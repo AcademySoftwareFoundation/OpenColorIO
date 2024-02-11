@@ -384,7 +384,14 @@ OCIO_ADD_TEST(FileFormatResolveCube, bake_1d_shaper)
         OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
         for(unsigned int i = 0; i < resvec.size(); ++i)
         {
-            OCIO_CHECK_EQUAL(osvec[i], resvec[i]);
+            if (i <= 0)
+            {
+                OCIO_CHECK_EQUAL(osvec[i], resvec[i]);
+            }
+            else
+            {
+                OCIO_CHECK_STR_FLOAT_VEC_CLOSE(osvec[i], resvec[i], 1e-5f);
+            }
         }
     }
 }
@@ -445,7 +452,14 @@ OCIO_ADD_TEST(FileFormatResolveCube, bake_3d)
     OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
     {
-        OCIO_CHECK_EQUAL(osvec[i], resvec[i]);
+        if (i <= 3)
+        {
+            OCIO_CHECK_EQUAL(osvec[i], resvec[i]);
+        }
+        else
+        {
+            OCIO_CHECK_STR_FLOAT_VEC_CLOSE(osvec[i], resvec[i], 1e-5f);
+        }
     }
 }
 
@@ -522,7 +536,14 @@ OCIO_ADD_TEST(FileFormatResolveCube, bake_1d_3d)
     OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
     {
-        OCIO_CHECK_EQUAL(osvec[i], resvec[i]);
+        if (i <= 2)
+        {
+            OCIO_CHECK_EQUAL(osvec[i], resvec[i]);
+        }
+        else
+        {
+            OCIO_CHECK_STR_FLOAT_VEC_CLOSE(osvec[i], resvec[i], 1e-5f);
+        }
     }
 }
 

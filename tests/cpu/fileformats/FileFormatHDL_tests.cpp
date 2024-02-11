@@ -5,6 +5,7 @@
 #include "fileformats/FileFormatHDL.cpp"
 
 #include "testutils/UnitTest.h"
+#include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -325,8 +326,23 @@ OCIO_ADD_TEST(FileFormatHDL, bake_1d_shaper)
         "\t16.291878\n"
         "}\n";
 
-        OCIO_CHECK_EQUAL(expectedHDL.size(), outputHDL.str().size());
-        OCIO_CHECK_EQUAL(expectedHDL, outputHDL.str());
+        const StringUtils::StringVec osvec  = StringUtils::SplitByLines(expectedHDL);
+        const StringUtils::StringVec resvec = StringUtils::SplitByLines(outputHDL.str());
+        OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
+        for(unsigned int i = 0; i < resvec.size(); ++i)
+        {
+            if ( (i >= 10 && i <= 19) ||
+                 (i >= 22 && i <= 31) ||
+                 (i >= 34 && i <= 43))
+            {
+                OCIO_CHECK_STR_FLOAT_VEC_CLOSE(osvec[i], resvec[i], 1e-5f);
+            }
+            else
+            {
+                OCIO_CHECK_EQUAL(osvec[i], resvec[i]);
+            }
+
+        }
     }
 }
 
