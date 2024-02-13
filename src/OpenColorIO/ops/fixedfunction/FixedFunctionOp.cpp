@@ -45,7 +45,7 @@ public:
 
     ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
-    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator, OptimizationFlags /*oFlags*/) const override;
 
 protected:
     ConstFixedFunctionOpDataRcPtr fnData() const { return DynamicPtrCast<const FixedFunctionOpData>(data()); }
@@ -125,7 +125,7 @@ ConstOpCPURcPtr FixedFunctionOp::getCPUOp(bool /*fastLogExpPow*/) const
     return GetFixedFunctionCPURenderer(data);
 }
 
-void FixedFunctionOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
+void FixedFunctionOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator, OptimizationFlags /*oFlags*/) const
 {
     ConstFixedFunctionOpDataRcPtr fnOpData = fnData();
     GetFixedFunctionGPUShaderProgram(shaderCreator, fnOpData);

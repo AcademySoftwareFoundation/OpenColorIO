@@ -85,6 +85,9 @@ void GPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps, OptimizationFlags o
     // Is NoOp ?
     m_isNoOp  = m_ops.isNoOp();
 
+    // Store optimization flags for use when generating shader code.
+    m_oFlags = oFlags;
+
     // Does the color processing introduce crosstalk between the pixel channels?
     m_hasChannelCrosstalk = m_ops.hasChannelCrosstalk();
 
@@ -104,7 +107,7 @@ void GPUProcessor::Impl::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCrea
     // Create the shader program information.
     for(const auto & op : m_ops)
     {
-        op->extractGpuShaderInfo(shaderCreator);
+        op->extractGpuShaderInfo(shaderCreator, m_oFlags);
     }
 
     WriteShaderHeader(shaderCreator);
