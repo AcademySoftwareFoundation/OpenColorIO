@@ -7,9 +7,7 @@
 name: CI-MacARM
 
 # This workflow is for CI for ARM-based MacOS. In an ideal world, this would
-# just be another matrix entry in the main CI workflow, but MacOS ARM runners
-# too expensive to run on every PR push. So we break into a separate workflow
-# to have more fine-grained control over when it runs.
+# just be another matrix entry in the main CI workflow.
 
 # This section controls when the workflow runs.
 on:
@@ -17,25 +15,22 @@ on:
   # contains the substrings "macarm", "-alpha", "-beta", or is called
   # "release".
   push:
-    tags:
-      - v**
-    branches:
-      - '*macarm*'
-      - '*alpha*'
-      - '*beta*'
-      - 'release'
-  # Run for pull requests whose branch name includes "macarm" (this allows
-  # us to test specific PRs that we think need ARM verification).
+    # Versioned branches and tags are ignored for OCIO <= 1.x.x
+    branches-ignore:
+      - RB-0.*
+      - RB-1.*
+      - gh-pages
+    tags-ignore:
+      - v0.*
+      - v1.*
   pull_request:
-    branches:
-      - '*macarm*'
-  # Run monthly on the 27th at 8:00AM to make sure we haven't broken
-  # anything among the many PRs that didn't test on ARM.
-  schedule:
-    - cron: "0 8 27 * *"
-      if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
-      
-permissions: read-all
+    branches-ignore:
+      - RB-0.*
+      - RB-1.*
+      - gh-pages
+    tags-ignore:
+      - v0.*
+      - v1.*
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -43,19 +38,18 @@ jobs:
   # ---------------------------------------------------------------------------
 
   macos-arm:
-    name: 'macOS 13 arm
-      <AppleClang 
+    name: 'macOS 14 arm
+      <AppleClang
        arch=${{ matrix.arch-type }},
-       config=${{ matrix.build-type }}, 
-       shared=${{ matrix.build-shared }}, 
-       simd=${{ matrix.use-simd }}, 
-       cxx=${{ matrix.cxx-standard }}, 
-       python=${{ matrix.python-version }}, 
-       docs=${{ matrix.build-docs }}, 
+       config=${{ matrix.build-type }},
+       shared=${{ matrix.build-shared }},
+       simd=${{ matrix.use-simd }},
+       cxx=${{ matrix.cxx-standard }},
+       python=${{ matrix.python-version }},
+       docs=${{ matrix.build-docs }},
        oiio=${{ matrix.use-oiio}}>'
-    # Needs special runners, only run on the main repo,
-    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
-    runs-on: macos-13-xlarge
+
+    runs-on: macos-14
     strategy:
       matrix:
         build: [1]
