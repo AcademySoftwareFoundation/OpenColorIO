@@ -54,7 +54,7 @@ message(STATUS "Checking for mandatory dependencies...")
 
 # expat
 # https://github.com/libexpat/libexpat
-ocio_handle_dependency(  expat REQUIRED ALLOW_INSTALL
+ocio_handle_dependency(  expat REQUIRED PREFER_CONFIG ALLOW_INSTALL
                          MIN_VERSION 2.4.1
                          RECOMMENDED_VERSION 2.5.0
                          RECOMMENDED_VERSION_REASON "CVE fixes and fix issue with symbol leakage when built as a static library")
@@ -75,7 +75,7 @@ ocio_handle_dependency(  pystring REQUIRED ALLOW_INSTALL
 
 # Imath (>=3.1)
 # https://github.com/AcademySoftwareFoundation/Imath
-ocio_handle_dependency(  Imath REQUIRED ALLOW_INSTALL
+ocio_handle_dependency(  Imath REQUIRED PREFER_CONFIG ALLOW_INSTALL
                          MIN_VERSION 3.1.1
                          RECOMMENDED_VERSION 3.1.6
                          RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
