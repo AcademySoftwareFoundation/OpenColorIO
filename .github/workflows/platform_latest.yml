@@ -86,7 +86,7 @@ jobs:
       CC: ${{ matrix.cc-compiler }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install tests env
         run: share/ci/scripts/linux/yum/install_tests_env.sh
       - name: Create build directories
@@ -197,11 +197,11 @@ jobs:
             python-version: '3.11'
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install tests env
         run: share/ci/scripts/macos/install_tests_env.sh
       - name: Create build directories
@@ -308,11 +308,11 @@ jobs:
             python-version: '3.11'
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install tests env
         run: share/ci/scripts/windows/install_tests_env.sh
         shell: bash
