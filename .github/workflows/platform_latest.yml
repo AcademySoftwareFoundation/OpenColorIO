@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        build: [1, 2, 3, 4]
+        build: [1, 2]
         include:
           # -------------------------------------------------------------------
           # GCC
@@ -46,7 +46,7 @@ jobs:
             build-python: ON
             build-type: Release
             build-shared: ON
-            cxx-standard: 20
+            cxx-standard: 23
             cxx-compiler: g++
             cc-compiler: gcc
             compiler-desc: GCC
@@ -55,7 +55,7 @@ jobs:
             build-python: OFF
             build-type: Debug
             build-shared: ON
-            cxx-standard: 20
+            cxx-standard: 23
             cxx-compiler: g++
             cc-compiler: gcc
             compiler-desc: GCC
@@ -63,24 +63,26 @@ jobs:
           # -------------------------------------------------------------------
           # Clang
           # -------------------------------------------------------------------
-          - build: 3
-            build-python: ON
-            build-type: Release
-            build-shared: ON
-            cxx-standard: 20
-            cxx-compiler: clang++
-            cc-compiler: clang
-            compiler-desc: Clang
-            enable-sanitizer: OFF
-          - build: 4
-            build-python: OFF
-            build-type: Debug
-            build-shared: ON
-            cxx-standard: 20
-            cxx-compiler: clang++
-            cc-compiler: clang
-            compiler-desc: Clang
-            enable-sanitizer: ON
+          # TODO: Re-enable clang when the following issue get fixed:
+          # https://github.com/actions/runner-images/issues/8659
+          # - build: 3
+          #   build-python: ON
+          #   build-type: Release
+          #   build-shared: ON
+          #   cxx-standard: 23
+          #   cxx-compiler: clang++
+          #   cc-compiler: clang
+          #   compiler-desc: Clang
+          #   enable-sanitizer: OFF
+          # - build: 4
+          #   build-python: OFF
+          #   build-type: Debug
+          #   build-shared: ON
+          #   cxx-standard: 23
+          #   cxx-compiler: clang++
+          #   cc-compiler: clang
+          #   compiler-desc: Clang
+          #   enable-sanitizer: ON
     env:
       CXX: ${{ matrix.cxx-compiler }}
       CC: ${{ matrix.cc-compiler }}
@@ -185,14 +187,14 @@ jobs:
             build-python: ON
             build-type: Release
             build-shared: ON
-            cxx-standard: 20
+            cxx-standard: 23
             enable-sanitizer: OFF
             python-version: '3.11'
           - build: 2
             build-python: OFF
             build-type: Debug
             build-shared: ON
-            cxx-standard: 20
+            cxx-standard: 23
             enable-sanitizer: ON
             python-version: '3.11'
     steps:
@@ -298,13 +300,13 @@ jobs:
             build-python: ON
             build-type: Release
             build-shared: ON
-            cxx-standard: 20
+            cxx-standard: 23
             python-version: '3.11'
           - build: 2
             build-python: ON
             build-type: Debug
             build-shared: ON
-            cxx-standard: 20
+            cxx-standard: 23
             python-version: '3.11'
     steps:
       - name: Setup Python

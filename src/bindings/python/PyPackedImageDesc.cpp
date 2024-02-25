@@ -15,10 +15,7 @@ void bindPyPackedImageDesc(py::module & m)
         .def(py::init([](py::buffer & data, long width, long height, long numChannels) 
             { 
                 PyPackedImageDesc * p = new PyPackedImageDesc();
-
-                py::gil_scoped_release release;
                 p->m_data[0] = data;
-                py::gil_scoped_acquire acquire;
 
                 py::buffer_info info = p->m_data[0].request();
                 checkBufferType(info, py::dtype("float32"));
@@ -39,10 +36,7 @@ void bindPyPackedImageDesc(py::module & m)
                          ptrdiff_t yStrideBytes) 
             { 
                 PyPackedImageDesc * p = new PyPackedImageDesc();
-
-                py::gil_scoped_release release;
                 p->m_data[0] = data;
-                py::gil_scoped_acquire acquire;
 
                 py::buffer_info info = p->m_data[0].request();
                 checkBufferType(info, bitDepth);
@@ -65,10 +59,7 @@ void bindPyPackedImageDesc(py::module & m)
                          ChannelOrdering chanOrder) 
             { 
                 PyPackedImageDesc * p = new PyPackedImageDesc();
-
-                py::gil_scoped_release release;
                 p->m_data[0] = data;
-                py::gil_scoped_acquire acquire;
 
                 py::buffer_info info = p->m_data[0].request();
                 checkBufferType(info, py::dtype("float32"));
@@ -89,10 +80,7 @@ void bindPyPackedImageDesc(py::module & m)
                          ptrdiff_t yStrideBytes) 
             { 
                 PyPackedImageDesc * p = new PyPackedImageDesc();
-
-                py::gil_scoped_release release;
                 p->m_data[0] = data;
-                py::gil_scoped_acquire acquire;
                 
                 py::buffer_info info = p->m_data[0].request();
                 checkBufferType(info, bitDepth);
