@@ -226,7 +226,7 @@ void archiveConfig(std::ostream & ostream, const Config & config, const char * c
     std::string configStr = ss.str();
 
     // Write zip to memory stream.
-#if MZ_VERSION_BUILD >= 040000
+#if MZ_VERSION_BUILD >= 0x40000
     write_mem_stream = mz_stream_mem_create();
 #else
     mz_stream_mem_create(&write_mem_stream);
@@ -242,7 +242,7 @@ void archiveConfig(std::ostream & ostream, const Config & config, const char * c
     options.compress_level  = ArchiveCompressionLevels::BEST;
 
     // Create the writer handle.
-#if MZ_VERSION_BUILD >= 040000
+#if MZ_VERSION_BUILD >= 0x40000
     archiver = mz_zip_writer_create();
 #else
     mz_zip_writer_create(&archiver);
@@ -341,7 +341,7 @@ void ExtractOCIOZArchive(const char * archivePath, const char * destination)
     std::string outputDestination = pystring::os::path::normpath(destination);
 
     // Create zip reader.
-#if MZ_VERSION_BUILD >= 040000
+#if MZ_VERSION_BUILD >= 0x40000
     extracter = mz_zip_reader_create();
 #else
     mz_zip_reader_create(&extracter);
@@ -463,7 +463,7 @@ std::vector<uint8_t> getFileStringFromArchiveFile(const std::string & filepath,
     std::vector<uint8_t> buffer;
 
     // Create the reader object.
-#if MZ_VERSION_BUILD >= 040000
+#if MZ_VERSION_BUILD >= 0x40000
     reader = mz_zip_reader_create();
 #else
     mz_zip_reader_create(&reader);
@@ -527,7 +527,7 @@ void getEntriesMappingFromArchiveFile(const std::string & archivePath,
     void *reader = NULL;
 
     // Create the reader object.
-#if MZ_VERSION_BUILD >= 040000
+#if MZ_VERSION_BUILD >= 0x40000
     reader = mz_zip_reader_create();
 #else
     mz_zip_reader_create(&reader);
