@@ -20,8 +20,6 @@ fi
 
 mkdir build
 cd build
-# FIXME: Revert OSL_BUILD_TESTS to OFF when OSL 1.12 is released
-# CMake configure fails when tests are off, only fixed in 1.12 dev branch
 
 if [[ $OSTYPE == 'darwin'* ]]; then
     cmake -DCMAKE_BUILD_TYPE=Release \
@@ -29,7 +27,7 @@ if [[ $OSTYPE == 'darwin'* ]]; then
         -DCMAKE_CXX_STANDARD=14 \
         -DCMAKE_C_COMPILER=$(brew --prefix llvm@15)/bin/clang \
         -DCMAKE_CXX_COMPILER=$(brew --prefix llvm@15)/bin/clang++ \
-        -DOSL_BUILD_TESTS=ON \
+        -DOSL_BUILD_TESTS=OFF \
         -DVERBOSE=ON \
         -DSTOP_ON_WARNING=OFF \
         -DBoost_NO_BOOST_CMAKE=ON \
@@ -39,17 +37,26 @@ else # not macOS
     cmake -DCMAKE_BUILD_TYPE=Release \
         ${INSTALL_TARGET:+"-DCMAKE_INSTALL_PREFIX="${INSTALL_TARGET}""} \
         -DCMAKE_CXX_STANDARD=14 \
-        -DOSL_BUILD_TESTS=ON \
+        -DOSL_BUILD_TESTS=OFF \
         -DVERBOSE=ON \
         -DSTOP_ON_WARNING=OFF \
         -DBoost_NO_BOOST_CMAKE=ON \
         ../.
 fi
 
+# OSL 1.13+ yield a permission error on mac OS.
+# "file cannot create directory: /usr/local/cmake.  Maybe need administrative privileges."
+if [[ $OSTYPE == 'darwin'* ]]; then
+sudo cmake --build . \
+           --target install \
+           --config Release \
+           --parallel 2
+else # not macOS
 cmake --build . \
       --target install \
       --config Release \
       --parallel 2
+fi
 
 cd ../..
 rm -rf OpenShadingLanguage

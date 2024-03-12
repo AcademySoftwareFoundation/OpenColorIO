@@ -179,8 +179,7 @@ if(OCIO_BUILD_PYTHON OR OCIO_BUILD_DOCS)
         # pybind11 2.9 fixes issues with MS Visual Studio 2022 (Debug).
         ocio_handle_dependency(  pybind11 REQUIRED ALLOW_INSTALL
                                  MIN_VERSION 2.9.2
-                                 RECOMMENDED_VERSION 2.9.2
-                                 RECOMMENDED_VERSION_REASON "Pybind 2.10.0+ does not work with Python 2.7 anymore")
+                                 RECOMMENDED_VERSION 2.11.1)
     endif()
 endif()
 

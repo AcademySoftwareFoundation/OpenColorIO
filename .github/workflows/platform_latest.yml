@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        build: [1, 2, 3, 4]
+        build: [1, 2]
         include:
           # -------------------------------------------------------------------
           # GCC
@@ -46,7 +46,7 @@ jobs:
             build-python: ON
             build-type: Release
             build-shared: ON
-            cxx-standard: 20
+            cxx-standard: 23
             cxx-compiler: g++
             cc-compiler: gcc
             compiler-desc: GCC
@@ -55,7 +55,7 @@ jobs:
             build-python: OFF
             build-type: Debug
             build-shared: ON
-            cxx-standard: 20
+            cxx-standard: 23
             cxx-compiler: g++
             cc-compiler: gcc
             compiler-desc: GCC
@@ -63,30 +63,32 @@ jobs:
           # -------------------------------------------------------------------
           # Clang
           # -------------------------------------------------------------------
-          - build: 3
-            build-python: ON
-            build-type: Release
-            build-shared: ON
-            cxx-standard: 20
-            cxx-compiler: clang++
-            cc-compiler: clang
-            compiler-desc: Clang
-            enable-sanitizer: OFF
-          - build: 4
-            build-python: OFF
-            build-type: Debug
-            build-shared: ON
-            cxx-standard: 20
-            cxx-compiler: clang++
-            cc-compiler: clang
-            compiler-desc: Clang
-            enable-sanitizer: ON
+          # TODO: Re-enable clang when the following issue get fixed:
+          # https://github.com/actions/runner-images/issues/8659
+          # - build: 3
+          #   build-python: ON
+          #   build-type: Release
+          #   build-shared: ON
+          #   cxx-standard: 23
+          #   cxx-compiler: clang++
+          #   cc-compiler: clang
+          #   compiler-desc: Clang
+          #   enable-sanitizer: OFF
+          # - build: 4
+          #   build-python: OFF
+          #   build-type: Debug
+          #   build-shared: ON
+          #   cxx-standard: 23
+          #   cxx-compiler: clang++
+          #   cc-compiler: clang
+          #   compiler-desc: Clang
+          #   enable-sanitizer: ON
     env:
       CXX: ${{ matrix.cxx-compiler }}
       CC: ${{ matrix.cc-compiler }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install tests env
         run: share/ci/scripts/linux/yum/install_tests_env.sh
       - name: Create build directories
@@ -185,23 +187,23 @@ jobs:
             build-python: ON
             build-type: Release
             build-shared: ON
-            cxx-standard: 20
+            cxx-standard: 23
             enable-sanitizer: OFF
             python-version: '3.11'
           - build: 2
             build-python: OFF
             build-type: Debug
             build-shared: ON
-            cxx-standard: 20
+            cxx-standard: 23
             enable-sanitizer: ON
             python-version: '3.11'
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install tests env
         run: share/ci/scripts/macos/install_tests_env.sh
       - name: Create build directories
@@ -298,21 +300,21 @@ jobs:
             build-python: ON
             build-type: Release
             build-shared: ON
-            cxx-standard: 20
+            cxx-standard: 23
             python-version: '3.11'
           - build: 2
             build-python: ON
             build-type: Debug
             build-shared: ON
-            cxx-standard: 20
+            cxx-standard: 23
             python-version: '3.11'
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install tests env
         run: share/ci/scripts/windows/install_tests_env.sh
         shell: bash
