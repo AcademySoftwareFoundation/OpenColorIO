@@ -157,6 +157,9 @@ if (WIN32)
     option(OCIO_USE_WINDOWS_UNICODE "Compile with Windows Unicode support" ON)
 endif()
 
+option(OCIO_INSTALL_OCIO "Install OCIO components" ON)
+
+
 ###############################################################################
 # Other preferences
 
@@ -473,7 +476,9 @@ endif()
 configure_file(${PROJECT_SOURCE_DIR}/share/ocio/${OCIO_SETUP_NAME}.in
     ${CMAKE_CURRENT_BINARY_DIR}/share/ocio/${OCIO_SETUP_NAME} @ONLY)
 
-INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/share/ocio/${OCIO_SETUP_NAME} DESTINATION ${CMAKE_INSTALL_DATADIR}/ocio/)
+if (OCIO_INSTALL_OCIO)
+    INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/share/ocio/${OCIO_SETUP_NAME} DESTINATION ${CMAKE_INSTALL_DATADIR}/ocio/)
+endif()
 
 
 ###############################################################################
@@ -504,32 +509,34 @@ configure_package_config_file(
     NO_CHECK_REQUIRED_COMPONENTS_MACRO
 )
 
-install(
-    EXPORT ${PROJECT_NAME}_EXPORTED_TARGETS
-    DESTINATION ${OCIO_CONFIG_INSTALL_DIR}
-    NAMESPACE ${PROJECT_NAME}::
-    FILE ${OCIO_TARGETS_EXPORT_NAME}
-)
-
-if (NOT BUILD_SHARED_LIBS)
-    # Install custom macros used in the find modules.
-    install(FILES
-        ${CMAKE_CURRENT_LIST_DIR}/share/cmake/macros/VersionUtils.cmake
-        DESTINATION ${OCIO_CUSTOM_MACROS_MODULE_DIR}
+if (OCIO_INSTALL_OCIO)
+    install(
+        EXPORT ${PROJECT_NAME}_EXPORTED_TARGETS
+        DESTINATION ${OCIO_CONFIG_INSTALL_DIR}
+        NAMESPACE ${PROJECT_NAME}::
+        FILE ${OCIO_TARGETS_EXPORT_NAME}
     )
 
-    # Install custom Find modules.
-    install(FILES
-        ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findexpat.cmake
-        ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/FindImath.cmake
-        ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findpystring.cmake
-        ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findminizip-ng.cmake
-        ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findyaml-cpp.cmake
-        DESTINATION ${OCIO_CUSTOM_FIND_MODULE_DIR}
+    if (NOT BUILD_SHARED_LIBS)
+        # Install custom macros used in the find modules.
+        install(FILES
+            ${CMAKE_CURRENT_LIST_DIR}/share/cmake/macros/VersionUtils.cmake
+            DESTINATION ${OCIO_CUSTOM_MACROS_MODULE_DIR}
+        )
+    
+        # Install custom Find modules.
+        install(FILES
+            ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findexpat.cmake
+            ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/FindImath.cmake
+            ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findpystring.cmake
+            ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findminizip-ng.cmake
+            ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findyaml-cpp.cmake
+            DESTINATION ${OCIO_CUSTOM_FIND_MODULE_DIR}
+        )
+    endif()
+    
+    install(
+        FILES "${OCIO_PROJECT_CONFIG}" "${OCIO_VERSION_CONFIG}"
+        DESTINATION "${OCIO_CONFIG_INSTALL_DIR}"
     )
 endif()
-
-install(
-    FILES "${OCIO_PROJECT_CONFIG}" "${OCIO_VERSION_CONFIG}"
-    DESTINATION "${OCIO_CONFIG_INSTALL_DIR}"
-)

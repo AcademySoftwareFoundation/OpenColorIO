@@ -37,6 +37,8 @@ target_link_libraries(ocioconvert
 include(StripUtils)
 ocio_strip_binary(ocioconvert)
 
-install(TARGETS ocioconvert
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+if (OCIO_INSTALL_OCIO)
+    install(TARGETS ocioconvert
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+endif()

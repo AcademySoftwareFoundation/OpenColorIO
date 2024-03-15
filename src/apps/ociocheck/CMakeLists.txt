@@ -25,6 +25,8 @@ target_link_libraries(ociocheck
 include(StripUtils)
 ocio_strip_binary(ociocheck)
 
-install(TARGETS ociocheck
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+if (OCIO_INSTALL_OCIO)
+    install(TARGETS ociocheck
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+endif()

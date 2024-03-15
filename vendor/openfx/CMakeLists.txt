@@ -87,15 +87,17 @@ endif()
 # Install to OFX package structure
 set(OFX_INSTALL_PREFIX "${CMAKE_INSTALL_LIBDIR}/OpenColorIO.ofx.bundle/Contents")
 
-install(DIRECTORY 
-    DESTINATION ${OFX_INSTALL_PREFIX}
-)
-install(FILES ${PLIST}
-    DESTINATION ${OFX_INSTALL_PREFIX}
-)
-install(FILES ${RESOURCES}
-    DESTINATION ${OFX_INSTALL_PREFIX}/Resources
-)
-install(TARGETS ofxplugin LIBRARY 
-    DESTINATION ${OFX_INSTALL_PREFIX}/${OFX_ARCH}
-)
+if(OCIO_INSTALL_OCIO)
+    install(DIRECTORY 
+        DESTINATION ${OFX_INSTALL_PREFIX}
+    )
+    install(FILES ${PLIST}
+        DESTINATION ${OFX_INSTALL_PREFIX}
+    )
+    install(FILES ${RESOURCES}
+        DESTINATION ${OFX_INSTALL_PREFIX}/Resources
+    )
+    install(TARGETS ofxplugin LIBRARY 
+        DESTINATION ${OFX_INSTALL_PREFIX}/${OFX_ARCH}
+    )
+endif()

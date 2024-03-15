@@ -154,9 +154,11 @@ set_target_properties(OpenColorIO-JNI
 ###############################################################################
 # Installation
 
-install(TARGETS OpenColorIO-JNI
-	DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/${CMAKE_INSTALL_LIBDIR}
-)
-install(FILES ${JNIOCIO_JAR}
-	DESTINATION ${CMAKE_INSTALL_PREFIX}/share/ocio/
-)
+if(OCIO_INSTALL_OCIO)
+    install(TARGETS OpenColorIO-JNI
+	    DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/${CMAKE_INSTALL_LIBDIR}
+    )
+    install(FILES ${JNIOCIO_JAR}
+	    DESTINATION ${CMAKE_INSTALL_PREFIX}/share/ocio/
+    )
+endif()

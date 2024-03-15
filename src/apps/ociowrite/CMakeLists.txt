@@ -21,6 +21,8 @@ target_link_libraries(ociowrite
 include(StripUtils)
 ocio_strip_binary(ociowrite)
 
-install(TARGETS ociowrite
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+if(OCIO_INSTALL_OCIO)
+    install(TARGETS ociowrite
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+endif()

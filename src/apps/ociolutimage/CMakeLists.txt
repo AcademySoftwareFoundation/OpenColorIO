@@ -30,6 +30,8 @@ target_link_libraries(ociolutimage
 include(StripUtils)
 ocio_strip_binary(ociolutimage)
 
-install(TARGETS ociolutimage
-	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+if (OCIO_INSTALL_OCIO)
+    install(TARGETS ociolutimage
+	    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+endif()

@@ -254,8 +254,10 @@ set(_PyOpenColorIO_SITE_PACKAGE_DIR "${PYTHON_VARIANT_PATH}/PyOpenColorIO")
 include(StripUtils)
 ocio_strip_binary(PyOpenColorIO)
 
-install(TARGETS PyOpenColorIO
-    LIBRARY DESTINATION ${_PyOpenColorIO_SITE_PACKAGE_DIR}
-)
+if(OCIO_INSTALL_OCIO)
+    install(TARGETS PyOpenColorIO
+        LIBRARY DESTINATION ${_PyOpenColorIO_SITE_PACKAGE_DIR}
+    )
 
-install(FILES package/__init__.py DESTINATION ${_PyOpenColorIO_SITE_PACKAGE_DIR})
+    install(FILES package/__init__.py DESTINATION ${_PyOpenColorIO_SITE_PACKAGE_DIR})
+endif()

@@ -40,11 +40,13 @@ target_link_libraries(imageioapphelpers
         utils::strings
 )
 
-install(TARGETS imageioapphelpers
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
+if(OCIO_INSTALL_OCIO)
+    install(TARGETS imageioapphelpers
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/imageio.h
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/OpenColorIO/imageioapphelpers
-)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/imageio.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/OpenColorIO/imageioapphelpers
+    )
+endif()

@@ -106,24 +106,26 @@ add_custom_target(Nuke
     DEPENDS NukeOCIOCDLTransform
 )
 
-install(TARGETS NukeOCIOColorSpace EXPORT OpenColorIO 
-        DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
+if(OCIO_INSTALL_OCIO)
+    install(TARGETS NukeOCIOColorSpace EXPORT OpenColorIO 
+            DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
 
-install(TARGETS NukeOCIODisplay EXPORT OpenColorIO 
-        DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
+    install(TARGETS NukeOCIODisplay EXPORT OpenColorIO 
+            DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
 
-install(TARGETS NukeOCIOLogConvert EXPORT OpenColorIO 
-        DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
+    install(TARGETS NukeOCIOLogConvert EXPORT OpenColorIO 
+            DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
 
-install(TARGETS NukeOCIOFileTransform EXPORT OpenColorIO 
-        DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
+    install(TARGETS NukeOCIOFileTransform EXPORT OpenColorIO 
+            DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
 
-install(TARGETS NukeOCIOLookTransform EXPORT OpenColorIO 
-        DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
+    install(TARGETS NukeOCIOLookTransform EXPORT OpenColorIO 
+            DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
 
-install(TARGETS NukeOCIOCDLTransform EXPORT OpenColorIO 
-        DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
+    install(TARGETS NukeOCIOCDLTransform EXPORT OpenColorIO 
+            DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
 
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/share/nuke
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/share/
-        PATTERN .svn EXCLUDE)
+    install(DIRECTORY ${PROJECT_SOURCE_DIR}/share/nuke
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/share/
+            PATTERN .svn EXCLUDE)
+endif()
