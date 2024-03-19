@@ -6,7 +6,6 @@
 
 #include "Logging.h"
 #include "OpBuilders.h"
-#include "ParseUtils.h"
 #include "UnitTestUtils.h"
 #include "utils/StringUtils.h"
 
@@ -70,28 +69,6 @@ ConstProcessorRcPtr GetFileTransformProcessor(const std::string & fileName)
     ConfigRcPtr config = Config::Create();
     // Get the processor corresponding to the transform.
     return config->getProcessor(fileTransform);
-}
-
-bool StringFloatVecClose(std::string value, std::string expected, float eps)
-{
-    std::vector<float> a;
-    std::vector<float> b;
-    if (StringVecToFloatVec(a, StringUtils::SplitByWhiteSpaces(value)) &&
-        StringVecToFloatVec(b, StringUtils::SplitByWhiteSpaces(expected)))
-    {
-        if (a.size() == b.size())
-        {
-            for(unsigned int i = 0; i < a.size(); i++)
-            {
-                if (std::abs(a[i] - b[i]) >= eps)
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-    }
-    return false;
 }
 
 std::string CreateTemporaryDirectory(const std::string & name)

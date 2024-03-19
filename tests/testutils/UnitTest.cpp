@@ -11,14 +11,58 @@
 
 #include "apputils/argparse.h"
 #include "UnitTest.h"
+#include "utils/NumberUtils.h"
 #include "utils/StringUtils.h"
 
+namespace OCIO = OCIO_NAMESPACE;
 
 UnitTests & GetUnitTests()
 {
     static UnitTests oiio_unit_tests;
     return oiio_unit_tests; 
 }
+
+static bool StringVecToFloatVec(std::vector<float> &floatArray, const StringUtils::StringVec &lineParts)
+{
+    floatArray.resize(lineParts.size());
+
+    for(unsigned int i=0; i<lineParts.size(); i++)
+    {
+        float x = NAN;
+        const char *str = lineParts[i].c_str();
+        const auto result = OCIO::NumberUtils::from_chars(str, str + lineParts[i].size(), x);
+        if (result.ec != std::errc())
+        {
+            return false;
+        }
+        floatArray[i] = x;
+    }
+
+    return true;
+}
+
+bool StringFloatVecClose(std::string value, std::string expected, float eps)
+{
+    std::vector<float> a;
+    std::vector<float> b;
+    if (StringVecToFloatVec(a, StringUtils::SplitByWhiteSpaces(value)) &&
+        StringVecToFloatVec(b, StringUtils::SplitByWhiteSpaces(expected)))
+    {
+        if (a.size() == b.size())
+        {
+            for(unsigned int i = 0; i < a.size(); i++)
+            {
+                if (std::abs(a[i] - b[i]) >= eps)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
 
 int unit_test_failures{ 0 };
 

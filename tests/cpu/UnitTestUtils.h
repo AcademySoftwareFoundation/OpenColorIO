@@ -93,17 +93,6 @@ inline bool EqualWithSafeRelError(T value,
         / div) <= eps;
 }
 
-bool StringFloatVecClose(std::string value, std::string expected, float eps);
-
-#define OCIO_CHECK_STR_FLOAT_VEC_CLOSE_FROM(x,y,tol,line)                    \
-    (OCIO::StringFloatVecClose(x,y,tol)) ? ((void)0)                         \
-         : ((std::cout << __FILE__ << ":" << line << ":\n"                   \
-             << "FAILED: " << FIELD_STR(x) << " == " << FIELD_STR(y) << "\n" \
-             << "\tvalues were '" << (x) << "' and '" << (y) << "'\n"),      \
-            (void)++unit_test_failures)
-
-#define OCIO_CHECK_STR_FLOAT_VEC_CLOSE(x,y,tol) OCIO_CHECK_STR_FLOAT_VEC_CLOSE_FROM(x,y,tol,__LINE__)
-
 // C++20 introduces new strongly typed, UTF-8 based, char8_t and u8string types
 // which are not implicitly convertible to char and std::string respectively.
 // Here we simply choose to ignore these new types for unit tests while the
