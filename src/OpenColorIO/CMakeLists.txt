@@ -302,7 +302,7 @@ target_include_directories(OpenColorIO
 )
 
 target_link_libraries(OpenColorIO
-    PRIVATE
+    PUBLIC
         expat::expat
         Imath::Imath
         pystring::pystring
