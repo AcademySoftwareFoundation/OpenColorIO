@@ -492,7 +492,7 @@ jobs:
         include:
           - build: 1
             arch-type: "arm64"
-            test-rosseta: "OFF"
+            test-rosetta: "OFF"
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
@@ -503,7 +503,7 @@ jobs:
             python-version: '3.11'
           - build: 2
             arch-type: "x86_64;arm64"
-            test-rosseta: "ON"
+            test-rosetta: "ON"
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
@@ -557,7 +557,7 @@ jobs:
         run: ctest -V -C ${{ matrix.build-type }}
         working-directory: _build
       - name: Test Rosetta
-        if: matrix.test-rosseta == 'ON'
+        if: matrix.test-rosetta == 'ON'
         run: |
           /usr/bin/arch -x86_64 /bin/zsh -c "ctest -V -C ${{ matrix.build-type }}"
         working-directory: _build
