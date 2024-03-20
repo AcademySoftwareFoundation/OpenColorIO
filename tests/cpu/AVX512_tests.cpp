@@ -186,8 +186,9 @@ void testConvert_InBitDepth(OCIO::BitDepth outBD)
 
 DEFINE_SIMD_TEST(packed_uint8_to_float_test)
 {
-    std::vector<uint8_t> inImage(256);
-    std::vector<float> outImage(256);
+    size_t maxValue = OCIO::BitDepthInfo<OCIO::BIT_DEPTH_UINT8>::maxValue + 1;
+    std::vector<uint8_t> inImage(maxValue);
+    std::vector<float> outImage(maxValue);
 
     for (unsigned i = 0; i < inImage.size(); i++)
     {
