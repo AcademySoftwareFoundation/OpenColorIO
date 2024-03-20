@@ -12,7 +12,9 @@ from ..utils import SignalsBlocked
 class ComboBox(QtWidgets.QComboBox):
     def __init__(self, parent: Optional[QtCore.QObject] = None):
         super().__init__(parent=parent)
-        self.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToMinimumContentsLengthWithIcon)
+        self.setSizeAdjustPolicy(
+            QtWidgets.QComboBox.AdjustToMinimumContentsLengthWithIcon
+        )
 
     # DataWidgetMapper user property interface
     @QtCore.Property(str, user=True)

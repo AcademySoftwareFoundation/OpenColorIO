@@ -11,7 +11,7 @@ ROOT_DIR = Path(__file__).parent.parent
 
 # Sizes
 ICON_SIZE_ITEM = QtCore.QSize(20, 20)
-ICON_SIZE_BUTTON = QtCore.QSize(24, 24)
+ICON_SIZE_BUTTON = QtCore.QSize(20, 20)
 ICON_SCALE_FACTOR = 1.15
 
 MARGIN_WIDTH = 13  # Pixels

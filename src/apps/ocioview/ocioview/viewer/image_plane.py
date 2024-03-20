@@ -11,19 +11,16 @@ import math
 from functools import partial
 from pathlib import Path
 from typing import Any, Optional
-import sys
 
 import numpy as np
 from OpenGL import GL
-try:
-    import OpenImageIO as oiio
-except:
-    import imageio as iio
+
 import PyOpenColorIO as ocio
 from PySide6 import QtCore, QtGui, QtWidgets, QtOpenGLWidgets
 
 from ..log_handlers import message_queue
 from ..ref_space_manager import ReferenceSpaceManager
+from .utils import load_image
 
 
 logger = logging.getLogger(__name__)
@@ -103,6 +100,7 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None):
         super().__init__(parent)
+        self.setMinimumSize(QtCore.QSize(10, 10))
 
         # Clicking on/tabbing to widget restores focus
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
@@ -165,6 +163,8 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         """
         self._gl_ready = True
 
+        self.makeCurrent()
+
         # Init image texture
         self._image_tex = GL.glGenTextures(1)
         GL.glActiveTexture(GL.GL_TEXTURE0)
@@ -172,11 +172,11 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         GL.glTexImage2D(
             GL.GL_TEXTURE_2D,
             0,
-            GL.GL_RGBA32F,
+            GL.GL_RGB32F,
             self._image_size[0],
             self._image_size[1],
             0,
-            GL.GL_RGBA,
+            GL.GL_RGB,
             GL.GL_FLOAT,
             ctypes.c_void_p(0),
         )
@@ -264,31 +264,6 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
         self._build_program()
 
-    def _orthographicProjMatrix(self, near, far, left, right, top, bottom):
-        rightPlusLeft  = right + left
-        rightMinusLeft = right - left
-
-        topPlusBottom  = top + bottom
-        topMinusBottom = top - bottom
-
-        farPlusNear  = far + near
-        farMinusNear = far - near
-
-        tx = -rightPlusLeft / rightMinusLeft
-        ty = -topPlusBottom / topMinusBottom
-        tz = -farPlusNear / farMinusNear
-
-        A = 2 / rightMinusLeft
-        B = 2 / topMinusBottom
-        C = -2 / farMinusNear
-
-        return np.array([
-            [A, 0, 0, tx],
-            [0, B, 0, ty],
-            [0, 0, C, tz],
-            [0, 0, 0, 1 ]
-        ])
-
     def resizeGL(self, w: int, h: int) -> None:
         """
         Called whenever the widget is resized.
@@ -296,18 +271,21 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         :param w: Window width
         :param h: Window height
         """
+        self.makeCurrent()
+
         GL.glViewport(0, 0, w, h)
 
         # Center image plane
-        # fmt: on
-        self._proj_mat = self._orthographicProjMatrix(
-                -1.0,  # Near
-                 1.0,  # Far
+        # fmt: off
+        self._proj_mat = self._orthographic_proj_matrix(
+            -1.0,      # Near
+             1.0,      # Far
             -w / 2.0,  # Left
              w / 2.0,  # Right
              h / 2.0,  # Top
             -h / 2.0,  # Bottom
         )
+        # fmt: on
 
         self._update_model_view_mat()
 
@@ -316,6 +294,8 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         Called whenever a repaint is needed. Calling ``update()`` will
         schedule a repaint.
         """
+        self.makeCurrent()
+
         GL.glClearColor(0.0, 0.0, 0.0, 1.0)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
 
@@ -328,9 +308,7 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
             # Set uniforms
             mvp_mat = self._proj_mat @ self._model_view_mat
             mvp_mat_loc = GL.glGetUniformLocation(self._shader_program, "mvpMat")
-            GL.glUniformMatrix4fv(
-                mvp_mat_loc, 1, GL.GL_FALSE, mvp_mat.T
-            )
+            GL.glUniformMatrix4fv(mvp_mat_loc, 1, GL.GL_FALSE, mvp_mat.T)
 
             image_tex_loc = GL.glGetUniformLocation(self._shader_program, "imageTex")
             GL.glUniform1i(image_tex_loc, 0)
@@ -346,55 +324,6 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
             )
 
             GL.glBindVertexArray(0)
-
-    def load_oiio(self, image_path: Path) -> np.ndarray:
-        image_buf = oiio.ImageBuf(image_path.as_posix())
-        spec = image_buf.spec()
-
-        # Convert to RGBA, filling missing color channels with 0.0, and a
-        # missing alpha with 1.0.
-        if spec.nchannels < 4:
-            image_buf = oiio.ImageBufAlgo.channels(
-                image_buf,
-                tuple(
-                    list(range(spec.nchannels))
-                    + ([0.0] * (4 - spec.nchannels - 1))
-                    + [1.0]
-                ),
-                newchannelnames=("R", "G", "B", "A"),
-            )
-        elif spec.nchannels > 4:
-            image_buf = oiio.ImageBufAlgo.channels(
-                image_buf, (0, 1, 2, 3), newchannelnames=("R", "G", "B", "A")
-            )
-
-        # Get pixels as 32-bit float NumPy array
-        return image_buf.get_pixels(oiio.FLOAT)
-
-    def load_iio(self, image_path: Path) -> np.ndarray:
-        data = iio.imread(image_path.as_posix())
-
-        # Convert to 32-bit float
-        if not np.issubdtype(data.dtype, np.floating):
-            data = data.astype(np.float32) / np.iinfo(data.dtype).max
-        if data.dtype != np.float32:
-            data = data.astype(np.float32)
-
-        # Convert to RGBA, filling missing color channels with 0.0, and a
-        # missing alpha with 1.0.
-        nchannels = 1
-        if len(data.shape) == 3:
-            nchannels = data.shape[-1]
-
-        while nchannels < 3:
-            data = np.dstack((data, np.zeros(data.shape[:2])))
-            nchannels += 1
-        if nchannels < 4:
-            data = np.dstack((data, np.ones(data.shape[:2])))
-        if nchannels > 4:
-            data = data[..., :4]
-
-        return data
 
     def load_image(self, image_path: Path) -> None:
         """
@@ -416,16 +345,13 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
                 color_space_name = ocio.ROLE_DEFAULT
         self._ocio_input_color_space = color_space_name
 
-        if "OpenImageIO" in sys.modules:
-            self._image_array = self.load_oiio(image_path)
-        else:
-            self._image_array = self.load_iio(image_path)
+        # Load image data via an available image library
+        self._image_array = load_image(image_path)
 
         width = self._image_array.shape[1]
         height = self._image_array.shape[0]
 
         # Stash image size for pan/zoom calculations
-
         self._image_pos = np.array([0, 1], dtype=np.float64)
         self._image_size = np.array([width, height], dtype=np.float64)
 
@@ -436,11 +362,11 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         GL.glTexImage2D(
             GL.GL_TEXTURE_2D,
             0,
-            GL.GL_RGBA32F,
+            GL.GL_RGB32F,
             width,
             height,
             0,
-            GL.GL_RGBA,
+            GL.GL_RGB,
             GL.GL_FLOAT,
             self._image_array.ravel(),
         )
@@ -451,6 +377,17 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
         self.update_ocio_proc(input_color_space=self._ocio_input_color_space)
         self.fit()
+
+        # Log image change after load and render
+        self.broadcast_image()
+
+    def broadcast_image(self) -> None:
+        """
+        Broadcast current image array, if one is loaded, through the
+        message queue for other app components.
+        """
+        if self._image_array is not None:
+            message_queue.put_nowait(self._image_array)
 
     def input_color_space(self) -> str:
         """
@@ -680,10 +617,10 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         self._mouse_pressed = True
-        self._mouse_last_pos = event.pos()
+        self._mouse_last_pos = event.position()
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
-        pos = event.pos()
+        pos = event.position()
 
         if self._mouse_pressed:
             offset = np.array([*(pos - self._mouse_last_pos).toTuple()])
@@ -696,20 +633,26 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
             # Trace mouse position through the inverse MVP matrix to update sampled
             # pixel.
-            screen_pos = np.array([
-                pos.x() / widget_w * 2.0 - 1.0,
-                (widget_h - pos.y() - 1) / widget_h * 2.0 - 1.0,
-                0.0,
-                1.0
-            ])
-            model_pos = np.linalg.inv(self._proj_mat @ self._model_view_mat) @ screen_pos
-            pixel_pos = np.array([model_pos[0] + 0.5, model_pos[1] + 0.5]) * self._image_size
+            screen_pos = np.array(
+                [
+                    pos.x() / widget_w * 2.0 - 1.0,
+                    (widget_h - pos.y() - 1) / widget_h * 2.0 - 1.0,
+                    0.0,
+                    1.0,
+                ]
+            )
+            model_pos = (
+                np.linalg.inv(self._proj_mat @ self._model_view_mat) @ screen_pos
+            )
+            pixel_pos = (
+                np.array([model_pos[0] + 0.5, model_pos[1] + 0.5]) * self._image_size
+            )
 
             # Broadcast sample position
             if (
                 self._image_array is not None
-                and 0 <= pixel_pos[0] <= self._image_size[0]
-                and 0 <= pixel_pos[1] <= self._image_size[1]
+                and 0 <= pixel_pos[0] < self._image_size[0]
+                and 0 <= pixel_pos[1] < self._image_size[1]
             ):
                 pixel_x = math.floor(pixel_pos[0])
                 pixel_y = math.floor(pixel_pos[1])
@@ -745,24 +688,10 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         # Fill frame with 1 pixel with 0.5 pixel overscan
         max_scale = max(w, h) * 1.5
 
-        delta = event.angleDelta().y() / 360.0
-        scale = max(0.01, self._image_scale - delta)
+        delta = event.angleDelta().y() / 360.0 * self._image_scale
+        scale = min(max_scale, max(min_scale, self._image_scale - delta))
 
-        if scale > 1.0:
-            if delta > 0.0:
-                # Exponential zoom out
-                scale = pow(scale, 1.0 / 1.01)
-            else:
-                # Exponential zoom in
-                scale = pow(scale, 1.01)
-
-        scale = min(max_scale, max(min_scale, scale))
-
-        if scale < 1.0:
-            # Half zoom in/out
-            scale = (self._image_scale + scale) / 2.0
-
-        self.zoom(event.pos(), scale, update=True, absolute=True)
+        self.zoom(event.position(), scale, update=True, absolute=True)
 
     def pan(
         self, offset: np.ndarray, update: bool = True, absolute: bool = False
@@ -776,10 +705,11 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
             absolute position to translate the viewport from its
             origin.
         """
-        if absolute:
-            self._image_pos = offset / self._image_scale
-        else:
-            self._image_pos += offset / self._image_scale
+        if self._image_scale > 0:
+            if absolute:
+                self._image_pos = offset / self._image_scale
+            else:
+                self._image_pos += offset / self._image_scale
 
         self._update_model_view_mat(update=update)
 
@@ -856,9 +786,7 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
         # Ctrl + Number keys = Power of 2 scale: 1 = x1, 2 = x2, 3 = x4, ...
         for i in range(9):
-            scale_shortcut = QtGui.QShortcut(
-                QtGui.QKeySequence(f"Ctrl+{i + 1}"), self
-            )
+            scale_shortcut = QtGui.QShortcut(QtGui.QKeySequence(f"Ctrl+{i + 1}"), self)
             scale_shortcut.activated.connect(
                 lambda exponent=i: self.zoom(
                     self.rect().center(), float(2**exponent), absolute=True
@@ -882,6 +810,8 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
             enum adhering to the formatting ``GL_*_SHADER``.
         :return: Shader object ID, or None if shader compilation fails
         """
+        self.makeCurrent()
+
         shader = GL.glCreateShader(shader_type)
         GL.glShaderSource(shader, glsl_src)
         GL.glCompileShader(shader)
@@ -958,6 +888,38 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         # Store cache ID to detect reuse
         self._ocio_shader_cache_id = shader_cache_id
 
+    def _orthographic_proj_matrix(
+        self,
+        near: float,
+        far: float,
+        left: float,
+        right: float,
+        top: float,
+        bottom: float,
+    ) -> np.ndarray:
+        """
+        Build orthographic projection matrix array from camera frustum
+        parameters.
+        """
+        right_plus_left = right + left
+        right_minus_left = right - left
+
+        top_plus_bottom = top + bottom
+        top_minus_bottom = top - bottom
+
+        far_plus_near = far + near
+        far_minus_near = far - near
+
+        tx = -right_plus_left / right_minus_left
+        ty = -top_plus_bottom / top_minus_bottom
+        tz = -far_plus_near / far_minus_near
+
+        a = 2 / right_minus_left
+        b = 2 / top_minus_bottom
+        c = -2 / far_minus_near
+
+        return np.array([[a, 0, 0, tx], [0, b, 0, ty], [0, 0, c, tz], [0, 0, 0, 1]])
+
     def _update_model_view_mat(self, update: bool = True) -> None:
         """
         Re-calculate the model view matrix, which needs to be updated
@@ -965,15 +927,16 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
         :param bool update: Optionally redraw the window
         """
-        size = np.array([self.width(), self.height()])
-
         self._model_view_mat = np.eye(4)
 
         # Flip Y to account for different OIIO/OpenGL image origin
         self._model_view_mat *= [1.0, -1.0, 1.0, 1.0]
 
         self._model_view_mat *= [self._image_scale, self._image_scale, 1.0, 1.0]
-        self._model_view_mat[:2, -1] += self._image_pos / size * 2.0
+        self._model_view_mat[:2, -1] += [
+            self._image_pos[0] * self._image_scale,
+            -self._image_pos[1] * self._image_scale,
+        ]
 
         self._model_view_mat *= self._image_size.tolist() + [1.0, 1.0]
 
@@ -996,6 +959,8 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         :param tex_type: OpenGL texture type (GL_TEXTURE_1/2/3D)
         :param interpolation: Interpolation enum value
         """
+        self.makeCurrent()
+
         if interpolation == ocio.INTERP_NEAREST:
             GL.glTexParameteri(tex_type, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
             GL.glTexParameteri(tex_type, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
@@ -1110,6 +1075,8 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         """
         Delete all OCIO textures from the GPU.
         """
+        self.makeCurrent()
+
         for tex, tex_name, sampler_name, tex_type, tex_index in self._ocio_tex_ids:
             GL.glDeleteTextures([tex])
         del self._ocio_tex_ids[:]
@@ -1118,6 +1085,8 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         """
         Bind all OCIO textures to the shader program.
         """
+        self.makeCurrent()
+
         for tex, tex_name, sampler_name, tex_type, tex_index in self._ocio_tex_ids:
             GL.glActiveTexture(GL.GL_TEXTURE0 + tex_index)
             GL.glBindTexture(tex_type, tex)
@@ -1139,6 +1108,8 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         """
         if not self._ocio_shader_desc or not self._shader_program:
             return
+
+        self.makeCurrent()
 
         for name, uniform_data in self._ocio_shader_desc.getUniforms():
             if name not in self._ocio_uniform_ids:
@@ -1180,13 +1151,13 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         """
         # If index is in range, and we are viewing all channels, or a channel
         # other than index, isolate channel at index.
-        if channel < 4 and (
+        if channel < 3 and (
             all(self._ocio_channel_hot) or not self._ocio_channel_hot[channel]
         ):
-            for i in range(4):
+            for i in range(3):
                 self._ocio_channel_hot[i] = 1 if i == channel else 0
 
         # Otherwise show all channels
         else:
-            for i in range(4):
+            for i in range(3):
                 self._ocio_channel_hot[i] = 1

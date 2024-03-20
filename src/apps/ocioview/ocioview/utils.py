@@ -8,6 +8,7 @@ from types import TracebackType
 from typing import Optional, Union
 
 import PyOpenColorIO as ocio
+import numpy as np
 import qtawesome
 from pygments import highlight
 from pygments.lexers import GLShaderLexer, HLSLShaderLexer, XmlLexer, YamlLexer
@@ -133,7 +134,9 @@ def item_type_label(item_type: type) -> str:
     :param item_type: Config item type
     :return: Friendly type name
     """
-    return " ".join(filter(None, re.split(r"([A-Z]+[a-z]+)", item_type.__name__)))
+    return " ".join(
+        filter(None, re.split(r"([A-Z]+[a-z]+)", item_type.__name__))
+    )
 
 
 def m44_to_m33(m44: list) -> list:
@@ -176,7 +179,9 @@ def config_to_html(config: ocio.Config) -> str:
     )
 
 
-def processor_to_ctf_html(processor: ocio.Processor) -> tuple[str, ocio.GroupTransform]:
+def processor_to_ctf_html(
+    processor: ocio.Processor,
+) -> tuple[str, ocio.GroupTransform]:
     """Return processor CTF formatted as HTML."""
     config = ocio.GetCurrentConfig()
     group_tf = processor.createGroupTransform()
@@ -218,14 +223,20 @@ def processor_to_shader_html(
     Return processor shader in the requested language, formatted as
     HTML.
     """
-    gpu_shader_desc = ocio.GpuShaderDesc.CreateShaderDesc(language=gpu_language)
+    gpu_shader_desc = ocio.GpuShaderDesc.CreateShaderDesc(
+        language=gpu_language
+    )
     gpu_proc.extractGpuShaderInfo(gpu_shader_desc)
     shader_data = gpu_shader_desc.getShaderText()
 
     return increase_html_lineno_padding(
         highlight(
             shader_data,
-            (GLShaderLexer if "GLSL" in gpu_language.name else HLSLShaderLexer)(),
+            (
+                GLShaderLexer
+                if "GLSL" in gpu_language.name
+                else HLSLShaderLexer
+            )(),
             HtmlFormatter(linenos="inline"),
         )
     )
@@ -242,3 +253,33 @@ def increase_html_lineno_padding(html: str) -> str:
         r"\1\2&nbsp;&nbsp;\3",
         html,
     )
+
+
+def float_to_uint8(value: float) -> int:
+    """
+    Convert float value to an 8-bit clamped unsigned integer value.
+
+    :param value: Float value
+    :return: Integer value
+    """
+    return max(0, min(255, int(value * 255)))
+
+
+def subsampling_factor(a: np.ndarray, maximum_size: float) -> int:
+    """
+    Return the best factor to sub-sample given :math:`a` array and have its
+    size less or equal to given maximum size.
+
+    :param a: Array :math:`a` to find the best sub-sample factor.
+    :param maximum_size: Maximum size of the sub-sampled array :math:`a`.
+    :return: Sub-sampling factor.
+    """
+
+    size = a.size
+
+    sub_sampling_factor = 1
+    while True:
+        if size / sub_sampling_factor <= maximum_size:
+            return sub_sampling_factor
+
+        sub_sampling_factor += 1
