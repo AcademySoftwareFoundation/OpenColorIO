@@ -2772,14 +2772,27 @@ void ComputeImage(unsigned width, unsigned height, unsigned nChannels,
     for(size_t idx=0; idx<(width*height);)
     {
         // Manual computation of the results.
+        // Break operations into steps similar to cpu processor
+        // to avoid potential fma compiler optimizations
+        const float in_scale[4]{ float(inValues[idx+0]) * inScale,
+                                 float(inValues[idx+1]) * inScale,
+                                 float(inValues[idx+2]) * inScale,
+                                 nChannels==4
+                                     ? float(inValues[idx+3]) * inScale
+                                     : 0.0f
+                                };
 
-        const float pxl[4]{ (float(inValues[idx+0]) * inScale + (float)offset4[0]) * outScale,
-                            (float(inValues[idx+1]) * inScale + (float)offset4[1]) * outScale,
-                            (float(inValues[idx+2]) * inScale + (float)offset4[2]) * outScale,
-                            nChannels==4
-                                ? ((float(inValues[idx+3]) * inScale + (float)offset4[3]) * outScale)
-                                : 0.0f
-                          };
+        const float operation[4]{ in_scale[0] + (float)offset4[0],
+                                  in_scale[1] + (float)offset4[1],
+                                  in_scale[2] + (float)offset4[2],
+                                  in_scale[3] + (float)offset4[3],
+                                };
+
+        const float pxl[4]{ operation[0] * outScale,
+                            operation[1] * outScale,
+                            operation[2] * outScale,
+                            operation[3] * outScale,
+                      };
 
         // Validate all the results.
 

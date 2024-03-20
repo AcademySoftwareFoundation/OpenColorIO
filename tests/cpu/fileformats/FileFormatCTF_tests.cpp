@@ -6934,8 +6934,23 @@ OCIO_ADD_TEST(CTFTransform, grading_rgbcurve_lin_ctf)
 </ProcessList>
 )" };
 
-        OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
-        OCIO_CHECK_EQUAL(expected, outputTransform.str());
+        const StringUtils::StringVec osvec  = StringUtils::SplitByLines(outputTransform.str());
+        const StringUtils::StringVec resvec = StringUtils::SplitByLines(expected);
+        OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
+        for(unsigned int i = 0; i < resvec.size(); ++i)
+        {
+            if ( (i >= 5 && i <= 7) ||
+                 (i >= 12 && i <= 15) ||
+                 (i == 18))
+            {
+                OCIO_CHECK_STR_FLOAT_VEC_CLOSE(osvec[i], resvec[i], 1e-5f);
+            }
+            else
+            {
+                OCIO_CHECK_EQUAL(osvec[i], resvec[i]);
+            }
+
+        }
     }
 
     // All curves are default curves, no curve is saved.
@@ -8326,8 +8341,23 @@ R"(<?xml version="1.0" encoding="UTF-8"?>
     </LUT3D>
 </ProcessList>
 )" };
-    OCIO_CHECK_EQUAL(expectedCLF.size(), output1.str().size());
-    OCIO_CHECK_EQUAL(expectedCLF, output1.str());
+
+    const StringUtils::StringVec osvec  = StringUtils::SplitByLines(output1.str());
+    const StringUtils::StringVec resvec = StringUtils::SplitByLines(expectedCLF);
+    OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    for(unsigned int i = 0; i < resvec.size(); ++i)
+    {
+        if ( (i >= 10 && i <= 19) ||
+             (i >= 24 && i <= 31))
+        {
+            OCIO_CHECK_STR_FLOAT_VEC_CLOSE(osvec[i], resvec[i], 1e-5f);
+        }
+        else
+        {
+            OCIO_CHECK_EQUAL(osvec[i], resvec[i]);
+        }
+
+    }
 }
 
 OCIO_ADD_TEST(FileFormatCTF, lut_interpolation_option)
