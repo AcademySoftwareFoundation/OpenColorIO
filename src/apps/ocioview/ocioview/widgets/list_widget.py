@@ -11,6 +11,7 @@ from .item_view import BaseItemView
 if TYPE_CHECKING:
     from ..items.config_item_model import BaseConfigItemModel
 
+
 class StringListWidget(BaseItemView):
     """
     Simple string list widget with filter edit and add and remove

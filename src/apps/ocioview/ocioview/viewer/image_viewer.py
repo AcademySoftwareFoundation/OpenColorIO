@@ -11,7 +11,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from ..transform_manager import TransformManager
 from ..config_cache import ConfigCache
 from ..constants import GRAY_COLOR, R_COLOR, G_COLOR, B_COLOR
-from ..utils import get_glyph_icon, SignalsBlocked
+from ..utils import float_to_uint8, get_glyph_icon, SignalsBlocked
 from ..widgets import ComboBox, CallbackComboBox
 from .image_plane import ImagePlane
 
@@ -269,7 +269,7 @@ class ImageViewer(QtWidgets.QWidget):
         TransformManager.subscribe_to_transform_subscription_init(
             self._on_transform_subscription_init
         )
-        self.update()
+        self.update(force=True)
         self._on_sample_precision_changed(self.sample_precision_box.value())
         self._on_sample_changed(-1, -1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
@@ -283,12 +283,14 @@ class ImageViewer(QtWidgets.QWidget):
         """
         self._update_input_color_spaces(update=False)
 
-        self.image_plane.makeCurrent()
         self.image_plane.update_ocio_proc(
             input_color_space=self.input_color_space(), force_update=force
         )
 
         super().update()
+
+        # Broadcast this viewer's image data for other app components
+        self.image_plane.broadcast_image()
 
     def reset(self) -> None:
         """Reset viewer parameters without unloading the current image."""
@@ -531,13 +533,6 @@ class ImageViewer(QtWidgets.QWidget):
             if index != -1:
                 self.tf_box.setCurrentIndex(index)
 
-    def _float_to_uint8(self, value: float) -> int:
-        """
-        :param value: Float value
-        :return: 8-bit clamped unsigned integer value
-        """
-        return max(0, min(255, int(value * 255)))
-
     @QtCore.Slot(int)
     def _on_transform_changed(self, index: int) -> None:
         if index == 0:
@@ -610,9 +605,9 @@ class ImageViewer(QtWidgets.QWidget):
         )
         self.input_sample_swatch.setStyleSheet(
             self.FMT_SWATCH_CSS.format(
-                r=self._float_to_uint8(r_input),
-                g=self._float_to_uint8(g_input),
-                b=self._float_to_uint8(b_input),
+                r=float_to_uint8(r_input),
+                g=float_to_uint8(g_input),
+                b=float_to_uint8(b_input),
             )
         )
 
@@ -628,9 +623,9 @@ class ImageViewer(QtWidgets.QWidget):
         )
         self.output_sample_swatch.setStyleSheet(
             self.FMT_SWATCH_CSS.format(
-                r=self._float_to_uint8(r_output),
-                g=self._float_to_uint8(g_output),
-                b=self._float_to_uint8(b_output),
+                r=float_to_uint8(r_output),
+                g=float_to_uint8(g_output),
+                b=float_to_uint8(b_output),
             )
         )
 

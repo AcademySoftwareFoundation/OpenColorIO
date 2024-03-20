@@ -9,6 +9,7 @@ import sys
 from typing import Any, Optional
 from queue import Empty, SimpleQueue
 
+import numpy as np
 import PyOpenColorIO as ocio
 from PySide6 import QtCore, QtGui, QtWidgets
 
@@ -30,9 +31,10 @@ class MessageRunner(QtCore.QObject):
     error_logged = QtCore.Signal(str)
     debug_logged = QtCore.Signal(str)
 
-    cpu_processor_ready = QtCore.Signal(ocio.CPUProcessor)
     config_html_ready = QtCore.Signal(str)
     ctf_html_ready = QtCore.Signal(str, ocio.GroupTransform)
+    image_ready = QtCore.Signal(np.ndarray)
+    processor_ready = QtCore.Signal(ocio.CPUProcessor)
     shader_html_ready = QtCore.Signal(str, ocio.GPUProcessor)
 
     LOOP_INTERVAL = 0.5  # In seconds
@@ -64,11 +66,13 @@ class MessageRunner(QtCore.QObject):
         self._gpu_language = ocio.GPU_LANGUAGE_GLSL_4_0
 
         self._prev_config = None
-        self._prev_proc = None
+        self._prev_cpu_proc = None
+        self._prev_image_array = None
 
-        self._cpu_processor_updates_allowed = False
         self._config_updates_allowed = False
         self._ctf_updates_allowed = False
+        self._image_updates_allowed = False
+        self._processor_updates_allowed = False
         self._shader_updates_allowed = False
 
     def get_gpu_language(self) -> ocio.GpuLanguage:
@@ -76,9 +80,9 @@ class MessageRunner(QtCore.QObject):
 
     def set_gpu_language(self, gpu_language: ocio.GpuLanguage) -> None:
         self._gpu_language = gpu_language
-        if self._shader_updates_allowed and self._prev_proc is not None:
+        if self._shader_updates_allowed and self._prev_cpu_proc is not None:
             # Rebroadcast last processor record
-            message_queue.put_nowait(self._prev_proc)
+            message_queue.put_nowait(self._prev_cpu_proc)
 
     def config_updates_allowed(self) -> bool:
         return self._config_updates_allowed
@@ -89,32 +93,41 @@ class MessageRunner(QtCore.QObject):
             # Rebroadcast last config record
             message_queue.put_nowait(self._prev_config)
 
-    def cpu_processor_updates_allowed(self) -> bool:
-        return self._cpu_processor_updates_allowed
-
-    def set_cpu_processor_updates_allowed(self, allowed: bool) -> None:
-        self._cpu_processor_updates_allowed = allowed
-        if allowed and self._prev_config is not None:
-            # Rebroadcast last config record
-            message_queue.put_nowait(self._prev_config)
-
     def ctf_updates_allowed(self) -> bool:
         return self._ctf_updates_allowed
 
     def set_ctf_updates_allowed(self, allowed: bool) -> None:
         self._ctf_updates_allowed = allowed
-        if allowed and self._prev_proc is not None:
+        if allowed and self._prev_cpu_proc is not None:
             # Rebroadcast last processor record
-            message_queue.put_nowait(self._prev_proc)
+            message_queue.put_nowait(self._prev_cpu_proc)
+
+    def image_updates_allowed(self) -> bool:
+        return self._image_updates_allowed
+
+    def set_image_updates_allowed(self, allowed: bool) -> None:
+        self._image_updates_allowed = allowed
+        if allowed and self._prev_image_array is not None:
+            # Rebroadcast last image record
+            message_queue.put_nowait(self._prev_image_array)
+
+    def processor_updates_allowed(self) -> bool:
+        return self._processor_updates_allowed
+
+    def set_processor_updates_allowed(self, allowed: bool) -> None:
+        self._processor_updates_allowed = allowed
+        if allowed and self._prev_config is not None:
+            # Rebroadcast last config record
+            message_queue.put_nowait(self._prev_config)
 
     def shader_updates_allowed(self) -> bool:
         return self._shader_updates_allowed
 
     def set_shader_updates_allowed(self, allowed: bool) -> None:
         self._shader_updates_allowed = allowed
-        if allowed and self._prev_proc is not None:
+        if allowed and self._prev_cpu_proc is not None:
             # Rebroadcast last processor record
-            message_queue.put_nowait(self._prev_proc)
+            message_queue.put_nowait(self._prev_cpu_proc)
 
     def is_routing(self) -> bool:
         """Whether runner is routing messages."""
@@ -144,13 +157,19 @@ class MessageRunner(QtCore.QObject):
 
             # OCIO processor
             elif isinstance(msg_raw, ocio.Processor):
-                self._prev_proc = msg_raw
+                self._prev_cpu_proc = msg_raw
                 if (
-                    self._cpu_processor_updates_allowed
+                    self._processor_updates_allowed
                     or self._ctf_updates_allowed
                     or self._shader_updates_allowed
                 ):
                     self._handle_processor_message(msg_raw)
+
+            # Image array
+            elif isinstance(msg_raw, np.ndarray):
+                self._prev_image_array = msg_raw
+                if self._image_updates_allowed:
+                    self._handle_image_message(msg_raw)
 
             # Python or OCIO log record
             else:
@@ -162,7 +181,7 @@ class MessageRunner(QtCore.QObject):
         """
         Handle OCIO config received in the message queue.
 
-        :config: OCIO config instance
+        :param config: OCIO config instance
         """
         try:
             config_html_data = config_to_html(config)
@@ -171,27 +190,39 @@ class MessageRunner(QtCore.QObject):
             # Pass error to log
             self._handle_log_message(str(e), force_level=self.LOG_LEVEL_WARNING)
 
-    def _handle_processor_message(self, processor: ocio.Processor) -> None:
+    def _handle_processor_message(self, cpu_proc: ocio.Processor) -> None:
         """
         Handle OCIO processor received in the message queue.
 
-        :config: OCIO processor instance
+        :param cpu_proc: OCIO processor instance
         """
         try:
-            if self._cpu_processor_updates_allowed:
-                self.cpu_processor_ready.emit(processor.getDefaultCPUProcessor())
+            if self._processor_updates_allowed:
+                self.processor_ready.emit(cpu_proc.getDefaultCPUProcessor())
 
             if self._ctf_updates_allowed:
-                ctf_html_data, group_tf = processor_to_ctf_html(processor)
+                ctf_html_data, group_tf = processor_to_ctf_html(cpu_proc)
                 self.ctf_html_ready.emit(ctf_html_data, group_tf)
 
             if self._shader_updates_allowed:
-                gpu_proc = processor.getDefaultGPUProcessor()
+                gpu_proc = cpu_proc.getDefaultGPUProcessor()
                 shader_html_data = processor_to_shader_html(
                     gpu_proc, self._gpu_language
                 )
                 self.shader_html_ready.emit(shader_html_data, gpu_proc)
 
+        except Exception as e:
+            # Pass error to log
+            self._handle_log_message(str(e), force_level=self.LOG_LEVEL_WARNING)
+
+    def _handle_image_message(self, image_array: np.ndarray) -> None:
+        """
+        Handle image buffer received in the message queue.
+
+        :param image_array: Image array
+        """
+        try:
+            self.image_ready.emit(image_array)
         except Exception as e:
             # Pass error to log
             self._handle_log_message(str(e), force_level=self.LOG_LEVEL_WARNING)

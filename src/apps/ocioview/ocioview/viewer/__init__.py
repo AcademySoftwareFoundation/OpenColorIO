@@ -2,3 +2,4 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 from .image_viewer import ViewerChannels, ImageViewer
+from .utils import load_image
