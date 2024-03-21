@@ -56,6 +56,7 @@ if __name__ == "__main__":
         ocio.OCIO_ACTIVE_DISPLAYS_ENVVAR,
         ocio.OCIO_INACTIVE_COLORSPACES_ENVVAR,
         ocio.OCIO_OPTIMIZATION_FLAGS_ENVVAR,
+        ocio.OCIO_ARCHIVE_FLAGS_ENVVAR,
         ocio.OCIO_USER_CATEGORIES_ENVVAR,
     ):
         if env_var in os.environ:
