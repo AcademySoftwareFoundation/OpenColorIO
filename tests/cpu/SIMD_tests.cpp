@@ -75,3 +75,26 @@ OCIO_ADD_TEST_AVX2(packed_nan_inf_test)
 OCIO_ADD_TEST_AVX2(packed_all_test)
 
 #endif
+
+#if OCIO_USE_AVX512
+
+#define AVX512_CHECK() \
+    if (!OCIO::CPUInfo::instance().hasAVX512()) throw SkipException()
+
+#define OCIO_ADD_TEST_AVX512(name) \
+void avx512_test_##name();         \
+OCIO_ADD_TEST(AVX512, name)        \
+{                                \
+   AVX512_CHECK();                 \
+   avx512_test_##name();           \
+}
+
+OCIO_ADD_TEST_AVX512(packed_uint8_to_float_test)
+OCIO_ADD_TEST_AVX512(packed_uint10_to_f32_test)
+OCIO_ADD_TEST_AVX512(packed_uint12_to_f32_test)
+OCIO_ADD_TEST_AVX512(packed_uint16_to_f32_test)
+OCIO_ADD_TEST_AVX512(packed_f16_to_f32_test)
+OCIO_ADD_TEST_AVX512(packed_nan_inf_test)
+OCIO_ADD_TEST_AVX512(packed_all_test)
+
+#endif

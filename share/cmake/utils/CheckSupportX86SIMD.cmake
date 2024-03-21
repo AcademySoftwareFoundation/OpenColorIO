@@ -31,6 +31,10 @@ if(MSVC)
     if (COMPILER_SUPPORTS_AVX2)
         set(OCIO_AVX2_ARGS "/arch:AVX2")
     endif()
+
+    if (COMPILER_SUPPORTS_AVX512)
+        set(OCIO_AVX512_ARGS "/arch:AVX512")
+    endif()     
 else()
     if (COMPILER_SUPPORTS_SSE2)
         set(OCIO_SSE2_ARGS "-msse2")
@@ -42,6 +46,10 @@ else()
 
     if (COMPILER_SUPPORTS_AVX2)
         set(OCIO_AVX2_ARGS "-mavx2" "-mfma")
+    endif()
+    
+    if (COMPILER_SUPPORTS_AVX512)
+        set(OCIO_AVX512_ARGS "-mavx512f")
     endif()    
 endif()
 

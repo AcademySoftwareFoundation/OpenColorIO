@@ -19,6 +19,7 @@
 #include "Lut1DOpCPU_SSE2.h"
 #include "Lut1DOpCPU_AVX.h"
 #include "Lut1DOpCPU_AVX2.h"
+#include "Lut1DOpCPU_AVX512.h"
 
 
 #define L_ADJUST(val) \
@@ -296,6 +297,13 @@ BaseLut1DRenderer<inBD, outBD>::BaseLut1DRenderer(ConstLut1DOpDataRcPtr & lut)
     if (CPUInfo::instance().hasAVX2() && !CPUInfo::instance().AVX2SlowGather())
     {
         m_applyLutFunc = AVX2GetLut1DApplyFunc(inBD, outBD);
+    }
+#endif
+
+#if OCIO_USE_AVX512
+    if (CPUInfo::instance().hasAVX512())
+    {
+        m_applyLutFunc = AVX512GetLut1DApplyFunc(inBD, outBD);
     }
 #endif
 }
@@ -641,7 +649,7 @@ void Lut1DRenderer<inBD, outBD>::apply(const void * inImg, void * outImg, long n
             out += 4;
         }
     }
-    else if (this->m_applyLutFunc)
+    else if (this->m_applyLutFunc && numPixels > 1)
     {
         const float * lutR = (const float *)this->m_tmpLutR;
         const float * lutG = (const float *)this->m_tmpLutG;
