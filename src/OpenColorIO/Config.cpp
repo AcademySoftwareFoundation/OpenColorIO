@@ -247,7 +247,7 @@ static constexpr unsigned LastSupportedMajorVersion = OCIO_VERSION_MAJOR;
 
 // For each major version keep the most recent minor.
 static const unsigned int LastSupportedMinorVersion[] = {0, // Version 1
-                                                         3  // Version 2
+                                                         4  // Version 2
                                                          };
 
 } // namespace
@@ -2822,6 +2822,23 @@ bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType refe
         auto procToReference = config.getImpl()->getProcessorWithoutCaching(
             config, t, TRANSFORM_DIR_FORWARD
         );
+
+        // TODO: It could be useful to try and avoid evaluating points through ops that are
+        // expensive but highly unlikely to be linear (with inverse Lut3D being the prime example).
+        // There are some heuristics that are used in ConfigUtils.cpp that are intended to filter
+        // out color spaces from consideration before a processor is even calculated.  However,
+        // those are not entirely appropriate here since one could imagine wanting to know if a
+        // color space involving a FileTransform (an ASC CDL being a good example) is linear.
+        // Likewise, one might want to know whether a color space involving a Look or ColorSpace
+        // Transform is linear (both of those are filtered out by the ConfigUtils heuristics).
+        // It seems like the right approach here is to go ahead and build the processor and
+        // thereby convert File/Look/ColorSpace Transforms into ops.  But currently there is
+        // no method on the Processor class to know if it contains a Lut3D.  There is the
+        // ProcessorMetadata files list, though that is not as precise.  For example, it would
+        // not say if a CLF or CTF file contains a Lut3D or just a matrix.  Probably the best
+        // solution would be to have each op sub-class provide an isLinear method and then
+        // surface that on the Processor class, iterating over each op in the Processor.
+
         auto optCPUProc = procToReference->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
         optCPUProc->apply(desc, descDst);
 
@@ -5213,6 +5230,16 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
             {
                 throw Exception("Only config version 2.3 (or higher) can have "
                                 "BuiltinTransform style 'DISPLAY - CIE-XYZ-D65_to_DisplayP3'.");
+            }
+            if (m_majorVersion == 2 && m_minorVersion < 4 
+                    && (   0 == Platform::Strcasecmp(blt->getStyle(), "APPLE_LOG_to_ACES2065-1")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - APPLE_LOG_to_LINEAR") )
+                )
+            {
+                std::ostringstream os;
+                os << "Only config version 2.4 (or higher) can have BuiltinTransform style '"
+                   << blt->getStyle() << "'.";
+                throw Exception(os.str().c_str());
             }
         }
         else if (ConstCDLTransformRcPtr cdl = DynamicPtrCast<const CDLTransform>(transform))

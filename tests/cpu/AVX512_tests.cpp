@@ -3,7 +3,7 @@
 
 
 #include "CPUInfo.h"
-#if OCIO_USE_AVX2
+#if OCIO_USE_AVX512
 
 #include <sstream>
 
@@ -12,16 +12,13 @@
 #include <immintrin.h>
 #include "MathUtils.h"
 #include "BitDepthUtils.h"
-#include "AVX2.h"
+#include "AVX512.h"
 #include "testutils/UnitTest.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
-#define HAS_F16C() \
-    OCIO::CPUInfo::instance().hasF16C()
-
 #define DEFINE_SIMD_TEST(name) \
-void avx2_test_##name()
+void avx512_test_##name()
 
 namespace
 {
@@ -71,15 +68,11 @@ float scale_unsigned<OCIO::BIT_DEPTH_F32>(unsigned i)
     return static_cast<float>(i) * 1.0f/65535.0f;
 }
 
-#if OCIO_USE_F16C
-
 template <>
 half scale_unsigned<OCIO::BIT_DEPTH_F16>(unsigned i)
 {
     return static_cast<half>(1.0f/65535.0f * static_cast<float>(i));
 }
-
-#endif
 
 template<OCIO::BitDepth inBD, OCIO::BitDepth outBD>
 void testConvert_OutBitDepth()
@@ -101,17 +94,17 @@ void testConvert_OutBitDepth()
     }
 
     float scale = (float)OCIO::BitDepthInfo<outBD>::maxValue / (float)OCIO::BitDepthInfo<inBD>::maxValue;
-    __m256 s = _mm256_set1_ps(scale);
+    __m512 s = _mm512_set1_ps(scale);
 
-    for (unsigned i = 0; i < inImage.size(); i += 32)
+    for (unsigned i = 0; i < inImage.size(); i += 64)
     {
-        __m256 r, g, b, a;
-        OCIO::AVX2RGBAPack<inBD>::Load(&inImage[i], r, g, b, a);
-        r = _mm256_mul_ps(r, s);
-        g = _mm256_mul_ps(g, s);
-        b = _mm256_mul_ps(b, s);
-        a = _mm256_mul_ps(a, s);
-        OCIO::AVX2RGBAPack<outBD>::Store(&outImage[i], r, g, b, a);
+        __m512 r, g, b, a;
+        OCIO::AVX512RGBAPack<inBD>::Load(&inImage[i], r, g, b, a);
+        r = _mm512_mul_ps(r, s);
+        g = _mm512_mul_ps(g, s);
+        b = _mm512_mul_ps(b, s);
+        a = _mm512_mul_ps(a, s);
+        OCIO::AVX512RGBAPack<outBD>::Store(&outImage[i], r, g, b, a);
     }
     for (unsigned i = 0; i < outImage.size(); i++)
     {
@@ -124,6 +117,41 @@ void testConvert_OutBitDepth()
 
         OCIO_CHECK_ASSERT_MESSAGE(!OCIO::FloatsDiffer(v, (float)outImage[i], 0, false),
                                   GetErrorMessage(v, (float)outImage[i], inBD, outBD));
+    }
+
+    // Test Load/Store Masked
+    for (unsigned pixel_count = 0; pixel_count <= 16; pixel_count++)
+    {
+        __m512 r, g, b, a;
+        // reset all values to zero
+        for (unsigned i = 0; i < outImage.size(); i++)
+        {
+            outImage[i] = 0;
+        }
+
+        OCIO::AVX512RGBAPack<inBD>::LoadMasked(&inImage[0], r, g, b, a, pixel_count);
+        r = _mm512_mul_ps(r, s);
+        g = _mm512_mul_ps(g, s);
+        b = _mm512_mul_ps(b, s);
+        a = _mm512_mul_ps(a, s);
+        OCIO::AVX512RGBAPack<outBD>::StoreMasked(&outImage[0], r, g, b, a, pixel_count);
+
+        for (unsigned i = 0; i < outImage.size(); i++)
+        {
+            float v = (float)inImage[i] * scale;
+
+            // values geater then the pixel count should not have been written to
+            if (i >= pixel_count*4)
+                v = 0.0f;
+
+            if (OCIO::BitDepthInfo<outBD>::isFloat)
+                v = (OutType)v; // casts to half if format is half
+            else
+                v = rintf(v);
+
+            OCIO_CHECK_ASSERT_MESSAGE(!OCIO::FloatsDiffer(v, (float)outImage[i], 0, false),
+                                       GetErrorMessage(v, (float)outImage[i], inBD, outBD));
+        }
     }
 }
 
@@ -141,10 +169,7 @@ void testConvert_InBitDepth(OCIO::BitDepth outBD)
         case OCIO::BIT_DEPTH_UINT16:
             return testConvert_OutBitDepth<inBD, OCIO::BIT_DEPTH_UINT16>();
         case OCIO::BIT_DEPTH_F16:
-#if OCIO_USE_F16C
-            if (HAS_F16C())
-                return testConvert_OutBitDepth<inBD, OCIO::BIT_DEPTH_F16>();
-#endif
+            return testConvert_OutBitDepth<inBD, OCIO::BIT_DEPTH_F16>();
             break;
         case OCIO::BIT_DEPTH_F32:
             return testConvert_OutBitDepth<inBD, OCIO::BIT_DEPTH_F32>();
@@ -170,11 +195,11 @@ DEFINE_SIMD_TEST(packed_uint8_to_float_test)
         inImage[i] = i;
     }
 
-    for (unsigned i = 0; i < inImage.size(); i += 32)
+    for (unsigned i = 0; i < inImage.size(); i += 64)
     {
-        __m256 r, g, b, a;
-        OCIO::AVX2RGBAPack<OCIO::BIT_DEPTH_UINT8>::Load(&inImage[i], r, g, b, a);
-        OCIO::AVX2RGBAPack<OCIO::BIT_DEPTH_F32>::Store(&outImage[i], r, g, b, a);
+        __m512 r, g, b, a;
+        OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_UINT8>::Load(&inImage[i], r, g, b, a);
+        OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_F32>::Store(&outImage[i], r, g, b, a);
     }
 
     for (unsigned i = 0; i < outImage.size(); i++)
@@ -196,11 +221,11 @@ DEFINE_SIMD_TEST(packed_uint10_to_f32_test)
         inImage[i] = i;
     }
 
-    for (unsigned i = 0; i < inImage.size(); i += 32)
+    for (unsigned i = 0; i < inImage.size(); i += 64)
     {
-        __m256 r, g, b, a;
-        OCIO::AVX2RGBAPack<OCIO::BIT_DEPTH_UINT10>::Load(&inImage[i], r, g, b, a);
-        OCIO::AVX2RGBAPack<OCIO::BIT_DEPTH_F32>::Store(&outImage[i], r, g, b, a);
+        __m512 r, g, b, a;
+        OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_UINT10>::Load(&inImage[i], r, g, b, a);
+        OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_F32>::Store(&outImage[i], r, g, b, a);
     }
 
     for (unsigned i = 0; i < outImage.size(); i++)
@@ -222,11 +247,11 @@ DEFINE_SIMD_TEST(packed_uint12_to_f32_test)
         inImage[i] = i;
     }
 
-    for (unsigned i = 0; i < inImage.size(); i += 32)
+    for (unsigned i = 0; i < inImage.size(); i += 64)
     {
-        __m256 r, g, b, a;
-        OCIO::AVX2RGBAPack<OCIO::BIT_DEPTH_UINT12>::Load(&inImage[i], r, g, b, a);
-        OCIO::AVX2RGBAPack<OCIO::BIT_DEPTH_F32>::Store(&outImage[i], r, g, b, a);
+        __m512 r, g, b, a;
+        OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_UINT12>::Load(&inImage[i], r, g, b, a);
+        OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_F32>::Store(&outImage[i], r, g, b, a);
     }
 
     for (unsigned i = 0; i < outImage.size(); i++)
@@ -248,11 +273,11 @@ DEFINE_SIMD_TEST(packed_uint16_to_f32_test)
         inImage[i] = i;
     }
 
-    for (unsigned i = 0; i < inImage.size(); i += 32)
+    for (unsigned i = 0; i < inImage.size(); i += 64)
     {
-        __m256 r, g, b, a;
-        OCIO::AVX2RGBAPack<OCIO::BIT_DEPTH_UINT16>::Load(&inImage[i], r, g, b, a);
-        OCIO::AVX2RGBAPack<OCIO::BIT_DEPTH_F32>::Store(&outImage[i], r, g, b, a);
+        __m512 r, g, b, a;
+        OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_UINT16>::Load(&inImage[i], r, g, b, a);
+        OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_F32>::Store(&outImage[i], r, g, b, a);
     }
 
     for (unsigned i = 0; i < outImage.size(); i++)
@@ -262,8 +287,6 @@ DEFINE_SIMD_TEST(packed_uint16_to_f32_test)
                                                   OCIO::BIT_DEPTH_UINT16, OCIO::BIT_DEPTH_F32));
     }
 }
-
-#if OCIO_USE_F16C
 
 DEFINE_SIMD_TEST(packed_f16_to_f32_test)
 {
@@ -277,11 +300,11 @@ DEFINE_SIMD_TEST(packed_f16_to_f32_test)
         u16Image[i] = i;
     }
 
-    for (unsigned i = 0; i < inImage.size(); i += 32)
+    for (unsigned i = 0; i < inImage.size(); i += 64)
     {
-        __m256 r, g, b, a;
-        OCIO::AVX2RGBAPack<OCIO::BIT_DEPTH_F16>::Load(&inImage[i], r, g, b, a);
-        OCIO::AVX2RGBAPack<OCIO::BIT_DEPTH_F32>::Store(&outImage[i], r, g, b, a);
+        __m512 r, g, b, a;
+        OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_F16>::Load(&inImage[i], r, g, b, a);
+        OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_F32>::Store(&outImage[i], r, g, b, a);
     }
 
     for (unsigned i = 0; i < outImage.size(); i++)
@@ -292,45 +315,55 @@ DEFINE_SIMD_TEST(packed_f16_to_f32_test)
     }
 }
 
-#endif
-
 DEFINE_SIMD_TEST(packed_nan_inf_test)
 {
     const float qnan = std::numeric_limits<float>::quiet_NaN();
     const float inf = std::numeric_limits<float>::infinity();
     const float maxf = std::numeric_limits<float>::max();
 
-    __m256 r, g, b, a;
-    std::vector<half> outImageHalf(32);
-    std::vector<uint8_t> outImageU8(32);
-    std::vector<uint16_t> outImageU16(32);
+    __m512 r, g, b, a;
+    std::vector<half> outImageHalf(64);
+    std::vector<uint8_t> outImageU8(64);
+    std::vector<uint16_t> outImageU16(64);
 
-    const float pixels[32] = {     qnan,      qnan,       qnan,     0.25f,
+    const float pixels[64] = {     qnan,      qnan,       qnan,     0.25f,
                                    maxf,     -maxf,       3.2f,      qnan,
                                     inf,       inf,        inf,       inf,
                                    -inf,      -inf,       -inf,      -inf,
                                    0.0f,    270.0f,     500.0f,      2.0f,
                                   -0.0f,     -1.0f,     - 2.0f,     -5.0f,
                               100000.0f, 200000.0f,     -10.0f,  -2000.0f,
-                               65535.0f,  65537.0f,  -65536.0f, -65537.0f };
+                               65535.0f,  65537.0f,  -65536.0f, -65537.0f,
+                                   qnan,      qnan,       qnan,     0.25f,
+                                   maxf,     -maxf,       3.2f,      qnan,
+                                    inf,       inf,        inf,       inf,
+                                   -inf,      -inf,       -inf,      -inf,
+                                   0.0f,    270.0f,     500.0f,      2.0f,
+                                  -0.0f,     -1.0f,     - 2.0f,     -5.0f,
+                              100000.0f, 200000.0f,     -10.0f,  -2000.0f,
+                               65535.0f,  65537.0f,  -65536.0f, -65537.0f  };
 
-#if OCIO_USE_F16C
-    if(HAS_F16C())
+
+    OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_F32>::Load(&pixels[0], r, g, b, a);
+    OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_F16>::Store(&outImageHalf[0], r, g, b, a);
+
+    for (unsigned i = 0; i < outImageHalf.size(); i++)
     {
-        OCIO::AVX2RGBAPack<OCIO::BIT_DEPTH_F32>::Load(&pixels[0], r, g, b, a);
-        OCIO::AVX2RGBAPack<OCIO::BIT_DEPTH_F16>::Store(&outImageHalf[0], r, g, b, a);
-
-        for (unsigned i = 0; i < outImageHalf.size(); i++)
-        {
-            OCIO_CHECK_ASSERT_MESSAGE(!OCIO::FloatsDiffer((half)pixels[i], (float)outImageHalf[i], 0, false),
-                                    GetErrorMessage((half)pixels[i], (float)outImageHalf[i],
-                                                    OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F16));
-        }
+        OCIO_CHECK_ASSERT_MESSAGE(!OCIO::FloatsDiffer((half)pixels[i], (float)outImageHalf[i], 0, false),
+                                GetErrorMessage((half)pixels[i], (float)outImageHalf[i],
+                                                OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F16));
     }
 
-#endif
 
-    const uint8_t resultU8[32] = {   0,   0,   0,   0,
+    const uint8_t resultU8[64] = {   0,   0,   0,   0,
+                                   255,   0,   3,   0,
+                                   255, 255, 255, 255,
+                                     0,   0,   0,   0,
+                                     0, 255, 255,   2,
+                                     0,   0,   0,   0,
+                                   255, 255,   0,   0,
+                                   255, 255,   0,   0,
+                                     0,   0,   0,   0,
                                    255,   0,   3,   0,
                                    255, 255, 255, 255,
                                      0,   0,   0,   0,
@@ -339,8 +372,8 @@ DEFINE_SIMD_TEST(packed_nan_inf_test)
                                    255, 255,   0,   0,
                                    255, 255,   0,   0 };
 
-    OCIO::AVX2RGBAPack<OCIO::BIT_DEPTH_F32>::Load(&pixels[0], r, g, b, a);
-    OCIO::AVX2RGBAPack<OCIO::BIT_DEPTH_UINT8>::Store(&outImageU8[0], r, g, b, a);
+    OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_F32>::Load(&pixels[0], r, g, b, a);
+    OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_UINT8>::Store(&outImageU8[0], r, g, b, a);
 
     for (unsigned i = 0; i < outImageU8.size(); i++)
     {
@@ -349,7 +382,15 @@ DEFINE_SIMD_TEST(packed_nan_inf_test)
                                                   OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_UINT8));
     }
 
-    const uint16_t resultU10[32] = {    0,    0,    0,    0,
+    const uint16_t resultU10[64] = {    0,    0,    0,    0,
+                                     1023,    0,    3,    0,
+                                     1023, 1023, 1023, 1023,
+                                        0,    0,    0,    0,
+                                        0,  270,  500,    2,
+                                        0,    0,    0,    0,
+                                     1023, 1023,    0,    0,
+                                     1023, 1023,    0,    0,
+                                        0,    0,    0,    0,
                                      1023,    0,    3,    0,
                                      1023, 1023, 1023, 1023,
                                         0,    0,    0,    0,
@@ -358,8 +399,8 @@ DEFINE_SIMD_TEST(packed_nan_inf_test)
                                      1023, 1023,    0,    0,
                                      1023, 1023,    0,    0};
 
-    OCIO::AVX2RGBAPack<OCIO::BIT_DEPTH_F32>::Load(&pixels[0], r, g, b, a);
-    OCIO::AVX2RGBAPack<OCIO::BIT_DEPTH_UINT10>::Store(&outImageU16[0], r, g, b, a);
+    OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_F32>::Load(&pixels[0], r, g, b, a);
+    OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_UINT10>::Store(&outImageU16[0], r, g, b, a);
 
     for (unsigned i = 0; i < outImageU16.size(); i++)
     {
@@ -368,7 +409,15 @@ DEFINE_SIMD_TEST(packed_nan_inf_test)
                                                   OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_UINT10));
     }
 
-    const uint16_t resultU12[32] = {    0,    0,    0,    0,
+    const uint16_t resultU12[64] = {    0,    0,    0,    0,
+                                     4095,    0,    3,    0,
+                                     4095, 4095, 4095, 4095,
+                                        0,    0,    0,    0,
+                                        0,  270,  500,    2,
+                                        0,    0,    0,    0,
+                                     4095, 4095,    0,    0,
+                                     4095, 4095,    0,    0,
+                                        0,    0,    0,    0,
                                      4095,    0,    3,    0,
                                      4095, 4095, 4095, 4095,
                                         0,    0,    0,    0,
@@ -377,8 +426,8 @@ DEFINE_SIMD_TEST(packed_nan_inf_test)
                                      4095, 4095,    0,    0,
                                      4095, 4095,    0,    0};
 
-    OCIO::AVX2RGBAPack<OCIO::BIT_DEPTH_F32>::Load(&pixels[0], r, g, b, a);
-    OCIO::AVX2RGBAPack<OCIO::BIT_DEPTH_UINT12>::Store(&outImageU16[0], r, g, b, a);
+    OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_F32>::Load(&pixels[0], r, g, b, a);
+    OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_UINT12>::Store(&outImageU16[0], r, g, b, a);
 
     for (unsigned i = 0; i < outImageU16.size(); i++)
     {
@@ -387,7 +436,15 @@ DEFINE_SIMD_TEST(packed_nan_inf_test)
                                                   OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_UINT12));
     }
 
-    const uint16_t resultU16[32] = {    0,     0,     0,     0,
+    const uint16_t resultU16[64] = {    0,     0,     0,     0,
+                                    65535,     0,     3,     0,
+                                    65535, 65535, 65535, 65535,
+                                        0,     0,     0,     0,
+                                        0,   270,   500,     2,
+                                        0,     0,     0,     0,
+                                    65535, 65535,     0,     0,
+                                    65535, 65535,     0,     0,
+                                        0,     0,     0,     0,
                                     65535,     0,     3,     0,
                                     65535, 65535, 65535, 65535,
                                         0,     0,     0,     0,
@@ -396,8 +453,8 @@ DEFINE_SIMD_TEST(packed_nan_inf_test)
                                     65535, 65535,     0,     0,
                                     65535, 65535,     0,     0};
 
-    OCIO::AVX2RGBAPack<OCIO::BIT_DEPTH_F32>::Load(&pixels[0], r, g, b, a);
-    OCIO::AVX2RGBAPack<OCIO::BIT_DEPTH_UINT16>::Store(&outImageU16[0], r, g, b, a);
+    OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_F32>::Load(&pixels[0], r, g, b, a);
+    OCIO::AVX512RGBAPack<OCIO::BIT_DEPTH_UINT16>::Store(&outImageU16[0], r, g, b, a);
 
     for (unsigned i = 0; i < outImageU16.size(); i++)
     {
@@ -439,10 +496,7 @@ DEFINE_SIMD_TEST(packed_all_test)
                 testConvert_InBitDepth<OCIO::BIT_DEPTH_UINT16>(outBD);
                 break;
             case OCIO::BIT_DEPTH_F16:
-#if OCIO_USE_F16C
-                if(HAS_F16C())
-                    testConvert_InBitDepth<OCIO::BIT_DEPTH_F16>(outBD);
-#endif
+                testConvert_InBitDepth<OCIO::BIT_DEPTH_F16>(outBD);
                 break;
             case OCIO::BIT_DEPTH_F32:
                 testConvert_InBitDepth<OCIO::BIT_DEPTH_F32>(outBD);

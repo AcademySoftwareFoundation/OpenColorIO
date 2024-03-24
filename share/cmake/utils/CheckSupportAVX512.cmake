@@ -5,7 +5,7 @@ include(CheckCXXSourceCompiles)
 
 set(_cmake_cxx_flags_orig "${CMAKE_CXX_FLAGS}")
 
-if(APPLE AND ("${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64;x86_64" 
+if(APPLE AND ("${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64;x86_64"
           OR "${CMAKE_OSX_ARCHITECTURES}" MATCHES "x86_64;arm64"))
     set(__universal_build 1)
     set(_cmake_osx_architectures_orig "${CMAKE_OSX_ARCHITECTURES}")
@@ -28,6 +28,8 @@ set(AVX512_CODE "
 
     int main() {
         __m512i vec = _mm512_set1_epi32(42);
+        // gcc <= 6 appear to be missing this intrinsic
+        __mmask16 k = _mm512_int2mask(42);
         return 0;
     }
 ")

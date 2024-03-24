@@ -429,6 +429,10 @@ AllValues UnitTestValues
     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-CINEMA-108nit-7.2nit-P3lim_1.1",
         { { 0.5f, 0.4f, 0.3f }, { 0.22214814f,     0.21179835f,     0.15639816f } } },
 
+    { "APPLE_LOG_to_ACES2065-1",
+        { { 0.5f, 0.4f, 0.3f }, { 0.153334766f,    0.083515430f,     0.032948254f } } },
+    { "CURVE - APPLE_LOG_to_LINEAR",
+        { { 0.5f, 0.4f, 0.3f }, { 0.198913991f,    0.083076466024f,  0.0315782763f } } },
     { "ARRI_ALEXA-LOGC-EI800-AWG_to_ACES2065-1",
         { { 0.5f, 0.4f, 0.3f }, { 0.401621427766f, 0.236455447604f,  0.064830001192f } } },
     { "ARRI_LOGC4_to_ACES2065-1",

@@ -220,6 +220,17 @@ int UnitTestMain(int argc, const char ** argv);
         ++unit_test_failures;                                           \
     }
 
+bool StringFloatVecClose(std::string value, std::string expected, float eps);
+
+#define OCIO_CHECK_STR_FLOAT_VEC_CLOSE_FROM(x,y,tol,line)                    \
+    (StringFloatVecClose(x,y,tol)) ? ((void)0)                         \
+         : ((std::cout << __FILE__ << ":" << line << ":\n"                   \
+             << "FAILED: " << FIELD_STR(x) << " == " << FIELD_STR(y) << "\n" \
+             << "\tvalues were '" << (x) << "' and '" << (y) << "'\n"),      \
+            (void)++unit_test_failures)
+
+#define OCIO_CHECK_STR_FLOAT_VEC_CLOSE(x,y,tol) OCIO_CHECK_STR_FLOAT_VEC_CLOSE_FROM(x,y,tol,__LINE__)
+
 /// Check that an exception E is thrown and that what() contains W
 /// When a function can throw different exceptions this can be used
 /// to verify that the right one is thrown.

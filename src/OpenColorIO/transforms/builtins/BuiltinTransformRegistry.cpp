@@ -11,6 +11,7 @@
 #include "OpBuilders.h"
 #include "Platform.h"
 #include "transforms/builtins/ACES.h"
+#include "transforms/builtins/AppleCameras.h"
 #include "transforms/builtins/ArriCameras.h"
 #include "transforms/builtins/BuiltinTransformRegistry.h"
 #include "transforms/builtins/CanonCameras.h"
@@ -109,6 +110,7 @@ void BuiltinTransformRegistryImpl::registerAll() noexcept
     ACES::RegisterAll(*this);
 
     // Camera support.
+    CAMERA::APPLE::RegisterAll(*this);
     CAMERA::ARRI::RegisterAll(*this);
     CAMERA::CANON::RegisterAll(*this);
     CAMERA::PANASONIC::RegisterAll(*this);

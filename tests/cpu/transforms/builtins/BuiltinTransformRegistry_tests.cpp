@@ -96,7 +96,7 @@ OCIO_ADD_TEST(Builtins, read_write)
     // builtin transforms.
 
     static constexpr char CONFIG_BUILTIN_TRANSFORMS[] {
-R"(ocio_profile_version: 2.3
+R"(ocio_profile_version: 2.4
 
 environment:
   {}
