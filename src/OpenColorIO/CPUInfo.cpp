@@ -183,18 +183,20 @@ CPUInfo::CPUInfo()
     }
 }
 
-CPUInfo& CPUInfo::instance()
-{
-    static CPUInfo singleton = CPUInfo();
-    return singleton;
-}
 #elif defined(__aarch64__) // ARM Processor or Apple ARM.
+
 CPUInfo::CPUInfo()
 {
     flags = 0;
     memset(name, 0, sizeof(name));
+    memset(vendor, 0, sizeof(vendor));
 
     snprintf(name, sizeof(name), "%s", "ARM");
+#if __APPLE__
+    snprintf(vendor, sizeof(vendor), "%s", "Apple");
+# else
+    snprintf(vendor, sizeof(vendor), "%s", "ARM");
+#endif
 
     // SSE2NEON library supports SSE, SSE2, SSE3, SSSE3, SSE4.1 and SSE4.2.
     // It does not support any AVX instructions.
@@ -208,11 +210,23 @@ CPUInfo::CPUInfo()
     }
 }
 
+#else
+
+CPUInfo::CPUInfo() // Unknown Processor
+{
+    flags = 0;
+    memset(name, 0, sizeof(name));
+    memset(vendor, 0, sizeof(vendor));
+    snprintf(name, sizeof(name), "%s", "Unknown");
+    snprintf(vendor, sizeof(vendor), "%s", "Unknown");
+}
+
+#endif
+
 CPUInfo& CPUInfo::instance()
 {
     static CPUInfo singleton = CPUInfo();
     return singleton;
 }
-#endif
 
 } // namespace OCIO_NAMESPACE
