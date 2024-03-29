@@ -50,6 +50,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
         target_link_libraries(${TEST_BINARY}
             PRIVATE
                 "-framework ColorSync"
+                "-framework CoreFoundation"
                 "-framework CoreGraphics"
                 "-framework IOKit"
         )

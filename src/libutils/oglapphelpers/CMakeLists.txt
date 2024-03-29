@@ -103,6 +103,7 @@ if(APPLE)
     target_link_libraries(oglapphelpers
         PRIVATE
             "-framework ColorSync"
+            "-framework CoreFoundation"
             "-framework CoreGraphics"
             "-framework IOKit"
             "-framework Metal"
