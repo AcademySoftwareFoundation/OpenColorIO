@@ -102,7 +102,8 @@ endif()
 if(APPLE)
     target_link_libraries(oglapphelpers
         PRIVATE
-            "-framework Carbon"
+            "-framework ColorSync"
+            "-framework CoreGraphics"
             "-framework IOKit"
             "-framework Metal"
             "-framework CoreVideo"

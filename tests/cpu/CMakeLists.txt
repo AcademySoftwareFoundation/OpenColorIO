@@ -49,7 +49,8 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
         # Frameworks needed to access the ICC monitor profile.
         target_link_libraries(${TEST_BINARY}
             PRIVATE
-                "-framework Carbon"
+                "-framework ColorSync"
+                "-framework CoreGraphics"
                 "-framework IOKit"
         )
     endif(APPLE)
