@@ -293,12 +293,12 @@ OCIO_ADD_TEST(FileTransform, format_by_index)
 OCIO_ADD_TEST(FileTransform, is_format_extension_supported)
 {
     OCIO::FormatRegistry & formatRegistry = OCIO::FormatRegistry::GetInstance();
-    OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported("foo", false));
-    OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported("bar", false));
-    OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported("cdl", true));
-    OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported(".cdl", true));
-    OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported("3dl", true));
-    OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported(".3dl", true));
+    OCIO_CHECK_EQUAL(formatRegistry.isFormatExtensionSupported("foo"), false);
+    OCIO_CHECK_EQUAL(formatRegistry.isFormatExtensionSupported("bar"), false);
+    OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported("cdl"));
+    OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported(".cdl"));
+    OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported("3dl"));
+    OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported(".3dl"));
 }
 
 OCIO_ADD_TEST(FileTransform, validate)
