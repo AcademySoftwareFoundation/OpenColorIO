@@ -158,6 +158,11 @@ const char * FileTransform::GetFormatExtensionByIndex(int index)
     return FormatRegistry::GetInstance().getFormatExtensionByIndex(FORMAT_CAPABILITY_READ, index);
 }
 
+bool FileTransform::IsFormatExtensionSupported(const char * extension)
+{
+    return FormatRegistry::GetInstance().isFormatExtensionSupported(extension);
+}
+
 std::ostream& operator<< (std::ostream& os, const FileTransform& t)
 {
     os << "<FileTransform ";
@@ -181,8 +186,8 @@ std::ostream& operator<< (std::ostream& os, const FileTransform& t)
 
 // Wrapper around ConfigIOProxy getLutData implementation.
 std::unique_ptr<std::istream> getLutData(
-    const Config & config, 
-    const std::string & filepath, 
+    const Config & config,
+    const std::string & filepath,
     std::ios_base::openmode mode)
 {
     if (config.getConfigIOProxy())
@@ -218,7 +223,7 @@ void closeLutStream(const Config & config, const std::istream & istream)
     }
 }
 
-bool CollectContextVariables(const Config &, 
+bool CollectContextVariables(const Config &,
                              const Context & context,
                              const FileTransform & tr,
                              ContextRcPtr & usedContextVars)
@@ -230,7 +235,7 @@ bool CollectContextVariables(const Config &,
     bool foundContextVars = false;
 
     // Used to collect the context variables needed to resolve the src string itself (not involving
-    // the search_path yet). 
+    // the search_path yet).
     ContextRcPtr ctxFilename = Context::Create();
     ctxFilename->setSearchPath(context.getSearchPath());
     ctxFilename->setWorkingDir(context.getWorkingDir());
@@ -247,7 +252,7 @@ bool CollectContextVariables(const Config &,
     // resolveFileLocation returns all usedContextVars in the search_path, regardless of whether
     // they are needed for the given file.  The work-around is to compare the resolved location
     // with and without using the environment -- if they are the same, it means the environment
-    // was not used. So we create an empty context for this purpose.    
+    // was not used. So we create an empty context for this purpose.
 
     ContextRcPtr emptyContext = Context::Create();
     emptyContext->setSearchPath(context.getSearchPath());
@@ -494,7 +499,7 @@ const char * FormatRegistry::getFormatExtensionByIndex(int capability, int index
 {
     if(capability == FORMAT_CAPABILITY_READ)
     {
-        if(index<0 
+        if(index<0
             || index>=static_cast<int>(m_readFormatExtensions.size()))
         {
             return "";
@@ -512,7 +517,7 @@ const char * FormatRegistry::getFormatExtensionByIndex(int capability, int index
     }
     else if(capability == FORMAT_CAPABILITY_WRITE)
     {
-        if(index<0 
+        if(index<0
             || index>=static_cast<int>(m_writeFormatExtensions.size()))
         {
             return "";
@@ -520,6 +525,17 @@ const char * FormatRegistry::getFormatExtensionByIndex(int capability, int index
         return m_writeFormatExtensions[index].c_str();
     }
     return "";
+}
+
+bool FormatRegistry::isFormatExtensionSupported(const char * extension) const
+{
+    std::cerr << extension << std::endl;
+    FileFormatVectorMap::const_iterator iter = m_formatsByExtension.find(StringUtils::Lower(extension));
+    if (iter != m_formatsByExtension.end())
+    {
+        return true;
+    }
+    return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -601,11 +617,11 @@ void LoadFileUncached(FileFormat * & returnFormat,
         {
             pStream = getLutData(
                 config,
-                filepath, 
-                tryFormat->isBinary() ? std::ios_base::binary : std::ios_base::in 
+                filepath,
+                tryFormat->isBinary() ? std::ios_base::binary : std::ios_base::in
             );
             auto & filestream = *pStream;
-            
+
             if (!filestream.good())
             {
                 std::ostringstream os;
@@ -637,7 +653,7 @@ void LoadFileUncached(FileFormat * & returnFormat,
         {
             if (pStream)
             {
-                closeLutStream(config, *pStream); 
+                closeLutStream(config, *pStream);
             }
 
             primaryErrorText += "    '";
@@ -678,11 +694,11 @@ void LoadFileUncached(FileFormat * & returnFormat,
         {
             pStream = getLutData(
                 config,
-                filepath, 
-                altFormat->isBinary() ? std::ios_base::binary : std::ios_base::in 
+                filepath,
+                altFormat->isBinary() ? std::ios_base::binary : std::ios_base::in
             );
             auto& filestream = *pStream;
-            
+
             if (!filestream.good())
             {
                 std::ostringstream os;
@@ -715,9 +731,9 @@ void LoadFileUncached(FileFormat * & returnFormat,
         {
             if (pStream)
             {
-                closeLutStream(config, *pStream); 
+                closeLutStream(config, *pStream);
             }
-            
+
             if(IsDebugLoggingEnabled())
             {
                 std::ostringstream os;
@@ -799,7 +815,7 @@ void GetCachedFileAndFormat(FileFormat * & format,
     FileCacheResultPtr result;
     {
         AutoMutex guard(g_fileCache.lock());
-    
+
         if (g_fileCache.isEnabled())
         {
             // As the entry is a shared pointer instance, having an empty one
@@ -920,9 +936,9 @@ void BuildFileTransformOps(OpRcPtrVec & ops,
     FileFormat* format = NULL;
     CachedFileRcPtr cachedFile;
 
-    GetCachedFileAndFormat(format, 
-                           cachedFile, 
-                           filepath, 
+    GetCachedFileAndFormat(format,
+                           cachedFile,
+                           filepath,
                            fileTransform.getInterpolation(),
                            config);
 
