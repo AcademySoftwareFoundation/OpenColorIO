@@ -297,6 +297,8 @@ OCIO_ADD_TEST(FileTransform, is_format_extension_supported)
     OCIO_CHECK_EQUAL(formatRegistry.isFormatExtensionSupported("bar"), false);
     OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported("cdl"));
     OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported(".cdl"));
+    OCIO_CHECK_EQUAL(formatRegistry.isFormatExtensionSupported("Cdl"), false);
+    OCIO_CHECK_EQUAL(formatRegistry.isFormatExtensionSupported(".Cdl"), false);
     OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported("3dl"));
     OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported(".3dl"));
 }

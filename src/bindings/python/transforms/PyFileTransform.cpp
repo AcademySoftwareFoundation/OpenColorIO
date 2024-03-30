@@ -22,21 +22,21 @@ void bindPyFileTransform(py::module & m)
 {
     FileTransformRcPtr DEFAULT = FileTransform::Create();
 
-    auto clsFileTransform = 
+    auto clsFileTransform =
         py::class_<FileTransform, FileTransformRcPtr, Transform>(
             m.attr("FileTransform"));
 
-    auto clsFormatIterator = 
+    auto clsFormatIterator =
         py::class_<FormatIterator>(
             clsFileTransform, "FormatIterator");
 
      clsFileTransform
-        .def(py::init(&FileTransform::Create), 
+        .def(py::init(&FileTransform::Create),
              DOC(FileTransform, Create))
-        .def(py::init([](const std::string & src, 
-                         const std::string & id, 
+        .def(py::init([](const std::string & src,
+                         const std::string & id,
                          Interpolation interp,
-                         TransformDirection dir) 
+                         TransformDirection dir)
             {
                 FileTransformRcPtr p = FileTransform::Create();
                 if (!src.empty()) { p->setSrc(src.c_str()); }
@@ -45,56 +45,58 @@ void bindPyFileTransform(py::module & m)
                 p->setDirection(dir);
                 p->validate();
                 return p;
-            }), 
-             "src"_a = DEFAULT->getSrc(), 
+            }),
+             "src"_a = DEFAULT->getSrc(),
              "cccId"_a = DEFAULT->getCCCId(),
              "interpolation"_a = DEFAULT->getInterpolation(),
-             "direction"_a = DEFAULT->getDirection(), 
+             "direction"_a = DEFAULT->getDirection(),
              DOC(FileTransform, Create))
 
-        .def_static("getFormats", []() 
-            { 
-                return FormatIterator(nullptr); 
+        .def_static("getFormats", []()
+            {
+                return FormatIterator(nullptr);
             })
 
-        .def("getSrc", &FileTransform::getSrc, 
+        .def("getSrc", &FileTransform::getSrc,
              DOC(FileTransform, getSrc))
-        .def("setSrc", &FileTransform::setSrc, "src"_a.none(false), 
+        .def("setSrc", &FileTransform::setSrc, "src"_a.none(false),
              DOC(FileTransform, setSrc))
-        .def("getCCCId", &FileTransform::getCCCId, 
+        .def("getCCCId", &FileTransform::getCCCId,
              DOC(FileTransform, getCCCId))
-        .def("setCCCId", &FileTransform::setCCCId, "cccId"_a.none(false), 
+        .def("setCCCId", &FileTransform::setCCCId, "cccId"_a.none(false),
              DOC(FileTransform, setCCCId))
-        .def("getCDLStyle", &FileTransform::getCDLStyle, 
+        .def("getCDLStyle", &FileTransform::getCDLStyle,
              DOC(FileTransform, getCDLStyle))
-        .def("setCDLStyle", &FileTransform::setCDLStyle, "style"_a, 
+        .def("setCDLStyle", &FileTransform::setCDLStyle, "style"_a,
              DOC(FileTransform, setCDLStyle))
-        .def("getInterpolation", &FileTransform::getInterpolation, 
+        .def("getInterpolation", &FileTransform::getInterpolation,
              DOC(FileTransform, getInterpolation))
-        .def("setInterpolation", &FileTransform::setInterpolation, "interpolation"_a, 
-             DOC(FileTransform, setInterpolation));
+        .def("setInterpolation", &FileTransform::setInterpolation, "interpolation"_a,
+             DOC(FileTransform, setInterpolation))
+        .def_static("IsFormatExtensionSupported", &FileTransform::IsFormatExtensionSupported, "extension"_a,
+             DOC(FileTransform, IsFormatExtensionSupported));
 
     defRepr(clsFileTransform);
 
     clsFormatIterator
-        .def("__len__", [](FormatIterator & /* it */) 
-            { 
-                return FileTransform::GetNumFormats(); 
+        .def("__len__", [](FormatIterator & /* it */)
+            {
+                return FileTransform::GetNumFormats();
             })
-        .def("__getitem__", [](FormatIterator & it, int i) 
-            { 
+        .def("__getitem__", [](FormatIterator & it, int i)
+            {
                 it.checkIndex(i, FileTransform::GetNumFormats());
-                return py::make_tuple(FileTransform::GetFormatNameByIndex(i), 
+                return py::make_tuple(FileTransform::GetFormatNameByIndex(i),
                                       FileTransform::GetFormatExtensionByIndex(i));
             })
-        .def("__iter__", [](FormatIterator & it) -> FormatIterator & 
-            { 
-                return it; 
+        .def("__iter__", [](FormatIterator & it) -> FormatIterator &
+            {
+                return it;
             })
         .def("__next__", [](FormatIterator & it)
             {
                 int i = it.nextIndex(FileTransform::GetNumFormats());
-                return py::make_tuple(FileTransform::GetFormatNameByIndex(i), 
+                return py::make_tuple(FileTransform::GetFormatNameByIndex(i),
                                       FileTransform::GetFormatExtensionByIndex(i));
             });
 }
