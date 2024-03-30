@@ -149,7 +149,7 @@ OCIO_ADD_TEST(FileTransform, load_file_fail)
     // Supported file extension with a wrong content.
     // It's in fact a binary png file i.e. all readers must fail.
     const std::string faultyCLFFile("clf/illegal/image_png.clf");
-    OCIO_CHECK_THROW_WHAT(OCIO::GetFileTransformProcessor(faultyCLFFile), 
+    OCIO_CHECK_THROW_WHAT(OCIO::GetFileTransformProcessor(faultyCLFFile),
                           OCIO::Exception, "image_png.clf' could not be loaded");
 
     // Missing file.
@@ -290,6 +290,17 @@ OCIO_ADD_TEST(FileTransform, format_by_index)
     ValidateFormatByIndex(formatRegistry, OCIO::FORMAT_CAPABILITY_READ);
 }
 
+OCIO_ADD_TEST(FileTransform, is_format_extension_supported)
+{
+    OCIO::FormatRegistry & formatRegistry = OCIO::FormatRegistry::GetInstance();
+    OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported("foo", false));
+    OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported("bar", false));
+    OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported("cdl", true));
+    OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported(".cdl", true));
+    OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported("3dl", true));
+    OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported(".3dl", true));
+}
+
 OCIO_ADD_TEST(FileTransform, validate)
 {
     OCIO::FileTransformRcPtr tr = OCIO::FileTransform::Create();
@@ -318,7 +329,7 @@ OCIO_ADD_TEST(FileTransform, interpolation_validity)
     OCIO_CHECK_NO_THROW(cfg->getProcessor(tr));
 
     // UNKNOWN can't be used by a LUT file, so the interp on the LUT is set to DEFAULT and a
-    // warning is logged. 
+    // warning is logged.
 
     tr->setInterpolation(OCIO::INTERP_UNKNOWN);
     OCIO_CHECK_NO_THROW(tr->validate());
@@ -355,7 +366,7 @@ OCIO_ADD_TEST(FileTransform, context_variables)
 {
     // Test context variables with a FileTransform i.e. the file name or the search_path could
     // contain one or several context variables.
- 
+
     OCIO::ContextRcPtr usedContextVars = OCIO::Context::Create();
 
     OCIO::ConfigRcPtr cfg = OCIO::Config::CreateRaw()->createEditableCopy();
@@ -429,13 +440,13 @@ OCIO_ADD_TEST(FileTransform, context_variables)
     OCIO_CHECK_EQUAL(std::string("ENV1"), usedContextVars->getStringVarNameByIndex(1));
     OCIO_CHECK_EQUAL(std::string("exposure_contrast_linear.ctf"), usedContextVars->getStringVarByIndex(1));
 
-    // A basic check to validate that context variables are correctly used. 
+    // A basic check to validate that context variables are correctly used.
     OCIO_CHECK_NO_THROW(cfg->getProcessor(ctx, file, OCIO::TRANSFORM_DIR_FORWARD));
 
 
     {
         // Case 4 - The 'cccid' now contains a context variable
-        static const std::string CONFIG = 
+        static const std::string CONFIG =
             "ocio_profile_version: 2\n"
             "\n"
             "environment:\n"
@@ -475,7 +486,7 @@ OCIO_ADD_TEST(FileTransform, context_variables)
             );
             OCIO::ConstFileTransformRcPtr fTr1 = OCIO::DynamicPtrCast<const OCIO::FileTransform>(tr1);
             OCIO_CHECK_ASSERT(fTr1);
-            
+
             OCIO_CHECK_ASSERT(CollectContextVariables(*cfg, *ctx, *fTr1, usedContextVars));
             OCIO_CHECK_EQUAL(2, usedContextVars->getNumStringVars());
             OCIO_CHECK_EQUAL(std::string("CCPREFIX"), usedContextVars->getStringVarNameByIndex(0));
@@ -487,7 +498,7 @@ OCIO_ADD_TEST(FileTransform, context_variables)
 
 OCIO_ADD_TEST(FileTransform, cc_file_with_different_file_extension)
 {
-    static const std::string BASE_CONFIG = 
+    static const std::string BASE_CONFIG =
     "ocio_profile_version: 1\n"
     "description: Minimal\n"
     "search_path: " + OCIO::GetTestFilesDir() + "\n"
