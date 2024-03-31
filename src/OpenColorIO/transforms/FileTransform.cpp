@@ -529,14 +529,15 @@ const char * FormatRegistry::getFormatExtensionByIndex(int capability, int index
 
 bool FormatRegistry::isFormatExtensionSupported(const char * extension) const
 {
-    FileFormatVectorMap::const_iterator iter;
-    // If dot is present at the start, pointer arithmetic increment up by one to ignore that dot.
-    // Early return false with malicious input of just the dot.
+    // Early return false with an input of just the dot.
     if (0 == strcmp(extension, "."))
     {
         return false;
     }
-    else if (extension[0] == '.')
+
+    // If dot is present at the start, pointer arithmetic increment up by one to ignore that dot.
+    FileFormatVectorMap::const_iterator iter;
+    if (extension[0] == '.')
     {
         iter = m_formatsByExtension.find(StringUtils::Lower(extension + 1));
     }
@@ -544,6 +545,7 @@ bool FormatRegistry::isFormatExtensionSupported(const char * extension) const
     {
         iter = m_formatsByExtension.find(StringUtils::Lower(extension));
     }
+
     if (iter != m_formatsByExtension.end())
     {
         return true;
