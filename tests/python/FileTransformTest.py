@@ -93,8 +93,8 @@ class FileTransformTest(unittest.TestCase, TransformsBaseTest):
         self.assertFalse(self.tr.IsFormatExtensionSupported('bar'))
         self.assertTrue(self.tr.IsFormatExtensionSupported('cdl'))
         self.assertTrue(self.tr.IsFormatExtensionSupported('.cdl'))
-        self.assertFalse(self.tr.IsFormatExtensionSupported('Cdl'))
-        self.assertFalse(self.tr.IsFormatExtensionSupported('.Cdl'))
+        self.assertTrue(self.tr.IsFormatExtensionSupported('Cdl'))
+        self.assertTrue(self.tr.IsFormatExtensionSupported('.Cdl'))
         self.assertTrue(self.tr.IsFormatExtensionSupported('3dl'))
         self.assertTrue(self.tr.IsFormatExtensionSupported('.3dl'))
 

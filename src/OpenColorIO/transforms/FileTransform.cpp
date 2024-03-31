@@ -533,11 +533,11 @@ bool FormatRegistry::isFormatExtensionSupported(const char * extension) const
     // If dot is present at the start, pointer arithmetic increment up by one to ignore that dot.
     if (extension[0] == '.')
     {
-        iter = m_formatsByExtension.find(extension+1);
+        iter = m_formatsByExtension.find(StringUtils::Lower(extension + 1));
     }
     else
     {
-        iter = m_formatsByExtension.find(extension);
+        iter = m_formatsByExtension.find(StringUtils::Lower(extension));
     }
     if (iter != m_formatsByExtension.end())
     {
