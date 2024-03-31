@@ -531,7 +531,12 @@ bool FormatRegistry::isFormatExtensionSupported(const char * extension) const
 {
     FileFormatVectorMap::const_iterator iter;
     // If dot is present at the start, pointer arithmetic increment up by one to ignore that dot.
-    if (extension[0] == '.')
+    // Early return false with malicious input of just the dot.
+    if (0 == strcmp(extension, "."))
+    {
+        return false;
+    }
+    else if (extension[0] == '.')
     {
         iter = m_formatsByExtension.find(StringUtils::Lower(extension + 1));
     }
