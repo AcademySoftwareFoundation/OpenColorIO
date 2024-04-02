@@ -17,7 +17,7 @@
 /**
  * C++ Transforms
  * ==============
- *
+ * 
  * Typically only needed when creating and/or manipulating configurations
  */
 
@@ -228,7 +228,7 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const BuiltinTransfo
 
 
 /**
- * \brief
+ * \brief 
  *     An implementation of the ASC Color Decision List (CDL), based on the ASC v1.2
  *     specification.
  *
@@ -236,7 +236,7 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const BuiltinTransfo
  *
  * Slope, offset, power::
  *    out = clamp( (in * slope) + offset ) ^ power
- *
+ * 
  * \note​
  *    If the config version is 1, negative values are clamped if the power is not 1.0.
  *    For config version 2 and higher, the negative handling is controlled by the CDL style.
@@ -256,7 +256,7 @@ public:
      *    if file does not contain any CDL or if the specified cccid is not found.
      */
     static CDLTransformRcPtr CreateFromFile(const char * src, const char * cccid);
-
+    
     /**
      * \brief Load all of the CDLs in a .cdl or .ccc file into a single GroupTransform.
      *
@@ -842,7 +842,7 @@ public:
      */
     virtual NegativeStyle getNegativeStyle() const = 0;
     virtual void setNegativeStyle(NegativeStyle style) = 0;
-
+    
     ExponentTransform(const ExponentTransform &) = delete;
     ExponentTransform & operator= (const ExponentTransform &) = delete;
     /// Do not use (needed only for pybind11).
@@ -883,7 +883,7 @@ public:
     /**
      * Set the exponent value for the power function for R, G, B, A.
      *
-     * \note
+     * \note 
      *    The gamma values must be in the range of [1, 10]. Set the transform direction
      *    to inverse to obtain the effect of values less than 1.
      */
@@ -893,7 +893,7 @@ public:
     /**
      * Set the offset value for the power function for R, G, B, A.
      *
-     * \note
+     * \note 
      *    The offset values must be in the range [0, 0.9].
      */
     virtual void setOffset(const double(&values)[4]) noexcept = 0;
@@ -907,7 +907,7 @@ public:
      */
     virtual NegativeStyle getNegativeStyle() const = 0;
     virtual void setNegativeStyle(NegativeStyle style) = 0;
-
+    
     ExponentWithLinearTransform(const ExponentWithLinearTransform &) = delete;
     ExponentWithLinearTransform & operator= (const ExponentWithLinearTransform &) = delete;
     /// Do not use (needed only for pybind11).
@@ -1234,8 +1234,8 @@ public:
     virtual void setValue(const ConstGradingRGBCurveRcPtr & values) = 0;
 
     /**
-     * It is possible to provide a desired slope value for each control point.  The number of slopes is
-     * always the same as the number of control points and so the control points must be set before
+     * It is possible to provide a desired slope value for each control point.  The number of slopes is 
+     * always the same as the number of control points and so the control points must be set before 
      * setting the slopes.  The slopes are primarily intended for use by config authors looking to match
      * a specific shape with as few control points as possible, they are not intended to be exposed to
      * a user interface for direct manipulation.  When a curve is being generated for creative purposes
@@ -1292,7 +1292,7 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingRGBCurv
  * Each control allows R, G, B adjustments and a Master adjustment.
  *
  * There is also an S-contrast control for imparting an S-shape curve.
- *
+ * 
  * The controls are dynamic, so they may be adjusted even after the Transform has been included
  * in a Processor.
  */
@@ -1455,7 +1455,7 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const LogAffineTrans
  * is used for many camera logs (e.g., LogC) as well as ACEScct.
  *
  * * The linSideBreak specifies the point on the linear axis where the log and linear
- *   segments meet.  It must be set (there is no default).
+ *   segments meet.  It must be set (there is no default).  
  * * The linearSlope specifies the slope of the linear segment of the forward (linToLog)
  *   transform.  By default it is set equal to the slope of the log curve at the break point.
  */
@@ -1492,14 +1492,14 @@ public:
     virtual bool getLinearSlopeValue(double(&values)[3]) const = 0;
     /**
      * \brief Set LinearSlope value.
-     *
+     * 
      * \note
      *      You must call setLinSideBreakValue before calling this.
      */
     virtual void setLinearSlopeValue(const double(&values)[3]) = 0;
     /// Remove LinearSlope values so that default values are used.
     virtual void unsetLinearSlopeValue() = 0;
-
+    
     LogCameraTransform(const LogCameraTransform &) = delete;
     LogCameraTransform & operator= (const LogCameraTransform &) = delete;
     /// Do not use (needed only for pybind11).
@@ -1684,7 +1684,7 @@ public:
      * For example, the value 1.0 would be written as the integer 15360
      * because it has the same bit-pattern.  Note that this implies the
      * values will be quantized to a 16-bit float.  Note that this setting
-     * only controls the output formatting (where supported) and not the
+     * only controls the output formatting (where supported) and not the 
      * values for getValue/setValue.  The only file formats that currently
      * support this are CLF and CTF.
      */
@@ -1789,7 +1789,7 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Lut3DTransform&
 /**
  * Represents an MX+B Matrix transform.
  *
- * \note
+ * \note 
  *    For singular matrices, an inverse direction will throw an exception during finalization.
  */
 class OCIOEXPORT MatrixTransform : public Transform
@@ -1834,7 +1834,7 @@ public:
      * outside [0,1].
      */
     virtual void setOffset(const double * offset4) = 0;
-
+    
     /**
      * Get the bit-depths associated with the matrix values read from a
      * file or set the bit-depths of values to be written to a file
@@ -1855,7 +1855,7 @@ public:
     /// **Convenience functions**
     ///
     /// Build the matrix and offset corresponding to higher-level concepts.
-    ///
+    /// 
     /// \note
     ///    These can throw an exception if for any component
     ///    ``oldmin == oldmax. (divide by 0)``
@@ -1893,7 +1893,7 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const MatrixTransfor
  * The Range is used to apply an affine transform (scale & offset) and
  * clamps values to min/max bounds on all color components except the alpha.
  * The scale and offset values are computed from the input and output bounds.
- *
+ * 
  * Refer to section 7.2.4 in specification S-2014-006 "A Common File Format
  * for Look-Up Tables" from the Academy of Motion Picture Arts and Sciences
  * and the American Society of Cinematographers.
