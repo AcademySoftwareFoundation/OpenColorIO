@@ -85,6 +85,20 @@ class FileTransformTest(unittest.TestCase, TransformsBaseTest):
             with self.assertRaises(TypeError):
                 self.tr.setCDLStyle(invalid)
 
+    def test_is_format_extension_supported(self):
+        """
+        Test the IsFormatExtensionSupported() method.
+        """
+        self.assertFalse(self.tr.IsFormatExtensionSupported('foo'))
+        self.assertFalse(self.tr.IsFormatExtensionSupported('bar'))
+        self.assertFalse(self.tr.IsFormatExtensionSupported('.'))
+        self.assertTrue(self.tr.IsFormatExtensionSupported('cdl'))
+        self.assertTrue(self.tr.IsFormatExtensionSupported('.cdl'))
+        self.assertTrue(self.tr.IsFormatExtensionSupported('Cdl'))
+        self.assertTrue(self.tr.IsFormatExtensionSupported('.Cdl'))
+        self.assertTrue(self.tr.IsFormatExtensionSupported('3dl'))
+        self.assertTrue(self.tr.IsFormatExtensionSupported('.3dl'))
+
     def test_getformats(self):
         """
         Test the getFormats() method.

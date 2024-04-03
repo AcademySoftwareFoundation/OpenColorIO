@@ -72,7 +72,9 @@ void bindPyFileTransform(py::module & m)
         .def("getInterpolation", &FileTransform::getInterpolation, 
              DOC(FileTransform, getInterpolation))
         .def("setInterpolation", &FileTransform::setInterpolation, "interpolation"_a, 
-             DOC(FileTransform, setInterpolation));
+             DOC(FileTransform, setInterpolation))
+        .def_static("IsFormatExtensionSupported", &FileTransform::IsFormatExtensionSupported, "extension"_a,
+             DOC(FileTransform, IsFormatExtensionSupported));
 
     defRepr(clsFileTransform);
 
