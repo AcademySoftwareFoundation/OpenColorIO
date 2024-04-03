@@ -325,7 +325,9 @@ endif()
 if(APPLE)
     target_link_libraries(OpenColorIO
         PRIVATE
-            "-framework Carbon"
+            "-framework ColorSync"
+            "-framework CoreFoundation"
+            "-framework CoreGraphics"
             "-framework IOKit"
     )
 endif()

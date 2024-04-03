@@ -212,6 +212,7 @@ setup(
             'ociocheck=PyOpenColorIO.command_line:main',
             'ociochecklut=PyOpenColorIO.command_line:main',
             'ocioconvert=PyOpenColorIO.command_line:main',
+            'ociocpuinfo=PyOpenColorIO.command_line:main',
             'ociodisplay=PyOpenColorIO.command_line:main',
             'ociolutimage=PyOpenColorIO.command_line:main',
             'ociomakeclf=PyOpenColorIO.command_line:main',
