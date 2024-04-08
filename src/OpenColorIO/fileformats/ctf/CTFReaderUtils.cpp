@@ -5,6 +5,7 @@
 #include <sstream>
 
 #include "fileformats/ctf/CTFReaderUtils.h"
+
 #include "Platform.h"
 
 namespace OCIO_NAMESPACE

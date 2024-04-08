@@ -2807,6 +2807,7 @@ bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType refe
     // where the neutral may be linear but there is non-linearity off the neutral axis.
     auto evaluate = [](const Config & config, ConstTransformRcPtr &t) -> bool
     {
+        // clang-format off
         std::vector<float> img = 
         { 
             0.0625f, 0.0625f, 0.0625f, 4.f, 4.f, 4.f,
@@ -2814,6 +2815,7 @@ bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType refe
             0.f, 0.0625f, 0.f, 0.f, 4.f, 0.f,
             0.f, 0.f, 0.0625f, 0.f, 0.f, 4.f
         };
+        // clang-format on
         std::vector<float> dst(img.size(), 0.f);
 
         PackedImageDesc desc(&img[0], 8, 1, CHANNEL_ORDERING_RGB);

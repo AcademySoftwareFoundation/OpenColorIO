@@ -97,6 +97,8 @@ void AddECLinearShader(GpuShaderCreatorRcPtr & shaderCreator,
                        const std::string & contrastName,
                        const std::string & gammaName)
 {
+    // clang-format off
+
     const double pivot = std::max(EC::MIN_PIVOT, ec->getPivot());
 
     st.newLine() << st.floatDecl("exposure") << " = pow( 2., " << exposureName << " );";
@@ -122,6 +124,8 @@ void AddECLinearShader(GpuShaderCreatorRcPtr & shaderCreator,
         st.dedent();
     }
     st.newLine() << "}";
+
+    // clang-format on
 }
 
 void AddECLinearRevShader(GpuShaderCreatorRcPtr & shaderCreator,
@@ -131,6 +135,8 @@ void AddECLinearRevShader(GpuShaderCreatorRcPtr & shaderCreator,
                           const std::string & contrastName,
                           const std::string & gammaName)
 {
+    // clang-format off
+
     const double pivot = std::max(EC::MIN_PIVOT, ec->getPivot());
 
     st.newLine() << st.floatDecl("exposure") << " = pow( 2., " << exposureName << " );";
@@ -157,6 +163,8 @@ void AddECLinearRevShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.newLine() << shaderCreator->getPixelName() << ".rgb = "
                  << shaderCreator->getPixelName() << ".rgb / exposure;";
+
+    // clang-format on
 }
 
 void AddECVideoShader(GpuShaderCreatorRcPtr & shaderCreator,
@@ -166,6 +174,8 @@ void AddECVideoShader(GpuShaderCreatorRcPtr & shaderCreator,
                       const std::string & contrastName,
                       const std::string & gammaName)
 {
+    // clang-format off
+
     double pivot = std::pow(std::max(EC::MIN_PIVOT, ec->getPivot()), EC::VIDEO_OETF_POWER);
 
     st.newLine() << st.floatDecl("exposure") << " = pow( pow( 2., " << exposureName << " ), "
@@ -191,6 +201,8 @@ void AddECVideoShader(GpuShaderCreatorRcPtr & shaderCreator,
         st.dedent();
     }
     st.newLine() << "}";
+
+    // clang-format on
 }
 
 void AddECVideoRevShader(GpuShaderCreatorRcPtr & shaderCreator,
@@ -200,6 +212,8 @@ void AddECVideoRevShader(GpuShaderCreatorRcPtr & shaderCreator,
                          const std::string & contrastName,
                          const std::string & gammaName)
 {
+    // clang-format off
+
     double pivot = std::pow(std::max(EC::MIN_PIVOT, ec->getPivot()), EC::VIDEO_OETF_POWER);
 
     st.newLine() << st.floatDecl("exposure") << " = pow( pow( 2., " << exposureName << " ), "
@@ -227,6 +241,8 @@ void AddECVideoRevShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.newLine() << shaderCreator->getPixelName() << ".rgb = "
                  << shaderCreator->getPixelName() << ".rgb / exposure;";
+
+    // clang-format on
 }
 
 void AddECLogarithmicShader(GpuShaderCreatorRcPtr & shaderCreator,
@@ -236,6 +252,8 @@ void AddECLogarithmicShader(GpuShaderCreatorRcPtr & shaderCreator,
                             const std::string & contrastName,
                             const std::string & gammaName)
 {
+    // clang-format off
+
     double pivot = std::max(EC::MIN_PIVOT, ec->getPivot());
     float logPivot = (float)std::max(0., std::log2(pivot / 0.18) *
                                          ec->getLogExposureStep() +
@@ -250,6 +268,8 @@ void AddECLogarithmicShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.newLine() << shaderCreator->getPixelName() << ".rgb = "
                  << shaderCreator->getPixelName() << ".rgb * contrast + offset;";
+
+    // clang-format on
 }
 
 void AddECLogarithmicRevShader(GpuShaderCreatorRcPtr & shaderCreator,
@@ -259,6 +279,8 @@ void AddECLogarithmicRevShader(GpuShaderCreatorRcPtr & shaderCreator,
                                const std::string & contrastName,
                                const std::string & gammaName)
 {
+    // clang-format off
+
     double pivot = std::max(EC::MIN_PIVOT, ec->getPivot());
     float logPivot = (float)std::max(0., std::log2(pivot / 0.18) *
                                          ec->getLogExposureStep() +
@@ -273,6 +295,8 @@ void AddECLogarithmicRevShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.newLine() << shaderCreator->getPixelName() << ".rgb = " 
                  << shaderCreator->getPixelName() << ".rgb / contrast + offset;";
+
+    // clang-format on
 }
 
 
@@ -288,6 +312,8 @@ void GetExposureContrastGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     GpuShaderText st(shaderCreator->getLanguage());
     st.indent();
 
+    // clang-format off
+
     st.newLine() << "";
     st.newLine() << "// Add ExposureContrast '"
                  << ExposureContrastOpData::ConvertStyleToString(ec->getStyle())
@@ -295,6 +321,8 @@ void GetExposureContrastGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << "";
     st.newLine() << "{";
     st.indent();
+
+    // clang-format on
 
     AddProperties(shaderCreator, st, ec,
                   exposureName,

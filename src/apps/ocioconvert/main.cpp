@@ -58,6 +58,7 @@ int main(int argc, const char **argv)
     bool useDisplayView = false;
     bool useInvertView  = false;
 
+    // clang-format off
     ap.options("ocioconvert -- apply colorspace transform to an image \n\n"
                "usage: ocioconvert [options] inputimage inputcolorspace outputimage outputcolorspace\n"
                "   or: ocioconvert [options] --lut lutfile inputimage outputimage\n"
@@ -86,6 +87,7 @@ int main(int argc, const char **argv)
                                                        "for outputimage",
                NULL
                );
+    // clang-format on
 
     if (ap.parse (argc, argv) < 0)
     {

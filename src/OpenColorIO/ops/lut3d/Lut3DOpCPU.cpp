@@ -208,6 +208,8 @@ inline __m128i GetLut3DIndices(const __m128i &idxR,
                                const __m128i &sizesG,
                                const __m128i &sizesB)
 {
+    // clang-format off
+
     // SSE2 doesn't have 4-way multiplication for integer registers, so we need
     // split them into two register and multiply-add them separately, and then
     // combine the results.
@@ -244,6 +246,8 @@ inline __m128i GetLut3DIndices(const __m128i &idxR,
     //          4 * (idxB2 + sizesB * (idxG2 + sizesG * idxR2)),
     //          4 * (idxB3 + sizesB * (idxG3 + sizesG * idxR3)) }
     return _mm_slli_epi32(r, 2);
+
+    // clang-format on
 }
 
 inline void LookupNearest4(float* optLut,
@@ -423,6 +427,8 @@ void Lut3DTetrahedralRenderer::apply(const void * inImg, void * outImg, long num
 {
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
+
+    // clang-format off
 
     if (m_applyLutFunc && numPixels > 1)
     {
@@ -621,6 +627,8 @@ void Lut3DTetrahedralRenderer::apply(const void * inImg, void * outImg, long num
             out += 4;
         }
     }
+
+    // clang-format on
 }
 
 Lut3DRenderer::Lut3DRenderer(ConstLut3DOpDataRcPtr & lut)
@@ -644,6 +652,8 @@ void Lut3DRenderer::apply(const void * inImg, void * outImg, long numPixels) con
     __m128i dim = _mm_set1_epi32(m_dim);
 
     __m128 v[8];
+
+    // clang-format off
 
     for (long i = 0; i < numPixels; ++i)
     {
@@ -816,6 +826,9 @@ void Lut3DRenderer::apply(const void * inImg, void * outImg, long numPixels) con
         in  += 4;
         out += 4;
     }
+
+    // clang-format on
+
 #endif
 }
 
@@ -1097,6 +1110,8 @@ void InvLut3DRenderer::RangeTree::initRanges(float *grvec)
     unsigned long cornerOffsets[8];
     unsigned long corners = 0;
 
+    // clang-format off
+
     if (m_chans == 3)
     {
         corners = 8;
@@ -1121,6 +1136,8 @@ void InvLut3DRenderer::RangeTree::initRanges(float *grvec)
     {
         throw Exception("Unsupported channel number.");
     }
+
+    // clang-format on
 
     float minVal[MAX_N] = { 0.0f, 0.0f, 0.0f, 0.0f };
     float maxVal[MAX_N] = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -1603,6 +1620,8 @@ void InvLut3DRenderer::apply(const void * inImg, void * outImg, long numPixels) 
 
     unsigned long offs[3] = { gsz[2] * gsz[1], gsz[2], 1 };
 
+    // clang-format off
+
     unsigned long list_len = 8;
     long ops_list[] =               { 0, 0, 1, 1, 1, 1, 1, 1 };
     unsigned long entering_list[] = { 2, 1, 0, 2, 0, 2, 0, 2 };
@@ -1624,6 +1643,9 @@ void InvLut3DRenderer::apply(const void * inImg, void * outImg, long numPixels) 
         2, 1, 0,
         2, 0, 1,
         0, 2, 1 };
+
+    // clang-format on
+
     unsigned long path_order[] = { 1, 0, 2 };
     unsigned long new_vert_list[8];
     for (int i = 0; i < 8; i++)
@@ -1677,6 +1699,7 @@ void InvLut3DRenderer::apply(const void * inImg, void * outImg, long numPixels) 
         {
             while (currentChild[level] < currentNumChildren[level])
             {
+                // clang-format off
                 const unsigned long node = currentChildInd[level];
                 const bool inRange =
                     R >= levels[level].minVals[node * chans] &&
@@ -1687,7 +1710,7 @@ void InvLut3DRenderer::apply(const void * inImg, void * outImg, long numPixels) 
                     B <= levels[level].maxVals[node * chans + 2];
                 currentChild[level]++;
                 currentChildInd[level]++;
-
+                // clang-format on
                 if (inRange)
                 {
                     if (level == depthm1)

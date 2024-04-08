@@ -533,3 +533,55 @@ install(
     FILES "${OCIO_PROJECT_CONFIG}" "${OCIO_VERSION_CONFIG}"
     DESTINATION "${OCIO_CONFIG_INSTALL_DIR}"
 )
+
+
+###########################################################################
+# Setup clang-format custom target (based on OpenImageIO).
+
+if (PROJECT_IS_TOP_LEVEL)
+    set (CLANG_FORMAT_EXE_HINT "" CACHE PATH "clang-format executable's directory (will search if not specified")
+    set (CLANG_FORMAT_INCLUDES
+        "include/*.h"
+        "src/*.h"
+        "src/*.cpp"
+        # Ignore tests for the time being as formating tends to make the code
+        # less readable (declarations of test values, ...).
+        # "tests/*.h"
+        # "tests/*.cpp"
+        "vendor/openfx/*.h"
+        "vendor/openfx/*.cpp"
+        CACHE STRING "Glob patterns to include for clang-format"
+    )
+    set (CLANG_FORMAT_EXCLUDES
+        "msl.h"
+        "vendor/openfx/Support/*"
+        CACHE STRING "Glob patterns to exclude for clang-format"
+    )
+
+    find_program (CLANG_FORMAT_EXE
+        NAMES clang-format bin/clang-format
+        HINTS ${CLANG_FORMAT_EXE_HINT}
+        ENV CLANG_FORMAT_EXE_HINT
+        ENV LLVM_DIRECTORY
+        NO_DEFAULT_PATH
+        DOC "Path to clang-format executable"
+    )
+    find_program (CLANG_FORMAT_EXE
+        NAMES clang-format bin/clang-format
+    )
+
+    if (CLANG_FORMAT_EXE)
+        message (STATUS "clang-format found: ${CLANG_FORMAT_EXE}")
+        # Start with the list of files to include when formatting...
+        file (GLOB_RECURSE FILES_TO_FORMAT ${CLANG_FORMAT_INCLUDES})
+        # ... then process any list of excludes we are given
+        foreach (_pat ${CLANG_FORMAT_EXCLUDES})
+            file (GLOB_RECURSE _excl ${_pat})
+            list (REMOVE_ITEM FILES_TO_FORMAT ${_excl})
+        endforeach ()
+        file (COPY ${CMAKE_CURRENT_SOURCE_DIR}/.clang-format DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+        add_custom_target (clang-format COMMAND "${CLANG_FORMAT_EXE}" --verbose -i -style=file ${FILES_TO_FORMAT} )
+    else ()
+        message (STATUS "clang-format not found.")
+    endif ()
+endif ()

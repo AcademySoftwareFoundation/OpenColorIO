@@ -59,6 +59,7 @@ bool IsPairInverseEnabled(OpData::Type type, OptimizationFlags flags)
 
 bool IsCombineEnabled(OpData::Type type, OptimizationFlags flags)
 {
+    // clang-format off
     // Some types are controlled by a flag.
     return  (type == OpData::ExponentType && HasFlag(flags, OPTIMIZATION_COMP_EXPONENT)) ||
             (type == OpData::GammaType    && HasFlag(flags, OPTIMIZATION_COMP_GAMMA))    ||
@@ -66,6 +67,7 @@ bool IsCombineEnabled(OpData::Type type, OptimizationFlags flags)
             (type == OpData::Lut3DType    && HasFlag(flags, OPTIMIZATION_COMP_LUT3D))    ||
             (type == OpData::MatrixType   && HasFlag(flags, OPTIMIZATION_COMP_MATRIX))   ||
             (type == OpData::RangeType    && HasFlag(flags, OPTIMIZATION_COMP_RANGE));
+    // clang-format on
 }
 
 constexpr int MAX_OPTIMIZATION_PASSES = 8;

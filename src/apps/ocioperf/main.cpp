@@ -184,6 +184,7 @@ int main(int argc, const char **argv)
     bool useInvertview  = false;
 
     ArgParse ap;
+    // clang-format off
     ap.options("ocioperf -- apply and measure a color transformation processing\n\n"
                "usage: ocioperf [options] --transform /path/to/file.clf\n\n",
                "--h",                       &help,              
@@ -214,6 +215,7 @@ int main(int argc, const char **argv)
                "--nooptim",                 &nooptim, 
                                             "Disable the processor optimizations. Default is false",
                NULL);
+    // clang-format on
 
     if (ap.parse (argc, argv) < 0)
     {

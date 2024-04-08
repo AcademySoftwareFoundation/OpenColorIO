@@ -428,11 +428,13 @@ int getReferenceSpaceFromLinearSpace(const ConstConfigRcPtr & srcConfig,
 {
     // Define a set of (somewhat arbitrary) RGB values to test whether the combined transform is 
     // enough of an identity.
+    // clang-format off
     std::vector<float> vals = { 0.7f,  0.4f,  0.02f, 0.f,
                                 0.02f, 0.6f, -0.2f,  0.f,
                                 0.3f,  0.02f, 1.5f,  0.f,
                                 0.f,   0.f,   0.f,   0.f,
                                 1.f,   1.f,   1.f,   0.f };
+    // clang-format on
 
     // Test the transform from the test color space to its reference space against all combinations
     // of the built-in linear color spaces.  If one of them results in an identity, that identifies
@@ -511,6 +513,7 @@ int getReferenceSpaceFromSRGBSpace(const ConstConfigRcPtr & srcConfig,
     // reference space primaries.
 
     // Break point is at 0.039286, so include at least one value below this.
+    // clang-format off
     std::vector<float> vals =
     {
         0.5f,  0.5f,  0.5f, 
@@ -520,6 +523,7 @@ int getReferenceSpaceFromSRGBSpace(const ConstConfigRcPtr & srcConfig,
         0.f,   0.f,   0.f, 
         1.f,   1.f ,  1.f
     };
+    // clang-format on
     std::vector<float> out(vals.size(), 0.f);
 
     PackedImageDesc desc( &vals[0], (long) vals.size() / 3, 1, CHANNEL_ORDERING_RGB );
@@ -566,11 +570,13 @@ int getReferenceSpaceFromSRGBSpace(const ConstConfigRcPtr & srcConfig,
     // Define a (somewhat arbitrary) set of RGB values to test whether the transform is in fact 
     // converting sRGB texture values to the candidate reference space. It includes 0.02 which is 
     // on the sRGB linear segment, color values, and neutral values.
+    // clang-format off
     vals = { 0.7f,  0.4f,  0.02f, 0.f,
              0.02f, 0.6f,  0.2f,  0.f,
              0.3f,  0.02f, 0.5f,  0.f,
              0.f,   0.f,   0.f,   0.f,
              1.f,   1.f,   1.f,   0.f, };
+    // clang-format on
 
     // The color space has the sRGB non-linearity. Now try combining the transform with a 
     // transform from the Built-in config that goes from a variety of reference spaces to an 
@@ -792,11 +798,13 @@ const char * IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
 
     if (*builtinInterchangeName)
     {
+        // clang-format off
         std::vector<float> vals = { 0.7f,  0.4f,  0.02f, 0.f,
                                     0.02f, 0.6f,  0.2f,  0.f,
                                     0.3f,  0.02f, 0.5f,  0.f,
                                     0.f,   0.f,   0.f,   0.f,
                                     1.f,   1.f,   1.f,   0.f };
+        // clang-format on
 
         // Loop over the active, non-excluded, color spaces in the source config and test if the
         // conversion to the specified space in the built-in config is an identity.

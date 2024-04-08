@@ -43,6 +43,7 @@ int main(int argc, const char **argv)
     pathDesc += formats.str();
 
     ArgParse ap;
+    // clang-format off
     ap.options("ociowrite -- write a color transformation to a file\n\n"
                "usage: ociowrite [options] --file outputfile\n\n",
                "--h",                       &help, 
@@ -62,6 +63,7 @@ int main(int argc, const char **argv)
                "--file %s",                 &filepath, 
                                             pathDesc.c_str(),
                NULL);
+    // clang-format on
 
     if (argc <= 1 || ap.parse(argc, argv) < 0)
     {

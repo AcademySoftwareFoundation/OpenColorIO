@@ -34,12 +34,14 @@ int main(int argc, const char **argv)
     std::string outputconfig;
 
     ArgParse ap;
+    // clang-format off
     ap.options("ociocheck -- validate an OpenColorIO configuration\n\n"
                "usage:  ociocheck [options]\n",
                "--help", &help, "Print help message",
                "--iconfig %s", &inputconfig, "Input .ocio configuration file (default: $OCIO)",
                "--oconfig %s", &outputconfig, "Output .ocio file",
                NULL);
+    // clang-format on
 
     if (ap.parse(argc, argv) < 0)
     {

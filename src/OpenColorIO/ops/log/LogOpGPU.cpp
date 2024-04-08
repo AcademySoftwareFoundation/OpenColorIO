@@ -21,6 +21,8 @@ void AddLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & /
 
     GpuShaderText st(shaderCreator->getLanguage());
 
+    // clang-format off
+
     st.indent();
     st.newLine() << "";
     st.newLine() << "// Add Log processing";
@@ -47,11 +49,15 @@ void AddLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & /
     st.newLine() << "}";
 
     shaderCreator->addToFunctionShaderCode(st.string().c_str());
+
+    // clang-format on
 }
 
 void AddAntiLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & /* logData */, float base)
 {
     GpuShaderText st(shaderCreator->getLanguage());
+
+    // clang-format off
 
     st.indent();
     st.newLine() << "";
@@ -69,6 +75,8 @@ void AddAntiLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr
     st.newLine() << "}";
 
     shaderCreator->addToFunctionShaderCode(st.string().c_str());
+
+    // clang-format on
 }
 
 void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & logData)
@@ -87,6 +95,8 @@ void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPt
                                    1.0f / (float)paramsB[LIN_SIDE_SLOPE] };
 
     GpuShaderText st(shaderCreator->getLanguage());
+
+    // clang-format off
 
     st.indent();
     st.newLine() << "";
@@ -116,6 +126,8 @@ void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPt
     st.newLine() << "}";
 
     shaderCreator->addToFunctionShaderCode(st.string().c_str());
+
+    // clang-format on
 }
 
 void AddLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & logData)
@@ -130,6 +142,8 @@ void AddLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPt
     const float minValue = std::numeric_limits<float>::min();
 
     GpuShaderText st(shaderCreator->getLanguage());
+
+    // clang-format off
 
     st.indent();
     st.newLine() << "";
@@ -160,6 +174,8 @@ void AddLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPt
     st.newLine() << "}";
 
     shaderCreator->addToFunctionShaderCode(st.string().c_str());
+
+    // clang-format on
 }
 
 void AddCameraLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator,
@@ -196,6 +212,8 @@ void AddCameraLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator,
 
 
     GpuShaderText st(shaderCreator->getLanguage());
+
+    // clang-format off
 
     st.indent();
     st.newLine() << "";
@@ -239,6 +257,8 @@ void AddCameraLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << "}";
 
     shaderCreator->addToFunctionShaderCode(st.string().c_str());
+
+    // clang-format on
 }
 
 void AddCameraLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator,
@@ -272,6 +292,8 @@ void AddCameraLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator,
     const float minValue = std::numeric_limits<float>::min();
 
     GpuShaderText st(shaderCreator->getLanguage());
+
+    // clang-format off
 
     st.indent();
     st.newLine() << "";
@@ -310,6 +332,8 @@ void AddCameraLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << "}";
 
     shaderCreator->addToFunctionShaderCode(st.string().c_str());
+
+    // clang-format on
 }
 
 }

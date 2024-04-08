@@ -101,11 +101,14 @@ std::string ConvertToRegularExpression(const char * globPattern, bool ignoreCase
     for (size_t idx = 0; idx < globSize; idx = nextIdx)
     {
         nextIdx = idx + 1;
+        // clang-format off
         if (globString[idx] == '.') { regexPattern += "\\."; continue; }
         if (globString[idx] == '?') { regexPattern += ".";   continue; }
         if (globString[idx] == '*') { regexPattern += ".*";  continue; }
+        // clang-format on
 
         // Escape regex characters.
+        // clang-format off
         if (globString[idx] == '+') { regexPattern += "\\+";  continue; }
         if (globString[idx] == '^') { regexPattern += "\\^";  continue; }
         if (globString[idx] == '$') { regexPattern += "\\$";  continue; }
@@ -114,6 +117,7 @@ std::string ConvertToRegularExpression(const char * globPattern, bool ignoreCase
         if (globString[idx] == '(') { regexPattern += "\\(";  continue; }
         if (globString[idx] == ')') { regexPattern += "\\)";  continue; }
         if (globString[idx] == '|') { regexPattern += "\\|";  continue; }
+        // clang-format on
 
         if (globString[idx] == ']')
         {
@@ -131,6 +135,7 @@ std::string ConvertToRegularExpression(const char * globPattern, bool ignoreCase
                 {
                     subString += '^';
                 }
+                // clang-format off
                 else if (globString[end] == '+'
                     || globString[end] == '^'
                     || globString[end] == '$'
@@ -139,6 +144,7 @@ std::string ConvertToRegularExpression(const char * globPattern, bool ignoreCase
                     || globString[end] == '('
                     || globString[end] == ')'
                     || globString[end] == '|')
+                // clang-format on
                 {
                     // Escape regex characters.
                     subString += "\\";

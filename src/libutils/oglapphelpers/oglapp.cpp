@@ -6,6 +6,8 @@
 #include <sstream>
 #include <utility>
 
+// clang-format off
+
 #ifdef __APPLE__
 
 #include <OpenGL/gl.h>
@@ -24,6 +26,7 @@
 
 #endif
 
+// clang-format on
 
 #include <OpenColorIO/OpenColorIO.h>
 

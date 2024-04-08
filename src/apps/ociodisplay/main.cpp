@@ -17,6 +17,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
+// clang-format off
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
 #include <OpenGL/glext.h>
@@ -32,6 +33,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #if __APPLE__
 #include "metalapp.h"
 #endif
+// clang-format on
 
 #include "glsl.h"
 #include "oglapp.h"

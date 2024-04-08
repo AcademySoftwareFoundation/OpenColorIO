@@ -23,6 +23,8 @@ void AddBasicFwdShader(GpuShaderCreatorRcPtr & shaderCreator,
     const double bluGamma   = gamma->getBlueParams()[0];
     const double alphaGamma = gamma->getAlphaParams()[0];
 
+    // clang-format off
+
     const std::string pxl(shaderCreator->getPixelName());
 
     ss.declareFloat4( "gamma", redGamma, grnGamma, bluGamma, alphaGamma);
@@ -34,6 +36,8 @@ void AddBasicFwdShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     ss.newLine() << pxl << ".rgb = " << ss.float3Const("res.x", "res.y", "res.z") << ";";
     ss.newLine() << pxl << ".a = res.w;";
+
+    // clang-format on
 }
 
 void AddBasicRevShader(GpuShaderCreatorRcPtr & shaderCreator,
@@ -44,6 +48,8 @@ void AddBasicRevShader(GpuShaderCreatorRcPtr & shaderCreator,
     const double grnGamma   = 1. / gamma->getGreenParams()[0];
     const double bluGamma   = 1. / gamma->getBlueParams()[0];
     const double alphaGamma = 1. / gamma->getAlphaParams()[0];
+
+    // clang-format off
 
     const std::string pxl(shaderCreator->getPixelName());
 
@@ -56,6 +62,8 @@ void AddBasicRevShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     ss.newLine() << pxl << ".rgb = " << ss.float3Const("res.x", "res.y", "res.z") << ";";
     ss.newLine() << pxl << ".a = res.w;";
+
+    // clang-format on
 }
 
 // Create shader for basic mirror gamma style
@@ -68,6 +76,8 @@ void AddBasicMirrorFwdShader(GpuShaderCreatorRcPtr & shaderCreator,
     const double bluGamma = gamma->getBlueParams()[0];
     const double alphaGamma = gamma->getAlphaParams()[0];
 
+    // clang-format off
+
     const std::string pxl(shaderCreator->getPixelName());
 
     ss.declareFloat4("gamma", redGamma, grnGamma, bluGamma, alphaGamma);
@@ -77,6 +87,8 @@ void AddBasicMirrorFwdShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     ss.newLine() << pxl << ".rgb = " << ss.float3Const("res.x", "res.y", "res.z") << ";";
     ss.newLine() << pxl << ".a = res.w;";
+
+    // clang-format on
 }
 
 void AddBasicMirrorRevShader(GpuShaderCreatorRcPtr & shaderCreator,
@@ -88,6 +100,8 @@ void AddBasicMirrorRevShader(GpuShaderCreatorRcPtr & shaderCreator,
     const double bluGamma = 1. / gamma->getBlueParams()[0];
     const double alphaGamma = 1. / gamma->getAlphaParams()[0];
 
+    // clang-format off
+
     const std::string pxl(shaderCreator->getPixelName());
 
     ss.declareFloat4("gamma", redGamma, grnGamma, bluGamma, alphaGamma);
@@ -97,6 +111,8 @@ void AddBasicMirrorRevShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     ss.newLine() << pxl << ".rgb = " << ss.float3Const("res.x", "res.y", "res.z") << ";";
     ss.newLine() << pxl << ".a = res.w;";
+
+    // clang-format on
 }
 
 // Create shader for basic pass thru gamma style
@@ -109,6 +125,8 @@ void AddBasicPassThruFwdShader(GpuShaderCreatorRcPtr & shaderCreator,
     const double bluGamma = gamma->getBlueParams()[0];
     const double alphaGamma = gamma->getAlphaParams()[0];
 
+    // clang-format off
+
     const std::string pxl(shaderCreator->getPixelName());
 
     ss.declareFloat4("gamma", redGamma, grnGamma, bluGamma, alphaGamma);
@@ -126,6 +144,8 @@ void AddBasicPassThruFwdShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     ss.newLine() << pxl << ".rgb = " << ss.float3Const("res.x", "res.y", "res.z") << ";";
     ss.newLine() << pxl << ".a = res.w;";
+
+    // clang-format on
 }
 
 void AddBasicPassThruRevShader(GpuShaderCreatorRcPtr & shaderCreator,
@@ -137,6 +157,8 @@ void AddBasicPassThruRevShader(GpuShaderCreatorRcPtr & shaderCreator,
     const double bluGamma = 1. / gamma->getBlueParams()[0];
     const double alphaGamma = 1. / gamma->getAlphaParams()[0];
 
+    // clang-format off
+
     const std::string pxl(shaderCreator->getPixelName());
 
     ss.declareFloat4("gamma", redGamma, grnGamma, bluGamma, alphaGamma);
@@ -154,6 +176,8 @@ void AddBasicPassThruRevShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     ss.newLine() << pxl << ".rgb = " << ss.float3Const("res.x", "res.y", "res.z") << ";";
     ss.newLine() << pxl << ".a = res.w;";
+
+    // clang-format on
 }
 
 // Create shader for moncurveFwd style
@@ -172,6 +196,8 @@ void AddMoncurveFwdShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     // Even if all components are the same, on OS X, a vec4 needs to be
     // declared.  This code will work in both cases.
+
+    // clang-format off
 
     ss.declareFloat4( "breakPnt", red.breakPnt, green.breakPnt, blue.breakPnt, alpha.breakPnt);
     ss.declareFloat4( "slope" , red.slope, green.slope, blue.slope, alpha.slope);
@@ -192,6 +218,8 @@ void AddMoncurveFwdShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     ss.newLine() << pxl << ".rgb = " << ss.float3Const("res.x", "res.y", "res.z") << ";";
     ss.newLine() << pxl << ".a = res.w;";
+
+    // clang-format on
 }
 
 // Create shader for moncurveRev style
@@ -211,6 +239,8 @@ void AddMoncurveRevShader(GpuShaderCreatorRcPtr & shaderCreator,
     // Even if all components are the same, on OS X, a vec4 needs to be
     // declared.  This code will work in both cases.
 
+    // clang-format off
+
     ss.declareFloat4( "breakPnt", red.breakPnt, green.breakPnt, blue.breakPnt, alpha.breakPnt);
     ss.declareFloat4( "slope" , red.slope, green.slope, blue.slope, alpha.slope);
     ss.declareFloat4( "scale" , red.scale, green.scale, blue.scale, alpha.scale);
@@ -229,6 +259,8 @@ void AddMoncurveRevShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     ss.newLine() << pxl << ".rgb = " << ss.float3Const("res.x", "res.y", "res.z") << ";";
     ss.newLine() << pxl << ".a = res.w;";
+
+    // clang-format on
 }
 
 // Create shader for moncurveMirrorFwd style
@@ -244,6 +276,8 @@ void AddMoncurveMirrorFwdShader(GpuShaderCreatorRcPtr & shaderCreator,
     ComputeParamsFwd(gamma->getAlphaParams(), alpha);
 
     const std::string pxl(shaderCreator->getPixelName());
+
+    // clang-format off
 
     // Even if all components are the same, on OS X, a vec4 needs to be
     // declared.  This code will work in both cases.
@@ -271,6 +305,8 @@ void AddMoncurveMirrorFwdShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     ss.newLine() << pxl << ".rgb = " << ss.float3Const("res.x", "res.y", "res.z") << ";";
     ss.newLine() << pxl << ".a = res.w;";
+
+    // clang-format on
 }
 
 // Create shader for moncurveMirrorRev style
@@ -286,6 +322,8 @@ void AddMoncurveMirrorRevShader(GpuShaderCreatorRcPtr & shaderCreator,
     ComputeParamsRev(gamma->getAlphaParams(), alpha);
 
     const std::string pxl(shaderCreator->getPixelName());
+
+    // clang-format off
 
     // Even if all components are the same, on OS X, a vec4 needs to be
     // declared.  This code will work in both cases.
@@ -311,6 +349,8 @@ void AddMoncurveMirrorRevShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     ss.newLine() << pxl << ".rgb = " << ss.float3Const("res.x", "res.y", "res.z") << ";";
     ss.newLine() << pxl << ".a = res.w;";
+
+    // clang-format on
 }
 
 }  // Anon namespace
@@ -321,6 +361,8 @@ void GetGammaGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     GpuShaderText ss(shaderCreator->getLanguage());
     ss.indent();
 
+    // clang-format off
+
     ss.newLine() << "";
     ss.newLine() << "// Add Gamma '"
                  << GammaOpData::ConvertStyleToString(gammaData->getStyle())
@@ -329,6 +371,8 @@ void GetGammaGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
     ss.newLine() << "{";
     ss.indent();
+
+    // clang-format on
 
     switch (gammaData->getStyle())
     {

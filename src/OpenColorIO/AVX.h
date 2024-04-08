@@ -75,10 +75,12 @@ inline __m256i avx_load_u8(__m128i a)
 
 inline __m128i avx_pack_u8(__m256i a, __m256i b)
 {
+    // clang-format off
     const __m128i lo0_shuf =  _mm_setr_epi8(  0, 4, 8,12, -1,-1,-1, -1,  -1,-1,-1,-1,   -1,-1,-1,-1);
     const __m128i lo1_shuf =  _mm_setr_epi8( -1,-1,-1,-1,  0, 4, 8, 12,  -1,-1,-1,-1,   -1,-1,-1,-1);
     const __m128i hi0_shuf =  _mm_setr_epi8( -1,-1,-1,-1, -1,-1,-1, -1,   0, 4, 8, 12,  -1,-1,-1,-1);
     const __m128i hi1_shuf =  _mm_setr_epi8( -1,-1,-1,-1, -1,-1,-1, -1,  -1,-1,-1,-1,   0, 4, 8, 12);
+    // clang-format on
 
     __m128i lo0 = _mm_shuffle_epi8(_mm256_castsi256_si128(a), lo0_shuf);
     __m128i lo1 = _mm_shuffle_epi8(_mm256_extractf128_si256(a, 1), lo1_shuf);
@@ -153,6 +155,7 @@ inline __m256i avx_unpack_u16(__m128i a)
 
 inline __m128i avx_pack_u16(__m256i a)
 {
+    // clang-format off
     const __m128i lo_pack_shuffle16 = _mm_setr_epi8( 0,  1,  4,  5,
                                                      8,  9, 12, 13,
                                                     -1, -1, -1, -1,
@@ -162,6 +165,7 @@ inline __m128i avx_pack_u16(__m256i a)
                                                     -1, -1, -1, -1,
                                                      0,  1,  4,  5,
                                                      8,  9, 12, 13);
+    // clang-format on
 
     __m128i hi = _mm256_extractf128_si256(a, 1);
     __m128i lo = _mm256_castsi256_si128(a);

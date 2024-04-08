@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+// clang-format off
 
 #ifndef INCLUDED_OCIO_SSE_H
 #define INCLUDED_OCIO_SSE_H
@@ -647,5 +648,6 @@ inline void sseSinCos(const float x, float& sin_x, float& cos_x)
 
 #endif  // OCIO_USE_SSE2
 
+// clang-format on
 
 #endif  // INCLUDED_OCIO_SSE_H

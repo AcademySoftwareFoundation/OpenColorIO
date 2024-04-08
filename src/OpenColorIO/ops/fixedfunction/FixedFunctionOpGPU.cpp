@@ -13,6 +13,8 @@ namespace OCIO_NAMESPACE
 
 void Add_hue_weight_shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, float width)
 {
+    // clang-format off
+
     float center = 0.f;  // If changed, must uncomment code below.
 
     // Convert from degrees to radians.
@@ -49,10 +51,14 @@ void Add_hue_weight_shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText 
     ss.newLine() << "coefs = " << ss.lerp("coefs", "m2", "float(j == 2)") << ";";
     ss.newLine() << "coefs = " << ss.lerp("coefs", "m3", "float(j == 3)") << ";";
     ss.newLine() << ss.floatDecl("f_H") << " = dot(coefs, monomials);";
+
+    // clang-format on
 }
 
 void Add_RedMod_03_Fwd_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
 {
+    // clang-format off
+
     const float _1minusScale = 1.f - 0.85f;  // (1. - scale) from the original ctl code
     const float _pivot = 0.03f;
 
@@ -74,10 +80,14 @@ void Add_RedMod_03_Fwd_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderTe
     ss.newLine() << ss.floatDecl("maxval2") << " = max( " << pxl << ".rgb.r, max( " << pxl << ".rgb.g, " << pxl << ".rgb.b));";
     ss.newLine() << ss.floatDecl("newChroma") << " = maxval2 - minval;";
     ss.newLine() << pxl << ".rgb = minval + delta * newChroma / oldChroma;";
+
+    // clang-format on
 }
 
 void Add_RedMod_03_Inv_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
 {
+    // clang-format off
+
     const float _1minusScale = 1.f - 0.85f;  // (1. - scale) from the original ctl code
     const float _pivot = 0.03f;
 
@@ -109,10 +119,14 @@ void Add_RedMod_03_Inv_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderTe
 
     ss.dedent();
     ss.newLine() << "}";
+
+    // clang-format on
 }
 
 void Add_RedMod_10_Fwd_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
 {
+    // clang-format off
+
     const float _1minusScale = 1.f - 0.82f;  // (1. - scale) from the original ctl code
     const float _pivot = 0.03f;
 
@@ -127,10 +141,14 @@ void Add_RedMod_10_Fwd_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderTe
 
     ss.newLine() << pxl << ".rgb.r = " << pxl << ".rgb.r + f_H * f_S * (" << _pivot
                  << " - " << pxl << ".rgb.r) * " << _1minusScale << ";";
+
+    // clang-format on
 }
 
 void Add_RedMod_10_Inv_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
 {
+    // clang-format off
+
     const float _1minusScale = 1.f - 0.82f;  // (1. - scale) from the original ctl code
     const float _pivot = 0.03f;
 
@@ -154,10 +172,14 @@ void Add_RedMod_10_Inv_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderTe
 
     ss.dedent();
     ss.newLine() << "}";
+
+    // clang-format on
 }
 
 void Add_Glow_03_Fwd_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, float glowGain, float glowMid)
 {
+    // clang-format off
+
     const std::string pxl(shaderCreator->getPixelName());
 
     ss.newLine() << ss.floatDecl("chroma") << " = sqrt( " << pxl << ".rgb.b * (" << pxl << ".rgb.b - " << pxl << ".rgb.g)"
@@ -181,10 +203,14 @@ void Add_Glow_03_Fwd_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText
     ss.newLine() << "glowGainOut = " << ss.lerp( "glowGainOut", "0.", "float( YC > GlowMid * 2. )" ) << ";";
 
     ss.newLine() << pxl << ".rgb = " << pxl << ".rgb * glowGainOut + " << pxl << ".rgb;";
+
+    // clang-format on
 }
 
 void Add_Glow_03_Inv_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, float glowGain, float glowMid)
 {
+    // clang-format off
+
     const std::string pxl(shaderCreator->getPixelName());
 
     ss.newLine() << ss.floatDecl("chroma") << " = sqrt( " << pxl << ".rgb.b * (" << pxl << ".rgb.b - " << pxl << ".rgb.g)"
@@ -210,6 +236,8 @@ void Add_Glow_03_Inv_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText
     ss.newLine() << "glowGainOut = " << ss.lerp( "glowGainOut", "0.", "float( YC > GlowMid * 2. )" ) << ";";
 
     ss.newLine() << pxl << ".rgb = " << pxl << ".rgb * glowGainOut + " << pxl << ".rgb;";
+
+    // clang-format on
 }
 
 void Add_GamutComp_13_Shader_Compress(GpuShaderText & ss,
@@ -219,6 +247,8 @@ void Add_GamutComp_13_Shader_Compress(GpuShaderText & ss,
                                       float thr,
                                       float power)
 {
+    // clang-format off
+
     // Only compress if greater or equal than threshold.
     ss.newLine() << "if (" << dist << " >= " << thr << ")";
     ss.newLine() << "{";
@@ -231,6 +261,8 @@ void Add_GamutComp_13_Shader_Compress(GpuShaderText & ss,
 
     ss.dedent();
     ss.newLine() << "}"; // if (dist >= thr)
+
+    // clang-format on
 }
 
 void Add_GamutComp_13_Shader_UnCompress(GpuShaderText & ss,
@@ -240,6 +272,8 @@ void Add_GamutComp_13_Shader_UnCompress(GpuShaderText & ss,
                                         float thr,
                                         float power)
 {
+    // clang-format off
+
     // Only compress if greater or equal than threshold, avoid singularity.
     ss.newLine() << "if (" << dist << " >= " << thr << " && " << dist << " < " << thr + scl << " )";
     ss.newLine() << "{";
@@ -252,6 +286,8 @@ void Add_GamutComp_13_Shader_UnCompress(GpuShaderText & ss,
 
     ss.dedent();
     ss.newLine() << "}"; // if (dist >= thr && dist < thr + scl)
+
+    // clang-format on
 }
 
 template <typename Func>
@@ -266,6 +302,8 @@ void Add_GamutComp_13_Shader(GpuShaderText & ss,
                              float power,
                              Func f)
 {
+    // clang-format off
+
     // Precompute scale factor for y = 1 intersect
     auto f_scale = [power](float lim, float thr) {
         return (lim - thr) / std::pow(std::pow((1.0f - thr) / (lim - thr), -power) - 1.0f, 1.0f / power);
@@ -297,6 +335,8 @@ void Add_GamutComp_13_Shader(GpuShaderText & ss,
 
     ss.dedent();
     ss.newLine() << "}"; // if ( ach != 0.0f )
+
+    // clang-format on
 }
 
 void Add_GamutComp_13_Fwd_Shader(GpuShaderText & ss,
@@ -349,6 +389,8 @@ void Add_GamutComp_13_Inv_Shader(GpuShaderText & ss,
 
 void Add_Surround_10_Fwd_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, float gamma)
 {
+    // clang-format off
+
     const std::string pxl(shaderCreator->getPixelName());
 
     // TODO: -- add vector inner product to GPUShaderUtils
@@ -360,10 +402,14 @@ void Add_Surround_10_Fwd_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShader
     ss.newLine() << ss.floatDecl("Ypow_over_Y") << " = pow( Y, " << gamma - 1.f << ");";
 
     ss.newLine() << pxl << ".rgb = " << pxl << ".rgb * Ypow_over_Y;";
+
+    // clang-format on
 }
 
 void Add_Surround_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, float gamma)
 {
+    // clang-format off
+
     const std::string pxl(shaderCreator->getPixelName());
 
     // TODO: -- add vector inner product to GPUShaderUtils
@@ -375,10 +421,14 @@ void Add_Surround_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & 
     ss.newLine() << ss.floatDecl("Ypow_over_Y") << " = pow( Y, " << (gamma - 1.f) << ");";
 
     ss.newLine() << "" << pxl << ".rgb = " << pxl << ".rgb * Ypow_over_Y;";
+
+    // clang-format on
 }
 
 void Add_RGB_TO_HSV(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
 {
+    // clang-format off
+
     const std::string pxl(shaderCreator->getPixelName());
 
     ss.newLine() << ss.floatDecl("minRGB") << " = min( " << pxl << ".rgb.r, min( " << pxl << ".rgb.g, " << pxl << ".rgb.b ) );";
@@ -404,10 +454,14 @@ void Add_RGB_TO_HSV(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
     ss.newLine() << "if ( -minRGB > maxRGB ) sat = (maxRGB - minRGB) / -minRGB;";
 
     ss.newLine() << pxl << ".rgb = " << ss.float3Const("hue * 1./6.", "sat", "val") << ";";
+
+    // clang-format on
 }
 
 void Add_HSV_TO_RGB(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
 {
+    // clang-format off
+
     const std::string pxl(shaderCreator->getPixelName());
 
     ss.newLine() << ss.floatDecl("Hue") << " = ( " << pxl << ".rgb.r - floor( " << pxl << ".rgb.r ) ) * 6.0;";
@@ -441,10 +495,14 @@ void Add_HSV_TO_RGB(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
     ss.newLine() << "RGB = RGB * (rgbMax - rgbMin) + rgbMin;";
 
     ss.newLine() << "" << pxl << ".rgb = RGB;";
+
+    // clang-format on
 }
 
 void Add_XYZ_TO_xyY(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
 {
+    // clang-format off
+
     const std::string pxl(shaderCreator->getPixelName());
 
     ss.newLine() << ss.floatDecl("d") << " = " << pxl << ".rgb.r + " << pxl << ".rgb.g + " << pxl << ".rgb.b;";
@@ -452,10 +510,14 @@ void Add_XYZ_TO_xyY(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
     ss.newLine() << pxl << ".rgb.b = " << pxl << ".rgb.g;";
     ss.newLine() << pxl << ".rgb.r *= d;";
     ss.newLine() << pxl << ".rgb.g *= d;";
+
+    // clang-format on
 }
 
 void Add_xyY_TO_XYZ(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
 {
+    // clang-format off
+
     const std::string pxl(shaderCreator->getPixelName());
 
     ss.newLine() << ss.floatDecl("d") << " = (" << pxl << ".rgb.g == 0.) ? 0. : 1. / " << pxl << ".rgb.g;";
@@ -463,10 +525,14 @@ void Add_xyY_TO_XYZ(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
     ss.newLine() << pxl << ".rgb.b = Y * (1. - " << pxl << ".rgb.r - " << pxl << ".rgb.g) * d;";
     ss.newLine() << pxl << ".rgb.r *= Y * d;";
     ss.newLine() << pxl << ".rgb.g = Y;";
+
+    // clang-format on
 }
 
 void Add_XYZ_TO_uvY(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
 {
+    // clang-format off
+
     const std::string pxl(shaderCreator->getPixelName());
 
     ss.newLine() << ss.floatDecl("d") << " = " << pxl << ".rgb.r + 15. * " << pxl << ".rgb.g + 3. * " << pxl << ".rgb.b;";
@@ -474,10 +540,14 @@ void Add_XYZ_TO_uvY(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
     ss.newLine() << pxl << ".rgb.b = " << pxl << ".rgb.g;";
     ss.newLine() << pxl << ".rgb.r *= 4. * d;";
     ss.newLine() << pxl << ".rgb.g *= 9. * d;";
+
+    // clang-format on
 }
 
 void Add_uvY_TO_XYZ(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
 {
+    // clang-format off
+
     const std::string pxl(shaderCreator->getPixelName());
 
     ss.newLine() << ss.floatDecl("d") << " = (" << pxl << ".rgb.g == 0.) ? 0. : 1. / " << pxl << ".rgb.g;";
@@ -485,10 +555,14 @@ void Add_uvY_TO_XYZ(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
     ss.newLine() << pxl << ".rgb.b = (3./4.) * Y * (4. - " << pxl << ".rgb.r - 6.6666666666666667 * " << pxl << ".rgb.g) * d;";
     ss.newLine() << pxl << ".rgb.r *= (9./4.) * Y * d;";
     ss.newLine() << pxl << ".rgb.g = Y;";
+
+    // clang-format on
 }
 
 void Add_XYZ_TO_LUV(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
 {
+    // clang-format off
+
     const std::string pxl(shaderCreator->getPixelName());
 
     ss.newLine() << ss.floatDecl("d") << " = " << pxl << ".rgb.r + 15. * " << pxl << ".rgb.g + 3. * " << pxl << ".rgb.b;";
@@ -503,10 +577,14 @@ void Add_XYZ_TO_LUV(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
     ss.newLine() << ss.floatDecl("vstar") << " = 13. * Lstar * (v - 0.46831999);";
 
     ss.newLine() << pxl << ".rgb = " << ss.float3Const("Lstar", "ustar", "vstar") << ";";
+
+    // clang-format on
 }
 
 void Add_LUV_TO_XYZ(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
 {
+    // clang-format off
+
     const std::string pxl(shaderCreator->getPixelName());
 
     ss.newLine() << ss.floatDecl("Lstar") << " = " << pxl << ".rgb.r;";
@@ -521,6 +599,8 @@ void Add_LUV_TO_XYZ(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
     ss.newLine() << pxl << ".rgb.r = 9. * Y * u * dd;";
     ss.newLine() << pxl << ".rgb.b = Y * (12. - 3. * u - 20. * v) * dd;";
     ss.newLine() << pxl << ".rgb.g = Y;";
+
+    // clang-format on
 }
 
 void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
@@ -529,6 +609,8 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     GpuShaderText ss(shaderCreator->getLanguage());
     ss.indent();
 
+    // clang-format off
+
     ss.newLine() << "";
     ss.newLine() << "// Add FixedFunction '"
                  << FixedFunctionOpData::ConvertStyleToString(func->getStyle(), true)
@@ -536,6 +618,8 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     ss.newLine() << "";
     ss.newLine() << "{";
     ss.indent();
+
+    // clang-format on
 
     switch(func->getStyle())
     {

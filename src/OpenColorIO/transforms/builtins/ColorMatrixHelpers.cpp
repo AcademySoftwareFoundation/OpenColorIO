@@ -210,6 +210,7 @@ MatrixOpData::MatrixArrayPtr build_vonkries_adapt(const MatrixOpData::Offsets & 
                                                   const MatrixOpData::Offsets & dst_XYZ,
                                                   AdaptationMethod method)
 {
+    // clang-format off
     static constexpr double CONE_RESP_MAT_BRADFORD[16]{
              0.8951,  0.2664, -0.1614,  0.,
             -0.7502,  1.7135,  0.0367,  0.,
@@ -221,6 +222,7 @@ MatrixOpData::MatrixArrayPtr build_vonkries_adapt(const MatrixOpData::Offsets & 
             -0.7036,  1.6975,  0.0061,  0.,
              0.0030,  0.0136,  0.9834,  0.,
              0.,      0.,      0.,      1. };
+    // clang-format on
 
     MatrixOpData::MatrixArrayPtr xyz2rgb = std::make_shared<MatrixOpData::MatrixArray>();
     if (method == ADAPTATION_CAT02)

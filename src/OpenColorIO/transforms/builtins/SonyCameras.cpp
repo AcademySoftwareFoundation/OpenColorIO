@@ -103,6 +103,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
 
             // NB: Primaries were not provided for this case, only the matrix.
             // Note that in CTL, the matrices are stored transposed.
+            // clang-format off
             static constexpr double SGAMUT3_VENICE[4 * 4]
             {
                 0.7933297411,  0.0890786256,  0.1175916333, 0., 
@@ -110,6 +111,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
                -0.0188647478,  0.0127694121,  1.0060953358, 0., 
                 0., 0., 0., 1.
             };
+            // clang-format on
             CreateMatrixOp(ops, &SGAMUT3_VENICE[0], TRANSFORM_DIR_FORWARD);
         };
 
@@ -126,6 +128,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
 
             // NB: Primaries were not provided for this case, only the matrix.
             // Note that in CTL, the matrices are stored transposed.
+            // clang-format off
             static constexpr double SGAMUT3_CINE_VENICE[4 * 4]
             {
                 0.6742570921,  0.2205717359,  0.1051711720, 0., 
@@ -133,6 +136,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
                -0.0382090673, -0.0179383766,  1.0561474439, 0., 
                 0., 0., 0., 1.
             };
+            // clang-format on
             CreateMatrixOp(ops, &SGAMUT3_CINE_VENICE[0], TRANSFORM_DIR_FORWARD);
         };
 

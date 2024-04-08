@@ -57,6 +57,8 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
     // incr = 1/dim (amount needed to increment one index in the grid)
     const float incr = 1.0f / dim;
 
+    // clang-format off
+
     {
         GpuShaderText ss(shaderCreator->getLanguage());
         ss.indent();
@@ -241,6 +243,8 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
 
         shaderCreator->addToFunctionShaderCode(ss.string().c_str());
     }
+
+    // clang-format on
 }
 
 

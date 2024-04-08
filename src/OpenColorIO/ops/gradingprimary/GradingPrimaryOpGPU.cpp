@@ -157,6 +157,8 @@ void AddGPLogForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
                            GpuShaderText & st,
                            const GPProperties & props)
 {
+    // clang-format off
+
     const std::string pxl(shaderCreator->getPixelName());
 
     st.newLine() << pxl << ".rgb += " << props.brightness << ";";
@@ -186,12 +188,16 @@ void AddGPLogForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.newLine() << pxl << ".rgb = clamp( " << pxl << ".rgb, " << props.clampBlack << ", "
                                             << props.clampWhite << " );";
+
+    // clang-format on
 }
 
 void AddGPLogInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
                            GpuShaderText & st,
                            const GPProperties & props)
 {
+    // clang-format off
+
     const std::string pxl(shaderCreator->getPixelName());
 
     st.newLine() << pxl << ".rgb = clamp( " << pxl << ".rgb, " << props.clampBlack << ", "
@@ -225,6 +231,8 @@ void AddGPLogInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
                  << " + " << props.pivot << ";";
 
     st.newLine() << pxl << ".rgb += " << props.brightness << ";";
+
+    // clang-format on
 }
 
 void AddGPLinProperties(GpuShaderCreatorRcPtr & shaderCreator,
@@ -299,6 +307,8 @@ void AddGPLinForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
                            GpuShaderText & st,
                            const GPProperties & props)
 {
+    // clang-format off
+
     const std::string pxl(shaderCreator->getPixelName());
 
     st.newLine() << pxl << ".rgb += " << props.offset << ";";
@@ -323,12 +333,16 @@ void AddGPLinForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.newLine() << pxl << ".rgb = clamp( " << pxl << ".rgb, " << props.clampBlack << ", "
                                         << props.clampWhite << " );";
+
+    // clang-format on
 }
 
 void AddGPLinInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
                            GpuShaderText & st,
                            const GPProperties & props)
 {
+    // clang-format off
+
     const std::string pxl(shaderCreator->getPixelName());
 
     st.newLine() << pxl << ".rgb = clamp( " << pxl << ".rgb, " << props.clampBlack << ", "
@@ -358,6 +372,8 @@ void AddGPLinInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << pxl << ".rgb *= " << props.exposure << ";";
 
     st.newLine() << pxl << ".rgb += " << props.offset << ";";
+
+    // clang-format on
 }
 
 void AddGPVideoProperties(GpuShaderCreatorRcPtr & shaderCreator,
@@ -439,6 +455,8 @@ void AddGPVideoForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
                              GpuShaderText & st,
                              const GPProperties & props)
 {
+    // clang-format off
+
     const std::string pxl(shaderCreator->getPixelName());
 
     st.newLine() << pxl << ".rgb += " << props.offset << ";";
@@ -465,12 +483,16 @@ void AddGPVideoForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.newLine() << pxl << ".rgb = clamp( " << pxl << ".rgb, " << props.clampBlack << ", "
                                         << props.clampWhite << " );";
+
+    // clang-format on
 }
 
 void AddGPVideoInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
                              GpuShaderText & st,
                              const GPProperties & props)
 {
+    // clang-format off
+
     const std::string pxl(shaderCreator->getPixelName());
 
     st.newLine() << pxl << ".rgb = clamp( " << pxl << ".rgb, " << props.clampBlack << ", "
@@ -502,6 +524,8 @@ void AddGPVideoInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << pxl << ".rgb = ( " << pxl << ".rgb - " << props.pivotBlack << " ) * "<< props.slope
                                 <<" + " << props.pivotBlack << ";";
     st.newLine() << pxl << ".rgb += " << props.offset << " );";
+
+    // clang-format on
 }
 }
 
@@ -534,6 +558,8 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     GpuShaderText st(shaderCreator->getLanguage());
     st.indent();
 
+    // clang-format off
+
     st.newLine() << "";
     st.newLine() << "// Add GradingPrimary '"
                  << GradingStyleToString(style) << "' "
@@ -541,6 +567,8 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << "";
     st.newLine() << "{";
     st.indent();
+
+    // clang-format on
 
     // Properties holds shader variables names and is initialized with undecorated names suitable
     // for local variables.

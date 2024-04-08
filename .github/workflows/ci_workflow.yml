@@ -756,3 +756,58 @@ jobs:
           ./${{ matrix.build-type }}/consumer
         shell: bash
         working-directory: _build/tests/cmake-consumer-dist
+
+  # ---------------------------------------------------------------------------
+  # clang-format
+  # ---------------------------------------------------------------------------
+
+  clang-format:
+    name: 'Linux Latest clang-format'
+    # Avoid duplicated checks when a pull_request is opened from a local branch.
+    if: |
+      github.event_name == 'push' ||
+      github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+      - name: Install clang-format
+        run: |
+          pip install clang-format
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Create build directories
+        run: |
+          mkdir _install
+          mkdir _build
+      - name: Configure
+        run: |
+          cmake ../. \
+                -DCMAKE_INSTALL_PREFIX=../_install \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_CXX_STANDARD=17 \
+                -DBUILD_SHARED_LIBS=ON \
+                -DOCIO_BUILD_DOCS=OFF \
+                -DOCIO_BUILD_OPENFX=ON \
+                -DOCIO_BUILD_GPU_TESTS=OFF \
+                -DOCIO_USE_SIMD=ON \
+                -DOCIO_USE_OIIO_FOR_APPS=OFF \
+                -DOCIO_INSTALL_EXT_PACKAGES=ALL \
+                -DOCIO_WARNING_AS_ERROR=ON \
+                -DPython_EXECUTABLE=$(which python)
+        working-directory: _build
+      - name: Build
+        run: |
+          cmake --build . \
+                --target clang-format \
+                --config Release \
+                -- -j$(nproc)
+        working-directory: _build
+      - name: Test clang-format
+        run: |
+          if [[ `git status --porcelain` ]]; then
+            echo "Failing clang-format check, please run locally before submitting the PR."
+            exit 1
+          fi

@@ -83,6 +83,7 @@ int main(int argc, const char ** argv)
     std::string cscColorSpace;
 
     ArgParse ap;
+    // clang-format off
     ap.options("ociomakeclf -- Convert a LUT into CLF format and optionally add conversions from/to ACES2065-1 to make it an LMT.\n"
                "               If the csc argument is used, the CLF will contain the transforms:\n"
                "               [ACES2065-1 to CSC space] [the LUT] [CSC space to ACES2065-1].\n\n"
@@ -97,6 +98,7 @@ int main(int argc, const char ** argv)
                "--list",      &listCSCColorSpaces, "List of the supported CSC color spaces",
                "--csc %s",    &cscColorSpace,      "The color space that the input LUT expects and produces",
                nullptr);
+    // clang-format on
 
     if (ap.parse(argc, argv) < 0)
     {

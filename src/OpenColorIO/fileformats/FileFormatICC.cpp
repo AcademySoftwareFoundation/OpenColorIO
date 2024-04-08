@@ -772,12 +772,14 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     // a D50 XYZ to a D65 XYZ.
     // In most cases, combining this with the matrix in the ICC profile
     // recovers what would be the actual matrix for a D65 native monitor.
+    // clang-format off
     static constexpr double D50_to_D65_m44[] = {
             0.955509474537, -0.023074829492, 0.063312392987, 0.0,
            -0.028327238868,  1.00994465504,  0.021055592145, 0.0,
             0.012329273379, -0.020536209966, 1.33072998567,  0.0,
             0.0,             0.0,            0.0,            1.0
     };
+    // clang-format on
 
     const auto fileInterp = fileTransform.getInterpolation();
 

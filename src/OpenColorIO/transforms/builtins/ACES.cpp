@@ -57,6 +57,7 @@ static const LogOpData log(base, params, params, params, TRANSFORM_DIR_INVERSE);
 namespace ADX_to_ACES
 {
 
+// clang-format off
 static constexpr unsigned lutSize = 11;
 static constexpr double nonuniform_LUT[lutSize * 2]
 {
@@ -72,10 +73,12 @@ static constexpr double nonuniform_LUT[lutSize * 2]
      0.500000000000000, -1.121718645000000,
      0.600000000000000, -0.926545676714876
 };
+// clang-format on
 
 void GenerateOps(OpRcPtrVec & ops)
 {
     // Note that in CTL, the matrices are stored transposed.
+    // clang-format off
     static constexpr double CDD_TO_CID[4 * 4]
     {
         0.75573,  0.22197,  0.02230,  0.,
@@ -83,6 +86,7 @@ void GenerateOps(OpRcPtrVec & ops)
         0.16134,  0.07406,  0.76460,  0.,
         0.,       0.,       0.,       1.
     };
+    // clang-format on
 
     // Convert Channel Dependent Density values into Channel Independent Density values.
     CreateMatrixOp(ops, &CDD_TO_CID[0], TRANSFORM_DIR_FORWARD);
@@ -124,6 +128,7 @@ void GenerateOps(OpRcPtrVec & ops)
     // Convert Relative Log Exposure values to Relative Exposure values.
     CreateLogOp(ops, 10., TRANSFORM_DIR_INVERSE);
 
+    // clang-format off
     static constexpr double EXP_TO_ACES[4 * 4]
     {
         0.72286,  0.12630,  0.15084,  0.,
@@ -131,6 +136,7 @@ void GenerateOps(OpRcPtrVec & ops)
         0.01427,  0.08213,  0.90359,  0.,
         0.,       0.,       0.,       1.
     };
+    // clang-format on
 
     // Convert Relative Exposure values to ACES values.
     CreateMatrixOp(ops, &EXP_TO_ACES[0], TRANSFORM_DIR_FORWARD);            
@@ -161,6 +167,7 @@ void Generate_RRT_preamble_ops(OpRcPtrVec & ops)
                   0., RangeOpData::EmptyValue(),  // don't clamp high end
                   TRANSFORM_DIR_FORWARD);
 
+    // clang-format off
     static constexpr double RRT_SAT_MAT[4 * 4]
     {
         0.970889148671, 0.026963270632, 0.002147580696, 0., 
@@ -168,6 +175,7 @@ void Generate_RRT_preamble_ops(OpRcPtrVec & ops)
         0.010889148671, 0.026963270632, 0.962147580696, 0., 
         0., 0., 0., 1.
     };
+    // clang-format on
     CreateMatrixOp(ops, &RRT_SAT_MAT[0], TRANSFORM_DIR_FORWARD);            
 }
 
@@ -178,6 +186,7 @@ void Generate_tonecurve_ops(OpRcPtrVec & ops)
 
     // Apply RRT shaper using the same quadratic B-spline as the CTL.
     {
+        // clang-format off
         auto curve = GradingBSplineCurve::Create({
                 {-5.26017743f, -4.f},
                 {-3.75502745f, -3.57868829f},
@@ -187,6 +196,7 @@ void Generate_tonecurve_ops(OpRcPtrVec & ops)
                 { 2.86763245f,  3.83406206f},
                 { 4.67381243f,  4.f}
             });
+        // clang-format on
         float slopes[] = { 0.f,  0.55982688f,  1.77532247f,  1.55f,  0.8787017f,  0.18374463f,  0.f };
         for (size_t i = 0; i < 7; ++i)
         {
@@ -202,6 +212,7 @@ void Generate_tonecurve_ops(OpRcPtrVec & ops)
 
     // Apply SDR ODT shaper using the same quadratic B-spline as the CTL.
     {
+        // clang-format off
         auto curve = GradingBSplineCurve::Create({
                 {-2.54062362f,  -1.69897000f},
                 {-2.08035721f,  -1.58843500f},
@@ -219,6 +230,7 @@ void Generate_tonecurve_ops(OpRcPtrVec & ops)
                 { 2.67087173f,   1.66065457f},
                 { 3.00247681f,   1.68124124f}
             });
+        // clang-format on
         float slopes[] = { 0.f,  0.4803088f,   0.5405565f,   0.79149813f,  0.9055625f,  0.98460368f,
                            0.96884766f,  1.f,  0.87078346f,  0.73702127f,  0.42068113f,  0.23763206f,
                            0.14535362f,  0.08416378f,  0.04f };
@@ -258,6 +270,7 @@ void Generate_video_adjustment_ops(OpRcPtrVec & ops)
     CreateFixedFunctionOp(ops, FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD, {});
 
     // Desat to compensate 48 nit to 100 nit brightness.
+    // clang-format off
     static constexpr double DESAT_100_NITS[4 * 4]
     {
         0.949056010175, 0.047185723607, 0.003758266219, 0., 
@@ -265,6 +278,7 @@ void Generate_video_adjustment_ops(OpRcPtrVec & ops)
         0.019056010175, 0.047185723607, 0.933758266219, 0., 
         0., 0., 0., 1.
     };
+    // clang-format on
     CreateMatrixOp(ops, &DESAT_100_NITS[0], TRANSFORM_DIR_FORWARD);
 }
 
@@ -276,6 +290,7 @@ void Generate_hdr_tonecurve_ops(OpRcPtrVec & ops, double Y_MAX)
     // Apply RRT shaper using the same quadratic B-spline as the CTL.
     if (Y_MAX == 1000.)
     {
+        // clang-format off
         auto curve = GradingBSplineCurve::Create({
                 { -5.60050155f,  -4.00000000f },
                 { -4.09535157f,  -3.57868829f },
@@ -285,6 +300,7 @@ void Generate_hdr_tonecurve_ops(OpRcPtrVec & ops, double Y_MAX)
                 {  1.53199279f,   2.87906206f },
                 {  2.84051500f,   3.00000000f }
             });
+        // clang-format on
         const float slopes[] = { 0.f,  0.55982688f,  1.77532247f,  1.55f,  0.81219728f,  0.1848466f,  0.f };
         for (size_t i = 0; i < 7; ++i)
         {
@@ -299,6 +315,7 @@ void Generate_hdr_tonecurve_ops(OpRcPtrVec & ops, double Y_MAX)
     }
     else if (Y_MAX == 2000.)
     {
+        // clang-format off
         auto curve = GradingBSplineCurve::Create({
                 { -5.59738488f,  -4.00000000f },
                 { -4.09223490f,  -3.57868829f },
@@ -308,6 +325,7 @@ void Generate_hdr_tonecurve_ops(OpRcPtrVec & ops, double Y_MAX)
                 {  1.83472930f,   3.16609199f },
                 {  3.29306142f,   3.30103000f },
             });
+        // clang-format on
         const float slopes[] = { 0.f,  0.55982688f,  1.77532247f,  1.55f,  0.83637009f,  0.18505799f,  0.f };
         for (size_t i = 0; i < 7; ++i)
         {
@@ -322,6 +340,7 @@ void Generate_hdr_tonecurve_ops(OpRcPtrVec & ops, double Y_MAX)
     }
     else if (Y_MAX == 4000.)
     {
+        // clang-format off
         auto curve = GradingBSplineCurve::Create({
                 { -5.59503319f,  -4.00000000f },
                 { -4.08988322f,  -3.57868829f },
@@ -331,6 +350,7 @@ void Generate_hdr_tonecurve_ops(OpRcPtrVec & ops, double Y_MAX)
                 {  2.13670081f,   3.45351273f },
                 {  3.74484285f,   3.60205999f },
             });
+        // clang-format on
         const float slopes[] = { 0.f,  0.55982688f,  1.77532247f,  1.55f,  0.85652519f,  0.18474395f,  0.f };
         for (size_t i = 0; i < 7; ++i)
         {
@@ -345,6 +365,7 @@ void Generate_hdr_tonecurve_ops(OpRcPtrVec & ops, double Y_MAX)
     }
     else if (Y_MAX == 108.)
     {
+        // clang-format off
         auto curve = GradingBSplineCurve::Create({
                 { -5.37852506f,  -4.00000000f },
                 { -3.87337508f,  -3.57868829f },
@@ -354,6 +375,7 @@ void Generate_hdr_tonecurve_ops(OpRcPtrVec & ops, double Y_MAX)
                 {  0.79192092f,   1.96008059f },
                 {  1.61941895f,   2.03342376f },
             });
+        // clang-format on
         const float slopes[] = { 0.f,  0.55982688f,  1.77532247f,  1.55f,  0.68179646f,  0.17726487f,  0.f };
         for (size_t i = 0; i < 7; ++i)
         {
@@ -695,6 +717,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
         auto BLUE_LIGHT_FIX_Functor = [](OpRcPtrVec & ops)
         {
             // Note that in CTL, the matrices are stored transposed.
+            // clang-format off
             static constexpr double BLUE_LIGHT_FIX[4 * 4]
             {
                 0.9404372683, -0.0183068787,  0.0778696104, 0., 
@@ -702,6 +725,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
                 0.0005471261, -0.0008833746,  1.0003362486, 0., 
                 0., 0., 0., 1.
             };
+            // clang-format on
             CreateMatrixOp(ops, &BLUE_LIGHT_FIX[0], TRANSFORM_DIR_FORWARD);
         };
 

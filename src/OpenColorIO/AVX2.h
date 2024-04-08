@@ -109,11 +109,13 @@ struct AVX2RGBAPack<BIT_DEPTH_UINT8>
         __m256i rgba45 = _mm256_cvtps_epi32(rgba2);
         __m256i rgba67 = _mm256_cvtps_epi32(rgba3);
 
+        // clang-format off
         const __m256i rgba_shuf_a = _mm256_setr_epi8( 0, 4, 8, 12,  -1,-1,-1, -1,  -1,-1,-1,-1, -1,-1,-1,-1,
                                                     -1,-1,-1, -1,   0, 4, 8, 12, -1,-1,-1,-1, -1,-1,-1,-1);
 
         const __m256i rgba_shuf_b = _mm256_setr_epi8(-1,-1,-1,-1, -1,-1,-1,-1,  0, 4, 8, 12,  -1,-1,-1,-1,
                                                     -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1, -1,   0, 4, 8, 12);
+        // clang-format on
 
         rgba01 = _mm256_shuffle_epi8(rgba01, rgba_shuf_a);
         rgba23 = _mm256_shuffle_epi8(rgba23, rgba_shuf_b);
@@ -172,8 +174,10 @@ struct AVX2RGBAPack16
         __m256i rgba45 = _mm256_cvtps_epi32(rgba2);
         __m256i rgba67 = _mm256_cvtps_epi32(rgba3);
 
+        // clang-format off
         const __m256i rgba_shuf = _mm256_setr_epi8( 0, 1, 4, 5,   8,  9, 12, 13,  -1,-1,-1,-1, -1,-1, -1 ,-1,
-                                                -1,-1,-1,-1,  -1, -1, -1, -1,   0, 1, 4, 5,  8, 9, 12, 13);
+                                                   -1,-1,-1,-1,  -1, -1, -1, -1,   0, 1, 4, 5,  8, 9, 12, 13);
+        // clang-format on
 
         rgba01 = _mm256_shuffle_epi8(rgba01, rgba_shuf);
         lo = _mm_or_si128(_mm256_castsi256_si128(rgba01), _mm256_extractf128_si256(rgba01, 1));

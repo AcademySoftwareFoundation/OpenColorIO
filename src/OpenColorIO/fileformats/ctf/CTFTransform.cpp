@@ -2211,12 +2211,14 @@ void MatrixWriter::writeContent() const
                 values[8]  * inOutScale, values[9] * inOutScale, values[10] * inOutScale, values[11] * inOutScale, offsets[2] * outScale,
                 values[12] * inOutScale, values[13]* inOutScale, values[14] * inOutScale, values[15] * inOutScale, offsets[3] * outScale
             };
+            // clang-format on
 
             WriteValues(m_formatter, v, v + 20, 5, BIT_DEPTH_F32, 1, 1.0);
         }
         else
         {
             // Write in 4x4x4 compact mode.
+            // clang-format off
             const double v[16]
             {
                 values[0]  * inOutScale, values[1]  * inOutScale, values[2]  * inOutScale, values[3]  * inOutScale,
@@ -2224,6 +2226,7 @@ void MatrixWriter::writeContent() const
                 values[8]  * inOutScale, values[9]  * inOutScale, values[10] * inOutScale, values[11] * inOutScale,
                 values[12] * inOutScale, values[13] * inOutScale, values[14] * inOutScale, values[15] * inOutScale
             };
+            // clang-format on
 
             WriteValues(m_formatter, v, v + 16, 4, BIT_DEPTH_F32, 1, 1.0);
         }
@@ -2231,24 +2234,28 @@ void MatrixWriter::writeContent() const
     else if (matrix->hasOffsets())
     {
         // Write in 3x4x3 compact mode.
+        // clang-format off
         const double v[12]
         {
             values[0] * inOutScale, values[1] * inOutScale, values[2]  * inOutScale, offsets[0] * outScale,
             values[4] * inOutScale, values[5] * inOutScale, values[6]  * inOutScale, offsets[1] * outScale,
             values[8] * inOutScale, values[9] * inOutScale, values[10] * inOutScale, offsets[2] * outScale
         };
+        // clang-format on
 
         WriteValues(m_formatter, v, v + 12, 4, BIT_DEPTH_F32, 1, 1.0);
     }
     else
     {
         // Write in 3x3x3 compact mode.
+        // clang-format off
         const double v[9]
         {
             values[0] * inOutScale, values[1] * inOutScale, values[2]  * inOutScale,
             values[4] * inOutScale, values[5] * inOutScale, values[6]  * inOutScale,
             values[8] * inOutScale, values[9] * inOutScale, values[10] * inOutScale
         };
+        // clang-format on
 
         WriteValues(m_formatter, v, v + 9, 3, BIT_DEPTH_F32, 1, 1.0);
     }
