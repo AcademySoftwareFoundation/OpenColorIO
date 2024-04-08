@@ -22,8 +22,8 @@ void MatrixTransformImpl::deleter(MatrixTransform * t)
 
 TransformRcPtr MatrixTransformImpl::createEditableCopy() const
 {
-    MatrixTransformRcPtr transform = MatrixTransform::Create();
-    dynamic_cast<MatrixTransformImpl*>(transform.get())->data() = data();
+    MatrixTransformRcPtr transform                               = MatrixTransform::Create();
+    dynamic_cast<MatrixTransformImpl *>(transform.get())->data() = data();
     return transform;
 }
 
@@ -44,7 +44,7 @@ void MatrixTransformImpl::validate() const
         Transform::validate();
         data().validate();
     }
-    catch(Exception & ex)
+    catch (Exception & ex)
     {
         std::string errMsg("MatrixTransform validation failed: ");
         errMsg += ex.what();
@@ -81,20 +81,22 @@ const FormatMetadata & MatrixTransformImpl::getFormatMetadata() const noexcept
 
 bool MatrixTransformImpl::equals(const MatrixTransform & other) const noexcept
 {
-    if (this == &other) return true;
-    return data() == dynamic_cast<const MatrixTransformImpl*>(&other)->data();
+    if (this == &other)
+        return true;
+    return data() == dynamic_cast<const MatrixTransformImpl *>(&other)->data();
 }
 
 void MatrixTransformImpl::setMatrix(const double * m44)
 {
-    if (m44) data().setRGBA(m44);
+    if (m44)
+        data().setRGBA(m44);
 }
 
-template<typename T>
-void GetMatrix(const ArrayDouble::Values & vals, T * m44)
+template <typename T> void GetMatrix(const ArrayDouble::Values & vals, T * m44)
 {
-    static_assert(std::is_floating_point<T>::value, 
-                    "Only single and double precision floats are supported");
+    static_assert(
+        std::is_floating_point<T>::value,
+        "Only single and double precision floats are supported");
 
     if (m44)
     {
@@ -125,16 +127,17 @@ void MatrixTransformImpl::getMatrix(double * m44) const
 
 void MatrixTransformImpl::setOffset(const double * offset4)
 {
-    if (offset4) data().setRGBAOffsets(offset4);
+    if (offset4)
+        data().setRGBAOffsets(offset4);
 }
 
-template<typename T>
-void GetOffset(const double * vals, T * offset4)
+template <typename T> void GetOffset(const double * vals, T * offset4)
 {
-    static_assert(std::is_floating_point<T>::value, 
-                    "Only single and double precision floats are supported");
+    static_assert(
+        std::is_floating_point<T>::value,
+        "Only single and double precision floats are supported");
 
-    if(offset4)
+    if (offset4)
     {
         offset4[0] = (T)vals[0];
         offset4[1] = (T)vals[1];
@@ -159,20 +162,28 @@ We algebraiclly manipulate the terms into y = mx + b form as:
 m = (newmax-newmin)/(oldmax-oldmin)
 b = (newmin*oldmax - newmax*oldmin) / (oldmax-oldmin)
 */
-void MatrixTransform::Fit(double * m44, double * offset4,
-                            const double * oldmin4, const double * oldmax4,
-                            const double * newmin4, const double * newmax4)
+void MatrixTransform::Fit(
+    double * m44,
+    double * offset4,
+    const double * oldmin4,
+    const double * oldmax4,
+    const double * newmin4,
+    const double * newmax4)
 {
-    if(!oldmin4 || !oldmax4) return;
-    if(!newmin4 || !newmax4) return;
+    if (!oldmin4 || !oldmax4)
+        return;
+    if (!newmin4 || !newmax4)
+        return;
 
-    if(m44) memset(m44, 0, 16*sizeof(double));
-    if(offset4) memset(offset4, 0, 4*sizeof(double));
+    if (m44)
+        memset(m44, 0, 16 * sizeof(double));
+    if (offset4)
+        memset(offset4, 0, 4 * sizeof(double));
 
-    for(int i=0; i<4; ++i)
+    for (int i = 0; i < 4; ++i)
     {
         double denom = oldmax4[i] - oldmin4[i];
-        if(IsScalarEqualToZero(denom))
+        if (IsScalarEqualToZero(denom))
         {
             std::ostringstream os;
             os << "Cannot create Fit operator. ";
@@ -182,8 +193,10 @@ void MatrixTransform::Fit(double * m44, double * offset4,
             throw Exception(os.str().c_str());
         }
 
-        if(m44) m44[5*i] = (newmax4[i]-newmin4[i]) / denom;
-        if(offset4) offset4[i] = (newmin4[i]*oldmax4[i] - newmax4[i]*oldmin4[i]) / denom;
+        if (m44)
+            m44[5 * i] = (newmax4[i] - newmin4[i]) / denom;
+        if (offset4)
+            offset4[i] = (newmin4[i] * oldmax4[i] - newmax4[i] * oldmin4[i]) / denom;
     }
 }
 
@@ -192,8 +205,8 @@ void MatrixTransform::Identity(double * m44, double * offset4)
     if (m44)
     {
         memset(m44, 0, 16 * sizeof(double));
-        m44[0] = 1.0;
-        m44[5] = 1.0;
+        m44[0]  = 1.0;
+        m44[5]  = 1.0;
         m44[10] = 1.0;
         m44[15] = 1.0;
     }
@@ -207,12 +220,12 @@ void MatrixTransform::Identity(double * m44, double * offset4)
     }
 }
 
-void MatrixTransform::Sat(double * m44, double * offset4,
-                            double sat, const double * lumaCoef3)
+void MatrixTransform::Sat(double * m44, double * offset4, double sat, const double * lumaCoef3)
 {
-    if(!lumaCoef3) return;
+    if (!lumaCoef3)
+        return;
 
-    if(m44)
+    if (m44)
     {
         m44[0] = (1. - sat) * lumaCoef3[0] + sat;
         m44[1] = (1. - sat) * lumaCoef3[1];
@@ -224,8 +237,8 @@ void MatrixTransform::Sat(double * m44, double * offset4,
         m44[6] = (1. - sat) * lumaCoef3[2];
         m44[7] = 0.0;
 
-        m44[8] =  (1. - sat) * lumaCoef3[0];
-        m44[9] =  (1. - sat) * lumaCoef3[1];
+        m44[8]  = (1. - sat) * lumaCoef3[0];
+        m44[9]  = (1. - sat) * lumaCoef3[1];
         m44[10] = (1. - sat) * lumaCoef3[2] + sat;
         m44[11] = 0.0;
 
@@ -235,7 +248,7 @@ void MatrixTransform::Sat(double * m44, double * offset4,
         m44[15] = 1.0;
     }
 
-    if(offset4)
+    if (offset4)
     {
         offset4[0] = 0.0;
         offset4[1] = 0.0;
@@ -244,21 +257,21 @@ void MatrixTransform::Sat(double * m44, double * offset4,
     }
 }
 
-void MatrixTransform::Scale(double * m44, double * offset4,
-                            const double * scale4)
+void MatrixTransform::Scale(double * m44, double * offset4, const double * scale4)
 {
-    if(!scale4) return;
+    if (!scale4)
+        return;
 
-    if(m44)
+    if (m44)
     {
-        memset(m44, 0, 16*sizeof(double));
-        m44[0] = scale4[0];
-        m44[5] = scale4[1];
+        memset(m44, 0, 16 * sizeof(double));
+        m44[0]  = scale4[0];
+        m44[5]  = scale4[1];
         m44[10] = scale4[2];
         m44[15] = scale4[3];
     }
 
-    if(offset4)
+    if (offset4)
     {
         offset4[0] = 0.0;
         offset4[1] = 0.0;
@@ -266,13 +279,16 @@ void MatrixTransform::Scale(double * m44, double * offset4,
         offset4[3] = 0.0;
     }
 }
-void MatrixTransform::View(double * m44, double * offset4,
-                            int * channelHot4,
-                            const double * lumaCoef3)
+void MatrixTransform::View(
+    double * m44,
+    double * offset4,
+    int * channelHot4,
+    const double * lumaCoef3)
 {
-    if(!channelHot4 || !lumaCoef3) return;
+    if (!channelHot4 || !lumaCoef3)
+        return;
 
-    if(offset4)
+    if (offset4)
     {
         offset4[0] = 0.0;
         offset4[1] = 0.0;
@@ -280,38 +296,37 @@ void MatrixTransform::View(double * m44, double * offset4,
         offset4[3] = 0.0;
     }
 
-    if(m44)
+    if (m44)
     {
-        memset(m44, 0, 16*sizeof(double));
+        memset(m44, 0, 16 * sizeof(double));
 
         // All channels are hot, return identity
-        if(channelHot4[0] && channelHot4[1] &&
-            channelHot4[2] && channelHot4[3])
+        if (channelHot4[0] && channelHot4[1] && channelHot4[2] && channelHot4[3])
         {
             Identity(m44, 0x0);
         }
         // If not all the channels are hot, but alpha is,
         // just show it.
-        else if(channelHot4[3])
+        else if (channelHot4[3])
         {
-            for(int i=0; i<4; ++i)
+            for (int i = 0; i < 4; ++i)
             {
-                    m44[4*i+3] = 1.0;
+                m44[4 * i + 3] = 1.0;
             }
         }
         // Blend rgb as specified, place it in all 3 output
         // channels (to make a grayscale final image)
         else
         {
-            double values[3] = { 0.0, 0.0, 0.0 };
+            double values[3] = {0.0, 0.0, 0.0};
 
-            for(int i = 0; i < 3; ++i)
+            for (int i = 0; i < 3; ++i)
             {
                 values[i] += lumaCoef3[i] * (channelHot4[i] ? 1.0 : 0.0);
             }
 
             double sum = values[0] + values[1] + values[2];
-            if(!IsScalarEqualToZero(sum))
+            if (!IsScalarEqualToZero(sum))
             {
                 values[0] /= sum;
                 values[1] /= sum;
@@ -319,11 +334,11 @@ void MatrixTransform::View(double * m44, double * offset4,
             }
 
             // Copy rgb into rgb rows
-            for(int row=0; row<3; ++row)
+            for (int row = 0; row < 3; ++row)
             {
-                for(int i=0; i<3; i++)
+                for (int i = 0; i < 3; i++)
                 {
-                    m44[4*row+i] = values[i];
+                    m44[4 * row + i] = values[i];
                 }
             }
 
@@ -338,7 +353,7 @@ namespace
 const int DOUBLE_DECIMALS = 16;
 }
 
-std::ostream& operator<< (std::ostream& os, const MatrixTransform& t) noexcept
+std::ostream & operator<<(std::ostream & os, const MatrixTransform & t) noexcept
 {
     double matrix[16], offset[4];
 
@@ -366,4 +381,3 @@ std::ostream& operator<< (std::ostream& os, const MatrixTransform& t) noexcept
 }
 
 } // namespace OCIO_NAMESPACE
-

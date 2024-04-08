@@ -10,28 +10,27 @@
 #include "ParseUtils.h"
 #include "utils/StringUtils.h"
 
-
 namespace OCIO_NAMESPACE
 {
 void LookParseResult::Token::parse(const std::string & str)
 {
     // Assert no commas, colons, or | in str.
 
-    if(StringUtils::StartsWith(str, "+"))
+    if (StringUtils::StartsWith(str, "+"))
     {
         name = StringUtils::LeftTrim(str, '+');
-        dir = TRANSFORM_DIR_FORWARD;
+        dir  = TRANSFORM_DIR_FORWARD;
     }
     // TODO: Handle --
-    else if(StringUtils::StartsWith(str, "-"))
+    else if (StringUtils::StartsWith(str, "-"))
     {
         name = StringUtils::LeftTrim(str, '-');
-        dir = TRANSFORM_DIR_INVERSE;
+        dir  = TRANSFORM_DIR_INVERSE;
     }
     else
     {
         name = str;
-        dir = TRANSFORM_DIR_FORWARD;
+        dir  = TRANSFORM_DIR_FORWARD;
     }
 }
 
@@ -39,20 +38,21 @@ void LookParseResult::Token::serialize(std::ostream & os) const
 {
     switch (dir)
     {
-    case TRANSFORM_DIR_FORWARD:
-        os << name;
-        break;
-    case TRANSFORM_DIR_INVERSE:
-        os << "-" << name;
-        break;
+        case TRANSFORM_DIR_FORWARD:
+            os << name;
+            break;
+        case TRANSFORM_DIR_INVERSE:
+            os << "-" << name;
+            break;
     }
 }
 
 void LookParseResult::serialize(std::ostream & os, const Tokens & tokens)
 {
-    for(unsigned int i=0; i<tokens.size(); ++i)
+    for (unsigned int i = 0; i < tokens.size(); ++i)
     {
-        if(i!=0) os << ", ";
+        if (i != 0)
+            os << ", ";
         tokens[i].serialize(os);
     }
 }
@@ -62,7 +62,7 @@ const LookParseResult::Options & LookParseResult::parse(const std::string & look
     m_options.clear();
 
     std::string strippedlooks = StringUtils::Trim(looksstr);
-    if(strippedlooks.empty())
+    if (strippedlooks.empty())
     {
         return m_options;
     }
@@ -71,13 +71,13 @@ const LookParseResult::Options & LookParseResult::parse(const std::string & look
 
     StringUtils::StringVec vec;
 
-    for(unsigned int optionsindex=0; optionsindex<options.size(); ++optionsindex)
+    for (unsigned int optionsindex = 0; optionsindex < options.size(); ++optionsindex)
     {
         LookParseResult::Tokens tokens;
 
         vec.clear();
         vec = SplitStringEnvStyle(options[optionsindex]);
-        for(unsigned int i=0; i<vec.size(); ++i)
+        for (unsigned int i = 0; i < vec.size(); ++i)
         {
             LookParseResult::Token t;
             t.parse(vec[i]);
@@ -107,16 +107,15 @@ void LookParseResult::reverse()
     // need to be applied in the inverse direction. But, the precedence
     // for which option to apply is to be maintained!
 
-    for (unsigned int optionindex=0; optionindex<m_options.size(); ++optionindex)
+    for (unsigned int optionindex = 0; optionindex < m_options.size(); ++optionindex)
     {
         std::reverse(m_options[optionindex].begin(), m_options[optionindex].end());
 
-        for (unsigned int tokenindex=0; tokenindex<m_options[optionindex].size(); ++tokenindex)
+        for (unsigned int tokenindex = 0; tokenindex < m_options[optionindex].size(); ++tokenindex)
         {
-            m_options[optionindex][tokenindex].dir = 
-                GetInverseTransformDirection(m_options[optionindex][tokenindex].dir);
+            m_options[optionindex][tokenindex].dir
+                = GetInverseTransformDirection(m_options[optionindex][tokenindex].dir);
         }
     }
 }
 } // namespace OCIO_NAMESPACE
-

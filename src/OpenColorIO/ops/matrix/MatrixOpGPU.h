@@ -12,11 +12,10 @@
 namespace OCIO_NAMESPACE
 {
 
-void GetMatrixGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
-                               ConstMatrixOpDataRcPtr & matrix);
+void GetMatrixGPUShaderProgram(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstMatrixOpDataRcPtr & matrix);
 
 } // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_GPU_MATRIXOP_H
-
-

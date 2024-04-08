@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_OP_H
 #define INCLUDED_OCIO_OP_H
 
@@ -11,8 +10,8 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "DynamicProperty.h"
-#include "fileformats/FormatMetadata.h"
 #include "Mutex.h"
+#include "fileformats/FormatMetadata.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -23,25 +22,24 @@ typedef OCIO_SHARED_PTR<const OpCPU> ConstOpCPURcPtr;
 typedef std::vector<OpCPURcPtr> OpCPURcPtrVec;
 typedef std::vector<ConstOpCPURcPtr> ConstOpCPURcPtrVec;
 
-
 // OpCPU is a helper class to define the CPU pixel processing method signature.
-// Ops may define several optimized renderers tailored to the needs of a given set 
+// Ops may define several optimized renderers tailored to the needs of a given set
 // of op parameters.
-// For example, in the Range op, if the parameters do not require clamping 
+// For example, in the Range op, if the parameters do not require clamping
 // at the high end, a renderer that skips that clamp may be called.
 // The CPU renderer to use for a given op instance is decided during finalization.
-// 
+//
 class OpCPU
 {
 public:
-    OpCPU() = default;
-    OpCPU(const OpCPU &) = delete;
-    OpCPU(OpCPU &&) = delete;
+    OpCPU()                          = default;
+    OpCPU(const OpCPU &)             = delete;
+    OpCPU(OpCPU &&)                  = delete;
     OpCPU & operator=(const OpCPU &) = delete;
-    OpCPU & operator=(OpCPU &&) = delete;
-    virtual ~OpCPU() = default;
+    OpCPU & operator=(OpCPU &&)      = delete;
+    virtual ~OpCPU()                 = default;
 
-    // All the Ops assume float pointers (i.e. always float bit depths) except 
+    // All the Ops assume float pointers (i.e. always float bit depths) except
     // the 1D LUT CPU Op where the finalization depends on input and output bit depths.
     virtual void apply(const void * inImg, void * outImg, long numPixels) const = 0;
 
@@ -61,39 +59,38 @@ typedef OCIO_SHARED_PTR<Op> OpRcPtr;
 typedef OCIO_SHARED_PTR<const Op> ConstOpRcPtr;
 class OpRcPtrVec;
 
-// The OpData class is a helper class to hold the data part of an Op 
-// with some basic behaviors (i.e. isNoop(), isIdentity() …). The Op class 
-// holds an OpData and offers high-level behaviors such as op's combinations, 
+// The OpData class is a helper class to hold the data part of an Op
+// with some basic behaviors (i.e. isNoop(), isIdentity() …). The Op class
+// holds an OpData and offers high-level behaviors such as op's combinations,
 // CPU processing and GPU code generator.
-// 
-// As the specialized Ops are private classes, operations between different 
-// Op types could not all be done. A 'Read-only' access to the data part of 
-// an Op allows to question its data, to cast to the specialized OpData 
+//
+// As the specialized Ops are private classes, operations between different
+// Op types could not all be done. A 'Read-only' access to the data part of
+// an Op allows to question its data, to cast to the specialized OpData
 // (to have finer knowledge) and to apply any optimization rules.
-// 
-// For example, one optimization is to remove from the color transformation 
-// an identity Range (but still clamping) followed by any arbitrary LUT 1D 
-// except if the LUT is a half domain one (i.e. the input domain is 
-// all possible 16-bit floating-point values so there is not clamping). 
-// It means that the methods Range::canCombineWith() and Range::combineWith() 
+//
+// For example, one optimization is to remove from the color transformation
+// an identity Range (but still clamping) followed by any arbitrary LUT 1D
+// except if the LUT is a half domain one (i.e. the input domain is
+// all possible 16-bit floating-point values so there is not clamping).
+// It means that the methods Range::canCombineWith() and Range::combineWith()
 // have to question the LUT Op with a ‘not generic’ call (i.e. isInputHalfDomain()).
-// 
+//
 // The design is to have a read-only access to the OpData of the Op, and
 // the ability to cast in any specialized OpData classes.
-// 
-// In contrast to several file format readers which could only read 1D 
-// and/or 3D LUT's, the CLF file format (i.e. Common LUT Format from ACES) 
-// read a list of arbitrary ops. As the specialized Ops are private classes, 
-// data must be stored in intermediate structures. The 1D and 3D LUT's 
-// already having such a structure, all the other Ops need a dedicated one. 
-// 
-// The design is to avoid code duplication by using the OpData for the Op 
+//
+// In contrast to several file format readers which could only read 1D
+// and/or 3D LUT's, the CLF file format (i.e. Common LUT Format from ACES)
+// read a list of arbitrary ops. As the specialized Ops are private classes,
+// data must be stored in intermediate structures. The 1D and 3D LUT's
+// already having such a structure, all the other Ops need a dedicated one.
+//
+// The design is to avoid code duplication by using the OpData for the Op
 // and the Transform.
-// 
+//
 class OpData
 {
 public:
-
     // Enumeration of all possible operator types.
     enum Type
     {
@@ -122,7 +119,7 @@ public:
     OpData(OpData && rhs) = delete;
     OpData & operator=(const OpData & rhs);
     OpData & operator=(OpData && rhs) = delete;
-    virtual ~OpData() = default;
+    virtual ~OpData()                 = default;
 
     const std::string & getID() const;
     void setID(const std::string & id);
@@ -159,7 +156,7 @@ public:
     virtual std::string getCacheID() const = 0;
 
     // FormatMetadata.
-    FormatMetadataImpl & getFormatMetadata() { return m_metadata;  }
+    FormatMetadataImpl & getFormatMetadata() { return m_metadata; }
     const FormatMetadataImpl & getFormatMetadata() const { return m_metadata; }
 
 protected:
@@ -176,11 +173,11 @@ const char * GetTypeName(OpData::Type type);
 class Op
 {
 public:
-    Op(const Op & rhs) = delete;
-    Op(Op && rhs) = delete;
+    Op(const Op & rhs)             = delete;
+    Op(Op && rhs)                  = delete;
     Op & operator=(const Op & rhs) = delete;
-    Op & operator=(Op && rhs) = delete;
-    virtual ~Op() = default;
+    Op & operator=(Op && rhs)      = delete;
+    virtual ~Op()                  = default;
 
     virtual OpRcPtr clone() const = 0;
 
@@ -217,13 +214,12 @@ public:
 
     virtual bool hasChannelCrosstalk() const { return m_data->hasChannelCrosstalk(); }
 
-    virtual void dumpMetadata(ProcessorMetadataRcPtr & /*metadata*/) const
-    { }
+    virtual void dumpMetadata(ProcessorMetadataRcPtr & /*metadata*/) const {}
 
     void validate() const;
 
     // Prepare op for optimization and apply.
-    virtual void finalize() { }
+    virtual void finalize() {}
 
     // This should yield a string of not unreasonable length.
     virtual std::string getCacheID() const = 0;
@@ -237,11 +233,14 @@ public:
     // use and so it is ok to hard-code the fastLogExpPow to false.
 
     virtual void apply(void * img, long numPixels) const
-    { getCPUOp(false)->apply(img, img, numPixels); }
+    {
+        getCPUOp(false)->apply(img, img, numPixels);
+    }
 
     virtual void apply(const void * inImg, void * outImg, long numPixels) const
-    { getCPUOp(false)->apply(inImg, outImg, numPixels); }
-
+    {
+        getCPUOp(false)->apply(inImg, outImg, numPixels);
+    }
 
     // Is this op supported by the legacy shader text generator?
     virtual bool supportedByLegacyShader() const { return true; }
@@ -252,23 +251,27 @@ public:
     virtual bool isDynamic() const;
     virtual bool hasDynamicProperty(DynamicPropertyType type) const;
     virtual DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const;
-    virtual void replaceDynamicProperty(DynamicPropertyType /* type */,
-                                        DynamicPropertyDoubleImplRcPtr & /* prop */)
+    virtual void replaceDynamicProperty(
+        DynamicPropertyType /* type */,
+        DynamicPropertyDoubleImplRcPtr & /* prop */)
     {
         throw Exception("Op does not implement double dynamic property.");
     }
-    virtual void replaceDynamicProperty(DynamicPropertyType /* type */,
-                                        DynamicPropertyGradingPrimaryImplRcPtr & /* prop */)
+    virtual void replaceDynamicProperty(
+        DynamicPropertyType /* type */,
+        DynamicPropertyGradingPrimaryImplRcPtr & /* prop */)
     {
         throw Exception("Op does not implement grading primary dynamic property.");
     }
-    virtual void replaceDynamicProperty(DynamicPropertyType /* type */,
-                                        DynamicPropertyGradingRGBCurveImplRcPtr & /* prop */)
+    virtual void replaceDynamicProperty(
+        DynamicPropertyType /* type */,
+        DynamicPropertyGradingRGBCurveImplRcPtr & /* prop */)
     {
         throw Exception("Op does not implement grading rgb curve dynamic property.");
     }
-    virtual void replaceDynamicProperty(DynamicPropertyType /* type */,
-                                        DynamicPropertyGradingToneImplRcPtr & /* prop */)
+    virtual void replaceDynamicProperty(
+        DynamicPropertyType /* type */,
+        DynamicPropertyGradingToneImplRcPtr & /* prop */)
     {
         throw Exception("Op does not implement grading tone dynamic property.");
     }
@@ -286,12 +289,11 @@ protected:
     OpDataRcPtr & data() { return m_data; }
 
 private:
-
     // The OpData instance holds the parameters (LUT values, matrix coefs, etc.) being used.
     OpDataRcPtr m_data;
 };
 
-std::ostream& operator<< (std::ostream&, const Op&);
+std::ostream & operator<<(std::ostream &, const Op &);
 
 // The class handles a list of ops.
 //
@@ -341,14 +343,14 @@ public:
     const OpRcPtr & operator[](size_type idx) const { return m_ops[idx]; }
     OpRcPtr & operator[](size_type idx) { return m_ops[idx]; }
 
-    iterator erase(const_iterator position);       
+    iterator erase(const_iterator position);
     iterator erase(const_iterator first, const_iterator last);
 
-    // Insert at the 'position' the elements from the range ['first', 'last'[ 
-    // respecting the element's order. Inserting elements at a given position 
+    // Insert at the 'position' the elements from the range ['first', 'last'[
+    // respecting the element's order. Inserting elements at a given position
     // shifts elements starting at 'position' to the right.
-    // 
-    // Note: Inserting an empty range will do nothing and inserting 
+    //
+    // Note: Inserting an empty range will do nothing and inserting
     // in an empty list appends elements from the range ['first', 'last'[.
     //
     // Note: It copies elements i.e. no clone.
@@ -397,17 +399,18 @@ public:
     void optimize(OptimizationFlags oFlags);
 
     // Only OptimizationFlags related to bitdepth optimization are used.
-    void optimizeForBitdepth(const BitDepth & inBitDepth,
-                             const BitDepth & outBitDepth,
-                             OptimizationFlags oFlags);
-
+    void optimizeForBitdepth(
+        const BitDepth & inBitDepth,
+        const BitDepth & outBitDepth,
+        OptimizationFlags oFlags);
 };
 
-std::string SerializeOpVec(const OpRcPtrVec & ops, int indent=0);
+std::string SerializeOpVec(const OpRcPtrVec & ops, int indent = 0);
 
-void CreateOpVecFromOpData(OpRcPtrVec & ops,
-                            const ConstOpDataRcPtr & opData,
-                            TransformDirection dir);
+void CreateOpVecFromOpData(
+    OpRcPtrVec & ops,
+    const ConstOpDataRcPtr & opData,
+    TransformDirection dir);
 
 inline bool HasFlag(OptimizationFlags flags, OptimizationFlags queryFlag)
 {

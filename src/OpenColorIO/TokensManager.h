@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_TOKENS_MANAGER_H
 #define INCLUDED_OCIO_TOKENS_MANAGER_H
 
@@ -19,16 +18,17 @@ namespace OCIO_NAMESPACE
 class TokensManager
 {
 public:
-    TokensManager() = default;
-    TokensManager(const TokensManager &) = delete;
-    virtual ~TokensManager() = default;
+    TokensManager()                                  = default;
+    TokensManager(const TokensManager &)             = delete;
+    virtual ~TokensManager()                         = default;
     TokensManager & operator=(const TokensManager &) = default;
 
     typedef StringUtils::StringVec Tokens;
 
     Tokens::const_iterator findToken(const char * token) const noexcept
     {
-        if (!token || !*token) return m_tokens.end();
+        if (!token || !*token)
+            return m_tokens.end();
 
         // NB: Categories are not case-sensitive and whitespace is stripped.
         const std::string ref(StringUtils::Trim(StringUtils::Lower(token)));
@@ -44,10 +44,7 @@ public:
         return m_tokens.end();
     }
 
-    bool hasToken(const char * token) const noexcept
-    {
-        return findToken(token) != m_tokens.end();
-    }
+    bool hasToken(const char * token) const noexcept { return findToken(token) != m_tokens.end(); }
 
     void addToken(const char * token)
     {
@@ -59,7 +56,8 @@ public:
 
     void removeToken(const char * token) noexcept
     {
-        if (!token || !*token) return;
+        if (!token || !*token)
+            return;
 
         // NB: Categories are not case-sensitive and whitespace is stripped.
         const std::string ref(StringUtils::Trim(StringUtils::Lower(token)));
@@ -76,22 +74,17 @@ public:
         return;
     }
 
-    int getNumTokens() const noexcept
-    {
-        return static_cast<int>(m_tokens.size());
-    }
+    int getNumTokens() const noexcept { return static_cast<int>(m_tokens.size()); }
 
     const char * getToken(int index) const noexcept
     {
-        if (index<0 || index >= (int)m_tokens.size()) return nullptr;
+        if (index < 0 || index >= (int)m_tokens.size())
+            return nullptr;
 
         return m_tokens[index].c_str();
     }
 
-    void clearTokens() noexcept
-    {
-        m_tokens.clear();
-    }
+    void clearTokens() noexcept { m_tokens.clear(); }
 
 private:
     Tokens m_tokens;

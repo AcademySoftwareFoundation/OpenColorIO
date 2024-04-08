@@ -7,14 +7,13 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "BakingUtils.h"
+#include "Platform.h"
 #include "fileformats/FileFormatUtils.h"
 #include "ops/lut3d/Lut3DOp.h"
-#include "Platform.h"
-#include "BakingUtils.h"
 #include "transforms/FileTransform.h"
-#include "utils/StringUtils.h"
 #include "utils/NumberUtils.h"
-
+#include "utils/StringUtils.h"
 
 /*
 SPILUT 1.0
@@ -37,7 +36,7 @@ namespace
 class LocalCachedFile : public CachedFile
 {
 public:
-    LocalCachedFile() = default;
+    LocalCachedFile()  = default;
     ~LocalCachedFile() = default;
 
     Lut3DOpDataRcPtr lut;
@@ -48,47 +47,47 @@ typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
 class LocalFileFormat : public FileFormat
 {
 public:
-    LocalFileFormat() = default;
+    LocalFileFormat()  = default;
     ~LocalFileFormat() = default;
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-    CachedFileRcPtr read(std::istream & istream,
-                         const std::string & fileName,
-                         Interpolation interp) const override;
+    CachedFileRcPtr read(std::istream & istream, const std::string & fileName, Interpolation interp)
+        const override;
 
-    void bake(const Baker & baker,
-              const std::string & formatName,
-              std::ostream & ostream) const override;
+    void bake(const Baker & baker, const std::string & formatName, std::ostream & ostream)
+        const override;
 
-    void buildFileOps(OpRcPtrVec & ops,
-                        const Config & config,
-                        const ConstContextRcPtr & context,
-                        CachedFileRcPtr untypedCachedFile,
-                        const FileTransform & fileTransform,
-                        TransformDirection dir) const override;
+    void buildFileOps(
+        OpRcPtrVec & ops,
+        const Config & config,
+        const ConstContextRcPtr & context,
+        CachedFileRcPtr untypedCachedFile,
+        const FileTransform & fileTransform,
+        TransformDirection dir) const override;
 };
 
 void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 {
     FormatInfo info;
-    info.name = "spi3d";
-    info.extension = "spi3d";
-    info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
+    info.name              = "spi3d";
+    info.extension         = "spi3d";
+    info.capabilities      = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
     info.bake_capabilities = FormatBakeFlags(FORMAT_BAKE_CAPABILITY_3DLUT);
     formatInfoVec.push_back(info);
 }
 
-CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
-                                      const std::string & fileName,
-                                      Interpolation interp) const
+CachedFileRcPtr LocalFileFormat::read(
+    std::istream & istream,
+    const std::string & fileName,
+    Interpolation interp) const
 {
     const int MAX_LINE_SIZE = 4096;
     char lineBuffer[MAX_LINE_SIZE];
 
     // Read header information
     istream.getline(lineBuffer, MAX_LINE_SIZE);
-    if(!StringUtils::StartsWith(StringUtils::Lower(lineBuffer), "spilut"))
+    if (!StringUtils::StartsWith(StringUtils::Lower(lineBuffer), "spilut"))
     {
         std::ostringstream os;
         os << "Error parsing .spi3d file (";
@@ -141,36 +140,52 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
     float redValue = NAN, greenValue = NAN, blueValue = NAN;
 
     int entriesRemaining = rSize * gSize * bSize;
-    Array & lutArray = lut3d->getArray();
+    Array & lutArray     = lut3d->getArray();
     unsigned long numVal = lutArray.getNumValues();
     std::vector<bool> indexDefined(numVal, false);
     while (istream.good() && entriesRemaining > 0)
     {
         istream.getline(lineBuffer, MAX_LINE_SIZE);
 
-        char redValueS[64] = "";
+        char redValueS[64]   = "";
         char greenValueS[64] = "";
-        char blueValueS[64] = "";
+        char blueValueS[64]  = "";
 
 #ifdef _WIN32
-        if (sscanf(lineBuffer,
-            "%d %d %d %s %s %s",
-            &rIndex, &gIndex, &bIndex,
-            redValueS, 64,
-            greenValueS, 64,
-            blueValueS, 64) == 6)
+        if (sscanf(
+                lineBuffer,
+                "%d %d %d %s %s %s",
+                &rIndex,
+                &gIndex,
+                &bIndex,
+                redValueS,
+                64,
+                greenValueS,
+                64,
+                blueValueS,
+                64)
+            == 6)
 #else
-        if (sscanf(lineBuffer, "%d %d %d %s %s %s",
-            &rIndex, &gIndex, &bIndex,
-            redValueS, greenValueS, blueValueS) == 6)
+        if (sscanf(
+                lineBuffer,
+                "%d %d %d %s %s %s",
+                &rIndex,
+                &gIndex,
+                &bIndex,
+                redValueS,
+                greenValueS,
+                blueValueS)
+            == 6)
 #endif
         {
-            const auto redValueAnswer = NumberUtils::from_chars(redValueS, redValueS + 64, redValue);
-            const auto greenValueAnswer = NumberUtils::from_chars(greenValueS, greenValueS + 64, greenValue);
-            const auto blueValueAnswer = NumberUtils::from_chars(blueValueS, blueValueS + 64, blueValue);
+            const auto redValueAnswer
+                = NumberUtils::from_chars(redValueS, redValueS + 64, redValue);
+            const auto greenValueAnswer
+                = NumberUtils::from_chars(greenValueS, greenValueS + 64, greenValue);
+            const auto blueValueAnswer
+                = NumberUtils::from_chars(blueValueS, blueValueS + 64, blueValue);
 
-            if (redValueAnswer.ec != std::errc()
-                || greenValueAnswer.ec != std::errc()
+            if (redValueAnswer.ec != std::errc() || greenValueAnswer.ec != std::errc()
                 || blueValueAnswer.ec != std::errc())
             {
                 std::ostringstream os;
@@ -185,21 +200,18 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
             }
 
             bool invalidIndex = false;
-            if (rIndex < 0 || rIndex >= rSize
-                || gIndex < 0 || gIndex >= gSize
-                || bIndex < 0 || bIndex >= bSize)
+            if (rIndex < 0 || rIndex >= rSize || gIndex < 0 || gIndex >= gSize || bIndex < 0
+                || bIndex >= bSize)
             {
                 invalidIndex = true;
             }
             else
             {
-                index = GetLut3DIndex_BlueFast(rIndex, gIndex, bIndex,
-                                                rSize, gSize, bSize);
+                index = GetLut3DIndex_BlueFast(rIndex, gIndex, bIndex, rSize, gSize, bSize);
                 if (index < 0 || index >= (int)numVal)
                 {
                     invalidIndex = true;
                 }
-
             }
 
             if (invalidIndex)
@@ -215,10 +227,10 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                 throw Exception(os.str().c_str());
             }
 
-            lutArray[index+0] = redValue;
-            lutArray[index+1] = greenValue;
-            lutArray[index+2] = blueValue;
-            if (! indexDefined[index])
+            lutArray[index + 0] = redValue;
+            lutArray[index + 1] = greenValue;
+            lutArray[index + 2] = blueValue;
+            if (!indexDefined[index])
             {
                 entriesRemaining--;
                 indexDefined[index] = true;
@@ -232,7 +244,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                 os << "Data is invalid. ";
                 os << "A LUT entry is specified multiple times (";
                 os << rIndex << " " << gIndex << " " << bIndex;
-                os <<  ").";  
+                os << ").";
                 throw Exception(os.str().c_str());
             }
         }
@@ -250,18 +262,19 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
     }
 
     LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
-    cachedFile->lut = lut3d;
+    cachedFile->lut                 = lut3d;
     return cachedFile;
 }
 
-void LocalFileFormat::bake(const Baker & baker,
-                           const std::string & formatName,
-                           std::ostream & ostream) const
+void LocalFileFormat::bake(
+    const Baker & baker,
+    const std::string & formatName,
+    std::ostream & ostream) const
 {
 
     static const int DEFAULT_CUBE_SIZE = 32;
 
-    if(formatName != "spi3d")
+    if (formatName != "spi3d")
     {
         std::ostringstream os;
         os << "Unknown spi format name, '";
@@ -272,13 +285,14 @@ void LocalFileFormat::bake(const Baker & baker,
     ConstConfigRcPtr config = baker.getConfig();
 
     int cubeSize = baker.getCubeSize();
-    if(cubeSize==-1) cubeSize = DEFAULT_CUBE_SIZE;
+    if (cubeSize == -1)
+        cubeSize = DEFAULT_CUBE_SIZE;
     cubeSize = std::max(2, cubeSize); // smallest cube is 2x2x2
 
     std::vector<float> cubeData;
-    cubeData.resize(cubeSize*cubeSize*cubeSize*3);
+    cubeData.resize(cubeSize * cubeSize * cubeSize * 3);
     GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_BLUE);
-    PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
+    PackedImageDesc cubeImg(&cubeData[0], cubeSize * cubeSize * cubeSize, 1, 3);
     ConstCPUProcessorRcPtr inputToTarget = GetInputToTargetProcessor(baker);
     inputToTarget->apply(cubeImg);
 
@@ -289,27 +303,25 @@ void LocalFileFormat::bake(const Baker & baker,
     // Set to a fixed 6 decimal precision
     ostream.setf(std::ios::fixed, std::ios::floatfield);
     ostream.precision(6);
-    for(int i=0; i<cubeSize*cubeSize*cubeSize; ++i)
+    for (int i = 0; i < cubeSize * cubeSize * cubeSize; ++i)
     {
-        ostream << ((i / cubeSize) / cubeSize) % cubeSize << " "
-                << (i / cubeSize) % cubeSize << " "
-                << i % cubeSize << " "
-                << cubeData[3*i+0] << " "
-                << cubeData[3*i+1] << " "
-                << cubeData[3*i+2] << "\n";
+        ostream << ((i / cubeSize) / cubeSize) % cubeSize << " " << (i / cubeSize) % cubeSize << " "
+                << i % cubeSize << " " << cubeData[3 * i + 0] << " " << cubeData[3 * i + 1] << " "
+                << cubeData[3 * i + 2] << "\n";
     }
 }
 
-void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
-                                    const Config & /*config*/,
-                                    const ConstContextRcPtr & /*context*/,
-                                    CachedFileRcPtr untypedCachedFile,
-                                    const FileTransform & fileTransform,
-                                    TransformDirection dir) const
+void LocalFileFormat::buildFileOps(
+    OpRcPtrVec & ops,
+    const Config & /*config*/,
+    const ConstContextRcPtr & /*context*/,
+    CachedFileRcPtr untypedCachedFile,
+    const FileTransform & fileTransform,
+    TransformDirection dir) const
 {
     LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
 
-    if(!cachedFile || !cachedFile->lut) // This should never happen.
+    if (!cachedFile || !cachedFile->lut) // This should never happen.
     {
         std::ostringstream os;
         os << "Cannot build Spi3D Op. Invalid cache type.";
@@ -321,7 +333,7 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     const auto fileInterp = fileTransform.getInterpolation();
 
     bool fileInterpUsed = false;
-    auto lut = HandleLUT3D(cachedFile->lut, fileInterp, fileInterpUsed);
+    auto lut            = HandleLUT3D(cachedFile->lut, fileInterp, fileInterpUsed);
 
     if (!fileInterpUsed)
     {
@@ -330,7 +342,7 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 
     CreateLut3DOp(ops, lut, newDir);
 }
-}
+} // namespace
 
 FileFormat * CreateFileFormatSpi3D()
 {

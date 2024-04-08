@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <vector>
 
-#include <OpenColorIO/OpenColorIO.h>
 #include "utils/StringUtils.h"
+#include <OpenColorIO/OpenColorIO.h>
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -23,10 +23,9 @@ namespace OCIO = OCIO_NAMESPACE;
 static std::vector<std::string> args;
 
 // Fill 'args' array with OpenColorIO arguments.
-static int
-parse_end_args(int argc, const char *argv[])
+static int parse_end_args(int argc, const char * argv[])
 {
-    while (argc>0)
+    while (argc > 0)
     {
         args.push_back(argv[0]);
         argc--;
@@ -36,7 +35,7 @@ parse_end_args(int argc, const char *argv[])
     return 0;
 }
 
-int main(int argc, const char **argv)
+int main(int argc, const char ** argv)
 {
     ArgParse ap;
     std::string inputconfig;
@@ -45,13 +44,13 @@ int main(int argc, const char **argv)
     // Default value is current directory.
     std::string extractDestination;
 
-    bool extract    = false;
-    bool list       = false;
-    bool help       = false;
+    bool extract = false;
+    bool list    = false;
+    bool help    = false;
 
-    int32_t err = MZ_OK;
-    mz_zip_file* file_info = NULL;
-    void* reader = NULL;
+    int32_t err             = MZ_OK;
+    mz_zip_file * file_info = NULL;
+    void * reader           = NULL;
 
     // clang-format off
     ap.options("ocioarchive -- Archive a config and its LUT files or extract a config archive. \n\n"
@@ -80,7 +79,7 @@ int main(int argc, const char **argv)
                );
     // clang-format on
 
-    if (ap.parse (argc, argv) < 0)
+    if (ap.parse(argc, argv) < 0)
     {
         std::cerr << ap.geterror() << std::endl;
         exit(1);
@@ -120,7 +119,6 @@ int main(int argc, const char **argv)
                     std::cerr << "ERROR: Could not load config: " << configFilename << std::endl;
                     exit(1);
                 }
-                
             }
             else if (ocioEnv && *ocioEnv)
             {
@@ -133,8 +131,8 @@ int main(int argc, const char **argv)
                 catch (...)
                 {
                     // Capture any errors and display a custom message.
-                    std::cerr << "ERROR: Could not load config from $OCIO variable: " 
-                              << ocioEnv << std::endl;
+                    std::cerr << "ERROR: Could not load config from $OCIO variable: " << ocioEnv
+                              << std::endl;
                     exit(1);
                 }
             }
@@ -144,11 +142,11 @@ int main(int argc, const char **argv)
                 exit(1);
             }
 
-            try 
+            try
             {
                 // The ocioz extension is added by the archive method. The assumption is that
                 // archiveName is the filename without extension.
-        
+
                 // Do not add ocioz extension if already present.
                 if (!StringUtils::EndsWith(archiveName, ".ocioz"))
                 {
@@ -163,7 +161,7 @@ int main(int argc, const char **argv)
                 }
                 else
                 {
-                    std::cerr << "Could not open output stream for: " 
+                    std::cerr << "Could not open output stream for: "
                               << archiveName + std::string(OCIO::OCIO_CONFIG_ARCHIVE_FILE_EXT)
                               << std::endl;
                     exit(1);
@@ -173,14 +171,14 @@ int main(int argc, const char **argv)
             {
                 std::cerr << e.what() << std::endl;
                 exit(1);
-            } 
+            }
         }
         catch (OCIO::Exception & exception)
         {
             std::cerr << "ERROR: " << exception.what() << std::endl;
             exit(1);
-        } 
-        catch (std::exception& exception)
+        }
+        catch (std::exception & exception)
         {
             std::cerr << "ERROR: " << exception.what() << std::endl;
             exit(1);
@@ -203,7 +201,7 @@ int main(int argc, const char **argv)
         }
 
         archiveName = args[0].c_str();
-        try 
+        try
         {
             if (extractDestination.empty())
             {
@@ -211,7 +209,7 @@ int main(int argc, const char **argv)
                 extractDestination = archiveName;
 
                 // Remove extension, if present.
-                char * dst = const_cast<char*>(extractDestination.c_str());
+                char * dst = const_cast<char *>(extractDestination.c_str());
                 mz_path_remove_extension(dst);
                 extractDestination = dst;
             }
@@ -243,7 +241,7 @@ int main(int argc, const char **argv)
         mz_zip_reader_create(&reader);
 #endif
         struct tm tmu_date;
-        
+
         err = mz_zip_reader_open_file(reader, path.c_str());
         if (err != MZ_OK)
         {
@@ -266,7 +264,7 @@ int main(int argc, const char **argv)
             err = mz_zip_reader_entry_get_info(reader, &file_info);
             if (err != MZ_OK)
             {
-                std::cerr << "ERROR: Could not get information from entry: " << file_info->filename 
+                std::cerr << "ERROR: Could not get information from entry: " << file_info->filename
                           << std::endl;
                 exit(1);
             }
@@ -274,15 +272,20 @@ int main(int argc, const char **argv)
             mz_zip_time_t_to_tm(file_info->modified_date, &tmu_date);
 
             // Print entry information.
-            printf("      %2.2" PRIu32 "-%2.2" PRIu32 "-%2.2" PRIu32 " %2.2" PRIu32 \
-                    ":%2.2" PRIu32 " %8.8" PRIx32 "   %s\n",
-                    (uint32_t)tmu_date.tm_mon + 1, (uint32_t)tmu_date.tm_mday,
-                    (uint32_t)tmu_date.tm_year % 100,
-                    (uint32_t)tmu_date.tm_hour, (uint32_t)tmu_date.tm_min,
-                    file_info->crc, file_info->filename);
+            printf(
+                "      %2.2" PRIu32 "-%2.2" PRIu32 "-%2.2" PRIu32 " %2.2" PRIu32 ":%2.2" PRIu32
+                " %8.8" PRIx32 "   %s\n",
+                (uint32_t)tmu_date.tm_mon + 1,
+                (uint32_t)tmu_date.tm_mday,
+                (uint32_t)tmu_date.tm_year % 100,
+                (uint32_t)tmu_date.tm_hour,
+                (uint32_t)tmu_date.tm_min,
+                file_info->crc,
+                file_info->filename);
 
             err = mz_zip_reader_goto_next_entry(reader);
-        } while (err == MZ_OK);
+        }
+        while (err == MZ_OK);
     }
 
     // Generic error handling.
@@ -290,7 +293,8 @@ int main(int argc, const char **argv)
     else
     {
         std::cerr << "Archive, extract, and/or list functions "
-                     "may not be used at the same time." << std::endl;
+                     "may not be used at the same time."
+                  << std::endl;
         exit(1);
     }
 }

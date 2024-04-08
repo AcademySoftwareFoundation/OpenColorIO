@@ -16,10 +16,11 @@ namespace OCIO_NAMESPACE
 
 namespace
 {
-void CreatePaddedLutChannels(unsigned long width,
-                             unsigned long height,
-                             const std::vector<float> & channel,
-                             std::vector<float> & paddedChannel)
+void CreatePaddedLutChannels(
+    unsigned long width,
+    unsigned long height,
+    const std::vector<float> & channel,
+    std::vector<float> & paddedChannel)
 {
     // The 1D LUT always contains 3 channels.
     const unsigned long currWidth = (unsigned long)(channel.size() / 3);
@@ -37,10 +38,11 @@ void CreatePaddedLutChannels(unsigned long width,
         const unsigned long step = width - 1;
         for (unsigned long i = 0; i < (currWidth - step); i += step)
         {
-            std::transform(&channel[3 * i],
-                           &channel[3 * (i + step)],
-                           std::back_inserter(paddedChannel),
-                           [](float val) {return SanitizeFloat(val); });
+            std::transform(
+                &channel[3 * i],
+                &channel[3 * (i + step)],
+                std::back_inserter(paddedChannel),
+                [](float val) { return SanitizeFloat(val); });
 
             paddedChannel.push_back(SanitizeFloat(channel[3 * (i + step) + 0]));
             paddedChannel.push_back(SanitizeFloat(channel[3 * (i + step) + 1]));
@@ -51,10 +53,11 @@ void CreatePaddedLutChannels(unsigned long width,
         // If there are still texels to fill, add them to the texture data.
         if (leftover > 0)
         {
-            std::transform(&channel[3 * (currWidth - leftover)],
-                           &channel[3 * (currWidth - 1)],
-                           std::back_inserter(paddedChannel),
-                           [](float val) {return SanitizeFloat(val); });
+            std::transform(
+                &channel[3 * (currWidth - leftover)],
+                &channel[3 * (currWidth - 1)],
+                std::back_inserter(paddedChannel),
+                [](float val) { return SanitizeFloat(val); });
 
             paddedChannel.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 0]));
             paddedChannel.push_back(SanitizeFloat(channel[3 * (currWidth - 1) + 1]));
@@ -81,10 +84,11 @@ void CreatePaddedLutChannels(unsigned long width,
     }
 }
 
-void CreatePaddedRedChannel(unsigned long width,
-                            unsigned long height,
-                            const std::vector<float> & channel, // Contains RGB.
-                            std::vector<float> & paddedChannel) // Expects Red only.
+void CreatePaddedRedChannel(
+    unsigned long width,
+    unsigned long height,
+    const std::vector<float> & channel, // Contains RGB.
+    std::vector<float> & paddedChannel) // Expects Red only.
 {
     // The 1D LUT always contains 3 channels.
     const unsigned long currWidth = (unsigned long)(channel.size() / 3);
@@ -140,14 +144,16 @@ void CreatePaddedRedChannel(unsigned long width,
     }
 }
 
-}  // anon.
+} // namespace
 
-void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
-                              ConstLut1DOpDataRcPtr & lutData)
+void GetLut1DGPUShaderProgram(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstLut1DOpDataRcPtr & lutData)
 {
     if (shaderCreator->getLanguage() == LANGUAGE_OSL_1)
     {
-        throw Exception("The Lut1DOp is not yet supported by the 'Open Shading language (OSL)' translation");
+        throw Exception(
+            "The Lut1DOp is not yet supported by the 'Open Shading language (OSL)' translation");
     }
 
     const unsigned long defaultMaxWidth = shaderCreator->getTextureMaxWidth();
@@ -157,10 +163,10 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     const unsigned long height      = (length / defaultMaxWidth) + 1;
     const unsigned long numChannels = lutData->getArray().getNumColorComponents();
 
-    // Note: The 1D LUT needs a GPU texture for the Look-up table implementation. 
+    // Note: The 1D LUT needs a GPU texture for the Look-up table implementation.
     // However, the texture type & content may vary based on the number of channels
     // i.e. when all channels are identical a F32 Red GPU texture is enough.
- 
+
     const bool singleChannel = (numChannels == 1);
 
     // Adjust LUT texture to allow for correct 2d linear interpolation, if needed.
@@ -180,9 +186,7 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     // Register the RGB LUT.
 
     std::ostringstream resName;
-    resName << shaderCreator->getResourcePrefix()
-            << std::string("_")
-            << std::string("lut1d_")
+    resName << shaderCreator->getResourcePrefix() << std::string("_") << std::string("lut1d_")
             << shaderCreator->getNextResourceIndex();
 
     // Note: Remove potentially problematic double underscores from GLSL resource names.
@@ -199,15 +203,16 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     }
 
     // (Using CacheID here to potentially allow reuse of existing textures.)
-    shaderCreator->addTexture(name.c_str(),
-                              GpuShaderText::getSamplerName(name).c_str(),
-                              width,
-                              height,
-                              singleChannel ? GpuShaderCreator::TEXTURE_RED_CHANNEL
-                                            : GpuShaderCreator::TEXTURE_RGB_CHANNEL,
-                              dimensions,
-                              lutData->getConcreteInterpolation(),
-                              &values[0]);
+    shaderCreator->addTexture(
+        name.c_str(),
+        GpuShaderText::getSamplerName(name).c_str(),
+        width,
+        height,
+        singleChannel ? GpuShaderCreator::TEXTURE_RED_CHANNEL
+                      : GpuShaderCreator::TEXTURE_RGB_CHANNEL,
+        dimensions,
+        lutData->getConcreteInterpolation(),
+        &values[0]);
 
     // Add the LUT code to the OCIO shader program.
 

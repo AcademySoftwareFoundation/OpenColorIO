@@ -9,16 +9,15 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "ParseUtils.h"
+#include "Platform.h"
 #include "expat.h"
 #include "fileformats/FileFormatUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
-#include "ParseUtils.h"
-#include "Platform.h"
 #include "transforms/FileTransform.h"
-#include "utils/StringUtils.h"
 #include "utils/NumberUtils.h"
-
+#include "utils/StringUtils.h"
 
 /*
 
@@ -70,21 +69,21 @@ namespace
 {
 // convert hex ascii to int
 // return true on success, false on failure
-bool hexasciitoint(char& ival, char character)
+bool hexasciitoint(char & ival, char character)
 {
-    if(character>=48 && character<=57) // [0-9]
+    if (character >= 48 && character <= 57) // [0-9]
     {
-        ival = static_cast<char>(character-48);
+        ival = static_cast<char>(character - 48);
         return true;
     }
-    else if(character>=65 && character<=70) // [A-F]
+    else if (character >= 65 && character <= 70) // [A-F]
     {
-        ival = static_cast<char>(10+character-65);
+        ival = static_cast<char>(10 + character - 65);
         return true;
     }
-    else if(character>=97 && character<=102) // [a-f]
+    else if (character >= 97 && character <= 102) // [a-f]
     {
-        ival = static_cast<char>(10+character-97);
+        ival = static_cast<char>(10 + character - 97);
         return true;
     }
 
@@ -97,13 +96,13 @@ bool hexasciitoint(char& ival, char character)
 // as used in the iridas file format
 // "AD10753F" -> 0.9572857022285461f on ALL architectures
 
-bool hexasciitofloat(float& fval, const char * ascii)
+bool hexasciitofloat(float & fval, const char * ascii)
 {
     // Convert all ASCII numbers to their numerical representations
     char asciinums[8];
-    for(unsigned int i=0; i<8; ++i)
+    for (unsigned int i = 0; i < 8; ++i)
     {
-        if(!hexasciitoint(asciinums[i], ascii[i]))
+        if (!hexasciitoint(asciinums[i], ascii[i]))
         {
             return false;
         }
@@ -114,17 +113,17 @@ bool hexasciitofloat(float& fval, const char * ascii)
 #if OCIO_LITTLE_ENDIAN
     // Since incoming values are little endian, and we're on little endian
     // preserve the byte order
-    fvalbytes[0] = (unsigned char) (asciinums[1] | (asciinums[0] << 4));
-    fvalbytes[1] = (unsigned char) (asciinums[3] | (asciinums[2] << 4));
-    fvalbytes[2] = (unsigned char) (asciinums[5] | (asciinums[4] << 4));
-    fvalbytes[3] = (unsigned char) (asciinums[7] | (asciinums[6] << 4));
+    fvalbytes[0] = (unsigned char)(asciinums[1] | (asciinums[0] << 4));
+    fvalbytes[1] = (unsigned char)(asciinums[3] | (asciinums[2] << 4));
+    fvalbytes[2] = (unsigned char)(asciinums[5] | (asciinums[4] << 4));
+    fvalbytes[3] = (unsigned char)(asciinums[7] | (asciinums[6] << 4));
 #else
     // Since incoming values are little endian, and we're on big endian
     // flip the byte order
-    fvalbytes[3] = (unsigned char) (asciinums[1] | (asciinums[0] << 4));
-    fvalbytes[2] = (unsigned char) (asciinums[3] | (asciinums[2] << 4));
-    fvalbytes[1] = (unsigned char) (asciinums[5] | (asciinums[4] << 4));
-    fvalbytes[0] = (unsigned char) (asciinums[7] | (asciinums[6] << 4));
+    fvalbytes[3] = (unsigned char)(asciinums[1] | (asciinums[0] << 4));
+    fvalbytes[2] = (unsigned char)(asciinums[3] | (asciinums[2] << 4));
+    fvalbytes[1] = (unsigned char)(asciinums[5] | (asciinums[4] << 4));
+    fvalbytes[0] = (unsigned char)(asciinums[7] | (asciinums[6] << 4));
 #endif
     return true;
 }
@@ -132,8 +131,8 @@ bool hexasciitofloat(float& fval, const char * ascii)
 class XMLParserHelper
 {
 public:
-    XMLParserHelper() = delete;
-    XMLParserHelper(const XMLParserHelper &) = delete;
+    XMLParserHelper()                                    = delete;
+    XMLParserHelper(const XMLParserHelper &)             = delete;
     XMLParserHelper & operator=(const XMLParserHelper &) = delete;
 
     explicit XMLParserHelper(const std::string & fileName)
@@ -152,10 +151,7 @@ public:
         XML_SetElementHandler(m_parser, StartElementHandler, EndElementHandler);
         XML_SetCharacterDataHandler(m_parser, CharacterDataHandler);
     }
-    ~XMLParserHelper()
-    {
-        XML_ParserFree(m_parser);
-    }
+    ~XMLParserHelper() { XML_ParserFree(m_parser); }
 
     void Parse(std::istream & istream)
     {
@@ -172,7 +168,7 @@ public:
     }
     void Parse(const std::string & buffer, bool lastLine)
     {
-        const int done = lastLine?1:0;
+        const int done = lastLine ? 1 : 0;
 
         if (XML_STATUS_ERROR == XML_Parse(m_parser, buffer.c_str(), (int)buffer.size(), done))
         {
@@ -202,13 +198,13 @@ public:
             throw Exception(os.str().c_str());
         }
 
-        lutSize = m_lutSize;
-        int expactedVectorSize = 3 * (lutSize*lutSize*lutSize);
+        lutSize                = m_lutSize;
+        int expactedVectorSize = 3 * (lutSize * lutSize * lutSize);
         lut.reserve(expactedVectorSize);
 
         const char * ascii = m_lutString.c_str();
-        float fval = 0.0f;
-        for (unsigned int i = 0; i<m_lutString.size() / 8; ++i)
+        float fval         = 0.0f;
+        for (unsigned int i = 0; i < m_lutString.size() / 8; ++i)
         {
             if (!hexasciitofloat(fval, &ascii[8 * i]))
             {
@@ -231,11 +227,9 @@ public:
             os << "Found " << lut.size() << " values, expected " << expactedVectorSize << ".";
             throw Exception(os.str().c_str());
         }
-
     }
 
 private:
-
     void Throw(const std::string & error) const
     {
         std::ostringstream os;
@@ -247,11 +241,10 @@ private:
     }
 
     // Start the parsing of one element
-    static void StartElementHandler(void *userData,
-        const XML_Char *name,
-        const XML_Char ** /*atts*/)
+    static void
+    StartElementHandler(void * userData, const XML_Char * name, const XML_Char ** /*atts*/)
     {
-        XMLParserHelper * pImpl = (XMLParserHelper*)userData;
+        XMLParserHelper * pImpl = (XMLParserHelper *)userData;
 
         if (!pImpl || !name || !*name)
         {
@@ -282,7 +275,7 @@ private:
                 if (pImpl->m_inLook)
                 {
                     pImpl->Throw("<look> node can not be inside "
-                                    "a <look> node");
+                                 "a <look> node");
                 }
                 else
                 {
@@ -331,10 +324,9 @@ private:
     }
 
     // End the parsing of one element
-    static void EndElementHandler(void *userData,
-        const XML_Char *name)
+    static void EndElementHandler(void * userData, const XML_Char * name)
     {
-        XMLParserHelper * pImpl = (XMLParserHelper*)userData;
+        XMLParserHelper * pImpl = (XMLParserHelper *)userData;
         if (!pImpl || !name || !*name)
         {
             throw Exception("XML internal parsing error.");
@@ -395,32 +387,35 @@ private:
     }
 
     // Handle of strings within an element
-    static void CharacterDataHandler(void *userData,
-        const XML_Char *s,
-        int len)
+    static void CharacterDataHandler(void * userData, const XML_Char * s, int len)
     {
-        XMLParserHelper * pImpl = (XMLParserHelper*)userData;
+        XMLParserHelper * pImpl = (XMLParserHelper *)userData;
         if (!pImpl)
         {
             throw Exception("XML internal parsing error.");
         }
 
-        if (len == 0) return;
-        if (len<0 || !s || !*s)
+        if (len == 0)
+            return;
+        if (len < 0 || !s || !*s)
         {
             pImpl->Throw("XML parsing error: attribute illegal");
         }
         // Parsing a single new line. This is valid.
-        if (len == 1 && s[0] == '\n') return;
+        if (len == 1 && s[0] == '\n')
+            return;
 
         if (pImpl->m_size)
         {
-            std::string size_raw = std::string(s, len);
+            std::string size_raw   = std::string(s, len);
             std::string size_clean = pystring::strip(size_raw, "'\" "); // strip quotes and space
 
             long int size_3d{};
-            
-            const auto result = NumberUtils::from_chars(size_clean.c_str(), size_clean.c_str() + size_clean.size(), size_3d);
+
+            const auto result = NumberUtils::from_chars(
+                size_clean.c_str(),
+                size_clean.c_str() + size_clean.size(),
+                size_3d);
 
             if (result.ec != std::errc())
             {
@@ -446,15 +441,9 @@ private:
         }
     }
 
-    unsigned getXmlLineNumber() const
-    {
-        return m_lineNumber;
-    }
+    unsigned getXmlLineNumber() const { return m_lineNumber; }
 
-    const std::string& getXmlFilename() const
-    {
-        return m_fileName;
-    }
+    const std::string & getXmlFilename() const { return m_fileName; }
 
     XML_Parser m_parser;
     unsigned m_lineNumber;
@@ -472,8 +461,8 @@ private:
 class LocalCachedFile : public CachedFile
 {
 public:
-    LocalCachedFile () = default;
-    ~LocalCachedFile()  = default;
+    LocalCachedFile()  = default;
+    ~LocalCachedFile() = default;
 
     Lut3DOpDataRcPtr lut3D;
 };
@@ -483,35 +472,36 @@ typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
 class LocalFileFormat : public FileFormat
 {
 public:
-    LocalFileFormat() = default;
+    LocalFileFormat()  = default;
     ~LocalFileFormat() = default;
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-    CachedFileRcPtr read(std::istream & istream,
-                         const std::string & fileName,
-                         Interpolation interp) const override;
+    CachedFileRcPtr read(std::istream & istream, const std::string & fileName, Interpolation interp)
+        const override;
 
-    void buildFileOps(OpRcPtrVec & ops,
-                        const Config & config,
-                        const ConstContextRcPtr & context,
-                        CachedFileRcPtr untypedCachedFile,
-                        const FileTransform & fileTransform,
-                        TransformDirection dir) const override;
+    void buildFileOps(
+        OpRcPtrVec & ops,
+        const Config & config,
+        const ConstContextRcPtr & context,
+        CachedFileRcPtr untypedCachedFile,
+        const FileTransform & fileTransform,
+        TransformDirection dir) const override;
 };
 
 void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 {
     FormatInfo info;
-    info.name = "iridas_look";
-    info.extension = "look";
+    info.name         = "iridas_look";
+    info.extension    = "look";
     info.capabilities = FORMAT_CAPABILITY_READ;
     formatInfoVec.push_back(info);
 }
 
-CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
-                                      const std::string & fileName,
-                                      Interpolation interp) const
+CachedFileRcPtr LocalFileFormat::read(
+    std::istream & istream,
+    const std::string & fileName,
+    Interpolation interp) const
 {
     XMLParserHelper parser(fileName);
     parser.Parse(istream);
@@ -539,19 +529,18 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
     return cachedFile;
 }
 
-
-void
-LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
-                                const Config& /*config*/,
-                                const ConstContextRcPtr & /*context*/,
-                                CachedFileRcPtr untypedCachedFile,
-                                const FileTransform& fileTransform,
-                                TransformDirection dir) const
+void LocalFileFormat::buildFileOps(
+    OpRcPtrVec & ops,
+    const Config & /*config*/,
+    const ConstContextRcPtr & /*context*/,
+    CachedFileRcPtr untypedCachedFile,
+    const FileTransform & fileTransform,
+    TransformDirection dir) const
 {
     LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
 
     // This should never happen.
-    if(!cachedFile || !cachedFile->lut3D)
+    if (!cachedFile || !cachedFile->lut3D)
     {
         std::ostringstream os;
         os << "Cannot build Iridas .look Op. Invalid cache type.";
@@ -563,7 +552,7 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     const auto fileInterp = fileTransform.getInterpolation();
 
     bool fileInterpUsed = false;
-    auto lut3D = HandleLUT3D(cachedFile->lut3D, fileInterp, fileInterpUsed);
+    auto lut3D          = HandleLUT3D(cachedFile->lut3D, fileInterp, fileInterpUsed);
 
     if (!fileInterpUsed)
     {

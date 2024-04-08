@@ -13,13 +13,10 @@ namespace OCIO_NAMESPACE
 class OCIOHIDDEN PySystemMonitors
 {
 public:
-    PySystemMonitors() = default;
+    PySystemMonitors()  = default;
     ~PySystemMonitors() = default;
 
-    size_t getNumMonitors() const noexcept
-    {
-        return SystemMonitors::Get()->getNumMonitors();
-    }
+    size_t getNumMonitors() const noexcept { return SystemMonitors::Get()->getNumMonitors(); }
 
     const char * getMonitorName(size_t idx) const
     {

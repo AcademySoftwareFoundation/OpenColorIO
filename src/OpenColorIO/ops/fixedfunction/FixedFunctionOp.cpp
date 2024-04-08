@@ -7,9 +7,9 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "GpuShaderUtils.h"
+#include "ops/fixedfunction/FixedFunctionOp.h"
 #include "ops/fixedfunction/FixedFunctionOpCPU.h"
 #include "ops/fixedfunction/FixedFunctionOpGPU.h"
-#include "ops/fixedfunction/FixedFunctionOp.h"
 #include "transforms/FixedFunctionTransform.h"
 
 namespace OCIO_NAMESPACE
@@ -25,7 +25,7 @@ typedef OCIO_SHARED_PTR<const FixedFunctionOp> ConstFixedFunctionOpRcPtr;
 class FixedFunctionOp : public Op
 {
 public:
-    FixedFunctionOp() = delete;
+    FixedFunctionOp()                        = delete;
     FixedFunctionOp(const FixedFunctionOp &) = delete;
     explicit FixedFunctionOp(FixedFunctionOpDataRcPtr & func);
 
@@ -48,13 +48,15 @@ public:
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
 protected:
-    ConstFixedFunctionOpDataRcPtr fnData() const { return DynamicPtrCast<const FixedFunctionOpData>(data()); }
+    ConstFixedFunctionOpDataRcPtr fnData() const
+    {
+        return DynamicPtrCast<const FixedFunctionOpData>(data());
+    }
     FixedFunctionOpDataRcPtr fnData() { return DynamicPtrCast<FixedFunctionOpData>(data()); }
 };
 
-
 FixedFunctionOp::FixedFunctionOp(FixedFunctionOpDataRcPtr & func)
-    :   Op()
+    : Op()
 {
     data() = func;
 }
@@ -88,7 +90,8 @@ bool FixedFunctionOp::isSameType(ConstOpRcPtr & op) const
 bool FixedFunctionOp::isInverse(ConstOpRcPtr & op) const
 {
     ConstFixedFunctionOpRcPtr typedRcPtr = DynamicPtrCast<const FixedFunctionOp>(op);
-    if (!typedRcPtr) return false;
+    if (!typedRcPtr)
+        return false;
 
     ConstFixedFunctionOpDataRcPtr fnOpData = typedRcPtr->fnData();
     return fnData()->isInverse(fnOpData);
@@ -131,25 +134,23 @@ void FixedFunctionOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator
     GetFixedFunctionGPUShaderProgram(shaderCreator, fnOpData);
 }
 
-
-}  // Anon namespace
-
-
-
+} // namespace
 
 ///////////////////////////////////////////////////////////////////////////
 
-
-void CreateFixedFunctionOp(OpRcPtrVec & ops, FixedFunctionOpData::Style style,
-                           const FixedFunctionOpData::Params & params)
+void CreateFixedFunctionOp(
+    OpRcPtrVec & ops,
+    FixedFunctionOpData::Style style,
+    const FixedFunctionOpData::Params & params)
 {
     FixedFunctionOpDataRcPtr funcData = std::make_shared<FixedFunctionOpData>(style, params);
     CreateFixedFunctionOp(ops, funcData, TRANSFORM_DIR_FORWARD);
 }
 
-void CreateFixedFunctionOp(OpRcPtrVec & ops,
-                           FixedFunctionOpDataRcPtr & funcData,
-                           TransformDirection direction)
+void CreateFixedFunctionOp(
+    OpRcPtrVec & ops,
+    FixedFunctionOpDataRcPtr & funcData,
+    TransformDirection direction)
 {
     auto func = funcData;
     if (direction == TRANSFORM_DIR_INVERSE)
@@ -169,17 +170,18 @@ void CreateFixedFunctionTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op
     {
         throw Exception("CreateFixedFunctionTransform: op has to be a FixedFunctionOp");
     }
-    auto ffData = DynamicPtrCast<const FixedFunctionOpData>(op->data());
+    auto ffData      = DynamicPtrCast<const FixedFunctionOpData>(op->data());
     auto ffTransform = FixedFunctionTransform::Create(FIXED_FUNCTION_ACES_RED_MOD_03);
-    auto & data = dynamic_cast<FixedFunctionTransformImpl *>(ffTransform.get())->data();
-    data = *ffData;
+    auto & data      = dynamic_cast<FixedFunctionTransformImpl *>(ffTransform.get())->data();
+    data             = *ffData;
 
     group->appendTransform(ffTransform);
 }
 
-void BuildFixedFunctionOp(OpRcPtrVec & ops,
-                          const FixedFunctionTransform & transform,
-                          TransformDirection dir)
+void BuildFixedFunctionOp(
+    OpRcPtrVec & ops,
+    const FixedFunctionTransform & transform,
+    TransformDirection dir)
 {
     const auto & data = dynamic_cast<const FixedFunctionTransformImpl &>(transform).data();
     data.validate();
@@ -188,6 +190,4 @@ void BuildFixedFunctionOp(OpRcPtrVec & ops,
     CreateFixedFunctionOp(ops, funcData, dir);
 }
 
-
 } // namespace OCIO_NAMESPACE
-

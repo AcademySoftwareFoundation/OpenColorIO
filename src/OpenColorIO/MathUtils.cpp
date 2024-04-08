@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <cmath>
 #include <sstream>
 #include <string.h>
@@ -14,11 +13,11 @@
 namespace OCIO_NAMESPACE
 {
 
-template<typename T>
-bool IsScalarEqualToZero(T v)
+template <typename T> bool IsScalarEqualToZero(T v)
 {
-    static_assert(std::is_floating_point<T>::value,
-                  "Only single and double precision floats are supported");
+    static_assert(
+        std::is_floating_point<T>::value,
+        "Only single and double precision floats are supported");
 
     return !FloatsDiffer(0.0f, (float)v, 2, false);
 }
@@ -26,11 +25,11 @@ bool IsScalarEqualToZero(T v)
 template bool IsScalarEqualToZero(float v);
 template bool IsScalarEqualToZero(double v);
 
-template<typename T>
-bool IsScalarEqualToOne(T v)
+template <typename T> bool IsScalarEqualToOne(T v)
 {
-    static_assert(std::is_floating_point<T>::value,
-                  "Only single and double precision floats are supported");
+    static_assert(
+        std::is_floating_point<T>::value,
+        "Only single and double precision floats are supported");
 
     return !FloatsDiffer(1.0f, (float)v, 2, false);
 }
@@ -38,15 +37,16 @@ bool IsScalarEqualToOne(T v)
 template bool IsScalarEqualToOne(float v);
 template bool IsScalarEqualToOne(double v);
 
-template<typename T>
-bool IsVecEqualToZero(const T * v, unsigned int size)
+template <typename T> bool IsVecEqualToZero(const T * v, unsigned int size)
 {
-    static_assert(std::is_floating_point<T>::value,
-                  "Only single and double precision floats are supported");
+    static_assert(
+        std::is_floating_point<T>::value,
+        "Only single and double precision floats are supported");
 
-    for(unsigned int i=0; i<size; ++i)
+    for (unsigned int i = 0; i < size; ++i)
     {
-        if(!IsScalarEqualToZero(v[i])) return false;
+        if (!IsScalarEqualToZero(v[i]))
+            return false;
     }
     return true;
 }
@@ -54,15 +54,16 @@ bool IsVecEqualToZero(const T * v, unsigned int size)
 template bool IsVecEqualToZero(const float * v, unsigned int size);
 template bool IsVecEqualToZero(const double * v, unsigned int size);
 
-template<typename T>
-bool IsVecEqualToOne(const T * v, unsigned int size)
+template <typename T> bool IsVecEqualToOne(const T * v, unsigned int size)
 {
-    static_assert(std::is_floating_point<T>::value,
-                  "Only single and double precision floats are supported");
+    static_assert(
+        std::is_floating_point<T>::value,
+        "Only single and double precision floats are supported");
 
-    for(unsigned int i=0; i<size; ++i)
+    for (unsigned int i = 0; i < size; ++i)
     {
-        if(!IsScalarEqualToOne(v[i])) return false;
+        if (!IsScalarEqualToOne(v[i]))
+            return false;
     }
     return true;
 }
@@ -70,64 +71,78 @@ bool IsVecEqualToOne(const T * v, unsigned int size)
 template bool IsVecEqualToOne(const float * v, unsigned int size);
 template bool IsVecEqualToOne(const double * v, unsigned int size);
 
-template<typename T>
-bool VecsEqualWithRelError(const T * v1, unsigned int size1,
-                           const T * v2, unsigned int size2,
-                           T e)
+template <typename T>
+bool VecsEqualWithRelError(const T * v1, unsigned int size1, const T * v2, unsigned int size2, T e)
 {
-    static_assert(std::is_floating_point<T>::value,
-                  "Only single and double precision floats are supported");
+    static_assert(
+        std::is_floating_point<T>::value,
+        "Only single and double precision floats are supported");
 
-    if (size1 != size2) return false;
+    if (size1 != size2)
+        return false;
 
-    for (unsigned int i = 0; i<size1; ++i)
+    for (unsigned int i = 0; i < size1; ++i)
     {
-        if (!EqualWithRelError(v1[i], v2[i], e)) return false;
+        if (!EqualWithRelError(v1[i], v2[i], e))
+            return false;
     }
 
     return true;
 }
 
-template bool VecsEqualWithRelError(const float * v1, unsigned int size1, const float * v2, unsigned int size2, float e);
-template bool VecsEqualWithRelError(const double * v1, unsigned int size1, const double * v2, unsigned int size2, double e);
+template bool VecsEqualWithRelError(
+    const float * v1,
+    unsigned int size1,
+    const float * v2,
+    unsigned int size2,
+    float e);
+template bool VecsEqualWithRelError(
+    const double * v1,
+    unsigned int size1,
+    const double * v2,
+    unsigned int size2,
+    double e);
 
 float GetSafeScalarInverse(float v, float defaultValue)
 {
-    if(IsScalarEqualToZero(v)) return defaultValue;
+    if (IsScalarEqualToZero(v))
+        return defaultValue;
     return 1.0f / v;
 }
 
-bool VecContainsZero(const float* v, int size)
+bool VecContainsZero(const float * v, int size)
 {
-    for(int i=0; i<size; ++i)
+    for (int i = 0; i < size; ++i)
     {
-        if(IsScalarEqualToZero(v[i])) return true;
+        if (IsScalarEqualToZero(v[i]))
+            return true;
     }
     return false;
 }
 
-bool VecContainsOne(const float* v, int size)
+bool VecContainsOne(const float * v, int size)
 {
-    for(int i=0; i<size; ++i)
+    for (int i = 0; i < size; ++i)
     {
-        if(IsScalarEqualToOne(v[i])) return true;
+        if (IsScalarEqualToOne(v[i]))
+            return true;
     }
     return false;
 }
 
 double ClampToNormHalf(double val)
 {
-    if(val < -GetHalfMax())
+    if (val < -GetHalfMax())
     {
         return -GetHalfMax();
     }
 
-    if(val > -GetHalfNormMin() && val<GetHalfNormMin())
+    if (val > -GetHalfNormMin() && val < GetHalfNormMin())
     {
         return 0.0;
     }
 
-    if(val > GetHalfMax())
+    if (val > GetHalfMax())
     {
         return GetHalfMax();
     }
@@ -159,27 +174,29 @@ float SanitizeFloat(float f)
     return f;
 }
 
-template<typename T>
-bool IsM44Identity(const T * m44)
+template <typename T> bool IsM44Identity(const T * m44)
 {
-    static_assert(std::is_floating_point<T>::value,
-                  "Only single and double precision floats are supported");
+    static_assert(
+        std::is_floating_point<T>::value,
+        "Only single and double precision floats are supported");
 
-    unsigned int index=0;
+    unsigned int index = 0;
 
-    for(unsigned int j=0; j<4; ++j)
+    for (unsigned int j = 0; j < 4; ++j)
     {
-        for(unsigned int i=0; i<4; ++i)
+        for (unsigned int i = 0; i < 4; ++i)
         {
-            index = 4*j+i;
+            index = 4 * j + i;
 
-            if(i==j)
+            if (i == j)
             {
-                if(!IsScalarEqualToOne(m44[index])) return false;
+                if (!IsScalarEqualToOne(m44[index]))
+                    return false;
             }
             else
             {
-                if(!IsScalarEqualToZero(m44[index])) return false;
+                if (!IsScalarEqualToZero(m44[index]))
+                    return false;
             }
         }
     }
@@ -301,49 +318,53 @@ void GetM44V4Product(float* vout, const float* m, const float* v_)
 }
 // clang-format on
 
-void GetV4Sum(float* vout, const float* v1, const float* v2)
+void GetV4Sum(float * vout, const float * v1, const float * v2)
 {
-    for(int i=0; i<4; ++i)
+    for (int i = 0; i < 4; ++i)
     {
         vout[i] = v1[i] + v2[i];
     }
 }
 
-} // anon namespace
+} // namespace
 
 // All m(s) are 4x4.  All v(s) are size 4 vectors.
 // Return mout, vout, where mout*x+vout == m2*(m1*x+v1)+v2
 // mout = m2*m1
 // vout = m2*v1 + v2
-void GetMxbCombine(float* mout, float* vout,
-                   const float* m1_, const float* v1_,
-                   const float* m2_, const float* v2_)
+void GetMxbCombine(
+    float * mout,
+    float * vout,
+    const float * m1_,
+    const float * v1_,
+    const float * m2_,
+    const float * v2_)
 {
     float m1[16];
     float v1[4];
     float m2[16];
     float v2[4];
-    memcpy(m1, m1_, 16*sizeof(float));
-    memcpy(v1, v1_, 4*sizeof(float));
-    memcpy(m2, m2_, 16*sizeof(float));
-    memcpy(v2, v2_, 4*sizeof(float));
+    memcpy(m1, m1_, 16 * sizeof(float));
+    memcpy(v1, v1_, 4 * sizeof(float));
+    memcpy(m2, m2_, 16 * sizeof(float));
+    memcpy(v2, v2_, 4 * sizeof(float));
 
     GetM44M44Product(mout, m2, m1);
     GetM44V4Product(vout, m2, v1);
     GetV4Sum(vout, vout, v2);
 }
 
-bool GetMxbInverse(float* mout, float* vout,
-                   const float* m_, const float* v_)
+bool GetMxbInverse(float * mout, float * vout, const float * m_, const float * v_)
 {
     float m[16];
     float v[4];
-    memcpy(m, m_, 16*sizeof(float));
-    memcpy(v, v_, 4*sizeof(float));
+    memcpy(m, m_, 16 * sizeof(float));
+    memcpy(v, v_, 4 * sizeof(float));
 
-    if(!GetM44Inverse(mout, m)) return false;
+    if (!GetM44Inverse(mout, m))
+        return false;
 
-    for(int i=0; i<4; ++i)
+    for (int i = 0; i < 4; ++i)
     {
         v[i] = -v[i];
     }
@@ -401,7 +422,8 @@ bool GetMxbInverse(float* mout, float* vout,
 // clang-format on
 inline int FloatForCompare(const unsigned floatBits)
 {
-    return floatBits < 0x80000000 ? (0x80000000 + floatBits) : (0x80000000 - (floatBits & 0x7FFFFFFF));
+    return floatBits < 0x80000000 ? (0x80000000 + floatBits)
+                                  : (0x80000000 - (floatBits & 0x7FFFFFFF));
 }
 
 // clang-format off

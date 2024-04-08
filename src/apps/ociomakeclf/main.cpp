@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <cstdio>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <string.h>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -14,14 +13,13 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "apputils/measure.h"
 #include "utils/StringUtils.h"
 
-
 // Array of non OpenColorIO arguments.
 static std::vector<std::string> args;
 
 // Fill 'args' array with OpenColorIO arguments.
 static int parse_end_args(int argc, const char * argv[])
 {
-    while ( argc > 0)
+    while (argc > 0)
     {
         args.push_back(argv[0]);
         argc--;
@@ -31,7 +29,9 @@ static int parse_end_args(int argc, const char * argv[])
     return 0;
 }
 
-void CreateOutputLutFile(const std::string & outLutFilepath, OCIO::ConstGroupTransformRcPtr transform)
+void CreateOutputLutFile(
+    const std::string & outLutFilepath,
+    OCIO::ConstGroupTransformRcPtr transform)
 {
     // Get the processor.
 
@@ -41,11 +41,11 @@ void CreateOutputLutFile(const std::string & outLutFilepath, OCIO::ConstGroupTra
     OCIO::ConstProcessorRcPtr processor = config->getProcessor(transform);
 
     // CLF file format does not support inverse 1D LUTs, optimize the processor
-    // to replace inverse 1D LUTs by 'fast forward' 1D LUTs. 
-    OCIO::ConstProcessorRcPtr optProcessor
-        = processor->getOptimizedProcessor(OCIO::BIT_DEPTH_F32, 
-                                           OCIO::BIT_DEPTH_F32,
-                                           OCIO::OPTIMIZATION_LUT_INV_FAST);
+    // to replace inverse 1D LUTs by 'fast forward' 1D LUTs.
+    OCIO::ConstProcessorRcPtr optProcessor = processor->getOptimizedProcessor(
+        OCIO::BIT_DEPTH_F32,
+        OCIO::BIT_DEPTH_F32,
+        OCIO::OPTIMIZATION_LUT_INV_FAST);
 
     // Create the CLF file.
 
@@ -69,10 +69,7 @@ void CreateOutputLutFile(const std::string & outLutFilepath, OCIO::ConstGroupTra
     else
     {
         std::ostringstream oss;
-        oss << "Could not open the file '"
-            << outLutFilepath
-            << "'."
-            << std::endl;
+        oss << "Could not open the file '" << outLutFilepath << "'." << std::endl;
         throw OCIO::Exception(oss.str().c_str());
     }
 }
@@ -113,7 +110,7 @@ int main(int argc, const char ** argv)
         return 0;
     }
 
-    // The LMT must accept and produce ACES2065-1 so look for all built-in transforms that produce 
+    // The LMT must accept and produce ACES2065-1 so look for all built-in transforms that produce
     // that (based on the naming conventions).
     static constexpr char BuiltinSuffix[] = "_to_ACES2065-1";
 
@@ -142,16 +139,16 @@ int main(int argc, const char ** argv)
         ap.usage();
         return 1;
     }
-    
-    const std::string inLutFilepath   = args[0].c_str();
-    const std::string outLutFilepath  = args[1].c_str();
+
+    const std::string inLutFilepath  = args[0].c_str();
+    const std::string outLutFilepath = args[1].c_str();
 
     const std::string originalCSC = cscColorSpace;
 
     if (!cscColorSpace.empty())
     {
         cscColorSpace += BuiltinSuffix;
-    
+
         OCIO::ConstBuiltinTransformRegistryRcPtr registry = OCIO::BuiltinTransformRegistry::Get();
 
         bool cscFound = false;
@@ -168,9 +165,7 @@ int main(int argc, const char ** argv)
 
         if (!cscFound)
         {
-            std::cerr << "ERROR: The LUT color space name '"
-                      << originalCSC
-                      << "' is not supported."
+            std::cerr << "ERROR: The LUT color space name '" << originalCSC << "' is not supported."
                       << std::endl;
             return 1;
         }
@@ -186,10 +181,8 @@ int main(int argc, const char ** argv)
         const std::string filepath = StringUtils::Lower(outLutFilepath);
         if (!StringUtils::EndsWith(filepath, ".clf"))
         {
-            std::cerr << "ERROR: The output LUT file path '"
-                      << outLutFilepath
-                      << "' must have a .clf extension."
-                      << std::endl;
+            std::cerr << "ERROR: The output LUT file path '" << outLutFilepath
+                      << "' must have a .clf extension." << std::endl;
             return 1;
         }
     }
@@ -215,7 +208,9 @@ int main(int argc, const char ** argv)
             description += "ACES LMT transform built from a look LUT expecting color space: ";
             description += originalCSC;
 
-            grp->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, description.c_str());
+            grp->getFormatMetadata().addChildElement(
+                OCIO::METADATA_DESCRIPTION,
+                description.c_str());
         }
 
         std::string description;
@@ -226,8 +221,10 @@ int main(int argc, const char ** argv)
         if (!cscColorSpace.empty())
         {
             // TODO: It should overwrite existing input and output descriptors if any.
-            grp->getFormatMetadata().addChildElement(OCIO::METADATA_INPUT_DESCRIPTOR,  "ACES2065-1");
-            grp->getFormatMetadata().addChildElement(OCIO::METADATA_OUTPUT_DESCRIPTOR, "ACES2065-1");
+            grp->getFormatMetadata().addChildElement(OCIO::METADATA_INPUT_DESCRIPTOR, "ACES2065-1");
+            grp->getFormatMetadata().addChildElement(
+                OCIO::METADATA_OUTPUT_DESCRIPTOR,
+                "ACES2065-1");
         }
 
         if (!cscColorSpace.empty())

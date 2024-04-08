@@ -15,17 +15,18 @@ namespace OCIO = OCIO_NAMESPACE;
 namespace
 {
 
-void initParam(OFX::ParamDescriptor * param,
-               const std::string & name, 
-               const std::string & label, 
-               const std::string & hint,
-               OFX::GroupParamDescriptor * parent)
+void initParam(
+    OFX::ParamDescriptor * param,
+    const std::string & name,
+    const std::string & label,
+    const std::string & hint,
+    OFX::GroupParamDescriptor * parent)
 {
     param->setLabels(label, label, label);
     param->setScriptName(name);
     param->setHint(hint);
 
-    if (parent) 
+    if (parent)
     {
         param->setParent(*parent);
     }
@@ -43,7 +44,7 @@ ContextMap deserializeContextStore(const std::string & contextStoreRaw)
     {
         std::vector<std::string> contextPair;
         pystring::split(contextPairsRaw[i], contextPair, ":");
-        
+
         if (contextPair.size() == 2)
         {
             contextMap[contextPair[0]] = contextPair[1];
@@ -72,7 +73,7 @@ std::string serializeContextStore(const ContextMap & contextMap)
 
 } // namespace
 
-void baseDescribe(const std::string & name, OFX::ImageEffectDescriptor& desc)
+void baseDescribe(const std::string & name, OFX::ImageEffectDescriptor & desc)
 {
     // Labels
     desc.setLabels(name, name, name);
@@ -91,18 +92,16 @@ void baseDescribe(const std::string & name, OFX::ImageEffectDescriptor& desc)
     desc.setSupportsMultipleClipDepths(false);
 }
 
-void baseDescribeInContext(OFX::ImageEffectDescriptor& desc)
+void baseDescribeInContext(OFX::ImageEffectDescriptor & desc)
 {
     // Create the mandated source clip
-    OFX::ClipDescriptor * srcClip = desc.defineClip(
-        kOfxImageEffectSimpleSourceClipName);
+    OFX::ClipDescriptor * srcClip = desc.defineClip(kOfxImageEffectSimpleSourceClipName);
 
     srcClip->addSupportedComponent(OFX::ePixelComponentRGBA);
     srcClip->addSupportedComponent(OFX::ePixelComponentRGB);
 
     // Create the mandated output clip
-    OFX::ClipDescriptor * dstClip = desc.defineClip(
-        kOfxImageEffectOutputClipName);
+    OFX::ClipDescriptor * dstClip = desc.defineClip(kOfxImageEffectOutputClipName);
 
     dstClip->addSupportedComponent(OFX::ePixelComponentRGBA);
     dstClip->addSupportedComponent(OFX::ePixelComponentRGB);
@@ -130,10 +129,10 @@ OCIO::BitDepth getOCIOBitDepth(OFX::BitDepthEnum ofxBitDepth)
             ocioBitDepth = OCIO::BIT_DEPTH_UINT8;
             break;
         case OFX::eBitDepthUShort:
-            ocioBitDepth = OCIO::BIT_DEPTH_UINT16;               
+            ocioBitDepth = OCIO::BIT_DEPTH_UINT16;
             break;
         case OFX::eBitDepthHalf:
-            ocioBitDepth = OCIO::BIT_DEPTH_F16;               
+            ocioBitDepth = OCIO::BIT_DEPTH_F16;
             break;
         case OFX::eBitDepthFloat:
             ocioBitDepth = OCIO::BIT_DEPTH_F32;
@@ -162,7 +161,7 @@ int getChanStrideBytes(OCIO::BitDepth ocioBitDepth)
             break;
         case OCIO::BIT_DEPTH_UINT16:
         case OCIO::BIT_DEPTH_F16:
-            chanStrideBytes = 2;               
+            chanStrideBytes = 2;
             break;
         case OCIO::BIT_DEPTH_F32:
             chanStrideBytes = 4;
@@ -183,12 +182,13 @@ int getChanStrideBytes(OCIO::BitDepth ocioBitDepth)
     return chanStrideBytes;
 }
 
-void defineCsNameParam(OFX::ImageEffectDescriptor & desc,
-                       OFX::PageParamDescriptor * page,
-                       const std::string & name, 
-                       const std::string & label, 
-                       const std::string & hint,
-                       OFX::GroupParamDescriptor * parent)
+void defineCsNameParam(
+    OFX::ImageEffectDescriptor & desc,
+    OFX::PageParamDescriptor * page,
+    const std::string & name,
+    const std::string & label,
+    const std::string & hint,
+    OFX::GroupParamDescriptor * parent)
 {
     OFX::ChoiceParamDescriptor * param = desc.defineChoiceParam(name);
     initParam(param, name, label, hint, parent);
@@ -196,7 +196,7 @@ void defineCsNameParam(OFX::ImageEffectDescriptor & desc,
     OCIO::ConstConfigRcPtr config = getOCIOConfig();
 
     // Populate color space names
-    // TODO: Use ColorSpaceMenuHelper to generate the menus in order to 
+    // TODO: Use ColorSpaceMenuHelper to generate the menus in order to
     //       leverage features such as categories.
     for (int i = 0; i < config->getNumColorSpaces(); i++)
     {
@@ -219,20 +219,23 @@ void defineCsNameParam(OFX::ImageEffectDescriptor & desc,
     page->addChild(*param);
 
     // Preserve color space name param values through OCIO config changes
-    defineStringParam(desc, page,
-                      name + "_store",
-                      "Color space name store",
-                      "Persistent color space name parameter value storage",
-                      parent,
-                      true); // secret
+    defineStringParam(
+        desc,
+        page,
+        name + "_store",
+        "Color space name store",
+        "Persistent color space name parameter value storage",
+        parent,
+        true); // secret
 }
 
-void defineDisplayParam(OFX::ImageEffectDescriptor & desc,
-                        OFX::PageParamDescriptor * page,
-                        const std::string & name, 
-                        const std::string & label, 
-                        const std::string & hint,
-                        OFX::GroupParamDescriptor * parent)
+void defineDisplayParam(
+    OFX::ImageEffectDescriptor & desc,
+    OFX::PageParamDescriptor * page,
+    const std::string & name,
+    const std::string & label,
+    const std::string & hint,
+    OFX::GroupParamDescriptor * parent)
 {
     OFX::ChoiceParamDescriptor * param = desc.defineChoiceParam(name);
     initParam(param, name, label, hint, parent);
@@ -256,22 +259,25 @@ void defineDisplayParam(OFX::ImageEffectDescriptor & desc,
     param->setDefault(defaultDisplayIdx);
 
     page->addChild(*param);
-    
+
     // Preserve display param values through OCIO config changes
-    defineStringParam(desc, page,
-                      name + "_store",
-                      "Display store",
-                      "Persistent display parameter value storage",
-                      parent,
-                      true); // secret
+    defineStringParam(
+        desc,
+        page,
+        name + "_store",
+        "Display store",
+        "Persistent display parameter value storage",
+        parent,
+        true); // secret
 }
 
-void defineViewParam(OFX::ImageEffectDescriptor & desc,
-                     OFX::PageParamDescriptor * page,
-                     const std::string & name, 
-                     const std::string & label, 
-                     const std::string & hint,
-                     OFX::GroupParamDescriptor * parent)
+void defineViewParam(
+    OFX::ImageEffectDescriptor & desc,
+    OFX::PageParamDescriptor * page,
+    const std::string & name,
+    const std::string & label,
+    const std::string & hint,
+    OFX::GroupParamDescriptor * parent)
 {
     OFX::ChoiceParamDescriptor * param = desc.defineChoiceParam(name);
     initParam(param, name, label, hint, parent);
@@ -297,23 +303,26 @@ void defineViewParam(OFX::ImageEffectDescriptor & desc,
     param->setDefault(defaultViewIdx);
 
     page->addChild(*param);
-    
+
     // Preserve view param values through OCIO config changes
-    defineStringParam(desc, page,
-                      name + "_store",
-                      "View store",
-                      "Persistent view parameter value storage",
-                      parent,
-                      true); // secret
+    defineStringParam(
+        desc,
+        page,
+        name + "_store",
+        "View store",
+        "Persistent view parameter value storage",
+        parent,
+        true); // secret
 }
 
-void defineBooleanParam(OFX::ImageEffectDescriptor & desc,
-                        OFX::PageParamDescriptor * page,
-                        const std::string & name, 
-                        const std::string & label, 
-                        const std::string & hint,
-                        OFX::GroupParamDescriptor * parent,
-                        bool defaultValue)
+void defineBooleanParam(
+    OFX::ImageEffectDescriptor & desc,
+    OFX::PageParamDescriptor * page,
+    const std::string & name,
+    const std::string & label,
+    const std::string & hint,
+    OFX::GroupParamDescriptor * parent,
+    bool defaultValue)
 {
     OFX::BooleanParamDescriptor * param = desc.defineBooleanParam(name);
     initParam(param, name, label, hint, parent);
@@ -323,15 +332,16 @@ void defineBooleanParam(OFX::ImageEffectDescriptor & desc,
     page->addChild(*param);
 }
 
-void defineStringParam(OFX::ImageEffectDescriptor & desc,
-                       OFX::PageParamDescriptor * page,
-                       const std::string & name, 
-                       const std::string & label, 
-                       const std::string & hint,
-                       OFX::GroupParamDescriptor * parent,
-                       bool isSecret,
-                       std::string defaultValue,
-                       OFX::StringTypeEnum stringType)
+void defineStringParam(
+    OFX::ImageEffectDescriptor & desc,
+    OFX::PageParamDescriptor * page,
+    const std::string & name,
+    const std::string & label,
+    const std::string & hint,
+    OFX::GroupParamDescriptor * parent,
+    bool isSecret,
+    std::string defaultValue,
+    OFX::StringTypeEnum stringType)
 {
     OFX::StringParamDescriptor * param = desc.defineStringParam(name);
     initParam(param, name, label, hint, parent);
@@ -343,12 +353,13 @@ void defineStringParam(OFX::ImageEffectDescriptor & desc,
     page->addChild(*param);
 }
 
-void definePushButtonParam(OFX::ImageEffectDescriptor & desc,
-                           OFX::PageParamDescriptor * page,
-                           const std::string & name, 
-                           const std::string & label, 
-                           const std::string & hint,
-                           OFX::GroupParamDescriptor * parent)
+void definePushButtonParam(
+    OFX::ImageEffectDescriptor & desc,
+    OFX::PageParamDescriptor * page,
+    const std::string & name,
+    const std::string & label,
+    const std::string & hint,
+    OFX::GroupParamDescriptor * parent)
 {
     OFX::PushButtonParamDescriptor * param = desc.definePushButtonParam(name);
     initParam(param, name, label, hint, parent);
@@ -356,8 +367,7 @@ void definePushButtonParam(OFX::ImageEffectDescriptor & desc,
     page->addChild(*param);
 }
 
-void defineContextParams(OFX::ImageEffectDescriptor & desc,
-                         OFX::PageParamDescriptor * page)
+void defineContextParams(OFX::ImageEffectDescriptor & desc, OFX::PageParamDescriptor * page)
 {
     OFX::GroupParamDescriptor * group = desc.defineGroupParam("Context");
     group->setOpen(false);
@@ -369,36 +379,36 @@ void defineContextParams(OFX::ImageEffectDescriptor & desc,
 
     for (int i = 0; i < config->getNumEnvironmentVars(); i++)
     {
-        std::string envVarName(
-            config->getEnvironmentVarNameByIndex(i));
-        std::string envVarDefault(
-            config->getEnvironmentVarDefault(envVarName.c_str()));
+        std::string envVarName(config->getEnvironmentVarNameByIndex(i));
+        std::string envVarDefault(config->getEnvironmentVarDefault(envVarName.c_str()));
 
-        defineStringParam(desc, page,
-                          "context_" + envVarName,              // name
-                          envVarName,                           // label
-                          ("Set or override context variable: " // hint
-                           + envVarName + " (default: '" 
-                           + envVarDefault + "')"),
-                           group);
+        defineStringParam(
+            desc,
+            page,
+            "context_" + envVarName,              // name
+            envVarName,                           // label
+            ("Set or override context variable: " // hint
+             + envVarName + " (default: '" + envVarDefault + "')"),
+            group);
     }
 
     // Preserve all context_* param values through OCIO config/context changes
-    defineStringParam(desc, page,
-                      "context_store",
-                      "Context store",
-                      "Persistent context parameter value storage",
-                      group,
-                      true); // secret
+    defineStringParam(
+        desc,
+        page,
+        "context_store",
+        "Context store",
+        "Persistent context parameter value storage",
+        group,
+        true); // secret
 }
 
 void fetchContextParams(OFX::ImageEffect & instance, ParamMap & params)
 {
     OCIO::ConstConfigRcPtr config = getOCIOConfig();
 
-    OFX::StringParam * contextStoreParam = 
-        instance.fetchStringParam("context_store");
-    
+    OFX::StringParam * contextStoreParam = instance.fetchStringParam("context_store");
+
     // Deserialize raw context store string into a context map
     std::string contextStoreRaw;
     contextStoreParam->getValue(contextStoreRaw);
@@ -409,8 +419,7 @@ void fetchContextParams(OFX::ImageEffect & instance, ParamMap & params)
     {
         std::string envVarName(config->getEnvironmentVarNameByIndex(i));
 
-        OFX::StringParam * contextParam = 
-            instance.fetchStringParam("context_" + envVarName);
+        OFX::StringParam * contextParam = instance.fetchStringParam("context_" + envVarName);
 
         if (contextParam != 0)
         {
@@ -433,24 +442,21 @@ void fetchContextParams(OFX::ImageEffect & instance, ParamMap & params)
     }
 }
 
-void contextParamChanged(OFX::ImageEffect & instance, 
-                         const std::string & paramName)
+void contextParamChanged(OFX::ImageEffect & instance, const std::string & paramName)
 {
     // Is changed param a context variable?
-    if (!pystring::startswith(paramName, "context_") 
-            || paramName == "context_store")
+    if (!pystring::startswith(paramName, "context_") || paramName == "context_store")
     {
         return;
     }
-    
-    OFX::StringParam * contextStoreParam = 
-        instance.fetchStringParam("context_store");
+
+    OFX::StringParam * contextStoreParam = instance.fetchStringParam("context_store");
 
     // Deserialize raw context store string into a context map
     std::string contextStoreRaw;
     contextStoreParam->getValue(contextStoreRaw);
     ContextMap contextMap = deserializeContextStore(contextStoreRaw);
-    
+
     // Update context map with new value
     OFX::StringParam * contextParam = instance.fetchStringParam(paramName);
 
@@ -474,9 +480,9 @@ void contextParamChanged(OFX::ImageEffect & instance,
 
 OCIO::ContextRcPtr createOCIOContext(ParamMap & params)
 {
-    OCIO::ConstConfigRcPtr config = getOCIOConfig();
+    OCIO::ConstConfigRcPtr config      = getOCIOConfig();
     OCIO::ConstContextRcPtr srcContext = config->getCurrentContext();
-    OCIO::ContextRcPtr context = srcContext->createEditableCopy();
+    OCIO::ContextRcPtr context         = srcContext->createEditableCopy();
 
     ParamMap::const_iterator it = params.begin();
 
@@ -484,7 +490,7 @@ OCIO::ContextRcPtr createOCIOContext(ParamMap & params)
     {
         std::string value;
         it->second->getValue(value);
-        
+
         if (!value.empty())
         {
             context->setStringVar(it->first.c_str(), value.c_str());
@@ -509,8 +515,7 @@ std::string getChoiceParamOption(OFX::ChoiceParam * param)
     return name;
 }
 
-void choiceParamChanged(OFX::ImageEffect & instance, 
-                        const std::string & paramName)
+void choiceParamChanged(OFX::ImageEffect & instance, const std::string & paramName)
 {
     // Ignore sibling *_store params
     if (pystring::endswith(paramName, "_store"))
@@ -526,8 +531,7 @@ void choiceParamChanged(OFX::ImageEffect & instance,
     }
 
     // Does the choice param have a sibling *_store param?
-    OFX::StringParam * storeParam = 
-        instance.fetchStringParam(paramName + "_store");
+    OFX::StringParam * storeParam = instance.fetchStringParam(paramName + "_store");
     if (!storeParam)
     {
         return;
@@ -541,9 +545,10 @@ void choiceParamChanged(OFX::ImageEffect & instance,
     }
 }
 
-void restoreChoiceParamOption(OFX::ImageEffect & instance,
-                              const std::string & paramName,
-                              const std::string & pluginType)
+void restoreChoiceParamOption(
+    OFX::ImageEffect & instance,
+    const std::string & paramName,
+    const std::string & pluginType)
 {
     // Get choice param
     OFX::ChoiceParam * choiceParam = instance.fetchChoiceParam(paramName);
@@ -553,8 +558,7 @@ void restoreChoiceParamOption(OFX::ImageEffect & instance,
     }
 
     // Get sibling *_store param
-    OFX::StringParam * storeParam = 
-        instance.fetchStringParam(paramName + "_store");
+    OFX::StringParam * storeParam = instance.fetchStringParam(paramName + "_store");
     if (!storeParam)
     {
         return;
@@ -580,9 +584,9 @@ void restoreChoiceParamOption(OFX::ImageEffect & instance,
             }
         }
 
-        // Value is missing. Add it and make it current, with an indication 
+        // Value is missing. Add it and make it current, with an indication
         // that it's now missing from the config.
-        // NOTE: Some hosts don't honor option labels, so also send a warning 
+        // NOTE: Some hosts don't honor option labels, so also send a warning
         //       message about the missing value.
         if (idx == -1)
         {
@@ -597,9 +601,10 @@ void restoreChoiceParamOption(OFX::ImageEffect & instance,
             os << "' choice '" << storedValue << "' is missing. ";
             os << "Is the correct OCIO config loaded?";
 
-            instance.sendMessage(OFX::Message::eMessageWarning,
-                                 "choice_param_missing_option_error",
-                                 os.str());
+            instance.sendMessage(
+                OFX::Message::eMessageWarning,
+                "choice_param_missing_option_error",
+                os.str());
         }
         // Value is present, but index changed. Reset it.
         else
@@ -612,8 +617,7 @@ void restoreChoiceParamOption(OFX::ImageEffect & instance,
     choiceParamChanged(instance, paramName);
 }
 
-void updateViewParamOptions(OFX::ChoiceParam * displayParam, 
-                            OFX::ChoiceParam * viewParam)
+void updateViewParamOptions(OFX::ChoiceParam * displayParam, OFX::ChoiceParam * viewParam)
 {
     OCIO::ConstConfigRcPtr config = getOCIOConfig();
 

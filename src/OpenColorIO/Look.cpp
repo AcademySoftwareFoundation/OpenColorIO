@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <cstring>
 #include <sstream>
 #include <vector>
@@ -10,7 +9,6 @@
 
 #include "ContextVariableUtils.h"
 
-
 namespace OCIO_NAMESPACE
 {
 LookRcPtr Look::Create()
@@ -18,7 +16,7 @@ LookRcPtr Look::Create()
     return LookRcPtr(new Look(), &deleter);
 }
 
-void Look::deleter(Look* c)
+void Look::deleter(Look * c)
 {
     delete c;
 }
@@ -32,28 +30,25 @@ public:
     TransformRcPtr m_transform;
     TransformRcPtr m_inverseTransform;
 
-    Impl()
-    { }
+    Impl() {}
 
     Impl(const Impl &) = delete;
 
-    ~Impl()
-    { }
+    ~Impl() {}
 
-    Impl& operator= (const Impl & rhs)
+    Impl & operator=(const Impl & rhs)
     {
         if (this != &rhs)
         {
-            m_name = rhs.m_name;
+            m_name         = rhs.m_name;
             m_processSpace = rhs.m_processSpace;
-            m_description = rhs.m_description;
+            m_description  = rhs.m_description;
 
-            m_transform = rhs.m_transform?
-                rhs.m_transform->createEditableCopy() : rhs.m_transform;
+            m_transform = rhs.m_transform ? rhs.m_transform->createEditableCopy() : rhs.m_transform;
 
-            m_inverseTransform = rhs.m_inverseTransform?
-                rhs.m_inverseTransform->createEditableCopy()
-                : rhs.m_inverseTransform;
+            m_inverseTransform = rhs.m_inverseTransform
+                                     ? rhs.m_inverseTransform->createEditableCopy()
+                                     : rhs.m_inverseTransform;
         }
         return *this;
     }
@@ -62,7 +57,7 @@ public:
 ///////////////////////////////////////////////////////////////////////////
 
 Look::Look()
-: m_impl(new Look::Impl)
+    : m_impl(new Look::Impl)
 {
 }
 
@@ -75,7 +70,7 @@ Look::~Look()
 LookRcPtr Look::createEditableCopy() const
 {
     LookRcPtr cs = Look::Create();
-    *cs->m_impl = *m_impl;
+    *cs->m_impl  = *m_impl;
     return cs;
 }
 
@@ -129,56 +124,57 @@ void Look::setDescription(const char * description)
     getImpl()->m_description = description;
 }
 
-bool CollectContextVariables(const Config & config,
-                             const Context & context,
-                             TransformDirection direction,
-                             const Look & look,
-                             ContextRcPtr & usedContext)
+bool CollectContextVariables(
+    const Config & config,
+    const Context & context,
+    TransformDirection direction,
+    const Look & look,
+    ContextRcPtr & usedContext)
 {
     bool foundContextVars = false;
 
     switch (direction)
     {
-    case TRANSFORM_DIR_FORWARD:
-    {
-        ConstTransformRcPtr tr = look.getTransform();
-        if (tr)
+        case TRANSFORM_DIR_FORWARD:
         {
-            if (CollectContextVariables(config, context, tr, usedContext))
+            ConstTransformRcPtr tr = look.getTransform();
+            if (tr)
             {
-                foundContextVars = true;
+                if (CollectContextVariables(config, context, tr, usedContext))
+                {
+                    foundContextVars = true;
+                }
             }
+            else
+            {
+                tr = look.getInverseTransform();
+                if (tr && CollectContextVariables(config, context, tr, usedContext))
+                {
+                    foundContextVars = true;
+                }
+            }
+            break;
         }
-        else
+        case TRANSFORM_DIR_INVERSE:
         {
-            tr = look.getInverseTransform();
-            if (tr && CollectContextVariables(config, context, tr, usedContext))
+            ConstTransformRcPtr tr = look.getInverseTransform();
+            if (tr)
             {
-                foundContextVars = true;
+                if (CollectContextVariables(config, context, tr, usedContext))
+                {
+                    foundContextVars = true;
+                }
             }
-        }
-        break;
-    }
-    case TRANSFORM_DIR_INVERSE:
-    {
-        ConstTransformRcPtr tr = look.getInverseTransform();
-        if (tr)
-        {
-            if (CollectContextVariables(config, context, tr, usedContext))
+            else
             {
-                foundContextVars = true;
+                tr = look.getTransform();
+                if (tr && CollectContextVariables(config, context, tr, usedContext))
+                {
+                    foundContextVars = true;
+                }
             }
+            break;
         }
-        else
-        {
-            tr = look.getTransform();
-            if (tr && CollectContextVariables(config, context, tr, usedContext))
-            {
-                foundContextVars = true;
-            }
-        }
-        break;
-    }
     }
 
     const char * ps = look.getProcessSpace();
@@ -204,25 +200,25 @@ bool CollectContextVariables(const Config & config,
     return foundContextVars;
 }
 
-std::ostream& operator<< (std::ostream& os, const Look& look)
+std::ostream & operator<<(std::ostream & os, const Look & look)
 {
     os << "<Look";
     os << " name=" << look.getName();
     os << ", processSpace=" << look.getProcessSpace();
 
-    std::string desc{ look.getDescription() };
+    std::string desc{look.getDescription()};
     if (!desc.empty())
     {
         os << ", description=" << desc;
     }
 
-    if(look.getTransform())
+    if (look.getTransform())
     {
         os << ",\n    transform=";
         os << "\n        " << *look.getTransform();
     }
 
-    if(look.getInverseTransform())
+    if (look.getInverseTransform())
     {
         os << ",\n    inverseTransform=";
         os << "\n        " << *look.getInverseTransform();

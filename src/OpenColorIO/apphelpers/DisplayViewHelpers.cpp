@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <algorithm>
 #include <cctype>
 #include <cstring>
@@ -11,9 +10,8 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "CategoryHelpers.h"
-#include "utils/StringUtils.h"
 #include "LegacyViewingPipeline.h"
-
+#include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -21,29 +19,32 @@ namespace OCIO_NAMESPACE
 namespace DisplayViewHelpers
 {
 
-ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & config,
-                                 const char * workingName,
-                                 const char * displayName,
-                                 const char * viewName,
-                                 const ConstMatrixTransformRcPtr & channelView,
-                                 TransformDirection direction)
+ConstProcessorRcPtr GetProcessor(
+    const ConstConfigRcPtr & config,
+    const char * workingName,
+    const char * displayName,
+    const char * viewName,
+    const ConstMatrixTransformRcPtr & channelView,
+    TransformDirection direction)
 {
-    return GetProcessor(config,
-                        config->getCurrentContext(),
-                        workingName,
-                        displayName,
-                        viewName,
-                        channelView,
-                        direction);
+    return GetProcessor(
+        config,
+        config->getCurrentContext(),
+        workingName,
+        displayName,
+        viewName,
+        channelView,
+        direction);
 }
 
-ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & config,
-                                 const ConstContextRcPtr & context,
-                                 const char * workingName,
-                                 const char * displayName,
-                                 const char * viewName,
-                                 const ConstMatrixTransformRcPtr & channelView,
-                                 TransformDirection direction)
+ConstProcessorRcPtr GetProcessor(
+    const ConstConfigRcPtr & config,
+    const ConstContextRcPtr & context,
+    const char * workingName,
+    const char * displayName,
+    const char * viewName,
+    const ConstMatrixTransformRcPtr & channelView,
+    TransformDirection direction)
 {
     DisplayViewTransformRcPtr displayTransform = DisplayViewTransform::Create();
     displayTransform->setDirection(direction);
@@ -62,10 +63,11 @@ ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & config,
         GroupTransformRcPtr grpTransform = processor->createGroupTransform();
 
         const int maxTransform = grpTransform->getNumTransforms();
-        for (int idx=0; idx<maxTransform; ++idx)
+        for (int idx = 0; idx < maxTransform; ++idx)
         {
             ConstTransformRcPtr tr = grpTransform->getTransform(idx);
-            ConstExposureContrastTransformRcPtr ex = DynamicPtrCast<const ExposureContrastTransform>(tr);
+            ConstExposureContrastTransformRcPtr ex
+                = DynamicPtrCast<const ExposureContrastTransform>(tr);
 
             if (ex)
             {
@@ -151,7 +153,8 @@ ConstProcessorRcPtr GetIdentityProcessor(const ConstConfigRcPtr & config)
 
 void AddActiveDisplayView(ConfigRcPtr & config, const char * displayName, const char * viewName)
 {
-    if (!displayName || !viewName) return;
+    if (!displayName || !viewName)
+        return;
 
     // Add the display to the active display list only if possible.
 
@@ -161,12 +164,11 @@ void AddActiveDisplayView(ConfigRcPtr & config, const char * displayName, const 
         StringUtils::StringVec displays = StringUtils::Split(envActiveDisplays, ',');
         StringUtils::Trim(displays);
 
-        const bool acceptAllDisplays = displays.size()==1 && displays[0]=="";
+        const bool acceptAllDisplays = displays.size() == 1 && displays[0] == "";
         if (!acceptAllDisplays)
         {
             std::stringstream err;
-            err << "Forbidden to add an active display as '" 
-                << OCIO_ACTIVE_DISPLAYS_ENVVAR
+            err << "Forbidden to add an active display as '" << OCIO_ACTIVE_DISPLAYS_ENVVAR
                 << "' controls the active list.";
 
             throw Exception(err.str().c_str());
@@ -180,7 +182,7 @@ void AddActiveDisplayView(ConfigRcPtr & config, const char * displayName, const 
             StringUtils::StringVec displays = StringUtils::Split(activeDisplays, ',');
             StringUtils::Trim(displays);
 
-            const bool acceptAllDisplays = displays.size()==1 && displays[0]=="";
+            const bool acceptAllDisplays = displays.size() == 1 && displays[0] == "";
 
             if (!acceptAllDisplays && !StringUtils::Contain(displays, displayName))
             {
@@ -199,12 +201,11 @@ void AddActiveDisplayView(ConfigRcPtr & config, const char * displayName, const 
         StringUtils::StringVec views = StringUtils::Split(envActiveViews, ',');
         StringUtils::Trim(views);
 
-        const bool acceptAllViews = views.size()==1 && views[0]=="";
+        const bool acceptAllViews = views.size() == 1 && views[0] == "";
         if (!acceptAllViews)
         {
             std::stringstream err;
-            err << "Forbidden to add an active view as '" 
-                << OCIO_ACTIVE_VIEWS_ENVVAR
+            err << "Forbidden to add an active view as '" << OCIO_ACTIVE_VIEWS_ENVVAR
                 << "' controls the active list.";
 
             throw Exception(err.str().c_str());
@@ -217,8 +218,8 @@ void AddActiveDisplayView(ConfigRcPtr & config, const char * displayName, const 
         {
             StringUtils::StringVec views = StringUtils::Split(activeViews, ',');
             StringUtils::Trim(views);
-    
-            const bool acceptAllViews = views.size()==1 && views[0]=="";
+
+            const bool acceptAllViews = views.size() == 1 && views[0] == "";
 
             if (!acceptAllViews && !StringUtils::Contain(views, viewName))
             {
@@ -232,7 +233,8 @@ void AddActiveDisplayView(ConfigRcPtr & config, const char * displayName, const 
 
 void RemoveActiveDisplayView(ConfigRcPtr & config, const char * displayName, const char * viewName)
 {
-    if (!displayName || !viewName) return;
+    if (!displayName || !viewName)
+        return;
 
     // Remove the display from the active display list only if possible.
 
@@ -242,12 +244,11 @@ void RemoveActiveDisplayView(ConfigRcPtr & config, const char * displayName, con
         StringUtils::StringVec displays = StringUtils::Split(envActiveDisplays, ',');
         StringUtils::Trim(displays);
 
-        const bool acceptAllDisplays = displays.size()==1 && displays[0]=="";
+        const bool acceptAllDisplays = displays.size() == 1 && displays[0] == "";
         if (!acceptAllDisplays)
         {
             std::stringstream err;
-            err << "Forbidden to remove an active display as '" 
-                << OCIO_ACTIVE_DISPLAYS_ENVVAR
+            err << "Forbidden to remove an active display as '" << OCIO_ACTIVE_DISPLAYS_ENVVAR
                 << "' controls the active list.";
 
             throw Exception(err.str().c_str());
@@ -261,14 +262,14 @@ void RemoveActiveDisplayView(ConfigRcPtr & config, const char * displayName, con
             StringUtils::StringVec displays = StringUtils::Split(activeDisplays, ',');
             StringUtils::Trim(displays);
 
-            const bool acceptAllDisplays = displays.size()==1 && displays[0]=="";
+            const bool acceptAllDisplays = displays.size() == 1 && displays[0] == "";
 
             if (!acceptAllDisplays && StringUtils::Contain(displays, displayName))
             {
                 // As the display is an active one, not finding it in the list
                 // means that it could be removed from the 'active_displays' list.
 
-                bool toRemove = true;
+                bool toRemove         = true;
                 const int numDisplays = config->getNumDisplays();
                 for (int dispIdx = 0; dispIdx < numDisplays && toRemove; ++dispIdx)
                 {
@@ -297,12 +298,11 @@ void RemoveActiveDisplayView(ConfigRcPtr & config, const char * displayName, con
         StringUtils::StringVec views = StringUtils::Split(envActiveViews, ',');
         StringUtils::Trim(views);
 
-        const bool acceptAllViews = views.size()==1 && views[0]=="";
+        const bool acceptAllViews = views.size() == 1 && views[0] == "";
         if (!acceptAllViews)
         {
             std::stringstream err;
-            err << "Forbidden to remove an active view as '" 
-                << OCIO_ACTIVE_VIEWS_ENVVAR
+            err << "Forbidden to remove an active view as '" << OCIO_ACTIVE_VIEWS_ENVVAR
                 << "' controls the active list.";
 
             throw Exception(err.str().c_str());
@@ -316,7 +316,7 @@ void RemoveActiveDisplayView(ConfigRcPtr & config, const char * displayName, con
             StringUtils::StringVec views = StringUtils::Split(activeViews, ',');
             StringUtils::Trim(views);
 
-            const bool acceptAllViews = views.size()==1 && views[0]=="";
+            const bool acceptAllViews = views.size() == 1 && views[0] == "";
             if (!acceptAllViews && StringUtils::Contain(views, viewName))
             {
                 // As the view is an active one, not finding it in the list means that it could
@@ -325,24 +325,21 @@ void RemoveActiveDisplayView(ConfigRcPtr & config, const char * displayName, con
 
                 struct EnableAllDisplays
                 {
-                    EnableAllDisplays() = delete;
+                    EnableAllDisplays()                          = delete;
                     EnableAllDisplays(const EnableAllDisplays &) = delete;
 
                     // Note that if the 'active_displays' list is controlled by the ennvar either
                     // the code throws before or the following guard is useless.
                     explicit EnableAllDisplays(ConfigRcPtr & config)
-                        :   m_config(config)
-                        ,   m_activeDisplays(config->getActiveDisplays())
+                        : m_config(config)
+                        , m_activeDisplays(config->getActiveDisplays())
                     {
                         m_config->setActiveDisplays("");
                     }
 
-                    ~EnableAllDisplays()
-                    {
-                        m_config->setActiveDisplays(m_activeDisplays.c_str());
-                    }
+                    ~EnableAllDisplays() { m_config->setActiveDisplays(m_activeDisplays.c_str()); }
 
-                    ConfigRcPtr       m_config;
+                    ConfigRcPtr m_config;
                     const std::string m_activeDisplays;
                 } guard(config);
 
@@ -375,13 +372,14 @@ void RemoveActiveDisplayView(ConfigRcPtr & config, const char * displayName, con
     }
 }
 
-void AddDisplayView(ConfigRcPtr & config,
-                    const char * displayName,
-                    const char * viewName,
-                    const char * lookDefinition,
-                    const ColorSpaceRcPtr & colorSpace,
-                    FileTransformRcPtr & userTransform,
-                    const char * connectionColorSpaceName)
+void AddDisplayView(
+    ConfigRcPtr & config,
+    const char * displayName,
+    const char * viewName,
+    const char * lookDefinition,
+    const ColorSpaceRcPtr & colorSpace,
+    FileTransformRcPtr & userTransform,
+    const char * connectionColorSpaceName)
 {
     if (!displayName || !*displayName)
     {
@@ -395,7 +393,7 @@ void AddDisplayView(ConfigRcPtr & config,
 
     // Step 1 - Create the color transformation.
 
-    GroupTransformRcPtr grp =  GroupTransform::Create();
+    GroupTransformRcPtr grp = GroupTransform::Create();
 
     // Add the 'reference' to connection color space.
     {
@@ -423,7 +421,8 @@ void AddDisplayView(ConfigRcPtr & config,
             if (tr)
             {
                 TransformRcPtr t = tr->createEditableCopy();
-                t->setDirection(CombineTransformDirections(tr->getDirection(), TRANSFORM_DIR_INVERSE));
+                t->setDirection(
+                    CombineTransformDirections(tr->getDirection(), TRANSFORM_DIR_INVERSE));
                 grp->appendTransform(t);
             }
         }
@@ -448,16 +447,17 @@ void AddDisplayView(ConfigRcPtr & config,
     config->addDisplayView(displayName, viewName, colorSpace->getName(), lookDefinition);
 }
 
-void AddDisplayView(ConfigRcPtr & config,
-                    const char * displayName,
-                    const char * viewName,
-                    const char * lookDefinition,
-                    const char * colorSpaceName,
-                    const char * colorSpaceFamily,
-                    const char * colorSpaceDescription,
-                    const char * categories,
-                    const char * transformFilePath,
-                    const char * connectionColorSpaceName)
+void AddDisplayView(
+    ConfigRcPtr & config,
+    const char * displayName,
+    const char * viewName,
+    const char * lookDefinition,
+    const char * colorSpaceName,
+    const char * colorSpaceFamily,
+    const char * colorSpaceDescription,
+    const char * categories,
+    const char * transformFilePath,
+    const char * connectionColorSpaceName)
 {
     ColorSpaceRcPtr colorSpace = ColorSpace::Create();
     colorSpace->setName(colorSpaceName ? colorSpaceName : "");
@@ -494,16 +494,20 @@ void AddDisplayView(ConfigRcPtr & config,
     FileTransformRcPtr file = FileTransform::Create();
     file->setSrc(transformFilePath);
 
-    AddDisplayView(config,
-                   displayName, viewName, lookDefinition,
-                   colorSpace, file,
-                   connectionColorSpaceName);
+    AddDisplayView(
+        config,
+        displayName,
+        viewName,
+        lookDefinition,
+        colorSpace,
+        file,
+        connectionColorSpaceName);
 }
 
 void RemoveDisplayView(ConfigRcPtr & config, const char * displayName, const char * viewName)
 {
-    const std::string name{ config->getDisplayViewColorSpaceName(displayName, viewName) };
-    const std::string csName{ name.empty() ? displayName : name };
+    const std::string name{config->getDisplayViewColorSpaceName(displayName, viewName)};
+    const std::string csName{name.empty() ? displayName : name};
     if (csName.empty())
     {
         std::string errMsg = "Missing color space for '";
@@ -530,7 +534,6 @@ void RemoveDisplayView(ConfigRcPtr & config, const char * displayName, const cha
     }
 }
 
-} // DisplayViewHelpers
-
+} // namespace DisplayViewHelpers
 
 } // namespace OCIO_NAMESPACE

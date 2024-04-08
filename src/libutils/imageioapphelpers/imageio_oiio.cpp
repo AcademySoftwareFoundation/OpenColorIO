@@ -6,7 +6,6 @@
 #include <OpenImageIO/imagebuf.h>
 #include <OpenImageIO/imagebufalgo.h>
 
-
 namespace OCIO_NAMESPACE
 {
 
@@ -17,10 +16,14 @@ BitDepth BitDepthFromTypeDesc(OIIO::TypeDesc type)
 {
     switch (type.basetype)
     {
-        case OIIO::TypeDesc::UINT8:     return BIT_DEPTH_UINT8;
-        case OIIO::TypeDesc::UINT16:    return BIT_DEPTH_UINT16;
-        case OIIO::TypeDesc::HALF:      return BIT_DEPTH_F16;
-        case OIIO::TypeDesc::FLOAT:     return BIT_DEPTH_F32;
+        case OIIO::TypeDesc::UINT8:
+            return BIT_DEPTH_UINT8;
+        case OIIO::TypeDesc::UINT16:
+            return BIT_DEPTH_UINT16;
+        case OIIO::TypeDesc::HALF:
+            return BIT_DEPTH_F16;
+        case OIIO::TypeDesc::FLOAT:
+            return BIT_DEPTH_F32;
         case OIIO::TypeDesc::UNKNOWN:
         case OIIO::TypeDesc::NONE:
         case OIIO::TypeDesc::INT8:
@@ -46,11 +49,16 @@ OIIO::TypeDesc BitDepthToTypeDesc(BitDepth bitdepth)
 {
     switch (bitdepth)
     {
-        case BIT_DEPTH_UINT8:   return OIIO::TypeDesc(OIIO::TypeDesc::UINT8);
-        case BIT_DEPTH_UINT16:  return OIIO::TypeDesc(OIIO::TypeDesc::UINT16);
-        case BIT_DEPTH_F16:     return OIIO::TypeDesc(OIIO::TypeDesc::HALF);
-        case BIT_DEPTH_F32:     return OIIO::TypeDesc(OIIO::TypeDesc::FLOAT);
-        case BIT_DEPTH_UNKNOWN: return OIIO::TypeDesc(OIIO::TypeDesc::UNKNOWN);
+        case BIT_DEPTH_UINT8:
+            return OIIO::TypeDesc(OIIO::TypeDesc::UINT8);
+        case BIT_DEPTH_UINT16:
+            return OIIO::TypeDesc(OIIO::TypeDesc::UINT16);
+        case BIT_DEPTH_F16:
+            return OIIO::TypeDesc(OIIO::TypeDesc::HALF);
+        case BIT_DEPTH_F32:
+            return OIIO::TypeDesc(OIIO::TypeDesc::FLOAT);
+        case BIT_DEPTH_UNKNOWN:
+            return OIIO::TypeDesc(OIIO::TypeDesc::UNKNOWN);
         case BIT_DEPTH_UINT10:
         case BIT_DEPTH_UINT12:
         case BIT_DEPTH_UINT14:
@@ -81,10 +89,10 @@ public:
     Impl() = default;
 
     Impl(const Impl &) = delete;
-    Impl(Impl &&) = delete;
+    Impl(Impl &&)      = delete;
 
-    Impl& operator= (const Impl & rhs) = delete;
-    Impl& operator= (Impl && rhs) = delete;
+    Impl & operator=(const Impl & rhs) = delete;
+    Impl & operator=(Impl && rhs)      = delete;
 
     ~Impl() = default;
 
@@ -121,46 +129,27 @@ public:
     ImageDescRcPtr getImageDesc() const
     {
         return std::make_shared<PackedImageDesc>(
-            (void*) getData(),
+            (void *)getData(),
             getWidth(),
             getHeight(),
             getChannelOrder(),
             getBitDepth(),
             getChanStrideBytes(),
             getXStrideBytes(),
-            getYStrideBytes()
-        );
+            getYStrideBytes());
     }
 
-    uint8_t * getData()
-    {
-        return (uint8_t*) m_buffer.localpixels();
-    }
+    uint8_t * getData() { return (uint8_t *)m_buffer.localpixels(); }
 
-    const uint8_t * getData() const
-    {
-        return (const uint8_t*) m_buffer.localpixels();
-    }
+    const uint8_t * getData() const { return (const uint8_t *)m_buffer.localpixels(); }
 
-    long getWidth() const
-    {
-        return m_buffer.spec().width;
-    }
+    long getWidth() const { return m_buffer.spec().width; }
 
-    long getHeight() const
-    {
-        return m_buffer.spec().height;
-    }
+    long getHeight() const { return m_buffer.spec().height; }
 
-    BitDepth getBitDepth() const
-    {
-        return BitDepthFromTypeDesc(m_buffer.spec().format);
-    }
+    BitDepth getBitDepth() const { return BitDepthFromTypeDesc(m_buffer.spec().format); }
 
-    long getNumChannels() const
-    {
-        return m_buffer.spec().nchannels;
-    }
+    long getNumChannels() const { return m_buffer.spec().nchannels; }
 
     ChannelOrdering getChannelOrder() const
     {
@@ -179,25 +168,13 @@ public:
         return GetChannelNames(getChannelOrder());
     }
 
-    ptrdiff_t getChanStrideBytes() const
-    {
-        return GetChannelSizeInBytes(getBitDepth());
-    }
+    ptrdiff_t getChanStrideBytes() const { return GetChannelSizeInBytes(getBitDepth()); }
 
-    ptrdiff_t getXStrideBytes() const
-    {
-        return getNumChannels() * getChanStrideBytes();
-    }
+    ptrdiff_t getXStrideBytes() const { return getNumChannels() * getChanStrideBytes(); }
 
-    ptrdiff_t getYStrideBytes() const
-    {
-        return getWidth() * getXStrideBytes();
-    }
+    ptrdiff_t getYStrideBytes() const { return getWidth() * getXStrideBytes(); }
 
-    ptrdiff_t getImageBytes() const
-    {
-        return getYStrideBytes() * getHeight();
-    }
+    ptrdiff_t getImageBytes() const { return getYStrideBytes() * getHeight(); }
 
     void attribute(const std::string & name, const std::string & value)
     {
@@ -219,7 +196,7 @@ public:
         bitDepth = bitDepth == BIT_DEPTH_UNKNOWN ? img.getBitDepth() : bitDepth;
 
         OIIO::ImageSpec spec = img.m_buffer.spec();
-        spec.format = BitDepthToTypeDesc(bitDepth);
+        spec.format          = BitDepthToTypeDesc(bitDepth);
 
         m_buffer = OIIO::ImageBuf(spec);
     }
@@ -227,7 +204,8 @@ public:
     void init(long width, long height, ChannelOrdering chanOrder, BitDepth bitDepth)
     {
         OIIO::ImageSpec spec(
-            width, height,
+            width,
+            height,
             GetNumChannels(chanOrder),
             BitDepthToTypeDesc(bitDepth));
 
@@ -241,11 +219,11 @@ public:
         m_buffer = OIIO::ImageBuf(filename);
 
         if (!m_buffer.read(
-                0,              // subimage
-                0,              // miplevel
-                true,           // force immediate read
-                typeDesc        // convert to type
-        ))
+                0,       // subimage
+                0,       // miplevel
+                true,    // force immediate read
+                typeDesc // convert to type
+                ))
         {
             std::stringstream ss;
             ss << "Error: Could not read image: " << m_buffer.geterror();
@@ -264,7 +242,6 @@ public:
             throw Exception(ss.str().c_str());
         }
     }
-
 };
 
 } // namespace OCIO_NAMESPACE

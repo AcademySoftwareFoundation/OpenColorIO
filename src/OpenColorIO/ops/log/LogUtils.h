@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_LOGUTILS_H
 #define INCLUDED_OCIO_LOGUTILS_H
 
@@ -28,12 +27,12 @@ enum LogStyle
 };
 
 // Strings for CLF/CTF files.
-static constexpr char LOG2_STR[] = "log2";
-static constexpr char LOG10_STR[] = "log10";
-static constexpr char ANTI_LOG2_STR[] = "antiLog2";
-static constexpr char ANTI_LOG10_STR[] = "antiLog10";
-static constexpr char LIN_TO_LOG_STR[] = "linToLog";
-static constexpr char LOG_TO_LIN_STR[] = "logToLin";
+static constexpr char LOG2_STR[]              = "log2";
+static constexpr char LOG10_STR[]             = "log10";
+static constexpr char ANTI_LOG2_STR[]         = "antiLog2";
+static constexpr char ANTI_LOG10_STR[]        = "antiLog10";
+static constexpr char LIN_TO_LOG_STR[]        = "linToLog";
+static constexpr char LOG_TO_LIN_STR[]        = "logToLin";
 static constexpr char CAMERA_LIN_TO_LOG_STR[] = "cameraLinToLog";
 static constexpr char CAMERA_LOG_TO_LIN_STR[] = "cameraLogToLin";
 
@@ -42,9 +41,7 @@ const char * ConvertStyleToString(LogStyle style);
 
 struct CTFParams
 {
-    CTFParams()
-    {
-    }
+    CTFParams() {}
 
     LogStyle m_style = LOG10;
 
@@ -72,21 +69,17 @@ struct CTFParams
         shadow
     };
 
-    Params & get(Channels c)
-    {
-        return m_params[c];
-    }
+    Params & get(Channels c) { return m_params[c]; }
 
-    const Params & get(Channels c) const
-    {
-        return m_params[c];
-    }
+    const Params & get(Channels c) const { return m_params[c]; }
 
     // red, green, blue.
     // Gamma, refWhite, refBlack, highlight, shadow.
-    Params m_params[3] = { { 0., 0., 0., 0., 0. },
-                           { 0., 0., 0., 0., 0. },
-                           { 0., 0., 0., 0., 0. } };
+    Params m_params[3] = {
+        {0., 0., 0., 0., 0.},
+        {0., 0., 0., 0., 0.},
+        {0., 0., 0., 0., 0.}
+    };
 
     bool setType(Type type)
     {
@@ -101,20 +94,18 @@ struct CTFParams
         return true;
     }
 
-    Type getType() const
-    {
-        return m_type;
-    }
+    Type getType() const { return m_type; }
 
 private:
     Type m_type = UNKNOWN;
 };
 
-void ConvertLogParameters(const CTFParams & ctfParams,
-                          double & base,
-                          LogOpData::Params & redParams,
-                          LogOpData::Params & greenParams,
-                          LogOpData::Params & blueParams);
+void ConvertLogParameters(
+    const CTFParams & ctfParams,
+    double & base,
+    LogOpData::Params & redParams,
+    LogOpData::Params & greenParams,
+    LogOpData::Params & blueParams);
 
 TransformDirection GetLogDirection(LogStyle style);
 
@@ -122,8 +113,7 @@ float GetLinearSlope(const LogOpData::Params & params, double base);
 float GetLogSideBreak(const LogOpData::Params & params, double base);
 float GetLinearOffset(const LogOpData::Params & params, float linearSlope, float logSideBreak);
 
-}
+} // namespace LogUtil
 } // namespace OCIO_NAMESPACE
 
 #endif
-

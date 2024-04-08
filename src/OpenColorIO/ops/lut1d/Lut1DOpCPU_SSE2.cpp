@@ -12,24 +12,24 @@
 namespace OCIO_NAMESPACE
 {
 
-namespace {
+namespace
+{
 
-#define i32gather_ps_sse2(src, dst, idx, indices, buffer)  \
-    _mm_store_si128((__m128i *)indices, idx); \
-    buffer[0] = (src)[indices[0]];               \
-    buffer[1] = (src)[indices[1]];               \
-    buffer[2] = (src)[indices[2]];               \
-    buffer[3] = (src)[indices[3]];               \
-    dst = _mm_load_ps(buffer)
+#define i32gather_ps_sse2(src, dst, idx, indices, buffer)                                          \
+    _mm_store_si128((__m128i *)indices, idx);                                                      \
+    buffer[0] = (src)[indices[0]];                                                                 \
+    buffer[1] = (src)[indices[1]];                                                                 \
+    buffer[2] = (src)[indices[2]];                                                                 \
+    buffer[3] = (src)[indices[3]];                                                                 \
+    dst       = _mm_load_ps(buffer)
 
 static inline __m128 fmadd_ps_sse2(__m128 a, __m128 b, __m128 c)
 {
 #if OCIO_USE_SSE2NEON
     return vreinterpretq_m128_f32(
-        vfmaq_f32(vreinterpretq_f32_m128(c), vreinterpretq_f32_m128(a), vreinterpretq_f32_m128(b))
-    );
+        vfmaq_f32(vreinterpretq_f32_m128(c), vreinterpretq_f32_m128(a), vreinterpretq_f32_m128(b)));
 #else
-    return  _mm_add_ps(_mm_mul_ps(a, b), c);
+    return _mm_add_ps(_mm_mul_ps(a, b), c);
 #endif
 }
 
@@ -43,16 +43,16 @@ static inline __m128 floor_ps_sse2(__m128 v)
 #endif
 }
 
-
-static inline __m128 apply_lut_sse2(const float *lut, __m128 v, const __m128& scale, const __m128& lut_max)
+static inline __m128
+apply_lut_sse2(const float * lut, __m128 v, const __m128 & scale, const __m128 & lut_max)
 {
     SSE2_ALIGN(uint32_t indices_p[4]);
     SSE2_ALIGN(uint32_t indices_n[4]);
     SSE2_ALIGN(float buffer_p[4]);
     SSE2_ALIGN(float buffer_n[4]);
 
-    __m128 zero   = _mm_setzero_ps();
-    __m128 one_f  = _mm_set1_ps(1);
+    __m128 zero  = _mm_setzero_ps();
+    __m128 one_f = _mm_set1_ps(1);
 
     __m128 scaled = _mm_mul_ps(v, scale);
 
@@ -76,27 +76,36 @@ static inline __m128 apply_lut_sse2(const float *lut, __m128 v, const __m128& sc
 }
 
 template <BitDepth inBD, BitDepth outBD>
-static inline void linear1D(const float *lutR, const float *lutG,const float *lutB, int dim, const void *inImg, void *outImg, long numPixels)
+static inline void linear1D(
+    const float * lutR,
+    const float * lutG,
+    const float * lutB,
+    int dim,
+    const void * inImg,
+    void * outImg,
+    long numPixels)
 {
 
     typedef typename BitDepthInfo<inBD>::Type InType;
     typedef typename BitDepthInfo<outBD>::Type OutType;
 
-    const InType *src = (const InType*)inImg;
-    OutType *dst = (OutType*)outImg;
-    __m128 r,g,b,a, alpha_scale;
+    const InType * src = (const InType *)inImg;
+    OutType * dst      = (OutType *)outImg;
+    __m128 r, g, b, a, alpha_scale;
 
-    float rgb_scale = 1.0f / (float)BitDepthInfo<inBD>::maxValue  * ((float)dim -1);
+    float rgb_scale        = 1.0f / (float)BitDepthInfo<inBD>::maxValue * ((float)dim - 1);
     const __m128 lut_scale = _mm_set1_ps(rgb_scale);
-    const __m128 lut_max   = _mm_set1_ps((float)dim -1);
+    const __m128 lut_max   = _mm_set1_ps((float)dim - 1);
 
     if (inBD != outBD)
-        alpha_scale = _mm_set1_ps((float)BitDepthInfo<outBD>::maxValue / (float)BitDepthInfo<inBD>::maxValue);
+        alpha_scale = _mm_set1_ps(
+            (float)BitDepthInfo<outBD>::maxValue / (float)BitDepthInfo<inBD>::maxValue);
 
     int pixel_count = numPixels / 4 * 4;
-    int remainder = numPixels - pixel_count;
+    int remainder   = numPixels - pixel_count;
 
-    for (int i = 0; i < pixel_count; i += 4 ) {
+    for (int i = 0; i < pixel_count; i += 4)
+    {
         SSE2RGBAPack<inBD>::Load(src, r, g, b, a);
 
         r = apply_lut_sse2(lutR, r, lut_scale, lut_max);
@@ -112,19 +121,20 @@ static inline void linear1D(const float *lutR, const float *lutG,const float *lu
         dst += 16;
     }
 
-     // handler leftovers pixels
-    if (remainder) {
+    // handler leftovers pixels
+    if (remainder)
+    {
         InType in_buf[16] = {};
         OutType out_buf[16];
 
         // memcpy(in_buf, src, remainder * 4 * sizeof(InType));
-        for (int i = 0; i < remainder*4; i+=4)
+        for (int i = 0; i < remainder * 4; i += 4)
         {
             in_buf[i + 0] = src[0];
             in_buf[i + 1] = src[1];
             in_buf[i + 2] = src[2];
             in_buf[i + 3] = src[3];
-            src+=4;
+            src += 4;
         }
 
         SSE2RGBAPack<inBD>::Load(in_buf, r, g, b, a);
@@ -138,22 +148,20 @@ static inline void linear1D(const float *lutR, const float *lutG,const float *lu
 
         SSE2RGBAPack<outBD>::Store(out_buf, r, g, b, a);
         // memcpy(dst, out_buf, remainder * 4 * sizeof(OutType));
-        for (int i = 0; i < remainder*4; i+=4)
+        for (int i = 0; i < remainder * 4; i += 4)
         {
             dst[0] = out_buf[i + 0];
             dst[1] = out_buf[i + 1];
             dst[2] = out_buf[i + 2];
             dst[3] = out_buf[i + 3];
-            dst+=4;
+            dst += 4;
         }
-
     }
 }
 
-template<BitDepth inBD>
-inline Lut1DOpCPUApplyFunc * GetConvertInBitDepth(BitDepth outBD)
+template <BitDepth inBD> inline Lut1DOpCPUApplyFunc * GetConvertInBitDepth(BitDepth outBD)
 {
-    switch(outBD)
+    switch (outBD)
     {
         case BIT_DEPTH_UINT8:
             return linear1D<inBD, BIT_DEPTH_UINT8>;
@@ -183,7 +191,7 @@ Lut1DOpCPUApplyFunc * SSE2GetLut1DApplyFunc(BitDepth inBD, BitDepth outBD)
 {
 
     // Lut1DOp only uses interpolation for in float in formats
-    switch(inBD)
+    switch (inBD)
     {
         case BIT_DEPTH_UINT8:
         case BIT_DEPTH_UINT10:
@@ -203,6 +211,6 @@ Lut1DOpCPUApplyFunc * SSE2GetLut1DApplyFunc(BitDepth inBD, BitDepth outBD)
     return nullptr;
 }
 
-} // OCIO_NAMESPACE
+} // namespace OCIO_NAMESPACE
 
 #endif // OCIO_USE_SSE2

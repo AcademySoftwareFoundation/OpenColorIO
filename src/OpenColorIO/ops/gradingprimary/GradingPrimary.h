@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_GRADINGPRIMARY_H
 #define INCLUDED_OCIO_GRADINGPRIMARY_H
 
-
 #include <OpenColorIO/OpenColorIO.h>
-
 
 namespace OCIO_NAMESPACE
 {
@@ -16,9 +13,9 @@ namespace OCIO_NAMESPACE
 struct GradingPrimaryPreRender
 {
     GradingPrimaryPreRender & operator=(const GradingPrimaryPreRender &) = default;
-    GradingPrimaryPreRender(const GradingPrimaryPreRender &) = default;
+    GradingPrimaryPreRender(const GradingPrimaryPreRender &)             = default;
 
-    GradingPrimaryPreRender() = default;
+    GradingPrimaryPreRender()  = default;
     ~GradingPrimaryPreRender() = default;
 
     void update(GradingStyle style, TransformDirection dir, const GradingPrimary & v) noexcept;
@@ -41,25 +38,36 @@ struct GradingPrimaryPreRender
     const Float3 & getSlope() const { return m_slope; }
 
 private:
-
     // Brightness, contrast, gamma
     // Exposure, contrast, offset
     // Slope, offset, gamma
 
     // Precomputed values are adjusted for the direction. Ex. slope is holding inverse slope
     // values for the inverse direction.
-    Float3 m_brightness{ { 0.f, 0.f, 0.f } };
-    Float3 m_contrast{ { 0.f, 0.f, 0.f } };
-    Float3 m_gamma{ { 0.f, 0.f, 0.f } };
-    Float3 m_exposure{ { 0.f, 0.f, 0.f } };
-    Float3 m_offset{ { 0.f, 0.f, 0.f } };
-    Float3 m_slope{ { 0.f, 0.f, 0.f } };
+    Float3 m_brightness{
+        {0.f, 0.f, 0.f}
+    };
+    Float3 m_contrast{
+        {0.f, 0.f, 0.f}
+    };
+    Float3 m_gamma{
+        {0.f, 0.f, 0.f}
+    };
+    Float3 m_exposure{
+        {0.f, 0.f, 0.f}
+    };
+    Float3 m_offset{
+        {0.f, 0.f, 0.f}
+    };
+    Float3 m_slope{
+        {0.f, 0.f, 0.f}
+    };
 
-    double m_pivot{ 0. };
+    double m_pivot{0.};
 
-    bool m_isPowerIdentity{ false };
+    bool m_isPowerIdentity{false};
 
-    bool m_localBypass{ false };
+    bool m_localBypass{false};
 };
 
 } // namespace OCIO_NAMESPACE

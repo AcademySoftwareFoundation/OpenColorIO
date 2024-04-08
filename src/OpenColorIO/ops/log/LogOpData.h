@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_OPS_LOG_LOGOPDATA_H
 #define INCLUDED_OCIO_OPS_LOG_LOGOPDATA_H
 
@@ -30,10 +29,9 @@ typedef OCIO_SHARED_PTR<const LogOpData> ConstLogOpDataRcPtr;
 class LogOpData : public OpData
 {
     // This class represents the Log op.
-    // 
+    //
     // A log op applies one of a family of parametric logarithmic functions.
 public:
-
     // Order of LogParams follows LogAffineParameter:
     // LOG_SIDE_SLOPE, LOG_SIDE_OFFSET,
     // LIN_SIDE_SLOPE, LIN_SIDE_OFFSET.
@@ -48,18 +46,20 @@ public:
 
     LogOpData(double base, TransformDirection direction);
 
-    LogOpData(double base,
-              const double(&logSlope)[3],
-              const double(&logOffset)[3],
-              const double(&linSlope)[3],
-              const double(&linOffset)[3],
-              TransformDirection direction);
+    LogOpData(
+        double base,
+        const double (&logSlope)[3],
+        const double (&logOffset)[3],
+        const double (&linSlope)[3],
+        const double (&linOffset)[3],
+        TransformDirection direction);
 
-    LogOpData(double base,
-              const Params & redParams,
-              const Params & greenParams,
-              const Params & blueParams,
-              TransformDirection dir);
+    LogOpData(
+        double base,
+        const Params & redParams,
+        const Params & greenParams,
+        const Params & blueParams,
+        TransformDirection dir);
 
     virtual ~LogOpData();
 
@@ -77,7 +77,7 @@ public:
 
     std::string getCacheID() const override;
 
-    bool equals(const OpData& other) const override;
+    bool equals(const OpData & other) const override;
 
     LogOpDataRcPtr clone() const;
 
@@ -125,23 +125,25 @@ public:
 
     double getBase() const noexcept;
 
-    void setValue(LogAffineParameter val, const double(&values)[3]);
+    void setValue(LogAffineParameter val, const double (&values)[3]);
 
     // Can be used to remove LINEAR_SLOPE
     void unsetLinearSlope();
 
     // Return false if value is not defined.
-    bool getValue(LogAffineParameter val, double(&values)[3]) const noexcept;
+    bool getValue(LogAffineParameter val, double (&values)[3]) const noexcept;
 
-    void setParameters(const double(&logSlope)[3],
-                       const double(&logOffset)[3],
-                       const double(&linSlope)[3],
-                       const double(&linOffset)[3]);
+    void setParameters(
+        const double (&logSlope)[3],
+        const double (&logOffset)[3],
+        const double (&linSlope)[3],
+        const double (&linOffset)[3]);
 
-    void getParameters(double(&logSlope)[3],
-                       double(&logOffset)[3],
-                       double(&linSlope)[3],
-                       double(&linOffset)[3]) const;
+    void getParameters(
+        double (&logSlope)[3],
+        double (&logOffset)[3],
+        double (&linSlope)[3],
+        double (&linOffset)[3]) const;
 
 private:
     bool isLogBase(double base) const;

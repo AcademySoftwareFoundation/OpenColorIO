@@ -57,9 +57,8 @@ protected:
     CDLOpDataRcPtr cdlData() { return DynamicPtrCast<CDLOpData>(data()); }
 };
 
-
 CDLOp::CDLOp(CDLOpDataRcPtr & cdl)
-    :   Op()
+    : Op()
 {
     data() = cdl;
 }
@@ -93,7 +92,8 @@ bool CDLOp::isSameType(ConstOpRcPtr & op) const
 bool CDLOp::isInverse(ConstOpRcPtr & op) const
 {
     ConstCDLOpRcPtr typedRcPtr = DynamicPtrCast<const CDLOp>(op);
-    if(!typedRcPtr) return false;
+    if (!typedRcPtr)
+        return false;
 
     ConstCDLOpDataRcPtr cdlData2 = typedRcPtr->cdlData();
     return cdlData()->isInverse(cdlData2);
@@ -108,7 +108,7 @@ bool CDLOp::canCombineWith(ConstOpRcPtr & /*op*/) const
 
 void CDLOp::combineWith(OpRcPtrVec & /*ops*/, ConstOpRcPtr & secondOp) const
 {
-    if(!canCombineWith(secondOp))
+    if (!canCombineWith(secondOp))
     {
         throw Exception("CDLOp: canCombineWith must be checked before calling combineWith.");
     }
@@ -139,37 +139,31 @@ void CDLOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
     GetCDLGPUShaderProgram(shaderCreator, data);
 }
 
-}  // Anon namespace
-
-
-
+} // namespace
 
 ///////////////////////////////////////////////////////////////////////////
 
-
-
-void CreateCDLOp(OpRcPtrVec & ops,
-                 CDLOpData::Style style,
-                 const double * slope3,
-                 const double * offset3,
-                 const double * power3,
-                 double saturation,
-                 TransformDirection direction)
+void CreateCDLOp(
+    OpRcPtrVec & ops,
+    CDLOpData::Style style,
+    const double * slope3,
+    const double * offset3,
+    const double * power3,
+    double saturation,
+    TransformDirection direction)
 {
 
-    CDLOpDataRcPtr cdlData(
-        new CDLOpData(style,
-                      CDLOpData::ChannelParams(slope3[0], slope3[1], slope3[2]),
-                      CDLOpData::ChannelParams(offset3[0], offset3[1], offset3[2]),
-                      CDLOpData::ChannelParams(power3[0], power3[1], power3[2]),
-                      saturation) );
+    CDLOpDataRcPtr cdlData(new CDLOpData(
+        style,
+        CDLOpData::ChannelParams(slope3[0], slope3[1], slope3[2]),
+        CDLOpData::ChannelParams(offset3[0], offset3[1], offset3[2]),
+        CDLOpData::ChannelParams(power3[0], power3[1], power3[2]),
+        saturation));
 
     CreateCDLOp(ops, cdlData, direction);
 }
 
-void CreateCDLOp(OpRcPtrVec & ops,
-                 CDLOpDataRcPtr & cdlData,
-                 TransformDirection direction)
+void CreateCDLOp(OpRcPtrVec & ops, CDLOpDataRcPtr & cdlData, TransformDirection direction)
 {
     auto cdl = cdlData;
     if (direction == TRANSFORM_DIR_INVERSE)
@@ -190,66 +184,67 @@ void CreateCDLTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
         throw Exception("CreateCDLTransform: op has to be a CDLOp");
     }
     const auto cdlData = DynamicPtrCast<const CDLOpData>(cdl->data());
-    auto cdlTransform = CDLTransform::Create();
-    auto & data = dynamic_cast<CDLTransformImpl *>(cdlTransform.get())->data();
+    auto cdlTransform  = CDLTransform::Create();
+    auto & data        = dynamic_cast<CDLTransformImpl *>(cdlTransform.get())->data();
 
     data = *cdlData;
     group->appendTransform(cdlTransform);
 }
 
-void BuildCDLOp(OpRcPtrVec & ops,
-                const Config & config,
-                const CDLTransform & cdlTransform,
-                TransformDirection dir)
+void BuildCDLOp(
+    OpRcPtrVec & ops,
+    const Config & config,
+    const CDLTransform & cdlTransform,
+    TransformDirection dir)
 {
     if (config.getMajorVersion() == 1)
     {
         const auto combinedDir = CombineTransformDirections(dir, cdlTransform.getDirection());
 
-        double slope4[] = { 1.0, 1.0, 1.0, 1.0 };
+        double slope4[] = {1.0, 1.0, 1.0, 1.0};
         cdlTransform.getSlope(slope4);
 
-        double offset4[] = { 0.0, 0.0, 0.0, 0.0 };
+        double offset4[] = {0.0, 0.0, 0.0, 0.0};
         cdlTransform.getOffset(offset4);
 
-        double power4[] = { 1.0, 1.0, 1.0, 1.0 };
+        double power4[] = {1.0, 1.0, 1.0, 1.0};
         cdlTransform.getPower(power4);
 
-        double lumaCoef3[] = { 1.0, 1.0, 1.0 };
+        double lumaCoef3[] = {1.0, 1.0, 1.0};
         cdlTransform.getSatLumaCoefs(lumaCoef3);
 
         double sat = cdlTransform.getSat();
 
         switch (combinedDir)
         {
-        case TRANSFORM_DIR_FORWARD:
-        {
-            // 1) Scale + Offset
-            CreateScaleOffsetOp(ops, slope4, offset4, TRANSFORM_DIR_FORWARD);
+            case TRANSFORM_DIR_FORWARD:
+            {
+                // 1) Scale + Offset
+                CreateScaleOffsetOp(ops, slope4, offset4, TRANSFORM_DIR_FORWARD);
 
-            // 2) Power + Clamp at 0 (NB: This is not in accord with the
-            //    ASC v1.2 spec since it also requires clamping at 1.)
-            CreateExponentOp(ops, power4, TRANSFORM_DIR_FORWARD);
+                // 2) Power + Clamp at 0 (NB: This is not in accord with the
+                //    ASC v1.2 spec since it also requires clamping at 1.)
+                CreateExponentOp(ops, power4, TRANSFORM_DIR_FORWARD);
 
-            // 3) Saturation (NB: Does not clamp at 0 and 1
-            //    as per ASC v1.2 spec)
-            CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_FORWARD);
-            break;
-        }
-        case TRANSFORM_DIR_INVERSE:
-        {
-            // 3) Saturation (NB: Does not clamp at 0 and 1
-            //    as per ASC v1.2 spec)
-            CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_INVERSE);
+                // 3) Saturation (NB: Does not clamp at 0 and 1
+                //    as per ASC v1.2 spec)
+                CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_FORWARD);
+                break;
+            }
+            case TRANSFORM_DIR_INVERSE:
+            {
+                // 3) Saturation (NB: Does not clamp at 0 and 1
+                //    as per ASC v1.2 spec)
+                CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_INVERSE);
 
-            // 2) Power + Clamp at 0 (NB: This is not in accord with the
-            //    ASC v1.2 spec since it also requires clamping at 1.)
-            CreateExponentOp(ops, power4, TRANSFORM_DIR_INVERSE);
+                // 2) Power + Clamp at 0 (NB: This is not in accord with the
+                //    ASC v1.2 spec since it also requires clamping at 1.)
+                CreateExponentOp(ops, power4, TRANSFORM_DIR_INVERSE);
 
-            // 1) Scale + Offset
-            CreateScaleOffsetOp(ops, slope4, offset4, TRANSFORM_DIR_INVERSE);
-            break;
-        }
+                // 1) Scale + Offset
+                CreateScaleOffsetOp(ops, slope4, offset4, TRANSFORM_DIR_INVERSE);
+                break;
+            }
         }
     }
     else
@@ -265,4 +260,3 @@ void BuildCDLOp(OpRcPtrVec & ops,
 }
 
 } // namespace OCIO_NAMESPACE
-

@@ -14,8 +14,8 @@ class OCIODisplayView : public OFX::ImageEffect
 {
 protected:
     // Do not need to delete these. The ImageEffect is managing them for us.
-    OFX::Clip *dstClip_;
-    OFX::Clip *srcClip_;
+    OFX::Clip * dstClip_;
+    OFX::Clip * srcClip_;
 
     OFX::ChoiceParam * srcCsNameParam_;
     OFX::ChoiceParam * displayParam_;
@@ -31,14 +31,14 @@ public:
     void render(const OFX::RenderArguments & args) override;
 
     /* Override identity (~no-op) check */
-    bool isIdentity(const OFX::IsIdentityArguments & args, 
-                    OFX::Clip *& identityClip, 
-                    double & identityTime) override;
+    bool isIdentity(
+        const OFX::IsIdentityArguments & args,
+        OFX::Clip *& identityClip,
+        double & identityTime) override;
 
     /* Override changedParam */
-    void changedParam(const OFX::InstanceChangedArgs & args, 
-                      const std::string & paramName) override;
-
+    void changedParam(const OFX::InstanceChangedArgs & args, const std::string & paramName)
+        override;
 };
 
 mDeclarePluginFactory(OCIODisplayViewFactory, {}, {});

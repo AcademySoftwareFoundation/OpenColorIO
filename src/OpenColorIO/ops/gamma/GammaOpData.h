@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_GAMMAOPDATA_H
 #define INCLUDED_OCIO_GAMMAOPDATA_H
-
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -18,42 +15,40 @@ class GammaOpData;
 typedef OCIO_SHARED_PTR<GammaOpData> GammaOpDataRcPtr;
 typedef OCIO_SHARED_PTR<const GammaOpData> ConstGammaOpDataRcPtr;
 
-
 // This class represents the Gamma op.
-// 
+//
 // A gamma op applies one of a family of parametric power functions.
-// 
+//
 // These functions are typically used to model the nonlinearity in a
 // display device or camera.
-// 
+//
 // A style argument is used to distinguish the specific function.
-// 
+//
 // The BASIC style is simply a power law.
-// 
+//
 // The MONCURVE style is a power law with the addition of a linear segment
 // in the shadows which avoids the fact that the slope of a pure power law
 // approaches infinity (for powers > 1) at 0.
-// 
-// Here are the parameters to use with the MONCURVE style to implement several 
+//
+// Here are the parameters to use with the MONCURVE style to implement several
 // commonly used functions:
 //   sRGB -- gamma: 2.4, offset: 0.055
 //   Rec.709 -- gamma: 1/0.45, offset: 0.099
 //   L* -- gamma: 3.0, offset: 0.16
-// 
+//
 // The suffixes FWD and REV are used to distinguish the forward model from
 // the reverse (or inverse) model.
-// 
+//
 //
 // By convention, the gamma values should be >= 1 whenever possible.
-// These are used as is for the forward direction and the reverse/inverse direction 
-// is used to obtain exponents of less than 1. For the MONCURVE style, this is enforced 
+// These are used as is for the forward direction and the reverse/inverse direction
+// is used to obtain exponents of less than 1. For the MONCURVE style, this is enforced
 // during validation so that the gamma and offset work together properly.
 //
 
 class GammaOpData : public OpData
 {
 public:
-
     enum Style
     {
         BASIC_FWD = 0,
@@ -80,11 +75,12 @@ public:
     GammaOpData();
     GammaOpData(const GammaOpData &) = default;
 
-    GammaOpData(const Style & style,
-                const Params & redParams,
-                const Params & greenParams,
-                const Params & blueParams,
-                const Params & alphaParams);
+    GammaOpData(
+        const Style & style,
+        const Params & redParams,
+        const Params & greenParams,
+        const Params & blueParams,
+        const Params & alphaParams);
 
     virtual ~GammaOpData();
 
@@ -94,24 +90,24 @@ public:
 
     Type getType() const override { return GammaType; }
 
-    inline const Params & getRedParams()   const { return m_redParams;   }
+    inline const Params & getRedParams() const { return m_redParams; }
     inline const Params & getGreenParams() const { return m_greenParams; }
-    inline const Params & getBlueParams()  const { return m_blueParams;  }
+    inline const Params & getBlueParams() const { return m_blueParams; }
     inline const Params & getAlphaParams() const { return m_alphaParams; }
 
-    inline Params & getRedParams()   { return m_redParams;   }
+    inline Params & getRedParams() { return m_redParams; }
     inline Params & getGreenParams() { return m_greenParams; }
-    inline Params & getBlueParams()  { return m_blueParams;  }
+    inline Params & getBlueParams() { return m_blueParams; }
     inline Params & getAlphaParams() { return m_alphaParams; }
 
     void setStyle(const Style & style) noexcept;
 
-    void setRedParams  (const Params & parameter);
+    void setRedParams(const Params & parameter);
     void setGreenParams(const Params & parameter);
-    void setBlueParams (const Params & parameter);
+    void setBlueParams(const Params & parameter);
     void setAlphaParams(const Params & parameter);
 
-    void setParams( const Params & parameter);
+    void setParams(const Params & parameter);
 
     virtual bool isNoOp() const override;
     virtual bool isIdentity() const override;
@@ -141,7 +137,7 @@ public:
 
     virtual void validateParameters() const;
 
-    bool equals(const OpData& other) const override;
+    bool equals(const OpData & other) const override;
 
     std::string getCacheID() const override;
 

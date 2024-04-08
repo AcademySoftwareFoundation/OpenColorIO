@@ -16,7 +16,7 @@ LogTransformRcPtr LogTransform::Create()
     return LogTransformRcPtr(new LogTransformImpl(), &LogTransformImpl::deleter);
 }
 
-void LogTransformImpl::deleter(LogTransform* t)
+void LogTransformImpl::deleter(LogTransform * t)
 {
     delete static_cast<LogTransformImpl *>(t);
 }
@@ -28,8 +28,8 @@ LogTransformImpl::LogTransformImpl()
 
 TransformRcPtr LogTransformImpl::createEditableCopy() const
 {
-    LogTransformRcPtr transform = LogTransform::Create();
-    dynamic_cast<LogTransformImpl*>(transform.get())->data() = data();
+    LogTransformRcPtr transform                               = LogTransform::Create();
+    dynamic_cast<LogTransformImpl *>(transform.get())->data() = data();
     return transform;
 }
 
@@ -70,8 +70,9 @@ const FormatMetadata & LogTransformImpl::getFormatMetadata() const noexcept
 
 bool LogTransformImpl::equals(const LogTransform & other) const noexcept
 {
-    if (this == &other) return true;
-    return data() == dynamic_cast<const LogTransformImpl*>(&other)->data();
+    if (this == &other)
+        return true;
+    return data() == dynamic_cast<const LogTransformImpl *>(&other)->data();
 }
 
 double LogTransformImpl::getBase() const noexcept
@@ -84,7 +85,7 @@ void LogTransformImpl::setBase(double val) noexcept
     data().setBase(val);
 }
 
-std::ostream & operator<< (std::ostream & os, const LogTransform & t)
+std::ostream & operator<<(std::ostream & os, const LogTransform & t)
 {
     os << "<LogTransform";
     os << " direction=" << TransformDirectionToString(t.getDirection());
@@ -95,4 +96,3 @@ std::ostream & operator<< (std::ostream & os, const LogTransform & t)
 }
 
 } // namespace OCIO_NAMESPACE
-

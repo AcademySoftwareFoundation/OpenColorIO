@@ -14,47 +14,53 @@ namespace OCIO_NAMESPACE
 {
 
 // Define __repr__ implementation compatible with *most* OCIO classes
-template<typename T, typename ... EXTRA>
-void defRepr(py::class_<T, OCIO_SHARED_PTR<T>, EXTRA ...> & cls)
+template <typename T, typename... EXTRA>
+void defRepr(py::class_<T, OCIO_SHARED_PTR<T>, EXTRA...> & cls)
 {
-    cls.def("__repr__", [](OCIO_SHARED_PTR<T> & self)
-        { 
-            std::ostringstream os;
-            os << (*self);
-            return os.str();
-        });
+    cls.def("__repr__", [](OCIO_SHARED_PTR<T> & self) {
+        std::ostringstream os;
+        os << (*self);
+        return os.str();
+    });
 }
 
-template<typename T>
-void defRepr(py::class_<T> & cls)
+template <typename T> void defRepr(py::class_<T> & cls)
 {
-    cls.def("__repr__", [](T & self)
-        { 
-            std::ostringstream os;
-            os << self;
-            return os.str();
-        });
+    cls.def("__repr__", [](T & self) {
+        std::ostringstream os;
+        os << self;
+        return os.str();
+    });
 }
 
 // Standard interface for Python iterator mechanics
-template<typename T, int UNIQUE, typename ... ARGS>
-struct PyIterator
+template <typename T, int UNIQUE, typename... ARGS> struct PyIterator
 {
-    PyIterator(T obj, ARGS ... args) : m_obj(obj), m_args(args ...) {}
+    PyIterator(T obj, ARGS... args)
+        : m_obj(obj)
+        , m_args(args...)
+    {
+    }
 
     int nextIndex(int num)
     {
-        if (m_i >= num) { throw py::stop_iteration(); }
+        if (m_i >= num)
+        {
+            throw py::stop_iteration();
+        }
         return m_i++;
     }
 
     void checkIndex(int i, int num)
     {
-        if (i >= num) { throw py::index_error("Iterator index out of range"); }
+        if (i >= num)
+        {
+            throw py::index_error("Iterator index out of range");
+        }
     }
 
     T m_obj;
-    std::tuple<ARGS ...> m_args;
+    std::tuple<ARGS...> m_args;
 
 private:
     int m_i = 0;

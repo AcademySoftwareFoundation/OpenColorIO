@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Logging.h"
 #include "ops/gradingprimary/GradingPrimaryOpGPU.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -15,26 +13,27 @@ namespace
 
 struct GPProperties
 {
-    std::string brightness{ "brightness" };
-    std::string contrast{ "contrast" };
-    std::string gamma{ "gamma" };
-    std::string exposure{ "exposure" };
-    std::string offset{ "offset" };
-    std::string slope{ "slope" };
+    std::string brightness{"brightness"};
+    std::string contrast{"contrast"};
+    std::string gamma{"gamma"};
+    std::string exposure{"exposure"};
+    std::string offset{"offset"};
+    std::string slope{"slope"};
 
-    std::string pivot{ "pivot" };
-    std::string pivotBlack{ "pivotBlack" };
-    std::string pivotWhite{ "pivotWhite" };
-    std::string clampBlack{ "clampBlack" };
-    std::string clampWhite{ "clampWhite" };
-    std::string saturation{ "saturation" };
+    std::string pivot{"pivot"};
+    std::string pivotBlack{"pivotBlack"};
+    std::string pivotWhite{"pivotWhite"};
+    std::string clampBlack{"clampBlack"};
+    std::string clampWhite{"clampWhite"};
+    std::string saturation{"saturation"};
 
-    std::string localBypass{ "localBypass" };
+    std::string localBypass{"localBypass"};
 };
 
-void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
-                const GpuShaderCreator::DoubleGetter & getter,
-                const std::string & name)
+void AddUniform(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    const GpuShaderCreator::DoubleGetter & getter,
+    const std::string & name)
 {
     // Add the uniform if it does not already exist.
     if (shaderCreator->addUniform(name.c_str(), getter))
@@ -46,9 +45,10 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
     }
 }
 
-void AddBoolUniform(GpuShaderCreatorRcPtr & shaderCreator,
-                    const GpuShaderCreator::BoolGetter & getBool,
-                    const std::string & name)
+void AddBoolUniform(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    const GpuShaderCreator::BoolGetter & getBool,
+    const std::string & name)
 {
     // Add the uniform if it does not already exist.
     if (shaderCreator->addUniform(name.c_str(), getBool))
@@ -60,9 +60,10 @@ void AddBoolUniform(GpuShaderCreatorRcPtr & shaderCreator,
     }
 }
 
-void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
-                const GpuShaderCreator::Float3Getter & getter,
-                const std::string & name)
+void AddUniform(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    const GpuShaderCreator::Float3Getter & getter,
+    const std::string & name)
 {
     // Add the uniform if it does not already exist.
     if (shaderCreator->addUniform(name.c_str(), getter))
@@ -76,11 +77,12 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
 
 static constexpr char opPrefix[] = "grading_primary";
 
-void AddGPLogProperties(GpuShaderCreatorRcPtr & shaderCreator,
-                        GpuShaderText & st,
-                        ConstGradingPrimaryOpDataRcPtr & gpData,
-                        GPProperties & propNames,
-                        bool dyn)
+void AddGPLogProperties(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    ConstGradingPrimaryOpDataRcPtr & gpData,
+    GPProperties & propNames,
+    bool dyn)
 {
     auto prop = gpData->getDynamicPropertyInternal();
     if (dyn)
@@ -89,10 +91,10 @@ void AddGPLogProperties(GpuShaderCreatorRcPtr & shaderCreator,
         // properties are unique.
 
         propNames.brightness = BuildResourceName(shaderCreator, opPrefix, propNames.brightness);
-        propNames.contrast = BuildResourceName(shaderCreator, opPrefix, propNames.contrast);
-        propNames.gamma = BuildResourceName(shaderCreator, opPrefix, propNames.gamma);
+        propNames.contrast   = BuildResourceName(shaderCreator, opPrefix, propNames.contrast);
+        propNames.gamma      = BuildResourceName(shaderCreator, opPrefix, propNames.gamma);
 
-        propNames.pivot = BuildResourceName(shaderCreator, opPrefix, propNames.pivot);
+        propNames.pivot      = BuildResourceName(shaderCreator, opPrefix, propNames.pivot);
         propNames.pivotBlack = BuildResourceName(shaderCreator, opPrefix, propNames.pivotBlack);
         propNames.pivotWhite = BuildResourceName(shaderCreator, opPrefix, propNames.pivotWhite);
         propNames.clampBlack = BuildResourceName(shaderCreator, opPrefix, propNames.clampBlack);
@@ -103,7 +105,7 @@ void AddGPLogProperties(GpuShaderCreatorRcPtr & shaderCreator,
 
         // Property is decoupled and added to shader creator.
         DynamicPropertyGradingPrimaryImplRcPtr shaderProp = prop->createEditableCopy();
-        DynamicPropertyRcPtr newProp = shaderProp;
+        DynamicPropertyRcPtr newProp                      = shaderProp;
         shaderCreator->addDynamicProperty(newProp);
         DynamicPropertyGradingPrimaryImpl * primaryProp = shaderProp.get();
 
@@ -132,13 +134,14 @@ void AddGPLogProperties(GpuShaderCreatorRcPtr & shaderCreator,
         AddUniform(shaderCreator, getCWVal, propNames.clampWhite);
         const auto getSVal = std::bind(&GradingPrimary::m_saturation, &value);
         AddUniform(shaderCreator, getSVal, propNames.saturation);
-        const auto getLBP = std::bind(&DynamicPropertyGradingPrimaryImpl::getLocalBypass, shaderProp.get());
+        const auto getLBP
+            = std::bind(&DynamicPropertyGradingPrimaryImpl::getLocalBypass, shaderProp.get());
         AddBoolUniform(shaderCreator, getLBP, propNames.localBypass);
     }
     else
     {
         const auto & value = prop->getValue();
-        const auto & comp = prop->getComputedValue();
+        const auto & comp  = prop->getComputedValue();
 
         st.declareFloat3(propNames.brightness, comp.getBrightness());
         st.declareFloat3(propNames.contrast, comp.getContrast());
@@ -153,9 +156,10 @@ void AddGPLogProperties(GpuShaderCreatorRcPtr & shaderCreator,
     }
 }
 
-void AddGPLogForwardShader(GpuShaderCreatorRcPtr & shaderCreator, 
-                           GpuShaderText & st,
-                           const GPProperties & props)
+void AddGPLogForwardShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    const GPProperties & props)
 {
     // clang-format off
 
@@ -192,9 +196,10 @@ void AddGPLogForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
     // clang-format on
 }
 
-void AddGPLogInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
-                           GpuShaderText & st,
-                           const GPProperties & props)
+void AddGPLogInverseShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    const GPProperties & props)
 {
     // clang-format off
 
@@ -235,11 +240,12 @@ void AddGPLogInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
     // clang-format on
 }
 
-void AddGPLinProperties(GpuShaderCreatorRcPtr & shaderCreator,
-                        GpuShaderText & st,
-                        ConstGradingPrimaryOpDataRcPtr & gpData,
-                        GPProperties & propNames,
-                        bool dyn)
+void AddGPLinProperties(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    ConstGradingPrimaryOpDataRcPtr & gpData,
+    GPProperties & propNames,
+    bool dyn)
 {
     auto prop = gpData->getDynamicPropertyInternal();
     if (dyn)
@@ -247,11 +253,11 @@ void AddGPLinProperties(GpuShaderCreatorRcPtr & shaderCreator,
         // Build names. No need to add an index to the name to avoid collisions as the dynamic
         // properties are unique.
 
-        propNames.offset = BuildResourceName(shaderCreator, opPrefix, propNames.offset);
+        propNames.offset   = BuildResourceName(shaderCreator, opPrefix, propNames.offset);
         propNames.exposure = BuildResourceName(shaderCreator, opPrefix, propNames.exposure);
         propNames.contrast = BuildResourceName(shaderCreator, opPrefix, propNames.contrast);
 
-        propNames.pivot = BuildResourceName(shaderCreator, opPrefix, propNames.pivot);
+        propNames.pivot      = BuildResourceName(shaderCreator, opPrefix, propNames.pivot);
         propNames.clampBlack = BuildResourceName(shaderCreator, opPrefix, propNames.clampBlack);
         propNames.clampWhite = BuildResourceName(shaderCreator, opPrefix, propNames.clampWhite);
         propNames.saturation = BuildResourceName(shaderCreator, opPrefix, propNames.saturation);
@@ -260,7 +266,7 @@ void AddGPLinProperties(GpuShaderCreatorRcPtr & shaderCreator,
 
         // Property is decoupled and added to shader creator.
         DynamicPropertyGradingPrimaryImplRcPtr shaderProp = prop->createEditableCopy();
-        DynamicPropertyRcPtr newProp = shaderProp;
+        DynamicPropertyRcPtr newProp                      = shaderProp;
         shaderCreator->addDynamicProperty(newProp);
         DynamicPropertyGradingPrimaryImpl * primaryProp = shaderProp.get();
 
@@ -284,13 +290,14 @@ void AddGPLinProperties(GpuShaderCreatorRcPtr & shaderCreator,
         AddUniform(shaderCreator, getCWVal, propNames.clampWhite);
         const auto getSVal = std::bind(&GradingPrimary::m_saturation, &value);
         AddUniform(shaderCreator, getSVal, propNames.saturation);
-        const auto getLBP = std::bind(&DynamicPropertyGradingPrimaryImpl::getLocalBypass, shaderProp.get());
+        const auto getLBP
+            = std::bind(&DynamicPropertyGradingPrimaryImpl::getLocalBypass, shaderProp.get());
         AddBoolUniform(shaderCreator, getLBP, propNames.localBypass);
     }
     else
     {
         const auto & value = prop->getValue();
-        const auto & comp = prop->getComputedValue();
+        const auto & comp  = prop->getComputedValue();
 
         st.declareFloat3(propNames.offset, comp.getOffset());
         st.declareFloat3(propNames.exposure, comp.getExposure());
@@ -303,9 +310,10 @@ void AddGPLinProperties(GpuShaderCreatorRcPtr & shaderCreator,
     }
 }
 
-void AddGPLinForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
-                           GpuShaderText & st,
-                           const GPProperties & props)
+void AddGPLinForwardShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    const GPProperties & props)
 {
     // clang-format off
 
@@ -337,9 +345,10 @@ void AddGPLinForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
     // clang-format on
 }
 
-void AddGPLinInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
-                           GpuShaderText & st,
-                           const GPProperties & props)
+void AddGPLinInverseShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    const GPProperties & props)
 {
     // clang-format off
 
@@ -376,11 +385,12 @@ void AddGPLinInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
     // clang-format on
 }
 
-void AddGPVideoProperties(GpuShaderCreatorRcPtr & shaderCreator,
-                          GpuShaderText & st,
-                          ConstGradingPrimaryOpDataRcPtr & gpData,
-                          GPProperties & propNames,
-                          bool dyn)
+void AddGPVideoProperties(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    ConstGradingPrimaryOpDataRcPtr & gpData,
+    GPProperties & propNames,
+    bool dyn)
 {
     auto prop = gpData->getDynamicPropertyInternal();
     if (dyn)
@@ -388,9 +398,9 @@ void AddGPVideoProperties(GpuShaderCreatorRcPtr & shaderCreator,
         // Build names. No need to add an index to the name to avoid collisions as the dynamic
         // properties are unique.
 
-        propNames.gamma = BuildResourceName(shaderCreator, opPrefix, propNames.gamma);
+        propNames.gamma  = BuildResourceName(shaderCreator, opPrefix, propNames.gamma);
         propNames.offset = BuildResourceName(shaderCreator, opPrefix, propNames.offset);
-        propNames.slope = BuildResourceName(shaderCreator, opPrefix, propNames.slope);
+        propNames.slope  = BuildResourceName(shaderCreator, opPrefix, propNames.slope);
 
         propNames.pivotBlack = BuildResourceName(shaderCreator, opPrefix, propNames.pivotBlack);
         propNames.pivotWhite = BuildResourceName(shaderCreator, opPrefix, propNames.pivotWhite);
@@ -402,7 +412,7 @@ void AddGPVideoProperties(GpuShaderCreatorRcPtr & shaderCreator,
 
         // Property is decoupled and added to shader creator.
         DynamicPropertyGradingPrimaryImplRcPtr shaderProp = prop->createEditableCopy();
-        DynamicPropertyRcPtr newProp = shaderProp;
+        DynamicPropertyRcPtr newProp                      = shaderProp;
         shaderCreator->addDynamicProperty(newProp);
         DynamicPropertyGradingPrimaryImpl * primaryProp = shaderProp.get();
 
@@ -431,13 +441,14 @@ void AddGPVideoProperties(GpuShaderCreatorRcPtr & shaderCreator,
         AddUniform(shaderCreator, getCWVal, propNames.clampWhite);
         const auto getSVal = std::bind(&GradingPrimary::m_saturation, &value);
         AddUniform(shaderCreator, getSVal, propNames.saturation);
-        const auto getLBP = std::bind(&DynamicPropertyGradingPrimaryImpl::getLocalBypass, shaderProp.get());
+        const auto getLBP
+            = std::bind(&DynamicPropertyGradingPrimaryImpl::getLocalBypass, shaderProp.get());
         AddBoolUniform(shaderCreator, getLBP, propNames.localBypass);
     }
     else
     {
         const auto & value = prop->getValue();
-        const auto & comp = prop->getComputedValue();
+        const auto & comp  = prop->getComputedValue();
 
         st.declareFloat3(propNames.gamma, comp.getGamma());
         st.declareFloat3(propNames.offset, comp.getOffset());
@@ -451,9 +462,10 @@ void AddGPVideoProperties(GpuShaderCreatorRcPtr & shaderCreator,
     }
 }
 
-void AddGPVideoForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
-                             GpuShaderText & st,
-                             const GPProperties & props)
+void AddGPVideoForwardShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    const GPProperties & props)
 {
     // clang-format off
 
@@ -487,9 +499,10 @@ void AddGPVideoForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
     // clang-format on
 }
 
-void AddGPVideoInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
-                             GpuShaderText & st,
-                             const GPProperties & props)
+void AddGPVideoInverseShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    const GPProperties & props)
 {
     // clang-format off
 
@@ -527,12 +540,13 @@ void AddGPVideoInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     // clang-format on
 }
-}
+} // namespace
 
-void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
-                                       ConstGradingPrimaryOpDataRcPtr & gpData)
+void GetGradingPrimaryGPUShaderProgram(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstGradingPrimaryOpDataRcPtr & gpData)
 {
-    const bool dyn = gpData->isDynamic() &&  shaderCreator->getLanguage() != LANGUAGE_OSL_1;
+    const bool dyn = gpData->isDynamic() && shaderCreator->getLanguage() != LANGUAGE_OSL_1;
     if (!dyn)
     {
         auto propGP = gpData->getDynamicPropertyInternal();
@@ -544,7 +558,7 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
     if (gpData->isDynamic() && shaderCreator->getLanguage() == LANGUAGE_OSL_1)
     {
-        std::string msg("The dynamic properties are not yet supported by the 'Open Shading language"\
+        std::string msg("The dynamic properties are not yet supported by the 'Open Shading language"
                         " (OSL)' translation: The '");
         msg += opPrefix;
         msg += "' dynamic property is replaced by a local variable.";
@@ -552,7 +566,7 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         LogWarning(msg);
     }
 
-    const GradingStyle style = gpData->getStyle();
+    const GradingStyle style     = gpData->getStyle();
     const TransformDirection dir = gpData->getDirection();
 
     GpuShaderText st(shaderCreator->getLanguage());
@@ -575,87 +589,87 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     GPProperties properties;
     switch (style)
     {
-    case GRADING_LOG:
-    {
-        AddGPLogProperties(shaderCreator, st, gpData, properties, dyn);
-        if (dyn)
+        case GRADING_LOG:
         {
-            st.newLine() << "if (!" << properties.localBypass << ")";
-            st.newLine() << "{";
-            st.indent();
-        }
+            AddGPLogProperties(shaderCreator, st, gpData, properties, dyn);
+            if (dyn)
+            {
+                st.newLine() << "if (!" << properties.localBypass << ")";
+                st.newLine() << "{";
+                st.indent();
+            }
 
-        switch (dir)
-        {
-        case TRANSFORM_DIR_FORWARD:
-            AddGPLogForwardShader(shaderCreator, st, properties);
-            break;
-        case TRANSFORM_DIR_INVERSE:
-            AddGPLogInverseShader(shaderCreator, st, properties);
-            break;
-        }
+            switch (dir)
+            {
+                case TRANSFORM_DIR_FORWARD:
+                    AddGPLogForwardShader(shaderCreator, st, properties);
+                    break;
+                case TRANSFORM_DIR_INVERSE:
+                    AddGPLogInverseShader(shaderCreator, st, properties);
+                    break;
+            }
 
-        if (dyn)
-        {
-            st.dedent();
-            st.newLine() << "}";
-        }
-        break;
-    }
-    case GRADING_LIN:
-    {
-        AddGPLinProperties(shaderCreator, st, gpData, properties, dyn);
-        if (dyn)
-        {
-            st.newLine() << "if (!" << properties.localBypass << ")";
-            st.newLine() << "{";
-            st.indent();
-        }
-
-        switch (dir)
-        {
-        case TRANSFORM_DIR_FORWARD:
-            AddGPLinForwardShader(shaderCreator, st, properties);
-            break;
-        case TRANSFORM_DIR_INVERSE:
-            AddGPLinInverseShader(shaderCreator, st, properties);
+            if (dyn)
+            {
+                st.dedent();
+                st.newLine() << "}";
+            }
             break;
         }
+        case GRADING_LIN:
+        {
+            AddGPLinProperties(shaderCreator, st, gpData, properties, dyn);
+            if (dyn)
+            {
+                st.newLine() << "if (!" << properties.localBypass << ")";
+                st.newLine() << "{";
+                st.indent();
+            }
 
-        if (dyn)
-        {
-            st.dedent();
-            st.newLine() << "}";
-        }
-        break;
-    }
-    case GRADING_VIDEO:
-    {
-        AddGPVideoProperties(shaderCreator, st, gpData, properties, dyn);
-        if (dyn)
-        {
-            st.newLine() << "if (!" << properties.localBypass << ")";
-            st.newLine() << "{";
-            st.indent();
-        }
+            switch (dir)
+            {
+                case TRANSFORM_DIR_FORWARD:
+                    AddGPLinForwardShader(shaderCreator, st, properties);
+                    break;
+                case TRANSFORM_DIR_INVERSE:
+                    AddGPLinInverseShader(shaderCreator, st, properties);
+                    break;
+            }
 
-        switch (dir)
-        {
-        case TRANSFORM_DIR_FORWARD:
-            AddGPVideoForwardShader(shaderCreator, st, properties);
+            if (dyn)
+            {
+                st.dedent();
+                st.newLine() << "}";
+            }
             break;
-        case TRANSFORM_DIR_INVERSE:
-            AddGPVideoInverseShader(shaderCreator, st, properties);
+        }
+        case GRADING_VIDEO:
+        {
+            AddGPVideoProperties(shaderCreator, st, gpData, properties, dyn);
+            if (dyn)
+            {
+                st.newLine() << "if (!" << properties.localBypass << ")";
+                st.newLine() << "{";
+                st.indent();
+            }
+
+            switch (dir)
+            {
+                case TRANSFORM_DIR_FORWARD:
+                    AddGPVideoForwardShader(shaderCreator, st, properties);
+                    break;
+                case TRANSFORM_DIR_INVERSE:
+                    AddGPVideoInverseShader(shaderCreator, st, properties);
+                    break;
+            }
+
+            if (dyn)
+            {
+                st.dedent();
+                st.newLine() << "}";
+            }
             break;
         }
-
-        if (dyn)
-        {
-            st.dedent();
-            st.newLine() << "}";
-        }
-        break;
-    }
     }
     st.dedent();
     st.newLine() << "}";
@@ -664,4 +678,4 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     shaderCreator->addToFunctionShaderCode(st.string().c_str());
 }
 
-} // OCIO_NAMESPACE
+} // namespace OCIO_NAMESPACE

@@ -5,10 +5,10 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "Platform.h"
 #include "ops/gradingrgbcurve/GradingRGBCurve.h"
 #include "ops/gradingrgbcurve/GradingRGBCurveOpData.h"
 #include "ops/range/RangeOpData.h"
-#include "Platform.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -18,22 +18,27 @@ namespace DefaultValues
 const std::streamsize FLOAT_DECIMALS = 7;
 ConstGradingBSplineCurveRcPtr Curve(GradingStyle style)
 {
-    return style == GRADING_LIN ? GradingRGBCurveImpl::DefaultLin.createEditableCopy() :
-                                  GradingRGBCurveImpl::Default.createEditableCopy();
+    return style == GRADING_LIN ? GradingRGBCurveImpl::DefaultLin.createEditableCopy()
+                                : GradingRGBCurveImpl::Default.createEditableCopy();
 }
-}
+} // namespace DefaultValues
 
 GradingRGBCurveOpData::GradingRGBCurveOpData(GradingStyle style)
-    : GradingRGBCurveOpData(style, DefaultValues::Curve(style), DefaultValues::Curve(style),
-                                   DefaultValues::Curve(style), DefaultValues::Curve(style))
+    : GradingRGBCurveOpData(
+          style,
+          DefaultValues::Curve(style),
+          DefaultValues::Curve(style),
+          DefaultValues::Curve(style),
+          DefaultValues::Curve(style))
 {
 }
 
-GradingRGBCurveOpData::GradingRGBCurveOpData(GradingStyle style,
-                                             ConstGradingBSplineCurveRcPtr red,
-                                             ConstGradingBSplineCurveRcPtr green,
-                                             ConstGradingBSplineCurveRcPtr blue,
-                                             ConstGradingBSplineCurveRcPtr master)
+GradingRGBCurveOpData::GradingRGBCurveOpData(
+    GradingStyle style,
+    ConstGradingBSplineCurveRcPtr red,
+    ConstGradingBSplineCurveRcPtr green,
+    ConstGradingBSplineCurveRcPtr blue,
+    ConstGradingBSplineCurveRcPtr master)
     : OpData()
     , m_style(style)
 {
@@ -53,7 +58,8 @@ GradingRGBCurveOpData::GradingRGBCurveOpData(const GradingRGBCurveOpData & rhs)
 
 GradingRGBCurveOpData & GradingRGBCurveOpData::operator=(const GradingRGBCurveOpData & rhs)
 {
-    if (this == &rhs) return *this;
+    if (this == &rhs)
+        return *this;
 
     OpData::operator=(rhs);
 
@@ -93,7 +99,8 @@ bool GradingRGBCurveOpData::isNoOp() const
 
 bool GradingRGBCurveOpData::isIdentity() const
 {
-    if (isDynamic()) return false;
+    if (isDynamic())
+        return false;
 
     return m_value->getValue()->isIdentity();
 }
@@ -105,9 +112,8 @@ bool GradingRGBCurveOpData::isInverse(ConstGradingRGBCurveOpDataRcPtr & r) const
         return false;
     }
 
-    if (m_style == r->m_style &&
-        (m_style != GRADING_LIN || m_bypassLinToLog == r->m_bypassLinToLog) &&
-        m_value->equals(*r->m_value))
+    if (m_style == r->m_style && (m_style != GRADING_LIN || m_bypassLinToLog == r->m_bypassLinToLog)
+        && m_value->equals(*r->m_value))
     {
         if (CombineTransformDirections(getDirection(), r->getDirection()) == TRANSFORM_DIR_INVERSE)
         {
@@ -119,7 +125,7 @@ bool GradingRGBCurveOpData::isInverse(ConstGradingRGBCurveOpDataRcPtr & r) const
 
 GradingRGBCurveOpDataRcPtr GradingRGBCurveOpData::inverse() const
 {
-    auto res = clone();
+    auto res         = clone();
     res->m_direction = GetInverseTransformDirection(m_direction);
     return res;
 }
@@ -168,7 +174,7 @@ float GradingRGBCurveOpData::getSlope(RGBCurveType c, size_t index) const
 
 void GradingRGBCurveOpData::setSlope(RGBCurveType c, size_t index, float slope)
 {
-    GradingRGBCurveRcPtr rgbcurve( m_value->getValue()->createEditableCopy() );
+    GradingRGBCurveRcPtr rgbcurve(m_value->getValue()->createEditableCopy());
     GradingBSplineCurveRcPtr curve = rgbcurve->getCurve(c);
     curve->setSlope(index, slope);
     m_value->setValue(rgbcurve);
@@ -200,7 +206,8 @@ DynamicPropertyRcPtr GradingRGBCurveOpData::getDynamicProperty() const noexcept
     return m_value;
 }
 
-void GradingRGBCurveOpData::replaceDynamicProperty(DynamicPropertyGradingRGBCurveImplRcPtr prop) noexcept
+void GradingRGBCurveOpData::replaceDynamicProperty(
+    DynamicPropertyGradingRGBCurveImplRcPtr prop) noexcept
 {
     m_value = prop;
 }
@@ -212,14 +219,13 @@ void GradingRGBCurveOpData::removeDynamicProperty() noexcept
 
 bool GradingRGBCurveOpData::equals(const OpData & other) const
 {
-    if (!OpData::equals(other)) return false;
+    if (!OpData::equals(other))
+        return false;
 
-    const GradingRGBCurveOpData* rop = static_cast<const GradingRGBCurveOpData*>(&other);
+    const GradingRGBCurveOpData * rop = static_cast<const GradingRGBCurveOpData *>(&other);
 
-    if (m_direction      != rop->m_direction ||
-        m_style          != rop->m_style ||
-        m_bypassLinToLog != rop->m_bypassLinToLog ||
-       !m_value->equals(  *(rop->m_value)  ))
+    if (m_direction != rop->m_direction || m_style != rop->m_style
+        || m_bypassLinToLog != rop->m_bypassLinToLog || !m_value->equals(*(rop->m_value)))
     {
         return false;
     }

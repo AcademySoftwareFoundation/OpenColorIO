@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include <Imath/half.h>
 
 #include "ops/lut1d/Lut1DOp.h"
 #include "transforms/builtins/OpHelpers.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -29,9 +27,9 @@ double Interpolate1D(unsigned lutSize, const double * lutValues, double in)
     {
         return lutValues[1];
     }
-    else if (in >= lutValues[2 * (lutSize-1)])
+    else if (in >= lutValues[2 * (lutSize - 1)])
     {
-        return lutValues[2 * (lutSize-1) + 1];
+        return lutValues[2 * (lutSize - 1) + 1];
     }
 
     for (unsigned idx = 1; idx < lutSize; ++idx)
@@ -44,24 +42,24 @@ double Interpolate1D(unsigned lutSize, const double * lutValues, double in)
             const double inCoeff
                 = (in - lutValues[minIdx]) / (lutValues[maxIdx] - lutValues[minIdx]);
 
-            return lutValues[minIdx + 1] * (1.0 - inCoeff) 
-                    + lutValues[maxIdx + 1] * inCoeff;
+            return lutValues[minIdx + 1] * (1.0 - inCoeff) + lutValues[maxIdx + 1] * inCoeff;
         }
     }
 
     throw Exception("Invalid interpolation value.");
 }
 
-void CreateLut(OpRcPtrVec & ops, 
-               unsigned long lutDimension,
-               std::function<float(double)> lutValueGenerator)
+void CreateLut(
+    OpRcPtrVec & ops,
+    unsigned long lutDimension,
+    std::function<float(double)> lutValueGenerator)
 {
-    Lut1DOpDataRcPtr lut = std::make_shared<Lut1DOpData>(Lut1DOpData::LUT_STANDARD,
-                                                         lutDimension, false);
+    Lut1DOpDataRcPtr lut
+        = std::make_shared<Lut1DOpData>(Lut1DOpData::LUT_STANDARD, lutDimension, false);
     lut->setInterpolation(INTERP_LINEAR);
     lut->setDirection(TRANSFORM_DIR_FORWARD);
 
-    Array & array = lut->getArray();
+    Array & array          = lut->getArray();
     Array::Values & values = array.getValues();
 
     for (unsigned long idx = 0; idx < lutDimension; ++idx)
@@ -74,9 +72,10 @@ void CreateLut(OpRcPtrVec & ops,
     CreateLut1DOp(ops, lut, TRANSFORM_DIR_FORWARD);
 }
 
-void CreateLut(OpRcPtrVec & ops,
-               unsigned long lutDimension,
-               std::function<void(const double *, double *)> lutValueGenerator)
+void CreateLut(
+    OpRcPtrVec & ops,
+    unsigned long lutDimension,
+    std::function<void(const double *, double *)> lutValueGenerator)
 {
     Lut1DOpDataRcPtr lut = std::make_shared<Lut1DOpData>(lutDimension);
     lut->setInterpolation(INTERP_LINEAR);
@@ -86,14 +85,12 @@ void CreateLut(OpRcPtrVec & ops,
 
     for (unsigned long idx = 0; idx < lutDimension; ++idx)
     {
-        const double in[3]
-        {
+        const double in[3]{
             double(idx) / (lutDimension - 1.),
             double(idx) / (lutDimension - 1.),
-            double(idx) / (lutDimension - 1.)
-        };
-    
-        double out[3] {0., 0., 0.};
+            double(idx) / (lutDimension - 1.)};
+
+        double out[3]{0., 0., 0.};
 
         lutValueGenerator(in, out);
 
@@ -107,12 +104,12 @@ void CreateLut(OpRcPtrVec & ops,
 
 void CreateHalfLut(OpRcPtrVec & ops, std::function<float(double)> lutValueGenerator)
 {
-    Lut1DOpDataRcPtr lut = std::make_shared<Lut1DOpData>(Lut1DOpData::LUT_INPUT_HALF_CODE,
-                                                         65536, true);
+    Lut1DOpDataRcPtr lut
+        = std::make_shared<Lut1DOpData>(Lut1DOpData::LUT_INPUT_HALF_CODE, 65536, true);
     lut->setInterpolation(INTERP_LINEAR);
     lut->setDirection(TRANSFORM_DIR_FORWARD);
 
-    Array & array = lut->getArray();
+    Array & array          = lut->getArray();
     Array::Values & values = array.getValues();
 
     const unsigned long lutDimension = array.getLength();

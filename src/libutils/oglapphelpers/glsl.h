@@ -8,13 +8,11 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-
 namespace OCIO_NAMESPACE
 {
 
 class OpenGLBuilder;
 typedef OCIO_SHARED_PTR<OpenGLBuilder> OpenGLBuilderRcPtr;
-
 
 // This is a reference implementation showing how to do the texture upload & allocation,
 // and the program compilation for the GLSL shader language.
@@ -23,20 +21,22 @@ class OpenGLBuilder
 {
     struct TextureId
     {
-        unsigned    m_uid = -1;
+        unsigned m_uid = -1;
         std::string m_textureName;
         std::string m_samplerName;
-        unsigned    m_type = -1;
+        unsigned m_type = -1;
 
-        TextureId(unsigned uid,
-                  const std::string & textureName,
-                  const std::string & samplerName,
-                  unsigned type)
-            :   m_uid(uid)
-            ,   m_textureName(textureName)
-            ,   m_samplerName(samplerName)
-            ,   m_type(type)
-        {}
+        TextureId(
+            unsigned uid,
+            const std::string & textureName,
+            const std::string & samplerName,
+            unsigned type)
+            : m_uid(uid)
+            , m_textureName(textureName)
+            , m_samplerName(samplerName)
+            , m_type(type)
+        {
+        }
     };
 
     typedef std::vector<TextureId> TextureIds;
@@ -77,7 +77,7 @@ public:
     // Update all uniforms.
     void useAllUniforms();
 
-    // Build the complete shader program which includes the OCIO shader program 
+    // Build the complete shader program which includes the OCIO shader program
     // and the client shader program.
     unsigned buildProgram(const std::string & clientShaderProgram, bool standaloneShader);
     void useProgram();
@@ -102,8 +102,8 @@ protected:
 
 private:
     OpenGLBuilder();
-    OpenGLBuilder(const OpenGLBuilder &) = delete;
-    OpenGLBuilder& operator=(const OpenGLBuilder &) = delete;
+    OpenGLBuilder(const OpenGLBuilder &)             = delete;
+    OpenGLBuilder & operator=(const OpenGLBuilder &) = delete;
 
     const GpuShaderDescRcPtr m_shaderDesc; // Description of the fragment shader to create
     unsigned m_startIndex;                 // Starting index for texture allocations
@@ -118,4 +118,3 @@ private:
 } // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_GLSL_H
-

@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_MIXING_HELPERS_H
 #define INCLUDED_OCIO_MIXING_HELPERS_H
 
-
 #include <OpenColorIO/OpenColorIO.h>
-
 
 namespace OCIO_NAMESPACE
 {
@@ -15,7 +12,7 @@ namespace OCIO_NAMESPACE
 class MixingSliderImpl : public MixingSlider
 {
 public:
-    MixingSliderImpl() = delete;
+    MixingSliderImpl()                                     = delete;
     MixingSliderImpl & operator=(const MixingSliderImpl &) = delete;
     explicit MixingSliderImpl(MixingColorSpaceManager & mixing);
     ~MixingSliderImpl() override = default;
@@ -42,11 +39,11 @@ private:
 class MixingColorSpaceManagerImpl : public MixingColorSpaceManager
 {
 public:
-    MixingColorSpaceManagerImpl() = delete;
+    MixingColorSpaceManagerImpl()                                                = delete;
     MixingColorSpaceManagerImpl & operator=(const MixingColorSpaceManagerImpl &) = delete;
     explicit MixingColorSpaceManagerImpl(ConstConfigRcPtr & config);
     MixingColorSpaceManagerImpl(const MixingColorSpaceManagerImpl &) = delete;
-    ~MixingColorSpaceManagerImpl() override = default;
+    ~MixingColorSpaceManagerImpl() override                          = default;
 
     size_t getNumMixingSpaces() const noexcept override;
     const char * getMixingSpaceUIName(size_t idx) const override;
@@ -64,13 +61,15 @@ public:
 
     void refresh(ConstConfigRcPtr config) override;
 
-    ConstProcessorRcPtr getProcessor(const char * workingName,
-                                     const char * displayName,
-                                     const char * viewName,
-                                     TransformDirection direction) const override;
+    ConstProcessorRcPtr getProcessor(
+        const char * workingName,
+        const char * displayName,
+        const char * viewName,
+        TransformDirection direction) const override;
 
     MixingSlider & getSlider() noexcept override;
-    MixingSlider & getSlider(float sliderMixingMinEdge, float sliderMixingMaxEdge) noexcept override;
+    MixingSlider & getSlider(float sliderMixingMinEdge, float sliderMixingMaxEdge) noexcept
+        override;
 
     static void Deleter(MixingColorSpaceManager * incs);
 
@@ -78,9 +77,10 @@ public:
 
 protected:
     void refresh();
-    ConstProcessorRcPtr getProcessorWithoutEncoding(const char * workingName,
-                                                    const char * displayName,
-                                                    const char * viewName) const;
+    ConstProcessorRcPtr getProcessorWithoutEncoding(
+        const char * workingName,
+        const char * displayName,
+        const char * viewName) const;
 
 private:
     ConstConfigRcPtr m_config;
@@ -88,14 +88,14 @@ private:
     MixingSliderImpl m_slider;
 
     ColorSpaceNames m_mixingSpaces;
-    const ColorSpaceNames m_mixingEncodings{ "RGB", "HSV" };
+    const ColorSpaceNames m_mixingEncodings{"RGB", "HSV"};
 
-    size_t m_selectedMixingSpaceIdx = 0;
+    size_t m_selectedMixingSpaceIdx    = 0;
     size_t m_selectedMixingEncodingIdx = 0;
 
     ConstColorSpaceInfoRcPtr m_colorPicker;
 };
 
-}  // namespace OCIO_NAMESPACE
+} // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_MIXING_HELPERS_H

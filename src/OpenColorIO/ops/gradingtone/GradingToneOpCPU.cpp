@@ -9,8 +9,8 @@
 
 #include "BitDepthUtils.h"
 #include "MathUtils.h"
-#include "ops/gradingtone/GradingToneOpCPU.h"
 #include "SSE.h"
+#include "ops/gradingtone/GradingToneOpCPU.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -20,7 +20,7 @@ namespace
 class GradingToneOpCPU : public OpCPU
 {
 public:
-    GradingToneOpCPU() = delete;
+    GradingToneOpCPU()                         = delete;
     GradingToneOpCPU(const GradingToneOpCPU &) = delete;
 
     explicit GradingToneOpCPU(ConstGradingToneOpDataRcPtr & gt);
@@ -37,7 +37,7 @@ protected:
 GradingToneOpCPU::GradingToneOpCPU(ConstGradingToneOpDataRcPtr & gt)
     : OpCPU()
 {
-    m_gt = gt->getDynamicPropertyInternal();
+    m_gt    = gt->getDynamicPropertyInternal();
     m_style = gt->getStyle();
     if (m_gt->isDynamic())
     {
@@ -84,10 +84,23 @@ public:
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 protected:
-
-    void mids(const GradingTone & v, const GradingTonePreRender & vpr, RGBMChannel channel, float * out) const;
-    void highlightShadow(const GradingTone & v, const GradingTonePreRender & vpr, RGBMChannel channel, bool isShadow, float * out) const;
-    void whiteBlack(const GradingTone & v, const GradingTonePreRender & vpr, RGBMChannel channel, bool isBlack, float * out) const;
+    void mids(
+        const GradingTone & v,
+        const GradingTonePreRender & vpr,
+        RGBMChannel channel,
+        float * out) const;
+    void highlightShadow(
+        const GradingTone & v,
+        const GradingTonePreRender & vpr,
+        RGBMChannel channel,
+        bool isShadow,
+        float * out) const;
+    void whiteBlack(
+        const GradingTone & v,
+        const GradingTonePreRender & vpr,
+        RGBMChannel channel,
+        bool isBlack,
+        float * out) const;
     void scontrast(const GradingTone & v, const GradingTonePreRender & vpr, float * out) const;
 };
 
@@ -107,10 +120,23 @@ public:
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 
 protected:
-
-    void mids(const GradingTone & v, const GradingTonePreRender & vpr, RGBMChannel channel, float * out) const;
-    void highlightShadow(const GradingTone & v, const GradingTonePreRender & vpr, RGBMChannel channel, bool isShadow, float * out) const;
-    void whiteBlack(const GradingTone & v, const GradingTonePreRender & vpr, RGBMChannel channel, bool isBlack, float * out) const;
+    void mids(
+        const GradingTone & v,
+        const GradingTonePreRender & vpr,
+        RGBMChannel channel,
+        float * out) const;
+    void highlightShadow(
+        const GradingTone & v,
+        const GradingTonePreRender & vpr,
+        RGBMChannel channel,
+        bool isShadow,
+        float * out) const;
+    void whiteBlack(
+        const GradingTone & v,
+        const GradingTonePreRender & vpr,
+        RGBMChannel channel,
+        bool isBlack,
+        float * out) const;
     void scontrast(const GradingTone & v, const GradingTonePreRender & vpr, float * out) const;
 };
 
@@ -182,7 +208,7 @@ struct float3
 
 float3 operator+(const float3 & f3, float p)
 {
-    return float3{ f3[0] + p, f3[1] + p, f3[2] + p };
+    return float3{f3[0] + p, f3[1] + p, f3[2] + p};
 }
 
 float3 operator+(float p, const float3 & f3)
@@ -192,22 +218,22 @@ float3 operator+(float p, const float3 & f3)
 
 float3 operator+(const float3 & f3a, const float3 & f3b)
 {
-    return float3{ f3a[0] + f3b[0], f3a[1] + f3b[1], f3a[2] + f3b[2] };
+    return float3{f3a[0] + f3b[0], f3a[1] + f3b[1], f3a[2] + f3b[2]};
 }
 
 float3 operator-(const float3 & f3, float m)
 {
-    return float3{ f3[0] - m, f3[1] - m, f3[2] - m };
+    return float3{f3[0] - m, f3[1] - m, f3[2] - m};
 }
 
 float3 operator-(float m, const float3 & f3)
 {
-    return float3{ m - f3[0], m - f3[1], m - f3[2] };
+    return float3{m - f3[0], m - f3[1], m - f3[2]};
 }
 
 float3 operator*(const float3 & f3, float m)
 {
-    return float3{ f3[0] * m, f3[1] * m, f3[2] * m };
+    return float3{f3[0] * m, f3[1] * m, f3[2] * m};
 }
 
 float3 operator*(float m, const float3 & f3)
@@ -217,34 +243,42 @@ float3 operator*(float m, const float3 & f3)
 
 float3 operator*(const float3 & f3a, const float3 & f3b)
 {
-    return float3{ f3a[0] * f3b[0],
-                   f3a[1] * f3b[1],
-                   f3a[2] * f3b[2] };
+    return float3{f3a[0] * f3b[0], f3a[1] * f3b[1], f3a[2] * f3b[2]};
 }
 
 float3 operator/(const float3 & f3, float d)
 {
-    return float3{ f3[0] / d, f3[1] / d, f3[2] / d };
+    return float3{f3[0] / d, f3[1] / d, f3[2] / d};
 }
 
 float3 operator/(const float3 & f3a, const float3 & f3b)
 {
-    return float3{ f3a[0] / f3b[0], f3a[1] / f3b[1], f3a[2] / f3b[2] };
+    return float3{f3a[0] / f3b[0], f3a[1] / f3b[1], f3a[2] / f3b[2]};
 }
 
-void setOnLimit(float3 & res, const float3 & val, float limit, const float3 & below, const float3 & above)
+void setOnLimit(
+    float3 & res,
+    const float3 & val,
+    float limit,
+    const float3 & below,
+    const float3 & above)
 {
     res.setOnLimit(val, limit, below, above);
 }
 
-void setOnLimit(float & res, const float & val, float limit, const float & below, const float & above)
+void setOnLimit(
+    float & res,
+    const float & val,
+    float limit,
+    const float & below,
+    const float & above)
 {
     res = val < limit ? below : above;
 }
 
 float3 Sqrt(const float3 & val)
 {
-    return float3{ sqrtf(val[0]), sqrtf(val[1]), sqrtf(val[2]) };
+    return float3{sqrtf(val[0]), sqrtf(val[1]), sqrtf(val[2])};
 }
 
 float Sqrt(const float & val)
@@ -266,8 +300,11 @@ void Set(RGBMChannel channel, float * out, const float & val)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void GradingToneFwdOpCPU::mids(const GradingTone & v, const GradingTonePreRender & vpr,
-                               RGBMChannel channel, float * out) const
+void GradingToneFwdOpCPU::mids(
+    const GradingTone & v,
+    const GradingTonePreRender & vpr,
+    RGBMChannel channel,
+    float * out) const
 {
     float mid_adj = Clamp(GetChannelValue(v.m_midtones, channel), 0.01f, 1.99f);
 
@@ -294,41 +331,46 @@ void GradingToneFwdOpCPU::mids(const GradingTone & v, const GradingTonePreRender
 
         if (channel != M)
         {
-            float t = out[channel];
-            float tL = (t - x0) / (x1 - x0);
-            float tM = (t - x1) / (x2 - x1);
-            float tR = (t - x2) / (x3 - x2);
+            float t   = out[channel];
+            float tL  = (t - x0) / (x1 - x0);
+            float tM  = (t - x1) / (x2 - x1);
+            float tR  = (t - x2) / (x3 - x2);
             float tR2 = (t - x3) / (x4 - x3);
             float tR3 = (t - x4) / (x5 - x4);
 
-            float fL = tL * (x1 - x0) * ( tL * 0.5f * (m1 - m0) + m0 ) + y0;
-            float fM = tM * (x2 - x1) * ( tM * 0.5f * (m2 - m1) + m1 ) + y1;
-            float fR = tR * (x3 - x2) * ( tR * 0.5f * (m3 - m2) + m2 ) + y2;
-            float fR2 = tR2 * (x4 - x3) * ( tR2 * 0.5f * (m4 - m3) + m3 ) + y3;
-            float fR3 = tR3 * (x5 - x4) * ( tR3 * 0.5f * (m5 - m4) + m4 ) + y4;
+            float fL  = tL * (x1 - x0) * (tL * 0.5f * (m1 - m0) + m0) + y0;
+            float fM  = tM * (x2 - x1) * (tM * 0.5f * (m2 - m1) + m1) + y1;
+            float fR  = tR * (x3 - x2) * (tR * 0.5f * (m3 - m2) + m2) + y2;
+            float fR2 = tR2 * (x4 - x3) * (tR2 * 0.5f * (m4 - m3) + m3) + y3;
+            float fR3 = tR3 * (x5 - x4) * (tR3 * 0.5f * (m5 - m4) + m4) + y4;
 
             float res = (t < x1) ? fL : fM;
-            if (t > x2) res = fR;
-            if (t > x3) res = fR2;
-            if (t > x4) res = fR3;
-            if (t < x0) res = y0 + (t - x0) * m0;
-            if (t > x5) res = y5 + (t - x5) * m5;
+            if (t > x2)
+                res = fR;
+            if (t > x3)
+                res = fR2;
+            if (t > x4)
+                res = fR3;
+            if (t < x0)
+                res = y0 + (t - x0) * m0;
+            if (t > x5)
+                res = y5 + (t - x5) * m5;
             out[channel] = res;
         }
         else
         {
-            float3 t{ out };
+            float3 t{out};
             float3 tL  = (t - x0) / (x1 - x0);
             float3 tM  = (t - x1) / (x2 - x1);
             float3 tR  = (t - x2) / (x3 - x2);
             float3 tR2 = (t - x3) / (x4 - x3);
             float3 tR3 = (t - x4) / (x5 - x4);
 
-            float3 fL  = tL * (x1 - x0) * ( tL * 0.5f * (m1 - m0) + m0 ) + y0;
-            float3 fM  = tM * (x2 - x1) * ( tM * 0.5f * (m2 - m1) + m1 ) + y1;
-            float3 fR  = tR * (x3 - x2) * ( tR * 0.5f * (m3 - m2) + m2 ) + y2;
-            float3 fR2 = tR2 * (x4 - x3) * ( tR2 * 0.5f * (m4 - m3) + m3 ) + y3;
-            float3 fR3 = tR3 * (x5 - x4) * ( tR3 * 0.5f * (m5 - m4) + m4 ) + y4;
+            float3 fL  = tL * (x1 - x0) * (tL * 0.5f * (m1 - m0) + m0) + y0;
+            float3 fM  = tM * (x2 - x1) * (tM * 0.5f * (m2 - m1) + m1) + y1;
+            float3 fR  = tR * (x3 - x2) * (tR * 0.5f * (m3 - m2) + m2) + y2;
+            float3 fR2 = tR2 * (x4 - x3) * (tR2 * 0.5f * (m4 - m3) + m3) + y3;
+            float3 fR3 = tR3 * (x5 - x4) * (tR3 * 0.5f * (m5 - m4) + m4) + y4;
 
             float3 fR4 = (t - x0) * m0 + y0;
             float3 fR5 = (t - x5) * m5 + y5;
@@ -348,8 +390,11 @@ void GradingToneFwdOpCPU::mids(const GradingTone & v, const GradingTonePreRender
     }
 }
 
-void GradingToneRevOpCPU::mids(const GradingTone & v, const GradingTonePreRender & vpr,
-                               RGBMChannel channel, float * out) const
+void GradingToneRevOpCPU::mids(
+    const GradingTone & v,
+    const GradingTonePreRender & vpr,
+    RGBMChannel channel,
+    float * out) const
 {
     float mid_adj = Clamp(GetChannelValue(v.m_midtones, channel), 0.01f, 1.99f);
 
@@ -376,7 +421,7 @@ void GradingToneRevOpCPU::mids(const GradingTone & v, const GradingTonePreRender
 
         if (channel != M)
         {
-            float t = out[channel];
+            float t   = out[channel];
             float res = 0.f;
             if (t >= y5)
             {
@@ -384,48 +429,48 @@ void GradingToneRevOpCPU::mids(const GradingTone & v, const GradingTonePreRender
             }
             else if (t >= y4)
             {
-                const float c = y4 - t;
-                const float b = m4 * (x5 - x4);
-                const float a = 0.5f * (m5 - m4) * (x5 - x4);
-                const float discrim = sqrt( b * b - 4.f * a * c);
-                const float tmp = (2.f * c) / (-discrim - b);
-                res = tmp * (x5 - x4) + x4;
+                const float c       = y4 - t;
+                const float b       = m4 * (x5 - x4);
+                const float a       = 0.5f * (m5 - m4) * (x5 - x4);
+                const float discrim = sqrt(b * b - 4.f * a * c);
+                const float tmp     = (2.f * c) / (-discrim - b);
+                res                 = tmp * (x5 - x4) + x4;
             }
             else if (t >= y3)
             {
-                const float c = y3 - t;
-                const float b = m3 * (x4 - x3);
-                const float a = 0.5f * (m4 - m3) * (x4 - x3);
-                const float discrim = sqrt( b * b - 4.f * a * c);
-                const float tmp = (2.f * c) / (-discrim - b);
-                res = tmp * (x4 - x3) + x3;
+                const float c       = y3 - t;
+                const float b       = m3 * (x4 - x3);
+                const float a       = 0.5f * (m4 - m3) * (x4 - x3);
+                const float discrim = sqrt(b * b - 4.f * a * c);
+                const float tmp     = (2.f * c) / (-discrim - b);
+                res                 = tmp * (x4 - x3) + x3;
             }
             else if (t >= y2)
             {
-                const float c = y2 - t;
-                const float b = m2 * (x3 - x2);
-                const float a = 0.5f * (m3 - m2) * (x3 - x2);
-                const float discrim = sqrt( b * b - 4.f * a * c);
-                const float tmp = (2.f * c) / (-discrim - b);
-                res = tmp * (x3 - x2) + x2;
+                const float c       = y2 - t;
+                const float b       = m2 * (x3 - x2);
+                const float a       = 0.5f * (m3 - m2) * (x3 - x2);
+                const float discrim = sqrt(b * b - 4.f * a * c);
+                const float tmp     = (2.f * c) / (-discrim - b);
+                res                 = tmp * (x3 - x2) + x2;
             }
             else if (t >= y1)
             {
-                const float c = y1 - t;
-                const float b = m1 * (x2 - x1);
-                const float a = 0.5f * (m2 - m1) * (x2 - x1);
-                const float discrim = sqrt( b * b - 4.f * a * c);
-                const float tmp = (2.f * c) / (-discrim - b);
-                res = tmp * (x2 - x1) + x1;
+                const float c       = y1 - t;
+                const float b       = m1 * (x2 - x1);
+                const float a       = 0.5f * (m2 - m1) * (x2 - x1);
+                const float discrim = sqrt(b * b - 4.f * a * c);
+                const float tmp     = (2.f * c) / (-discrim - b);
+                res                 = tmp * (x2 - x1) + x1;
             }
             else if (t >= y0)
             {
-                const float c = y0 - t;
-                const float b = m0 * (x1 - x0);
-                const float a = 0.5f * (m1 - m0) * (x1 - x0);
-                const float discrim = sqrt( b * b - 4.f * a * c);
-                const float tmp = (2.f * c) / (-discrim - b);
-                res = tmp * (x1 - x0) + x0;
+                const float c       = y0 - t;
+                const float b       = m0 * (x1 - x0);
+                const float a       = 0.5f * (m1 - m0) * (x1 - x0);
+                const float discrim = sqrt(b * b - 4.f * a * c);
+                const float tmp     = (2.f * c) / (-discrim - b);
+                res                 = tmp * (x1 - x0) + x0;
             }
             else
             {
@@ -435,49 +480,49 @@ void GradingToneRevOpCPU::mids(const GradingTone & v, const GradingTonePreRender
         }
         else
         {
-            float3 t{ out };
+            float3 t{out};
             float3 outL0, outL, outM, outR, outR2, outR3, outR4;
 
             outR4 = x5 + (t - y5) / m5;
             {
-                float3 c = y4 - t;
-                const float b = m4 * (x5 - x4);
-                const float a = 0.5f * (m5 - m4) * (x5 - x4);
-                float3 discrim = Sqrt( b * b - 4.f * a * c);
-                float3 tmp = (2.f * c) / (-b - discrim);
-                outR3 = tmp * (x5 - x4) + x4;
+                float3 c       = y4 - t;
+                const float b  = m4 * (x5 - x4);
+                const float a  = 0.5f * (m5 - m4) * (x5 - x4);
+                float3 discrim = Sqrt(b * b - 4.f * a * c);
+                float3 tmp     = (2.f * c) / (-b - discrim);
+                outR3          = tmp * (x5 - x4) + x4;
             }
             {
-                float3 c = y3 - t;
-                const float b = m3 * (x4 - x3);
-                const float a = 0.5f * (m4 - m3) * (x4 - x3);
-                float3 discrim = Sqrt( b * b - 4.f * a * c);
-                float3 tmp = (2.f * c) / (-b - discrim);
-                outR2 = tmp * (x4 - x3) + x3;
+                float3 c       = y3 - t;
+                const float b  = m3 * (x4 - x3);
+                const float a  = 0.5f * (m4 - m3) * (x4 - x3);
+                float3 discrim = Sqrt(b * b - 4.f * a * c);
+                float3 tmp     = (2.f * c) / (-b - discrim);
+                outR2          = tmp * (x4 - x3) + x3;
             }
             {
-                float3 c = y2 - t;
-                const float b = m2 * (x3 - x2);
-                const float a = 0.5f * (m3 - m2) * (x3 - x2);
-                float3 discrim = Sqrt( b * b - 4.f * a * c);
-                float3 tmp = (2.f * c) / (-b - discrim);
-                outR = tmp * (x3 - x2) + x2;
+                float3 c       = y2 - t;
+                const float b  = m2 * (x3 - x2);
+                const float a  = 0.5f * (m3 - m2) * (x3 - x2);
+                float3 discrim = Sqrt(b * b - 4.f * a * c);
+                float3 tmp     = (2.f * c) / (-b - discrim);
+                outR           = tmp * (x3 - x2) + x2;
             }
             {
-                float3 c = y1 - t;
-                const float b = m1 * (x2 - x1);
-                const float a = 0.5f * (m2 - m1) * (x2 - x1);
-                float3 discrim = Sqrt( b * b - 4.f * a * c);
-                float3 tmp = (2.f * c) / (-b - discrim);
-                outM = tmp * (x2 - x1) + x1;
+                float3 c       = y1 - t;
+                const float b  = m1 * (x2 - x1);
+                const float a  = 0.5f * (m2 - m1) * (x2 - x1);
+                float3 discrim = Sqrt(b * b - 4.f * a * c);
+                float3 tmp     = (2.f * c) / (-b - discrim);
+                outM           = tmp * (x2 - x1) + x1;
             }
             {
-                float3 c = y0 - t;
-                const float b = m0 * (x1 - x0);
-                const float a = 0.5f * (m1 - m0) * (x1 - x0);
-                float3 discrim = Sqrt( b * b - 4.f * a * c);
-                float3 tmp = (2.f * c) / (-b - discrim);
-                outL = tmp * (x1 - x0) + x0;
+                float3 c       = y0 - t;
+                const float b  = m0 * (x1 - x0);
+                const float a  = 0.5f * (m1 - m0) * (x1 - x0);
+                float3 discrim = Sqrt(b * b - 4.f * a * c);
+                float3 tmp     = (2.f * c) / (-b - discrim);
+                outL           = tmp * (x1 - x0) + x0;
             }
             outL0 = x0 + (t - y0) / m0;
 
@@ -496,16 +541,26 @@ void GradingToneRevOpCPU::mids(const GradingTone & v, const GradingTonePreRender
     }
 }
 
-template<typename type>
-void ComputeHSFwd(RGBMChannel channel, float * out, float x0, float x1, float x2,
-                  float y0, float y1, float y2, float m0, float m2, type & t)
+template <typename type>
+void ComputeHSFwd(
+    RGBMChannel channel,
+    float * out,
+    float x0,
+    float x1,
+    float x2,
+    float y0,
+    float y1,
+    float y2,
+    float m0,
+    float m2,
+    type & t)
 {
-    type res{ t }, tL, tR, fL, fR;
+    type res{t}, tL, tR, fL, fR;
 
     tL = (t - x0) / (x1 - x0);
     tR = (t - x1) / (x2 - x1);
-    fL = y0 * (1.f - tL*tL) + y1 * tL*tL + m0 * (1.f - tL) * tL * (x1 - x0);
-    fR = y1 * (1.f - tR)*(1.f - tR) + y2 * (2.f - tR)*tR + m2 * (tR - 1.f)*tR * (x2 - x1);
+    fL = y0 * (1.f - tL * tL) + y1 * tL * tL + m0 * (1.f - tL) * tL * (x1 - x0);
+    fR = y1 * (1.f - tR) * (1.f - tR) + y2 * (2.f - tR) * tR + m2 * (tR - 1.f) * tR * (x2 - x1);
 
     setOnLimit(res, t, x1, fL, fR);
     type r0 = (t - x0) * m0 + y0;
@@ -516,22 +571,32 @@ void ComputeHSFwd(RGBMChannel channel, float * out, float x0, float x1, float x2
     Set(channel, out, res);
 }
 
-template<typename type>
-void ComputeHSRev(RGBMChannel channel, float * out, float x0, float x1, float x2,
-                  float y0, float y1, float y2, float m0, float m2, type & t)
+template <typename type>
+void ComputeHSRev(
+    RGBMChannel channel,
+    float * out,
+    float x0,
+    float x1,
+    float x2,
+    float y0,
+    float y1,
+    float y2,
+    float m0,
+    float m2,
+    type & t)
 {
-    type res{ t }, cL, cR, discrimL, discrimR, outL, outR;
+    type res{t}, cL, cR, discrimL, discrimR, outL, outR;
 
     float bL = m0 * (x1 - x0);
     float aL = y1 - y0 - m0 * (x1 - x0);
-    cL = y0 - t;
+    cL       = y0 - t;
     discrimL = Sqrt(bL * bL - 4.f * aL * cL);
-    outL = (-2.f * cL) / (discrimL + bL) * (x1 - x0) + x0;
-    float bR = 2.f*y2 - 2.f*y1 - m2 * (x2 - x1);
+    outL     = (-2.f * cL) / (discrimL + bL) * (x1 - x0) + x0;
+    float bR = 2.f * y2 - 2.f * y1 - m2 * (x2 - x1);
     float aR = y1 - y2 + m2 * (x2 - x1);
-    cR = y1 - t;
+    cR       = y1 - t;
     discrimR = Sqrt(bR * bR - 4.f * aR * cR);
-    outR = (-2.f * cR) / (discrimR + bR) * (x2 - x1) + x1;
+    outR     = (-2.f * cR) / (discrimR + bR) * (x2 - x1) + x1;
 
     setOnLimit(res, t, y1, outL, outR);
     type r0 = (t - y0) / m0 + x0;
@@ -542,18 +607,22 @@ void ComputeHSRev(RGBMChannel channel, float * out, float x0, float x1, float x2
     Set(channel, out, res);
 }
 
-void GradingToneFwdOpCPU::highlightShadow(const GradingTone & v, const GradingTonePreRender & vpr,
-                                          RGBMChannel channel,
-                                          bool isShadow, float * out) const
+void GradingToneFwdOpCPU::highlightShadow(
+    const GradingTone & v,
+    const GradingTonePreRender & vpr,
+    RGBMChannel channel,
+    bool isShadow,
+    float * out) const
 {
     // The effect of val is symmetric around 1 (<1 uses Fwd algorithm, >1 uses Rev algorithm).
-    float val = isShadow ? GetChannelValue(v.m_shadows, channel) :
-                           GetChannelValue(v.m_highlights, channel);
+    float val = isShadow ? GetChannelValue(v.m_shadows, channel)
+                         : GetChannelValue(v.m_highlights, channel);
     if (!isShadow)
     {
         val = 2.f - val;
     }
-    if (val == 1.) return;
+    if (val == 1.)
+        return;
 
     const auto & x0 = vpr.m_hsX[isShadow ? 1 : 0][channel][0];
     const auto & x1 = vpr.m_hsX[isShadow ? 1 : 0][channel][1];
@@ -569,11 +638,11 @@ void GradingToneFwdOpCPU::highlightShadow(const GradingTone & v, const GradingTo
         if (channel != M)
         {
             float t = out[channel];
-            ComputeHSFwd(channel, out, x0, x1, x2, y0, y1, y2, m0, m2, t);     // Fwd
+            ComputeHSFwd(channel, out, x0, x1, x2, y0, y1, y2, m0, m2, t); // Fwd
         }
         else
         {
-            float3 t{ out };
+            float3 t{out};
             ComputeHSFwd(channel, out, x0, x1, x2, y0, y1, y2, m0, m2, t);
         }
     }
@@ -582,27 +651,31 @@ void GradingToneFwdOpCPU::highlightShadow(const GradingTone & v, const GradingTo
         if (channel != M)
         {
             float t = out[channel];
-            ComputeHSRev(channel, out, x0, x1, x2, y0, y1, y2, m0, m2, t);     // Rev
+            ComputeHSRev(channel, out, x0, x1, x2, y0, y1, y2, m0, m2, t); // Rev
         }
         else
         {
-            float3 t{ out };
+            float3 t{out};
             ComputeHSRev(channel, out, x0, x1, x2, y0, y1, y2, m0, m2, t);
         }
     }
 }
 
-void GradingToneRevOpCPU::highlightShadow(const GradingTone & v, const GradingTonePreRender & vpr,
-                                          RGBMChannel channel,
-                                          bool isShadow, float * out) const
+void GradingToneRevOpCPU::highlightShadow(
+    const GradingTone & v,
+    const GradingTonePreRender & vpr,
+    RGBMChannel channel,
+    bool isShadow,
+    float * out) const
 {
-    float val = isShadow ? GetChannelValue(v.m_shadows, channel) :
-                           GetChannelValue(v.m_highlights, channel);
+    float val = isShadow ? GetChannelValue(v.m_shadows, channel)
+                         : GetChannelValue(v.m_highlights, channel);
     if (!isShadow)
     {
         val = 2.f - val;
     }
-    if (val == 1.) return;
+    if (val == 1.)
+        return;
 
     const auto & x0 = vpr.m_hsX[isShadow ? 1 : 0][channel][0];
     const auto & x1 = vpr.m_hsX[isShadow ? 1 : 0][channel][1];
@@ -618,11 +691,11 @@ void GradingToneRevOpCPU::highlightShadow(const GradingTone & v, const GradingTo
         if (channel != M)
         {
             float t = out[channel];
-            ComputeHSRev(channel, out, x0, x1, x2, y0, y1, y2, m0, m2, t);     // Rev
+            ComputeHSRev(channel, out, x0, x1, x2, y0, y1, y2, m0, m2, t); // Rev
         }
         else
         {
-            float3 t{ out };
+            float3 t{out};
             ComputeHSRev(channel, out, x0, x1, x2, y0, y1, y2, m0, m2, t);
         }
     }
@@ -631,19 +704,30 @@ void GradingToneRevOpCPU::highlightShadow(const GradingTone & v, const GradingTo
         if (channel != M)
         {
             float t = out[channel];
-            ComputeHSFwd(channel, out, x0, x1, x2, y0, y1, y2, m0, m2, t);     // Fwd
+            ComputeHSFwd(channel, out, x0, x1, x2, y0, y1, y2, m0, m2, t); // Fwd
         }
         else
         {
-            float3 t{ out };
+            float3 t{out};
             ComputeHSFwd(channel, out, x0, x1, x2, y0, y1, y2, m0, m2, t);
         }
     }
 }
 
-template<typename type>
-void ComputeWBFwd(RGBMChannel channel, bool isBlack, float * out, float val, float x0, float x1,
-                  float y0, float y1, float m0, float m1, float gain, type & t)
+template <typename type>
+void ComputeWBFwd(
+    RGBMChannel channel,
+    bool isBlack,
+    float * out,
+    float val,
+    float x0,
+    float x1,
+    float y0,
+    float y1,
+    float m0,
+    float m1,
+    float gain,
+    type & t)
 {
     const float mtest = (!isBlack) ? val : 2.f - val;
 
@@ -652,8 +736,8 @@ void ComputeWBFwd(RGBMChannel channel, bool isBlack, float * out, float val, flo
         // Slope is decreasing case.
 
         type tlocal = (t - x0) / (x1 - x0);
-        type res = tlocal * (x1 - x0) * (tlocal * 0.5f * (m1 - m0) + m0) + y0;
-        type res0 = y0 + (t - x0) * m0;
+        type res    = tlocal * (x1 - x0) * (tlocal * 0.5f * (m1 - m0) + m0) + y0;
+        type res0   = y0 + (t - x0) * m0;
         setOnLimit(res, t, x0, res0, res);
         type res1 = y1 + (t - x1) * m1;
         setOnLimit(res, t, x1, res, res1);
@@ -669,11 +753,11 @@ void ComputeWBFwd(RGBMChannel channel, bool isBlack, float * out, float val, flo
         const float a = 0.5f * (m1 - m0) * (x1 - x0);
         const float b = m0 * (x1 - x0);
 
-        type c = y0 - t;
+        type c       = y0 - t;
         type discrim = Sqrt(b * b - 4.f * a * c);
-        type tmp = (-2.f * c) / (discrim + b);
-        type res = tmp * (x1 - x0) + x0;
-        type res0 = x0 + (t - y0) / m0;
+        type tmp     = (-2.f * c) / (discrim + b);
+        type res     = tmp * (x1 - x0) + x0;
+        type res0    = x0 + (t - y0) / m0;
         setOnLimit(res, t, y0, res0, res);
 
         if (!isBlack)
@@ -682,13 +766,13 @@ void ComputeWBFwd(RGBMChannel channel, bool isBlack, float * out, float val, flo
             // Quadratic extrapolation for better HDR control.
             // TODO: These values are not per pixel and could be pre-calculated.
             const float new_y1 = (x1 - x0) / gain + x0;
-            const float xd = x0 + (x1 - x0) * 0.99f;
-            float md = m0 + (xd - x0) * (m1 - m0) / (x1 - x0);
-            md = 1.f / md;
-            const float aa = 0.5f * (1.f / m1 - md) / (x1 - xd);
-            const float bb = 1.f / m1 - 2.f * aa * x1;
-            const float cc = new_y1 - bb * x1 - aa * x1 * x1;
-            t = (t - x0) / gain + x0;
+            const float xd     = x0 + (x1 - x0) * 0.99f;
+            float md           = m0 + (xd - x0) * (m1 - m0) / (x1 - x0);
+            md                 = 1.f / md;
+            const float aa     = 0.5f * (1.f / m1 - md) / (x1 - xd);
+            const float bb     = 1.f / m1 - 2.f * aa * x1;
+            const float cc     = new_y1 - bb * x1 - aa * x1 * x1;
+            t                  = (t - x0) / gain + x0;
 
             type res1 = (aa * t + bb) * t + cc;
             setOnLimit(res, t, x1, res, res1);
@@ -704,9 +788,20 @@ void ComputeWBFwd(RGBMChannel channel, bool isBlack, float * out, float val, flo
     }
 }
 
-template<typename type>
-void ComputeWBRev(RGBMChannel channel, bool isBlack, float * out, float val, float x0, float x1,
-                  float y0, float y1, float m0, float m1, float gain, type & t)
+template <typename type>
+void ComputeWBRev(
+    RGBMChannel channel,
+    bool isBlack,
+    float * out,
+    float val,
+    float x0,
+    float x1,
+    float y0,
+    float y1,
+    float m0,
+    float m1,
+    float gain,
+    type & t)
 {
     const float mtest = (!isBlack) ? val : 2.f - val;
 
@@ -718,11 +813,11 @@ void ComputeWBRev(RGBMChannel channel, bool isBlack, float * out, float val, flo
         const float a = 0.5f * (m1 - m0) * (x1 - x0);
         const float b = m0 * (x1 - x0);
 
-        type c = y0 - t;
+        type c       = y0 - t;
         type discrim = Sqrt(b * b - 4.f * a * c);
-        type tmp = (-2.f * c) / (discrim + b);
-        type res = tmp * (x1 - x0) + x0;
-        type res0 = x0 + (t - y0) / m0;
+        type tmp     = (-2.f * c) / (discrim + b);
+        type res     = tmp * (x1 - x0) + x0;
+        type res0    = x0 + (t - y0) / m0;
         setOnLimit(res, t, y0, res0, res);
 
         type res1 = x1 + (t - y1) / m1;
@@ -737,8 +832,8 @@ void ComputeWBRev(RGBMChannel channel, bool isBlack, float * out, float val, flo
         t = (!isBlack) ? (t - x0) * gain + x0 : (t - x1) * gain + x1;
 
         type tlocal = (t - x0) / (x1 - x0);
-        type res = tlocal * (x1 - x0) * (tlocal * 0.5f * (m1 - m0) + m0) + y0;
-        type res0 = y0 + (t - x0) * m0;
+        type res    = tlocal * (x1 - x0) * (tlocal * 0.5f * (m1 - m0) + m0) + y0;
+        type res0   = y0 + (t - x0) * m0;
         setOnLimit(res, t, x0, res0, res);
 
         if (!isBlack)
@@ -747,17 +842,17 @@ void ComputeWBRev(RGBMChannel channel, bool isBlack, float * out, float val, flo
             // Quadratic extrapolation for better HDR control.
             // TODO: These values are not per pixel and could be pre-calculated.
             const float new_y1 = (x1 - x0) / gain + x0;
-            const float xd = x0 + (x1 - x0) * 0.99f;
-            float md = m0 + (xd - x0) * (m1 - m0) / (x1 - x0);
-            md = 1.f / md;
-            const float aa = 0.5f * (1.f / m1 - md) / (x1 - xd);
-            const float bb = 1.f / m1 - 2.f * aa * x1;
-            const float cc = new_y1 - bb * x1 - aa * x1 * x1;
-            t = (t - x0) / gain + x0;
+            const float xd     = x0 + (x1 - x0) * 0.99f;
+            float md           = m0 + (xd - x0) * (m1 - m0) / (x1 - x0);
+            md                 = 1.f / md;
+            const float aa     = 0.5f * (1.f / m1 - md) / (x1 - xd);
+            const float bb     = 1.f / m1 - 2.f * aa * x1;
+            const float cc     = new_y1 - bb * x1 - aa * x1 * x1;
+            t                  = (t - x0) / gain + x0;
 
-            type c = cc - t;
-            type discrim = Sqrt(bb * bb - 4.f * aa * c);
-            type res1 = (-2.f * c) / (discrim + bb);
+            type c          = cc - t;
+            type discrim    = Sqrt(bb * bb - 4.f * aa * c);
+            type res1       = (-2.f * c) / (discrim + bb);
             const float brk = (aa * x1 + bb) * x1 + cc;
             setOnLimit(res, t, brk, res, res1);
         }
@@ -772,20 +867,24 @@ void ComputeWBRev(RGBMChannel channel, bool isBlack, float * out, float val, flo
     }
 }
 
-void GradingToneFwdOpCPU::whiteBlack(const GradingTone & v, const GradingTonePreRender & vpr,
-                                     RGBMChannel channel, bool isBlack, float * out) const
+void GradingToneFwdOpCPU::whiteBlack(
+    const GradingTone & v,
+    const GradingTonePreRender & vpr,
+    RGBMChannel channel,
+    bool isBlack,
+    float * out) const
 {
-    float val = isBlack ? GetChannelValue(v.m_blacks, channel) :
-                          GetChannelValue(v.m_whites, channel);
+    float val
+        = isBlack ? GetChannelValue(v.m_blacks, channel) : GetChannelValue(v.m_whites, channel);
 
-    const auto & x0 = vpr.m_wbX[isBlack ? 1 : 0][channel][0];
-    const auto & x1 = vpr.m_wbX[isBlack ? 1 : 0][channel][1];
-    const auto & y0 = vpr.m_wbY[isBlack ? 1 : 0][channel][0];
-    const auto & y1 = vpr.m_wbY[isBlack ? 1 : 0][channel][1];
-    const auto & m0 = vpr.m_wbM[isBlack ? 1 : 0][channel][0];
-    const auto & m1 = vpr.m_wbM[isBlack ? 1 : 0][channel][1];
+    const auto & x0   = vpr.m_wbX[isBlack ? 1 : 0][channel][0];
+    const auto & x1   = vpr.m_wbX[isBlack ? 1 : 0][channel][1];
+    const auto & y0   = vpr.m_wbY[isBlack ? 1 : 0][channel][0];
+    const auto & y1   = vpr.m_wbY[isBlack ? 1 : 0][channel][1];
+    const auto & m0   = vpr.m_wbM[isBlack ? 1 : 0][channel][0];
+    const auto & m1   = vpr.m_wbM[isBlack ? 1 : 0][channel][1];
     const auto & gain = vpr.m_wbGain[isBlack ? 1 : 0][channel];
-    
+
     if (channel != M)
     {
         float t = out[channel];
@@ -793,25 +892,29 @@ void GradingToneFwdOpCPU::whiteBlack(const GradingTone & v, const GradingTonePre
     }
     else
     {
-        float3 t{ out };
+        float3 t{out};
         ComputeWBFwd(channel, isBlack, out, val, x0, x1, y0, y1, m0, m1, gain, t);
     }
 }
 
-void GradingToneRevOpCPU::whiteBlack(const GradingTone & v, const GradingTonePreRender & vpr,
-                                     RGBMChannel channel, bool isBlack, float * out) const
+void GradingToneRevOpCPU::whiteBlack(
+    const GradingTone & v,
+    const GradingTonePreRender & vpr,
+    RGBMChannel channel,
+    bool isBlack,
+    float * out) const
 {
-    float val = isBlack ? GetChannelValue(v.m_blacks, channel) :
-                          GetChannelValue(v.m_whites, channel);
+    float val
+        = isBlack ? GetChannelValue(v.m_blacks, channel) : GetChannelValue(v.m_whites, channel);
 
-    const auto & x0 = vpr.m_wbX[isBlack ? 1 : 0][channel][0];
-    const auto & x1 = vpr.m_wbX[isBlack ? 1 : 0][channel][1];
-    const auto & y0 = vpr.m_wbY[isBlack ? 1 : 0][channel][0];
-    const auto & y1 = vpr.m_wbY[isBlack ? 1 : 0][channel][1];
-    const auto & m0 = vpr.m_wbM[isBlack ? 1 : 0][channel][0];
-    const auto & m1 = vpr.m_wbM[isBlack ? 1 : 0][channel][1];
+    const auto & x0   = vpr.m_wbX[isBlack ? 1 : 0][channel][0];
+    const auto & x1   = vpr.m_wbX[isBlack ? 1 : 0][channel][1];
+    const auto & y0   = vpr.m_wbY[isBlack ? 1 : 0][channel][0];
+    const auto & y1   = vpr.m_wbY[isBlack ? 1 : 0][channel][1];
+    const auto & m0   = vpr.m_wbM[isBlack ? 1 : 0][channel][0];
+    const auto & m1   = vpr.m_wbM[isBlack ? 1 : 0][channel][1];
     const auto & gain = vpr.m_wbGain[isBlack ? 1 : 0][channel];
-    
+
     if (channel != M)
     {
         float t = out[channel];
@@ -819,22 +922,25 @@ void GradingToneRevOpCPU::whiteBlack(const GradingTone & v, const GradingTonePre
     }
     else
     {
-        float3 t{ out };
+        float3 t{out};
         ComputeWBRev(channel, isBlack, out, val, x0, x1, y0, y1, m0, m1, gain, t);
     }
 }
 
-void GradingToneFwdOpCPU::scontrast(const GradingTone & v, const GradingTonePreRender & vpr, float * out) const
+void GradingToneFwdOpCPU::scontrast(
+    const GradingTone & v,
+    const GradingTonePreRender & vpr,
+    float * out) const
 {
     float contrast = static_cast<float>(v.m_scontrast);
     if (contrast != 1.)
     {
         // Limit the range of values to prevent reversals.
-        contrast = (contrast > 1.f) ? 1.f / (1.8125f - 0.8125f * std::min(contrast, 1.99f)) :
-                                            0.28125f + 0.71875f * std::max(contrast, 0.01f);
+        contrast = (contrast > 1.f) ? 1.f / (1.8125f - 0.8125f * std::min(contrast, 1.99f))
+                                    : 0.28125f + 0.71875f * std::max(contrast, 0.01f);
 
-        float3 t{ out };
-        float3 outColor{ (t - vpr.m_pivot) * contrast + vpr.m_pivot };
+        float3 t{out};
+        float3 outColor{(t - vpr.m_pivot) * contrast + vpr.m_pivot};
 
         // Top end
         {
@@ -846,7 +952,7 @@ void GradingToneFwdOpCPU::scontrast(const GradingTone & v, const GradingTonePreR
             const auto & m3 = vpr.m_scM[0][1];
 
             float3 tR  = (t - x1) / (x2 - x1);
-            float3 res = tR * (x2 - x1) * ( tR * 0.5f * (m3 - m0) + m0 ) + y1;
+            float3 res = tR * (x2 - x1) * (tR * 0.5f * (m3 - m0) + m0) + y1;
 
             setOnLimit(outColor, t, x1, outColor, res);
 
@@ -862,7 +968,7 @@ void GradingToneFwdOpCPU::scontrast(const GradingTone & v, const GradingTonePreR
             const auto & m0 = vpr.m_scM[1][0];
             const auto & m3 = vpr.m_scM[1][1];
 
-            float3 tR = (t - x1) / (x2 - x1);
+            float3 tR  = (t - x1) / (x2 - x1);
             float3 res = tR * (x2 - x1) * (tR * 0.5f * (m3 - m0) + m0) + y1;
 
             setOnLimit(outColor, t, x2, res, outColor);
@@ -874,20 +980,23 @@ void GradingToneFwdOpCPU::scontrast(const GradingTone & v, const GradingTonePreR
         out[0] = outColor[0];
         out[1] = outColor[1];
         out[2] = outColor[2];
-    }  // end if contrast != 1.
+    } // end if contrast != 1.
 }
 
-void GradingToneRevOpCPU::scontrast(const GradingTone & v, const GradingTonePreRender & vpr, float * out) const
+void GradingToneRevOpCPU::scontrast(
+    const GradingTone & v,
+    const GradingTonePreRender & vpr,
+    float * out) const
 {
     float contrast = static_cast<float>(v.m_scontrast);
     if (contrast != 1.)
     {
         // Limit the range of values to prevent reversals.
-        contrast = (contrast > 1.f) ? 1.f / (1.8125f - 0.8125f * std::min(contrast, 1.99f)) :
-                                            0.28125f + 0.71875f * std::max(contrast, 0.01f);
+        contrast = (contrast > 1.f) ? 1.f / (1.8125f - 0.8125f * std::min(contrast, 1.99f))
+                                    : 0.28125f + 0.71875f * std::max(contrast, 0.01f);
 
-        float3 t{ out };
-        float3 outColor{ (t - vpr.m_pivot) / contrast + vpr.m_pivot };
+        float3 t{out};
+        float3 outColor{(t - vpr.m_pivot) / contrast + vpr.m_pivot};
 
         // Top end
         {
@@ -898,11 +1007,11 @@ void GradingToneRevOpCPU::scontrast(const GradingTone & v, const GradingTonePreR
             const auto & m0 = vpr.m_scM[0][0];
             const auto & m3 = vpr.m_scM[0][1];
 
-            float b = m0 * (x2 - x1);
-            float a = (m3 - m0) * 0.5f * (x2 - x1);
-            float3 c = y1 - t;
+            float b        = m0 * (x2 - x1);
+            float a        = (m3 - m0) * 0.5f * (x2 - x1);
+            float3 c       = y1 - t;
             float3 discrim = Sqrt(b * b - 4.f * a * c);
-            float3 res =  (x2 - x1) * (-2.f * c) / (discrim + b) + x1;
+            float3 res     = (x2 - x1) * (-2.f * c) / (discrim + b) + x1;
 
             setOnLimit(outColor, t, y1, outColor, res);
             setOnLimit(outColor, t, y2, outColor, x2 + (t - y2) / m3);
@@ -917,11 +1026,11 @@ void GradingToneRevOpCPU::scontrast(const GradingTone & v, const GradingTonePreR
             const auto & m0 = vpr.m_scM[1][0];
             const auto & m3 = vpr.m_scM[1][1];
 
-            float b = m0 * (x2 - x1);
-            float a = (m3 - m0) * 0.5f * (x2 - x1);
-            float3 c = y1 - t;
+            float b        = m0 * (x2 - x1);
+            float a        = (m3 - m0) * 0.5f * (x2 - x1);
+            float3 c       = y1 - t;
             float3 discrim = Sqrt(b * b - 4.f * a * c);
-            float3 res =  (x2 - x1) * (-2.f * c) / (discrim + b) + x1;
+            float3 res     = (x2 - x1) * (-2.f * c) / (discrim + b) + x1;
 
             setOnLimit(outColor, t, y2, res, outColor);
             setOnLimit(outColor, t, y1, x1 + (t - y1) / m0, outColor);
@@ -930,7 +1039,7 @@ void GradingToneRevOpCPU::scontrast(const GradingTone & v, const GradingTonePreR
         out[0] = outColor[0];
         out[1] = outColor[1];
         out[2] = outColor[2];
-    }  // end if contrast != 1.
+    } // end if contrast != 1.
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -959,9 +1068,9 @@ void GradingToneFwdOpCPU::apply(const void * inImg, void * outImg, long numPixel
     }
 
     const float * in = (float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    auto & v = m_gt->getValue();
+    auto & v   = m_gt->getValue();
     auto & vpr = m_gt->getComputedValue();
 
     for (long idx = 0; idx < numPixels; ++idx)
@@ -1016,9 +1125,9 @@ void GradingToneRevOpCPU::apply(const void * inImg, void * outImg, long numPixel
     }
 
     const float * in = (float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    auto & v = m_gt->getValue();
+    auto & v   = m_gt->getValue();
     auto & vpr = m_gt->getComputedValue();
 
     for (long idx = 0; idx < numPixels; ++idx)
@@ -1062,85 +1171,89 @@ void GradingToneRevOpCPU::apply(const void * inImg, void * outImg, long numPixel
 
 namespace LogLinConstants
 {
-    static constexpr float xbrk = 0.0041318374739483946f;
-    static constexpr float shift = -0.000157849851665374f;
-    static constexpr float m = 1.f / (0.18f + shift);
-    static constexpr float gain = 363.034608563f;
-    static constexpr float offs = -7.f;
-    static constexpr float ybrk = -5.5f;
+static constexpr float xbrk  = 0.0041318374739483946f;
+static constexpr float shift = -0.000157849851665374f;
+static constexpr float m     = 1.f / (0.18f + shift);
+static constexpr float gain  = 363.034608563f;
+static constexpr float offs  = -7.f;
+static constexpr float ybrk  = -5.5f;
 #if OCIO_USE_SSE2
-    const __m128 mxbrk = _mm_set1_ps(xbrk);
-    const __m128 mshift = _mm_set1_ps(shift);
-    const __m128 mm = _mm_set1_ps(m);
-    const __m128 mgain = _mm_set1_ps(gain);
-    const __m128 moffs = _mm_set1_ps(offs);
-    const __m128 mybrk = _mm_set1_ps(ybrk);
-    const __m128 mgainInv = _mm_set1_ps(1.f / gain);
-    const __m128 mshift018 = _mm_set1_ps(shift + 0.18f);
-    const __m128 mpower = _mm_set1_ps(2.0f);
+const __m128 mxbrk     = _mm_set1_ps(xbrk);
+const __m128 mshift    = _mm_set1_ps(shift);
+const __m128 mm        = _mm_set1_ps(m);
+const __m128 mgain     = _mm_set1_ps(gain);
+const __m128 moffs     = _mm_set1_ps(offs);
+const __m128 mybrk     = _mm_set1_ps(ybrk);
+const __m128 mgainInv  = _mm_set1_ps(1.f / gain);
+const __m128 mshift018 = _mm_set1_ps(shift + 0.18f);
+const __m128 mpower    = _mm_set1_ps(2.0f);
 #else
-    static constexpr float base2 = 1.4426950408889634f; // 1/log(2)
+static constexpr float base2 = 1.4426950408889634f; // 1/log(2)
 #endif
-}
+} // namespace LogLinConstants
 
 inline void LinLog(const float * in, float * out)
 {
 #if OCIO_USE_SSE2
-        __m128 pix = _mm_loadu_ps(in);
-        __m128 flag = _mm_cmpgt_ps(pix, LogLinConstants::mxbrk);
+    __m128 pix  = _mm_loadu_ps(in);
+    __m128 flag = _mm_cmpgt_ps(pix, LogLinConstants::mxbrk);
 
-        __m128 pixLin = _mm_mul_ps(pix, LogLinConstants::mgain);
-        pixLin = _mm_add_ps(pixLin, LogLinConstants::moffs);
+    __m128 pixLin = _mm_mul_ps(pix, LogLinConstants::mgain);
+    pixLin        = _mm_add_ps(pixLin, LogLinConstants::moffs);
 
-        pix = _mm_add_ps(pix, LogLinConstants::mshift);
-        pix = _mm_mul_ps(pix, LogLinConstants::mm);
-        pix = sseLog2(pix);
+    pix = _mm_add_ps(pix, LogLinConstants::mshift);
+    pix = _mm_mul_ps(pix, LogLinConstants::mm);
+    pix = sseLog2(pix);
 
-        pix = _mm_or_ps(_mm_and_ps(flag, pix),
-            _mm_andnot_ps(flag, pixLin));
+    pix = _mm_or_ps(_mm_and_ps(flag, pix), _mm_andnot_ps(flag, pixLin));
 
-        _mm_storeu_ps(out, pix);
+    _mm_storeu_ps(out, pix);
 #else
-        out[0] = (in[0] < LogLinConstants::xbrk) ?
-                 in[0] * LogLinConstants::gain + LogLinConstants::offs :
-                 LogLinConstants::base2 * std::log((in[0] + LogLinConstants::shift) * LogLinConstants::m);
-        out[1] = (in[1] < LogLinConstants::xbrk) ?
-                 in[1] * LogLinConstants::gain + LogLinConstants::offs :
-                 LogLinConstants::base2 * std::log((in[1] + LogLinConstants::shift) * LogLinConstants::m);
-        out[2] = (in[2] < LogLinConstants::xbrk) ?
-                 in[2] * LogLinConstants::gain + LogLinConstants::offs :
-                 LogLinConstants::base2 * std::log((in[2] + LogLinConstants::shift) * LogLinConstants::m);
-        out[3] = in[3];
+    out[0] = (in[0] < LogLinConstants::xbrk)
+                 ? in[0] * LogLinConstants::gain + LogLinConstants::offs
+                 : LogLinConstants::base2
+                       * std::log((in[0] + LogLinConstants::shift) * LogLinConstants::m);
+    out[1] = (in[1] < LogLinConstants::xbrk)
+                 ? in[1] * LogLinConstants::gain + LogLinConstants::offs
+                 : LogLinConstants::base2
+                       * std::log((in[1] + LogLinConstants::shift) * LogLinConstants::m);
+    out[2] = (in[2] < LogLinConstants::xbrk)
+                 ? in[2] * LogLinConstants::gain + LogLinConstants::offs
+                 : LogLinConstants::base2
+                       * std::log((in[2] + LogLinConstants::shift) * LogLinConstants::m);
+    out[3] = in[3];
 #endif
 }
 
 inline void LogLin(float * out)
 {
 #if OCIO_USE_SSE2
-        __m128 pix = _mm_loadu_ps(out);
-        __m128 flag = _mm_cmpgt_ps(pix, LogLinConstants::mybrk);
+    __m128 pix  = _mm_loadu_ps(out);
+    __m128 flag = _mm_cmpgt_ps(pix, LogLinConstants::mybrk);
 
-        __m128 pixLin = _mm_sub_ps(pix, LogLinConstants::moffs);
-        pixLin = _mm_mul_ps(pixLin, LogLinConstants::mgainInv);
+    __m128 pixLin = _mm_sub_ps(pix, LogLinConstants::moffs);
+    pixLin        = _mm_mul_ps(pixLin, LogLinConstants::mgainInv);
 
-        pix = ssePower(LogLinConstants::mpower, pix);
-        pix = _mm_mul_ps(pix, LogLinConstants::mshift018);
-        pix = _mm_sub_ps(pix, LogLinConstants::mshift);
+    pix = ssePower(LogLinConstants::mpower, pix);
+    pix = _mm_mul_ps(pix, LogLinConstants::mshift018);
+    pix = _mm_sub_ps(pix, LogLinConstants::mshift);
 
-        pix = _mm_or_ps(_mm_and_ps(flag, pix),
-              _mm_andnot_ps(flag, pixLin));
+    pix = _mm_or_ps(_mm_and_ps(flag, pix), _mm_andnot_ps(flag, pixLin));
 
-        _mm_storeu_ps(out, pix);
+    _mm_storeu_ps(out, pix);
 #else
-        out[0] = (out[0] < LogLinConstants::ybrk) ?
-                 (out[0] - LogLinConstants::offs) / LogLinConstants::gain :
-                 std::pow(2.0f, out[0]) * (0.18f + LogLinConstants::shift) - LogLinConstants::shift;
-        out[1] = (out[1] < LogLinConstants::ybrk) ?
-                 (out[1] - LogLinConstants::offs) / LogLinConstants::gain :
-                 std::pow(2.0f, out[1]) * (0.18f + LogLinConstants::shift) - LogLinConstants::shift;
-        out[2] = (out[2] < LogLinConstants::ybrk) ?
-                 (out[2] - LogLinConstants::offs) / LogLinConstants::gain :
-                 std::pow(2.0f, out[2]) * (0.18f + LogLinConstants::shift) - LogLinConstants::shift;
+    out[0]
+        = (out[0] < LogLinConstants::ybrk)
+              ? (out[0] - LogLinConstants::offs) / LogLinConstants::gain
+              : std::pow(2.0f, out[0]) * (0.18f + LogLinConstants::shift) - LogLinConstants::shift;
+    out[1]
+        = (out[1] < LogLinConstants::ybrk)
+              ? (out[1] - LogLinConstants::offs) / LogLinConstants::gain
+              : std::pow(2.0f, out[1]) * (0.18f + LogLinConstants::shift) - LogLinConstants::shift;
+    out[2]
+        = (out[2] < LogLinConstants::ybrk)
+              ? (out[2] - LogLinConstants::offs) / LogLinConstants::gain
+              : std::pow(2.0f, out[2]) * (0.18f + LogLinConstants::shift) - LogLinConstants::shift;
 #endif
 }
 
@@ -1156,9 +1269,9 @@ void GradingToneLinearFwdOpCPU::apply(const void * inImg, void * outImg, long nu
     }
 
     const float * in = (float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    auto & v = m_gt->getValue();
+    auto & v   = m_gt->getValue();
     auto & vpr = m_gt->getComputedValue();
 
     for (long idx = 0; idx < numPixels; ++idx)
@@ -1213,9 +1326,9 @@ void GradingToneLinearRevOpCPU::apply(const void * inImg, void * outImg, long nu
     }
 
     const float * in = (float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    auto & v = m_gt->getValue();
+    auto & v   = m_gt->getValue();
     auto & vpr = m_gt->getComputedValue();
 
     for (long idx = 0; idx < numPixels; ++idx)
@@ -1258,7 +1371,7 @@ void GradingToneLinearRevOpCPU::apply(const void * inImg, void * outImg, long nu
     }
 }
 
-} // Anonymous namspace
+} // namespace
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1266,19 +1379,19 @@ ConstOpCPURcPtr GetGradingToneCPURenderer(ConstGradingToneOpDataRcPtr & tone)
 {
     switch (tone->getDirection())
     {
-    case TRANSFORM_DIR_FORWARD:
-        if (tone->getStyle() == GRADING_LIN)
-        {
-            return std::make_shared<GradingToneLinearFwdOpCPU>(tone);
-        }
-        return std::make_shared<GradingToneFwdOpCPU>(tone);
+        case TRANSFORM_DIR_FORWARD:
+            if (tone->getStyle() == GRADING_LIN)
+            {
+                return std::make_shared<GradingToneLinearFwdOpCPU>(tone);
+            }
+            return std::make_shared<GradingToneFwdOpCPU>(tone);
 
-    case TRANSFORM_DIR_INVERSE:
-        if (tone->getStyle() == GRADING_LIN)
-        {
-            return std::make_shared<GradingToneLinearRevOpCPU>(tone);
-        }
-        return std::make_shared<GradingToneRevOpCPU>(tone);
+        case TRANSFORM_DIR_INVERSE:
+            if (tone->getStyle() == GRADING_LIN)
+            {
+                return std::make_shared<GradingToneLinearRevOpCPU>(tone);
+            }
+            return std::make_shared<GradingToneRevOpCPU>(tone);
     }
 
     throw Exception("Illegal GradingTone direction.");

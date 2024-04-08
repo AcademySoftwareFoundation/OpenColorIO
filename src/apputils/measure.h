@@ -4,34 +4,32 @@
 #ifndef INCLUDED_OCIO_MEASURE_H
 #define INCLUDED_OCIO_MEASURE_H
 
-
 #include <chrono>
-#include <string>
-#include <stdexcept>
 #include <iostream>
-
+#include <stdexcept>
+#include <string>
 
 // Utility to measure time in ms.
 class Measure
 {
 public:
-    Measure() = delete;
+    Measure()                = delete;
     Measure(const Measure &) = delete;
 
     explicit Measure(const char * explanation)
-        :   m_explanations(explanation)
+        : m_explanations(explanation)
     {
     }
 
     explicit Measure(const char * explanation, unsigned iterations)
-        :   m_explanations(explanation)
-        ,   m_iterations(iterations)
+        : m_explanations(explanation)
+        , m_iterations(iterations)
     {
     }
 
     ~Measure()
     {
-        if(m_started)
+        if (m_started)
         {
             pause();
         }
@@ -40,21 +38,21 @@ public:
 
     void resume()
     {
-        if(m_started)
+        if (m_started)
         {
             throw std::runtime_error("Measure already started.");
         }
 
         m_started = true;
-        m_start = std::chrono::high_resolution_clock::now();
+        m_start   = std::chrono::high_resolution_clock::now();
     }
 
     void pause()
     {
         std::chrono::high_resolution_clock::time_point end
-           = std::chrono::high_resolution_clock::now();
+            = std::chrono::high_resolution_clock::now();
 
-        if(m_started)
+        if (m_started)
         {
             const std::chrono::duration<float, std::milli> duration = end - m_start;
 
@@ -67,14 +65,13 @@ public:
 
         m_started = false;
     }
-    
+
     void print() const noexcept
     {
         std::cout << "\n"
                   << m_explanations << "\n"
-                  << "  Processing took: "
-                  << (m_duration.count() / float(m_iterations))
-                  <<  " ms" << std::endl;
+                  << "  Processing took: " << (m_duration.count() / float(m_iterations)) << " ms"
+                  << std::endl;
     }
 
 private:
@@ -84,8 +81,7 @@ private:
     bool m_started = false;
     std::chrono::high_resolution_clock::time_point m_start;
 
-    std::chrono::duration<float, std::milli> m_duration { 0 };
+    std::chrono::duration<float, std::milli> m_duration{0};
 };
-
 
 #endif // INCLUDED_OCIO_MEASURE_H

@@ -17,5 +17,3 @@ void GetLogGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDat
 } // namespace OCIO_NAMESPACE
 
 #endif
-
-

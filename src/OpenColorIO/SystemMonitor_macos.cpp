@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #if !defined(__APPLE__)
 
 #error The file is for the macOS platform only.
 
 #endif
-
 
 #include <ColorSync/ColorSync.h>
 #include <CoreGraphics/CoreGraphics.h>
@@ -15,23 +13,23 @@
 
 #include "Logging.h"
 
-
 namespace OCIO_NAMESPACE
 {
 
-
-static constexpr char ErrorMsg[] { "Problem obtaining monitor profile information from operating system." };
-
+static constexpr char ErrorMsg[]{
+    "Problem obtaining monitor profile information from operating system."};
 
 // Some variables must be released.
-template<typename T>
-struct Guard
+template <typename T> struct Guard
 {
-    Guard() = delete;
-    Guard(const Guard &) = delete;
+    Guard()                          = delete;
+    Guard(const Guard &)             = delete;
     Guard & operator=(const Guard &) = delete;
 
-    explicit Guard(T & data) : m_data(data) {}
+    explicit Guard(T & data)
+        : m_data(data)
+    {
+    }
     ~Guard() { release(); }
 
     void release()
@@ -60,7 +58,8 @@ std::string GetICCProfilePath(CGDirectDisplayID dispId)
         throw Exception(ErrorMsg);
     }
 
-    CFDictionaryRef displayInfo = ColorSyncDeviceCopyDeviceInfo(kColorSyncDisplayDeviceClass, displayUUID);
+    CFDictionaryRef displayInfo
+        = ColorSyncDeviceCopyDeviceInfo(kColorSyncDisplayDeviceClass, displayUUID);
     Guard<CFDictionaryRef> info(displayInfo);
 
     uuid.release();
@@ -104,8 +103,7 @@ std::string GetICCProfilePath(CGDirectDisplayID dispId)
             throw Exception(ErrorMsg);
         }
 
-        profileURL
-            = (CFURLRef)CFDictionaryGetValue(factoryProfileInfo, kColorSyncDeviceProfileURL);
+        profileURL = (CFURLRef)CFDictionaryGetValue(factoryProfileInfo, kColorSyncDeviceProfileURL);
         if (!profileURL)
         {
             throw Exception(ErrorMsg);
@@ -113,14 +111,13 @@ std::string GetICCProfilePath(CGDirectDisplayID dispId)
     }
 
     char path[PATH_MAX];
-    const bool result
-        = CFURLGetFileSystemRepresentation(profileURL, true, (UInt8 *)path, PATH_MAX);
+    const bool result = CFURLGetFileSystemRepresentation(profileURL, true, (UInt8 *)path, PATH_MAX);
 
     return result ? std::string(path) : throw Exception(ErrorMsg);
 }
 
 // Some references for 'Quartz Display Services' part of the 'Core Graphics' framework:
-//  * https://developer.apple.com/library/archive/documentation/GraphicsImaging/Conceptual/QuartzDisplayServicesConceptual/Introduction/Introduction.html#//apple_ref/doc/uid/TP40004245-SW1 
+//  * https://developer.apple.com/library/archive/documentation/GraphicsImaging/Conceptual/QuartzDisplayServicesConceptual/Introduction/Introduction.html#//apple_ref/doc/uid/TP40004245-SW1
 //  * https://developer.apple.com/documentation/coregraphics/quartz_display_services?language=objc
 
 void SystemMonitorsImpl::getAllMonitors()
@@ -130,13 +127,13 @@ void SystemMonitorsImpl::getAllMonitors()
     // TODO: Needs to have all displays with a status to indicate the active ones?
 
     // CGGetActiveDisplayList provides only the list of displays that are active (i.e. drawable).
-    // Note: CGGetOnlineDisplayList provides the list of all displays that are online (active, 
+    // Note: CGGetOnlineDisplayList provides the list of all displays that are online (active,
     // mirrored, or sleeping).
 
     // Get the number of active monitors.
 
     uint32_t maxDisplays = 0;
-    CGDisplayErr err = CGGetActiveDisplayList(0, nullptr, &maxDisplays);
+    CGDisplayErr err     = CGGetActiveDisplayList(0, nullptr, &maxDisplays);
     if (err != kCGErrorSuccess)
     {
         throw Exception(ErrorMsg);
@@ -167,8 +164,9 @@ void SystemMonitorsImpl::getAllMonitors()
         // Build a generic unique name if vendor information is not accessible.
         std::string displayName = "Monitor " + std::to_string(idx);
 
-        CFDictionaryRef displayInfo
-            = IODisplayCreateInfoDictionary(CGDisplayIOServicePort(dispId), kIODisplayOnlyPreferredName);
+        CFDictionaryRef displayInfo = IODisplayCreateInfoDictionary(
+            CGDisplayIOServicePort(dispId),
+            kIODisplayOnlyPreferredName);
         Guard<CFDictionaryRef> info(displayInfo);
 
         if (!displayInfo)
@@ -189,10 +187,11 @@ void SystemMonitorsImpl::getAllMonitors()
                 std::vector<CFStringRef> values(number);
                 CFDictionaryGetKeysAndValues(productInfo, nullptr, (const void **)&values[0]);
 
-                const CFIndex bufferSize = CFStringGetLength(values[0]) + 1; // +1 for null termination
+                const CFIndex bufferSize
+                    = CFStringGetLength(values[0]) + 1; // +1 for null termination
                 char buffer[bufferSize];
 
-                // Return false if the buffer is too small or if the conversion fails.  
+                // Return false if the buffer is too small or if the conversion fails.
                 if (CFStringGetCString(values[0], buffer, bufferSize, kCFStringEncodingUTF8))
                 {
                     // Build a name using the vendor information.
@@ -210,12 +209,11 @@ void SystemMonitorsImpl::getAllMonitors()
             const std::string iccFilepath = GetICCProfilePath(dispId);
             m_monitors.push_back({displayName, iccFilepath});
         }
-        catch(const Exception & ex)
+        catch (const Exception & ex)
         {
             std::ostringstream oss;
-            oss << "Failed to access ICC profile for the monitor '"
-                << displayName << "': "
-                << ex.what();
+            oss << "Failed to access ICC profile for the monitor '" << displayName
+                << "': " << ex.what();
 
             LogDebug(oss.str());
         }

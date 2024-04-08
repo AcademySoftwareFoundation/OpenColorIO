@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_OGLAPP_H
 #define INCLUDED_OCIO_OGLAPP_H
-
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -58,8 +56,8 @@ typedef OCIO_SHARED_PTR<OglApp> OglAppRcPtr;
 class OglApp
 {
 public:
-    OglApp() = delete;
-    OglApp(const OglApp &) = delete;
+    OglApp()                           = delete;
+    OglApp(const OglApp &)             = delete;
     OglApp & operator=(const OglApp &) = delete;
 
     // Initialize the app with given window name & client rect size.
@@ -69,16 +67,10 @@ public:
 
     // When displaying the processed image in a window this needs to be done.
     // In that case, when image is read, the result will be mirrored on Y.
-    void setYMirror()
-    {
-        m_yMirror = true;
-    }
+    void setYMirror() { m_yMirror = true; }
 
     // Shader code will be printed when generated.
-    void setPrintShader(bool print)
-    {
-        m_printShader = print;
-    }
+    void setPrintShader(bool print) { m_printShader = print; }
 
     enum Components
     {
@@ -87,8 +79,8 @@ public:
     };
 
     // Initialize the image.
-    virtual void initImage(int imageWidth, int imageHeight,
-                           Components comp, const float * imageBuffer);
+    virtual void
+    initImage(int imageWidth, int imageHeight, Components comp, const float * imageBuffer);
     // Update the image if it changes.
     virtual void updateImage(const float * imageBuffer);
 
@@ -125,41 +117,41 @@ protected:
     // when processed image is read from the viewport it matches the size of the original image.
     // When an interactive app is just displaying an image, this should equal the viewport size
     // and the image will be scaled to fit so there is no cropping.
-    int m_viewportWidth{ 0 };
-    int m_viewportHeight{ 0 };
+    int m_viewportWidth{0};
+    int m_viewportHeight{0};
 
     // Initialize the OpenGL engine, and set up GLEW if needed.
     void setupCommon();
-    
+
     void setImageDimensions(int imgWidth, int imgHeight, Components comp);
     Components getImageComponents() const { return m_components; }
 
     bool printShader() const { return m_printShader; }
-    
+
     OpenGLBuilderRcPtr m_oglBuilder;
-    
+
 private:
     // Keep track of the original image ratio.
-    float m_imageAspect{ 1.0f };
+    float m_imageAspect{1.0f};
 
     // For interactive application displaying the processed image, this needs to be true.
-    bool m_yMirror{ false };
+    bool m_yMirror{false};
 
     // Will shader code be outputed when setShader is called.
-    bool m_printShader{ false };
+    bool m_printShader{false};
 
     // Image information.
-    int m_imageWidth{ 0 };
-    int m_imageHeight{ 0 };
-    Components m_components{ COMPONENTS_RGBA };
+    int m_imageWidth{0};
+    int m_imageHeight{0};
+    Components m_components{COMPONENTS_RGBA};
     unsigned int m_imageTexID;
 };
 
-class ScreenApp: public OglApp
+class ScreenApp : public OglApp
 {
 public:
-    ScreenApp() = delete;
-    ScreenApp(const ScreenApp &) = delete;
+    ScreenApp()                              = delete;
+    ScreenApp(const ScreenApp &)             = delete;
     ScreenApp & operator=(const ScreenApp &) = delete;
 
     ScreenApp(const char * winTitle, int winWidth, int winHeight);
@@ -171,14 +163,14 @@ public:
 
 private:
     // Window identifier returned by glutCreateWindow.
-    int m_mainWin{ 0 };
+    int m_mainWin{0};
 };
 
 #ifdef OCIO_HEADLESS_ENABLED
 
 #include <EGL/egl.h>
 
-class HeadlessApp: public OglApp
+class HeadlessApp : public OglApp
 {
 public:
     HeadlessApp() = delete;
@@ -195,8 +187,8 @@ protected:
     void printEGLInfo() const noexcept;
 
 private:
-    EGLint m_pixBufferWidth{ 0 };
-    EGLint m_pixBufferHeight{ 0 };
+    EGLint m_pixBufferWidth{0};
+    EGLint m_pixBufferHeight{0};
     std::vector<EGLint> m_pixBufferAttribs;
 
     EGLDisplay m_eglDisplay;
@@ -212,4 +204,3 @@ private:
 } // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_OGLAPP_H
-

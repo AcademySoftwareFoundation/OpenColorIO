@@ -10,22 +10,22 @@
 #include "ops/lut3d/Lut3DOpGPU.h"
 #include "utils/StringUtils.h"
 
-
 namespace OCIO_NAMESPACE
 {
 
-void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DOpDataRcPtr & lutData)
+void GetLut3DGPUShaderProgram(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstLut3DOpDataRcPtr & lutData)
 {
 
     if (shaderCreator->getLanguage() == LANGUAGE_OSL_1)
     {
-        throw Exception("The Lut3DOp is not yet supported by the 'Open Shading language (OSL)' translation");
+        throw Exception(
+            "The Lut3DOp is not yet supported by the 'Open Shading language (OSL)' translation");
     }
 
     std::ostringstream resName;
-    resName << shaderCreator->getResourcePrefix()
-            << std::string("_")
-            << std::string("lut3d_")
+    resName << shaderCreator->getResourcePrefix() << std::string("_") << std::string("lut3d_")
             << shaderCreator->getNextResourceIndex();
 
     // Note: Remove potentially problematic double underscores from GLSL resource names.
@@ -39,18 +39,18 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
         samplerInterpolation = INTERP_NEAREST;
     }
     // (Using CacheID here to potentially allow reuse of existing textures.)
-    shaderCreator->add3DTexture(name.c_str(),
-                                GpuShaderText::getSamplerName(name).c_str(),
-                                lutData->getGridSize(),
-                                samplerInterpolation,
-                                &lutData->getArray()[0]);
+    shaderCreator->add3DTexture(
+        name.c_str(),
+        GpuShaderText::getSamplerName(name).c_str(),
+        lutData->getGridSize(),
+        samplerInterpolation,
+        &lutData->getArray()[0]);
 
     {
         GpuShaderText ss(shaderCreator->getLanguage());
         ss.declareTex3D(name);
         shaderCreator->addToDeclareShaderCode(ss.string().c_str());
     }
-
 
     const float dim = (float)lutData->getGridSize();
 
@@ -246,6 +246,5 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
 
     // clang-format on
 }
-
 
 } // namespace OCIO_NAMESPACE

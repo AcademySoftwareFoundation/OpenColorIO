@@ -10,7 +10,6 @@
 #include "ops/exposurecontrast/ExposureContrastOpGPU.h"
 #include "utils/StringUtils.h"
 
-
 namespace OCIO_NAMESPACE
 {
 namespace
@@ -20,12 +19,13 @@ static constexpr char EC_EXPOSURE[] = "exposureVal";
 static constexpr char EC_CONTRAST[] = "contrastVal";
 static constexpr char EC_GAMMA[]    = "gammaVal";
 
-void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
-                DynamicPropertyDoubleRcPtr prop,
-                const std::string & name)
+void AddUniform(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    DynamicPropertyDoubleRcPtr prop,
+    const std::string & name)
 {
-    GpuShaderCreator::DoubleGetter getDouble = std::bind(&DynamicPropertyDouble::getValue,
-                                                        prop.get());
+    GpuShaderCreator::DoubleGetter getDouble
+        = std::bind(&DynamicPropertyDouble::getValue, prop.get());
     shaderCreator->addUniform(name.c_str(), getDouble);
     // Declare uniform.
     GpuShaderText stDecl(shaderCreator->getLanguage());
@@ -33,14 +33,15 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
     shaderCreator->addToDeclareShaderCode(stDecl.string().c_str());
 }
 
-std::string AddProperty(GpuShaderCreatorRcPtr & shaderCreator,
-                        GpuShaderText & st,
-                        DynamicPropertyDoubleImplRcPtr prop,
-                        const std::string & name)
+std::string AddProperty(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    DynamicPropertyDoubleImplRcPtr prop,
+    const std::string & name)
 {
     std::string finalName;
 
-    if(prop->isDynamic() && shaderCreator->getLanguage() != LANGUAGE_OSL_1)
+    if (prop->isDynamic() && shaderCreator->getLanguage() != LANGUAGE_OSL_1)
     {
         // Build the name for the uniform. The same type of property should give the same name, so
         // that uniform is declared only once, but multiple instances of the shader code can
@@ -50,7 +51,7 @@ std::string AddProperty(GpuShaderCreatorRcPtr & shaderCreator,
         finalName = BuildResourceName(shaderCreator, "exposure_contrast", name);
 
         // Property is decoupled and added to shader creator.
-        auto shaderProp = prop->createEditableCopy();
+        auto shaderProp              = prop->createEditableCopy();
         DynamicPropertyRcPtr newProp = shaderProp;
         shaderCreator->addDynamicProperty(newProp);
         auto newPropDouble = DynamicPropertyValue::AsDouble(newProp);
@@ -66,8 +67,9 @@ std::string AddProperty(GpuShaderCreatorRcPtr & shaderCreator,
 
         if (shaderCreator->getLanguage() == LANGUAGE_OSL_1 && prop->isDynamic())
         {
-            std::string msg("The dynamic properties are not yet supported by the 'Open Shading language"\
-                            " (OSL)' translation: The '");
+            std::string msg(
+                "The dynamic properties are not yet supported by the 'Open Shading language"
+                " (OSL)' translation: The '");
             msg += name;
             msg += "' dynamic property is replaced by a local variable.";
 
@@ -78,24 +80,26 @@ std::string AddProperty(GpuShaderCreatorRcPtr & shaderCreator,
     return finalName;
 }
 
-void AddProperties(GpuShaderCreatorRcPtr & shaderCreator,
-                   GpuShaderText & st,
-                   ConstExposureContrastOpDataRcPtr & ec,
-                   std::string & exposureName,
-                   std::string & contrastName,
-                   std::string & gammaName)
+void AddProperties(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    ConstExposureContrastOpDataRcPtr & ec,
+    std::string & exposureName,
+    std::string & contrastName,
+    std::string & gammaName)
 {
     exposureName = AddProperty(shaderCreator, st, ec->getExposureProperty(), EC_EXPOSURE);
     contrastName = AddProperty(shaderCreator, st, ec->getContrastProperty(), EC_CONTRAST);
-    gammaName    = AddProperty(shaderCreator, st, ec->getGammaProperty(),    EC_GAMMA);
+    gammaName    = AddProperty(shaderCreator, st, ec->getGammaProperty(), EC_GAMMA);
 }
 
-void AddECLinearShader(GpuShaderCreatorRcPtr & shaderCreator,
-                       GpuShaderText & st,
-                       ConstExposureContrastOpDataRcPtr & ec,
-                       const std::string & exposureName,
-                       const std::string & contrastName,
-                       const std::string & gammaName)
+void AddECLinearShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    ConstExposureContrastOpDataRcPtr & ec,
+    const std::string & exposureName,
+    const std::string & contrastName,
+    const std::string & gammaName)
 {
     // clang-format off
 
@@ -128,12 +132,13 @@ void AddECLinearShader(GpuShaderCreatorRcPtr & shaderCreator,
     // clang-format on
 }
 
-void AddECLinearRevShader(GpuShaderCreatorRcPtr & shaderCreator,
-                          GpuShaderText & st,
-                          ConstExposureContrastOpDataRcPtr & ec,
-                          const std::string & exposureName,
-                          const std::string & contrastName,
-                          const std::string & gammaName)
+void AddECLinearRevShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    ConstExposureContrastOpDataRcPtr & ec,
+    const std::string & exposureName,
+    const std::string & contrastName,
+    const std::string & gammaName)
 {
     // clang-format off
 
@@ -167,12 +172,13 @@ void AddECLinearRevShader(GpuShaderCreatorRcPtr & shaderCreator,
     // clang-format on
 }
 
-void AddECVideoShader(GpuShaderCreatorRcPtr & shaderCreator,
-                      GpuShaderText & st,
-                      ConstExposureContrastOpDataRcPtr & ec,
-                      const std::string & exposureName,
-                      const std::string & contrastName,
-                      const std::string & gammaName)
+void AddECVideoShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    ConstExposureContrastOpDataRcPtr & ec,
+    const std::string & exposureName,
+    const std::string & contrastName,
+    const std::string & gammaName)
 {
     // clang-format off
 
@@ -205,12 +211,13 @@ void AddECVideoShader(GpuShaderCreatorRcPtr & shaderCreator,
     // clang-format on
 }
 
-void AddECVideoRevShader(GpuShaderCreatorRcPtr & shaderCreator,
-                         GpuShaderText & st,
-                         ConstExposureContrastOpDataRcPtr & ec,
-                         const std::string & exposureName,
-                         const std::string & contrastName,
-                         const std::string & gammaName)
+void AddECVideoRevShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    ConstExposureContrastOpDataRcPtr & ec,
+    const std::string & exposureName,
+    const std::string & contrastName,
+    const std::string & gammaName)
 {
     // clang-format off
 
@@ -245,12 +252,13 @@ void AddECVideoRevShader(GpuShaderCreatorRcPtr & shaderCreator,
     // clang-format on
 }
 
-void AddECLogarithmicShader(GpuShaderCreatorRcPtr & shaderCreator,
-                            GpuShaderText & st,
-                            ConstExposureContrastOpDataRcPtr & ec,
-                            const std::string & exposureName,
-                            const std::string & contrastName,
-                            const std::string & gammaName)
+void AddECLogarithmicShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    ConstExposureContrastOpDataRcPtr & ec,
+    const std::string & exposureName,
+    const std::string & contrastName,
+    const std::string & gammaName)
 {
     // clang-format off
 
@@ -272,12 +280,13 @@ void AddECLogarithmicShader(GpuShaderCreatorRcPtr & shaderCreator,
     // clang-format on
 }
 
-void AddECLogarithmicRevShader(GpuShaderCreatorRcPtr & shaderCreator,
-                               GpuShaderText & st,
-                               ConstExposureContrastOpDataRcPtr & ec,
-                               const std::string & exposureName,
-                               const std::string & contrastName,
-                               const std::string & gammaName)
+void AddECLogarithmicRevShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    ConstExposureContrastOpDataRcPtr & ec,
+    const std::string & exposureName,
+    const std::string & contrastName,
+    const std::string & gammaName)
 {
     // clang-format off
 
@@ -299,11 +308,11 @@ void AddECLogarithmicRevShader(GpuShaderCreatorRcPtr & shaderCreator,
     // clang-format on
 }
 
+} // namespace
 
-}
-
-void GetExposureContrastGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
-                                         ConstExposureContrastOpDataRcPtr & ec)
+void GetExposureContrastGPUShaderProgram(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstExposureContrastOpDataRcPtr & ec)
 {
     std::string exposureName;
     std::string contrastName;
@@ -324,31 +333,28 @@ void GetExposureContrastGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
     // clang-format on
 
-    AddProperties(shaderCreator, st, ec,
-                  exposureName,
-                  contrastName,
-                  gammaName);
+    AddProperties(shaderCreator, st, ec, exposureName, contrastName, gammaName);
 
     switch (ec->getStyle())
     {
-    case ExposureContrastOpData::STYLE_LINEAR:
-        AddECLinearShader(shaderCreator, st, ec, exposureName, contrastName, gammaName);
-        break;
-    case ExposureContrastOpData::STYLE_LINEAR_REV:
-        AddECLinearRevShader(shaderCreator, st, ec, exposureName, contrastName, gammaName);
-        break;
-    case ExposureContrastOpData::STYLE_VIDEO:
-        AddECVideoShader(shaderCreator, st, ec, exposureName, contrastName, gammaName);
-        break;
-    case ExposureContrastOpData::STYLE_VIDEO_REV:
-        AddECVideoRevShader(shaderCreator, st, ec, exposureName, contrastName, gammaName);
-        break;
-    case ExposureContrastOpData::STYLE_LOGARITHMIC:
-        AddECLogarithmicShader(shaderCreator, st, ec, exposureName, contrastName, gammaName);
-        break;
-    case ExposureContrastOpData::STYLE_LOGARITHMIC_REV:
-        AddECLogarithmicRevShader(shaderCreator, st, ec, exposureName, contrastName, gammaName);
-        break;
+        case ExposureContrastOpData::STYLE_LINEAR:
+            AddECLinearShader(shaderCreator, st, ec, exposureName, contrastName, gammaName);
+            break;
+        case ExposureContrastOpData::STYLE_LINEAR_REV:
+            AddECLinearRevShader(shaderCreator, st, ec, exposureName, contrastName, gammaName);
+            break;
+        case ExposureContrastOpData::STYLE_VIDEO:
+            AddECVideoShader(shaderCreator, st, ec, exposureName, contrastName, gammaName);
+            break;
+        case ExposureContrastOpData::STYLE_VIDEO_REV:
+            AddECVideoRevShader(shaderCreator, st, ec, exposureName, contrastName, gammaName);
+            break;
+        case ExposureContrastOpData::STYLE_LOGARITHMIC:
+            AddECLogarithmicShader(shaderCreator, st, ec, exposureName, contrastName, gammaName);
+            break;
+        case ExposureContrastOpData::STYLE_LOGARITHMIC_REV:
+            AddECLogarithmicRevShader(shaderCreator, st, ec, exposureName, contrastName, gammaName);
+            break;
     }
 
     st.dedent();

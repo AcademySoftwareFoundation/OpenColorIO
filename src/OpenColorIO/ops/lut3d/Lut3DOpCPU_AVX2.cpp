@@ -11,25 +11,33 @@
 
 namespace OCIO_NAMESPACE
 {
-namespace {
+namespace
+{
 
-struct Lut3DContextAVX2 {
-    const float *lut;
+struct Lut3DContextAVX2
+{
+    const float * lut;
     __m256 lutmax;
     __m256 lutsize;
     __m256 lutsize2;
 };
 
-struct rgbavec_avx2 {
+struct rgbavec_avx2
+{
     __m256 r, g, b, a;
 };
 
-#define gather_rgb_avx2(src, idx)                               \
-    sample_r = _mm256_i32gather_ps(src+0, idx, 4);              \
-    sample_g = _mm256_i32gather_ps(src+1, idx, 4);              \
-    sample_b = _mm256_i32gather_ps(src+2, idx, 4)
+#define gather_rgb_avx2(src, idx)                                                                  \
+    sample_r = _mm256_i32gather_ps(src + 0, idx, 4);                                               \
+    sample_g = _mm256_i32gather_ps(src + 1, idx, 4);                                               \
+    sample_b = _mm256_i32gather_ps(src + 2, idx, 4)
 
-static inline rgbavec_avx2 interp_tetrahedral_avx2(const Lut3DContextAVX2 &ctx, __m256& r, __m256& g, __m256& b, __m256& a)
+static inline rgbavec_avx2 interp_tetrahedral_avx2(
+    const Lut3DContextAVX2 & ctx,
+    __m256 & r,
+    __m256 & g,
+    __m256 & b,
+    __m256 & a)
 {
     __m256 x0, x1, x2;
     __m256 cxxxa;
@@ -43,8 +51,8 @@ static inline rgbavec_avx2 interp_tetrahedral_avx2(const Lut3DContextAVX2 &ctx, 
     __m256 lutsize  = ctx.lutsize;
     __m256 lutsize2 = ctx.lutsize2;
 
-    __m256 one_f    = _mm256_set1_ps(1.0f);
-    __m256 four_f  = _mm256_set1_ps(4.0f);
+    __m256 one_f  = _mm256_set1_ps(1.0f);
+    __m256 four_f = _mm256_set1_ps(4.0f);
 
     __m256 prev_r = _mm256_floor_ps(r);
     __m256 prev_g = _mm256_floor_ps(g);
@@ -72,9 +80,9 @@ static inline rgbavec_avx2 interp_tetrahedral_avx2(const Lut3DContextAVX2 &ctx, 
     // This is the tetrahedral blend equation
     // red = (1-x0) * c000.r + (x0-x1) * cxxxa.r + (x1-x2) * cxxxb.r + x2 * c111.r;
     // The x values are the rgb delta values sorted, x0 >= x1 >= x2
-    // c### are samples from the lut, which are indices made with prev_(r,g,b) and next_(r,g,b) values
-    // 0 = use prev, 1 = use next
-    // c### = (prev_r or next_r) * (lutsize * lutsize) + (prev_g or next_g) * lutsize + (prev_b or next_b)
+    // c### are samples from the lut, which are indices made with prev_(r,g,b) and next_(r,g,b)
+    // values 0 = use prev, 1 = use next c### = (prev_r or next_r) * (lutsize * lutsize) + (prev_g
+    // or next_g) * lutsize + (prev_b or next_b)
 
     // cxxxa
     // always uses 1 next and 2 prev and next is largest delta
@@ -95,27 +103,27 @@ static inline rgbavec_avx2 interp_tetrahedral_avx2(const Lut3DContextAVX2 &ctx, 
     __m256 gt_b = _mm256_cmp_ps(d_b, d_r, _CMP_GT_OQ); // b>r
 
     // r> !b>r && r>g
-    mask = _mm256_andnot_ps(gt_b, gt_r);
+    mask  = _mm256_andnot_ps(gt_b, gt_r);
     cxxxa = _mm256_blendv_ps(prev_r, next_r, mask);
 
     // r< !r>g && b>r
-    mask = _mm256_andnot_ps(gt_r, gt_b);
+    mask  = _mm256_andnot_ps(gt_r, gt_b);
     cxxxb = _mm256_blendv_ps(next_r, prev_r, mask);
 
     // g> !r>g && g>b
-    mask = _mm256_andnot_ps(gt_r, gt_g);
+    mask  = _mm256_andnot_ps(gt_r, gt_g);
     cxxxa = _mm256_add_ps(cxxxa, _mm256_blendv_ps(prev_g, next_g, mask));
 
     // g< !g>b && r>g
-    mask = _mm256_andnot_ps(gt_g, gt_r);
+    mask  = _mm256_andnot_ps(gt_g, gt_r);
     cxxxb = _mm256_add_ps(cxxxb, _mm256_blendv_ps(next_g, prev_g, mask));
 
     // b> !g>b && b>r
-    mask = _mm256_andnot_ps(gt_g, gt_b);
+    mask  = _mm256_andnot_ps(gt_g, gt_b);
     cxxxa = _mm256_add_ps(cxxxa, _mm256_blendv_ps(prev_b, next_b, mask));
 
     // b< !b>r && g>b
-    mask = _mm256_andnot_ps(gt_b, gt_g);
+    mask  = _mm256_andnot_ps(gt_b, gt_g);
     cxxxb = _mm256_add_ps(cxxxb, _mm256_blendv_ps(next_b, prev_b, mask));
 
     __m256 c000 = _mm256_add_ps(_mm256_add_ps(prev_r, prev_g), prev_b);
@@ -148,7 +156,7 @@ static inline rgbavec_avx2 interp_tetrahedral_avx2(const Lut3DContextAVX2 &ctx, 
     gather_rgb_avx2(ctx.lut, cxxxa_idx);
 
     // (x0-x1) * cxxxa
-    v = _mm256_sub_ps(x0, x1);
+    v        = _mm256_sub_ps(x0, x1);
     result.r = _mm256_fmadd_ps(v, sample_r, result.r);
     result.g = _mm256_fmadd_ps(v, sample_g, result.g);
     result.b = _mm256_fmadd_ps(v, sample_b, result.b);
@@ -156,7 +164,7 @@ static inline rgbavec_avx2 interp_tetrahedral_avx2(const Lut3DContextAVX2 &ctx, 
     gather_rgb_avx2(ctx.lut, cxxxb_idx);
 
     // (x1-x2) * cxxxb
-    v = _mm256_sub_ps(x1, x2);
+    v        = _mm256_sub_ps(x1, x2);
     result.r = _mm256_fmadd_ps(v, sample_r, result.r);
     result.g = _mm256_fmadd_ps(v, sample_g, result.g);
     result.b = _mm256_fmadd_ps(v, sample_b, result.b);
@@ -173,22 +181,27 @@ static inline rgbavec_avx2 interp_tetrahedral_avx2(const Lut3DContextAVX2 &ctx, 
     return result;
 }
 
-template<BitDepth inBD, BitDepth outBD>
-inline void applyTetrahedralAVX2Func(const float *lut3d, int dim, const void *inImg, void *outImg, int numPixels)
+template <BitDepth inBD, BitDepth outBD>
+inline void applyTetrahedralAVX2Func(
+    const float * lut3d,
+    int dim,
+    const void * inImg,
+    void * outImg,
+    int numPixels)
 {
     typedef typename BitDepthInfo<inBD>::Type InType;
     typedef typename BitDepthInfo<outBD>::Type OutType;
 
     const InType * src = (InType *)inImg;
-    OutType * dst = (OutType *)outImg;
-    __m256 r,g,b,a;
+    OutType * dst      = (OutType *)outImg;
+    __m256 r, g, b, a;
     rgbavec_avx2 c;
 
     Lut3DContextAVX2 ctx;
 
     float lutmax = (float)dim - 1;
-    __m256 scale   = _mm256_set1_ps(lutmax);
-    __m256 zero    = _mm256_setzero_ps();
+    __m256 scale = _mm256_set1_ps(lutmax);
+    __m256 zero  = _mm256_setzero_ps();
 
     ctx.lut      = lut3d;
     ctx.lutmax   = _mm256_set1_ps(lutmax);
@@ -196,9 +209,9 @@ inline void applyTetrahedralAVX2Func(const float *lut3d, int dim, const void *in
     ctx.lutsize2 = _mm256_set1_ps((float)dim * dim * 4);
 
     int pixel_count = numPixels / 8 * 8;
-    int remainder = numPixels - pixel_count;
+    int remainder   = numPixels - pixel_count;
 
-    for (int i = 0; i < pixel_count; i += 8 )
+    for (int i = 0; i < pixel_count; i += 8)
     {
         AVX2RGBAPack<inBD>::Load(src, r, g, b, a);
 
@@ -223,19 +236,19 @@ inline void applyTetrahedralAVX2Func(const float *lut3d, int dim, const void *in
         dst += 32;
     }
 
-     // handler leftovers pixels
+    // handler leftovers pixels
     if (remainder)
     {
         InType in_buf[32] = {};
         OutType out_buf[32];
 
-        for (int i = 0; i < remainder*4; i+=4)
+        for (int i = 0; i < remainder * 4; i += 4)
         {
             in_buf[i + 0] = src[0];
             in_buf[i + 1] = src[1];
             in_buf[i + 2] = src[2];
             in_buf[i + 3] = src[3];
-            src+=4;
+            src += 4;
         }
 
         AVX2RGBAPack<inBD>::Load(in_buf, r, g, b, a);
@@ -257,24 +270,29 @@ inline void applyTetrahedralAVX2Func(const float *lut3d, int dim, const void *in
 
         AVX2RGBAPack<outBD>::Store(out_buf, c.r, c.g, c.b, c.a);
 
-        for (int i = 0; i < remainder*4; i+=4)
+        for (int i = 0; i < remainder * 4; i += 4)
         {
             dst[0] = out_buf[i + 0];
             dst[1] = out_buf[i + 1];
             dst[2] = out_buf[i + 2];
             dst[3] = out_buf[i + 3];
-            dst+=4;
+            dst += 4;
         }
     }
 }
 
 } // anonymous namespace
 
-void applyTetrahedralAVX2(const float *lut3d, int dim, const float *src, float *dst, int total_pixel_count)
+void applyTetrahedralAVX2(
+    const float * lut3d,
+    int dim,
+    const float * src,
+    float * dst,
+    int total_pixel_count)
 {
     applyTetrahedralAVX2Func<BIT_DEPTH_F32, BIT_DEPTH_F32>(lut3d, dim, src, dst, total_pixel_count);
 }
 
-} // OCIO_NAMESPACE
+} // namespace OCIO_NAMESPACE
 
 #endif // OCIO_USE_AVX2

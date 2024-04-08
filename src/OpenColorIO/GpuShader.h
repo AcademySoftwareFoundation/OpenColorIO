@@ -4,9 +4,7 @@
 #ifndef INCLUDED_OCIO_GPU_SHADER_H
 #define INCLUDED_OCIO_GPU_SHADER_H
 
-
 #include <OpenColorIO/OpenColorIO.h>
-
 
 namespace OCIO_NAMESPACE
 {
@@ -39,56 +37,63 @@ public:
     bool addUniform(const char * name, const DoubleGetter & getDouble) override;
     bool addUniform(const char * name, const BoolGetter & getBool) override;
     bool addUniform(const char * name, const Float3Getter & getter) override;
-    bool addUniform(const char * name,
-                    const SizeGetter & getSize,
-                    const VectorFloatGetter & getVectorFloat) override;
-    bool addUniform(const char * name,
-                    const SizeGetter & getSize,
-                    const VectorIntGetter & getVectorInt) override;
+    bool addUniform(
+        const char * name,
+        const SizeGetter & getSize,
+        const VectorFloatGetter & getVectorFloat) override;
+    bool addUniform(
+        const char * name,
+        const SizeGetter & getSize,
+        const VectorIntGetter & getVectorInt) override;
 
     // Accessors to the 1D & 2D textures built from 1D LUT
     //
     unsigned getNumTextures() const noexcept override;
-    void addTexture(const char * textureName,
-                    const char * samplerName,
-                    unsigned width, unsigned height,
-                    TextureType channel,
-                    TextureDimensions dimensions,
-                    Interpolation interpolation,
-                    const float * values) override;
-    void getTexture(unsigned index,
-                    const char *& textureName,
-                    const char *& samplerName,
-                    unsigned & width, unsigned & height,
-                    TextureType & channel,
-                    TextureDimensions & dimensions,
-                    Interpolation & interpolation) const override;
+    void addTexture(
+        const char * textureName,
+        const char * samplerName,
+        unsigned width,
+        unsigned height,
+        TextureType channel,
+        TextureDimensions dimensions,
+        Interpolation interpolation,
+        const float * values) override;
+    void getTexture(
+        unsigned index,
+        const char *& textureName,
+        const char *& samplerName,
+        unsigned & width,
+        unsigned & height,
+        TextureType & channel,
+        TextureDimensions & dimensions,
+        Interpolation & interpolation) const override;
     void getTextureValues(unsigned index, const float *& values) const override;
 
     // Accessors to the 3D textures built from 3D LUT
     //
     unsigned getNum3DTextures() const noexcept override;
-    void add3DTexture(const char * textureName,
-                      const char * samplerName,
-                      unsigned edgelen,
-                      Interpolation interpolation,
-                      const float * values) override;
-    void get3DTexture(unsigned index,
-                      const char *& textureName,
-                      const char *& samplerName,
-                      unsigned & edgelen,
-                      Interpolation & interpolation) const override;
+    void add3DTexture(
+        const char * textureName,
+        const char * samplerName,
+        unsigned edgelen,
+        Interpolation interpolation,
+        const float * values) override;
+    void get3DTexture(
+        unsigned index,
+        const char *& textureName,
+        const char *& samplerName,
+        unsigned & edgelen,
+        Interpolation & interpolation) const override;
     void get3DTextureValues(unsigned index, const float *& value) const override;
 
 private:
-
     GenericGpuShaderDesc();
     virtual ~GenericGpuShaderDesc();
 
-    GenericGpuShaderDesc(const GenericGpuShaderDesc &) = delete;
-    GenericGpuShaderDesc& operator= (const GenericGpuShaderDesc &) = delete;
+    GenericGpuShaderDesc(const GenericGpuShaderDesc &)             = delete;
+    GenericGpuShaderDesc & operator=(const GenericGpuShaderDesc &) = delete;
 
-    static void Deleter(GenericGpuShaderDesc* c);
+    static void Deleter(GenericGpuShaderDesc * c);
 
     class ImplGeneric;
     ImplGeneric * m_implGeneric;

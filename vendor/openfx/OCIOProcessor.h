@@ -11,7 +11,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
-class OCIOProcessor : public OFX::ImageProcessor 
+class OCIOProcessor : public OFX::ImageProcessor
 {
 protected:
     OFX::Image * _srcImg = nullptr;
@@ -21,19 +21,20 @@ protected:
 public:
     OCIOProcessor(OFX::ImageEffect & instance)
         : OFX::ImageProcessor(instance)
-    {}
+    {
+    }
 
     /* Set the src image */
     void setSrcImg(OFX::Image * img);
 
     /* Set the processor's transform */
-    void setTransform(OCIO::ContextRcPtr context,
-                      OCIO::ConstTransformRcPtr transform,
-                      OCIO::TransformDirection direction);
+    void setTransform(
+        OCIO::ContextRcPtr context,
+        OCIO::ConstTransformRcPtr transform,
+        OCIO::TransformDirection direction);
 
     /* Process image on multiple threads */
     void multiThreadProcessImages(OfxRectI procWindow) override;
-
 };
 
 #endif // INCLUDED_OFX_OCIOPROCESSOR_H

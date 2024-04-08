@@ -2,8 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <cstdlib>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <set>
 #include <vector>
 
@@ -14,21 +14,21 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "apputils/logGuard.h"
 #include "utils/StringUtils.h"
 
+const char * DESC_STRING
+    = "\n\n"
+      "Ociocheck is useful to validate that the specified OCIO configuration\n"
+      "is valid, and that all the color transforms are defined and loadable.\n"
+      "For example, it is possible that the configuration may reference\n"
+      "lookup tables that do not exist and ociocheck will find these cases.\n"
+      "Unlike the config validate method, ociocheck parses all required LUTs.\n"
+      "All display/view pairs, color spaces, and named transforms are checked,\n"
+      "regardless of whether they are active or inactive.\n\n"
+      "Ociocheck can also be used to clean up formatting on an existing profile\n"
+      "that has been manually edited, using the '-o' option.\n";
 
-const char * DESC_STRING = "\n\n"
-"Ociocheck is useful to validate that the specified OCIO configuration\n"
-"is valid, and that all the color transforms are defined and loadable.\n"
-"For example, it is possible that the configuration may reference\n"
-"lookup tables that do not exist and ociocheck will find these cases.\n"
-"Unlike the config validate method, ociocheck parses all required LUTs.\n"
-"All display/view pairs, color spaces, and named transforms are checked,\n"
-"regardless of whether they are active or inactive.\n\n"
-"Ociocheck can also be used to clean up formatting on an existing profile\n"
-"that has been manually edited, using the '-o' option.\n";
-
-int main(int argc, const char **argv)
+int main(int argc, const char ** argv)
 {
-    bool help = false;
+    bool help      = false;
     int errorcount = 0;
     std::string inputconfig;
     std::string outputconfig;
@@ -69,13 +69,13 @@ int main(int argc, const char **argv)
         std::cout << "OpenColorIO Library Version: " << OCIO::GetVersion() << std::endl;
         std::cout << "OpenColorIO Library VersionHex: " << OCIO::GetVersionHex() << std::endl;
 
-        if(!inputconfig.empty())
+        if (!inputconfig.empty())
         {
             std::cout << std::endl;
             std::cout << "Loading " << inputconfig << std::endl;
             srcConfig = OCIO::Config::CreateFromFile(inputconfig.c_str());
         }
-        else if(OCIO::GetEnvVariable("OCIO"))
+        else if (OCIO::GetEnvVariable("OCIO"))
         {
             std::cout << std::endl;
             std::cout << "Loading $OCIO " << OCIO::GetEnvVariable("OCIO") << std::endl;
@@ -86,7 +86,7 @@ int main(int argc, const char **argv)
             std::cout << std::endl;
             std::cout << "ERROR: You must specify an input OCIO configuration ";
             std::cout << "(either with --iconfig or $OCIO).\n";
-            ap.usage ();
+            ap.usage();
             std::cout << DESC_STRING;
             return 1;
         }
@@ -105,8 +105,7 @@ int main(int argc, const char **argv)
             for (int idx = 0; idx < config->getNumEnvironmentVars(); ++idx)
             {
                 const char * name = config->getEnvironmentVarNameByIndex(idx);
-                std::cout << "  " << name
-                          << ": " << config->getEnvironmentVarDefault(name)
+                std::cout << "  " << name << ": " << config->getEnvironmentVarDefault(name)
                           << std::endl;
             }
         }
@@ -135,7 +134,8 @@ int main(int argc, const char **argv)
         {
             std::cout << std::endl;
             std::cout << "Default Display: " << config->getDefaultDisplay() << std::endl;
-            std::cout << "Default View: " << config->getDefaultView(config->getDefaultDisplay()) << std::endl;
+            std::cout << "Default View: " << config->getDefaultView(config->getDefaultDisplay())
+                      << std::endl;
 
             // It's important that the getProcessor call below always loads the transforms
             // involved in each display/view pair.  However, if the src color space is a
@@ -145,7 +145,7 @@ int main(int argc, const char **argv)
             // src color space that will definitely allow the Processor to be created.
 
             OCIO::ConfigRcPtr displayTestConfig = config->createEditableCopy();
-            auto cs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
+            auto cs                         = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
             const std::string srcColorSpace = "ocioCheckTotallyUniqueColorSpaceName";
             cs->setName(srcColorSpace.c_str());
             auto ff = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GLOW_10);
@@ -167,21 +167,19 @@ int main(int argc, const char **argv)
                     int numViews = config->getNumViews(OCIO::VIEW_SHARED, displayName);
                     for (int idxView = 0; idxView < numViews; ++idxView)
                     {
-                        const char * viewName = config->getView(OCIO::VIEW_SHARED, 
-                                                                displayName, 
-                                                                idxView);
+                        const char * viewName
+                            = config->getView(OCIO::VIEW_SHARED, displayName, idxView);
                         try
                         {
-                            OCIO::ConstProcessorRcPtr process 
-                                = displayTestConfig->getProcessor(srcColorSpace.c_str(), 
-                                                                  displayName,
-                                                                  viewName,
-                                                                  OCIO::TRANSFORM_DIR_FORWARD);
+                            OCIO::ConstProcessorRcPtr process = displayTestConfig->getProcessor(
+                                srcColorSpace.c_str(),
+                                displayName,
+                                viewName,
+                                OCIO::TRANSFORM_DIR_FORWARD);
 
-                            std::cout << "(" << displayName << ", " << viewName << ")"
-                                      << std::endl;
+                            std::cout << "(" << displayName << ", " << viewName << ")" << std::endl;
                         }
-                        catch(OCIO::Exception & exception)
+                        catch (OCIO::Exception & exception)
                         {
                             std::cout << "ERROR: " << exception.what() << std::endl;
                             errorcount += 1;
@@ -192,20 +190,19 @@ int main(int argc, const char **argv)
                     numViews = config->getNumViews(OCIO::VIEW_DISPLAY_DEFINED, displayName);
                     for (int idxView = 0; idxView < numViews; ++idxView)
                     {
-                        const char * viewName = config->getView(OCIO::VIEW_DISPLAY_DEFINED, 
-                                                                displayName, idxView);
+                        const char * viewName
+                            = config->getView(OCIO::VIEW_DISPLAY_DEFINED, displayName, idxView);
                         try
                         {
-                            OCIO::ConstProcessorRcPtr process 
-                                = displayTestConfig->getProcessor(srcColorSpace.c_str(), 
-                                                                  displayName,
-                                                                  viewName,
-                                                                  OCIO::TRANSFORM_DIR_FORWARD);
+                            OCIO::ConstProcessorRcPtr process = displayTestConfig->getProcessor(
+                                srcColorSpace.c_str(),
+                                displayName,
+                                viewName,
+                                OCIO::TRANSFORM_DIR_FORWARD);
 
-                            std::cout << "(" << displayName << ", " << viewName << ")"
-                                      << std::endl;
+                            std::cout << "(" << displayName << ", " << viewName << ")" << std::endl;
                         }
-                        catch(OCIO::Exception & exception)
+                        catch (OCIO::Exception & exception)
                         {
                             std::cout << "ERROR: " << exception.what() << std::endl;
                             errorcount += 1;
@@ -220,30 +217,29 @@ int main(int argc, const char **argv)
             std::cout << "** Roles **" << std::endl;
 
             // All roles defined in OpenColorTypes.h.
-            std::set<std::string> allRolesSet = { 
-                                                    OCIO::ROLE_DEFAULT, 
-                                                    OCIO::ROLE_SCENE_LINEAR,
-                                                    OCIO::ROLE_DATA, 
-                                                    OCIO::ROLE_REFERENCE,
-                                                    OCIO::ROLE_COMPOSITING_LOG, 
-                                                    OCIO::ROLE_COLOR_TIMING,
-                                                    OCIO::ROLE_COLOR_PICKING,
-                                                    OCIO::ROLE_TEXTURE_PAINT, 
-                                                    OCIO::ROLE_MATTE_PAINT,
-                                                    OCIO::ROLE_RENDERING,
-                                                    OCIO::ROLE_INTERCHANGE_SCENE,
-                                                    OCIO::ROLE_INTERCHANGE_DISPLAY
-                                                };
+            std::set<std::string> allRolesSet
+                = {OCIO::ROLE_DEFAULT,
+                   OCIO::ROLE_SCENE_LINEAR,
+                   OCIO::ROLE_DATA,
+                   OCIO::ROLE_REFERENCE,
+                   OCIO::ROLE_COMPOSITING_LOG,
+                   OCIO::ROLE_COLOR_TIMING,
+                   OCIO::ROLE_COLOR_PICKING,
+                   OCIO::ROLE_TEXTURE_PAINT,
+                   OCIO::ROLE_MATTE_PAINT,
+                   OCIO::ROLE_RENDERING,
+                   OCIO::ROLE_INTERCHANGE_SCENE,
+                   OCIO::ROLE_INTERCHANGE_DISPLAY};
 
             // Print a list of the config's roles, appending ": user" if they are not one
             // of the "standard" roles defined in the library.
-            for(int i=0; i<config->getNumRoles(); ++i)
+            for (int i = 0; i < config->getNumRoles(); ++i)
             {
-                const char * role = config->getRoleName(i);
+                const char * role             = config->getRoleName(i);
                 OCIO::ConstColorSpaceRcPtr cs = config->getColorSpace(role);
-                if(cs)
+                if (cs)
                 {
-                    if(allRolesSet.find(role) != allRolesSet.end())
+                    if (allRolesSet.find(role) != allRolesSet.end())
                     {
                         std::cout << cs->getName() << " (" << role << ")" << std::endl;
                     }
@@ -270,15 +266,15 @@ int main(int argc, const char **argv)
                 OCIO::ROLE_COMPOSITING_LOG,     // LogConvert plug-in
                 OCIO::ROLE_INTERCHANGE_SCENE,   // Used by the library
                 OCIO::ROLE_INTERCHANGE_DISPLAY, // Used by the library
-                };
+            };
 
             // Print a warning for any essential roles that are missing.
             // (Subsequent sections may raise an error.)
-            for(size_t i=0;i<essentialRoles.size(); ++i)
+            for (size_t i = 0; i < essentialRoles.size(); ++i)
             {
-                const std::string role = essentialRoles[i];
+                const std::string role        = essentialRoles[i];
                 OCIO::ConstColorSpaceRcPtr cs = config->getColorSpace(role.c_str());
-                if(!cs)
+                if (!cs)
                 {
                     std::cout << "WARNING: NOT DEFINED (" << role << ")" << std::endl;
                 }
@@ -290,30 +286,32 @@ int main(int argc, const char **argv)
             std::cout << "** ColorSpaces **" << std::endl;
 
             const int numCS = config->getNumColorSpaces(
-                OCIO::SEARCH_REFERENCE_SPACE_ALL,   // Iterate over scene & display color spaces.
-                OCIO::COLORSPACE_ALL);              // Iterate over active & inactive color spaces.
+                OCIO::SEARCH_REFERENCE_SPACE_ALL, // Iterate over scene & display color spaces.
+                OCIO::COLORSPACE_ALL);            // Iterate over active & inactive color spaces.
 
-            for(int i=0; i<numCS; ++i)
+            for (int i = 0; i < numCS; ++i)
             {
-                OCIO::ConstColorSpaceRcPtr cs = config->getColorSpace(config->getColorSpaceNameByIndex(
-                    OCIO::SEARCH_REFERENCE_SPACE_ALL,
-                    OCIO::COLORSPACE_ALL,
-                    i));
+                OCIO::ConstColorSpaceRcPtr cs
+                    = config->getColorSpace(config->getColorSpaceNameByIndex(
+                        OCIO::SEARCH_REFERENCE_SPACE_ALL,
+                        OCIO::COLORSPACE_ALL,
+                        i));
 
                 // Try to load the transform for the to_ref direction -- this will load any LUTs.
                 bool toRefOK = true;
                 std::string toRefErrorText;
                 try
                 {
-                    OCIO::ConstTransformRcPtr t = cs->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE);
-                    if(t)
+                    OCIO::ConstTransformRcPtr t
+                        = cs->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE);
+                    if (t)
                     {
                         OCIO::ConstProcessorRcPtr p = config->getProcessor(t);
                     }
                 }
-                catch(OCIO::Exception & exception)
+                catch (OCIO::Exception & exception)
                 {
-                    toRefOK = false;
+                    toRefOK        = false;
                     toRefErrorText = exception.what();
                 }
 
@@ -322,28 +320,29 @@ int main(int argc, const char **argv)
                 std::string fromRefErrorText;
                 try
                 {
-                    OCIO::ConstTransformRcPtr t = cs->getTransform(OCIO::COLORSPACE_DIR_FROM_REFERENCE);
-                    if(t)
+                    OCIO::ConstTransformRcPtr t
+                        = cs->getTransform(OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+                    if (t)
                     {
                         OCIO::ConstProcessorRcPtr p = config->getProcessor(t);
                     }
                 }
-                catch(OCIO::Exception & exception)
+                catch (OCIO::Exception & exception)
                 {
-                    fromRefOK = false;
+                    fromRefOK        = false;
                     fromRefErrorText = exception.what();
                 }
 
-                if(!toRefOK || !fromRefOK)
+                if (!toRefOK || !fromRefOK)
                 {
                     // There was a problem with one of the color space's transforms.
                     std::cout << cs->getName();
                     std::cout << " -- error" << std::endl;
-                    if(!toRefOK)
+                    if (!toRefOK)
                     {
                         std::cout << "\t" << toRefErrorText << std::endl;
                     }
-                    if(!fromRefOK)
+                    if (!fromRefOK)
                     {
                         std::cout << "\t" << fromRefErrorText << std::endl;
                     }
@@ -363,12 +362,12 @@ int main(int argc, const char **argv)
 
             // Iterate over active & inactive named transforms.
             const int numNT = config->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_ALL);
-            if(numNT==0)
+            if (numNT == 0)
             {
                 std::cout << "no named transforms defined" << std::endl;
             }
 
-            for(int i = 0; i<numNT; ++i)
+            for (int i = 0; i < numNT; ++i)
             {
                 OCIO::ConstNamedTransformRcPtr nt = config->getNamedTransform(
                     config->getNamedTransformNameByIndex(OCIO::NAMEDTRANSFORM_ALL, i));
@@ -379,14 +378,14 @@ int main(int argc, const char **argv)
                 try
                 {
                     OCIO::ConstTransformRcPtr t = nt->getTransform(OCIO::TRANSFORM_DIR_FORWARD);
-                    if(t)
+                    if (t)
                     {
                         OCIO::ConstProcessorRcPtr p = config->getProcessor(t);
                     }
                 }
-                catch(OCIO::Exception & exception)
+                catch (OCIO::Exception & exception)
                 {
-                    fwdOK = false;
+                    fwdOK        = false;
                     fwdErrorText = exception.what();
                 }
 
@@ -396,27 +395,27 @@ int main(int argc, const char **argv)
                 try
                 {
                     OCIO::ConstTransformRcPtr t = nt->getTransform(OCIO::TRANSFORM_DIR_INVERSE);
-                    if(t)
+                    if (t)
                     {
                         OCIO::ConstProcessorRcPtr p = config->getProcessor(t);
                     }
                 }
-                catch(OCIO::Exception & exception)
+                catch (OCIO::Exception & exception)
                 {
-                    invOK = false;
+                    invOK        = false;
                     invErrorText = exception.what();
                 }
 
-                if(!fwdOK || !invOK)
+                if (!fwdOK || !invOK)
                 {
                     // There was a problem with one of the named transform's transforms.
                     std::cout << nt->getName();
                     std::cout << " -- error" << std::endl;
-                    if(!fwdOK)
+                    if (!fwdOK)
                     {
                         std::cout << "\t" << fwdErrorText << std::endl;
                     }
-                    if(!invOK)
+                    if (!invOK)
                     {
                         std::cout << "\t" << invErrorText << std::endl;
                     }
@@ -435,14 +434,14 @@ int main(int argc, const char **argv)
             std::cout << "** Looks **" << std::endl;
 
             const int numL = config->getNumLooks();
-            if(numL==0)
+            if (numL == 0)
             {
                 std::cout << "no looks defined" << std::endl;
             }
 
-            for(int i=0; i<numL; ++i)
+            for (int i = 0; i < numL; ++i)
             {
-                OCIO::ConstLookRcPtr look = config->getLook(config->getLookNameByIndex(i)); 
+                OCIO::ConstLookRcPtr look = config->getLook(config->getLookNameByIndex(i));
 
                 // Try to load the transform -- this will load any LUTs.
                 bool fwdOK = true;
@@ -450,14 +449,14 @@ int main(int argc, const char **argv)
                 try
                 {
                     OCIO::ConstTransformRcPtr t = look->getTransform();
-                    if(t)
+                    if (t)
                     {
                         OCIO::ConstProcessorRcPtr p = config->getProcessor(t);
                     }
                 }
-                catch(OCIO::Exception & exception)
+                catch (OCIO::Exception & exception)
                 {
-                    fwdOK = false;
+                    fwdOK        = false;
                     fwdErrorText = exception.what();
                 }
 
@@ -467,27 +466,27 @@ int main(int argc, const char **argv)
                 try
                 {
                     OCIO::ConstTransformRcPtr t = look->getInverseTransform();
-                    if(t)
+                    if (t)
                     {
                         OCIO::ConstProcessorRcPtr p = config->getProcessor(t);
                     }
                 }
-                catch(OCIO::Exception & exception)
+                catch (OCIO::Exception & exception)
                 {
-                    invOK = false;
+                    invOK        = false;
                     invErrorText = exception.what();
                 }
 
-                if(!fwdOK || !invOK)
+                if (!fwdOK || !invOK)
                 {
                     // There was a problem with one of the look transform's transforms.
                     std::cout << look->getName();
                     std::cout << " -- error" << std::endl;
-                    if(!fwdOK)
+                    if (!fwdOK)
                     {
                         std::cout << "\t" << fwdErrorText << std::endl;
                     }
-                    if(!invOK)
+                    if (!invOK)
                     {
                         std::cout << "\t" << invErrorText << std::endl;
                     }
@@ -512,8 +511,8 @@ int main(int argc, const char **argv)
 
             config->validate();
             std::cout << logGuard.output();
-            
-            cacheID = config->getCacheID();
+
+            cacheID      = config->getCacheID();
             isArchivable = config->isArchivable();
 
             // Passed if there are no Error level logs.
@@ -528,7 +527,7 @@ int main(int argc, const char **argv)
                 errorcount += 1;
             }
         }
-        catch(OCIO::Exception & exception)
+        catch (OCIO::Exception & exception)
         {
             std::cout << "ERROR:" << std::endl;
             errorcount += 1;
@@ -541,12 +540,12 @@ int main(int argc, const char **argv)
         std::cout << "CacheID: " << cacheID << std::endl;
         std::cout << "Archivable: " << (isArchivable ? "yes" : "no") << std::endl;
 
-        if(!outputconfig.empty())
+        if (!outputconfig.empty())
         {
             std::ofstream output;
             output.open(outputconfig.c_str());
 
-            if(!output.is_open())
+            if (!output.is_open())
             {
                 std::cout << "Error opening " << outputconfig << " for writing." << std::endl;
             }
@@ -558,22 +557,24 @@ int main(int argc, const char **argv)
             }
         }
     }
-    catch(OCIO::Exception & exception)
+    catch (OCIO::Exception & exception)
     {
         std::cout << "ERROR: " << exception.what() << std::endl;
         return 1;
-    } catch (std::exception& exception) {
+    }
+    catch (std::exception & exception)
+    {
         std::cout << "ERROR: " << exception.what() << "\n";
         return 1;
     }
-    catch(...)
+    catch (...)
     {
         std::cout << "Unknown error encountered." << std::endl;
         return 1;
     }
 
     std::cout << std::endl;
-    if(errorcount == 0)
+    if (errorcount == 0)
     {
         std::cout << "Tests complete." << std::endl << std::endl;
         return 0;

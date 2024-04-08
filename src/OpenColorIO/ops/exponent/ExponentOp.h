@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_EXPONENTOP_H
 #define INCLUDED_OCIO_EXPONENTOP_H
 
@@ -23,7 +22,7 @@ public:
     explicit ExponentOpData(const double * exp4);
     virtual ~ExponentOpData() {}
 
-    ExponentOpData & operator = (const ExponentOpData & rhs);
+    ExponentOpData & operator=(const ExponentOpData & rhs);
 
     virtual Type getType() const override { return ExponentType; }
 
@@ -41,13 +40,12 @@ public:
 // If the exponent is 1.0, this will return without clamping
 // Otherwise, will be clamped between [0.0, inf]
 
-void CreateExponentOp(OpRcPtrVec & ops,
-                        const double(&vec4)[4],
-                        TransformDirection direction);
+void CreateExponentOp(OpRcPtrVec & ops, const double (&vec4)[4], TransformDirection direction);
 
-void CreateExponentOp(OpRcPtrVec & ops,
-                        ExponentOpDataRcPtr & expData,
-                        TransformDirection direction);
+void CreateExponentOp(
+    OpRcPtrVec & ops,
+    ExponentOpDataRcPtr & expData,
+    TransformDirection direction);
 
 // Create a copy of the exponent transform in the op and append it to the GroupTransform.
 void CreateExponentTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op);

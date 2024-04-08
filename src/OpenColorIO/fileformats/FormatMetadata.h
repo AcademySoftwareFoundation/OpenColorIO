@@ -15,7 +15,6 @@
 namespace OCIO_NAMESPACE
 {
 
-
 // ROOT is simply a placeholder name  for the top-level element, since each
 // instance needs a name string.  (At the file level in CLF/CTF, the actual
 // name would be ProcessList.  At the op level it would be the process node
@@ -28,12 +27,12 @@ static constexpr char METADATA_ROOT[] = "ROOT";
 // -- a value string (e.g. "updated viewing LUT")
 // -- a list of attributes (name, value) string pairs (e.g. "version", "1.5")
 // -- and a list of child sub-elements, which are also FormatMetadataImpl objects.
-// 
+//
 // Root "ProcessList" metadata for CLF/CTF files may include attributes such as
 // "name" and "id" and sub - elements such as "Info", "Description",
 // "InputDescriptor", and "OutputDescriptor". This class is also used to hold
 // the metadata within individual ops in a CLF/CTF file, which similarly may
-// contain items such as name or id attributes and Description elements. 
+// contain items such as name or id attributes and Description elements.
 // (It does not hold the actual LUT or parameter values.)
 class FormatMetadataImpl : public FormatMetadata
 {
@@ -43,8 +42,7 @@ public:
     typedef std::vector<Attribute> Attributes;
 
     FormatMetadataImpl();
-    FormatMetadataImpl(const std::string & name,
-                       const std::string & value);
+    FormatMetadataImpl(const std::string & name, const std::string & value);
 
     FormatMetadataImpl(const FormatMetadataImpl & other);
     FormatMetadataImpl(const FormatMetadata & other);
@@ -110,10 +108,10 @@ protected:
     void validateElementName(const std::string & name) const;
 
 private:
-    std::string      m_name;       // The element name
-    std::string      m_value;      // The element value
-    Attributes       m_attributes; // The element's list of attributes
-    Elements         m_elements;   // The list of sub-elements
+    std::string m_name;      // The element name
+    std::string m_value;     // The element value
+    Attributes m_attributes; // The element's list of attributes
+    Elements m_elements;     // The list of sub-elements
 };
 
 } // namespace OCIO_NAMESPACE

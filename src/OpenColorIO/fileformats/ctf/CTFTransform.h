@@ -1,20 +1,17 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_FILEFORMATS_CTF_CTFTRANSFORM_H
 #define INCLUDED_OCIO_FILEFORMATS_CTF_CTFTRANSFORM_H
-
 
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "Op.h"
 #include "fileformats/FormatMetadata.h"
 #include "fileformats/xmlutils/XMLWriterUtils.h"
-#include "Op.h"
 #include "utils/StringUtils.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -23,8 +20,7 @@ class CTFVersion
 {
 public:
     // Will throw if versionString is not formatted like a version.
-    static void ReadVersion(const std::string & versionString,
-                            CTFVersion & versionOut);
+    static void ReadVersion(const std::string & versionString, CTFVersion & versionOut);
 
     CTFVersion()
         : m_major(0)
@@ -62,8 +58,7 @@ public:
 
     ~CTFVersion() {}
 
-    friend std::ostream & operator<< (std::ostream & stream,
-                                      const CTFVersion & rhs)
+    friend std::ostream & operator<<(std::ostream & stream, const CTFVersion & rhs)
     {
         stream << rhs.m_major;
         if (rhs.m_minor != 0 || rhs.m_revision != 0)
@@ -119,7 +114,6 @@ static const CTFVersion CTF_PROCESS_LIST_VERSION_2_1 = CTFVersion(2, 1);
 // and do not forget to update the following line.
 static const CTFVersion CTF_PROCESS_LIST_VERSION = CTF_PROCESS_LIST_VERSION_2_1;
 
-
 // Version 1.0 initial Autodesk version for InfoElt.
 #define CTF_INFO_ELEMENT_VERSION_1_0 1.0f
 
@@ -131,85 +125,34 @@ static const CTFVersion CTF_PROCESS_LIST_VERSION = CTF_PROCESS_LIST_VERSION_2_1;
 
 #define CTF_INFO_ELEMENT_VERSION CTF_INFO_ELEMENT_VERSION_2_0
 
-
 class CTFReaderTransform
 {
 public:
     CTFReaderTransform();
     CTFReaderTransform(const OpRcPtrVec & ops, const FormatMetadataImpl & metadata);
 
-    ~CTFReaderTransform()
-    {
-    }
+    ~CTFReaderTransform() {}
 
-    const std::string & getID() const
-    {
-        return m_id;
-    }
-    void setID(const char * id)
-    {
-        m_id = id;
-    }
-    const std::string & getName() const
-    {
-        return m_name;
-    }
-    void setName(const char * name)
-    {
-        m_name = name;
-    }
-    const std::string & getInverseOfId() const
-    {
-        return m_inverseOfId;
-    }
-    void setInverseOfId(const char * id)
-    {
-        m_inverseOfId = id;
-    }
-    FormatMetadataImpl & getInfoMetadata()
-    {
-        return m_infoMetadata;
-    }
-    const FormatMetadataImpl & getInfoMetadata() const
-    {
-        return m_infoMetadata;
-    }
-    const ConstOpDataVec & getOps() const
-    {
-        return m_ops;
-    }
-    ConstOpDataVec & getOps()
-    {
-        return m_ops;
-    }
-    const StringUtils::StringVec & getDescriptions() const
-    {
-        return m_descriptions;
-    }
-    StringUtils::StringVec & getDescriptions()
-    {
-        return m_descriptions;
-    }
+    const std::string & getID() const { return m_id; }
+    void setID(const char * id) { m_id = id; }
+    const std::string & getName() const { return m_name; }
+    void setName(const char * name) { m_name = name; }
+    const std::string & getInverseOfId() const { return m_inverseOfId; }
+    void setInverseOfId(const char * id) { m_inverseOfId = id; }
+    FormatMetadataImpl & getInfoMetadata() { return m_infoMetadata; }
+    const FormatMetadataImpl & getInfoMetadata() const { return m_infoMetadata; }
+    const ConstOpDataVec & getOps() const { return m_ops; }
+    ConstOpDataVec & getOps() { return m_ops; }
+    const StringUtils::StringVec & getDescriptions() const { return m_descriptions; }
+    StringUtils::StringVec & getDescriptions() { return m_descriptions; }
 
-    const std::string & getInputDescriptor() const
-    {
-        return m_inDescriptor;
-    }
+    const std::string & getInputDescriptor() const { return m_inDescriptor; }
 
-    void setInputDescriptor(const std::string & in)
-    {
-        m_inDescriptor = in;
-    }
+    void setInputDescriptor(const std::string & in) { m_inDescriptor = in; }
 
-    const std::string & getOutputDescriptor() const
-    {
-        return m_outDescriptor;
-    }
+    const std::string & getOutputDescriptor() const { return m_outDescriptor; }
 
-    void setOutputDescriptor(const std::string & out)
-    {
-        m_outDescriptor = out;
-    }
+    void setOutputDescriptor(const std::string & out) { m_outDescriptor = out; }
 
     void setCTFVersion(const CTFVersion & ver);
     void setCLFVersion(const CTFVersion & ver);
@@ -222,14 +165,8 @@ public:
     void toMetadata(FormatMetadataImpl & metadata) const;
 
     // Helper methods to keep the output bit-depth of the Op currently parsed.
-    void setPreviousOutBitDepth(BitDepth out)
-    {
-        m_prevOutBD = out;
-    }
-    BitDepth getPreviousOutBitDepth() const
-    {
-        return m_prevOutBD;
-    }
+    void setPreviousOutBitDepth(BitDepth out) { m_prevOutBD = out; }
+    BitDepth getPreviousOutBitDepth() const { return m_prevOutBD; }
 
 private:
     std::string m_id;
@@ -259,13 +196,11 @@ typedef OCIO_SHARED_PTR<const CTFReaderTransform> ConstCTFReaderTransformPtr;
 class TransformWriter : public XmlElementWriter
 {
 public:
-    TransformWriter() = delete;
-    TransformWriter(const TransformWriter &) = delete;
-    TransformWriter& operator=(const TransformWriter &) = delete;
+    TransformWriter()                                    = delete;
+    TransformWriter(const TransformWriter &)             = delete;
+    TransformWriter & operator=(const TransformWriter &) = delete;
 
-    TransformWriter(XmlFormatter & formatter,
-                    ConstCTFReaderTransformPtr transform,
-                    bool isCLF);
+    TransformWriter(XmlFormatter & formatter, ConstCTFReaderTransformPtr transform, bool isCLF);
 
     virtual ~TransformWriter();
 
@@ -278,15 +213,15 @@ private:
 
 private:
     ConstCTFReaderTransformPtr m_transform;
-    bool                       m_isCLF;
+    bool m_isCLF;
 };
-
 
 // Helper function to extract the values of FormatMetadata elements with a
 // given name. Used to get Description values.
-void GetElementsValues(const FormatMetadataImpl::Elements & elements,
-                       const std::string & name, 
-                       StringUtils::StringVec & values);
+void GetElementsValues(
+    const FormatMetadataImpl::Elements & elements,
+    const std::string & name,
+    StringUtils::StringVec & values);
 
 } // namespace OCIO_NAMESPACE
 

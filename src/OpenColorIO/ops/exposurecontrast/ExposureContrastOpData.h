@@ -14,10 +14,10 @@ namespace OCIO_NAMESPACE
 
 namespace EC
 {
-constexpr double MIN_PIVOT = 0.001;
-constexpr double MIN_CONTRAST = 0.001;
-constexpr double VIDEO_OETF_POWER = 0.54644808743169393;  // 1 / 1.83
-}
+constexpr double MIN_PIVOT        = 0.001;
+constexpr double MIN_CONTRAST     = 0.001;
+constexpr double VIDEO_OETF_POWER = 0.54644808743169393; // 1 / 1.83
+} // namespace EC
 
 class ExposureContrastOpData;
 typedef OCIO_SHARED_PTR<ExposureContrastOpData> ExposureContrastOpDataRcPtr;
@@ -27,23 +27,23 @@ typedef OCIO_SHARED_PTR<const ExposureContrastOpData> ConstExposureContrastOpDat
 // contrast/gamma adjustments in application viewport windows.  Typically this
 // op will be inserted into the view + display transform as part of the viewing
 // pipeline that converts the working color space into a display color space.
-// 
+//
 // The op utilizes the DynamicProperties class in order to allow the exposure /
 // contrast controls to be adjusted by the user in real-time, even after the
 // Processor has been created and its ops have been finalized.  Three dynamic
 // properties (or parameters) are available:
-// 
+//
 //   Exposure -- The exposure control attempts to simulate an adjustment to
 //   the amount of light hitting the scene.  It is in units of photographic
 //   stops.  The default is 0, and +1 is twice the amount light, -1 is half
 //   the light.  Ideally it is applied in scene-referred linear or log space
 //   (before the viewing transform).
-// 
+//
 //   Contrast & Gamma -- The contrast and gamma controls raise or lower the
 //   contrast relative to the pivot point.  Values above the pivot point get
 //   brighter as the control is increased, values below the pivot point get
 //   darker.
-// 
+//
 // It is useful to be able to apply a contrast/gamma-type control both before
 // and after a viewing transform.  The contrast control is typically applied in
 // scene-referred linear or log space (before the viewing transform) and allows
@@ -53,44 +53,44 @@ typedef OCIO_SHARED_PTR<const ExposureContrastOpData> ConstExposureContrastOpDat
 // transform) with a pivot of 1.  This allows the highlights and shadows of the
 // final image to be carefully inspected.  Mathematically, the contrast and
 // gamma controls are the same, but two controls are provided since applications
-// will likely want to make both available to users and hence two properties 
+// will likely want to make both available to users and hence two properties
 // are required.
-// 
+//
 // The most common scenario in visual effects is for the application working
 // space to be scene-linear.  However there are scenarios where applications
 // would like to offer exposure/contrast controls for images in log or video
 // color space (without the overhead of converting to scene-linear just to make
-// these controls available).  Therefore, the op provides algorithms for linear, 
-// log, and video style use-cases.  The math is adjusted so that the user 
+// these controls available).  Therefore, the op provides algorithms for linear,
+// log, and video style use-cases.  The math is adjusted so that the user
 // experience remains constant.
-// 
+//
 // LINEAR STYLE
-// 
+//
 //   OUT = pivot * ( IN * 2^exposure / pivot )^contrast
-// 
+//
 // VIDEO STYLE
-// 
+//
 //   OUT = pivot^G * ( IN * (2^exposure / pivot)^G )^contrast
-// 
+//
 // LOG STYLE
-// 
+//
 //   logPivot = log2( pivot / 0.18 ) * logExposureStep + logMidGray
 //   OUT = ( IN + exposure * logExposureStep - logPivot ) * contrast + logPivot
-// 
+//
 // The pivot, logExposureStep, and logMidGray are settable (non-dynamic)
 // parameters.
-// 
+//
 // Consider the following simplistic conversions from scene-linear to video and
 // logarithmic space:
-// 
+//
 //   VIDEO = LINEAR^G
 //   LOG = log2( LINEAR / 0.18 ) * logExposureStep + logMidGray
-// 
+//
 // For this scenario, one may show that the exposure and contrast/gamma controls
 // have exactly the same behavior for all three cases.  In practice the video
-// and log conversions will be more complicated, but hopefully this provides 
+// and log conversions will be more complicated, but hopefully this provides
 // some insight into the design of the equations.
-// 
+//
 // The G parameter is set to 1/1.83.  This value was chosen since that power is
 // a decent approximation to the ITU-R BT.709 OETF (i.e., camera) curve.  Note
 // that for a scene-linear value of 0.18, the BT.709 curve gives 0.409, the
@@ -100,7 +100,7 @@ typedef OCIO_SHARED_PTR<const ExposureContrastOpData> ConstExposureContrastOpDat
 // to give some confidence that it is a reasonable choice.)  The value is
 // currently hard-coded but could be brought forward to the API in the future,
 // if necessary.
-// 
+//
 // The logExposureStep parameter is the size of one stop exposure change as
 // measured in the [0-1] normalized log encoding.  This is settable in the API
 // since there is some variation in typical encodings.  For example, Cineon used
@@ -109,7 +109,7 @@ typedef OCIO_SHARED_PTR<const ExposureContrastOpData> ConstExposureContrastOpDat
 // 0.057.  The default is 0.088 but in practice the exact value is not critical
 // since users are typically using these controls simply to dynamically explore
 // their images on-the-fly rather than to bake in precise adjustments.
-// 
+//
 // The logMidGray parameter is the position of a scene-linear value of 0.18 as
 // represented in the [0-1] normalized log encoding.  This is settable in the
 // API since there is some variation in typical encodings.  For example, ADX10
@@ -123,12 +123,12 @@ class ExposureContrastOpData : public OpData
 public:
     enum Style
     {
-        STYLE_LINEAR,          // E/C to be applied to a linear space image
-        STYLE_LINEAR_REV,      // Inverse of STYLE_LINEAR
-        STYLE_VIDEO,           // E/C to be applied to a video space image
-        STYLE_VIDEO_REV,       // Inverse of STYLE_VIDEO
-        STYLE_LOGARITHMIC,     // E/C to be applied to a log space image
-        STYLE_LOGARITHMIC_REV  // Inverse of STYLE_LOG
+        STYLE_LINEAR,         // E/C to be applied to a linear space image
+        STYLE_LINEAR_REV,     // Inverse of STYLE_LINEAR
+        STYLE_VIDEO,          // E/C to be applied to a video space image
+        STYLE_VIDEO_REV,      // Inverse of STYLE_VIDEO
+        STYLE_LOGARITHMIC,    // E/C to be applied to a log space image
+        STYLE_LOGARITHMIC_REV // Inverse of STYLE_LOG
     };
 
     static Style ConvertStringToStyle(const char * str);
@@ -193,34 +193,25 @@ public:
     void setLogExposureStep(double step) { m_logExposureStep = step; }
 
     double getLogMidGray() const { return m_logMidGray; }
-    void setLogMidGray(double midGray) { m_logMidGray = midGray;  }
+    void setLogMidGray(double midGray) { m_logMidGray = midGray; }
 
-    DynamicPropertyDoubleImplRcPtr getExposureProperty() const
-    { 
-        return m_exposure;
-    }
-    DynamicPropertyDoubleImplRcPtr getContrastProperty() const
-    {
-        return m_contrast;
-    }
-    DynamicPropertyDoubleImplRcPtr getGammaProperty() const
-    {
-        return m_gamma;
-    }
+    DynamicPropertyDoubleImplRcPtr getExposureProperty() const { return m_exposure; }
+    DynamicPropertyDoubleImplRcPtr getContrastProperty() const { return m_contrast; }
+    DynamicPropertyDoubleImplRcPtr getGammaProperty() const { return m_gamma; }
 
     static constexpr double LOGEXPOSURESTEP_DEFAULT = 0.088;
-    static constexpr double LOGMIDGRAY_DEFAULT = 0.435;
+    static constexpr double LOGMIDGRAY_DEFAULT      = 0.435;
 
 private:
     void invert() noexcept;
 
-    Style  m_style = STYLE_LINEAR;
+    Style m_style = STYLE_LINEAR;
     DynamicPropertyDoubleImplRcPtr m_exposure;
     DynamicPropertyDoubleImplRcPtr m_contrast;
     DynamicPropertyDoubleImplRcPtr m_gamma;
-    double m_pivot = 0.18;
+    double m_pivot           = 0.18;
     double m_logExposureStep = LOGEXPOSURESTEP_DEFAULT;
-    double m_logMidGray = LOGMIDGRAY_DEFAULT;
+    double m_logMidGray      = LOGMIDGRAY_DEFAULT;
 };
 
 bool operator==(const ExposureContrastOpData & lhs, const ExposureContrastOpData & rhs);

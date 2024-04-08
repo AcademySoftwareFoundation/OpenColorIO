@@ -23,35 +23,32 @@ namespace NumberUtils
 struct Locale
 {
 #ifdef _WIN32
-    Locale() : local(_create_locale(LC_ALL, "C"))
+    Locale()
+        : local(_create_locale(LC_ALL, "C"))
     {
     }
-    ~Locale()
-    {
-        _free_locale(local);
-    }
+    ~Locale() { _free_locale(local); }
     _locale_t local;
 #else
-    Locale() : local(newlocale(LC_ALL_MASK, "C", NULL))
+    Locale()
+        : local(newlocale(LC_ALL_MASK, "C", NULL))
     {
     }
-    ~Locale()
-    {
-        freelocale(local);
-    }
+    ~Locale() { freelocale(local); }
     locale_t local;
 #endif
 };
 
 struct from_chars_result
 {
-    const char *ptr;
+    const char * ptr;
     std::errc ec;
 };
 
 static const Locale loc;
 
-really_inline from_chars_result from_chars(const char *first, const char *last, double &value) noexcept
+really_inline from_chars_result
+from_chars(const char * first, const char * last, double & value) noexcept
 {
     errno = 0;
     if (!first || !last || first == last)
@@ -63,9 +60,11 @@ really_inline from_chars_result from_chars(const char *first, const char *last, 
 
     double
 #ifdef _WIN32
-    tempval = _strtod_l(first, &endptr, loc.local);
+        tempval
+        = _strtod_l(first, &endptr, loc.local);
 #else
-    tempval = ::strtod_l(first, &endptr, loc.local);
+        tempval
+        = ::strtod_l(first, &endptr, loc.local);
 #endif
 
     if (errno != 0 && errno != EINVAL)
@@ -87,7 +86,8 @@ really_inline from_chars_result from_chars(const char *first, const char *last, 
     }
 }
 
-really_inline from_chars_result from_chars(const char *first, const char *last, float &value) noexcept
+really_inline from_chars_result
+from_chars(const char * first, const char * last, float & value) noexcept
 {
     errno = 0;
     if (!first || !last || first == last)
@@ -95,21 +95,25 @@ really_inline from_chars_result from_chars(const char *first, const char *last, 
         return {first, std::errc::invalid_argument};
     }
 
-    char *endptr = nullptr;
+    char * endptr = nullptr;
 
     float
 #ifdef _WIN32
 #if defined(__MINGW32__) || defined(__MINGW64__)
-    // MinGW doesn't define strtof_l (clang/gcc) nor strtod_l (gcc)...
-    tempval = static_cast<float>(_strtod_l (first, &endptr, loc.local));
+        // MinGW doesn't define strtof_l (clang/gcc) nor strtod_l (gcc)...
+        tempval
+        = static_cast<float>(_strtod_l(first, &endptr, loc.local));
 #else
-    tempval = _strtof_l(first, &endptr, loc.local);
+        tempval
+        = _strtof_l(first, &endptr, loc.local);
 #endif
 #elif __APPLE__
-    // On OSX, strtod_l is for some reason drastically faster than strtof_l.
-    tempval = static_cast<float>(::strtod_l(first, &endptr, loc.local));
+        // On OSX, strtod_l is for some reason drastically faster than strtof_l.
+        tempval
+        = static_cast<float>(::strtod_l(first, &endptr, loc.local));
 #else
-    tempval = ::strtof_l(first, &endptr, loc.local);
+        tempval
+        = ::strtof_l(first, &endptr, loc.local);
 #endif
 
     if (errno != 0)
@@ -131,7 +135,8 @@ really_inline from_chars_result from_chars(const char *first, const char *last, 
     }
 }
 
-really_inline from_chars_result from_chars(const char *first, const char *last, long int &value) noexcept
+really_inline from_chars_result
+from_chars(const char * first, const char * last, long int & value) noexcept
 {
     errno = 0;
     if (!first || !last || first == last)
@@ -139,15 +144,18 @@ really_inline from_chars_result from_chars(const char *first, const char *last, 
         return {first, std::errc::invalid_argument};
     }
 
-    char *endptr = nullptr;
+    char * endptr = nullptr;
 
     long int
 #ifdef _WIN32
-    tempval = _strtol_l(first, &endptr, 0, loc.local);
+        tempval
+        = _strtol_l(first, &endptr, 0, loc.local);
 #elif defined(__GLIBC__)
-    tempval = ::strtol_l(first, &endptr, 0, loc.local);
+        tempval
+        = ::strtol_l(first, &endptr, 0, loc.local);
 #else
-    tempval = ::strtol(first, &endptr, 0);
+        tempval
+        = ::strtol(first, &endptr, 0);
 #endif
 
     if (errno != 0)

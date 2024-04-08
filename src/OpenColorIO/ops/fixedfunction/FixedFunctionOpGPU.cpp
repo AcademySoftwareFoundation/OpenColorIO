@@ -7,7 +7,6 @@
 
 #include "ops/fixedfunction/FixedFunctionOpGPU.h"
 
-
 namespace OCIO_NAMESPACE
 {
 
@@ -176,7 +175,11 @@ void Add_RedMod_10_Inv_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderTe
     // clang-format on
 }
 
-void Add_Glow_03_Fwd_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, float glowGain, float glowMid)
+void Add_Glow_03_Fwd_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & ss,
+    float glowGain,
+    float glowMid)
 {
     // clang-format off
 
@@ -207,7 +210,11 @@ void Add_Glow_03_Fwd_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText
     // clang-format on
 }
 
-void Add_Glow_03_Inv_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, float glowGain, float glowMid)
+void Add_Glow_03_Inv_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & ss,
+    float glowGain,
+    float glowMid)
 {
     // clang-format off
 
@@ -240,12 +247,13 @@ void Add_Glow_03_Inv_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText
     // clang-format on
 }
 
-void Add_GamutComp_13_Shader_Compress(GpuShaderText & ss,
-                                      const char * dist,
-                                      const char * cdist,
-                                      float scl,
-                                      float thr,
-                                      float power)
+void Add_GamutComp_13_Shader_Compress(
+    GpuShaderText & ss,
+    const char * dist,
+    const char * cdist,
+    float scl,
+    float thr,
+    float power)
 {
     // clang-format off
 
@@ -265,12 +273,13 @@ void Add_GamutComp_13_Shader_Compress(GpuShaderText & ss,
     // clang-format on
 }
 
-void Add_GamutComp_13_Shader_UnCompress(GpuShaderText & ss,
-                                        const char * dist,
-                                        const char * cdist,
-                                        float scl,
-                                        float thr,
-                                        float power)
+void Add_GamutComp_13_Shader_UnCompress(
+    GpuShaderText & ss,
+    const char * dist,
+    const char * cdist,
+    float scl,
+    float thr,
+    float power)
 {
     // clang-format off
 
@@ -291,16 +300,17 @@ void Add_GamutComp_13_Shader_UnCompress(GpuShaderText & ss,
 }
 
 template <typename Func>
-void Add_GamutComp_13_Shader(GpuShaderText & ss,
-                             GpuShaderCreatorRcPtr & sc,
-                             float limCyan,
-                             float limMagenta,
-                             float limYellow,
-                             float thrCyan,
-                             float thrMagenta,
-                             float thrYellow,
-                             float power,
-                             Func f)
+void Add_GamutComp_13_Shader(
+    GpuShaderText & ss,
+    GpuShaderCreatorRcPtr & sc,
+    float limCyan,
+    float limMagenta,
+    float limYellow,
+    float thrCyan,
+    float thrMagenta,
+    float thrYellow,
+    float power,
+    Func f)
 {
     // clang-format off
 
@@ -339,15 +349,16 @@ void Add_GamutComp_13_Shader(GpuShaderText & ss,
     // clang-format on
 }
 
-void Add_GamutComp_13_Fwd_Shader(GpuShaderText & ss,
-                                 GpuShaderCreatorRcPtr & sc,
-                                 float limCyan,
-                                 float limMagenta,
-                                 float limYellow,
-                                 float thrCyan,
-                                 float thrMagenta,
-                                 float thrYellow,
-                                 float power)
+void Add_GamutComp_13_Fwd_Shader(
+    GpuShaderText & ss,
+    GpuShaderCreatorRcPtr & sc,
+    float limCyan,
+    float limMagenta,
+    float limYellow,
+    float thrCyan,
+    float thrMagenta,
+    float thrYellow,
+    float power)
 {
     Add_GamutComp_13_Shader(
         ss,
@@ -359,19 +370,19 @@ void Add_GamutComp_13_Fwd_Shader(GpuShaderText & ss,
         thrMagenta,
         thrYellow,
         power,
-        Add_GamutComp_13_Shader_Compress
-    );
+        Add_GamutComp_13_Shader_Compress);
 }
 
-void Add_GamutComp_13_Inv_Shader(GpuShaderText & ss,
-                                 GpuShaderCreatorRcPtr & sc,
-                                 float limCyan,
-                                 float limMagenta,
-                                 float limYellow,
-                                 float thrCyan,
-                                 float thrMagenta,
-                                 float thrYellow,
-                                 float power)
+void Add_GamutComp_13_Inv_Shader(
+    GpuShaderText & ss,
+    GpuShaderCreatorRcPtr & sc,
+    float limCyan,
+    float limMagenta,
+    float limYellow,
+    float thrCyan,
+    float thrMagenta,
+    float thrYellow,
+    float power)
 {
     Add_GamutComp_13_Shader(
         ss,
@@ -383,11 +394,13 @@ void Add_GamutComp_13_Inv_Shader(GpuShaderText & ss,
         thrMagenta,
         thrYellow,
         power,
-        Add_GamutComp_13_Shader_UnCompress
-    );
+        Add_GamutComp_13_Shader_UnCompress);
 }
 
-void Add_Surround_10_Fwd_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, float gamma)
+void Add_Surround_10_Fwd_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & ss,
+    float gamma)
 {
     // clang-format off
 
@@ -603,8 +616,9 @@ void Add_LUV_TO_XYZ(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
     // clang-format on
 }
 
-void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
-                                      ConstFixedFunctionOpDataRcPtr & func)
+void GetFixedFunctionGPUShaderProgram(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstFixedFunctionOpDataRcPtr & func)
 {
     GpuShaderText ss(shaderCreator->getLanguage());
     ss.indent();
@@ -621,13 +635,13 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
     // clang-format on
 
-    switch(func->getStyle())
+    switch (func->getStyle())
     {
         case FixedFunctionOpData::ACES_RED_MOD_03_FWD:
         {
             Add_RedMod_03_Fwd_Shader(shaderCreator, ss);
             break;
-         }
+        }
         case FixedFunctionOpData::ACES_RED_MOD_03_INV:
         {
             Add_RedMod_03_Inv_Shader(shaderCreator, ss);
@@ -681,14 +695,13 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
             Add_GamutComp_13_Fwd_Shader(
                 ss,
                 shaderCreator,
-                (float) func->getParams()[0],
-                (float) func->getParams()[1],
-                (float) func->getParams()[2],
-                (float) func->getParams()[3],
-                (float) func->getParams()[4],
-                (float) func->getParams()[5],
-                (float) func->getParams()[6]
-            );
+                (float)func->getParams()[0],
+                (float)func->getParams()[1],
+                (float)func->getParams()[2],
+                (float)func->getParams()[3],
+                (float)func->getParams()[4],
+                (float)func->getParams()[5],
+                (float)func->getParams()[6]);
             break;
         }
         case FixedFunctionOpData::ACES_GAMUT_COMP_13_INV:
@@ -696,19 +709,18 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
             Add_GamutComp_13_Inv_Shader(
                 ss,
                 shaderCreator,
-                (float) func->getParams()[0],
-                (float) func->getParams()[1],
-                (float) func->getParams()[2],
-                (float) func->getParams()[3],
-                (float) func->getParams()[4],
-                (float) func->getParams()[5],
-                (float) func->getParams()[6]
-            );
+                (float)func->getParams()[0],
+                (float)func->getParams()[1],
+                (float)func->getParams()[2],
+                (float)func->getParams()[3],
+                (float)func->getParams()[4],
+                (float)func->getParams()[5],
+                (float)func->getParams()[6]);
             break;
         }
         case FixedFunctionOpData::REC2100_SURROUND_FWD:
         {
-            Add_Surround_Shader(shaderCreator, ss, (float) func->getParams()[0]);
+            Add_Surround_Shader(shaderCreator, ss, (float)func->getParams()[0]);
             break;
         }
         case FixedFunctionOpData::REC2100_SURROUND_INV:
@@ -764,4 +776,4 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     shaderCreator->addToFunctionShaderCode(ss.string().c_str());
 }
 
-} // OCIO_NAMESPACE
+} // namespace OCIO_NAMESPACE

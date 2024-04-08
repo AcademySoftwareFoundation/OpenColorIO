@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
-#include "transforms/builtins/BuiltinTransformRegistry.h"
-#include "transforms/BuiltinTransform.h"
 #include "Platform.h"
-
+#include "transforms/BuiltinTransform.h"
+#include "transforms/builtins/BuiltinTransformRegistry.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -64,7 +62,8 @@ void BuiltinTransformImpl::setStyle(const char * style)
 {
     for (size_t index = 0; index < BuiltinTransformRegistry::Get()->getNumBuiltins(); ++index)
     {
-        if (0 == Platform::Strcasecmp(style, BuiltinTransformRegistry::Get()->getBuiltinStyle(index)))
+        if (0
+            == Platform::Strcasecmp(style, BuiltinTransformRegistry::Get()->getBuiltinStyle(index)))
         {
             m_transformIndex = index;
             return;
@@ -77,28 +76,21 @@ void BuiltinTransformImpl::setStyle(const char * style)
     throw Exception(oss.str().c_str());
 }
 
-
-void BuildBuiltinOps(OpRcPtrVec & ops,
-                     const BuiltinTransform & transform,
-                     TransformDirection dir)
+void BuildBuiltinOps(OpRcPtrVec & ops, const BuiltinTransform & transform, TransformDirection dir)
 {
-    const TransformDirection combinedDir = CombineTransformDirections(dir, transform.getDirection());
+    const TransformDirection combinedDir
+        = CombineTransformDirections(dir, transform.getDirection());
 
-    const BuiltinTransformImpl * pImpl = dynamic_cast<const BuiltinTransformImpl*>(&transform);
+    const BuiltinTransformImpl * pImpl = dynamic_cast<const BuiltinTransformImpl *>(&transform);
 
     CreateBuiltinTransformOps(ops, pImpl->getTransformIndex(), combinedDir);
 }
 
-
-std::ostream & operator<< (std::ostream & os, const BuiltinTransform & t) noexcept
+std::ostream & operator<<(std::ostream & os, const BuiltinTransform & t) noexcept
 {
-    os << "<BuiltinTransform"
-       << " direction = " << TransformDirectionToString(t.getDirection())
-       << ", style = " << t.getStyle()
-       << ">";
+    os << "<BuiltinTransform" << " direction = " << TransformDirectionToString(t.getDirection())
+       << ", style = " << t.getStyle() << ">";
     return os;
 }
-
-
 
 } // namespace OCIO_NAMESPACE

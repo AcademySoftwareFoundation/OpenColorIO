@@ -650,4 +650,4 @@ inline void sseSinCos(const float x, float& sin_x, float& cos_x)
 
 // clang-format on
 
-#endif  // INCLUDED_OCIO_SSE_H
+#endif // INCLUDED_OCIO_SSE_H

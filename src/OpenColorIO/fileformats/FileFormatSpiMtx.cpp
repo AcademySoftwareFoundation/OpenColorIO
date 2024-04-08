@@ -7,11 +7,10 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ops/matrix/MatrixOp.h"
 #include "ParseUtils.h"
+#include "ops/matrix/MatrixOp.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -23,10 +22,10 @@ class LocalCachedFile : public CachedFile
 public:
     LocalCachedFile()
     {
-        memset(m44, 0, 16*sizeof(double));
-        memset(offset4, 0, 4*sizeof(double));
+        memset(m44, 0, 16 * sizeof(double));
+        memset(offset4, 0, 4 * sizeof(double));
     };
-    ~LocalCachedFile() {};
+    ~LocalCachedFile(){};
 
     double m44[16];
     double offset4[4];
@@ -37,35 +36,35 @@ typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
 class LocalFileFormat : public FileFormat
 {
 public:
-
-    ~LocalFileFormat() {};
+    ~LocalFileFormat(){};
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-    CachedFileRcPtr read(std::istream & istream,
-                         const std::string & fileName,
-                         Interpolation interp) const override;
+    CachedFileRcPtr read(std::istream & istream, const std::string & fileName, Interpolation interp)
+        const override;
 
-    void buildFileOps(OpRcPtrVec & ops,
-                        const Config& config,
-                        const ConstContextRcPtr & context,
-                        CachedFileRcPtr untypedCachedFile,
-                        const FileTransform& fileTransform,
-                        TransformDirection dir) const override;
+    void buildFileOps(
+        OpRcPtrVec & ops,
+        const Config & config,
+        const ConstContextRcPtr & context,
+        CachedFileRcPtr untypedCachedFile,
+        const FileTransform & fileTransform,
+        TransformDirection dir) const override;
 };
 
 void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 {
     FormatInfo info;
-    info.name = "spimtx";
-    info.extension = "spimtx";
+    info.name         = "spimtx";
+    info.extension    = "spimtx";
     info.capabilities = FORMAT_CAPABILITY_READ;
     formatInfoVec.push_back(info);
 }
 
-CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
-                                      const std::string & fileName,
-                                      Interpolation /*interp*/) const
+CachedFileRcPtr LocalFileFormat::read(
+    std::istream & istream,
+    const std::string & fileName,
+    Interpolation /*interp*/) const
 {
 
     // Read the entire file.
@@ -83,10 +82,10 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
     }
 
     // Turn it into parts
-    const StringUtils::StringVec lineParts 
+    const StringUtils::StringVec lineParts
         = StringUtils::SplitByWhiteSpaces(StringUtils::Trim(fileStream.str()));
 
-    if(lineParts.size() != 12)
+    if (lineParts.size() != 12)
     {
         std::ostringstream os;
         os << "Error parsing .spimtx file (";
@@ -98,7 +97,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 
     // Turn the parts into floats
     std::vector<float> floatArray;
-    if(!StringVecToFloatVec(floatArray, lineParts))
+    if (!StringVecToFloatVec(floatArray, lineParts))
     {
         std::ostringstream os;
         os << "Error parsing .spimtx file (";
@@ -107,22 +106,21 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
         throw Exception(os.str().c_str());
     }
 
-
     // Put the bits in the right place
     LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
 
-    cachedFile->m44[0] =  floatArray[0];
-    cachedFile->m44[1] =  floatArray[1];
-    cachedFile->m44[2] =  floatArray[2];
-    cachedFile->m44[3] =  0.0;
+    cachedFile->m44[0] = floatArray[0];
+    cachedFile->m44[1] = floatArray[1];
+    cachedFile->m44[2] = floatArray[2];
+    cachedFile->m44[3] = 0.0;
 
-    cachedFile->m44[4] =  floatArray[4];
-    cachedFile->m44[5] =  floatArray[5];
-    cachedFile->m44[6] =  floatArray[6];
-    cachedFile->m44[7] =  0.0;
+    cachedFile->m44[4] = floatArray[4];
+    cachedFile->m44[5] = floatArray[5];
+    cachedFile->m44[6] = floatArray[6];
+    cachedFile->m44[7] = 0.0;
 
-    cachedFile->m44[8] =  floatArray[8];
-    cachedFile->m44[9] =  floatArray[9];
+    cachedFile->m44[8]  = floatArray[8];
+    cachedFile->m44[9]  = floatArray[9];
     cachedFile->m44[10] = floatArray[10];
     cachedFile->m44[11] = 0.0;
 
@@ -139,16 +137,17 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
     return cachedFile;
 }
 
-void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
-                                    const Config& /*config*/,
-                                    const ConstContextRcPtr & /*context*/,
-                                    CachedFileRcPtr untypedCachedFile,
-                                    const FileTransform& fileTransform,
-                                    TransformDirection dir) const
+void LocalFileFormat::buildFileOps(
+    OpRcPtrVec & ops,
+    const Config & /*config*/,
+    const ConstContextRcPtr & /*context*/,
+    CachedFileRcPtr untypedCachedFile,
+    const FileTransform & fileTransform,
+    TransformDirection dir) const
 {
     LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
 
-    if(!cachedFile) // This should never happen.
+    if (!cachedFile) // This should never happen.
     {
         std::ostringstream os;
         os << "Cannot build SpiMtx Ops. Invalid cache type.";
@@ -159,7 +158,7 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 
     CreateMatrixOffsetOp(ops, cachedFile->m44, cachedFile->offset4, newDir);
 }
-}
+} // namespace
 
 FileFormat * CreateFileFormatSpiMtx()
 {
@@ -167,4 +166,3 @@ FileFormat * CreateFileFormatSpiMtx()
 }
 
 } // namespace OCIO_NAMESPACE
-

@@ -12,9 +12,10 @@
 namespace OCIO_NAMESPACE
 {
 
-void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DOpDataRcPtr & lutData);
+void GetLut3DGPUShaderProgram(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstLut3DOpDataRcPtr & lutData);
 
 } // namespace OCIO_NAMESPACE
-
 
 #endif

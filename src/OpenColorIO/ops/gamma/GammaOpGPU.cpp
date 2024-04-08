@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/gamma/GammaOpGPU.h"
@@ -14,9 +13,10 @@ namespace
 {
 
 // Create shader for basic gamma style
-void AddBasicFwdShader(GpuShaderCreatorRcPtr & shaderCreator,
-                       ConstGammaOpDataRcPtr gamma,
-                       GpuShaderText & ss)
+void AddBasicFwdShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstGammaOpDataRcPtr gamma,
+    GpuShaderText & ss)
 {
     const double redGamma   = gamma->getRedParams()[0];
     const double grnGamma   = gamma->getGreenParams()[0];
@@ -40,9 +40,10 @@ void AddBasicFwdShader(GpuShaderCreatorRcPtr & shaderCreator,
     // clang-format on
 }
 
-void AddBasicRevShader(GpuShaderCreatorRcPtr & shaderCreator,
-                       ConstGammaOpDataRcPtr gamma,
-                       GpuShaderText & ss)
+void AddBasicRevShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstGammaOpDataRcPtr gamma,
+    GpuShaderText & ss)
 {
     const double redGamma   = 1. / gamma->getRedParams()[0];
     const double grnGamma   = 1. / gamma->getGreenParams()[0];
@@ -67,13 +68,14 @@ void AddBasicRevShader(GpuShaderCreatorRcPtr & shaderCreator,
 }
 
 // Create shader for basic mirror gamma style
-void AddBasicMirrorFwdShader(GpuShaderCreatorRcPtr & shaderCreator,
-                             ConstGammaOpDataRcPtr gamma,
-                             GpuShaderText & ss)
+void AddBasicMirrorFwdShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstGammaOpDataRcPtr gamma,
+    GpuShaderText & ss)
 {
-    const double redGamma = gamma->getRedParams()[0];
-    const double grnGamma = gamma->getGreenParams()[0];
-    const double bluGamma = gamma->getBlueParams()[0];
+    const double redGamma   = gamma->getRedParams()[0];
+    const double grnGamma   = gamma->getGreenParams()[0];
+    const double bluGamma   = gamma->getBlueParams()[0];
     const double alphaGamma = gamma->getAlphaParams()[0];
 
     // clang-format off
@@ -91,13 +93,14 @@ void AddBasicMirrorFwdShader(GpuShaderCreatorRcPtr & shaderCreator,
     // clang-format on
 }
 
-void AddBasicMirrorRevShader(GpuShaderCreatorRcPtr & shaderCreator,
-                             ConstGammaOpDataRcPtr gamma,
-                             GpuShaderText & ss)
+void AddBasicMirrorRevShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstGammaOpDataRcPtr gamma,
+    GpuShaderText & ss)
 {
-    const double redGamma = 1. / gamma->getRedParams()[0];
-    const double grnGamma = 1. / gamma->getGreenParams()[0];
-    const double bluGamma = 1. / gamma->getBlueParams()[0];
+    const double redGamma   = 1. / gamma->getRedParams()[0];
+    const double grnGamma   = 1. / gamma->getGreenParams()[0];
+    const double bluGamma   = 1. / gamma->getBlueParams()[0];
     const double alphaGamma = 1. / gamma->getAlphaParams()[0];
 
     // clang-format off
@@ -116,13 +119,14 @@ void AddBasicMirrorRevShader(GpuShaderCreatorRcPtr & shaderCreator,
 }
 
 // Create shader for basic pass thru gamma style
-void AddBasicPassThruFwdShader(GpuShaderCreatorRcPtr & shaderCreator,
-                               ConstGammaOpDataRcPtr gamma,
-                               GpuShaderText & ss)
+void AddBasicPassThruFwdShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstGammaOpDataRcPtr gamma,
+    GpuShaderText & ss)
 {
-    const double redGamma = gamma->getRedParams()[0];
-    const double grnGamma = gamma->getGreenParams()[0];
-    const double bluGamma = gamma->getBlueParams()[0];
+    const double redGamma   = gamma->getRedParams()[0];
+    const double grnGamma   = gamma->getGreenParams()[0];
+    const double bluGamma   = gamma->getBlueParams()[0];
     const double alphaGamma = gamma->getAlphaParams()[0];
 
     // clang-format off
@@ -148,13 +152,14 @@ void AddBasicPassThruFwdShader(GpuShaderCreatorRcPtr & shaderCreator,
     // clang-format on
 }
 
-void AddBasicPassThruRevShader(GpuShaderCreatorRcPtr & shaderCreator,
-                               ConstGammaOpDataRcPtr gamma,
-                               GpuShaderText & ss)
+void AddBasicPassThruRevShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstGammaOpDataRcPtr gamma,
+    GpuShaderText & ss)
 {
-    const double redGamma = 1. / gamma->getRedParams()[0];
-    const double grnGamma = 1. / gamma->getGreenParams()[0];
-    const double bluGamma = 1. / gamma->getBlueParams()[0];
+    const double redGamma   = 1. / gamma->getRedParams()[0];
+    const double grnGamma   = 1. / gamma->getGreenParams()[0];
+    const double bluGamma   = 1. / gamma->getBlueParams()[0];
     const double alphaGamma = 1. / gamma->getAlphaParams()[0];
 
     // clang-format off
@@ -181,15 +186,16 @@ void AddBasicPassThruRevShader(GpuShaderCreatorRcPtr & shaderCreator,
 }
 
 // Create shader for moncurveFwd style
-void AddMoncurveFwdShader(GpuShaderCreatorRcPtr & shaderCreator,
-                          ConstGammaOpDataRcPtr gamma,
-                          GpuShaderText & ss)
+void AddMoncurveFwdShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstGammaOpDataRcPtr gamma,
+    GpuShaderText & ss)
 {
     RendererParams red, green, blue, alpha;
 
-    ComputeParamsFwd(gamma->getRedParams(),   red);
+    ComputeParamsFwd(gamma->getRedParams(), red);
     ComputeParamsFwd(gamma->getGreenParams(), green);
-    ComputeParamsFwd(gamma->getBlueParams(),  blue);
+    ComputeParamsFwd(gamma->getBlueParams(), blue);
     ComputeParamsFwd(gamma->getAlphaParams(), alpha);
 
     const std::string pxl(shaderCreator->getPixelName());
@@ -223,15 +229,16 @@ void AddMoncurveFwdShader(GpuShaderCreatorRcPtr & shaderCreator,
 }
 
 // Create shader for moncurveRev style
-void AddMoncurveRevShader(GpuShaderCreatorRcPtr & shaderCreator,
-                          ConstGammaOpDataRcPtr gamma,
-                          GpuShaderText & ss)
+void AddMoncurveRevShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstGammaOpDataRcPtr gamma,
+    GpuShaderText & ss)
 {
     RendererParams red, green, blue, alpha;
 
-    ComputeParamsRev(gamma->getRedParams(),   red);
+    ComputeParamsRev(gamma->getRedParams(), red);
     ComputeParamsRev(gamma->getGreenParams(), green);
-    ComputeParamsRev(gamma->getBlueParams(),  blue);
+    ComputeParamsRev(gamma->getBlueParams(), blue);
     ComputeParamsRev(gamma->getAlphaParams(), alpha);
 
     const std::string pxl(shaderCreator->getPixelName());
@@ -264,9 +271,10 @@ void AddMoncurveRevShader(GpuShaderCreatorRcPtr & shaderCreator,
 }
 
 // Create shader for moncurveMirrorFwd style
-void AddMoncurveMirrorFwdShader(GpuShaderCreatorRcPtr & shaderCreator,
-                                ConstGammaOpDataRcPtr gamma,
-                                GpuShaderText & ss)
+void AddMoncurveMirrorFwdShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstGammaOpDataRcPtr gamma,
+    GpuShaderText & ss)
 {
     RendererParams red, green, blue, alpha;
 
@@ -310,9 +318,10 @@ void AddMoncurveMirrorFwdShader(GpuShaderCreatorRcPtr & shaderCreator,
 }
 
 // Create shader for moncurveMirrorRev style
-void AddMoncurveMirrorRevShader(GpuShaderCreatorRcPtr & shaderCreator,
-                                ConstGammaOpDataRcPtr gamma,
-                                GpuShaderText & ss)
+void AddMoncurveMirrorRevShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstGammaOpDataRcPtr gamma,
+    GpuShaderText & ss)
 {
     RendererParams red, green, blue, alpha;
 
@@ -353,10 +362,11 @@ void AddMoncurveMirrorRevShader(GpuShaderCreatorRcPtr & shaderCreator,
     // clang-format on
 }
 
-}  // Anon namespace
+} // namespace
 
-void GetGammaGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
-                              ConstGammaOpDataRcPtr & gammaData)
+void GetGammaGPUShaderProgram(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstGammaOpDataRcPtr & gammaData)
 {
     GpuShaderText ss(shaderCreator->getLanguage());
     ss.indent();
@@ -376,56 +386,56 @@ void GetGammaGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
     switch (gammaData->getStyle())
     {
-    case GammaOpData::MONCURVE_FWD:
-    {
-        AddMoncurveFwdShader(shaderCreator, gammaData, ss);
-        break;
-    }
-    case GammaOpData::MONCURVE_REV:
-    {
-        AddMoncurveRevShader(shaderCreator, gammaData, ss);
-        break;
-    }
-    case GammaOpData::MONCURVE_MIRROR_FWD:
-    {
-        AddMoncurveMirrorFwdShader(shaderCreator, gammaData, ss);
-        break;
-    }
-    case GammaOpData::MONCURVE_MIRROR_REV:
-    {
-        AddMoncurveMirrorRevShader(shaderCreator, gammaData, ss);
-        break;
-    }
-    case GammaOpData::BASIC_FWD:
-    {
-        AddBasicFwdShader(shaderCreator, gammaData, ss);
-        break;
-    }
-    case GammaOpData::BASIC_REV:
-    {
-        AddBasicRevShader(shaderCreator, gammaData, ss);
-        break;
-    }
-    case GammaOpData::BASIC_MIRROR_FWD:
-    {
-        AddBasicMirrorFwdShader(shaderCreator, gammaData, ss);
-        break;
-    }
-    case GammaOpData::BASIC_MIRROR_REV:
-    {
-        AddBasicMirrorRevShader(shaderCreator, gammaData, ss);
-        break;
-    }
-    case GammaOpData::BASIC_PASS_THRU_FWD:
-    {
-        AddBasicPassThruFwdShader(shaderCreator, gammaData, ss);
-        break;
-    }
-    case GammaOpData::BASIC_PASS_THRU_REV:
-    {
-        AddBasicPassThruRevShader(shaderCreator, gammaData, ss);
-        break;
-    }
+        case GammaOpData::MONCURVE_FWD:
+        {
+            AddMoncurveFwdShader(shaderCreator, gammaData, ss);
+            break;
+        }
+        case GammaOpData::MONCURVE_REV:
+        {
+            AddMoncurveRevShader(shaderCreator, gammaData, ss);
+            break;
+        }
+        case GammaOpData::MONCURVE_MIRROR_FWD:
+        {
+            AddMoncurveMirrorFwdShader(shaderCreator, gammaData, ss);
+            break;
+        }
+        case GammaOpData::MONCURVE_MIRROR_REV:
+        {
+            AddMoncurveMirrorRevShader(shaderCreator, gammaData, ss);
+            break;
+        }
+        case GammaOpData::BASIC_FWD:
+        {
+            AddBasicFwdShader(shaderCreator, gammaData, ss);
+            break;
+        }
+        case GammaOpData::BASIC_REV:
+        {
+            AddBasicRevShader(shaderCreator, gammaData, ss);
+            break;
+        }
+        case GammaOpData::BASIC_MIRROR_FWD:
+        {
+            AddBasicMirrorFwdShader(shaderCreator, gammaData, ss);
+            break;
+        }
+        case GammaOpData::BASIC_MIRROR_REV:
+        {
+            AddBasicMirrorRevShader(shaderCreator, gammaData, ss);
+            break;
+        }
+        case GammaOpData::BASIC_PASS_THRU_FWD:
+        {
+            AddBasicPassThruFwdShader(shaderCreator, gammaData, ss);
+            break;
+        }
+        case GammaOpData::BASIC_PASS_THRU_REV:
+        {
+            AddBasicPassThruRevShader(shaderCreator, gammaData, ss);
+            break;
+        }
     }
 
     ss.dedent();
@@ -434,6 +444,5 @@ void GetGammaGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
     shaderCreator->addToFunctionShaderCode(ss.string().c_str());
 }
-
 
 } // namespace OCIO_NAMESPACE

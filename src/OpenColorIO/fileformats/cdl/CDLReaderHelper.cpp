@@ -26,7 +26,7 @@ void CDLReaderColorCorrectionElt::start(const char ** atts)
         {
             if (atts[i + 1])
             {
-                // Note: eXpat automatically replaces escaped characters with 
+                // Note: eXpat automatically replaces escaped characters with
                 //       their original values.
                 m_transformData->setID(atts[i + 1]);
             }
@@ -46,26 +46,26 @@ void CDLReaderColorCorrectionElt::end()
 
     double vec9[9];
     const CDLOpData::ChannelParams & slopes = m_transformData->getSlopeParams();
-    vec9[0] = slopes[0];
-    vec9[1] = slopes[1];
-    vec9[2] = slopes[2];
+    vec9[0]                                 = slopes[0];
+    vec9[1]                                 = slopes[1];
+    vec9[2]                                 = slopes[2];
 
     const CDLOpData::ChannelParams & offsets = m_transformData->getOffsetParams();
-    vec9[3] = offsets[0];
-    vec9[4] = offsets[1];
-    vec9[5] = offsets[2];
+    vec9[3]                                  = offsets[0];
+    vec9[4]                                  = offsets[1];
+    vec9[5]                                  = offsets[2];
 
     const CDLOpData::ChannelParams & powers = m_transformData->getPowerParams();
-    vec9[6] = powers[0];
-    vec9[7] = powers[1];
-    vec9[8] = powers[2];
+    vec9[6]                                 = powers[0];
+    vec9[7]                                 = powers[1];
+    vec9[8]                                 = powers[2];
     transform->setSOP(vec9);
 
     transform->setSat(m_transformData->getSaturation());
 
     auto & formatMetadata = transform->getFormatMetadata();
-    auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
-    metadata = m_transformData->getFormatMetadata();
+    auto & metadata       = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
+    metadata              = m_transformData->getFormatMetadata();
 
     transform->validate();
 
@@ -77,7 +77,9 @@ void CDLReaderColorCorrectionElt::setCDLParsingInfo(const CDLParsingInfoRcPtr & 
     m_parsingInfo = pTransformList;
 }
 
-void CDLReaderColorCorrectionElt::appendMetadata(const std::string & name, const std::string & value)
+void CDLReaderColorCorrectionElt::appendMetadata(
+    const std::string & name,
+    const std::string & value)
 {
     // Keeps description as metadata with supplied name.
     FormatMetadataImpl item(name, value);
