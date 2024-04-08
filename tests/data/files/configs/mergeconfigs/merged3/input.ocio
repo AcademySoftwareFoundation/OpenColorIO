@@ -1,0 +1,38 @@
+ocio_profile_version: 2.1
+
+environment: 
+  SHOT: shot4
+  LUT_PATH: shot3/lut1.clf
+  CCCID: look-02
+
+search_path: 
+  - ./$SHOT
+  - ./shot1
+
+roles:
+  default: raw
+  scene_linear: reference
+
+displays:
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+
+looks:
+  - !<Look>
+    name: shot_look
+    process_space: reference
+    transform: !<FileTransform> {src: "looks.cdl", cccid: $CCCID}
+
+colorspaces:
+
+  - !<ColorSpace>
+    name: reference
+    isdata: false
+
+  - !<ColorSpace>
+    name: raw
+    isdata: true
+
+  - !<ColorSpace>
+    name: shot1_lut1_cs
+    to_reference: !<FileTransform> {src: lut1.clf}

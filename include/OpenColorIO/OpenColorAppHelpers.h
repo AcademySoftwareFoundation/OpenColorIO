@@ -521,6 +521,280 @@ protected:
 
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const MixingColorSpaceManager &);
 
+/**
+ * The ConfigMergingParameters class represent all the options that a merge can have.
+ * 
+ * In terms of OCIOM file, it represent one of the merges in a OCIOM file.
+ * 
+ * Let's take the following OCIOM structure:
+ * 
+ *   ociom_version: 2.1
+ *   search_path:
+ *   - .
+ *   - subfolder
+ *   merge:
+ *   Merge_ADD_THIS:
+ *       [...]
+ *   Merge_ADD_THAT:
+ *       [...]
+ * 
+ * In the OCIOM above, there would be two instances of ConfigMergingParameters.
+ * One for the merge "Merge_ADD_THIS" and one for the merge "Merge_ADD_THAT".
+ * 
+ * Where the [...] have the following structure:
+ *    Merge1:
+ *      base: base1.ocio
+ *      input: base1.ocio
+ *      options:
+ *        input_family_prefix: ""
+ *        base_family_prefix: ""
+ *        input_first: true
+ *        error_on_conflict: false
+ *        default_strategy: PreferInput
+ *        avoid_duplicates: true
+ *        assume_common_reference_space: false
+ *      overrides:
+ *        name: ""
+ *        description: ""
+ *        search_path: ""
+ *        environment: {}
+ *        active_displays: []
+ *        active_views: []
+ *        inactive_colorspaces: []
+ *      params:
+ *        roles:
+ *          strategy: PreferInput
+ *        [...]
+ * 
+ */
+class OCIOEXPORT ConfigMergingParameters
+{
+public:
+
+    enum MergeStrategies
+    {
+        // Merge, pieces from the input config replace those from the base config.
+        // On conflict, take from input.
+        STRATEGY_PREFER_INPUT = 0,
+        // Merge, pieces from the input config are ignored.
+        // On conflict, take from base.
+        STRATEGY_PREFER_BASE,
+        // Don't merge, replace the base content with the content of the input config.
+        STRATEGY_INPUT_ONLY,
+        // Don't merge, just keep the base content.
+        STRATEGY_BASE_ONLY,
+        // Pieces from the input config are removed from the base config. The prefixes are 
+        // not used in this case. If the names match, the item is removed, even if the content 
+        // is not identical.
+        STRATEGY_REMOVE,
+        STRATEGY_UNSET
+    };
+
+    // Default object
+    static ConfigMergingParametersRcPtr Create();
+
+    ConfigMergingParametersRcPtr createEditableCopy() const;
+
+    void setBaseConfigName(const char * baseConfig);
+    const char * getBaseConfigName() const;
+
+    void setInputConfigName(const char * inputConfig);
+    const char * getInputConfigName() const;
+
+    void setOutputName(const char * outputName);
+    const char * getOutputName() const;   
+
+    // Options
+    void setDefaultStrategy(const ConfigMergingParameters::MergeStrategies strategy);
+    ConfigMergingParameters::MergeStrategies getDefaultStrategy() const;
+
+    /**
+     * @brief Set the Input Family Prefix object
+     * 
+     * The default separator '/' must be used here.
+     * It will be replaced by the right separator based on the merged parameters.
+     * 
+     * @param prefix Prefix
+     */
+    void setInputFamilyPrefix(const char * prefix);
+    const char * getInputFamilyPrefix() const;
+
+    /**
+     * @brief Set the Base Family Prefix object
+     * 
+     * The default separator '/' must be used here.
+     * It will be replaced by the right separator based on the merged parameters.
+     * 
+     * @param prefix Prefix
+     */
+    void setBaseFamilyPrefix(const char * prefix);
+    const char * getBaseFamilyPrefix() const;
+
+    void setInputFirst(bool enabled);
+    bool isInputFirst() const;
+
+    void setErrorOnConflict(bool enabled);
+    bool isErrorOnConflict() const;
+
+    void setAvoidDuplicates(bool enabled);
+    bool isAvoidDuplicates() const;
+
+    void setAssumeCommonReferenceSpace(bool enabled);
+    bool isAssumeCommonReferenceSpace() const;
+
+    // Overrides
+    void setName(const char * mergedConfigName);
+    const char * getName() const;
+
+    void setDescription(const char * mergedConfigDesc);
+    const char * getDescription() const;
+
+    void addEnvironmentVar(const char * name, const char * defaultValue);
+    int getNumEnvironmentVars() const;
+    const char * getEnvironmentVar(int index) const;
+    const char * getEnvironmentVarValue(int index) const;
+
+    void setSearchPath(const char * path);
+    void addSearchPath(const char * path);
+    const char * getSearchPath() const;
+
+    void setActiveDisplays(const char * displays);
+    const char * getActiveDisplays() const;
+
+    void setActiveViews(const char * views);
+    const char * getActiveViews() const;
+
+    void setInactiveColorspaces(const char * colorspaces);
+    const char * getInactiveColorSpaces() const;
+
+    ////////////
+
+    // roles
+    void setRoles(MergeStrategies strategy);
+    MergeStrategies getRoles() const;
+
+    // file_rules
+    void setFileRules(MergeStrategies strategy);
+    MergeStrategies getFileRules() const;
+
+    // Includes shared_views, displays, view_transforms, viewing_rules, virtual_display, 
+    // active_display, active_views and default_view_transform.    
+    void setDisplayViews(MergeStrategies strategy);
+    MergeStrategies getDisplayViews() const;
+    
+    // looks
+    void setLooks(MergeStrategies strategy);
+    MergeStrategies getLooks() const;
+
+    // Includes colorspaces, display_colorspaces, environment,
+    // search_path, family_separator and inactive_colorspaces.
+    void setColorspaces(MergeStrategies strategy);
+    MergeStrategies getColorspaces() const;
+    
+    // named_transforms
+    void setNamedTransforms(MergeStrategies strategy);
+    MergeStrategies getNamedTransforms() const;
+
+    ConfigMergingParameters(const ConfigMergingParameters &) = delete;
+    ConfigMergingParameters& operator= (const ConfigMergingParameters &) = delete;
+
+    /// Do not use (needed only for pybind11).
+    ~ConfigMergingParameters();
+
+private:
+    ConfigMergingParameters();
+
+    static void deleter(ConfigMergingParameters * c);
+
+    class Impl;
+    Impl * m_impl;
+    Impl * getImpl() { return m_impl; }
+    const Impl * getImpl() const { return m_impl; }
+};
+
+//TODO Not implemented.
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const ConfigMergingParameters &);
+
+/**
+ * The ConfigMerger class is the controller for the merging process.
+ * 
+ * It is controlling the ociom_version, the search_path to find the base and input config,
+ * and the merges.
+ * 
+ * It contains an instance of ConfigMergingParameters for each merges present under the "merge" 
+ * section.
+ * 
+ */
+class OCIOEXPORT ConfigMerger
+{
+public:
+    static ConfigMergerRcPtr Create();
+
+    // Create based on the ociom file.
+    static ConstConfigMergerRcPtr CreateFromFile(const char * filepath);
+
+    ConfigMergerRcPtr createEditableCopy() const;
+
+    void setSearchPath(const char * path);
+    void addSearchPath(const char * path);
+    int getNumSearchPaths() const;
+    const char * getSearchPath(int index) const;
+
+    void setWorkingDir(const char * dirname);
+    const char * getWorkingDir() const;
+
+    ConfigMergingParametersRcPtr getParams(int index) const;
+    int getNumOfConfigMergingParameters() const;
+    void addParams(ConfigMergingParametersRcPtr params);
+
+    void addMergedConfig(ConstConfigRcPtr cfg);
+
+    ConstConfigRcPtr getMergedConfig() const;
+    ConstConfigRcPtr getMergedConfig(int index) const;
+
+    void serialize(std::ostream& os) const;
+
+    void setMajorVersion(unsigned int major);
+    void setMinorVersion(unsigned int minor);
+    void setVersion(unsigned int major, unsigned int minor);
+
+    unsigned int getMajorVersion() const;
+    unsigned int getMinorVersion() const;
+    
+    ConfigMerger(const ConfigMerger &) = delete;
+    ConfigMerger & operator=(const ConfigMerger &) = delete;
+
+    /// Do not use (needed only for pybind11).
+    ~ConfigMerger();
+
+private:
+    ConfigMerger();
+
+    static void deleter(ConfigMerger * c);
+
+    class Impl;
+    Impl * m_impl;
+    Impl * getImpl() { return m_impl; }
+    const Impl * getImpl() const { return m_impl; }
+};
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const ColorSpaceMenuHelper &);
+
+namespace ConfigMergingHelpers
+{
+/**
+ * \brief Execute the merge(s) based on the merger object.
+ * 
+ * Execute the merge(s) based on the merger object that was previously populated by using 
+ * ConfigMerger::CreateFromFile or created from scratch by using ConfigMerger::Create() and 
+ * programmatically configuring it.
+ * 
+ * \param merger Merger object
+ * \return OCIOEXPORT 
+ */
+extern OCIOEXPORT ConstConfigMergerRcPtr MergeConfigs(const ConstConfigMergerRcPtr & merger);
+} // ConfigMergingHelpers
+
 } // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_OPENCOLORAPPHELPERS_H

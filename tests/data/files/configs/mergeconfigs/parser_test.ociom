@@ -1,0 +1,47 @@
+ociom_version: 1.0
+search_path: "."
+
+merge:
+  Merge1:
+    base: base0.ocio
+    input: input0.ocio
+    options:
+      input_family_prefix: "abc"
+      base_family_prefix: "def"
+      input_first: true
+      error_on_conflict: false
+      default_strategy: InputOnly
+      avoid_duplicates: true
+      assume_common_reference_space: false
+    overrides:
+      name: my merge
+      description: my desc
+      search_path: "abc"
+      environment:
+        test: valueOther
+        test1: value123
+      active_displays: ["D1", "D2"]
+      active_views: ["V1", "V2"]
+      inactive_colorspaces: ["I1", "I2"]
+    params: 
+      roles:
+        strategy: PreferInput
+  
+      file_rules:
+        strategy: PreferBase
+
+      display-views:
+        # Includes shared_views, displays, view_transforms, viewing_rules, virtual_display, 
+        # active_display, active_views and default_view_transform.      
+        strategy: InputOnly
+
+      looks:
+        strategy: BaseOnly
+
+      colorspaces:
+          # Includes colorspaces, display_colorspaces, environment,
+          # search_path, family_separator and inactive_colorspaces.
+        strategy: Remove
+
+      named_transform:
+        strategy: PreferBase

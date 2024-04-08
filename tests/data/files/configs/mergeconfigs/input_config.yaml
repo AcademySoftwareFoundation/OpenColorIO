@@ -1,0 +1,192 @@
+ocio_profile_version: 2
+
+environment:
+  test: differentValue
+  test3: value3
+
+search_path: 
+  - .
+  - def
+
+name: input0
+description: |
+  My description 2
+
+family_separator: '@'
+strictparsing: false
+
+roles:
+  aces_interchange: ACES2065-1
+  texture_paint: ACEScct - SomeOtherName
+  matte_paint: sRGB - Texture
+  g22_ap1_tx: view_3
+  nt_base: log_3
+
+file_rules:
+  - !<Rule> {name: LogC, colorspace: ACES2065-1, pattern: "*LogC*", extension: "*"}
+  - !<Rule> {name: TIFF, colorspace: sRGB - Texture, regex: ".*\\.TIF?F$", custom: {key1: value1, key2: value2}}
+  - !<Rule> {name: JPEG, colorspace: Linear Rec.2020, regex: ".*\\.jpeg$"}
+  - !<Rule> {name: ColorSpaceNamePathSearch}
+  - !<Rule> {name: Default, colorspace: ACEScct - SomeOtherName}
+
+shared_views:
+  - !<View> {name: SHARED_1, colorspace: lin_3}
+  - !<View> {name: SHARED_3, colorspace: log_3}
+
+viewing_rules:
+  - !<Rule> {name: RULE_1, colorspaces: [sRGB - Texture]}
+  - !<Rule> {name: RULE_3, colorspaces: [Linear Rec.2020, ACEScct - SomeOtherName]}
+
+displays:
+  DISP_1:
+    - !<View> {name: VIEW_1, colorspace: view_1B, rule: RULE_3}
+    - !<Views> [ SHARED_3, SHARED_1 ]
+  DISP_3:
+    - !<View> {name: VIEW_1, colorspace: view_1}
+    - !<View> {name: VIEW_3, colorspace: view_3, looks: look_input}
+    
+virtual_display:
+  - !<View> {name: ACES, view_transform: SDR Video, display_colorspace: <USE_DISPLAY_NAME>}
+  - !<View> {name: Lin, colorspace: lin_3}
+  - !<Views> [ SHARED_3 ]
+
+looks:
+  - !<Look>
+    name: look_both
+    process_space: ACEScct - SomeOtherName
+    transform: !<CDLTransform> {slope: [1, 2, 1]}
+
+  - !<Look>
+    name: look_input
+    process_space: log_3
+    transform: !<CDLTransform> {slope: [1, 2, 1]}
+
+active_displays: [DISP_1,DISP_3]
+active_views: [SHARED_1,SHARED_3,VIEW_1,VIEW_3,]
+inactive_colorspaces: [Linear Rec.2020, nt_both, nt_input, view_2]
+default_view_transform: Un-tone-mapped-2
+
+view_transforms:
+  - !<ViewTransform>
+    name: SDR Video
+    from_scene_reference: !<BuiltinTransform> {style: ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-P3lim_1.1}
+  - !<ViewTransform>
+    name: Un-tone-mapped-2
+    from_scene_reference: !<BuiltinTransform> {style: UTILITY - ACES-AP0_to_CIE-XYZ-D65_BFD}
+
+named_transforms:
+  - !<NamedTransform>
+    name: nt_both
+    aliases: [Utility - Raw, nametr]
+    description: from input
+    family: 
+    categories: [ working-space, basic-3d, advanced-2d ]
+    encoding: sdr-video
+    transform: !<MatrixTransform> {name: forwardInput, offset: [0.1, 0.2, 0.3, 0.4]}
+
+  - !<NamedTransform>
+    name: nt_input
+    aliases: [Raw, in nt]
+    description: from input
+    categories: [ file-io, basic-2d ]
+    encoding: sdr-video
+    family: Raw 
+    transform: !<MatrixTransform> {name: forward, offset: [0.1, 0.2, 0.3, 0.4]}
+    inverse_transform: !<MatrixTransform> {name: inverse, offset: [-0.2, -0.1, -0.1, 0]}
+
+  - !<NamedTransform>
+    name: view_2
+    aliases: [g22_ap1]
+    description: from input
+    family: Raw 
+    transform: !<MatrixTransform> {name: forward, offset: [0.1, 0.2, 0.3, 0.4]}
+
+colorspaces:
+  - !<ColorSpace>
+    name: ACES2065-1
+    aliases: [aces2065_1, ACES - ACES2065-1, lin_ap0]
+    family: ACES
+    equalitygroup: ""
+    bitdepth: 32f
+    description: The "Academy Color Encoding System" reference colorspace. 456
+    isdata: false
+    categories: [file-io]
+    encoding: scene-linear
+    allocation: uniform
+
+  - !<ColorSpace>
+    name: ACEScct - SomeOtherName
+    aliases: [ACES - ACEScct123, acescct_ap1123]
+    family: ACES
+    equalitygroup: ""
+    bitdepth: 32f
+    description: |
+      Convert ACEScct to ACES2065-1
+      
+      ACEStransformID: urn:ampas:aces:transformId:v1.5:ACEScsc.Academy.ACEScct_to_ACES.a1.0.3
+    isdata: false
+    categories: [file-io, working-space]
+    encoding: log
+    allocation: uniform
+    to_scene_reference: !<BuiltinTransform> {style: ACEScct_to_ACES2065-1}
+
+  - !<ColorSpace>
+    name: sRGB - Texture
+    aliases: [srgb_tx, Utility - sRGB - Texture, srgb_texture, Input - Generic - sRGB - Texture]
+    family: Utility
+    equalitygroup: ""
+    bitdepth: 32f
+    description: |
+      Convert ACES2065-1 to sRGB
+      
+      CLFtransformID: urn:aswf:ocio:transformId:1.0:OCIO:Utility:AP0_to_sRGB-Texture:1.0
+    isdata: false
+    categories: [file-io]
+    allocation: uniform
+    from_scene_reference: !<GroupTransform>
+      name: AP0 to sRGB Rec.709
+      children:
+        - !<MatrixTransform> {matrix: [2.52168618674388, -1.13413098823972, -0.387555198504164, 0, -0.276479914229922, 1.37271908766826, -0.096239173438334, 0, -0.0153780649660342, -0.152975335867399, 1.16835340083343, 0, 0, 0, 0, 1]}
+        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
+
+  - !<ColorSpace>
+    name: Linear Rec.2020
+    aliases: [lin_rec2020, Utility - Linear - Rec.2020]
+    family: Utility
+    equalitygroup: ""
+    bitdepth: 32f
+    description: |
+      Convert ACES2065-1 to linear Rec.2020 primaries, D65 white point
+      
+      CLFtransformID: urn:aswf:ocio:transformId:1.0:OCIO:Utility:AP0_to_Linear_Rec2020:1.0
+    isdata: false
+    categories: [file-io]
+    encoding: scene-linear
+    allocation: uniform
+    from_scene_reference: !<GroupTransform>
+      name: AP0 to Linear Rec.2020
+      children:
+        - !<MatrixTransform> {matrix: [1.49040952054172, -0.26617091926613, -0.224238601275593, 0, -0.0801674998722558, 1.18216712109757, -0.10199962122531, 0, 0.00322763119162216, -0.0347764757450576, 1.03154884455344, 0, 0, 0, 0, 1]}
+
+  - !<ColorSpace>
+    name: view_1
+    from_reference: !<ExponentTransform> {value: [2.6, 2.6, 2.6, 1], direction: inverse}
+
+  - !<ColorSpace>
+    name: view_1B
+    from_reference: !<ExponentTransform> {value: [2.6, 2.6, 2.6, 1], direction: inverse}
+
+  - !<ColorSpace>
+    name: view_3
+    from_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1], direction: inverse}
+
+  - !<ColorSpace>
+    name: log_3
+    categories: [ working-space ]
+    encoding: log
+    to_reference: !<LogTransform> {base: 2, direction: inverse}
+
+  - !<ColorSpace>
+    name: lin_3
+    categories: [ working-space ]
+    encoding: scene-linear

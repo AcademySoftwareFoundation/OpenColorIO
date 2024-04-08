@@ -1179,8 +1179,8 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
         throw Exception (os.str().c_str());
     }
 
-    char magicNumber[2] = { 0 };
-    if (ifstream.read(magicNumber, 2))
+    char magicNumber[5] = { 0 };
+    if (ifstream.read(magicNumber, 5))
     {
         // Check if it is an OCIOZ archive.
         if (magicNumber[0] == 'P' && magicNumber[1] == 'K')
@@ -1197,9 +1197,33 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
             ciop->buildEntries();
             return CreateFromConfigIOProxy(ciop);
         }
+        else
+        {
+            // *IMPORTANT NOTE*
+            // It not the most robust method. Comments at the top of the files would break this.
+
+            // Check for "ociom" at the start of the file. (ociom_profile)
+            if (magicNumber[0] == 'o' && magicNumber[1] == 'c' &&
+                magicNumber[2] == 'i' && magicNumber[3] == 'o' && magicNumber[4] == 'm' )
+            {
+                try
+                {
+                    ifstream.close();
+
+                    ConstConfigMergerRcPtr merger = ConfigMerger::CreateFromFile(filename);
+                    ConstConfigMergerRcPtr newMerger = ConfigMergingHelpers::MergeConfigs(merger);
+                    // return final merged config.
+                    return newMerger->getMergedConfig();
+                }
+                catch(const Exception & e)
+                {
+                    throw e;
+                }
+            }
+        }
     } 
 
-    // Not an OCIOZ archive. Continue as usual.
+    // Not an OCIOZ archive or OCIOM file. Continue as usual.
     ifstream.clear();
     ifstream.seekg(0);
     return Config::Impl::Read(ifstream, filename);
@@ -2561,7 +2585,8 @@ void Config::addColorSpace(const ConstColorSpaceRcPtr & original)
     const std::string name(original->getName());
     if (name.empty())
     {
-        throw Exception("Color space must have a non-empty name.");
+        throw ExceptionAddColorspace("Color space must have a non-empty name.",
+                                     ADD_CS_ERROR_EMPTY);
     }
 
     // Check this is not an existing role or named transform.
@@ -2570,7 +2595,7 @@ void Config::addColorSpace(const ConstColorSpaceRcPtr & original)
         std::ostringstream os;
         os << "Cannot add '" << name << "' color space, there is already a role with this "
               "name.";
-        throw Exception(os.str().c_str());
+        throw ExceptionAddColorspace(os.str().c_str(), ADD_CS_ERROR_NAME_IDENTICAL_TO_A_ROLE_NAME);
     }
     auto nt = getNamedTransform(name.c_str());
     if (nt)
@@ -2578,7 +2603,8 @@ void Config::addColorSpace(const ConstColorSpaceRcPtr & original)
         std::ostringstream os;
         os << "Cannot add '" << name << "' color space, there is already a named transform using "
             "this name as a name or as an alias: '" << nt->getName() << "'.";
-        throw Exception(os.str().c_str());
+        throw ExceptionAddColorspace(os.str().c_str(),
+                                     ADD_CS_ERROR_NAME_IDENTICAL_TO_NT_NAME_OR_ALIAS);
     }
 
     if (getMajorVersion() >= 2 && ContainsContextVariableToken(name))
@@ -2587,7 +2613,8 @@ void Config::addColorSpace(const ConstColorSpaceRcPtr & original)
         oss << "A color space name '" << name
             << "' cannot contain a context variable reserved token i.e. % or $.";
 
-        throw Exception(oss.str().c_str());
+        throw ExceptionAddColorspace(oss.str().c_str(),
+                                     ADD_CS_ERROR_NAME_CONTAIN_CTX_VAR_TOKEN);
     }
 
     const size_t numAliases = original->getNumAliases();
@@ -2600,7 +2627,8 @@ void Config::addColorSpace(const ConstColorSpaceRcPtr & original)
             std::ostringstream os;
             os << "Cannot add '" << name << "' color space, it has an alias '" << alias
                << "' and there is already a role with this name.";
-            throw Exception(os.str().c_str());
+            throw ExceptionAddColorspace(os.str().c_str(), 
+                                         ADD_CS_ERROR_ALIAS_IDENTICAL_TO_A_ROLE_NAME);
         }
         auto nt = getNamedTransform(alias);
         if (nt)
@@ -2609,7 +2637,8 @@ void Config::addColorSpace(const ConstColorSpaceRcPtr & original)
             os << "Cannot add '" << name << "' color space, it has an alias '" << alias
                << "' and there is already a named transform using this name as a name or as "
                   "an alias: '" << nt->getName() << "'.";
-            throw Exception(os.str().c_str());
+            throw ExceptionAddColorspace(os.str().c_str(),
+                                         ADD_CS_ERROR_ALIAS_IDENTICAL_TO_NT_NAME_OR_ALIAS);
         }
         if (ContainsContextVariableToken(alias))
         {
@@ -2617,7 +2646,8 @@ void Config::addColorSpace(const ConstColorSpaceRcPtr & original)
             os << "Cannot add '" << name << "' color space, it has an alias '" << alias
                 << "' that cannot contain a context variable reserved token i.e. % or $.";
 
-            throw Exception(os.str().c_str());
+            throw ExceptionAddColorspace(os.str().c_str(),
+                                         ADD_CS_ERROR_ALIAS_CONTAIN_CTX_VAR_TOKEN);
         }
     }
 
@@ -3152,17 +3182,19 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
 {
     if (!nt)
     {
-        throw Exception("Named transform is null.");
+        throw ExceptionAddNamedTransform("Named transform is null.", ADD_NT_ERROR_NULL);
     }
     const std::string name(nt->getName());
     if (name.empty())
     {
-        throw Exception("Named transform must have a non-empty name.");
+        throw ExceptionAddNamedTransform("Named transform must have a non-empty name.",
+                                         ADD_NT_ERROR_EMPTY);
     }
     if (!nt->getTransform(TRANSFORM_DIR_FORWARD) &&
         !nt->getTransform(TRANSFORM_DIR_INVERSE))
     {
-        throw Exception("Named transform must define at least one transform.");
+        throw ExceptionAddNamedTransform("Named transform must define at least one transform.",
+                                         ADD_NT_ERROR_AT_LEAST_ONE_TRANSFORM);
     }
 
     if (hasRole(name.c_str()))
@@ -3170,7 +3202,7 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
         std::ostringstream os;
         os << "Cannot add '" << name << "' named transform, there is already a role with this "
               "name.";
-        throw Exception(os.str().c_str());
+        throw ExceptionAddNamedTransform(os.str().c_str(), ADD_NT_ERROR_NAME_IDENTICAL_TO_A_ROLE_NAME);
     }
     auto cs = getColorSpace(name.c_str());
     if (cs)
@@ -3178,7 +3210,8 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
         std::ostringstream os;
         os << "Cannot add '" << name << "' named transform, there is already a color space using "
               "this name as a name or as an alias: '" << cs->getName() << "'.";
-        throw Exception(os.str().c_str());
+        throw ExceptionAddNamedTransform(os.str().c_str(), 
+                                         ADD_NT_ERROR_NAME_IDENTICAL_TO_COLORSPACE_OR_ALIAS);
     }
 
     if (ContainsContextVariableToken(name))
@@ -3187,7 +3220,7 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
         oss << "A named transform name '" << name
             << "' cannot contain a context variable reserved token i.e. % or $.";
 
-        throw Exception(oss.str().c_str());
+        throw ExceptionAddNamedTransform(oss.str().c_str(), ADD_NT_ERROR_NAME_CONTAIN_CTX_VAR_TOKEN);
     }
 
     size_t existing = getImpl()->getNamedTransformIndex(name.c_str());
@@ -3202,7 +3235,8 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
             std::ostringstream os;
             os << "Cannot add '" << name << "' named transform, existing named transform, '";
             os << existingName << "' is using this name as an alias.";
-            throw Exception(os.str().c_str());
+            throw ExceptionAddNamedTransform(os.str().c_str(), 
+                                             ADD_NT_ERROR_NAME_IDENTICAL_TO_EXISTING_NT_ALIAS);
         }
         // There is a named transform with the same name that will be replaced (if new named
         // transform can be used).
@@ -3219,7 +3253,8 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
             std::ostringstream os;
             os << "Cannot add '" << name << "' named transform, it has an alias '" << alias
                << "' and there is already a role with this name.";
-            throw Exception(os.str().c_str());
+            throw ExceptionAddNamedTransform(os.str().c_str(), 
+                                             ADD_NT_ERROR_ALIAS_IDENTICAL_TO_A_ROLE_NAME);
         }
         auto cs = getColorSpace(alias);
         if (cs)
@@ -3228,7 +3263,8 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
             os << "Cannot add '" << name << "' named transform, it has an alias '" << alias
                << "' and there is already a color space using this name as a name or as "
                   "an alias: '" << cs->getName() << "'.";
-            throw Exception(os.str().c_str());
+            throw ExceptionAddNamedTransform(os.str().c_str(),
+                                             ADD_NT_ERROR_ALIAS_IDENTICAL_TO_COLORSPACE_OR_ALIAS);
         }
         if (ContainsContextVariableToken(alias))
         {
@@ -3236,7 +3272,8 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
             oss << "Cannot add '" << name << "' named transform, it has an alias '" << alias
                 << "' that cannot contain a context variable reserved token i.e. % or $.";
 
-            throw Exception(oss.str().c_str());
+            throw ExceptionAddNamedTransform(oss.str().c_str(),
+                                             ADD_NT_ERROR_ALIAS_CONTAIN_CTX_VAR_TOKEN);
         }
 
         existing = getImpl()->getNamedTransformIndex(alias);
@@ -3249,7 +3286,8 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
             os << "Cannot add '" << name << "' named transform, it has '" << alias;
             os << "' alias and existing named transform, '";
             os << existingName << "' is using the same alias.";
-            throw Exception(os.str().c_str());
+            throw ExceptionAddNamedTransform(os.str().c_str(),
+                                             ADD_NT_ERROR_ALIAS_IDENTICAL_TO_EXISTING_NT_ALIAS);
         }
     }
 
@@ -3261,7 +3299,8 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
             std::ostringstream os;
             os << "Cannot add '" << name << "' named transform, existing named transform, '";
             os << existingName << "' is using this name as an alias.";
-            throw Exception(os.str().c_str());
+            throw ExceptionAddNamedTransform(os.str().c_str(),
+                                             ADD_NT_ERROR_ALIAS_IDENTICAL_TO_EXISTING_NT_ALIAS);
         }
         NamedTransformRcPtr copy = nt->createEditableCopy();
         ConstNamedTransformRcPtr namedTransformCopy = copy;
@@ -3275,6 +3314,25 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
         getImpl()->m_allNamedTransforms.push_back(namedTransformCopy);
     }
 
+    getImpl()->resetCacheIDs();
+    getImpl()->refreshActiveColorSpaces();
+}
+
+void Config::removeNamedTransform(const char * name)
+{
+    const std::string nameToSearch = StringUtils::Lower(name);
+    if (nameToSearch.empty()) return;
+
+    for (auto itr = getImpl()->m_allNamedTransforms.begin(); itr != getImpl()->m_allNamedTransforms.end(); ++itr)
+    {
+        if (StringUtils::Lower((*itr)->getName()) == nameToSearch)
+        {
+            getImpl()->m_allNamedTransforms.erase(itr);
+            return;
+        }
+    }
+
+    AutoMutex lock(getImpl()->m_cacheidMutex);
     getImpl()->resetCacheIDs();
     getImpl()->refreshActiveColorSpaces();
 }

@@ -836,6 +836,325 @@ const char * IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
     throw Exception(os.str().c_str());
 }
 
+
+// Simplify a transform by removing nested group transforms and identities.
+//
+ConstTransformRcPtr simplifyTransform(const ConstGroupTransformRcPtr & gt)
+{
+    ConstConfigRcPtr config = Config::CreateRaw();
+    ConstProcessorRcPtr p = config->getProcessor(gt);
+    ConstProcessorRcPtr opt = p->getOptimizedProcessor(OPTIMIZATION_DEFAULT);
+    GroupTransformRcPtr finalGt = opt->createGroupTransform();
+    if (finalGt->getNumTransforms() == 1)
+    {
+        return finalGt->getTransform(0);
+    }
+    return finalGt;
+}
+
+ConstTransformRcPtr invertTransform(const ConstTransformRcPtr & t)
+{
+    TransformRcPtr eT = t->createEditableCopy();
+    eT->setDirection(TRANSFORM_DIR_INVERSE);
+    return eT;
+}
+
+// Return a transform in either the to_ref or from_ref direction for this color space.
+// Return an identity matrix, if the color space has no transforms.
+//
+ConstTransformRcPtr getTransformForDir(const ConstColorSpaceRcPtr & cs, ColorSpaceDirection dir)
+{
+    ColorSpaceDirection otherDir = COLORSPACE_DIR_TO_REFERENCE;
+    if (dir == COLORSPACE_DIR_TO_REFERENCE)
+    {
+        otherDir = COLORSPACE_DIR_FROM_REFERENCE;
+    }
+
+    ConstTransformRcPtr t = cs->getTransform(dir);
+    if (t) 
+    {
+        return t;
+    }
+
+    ConstTransformRcPtr tOther = cs->getTransform(otherDir);
+    if (tOther) 
+    {
+        return invertTransform(tOther);
+    }
+
+    // If it's the reference space, it won't have a transform, so return an identity matrix.
+    double m44[16];
+    double offset4[4];
+    MatrixTransform::Identity(m44, offset4);
+    MatrixTransformRcPtr p = MatrixTransform::Create();
+    p->setMatrix(m44);
+    p->setOffset(offset4);
+
+    return p;
+}
+
+// Get a transform to convert from the source config reference space to the
+// destination config reference space.  The ref_space_type specifies whether
+// to work with the scene-referred or display-referred reference space.
+//
+ConstTransformRcPtr getRefSpaceConverter(const ConstConfigRcPtr & srcConfig, 
+                                         const ConstConfigRcPtr & dstConfig, 
+                                         ReferenceSpaceType refSpaceType)
+{
+    ConstConfigRcPtr builtinConfig = Config::CreateFromFile("ocio://cg-config-latest");
+
+    auto getColorspaceOfRefType = [](const ConstConfigRcPtr & config, 
+                                     ReferenceSpaceType refType) -> const char *
+    {
+        // Just return the first one, doesn't matter if it's inactive or a data space.
+        // All that matters is the reference space type.
+        // Casting to SearchReferenceSpaceType since they have the same values.
+        SearchReferenceSpaceType searchRefType = static_cast<SearchReferenceSpaceType>(refType);
+        for (int i = 0; i < config->getNumColorSpaces(searchRefType, COLORSPACE_ALL); i++)
+        {
+            const char * name = config->getColorSpaceNameByIndex(searchRefType, COLORSPACE_ALL, i);
+            ConstColorSpaceRcPtr cs = config->getColorSpace(name);
+            return cs->getName();
+        }
+
+        throw Exception("Config is lacking any color spaces of the requested reference space type.");
+    };
+
+    // Identify an interchange space for the src config.
+    // Note that the interchange space will always be a linear color space.
+    // TODO: IdentifyInterchangeSpace currently fails if the config does not have
+    //  a color space for the reference space.
+    // TODO: IdentifyInterchangeSpace will fail in the display-referred case if the
+    //  config does not have the cie_xyz_d65_interchange role.
+    const char * srcInterchange = nullptr;
+    const char * srcBuiltinInterchange = nullptr;
+    Config::IdentifyInterchangeSpace(&srcInterchange,
+                                     &srcBuiltinInterchange,
+                                     srcConfig,
+                                     getColorspaceOfRefType(srcConfig, refSpaceType),
+                                     builtinConfig,
+                                     getColorspaceOfRefType(builtinConfig, refSpaceType));
+
+    // Identify an interchange space for the dst config.
+    // Note that the interchange space will always be a linear color space.
+    const char * dstInterchange = nullptr;
+    const char * dstBuiltinInterchange = nullptr;
+    Config::IdentifyInterchangeSpace(&dstInterchange,
+                                     &dstBuiltinInterchange,
+                                     dstConfig,
+                                     getColorspaceOfRefType(dstConfig, refSpaceType),
+                                     builtinConfig,
+                                     getColorspaceOfRefType(builtinConfig, refSpaceType));
+
+    // Get the from_ref transform from the srcInterchange space.
+    ConstTransformRcPtr srcFromRef = getTransformForDir(srcConfig->getColorSpace(srcInterchange), 
+                                                        COLORSPACE_DIR_FROM_REFERENCE);
+
+    // Get a conversion from one builtin interchange to another
+    ColorSpaceTransformRcPtr cst = ColorSpaceTransform::Create();
+    GroupTransformRcPtr srcBuiltinToDstBuiltin;
+    if (srcBuiltinInterchange && *srcBuiltinInterchange &&
+        dstBuiltinInterchange && *dstBuiltinInterchange)
+    {
+        // srcBuiltinInterchange and dstBuiltinInterchange are not empty.
+        cst->setSrc(srcBuiltinInterchange);
+        cst->setDst(dstBuiltinInterchange);
+
+        srcBuiltinToDstBuiltin = builtinConfig->getProcessor(cst)->createGroupTransform();
+    }
+
+    // Append to_ref transform from the dstInterchange space.
+    ConstTransformRcPtr dstToRef = getTransformForDir(dstConfig->getColorSpace(dstInterchange), 
+                                                      COLORSPACE_DIR_TO_REFERENCE);
+
+    // Combine into a group transform.
+    // Note: Some of these pieces may be identities but the whole thing needs to get
+    // simplified/optimized after being combined with the existing transform anyway
+    // since one of these pieces may be the inverse of a color space's existing transform.
+    GroupTransformRcPtr gt = GroupTransform::Create();
+    gt->appendTransform(srcFromRef->createEditableCopy());
+    gt->appendTransform(srcBuiltinToDstBuiltin);
+    gt->appendTransform(dstToRef->createEditableCopy());
+
+    // TODO: Need to ensure that gt would never contain a file transform.
+    // for (size_t t = 0; t < gt->getNumTransforms(); t++)
+    // {
+    //     if (gt->getTransform(t)->getTransformType() == TRANSFORM_TYPE_FILE)
+    //     {
+    //         throw Exception("Cannot contain FileTransform.");
+    //     }
+    // }
+    return simplifyTransform(gt);
+}
+
+// Update the reference space used by a color space's transforms.
+// The argument is a group transform that converts from the current to the new ref. space.
+//
+void updateReferenceColorspace(ColorSpaceRcPtr & cs, 
+                               const ConstTransformRcPtr & toNewReferenceTransform)
+{
+    if (!toNewReferenceTransform || !cs)
+    {
+        std::ostringstream os;
+        os << "Could not update reference space, converter transform was not initialized.";
+        throw Exception(os.str().c_str());
+    }
+
+    ConstTransformRcPtr transformTo = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+    if (transformTo)
+    {
+        GroupTransformRcPtr gt = GroupTransform::Create();
+        gt->appendTransform(transformTo->createEditableCopy());
+        gt->appendTransform(toNewReferenceTransform->createEditableCopy());
+
+        // NB: Don't want to call simplify_transforms on gt since it would do things like
+        // expand built-in or file transforms. But as a result, there could be transforms that
+        // appear more complex than necessary. In some cases there could be color spaces
+        // with transforms present that would actually simplify into an identity.  In other
+        // words there could be color spaces that are effectively the reference space that
+        // have from_ref or to_ref transforms.
+        cs->setTransform(gt, COLORSPACE_DIR_TO_REFERENCE);
+    }
+
+    ConstTransformRcPtr transformFrom = cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+    if (transformFrom)
+    {
+        ConstTransformRcPtr inv = invertTransform(toNewReferenceTransform);
+        GroupTransformRcPtr gt = GroupTransform::Create();
+        gt->appendTransform(inv->createEditableCopy());
+        gt->appendTransform(transformFrom->createEditableCopy());
+        cs->setTransform(gt, COLORSPACE_DIR_FROM_REFERENCE);
+    }
+
+    if (transformTo == nullptr && transformFrom == nullptr && !cs->isData())
+    {
+        GroupTransformRcPtr gt = GroupTransform::Create();
+        gt->appendTransform(toNewReferenceTransform->createEditableCopy());
+        cs->setTransform(gt, COLORSPACE_DIR_TO_REFERENCE);
+    }
+}
+
+// Update the transforms in a view transform to adapt the reference spaces.
+// Note that the from_ref transform converts from the scene-referred reference space to
+// the display-referred reference space.
+//
+void updateReferenceView(ViewTransformRcPtr & vt, 
+                         const ConstTransformRcPtr & toNewSceneReferenceTransform,
+                         const ConstTransformRcPtr & toNewDisplayReferenceTransform)
+{
+    ConstTransformRcPtr transformTo = vt->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE);
+    if (transformTo)
+    {
+        ConstTransformRcPtr inv = invertTransform(toNewSceneReferenceTransform);
+        GroupTransformRcPtr gt = GroupTransform::Create();
+        gt->appendTransform(inv->createEditableCopy());
+        gt->appendTransform(transformTo->createEditableCopy());
+        gt->appendTransform(toNewDisplayReferenceTransform->createEditableCopy());
+        vt->setTransform(gt, VIEWTRANSFORM_DIR_TO_REFERENCE);
+    }
+
+    ConstTransformRcPtr transformFrom = vt->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE);
+    if (transformFrom)
+    {
+        ConstTransformRcPtr inv = invertTransform(toNewDisplayReferenceTransform); 
+        GroupTransformRcPtr gt = GroupTransform::Create();
+        gt->appendTransform(inv->createEditableCopy());
+        gt->appendTransform(transformFrom->createEditableCopy());
+        gt->appendTransform(toNewSceneReferenceTransform->createEditableCopy());
+        vt->setTransform(gt, VIEWTRANSFORM_DIR_FROM_REFERENCE);
+    }
+
+    // Note that Config::addViewTransform prevents creating a view transform that 
+    // has no transforms, so we may be sure at least one direction will be present.
+}
+
+// If config contains a color space equivalent to new_cs, return its name.
+// Return an empty string if no equivalent color space is found (within the tolerance).
+// The ref_space_type specifies the type of new_cs and determines which part of the
+// config is searched. Note: Normally the refType should be set by simply calling
+// newCS->getReferenceSpaceType(). Not sure the extra flexibility to search the
+// other ref space type is needed (perhaps drop the option if this gets added to
+// the public API).
+//    
+const char * findEquivalentColorspace(const ConstConfigRcPtr & config, 
+                                      const ConstColorSpaceRcPtr & newCS,
+                                      ReferenceSpaceType refType)
+{
+    // NB: This assumes that new_cs uses the same reference space as config.
+    // In general, this means that update_color_reference_space must be called on new_cs
+    // before calling this function.
+
+    if (newCS->isData())
+    {
+        for (int i = 0; i < config->getNumColorSpaces(SEARCH_REFERENCE_SPACE_SCENE, COLORSPACE_ALL); ++i)
+        {
+            const char * name = config->getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_SCENE, COLORSPACE_ALL, i);
+            ConstColorSpaceRcPtr cs = config->getColorSpace(name);
+            if (cs->isData())
+            {
+                return cs->getName();
+            }
+            
+        }
+        return "";
+    }
+
+    // The heuristics need to create a lot of Processors and send RGB values through
+    // them to try and identify a known color space.  Turn off the Processor cache in
+    // the configs to avoid polluting the cache with transforms that won't be reused
+    // and avoid the overhead of maintaining the cache.
+    SuspendCacheGuard srcGuard(config);
+
+    ConstTransformRcPtr fromRef = getTransformForDir(newCS, COLORSPACE_DIR_FROM_REFERENCE);
+
+
+
+// FIXME:  Before looping over all color spaces, check to see if there's one with the same name.
+
+    SearchReferenceSpaceType searchRefType = static_cast<SearchReferenceSpaceType>(refType);
+    for (int i = 0; i < config->getNumColorSpaces(searchRefType, COLORSPACE_ALL); ++i)
+    {
+        const char * name = config->getColorSpaceNameByIndex(searchRefType, COLORSPACE_ALL, i);
+        ConstColorSpaceRcPtr cs = config->getColorSpace(name);
+
+// TODO: Need to add isdata check to other heuristics too.
+
+        if (!cs->isData())
+        {
+            ConstTransformRcPtr toRef = getTransformForDir(cs, COLORSPACE_DIR_TO_REFERENCE);
+            GroupTransformRcPtr gt = GroupTransform::Create();
+            gt->appendTransform(toRef->createEditableCopy());
+            gt->appendTransform(fromRef->createEditableCopy());
+
+            auto p = config->getProcessor(gt);
+
+            // Define a set of (somewhat arbitrary) RGB values to test whether the combined transform is 
+            // enough of an identity.
+            // TODO: Should we check values outside [0,1]?
+            std::vector<float> vals = { 0.7f,  0.4f,  0.02f, 0.f,
+                                        0.02f, 0.6f,  0.2f,  0.f,
+                                        0.3f,  0.02f, 0.5f,  0.f,
+                                        0.f,   0.f,   0.f,   0.f,
+                                        1.f,   1.f,   1.f,   0.f };
+
+// FIXME: THIS BREAKS THE TESTS
+
+//             std::vector<float> vals = { 0.7f,  0.4f,  0.02f, 0.f,
+//                                         0.02f, 0.6f, -0.2f,  0.f,
+//                                         0.3f,  0.02f, 1.5f,  0.f,
+//                                         0.f,   0.f,   0.f,   0.f,
+//                                         1.f,   1.f,   1.f,   0.f };
+
+            if (isIdentityTransform(p, vals, 1e-3f))
+            {
+                return cs->getName();
+            }
+        }
+    }
+
+    return "";
+}
+
 }  // namespace ConfigUtils
 
 }  // namespace OCIO_NAMESPACE

@@ -1,0 +1,170 @@
+ocio_profile_version: 2
+
+environment:
+  test: value
+  test1: value1
+
+search_path: 
+  - .
+  - abc
+
+name: base0
+description: |
+  My description 1
+
+family_separator: '#'
+strictparsing: true
+
+roles:
+  aces_interchange: ACES2065-1
+  texture_paint: ACEScct
+  data: Raw
+
+file_rules:
+  - !<Rule> {name: LogC, colorspace: ACES2065-1, pattern: "*LogC*", extension: "*"}
+  - !<Rule> {name: TIFF, colorspace: Gamma 2.2 AP1 - Texture, regex: ".*\\.TIF?F$"}
+  - !<Rule> {name: OpenEXR, colorspace: ACEScct, extension: "exr", pattern: "*"}
+  - !<Rule> {name: ColorSpaceNamePathSearch}
+  - !<Rule> {name: Default, colorspace: Raw}
+
+shared_views:
+  - !<View> {name: SHARED_1, colorspace: lin_1}
+  - !<View> {name: SHARED_2, view_transform: SDR Video, display_colorspace: <USE_DISPLAY_NAME>}
+
+viewing_rules:
+  - !<Rule> {name: RULE_1, colorspaces: [Gamma 2.2 AP1 - Texture]}
+  - !<Rule> {name: RULE_2, encodings: [scene-linear]}
+  
+displays:
+  DISP_1:
+    - !<View> {name: VIEW_1, colorspace: view_1, rule: RULE_1}
+    - !<Views> [ SHARED_1, SHARED_2 ]
+  DISP_2:
+    - !<View> {name: VIEW_1, colorspace: view_1, rule: RULE_2}
+    - !<View> {name: VIEW_2, colorspace: view_2, looks: look_base}
+    
+virtual_display:
+  - !<View> {name: ACES, view_transform: SDR Video, display_colorspace: <USE_DISPLAY_NAME>}
+  - !<View> {name: Log, colorspace: log_1}
+  - !<Views> [ SHARED_1 ]
+
+looks:
+  - !<Look>
+    name: look_both
+    process_space: ACES2065-1
+    transform: !<CDLTransform> {slope: [1, 2, 1]}
+
+  - !<Look>
+    name: look_base
+    process_space: log_1
+    transform: !<CDLTransform> {slope: [1, 2, 1]}
+
+active_displays: [DISP_1, DISP_2]
+active_views: [  SHARED_1 ,   SHARED_2,  VIEW_1 , VIEW_2,  ]
+inactive_colorspaces: [Gamma 2.2 AP1 - Texture]
+default_view_transform: SDR Video
+
+view_transforms:
+  - !<ViewTransform>
+    name: SDR Video
+    from_scene_reference: !<BuiltinTransform> {style: ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO_1.0}
+  - !<ViewTransform>
+    name: Un-tone-mapped
+    from_scene_reference: !<BuiltinTransform> {style: UTILITY - ACES-AP0_to_CIE-XYZ-D65_BFD}
+
+named_transforms:
+  - !<NamedTransform>
+    name: nt_both
+    aliases: [srgb_tx, namet2]
+    description: from base
+    family: 
+    categories: [ working-space, basic-3d, advanced-2d ]
+    encoding: sdr-video
+    transform: !<BuiltinTransform> {style: UTILITY - ACES-AP0_to_CIE-XYZ-D65_BFD}
+
+  - !<NamedTransform>
+    name: nt_base
+    aliases: [view_3, nt_input]
+    description: from base
+    family: nt
+    encoding: log
+    inverse_transform: !<MatrixTransform> {name: inverse, offset: [-0.2, -0.1, -0.1, 0]}
+
+colorspaces:
+  - !<ColorSpace>
+    name: ACES2065-1
+    aliases: [aces2065_1, ACES - ACES2065-1, lin_ap0]
+    family: ACES
+    equalitygroup: ""
+    bitdepth: 32f
+    description: The "Academy Color Encoding System" reference colorspace.
+    isdata: false
+    categories: [file-io]
+    encoding: scene-linear
+    allocation: uniform
+
+  - !<ColorSpace>
+    name: ACEScct
+    aliases: [ACES - ACEScct, acescct_ap1]
+    family: ACES
+    equalitygroup: ""
+    bitdepth: 32f
+    description: |
+      Convert ACEScct to ACES2065-1
+      
+      ACEStransformID: urn:ampas:aces:transformId:v1.5:ACEScsc.Academy.ACEScct_to_ACES.a1.0.3
+    isdata: false
+    categories: [file-io, working-space]
+    encoding: log
+    allocation: uniform
+    to_scene_reference: !<BuiltinTransform> {style: ACEScct_to_ACES2065-1}
+
+  - !<ColorSpace>
+    name: Raw
+    aliases: [Utility - Raw]
+    family: Utility
+    equalitygroup: ""
+    bitdepth: 32f
+    description: The utility "Raw" colorspace.
+    isdata: true
+    categories: [file-io]
+    allocation: uniform
+
+  - !<ColorSpace>
+    name: Gamma 2.2 AP1 - Texture
+    aliases: [g22_ap1_tx, g22_ap1]
+    family: Utility
+    equalitygroup: ""
+    bitdepth: 32f
+    description: |
+      Convert ACES2065-1 to 2.2 gamma-corrected AP1 primaries, D60 white point
+      
+      CLFtransformID: urn:aswf:ocio:transformId:1.0:OCIO:Utility:AP0_to_Gamma2.2_AP1-Texture:1.0
+    isdata: false
+    categories: [file-io]
+    encoding: sdr-video
+    allocation: uniform
+    from_scene_reference: !<GroupTransform>
+      name: AP0 to Gamma 2.2 AP1 - Texture
+      children:
+        - !<MatrixTransform> {matrix: [1.45143931614567, -0.23651074689374, -0.214928569251925, 0, -0.0765537733960206, 1.17622969983357, -0.0996759264375522, 0, 0.00831614842569772, -0.00603244979102102, 0.997716301365323, 0, 0, 0, 0, 1]}
+        - !<ExponentTransform> {value: 2.2, style: pass_thru, direction: inverse}
+
+  - !<ColorSpace>
+    name: view_1
+    from_reference: !<ExponentTransform> {value: [2.6, 2.6, 2.6, 1], direction: inverse}
+
+  - !<ColorSpace>
+    name: view_2
+    from_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1], direction: inverse}
+
+  - !<ColorSpace>
+    name: log_1
+    categories: [ working-space ]
+    encoding: log
+    to_reference: !<LogTransform> {base: 2, direction: inverse}
+
+  - !<ColorSpace>
+    name: lin_1
+    categories: [ working-space ]
+    encoding: scene-linear

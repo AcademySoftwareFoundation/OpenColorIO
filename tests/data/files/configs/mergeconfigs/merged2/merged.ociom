@@ -1,0 +1,43 @@
+ociom_version: 2.1
+search_path: "."
+
+# This OCIOM file is used to test multiple merges.
+merge:
+  Merge1:
+    base: base.ocio
+    input: input.ocio
+    options:
+      input_family_prefix: ""
+      base_family_prefix: ""
+      input_first: true
+      error_on_conflict: false
+      default_strategy: PreferInput
+      avoid_duplicates: true
+      assume_common_reference_space: false
+    overrides:
+      name: Merged1
+      description: Basic merge with default strategy
+      search_path: ""
+      environment: {}
+      active_displays: []
+      active_views: []
+      inactive_colorspaces: []
+  Merge2:
+    base: Merge1
+    input: input.ocio
+    options:
+      input_family_prefix: ""
+      base_family_prefix: ""
+      input_first: true
+      error_on_conflict: false
+      default_strategy: InputOnly
+      avoid_duplicates: true
+      assume_common_reference_space: false
+    overrides:
+      name: Merged2
+      description: Same as the input
+      search_path: ""
+      environment: {}
+      active_displays: []
+      active_views: []
+      inactive_colorspaces: []

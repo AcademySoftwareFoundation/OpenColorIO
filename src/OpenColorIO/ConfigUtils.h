@@ -31,6 +31,24 @@ const char * IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
                                        const ConstConfigRcPtr & builtinConfig, 
                                        const char * builtinColorSpaceName);
 
+ConstTransformRcPtr simplifyTransform(const ConstGroupTransformRcPtr & gt);
+ConstTransformRcPtr invertTransform(const ConstTransformRcPtr & t);
+ConstTransformRcPtr getTransformDir(const ConstColorSpaceRcPtr & cs, ColorSpaceDirection dir);
+
+ConstTransformRcPtr getRefSpaceConverter(const ConstConfigRcPtr & srcConfig, 
+                                         const ConstConfigRcPtr & dstConfig, 
+                                         ReferenceSpaceType refSpaceType);
+
+void updateReferenceColorspace(ColorSpaceRcPtr & cs, 
+                               const ConstTransformRcPtr & toNewReferenceTransform);
+void updateReferenceView(ViewTransformRcPtr & vt, 
+                         const ConstTransformRcPtr & toNewSceneReferenceTransform,
+                         const ConstTransformRcPtr & toNewDisplayReferenceTransform);
+
+const char * findEquivalentColorspace(const ConstConfigRcPtr & config, 
+                                      const ConstColorSpaceRcPtr & newCs,
+                                      ReferenceSpaceType refType);
+
 // Temporarily deactivate the Processor cache on a Config object.
 // Currently, this also clears the cache.
 //

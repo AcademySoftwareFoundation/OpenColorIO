@@ -1,0 +1,64 @@
+ocio_profile_version: 2.1
+name: input
+search_path: lut_dir
+inactive_colorspaces: [ACES2065-1]
+
+roles:
+  cie_xyz_d65_interchange: CIE-XYZ-D65
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: sRGB}
+
+displays:
+  sRGB - Display:
+    - !<View> {name: Raw, colorspace: raw}
+    - !<View> {name: ACES 1.0 - SDR Video, view_transform: SDR Video, display_colorspace: sRGB - Display}
+
+view_transforms:
+  - !<ViewTransform>
+    name: SDR Video
+    from_scene_reference: !<BuiltinTransform> {style: ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-P3lim_1.1}
+
+display_colorspaces:   # reference space = linear rec 709
+  - !<ColorSpace>
+    name: sRGB - Display
+    aliases: [srgb_display]
+    family: Display~Standard
+    description: from input
+    from_display_reference: !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
+
+  - !<ColorSpace>
+    name: CIE-XYZ-D65
+    aliases: [cie_xyz_d65]
+    description: The \"CIE XYZ (D65)\" display connection colorspace.
+    isdata: false
+    from_display_reference: !<MatrixTransform> {matrix: [ 0.412390799266, 0.357584339384, 0.180480788402, 0, 0.212639005872, 0.715168678768, 0.072192315361, 0, 0.019330818716, 0.119194779795, 0.950532152250, 0, 0, 0, 0, 1 ]}
+
+colorspaces:   # reference space = linear rec 709
+  - !<ColorSpace>
+    name: ACES2065-1
+    aliases: [aces]
+    family: ACES~Linear
+    description: from input
+    to_scene_reference: !<MatrixTransform> {matrix: [ 2.521686186744, -1.134130988240, -0.387555198504, 0, -0.276479914230, 1.372719087668, -0.096239173438, 0, -0.015378064966, -0.152975335867, 1.168353400833, 0, 0, 0, 0, 1 ]}
+
+  - !<ColorSpace>
+    name: sRGB
+    family: Texture~
+    description: from input
+    to_scene_reference: !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055}
+
+  - !<ColorSpace>
+    name: rec709
+    description: from input
+
+  - !<ColorSpace>
+    name: Raw
+    aliases: [Utility - Raw]
+    family: Utility
+    equalitygroup: ""
+    bitdepth: 32f
+    description: The utility "Raw" colorspace.
+    isdata: true
+    categories: [file-io]
+    allocation: uniform

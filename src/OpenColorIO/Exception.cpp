@@ -35,5 +35,43 @@ ExceptionMissingFile::~ExceptionMissingFile()
 {
 }
 
+ExceptionAddColorspace::ExceptionAddColorspace(const char * msg, AddColorspaceError errorCode)
+    :   Exception(msg), m_errorCode(errorCode)
+{
+}
+
+ExceptionAddColorspace::ExceptionAddColorspace(const ExceptionAddColorspace & e)
+    :   Exception(e)
+{
+}
+
+AddColorspaceError ExceptionAddColorspace::getErrorCode() const noexcept
+{
+    return m_errorCode;
+}
+
+ExceptionAddColorspace::~ExceptionAddColorspace()
+{
+}
+
+ExceptionAddNamedTransform::ExceptionAddNamedTransform(const char * msg, AddNamedTransformError errorCode)
+    :   Exception(msg), m_errorCode(errorCode)
+{
+}
+
+ExceptionAddNamedTransform::ExceptionAddNamedTransform(const ExceptionAddNamedTransform & e)
+    :   Exception(e)
+{
+}
+
+AddNamedTransformError ExceptionAddNamedTransform::getErrorCode() const noexcept
+{
+    return m_errorCode;
+}
+
+ExceptionAddNamedTransform::~ExceptionAddNamedTransform()
+{
+}
+
 } // namespace OCIO_NAMESPACE
 

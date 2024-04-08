@@ -254,6 +254,13 @@ class LegacyViewingPipeline;
 typedef OCIO_SHARED_PTR<LegacyViewingPipeline> LegacyViewingPipelineRcPtr;
 typedef OCIO_SHARED_PTR<const LegacyViewingPipeline> ConstLegacyViewingPipelineRcPtr;
 
+class ConfigMergingParameters;
+typedef OCIO_SHARED_PTR<ConfigMergingParameters> ConfigMergingParametersRcPtr;
+typedef OCIO_SHARED_PTR<const ConfigMergingParameters> ConstConfigMergingParametersRcPtr;
+
+class ConfigMerger;
+typedef OCIO_SHARED_PTR<ConfigMerger> ConfigMergerRcPtr;
+typedef OCIO_SHARED_PTR<const ConfigMerger> ConstConfigMergerRcPtr;
 
 template <class T, class U>
 inline OCIO_SHARED_PTR<T> DynamicPtrCast(OCIO_SHARED_PTR<U> const & ptr)
@@ -683,6 +690,44 @@ enum ProcessorCacheFlags : unsigned int
                                                  // properties.
 
     PROCESSOR_CACHE_DEFAULT = (PROCESSOR_CACHE_ENABLED | PROCESSOR_CACHE_SHARE_DYN_PROPERTIES)
+};
+
+// Provides codes for errors if there is any problem when a colorspace is added to a config.
+enum AddColorspaceError
+{
+    ADD_CS_ERROR_NONE = 0,
+
+    ADD_CS_ERROR_EMPTY,
+    ADD_CS_ERROR_NAME_IDENTICAL_TO_A_ROLE_NAME,
+    ADD_CS_ERROR_NAME_IDENTICAL_TO_NT_NAME_OR_ALIAS,
+    ADD_CS_ERROR_NAME_CONTAIN_CTX_VAR_TOKEN,
+    ADD_CS_ERROR_NAME_IDENTICAL_TO_EXISTING_COLORSPACE_ALIAS,
+
+    ADD_CS_ERROR_ALIAS_IDENTICAL_TO_A_ROLE_NAME,
+    ADD_CS_ERROR_ALIAS_IDENTICAL_TO_NT_NAME_OR_ALIAS,
+    ADD_CS_ERROR_ALIAS_CONTAIN_CTX_VAR_TOKEN,
+    ADD_CS_ERROR_ALIAS_IDENTICAL_TO_EXISTING_COLORSPACE_NAME,
+    ADD_CS_ERROR_ALIAS_IDENTICAL_TO_EXISTING_COLORSPACE_ALIAS,
+};
+
+// Provides codes for errors if there is any problem when a named transform is added to a config.
+enum AddNamedTransformError
+{
+    ADD_NT_ERROR_NONE = 0,
+
+    ADD_NT_ERROR_NULL,
+    ADD_NT_ERROR_EMPTY,
+    ADD_NT_ERROR_AT_LEAST_ONE_TRANSFORM,
+    
+    ADD_NT_ERROR_NAME_IDENTICAL_TO_A_ROLE_NAME,
+    ADD_NT_ERROR_NAME_IDENTICAL_TO_COLORSPACE_OR_ALIAS,
+    ADD_NT_ERROR_NAME_CONTAIN_CTX_VAR_TOKEN,
+    ADD_NT_ERROR_NAME_IDENTICAL_TO_EXISTING_NT_ALIAS,
+
+    ADD_NT_ERROR_ALIAS_IDENTICAL_TO_A_ROLE_NAME,
+    ADD_NT_ERROR_ALIAS_IDENTICAL_TO_COLORSPACE_OR_ALIAS,
+    ADD_NT_ERROR_ALIAS_CONTAIN_CTX_VAR_TOKEN,
+    ADD_NT_ERROR_ALIAS_IDENTICAL_TO_EXISTING_NT_ALIAS
 };
 
 // Conversion

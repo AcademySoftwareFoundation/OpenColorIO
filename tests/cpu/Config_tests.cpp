@@ -9125,7 +9125,7 @@ OCIO_ADD_TEST(Config, alias_validation)
     cs->addAlias("colorspace1");
     OCIO_CHECK_THROW_WHAT(cfg->addColorSpace(cs), OCIO::Exception, "Cannot add 'colorspace3' "
                           "color space, it has 'colorspace1' alias and existing color space, "
-                          "'colorspace1' is using the same alias");
+                          "'colorspace1' has the same name");
     cs->removeAlias("colorspace1");
 
     OCIO_CHECK_NO_THROW(cfg->setRole("alias", "colorspace2"));
