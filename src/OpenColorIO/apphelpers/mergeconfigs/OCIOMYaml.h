@@ -13,7 +13,8 @@
 namespace OCIO_NAMESPACE
 {
 
-// Handles the OCIOM file parsing.
+// Handles the OCIOM file format parsing.
+
 class OCIOMYaml
 {
 public:
@@ -52,7 +53,7 @@ public:
     void load(const YAML::Node & node, std::vector<std::string> & x);
 
     /**
-     * \brief Load a OCIOM file.
+     * \brief Load an OCIOM file.
      */
     void load(const YAML::Node& node, ConfigMergerRcPtr & merger, const char * filename);
     

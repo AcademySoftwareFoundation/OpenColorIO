@@ -30,18 +30,16 @@ class SectionMerger
 {
 public:
 
-    enum MergerFlag
-    {
-        MERGERSTATE_NOFLAG,
-        MERGERSTATE_ADD_INITIAL_CONFIG,
-    };
-
     SectionMerger(MergeHandlerOptions options)
         : m_baseConfig(options.baseConfig), m_inputConfig(options.inputConfig), 
           m_mergedConfig(options.mergedConfig), m_params(options.params)
     {
-        m_strategy = options.params->getDefaultStrategy();
-        m_params->setDefaultStrategy(options.params->getDefaultStrategy());
+        if (!options.baseConfig || !options.inputConfig || !options.mergedConfig || !options.params)
+        {
+            throw Exception("SectionMerger arguments were not initialized.");
+        }
+//         m_strategy = options.params->getDefaultStrategy();
+//         m_params->setDefaultStrategy(options.params->getDefaultStrategy());
     }
     
     void merge()
@@ -64,7 +62,7 @@ public:
                 handleRemove();
                 break;
             case ConfigMergingParameters::MergeStrategies::STRATEGY_UNSET:
-                // nothing to do.
+                // Nothing to do.
                 break;
             default:
                 break;
@@ -76,27 +74,27 @@ public:
 private:
     virtual void handlePreferInput()
     {
-        LogWarning(getName() + std::string(" section does not supported strategy 'PreferInput'"));
+        LogWarning(getName() + std::string(" section does not support strategy 'PreferInput'"));
     }
 
     virtual void handlePreferBase()
     {
-        LogWarning(getName() + std::string(" section does not supported strategy 'PreferBase'"));
+        LogWarning(getName() + std::string(" section does not support strategy 'PreferBase'"));
     }
 
     virtual void handleInputOnly()
     {
-        LogWarning(getName() + std::string(" section does not supported strategy 'InputOnly'"));
+        LogWarning(getName() + std::string(" section does not support strategy 'InputOnly'"));
     }
 
     virtual void handleBaseOnly()
     {
-        LogWarning(getName() + std::string(" section does not supported strategy 'BaseOnly'"));
+        LogWarning(getName() + std::string(" section does not support strategy 'BaseOnly'"));
     }
 
     virtual void handleRemove()
     {
-        LogWarning(getName() + std::string(" section does not supported strategy 'Remove'"));
+        LogWarning(getName() + std::string(" section does not support strategy 'Remove'"));
     }
 
 protected:
@@ -128,7 +126,7 @@ public:
     }
 
 private:
-    const std::string getName() const { return "Miscellaneous"; }
+    const std::string getName() const { return "General"; }
 
     void handlePreferInput();
     void handlePreferBase();    
@@ -285,8 +283,6 @@ public:
         {
             m_strategy = options.params->getDefaultStrategy();
         }
-
-        m_state = MERGERSTATE_NOFLAG;
     }
 
     struct ColorspaceNameConflict
@@ -301,13 +297,12 @@ public:
 
 private:
     // Attributes
-    MergerFlag m_state;
 
     std::vector<std::string> m_colorspaceMarkedToBeDeleted;
     std::vector<std::string> m_colorspaceReplacingMarkedCs;
 
     // Methods
-    const std::string getName() const { return "Colorspaces"; }
+    const std::string getName() const { return "Color Spaces"; }
 
     void processSearchPaths() const;
 
@@ -395,13 +390,10 @@ public:
         {
             m_strategy = options.params->getDefaultStrategy();
         }
-
-        m_state = MERGERSTATE_NOFLAG;
     }
 
 private:
     // Attributes
-    MergerFlag m_state;
 
     // Methods
     const std::string getName() const { return "Named Transforms"; }

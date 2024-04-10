@@ -359,7 +359,7 @@ ConstConfigMergerRcPtr ConfigMerger::Impl::Read(std::istream & istream, const ch
         for (int i = 0; i < numOfMerges; i++)
         {
             ConfigMergingParametersRcPtr params = ConfigMergingParameters::Create();
-            merger->getImpl()->mergesParams.push_back(params);
+            merger->getImpl()->m_mergeParams.push_back(params);
         }
 
         ociomParser.load(node, merger, filepath);
@@ -402,9 +402,9 @@ ConstConfigRcPtr ConfigMerger::Impl::loadConfig(const char * value) const
         if (Platform::Strcasecmp(getParams(i)->getOutputName(), value) == 0)
         {
             // Use the config from the index.
-            if (i < mergedConfigs.size())
+            if (i < (int) m_mergedConfigs.size())
             {
-                return mergedConfigs.at(i);
+                return m_mergedConfigs.at(i);
             }
         }
     }
@@ -501,21 +501,21 @@ const char * ConfigMerger::getWorkingDir() const
 
 ConfigMergingParametersRcPtr ConfigMerger::getParams(int index) const
 {
-    if (index < static_cast<int>(getImpl()->mergesParams.size()))
+    if (index < static_cast<int>(getImpl()->m_mergeParams.size()))
     {
-        return getImpl()->mergesParams.at(index);
+        return getImpl()->m_mergeParams.at(index);
     }
     return nullptr;
 }
 
 int ConfigMerger::getNumOfConfigMergingParameters() const
 {
-    return static_cast<int>(getImpl()->mergesParams.size());
+    return static_cast<int>(getImpl()->m_mergeParams.size());
 }
 
 void ConfigMerger::addParams(ConfigMergingParametersRcPtr params)
 {
-    getImpl()->mergesParams.push_back(params);
+    getImpl()->m_mergeParams.push_back(params);
 }
 
 void ConfigMerger::serialize(std::ostream& os) const
@@ -561,19 +561,19 @@ void ConfigMerger::setVersion(unsigned int major, unsigned int minor)
 
 void ConfigMerger::addMergedConfig(ConstConfigRcPtr cfg)
 {
-    getImpl()->mergedConfigs.push_back(cfg);
+    getImpl()->m_mergedConfigs.push_back(cfg);
 }
 
 ConstConfigRcPtr ConfigMerger::getMergedConfig() const
 {
-    return getMergedConfig(static_cast<int>(getImpl()->mergedConfigs.size() - 1));
+    return getMergedConfig(static_cast<int>(getImpl()->m_mergedConfigs.size() - 1));
 }
 
 ConstConfigRcPtr ConfigMerger::getMergedConfig(int index) const
 {
-    if (index < static_cast<int>(getImpl()->mergedConfigs.size()))
+    if (index < static_cast<int>(getImpl()->m_mergedConfigs.size()))
     {
-        return getImpl()->mergedConfigs.at(index);
+        return getImpl()->m_mergedConfigs.at(index);
     }
     return nullptr;
 }
@@ -612,8 +612,8 @@ ConstConfigRcPtr loadConfig(const ConfigMergerRcPtr merger,
     {
         try
         {
-            // Try to load the provided config using the searchpaths.
-            // Return as soon as they a valid path.
+            // Try to load the provided config using the search paths.
+            // Return as soon as they find a valid path.
             const std::string resolvedfullpath = pystring::os::path::join(searchpaths[i], 
                                                                           value);
             return Config::CreateFromFile(resolvedfullpath.c_str());
@@ -658,7 +658,7 @@ ConstConfigMergerRcPtr MergeConfigs(const ConstConfigMergerRcPtr & merger)
 
         if (baseCfg && inputCfg)
         {
-            // Create a copy of the base config.
+            // The merged config must be initialized with a copy of the base config.
             ConfigRcPtr mergedConfig = baseCfg->createEditableCopy();
 
             // Process merge.
@@ -678,7 +678,7 @@ ConstConfigMergerRcPtr MergeConfigs(const ConstConfigMergerRcPtr & merger)
                 throw(e);
             }
 
-            // Add new config object to mergedConfigs so they can be used for following merges.
+            // Add new config object to m_mergedConfigs so they can be used for following merges.
             editableMerger->addMergedConfig(mergedConfig);
         }
         else
@@ -688,6 +688,73 @@ ConstConfigMergerRcPtr MergeConfigs(const ConstConfigMergerRcPtr & merger)
     }
 
     return editableMerger;
+}
+
+ConfigRcPtr MergeConfigs(const ConfigMergingParametersRcPtr & params,
+                         const ConstConfigRcPtr & baseConfig,
+                         const ConstConfigRcPtr & inputConfig)
+{
+    if (!baseConfig || !inputConfig)
+    {
+        throw(Exception("The input or base config was not set."));
+    }
+
+    // The merged config must be initialized with a copy of the base config.
+    ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+
+    // Process the merge.
+    try
+    {
+        MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        GeneralMerger(options).merge();
+        RolesMerger(options).merge();
+        FileRulesMerger(options).merge();
+        DisplayViewMerger(options).merge();
+        LooksMerger(options).merge();
+        ColorspacesMerger(options).merge();
+        NamedTransformsMerger(options).merge();
+    }
+    catch(const Exception & e)
+    {
+        throw(e);
+    }
+
+    return mergedConfig;
+}
+
+ConfigRcPtr MergeColorSpace(const ConfigMergingParametersRcPtr & params,
+                            const ConstConfigRcPtr & baseConfig,
+                            const ConstColorSpaceRcPtr & colorspace)
+{
+    if (!baseConfig || !colorspace)
+    {
+        throw(Exception("The base config or color space object was not set."));
+    }
+
+    // Create an input config and add the color space.
+    ConfigRcPtr inputConfig = Config::Create();
+    inputConfig->addColorSpace(colorspace);
+
+    // The merged config must be initialized with a copy of the base config.
+    ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+
+    // With only the color space, the reference space is unknown, so turn off
+    // automatic reference space conversion to the reference space of the base config.
+    ConfigMergingParametersRcPtr eParams = params->createEditableCopy();
+    eParams->setAssumeCommonReferenceSpace(true);
+
+    // Process the merge.
+    try
+    {
+        MergeHandlerOptions options = { baseConfig, inputConfig, eParams, mergedConfig };
+        ColorspacesMerger(options).merge();
+    }
+    catch(const Exception & e)
+    {
+        throw(e);
+    }
+
+    return mergedConfig;
 }
 
 } // ConfigMergingHelpers

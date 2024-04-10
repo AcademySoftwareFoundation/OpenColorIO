@@ -6041,7 +6041,7 @@ colorspaces:
 //            OCIO_CHECK_EQUAL(std::string(mergedConfig->getCacheID()), std::string(bConfig->getCacheID()));
         }
     }
-
+}
     // Test with an OCIOZ archive
     // {
     //     std::vector<std::string> paths = { 
@@ -6066,4 +6066,108 @@ colorspaces:
     //         OCIO_CHECK_NO_THROW(mergedConfig->validate());
     //     }
     //}
+
+OCIO_ADD_TEST(MergeConfigs, merge_in_memory_configs)
+{
+            constexpr const char * BASE {
+R"(ocio_profile_version: 2
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: A}
+
+roles:
+    a: colorspace_a
+
+colorspaces:
+- !<ColorSpace>
+    name: colorspace_a
+    family: utility
+)" };
+
+            constexpr const char * INPUT {
+R"(ocio_profile_version: 2
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: B}
+
+colorspaces:
+- !<ColorSpace>
+    name: B
+    family: aces
+)" };
+        std::istringstream bss(BASE);
+        std::istringstream iss(INPUT);
+        OCIO::ConstConfigRcPtr baseConfig = OCIO::Config::CreateFromStream(bss);
+        OCIO::ConstConfigRcPtr inputConfig = OCIO::Config::CreateFromStream(iss);
+
+        OCIO::ConfigMergingParametersRcPtr params = OCIO::ConfigMergingParameters::Create();
+        params->setInputFirst(false);
+        MergeStrategy strategy = MergeStrategy::STRATEGY_PREFER_INPUT;
+        params->setRoles(strategy);
+        params->setColorspaces(strategy);
+        params->setNamedTransforms(strategy);
+        params->setDefaultStrategy(strategy);
+        params->setInputFamilyPrefix("Input/");
+        params->setBaseFamilyPrefix("Base/");
+        params->setAssumeCommonReferenceSpace(true);
+        params->setAvoidDuplicates(false);
+
+        OCIO::ConfigRcPtr mergedConfig = OCIO::ConfigMergingHelpers::MergeConfigs(params, baseConfig, inputConfig);
+
+    std::ostringstream ossResult;
+    mergedConfig->serialize(ossResult);
+    std::cout << ossResult.str() << "\n";
+}
+
+OCIO_ADD_TEST(MergeConfigs, merge_single_colorspace)
+{
+            constexpr const char * BASE {
+R"(ocio_profile_version: 2
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: A}
+
+roles:
+    a: colorspace_a
+
+colorspaces:
+- !<ColorSpace>
+    name: colorspace_a
+    family: utility
+)" };
+
+            constexpr const char * INPUT {
+R"(ocio_profile_version: 2
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: B}
+
+colorspaces:
+- !<ColorSpace>
+    name: B
+    family: aces
+)" };
+        std::istringstream bss(BASE);
+        std::istringstream iss(INPUT);
+        OCIO::ConstConfigRcPtr baseConfig = OCIO::Config::CreateFromStream(bss);
+        OCIO::ConstConfigRcPtr inputConfig = OCIO::Config::CreateFromStream(iss);
+        OCIO::ConstColorSpaceRcPtr colorspace = inputConfig->getColorSpace("B");
+
+        OCIO::ConfigMergingParametersRcPtr params = OCIO::ConfigMergingParameters::Create();
+        params->setInputFirst(false);
+        MergeStrategy strategy = MergeStrategy::STRATEGY_PREFER_INPUT;
+        params->setRoles(strategy);
+        params->setColorspaces(strategy);
+        params->setNamedTransforms(strategy);
+        params->setDefaultStrategy(strategy);
+        params->setInputFamilyPrefix("Input/");
+        params->setBaseFamilyPrefix("Base/");
+        params->setAssumeCommonReferenceSpace(true);
+        params->setAvoidDuplicates(false);
+
+        OCIO::ConfigRcPtr mergedConfig = OCIO::ConfigMergingHelpers::MergeColorSpace(params, baseConfig, colorspace);
+
+    std::ostringstream ossResult;
+    mergedConfig->serialize(ossResult);
+    std::cout << ossResult.str() << "\n";
 }

@@ -782,6 +782,7 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const ColorSpaceMenu
 
 namespace ConfigMergingHelpers
 {
+
 /**
  * \brief Execute the merge(s) based on the merger object.
  * 
@@ -793,6 +794,35 @@ namespace ConfigMergingHelpers
  * \return OCIOEXPORT 
  */
 extern OCIOEXPORT ConstConfigMergerRcPtr MergeConfigs(const ConstConfigMergerRcPtr & merger);
+
+/**
+ * \brief Merge the input into the base config, using the supplied merge parameters.
+ * 
+ * \param params ConfigMergingParameters controlling the merger.
+ * \param params The base config.
+ * \param params The input config to merge.
+ * \return The merged config object.
+ */
+extern OCIOEXPORT ConfigRcPtr MergeConfigs(const ConfigMergingParametersRcPtr & params,
+                                           const ConstConfigRcPtr & baseConfig,
+                                           const ConstConfigRcPtr & inputConfig);
+
+/**
+ * \brief Merge a single color space into the base config, using the supplied merge parameters.
+ * 
+ * Note that the assumeCommonReferenceSpace merge parameter will be ignored and set to true.
+ * To use automatice reference space conversion, add the color space to an input config that
+ * has the necessary interchange role set.
+ *
+ * \param params ConfigMergingParameters controlling the merger.
+ * \param params The base config.
+ * \param params The input color space to merge.
+ * \return The merged config object.
+ */
+extern OCIOEXPORT ConfigRcPtr MergeColorSpace(const ConfigMergingParametersRcPtr & params,
+                                              const ConstConfigRcPtr & baseConfig,
+                                              const ConstColorSpaceRcPtr & colorspace);
+
 } // ConfigMergingHelpers
 
 } // namespace OCIO_NAMESPACE

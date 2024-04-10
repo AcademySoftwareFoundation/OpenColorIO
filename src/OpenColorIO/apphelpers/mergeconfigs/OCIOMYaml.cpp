@@ -513,7 +513,7 @@ inline void save(YAML::Emitter & out, const ConfigMerger & merger)
         out << YAML::Value << YAML::BeginMap;
 
         out << YAML::Key << "base" << YAML::Value << p->getBaseConfigName();
-        out << YAML::Key << "input" << YAML::Value << p->getBaseConfigName();
+        out << YAML::Key << "input" << YAML::Value << p->getInputConfigName();
         out << YAML::Newline;
 
         out << YAML::Key << "options";
@@ -579,27 +579,27 @@ inline void save(YAML::Emitter & out, const ConfigMerger & merger)
 
         out << YAML::Key << "file_rules";
         out << YAML::Value << YAML::BeginMap;
-        out << YAML::Key << "strategy" << YAML::Value << stategyEnumToString(p->getRoles());
+        out << YAML::Key << "strategy" << YAML::Value << stategyEnumToString(p->getFileRules());
         out << YAML::EndMap;
 
         out << YAML::Key << "display-views";
         out << YAML::Value << YAML::BeginMap;
-        out << YAML::Key << "strategy" << YAML::Value << stategyEnumToString(p->getRoles());
+        out << YAML::Key << "strategy" << YAML::Value << stategyEnumToString(p->getDisplayViews());
         out << YAML::EndMap;
 
         out << YAML::Key << "looks";
         out << YAML::Value << YAML::BeginMap;
-        out << YAML::Key << "strategy" << YAML::Value << stategyEnumToString(p->getRoles());
+        out << YAML::Key << "strategy" << YAML::Value << stategyEnumToString(p->getLooks());
         out << YAML::EndMap;
 
         out << YAML::Key << "colorspaces";
         out << YAML::Value << YAML::BeginMap;
-        out << YAML::Key << "strategy" << YAML::Value << stategyEnumToString(p->getRoles());
+        out << YAML::Key << "strategy" << YAML::Value << stategyEnumToString(p->getColorspaces());
         out << YAML::EndMap;
 
         out << YAML::Key << "named_transform";
         out << YAML::Value << YAML::BeginMap;
-        out << YAML::Key << "strategy" << YAML::Value << stategyEnumToString(p->getRoles());
+        out << YAML::Key << "strategy" << YAML::Value << stategyEnumToString(p->getNamedTransforms());
         out << YAML::EndMap;
 
         // End of params section.
