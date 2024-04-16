@@ -26,7 +26,11 @@ struct MyUserData
     }
 
     // Make a retrieve-by-name function.
+#if OSL_LIBRARY_VERSION_CODE >= 11300
+    bool retrieve(OSL::ustringhash name, OSL::TypeDesc type, void * val, bool /*derivatives*/)
+#else
     bool retrieve(OSL::ustring name, OSL::TypeDesc type, void * val, bool /*derivatives*/)
+#endif
     {
         static const OSL::ustring ucolor_rgb("inColor.rgb");
         if (name == ucolor_rgb && type == OIIO::TypeColor)
@@ -61,9 +65,15 @@ struct MyUserData
 class MyRendererServices final : public OSL::RendererServices
 {
 public:
+#if OSL_LIBRARY_VERSION_CODE >= 11300
+    virtual bool get_userdata(bool derivatives, OSL::ustringhash name,
+                              OSL::TypeDesc type, OSL::ShaderGlobals * sg,
+                              void * val)
+#else
     virtual bool get_userdata(bool derivatives, OSL::ustring name,
                               OSL::TypeDesc type, OSL::ShaderGlobals * sg,
                               void * val)
+#endif
     {
         // In this case, our implementation of get_userdata just requests
         // it from the MyUserData, which we have arranged is pointed to
@@ -137,6 +147,21 @@ void ExecuteOSLShader(const std::string & shaderName,
                         OSL::TypeDesc(OSL::TypeDesc::STRING, output_names.size()),
                         output_names.data());
 
+#if OSL_LIBRARY_VERSION_CODE >= 11300
+    // Use the new symlocs API to say where to place outputs
+    OSL::SymLocationDesc outputRGB("outColor.rgb", OSL::TypePoint, false,
+                                 OSL::SymArena::Outputs,
+                                 0 /* output arena offset of "out" */,
+                                 sizeof(OSL::Vec3) /* point to point stride */);
+    shadsys->add_symlocs(mygroup.get(), outputRGB);
+
+    OSL::SymLocationDesc outputA("outColor.a", OSL::TypeFloat, false,
+                                 OSL::SymArena::Outputs,
+                                 sizeof(OSL::Vec3) /* output arena offset of "out" */,
+                                 sizeof(float) /* point to point stride */);
+    shadsys->add_symlocs(mygroup.get(), outputA);
+#endif
+
     // Now we want to create a context in which we can execute the shader.
     // We need one context per thread.
     OSL::PerThreadInfo * perthread = shadsys->create_thread_info();
@@ -146,6 +171,7 @@ void ExecuteOSLShader(const std::string & shaderName,
     // so we force that to happen now.
     shadsys->optimize_group(mygroup.get(), ctx);
 
+#if OSL_LIBRARY_VERSION_CODE < 11300
     // Get a ShaderSymbol* handle to the final output we care about. This
     // will greatly speed up retrieving the value later, rather than by
     // looking it up by name on every shade.
@@ -156,6 +182,7 @@ void ExecuteOSLShader(const std::string & shaderName,
     const OSL::ShaderSymbol * outsymA
         = shadsys->find_symbol(*mygroup.get(), OSL::ustring("layer1"), OSL::ustring("outColor.a"));
     OSL_ASSERT(outsymA);
+#endif
 
     for (size_t idx = 0; idx < inValues.size(); ++idx)
     {
@@ -165,8 +192,14 @@ void ExecuteOSLShader(const std::string & shaderName,
         MyUserData userdata(inValues[idx]);
         shaderglobals.renderstate = &userdata;
 
+        Vec4 rgbaOut { 0.0, 0.0, 0.0 };
+
         // Run the shader (will automagically optimize and JIT the first time it executes).
+#if OSL_LIBRARY_VERSION_CODE >= 11300
+        if (!shadsys->execute(*ctx, *mygroup.get(), 0, 0, shaderglobals, nullptr, &rgbaOut))
+#else
         if (!shadsys->execute(*ctx, *mygroup.get(), shaderglobals))
+#endif
         {
             std::string errormessage;
 
@@ -182,15 +215,21 @@ void ExecuteOSLShader(const std::string & shaderName,
             throw std::runtime_error(errormessage);
         }
 
+#if OSL_LIBRARY_VERSION_CODE < 11300
         const OSL::Vec3 outRGB = *(OSL::Vec3 *)shadsys->symbol_address(*ctx, outsymRGB);
         const float outA = *(float *)shadsys->symbol_address(*ctx, outsymA);
+        rgbaOut[0] = outRGB[0];
+        rgbaOut[1] = outRGB[1];
+        rgbaOut[2] = outRGB[2];
+        rgbaOut[3] = outA;
+#endif
 
         // Check the result.
 
-        if (   ComputeDiff(outValues[idx][0], outRGB[0], relativeComparison, minValue, threshold)
-            || ComputeDiff(outValues[idx][1], outRGB[1], relativeComparison, minValue, threshold)
-            || ComputeDiff(outValues[idx][2], outRGB[2], relativeComparison, minValue, threshold)
-            || ComputeDiff(outValues[idx][3], outA,      relativeComparison, minValue, threshold))
+        if (   ComputeDiff(outValues[idx][0], rgbaOut[0], relativeComparison, minValue, threshold)
+            || ComputeDiff(outValues[idx][1], rgbaOut[1], relativeComparison, minValue, threshold)
+            || ComputeDiff(outValues[idx][2], rgbaOut[2], relativeComparison, minValue, threshold)
+            || ComputeDiff(outValues[idx][3], rgbaOut[3], relativeComparison, minValue, threshold))
         {
             std::stringstream str;
             str << "Values from [" 
@@ -200,7 +239,7 @@ void ExecuteOSLShader(const std::string & shaderName,
                 << outValues[idx][0] << ", " << outValues[idx][1] << ", "
                 << outValues[idx][2] << ", " << outValues[idx][3]
                 << "], but OSL computed values are [" 
-                << outRGB[0] << ", " << outRGB[1] << ", " << outRGB[2] << ", " << outA << "].";
+                << rgbaOut[0] << ", " << rgbaOut[1] << ", " << rgbaOut[2] << ", " << rgbaOut[3] << "].";
 
             throw std::runtime_error(str.str());
         }

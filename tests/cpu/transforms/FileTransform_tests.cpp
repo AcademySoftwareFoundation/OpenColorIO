@@ -290,6 +290,20 @@ OCIO_ADD_TEST(FileTransform, format_by_index)
     ValidateFormatByIndex(formatRegistry, OCIO::FORMAT_CAPABILITY_READ);
 }
 
+OCIO_ADD_TEST(FileTransform, is_format_extension_supported)
+{
+    OCIO::FormatRegistry & formatRegistry = OCIO::FormatRegistry::GetInstance();
+    OCIO_CHECK_EQUAL(formatRegistry.isFormatExtensionSupported("foo"), false);
+    OCIO_CHECK_EQUAL(formatRegistry.isFormatExtensionSupported("bar"), false);
+    OCIO_CHECK_EQUAL(formatRegistry.isFormatExtensionSupported("."), false);
+    OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported("cdl"));
+    OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported(".cdl"));
+    OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported("Cdl"));
+    OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported(".Cdl"));
+    OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported("3dl"));
+    OCIO_CHECK_ASSERT(formatRegistry.isFormatExtensionSupported(".3dl"));
+}
+
 OCIO_ADD_TEST(FileTransform, validate)
 {
     OCIO::FileTransformRcPtr tr = OCIO::FileTransform::Create();

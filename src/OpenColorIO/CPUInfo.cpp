@@ -107,10 +107,10 @@ CPUInfo::CPUInfo()
             flags |= X86_CPU_FLAG_SSE42;
 
         /* Check OSXSAVE and AVX bits */
-        if (info.reg.ecx & 0x18000000)
+        if ((info.reg.ecx & 0x18000000) == 0x18000000)
         {
             xcr = xgetbv();
-            if(xcr & 0x6) {
+            if((xcr & 0x6) == 0x6) {
                 flags |= X86_CPU_FLAG_AVX;
 
                 if(info.reg.ecx & 0x20000000) {
@@ -129,7 +129,7 @@ CPUInfo::CPUInfo()
 
         /* OPMASK/ZMM state */
         if ((xcr & 0xe0) == 0xe0) {
-            if ((flags & X86_CPU_FLAG_AVX2) && (info.reg.ebx & 0xd0030000))
+            if ((flags & X86_CPU_FLAG_AVX2) && ((info.reg.ebx & 0xd0030000) == 0xd0030000))
                 flags |= X86_CPU_FLAG_AVX512;
         }
     }
@@ -183,18 +183,20 @@ CPUInfo::CPUInfo()
     }
 }
 
-CPUInfo& CPUInfo::instance()
-{
-    static CPUInfo singleton = CPUInfo();
-    return singleton;
-}
 #elif defined(__aarch64__) // ARM Processor or Apple ARM.
+
 CPUInfo::CPUInfo()
 {
     flags = 0;
     memset(name, 0, sizeof(name));
+    memset(vendor, 0, sizeof(vendor));
 
     snprintf(name, sizeof(name), "%s", "ARM");
+#if __APPLE__
+    snprintf(vendor, sizeof(vendor), "%s", "Apple");
+# else
+    snprintf(vendor, sizeof(vendor), "%s", "ARM");
+#endif
 
     // SSE2NEON library supports SSE, SSE2, SSE3, SSSE3, SSE4.1 and SSE4.2.
     // It does not support any AVX instructions.
@@ -208,11 +210,23 @@ CPUInfo::CPUInfo()
     }
 }
 
+#else
+
+CPUInfo::CPUInfo() // Unknown Processor
+{
+    flags = 0;
+    memset(name, 0, sizeof(name));
+    memset(vendor, 0, sizeof(vendor));
+    snprintf(name, sizeof(name), "%s", "Unknown");
+    snprintf(vendor, sizeof(vendor), "%s", "Unknown");
+}
+
+#endif
+
 CPUInfo& CPUInfo::instance()
 {
     static CPUInfo singleton = CPUInfo();
     return singleton;
 }
-#endif
 
 } // namespace OCIO_NAMESPACE

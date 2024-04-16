@@ -9,7 +9,8 @@
 #endif
 
 
-#include <Carbon/Carbon.h>
+#include <ColorSync/ColorSync.h>
+#include <CoreGraphics/CoreGraphics.h>
 #include <IOKit/graphics/IOGraphicsLib.h>
 
 #include "Logging.h"

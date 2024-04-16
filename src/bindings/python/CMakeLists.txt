@@ -170,7 +170,7 @@ if(UNIX)
 	set_property(TARGET PyOpenColorIO PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif()
 
-if (UNIX AND NOT CMAKE_SKIP_RPATH AND NOT CMAKE_INSTALL_RPATH)
+if (UNIX AND NOT CMAKE_SKIP_RPATH AND CMAKE_INSTALL_RPATH)
     # Update the default RPATH so the Python binding dynamic library can find the OpenColorIO
     # dynamic library based on the default installation directory structure.
     if (APPLE)

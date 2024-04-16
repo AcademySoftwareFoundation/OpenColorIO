@@ -18,6 +18,7 @@
 #include "Lut3DOpCPU_SSE2.h"
 #include "Lut3DOpCPU_AVX.h"
 #include "Lut3DOpCPU_AVX2.h"
+#include "Lut3DOpCPU_AVX512.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -405,6 +406,13 @@ Lut3DTetrahedralRenderer::Lut3DTetrahedralRenderer(ConstLut3DOpDataRcPtr & lut)
         m_applyLutFunc = applyTetrahedralAVX2;
     }
     #endif
+
+    #if OCIO_USE_AVX512
+    if (CPUInfo::instance().hasAVX512())
+    {
+        m_applyLutFunc = applyTetrahedralAVX512;
+    }
+    #endif
 }
 
 Lut3DTetrahedralRenderer::~Lut3DTetrahedralRenderer()
@@ -416,7 +424,7 @@ void Lut3DTetrahedralRenderer::apply(const void * inImg, void * outImg, long num
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
 
-    if (m_applyLutFunc)
+    if (m_applyLutFunc && numPixels > 1)
     {
         m_applyLutFunc(m_optLut, m_dim, in, out, numPixels);
     }

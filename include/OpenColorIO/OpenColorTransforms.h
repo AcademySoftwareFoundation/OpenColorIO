@@ -1070,6 +1070,13 @@ public:
     static const char * GetFormatNameByIndex(int index);
     /// Get the LUT reader extension at index, return empty string if an invalid index is specified.
     static const char * GetFormatExtensionByIndex(int index);
+    /// Returns true if the extension corresponds to a format supported by FileTransform.
+    /// The argument is case-insensitive, and a leading dot, if present, is ignored.
+    /// Note that FileTransform will attempt all format readers on a given file until it is
+    /// successful, even files that contain an unsupported extension or no extension.
+    /// However, this function is useful for applications that want to know which files are likely
+    /// to be LUT files, based on their extension.
+    static bool IsFormatExtensionSupported(const char * extension);
 
     FileTransform & operator=(const FileTransform &) = delete;
     /// Do not use (needed only for pybind11).

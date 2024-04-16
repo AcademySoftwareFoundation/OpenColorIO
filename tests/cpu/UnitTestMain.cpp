@@ -67,6 +67,7 @@ int main(int argc, const char ** argv)
     bool sse2     = false;
     bool avx      = false;
     bool avx2     = false;
+    bool avx512   = false;
     bool f16c     = false;
 #endif
     ArgParse ap;
@@ -78,7 +79,8 @@ int main(int argc, const char ** argv)
                "--sse2",          &sse2,             "Enable SSE2 Accelerated features",
                "--avx",           &avx,              "Enable AVX Accelerated features",
                "--avx2",          &avx2,             "Enable AVX2 Accelerated features",
-               "--f16c",          &f16c,             "Enable F16C Accelerated features",
+               "--avx512",        &avx512,           "Enable AVX512 Accelerated features",
+               "--f16c",          &f16c,             "Enable F16C Accelerated features (only used with AVX/AVX2)",
 #endif
                "--run_only %s",   &filter,           "Run only some unit tests\n"
                                                      "\tex: --run_only \"FileRules/clone\"\n"
@@ -101,7 +103,7 @@ int main(int argc, const char ** argv)
 
 #if defined(ENABLE_SIMD_USAGE)
     OCIO::CPUInfo &cpu = OCIO::CPUInfo::instance();
-    if (no_accel || sse2 || avx || avx2 || f16c)
+    if (no_accel || sse2 || avx || avx2 || avx512 || f16c)
     {
         unsigned flags = 0;
         if (sse2)
@@ -132,6 +134,16 @@ int main(int argc, const char ** argv)
             }
             flags |= X86_CPU_FLAG_AVX2;
         }
+        if (avx512)
+        {
+            if (!cpu.hasAVX512())
+            {
+                std::cerr << "-avx512 not supported by processor\n";
+                GetUnitTests().clear();
+            }
+            flags |= X86_CPU_FLAG_AVX512;
+        }
+
         if (f16c)
         {
             if (!cpu.hasF16C())
@@ -153,6 +165,9 @@ int main(int argc, const char ** argv)
 
     if (cpu.hasAVX2())
         std::cerr << "+avx2";
+    
+    if (cpu.hasAVX512())
+        std::cerr << "+avx512";
 
     if (cpu.hasF16C())
         std::cerr << "+f16c";
