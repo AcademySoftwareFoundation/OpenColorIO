@@ -329,6 +329,54 @@ class MessageRouter(QtCore.QObject):
         """Forward unknown attribute requests to internal runner."""
         return getattr(self._runner, item)
 
+    @property
+    def gpu_language(self) -> ocio.GpuLanguage:
+        return self._runner.gpu_language
+
+    @gpu_language.setter
+    def gpu_language(self, gpu_language: ocio.GpuLanguage) -> None:
+        self._runner.gpu_language = gpu_language
+
+    @property
+    def config_updates_allowed(self) -> bool:
+        return self._runner.config_updates_allowed
+
+    @config_updates_allowed.setter
+    def config_updates_allowed(self, allowed: bool) -> None:
+        self._runner.config_updates_allowed = allowed
+
+    @property
+    def ctf_updates_allowed(self) -> bool:
+        return self._runner.ctf_updates_allowed
+
+    @ctf_updates_allowed.setter
+    def ctf_updates_allowed(self, allowed: bool) -> None:
+        self._runner.ctf_updates_allowed = allowed
+
+    @property
+    def image_updates_allowed(self) -> bool:
+        return self._runner.image_updates_allowed
+
+    @image_updates_allowed.setter
+    def image_updates_allowed(self, allowed: bool) -> None:
+        self._runner.image_updates_allowed = allowed
+
+    @property
+    def processor_updates_allowed(self) -> bool:
+        return self._runner.processor_updates_allowed
+
+    @processor_updates_allowed.setter
+    def processor_updates_allowed(self, allowed: bool) -> None:
+        self._runner.processor_updates_allowed = allowed
+
+    @property
+    def shader_updates_allowed(self) -> bool:
+        return self._runner.shader_updates_allowed
+
+    @shader_updates_allowed.setter
+    def shader_updates_allowed(self, allowed: bool) -> None:
+        self._runner.shader_updates_allowed = allowed
+
     def end_routing(self) -> None:
         """Stop message routing thread."""
         if not self._runner.is_routing():
