@@ -9,6 +9,7 @@ import PyOpenColorIO as ocio
 from PySide6 import QtCore, QtGui
 
 from ..config_cache import ConfigCache
+from ..constants import ICON_SIZE_ITEM
 from ..undo import ConfigSnapshotUndoCommand
 from ..utils import get_glyph_icon, next_name
 from .config_item_model import ColumnDesc, BaseConfigItemModel
@@ -77,7 +78,7 @@ class FileRuleModel(BaseConfigItemModel):
             FileRuleType.RULE_OCIO_V1: "mdi6.contain",
             FileRuleType.RULE_DEFAULT: "ph.arrow-line-down",
         }
-        return get_glyph_icon(glyph_names[rule_type])
+        return get_glyph_icon(glyph_names[rule_type], size=ICON_SIZE_ITEM)
 
     @classmethod
     def has_presets(cls) -> bool:

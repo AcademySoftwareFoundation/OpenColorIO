@@ -6,7 +6,7 @@ from typing import Optional
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from ..constants import MARGIN_WIDTH
+from ..constants import MARGIN_WIDTH, ICON_SIZE_TAB
 from ..transform_manager import TransformManager
 from ..transforms import TransformEditStack
 from ..utils import get_glyph_icon, SignalsBlocked
@@ -47,14 +47,16 @@ class BaseConfigItemParamEdit(QtWidgets.QWidget):
 
         if self.__has_transforms__:
             self.__has_tabs__ = True
-            no_tf_color = palette.color(palette.ColorGroup.Disabled, palette.ColorRole.Text)
-            self._from_ref_icon = get_glyph_icon("mdi6.layers-plus")
-            self._no_from_ref_icon = get_glyph_icon(
-                "mdi6.layers-plus", color=no_tf_color
+            no_tf_color = palette.color(
+                palette.ColorGroup.Disabled, palette.ColorRole.Text
             )
-            self._to_ref_icon = get_glyph_icon("mdi6.layers-minus")
+            self._from_ref_icon = get_glyph_icon("mdi6.layers-plus", size=ICON_SIZE_TAB)
+            self._no_from_ref_icon = get_glyph_icon(
+                "mdi6.layers-plus", color=no_tf_color, size=ICON_SIZE_TAB
+            )
+            self._to_ref_icon = get_glyph_icon("mdi6.layers-minus", size=ICON_SIZE_TAB)
             self._no_to_ref_icon = get_glyph_icon(
-                "mdi6.layers-minus", color=no_tf_color
+                "mdi6.layers-minus", color=no_tf_color, size=ICON_SIZE_TAB
             )
 
         # Widgets

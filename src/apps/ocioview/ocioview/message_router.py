@@ -71,46 +71,56 @@ class MessageRunner(QtCore.QObject):
         self._ctf_updates_allowed = False
         self._shader_updates_allowed = False
 
-    def get_gpu_language(self) -> ocio.GpuLanguage:
+    @property
+    def gpu_language(self) -> ocio.GpuLanguage:
         return self._gpu_language
 
-    def set_gpu_language(self, gpu_language: ocio.GpuLanguage) -> None:
+    @gpu_language.setter
+    def gpu_language(self, gpu_language: ocio.GpuLanguage) -> None:
         self._gpu_language = gpu_language
         if self._shader_updates_allowed and self._prev_proc is not None:
             # Rebroadcast last processor record
             message_queue.put_nowait(self._prev_proc)
 
+    @property
     def config_updates_allowed(self) -> bool:
         return self._config_updates_allowed
 
-    def set_config_updates_allowed(self, allowed: bool) -> None:
+    @config_updates_allowed.setter
+    def config_updates_allowed(self, allowed: bool) -> None:
         self._config_updates_allowed = allowed
         if allowed and self._prev_config is not None:
             # Rebroadcast last config record
             message_queue.put_nowait(self._prev_config)
 
+    @property
     def cpu_processor_updates_allowed(self) -> bool:
         return self._cpu_processor_updates_allowed
 
-    def set_cpu_processor_updates_allowed(self, allowed: bool) -> None:
+    @cpu_processor_updates_allowed.setter
+    def cpu_processor_updates_allowed(self, allowed: bool) -> None:
         self._cpu_processor_updates_allowed = allowed
         if allowed and self._prev_config is not None:
             # Rebroadcast last config record
             message_queue.put_nowait(self._prev_config)
 
+    @property
     def ctf_updates_allowed(self) -> bool:
         return self._ctf_updates_allowed
 
-    def set_ctf_updates_allowed(self, allowed: bool) -> None:
+    @ctf_updates_allowed.setter
+    def ctf_updates_allowed(self, allowed: bool) -> None:
         self._ctf_updates_allowed = allowed
         if allowed and self._prev_proc is not None:
             # Rebroadcast last processor record
             message_queue.put_nowait(self._prev_proc)
 
+    @property
     def shader_updates_allowed(self) -> bool:
         return self._shader_updates_allowed
 
-    def set_shader_updates_allowed(self, allowed: bool) -> None:
+    @shader_updates_allowed.setter
+    def shader_updates_allowed(self, allowed: bool) -> None:
         self._shader_updates_allowed = allowed
         if allowed and self._prev_proc is not None:
             # Rebroadcast last processor record

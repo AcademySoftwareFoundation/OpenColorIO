@@ -9,6 +9,7 @@ from typing import Callable, Optional
 import PyOpenColorIO as ocio
 from PySide6 import QtCore, QtGui
 
+from .constants import ICON_SIZE_ITEM
 from .utils import get_glyph_icon
 
 
@@ -178,7 +179,9 @@ class TransformManager:
                 9: "nine",
             }[slot]
             color = cls.get_subscription_slot_color(slot)
-            return get_glyph_icon(f"ph.number-circle-{slot_word}", color=color)
+            return get_glyph_icon(
+                f"ph.number-circle-{slot_word}", color=color, size=ICON_SIZE_ITEM
+            )
         else:
             return None
 

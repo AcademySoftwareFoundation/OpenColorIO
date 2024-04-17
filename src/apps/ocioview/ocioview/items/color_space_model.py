@@ -8,6 +8,7 @@ import PyOpenColorIO as ocio
 from PySide6 import QtCore, QtGui
 
 from ..config_cache import ConfigCache
+from ..constants import ICON_SIZE_ITEM
 from ..ref_space_manager import ReferenceSpaceManager
 from ..utils import get_enum_member, get_glyph_icon
 from .config_item_model import ColumnDesc, BaseConfigItemModel
@@ -50,8 +51,10 @@ class ColorSpaceModel(BaseConfigItemModel):
         self._items = ocio.ColorSpaceSet()
 
         self._ref_space_icons = {
-            ocio.REFERENCE_SPACE_SCENE: get_glyph_icon("ph.sun"),
-            ocio.REFERENCE_SPACE_DISPLAY: get_glyph_icon("ph.monitor"),
+            ocio.REFERENCE_SPACE_SCENE: get_glyph_icon("ph.sun", size=ICON_SIZE_ITEM),
+            ocio.REFERENCE_SPACE_DISPLAY: get_glyph_icon(
+                "ph.monitor", size=ICON_SIZE_ITEM
+            ),
         }
 
         # Update on external config changes, in this case when a required reference

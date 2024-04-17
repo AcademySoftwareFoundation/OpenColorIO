@@ -10,7 +10,7 @@ import numpy as np
 import PyOpenColorIO as ocio
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from ..constants import R_COLOR, G_COLOR, B_COLOR, GRAY_COLOR
+from ..constants import R_COLOR, G_COLOR, B_COLOR, GRAY_COLOR, ICON_SIZE_TAB
 from ..message_router import MessageRouter
 from ..utils import get_glyph_icon, SignalsBlocked
 from ..widgets import EnumComboBox, FloatEditArray, IntEdit
@@ -39,7 +39,7 @@ class CurveInspector(QtWidgets.QWidget):
 
     @classmethod
     def icon(cls) -> QtGui.QIcon:
-        return get_glyph_icon("mdi6.chart-bell-curve-cumulative")
+        return get_glyph_icon("mdi6.chart-bell-curve-cumulative", size=ICON_SIZE_TAB)
 
     def __init__(self, parent: Optional[QtCore.QObject] = None):
         super().__init__(parent=parent)
@@ -256,14 +256,14 @@ class CurveView(QtWidgets.QGraphicsView):
         super().showEvent(event)
 
         msg_router = MessageRouter.get_instance()
-        msg_router.set_cpu_processor_updates_allowed(True)
+        msg_router.cpu_processor_updates_allowed = True
 
     def hideEvent(self, event: QtGui.QHideEvent) -> None:
         """Stop listening for processor updates, if not visible."""
         super().hideEvent(event)
 
         msg_router = MessageRouter.get_instance()
-        msg_router.set_cpu_processor_updates_allowed(False)
+        msg_router.cpu_processor_updates_allowed = False
 
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
         """Re-fit graph on resize, to always be centered."""

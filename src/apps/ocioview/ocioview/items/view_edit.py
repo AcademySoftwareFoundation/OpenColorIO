@@ -260,7 +260,7 @@ class ViewEdit(BaseConfigItemEdit):
         signal is emitted twice when pressing enter. See:
             https://forum.qt.io/topic/39141/qlineedit-editingfinished-signal-is-emitted-twice
         """
-        view_type = self._get_view_type(self.list.current_row())
+        view_type, _ = self._get_view_type(self.list.current_row())
         self.param_edit.display_edits[view_type].blockSignals(True)
         self._display_mapper.submit()
         self.param_edit.display_edits[view_type].blockSignals(False)

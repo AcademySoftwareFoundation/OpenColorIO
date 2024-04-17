@@ -8,6 +8,7 @@ import PyOpenColorIO as ocio
 from PySide6 import QtCore, QtGui
 
 from ..config_cache import ConfigCache
+from ..constants import ICON_SIZE_ITEM
 from ..utils import get_enum_member, get_glyph_icon
 from .config_item_model import ColumnDesc, BaseConfigItemModel
 from .utils import get_scene_to_display_transform, get_display_to_scene_transform
@@ -40,8 +41,10 @@ class ViewTransformModel(BaseConfigItemModel):
         super().__init__(parent=parent)
 
         self._ref_space_icons = {
-            ocio.REFERENCE_SPACE_SCENE: get_glyph_icon("ph.sun"),
-            ocio.REFERENCE_SPACE_DISPLAY: get_glyph_icon("ph.monitor"),
+            ocio.REFERENCE_SPACE_SCENE: get_glyph_icon("ph.sun", size=ICON_SIZE_ITEM),
+            ocio.REFERENCE_SPACE_DISPLAY: get_glyph_icon(
+                "ph.monitor", size=ICON_SIZE_ITEM
+            ),
         }
 
     def get_item_names(self) -> list[str]:

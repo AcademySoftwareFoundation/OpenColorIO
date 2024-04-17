@@ -7,6 +7,7 @@ import PyOpenColorIO as ocio
 from PySide6 import QtCore, QtGui
 
 from ..config_cache import ConfigCache
+from ..constants import ICON_SIZE_ITEM
 from ..ref_space_manager import ReferenceSpaceManager
 from ..undo import ConfigSnapshotUndoCommand
 from ..utils import get_glyph_icon, next_name
@@ -44,7 +45,7 @@ class ViewModel(BaseConfigItemModel):
             ViewType.VIEW_DISPLAY: "mdi6.eye-outline",
             ViewType.VIEW_SCENE: "mdi6.eye",
         }
-        return get_glyph_icon(glyph_names[view_type])
+        return get_glyph_icon(glyph_names[view_type], size=ICON_SIZE_ITEM)
 
     @classmethod
     def has_presets(cls) -> bool:
@@ -353,9 +354,13 @@ class ViewModel(BaseConfigItemModel):
 
         # Display views
         for name in config.getViews(ocio.VIEW_DISPLAY_DEFINED, self._display):
+            view_type, warning = get_view_type(self._display, name)
+            if warning:
+                self.warning_raised.emit(warning)
+
             self._items.append(
                 View(
-                    get_view_type(self._display, name),
+                    view_type,
                     name,
                     config.getDisplayViewColorSpaceName(self._display, name),
                     config.getDisplayViewTransformName(self._display, name),

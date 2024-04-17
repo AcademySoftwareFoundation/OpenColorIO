@@ -6,9 +6,10 @@ from dataclasses import dataclass
 from typing import Any, Optional, Type, Union
 
 import PyOpenColorIO as ocio
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui
 
 from ..config_cache import ConfigCache
+from ..constants import ICON_SIZE_ITEM
 from ..transform_manager import TransformManager, TransformAgent
 from ..undo import ItemModelUndoCommand, ConfigSnapshotUndoCommand
 from ..utils import get_glyph_icon, next_name, item_type_label
@@ -74,7 +75,7 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
         :return: Item type icon
         """
         if cls.__icon__ is None:
-            cls.__icon__ = get_glyph_icon(cls.__icon_glyph__)
+            cls.__icon__ = get_glyph_icon(cls.__icon_glyph__, size=ICON_SIZE_ITEM)
         return cls.__icon__
 
     @classmethod

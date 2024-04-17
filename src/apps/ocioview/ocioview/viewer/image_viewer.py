@@ -10,7 +10,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..transform_manager import TransformManager
 from ..config_cache import ConfigCache
-from ..constants import GRAY_COLOR, R_COLOR, G_COLOR, B_COLOR
+from ..constants import GRAY_COLOR, R_COLOR, G_COLOR, B_COLOR, ICON_SIZE_TAB
 from ..utils import get_glyph_icon, SignalsBlocked
 from ..widgets import ComboBox, CallbackComboBox
 from .image_plane import ImagePlane
@@ -48,7 +48,7 @@ class ImageViewer(QtWidgets.QWidget):
         """
         :return: Viewer type icon
         """
-        return get_glyph_icon("mdi6.image-outline")
+        return get_glyph_icon("mdi6.image-outline", size=ICON_SIZE_TAB)
 
     @classmethod
     def viewer_type_label(cls) -> str:

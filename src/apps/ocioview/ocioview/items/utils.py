@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+from __future__ import annotations
+
 import enum
 from typing import Optional
 
@@ -15,17 +17,20 @@ class ViewType(str, enum.Enum):
     VIEW_SCENE = "View (Scene Reference Space)"
 
 
-def get_view_type(display: str, view: str) -> ViewType:
+def get_view_type(display: str, view: str) -> tuple[ViewType, str | None]:
     """
     Get the view type from a display and view.
 
     :param display: Display name. An empty string indicates a shared
         display.
     :param view: View name
-    :return: View type
+    :return: Tuple of view type and any warning raised while inspecting
+        the display and view.
     """
+    warning = None
+
     if not display:
-        return ViewType.VIEW_SHARED
+        return ViewType.VIEW_SHARED, warning
 
     config = ocio.GetCurrentConfig()
 
@@ -35,13 +40,20 @@ def get_view_type(display: str, view: str) -> ViewType:
     color_space = config.getColorSpace(color_space_name)
     if color_space is not None:
         if color_space.getReferenceSpaceType() == ocio.REFERENCE_SPACE_DISPLAY:
-            return ViewType.VIEW_DISPLAY
+            if view_transform_name:
+                warning = (
+                    f"Invalid view '{display}/{view}' references a view transform "
+                    f"('{view_transform_name}') with a non-display color space "
+                    f"('{color_space_name}'). The view transform will be dropped to "
+                    f"preserve the color space selection."
+                )
+            return ViewType.VIEW_DISPLAY, warning
         else:
-            return ViewType.VIEW_SCENE
+            return ViewType.VIEW_SCENE, warning
     elif view_transform_name:
-        return ViewType.VIEW_DISPLAY
+        return ViewType.VIEW_DISPLAY, warning
     else:
-        return ViewType.VIEW_SCENE
+        return ViewType.VIEW_SCENE, warning
 
 
 def adapt_splitter_sizes(from_sizes: list[int], to_sizes: list[int]) -> list[int]:
