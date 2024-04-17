@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 import PyOpenColorIO as ocio
-from PySide6 import QtCore, QtGui, QtWidgets, QtOpenGL
+from PySide6 import QtCore, QtGui, QtWidgets
 
 import ocioview.log_handlers  # Import to initialize logging
 from ocioview.main_window import OCIOView
