@@ -6,7 +6,7 @@ from typing import Optional, Union
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from ..constants import ICON_SIZE_BUTTON, BORDER_COLOR_ROLE
+from ..constants import ICON_SIZE_BUTTON, ICON_SIZE_ITEM, BORDER_COLOR_ROLE
 from ..style import apply_top_tool_bar_style
 from ..utils import get_icon
 
@@ -31,12 +31,12 @@ class DockTitleBar(QtWidgets.QFrame):
 
         # Widgets
         self.icon = QtWidgets.QLabel()
-        self.icon.setPixmap(icon.pixmap(ICON_SIZE_BUTTON))
+        self.icon.setPixmap(icon.pixmap(ICON_SIZE_ITEM))
         self.title = QtWidgets.QLabel(title)
 
         # Layout
         inner_layout = QtWidgets.QHBoxLayout()
-        inner_layout.setContentsMargins(10, 8, 10, 8)
+        inner_layout.setContentsMargins(4, 5, 4, 5)
         inner_layout.setSpacing(5)
         inner_layout.addWidget(self.icon)
         inner_layout.addWidget(self.title)

@@ -40,7 +40,9 @@ class CodeInspector(QtWidgets.QWidget):
 
         html_css = HtmlFormatter(style="material").get_style_defs()
         # Update line number colors to match palette
-        html_css = html_css.replace("#263238", palette.color(palette.ColorRole.Base).name())
+        html_css = html_css.replace(
+            "#263238", palette.color(palette.ColorRole.Base).name()
+        )
         html_css = html_css.replace(
             "#37474F", palette.color(palette.ColorRole.Text).darker(150).name()
         )
