@@ -421,13 +421,13 @@ class ImageViewer(QtWidgets.QWidget):
 
     def transform_item_type(self) -> Type | None:
         """
-        :return: Config item type associated with transform
+        :return: Transform source config item type
         """
         return self.tf_box.currentData(role=self.ROLE_ITEM_TYPE)
 
     def transform_item_name(self) -> str | None:
         """
-        :return: Config item name associated with transform
+        :return: Transform source config item name
         """
         return self.tf_box.currentText()
 

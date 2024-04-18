@@ -17,14 +17,14 @@ class ProcessorContext:
     """Input color space name."""
 
     transform_item_type: Type | None
-    """Config item type for output transform."""
+    """Transform source config item type."""
 
     transform_item_name: str | None
-    """Config item name for output transform."""
+    """Transform source config item name."""
 
     inverse: bool = False
     """
-    True if the processor is converting from the output transform to 
-    the input color space, otherwise the processor is converting from 
-    the input color space to the output transform.
+    True if the processor is converting from the transform to the input 
+    color space, otherwise the processor is converting from the input 
+    color space to the transform.
     """
