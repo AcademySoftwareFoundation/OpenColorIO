@@ -20,7 +20,7 @@ class TransformSubscription:
     """Reference for one item transform subscription."""
 
     item_model: QtCore.QAbstractItemModel
-    item_name: str
+    item_label: str
 
 
 class TransformAgent(QtCore.QObject):
@@ -65,7 +65,7 @@ class TransformManager:
 
     @classmethod
     def set_subscription(
-        cls, slot: int, item_model: QtCore.QAbstractItemModel, item_name: str
+        cls, slot: int, item_model: QtCore.QAbstractItemModel, item_label: str
     ) -> None:
         """
         Set the transform for a specific subscription slot, so that
@@ -74,7 +74,7 @@ class TransformManager:
 
         :param slot: Subscription slot number between 1-10
         :param item_model: Model for item and its transforms
-        :param item_name: Item name
+        :param item_label: Item label
         """
         prev_item_model = None
 
@@ -89,14 +89,14 @@ class TransformManager:
         for other_slot, tf_subscription in list(cls._tf_subscriptions.items()):
             if (
                 tf_subscription.item_model == item_model
-                and tf_subscription.item_name == item_name
+                and tf_subscription.item_label == item_label
             ):
                 tf_agent = tf_subscription.item_model.get_transform_agent(slot)
                 tf_agent.disconnect_all()
                 del cls._tf_subscriptions[other_slot]
 
         # Connect new subscription
-        tf_subscription = TransformSubscription(item_model, item_name)
+        tf_subscription = TransformSubscription(item_model, item_label)
         tf_agent = item_model.get_transform_agent(slot)
         tf_agent.item_name_changed.connect(partial(cls._on_item_name_changed, slot))
         tf_agent.item_tf_changed.connect(partial(cls._on_item_tf_changed, slot))
@@ -110,7 +110,7 @@ class TransformManager:
             init_callback(slot)
 
         # Trigger immediate update to subscribers of this slot
-        cls._on_item_tf_changed(slot, *item_model.get_item_transforms(item_name))
+        cls._on_item_tf_changed(slot, *item_model.get_item_transforms(item_label))
 
         # Repaint views for previous and new model
         if prev_item_model is not None:
@@ -120,21 +120,21 @@ class TransformManager:
 
     @classmethod
     def get_subscription_slot(
-        cls, item_model: QtCore.QAbstractItemModel, item_name: str
+        cls, item_model: QtCore.QAbstractItemModel, item_label: str
     ) -> int:
         """
         Return the subscription slot number for a transform
-        with the provided item model and name, if set.
+        with the provided item model and label, if set.
 
         :param item_model: Model for item and its transforms
-        :param item_name: Item name
+        :param item_label: Item label
         :return: Subscription slot number, or -1 if no subscription is
             set.
         """
         for slot, tf_subscription in cls._tf_subscriptions.items():
             if (
                 tf_subscription.item_model == item_model
-                and tf_subscription.item_name == item_name
+                and tf_subscription.item_label == item_label
             ):
                 return slot
         return -1
@@ -188,44 +188,20 @@ class TransformManager:
             return None
 
     @classmethod
-    def get_subscription_slot_item_type(cls, slot: int) -> Type | None:
+    def get_subscription_menu_items(
+        cls,
+    ) -> list[tuple[int, str, Type, str, QtGui.QIcon]]:
         """
-        Return the item type associated with the given subscription
-        slot.
-
-        :param slot: Subscription slot number
-        :return: Item type, if slot number is valid
-        """
-        if slot != -1 and slot in cls._tf_subscriptions:
-            return cls._tf_subscriptions[slot].item_model.__item_type__
-        else:
-            return None
-
-    @classmethod
-    def get_subscription_slot_item_name(cls, slot: int) -> str | None:
-        """
-        Return the item name associated with the given subscription
-        slot.
-
-        :param slot: Subscription slot number
-        :return: Item name, if slot number is valid
-        """
-        if slot != -1 and slot in cls._tf_subscriptions:
-            return cls._tf_subscriptions[slot].item_name
-        else:
-            return None
-
-    @classmethod
-    def get_subscription_menu_items(cls) -> list[tuple[int, Type, str, QtGui.QIcon]]:
-        """
-        :return: Subscription slots, their names, and respective item
-            type icons, for use in subscription menus.
+        :return: Subscription slots, their labels, associated item
+            types and names, and slot icons, for use in subscription
+            menus.
         """
         return [
             (
                 i,
+                s.item_label,
                 s.item_model.__item_type__,
-                s.item_name,
+                s.item_model.extract_subscription_item_name(s.item_label),
                 cls.get_subscription_slot_icon(i),
             )
             for i, s in sorted(cls._tf_subscriptions.items())
@@ -283,7 +259,7 @@ class TransformManager:
             tf_callback(
                 slot,
                 *tf_subscription.item_model.get_item_transforms(
-                    tf_subscription.item_name
+                    tf_subscription.item_label
                 ),
             )
 
@@ -321,16 +297,16 @@ class TransformManager:
             callback(menu_items)
 
     @classmethod
-    def _on_item_name_changed(cls, slot: int, item_name: str) -> None:
+    def _on_item_name_changed(cls, slot: int, item_label: str) -> None:
         """
         Called when a subscription item is renamed, for internal and
         subscriber tracking.
         """
         tf_subscription = cls._tf_subscriptions.get(slot)
         if tf_subscription is not None:
-            tf_subscription.item_name = item_name
+            tf_subscription.item_label = item_label
             cls._on_item_tf_changed(
-                slot, *tf_subscription.item_model.get_item_transforms(item_name)
+                slot, *tf_subscription.item_model.get_item_transforms(item_label)
             )
             cls._update_menu_items()
 

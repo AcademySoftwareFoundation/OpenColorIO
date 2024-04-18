@@ -65,10 +65,10 @@ class ColorSpaceModel(BaseConfigItemModel):
         return [item.getName() for item in self._get_items()]
 
     def get_item_transforms(
-        self, item_name: str
+        self, item_label: str
     ) -> tuple[Optional[ocio.Transform], Optional[ocio.Transform]]:
-        # Get view name from subscription item name
-        item_name = self.extract_subscription_item_name(item_name)
+        # Get color space name from subscription item label
+        item_name = self.extract_subscription_item_name(item_label)
 
         ref_space_name = ReferenceSpaceManager.scene_reference_space().getName()
         return (

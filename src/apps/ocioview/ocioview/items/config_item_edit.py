@@ -316,10 +316,10 @@ class BaseConfigItemEdit(QtWidgets.QWidget):
             )
         ):
             current_index = self.list.current_index()
-            item_name = self.model.format_subscription_item_name(current_index)
-            if item_name:
+            item_label = self.model.format_subscription_item_label(current_index)
+            if item_label:
                 TransformManager.set_subscription(
-                    int(event.text()), self.model, item_name
+                    int(event.text()), self.model, item_label
                 )
                 return True
 

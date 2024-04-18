@@ -239,12 +239,12 @@ class ViewModel(BaseConfigItemModel):
         return None
 
     def get_item_transforms(
-        self, item_name: str
+        self, item_label: str
     ) -> tuple[Optional[ocio.Transform], Optional[ocio.Transform]]:
 
         if self._display is not None:
-            # Get view name from subscription item name
-            item_name = self.extract_subscription_item_name(item_name)
+            # Get view name from subscription item label
+            item_name = self.extract_subscription_item_name(item_label)
 
             scene_ref_name = ReferenceSpaceManager.scene_reference_space().getName()
             return (
@@ -264,20 +264,20 @@ class ViewModel(BaseConfigItemModel):
         else:
             return None, None
 
-    def format_subscription_item_name(
+    def format_subscription_item_label(
         self,
         item_name_or_index: Union[str, QtCore.QModelIndex],
         display: Optional[str] = None,
         **kwargs,
     ) -> Optional[str]:
-        item_name = super().format_subscription_item_name(item_name_or_index)
-        if item_name and (display or self._display):
-            return f"{display or self._display}/{item_name}"
+        item_label = super().format_subscription_item_label(item_name_or_index)
+        if item_label and (display or self._display):
+            return f"{display or self._display}/{item_label}"
         else:
-            return item_name
+            return item_label
 
-    def extract_subscription_item_name(self, subscription_item_name: str) -> str:
-        item_name = super().extract_subscription_item_name(subscription_item_name)
+    def extract_subscription_item_name(self, item_label: str) -> str:
+        item_name = super().extract_subscription_item_name(item_label)
         if self._display and item_name.startswith(self._display + "/"):
             item_name = item_name[len(self._display) + 1 :]
         return item_name
@@ -290,7 +290,7 @@ class ViewModel(BaseConfigItemModel):
             # Insert display name before view
             item_name = self.get_item_name(index)
             text = text.replace(
-                f"({item_name})", f"({self.format_subscription_item_name(item_name)})"
+                f"({item_name})", f"({self.format_subscription_item_label(item_name)})"
             )
         return text
 

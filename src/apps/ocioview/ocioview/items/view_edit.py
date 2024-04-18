@@ -276,13 +276,13 @@ class ViewEdit(BaseConfigItemEdit):
         """
         for i in range(self.model.rowCount()):
             view_index = self.model.index(i, self.model.NAME.column)
-            item_name = self.model.format_subscription_item_name(view_index)
-            prev_item_name = self.model.format_subscription_item_name(
+            item_label = self.model.format_subscription_item_label(view_index)
+            prev_item_label = self.model.format_subscription_item_label(
                 view_index, display=prev_display
             )
-            slot = TransformManager.get_subscription_slot(self.model, prev_item_name)
+            slot = TransformManager.get_subscription_slot(self.model, prev_item_label)
             if slot != -1:
-                TransformManager.set_subscription(slot, self.model, item_name)
+                TransformManager.set_subscription(slot, self.model, item_label)
 
     @QtCore.Slot(int)
     def _on_display_changed(self, display_row: int) -> None:

@@ -48,6 +48,7 @@ class ImageViewer(QtWidgets.QWidget):
 
     ROLE_SLOT = QtCore.Qt.UserRole + 1
     ROLE_ITEM_TYPE = QtCore.Qt.UserRole + 2
+    ROLE_ITEM_NAME = QtCore.Qt.UserRole + 3
 
     @classmethod
     def viewer_type_icon(cls) -> QtGui.QIcon:
@@ -429,7 +430,7 @@ class ImageViewer(QtWidgets.QWidget):
         """
         :return: Transform source config item name
         """
-        return self.tf_box.currentText()
+        return self.tf_box.currentData(role=self.ROLE_ITEM_NAME)
 
     def transform_direction(self) -> ocio.TransformDirection:
         """
@@ -541,13 +542,14 @@ class ImageViewer(QtWidgets.QWidget):
             self.tf_box.addItem(self.PASSTHROUGH)
             self.tf_box.setItemData(0, -1, role=self.ROLE_SLOT)
 
-            for i, (slot, item_type, item_name, item_type_icon) in enumerate(
+            for i, (slot, item_label, item_type, item_name, slot_icon) in enumerate(
                 menu_items
             ):
                 index = i + 1
-                self.tf_box.addItem(item_type_icon, item_name)
+                self.tf_box.addItem(slot_icon, item_label)
                 self.tf_box.setItemData(index, slot, role=self.ROLE_SLOT)
                 self.tf_box.setItemData(index, item_type, role=self.ROLE_ITEM_TYPE)
+                self.tf_box.setItemData(index, item_name, role=self.ROLE_ITEM_NAME)
                 if slot == current_slot:
                     target_index = index  # Offset for "Passthrough" item
 
