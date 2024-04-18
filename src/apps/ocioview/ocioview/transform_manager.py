@@ -1,10 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+from __future__ import annotations
+
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import partial
-from typing import Callable, Optional
+from typing import Callable, Optional, Type, Union
 
 import PyOpenColorIO as ocio
 from PySide6 import QtCore, QtGui
@@ -140,7 +142,7 @@ class TransformManager:
     @classmethod
     def get_subscription_slot_color(
         cls, slot: int, saturation: float = 0.5, value: float = 1.0
-    ) -> Optional[QtGui.QColor]:
+    ) -> Union[QtGui.QColor, None]:
         """
         Return a standard subscription slot color for use in GUI
         elements.
@@ -157,7 +159,7 @@ class TransformManager:
             return None
 
     @classmethod
-    def get_subscription_slot_icon(cls, slot: int) -> Optional[QtGui.QIcon]:
+    def get_subscription_slot_icon(cls, slot: int) -> Union[QtGui.QIcon, None]:
         """
         Return a standard subscription slot icon for use in GUI
         elements.
@@ -186,13 +188,46 @@ class TransformManager:
             return None
 
     @classmethod
-    def get_subscription_menu_items(cls) -> list[tuple[int, str, QtGui.QIcon]]:
+    def get_subscription_slot_item_type(cls, slot: int) -> Type | None:
+        """
+        Return the item type associated with the given subscription
+        slot.
+
+        :param slot: Subscription slot number
+        :return: Item type, if slot number is valid
+        """
+        if slot != -1 and slot in cls._tf_subscriptions:
+            return cls._tf_subscriptions[slot].item_model.__item_type__
+        else:
+            return None
+
+    @classmethod
+    def get_subscription_slot_item_name(cls, slot: int) -> str | None:
+        """
+        Return the item name associated with the given subscription
+        slot.
+
+        :param slot: Subscription slot number
+        :return: Item name, if slot number is valid
+        """
+        if slot != -1 and slot in cls._tf_subscriptions:
+            return cls._tf_subscriptions[slot].item_name
+        else:
+            return None
+
+    @classmethod
+    def get_subscription_menu_items(cls) -> list[tuple[int, Type, str, QtGui.QIcon]]:
         """
         :return: Subscription slots, their names, and respective item
             type icons, for use in subscription menus.
         """
         return [
-            (i, s.item_name, cls.get_subscription_slot_icon(i))
+            (
+                i,
+                s.item_model.__item_type__,
+                s.item_name,
+                cls.get_subscription_slot_icon(i),
+            )
             for i, s in sorted(cls._tf_subscriptions.items())
         ]
 

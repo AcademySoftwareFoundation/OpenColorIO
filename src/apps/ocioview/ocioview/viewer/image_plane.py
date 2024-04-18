@@ -5,6 +5,8 @@
 #       oglapphelpers library bundled with OCIO. We should fully
 #       reimplement that in Python for direct use in applications.
 
+from __future__ import annotations
+
 import ctypes
 import logging
 import math
@@ -19,6 +21,7 @@ import PyOpenColorIO as ocio
 from PySide6 import QtCore, QtGui, QtWidgets, QtOpenGLWidgets
 
 from ..log_handlers import message_queue
+from ..processor_context import ProcessorContext
 from ..ref_space_manager import ReferenceSpaceManager
 from .utils import load_image
 
@@ -111,13 +114,13 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         self._gl_ready = False
 
         # Color management
-        self._ocio_input_color_space = None
         self._ocio_tf = None
         self._ocio_exposure = 0.0
         self._ocio_gamma = 1.0
         self._ocio_channel_hot = [1, 1, 1, 1]
-        self._ocio_tf_proc = None
-        self._ocio_tf_proc_cpu = None
+        self._ocio_proc_context = ProcessorContext(None, None, None)
+        self._ocio_proc = None
+        self._ocio_proc_cpu = None
         self._ocio_proc_cache_id = None
         self._ocio_shader_cache_id = None
         self._ocio_shader_desc = None
@@ -339,11 +342,20 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         )
         if not color_space_name:
             # Use previous or config default
-            if self._ocio_input_color_space:
-                color_space_name = self._ocio_input_color_space
+            if self._ocio_proc_context:
+                color_space_name = self._ocio_proc_context.input_color_space
             else:
                 color_space_name = ocio.ROLE_DEFAULT
-        self._ocio_input_color_space = color_space_name
+
+        if self._ocio_proc_context:
+            proc_context = ProcessorContext(
+                color_space_name,
+                self._ocio_proc_context.transform_item_type,
+                self._ocio_proc_context.transform_item_name,
+                self._ocio_proc_context.inverse,
+            )
+        else:
+            proc_context = ProcessorContext(color_space_name, None, None)
 
         # Load image data via an available image library
         self._image_array = load_image(image_path)
@@ -375,7 +387,7 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
             image_path, int(self._image_size[0]), int(self._image_size[1])
         )
 
-        self.update_ocio_proc(input_color_space=self._ocio_input_color_space)
+        self.update_ocio_proc(proc_context=proc_context)
         self.fit()
 
         # Log image change after load and render
@@ -389,11 +401,14 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         if self._image_array is not None:
             message_queue.put_nowait(self._image_array)
 
-    def input_color_space(self) -> str:
+    def input_color_space(self) -> str | None:
         """
         :return: Current input OCIO color space name
         """
-        return self._ocio_input_color_space
+        if self._ocio_proc_context:
+            return self._ocio_proc_context.input_color_space
+        else:
+            return None
 
     def transform(self) -> Optional[ocio.Transform]:
         """
@@ -415,7 +430,7 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
         :param update: Whether to redraw viewport
         """
-        self._ocio_input_color_space = None
+        self._ocio_proc_context = None
         self._ocio_tf = None
         self._ocio_exposure = 0.0
         self._ocio_gamma = 1.0
@@ -426,7 +441,7 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
     def update_ocio_proc(
         self,
-        input_color_space: Optional[str] = None,
+        proc_context: Optional[ProcessorContext] = None,
         transform: Optional[ocio.Transform] = None,
         channel: Optional[int] = None,
         force_update: bool = False,
@@ -437,7 +452,7 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         state. This will trigger a GL update IF the underlying OCIO ops
         in the processor have changed.
 
-        :param input_color_space: Input OCIO color space name
+        :param proc_context: Processor context data
         :param transform: Optional main OCIO transform, to be applied
             from the current config's scene reference space.
         :param channel: ImagePlaneChannels value to toggle channel
@@ -446,8 +461,8 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
             when the processor has not been updated.
         """
         # Update processor parameters
-        if input_color_space is not None:
-            self._ocio_input_color_space = input_color_space
+        if proc_context is not None:
+            self._ocio_proc_context = proc_context
         if transform is not None:
             self._ocio_tf = transform
         if channel is not None:
@@ -464,9 +479,10 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         cpu_viewing_pipeline = ocio.GroupTransform()
 
         # Convert to scene linear space if input space is known
-        if has_scene_linear and self._ocio_input_color_space:
+        if has_scene_linear and self._ocio_proc_context:
             to_scene_linear = ocio.ColorSpaceTransform(
-                src=self._ocio_input_color_space, dst=ocio.ROLE_SCENE_LINEAR
+                src=self._ocio_proc_context.input_color_space,
+                dst=ocio.ROLE_SCENE_LINEAR,
             )
             gpu_viewing_pipeline.appendTransform(to_scene_linear)
             cpu_viewing_pipeline.appendTransform(to_scene_linear)
@@ -481,18 +497,19 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         # Convert to the scene reference space, which is the expected input space for
         # all provided transforms. If the input color space is not known, the transform
         # will be applied to unmodified input pixels.
-        if has_scene_linear and self._ocio_input_color_space:
-            to_scene_ref = ocio.ColorSpaceTransform(
-                src=ocio.ROLE_SCENE_LINEAR, dst=scene_ref_name
-            )
-            gpu_viewing_pipeline.appendTransform(to_scene_ref)
-            cpu_viewing_pipeline.appendTransform(to_scene_ref)
-        elif self._ocio_input_color_space:
-            to_scene_ref = ocio.ColorSpaceTransform(
-                src=self._ocio_input_color_space, dst=scene_ref_name
-            )
-            gpu_viewing_pipeline.appendTransform(to_scene_ref)
-            cpu_viewing_pipeline.appendTransform(to_scene_ref)
+        if self._ocio_proc_context and self._ocio_proc_context.input_color_space:
+            if has_scene_linear:
+                to_scene_ref = ocio.ColorSpaceTransform(
+                    src=ocio.ROLE_SCENE_LINEAR, dst=scene_ref_name
+                )
+                gpu_viewing_pipeline.appendTransform(to_scene_ref)
+                cpu_viewing_pipeline.appendTransform(to_scene_ref)
+            else:
+                to_scene_ref = ocio.ColorSpaceTransform(
+                    src=self._ocio_proc_context.input_color_space, dst=scene_ref_name
+                )
+                gpu_viewing_pipeline.appendTransform(to_scene_ref)
+                cpu_viewing_pipeline.appendTransform(to_scene_ref)
 
         # Main transform
         if self._ocio_tf is not None:
@@ -500,9 +517,9 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
             cpu_viewing_pipeline.appendTransform(self._ocio_tf)
 
         # Or restore input color space, if known
-        elif self._ocio_input_color_space:
+        elif self._ocio_proc_context and self._ocio_proc_context.input_color_space:
             from_scene_ref = ocio.ColorSpaceTransform(
-                src=scene_ref_name, dst=self._ocio_input_color_space
+                src=scene_ref_name, dst=self._ocio_proc_context.input_color_space
             )
             gpu_viewing_pipeline.appendTransform(from_scene_ref)
             cpu_viewing_pipeline.appendTransform(from_scene_ref)
@@ -530,8 +547,8 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
             cpu_proc = config.getProcessor(
                 cpu_viewing_pipeline, ocio.TRANSFORM_DIR_FORWARD
             )
-            self._ocio_tf_proc = cpu_proc
-            self._ocio_tf_proc_cpu = cpu_proc.getDefaultCPUProcessor()
+            self._ocio_proc = cpu_proc
+            self._ocio_proc_cpu = cpu_proc.getDefaultCPUProcessor()
 
             # Update GPU processor shaders and textures
             self._ocio_shader_desc = ocio.GpuShaderDesc.CreateShaderDesc(
@@ -553,16 +570,16 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
             self.update()
 
             # Log processor change after render
-            message_queue.put_nowait(cpu_proc)
+            message_queue.put_nowait((self._ocio_proc_context, self._ocio_proc))
 
         elif force_update:
             self.update()
 
             # The transform and processor has not changed, but other app components
-            # which view it may have dropped tje reference. Log processor to update
+            # which view it may have dropped the reference. Log processor to update
             # them as needed.
-            if self._ocio_tf_proc is not None:
-                message_queue.put_nowait(self._ocio_tf_proc)
+            if self._ocio_proc is not None and self._ocio_proc_context is not None:
+                message_queue.put_nowait((self._ocio_proc_context, self._ocio_proc))
 
     def exposure(self) -> float:
         """
@@ -663,8 +680,8 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
                     pixel_input = pixel_input[:3]
 
                 # Sample output pixel with CPU processor
-                if self._ocio_tf_proc_cpu is not None:
-                    pixel_output = self._ocio_tf_proc_cpu.applyRGB(pixel_input)
+                if self._ocio_proc_cpu is not None:
+                    pixel_output = self._ocio_proc_cpu.applyRGB(pixel_input)
                 else:
                     pixel_output = pixel_input.copy()
 

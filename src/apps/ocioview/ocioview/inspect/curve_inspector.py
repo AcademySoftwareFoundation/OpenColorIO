@@ -12,6 +12,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..constants import R_COLOR, G_COLOR, B_COLOR, GRAY_COLOR, ICON_SIZE_TAB
 from ..message_router import MessageRouter
+from ..processor_context import ProcessorContext
 from ..utils import get_glyph_icon, SignalsBlocked
 from ..widgets import EnumComboBox, FloatEditArray, IntEdit
 
@@ -603,10 +604,13 @@ class CurveView(QtWidgets.QGraphicsView):
         self.update()
 
     @QtCore.Slot(ocio.CPUProcessor)
-    def _on_processor_ready(self, cpu_proc: ocio.CPUProcessor) -> None:
+    def _on_processor_ready(
+        self, proc_context: ProcessorContext, cpu_proc: ocio.CPUProcessor
+    ) -> None:
         """
         Update curves from sampled OCIO CPU processor.
 
+        :param proc_context: OCIO processor context data
         :param cpu_proc: CPU processor of currently viewed transform
         """
         self.reset()

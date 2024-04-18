@@ -1,13 +1,16 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+from __future__ import annotations
+
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Generator, Optional
+from typing import Generator, Optional, Type
 
 import PyOpenColorIO as ocio
 from PySide6 import QtCore, QtGui, QtWidgets
 
+from ..processor_context import ProcessorContext
 from ..transform_manager import TransformManager
 from ..config_cache import ConfigCache
 from ..constants import GRAY_COLOR, R_COLOR, G_COLOR, B_COLOR, ICON_SIZE_TAB
@@ -42,6 +45,9 @@ class ImageViewer(QtWidgets.QWidget):
     PASSTHROUGH_LABEL = FMT_GRAY_LABEL.format(v=f"{PASSTHROUGH}:")
 
     WIDGET_HEIGHT_IO = 32
+
+    ROLE_SLOT = QtCore.Qt.UserRole + 1
+    ROLE_ITEM_TYPE = QtCore.Qt.UserRole + 2
 
     @classmethod
     def viewer_type_icon(cls) -> QtGui.QIcon:
@@ -284,7 +290,13 @@ class ImageViewer(QtWidgets.QWidget):
         self._update_input_color_spaces(update=False)
 
         self.image_plane.update_ocio_proc(
-            input_color_space=self.input_color_space(), force_update=force
+            proc_context=ProcessorContext(
+                self.input_color_space(),
+                self.transform_item_type(),
+                self.transform_item_name(),
+                self.is_inverse_transform(),
+            ),
+            force_update=force,
         )
 
         super().update()
@@ -382,9 +394,15 @@ class ImageViewer(QtWidgets.QWidget):
         self._tf_inv = transform_inv
 
         self.image_plane.update_ocio_proc(
+            proc_context=ProcessorContext(
+                self.input_color_space(),
+                self.transform_item_type(),
+                self.transform_item_name(),
+                tf_direction == ocio.TRANSFORM_DIR_INVERSE,
+            ),
             transform=self._tf_inv
             if tf_direction == ocio.TRANSFORM_DIR_INVERSE
-            else self._tf_fwd
+            else self._tf_fwd,
         )
 
     def clear_transform(self) -> None:
@@ -401,6 +419,18 @@ class ImageViewer(QtWidgets.QWidget):
 
         self.image_plane.clear_transform()
 
+    def transform_item_type(self) -> Type | None:
+        """
+        :return: Config item type associated with transform
+        """
+        return self.tf_box.currentData(role=self.ROLE_ITEM_TYPE)
+
+    def transform_item_name(self) -> str | None:
+        """
+        :return: Config item name associated with transform
+        """
+        return self.tf_box.currentText()
+
     def transform_direction(self) -> ocio.TransformDirection:
         """
         :return: Transform direction being viewed
@@ -416,6 +446,13 @@ class ImageViewer(QtWidgets.QWidget):
         :param direction: Set the transform direction to be viewed
         """
         self.tf_direction_button.setChecked(direction == ocio.TRANSFORM_DIR_INVERSE)
+
+    def is_inverse_transform(self) -> bool:
+        """
+        :return: Whether the viewer is converting from the output
+            transform to the input color space.
+        """
+        return self.tf_direction_button.isChecked()
 
     def exposure(self) -> float:
         """
@@ -495,18 +532,24 @@ class ImageViewer(QtWidgets.QWidget):
         target_index = -1
         current_slot = -1
         if self.tf_box.count():
-            current_slot = self.tf_box.currentData()
+            current_slot = self.tf_box.currentData(role=self.ROLE_SLOT)
 
         with SignalsBlocked(self.tf_box):
             self.tf_box.clear()
 
             # The first item is always no transform
-            self.tf_box.addItem(self.PASSTHROUGH, userData=-1)
+            self.tf_box.addItem(self.PASSTHROUGH)
+            self.tf_box.setItemData(0, -1, role=self.ROLE_SLOT)
 
-            for i, (slot, item_name, item_type_icon) in enumerate(menu_items):
-                self.tf_box.addItem(item_type_icon, item_name, userData=slot)
+            for i, (slot, item_type, item_name, item_type_icon) in enumerate(
+                menu_items
+            ):
+                index = i + 1
+                self.tf_box.addItem(item_type_icon, item_name)
+                self.tf_box.setItemData(index, slot, role=self.ROLE_SLOT)
+                self.tf_box.setItemData(index, item_type, role=self.ROLE_ITEM_TYPE)
                 if slot == current_slot:
-                    target_index = i + 1  # Offset for "Passthrough" item
+                    target_index = index  # Offset for "Passthrough" item
 
             # Restore previous item?
             if target_index != -1:
@@ -529,7 +572,7 @@ class ImageViewer(QtWidgets.QWidget):
         :param slot: Transform subscription slot
         """
         if self._tf_subscription_slot == -1:
-            index = self.tf_box.findData(slot)
+            index = self.tf_box.findData(slot, role=self.ROLE_SLOT)
             if index != -1:
                 self.tf_box.setCurrentIndex(index)
 
@@ -539,7 +582,7 @@ class ImageViewer(QtWidgets.QWidget):
             TransformManager.unsubscribe_from_all_transforms(self.set_transform)
             self.clear_transform()
         else:
-            self._tf_subscription_slot = self.tf_box.currentData()
+            self._tf_subscription_slot = self.tf_box.currentData(role=self.ROLE_SLOT)
             TransformManager.subscribe_to_transforms_at(
                 self._tf_subscription_slot, self.set_transform
             )
@@ -548,7 +591,9 @@ class ImageViewer(QtWidgets.QWidget):
     def _on_tf_subscription_requested(self, slot: int) -> None:
         # If the requested slot does not have a subscription, "Passthrough" will
         # be selected.
-        self.tf_box.setCurrentIndex(max(0, self.tf_box.findData(slot)))
+        self.tf_box.setCurrentIndex(
+            max(0, self.tf_box.findData(slot, role=self.ROLE_SLOT))
+        )
 
     @QtCore.Slot(bool)
     def _on_inverse_check_clicked(self, checked: bool) -> None:
@@ -631,7 +676,14 @@ class ImageViewer(QtWidgets.QWidget):
 
     @QtCore.Slot(str)
     def _on_input_color_space_changed(self, input_color_space: str) -> None:
-        self.image_plane.update_ocio_proc(input_color_space=input_color_space)
+        self.image_plane.update_ocio_proc(
+            proc_context=ProcessorContext(
+                input_color_space,
+                self.transform_item_type(),
+                self.transform_item_name(),
+                self.is_inverse_transform(),
+            )
+        )
 
     @QtCore.Slot(float)
     def _on_exposure_changed(self, value: float) -> None:
