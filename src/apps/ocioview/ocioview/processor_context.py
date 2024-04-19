@@ -6,6 +6,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Type
 
+import PyOpenColorIO as ocio
+
 
 @dataclass
 class ProcessorContext:
@@ -22,9 +24,5 @@ class ProcessorContext:
     transform_item_name: str | None
     """Transform source config item name."""
 
-    inverse: bool = False
-    """
-    True if the processor is converting from the transform to the input 
-    color space, otherwise the processor is converting from the input 
-    color space to the transform.
-    """
+    transform_direction: ocio.TransformDirection = ocio.TRANSFORM_DIR_FORWARD
+    """Transform direction being viewed."""

@@ -295,7 +295,7 @@ class ImageViewer(QtWidgets.QWidget):
                 self.input_color_space(),
                 self.transform_item_type(),
                 self.transform_item_name(),
-                self.is_inverse_transform(),
+                self.transform_direction(),
             ),
             force_update=force,
         )
@@ -399,7 +399,7 @@ class ImageViewer(QtWidgets.QWidget):
                 self.input_color_space(),
                 self.transform_item_type(),
                 self.transform_item_name(),
-                tf_direction == ocio.TRANSFORM_DIR_INVERSE,
+                tf_direction,
             ),
             transform=self._tf_inv
             if tf_direction == ocio.TRANSFORM_DIR_INVERSE
@@ -447,13 +447,6 @@ class ImageViewer(QtWidgets.QWidget):
         :param direction: Set the transform direction to be viewed
         """
         self.tf_direction_button.setChecked(direction == ocio.TRANSFORM_DIR_INVERSE)
-
-    def is_inverse_transform(self) -> bool:
-        """
-        :return: Whether the viewer is converting from the output
-            transform to the input color space.
-        """
-        return self.tf_direction_button.isChecked()
 
     def exposure(self) -> float:
         """
@@ -683,7 +676,7 @@ class ImageViewer(QtWidgets.QWidget):
                 input_color_space,
                 self.transform_item_type(),
                 self.transform_item_name(),
-                self.is_inverse_transform(),
+                self.transform_direction(),
             )
         )
 
