@@ -7,7 +7,7 @@ from typing import Optional
 import PyOpenColorIO as ocio
 from PySide6 import QtWidgets
 
-from ..constants import RGB
+from ..constants import RGB, ICON_SIZE_ITEM
 from ..widgets import (
     ComboBox,
     LineEdit,
@@ -40,12 +40,13 @@ class ConfigPropertiesParamEdit(BaseConfigItemParamEdit):
         self.description_edit = TextEdit()
         self.env_vars_table = StringMapTableWidget(
             ("Name", "Default Value"),
-            item_icon=get_glyph_icon("mdi6.variable"),
+            item_icon=get_glyph_icon("mdi6.variable", size=ICON_SIZE_ITEM),
             default_key_prefix="ENV_VAR_",
             default_value="value",
         )
         self.search_path_list = StringListWidget(
-            item_icon=get_glyph_icon("ph.file-search"), get_item=self._get_search_path
+            item_icon=get_glyph_icon("ph.file-search", size=ICON_SIZE_ITEM),
+            get_item=self._get_search_path,
         )
         self.working_dir_edit = PathEdit(QtWidgets.QFileDialog.Directory)
         self.family_separator_edit = LineEdit()

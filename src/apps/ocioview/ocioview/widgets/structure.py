@@ -6,7 +6,7 @@ from typing import Optional, Union
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from ..constants import ICON_SIZE_BUTTON, ICON_SIZE_ITEM, BORDER_COLOR_ROLE
+from ..constants import ICON_SIZE_ITEM, ICON_SIZE_TAB, BORDER_COLOR_ROLE
 from ..style import apply_top_tool_bar_style
 from ..utils import get_icon
 
@@ -82,6 +82,7 @@ class TabbedDockWidget(QtWidgets.QDockWidget):
 
         # Widgets
         self.tabs = QtWidgets.QTabWidget()
+        self.tabs.setIconSize(ICON_SIZE_TAB)
         self.setWidget(self.tabs)
 
         # Connections
@@ -137,8 +138,8 @@ class TabbedDockWidget(QtWidgets.QDockWidget):
         xform = QtGui.QTransform()
         xform.rotate(icon_rot)
 
-        pixmap = icon.pixmap(ICON_SIZE_BUTTON)
-        pixmap = pixmap.transformed(xform)
+        pixmap = icon.pixmap(ICON_SIZE_TAB)
+        pixmap = pixmap.transformed(xform, QtCore.Qt.SmoothTransformation)
 
         return QtGui.QIcon(pixmap)
 

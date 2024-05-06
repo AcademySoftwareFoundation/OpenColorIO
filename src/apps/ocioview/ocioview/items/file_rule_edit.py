@@ -6,6 +6,7 @@ from typing import Optional
 from PySide6 import QtCore, QtWidgets
 
 from ..config_cache import ConfigCache
+from ..constants import ICON_SIZE_ITEM
 from ..utils import get_glyph_icon
 from ..widgets import (
     CallbackComboBox,
@@ -69,7 +70,7 @@ class FileRuleParamEdit(BaseConfigItemParamEdit):
             if file_rule_type in (FileRuleType.RULE_BASIC, FileRuleType.RULE_REGEX):
                 custom_keys_table = StringMapTableWidget(
                     ("Key Name", "Key Value"),
-                    item_icon=get_glyph_icon("ph.key"),
+                    item_icon=get_glyph_icon("ph.key", size=ICON_SIZE_ITEM),
                     default_key_prefix="key_",
                     default_value="value",
                 )

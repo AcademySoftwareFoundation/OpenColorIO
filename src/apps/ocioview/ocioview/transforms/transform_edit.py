@@ -45,7 +45,7 @@ class BaseTransformEdit(QtWidgets.QFrame):
         :return: Transform type icon
         """
         if cls.__icon__ is None:
-            cls.__icon__ = get_glyph_icon(cls.__icon_glyph__)
+            cls.__icon__ = get_glyph_icon(cls.__icon_glyph__, size=ICON_SIZE_ITEM)
         return cls.__icon__
 
     @classmethod

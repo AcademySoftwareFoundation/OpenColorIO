@@ -8,6 +8,7 @@ import PyOpenColorIO as ocio
 from PySide6 import QtCore, QtGui
 
 from ..config_cache import ConfigCache
+from ..constants import ICON_SIZE_ITEM
 from ..utils import get_glyph_icon
 from .config_item_model import ColumnDesc, BaseConfigItemModel
 
@@ -39,16 +40,16 @@ class NamedTransformModel(BaseConfigItemModel):
     def __init__(self, parent: Optional[QtCore.QObject] = None):
         super().__init__(parent=parent)
 
-        self._item_icon = get_glyph_icon("ph.arrow-square-right")
+        self._item_icon = get_glyph_icon("ph.arrow-square-right", size=ICON_SIZE_ITEM)
 
     def get_item_names(self) -> list[str]:
         return [item.getName() for item in self._get_items()]
 
     def get_item_transforms(
-        self, item_name: str
+        self, item_label: str
     ) -> tuple[Optional[ocio.Transform], Optional[ocio.Transform]]:
-        # Get view name from subscription item name
-        item_name = self.extract_subscription_item_name(item_name)
+        # Get named transform name from subscription item label
+        item_name = self.extract_subscription_item_name(item_label)
 
         config = ocio.GetCurrentConfig()
         named_transform = config.getNamedTransform(item_name)

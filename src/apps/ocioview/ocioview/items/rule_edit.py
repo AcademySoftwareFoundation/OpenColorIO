@@ -5,6 +5,7 @@ from typing import Optional
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
+from ..constants import ICON_SIZE_ITEM
 from ..utils import get_glyph_icon
 from .file_rule_edit import FileRuleEdit
 from .utils import adapt_splitter_sizes
@@ -22,7 +23,7 @@ class RuleEdit(QtWidgets.QWidget):
         """
         :return: Item type icon
         """
-        return get_glyph_icon("mdi6.list-status")
+        return get_glyph_icon("mdi6.list-status", size=ICON_SIZE_ITEM)
 
     @classmethod
     def item_type_label(cls, plural: bool = False) -> str:
