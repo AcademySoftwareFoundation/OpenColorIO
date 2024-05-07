@@ -29,11 +29,17 @@ set DOXYGEN_CONTINUE_ANYWAY=n
 
 set %PYTHON_DOCUMENTATION_REQUIREMENTS=..\..\..\docs\requirements.txt
 
+rem Microsoft Visual Studio path
+set MSVS_PATH=%programfiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build
+
 rem Command line arguments processing
 :args_loop
 if NOT "%~1"=="" (
     if "%~1"=="--vcpkg" (
         set VCPKG_INSTALL_DIR=%~2
+    )
+	if "%~1"=="--msvs" (
+        set MSVS_PATH=%~2
     )
 
     if "%~1"=="--help" (
@@ -103,20 +109,24 @@ if ErrorLevel 1 (
     exit /b
 )
 
-echo Checking for Microsoft Visual Studio...
-set MSVS=0
-for /d %%a in ("%programfiles%\Microsoft Visual Studio*") do (
-    for /f "tokens=3 delims=\" %%x in ("%%a") do set MSVS=1
-)
-
-if !MSVS!==0 (
-    echo No Microsoft Visual Studio installation was found in !programfiles!.
-    echo For non-standard installation path, please use the following option:
-    rem The double dash are in quote here because otherwise the echo command thow an error. 
-    echo "ocio_deps --vs <path>"
+IF NOT EXIST "!MSVS_PATH!" ( 
+    echo Could not find MS Visual Studio. Please provide the location for Microsoft Visual Studio vcvars64.bat or modify MSVS_PATH in the script.
+    rem The double dash are in quote here because otherwise the echo command thow an error.
+    echo "--msvs <path>"
+    echo E.g. C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build
     exit /b
 )
 
+rem ****************************************************************************************************************
+rem Setting up the environment using MS Visual Studio batch script
+set VCVARS64_PATH="!MSVS_PATH!\vcvars64.bat"
+IF NOT EXIST !VCVARS64_PATH! (
+    rem Checking for vcvars64.bat script.
+    rem !MSVS_PATH! is checked earlier in the script
+    echo VCVARS64_PATH=!VCVARS64_PATH! does not exist
+    echo Make sure that Microsoft Visual Studio is installed.
+    exit /b
+)
 echo Checking for Vcpkg...
 where /q vcpkg
 set IS_VCPKG_PRESENT=False && if ErrorLevel 1 ( set IS_VCPKG_PRESENT=False ) && if EXIST !VCPKG_INSTALL_DIR!\vcpkg.exe ( set IS_VCPKG_PRESENT=True )
