@@ -260,7 +260,7 @@ class ViewEdit(BaseConfigItemEdit):
         signal is emitted twice when pressing enter. See:
             https://forum.qt.io/topic/39141/qlineedit-editingfinished-signal-is-emitted-twice
         """
-        view_type = self._get_view_type(self.list.current_row())
+        view_type, _ = self._get_view_type(self.list.current_row())
         self.param_edit.display_edits[view_type].blockSignals(True)
         self._display_mapper.submit()
         self.param_edit.display_edits[view_type].blockSignals(False)
@@ -276,13 +276,13 @@ class ViewEdit(BaseConfigItemEdit):
         """
         for i in range(self.model.rowCount()):
             view_index = self.model.index(i, self.model.NAME.column)
-            item_name = self.model.format_subscription_item_name(view_index)
-            prev_item_name = self.model.format_subscription_item_name(
+            item_label = self.model.format_subscription_item_label(view_index)
+            prev_item_label = self.model.format_subscription_item_label(
                 view_index, display=prev_display
             )
-            slot = TransformManager.get_subscription_slot(self.model, prev_item_name)
+            slot = TransformManager.get_subscription_slot(self.model, prev_item_label)
             if slot != -1:
-                TransformManager.set_subscription(slot, self.model, item_name)
+                TransformManager.set_subscription(slot, self.model, item_label)
 
     @QtCore.Slot(int)
     def _on_display_changed(self, display_row: int) -> None:

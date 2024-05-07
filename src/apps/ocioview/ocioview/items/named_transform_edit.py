@@ -6,6 +6,7 @@ from typing import Optional
 from PySide6 import QtWidgets
 
 from ..config_cache import ConfigCache
+from ..constants import ICON_SIZE_ITEM
 from ..utils import get_glyph_icon
 from ..widgets import CallbackComboBox, StringListWidget, TextEdit
 from .config_item_edit import BaseConfigItemParamEdit, BaseConfigItemEdit
@@ -28,14 +29,15 @@ class NamedTransformParamEdit(BaseConfigItemParamEdit):
 
         # Widgets
         self.aliases_list = StringListWidget(
-            item_basename="alias", item_icon=get_glyph_icon("ph.bookmark-simple")
+            item_basename="alias",
+            item_icon=get_glyph_icon("ph.bookmark-simple", size=ICON_SIZE_ITEM),
         )
         self.family_edit = CallbackComboBox(ConfigCache.get_families, editable=True)
         self.encoding_edit = CallbackComboBox(ConfigCache.get_encodings, editable=True)
         self.description_edit = TextEdit()
         self.categories_list = StringListWidget(
             item_basename="category",
-            item_icon=get_glyph_icon("ph.bookmarks-simple"),
+            item_icon=get_glyph_icon("ph.bookmarks-simple", size=ICON_SIZE_ITEM),
             get_presets=self._get_available_categories,
         )
 
