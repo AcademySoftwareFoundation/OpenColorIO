@@ -312,7 +312,7 @@ def color_space_to_rgb_colourspace(color_space: str) -> RGB_Colourspace | None:
         color_space,
         XYZ_to_xy(XYZ),
         XYZ_to_xy(XYZ_w),
-        f"{color_space}",
+        color_space,
         use_derived_matrix_RGB_to_XYZ=True,
         use_derived_matrix_XYZ_to_RGB=True,
     )
