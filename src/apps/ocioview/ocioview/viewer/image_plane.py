@@ -118,7 +118,7 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         self._ocio_exposure = 0.0
         self._ocio_gamma = 1.0
         self._ocio_channel_hot = [1, 1, 1, 1]
-        self._ocio_proc_context = ProcessorContext(None, None, None)
+        self._ocio_proc_context = ProcessorContext()
         self._ocio_proc = None
         self._ocio_proc_cpu = None
         self._ocio_proc_cache_id = None
@@ -352,10 +352,10 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
                 color_space_name,
                 self._ocio_proc_context.transform_item_type,
                 self._ocio_proc_context.transform_item_name,
-                self._ocio_proc_context.direction,
+                self._ocio_proc_context.transform_direction,
             )
         else:
-            proc_context = ProcessorContext(color_space_name, None, None)
+            proc_context = ProcessorContext(color_space_name)
 
         # Load image data via an available image library
         self._image_array = load_image(image_path)
@@ -420,9 +420,12 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         """
         Clear current OCIO transform, passing through the input image.
         """
+
         self._ocio_tf = None
 
-        self.update_ocio_proc(force_update=True)
+        self.update_ocio_proc(
+            ProcessorContext(self._ocio_proc_context.input_color_space),
+            force_update=True)
 
     def reset_ocio_proc(self, update: bool = False) -> None:
         """
@@ -460,6 +463,7 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         :param force_update: Set to True to update the viewport even
             when the processor has not been updated.
         """
+
         # Update processor parameters
         if proc_context is not None:
             self._ocio_proc_context = proc_context
