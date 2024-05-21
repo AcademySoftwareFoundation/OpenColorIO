@@ -279,7 +279,7 @@ def subsampling_factor(a: np.ndarray, maximum_size: float) -> int:
         sub_sampling_factor += 1
 
 
-def color_space_to_RGB_Colourspace(color_space: str) -> RGB_Colourspace | None:
+def color_space_to_rgb_colourspace(color_space: str) -> RGB_Colourspace | None:
     """
     Convert a color space name from the current Config to a
     :class:`RGB_Colourspace` class instance.
