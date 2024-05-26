@@ -104,16 +104,14 @@ if ErrorLevel 1 (
 )
 
 echo Checking for Microsoft Visual Studio...
-set MSVS=0
-for /d %%a in ("%programfiles%\Microsoft Visual Studio*") do (
-    for /f "tokens=3 delims=\" %%x in ("%%a") do set MSVS=1
+set MSVS_PATH=
+for /f %%i in ('"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -format value -property installationPath -latest') do (
+    echo Found Visual Studio installation at '%%i'
+    set MSVS_PATH=%%i
 )
 
-if !MSVS!==0 (
-    echo No Microsoft Visual Studio installation was found in !programfiles!.
-    echo For non-standard installation path, please use the following option:
-    rem The double dash are in quote here because otherwise the echo command thow an error. 
-    echo "ocio_deps --vs <path>"
+if NOT EXIST !MSVS_PATH! (
+    echo No Microsoft Visual Studio installation was found in the system.
     exit /b
 )
 
