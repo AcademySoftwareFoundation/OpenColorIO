@@ -8,6 +8,7 @@ from PySide6 import QtWidgets
 import PyOpenColorIO as ocio
 
 from ..config_cache import ConfigCache
+from ..constants import ICON_SIZE_ITEM
 from ..utils import get_glyph_icon
 from ..widgets import EnumComboBox, CallbackComboBox, StringListWidget, TextEdit
 from .config_item_edit import BaseConfigItemParamEdit, BaseConfigItemEdit
@@ -32,15 +33,19 @@ class ViewTransformParamEdit(BaseConfigItemParamEdit):
         self.reference_space_type_combo = EnumComboBox(
             ocio.ReferenceSpaceType,
             icons={
-                ocio.REFERENCE_SPACE_SCENE: get_glyph_icon("ph.sun"),
-                ocio.REFERENCE_SPACE_DISPLAY: get_glyph_icon("ph.monitor"),
+                ocio.REFERENCE_SPACE_SCENE: get_glyph_icon(
+                    "ph.sun", size=ICON_SIZE_ITEM
+                ),
+                ocio.REFERENCE_SPACE_DISPLAY: get_glyph_icon(
+                    "ph.monitor", size=ICON_SIZE_ITEM
+                ),
             },
         )
         self.family_edit = CallbackComboBox(ConfigCache.get_families, editable=True)
         self.description_edit = TextEdit()
         self.categories_list = StringListWidget(
             item_basename="category",
-            item_icon=get_glyph_icon("ph.bookmarks-simple"),
+            item_icon=get_glyph_icon("ph.bookmarks-simple", size=ICON_SIZE_ITEM),
             get_presets=self._get_available_categories,
         )
 

@@ -6,9 +6,10 @@ from dataclasses import dataclass
 from typing import Any, Optional, Type, Union
 
 import PyOpenColorIO as ocio
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui
 
 from ..config_cache import ConfigCache
+from ..constants import ICON_SIZE_ITEM
 from ..transform_manager import TransformManager, TransformAgent
 from ..undo import ItemModelUndoCommand, ConfigSnapshotUndoCommand
 from ..utils import get_glyph_icon, next_name, item_type_label
@@ -74,7 +75,7 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
         :return: Item type icon
         """
         if cls.__icon__ is None:
-            cls.__icon__ = get_glyph_icon(cls.__icon_glyph__)
+            cls.__icon__ = get_glyph_icon(cls.__icon_glyph__, size=ICON_SIZE_ITEM)
         return cls.__icon__
 
     @classmethod
@@ -510,41 +511,42 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
         """
         return self.data(self.index(index.row(), self.NAME.column))
 
-    def format_subscription_item_name(
+    def format_subscription_item_label(
         self, item_name_or_index: Union[str, QtCore.QModelIndex], **kwargs
     ) -> Optional[str]:
         """
-        Format item name into a per-model unique name for tracking
+        Format item name into a per-model unique label for tracking
         transform subscriptions.
 
         :param item_name_or_index: Item name or model index for item
-        :return: Subscription unique item name
+        :return: Subscription unique item label
         """
         if isinstance(item_name_or_index, QtCore.QModelIndex):
-            item_name = self.get_item_name(item_name_or_index)
+            item_label = self.get_item_name(item_name_or_index)
         else:
-            item_name = item_name_or_index
-        return f"{item_name} [{self.item_type_label().lower()}]"
+            item_label = item_name_or_index
+        return f"{item_label} [{self.item_type_label().lower()}]"
 
-    def extract_subscription_item_name(self, subscription_item_name: str) -> str:
+    def extract_subscription_item_name(self, item_label: str) -> str:
         """
         Unformat item name from its per-model unique name for tracking
         transform subscriptions.
 
-        :param subscription_item_name: Subscription unique item name
+        :param item_label: Subscription unique item label
         :return: Extracted item name
         """
         suffix = f" [{self.item_type_label().lower()}]"
-        if subscription_item_name.endswith(suffix):
-            return subscription_item_name[: -len(suffix)]
+        if item_label.endswith(suffix):
+            return item_label[: -len(suffix)]
         else:
-            return subscription_item_name
+            return item_label
 
     def get_item_transforms(
-        self, item_name: str
+        self, item_label: str
     ) -> tuple[Optional[ocio.Transform], Optional[ocio.Transform]]:
         """
-        :param item_name: Item name to get transform for
+        :param item_label: Subscription unique label of item to get
+            transform for.
         :return: Forward and inverse item transforms, or None if either
             is not defined.
         """
@@ -661,7 +663,7 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
         """
         slot = TransformManager.get_subscription_slot(
             self,
-            self.format_subscription_item_name(self._get_value(item, column_desc)),
+            self.format_subscription_item_label(self._get_value(item, column_desc)),
         )
         return TransformManager.get_subscription_slot_color(
             slot, saturation=0.25, value=0.25
@@ -676,7 +678,7 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
         """
         slot = TransformManager.get_subscription_slot(
             self,
-            self.format_subscription_item_name(self._get_value(item, column_desc)),
+            self.format_subscription_item_label(self._get_value(item, column_desc)),
         )
         return TransformManager.get_subscription_slot_icon(slot)
 
@@ -750,20 +752,24 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
         """
         # Name adjustment may be needed for unique item/transform identifiers within
         # the model.
-        item_name = self.format_subscription_item_name(item_name)
+        item_label = self.format_subscription_item_label(item_name)
         if prev_item_name:
-            prev_item_name = self.format_subscription_item_name(prev_item_name)
+            prev_item_label = self.format_subscription_item_label(prev_item_name)
+        else:
+            prev_item_label = None
 
         # Is item set as a subscription?
-        slot = TransformManager.get_subscription_slot(self, prev_item_name or item_name)
+        slot = TransformManager.get_subscription_slot(
+            self, prev_item_label or item_label
+        )
         if slot != -1:
             # Broadcast name change
-            if prev_item_name and prev_item_name != item_name:
-                self._tf_agents[slot].item_name_changed.emit(item_name)
+            if prev_item_label and prev_item_label != item_label:
+                self._tf_agents[slot].item_name_changed.emit(item_label)
 
             # Broadcast transform change
             self._tf_agents[slot].item_tf_changed.emit(
-                *self.get_item_transforms(item_name)
+                *self.get_item_transforms(item_label)
             )
 
     def _get_value(self, item: __item_type__, column_desc: ColumnDesc) -> Any:

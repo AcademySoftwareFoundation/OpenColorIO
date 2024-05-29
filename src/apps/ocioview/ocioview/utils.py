@@ -42,6 +42,7 @@ def get_glyph_icon(
     scale_factor: float = ICON_SCALE_FACTOR,
     color: Optional[QtGui.QColor] = None,
     as_widget: bool = False,
+    size: QtCore.QSize = ICON_SIZE_BUTTON,
 ) -> Union[QtGui.QIcon, QtWidgets.QLabel]:
     """
     Get named glyph QIcon from QtAwesome.
@@ -51,6 +52,7 @@ def get_glyph_icon(
     :param color: Optional icon color override
     :param as_widget: Set to True to return a widget displaying the
         icon instead of a QIcon.
+    :param size: Override icon size
     :return: Glyph QIcon or QLabel
     """
     kwargs = {"scale_factor": scale_factor}
@@ -61,7 +63,7 @@ def get_glyph_icon(
 
     if as_widget:
         widget = QtWidgets.QLabel()
-        widget.setPixmap(icon.pixmap(ICON_SIZE_BUTTON))
+        widget.setPixmap(icon.pixmap(size))
         return widget
     else:
         return icon
@@ -242,3 +244,13 @@ def increase_html_lineno_padding(html: str) -> str:
         r"\1\2&nbsp;&nbsp;\3",
         html,
     )
+
+
+def float_to_uint8(value: float) -> int:
+    """
+    Convert float value to an 8-bit clamped unsigned integer value.
+
+    :param value: Float value
+    :return: Integer value
+    """
+    return max(0, min(255, int(value * 255)))

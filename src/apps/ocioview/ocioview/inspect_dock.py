@@ -5,8 +5,7 @@ from typing import Optional
 
 from PySide6 import QtCore, QtWidgets
 
-from .inspect.curve_inspector import CurveInspector
-from .inspect import LogInspector, CodeInspector
+from .inspect import CodeInspector, CurveInspector, LogInspector
 from .utils import get_glyph_icon
 from .widgets.structure import TabbedDockWidget
 
