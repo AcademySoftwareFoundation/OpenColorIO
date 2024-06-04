@@ -210,8 +210,9 @@ void MetalBuilder::allocateAllTextures(unsigned startIndex)
         const char * textureName = nullptr;
         const char * samplerName = nullptr;
         unsigned edgelen = 0;
+        GpuShaderDesc::TextureType channel = GpuShaderDesc::TEXTURE_RGBA_CHANNEL;
         Interpolation interpolation = INTERP_LINEAR;
-        m_shaderDesc->get3DTexture(idx, textureName, samplerName, edgelen, interpolation);
+        m_shaderDesc->get3DTexture(idx, textureName, samplerName, edgelen, channel, interpolation);
 
         if(!textureName || !*textureName
             || !samplerName || !*samplerName

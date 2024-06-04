@@ -184,11 +184,11 @@ class GpuShaderDescTest(unittest.TestCase):
         buf = np.linspace(0, 1, num=8*3).astype(np.float32)
         bufTest1 = buf[3]
         desc.add3DTexture('tex', 'sampler', 2,
-                          OCIO.INTERP_DEFAULT, buf)
+                          OCIO.GpuShaderDesc.TEXTURE_RGB_CHANNEL, OCIO.INTERP_DEFAULT, buf)
         buf = np.linspace(0, 1, num=27*3).astype(np.float32)
         bufTest2 = buf[42]
         desc.add3DTexture('tex2', 'sampler2', 3,
-                          OCIO.INTERP_DEFAULT, buf)
+                          OCIO.GpuShaderDesc.TEXTURE_RGB_CHANNEL, OCIO.INTERP_DEFAULT, buf)
 
         textures = desc.get3DTextures()
         self.assertEqual(len(textures), 2)
@@ -197,6 +197,7 @@ class GpuShaderDescTest(unittest.TestCase):
         self.assertEqual(t1.samplerName, 'sampler')
         self.assertEqual(t1.edgeLen, 2)
         self.assertEqual(t1.interpolation, OCIO.INTERP_DEFAULT)
+        self.assertEqual(t1.channel, OCIO.GpuShaderDesc.TEXTURE_RGB_CHANNEL)
         v1 = t1.getValues()
         self.assertEqual(len(v1), 3*8)
         self.assertEqual(v1[3], bufTest1)
@@ -205,6 +206,7 @@ class GpuShaderDescTest(unittest.TestCase):
         self.assertEqual(t2.samplerName, 'sampler2')
         self.assertEqual(t2.edgeLen, 3)
         self.assertEqual(t2.interpolation, OCIO.INTERP_DEFAULT)
+        self.assertEqual(t2.channel, OCIO.GpuShaderDesc.TEXTURE_RGB_CHANNEL)
         v2 = t2.getValues()
         self.assertEqual(len(v2), 3*27)
         self.assertEqual(v2[42], bufTest2)

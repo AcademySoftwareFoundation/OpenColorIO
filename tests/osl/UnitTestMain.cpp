@@ -85,6 +85,7 @@ public:
     void add3DTexture(const char * /*textureName*/,
                       const char * /*samplerName*/,
                       unsigned /*edgelen*/,
+                      TextureType /*channel*/,
                       OCIO::Interpolation /*interpolation*/,
                       const float * /*values*/) override
     {
