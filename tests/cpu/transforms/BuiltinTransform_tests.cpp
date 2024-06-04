@@ -429,6 +429,11 @@ AllValues UnitTestValues
     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-CINEMA-108nit-7.2nit-P3lim_1.1",
         { { 0.5f, 0.4f, 0.3f }, { 0.22214814f,     0.21179835f,     0.15639816f } } },
 
+    { "ACES-2-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-REC709lim",
+        { { 0.5f, 0.4f, 0.3f }, { 0.262158800136f, 0.252041654572f, 0.207226022342f } } },
+    { "ACES-2-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-VIDEO-1000nit-P3D65lim",
+        { { 0.5f, 0.4f, 0.3f }, { 0.464483438249f, 0.438469451614f, 0.338891738008f } } },
+
     { "APPLE_LOG_to_ACES2065-1",
         { { 0.5f, 0.4f, 0.3f }, { 0.153334766f,    0.083515430f,     0.032948254f } } },
     { "CURVE - APPLE_LOG_to_LINEAR",

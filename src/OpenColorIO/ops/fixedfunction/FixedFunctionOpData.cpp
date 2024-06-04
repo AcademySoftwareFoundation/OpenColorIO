@@ -28,6 +28,16 @@ constexpr char ACES_DARK_TO_DIM_10_STR[]   = "DarkToDim10";
 constexpr char ACES_DIM_TO_DARK_10_STR[]   = "DimToDark10";
 constexpr char ACES_GAMUT_COMP_13_FWD_STR[]= "GamutComp13Fwd";
 constexpr char ACES_GAMUT_COMP_13_REV_STR[]= "GamutComp13Rev";
+constexpr char ACES_OUTPUT_TRANSFORM_20_FWD_STR[]= "OutputTransform20Fwd";
+constexpr char ACES_OUTPUT_TRANSFORM_20_INV_STR[]= "OutputTransform20Inv";
+constexpr char ACES_AP0_TO_JMh_20_STR[]    = "AP0_TO_JMh_20";
+constexpr char ACES_JMh_TO_AP0_20_STR[]    = "JMh_TO_AP0_20";
+constexpr char ACES_TONEASCALE_20_FWD_STR[]= "ToneScale20Fwd";
+constexpr char ACES_TONESCALE_20_INV_STR[] = "ToneScale20Inv";
+constexpr char ACES_GAMUT_MAP_20_FWD_STR[] = "GamutCompress20Fwd";
+constexpr char ACES_GAMUT_MAP_20_INV_STR[] = "GamutCompress20Inv";
+constexpr char ACES_RGB_TO_JMh_20_STR[]    = "RGB_TO_JMh_20";
+constexpr char ACES_JMh_TO_RGB_20_STR[]    = "JMh_TO_RGB_20";
 constexpr char SURROUND_STR[]              = "Surround"; // Old name for Rec2100SurroundFwd
 constexpr char REC_2100_SURROUND_FWD_STR[] = "Rec2100SurroundFwd";
 constexpr char REC_2100_SURROUND_REV_STR[] = "Rec2100SurroundRev";
@@ -74,6 +84,26 @@ const char * FixedFunctionOpData::ConvertStyleToString(Style style, bool detaile
             return detailed ? "ACES_GamutComp13 (Forward)" : ACES_GAMUT_COMP_13_FWD_STR;
         case ACES_GAMUT_COMP_13_INV:
             return detailed ? "ACES_GamutComp13 (Inverse)" : ACES_GAMUT_COMP_13_REV_STR;
+        case ACES_OUTPUT_TRANSFORM_20_FWD:
+            return detailed ? "ACES_OutputTransform20 (Forward)" : ACES_OUTPUT_TRANSFORM_20_FWD_STR;
+        case ACES_OUTPUT_TRANSFORM_20_INV:
+            return detailed ? "ACES_OutputTransform20 (Inverse)" : ACES_OUTPUT_TRANSFORM_20_INV_STR;
+        case ACES_AP0_TO_JMh_20:
+            return ACES_AP0_TO_JMh_20_STR;
+        case ACES_JMh_TO_AP0_20:
+            return ACES_JMh_TO_AP0_20_STR;
+        case ACES_TONESCALE_20_FWD:
+            return detailed ? "ACES_ToneScale20 (Forward)" : ACES_TONEASCALE_20_FWD_STR;
+        case ACES_TONESCALE_20_INV:
+            return detailed ? "ACES_ToneScale20 (Inverse)" : ACES_TONESCALE_20_INV_STR;
+        case ACES_GAMUT_MAP_20_FWD:
+            return detailed ? "GamutCompress20 (Forward)" : ACES_GAMUT_MAP_20_FWD_STR;
+        case ACES_GAMUT_MAP_20_INV:
+            return detailed ? "GamutCompress20 (Inverse)" : ACES_GAMUT_MAP_20_INV_STR;
+        case ACES_RGB_TO_JMh_20:
+            return ACES_RGB_TO_JMh_20_STR;
+        case ACES_JMh_TO_RGB_20:
+            return ACES_JMh_TO_RGB_20_STR;
         case REC2100_SURROUND_FWD:
             return detailed ? "REC2100_Surround (Forward)" : REC_2100_SURROUND_FWD_STR;
         case REC2100_SURROUND_INV:
@@ -154,6 +184,46 @@ FixedFunctionOpData::Style FixedFunctionOpData::GetStyle(const char * name)
         else if (0 == Platform::Strcasecmp(name, ACES_GAMUT_COMP_13_REV_STR))
         {
             return ACES_GAMUT_COMP_13_INV;
+        }
+        else if (0 == Platform::Strcasecmp(name, ACES_OUTPUT_TRANSFORM_20_FWD_STR))
+        {
+            return ACES_OUTPUT_TRANSFORM_20_FWD;
+        }
+        else if (0 == Platform::Strcasecmp(name, ACES_OUTPUT_TRANSFORM_20_INV_STR))
+        {
+            return ACES_OUTPUT_TRANSFORM_20_INV;
+        }
+        else if (0 == Platform::Strcasecmp(name, ACES_AP0_TO_JMh_20_STR))
+        {
+            return ACES_AP0_TO_JMh_20;
+        }
+        else if (0 == Platform::Strcasecmp(name, ACES_JMh_TO_AP0_20_STR))
+        {
+            return ACES_JMh_TO_AP0_20;
+        }
+        else if (0 == Platform::Strcasecmp(name, ACES_TONEASCALE_20_FWD_STR))
+        {
+            return ACES_TONESCALE_20_FWD;
+        }
+        else if (0 == Platform::Strcasecmp(name, ACES_TONESCALE_20_INV_STR))
+        {
+            return ACES_TONESCALE_20_INV;
+        }
+        else if (0 == Platform::Strcasecmp(name, ACES_GAMUT_MAP_20_FWD_STR))
+        {
+            return ACES_GAMUT_MAP_20_FWD;
+        }
+        else if (0 == Platform::Strcasecmp(name, ACES_GAMUT_MAP_20_INV_STR))
+        {
+            return ACES_GAMUT_MAP_20_INV;
+        }
+        else if (0 == Platform::Strcasecmp(name, ACES_RGB_TO_JMh_20_STR))
+        {
+            return ACES_RGB_TO_JMh_20;
+        }
+        else if (0 == Platform::Strcasecmp(name, ACES_JMh_TO_RGB_20_STR))
+        {
+            return ACES_JMh_TO_RGB_20;
         }
         else if (0 == Platform::Strcasecmp(name, SURROUND_STR) ||
                  0 == Platform::Strcasecmp(name, REC_2100_SURROUND_FWD_STR))
@@ -242,6 +312,31 @@ FixedFunctionOpData::Style FixedFunctionOpData::ConvertStyle(FixedFunctionStyle 
             return isForward ? FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD :
                                FixedFunctionOpData::ACES_GAMUT_COMP_13_INV;
         }
+        case FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20:
+        {
+            return isForward ? FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_FWD :
+                               FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_INV;
+        }
+        case FIXED_FUNCTION_ACES_AP0_TO_JMH_20:
+        {
+            return isForward ? FixedFunctionOpData::ACES_AP0_TO_JMh_20 :
+                               FixedFunctionOpData::ACES_JMh_TO_AP0_20;
+        }
+        case FIXED_FUNCTION_ACES_TONESCALE_20:
+        {
+            return isForward ? FixedFunctionOpData::ACES_TONESCALE_20_FWD :
+                               FixedFunctionOpData::ACES_TONESCALE_20_INV;
+        }
+        case FIXED_FUNCTION_ACES_GAMUTMAP_20:
+        {
+            return isForward ? FixedFunctionOpData::ACES_GAMUT_MAP_20_FWD :
+                               FixedFunctionOpData::ACES_GAMUT_MAP_20_INV;
+        }
+        case FIXED_FUNCTION_ACES_RGB_TO_JMH_20:
+        {
+            return isForward ? FixedFunctionOpData::ACES_RGB_TO_JMh_20 :
+                               FixedFunctionOpData::ACES_JMh_TO_RGB_20;
+        }
         case FIXED_FUNCTION_REC2100_SURROUND:
         {
             return isForward ? FixedFunctionOpData::REC2100_SURROUND_FWD :
@@ -306,6 +401,26 @@ FixedFunctionStyle FixedFunctionOpData::ConvertStyle(FixedFunctionOpData::Style 
     case FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD:
     case FixedFunctionOpData::ACES_GAMUT_COMP_13_INV:
         return FIXED_FUNCTION_ACES_GAMUT_COMP_13;
+
+    case FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_FWD:
+    case FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_INV:
+        return FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20;
+
+    case FixedFunctionOpData::ACES_AP0_TO_JMh_20:
+    case FixedFunctionOpData::ACES_JMh_TO_AP0_20:
+        return FIXED_FUNCTION_ACES_AP0_TO_JMH_20;
+
+    case FixedFunctionOpData::ACES_TONESCALE_20_FWD:
+    case FixedFunctionOpData::ACES_TONESCALE_20_INV:
+        return FIXED_FUNCTION_ACES_TONESCALE_20;
+
+    case FixedFunctionOpData::ACES_GAMUT_MAP_20_FWD:
+    case FixedFunctionOpData::ACES_GAMUT_MAP_20_INV:
+        return FIXED_FUNCTION_ACES_GAMUTMAP_20;
+
+    case FixedFunctionOpData::ACES_RGB_TO_JMh_20:
+    case FixedFunctionOpData::ACES_JMh_TO_RGB_20:
+        return FIXED_FUNCTION_ACES_RGB_TO_JMH_20;
 
     case FixedFunctionOpData::REC2100_SURROUND_FWD:
     case FixedFunctionOpData::REC2100_SURROUND_INV:
@@ -408,6 +523,40 @@ void FixedFunctionOpData::validate() const
         static constexpr double pwr_low_bound = 1.0;
         static constexpr double pwr_hi_bound  = 65504.0;
         check_bounds("power",       power,       pwr_low_bound, pwr_hi_bound);
+    }
+    else if (m_style == ACES_OUTPUT_TRANSFORM_20_FWD || m_style == ACES_OUTPUT_TRANSFORM_20_INV)
+    {
+        // TODO: parameter validation
+        // TODO: need encoding primaries for creative white point handling?
+
+        if (m_params.size() != 10)
+        {
+            std::stringstream ss;
+            ss  << "The style '" << ConvertStyleToString(m_style, true)
+                << "' must have ten parameters but "
+                << m_params.size() << " found.";
+            throw Exception(ss.str().c_str());
+        }
+
+        // 1. peakLuminance (1 to 10000 nits?)
+        // 2. limit primaries (xy for rgbw, 8 numbers)
+        // 3. whether to apply initial ap1 clamp
+    }
+    else if (m_style == ACES_AP0_TO_JMh_20 || m_style == ACES_JMh_TO_AP0_20)
+    {
+        // No parameters to validate yet!
+    }
+    else if (m_style == ACES_TONESCALE_20_FWD || m_style == ACES_TONESCALE_20_INV)
+    {
+        // No parameters to validate yet!
+    }
+    else if (m_style == ACES_GAMUT_MAP_20_FWD || m_style == ACES_GAMUT_MAP_20_INV)
+    {
+        // No parameters to validate yet!
+    }
+    else if (m_style == ACES_RGB_TO_JMh_20 || m_style == ACES_JMh_TO_RGB_20)
+    {
+        // No parameters to validate yet!
     }
     else if (m_style==REC2100_SURROUND_FWD || m_style == REC2100_SURROUND_INV)
     {
@@ -530,6 +679,56 @@ void FixedFunctionOpData::invert() noexcept
             setStyle(ACES_GAMUT_COMP_13_FWD);
             break;
         }
+        case ACES_OUTPUT_TRANSFORM_20_FWD:
+        {
+            setStyle(ACES_OUTPUT_TRANSFORM_20_INV);
+            break;
+        }
+        case ACES_OUTPUT_TRANSFORM_20_INV:
+        {
+            setStyle(ACES_OUTPUT_TRANSFORM_20_FWD);
+            break;
+        }
+        case ACES_AP0_TO_JMh_20:
+        {
+            setStyle(ACES_JMh_TO_AP0_20);
+            break;
+        }
+        case ACES_JMh_TO_AP0_20:
+        {
+            setStyle(ACES_AP0_TO_JMh_20);
+            break;
+        }
+        case ACES_TONESCALE_20_FWD:
+        {
+            setStyle(ACES_TONESCALE_20_INV);
+            break;
+        }
+        case ACES_TONESCALE_20_INV:
+        {
+            setStyle(ACES_TONESCALE_20_FWD);
+            break;
+        }
+        case ACES_GAMUT_MAP_20_FWD:
+        {
+            setStyle(ACES_GAMUT_MAP_20_INV);
+            break;
+        }
+        case ACES_GAMUT_MAP_20_INV:
+        {
+            setStyle(ACES_GAMUT_MAP_20_FWD);
+            break;
+        }
+        case ACES_RGB_TO_JMh_20:
+        {
+            setStyle(ACES_JMh_TO_RGB_20);
+            break;
+        }
+        case ACES_JMh_TO_RGB_20:
+        {
+            setStyle(ACES_RGB_TO_JMh_20);
+            break;
+        }
         case REC2100_SURROUND_FWD:
         {
             setStyle(REC2100_SURROUND_INV);
@@ -609,6 +808,11 @@ TransformDirection FixedFunctionOpData::getDirection() const noexcept
     case FixedFunctionOpData::ACES_GLOW_10_FWD:
     case FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD:
     case FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD:
+    case FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_FWD:
+    case FixedFunctionOpData::ACES_AP0_TO_JMh_20:
+    case FixedFunctionOpData::ACES_TONESCALE_20_FWD:
+    case FixedFunctionOpData::ACES_GAMUT_MAP_20_FWD:
+    case FixedFunctionOpData::ACES_RGB_TO_JMh_20:
     case FixedFunctionOpData::REC2100_SURROUND_FWD:
     case FixedFunctionOpData::RGB_TO_HSV:
     case FixedFunctionOpData::XYZ_TO_xyY:
@@ -622,6 +826,11 @@ TransformDirection FixedFunctionOpData::getDirection() const noexcept
     case FixedFunctionOpData::ACES_GLOW_10_INV:
     case FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV:
     case FixedFunctionOpData::ACES_GAMUT_COMP_13_INV:
+    case FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_INV:
+    case FixedFunctionOpData::ACES_JMh_TO_AP0_20:
+    case FixedFunctionOpData::ACES_TONESCALE_20_INV:
+    case FixedFunctionOpData::ACES_GAMUT_MAP_20_INV:
+    case FixedFunctionOpData::ACES_JMh_TO_RGB_20:
     case FixedFunctionOpData::REC2100_SURROUND_INV:
     case FixedFunctionOpData::HSV_TO_RGB:
     case FixedFunctionOpData::xyY_TO_XYZ:
