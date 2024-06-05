@@ -148,6 +148,9 @@ option(OCIO_BUILD_FROZEN_DOCS "Specify whether to build frozen documentation, ne
 option(OCIO_BUILD_DOCS "Specify whether to build documentation" ${OCIO_BUILD_FROZEN_DOCS})
 
 option(OCIO_BUILD_PYTHON "Specify whether to build python bindings" ON)
+
+option(OCIO_USE_HALF_LOOKUP_TABLE "Determines if the Imath library should use a 64k LUT for half conversions" ON)
+
 set (OCIO_PYTHON_VERSION "" CACHE STRING
      "Preferred Python version (if any) in case multiple are available")
 

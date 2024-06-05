@@ -221,6 +221,10 @@ if(OCIO_USE_SIMD AND (OCIO_ARCH_X86 OR OCIO_USE_SSE2NEON))
     set_property(SOURCE ops/lut3d/Lut3DOpCPU_AVX512.cpp APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX512_ARGS})
 endif()
 
+if(NOT OCIO_USE_HALF_LOOKUP_TABLE)
+    add_compile_definitions(IMATH_HALF_NO_LOOKUP_TABLE)
+endif()
+
 configure_file(CPUInfoConfig.h.in CPUInfoConfig.h)
 
 add_library(OpenColorIO ${SOURCES})

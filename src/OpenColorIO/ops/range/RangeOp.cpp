@@ -6,8 +6,6 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include <Imath/half.h>
-
 #include "GpuShaderUtils.h"
 #include "HashUtils.h"
 #include "MathUtils.h"
