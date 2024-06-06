@@ -5,8 +5,9 @@
 #ifndef INCLUDED_OCIO_STUDIOCONFIG_H
 #define INCLUDED_OCIO_STUDIOCONFIG_H
 
-
 #include <OpenColorIO/OpenColorIO.h>
+
+#if OCIO_HAS_BUILTIN_YAML_CONFIGS
 #include "builtinconfigs/BuiltinConfigRegistry.h"
 
 namespace OCIO_NAMESPACE
@@ -20,5 +21,6 @@ namespace STUDIOCONFIG
 } // namespace STUDIOCONFIG
 
 } // namespace OCIO_NAMESPACE
+#endif //OCIO_HAS_BUILTIN_YAML_CONFIGS
 
 #endif // INCLUDED_OCIO_STUDIOCONFIG_H

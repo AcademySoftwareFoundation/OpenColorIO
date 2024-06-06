@@ -976,6 +976,7 @@ colorspaces:
     }
 }
 
+#if OCIO_HAS_BUILTIN_YAML_CONFIGS
 OCIO_ADD_TEST(ConfigUtils, processor_to_known_colorspace)
 {
     constexpr const char * CONFIG { R"(
@@ -1688,3 +1689,4 @@ colorspaces:
         );
     }
 }
+#endif //OCIO_HAS_BUILTIN_YAML_CONFIGS

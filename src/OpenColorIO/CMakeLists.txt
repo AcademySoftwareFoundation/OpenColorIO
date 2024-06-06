@@ -224,6 +224,10 @@ endif()
 if(NOT OCIO_USE_HALF_LOOKUP_TABLE)
     add_compile_definitions(IMATH_HALF_NO_LOOKUP_TABLE)
 endif()
+if(OCIO_HAS_BUILTIN_YAML_CONFIGS)
+    add_compile_definitions(OCIO_HAS_BUILTIN_YAML_CONFIGS)
+endif()
+
 
 configure_file(CPUInfoConfig.h.in CPUInfoConfig.h)
 

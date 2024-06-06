@@ -5743,6 +5743,7 @@ OCIO_ADD_TEST(Config, inactive_color_space)
                                                       OCIO::COLORSPACE_ALL, 1));
 }
 
+#if OCIO_HAS_BUILTIN_YAML_CONFIGS
 OCIO_ADD_TEST(Config, is_inactive)
 {
     // Using Built-in config to test the getInactiveColorSpace method.
@@ -5770,6 +5771,8 @@ OCIO_ADD_TEST(Config, is_inactive)
         OCIO_CHECK_EQUAL(config->isInactiveColorSpace("Rec.1886 Rec.2020 - Display"), true);
     }
 }
+#endif //OCIO_HAS_BUILTIN_YAML_CONFIGS
+
 
 OCIO_ADD_TEST(Config, inactive_color_space_precedence)
 {
