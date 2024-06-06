@@ -104,6 +104,7 @@ public:
         GammaType,            // A gamma (i.e. enhancement of the Exponent)
         GradingPrimaryType,   // A set of primary grading controls
         GradingRGBCurveType,  // A rgb curve
+        GradingHueCurveType,  // A hue curve
         GradingToneType,      // A set of grading controls for tonal ranges
         LogType,              // A log
         Lut1DType,            // A 1D LUT

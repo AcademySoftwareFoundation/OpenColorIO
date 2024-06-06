@@ -104,7 +104,11 @@ set(SOURCES
     ops/gradingrgbcurve/GradingRGBCurveOpData.cpp
     ops/gradingrgbcurve/GradingRGBCurveOpGPU.cpp
     ops/gradingrgbcurve/GradingRGBCurveOp.cpp
+    ops/gradingrgbcurve/HueCurveOpData.cpp
+    ops/gradingrgbcurve/HueCurveOp.cpp
+    ops/gradingrgbcurve/HueCurveOpGPU.cpp
     ops/gradingrgbcurve/GradingRGBCurve.cpp
+    ops/gradingrgbcurve/HueCurve.cpp
     ops/gradingtone/GradingTone.cpp
     ops/gradingtone/GradingToneOpCPU.cpp
     ops/gradingtone/GradingToneOpData.cpp
@@ -170,6 +174,7 @@ set(SOURCES
     transforms/FileTransform.cpp
     transforms/FixedFunctionTransform.cpp
     transforms/GradingPrimaryTransform.cpp
+    transforms/HueCurveTransform.cpp
     transforms/GradingRGBCurveTransform.cpp
     transforms/GradingToneTransform.cpp
     transforms/GroupTransform.cpp

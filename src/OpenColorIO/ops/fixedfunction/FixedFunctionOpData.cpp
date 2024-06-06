@@ -77,7 +77,12 @@ constexpr char LIN_TO_GAMMA_LOG_STR[]               = "Lin_TO_GammaLog";
 constexpr char GAMMA_LOG_TO_LIN_STR[]               = "GammaLog_TO_Lin";
 constexpr char LIN_TO_DOUBLE_LOG_STR[]              = "Lin_TO_DoubleLog";
 constexpr char DOUBLE_LOG_TO_LIN_STR[]              = "DoubleLog_TO_Lin";
-
+constexpr char RGB_TO_HSY_LIN_STR[]                 = "RGB_TO_HSY_LIN";
+constexpr char RGB_TO_HSY_LOG_STR[]                 = "RGB_TO_HSY_LOG";
+constexpr char RGB_TO_HSY_VID_STR[]                 = "RGB_TO_HSY_VID";
+constexpr char HSY_LOG_TO_RGB_STR[]                 = "HSY_LOG_TO_RGB";
+constexpr char HSY_LIN_TO_RGB_STR[]                 = "HSY_LIN_TO_RGB";
+constexpr char HSY_VID_TO_RGB_STR[]                 = "HSY_VID_TO_RGB";
 
 // NOTE: Converts the enumeration value to its string representation (i.e. CLF reader).
 //       It could add details for error reporting.
@@ -160,6 +165,18 @@ const char * FixedFunctionOpData::ConvertStyleToString(Style style, bool detaile
             return LIN_TO_DOUBLE_LOG_STR;
         case DOUBLE_LOG_TO_LIN:
             return DOUBLE_LOG_TO_LIN_STR;
+        case RGB_TO_HSY_LIN:
+            return RGB_TO_HSY_LIN_STR;
+        case RGB_TO_HSY_LOG:
+            return RGB_TO_HSY_LOG_STR;
+        case RGB_TO_HSY_VID:
+            return RGB_TO_HSY_VID_STR;
+        case HSY_LOG_TO_RGB:
+                return HSY_LOG_TO_RGB_STR;
+        case HSY_LIN_TO_RGB:
+                return HSY_LIN_TO_RGB_STR;
+        case HSY_VID_TO_RGB:
+                return HSY_VID_TO_RGB_STR;
     }
 
     std::stringstream ss("Unknown FixedFunction style: ");
@@ -317,6 +334,30 @@ FixedFunctionOpData::Style FixedFunctionOpData::GetStyle(const char * name)
         else if (0 == Platform::Strcasecmp(name, DOUBLE_LOG_TO_LIN_STR))
         {
             return DOUBLE_LOG_TO_LIN;
+        }
+        else if (0 == Platform::Strcasecmp(name, RGB_TO_HSY_LIN_STR))
+        {
+            return RGB_TO_HSY_LIN;
+        }
+        else if (0 == Platform::Strcasecmp(name, RGB_TO_HSY_LOG_STR))
+        {
+            return RGB_TO_HSY_LOG;
+        }
+        else if (0 == Platform::Strcasecmp(name, RGB_TO_HSY_VID_STR))
+        {
+            return RGB_TO_HSY_VID;
+        }
+        else if (0 == Platform::Strcasecmp(name, HSY_LOG_TO_RGB_STR))
+        {
+            return HSY_LOG_TO_RGB;
+        }
+        else if (0 == Platform::Strcasecmp(name, HSY_LIN_TO_RGB_STR))
+        {
+            return HSY_LIN_TO_RGB;
+        }
+        else if (0 == Platform::Strcasecmp(name, HSY_VID_TO_RGB_STR))
+        {
+            return HSY_VID_TO_RGB;
         }
     }
 
@@ -511,6 +552,12 @@ FixedFunctionStyle FixedFunctionOpData::ConvertStyle(FixedFunctionOpData::Style 
     case FixedFunctionOpData::LIN_TO_DOUBLE_LOG:
     case FixedFunctionOpData::DOUBLE_LOG_TO_LIN:
         return FIXED_FUNCTION_LIN_TO_DOUBLE_LOG;
+    
+    // TODO: Implement the following conversions.
+    //case FixedFunctionOpData::RGB_TO_HSY_LIN:
+    //case FixedFunctionOpData::HSY_LIN_TO_RGB:
+    //    return FIXED_FUNCTION_RGB_TO_HSY_LIN;
+
     }
 
     std::stringstream ss("Unknown FixedFunction style: ");

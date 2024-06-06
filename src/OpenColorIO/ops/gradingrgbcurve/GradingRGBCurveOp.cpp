@@ -248,6 +248,5 @@ void BuildGradingRGBCurveOp(OpRcPtrVec & ops,
     CreateGradingRGBCurveOp(ops, curveData, dir);
 }
 
-
 } // namespace OCIO_NAMESPACE
 

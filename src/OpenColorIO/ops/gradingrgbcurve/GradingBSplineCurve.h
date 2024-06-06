@@ -17,8 +17,8 @@ class GpuShaderText;
 class GradingBSplineCurveImpl : public GradingBSplineCurve
 {
 public:
-    explicit GradingBSplineCurveImpl(size_t size);
-    GradingBSplineCurveImpl(const std::vector<GradingControlPoint> & controlPoints);
+    explicit GradingBSplineCurveImpl(size_t size, BSplineCurveType curveType = B_SPLINE);
+    GradingBSplineCurveImpl(const std::vector<GradingControlPoint> & controlPoints, BSplineCurveType curveType = B_SPLINE);
     ~GradingBSplineCurveImpl() = default;
 
     GradingBSplineCurveRcPtr createEditableCopy() const override;
@@ -30,6 +30,9 @@ public:
     void setSlope(size_t index, float slope) override;
     bool slopesAreDefault() const override;
     void validate() const override;
+
+    BSplineCurveType getCurveType() const override;
+    void setCurveType(BSplineCurveType curveType) override;
 
     bool isIdentity() const;
 
@@ -57,11 +60,7 @@ public:
     {
         KnotsCoefs() = delete;
 
-        explicit KnotsCoefs(size_t numCurves)
-        {
-            m_knotsOffsetsArray.resize(2 * numCurves);
-            m_coefsOffsetsArray.resize(2 * numCurves);
-        }
+        explicit KnotsCoefs(size_t numCurves);
 
         // Pre-processing scalar values.
 
@@ -106,6 +105,9 @@ public:
         std::vector<float> m_coefsArray;  // Contains packed coefs of ALL curves.
         std::vector<float> m_knotsArray;  // Contains packed knots of ALL curves.
 
+        int m_nCoefs = 0;
+        int m_nKnots = 0;
+
         float evalCurve(int curveIdx, float x) const;
         float evalCurveRev(int curveIdx, float x) const;
     };
@@ -117,11 +119,24 @@ public:
     static void AddShaderEval(GpuShaderText & st,
                               const std::string & knotsOffsets, const std::string & coefsOffsets,
                               const std::string & knots, const std::string & coefs, bool isInv);
+
+    static void AddShaderEvalHueCurve(GpuShaderText & st,
+                                      const std::string & knotsOffsets, const std::string & coefsOffsets,
+                                      const std::string & knots, const std::string & coefs, bool isInv);
 private:
+    void computeKnotsAndCoefsBSpline(KnotsCoefs & knotsCoefs, int curveIdx) const;
+    void computeKnotsAndCoefsHueCurves(KnotsCoefs & knotsCoefs, int curveIdx) const;
+
     void validateIndex(size_t index) const;
+    void prepData(const std::vector<GradingControlPoint>& inCtrlPnts,
+                   std::vector<GradingControlPoint>& outCtrlPnt,
+                   bool isPeriodic,
+                   bool isHorizontal) const;
 
     std::vector<GradingControlPoint> m_controlPoints;
     std::vector<float> m_slopesArray;  // Optional slope values for the control points.
+
+    BSplineCurveType m_curveType = BSplineCurveType::B_SPLINE;
 };
 
 bool IsGradingCurveIdentity(const ConstGradingBSplineCurveRcPtr & curve);

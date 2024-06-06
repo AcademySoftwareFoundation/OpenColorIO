@@ -15,6 +15,7 @@ set(SOURCES
 	GPUUnitTest.cpp
 	GradingPrimaryOp_test.cpp
 	GradingRGBCurveOp_test.cpp
+	HueCurveOp_test.cpp
 	GradingToneOp_test.cpp
 	LogOp_test.cpp
 	Lut1DOp_test.cpp

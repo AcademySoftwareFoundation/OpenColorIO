@@ -114,6 +114,10 @@ class OCIOEXPORT GradingRGBCurve;
 typedef OCIO_SHARED_PTR<const GradingRGBCurve> ConstGradingRGBCurveRcPtr;
 typedef OCIO_SHARED_PTR<GradingRGBCurve> GradingRGBCurveRcPtr;
 
+class OCIOEXPORT HueCurve;
+typedef OCIO_SHARED_PTR<const HueCurve> ConstHueCurveRcPtr;
+typedef OCIO_SHARED_PTR<HueCurve> HueCurveRcPtr;
+
 class OCIOEXPORT ConfigIOProxy;
 typedef OCIO_SHARED_PTR<const ConfigIOProxy> ConstConfigIOProxyRcPtr;
 typedef OCIO_SHARED_PTR<ConfigIOProxy> ConfigIOProxyRcPtr;
@@ -163,6 +167,10 @@ class OCIOEXPORT DynamicPropertyGradingRGBCurve;
 typedef OCIO_SHARED_PTR<const DynamicPropertyGradingRGBCurve> ConstDynamicPropertyGradingRGBCurveRcPtr;
 typedef OCIO_SHARED_PTR<DynamicPropertyGradingRGBCurve> DynamicPropertyGradingRGBCurveRcPtr;
 
+class OCIOEXPORT DynamicPropertyHueCurve;
+typedef OCIO_SHARED_PTR<const DynamicPropertyHueCurve> ConstDynamicPropertyHueCurveRcPtr;
+typedef OCIO_SHARED_PTR<DynamicPropertyHueCurve> DynamicPropertyHueCurveRcPtr;
+
 class OCIOEXPORT DynamicPropertyGradingTone;
 typedef OCIO_SHARED_PTR<const DynamicPropertyGradingTone> ConstDynamicPropertyGradingToneRcPtr;
 typedef OCIO_SHARED_PTR<DynamicPropertyGradingTone> DynamicPropertyGradingToneRcPtr;
@@ -190,6 +198,10 @@ typedef OCIO_SHARED_PTR<FixedFunctionTransform> FixedFunctionTransformRcPtr;
 class OCIOEXPORT GradingPrimaryTransform;
 typedef OCIO_SHARED_PTR<const GradingPrimaryTransform> ConstGradingPrimaryTransformRcPtr;
 typedef OCIO_SHARED_PTR<GradingPrimaryTransform> GradingPrimaryTransformRcPtr;
+
+class OCIOEXPORT HueCurveTransform;
+typedef OCIO_SHARED_PTR<const HueCurveTransform> ConstHueCurveTransformRcPtr;
+typedef OCIO_SHARED_PTR<HueCurveTransform> HueCurveTransformRcPtr;
 
 class OCIOEXPORT GradingRGBCurveTransform;
 typedef OCIO_SHARED_PTR<const GradingRGBCurveTransform> ConstGradingRGBCurveTransformRcPtr;
@@ -362,7 +374,8 @@ enum TransformType
     TRANSFORM_TYPE_LUT1D,
     TRANSFORM_TYPE_LUT3D,
     TRANSFORM_TYPE_MATRIX,
-    TRANSFORM_TYPE_RANGE
+    TRANSFORM_TYPE_RANGE,
+    TRANSFORM_TYPE_HUE_CURVE
 };
 
 /**
@@ -549,7 +562,8 @@ enum DynamicPropertyType
     DYNAMIC_PROPERTY_GAMMA,            ///< Image gamma value (double floating point value)
     DYNAMIC_PROPERTY_GRADING_PRIMARY,  ///< Used by GradingPrimaryTransform
     DYNAMIC_PROPERTY_GRADING_RGBCURVE, ///< Used by GradingRGBCurveTransform
-    DYNAMIC_PROPERTY_GRADING_TONE      ///< Used by GradingToneTransform
+    DYNAMIC_PROPERTY_GRADING_TONE,      ///< Used by GradingToneTransform
+    DYNAMIC_PROPERTY_HUE_CURVE      ///< Used by GradingToneTransform
 };
 
 /// Types for GradingRGBCurve.
@@ -560,6 +574,29 @@ enum RGBCurveType
     RGB_BLUE,
     RGB_MASTER,
     RGB_NUM_CURVES
+};
+
+/// Types for HueCurve.
+enum HueCurveType
+{
+    HUE_HUE = 0,
+    HUE_SAT,
+    HUE_LUM,
+    LUM_SAT,
+    SAT_SAT,
+    LUM_LUM,
+    SAT_LUM,
+    HUE_FX,
+    HUE_NUM_CURVES
+};
+
+enum BSplineCurveType
+{
+   B_SPLINE = 0,           //!< Monotonic quadratic B-spline based function.
+   DIAGONAL_B_SPLINE,      //!< Monotonic quadratic B-spline based function (newer algorithm).
+   HUE_HUE_B_SPLINE,       //!< Special B-spline used for the hue vs. hue curve (monotonic and periodic).
+   PERIODIC_B_SPLINE,      //!< Periodic non-monotonic B-spline used for some of the hue curves.
+   HORIZONTAL_B_SPLINE 
 };
 
 /// Types for uniform data.

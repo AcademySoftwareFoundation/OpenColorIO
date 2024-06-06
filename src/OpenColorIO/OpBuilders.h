@@ -100,6 +100,12 @@ void BuildGradingPrimaryOp(OpRcPtrVec & ops,
                            const GradingPrimaryTransform & transform,
                            TransformDirection dir);
 
+void BuildHueCurveOp(OpRcPtrVec & ops,
+                            const Config & config,
+                            const ConstContextRcPtr & context,
+                            const HueCurveTransform & transform,
+                            TransformDirection dir);
+
 void BuildGradingRGBCurveOp(OpRcPtrVec & ops,
                             const Config & config,
                             const ConstContextRcPtr & context,

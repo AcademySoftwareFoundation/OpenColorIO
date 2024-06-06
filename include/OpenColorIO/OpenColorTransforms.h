@@ -512,9 +512,9 @@ class OCIOEXPORT GradingBSplineCurve
 {
 public:
     /// Create a BSpline curve with a specified number of control points.
-    static GradingBSplineCurveRcPtr Create(size_t size);
+    static GradingBSplineCurveRcPtr Create(size_t size, BSplineCurveType curveType = B_SPLINE);
     /// Create a BSpline curve with a list of control points.
-    static GradingBSplineCurveRcPtr Create(std::initializer_list<GradingControlPoint> values);
+    static GradingBSplineCurveRcPtr Create(std::initializer_list<GradingControlPoint> values, BSplineCurveType curveType = B_SPLINE);
 
     virtual GradingBSplineCurveRcPtr createEditableCopy() const = 0;
     virtual size_t getNumControlPoints() const noexcept = 0;
@@ -525,6 +525,8 @@ public:
     virtual void setSlope(size_t index, float slope) = 0;
     virtual bool slopesAreDefault() const = 0;
     virtual void validate() const = 0;
+    virtual BSplineCurveType getCurveType() const = 0;
+    virtual void setCurveType(BSplineCurveType curveType) = 0;
 
     GradingBSplineCurve(const GradingBSplineCurve &) = delete;
     GradingBSplineCurve & operator= (const GradingBSplineCurve &) = delete;
@@ -570,6 +572,34 @@ protected:
 extern OCIOEXPORT bool operator==(const GradingRGBCurve & lhs, const GradingRGBCurve & rhs);
 extern OCIOEXPORT bool operator!=(const GradingRGBCurve & lhs, const GradingRGBCurve & rhs);
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingRGBCurve &);
+
+/**
+ * A set of HUE/SAT/LUM curves. It is used by HueCurveTransform and can be used as
+ * a dynamic property (see \ref DynamicPropertyHueCurve).
+ */
+class OCIOEXPORT HueCurve
+{
+public:
+    static HueCurveRcPtr Create(GradingStyle style);
+    static HueCurveRcPtr Create(const ConstHueCurveRcPtr & rhs);
+    static HueCurveRcPtr Create(const std::array<ConstGradingBSplineCurveRcPtr, HUE_NUM_CURVES> & curves);
+
+    virtual HueCurveRcPtr createEditableCopy() const = 0;
+    virtual void validate() const = 0;
+    virtual bool isIdentity() const = 0;
+    virtual ConstGradingBSplineCurveRcPtr getCurve(HueCurveType c) const = 0;
+    virtual GradingBSplineCurveRcPtr getCurve(HueCurveType c) = 0;
+
+    /// Do not use (needed only for pybind11).
+    virtual ~HueCurve() = default;
+
+protected:
+    HueCurve() = default;
+};
+
+extern OCIOEXPORT bool operator==(const HueCurve & lhs, const HueCurve & rhs);
+extern OCIOEXPORT bool operator!=(const HueCurve & lhs, const HueCurve & rhs);
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const HueCurve &);
 
 /**
  * Used by the grading tone transforms to hold the red, green, blue, master, start,
@@ -735,6 +765,11 @@ extern OCIOEXPORT DynamicPropertyGradingPrimaryRcPtr AsGradingPrimary(DynamicPro
  */
 extern OCIOEXPORT DynamicPropertyGradingRGBCurveRcPtr AsGradingRGBCurve(DynamicPropertyRcPtr & prop);
 /**
+ * Get the property as DynamicPropertyHueCurveRcPtr to access the HueCurveRcPtr
+ * value. Will throw if property type is not DYNAMIC_PROPERTY_HUE_CURVE.
+ */
+extern OCIOEXPORT DynamicPropertyHueCurveRcPtr AsHueCurve(DynamicPropertyRcPtr & prop);
+/**
  * Get the property as DynamicPropertyGradingToneRcPtr to access the GradingTone value. Will throw
  * if property type is not DYNAMIC_PROPERTY_GRADING_TONE.
  */
@@ -789,6 +824,21 @@ public:
 
 protected:
     DynamicPropertyGradingRGBCurve() = default;
+};
+class OCIOEXPORT DynamicPropertyHueCurve
+{
+public:
+    virtual const ConstHueCurveRcPtr & getValue() const = 0;
+    /// Will throw if value is not valid.
+    virtual void setValue(const ConstHueCurveRcPtr & value) = 0;
+
+    DynamicPropertyHueCurve(const DynamicPropertyHueCurve &) = delete;
+    DynamicPropertyHueCurve & operator=(const DynamicPropertyHueCurve &) = delete;
+    /// Do not use (needed only for pybind11).
+    virtual ~DynamicPropertyHueCurve() = default;
+
+protected:
+    DynamicPropertyHueCurve() = default;
 };
 
 /// Interface used to access dynamic property GradingTone value.
@@ -1195,6 +1245,74 @@ protected:
 };
 
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingPrimaryTransform &) noexcept;
+
+/**
+ * Hue color correction controls.
+ *
+ *   TODO: Description.
+ */
+class OCIOEXPORT HueCurveTransform : public Transform
+{
+public:
+    /// Creates an instance of HueCurveTransform.
+    static HueCurveTransformRcPtr Create(GradingStyle style);
+
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_HUE_CURVE; }
+//
+    virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
+    virtual FormatMetadata & getFormatMetadata() noexcept = 0;
+//
+    ///// Checks if this equals other.
+    virtual bool equals(const HueCurveTransform & other) const noexcept = 0;
+//
+    ///// Adjusts the behavior of the transform for log, linear, or video color space encodings.
+    virtual GradingStyle getStyle() const noexcept = 0;
+    ///// Will reset value to style's defaults if style is not the current style.
+    virtual void setStyle(GradingStyle style) noexcept = 0;
+//
+    virtual const ConstHueCurveRcPtr getValue() const = 0;
+    ///// Throws if value is not valid.
+    //virtual 
+    virtual void setValue(const ConstHueCurveRcPtr & values) = 0;    
+    
+    /**
+     * It is possible to provide a desired slope value for each control point.  The number of slopes is 
+     * always the same as the number of control points and so the control points must be set before 
+     * setting the slopes.  The slopes are primarily intended for use by config authors looking to match
+     * a specific shape with as few control points as possible, they are not intended to be exposed to
+     * a user interface for direct manipulation.  When a curve is being generated for creative purposes
+     * it is better to let OCIO calculate the slopes automatically.
+     */
+    virtual float getSlope(HueCurveType c, size_t index) const = 0;
+    virtual void setSlope(HueCurveType c, size_t index, float slope) = 0;
+    virtual bool slopesAreDefault(HueCurveType c) const = 0;
+
+    /**
+     * The scene-linear grading style applies a lin-to-log transform to the pixel
+     * values before going through the curve.  However, in some cases (e.g. drawing curves in a UI)
+     * it may be useful to bypass the lin-to-log. Default value is false.
+     */
+    virtual bool getBypassLinToLog() const = 0;
+    virtual void setBypassLinToLog(bool bypass) = 0;
+//
+    ///**
+    // * Parameters can be made dynamic so the values can be changed through the CPU or GPU processor,
+    // * but if there are several GradingPrimaryTransform only one can have dynamic parameters.
+    // */
+    virtual bool isDynamic() const noexcept = 0;
+    virtual void makeDynamic() noexcept = 0;
+    virtual void makeNonDynamic() noexcept = 0;
+
+    HueCurveTransform(const HueCurveTransform &) = delete;
+    HueCurveTransform & operator= (const HueCurveTransform &) = delete;
+    /// Do not use (needed only for pybind11).
+    virtual ~HueCurveTransform() = default;
+
+protected:
+    HueCurveTransform() = default;
+};
+
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const HueCurveTransform &) noexcept;
 
 
 /**

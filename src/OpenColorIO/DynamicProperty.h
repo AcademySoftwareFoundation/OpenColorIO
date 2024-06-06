@@ -173,6 +173,44 @@ private:
     GradingBSplineCurveImpl::KnotsCoefs m_knotsCoefs{ 4 };
 };
 
+class DynamicPropertyHueCurveImpl;
+typedef OCIO_SHARED_PTR<DynamicPropertyHueCurveImpl> DynamicPropertyHueCurveImplRcPtr;
+
+class DynamicPropertyHueCurveImpl : public DynamicPropertyImpl,
+                                    public DynamicPropertyHueCurve
+{
+public:
+    DynamicPropertyHueCurveImpl() = delete;
+    DynamicPropertyHueCurveImpl(const ConstHueCurveRcPtr & value, bool dynamic);
+    ~DynamicPropertyHueCurveImpl() = default;
+    const ConstHueCurveRcPtr & getValue() const override;
+    void setValue(const ConstHueCurveRcPtr & value) override;
+
+    bool getLocalBypass() const;
+    int getNumKnots() const;
+    int getNumCoefs() const;
+    static int GetNumOffsetValues() { return 8; }
+    const int * getKnotsOffsetsArray() const;
+    const int * getCoefsOffsetsArray() const;
+    const float * getKnotsArray() const;
+    const float * getCoefsArray() const;
+
+    const GradingBSplineCurveImpl::KnotsCoefs & getKnotsCoefs() const { return m_knotsCoefs; }
+
+    static unsigned int GetMaxKnots();
+    static unsigned int GetMaxCoefs();
+
+    DynamicPropertyHueCurveImplRcPtr createEditableCopy() const;
+
+private:
+    void precompute();
+
+    ConstHueCurveRcPtr m_hueCurve;
+
+    // Holds curve data as knots and coefs. There is 8 curve.
+    GradingBSplineCurveImpl::KnotsCoefs m_knotsCoefs{ 8 };
+};
+
 class DynamicPropertyGradingToneImpl;
 typedef OCIO_SHARED_PTR<DynamicPropertyGradingToneImpl> DynamicPropertyGradingToneImplRcPtr;
 

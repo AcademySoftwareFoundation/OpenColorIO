@@ -1353,6 +1353,25 @@ void AddLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st
     st.newLine() << "}";
 }
 
+void AddLinToLogShaderChannelBlue(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st)
+{
+    const std::string pix(shaderCreator->getPixelName());
+
+    st.newLine() << "{";   // establish scope so local variable names won't conflict
+    st.indent();
+    st.newLine() << st.floatKeywordConst() << " xbrk = 0.0041318374739483946;";
+    st.newLine() << st.floatKeywordConst() << " shift = -0.000157849851665374;";
+    st.newLine() << st.floatKeywordConst() << " m = 1. / (0.18 + shift);";
+    st.newLine() << st.floatKeywordConst() << " base2 = 1.4426950408889634;";  // 1/log(2)
+    st.newLine() << st.floatKeywordConst() << " gain = 363.034608563;";
+    st.newLine() << st.floatKeywordConst() << " offs = -7.;";
+    st.newLine() << st.float3Decl("ylin") << " = " << pix << ".rgb * gain + offs;";
+    st.newLine() << st.float3Decl("ylog") << " = base2 * log( ( " << pix << ".rgb + shift ) * m );";
+    st.newLine() << pix << ".rgb.b = (" << pix << ".rgb.b < xbrk) ? ylin.z : ylog.z;";
+    st.dedent();
+    st.newLine() << "}";
+}
+
 void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st)
 {
     const std::string pix(shaderCreator->getPixelName());
@@ -1368,6 +1387,24 @@ void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st
                                           <<          ", " << pix << ".rgb ) * (0.18 + shift) - shift;";
     st.newLine() << pix << ".rgb.r = (" << pix << ".rgb.r < ybrk) ? xlin.x : xlog.x;";
     st.newLine() << pix << ".rgb.g = (" << pix << ".rgb.g < ybrk) ? xlin.y : xlog.y;";
+    st.newLine() << pix << ".rgb.b = (" << pix << ".rgb.b < ybrk) ? xlin.z : xlog.z;";
+    st.dedent();
+    st.newLine() << "}";
+}
+
+void AddLogToLinShaderChannelBlue(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st)
+{
+    const std::string pix(shaderCreator->getPixelName());
+
+    st.newLine() << "{";   // establish scope so local variable names won't conflict
+    st.indent();
+    st.newLine() << st.floatKeywordConst() << " ybrk = -5.5;";
+    st.newLine() << st.floatKeywordConst() << " shift = -0.000157849851665374;";
+    st.newLine() << st.floatKeywordConst() << " gain = 363.034608563;";
+    st.newLine() << st.floatKeywordConst() << " offs = -7.;";
+    st.newLine() << st.float3Decl("xlin") << " = (" << pix << ".rgb - offs) / gain;";
+    st.newLine() << st.float3Decl("xlog") << " = pow( " << st.float3Const(2.0f)
+                                          <<          ", " << pix << ".rgb ) * (0.18 + shift) - shift;";
     st.newLine() << pix << ".rgb.b = (" << pix << ".rgb.b < ybrk) ? xlin.z : xlog.z;";
     st.dedent();
     st.newLine() << "}";
