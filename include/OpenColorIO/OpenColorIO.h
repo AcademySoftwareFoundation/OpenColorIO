@@ -228,6 +228,7 @@ extern OCIOEXPORT void SetCurrentConfig(const ConstConfigRcPtr & config);
  */
 extern OCIOEXPORT const char * ResolveConfigPath(const char * originalPath) noexcept;
 
+#if OCIO_ARCHIVE_SUPPORT
 /**
  * \brief Extract an OCIO Config archive.
  * 
@@ -247,6 +248,7 @@ extern OCIOEXPORT void ExtractOCIOZArchive(
     const char * archivePath, 
     const char * destinationDir
 );
+#endif //OCIO_ARCHIVE_SUPPORT
 
 /**
  * \brief
@@ -1505,6 +1507,7 @@ public:
      */
     bool isArchivable() const;
 
+#if OCIO_ARCHIVE_SUPPORT
     /**
      * \brief Archive the config and its LUTs into the specified output stream.
      * 
@@ -1530,6 +1533,7 @@ public:
      * \param ostream The output stream to write to.
      */
     void archive(std::ostream & ostream) const;
+#endif //OCIO_ARCHIVE_SUPPORT
 
     Config(const Config &) = delete;
     Config& operator= (const Config &) = delete;

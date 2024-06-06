@@ -5,13 +5,16 @@
 #ifndef INCLUDED_OCIO_ARCHIVEUTILS_H
 #define INCLUDED_OCIO_ARCHIVEUTILS_H
 
+#include <OpenColorIO/OpenColorIO.h>
+
+#if OCIO_ARCHIVE_SUPPORT
+
 #include <sstream>
 #include <fstream>
 #include <vector>
 #include <map>
 #include <string>
 
-#include <OpenColorIO/OpenColorIO.h>
 
 namespace OCIO_NAMESPACE
 {
@@ -108,4 +111,5 @@ private:
 
 } // namespace OCIO_NAMESPACE
 
+#endif //OCIO_ARCHIVE_SUPPORT
 #endif

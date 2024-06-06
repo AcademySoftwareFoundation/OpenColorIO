@@ -80,40 +80,7 @@ ocio_handle_dependency(  Imath REQUIRED ALLOW_INSTALL
                          RECOMMENDED_VERSION 3.1.6
                          RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
 
-###############################################################################
-# ZLIB (https://github.com/madler/zlib)
-#
-# The following variables can be set:
-# ZLIB_ROOT               Location of ZLIB library file and includes folder.
-#                         Alternatively, ZLIB_LIBRARY and ZLIB_INCLUDE_DIR can be used.
-#
-# ZLIB_LIBRARY            Location of ZLIB library file.
-# ZLIB_INCLUDE_DIR        Location of ZLIB includes folder.
-#
-# ZLIB_VERSION            ZLIB Version (CMake 3.26+)
-# ZLIB_VERSION_STRING     ZLIB Version (CMake < 3.26)
-#
-#
-# ZLIB_USE_STATIC_LIBS    Set to ON if static library is prefered (CMake 3.24+)
-#
-###############################################################################
-# ZLIB 1.2.13 is used since it fixes a critical vulnerability.
-# See https://nvd.nist.gov/vuln/detail/CVE-2022-37434
-# See https://github.com/madler/zlib/releases/tag/v1.2.13
-ocio_handle_dependency(  ZLIB REQUIRED ALLOW_INSTALL
-                         MIN_VERSION 1.2.8
-                         RECOMMENDED_VERSION 1.2.13
-                         RECOMMENDED_VERSION_REASON "CVE fixes"
-                         VERSION_VARS ZLIB_VERSION_STRING ZLIB_VERSION )
 
-###############################################################################
-
-# minizip-ng
-# https://github.com/zlib-ng/minizip-ng
-ocio_handle_dependency(  minizip-ng REQUIRED ALLOW_INSTALL
-                         MIN_VERSION 3.0.6
-                         RECOMMENDED_VERSION 3.0.7
-                         RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
 
 ###############################################################################
 ##
@@ -122,6 +89,43 @@ ocio_handle_dependency(  minizip-ng REQUIRED ALLOW_INSTALL
 ###############################################################################
 message(STATUS "")
 message(STATUS "Checking for optional dependencies...")
+
+if(OCIO_ARCHIVE_SUPPORT)
+    ###############################################################################
+    # ZLIB (https://github.com/madler/zlib)
+    #
+    # The following variables can be set:
+    # ZLIB_ROOT               Location of ZLIB library file and includes folder.
+    #                         Alternatively, ZLIB_LIBRARY and ZLIB_INCLUDE_DIR can be used.
+    #
+    # ZLIB_LIBRARY            Location of ZLIB library file.
+    # ZLIB_INCLUDE_DIR        Location of ZLIB includes folder.
+    #
+    # ZLIB_VERSION            ZLIB Version (CMake 3.26+)
+    # ZLIB_VERSION_STRING     ZLIB Version (CMake < 3.26)
+    #
+    #
+    # ZLIB_USE_STATIC_LIBS    Set to ON if static library is prefered (CMake 3.24+)
+    #
+    ###############################################################################
+    # ZLIB 1.2.13 is used since it fixes a critical vulnerability.
+    # See https://nvd.nist.gov/vuln/detail/CVE-2022-37434
+    # See https://github.com/madler/zlib/releases/tag/v1.2.13
+    ocio_handle_dependency(  ZLIB REQUIRED ALLOW_INSTALL
+                             MIN_VERSION 1.2.8
+                             RECOMMENDED_VERSION 1.2.13
+                             RECOMMENDED_VERSION_REASON "CVE fixes"
+                             VERSION_VARS ZLIB_VERSION_STRING ZLIB_VERSION )
+
+    ###############################################################################
+
+    # minizip-ng
+    # https://github.com/zlib-ng/minizip-ng
+    ocio_handle_dependency(  minizip-ng REQUIRED ALLOW_INSTALL
+                             MIN_VERSION 3.0.6
+                             RECOMMENDED_VERSION 3.0.7
+                             RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
+endif()
 
 if(OCIO_BUILD_APPS)
     # NOTE: Depending of the compiler version lcms2 2.2 does not compile with 

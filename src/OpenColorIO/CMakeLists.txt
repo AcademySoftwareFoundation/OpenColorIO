@@ -323,8 +323,11 @@ target_link_libraries(OpenColorIO
         "$<BUILD_INTERFACE:utils::strings>"
         "$<BUILD_INTERFACE:xxHash>"
         ${YAML_CPP_LIBRARIES}
-        MINIZIP::minizip-ng
 )
+
+if(OCIO_ARCHIVE_SUPPORT)
+    target_link_libraries(OpenColorIO PRIVATE MINIZIP::minizip-ng)
+endif()
 
 if(OCIO_USE_SIMD AND OCIO_USE_SSE2NEON AND COMPILER_SUPPORTS_SSE_WITH_SSE2NEON)
     target_link_libraries(OpenColorIO PRIVATE $<BUILD_INTERFACE:sse2neon>)

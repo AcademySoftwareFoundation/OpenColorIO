@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include "OpenColorIO/OpenColorIO.h"
+#if OCIO_ARCHIVE_SUPPORT
+
 #include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
 
@@ -572,3 +574,5 @@ OCIO_ADD_TEST(OCIOZArchive, extract_config_and_compare_to_original)
         );
     }
 }
+
+#endif //OCIO_ARCHIVE_SUPPORT

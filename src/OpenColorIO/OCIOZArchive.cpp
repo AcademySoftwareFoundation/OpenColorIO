@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
+#include <OpenColorIO/OpenColorIO.h>
+#if OCIO_ARCHIVE_SUPPORT
 
 #include <sstream>
 #include <fstream>
@@ -10,7 +12,6 @@
 
 #include <pystring.h>
 
-#include <OpenColorIO/OpenColorIO.h>
 
 #include "Mutex.h"
 #include "Platform.h"
@@ -652,3 +653,5 @@ void CIOPOciozArchive::buildEntries()
 }
 
 } // namespace OCIO_NAMESPACE
+
+#endif //OCIO_ARCHIVE_SUPPORT

@@ -1179,6 +1179,7 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
         throw Exception (os.str().c_str());
     }
 
+#if OCIO_ARCHIVE_SUPPORT
     char magicNumber[2] = { 0 };
     if (ifstream.read(magicNumber, 2))
     {
@@ -1198,7 +1199,7 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
             return CreateFromConfigIOProxy(ciop);
         }
     } 
-
+#endif //OCIO_ARCHIVE_SUPPORT
     // Not an OCIOZ archive. Continue as usual.
     ifstream.clear();
     ifstream.seekg(0);
@@ -5482,7 +5483,6 @@ ConfigIOProxyRcPtr Config::getConfigIOProxy() const
 {
     return getImpl()->m_context->getConfigIOProxy();
 }
-
 bool Config::isArchivable() const
 {
     ConstContextRcPtr context = getCurrentContext();
@@ -5557,11 +5557,12 @@ bool Config::isArchivable() const
 
     return true;
 }
+#if OCIO_ARCHIVE_SUPPORT
 
 void Config::archive(std::ostream & ostream) const
 {
     // Using utility functions in OCIOZArchive.cpp.
     archiveConfig(ostream, *this, getCurrentContext()->getWorkingDir());
 }
-
+#endif //OCIO_ARCHIVE_SUPPORT
 } // namespace OCIO_NAMESPACE

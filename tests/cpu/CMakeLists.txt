@@ -37,9 +37,12 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
             utils::strings
             ${YAML_CPP_LIBRARIES}
             testutils
-            MINIZIP::minizip-ng
             xxHash
     )
+
+    if(OCIO_ARCHIVE_SUPPORT)
+        target_link_libraries(${TEST_BINARY} PRIVATE MINIZIP::minizip-ng)
+    endif()
 
     if(OCIO_USE_SIMD AND OCIO_USE_SSE2NEON AND COMPILER_SUPPORTS_SSE_WITH_SSE2NEON)
         target_link_libraries(${TEST_BINARY} PRIVATE sse2neon)
