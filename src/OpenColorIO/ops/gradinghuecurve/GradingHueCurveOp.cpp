@@ -8,8 +8,8 @@
 
 #include "GpuShaderUtils.h"
 //#include "ops/gradingrgbcurve/GradingRGBCurveOpCPU.h"
-#include "ops/gradingrgbcurve/HueCurveOpGPU.h"
-#include "ops/gradingrgbcurve/HueCurveOp.h"
+#include "ops/gradinghuecurve/GradingHueCurveOpGPU.h"
+#include "ops/gradinghuecurve/GradingHueCurveOp.h"
 #include "transforms/HueCurveTransform.h"
 
 namespace OCIO_NAMESPACE

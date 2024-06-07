@@ -8,7 +8,7 @@
 #include "ops/gradingprimary/GradingPrimaryOpData.h"
 #include "ops/gradingrgbcurve/GradingRGBCurve.h"
 #include "ops/gradingtone/GradingToneOpData.h"
-#include "ops/gradingrgbcurve/HueCurve.h"
+#include "ops/gradinghuecurve/GradingHueCurve.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -290,20 +290,20 @@ DynamicPropertyGradingRGBCurveImplRcPtr DynamicPropertyGradingRGBCurveImpl::crea
 
 
 DynamicPropertyHueCurveImpl::DynamicPropertyHueCurveImpl(
-    const ConstHueCurveRcPtr & value, bool dynamic)
+    const ConstGradingHueCurveRcPtr & value, bool dynamic)
     : DynamicPropertyImpl(DYNAMIC_PROPERTY_HUE_CURVE, dynamic)
 {
-    m_hueCurve = HueCurve::Create(value);
+    m_hueCurve = GradingHueCurve::Create(value);
     // Convert control points from the UI into knots and coefficients for the apply.
     precompute();
 }
 
-const ConstHueCurveRcPtr & DynamicPropertyHueCurveImpl::getValue() const
+const ConstGradingHueCurveRcPtr & DynamicPropertyHueCurveImpl::getValue() const
 {
     return m_hueCurve;
 }
 
-void DynamicPropertyHueCurveImpl::setValue(const ConstHueCurveRcPtr & value)
+void DynamicPropertyHueCurveImpl::setValue(const ConstGradingHueCurveRcPtr & value)
 {
     value->validate();
 

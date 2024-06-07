@@ -16,15 +16,15 @@ namespace OCIO_NAMESPACE
 // Class to hold the RGB curve data that is used in the corresponding dynamic property and in
 // the CTF reader..  This allows moving some of the code from DynamicProperty to here.  The
 // dynamic property is then used by the OpData, which is then used by the Op and Transform.
-class HueCurveImpl : public HueCurve
+class HueCurveImpl : public GradingHueCurve
 {
 public:
     HueCurveImpl();
     HueCurveImpl(GradingStyle style);
-    HueCurveImpl(const std::array<ConstGradingBSplineCurveRcPtr, HUE_NUM_CURVES> & curves );
-    HueCurveImpl(const ConstHueCurveRcPtr & rhs);
+    HueCurveImpl(const GradingHueCurves & curves );
+    HueCurveImpl(const ConstGradingHueCurveRcPtr & rhs);
 
-    HueCurveRcPtr createEditableCopy() const override;
+    GradingHueCurveRcPtr createEditableCopy() const override;
 
     void validate() const override;
     bool isIdentity() const override;

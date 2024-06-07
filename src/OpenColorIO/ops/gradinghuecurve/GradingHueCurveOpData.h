@@ -26,7 +26,7 @@ public:
     HueCurveOpData(GradingStyle style);
     HueCurveOpData(const HueCurveOpData & rhs);
     HueCurveOpData(GradingStyle style,
-                   const std::array<ConstGradingBSplineCurveRcPtr, HUE_NUM_CURVES> & curve);
+                   const GradingHueCurves & curve);
     HueCurveOpData & operator=(const HueCurveOpData & rhs);
     virtual ~HueCurveOpData();
 
@@ -49,8 +49,8 @@ public:
     GradingStyle getStyle() const noexcept { return m_style; }
     void setStyle(GradingStyle style) noexcept;
 
-    const ConstHueCurveRcPtr getValue() const { return m_value->getValue(); }
-    void setValue(const ConstHueCurveRcPtr & values) { m_value->setValue(values); }
+    const ConstGradingHueCurveRcPtr getValue() const { return m_value->getValue(); }
+    void setValue(const ConstGradingHueCurveRcPtr & values) { m_value->setValue(values); }
 
     float getSlope(HueCurveType c, size_t index) const;
     void setSlope(HueCurveType c, size_t index, float slope);

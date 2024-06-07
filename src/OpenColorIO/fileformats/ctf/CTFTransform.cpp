@@ -16,8 +16,8 @@
 #include "ops/gradingprimary/GradingPrimaryOpData.h"
 #include "ops/gradingrgbcurve/GradingRGBCurve.h"
 #include "ops/gradingrgbcurve/GradingRGBCurveOpData.h"
-#include "ops/gradingrgbcurve/HueCurve.h"
-#include "ops/gradingrgbcurve/HueCurveOpData.h"
+#include "ops/gradinghuecurve/GradingHueCurve.h"
+#include "ops/gradinghuecurve/GradingHueCurveOpData.h"
 #include "ops/gradingtone/GradingToneOpData.h"
 #include "ops/log/LogOpData.h"
 #include "ops/log/LogUtils.h"
@@ -2837,7 +2837,7 @@ void TransformWriter::writeOps(const CTFVersion & version) const
             {
                 if (m_isCLF)
                 {
-                    ThrowWriteOp("HueCurve");
+                    ThrowWriteOp("GradingHueCurve");
                 }
 
                 auto hue = OCIO_DYNAMIC_POINTER_CAST<const HueCurveOpData>(op);

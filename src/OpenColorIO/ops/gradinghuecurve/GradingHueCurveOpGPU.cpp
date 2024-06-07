@@ -5,7 +5,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Logging.h"
-#include "ops/gradingrgbcurve/HueCurveOpGPU.h"
+#include "ops/gradinghuecurve/GradingHueCurveOpGPU.h"
 #include "ops/fixedfunction/FixedFunctionOpGPU.h"
 #include "ops/fixedfunction/FixedFunctionOpData.h"
 #include "utils/StringUtils.h"
@@ -303,15 +303,15 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
     const std::string pix(shaderCreator->getPixelName());
 
     st.newLine() << "";
-    st.newLine() << "float hueSatGain = max(0., " << props.m_eval << "(1, outColor.r, 1.));";    // HUE-SAT
-    st.newLine() << "float hueLumGain = max(0., " << props.m_eval << "(2, outColor.r, 1.));";    // HUE-LUM
-    st.newLine() << "outColor.r = " << props.m_eval << "(0, outColor.r, outColor.r);";           // HUE-HUE
-    st.newLine() << "outColor.g = max(0., " << props.m_eval << "(4, outColor.g, outColor.g));";  // SAT-SAT
-    st.newLine() << "float lumSatGain = max(0., " << props.m_eval << "(3, outColor.b, 1.));";    // LUM-SAT
+    st.newLine() << "float hueSatGain = max(0., " << props.m_eval << "(1, " << pix << ".r, 1.));"; // HUE-SAT
+    st.newLine() << "float hueLumGain = max(0., " << props.m_eval << "(2, " << pix << ".r, 1.));"; // HUE-LUM
+    st.newLine() << pix << ".r = " << props.m_eval << "(0, " << pix << ".r, " << pix << ".r);"; // HUE-HUE
+    st.newLine() << "" << pix << ".g = max(0., " << props.m_eval << "(4, " << pix << ".g, " << pix << ".g));"; // SAT-SAT
+    st.newLine() << "float lumSatGain = max(0., " << props.m_eval << "(3, " << pix << ".b, 1.));"; // LUM-SAT
     st.newLine() << "float satGain = lumSatGain * hueSatGain;";
-    st.newLine() << "outColor.g = satGain * outColor.g;";
-    st.newLine() << "float satLumGain = max(0., " << props.m_eval << "(6, outColor.g, 1.));";    // SAT-LUM
-    st.newLine() << "outColor.b = " << props.m_eval << "(5, outColor.b, outColor.b);";           // LUM-LUM
+    st.newLine() << "" << pix << ".g = satGain * " << pix << ".g;";
+    st.newLine() << "float satLumGain = max(0., " << props.m_eval << "(6, " << pix << ".g, 1.));"; // SAT-LUM
+    st.newLine() << pix << ".b = " << props.m_eval << "(5, " << pix << ".b, " << pix << ".b);"; // LUM-LUM
     st.newLine() << "";
 
     if (doLinToLog)
@@ -322,17 +322,17 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
     }
 
     st.newLine() << "";
-    st.newLine() << "hueLumGain = 1. - (1. - hueLumGain) * min( 1., outColor.g );";
+    st.newLine() << "hueLumGain = 1. - (1. - hueLumGain) * min( 1., " << pix << ".g );";
     if (style == GRADING_LOG)
       // Use shift rather than scale for log mode.
-      st.newLine() << "outColor.b = outColor.b + (hueLumGain + satLumGain - 2.) * 0.1;";
+      st.newLine() << pix << ".b = " << pix << ".b + (hueLumGain + satLumGain - 2.) * 0.1;";
     else
       // Note this is applied in linear space, for linear style.
-      st.newLine() << "outColor.b = outColor.b * hueLumGain * satLumGain;";
+      st.newLine() << pix << ".b = " << pix << ".b * hueLumGain * satLumGain;";
     st.newLine() << "";
 
-    st.newLine() << "outColor.r = outColor.r - floor( outColor.r );";
-    st.newLine() << "outColor.r = outColor.r + " << props.m_eval << "(7, outColor.r, 0.);";      // HUE-FX
+    st.newLine() << pix << ".r = " << pix << ".r - floor( " << pix << ".r );";
+    st.newLine() << pix << ".r = " << pix << ".r + " << props.m_eval << "(7, " << pix << ".r, 0.);"; // HUE-FX
 
     {
       FixedFunctionOpData::Style hsyStyle = FixedFunctionOpData::RGB_TO_HSY_LIN;
@@ -444,7 +444,7 @@ void GetHueCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     st.indent();
 
     st.newLine() << "";
-    st.newLine() << "// Add HueCurve '"
+    st.newLine() << "// Add GradingHueCurve '"
                  << TransformDirectionToString(dir) << " processing";
     st.newLine() << "";
     st.newLine() << "{";

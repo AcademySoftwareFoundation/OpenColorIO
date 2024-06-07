@@ -11,7 +11,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
-#include "ops/gradingrgbcurve/HueCurveOpData.h"
+#include "ops/gradinghuecurve/GradingHueCurveOpData.h"
 
 
 namespace OCIO_NAMESPACE

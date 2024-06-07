@@ -181,10 +181,10 @@ class DynamicPropertyHueCurveImpl : public DynamicPropertyImpl,
 {
 public:
     DynamicPropertyHueCurveImpl() = delete;
-    DynamicPropertyHueCurveImpl(const ConstHueCurveRcPtr & value, bool dynamic);
+    DynamicPropertyHueCurveImpl(const ConstGradingHueCurveRcPtr & value, bool dynamic);
     ~DynamicPropertyHueCurveImpl() = default;
-    const ConstHueCurveRcPtr & getValue() const override;
-    void setValue(const ConstHueCurveRcPtr & value) override;
+    const ConstGradingHueCurveRcPtr & getValue() const override;
+    void setValue(const ConstGradingHueCurveRcPtr & value) override;
 
     bool getLocalBypass() const;
     int getNumKnots() const;
@@ -205,7 +205,7 @@ public:
 private:
     void precompute();
 
-    ConstHueCurveRcPtr m_hueCurve;
+    ConstGradingHueCurveRcPtr m_hueCurve;
 
     // Holds curve data as knots and coefs. There is 8 curve.
     GradingBSplineCurveImpl::KnotsCoefs m_knotsCoefs{ 8 };

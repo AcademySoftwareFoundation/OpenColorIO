@@ -3,13 +3,13 @@
 
 
 #include "DynamicProperty.h"
-#include "ops/gradingrgbcurve/HueCurve.cpp"
+#include "ops/gradinghuecurve/GradingHueCurve.cpp"
 
 #include "testutils/UnitTest.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
-OCIO_ADD_TEST(HueCurve, basic)
+OCIO_ADD_TEST(GradingHueCurve, basic)
 {
     //auto curve = OCIO::GradingBSplineCurve::Create({ { 0.f,0.f },{ 0.2f,0.2f },
     //                                                 { 0.5f,0.7f },{ 1.f,1.f } });
@@ -87,7 +87,7 @@ OCIO_ADD_TEST(HueCurve, basic)
     //                 oss.str());
 }
 
-OCIO_ADD_TEST(HueCurve, curves)
+OCIO_ADD_TEST(GradingHueCurve, curves)
 {
     //auto curves = OCIO::GradingRGBCurve::Create(OCIO::GRADING_VIDEO);
     //OCIO_CHECK_ASSERT(curves->isIdentity());
@@ -107,7 +107,7 @@ OCIO_ADD_TEST(HueCurve, curves)
     //OCIO_CHECK_EQUAL(curves->getCurve(OCIO::RGB_GREEN)->getNumControlPoints(), 4);
 }
 
-OCIO_ADD_TEST(HueCurve, max_ctrl_pnts)
+OCIO_ADD_TEST(GradingHueCurve, max_ctrl_pnts)
 {
     //auto curveR = OCIO::GradingBSplineCurve::Create({ { 0.f, 10.f },{ 2.f, 10.f },{ 3.f, 10.f },{ 5.f, 10.f },{ 6.f, 10.f },
     //    { 8.f, 10.f },{ 9.f, 10.5f },{ 11.f, 15.f },{ 12.f, 50.f },{ 14.f, 60.f },{ 15.f, 85.f } });

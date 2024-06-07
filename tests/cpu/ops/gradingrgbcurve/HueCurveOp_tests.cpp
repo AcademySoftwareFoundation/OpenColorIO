@@ -4,7 +4,7 @@
 
 #include "OpBuilders.h"
 
-#include "ops/gradingrgbcurve/HueCurveOp.cpp"
+#include "ops/gradinghuecurve/GradingHueCurveOp.cpp"
 
 #include "testutils/UnitTest.h"
 

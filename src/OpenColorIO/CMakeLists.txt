@@ -104,11 +104,11 @@ set(SOURCES
     ops/gradingrgbcurve/GradingRGBCurveOpData.cpp
     ops/gradingrgbcurve/GradingRGBCurveOpGPU.cpp
     ops/gradingrgbcurve/GradingRGBCurveOp.cpp
-    ops/gradingrgbcurve/HueCurveOpData.cpp
-    ops/gradingrgbcurve/HueCurveOp.cpp
-    ops/gradingrgbcurve/HueCurveOpGPU.cpp
+    ops/gradinghuecurve/GradingHueCurveOpData.cpp
+    ops/gradinghuecurve/GradingHueCurveOp.cpp
+    ops/gradinghuecurve/GradingHueCurveOpGPU.cpp
     ops/gradingrgbcurve/GradingRGBCurve.cpp
-    ops/gradingrgbcurve/HueCurve.cpp
+    ops/gradinghuecurve/GradingHueCurve.cpp
     ops/gradingtone/GradingTone.cpp
     ops/gradingtone/GradingToneOpCPU.cpp
     ops/gradingtone/GradingToneOpData.cpp

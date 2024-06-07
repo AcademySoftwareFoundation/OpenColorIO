@@ -14,10 +14,30 @@
 namespace OCIO_NAMESPACE
 {
 
+GradingBSplineCurveRcPtr GradingBSplineCurve::Create(size_t size)
+{
+    auto newSpline = std::make_shared<GradingBSplineCurveImpl>(size);
+    GradingBSplineCurveRcPtr res = newSpline;
+    return res;
+}
+
 GradingBSplineCurveRcPtr GradingBSplineCurve::Create(size_t size, BSplineCurveType curveType)
 {
     auto newSpline = std::make_shared<GradingBSplineCurveImpl>(size, curveType);
     GradingBSplineCurveRcPtr res = newSpline;
+    return res;
+}
+
+GradingBSplineCurveRcPtr GradingBSplineCurve::Create(std::initializer_list<GradingControlPoint> values)
+{
+    auto newSpline = std::make_shared<GradingBSplineCurveImpl>(values.size());
+    size_t i = 0;
+    for (const auto & c : values)
+    {
+        newSpline->getControlPoint(i++) = c;
+    }
+    GradingBSplineCurveRcPtr res;
+    res = newSpline;
     return res;
 }
 
@@ -34,8 +54,18 @@ GradingBSplineCurveRcPtr GradingBSplineCurve::Create(std::initializer_list<Gradi
     return res;
 }
 
+GradingBSplineCurveImpl::GradingBSplineCurveImpl(size_t size)
+    : m_controlPoints(size), m_slopesArray(size, 0.f), m_curveType(B_SPLINE)
+{
+}
+
 GradingBSplineCurveImpl::GradingBSplineCurveImpl(size_t size, BSplineCurveType curveType)
     : m_controlPoints(size), m_slopesArray(size, 0.f), m_curveType(curveType)
+{
+}
+
+GradingBSplineCurveImpl::GradingBSplineCurveImpl(const std::vector<GradingControlPoint> & controlPoints)
+    : m_controlPoints(controlPoints), m_slopesArray(controlPoints.size(), 0.f), m_curveType(B_SPLINE)
 {
 }
 

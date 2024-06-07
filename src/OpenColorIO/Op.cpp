@@ -17,7 +17,7 @@
 #include "ops/gamma/GammaOp.h"
 #include "ops/gradingprimary/GradingPrimaryOp.h"
 #include "ops/gradingrgbcurve/GradingRGBCurveOp.h"
-#include "ops/gradingrgbcurve/HueCurveOp.h"
+#include "ops/gradinghuecurve/GradingHueCurveOp.h"
 #include "ops/gradingtone/GradingToneOp.h"
 #include "ops/log/LogOp.h"
 #include "ops/lut1d/Lut1DOp.h"
@@ -122,7 +122,7 @@ const char * GetTypeName(OpData::Type type)
     case OpData::GradingRGBCurveType:
         return "GradingRGBCurve";
     case OpData::GradingHueCurveType :
-        return "HueCurve";
+        return "GradingHueCurve";
     case OpData::GradingToneType:
         return "GradingTone";
     case OpData::LogType:

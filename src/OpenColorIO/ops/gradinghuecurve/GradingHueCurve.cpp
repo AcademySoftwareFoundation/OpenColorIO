@@ -6,7 +6,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ops/gradingrgbcurve/HueCurve.h"
+#include "ops/gradinghuecurve/GradingHueCurve.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -90,23 +90,19 @@ HueCurveImpl::HueCurveImpl(GradingStyle style)
    }
 }
 
-HueCurveImpl::HueCurveImpl(const std::array<ConstGradingBSplineCurveRcPtr, HUE_NUM_CURVES> & curves)
+HueCurveImpl::HueCurveImpl(const GradingHueCurves & curves)
 {
-    if (curves.size() != static_cast<size_t>(HUE_NUM_CURVES))
-    {
-        throw Exception("All curves have to be defined");
-    }
-
-    for (int c = 0; c < HUE_NUM_CURVES; ++c)
-    {
-        if(curves[c])
-        {
-            m_curves[c] = curves[c]->createEditableCopy();
-        }
-    }
+    m_curves[HUE_HUE] = curves.hueHue->createEditableCopy();
+    m_curves[HUE_SAT] = curves.hueSat->createEditableCopy();
+    m_curves[HUE_LUM] = curves.hueLum->createEditableCopy();
+    m_curves[LUM_SAT] = curves.lumSat->createEditableCopy();
+    m_curves[SAT_SAT] = curves.satSat->createEditableCopy();
+    m_curves[LUM_LUM] = curves.lumLum->createEditableCopy();
+    m_curves[SAT_LUM] = curves.satLum->createEditableCopy();
+    m_curves[HUE_FX] = curves.hueFx->createEditableCopy();
 }
 
-HueCurveImpl::HueCurveImpl(const ConstHueCurveRcPtr & rhs)
+HueCurveImpl::HueCurveImpl(const ConstGradingHueCurveRcPtr & rhs)
 {
     auto impl = dynamic_cast<const HueCurveImpl *>(rhs.get());
     if (impl)
@@ -118,7 +114,7 @@ HueCurveImpl::HueCurveImpl(const ConstHueCurveRcPtr & rhs)
     }
 }
 
-HueCurveRcPtr HueCurveImpl::createEditableCopy() const
+GradingHueCurveRcPtr HueCurveImpl::createEditableCopy() const
 {
     auto newCurve = std::make_shared<HueCurveImpl>();
     for (int c = 0; c < HUE_NUM_CURVES; ++c)
@@ -126,7 +122,7 @@ HueCurveRcPtr HueCurveImpl::createEditableCopy() const
         newCurve->m_curves[c] = m_curves[c]->createEditableCopy();
     }
     
-    HueCurveRcPtr res = newCurve;
+    GradingHueCurveRcPtr res = newCurve;
     return res;
 }
 
@@ -172,7 +168,7 @@ void HueCurveImpl::validate() const
         catch (Exception & e)
         {
             std::ostringstream oss;
-            oss << "HueCurve validation failed for curve: " << CurveType(c) << "' curve "
+            oss << "GradingHueCurve validation failed for curve: " << CurveType(c) << "' curve "
                 << "with: " << e.what();
             throw Exception(oss.str().c_str());
         }
@@ -201,28 +197,28 @@ GradingBSplineCurveRcPtr HueCurveImpl::getCurve(HueCurveType c)
     return m_curves[c];
 }
 
-HueCurveRcPtr HueCurve::Create(GradingStyle style)
+GradingHueCurveRcPtr GradingHueCurve::Create(GradingStyle style)
 {
     auto newCurve = std::make_shared<HueCurveImpl>(style);
-    HueCurveRcPtr res = newCurve;
+    GradingHueCurveRcPtr res = newCurve;
     return res;
 }
 
-HueCurveRcPtr HueCurve::Create(const ConstHueCurveRcPtr & rhs)
+GradingHueCurveRcPtr GradingHueCurve::Create(const ConstGradingHueCurveRcPtr & rhs)
 {
     auto newCurve = std::make_shared<HueCurveImpl>(rhs);
-    HueCurveRcPtr res = newCurve;
+    GradingHueCurveRcPtr res = newCurve;
     return res;
 }
 
-HueCurveRcPtr HueCurve::Create(const std::array<ConstGradingBSplineCurveRcPtr, HUE_NUM_CURVES> & curves)
+GradingHueCurveRcPtr GradingHueCurve::Create(const GradingHueCurves & curves)
 {
     auto newCurve = std::make_shared<HueCurveImpl>(curves);
-    HueCurveRcPtr res = newCurve;
+    GradingHueCurveRcPtr res = newCurve;
     return res;
 }
 
-bool operator==(const HueCurve & lhs, const HueCurve & rhs)
+bool operator==(const GradingHueCurve & lhs, const GradingHueCurve & rhs)
 {
 
     for (int c = 0; c < HUE_NUM_CURVES; ++c)
@@ -235,7 +231,7 @@ bool operator==(const HueCurve & lhs, const HueCurve & rhs)
     return true;
 }
 
-bool operator!=(const HueCurve & lhs, const HueCurve & rhs)
+bool operator!=(const GradingHueCurve & lhs, const GradingHueCurve & rhs)
 {
     return !(lhs == rhs);
 }

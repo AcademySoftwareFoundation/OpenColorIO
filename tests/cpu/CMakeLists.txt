@@ -153,7 +153,7 @@ set(SOURCES
     ops/gamma/GammaOpGPU.cpp
     ops/gradingprimary/GradingPrimaryOpGPU.cpp
     ops/gradingrgbcurve/GradingRGBCurveOpGPU.cpp
-    ops/gradingrgbcurve/HueCurveOpGPU.cpp
+    ops/gradinghuecurve/GradingHueCurveOpGPU.cpp
     ops/gradingtone/GradingToneOpGPU.cpp
     ops/log/LogOpGPU.cpp
     ops/lut1d/Lut1DOpCPU_SSE2.cpp

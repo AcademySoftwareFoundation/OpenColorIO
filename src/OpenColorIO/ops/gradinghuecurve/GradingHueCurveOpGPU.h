@@ -7,7 +7,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "GpuShaderUtils.h"
-#include "ops/gradingrgbcurve/HueCurveOpData.h"
+#include "ops/gradinghuecurve/GradingHueCurveOpData.h"
 
 namespace OCIO_NAMESPACE
 {

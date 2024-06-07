@@ -17,8 +17,10 @@ class GpuShaderText;
 class GradingBSplineCurveImpl : public GradingBSplineCurve
 {
 public:
-    explicit GradingBSplineCurveImpl(size_t size, BSplineCurveType curveType = B_SPLINE);
-    GradingBSplineCurveImpl(const std::vector<GradingControlPoint> & controlPoints, BSplineCurveType curveType = B_SPLINE);
+    explicit GradingBSplineCurveImpl(size_t size);
+    explicit GradingBSplineCurveImpl(size_t size, BSplineCurveType curveType);
+    GradingBSplineCurveImpl(const std::vector<GradingControlPoint> & controlPoints);
+    GradingBSplineCurveImpl(const std::vector<GradingControlPoint> & controlPoints, BSplineCurveType curveType);
     ~GradingBSplineCurveImpl() = default;
 
     GradingBSplineCurveRcPtr createEditableCopy() const override;

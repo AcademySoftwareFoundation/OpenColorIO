@@ -512,9 +512,11 @@ class OCIOEXPORT GradingBSplineCurve
 {
 public:
     /// Create a BSpline curve with a specified number of control points.
-    static GradingBSplineCurveRcPtr Create(size_t size, BSplineCurveType curveType = B_SPLINE);
+    static GradingBSplineCurveRcPtr Create(size_t size);
+    static GradingBSplineCurveRcPtr Create(size_t size, BSplineCurveType curveType);
     /// Create a BSpline curve with a list of control points.
-    static GradingBSplineCurveRcPtr Create(std::initializer_list<GradingControlPoint> values, BSplineCurveType curveType = B_SPLINE);
+    static GradingBSplineCurveRcPtr Create(std::initializer_list<GradingControlPoint> values);
+    static GradingBSplineCurveRcPtr Create(std::initializer_list<GradingControlPoint> values, BSplineCurveType curveType);
 
     virtual GradingBSplineCurveRcPtr createEditableCopy() const = 0;
     virtual size_t getNumControlPoints() const noexcept = 0;
@@ -573,33 +575,45 @@ extern OCIOEXPORT bool operator==(const GradingRGBCurve & lhs, const GradingRGBC
 extern OCIOEXPORT bool operator!=(const GradingRGBCurve & lhs, const GradingRGBCurve & rhs);
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingRGBCurve &);
 
+struct OCIOEXPORT GradingHueCurves
+{
+   ConstGradingBSplineCurveRcPtr hueHue;
+   ConstGradingBSplineCurveRcPtr hueSat;
+   ConstGradingBSplineCurveRcPtr hueLum;
+   ConstGradingBSplineCurveRcPtr lumSat;
+   ConstGradingBSplineCurveRcPtr satSat;
+   ConstGradingBSplineCurveRcPtr lumLum;
+   ConstGradingBSplineCurveRcPtr satLum;
+   ConstGradingBSplineCurveRcPtr hueFx;
+};
+
 /**
  * A set of HUE/SAT/LUM curves. It is used by HueCurveTransform and can be used as
  * a dynamic property (see \ref DynamicPropertyHueCurve).
  */
-class OCIOEXPORT HueCurve
+class OCIOEXPORT GradingHueCurve
 {
 public:
-    static HueCurveRcPtr Create(GradingStyle style);
-    static HueCurveRcPtr Create(const ConstHueCurveRcPtr & rhs);
-    static HueCurveRcPtr Create(const std::array<ConstGradingBSplineCurveRcPtr, HUE_NUM_CURVES> & curves);
+    static GradingHueCurveRcPtr Create(GradingStyle style);
+    static GradingHueCurveRcPtr Create(const ConstGradingHueCurveRcPtr & rhs);
+    static GradingHueCurveRcPtr Create(const GradingHueCurves & curves);
 
-    virtual HueCurveRcPtr createEditableCopy() const = 0;
+    virtual GradingHueCurveRcPtr createEditableCopy() const = 0;
     virtual void validate() const = 0;
     virtual bool isIdentity() const = 0;
     virtual ConstGradingBSplineCurveRcPtr getCurve(HueCurveType c) const = 0;
     virtual GradingBSplineCurveRcPtr getCurve(HueCurveType c) = 0;
 
     /// Do not use (needed only for pybind11).
-    virtual ~HueCurve() = default;
+    virtual ~GradingHueCurve() = default;
 
 protected:
-    HueCurve() = default;
+    GradingHueCurve() = default;
 };
 
-extern OCIOEXPORT bool operator==(const HueCurve & lhs, const HueCurve & rhs);
-extern OCIOEXPORT bool operator!=(const HueCurve & lhs, const HueCurve & rhs);
-extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const HueCurve &);
+extern OCIOEXPORT bool operator==(const GradingHueCurve & lhs, const GradingHueCurve & rhs);
+extern OCIOEXPORT bool operator!=(const GradingHueCurve & lhs, const GradingHueCurve & rhs);
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingHueCurve &);
 
 /**
  * Used by the grading tone transforms to hold the red, green, blue, master, start,
@@ -765,7 +779,7 @@ extern OCIOEXPORT DynamicPropertyGradingPrimaryRcPtr AsGradingPrimary(DynamicPro
  */
 extern OCIOEXPORT DynamicPropertyGradingRGBCurveRcPtr AsGradingRGBCurve(DynamicPropertyRcPtr & prop);
 /**
- * Get the property as DynamicPropertyHueCurveRcPtr to access the HueCurveRcPtr
+ * Get the property as DynamicPropertyHueCurveRcPtr to access the GradingHueCurveRcPtr
  * value. Will throw if property type is not DYNAMIC_PROPERTY_HUE_CURVE.
  */
 extern OCIOEXPORT DynamicPropertyHueCurveRcPtr AsHueCurve(DynamicPropertyRcPtr & prop);
@@ -825,12 +839,14 @@ public:
 protected:
     DynamicPropertyGradingRGBCurve() = default;
 };
+
+/// Interface used to access dynamic property ConstGradingHueCurveRcPtr value.
 class OCIOEXPORT DynamicPropertyHueCurve
 {
 public:
-    virtual const ConstHueCurveRcPtr & getValue() const = 0;
+    virtual const ConstGradingHueCurveRcPtr & getValue() const = 0;
     /// Will throw if value is not valid.
-    virtual void setValue(const ConstHueCurveRcPtr & value) = 0;
+    virtual void setValue(const ConstGradingHueCurveRcPtr & value) = 0;
 
     DynamicPropertyHueCurve(const DynamicPropertyHueCurve &) = delete;
     DynamicPropertyHueCurve & operator=(const DynamicPropertyHueCurve &) = delete;
@@ -1257,7 +1273,7 @@ public:
     /// Creates an instance of HueCurveTransform.
     static HueCurveTransformRcPtr Create(GradingStyle style);
 
-    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_HUE_CURVE; }
+    TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_GRADING_HUE_CURVE; }
 //
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
@@ -1270,10 +1286,10 @@ public:
     ///// Will reset value to style's defaults if style is not the current style.
     virtual void setStyle(GradingStyle style) noexcept = 0;
 //
-    virtual const ConstHueCurveRcPtr getValue() const = 0;
+    virtual const ConstGradingHueCurveRcPtr getValue() const = 0;
     ///// Throws if value is not valid.
     //virtual 
-    virtual void setValue(const ConstHueCurveRcPtr & values) = 0;    
+    virtual void setValue(const ConstGradingHueCurveRcPtr & values) = 0;    
     
     /**
      * It is possible to provide a desired slope value for each control point.  The number of slopes is 

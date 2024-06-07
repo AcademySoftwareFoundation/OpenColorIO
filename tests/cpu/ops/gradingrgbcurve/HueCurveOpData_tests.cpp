@@ -2,7 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include "ops/gradingrgbcurve/HueCurveOpData.cpp"
+#include "ops/gradinghuecurve/GradingHueCurveOpData.cpp"
 
 #include "testutils/UnitTest.h"
 

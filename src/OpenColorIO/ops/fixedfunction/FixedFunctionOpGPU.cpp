@@ -1694,16 +1694,18 @@ void Add_RGB_TO_HSV(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
 
 void Add_RGB_TO_HSY(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, float min0)
 {
+    const std::string pxl(shaderCreator->getPixelName());
+
     ss.newLine() << ss.float3Decl("lumaWeights") << " = " << ss.float3Const(0.2126f,  0.7152f, 0.0722f) << ";";
     ss.newLine() << ss.float3Decl("ones") << " = " << ss.float3Const(1.f, 1.f, 1.f) << ";";
-    ss.newLine() << "float luma = dot(outColor.rgb, lumaWeights);";
-    ss.newLine() << "float minRGB =  min( outColor.x, min( outColor.y, outColor.z ) );";
-    ss.newLine() << "float maxRGB =  max( outColor.x, max( outColor.y, outColor.z ) );";
-    ss.newLine() << ss.float3Decl("RGBm") << " = " << "outColor.rgb - luma;";
+    ss.newLine() << "float luma = dot(" << pxl << ".rgb, lumaWeights);";
+    ss.newLine() << "float minRGB =  min( " << pxl << ".x, min( " << pxl << ".y, " << pxl << ".z ) );";
+    ss.newLine() << "float maxRGB =  max( " << pxl << ".x, max( " << pxl << ".y, " << pxl << ".z ) );";
+    ss.newLine() << ss.float3Decl("RGBm") << " = " << pxl << ".rgb - luma;";
     ss.newLine() << "float distRGB  = dot( abs(RGBm), ones );";
-    if (min0 > 0.)
+    if (min0 > 0.f)
     {
-      ss.newLine() << "float sumRGB  = dot( outColor.rgb, ones );";
+      ss.newLine() << "float sumRGB  = dot( " << pxl << ".rgb, ones );";
       ss.newLine() << "float sat_hi  = distRGB / (0.15 + sumRGB);";
       ss.newLine() << "float sat_lo  = distRGB * 5.;";
       ss.newLine() << "float alpha  = clamp( (luma - 0.001) / (0.01 - 0.001), 0., 1.);";
@@ -1711,7 +1713,7 @@ void Add_RGB_TO_HSY(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, f
       ss.newLine() << "float sat = sat_lo + alpha * (sat_hi - sat_lo);";
       ss.newLine() << "sat *= 1.4;";
     }
-    else if (min0 < 0.)
+    else if (min0 < 0.f)
     {
       ss.newLine() << "float sat = distRGB * 4.;";
     }
@@ -1722,19 +1724,19 @@ void Add_RGB_TO_HSY(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, f
     ss.newLine() << "float hue = 0.0;";
     ss.newLine() << "if (minRGB != maxRGB) {";
     ss.newLine() << "   float OneOverMaxMinusMin = 1.0 / (maxRGB - minRGB);";
-    ss.newLine() << "   if ( maxRGB == outColor.r ) hue = 1.0 + (outColor.g - outColor.b) * OneOverMaxMinusMin;";
-    ss.newLine() << "   else if ( maxRGB == outColor.g ) hue = 3.0 + (outColor.b - outColor.r) * OneOverMaxMinusMin;";
-    ss.newLine() << "   else hue = 5.0 + (outColor.r - outColor.g) * OneOverMaxMinusMin;";
+    ss.newLine() << "   if ( maxRGB == " << pxl << ".r ) hue = 1.0 + (" << pxl << ".g - " << pxl << ".b) * OneOverMaxMinusMin;";
+    ss.newLine() << "   else if ( maxRGB == " << pxl << ".g ) hue = 3.0 + (" << pxl << ".b - " << pxl << ".r) * OneOverMaxMinusMin;";
+    ss.newLine() << "   else hue = 5.0 + (" << pxl << ".r - " << pxl << ".g) * OneOverMaxMinusMin;";
     ss.newLine() << "}";
-    ss.newLine() << "outColor.r = hue * 1./6.; outColor.g = sat; outColor.b = luma;";
+    ss.newLine() << "" << pxl << ".r = hue * 1./6.; " << pxl << ".g = sat; " << pxl << ".b = luma;";
 }
 
 void Add_HSY_TO_RGB(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, float min0)
 {
-    //ss.setIndent(2);
+    const std::string pxl(shaderCreator->getPixelName());
 
-    ss.newLine() << "float luma = outColor.z;";
-    ss.newLine() << "float Hue = outColor.x - 1./6.;";
+    ss.newLine() << "float luma = " << pxl << ".z;";
+    ss.newLine() << "float Hue = " << pxl << ".x - 1./6.;";
     ss.newLine() << "Hue = (luma < 0.) ? Hue + 0.5 : Hue;";
     ss.newLine() << "Hue = ( Hue - floor( Hue ) ) * 6.0;";
     ss.newLine() << "float R = abs(Hue - 3.0) - 1.0;";
@@ -1748,9 +1750,9 @@ void Add_HSY_TO_RGB(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, f
     ss.newLine() << "float currY = dot(RGB0, lumaWeights);";
     ss.newLine() << "RGB0 *= luma / currY;";
 
-    ss.newLine() << "float sat = outColor.y;";
+    ss.newLine() << "float sat = " << pxl << ".y;";
     ss.newLine() << "float distRGB = dot( abs(RGB0 - luma), ones );";
-    if (min0 > 0.)
+    if (min0 > 0.f)
     {
       ss.newLine() << "float sumRGB  = dot( RGB0, ones );";
       ss.newLine() << "float k = 0.15;";
@@ -1769,7 +1771,7 @@ void Add_HSY_TO_RGB(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, f
       ss.newLine() << "sm = (sm >= 0.) ? sm : (2. * c) / (denom + discrim * 2.);";
       ss.newLine() << "float gainS = (alpha == 1.) ? s1 : (alpha == 0.) ? s0 : sm;";
     }
-    else if (min0 < 0.)
+    else if (min0 < 0.f)
     {
       ss.newLine() << "float gainS = sat / max(1e-10, distRGB * 4.);";
     }
@@ -1777,7 +1779,7 @@ void Add_HSY_TO_RGB(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, f
     {
       ss.newLine() << "float gainS = sat / max(1e-10, distRGB * 1.25);";
     }
-    ss.newLine() << "outColor.rgb = luma + gainS * (RGB0 - luma);";
+    ss.newLine() << "" << pxl << ".rgb = luma + gainS * (RGB0 - luma);";
 }
 
 void Add_RGB_TO_HSY_LOG(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)

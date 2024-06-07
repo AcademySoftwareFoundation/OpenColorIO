@@ -5,8 +5,8 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ops/gradingrgbcurve/HueCurve.h"
-#include "ops/gradingrgbcurve/HueCurveOpData.h"
+#include "ops/gradinghuecurve/GradingHueCurve.h"
+#include "ops/gradinghuecurve/GradingHueCurveOpData.h"
 #include "ops/range/RangeOpData.h"
 #include "Platform.h"
 
@@ -22,7 +22,7 @@ HueCurveOpData::HueCurveOpData(GradingStyle style)
     : OpData()
     , m_style(style)
 {
-    ConstHueCurveRcPtr hueCurve = HueCurve::Create(style);
+    ConstGradingHueCurveRcPtr hueCurve = GradingHueCurve::Create(style);
     m_value = std::make_shared<DynamicPropertyHueCurveImpl>(hueCurve, false);
 }
 
@@ -30,18 +30,18 @@ HueCurveOpData::HueCurveOpData(const HueCurveOpData & rhs)
     : OpData(rhs)
     , m_style(rhs.m_style)
 {
-    ConstHueCurveRcPtr hueCurve = HueCurve::Create(rhs.m_style);
+    ConstGradingHueCurveRcPtr hueCurve = GradingHueCurve::Create(rhs.m_style);
     m_value = std::make_shared<DynamicPropertyHueCurveImpl>(hueCurve, false);
 
     *this = rhs;
 }
 
 HueCurveOpData::HueCurveOpData(GradingStyle style, 
-                               const std::array<ConstGradingBSplineCurveRcPtr, HUE_NUM_CURVES> & curves)
+                               const GradingHueCurves & curves)
     : OpData()
     , m_style(style)
 {
-    ConstHueCurveRcPtr hueCurve = HueCurve::Create(curves);
+    ConstGradingHueCurveRcPtr hueCurve = GradingHueCurve::Create(curves);
     m_value = std::make_shared<DynamicPropertyHueCurveImpl>(hueCurve, false);
 }
 
@@ -150,7 +150,7 @@ void HueCurveOpData::setStyle(GradingStyle style) noexcept
     {
         m_style = style;
         // Reset value to default when style is changing.
-        ConstHueCurveRcPtr reset = HueCurve::Create(style);
+        ConstGradingHueCurveRcPtr reset = GradingHueCurve::Create(style);
         m_value->setValue(reset);
     }
 }
@@ -163,7 +163,7 @@ float HueCurveOpData::getSlope(HueCurveType c, size_t index) const
 
 void HueCurveOpData::setSlope(HueCurveType c, size_t index, float slope)
 {
-    HueCurveRcPtr hueCurve( m_value->getValue()->createEditableCopy() );
+    GradingHueCurveRcPtr hueCurve( m_value->getValue()->createEditableCopy() );
     GradingBSplineCurveRcPtr curve = hueCurve->getCurve(c);
     curve->setSlope(index, slope);
     m_value->setValue(hueCurve);

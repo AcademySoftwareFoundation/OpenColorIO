@@ -7,7 +7,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ops/gradingrgbcurve/HueCurveOpData.h"
+#include "ops/gradinghuecurve/GradingHueCurveOpData.h"
 
 
 namespace OCIO_NAMESPACE
@@ -38,9 +38,9 @@ public:
 
     void setStyle(GradingStyle style) noexcept override;
 
-    const ConstHueCurveRcPtr getValue() const override;
+    const ConstGradingHueCurveRcPtr getValue() const override;
     
-    void setValue(const ConstHueCurveRcPtr & values) override;
+    void setValue(const ConstGradingHueCurveRcPtr & values) override;
 
     float getSlope(HueCurveType c, size_t index) const override;
     void setSlope(HueCurveType c, size_t index, float slope) override;
@@ -65,4 +65,4 @@ private:
 
 } // namespace OCIO_NAMESPACE
 
-#endif  // INCLUDED_OCIO_GRADINGPRIMARYTRANSFORM_H
+#endif  // INCLUDED_OCIO_HUECURVETRANSFORM_H

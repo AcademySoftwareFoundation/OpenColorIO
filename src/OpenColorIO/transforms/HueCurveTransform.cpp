@@ -70,7 +70,6 @@ const FormatMetadata & HueCurveTransformImpl::getFormatMetadata() const noexcept
     return data().getFormatMetadata();
 }
 
-
 bool HueCurveTransformImpl::equals(const HueCurveTransform & other) const noexcept
 {
     if (this == &other) return true;
@@ -87,13 +86,12 @@ void HueCurveTransformImpl::setStyle(GradingStyle style) noexcept
     data().setStyle(style);
 }
 
-const ConstHueCurveRcPtr HueCurveTransformImpl::getValue() const
+const ConstGradingHueCurveRcPtr HueCurveTransformImpl::getValue() const
 {
     return data().getValue();
 }
 
-
-void HueCurveTransformImpl::setValue(const ConstHueCurveRcPtr & values)
+void HueCurveTransformImpl::setValue(const ConstGradingHueCurveRcPtr & values)
 {
     data().setValue(values);
 }
@@ -152,26 +150,7 @@ std::ostream& operator<< (std::ostream & os, const HueCurveTransform & t) noexce
     return os;
 }
 
-// TODO: Duplicated from GradingRGB, should it be accessible here?
-//std::ostream & operator<<(std::ostream & os, const GradingControlPoint & cp)
-//{
-//    os << "<x=" << cp.m_x << ", y=" << cp.m_y << ">";
-//    return os;
-//}
-//
-//std::ostream & operator<<(std::ostream & os, const GradingBSplineCurve & bspline)
-//{
-//    os << "<control_points=[";
-//    const auto numPoints = bspline.getNumControlPoints();
-//    for (size_t i = 0; i < numPoints; ++i)
-//    {
-//        os << bspline.getControlPoint(i);
-//    }
-//    os << "]>";
-//    return os;
-//}
-
-std::ostream & operator<<(std::ostream & os, const HueCurve & hueCurve)
+std::ostream & operator<<(std::ostream & os, const GradingHueCurve & hueCurve)
 {
     os << "<hue_hue=" << *hueCurve.getCurve(HUE_HUE);
     os << ", hue_sat=" << *hueCurve.getCurve(HUE_SAT);

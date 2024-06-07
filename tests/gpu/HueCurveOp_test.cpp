@@ -9,13 +9,13 @@ namespace OCIO = OCIO_NAMESPACE;
 
 void GradingHueCurveLog(OCIOGPUTest & test, OCIO::TransformDirection dir, bool dynamic)
 {
-    // TODO: Put back the HueCurve test once the CPU implementation is available.'
+    // TODO: Put back the GradingHueCurve test once the CPU implementation is available.'
     //       GPU test compares the result of the GPU processor to the CPU processor.
 
     //auto c = OCIO::GradingBSplineCurve::Create({ { 0.0f,   0.0f },  { 0.785f, 0.231f },
     //                                             { 0.809f, 0.631f },{ 0.948f, 0.704f },
     //                                             { 1.0f,   1.0f } });
-    //auto curve = OCIO::HueCurve::Create(c);
+    //auto curve = OCIO::GradingHueCurve::Create(c);
     //auto hc = OCIO::HueCurveTransform::Create(OCIO::GRADING_LOG);
     //if(!hc.get())
     //{
@@ -38,35 +38,35 @@ void GradingHueCurveLog(OCIOGPUTest & test, OCIO::TransformDirection dir, bool d
     //test.setTestNaN(true);
 }
 
-OCIO_ADD_GPU_TEST(HueCurve, style_log_fwd)
+OCIO_ADD_GPU_TEST(GradingHueCurve, style_log_fwd)
 {
     GradingHueCurveLog(test, OCIO::TRANSFORM_DIR_FORWARD, false);
 }
 
-OCIO_ADD_GPU_TEST(HueCurve, style_log_fwd_dynamic)
+OCIO_ADD_GPU_TEST(GradingHueCurve, style_log_fwd_dynamic)
 {
     GradingHueCurveLog(test, OCIO::TRANSFORM_DIR_FORWARD, true);
 }
 
-OCIO_ADD_GPU_TEST(HueCurve, style_log_rev)
+OCIO_ADD_GPU_TEST(GradingHueCurve, style_log_rev)
 {
     GradingHueCurveLog(test, OCIO::TRANSFORM_DIR_INVERSE, false);
 }
 
-OCIO_ADD_GPU_TEST(HueCurve, style_log_rev_dynamic)
+OCIO_ADD_GPU_TEST(GradingHueCurve, style_log_rev_dynamic)
 {
     GradingHueCurveLog(test, OCIO::TRANSFORM_DIR_INVERSE, true);
 }
 
 void HueCurveLin(OCIOGPUTest & test, OCIO::TransformDirection dir, bool dynamic)
 {
-    // TODO: Put back the HueCurve test once the CPU implementation is available.'
+    // TODO: Put back the GradingHueCurve test once the CPU implementation is available.'
     //       GPU test compares the result of the GPU processor to the CPU processor.
 
     //auto c = OCIO::GradingBSplineCurve::Create({ { 0.0f,   0.0f },  { 0.785f, 0.231f },
     //                                             { 0.809f, 0.631f },{ 0.948f, 0.704f },
     //                                             { 1.0f,   1.0f } });
-    //auto curve = OCIO::HueCurve::Create(c);
+    //auto curve = OCIO::GradingHueCurve::Create(c);
     //auto hc = OCIO::HueCurveTransform::Create(OCIO::GRADING_LIN);
     //if(!hc.get())
     //{
@@ -89,29 +89,29 @@ void HueCurveLin(OCIOGPUTest & test, OCIO::TransformDirection dir, bool dynamic)
     //test.setTestNaN(true);
 }
 
-OCIO_ADD_GPU_TEST(HueCurve, style_lin_fwd)
+OCIO_ADD_GPU_TEST(GradingHueCurve, style_lin_fwd)
 {
     HueCurveLin(test, OCIO::TRANSFORM_DIR_FORWARD, false);
 }
 
-OCIO_ADD_GPU_TEST(HueCurve, style_lin_fwd_dynamic)
+OCIO_ADD_GPU_TEST(GradingHueCurve, style_lin_fwd_dynamic)
 {
     HueCurveLin(test, OCIO::TRANSFORM_DIR_FORWARD, true);
 }
 
-OCIO_ADD_GPU_TEST(HueCurve, style_lin_rev)
+OCIO_ADD_GPU_TEST(GradingHueCurve, style_lin_rev)
 {
     HueCurveLin(test, OCIO::TRANSFORM_DIR_INVERSE, false);
 }
 
-OCIO_ADD_GPU_TEST(HueCurve, style_lin_rev_dynamic)
+OCIO_ADD_GPU_TEST(GradingHueCurve, style_lin_rev_dynamic)
 {
     HueCurveLin(test, OCIO::TRANSFORM_DIR_INVERSE, true);
 }
 
 void HueSCurve(OCIOGPUTest & test, OCIO::TransformDirection dir, bool dynamic)
 {
-    // TODO: Implement this HueCurve test once the CPU implementation is available.'
+    // TODO: Implement this GradingHueCurve test once the CPU implementation is available.'
     //       GPU test compares the result of the GPU processor to the CPU processor.
 
     // Create an S-curve with 0 slope at each end.
