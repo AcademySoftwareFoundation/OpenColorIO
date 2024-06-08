@@ -172,7 +172,7 @@ class MessageRunner(QtCore.QObject):
             elif (
                 isinstance(msg_raw, tuple)
                 and len(msg_raw) == 2
-                and isinstance(msg_raw[0], ProcessorContext)
+                and isinstance(msg_raw[0], (str, ProcessorContext))
                 and isinstance(msg_raw[1], ocio.Processor)
             ):
                 self._prev_proc_data = msg_raw
