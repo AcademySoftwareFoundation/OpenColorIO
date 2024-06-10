@@ -14,23 +14,23 @@
 namespace OCIO_NAMESPACE
 {
 
-class HueCurveOpData;
-typedef OCIO_SHARED_PTR<HueCurveOpData> HueCurveOpDataRcPtr;
-typedef OCIO_SHARED_PTR<const HueCurveOpData> ConstHueCurveOpDataRcPtr;
+class GradingHueCurveOpData;
+typedef OCIO_SHARED_PTR<GradingHueCurveOpData> GradingHueCurveOpDataRcPtr;
+typedef OCIO_SHARED_PTR<const GradingHueCurveOpData> ConstGradingHueCurveOpDataRcPtr;
 
 
-class HueCurveOpData : public OpData
+class GradingHueCurveOpData : public OpData
 {
 public:
 
-    HueCurveOpData(GradingStyle style);
-    HueCurveOpData(const HueCurveOpData & rhs);
-    HueCurveOpData(GradingStyle style,
+    GradingHueCurveOpData(GradingStyle style);
+    GradingHueCurveOpData(const GradingHueCurveOpData & rhs);
+    GradingHueCurveOpData(GradingStyle style,
                    const GradingHueCurves & curve);
-    HueCurveOpData & operator=(const HueCurveOpData & rhs);
-    virtual ~HueCurveOpData();
+    GradingHueCurveOpData & operator=(const GradingHueCurveOpData & rhs);
+    virtual ~GradingHueCurveOpData();
 
-    HueCurveOpDataRcPtr clone() const;
+    GradingHueCurveOpDataRcPtr clone() const;
 
     void validate() const override;
 
@@ -41,8 +41,8 @@ public:
 
     bool hasChannelCrosstalk() const override { return false; }
 
-    bool isInverse(ConstHueCurveOpDataRcPtr & r) const;
-    HueCurveOpDataRcPtr inverse() const;
+    bool isInverse(ConstGradingHueCurveOpDataRcPtr & r) const;
+    GradingHueCurveOpDataRcPtr inverse() const;
 
     std::string getCacheID() const override;
 
@@ -64,10 +64,10 @@ public:
 
     bool isDynamic() const noexcept;
     DynamicPropertyRcPtr getDynamicProperty() const noexcept;
-    void replaceDynamicProperty(DynamicPropertyHueCurveImplRcPtr prop) noexcept;
+    void replaceDynamicProperty(DynamicPropertyGradingHueCurveImplRcPtr prop) noexcept;
     void removeDynamicProperty() noexcept;
 
-    DynamicPropertyHueCurveImplRcPtr getDynamicPropertyInternal() const noexcept
+    DynamicPropertyGradingHueCurveImplRcPtr getDynamicPropertyInternal() const noexcept
     {
         return m_value;
     }
@@ -76,12 +76,12 @@ public:
 
 private:
     GradingStyle                            m_style;
-    DynamicPropertyHueCurveImplRcPtr        m_value;
+    DynamicPropertyGradingHueCurveImplRcPtr m_value;
     bool                                    m_bypassLinToLog{ false };
     TransformDirection                      m_direction{ TRANSFORM_DIR_FORWARD };
 };
 
-bool operator==(const HueCurveOpData & lhs, const HueCurveOpData & rhs);
+bool operator==(const GradingHueCurveOpData & lhs, const GradingHueCurveOpData & rhs);
 
 } // namespace OCIO_NAMESPACE
 

@@ -2,8 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#ifndef INCLUDED_OCIO_HUECURVE_H
-#define INCLUDED_OCIO_HUECURVE_H
+#ifndef INCLUDED_OCIO_GRADINGHUECURVE_H
+#define INCLUDED_OCIO_GRADINGHUECURVE_H
 
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -13,16 +13,16 @@
 namespace OCIO_NAMESPACE
 {
 
-// Class to hold the RGB curve data that is used in the corresponding dynamic property and in
-// the CTF reader..  This allows moving some of the code from DynamicProperty to here.  The
+// Class to hold the hue curve data that is used in the corresponding dynamic property and in
+// the CTF reader.  This allows moving some of the code from DynamicProperty to here.  The
 // dynamic property is then used by the OpData, which is then used by the Op and Transform.
-class HueCurveImpl : public GradingHueCurve
+class GradingHueCurveImpl : public GradingHueCurve
 {
 public:
-    HueCurveImpl();
-    HueCurveImpl(GradingStyle style);
-    HueCurveImpl(const GradingHueCurves & curves );
-    HueCurveImpl(const ConstGradingHueCurveRcPtr & rhs);
+    GradingHueCurveImpl();
+    GradingHueCurveImpl(GradingStyle style);
+    GradingHueCurveImpl(const GradingHueCurves & curves );
+    GradingHueCurveImpl(const ConstGradingHueCurveRcPtr & rhs);
 
     GradingHueCurveRcPtr createEditableCopy() const override;
 
@@ -45,12 +45,14 @@ public:
     static const std::array<std::reference_wrapper<const GradingBSplineCurveImpl>, static_cast<size_t>(HUE_NUM_CURVES)> DefaultCurves;
 
 private:
+    bool isHueCurveTypeValid(HueCurveType c) const;
+
     std::array<GradingBSplineCurveRcPtr, static_cast<size_t>(HUE_NUM_CURVES)> m_curves;
 };
 
-typedef OCIO_SHARED_PTR<const HueCurveImpl> ConstHueCurveImplRcPtr;
-typedef OCIO_SHARED_PTR<HueCurveImpl> HueCurveImplRcPtr;
+typedef OCIO_SHARED_PTR<const GradingHueCurveImpl> ConstHueCurveImplRcPtr;
+typedef OCIO_SHARED_PTR<GradingHueCurveImpl> HueCurveImplRcPtr;
 
 }
 
-#endif //INCLUDED_OCIO_GRADINGRGBCURVE_H
+#endif //INCLUDED_OCIO_GRADINGHUECURVE_H

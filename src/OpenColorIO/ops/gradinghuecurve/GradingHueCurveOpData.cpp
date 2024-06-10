@@ -7,7 +7,6 @@
 
 #include "ops/gradinghuecurve/GradingHueCurve.h"
 #include "ops/gradinghuecurve/GradingHueCurveOpData.h"
-#include "ops/range/RangeOpData.h"
 #include "Platform.h"
 
 namespace OCIO_NAMESPACE
@@ -18,41 +17,41 @@ namespace DefaultValues
 const std::streamsize FLOAT_DECIMALS = 7;
 }
 
-HueCurveOpData::HueCurveOpData(GradingStyle style)
+GradingHueCurveOpData::GradingHueCurveOpData(GradingStyle style)
     : OpData()
     , m_style(style)
 {
     ConstGradingHueCurveRcPtr hueCurve = GradingHueCurve::Create(style);
-    m_value = std::make_shared<DynamicPropertyHueCurveImpl>(hueCurve, false);
+    m_value = std::make_shared<DynamicPropertyGradingHueCurveImpl>(hueCurve, false);
 }
 
-HueCurveOpData::HueCurveOpData(const HueCurveOpData & rhs)
+GradingHueCurveOpData::GradingHueCurveOpData(const GradingHueCurveOpData & rhs)
     : OpData(rhs)
     , m_style(rhs.m_style)
 {
     ConstGradingHueCurveRcPtr hueCurve = GradingHueCurve::Create(rhs.m_style);
-    m_value = std::make_shared<DynamicPropertyHueCurveImpl>(hueCurve, false);
+    m_value = std::make_shared<DynamicPropertyGradingHueCurveImpl>(hueCurve, false);
 
     *this = rhs;
 }
 
-HueCurveOpData::HueCurveOpData(GradingStyle style, 
+GradingHueCurveOpData::GradingHueCurveOpData(GradingStyle style, 
                                const GradingHueCurves & curves)
     : OpData()
     , m_style(style)
 {
     ConstGradingHueCurveRcPtr hueCurve = GradingHueCurve::Create(curves);
-    m_value = std::make_shared<DynamicPropertyHueCurveImpl>(hueCurve, false);
+    m_value = std::make_shared<DynamicPropertyGradingHueCurveImpl>(hueCurve, false);
 }
 
-HueCurveOpData & HueCurveOpData::operator=(const HueCurveOpData & rhs)
+GradingHueCurveOpData & GradingHueCurveOpData::operator=(const GradingHueCurveOpData & rhs)
 {
     if (this == &rhs) return *this;
 
     OpData::operator=(rhs);
 
     m_direction = rhs.m_direction;
-    m_style          = rhs.m_style;
+    m_style = rhs.m_style;
     m_bypassLinToLog = rhs.m_bypassLinToLog;
 
     // Copy dynamic properties. Sharing happens when needed, with CPUOp for instance.
@@ -65,35 +64,35 @@ HueCurveOpData & HueCurveOpData::operator=(const HueCurveOpData & rhs)
     return *this;
 }
 
-HueCurveOpData::~HueCurveOpData()
+GradingHueCurveOpData::~GradingHueCurveOpData()
 {
 }
 
-HueCurveOpDataRcPtr HueCurveOpData::clone() const
+GradingHueCurveOpDataRcPtr GradingHueCurveOpData::clone() const
 {
-    return std::make_shared<HueCurveOpData>(*this);
+    return std::make_shared<GradingHueCurveOpData>(*this);
 }
 
-void HueCurveOpData::validate() const
+void GradingHueCurveOpData::validate() const
 {
     // This should already be valid.
     m_value->getValue()->validate();
     return;
 }
 
-bool HueCurveOpData::isNoOp() const
+bool GradingHueCurveOpData::isNoOp() const
 {
     return isIdentity();
 }
 
-bool HueCurveOpData::isIdentity() const
+bool GradingHueCurveOpData::isIdentity() const
 {
     if (isDynamic()) return false;
     
     return m_value->getValue()->isIdentity();
 }
 
-bool HueCurveOpData::isInverse(ConstHueCurveOpDataRcPtr & r) const
+bool GradingHueCurveOpData::isInverse(ConstGradingHueCurveOpDataRcPtr & r) const
 {
     if (isDynamic() || r->isDynamic())
     {
@@ -112,14 +111,14 @@ bool HueCurveOpData::isInverse(ConstHueCurveOpDataRcPtr & r) const
     return false;
 }
 
-HueCurveOpDataRcPtr HueCurveOpData::inverse() const
+GradingHueCurveOpDataRcPtr GradingHueCurveOpData::inverse() const
 {
     auto res = clone();
     res->m_direction = GetInverseTransformDirection(m_direction);
     return res;
 }
 
-std::string HueCurveOpData::getCacheID() const
+std::string GradingHueCurveOpData::getCacheID() const
 {
     AutoMutex lock(m_mutex);
 
@@ -144,7 +143,7 @@ std::string HueCurveOpData::getCacheID() const
     return cacheIDStream.str();
 }
 
-void HueCurveOpData::setStyle(GradingStyle style) noexcept
+void GradingHueCurveOpData::setStyle(GradingStyle style) noexcept
 {
     if (style != m_style)
     {
@@ -155,13 +154,13 @@ void HueCurveOpData::setStyle(GradingStyle style) noexcept
     }
 }
 
-float HueCurveOpData::getSlope(HueCurveType c, size_t index) const
+float GradingHueCurveOpData::getSlope(HueCurveType c, size_t index) const
 {
     ConstGradingBSplineCurveRcPtr curve = m_value->getValue()->getCurve(c);
     return curve->getSlope(index);
 }
 
-void HueCurveOpData::setSlope(HueCurveType c, size_t index, float slope)
+void GradingHueCurveOpData::setSlope(HueCurveType c, size_t index, float slope)
 {
     GradingHueCurveRcPtr hueCurve( m_value->getValue()->createEditableCopy() );
     GradingBSplineCurveRcPtr curve = hueCurve->getCurve(c);
@@ -169,47 +168,47 @@ void HueCurveOpData::setSlope(HueCurveType c, size_t index, float slope)
     m_value->setValue(hueCurve);
 }
 
-bool HueCurveOpData::slopesAreDefault(HueCurveType c) const
+bool GradingHueCurveOpData::slopesAreDefault(HueCurveType c) const
 {
     ConstGradingBSplineCurveRcPtr curve = m_value->getValue()->getCurve(c);
     return curve->slopesAreDefault();
 }
 
-TransformDirection HueCurveOpData::getDirection() const noexcept
+TransformDirection GradingHueCurveOpData::getDirection() const noexcept
 {
     return m_direction;
 }
 
-void HueCurveOpData::setDirection(TransformDirection dir) noexcept
+void GradingHueCurveOpData::setDirection(TransformDirection dir) noexcept
 {
     m_direction = dir;
 }
 
-bool HueCurveOpData::isDynamic() const noexcept
+bool GradingHueCurveOpData::isDynamic() const noexcept
 {
     return m_value->isDynamic();
 }
 
-DynamicPropertyRcPtr HueCurveOpData::getDynamicProperty() const noexcept
+DynamicPropertyRcPtr GradingHueCurveOpData::getDynamicProperty() const noexcept
 {
     return m_value;
 }
 
-void HueCurveOpData::replaceDynamicProperty(DynamicPropertyHueCurveImplRcPtr prop) noexcept
+void GradingHueCurveOpData::replaceDynamicProperty(DynamicPropertyGradingHueCurveImplRcPtr prop) noexcept
 {
     m_value = prop;
 }
 
-void HueCurveOpData::removeDynamicProperty() noexcept
+void GradingHueCurveOpData::removeDynamicProperty() noexcept
 {
     m_value->makeNonDynamic();
 }
 
-bool HueCurveOpData::equals(const OpData & other) const
+bool GradingHueCurveOpData::equals(const OpData & other) const
 {
     if (!OpData::equals(other)) return false;
 
-    const HueCurveOpData* rop = static_cast<const HueCurveOpData*>(&other);
+    const GradingHueCurveOpData* rop = static_cast<const GradingHueCurveOpData*>(&other);
 
     if (m_direction      != rop->m_direction ||
         m_style          != rop->m_style ||
@@ -222,7 +221,7 @@ bool HueCurveOpData::equals(const OpData & other) const
     return true;
 }
 
-bool operator==(const HueCurveOpData & lhs, const HueCurveOpData & rhs)
+bool operator==(const GradingHueCurveOpData & lhs, const GradingHueCurveOpData & rhs)
 {
     return lhs.equals(rhs);
 }

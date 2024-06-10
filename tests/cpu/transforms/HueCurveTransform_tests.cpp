@@ -3,18 +3,18 @@
 
 
 #include "ops/gradingrgbcurve/GradingBSplineCurve.h"
-#include "transforms/HueCurveTransform.cpp"
+#include "transforms/GradingHueCurveTransform.cpp"
 
 #include "testutils/UnitTest.h"
 #include "UnitTestLogUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
-OCIO_ADD_TEST(HueCurveTransform, basic)
+OCIO_ADD_TEST(GradingHueCurveTransform, basic)
 {
     // Create transform and validate default values for all styles.
 
-    auto gctLin = OCIO::HueCurveTransform::Create(OCIO::GRADING_LOG);
+    auto gctLin = OCIO::GradingHueCurveTransform::Create(OCIO::GRADING_LOG);
     //OCIO_CHECK_EQUAL(gctLin->getStyle(), OCIO::GRADING_LIN);
     OCIO_CHECK_EQUAL(gctLin->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
     gctLin->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
@@ -100,7 +100,7 @@ OCIO_ADD_TEST(HueCurveTransform, basic)
     //OCIO_CHECK_ASSERT(!gct->slopesAreDefault(OCIO::RGB_BLUE));
 }
 
-OCIO_ADD_TEST(HueCurveTransform, processor_several_transforms)
+OCIO_ADD_TEST(GradingHueCurveTransform, processor_several_transforms)
 {
     //OCIO::ConfigRcPtr config = OCIO::Config::Create();
     //const float srcPixel[3] = { 0.2f, 0.3f, 0.4f };
@@ -119,7 +119,7 @@ OCIO_ADD_TEST(HueCurveTransform, processor_several_transforms)
 
     //auto rgbCurveA = OCIO::GradingRGBCurve::Create(c1, c2, c3, c5);
 
-    //auto gcta = OCIO::HueCurveTransform::Create();
+    //auto gcta = OCIO::GradingHueCurveTransform::Create();
     //OCIO_CHECK_ASSERT(gcta.get());
     //OCIO_CHECK_NO_THROW(gcta->validate());
     //gcta->setValue(rgbCurveA);
@@ -227,7 +227,7 @@ OCIO_ADD_TEST(HueCurveTransform, processor_several_transforms)
     //}
 }
 
-OCIO_ADD_TEST(HueCurveTransform, serialization)
+OCIO_ADD_TEST(GradingHueCurveTransform, serialization)
 {
     // Test the serialization of the transform.
 
@@ -243,7 +243,7 @@ OCIO_ADD_TEST(HueCurveTransform, serialization)
 //
     //auto data = OCIO::GradingRGBCurve::Create(c1, c2, c3, c4);
 
-    //auto curve = OCIO::HueCurveTransform::Create();
+    //auto curve = OCIO::GradingHueCurveTransform::Create();
     //OCIO_CHECK_ASSERT(curve.get());
     //OCIO_CHECK_NO_THROW(curve->validate());
     
@@ -280,12 +280,12 @@ OCIO_ADD_TEST(HueCurveTransform, serialization)
 }
 
 
-OCIO_ADD_TEST(HueCurveTransform, local_bypass)
+OCIO_ADD_TEST(GradingHueCurveTransform, local_bypass)
 {
     // Test that the GPU is empty for an identity transform.
 
-    OCIO::HueCurveTransformRcPtr transform
-        = OCIO::HueCurveTransform::Create(OCIO::GRADING_LOG);
+    OCIO::GradingHueCurveTransformRcPtr transform
+        = OCIO::GradingHueCurveTransform::Create(OCIO::GRADING_LOG);
     //std::cout <<  "local_bypass HOMEMADE\n";
     OCIO_CHECK_ASSERT(transform.get());
 

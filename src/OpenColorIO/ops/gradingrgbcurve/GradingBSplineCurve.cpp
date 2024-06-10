@@ -412,9 +412,9 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefsBSpline(KnotsCoefs & knotsCoef
             FitSpline(m_controlPoints, slopes, knots, coefsA, coefsB, coefsC);
         }
 
-        const int numKnots = static_cast<int>(knotsCoefs.m_nKnots);
+        const int numKnots = static_cast<int>(knotsCoefs.m_numKnots);
         const int newKnots = static_cast<int>(knots.size());
-        const int numCoefs = static_cast<int>(knotsCoefs.m_nCoefs);
+        const int numCoefs = static_cast<int>(knotsCoefs.m_numCoefs);
         const int newCoefs = static_cast<int>(coefsA.size() * 3);
 
         if (numKnots + newKnots > KnotsCoefs::MAX_NUM_KNOTS ||
@@ -434,8 +434,8 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefsBSpline(KnotsCoefs & knotsCoef
         std::copy(coefsB.begin(), coefsB.end(), knotsCoefs.m_coefsArray.begin() + numCoefs + coefsSize);
         std::copy(coefsC.begin(), coefsC.end(), knotsCoefs.m_coefsArray.begin() + numCoefs + coefsSize * 2);
         
-        knotsCoefs.m_nKnots += newKnots;
-        knotsCoefs.m_nCoefs += newCoefs;
+        knotsCoefs.m_numKnots += newKnots;
+        knotsCoefs.m_numCoefs += newCoefs;
     }
 }
 
@@ -795,9 +795,9 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefsHueCurves(KnotsCoefs & knotsCo
     std::vector<float> coefsC;
     fitHueSpline(resultCtrlPnts, slopes, knots, coefsA, coefsB, coefsC);
 
-    const int numKnots = static_cast<int>(knotsCoefs.m_nKnots);
+    const int numKnots = static_cast<int>(knotsCoefs.m_numKnots);
     const int newKnots = static_cast<int>(knots.size());
-    const int numCoefs = static_cast<int>(knotsCoefs.m_nCoefs);
+    const int numCoefs = static_cast<int>(knotsCoefs.m_numCoefs);
     const int newCoefs = static_cast<int>(coefsA.size() * 3);
 
     if (numKnots + newKnots > KnotsCoefs::MAX_NUM_KNOTS ||
@@ -817,8 +817,8 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefsHueCurves(KnotsCoefs & knotsCo
     std::copy(coefsB.begin(), coefsB.end(), knotsCoefs.m_coefsArray.begin() + numCoefs + coefsSize);
     std::copy(coefsC.begin(), coefsC.end(), knotsCoefs.m_coefsArray.begin() + numCoefs + coefsSize * 2);
     
-    knotsCoefs.m_nKnots += newKnots;
-    knotsCoefs.m_nCoefs += newCoefs;
+    knotsCoefs.m_numKnots += newKnots;
+    knotsCoefs.m_numCoefs += newCoefs;
 }
 
 

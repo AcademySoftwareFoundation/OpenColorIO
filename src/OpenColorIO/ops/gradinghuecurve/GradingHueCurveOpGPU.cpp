@@ -138,7 +138,7 @@ std::string BuildResourceNameIndexed(GpuShaderCreatorRcPtr & shaderCreator, cons
     return name;
 }
 
-static const std::string opPrefix{ "huecurve" };
+static const std::string opPrefix{ "grading_huecurve" };
 
 void SetGCProperties(GpuShaderCreatorRcPtr & shaderCreator, bool dynamic, GCProperties & propNames)
 {
@@ -175,7 +175,7 @@ void SetGCProperties(GpuShaderCreatorRcPtr & shaderCreator, bool dynamic, GCProp
 
 // Only called once for dynamic ops.
 void AddGCPropertiesUniforms(GpuShaderCreatorRcPtr & shaderCreator,
-                             DynamicPropertyHueCurveImplRcPtr & shaderProp,
+                             DynamicPropertyGradingHueCurveImplRcPtr & shaderProp,
                              const GCProperties & propNames)
 {
     // Use the shader dynamic property to bind the uniforms.
@@ -184,31 +184,31 @@ void AddGCPropertiesUniforms(GpuShaderCreatorRcPtr & shaderCreator,
     // Note: No need to add an index to the name to avoid collisions as the dynamic properties
     // are unique.
 
-    auto getNK = std::bind(&DynamicPropertyHueCurveImpl::getNumKnots, curveProp);
-    auto getKO = std::bind(&DynamicPropertyHueCurveImpl::getKnotsOffsetsArray,
+    auto getNK = std::bind(&DynamicPropertyGradingHueCurveImpl::getNumKnots, curveProp);
+    auto getKO = std::bind(&DynamicPropertyGradingHueCurveImpl::getKnotsOffsetsArray,
                            curveProp);
-    auto getK = std::bind(&DynamicPropertyHueCurveImpl::getKnotsArray, curveProp);
-    auto getNC = std::bind(&DynamicPropertyHueCurveImpl::getNumCoefs, curveProp);
-    auto getCO = std::bind(&DynamicPropertyHueCurveImpl::getCoefsOffsetsArray,
+    auto getK = std::bind(&DynamicPropertyGradingHueCurveImpl::getKnotsArray, curveProp);
+    auto getNC = std::bind(&DynamicPropertyGradingHueCurveImpl::getNumCoefs, curveProp);
+    auto getCO = std::bind(&DynamicPropertyGradingHueCurveImpl::getCoefsOffsetsArray,
                            curveProp);
-    auto getC = std::bind(&DynamicPropertyHueCurveImpl::getCoefsArray, curveProp);
-    auto getLB = std::bind(&DynamicPropertyHueCurveImpl::getLocalBypass, curveProp);
+    auto getC = std::bind(&DynamicPropertyGradingHueCurveImpl::getCoefsArray, curveProp);
+    auto getLB = std::bind(&DynamicPropertyGradingHueCurveImpl::getLocalBypass, curveProp);
     // Uniforms are added if they are not already there (added by another op).
-    AddUniform(shaderCreator, DynamicPropertyHueCurveImpl::GetNumOffsetValues,
+    AddUniform(shaderCreator, DynamicPropertyGradingHueCurveImpl::GetNumOffsetValues,
                getKO, propNames.m_knotsOffsets);
     AddUniform(shaderCreator, getNK, getK,
-               DynamicPropertyHueCurveImpl::GetMaxKnots(),
+               DynamicPropertyGradingHueCurveImpl::GetMaxKnots(),
                propNames.m_knots);
-    AddUniform(shaderCreator, DynamicPropertyHueCurveImpl::GetNumOffsetValues,
+    AddUniform(shaderCreator, DynamicPropertyGradingHueCurveImpl::GetNumOffsetValues,
                getCO, propNames.m_coefsOffsets);
     AddUniform(shaderCreator, getNC, getC,
-               DynamicPropertyHueCurveImpl::GetMaxCoefs(),
+               DynamicPropertyGradingHueCurveImpl::GetMaxCoefs(),
                propNames.m_coefs);
     AddUniform(shaderCreator, getLB, propNames.m_localBypass);
 }
 
 void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
-                                           ConstHueCurveOpDataRcPtr & gcData,
+                                           ConstGradingHueCurveOpDataRcPtr & gcData,
                                            const GCProperties & props,
                                            bool dyn)
 {
@@ -415,7 +415,7 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
 }
 
 void GetHueCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
-                                 ConstHueCurveOpDataRcPtr & gcData)
+                                 ConstGradingHueCurveOpDataRcPtr & gcData)
 {
     const bool dyn = gcData->isDynamic() &&  shaderCreator->getLanguage() != LANGUAGE_OSL_1;
     if (!dyn)

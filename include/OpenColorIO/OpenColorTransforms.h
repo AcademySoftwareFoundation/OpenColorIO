@@ -588,8 +588,8 @@ struct OCIOEXPORT GradingHueCurves
 };
 
 /**
- * A set of HUE/SAT/LUM curves. It is used by HueCurveTransform and can be used as
- * a dynamic property (see \ref DynamicPropertyHueCurve).
+ * A set of HUE/SAT/LUM curves. It is used by GradingHueCurveTransform and can be used as
+ * a dynamic property (see \ref DynamicPropertyGradingHueCurve).
  */
 class OCIOEXPORT GradingHueCurve
 {
@@ -779,10 +779,10 @@ extern OCIOEXPORT DynamicPropertyGradingPrimaryRcPtr AsGradingPrimary(DynamicPro
  */
 extern OCIOEXPORT DynamicPropertyGradingRGBCurveRcPtr AsGradingRGBCurve(DynamicPropertyRcPtr & prop);
 /**
- * Get the property as DynamicPropertyHueCurveRcPtr to access the GradingHueCurveRcPtr
- * value. Will throw if property type is not DYNAMIC_PROPERTY_HUE_CURVE.
+ * Get the property as DynamicPropertyGradingHueCurveRcPtr to access the GradingHueCurveRcPtr
+ * value. Will throw if property type is not DYNAMIC_PROPERTY_GRADING_HUECURVE.
  */
-extern OCIOEXPORT DynamicPropertyHueCurveRcPtr AsHueCurve(DynamicPropertyRcPtr & prop);
+extern OCIOEXPORT DynamicPropertyGradingHueCurveRcPtr AsGradingHueCurve(DynamicPropertyRcPtr & prop);
 /**
  * Get the property as DynamicPropertyGradingToneRcPtr to access the GradingTone value. Will throw
  * if property type is not DYNAMIC_PROPERTY_GRADING_TONE.
@@ -841,20 +841,20 @@ protected:
 };
 
 /// Interface used to access dynamic property ConstGradingHueCurveRcPtr value.
-class OCIOEXPORT DynamicPropertyHueCurve
+class OCIOEXPORT DynamicPropertyGradingHueCurve
 {
 public:
     virtual const ConstGradingHueCurveRcPtr & getValue() const = 0;
     /// Will throw if value is not valid.
     virtual void setValue(const ConstGradingHueCurveRcPtr & value) = 0;
 
-    DynamicPropertyHueCurve(const DynamicPropertyHueCurve &) = delete;
-    DynamicPropertyHueCurve & operator=(const DynamicPropertyHueCurve &) = delete;
+    DynamicPropertyGradingHueCurve(const DynamicPropertyGradingHueCurve &) = delete;
+    DynamicPropertyGradingHueCurve & operator=(const DynamicPropertyGradingHueCurve &) = delete;
     /// Do not use (needed only for pybind11).
-    virtual ~DynamicPropertyHueCurve() = default;
+    virtual ~DynamicPropertyGradingHueCurve() = default;
 
 protected:
-    DynamicPropertyHueCurve() = default;
+    DynamicPropertyGradingHueCurve() = default;
 };
 
 /// Interface used to access dynamic property GradingTone value.
@@ -1267,28 +1267,29 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingPrimary
  *
  *   TODO: Description.
  */
-class OCIOEXPORT HueCurveTransform : public Transform
+class OCIOEXPORT GradingHueCurveTransform : public Transform
 {
 public:
-    /// Creates an instance of HueCurveTransform.
-    static HueCurveTransformRcPtr Create(GradingStyle style);
+    /// Creates an instance of GradingHueCurveTransform.
+    static GradingHueCurveTransformRcPtr Create(GradingStyle style);
 
     TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_GRADING_HUE_CURVE; }
-//
+
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
-//
-    ///// Checks if this equals other.
-    virtual bool equals(const HueCurveTransform & other) const noexcept = 0;
-//
-    ///// Adjusts the behavior of the transform for log, linear, or video color space encodings.
+
+    /// Checks if this equals other.
+    virtual bool equals(const GradingHueCurveTransform & other) const noexcept = 0;
+
+    /// Adjusts the behavior of the transform for log, linear, or video color space encodings.
     virtual GradingStyle getStyle() const noexcept = 0;
-    ///// Will reset value to style's defaults if style is not the current style.
+
+    /// Will reset value to style's defaults if style is not the current style.
     virtual void setStyle(GradingStyle style) noexcept = 0;
-//
+
     virtual const ConstGradingHueCurveRcPtr getValue() const = 0;
-    ///// Throws if value is not valid.
-    //virtual 
+
+    /// Throws if value is not valid.
     virtual void setValue(const ConstGradingHueCurveRcPtr & values) = 0;    
     
     /**
@@ -1310,26 +1311,26 @@ public:
      */
     virtual bool getBypassLinToLog() const = 0;
     virtual void setBypassLinToLog(bool bypass) = 0;
-//
+
     ///**
     // * Parameters can be made dynamic so the values can be changed through the CPU or GPU processor,
-    // * but if there are several GradingPrimaryTransform only one can have dynamic parameters.
+    // * but if there are several GradingHueCurveTransform only one can have dynamic parameters.
     // */
     virtual bool isDynamic() const noexcept = 0;
     virtual void makeDynamic() noexcept = 0;
     virtual void makeNonDynamic() noexcept = 0;
 
-    HueCurveTransform(const HueCurveTransform &) = delete;
-    HueCurveTransform & operator= (const HueCurveTransform &) = delete;
+    GradingHueCurveTransform(const GradingHueCurveTransform &) = delete;
+    GradingHueCurveTransform & operator= (const GradingHueCurveTransform &) = delete;
+
     /// Do not use (needed only for pybind11).
-    virtual ~HueCurveTransform() = default;
+    virtual ~GradingHueCurveTransform() = default;
 
 protected:
-    HueCurveTransform() = default;
+    GradingHueCurveTransform() = default;
 };
 
-extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const HueCurveTransform &) noexcept;
-
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingHueCurveTransform &) noexcept;
 
 /**
  * RGB curve color correction controls.

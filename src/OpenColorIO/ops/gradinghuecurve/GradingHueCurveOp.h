@@ -17,13 +17,13 @@
 namespace OCIO_NAMESPACE
 {
 
-void CreateHueCurveOp(OpRcPtrVec & ops,
-                             HueCurveOpDataRcPtr & gpData,
+void CreateGradingHueCurveOp(OpRcPtrVec & ops,
+                             GradingHueCurveOpDataRcPtr & gpData,
                              TransformDirection direction);
 
-// Create a copy of the rgb curve transform in the op and append it to
+// Create a copy of the hue curve transform in the op and append it to
 // the GroupTransform.
-void CreateHueCurveTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op);
+void CreateGradingHueCurveTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op);
 
 } // namespace OCIO_NAMESPACE
 

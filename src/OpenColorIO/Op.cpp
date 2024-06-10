@@ -407,8 +407,8 @@ void ValidateDynamicProperty(OpRcPtr op, std::shared_ptr<T> & prop, DynamicPrope
             case DYNAMIC_PROPERTY_GRADING_TONE:
                 os << "Grading tone";
                 break;
-            case DYNAMIC_PROPERTY_HUE_CURVE:
-                os << "Hue curve";
+            case DYNAMIC_PROPERTY_GRADING_HUECURVE:
+                os << "Grading hue curve";
                 break;
             }
             os << " dynamic property can only be there once.";
@@ -550,9 +550,9 @@ void CreateOpVecFromOpData(OpRcPtrVec & ops,
 
     case OpData::GradingHueCurveType:
     {
-        auto hueSrc = std::dynamic_pointer_cast<const HueCurveOpData>(opData);
-        auto hue = std::make_shared<HueCurveOpData>(*hueSrc);
-        CreateHueCurveOp(ops, hue, dir);
+        auto hueSrc = std::dynamic_pointer_cast<const GradingHueCurveOpData>(opData);
+        auto hue = std::make_shared<GradingHueCurveOpData>(*hueSrc);
+        CreateGradingHueCurveOp(ops, hue, dir);
         break;
     }
 

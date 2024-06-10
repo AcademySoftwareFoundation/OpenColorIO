@@ -13,7 +13,7 @@ namespace OCIO_NAMESPACE
 {
 
 void GetHueCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
-                                 ConstHueCurveOpDataRcPtr & gpData);
+                                 ConstGradingHueCurveOpDataRcPtr & gpData);
 
 } // namespace OCIO_NAMESPACE
 

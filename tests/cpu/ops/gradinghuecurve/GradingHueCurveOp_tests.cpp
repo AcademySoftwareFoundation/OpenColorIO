@@ -10,17 +10,17 @@
 
 namespace OCIO = OCIO_NAMESPACE;
 
-OCIO_ADD_TEST(HueCurveOp, create)
+OCIO_ADD_TEST(GradingHueCurveOp, create)
 {
     //OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_FORWARD;
-    //OCIO::HueCurveOpDataRcPtr data =
-    //    std::make_shared<OCIO::HueCurveOpData>();
+    //OCIO::GradingHueCurveOpDataRcPtr data =
+    //    std::make_shared<OCIO::GradingHueCurveOpData>();
     //OCIO::OpRcPtrVec ops;
 //
-    //OCIO_CHECK_NO_THROW(OCIO::CreateHueCurveOp(ops, data, direction));
+    //OCIO_CHECK_NO_THROW(OCIO::CreateGradingHueCurveOp(ops, data, direction));
     //OCIO_REQUIRE_EQUAL(ops.size(), 1);
     //OCIO_REQUIRE_ASSERT(ops[0]);
-    //OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<HueCurveOp>");
+    //OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<GradingHueCurveOp>");
     //OCIO_CHECK_ASSERT(ops[0]->isIdentity());
     //OCIO_CHECK_ASSERT(ops[0]->isNoOp());
 
@@ -33,15 +33,15 @@ OCIO_ADD_TEST(HueCurveOp, create)
     //OCIO_CHECK_ASSERT(!ops[1]->isNoOp());
 }
 
-OCIO_ADD_TEST(HueCurveOp, create_transform)
+OCIO_ADD_TEST(GradingHueCurveOp, create_transform)
 {
     //OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_FORWARD;
-    //OCIO::HueCurveOpDataRcPtr data =
-    //    std::make_shared<OCIO::HueCurveOpData>();
+    //OCIO::GradingHueCurveOpDataRcPtr data =
+    //    std::make_shared<OCIO::GradingHueCurveOpData>();
     ////data->getDynamicPropertyInternal()->makeDynamic();
     //OCIO::OpRcPtrVec ops;
 //
-    //OCIO_CHECK_NO_THROW(OCIO::CreateHueCurveOp(ops, data, direction));
+    //OCIO_CHECK_NO_THROW(OCIO::CreateGradingHueCurveOp(ops, data, direction));
     //OCIO_REQUIRE_EQUAL(ops.size(), 1);
 
     //OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
@@ -58,11 +58,11 @@ OCIO_ADD_TEST(HueCurveOp, create_transform)
     //OCIO_CHECK_ASSERT(gcTransform->isDynamic());
 }
 
-OCIO_ADD_TEST(HueCurveOp, build_ops)
+OCIO_ADD_TEST(GradingHueCurveOp, build_ops)
 {
     //OCIO::ConstConfigRcPtr config = OCIO::Config::CreateRaw();
 //
-    //auto gcTransform = OCIO::HueCurveTransform::Create();
+    //auto gcTransform = OCIO::GradingHueCurveTransform::Create();
     //OCIO_CHECK_ASSERT(gcTransform.get());
 //
     //// Identity does create an op.

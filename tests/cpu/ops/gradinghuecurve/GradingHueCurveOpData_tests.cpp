@@ -8,10 +8,10 @@
 
 namespace OCIO = OCIO_NAMESPACE;
 
-OCIO_ADD_TEST(HueCurveOpData, accessors)
+OCIO_ADD_TEST(GradingHueCurveOpData, accessors)
 {
     // Create GradingRGBCurveOpData and check values. Changes them and check.
-    //OCIO::HueCurveOpData gc;
+    //OCIO::GradingHueCurveOpData gc;
 
     //static constexpr char expected[]{ "log forward "
     //    "<red=<control_points=[<x=0, y=0><x=0.5, y=0.5><x=1, y=1>]>, "
@@ -52,8 +52,8 @@ OCIO_ADD_TEST(HueCurveOpData, accessors)
     //OCIO_CHECK_EQUAL(gc.getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
 
     // Test operator==.
-    //OCIO::HueCurveOpData gc1{};
-    //OCIO::HueCurveOpData gc2{};
+    //OCIO::GradingHueCurveOpData gc1{};
+    //OCIO::GradingHueCurveOpData gc2{};
 //
     //OCIO_CHECK_ASSERT(gc1 == gc2);
     //gc1.setDirection(OCIO::TRANSFORM_DIR_INVERSE);
@@ -110,10 +110,10 @@ OCIO_ADD_TEST(HueCurveOpData, accessors)
     //OCIO_CHECK_ASSERT(!gc1.isInverse(gcptr2));
 }
 
-OCIO_ADD_TEST(HueCurveOpData, validate)
+OCIO_ADD_TEST(GradingHueCurveOpData, validate)
 {
     // Default is valid.
-    //OCIO::HueCurveOpData gc;
+    //OCIO::GradingHueCurveOpData gc;
     //OCIO_CHECK_NO_THROW(gc.validate());
 
     // Curves with a single control point are not valid.

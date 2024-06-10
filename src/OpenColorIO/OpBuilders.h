@@ -103,7 +103,7 @@ void BuildGradingPrimaryOp(OpRcPtrVec & ops,
 void BuildHueCurveOp(OpRcPtrVec & ops,
                             const Config & config,
                             const ConstContextRcPtr & context,
-                            const HueCurveTransform & transform,
+                            const GradingHueCurveTransform & transform,
                             TransformDirection dir);
 
 void BuildGradingRGBCurveOp(OpRcPtrVec & ops,

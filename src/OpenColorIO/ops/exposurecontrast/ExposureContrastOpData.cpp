@@ -311,7 +311,7 @@ bool ExposureContrastOpData::hasDynamicProperty(DynamicPropertyType type) const
         break;
     case DYNAMIC_PROPERTY_GRADING_PRIMARY:
     case DYNAMIC_PROPERTY_GRADING_RGBCURVE:
-    case DYNAMIC_PROPERTY_HUE_CURVE:
+    case DYNAMIC_PROPERTY_GRADING_HUECURVE:
     case DYNAMIC_PROPERTY_GRADING_TONE:
     default:
         break;
@@ -345,7 +345,7 @@ ExposureContrastOpData::getDynamicProperty(DynamicPropertyType type) const
         break;
     case DYNAMIC_PROPERTY_GRADING_PRIMARY:
     case DYNAMIC_PROPERTY_GRADING_RGBCURVE:
-    case DYNAMIC_PROPERTY_HUE_CURVE:
+    case DYNAMIC_PROPERTY_GRADING_HUECURVE:
     case DYNAMIC_PROPERTY_GRADING_TONE:
     default:
         throw Exception("Dynamic property type not supported by ExposureContrast.");
@@ -385,7 +385,7 @@ void ExposureContrastOpData::replaceDynamicProperty(DynamicPropertyType type,
             break;
         case DYNAMIC_PROPERTY_GRADING_PRIMARY:
         case DYNAMIC_PROPERTY_GRADING_RGBCURVE:
-        case DYNAMIC_PROPERTY_HUE_CURVE:
+        case DYNAMIC_PROPERTY_GRADING_HUECURVE:
         case DYNAMIC_PROPERTY_GRADING_TONE:
         default:
             throw Exception("Dynamic property type not supported by ExposureContrast.");

@@ -44,18 +44,18 @@ static const std::vector<GradingControlPoint> DefaultLumLumLinCtrl{ { -7.0f, -7.
 
 }
 
-const GradingBSplineCurveImpl HueCurveImpl::DefaultHueHue(DefaultHueHueCtrl, BSplineCurveType::HUE_HUE_B_SPLINE );
-const GradingBSplineCurveImpl HueCurveImpl::DefaultHueSat(DefaultHueSatCtrl, BSplineCurveType::PERIODIC_B_SPLINE );
-const GradingBSplineCurveImpl HueCurveImpl::DefaultHueFx(DefaultHueFxCtrl, BSplineCurveType::PERIODIC_B_SPLINE );
-const GradingBSplineCurveImpl HueCurveImpl::DefaultLumSat(DefaultLumSatCtrl, BSplineCurveType::HORIZONTAL_B_SPLINE);
-const GradingBSplineCurveImpl HueCurveImpl::DefaultLumSatLin(DefaultLumSatLinCtrl, BSplineCurveType::HORIZONTAL_B_SPLINE);
-const GradingBSplineCurveImpl HueCurveImpl::DefaultSatSat(DefaultSatSatCtrl, BSplineCurveType::DIAGONAL_B_SPLINE);
-const GradingBSplineCurveImpl HueCurveImpl::DefaultSatLum(DefaultSatLumCtrl, BSplineCurveType::HORIZONTAL_B_SPLINE);
-const GradingBSplineCurveImpl HueCurveImpl::DefaultLumLum(DefaultLumLumCtrl, BSplineCurveType::DIAGONAL_B_SPLINE);
-const GradingBSplineCurveImpl HueCurveImpl::DefaultLumLumLin(DefaultLumLumLinCtrl, BSplineCurveType::DIAGONAL_B_SPLINE);
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultHueHue(DefaultHueHueCtrl, BSplineCurveType::HUE_HUE_B_SPLINE );
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultHueSat(DefaultHueSatCtrl, BSplineCurveType::PERIODIC_B_SPLINE );
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultHueFx(DefaultHueFxCtrl, BSplineCurveType::PERIODIC_B_SPLINE );
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultLumSat(DefaultLumSatCtrl, BSplineCurveType::HORIZONTAL_B_SPLINE);
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultLumSatLin(DefaultLumSatLinCtrl, BSplineCurveType::HORIZONTAL_B_SPLINE);
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultSatSat(DefaultSatSatCtrl, BSplineCurveType::DIAGONAL_B_SPLINE);
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultSatLum(DefaultSatLumCtrl, BSplineCurveType::HORIZONTAL_B_SPLINE);
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultLumLum(DefaultLumLumCtrl, BSplineCurveType::DIAGONAL_B_SPLINE);
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultLumLumLin(DefaultLumLumLinCtrl, BSplineCurveType::DIAGONAL_B_SPLINE);
 
 const std::array<std::reference_wrapper<const GradingBSplineCurveImpl>, static_cast<size_t>(HUE_NUM_CURVES)> 
-   HueCurveImpl::DefaultCurvesLin( {  std::ref(DefaultHueHue),
+   GradingHueCurveImpl::DefaultCurvesLin( {  std::ref(DefaultHueHue),
                                       std::ref(DefaultHueSat),
                                       std::ref(DefaultHueSat),
                                       std::ref(DefaultLumSatLin),
@@ -66,7 +66,7 @@ const std::array<std::reference_wrapper<const GradingBSplineCurveImpl>, static_c
 
 
 const std::array<std::reference_wrapper<const GradingBSplineCurveImpl>, static_cast<size_t>(HUE_NUM_CURVES)> 
-   HueCurveImpl::DefaultCurves(  {  std::ref(DefaultHueHue),
+   GradingHueCurveImpl::DefaultCurves(  {  std::ref(DefaultHueHue),
                                     std::ref(DefaultHueSat),
                                     std::ref(DefaultHueSat),
                                     std::ref(DefaultLumSat),
@@ -75,14 +75,14 @@ const std::array<std::reference_wrapper<const GradingBSplineCurveImpl>, static_c
                                     std::ref(DefaultSatLum),
                                     std::ref(DefaultHueFx) });
 
-HueCurveImpl::HueCurveImpl() : 
-    HueCurveImpl(GRADING_LOG)
+GradingHueCurveImpl::GradingHueCurveImpl() : 
+    GradingHueCurveImpl(GRADING_LOG)
 {}
 
-HueCurveImpl::HueCurveImpl(GradingStyle style)
+GradingHueCurveImpl::GradingHueCurveImpl(GradingStyle style)
 {  
-   auto & curves = (style == GRADING_LIN) ? HueCurveImpl::DefaultCurvesLin:
-                                            HueCurveImpl::DefaultCurves;
+   auto & curves = (style == GRADING_LIN) ? GradingHueCurveImpl::DefaultCurvesLin:
+                                            GradingHueCurveImpl::DefaultCurves;
 
    for (int c = 0; c < HUE_NUM_CURVES; ++c)
    {
@@ -90,7 +90,7 @@ HueCurveImpl::HueCurveImpl(GradingStyle style)
    }
 }
 
-HueCurveImpl::HueCurveImpl(const GradingHueCurves & curves)
+GradingHueCurveImpl::GradingHueCurveImpl(const GradingHueCurves & curves)
 {
     m_curves[HUE_HUE] = curves.hueHue->createEditableCopy();
     m_curves[HUE_SAT] = curves.hueSat->createEditableCopy();
@@ -102,9 +102,9 @@ HueCurveImpl::HueCurveImpl(const GradingHueCurves & curves)
     m_curves[HUE_FX] = curves.hueFx->createEditableCopy();
 }
 
-HueCurveImpl::HueCurveImpl(const ConstGradingHueCurveRcPtr & rhs)
+GradingHueCurveImpl::GradingHueCurveImpl(const ConstGradingHueCurveRcPtr & rhs)
 {
-    auto impl = dynamic_cast<const HueCurveImpl *>(rhs.get());
+    auto impl = dynamic_cast<const GradingHueCurveImpl *>(rhs.get());
     if (impl)
     {
         for (int c = 0; c < HUE_NUM_CURVES; ++c)
@@ -114,9 +114,9 @@ HueCurveImpl::HueCurveImpl(const ConstGradingHueCurveRcPtr & rhs)
     }
 }
 
-GradingHueCurveRcPtr HueCurveImpl::createEditableCopy() const
+GradingHueCurveRcPtr GradingHueCurveImpl::createEditableCopy() const
 {
-    auto newCurve = std::make_shared<HueCurveImpl>();
+    auto newCurve = std::make_shared<GradingHueCurveImpl>();
     for (int c = 0; c < HUE_NUM_CURVES; ++c)
     {
         newCurve->m_curves[c] = m_curves[c]->createEditableCopy();
@@ -157,7 +157,7 @@ const char * CurveType(int c)
 }
 }
 
-void HueCurveImpl::validate() const
+void GradingHueCurveImpl::validate() const
 {
     for (int c = 0; c < HUE_NUM_CURVES; ++c)
     {
@@ -175,7 +175,7 @@ void HueCurveImpl::validate() const
     }
 }
 
-bool HueCurveImpl::isIdentity() const
+bool GradingHueCurveImpl::isIdentity() const
 {
     for (int c = 0; c < HUE_NUM_CURVES; ++c)
     {
@@ -187,33 +187,49 @@ bool HueCurveImpl::isIdentity() const
     return true;
 }
 
-ConstGradingBSplineCurveRcPtr HueCurveImpl::getCurve(HueCurveType c) const
+bool GradingHueCurveImpl::isHueCurveTypeValid(HueCurveType c) const
 {
+    return ( c >= HUE_HUE && 
+             c < HUE_NUM_CURVES );
+}
+
+ConstGradingBSplineCurveRcPtr GradingHueCurveImpl::getCurve(HueCurveType c) const
+{
+    if(!isHueCurveTypeValid(c))
+    {
+        throw Exception("The HueCurveType provided is invalid");
+    }
+
     return m_curves[c];
 }
 
-GradingBSplineCurveRcPtr HueCurveImpl::getCurve(HueCurveType c)
+GradingBSplineCurveRcPtr GradingHueCurveImpl::getCurve(HueCurveType c)
 {
+    if(!isHueCurveTypeValid(c))
+    {
+        throw Exception("The HueCurveType provided is invalid");
+    }
+
     return m_curves[c];
 }
 
 GradingHueCurveRcPtr GradingHueCurve::Create(GradingStyle style)
 {
-    auto newCurve = std::make_shared<HueCurveImpl>(style);
+    auto newCurve = std::make_shared<GradingHueCurveImpl>(style);
     GradingHueCurveRcPtr res = newCurve;
     return res;
 }
 
 GradingHueCurveRcPtr GradingHueCurve::Create(const ConstGradingHueCurveRcPtr & rhs)
 {
-    auto newCurve = std::make_shared<HueCurveImpl>(rhs);
+    auto newCurve = std::make_shared<GradingHueCurveImpl>(rhs);
     GradingHueCurveRcPtr res = newCurve;
     return res;
 }
 
 GradingHueCurveRcPtr GradingHueCurve::Create(const GradingHueCurves & curves)
 {
-    auto newCurve = std::make_shared<HueCurveImpl>(curves);
+    auto newCurve = std::make_shared<GradingHueCurveImpl>(curves);
     GradingHueCurveRcPtr res = newCurve;
     return res;
 }

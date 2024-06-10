@@ -107,8 +107,8 @@ public:
         std::vector<float> m_coefsArray;  // Contains packed coefs of ALL curves.
         std::vector<float> m_knotsArray;  // Contains packed knots of ALL curves.
 
-        int m_nCoefs = 0;
-        int m_nKnots = 0;
+        int m_numCoefs = 0;
+        int m_numKnots = 0;
 
         float evalCurve(int curveIdx, float x) const;
         float evalCurveRev(int curveIdx, float x) const;

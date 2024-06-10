@@ -1618,14 +1618,14 @@ void GradingRGBCurveWriter::writeContent() const
 }
 ///////////////////////////////////////////////////////////////////////////////
 
-class HueCurveWriter : public OpWriter
+class GradingHueCurveWriter : public OpWriter
 {
 public:
-    HueCurveWriter() = delete;
-    HueCurveWriter(const HueCurveWriter&) = delete;
-    HueCurveWriter& operator=(const HueCurveWriter&) = delete;
-    HueCurveWriter(XmlFormatter & formatter, ConstHueCurveOpDataRcPtr primary);
-    virtual ~HueCurveWriter();
+    GradingHueCurveWriter() = delete;
+    GradingHueCurveWriter(const GradingHueCurveWriter&) = delete;
+    GradingHueCurveWriter& operator=(const GradingHueCurveWriter&) = delete;
+    GradingHueCurveWriter(XmlFormatter & formatter, ConstGradingHueCurveOpDataRcPtr primary);
+    virtual ~GradingHueCurveWriter();
 
 protected:
     ConstOpDataRcPtr getOp() const override;
@@ -1635,31 +1635,31 @@ protected:
 
 private:
     void writeCurve(const char * tag, const ConstGradingBSplineCurveRcPtr & curve) const;
-    ConstHueCurveOpDataRcPtr m_curves;
+    ConstGradingHueCurveOpDataRcPtr m_curves;
 };
 
-HueCurveWriter::HueCurveWriter(XmlFormatter & formatter,
-                               ConstHueCurveOpDataRcPtr curves)
+GradingHueCurveWriter::GradingHueCurveWriter(XmlFormatter & formatter,
+                               ConstGradingHueCurveOpDataRcPtr curves)
     : OpWriter(formatter)
     , m_curves(curves)
 {
 }
 
-HueCurveWriter::~HueCurveWriter()
+GradingHueCurveWriter::~GradingHueCurveWriter()
 {
 }
 
-ConstOpDataRcPtr HueCurveWriter::getOp() const
+ConstOpDataRcPtr GradingHueCurveWriter::getOp() const
 {
     return m_curves;
 }
 
-const char * HueCurveWriter::getTagName() const
+const char * GradingHueCurveWriter::getTagName() const
 {
     return TAG_HUE_CURVE;
 }
 
-void HueCurveWriter::getAttributes(XmlFormatter::Attributes& attributes) const
+void GradingHueCurveWriter::getAttributes(XmlFormatter::Attributes& attributes) const
 {
     OpWriter::getAttributes(attributes);
 
@@ -1675,7 +1675,7 @@ void HueCurveWriter::getAttributes(XmlFormatter::Attributes& attributes) const
     }
 }
 
-void HueCurveWriter::writeCurve(const char * tag,
+void GradingHueCurveWriter::writeCurve(const char * tag,
                                 const ConstGradingBSplineCurveRcPtr & curve) const
 {
     m_formatter.writeStartTag(tag, XmlFormatter::Attributes());
@@ -1721,12 +1721,12 @@ void HueCurveWriter::writeCurve(const char * tag,
     m_formatter.writeEndTag(tag);
 }
 
-void HueCurveWriter::writeContent() const
+void GradingHueCurveWriter::writeContent() const
 {
     const auto & vals = m_curves->getValue();
 
-    auto & defCurve = (m_curves->getStyle() == GRADING_LIN) ? HueCurveImpl::DefaultCurvesLin:
-                                                                                                                                                               HueCurveImpl::DefaultCurves;
+    auto & defCurve = (m_curves->getStyle() == GRADING_LIN) ? GradingHueCurveImpl::DefaultCurvesLin:
+                                                                                                                                                               GradingHueCurveImpl::DefaultCurves;
     static const std::vector<const char *> curveTags = { 
         TAG_HUE_CURVE_HUE_HUE,
         TAG_HUE_CURVE_HUE_SAT,
@@ -2840,8 +2840,8 @@ void TransformWriter::writeOps(const CTFVersion & version) const
                     ThrowWriteOp("GradingHueCurve");
                 }
 
-                auto hue = OCIO_DYNAMIC_POINTER_CAST<const HueCurveOpData>(op);
-                HueCurveWriter opWriter(m_formatter, hue);
+                auto hue = OCIO_DYNAMIC_POINTER_CAST<const GradingHueCurveOpData>(op);
+                GradingHueCurveWriter opWriter(m_formatter, hue);
                 opWriter.setInputBitdepth(inBD);
                 opWriter.setOutputBitdepth(outBD);
                 opWriter.write();

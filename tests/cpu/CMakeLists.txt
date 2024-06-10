@@ -151,9 +151,9 @@ set(SOURCES
     ops/fixedfunction/ACES2/Transform.cpp
     ops/fixedfunction/FixedFunctionOpGPU.cpp
     ops/gamma/GammaOpGPU.cpp
+    ops/gradinghuecurve/GradingHueCurveOpGPU.cpp
     ops/gradingprimary/GradingPrimaryOpGPU.cpp
     ops/gradingrgbcurve/GradingRGBCurveOpGPU.cpp
-    ops/gradinghuecurve/GradingHueCurveOpGPU.cpp
     ops/gradingtone/GradingToneOpGPU.cpp
     ops/log/LogOpGPU.cpp
     ops/lut1d/Lut1DOpCPU_SSE2.cpp
@@ -254,11 +254,11 @@ set(TESTS
     ops/gradingprimary/GradingPrimaryOpData_tests.cpp
     ops/gradingprimary/GradingPrimaryOp_tests.cpp
     ops/gradingrgbcurve/GradingBSplineCurve_tests.cpp
+    ops/gradinghuecurve/GradingHueCurve_tests.cpp
+    ops/gradinghuecurve/GradingHueCurveOpData_tests.cpp
+    ops/gradinghuecurve/GradingHueCurveOp_tests.cpp
     ops/gradingrgbcurve/GradingRGBCurve_tests.cpp
-    ops/gradingrgbcurve/HueCurve_tests.cpp
     ops/gradingrgbcurve/GradingRGBCurveOpCPU_tests.cpp
-    ops/gradingrgbcurve/HueCurveOp_tests.cpp
-    ops/gradingrgbcurve/HueCurveOpData_tests.cpp
     ops/gradingrgbcurve/GradingRGBCurveOpData_tests.cpp
     ops/gradingrgbcurve/GradingRGBCurveOp_tests.cpp
     ops/gradingtone/GradingTone_tests.cpp

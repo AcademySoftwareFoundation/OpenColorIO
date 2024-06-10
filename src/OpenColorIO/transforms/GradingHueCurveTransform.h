@@ -13,14 +13,14 @@
 namespace OCIO_NAMESPACE
 {
 
-class HueCurveTransformImpl : public HueCurveTransform
+class GradingHueCurveTransformImpl : public GradingHueCurveTransform
 {
 public:
-    HueCurveTransformImpl(GradingStyle style);
-    HueCurveTransformImpl() = delete;
-    HueCurveTransformImpl(const HueCurveTransformImpl &) = delete;
-    HueCurveTransformImpl& operator=(const HueCurveTransformImpl &) = delete;
-    ~HueCurveTransformImpl() override = default;
+    GradingHueCurveTransformImpl(GradingStyle style);
+    GradingHueCurveTransformImpl() = delete;
+    GradingHueCurveTransformImpl(const GradingHueCurveTransformImpl &) = delete;
+    GradingHueCurveTransformImpl& operator=(const GradingHueCurveTransformImpl &) = delete;
+    ~GradingHueCurveTransformImpl() override = default;
 
     TransformRcPtr createEditableCopy() const override;
 
@@ -32,7 +32,7 @@ public:
 
     void validate() const override;
 
-    bool equals(const HueCurveTransform & other) const noexcept override;
+    bool equals(const GradingHueCurveTransform & other) const noexcept override;
 
     GradingStyle getStyle() const noexcept override;
 
@@ -53,13 +53,13 @@ public:
     void makeDynamic() noexcept override;
     void makeNonDynamic() noexcept override;
 
-    HueCurveOpData & data() noexcept { return m_data; }
-    const HueCurveOpData & data() const noexcept { return m_data; }
+    GradingHueCurveOpData & data() noexcept { return m_data; }
+    const GradingHueCurveOpData & data() const noexcept { return m_data; }
 
-    static void deleter(HueCurveTransform* t);
+    static void deleter(GradingHueCurveTransform* t);
 
 private:
-    HueCurveOpData m_data;
+    GradingHueCurveOpData m_data;
 };
 
 
