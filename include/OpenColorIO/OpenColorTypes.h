@@ -563,7 +563,7 @@ enum DynamicPropertyType
     DYNAMIC_PROPERTY_GRADING_PRIMARY,  ///< Used by GradingPrimaryTransform
     DYNAMIC_PROPERTY_GRADING_RGBCURVE, ///< Used by GradingRGBCurveTransform
     DYNAMIC_PROPERTY_GRADING_TONE,     ///< Used by GradingToneTransform
-    DYNAMIC_PROPERTY_GRADING_HUECURVE  ///< Used by GradingToneTransform
+    DYNAMIC_PROPERTY_GRADING_HUECURVE  ///< Used by GradingHueCurveTransform
 };
 
 /// Types for GradingRGBCurve.
@@ -592,11 +592,13 @@ enum HueCurveType
 
 enum BSplineCurveType
 {
-   B_SPLINE = 0,           //!< Monotonic quadratic B-spline based function.
-   DIAGONAL_B_SPLINE,      //!< Monotonic quadratic B-spline based function (newer algorithm).
-   HUE_HUE_B_SPLINE,       //!< Special B-spline used for the hue vs. hue curve (monotonic and periodic).
-   PERIODIC_B_SPLINE,      //!< Periodic non-monotonic B-spline used for some of the hue curves.
-   HORIZONTAL_B_SPLINE     //!< Non-monotonic B-spline used for some of the lum vs. sat-gain curve.
+   B_SPLINE = 0,                   //!< Monotonic quadratic B-spline based function.
+   DIAGONAL_B_SPLINE,              //!< Monotonic quadratic B-spline based function (newer algorithm).
+   HUE_HUE_B_SPLINE,               //!< Special B-spline used for the hue vs. hue curve (monotonic and periodic).
+   PERIODIC_HORIZONTAL1_B_SPLINE,  //!< Periodic non-monotonic B-spline centered at 1 used for some of the hue curves.
+   PERIODIC_HORIZONTAL0_B_SPLINE,  //!< Periodic non-monotonic B-spline centered at 0 used for some of the hue curves.
+   HORIZONTAL1_B_SPLINE,           //!< Non-monotonic B-spline, centered at 1, used for HueSat, HueLum, and SatLum curves.
+   HORIZONTAL0_B_SPLINE            //!< Non-monotonic B-spline, centered at 0, used for HueFX curve.
 };
 
 /// Types for uniform data.

@@ -271,7 +271,7 @@ public:
     virtual void replaceDynamicProperty(DynamicPropertyType /* type */,
                                         DynamicPropertyGradingHueCurveImplRcPtr & /* prop */)
     {
-        throw Exception("Op does not implement grading rgb curve dynamic property.");
+        throw Exception("Op does not implement grading hue curve dynamic property.");
     }
     virtual void replaceDynamicProperty(DynamicPropertyType /* type */,
                                         DynamicPropertyGradingToneImplRcPtr & /* prop */)

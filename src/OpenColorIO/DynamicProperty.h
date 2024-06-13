@@ -189,7 +189,7 @@ public:
     bool getLocalBypass() const;
     int getNumKnots() const;
     int getNumCoefs() const;
-    static int GetNumOffsetValues() { return 8; }
+    static int GetNumOffsetValues() { return 16; }
     const int * getKnotsOffsetsArray() const;
     const int * getCoefsOffsetsArray() const;
     const float * getKnotsArray() const;

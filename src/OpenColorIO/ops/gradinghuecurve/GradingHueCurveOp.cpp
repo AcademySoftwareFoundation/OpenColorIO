@@ -74,7 +74,7 @@ GradingHueCurveOp::GradingHueCurveOp(GradingHueCurveOpDataRcPtr & hueCurveData)
 OpRcPtr GradingHueCurveOp::clone() const
 {
    GradingHueCurveOpDataRcPtr p = hueCurveData()->clone();
-    return std::make_shared<GradingHueCurveOp>(p);
+   return std::make_shared<GradingHueCurveOp>(p);
 }
 
 GradingHueCurveOp::~GradingHueCurveOp()
@@ -238,7 +238,7 @@ void CreateGradingHueCurveTransform(GroupTransformRcPtr & group, ConstOpRcPtr & 
     group->appendTransform(gcTransform);
 }
 
-void BuildHueCurveOp(OpRcPtrVec & ops,
+void BuildGradingHueCurveOp(OpRcPtrVec & ops,
                             const Config & /*config*/,
                             const ConstContextRcPtr & /*context*/,
                             const GradingHueCurveTransform & transform,

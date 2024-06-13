@@ -112,7 +112,7 @@ void BuildOps(OpRcPtrVec & ops,
     else if (ConstGradingHueCurveTransformRcPtr hueCurveTransform = \
         DynamicPtrCast<const GradingHueCurveTransform>(transform))
     {
-        BuildHueCurveOp(ops, config, context, *hueCurveTransform, dir);
+        BuildGradingHueCurveOp(ops, config, context, *hueCurveTransform, dir);
     }
     else if (ConstGradingToneTransformRcPtr gradingToneTransform = \
         DynamicPtrCast<const GradingToneTransform>(transform))

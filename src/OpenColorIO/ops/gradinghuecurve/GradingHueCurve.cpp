@@ -45,12 +45,12 @@ static const std::vector<GradingControlPoint> DefaultLumLumLinCtrl{ { -7.0f, -7.
 }
 
 const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultHueHue(DefaultHueHueCtrl, BSplineCurveType::HUE_HUE_B_SPLINE );
-const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultHueSat(DefaultHueSatCtrl, BSplineCurveType::PERIODIC_B_SPLINE );
-const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultHueFx(DefaultHueFxCtrl, BSplineCurveType::PERIODIC_B_SPLINE );
-const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultLumSat(DefaultLumSatCtrl, BSplineCurveType::HORIZONTAL_B_SPLINE);
-const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultLumSatLin(DefaultLumSatLinCtrl, BSplineCurveType::HORIZONTAL_B_SPLINE);
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultHueSat(DefaultHueSatCtrl, BSplineCurveType::PERIODIC_HORIZONTAL1_B_SPLINE );
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultHueFx(DefaultHueFxCtrl, BSplineCurveType::PERIODIC_HORIZONTAL0_B_SPLINE );
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultLumSat(DefaultLumSatCtrl, BSplineCurveType::HORIZONTAL1_B_SPLINE);
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultLumSatLin(DefaultLumSatLinCtrl, BSplineCurveType::HORIZONTAL1_B_SPLINE);
 const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultSatSat(DefaultSatSatCtrl, BSplineCurveType::DIAGONAL_B_SPLINE);
-const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultSatLum(DefaultSatLumCtrl, BSplineCurveType::HORIZONTAL_B_SPLINE);
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultSatLum(DefaultSatLumCtrl, BSplineCurveType::HORIZONTAL1_B_SPLINE);
 const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultLumLum(DefaultLumLumCtrl, BSplineCurveType::DIAGONAL_B_SPLINE);
 const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultLumLumLin(DefaultLumLumLinCtrl, BSplineCurveType::DIAGONAL_B_SPLINE);
 
@@ -153,7 +153,7 @@ const char * CurveType(int c)
     default:
         break;
     }
-    return "invalid";
+    return "illegal";
 }
 }
 
@@ -197,7 +197,7 @@ ConstGradingBSplineCurveRcPtr GradingHueCurveImpl::getCurve(HueCurveType c) cons
 {
     if(!isHueCurveTypeValid(c))
     {
-        throw Exception("The HueCurveType provided is invalid");
+        throw Exception("The HueCurveType provided is illegal");
     }
 
     return m_curves[c];
@@ -207,7 +207,7 @@ GradingBSplineCurveRcPtr GradingHueCurveImpl::getCurve(HueCurveType c)
 {
     if(!isHueCurveTypeValid(c))
     {
-        throw Exception("The HueCurveType provided is invalid");
+        throw Exception("The HueCurveType provided is illegal");
     }
 
     return m_curves[c];

@@ -305,9 +305,9 @@ set(TESTS
     transforms/ExposureContrastTransform_tests.cpp
     transforms/FileTransform_tests.cpp
     transforms/FixedFunctionTransform_tests.cpp
+    transforms/GradingHueCurveTransform_tests.cpp
     transforms/GradingPrimaryTransform_tests.cpp
     transforms/GradingRGBCurveTransform_tests.cpp
-    transforms/HueCurveTransform_tests.cpp
     transforms/GradingToneTransform_tests.cpp
     transforms/GroupTransform_tests.cpp
     transforms/LogAffineTransform_tests.cpp

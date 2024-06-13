@@ -229,11 +229,11 @@ void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator
     st.newLine() << "";
     if (shaderCreator->getLanguage() == LANGUAGE_OSL_1 || shaderCreator->getLanguage() == GPU_LANGUAGE_MSL_2_0)
     {
-        st.newLine() << st.floatKeyword() << " " << props.m_eval << "(int curveIdx, float x)";
+        st.newLine() << st.floatKeyword() << " " << props.m_eval << "(int curveIdx, float x, float identity_x)";
     }
     else
     {
-        st.newLine() << st.floatKeyword() << " " << props.m_eval << "(in int curveIdx, in float x)";
+        st.newLine() << st.floatKeyword() << " " << props.m_eval << "(in int curveIdx, in float x, in float identity_x)";
     }
     st.newLine() << "{";
     st.indent();
@@ -275,13 +275,13 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
     const std::string pix(shaderCreator->getPixelName());
 
     // Call the curve evaluation method for each curve.
-    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(0, " << pix << ".rgb.r);"; // RED
-    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(1, " << pix << ".rgb.g);"; // GREEN
-    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(2, " << pix << ".rgb.b);"; // BLUE
+    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(0, " << pix << ".rgb.r, " << pix << ".rgb.r);"; // RED
+    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(1, " << pix << ".rgb.g, " << pix << ".rgb.g);"; // GREEN
+    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(2, " << pix << ".rgb.b, " << pix << ".rgb.b);"; // BLUE
     // TODO: vectorize master.
-    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(3, " << pix << ".rgb.r);"; // MASTER
-    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(3, " << pix << ".rgb.g);"; // MASTER
-    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(3, " << pix << ".rgb.b);"; // MASTER
+    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(3, " << pix << ".rgb.r, " << pix << ".rgb.r);"; // MASTER
+    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(3, " << pix << ".rgb.g, " << pix << ".rgb.g);"; // MASTER
+    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(3, " << pix << ".rgb.b, " << pix << ".rgb.b);"; // MASTER
 
     if (doLinToLog)
     {
@@ -323,12 +323,12 @@ void AddGCInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
     const std::string pix(shaderCreator->getPixelName());
 
     // Call the curve evaluation method for each curve.
-    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(3, " << pix << ".rgb.r);"; // MASTER
-    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(3, " << pix << ".rgb.g);"; // MASTER
-    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(3, " << pix << ".rgb.b);"; // MASTER
-    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(0, " << pix << ".rgb.r);"; // RED
-    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(1, " << pix << ".rgb.g);"; // GREEN
-    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(2, " << pix << ".rgb.b);"; // BLUE
+    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(3, " << pix << ".rgb.r, " << pix << ".rgb.r);"; // MASTER
+    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(3, " << pix << ".rgb.g, " << pix << ".rgb.g);"; // MASTER
+    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(3, " << pix << ".rgb.b, " << pix << ".rgb.b);"; // MASTER
+    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(0, " << pix << ".rgb.r, " << pix << ".rgb.r);"; // RED
+    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(1, " << pix << ".rgb.g, " << pix << ".rgb.g);"; // GREEN
+    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(2, " << pix << ".rgb.b, " << pix << ".rgb.b);"; // BLUE
 
     if (doLinToLog)
     {

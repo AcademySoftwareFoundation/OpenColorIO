@@ -24,6 +24,8 @@ public:
     ~GradingBSplineCurveImpl() = default;
 
     GradingBSplineCurveRcPtr createEditableCopy() const override;
+    BSplineCurveType getCurveType() const override;
+    void setCurveType(BSplineCurveType curveType) override;
     size_t getNumControlPoints() const noexcept override;
     void setNumControlPoints(size_t size) override;
     const GradingControlPoint & getControlPoint(size_t index) const override;
@@ -32,9 +34,6 @@ public:
     void setSlope(size_t index, float slope) override;
     bool slopesAreDefault() const override;
     void validate() const override;
-
-    BSplineCurveType getCurveType() const override;
-    void setCurveType(BSplineCurveType curveType) override;
 
     bool isIdentity() const;
 
@@ -99,9 +98,9 @@ public:
         // add knots for curves that are simply identity.
         //
         // Maximum size of the knots array (for ALL curves).
-        static constexpr int MAX_NUM_KNOTS = 60;
+        static constexpr int MAX_NUM_KNOTS = 120;
         // Maximum size of the coefs array (for ALL curves).
-        static constexpr int MAX_NUM_COEFS = 180;
+        static constexpr int MAX_NUM_COEFS = 360;
 
         // Pre-processing arrays of length MAX_NUM_KNOTS and MAX_NUM_COEFS.
         std::vector<float> m_coefsArray;  // Contains packed coefs of ALL curves.
@@ -121,13 +120,9 @@ public:
     static void AddShaderEval(GpuShaderText & st,
                               const std::string & knotsOffsets, const std::string & coefsOffsets,
                               const std::string & knots, const std::string & coefs, bool isInv);
-
-    static void AddShaderEvalHueCurve(GpuShaderText & st,
-                                      const std::string & knotsOffsets, const std::string & coefsOffsets,
-                                      const std::string & knots, const std::string & coefs, bool isInv);
 private:
-    void computeKnotsAndCoefsBSpline(KnotsCoefs & knotsCoefs, int curveIdx) const;
-    void computeKnotsAndCoefsHueCurves(KnotsCoefs & knotsCoefs, int curveIdx) const;
+    void computeKnotsAndCoefsForRGBCurve(KnotsCoefs & knotsCoefs, int curveIdx) const;
+    void computeKnotsAndCoefsForHueCurve(KnotsCoefs & knotsCoefs, int curveIdx) const;
 
     void validateIndex(size_t index) const;
     void prepData(const std::vector<GradingControlPoint>& inCtrlPnts,
