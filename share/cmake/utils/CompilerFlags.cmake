@@ -48,6 +48,9 @@ endif()
 ###############################################################################
 # Compile flags
 
+include(CheckPIESupported)
+check_pie_supported()
+
 if(USE_MSVC)
 
     set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};/DUSE_MSVC")
