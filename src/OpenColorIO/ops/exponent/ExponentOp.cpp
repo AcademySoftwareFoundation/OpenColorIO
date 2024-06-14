@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <sstream>
-#include <algorithm>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "HashUtils.h"
-#include "ops/exponent/ExponentOp.h"
 #include "GpuShaderUtils.h"
+#include "HashUtils.h"
 #include "MathUtils.h"
+#include "ops/exponent/ExponentOp.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -21,7 +21,7 @@ const int FLOAT_DECIMALS = 7;
 }
 
 ExponentOpData::ExponentOpData()
-    :   OpData()
+    : OpData()
 {
     for (unsigned i = 0; i < 4; ++i)
     {
@@ -30,7 +30,7 @@ ExponentOpData::ExponentOpData()
 }
 
 ExponentOpData::ExponentOpData(const ExponentOpData & rhs)
-    :   OpData()
+    : OpData()
 {
     if (this != &rhs)
     {
@@ -39,17 +39,17 @@ ExponentOpData::ExponentOpData(const ExponentOpData & rhs)
 }
 
 ExponentOpData::ExponentOpData(const double * exp4)
-    :   OpData()
+    : OpData()
 {
-    memcpy(m_exp4, exp4, 4*sizeof(double));
+    memcpy(m_exp4, exp4, 4 * sizeof(double));
 }
 
-ExponentOpData & ExponentOpData::operator = (const ExponentOpData & rhs)
+ExponentOpData & ExponentOpData::operator=(const ExponentOpData & rhs)
 {
     if (this != &rhs)
     {
         OpData::operator=(rhs);
-        memcpy(m_exp4, rhs.m_exp4, sizeof(double)*4);
+        memcpy(m_exp4, rhs.m_exp4, sizeof(double) * 4);
     }
 
     return *this;
@@ -94,7 +94,11 @@ namespace
 class ExponentOpCPU : public OpCPU
 {
 public:
-    ExponentOpCPU(ConstExponentOpDataRcPtr exp) : OpCPU(), m_data(exp) {}
+    ExponentOpCPU(ConstExponentOpDataRcPtr exp)
+        : OpCPU()
+        , m_data(exp)
+    {
+    }
     virtual ~ExponentOpCPU() {}
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
@@ -106,21 +110,22 @@ private:
 void ExponentOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    const float exp[4] = { float(m_data->m_exp4[0]),
-                            float(m_data->m_exp4[1]),
-                            float(m_data->m_exp4[2]),
-                            float(m_data->m_exp4[3]) };
+    const float exp[4]
+        = {float(m_data->m_exp4[0]),
+           float(m_data->m_exp4[1]),
+           float(m_data->m_exp4[2]),
+           float(m_data->m_exp4[3])};
 
     for (long pixelIndex = 0; pixelIndex < numPixels; ++pixelIndex)
     {
-        out[0] = powf( std::max(0.0f, in[0]), exp[0]);
-        out[1] = powf( std::max(0.0f, in[1]), exp[1]);
-        out[2] = powf( std::max(0.0f, in[2]), exp[2]);
-        out[3] = powf( std::max(0.0f, in[3]), exp[3]);
+        out[0] = powf(std::max(0.0f, in[0]), exp[0]);
+        out[1] = powf(std::max(0.0f, in[1]), exp[1]);
+        out[2] = powf(std::max(0.0f, in[2]), exp[2]);
+        out[3] = powf(std::max(0.0f, in[3]), exp[3]);
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
@@ -128,7 +133,7 @@ void ExponentOpCPU::apply(const void * inImg, void * outImg, long numPixels) con
 class ExponentOp : public Op
 {
 public:
-    ExponentOp() = delete;
+    ExponentOp()                 = delete;
     ExponentOp(ExponentOp & exp) = delete;
 
     explicit ExponentOp(const double * exp4);
@@ -153,9 +158,11 @@ public:
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
 protected:
-    ConstExponentOpDataRcPtr expData() const { return DynamicPtrCast<const ExponentOpData>(data()); }
+    ConstExponentOpDataRcPtr expData() const
+    {
+        return DynamicPtrCast<const ExponentOpData>(data());
+    }
     ExponentOpDataRcPtr expData() { return DynamicPtrCast<ExponentOpData>(data()); }
-
 };
 
 typedef OCIO_SHARED_PTR<ExponentOp> ExponentOpRcPtr;
@@ -190,7 +197,8 @@ std::string ExponentOp::getInfo() const
 bool ExponentOp::isSameType(ConstOpRcPtr & op) const
 {
     ConstExponentOpRcPtr typedRcPtr = DynamicPtrCast<const ExponentOp>(op);
-    if (!typedRcPtr) return false;
+    if (!typedRcPtr)
+        return false;
     return true;
 }
 
@@ -217,10 +225,10 @@ void ExponentOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
     ConstExponentOpRcPtr typedRcPtr = DynamicPtrCast<const ExponentOp>(secondOp);
 
     const double combined[4]
-        = { expData()->m_exp4[0]*typedRcPtr->expData()->m_exp4[0],
-            expData()->m_exp4[1]*typedRcPtr->expData()->m_exp4[1],
-            expData()->m_exp4[2]*typedRcPtr->expData()->m_exp4[2],
-            expData()->m_exp4[3]*typedRcPtr->expData()->m_exp4[3] };
+        = {expData()->m_exp4[0] * typedRcPtr->expData()->m_exp4[0],
+           expData()->m_exp4[1] * typedRcPtr->expData()->m_exp4[1],
+           expData()->m_exp4[2] * typedRcPtr->expData()->m_exp4[2],
+           expData()->m_exp4[3] * typedRcPtr->expData()->m_exp4[3]};
 
     if (!IsVecEqualToOne(combined, 4))
     {
@@ -267,17 +275,17 @@ void ExponentOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) con
 
     const std::string pxl(shaderCreator->getPixelName());
 
-    ss.newLine() << ss.float4Decl("res") 
-                 << " = " << ss.float4Const(pxl + ".rgb.r",
-                                            pxl + ".rgb.g",
-                                            pxl + ".rgb.b",
-                                            pxl + ".a") << ";";
+    ss.newLine() << ss.float4Decl("res") << " = "
+                 << ss.float4Const(pxl + ".rgb.r", pxl + ".rgb.g", pxl + ".rgb.b", pxl + ".a")
+                 << ";";
 
-    ss.newLine()
-        << "res = pow( "
-        << "max( res, " << ss.float4Const(0.0f) << " )"
-        << ", " << ss.float4Const(expData()->m_exp4[0], expData()->m_exp4[1],
-                                  expData()->m_exp4[2], expData()->m_exp4[3]) << " );";
+    ss.newLine() << "res = pow( " << "max( res, " << ss.float4Const(0.0f) << " )" << ", "
+                 << ss.float4Const(
+                        expData()->m_exp4[0],
+                        expData()->m_exp4[1],
+                        expData()->m_exp4[2],
+                        expData()->m_exp4[3])
+                 << " );";
 
     ss.newLine() << pxl << ".rgb = " << ss.float3Const("res.x", "res.y", "res.z") << ";";
     ss.newLine() << pxl << ".a = res.w;";
@@ -288,47 +296,42 @@ void ExponentOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) con
     shaderCreator->addToFunctionShaderCode(ss.string().c_str());
 }
 
-}  // Anon namespace
+} // namespace
 
-
-
-void CreateExponentOp(OpRcPtrVec & ops,
-                      const double(&vec4)[4],
-                      TransformDirection direction)
+void CreateExponentOp(OpRcPtrVec & ops, const double (&vec4)[4], TransformDirection direction)
 {
     ExponentOpDataRcPtr expData = std::make_shared<ExponentOpData>(vec4);
     CreateExponentOp(ops, expData, direction);
 }
 
-void CreateExponentOp(OpRcPtrVec & ops,
-                      ExponentOpDataRcPtr & expData,
-                      TransformDirection direction)
+void CreateExponentOp(OpRcPtrVec & ops, ExponentOpDataRcPtr & expData, TransformDirection direction)
 {
     switch (direction)
     {
-    case TRANSFORM_DIR_FORWARD:
-    {
-        ops.push_back(std::make_shared<ExponentOp>(expData));
-        break;
-    }
-    case TRANSFORM_DIR_INVERSE:
-    {
-        double values[4];
-        for (int i = 0; i<4; ++i)
+        case TRANSFORM_DIR_FORWARD:
         {
-            if (!IsScalarEqualToZero(expData->m_exp4[i]))
-            {
-                values[i] = 1.0 / expData->m_exp4[i];
-            }
-            else
-            {
-                throw Exception("Cannot apply ExponentOp op, Cannot apply 0.0 exponent in the inverse.");
-            }
+            ops.push_back(std::make_shared<ExponentOp>(expData));
+            break;
         }
-        ExponentOpDataRcPtr expInv = std::make_shared<ExponentOpData>(values);
-        ops.push_back(std::make_shared<ExponentOp>(expInv));
-        break;
-    }
+        case TRANSFORM_DIR_INVERSE:
+        {
+            double values[4];
+            for (int i = 0; i < 4; ++i)
+            {
+                if (!IsScalarEqualToZero(expData->m_exp4[i]))
+                {
+                    values[i] = 1.0 / expData->m_exp4[i];
+                }
+                else
+                {
+                    throw Exception(
+                        "Cannot apply ExponentOp op, Cannot apply 0.0 exponent in the inverse.");
+                }
+            }
+            ExponentOpDataRcPtr expInv = std::make_shared<ExponentOpData>(values);
+            ops.push_back(std::make_shared<ExponentOp>(expInv));
+            break;
+        }
     }
 }
 
@@ -341,16 +344,14 @@ void CreateExponentTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     }
     auto expTransform = ExponentTransform::Create();
 
-    auto expData = DynamicPtrCast<const ExponentOpData>(op->data());
+    auto expData          = DynamicPtrCast<const ExponentOpData>(op->data());
     auto & formatMetadata = expTransform->getFormatMetadata();
-    auto & metadata = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
-    metadata = expData->getFormatMetadata();
+    auto & metadata       = dynamic_cast<FormatMetadataImpl &>(formatMetadata);
+    metadata              = expData->getFormatMetadata();
 
     expTransform->setValue(expData->m_exp4);
 
     group->appendTransform(expTransform);
 }
 
-
 } // namespace OCIO_NAMESPACE
-

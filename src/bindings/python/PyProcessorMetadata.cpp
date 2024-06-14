@@ -25,62 +25,46 @@ using LookIterator = PyIterator<ProcessorMetadataRcPtr, IT_LOOK>;
 
 void bindPyProcessorMetadata(py::module & m)
 {
-    auto clsProcessorMetadata = 
-        py::class_<ProcessorMetadata, ProcessorMetadataRcPtr>(
-            m.attr("ProcessorMetadata"));
+    auto clsProcessorMetadata
+        = py::class_<ProcessorMetadata, ProcessorMetadataRcPtr>(m.attr("ProcessorMetadata"));
 
-    auto clsFileIterator =
-        py::class_<FileIterator>(
-            clsProcessorMetadata, "FileIterator");
+    auto clsFileIterator = py::class_<FileIterator>(clsProcessorMetadata, "FileIterator");
 
-    auto clsLookIterator =
-        py::class_<LookIterator>(
-            clsProcessorMetadata, "LookIterator");
+    auto clsLookIterator = py::class_<LookIterator>(clsProcessorMetadata, "LookIterator");
 
     clsProcessorMetadata
-        .def(py::init(&ProcessorMetadata::Create),
-             DOC(ProcessorMetadata, Create))
+        .def(py::init(&ProcessorMetadata::Create), DOC(ProcessorMetadata, Create))
 
-        .def("getFiles", [](ProcessorMetadataRcPtr & self) 
-            { 
-                return FileIterator(self); 
-            })
-        .def("getLooks", [](ProcessorMetadataRcPtr & self) 
-            { 
-                return LookIterator(self); 
-            })
-        .def("addFile", &ProcessorMetadata::addFile, "fileName"_a,
-             DOC(ProcessorMetadata, addFile))
-        .def("addLook", &ProcessorMetadata::addLook, "look"_a,
-             DOC(ProcessorMetadata, addLook));
+        .def("getFiles", [](ProcessorMetadataRcPtr & self) { return FileIterator(self); })
+        .def("getLooks", [](ProcessorMetadataRcPtr & self) { return LookIterator(self); })
+        .def("addFile", &ProcessorMetadata::addFile, "fileName"_a, DOC(ProcessorMetadata, addFile))
+        .def("addLook", &ProcessorMetadata::addLook, "look"_a, DOC(ProcessorMetadata, addLook));
 
-    clsFileIterator
-        .def("__len__", [](FileIterator & it) { return it.m_obj->getNumFiles(); })
-        .def("__getitem__", [](FileIterator & it, int i) 
-            { 
+    clsFileIterator.def("__len__", [](FileIterator & it) { return it.m_obj->getNumFiles(); })
+        .def(
+            "__getitem__",
+            [](FileIterator & it, int i) {
                 it.checkIndex(i, it.m_obj->getNumFiles());
                 return it.m_obj->getFile(i);
             })
         .def("__iter__", [](FileIterator & it) -> FileIterator & { return it; })
-        .def("__next__", [](FileIterator & it)
-            {
-                int i = it.nextIndex(it.m_obj->getNumFiles());
-                return it.m_obj->getFile(i);
-            });
+        .def("__next__", [](FileIterator & it) {
+            int i = it.nextIndex(it.m_obj->getNumFiles());
+            return it.m_obj->getFile(i);
+        });
 
-    clsLookIterator
-        .def("__len__", [](LookIterator & it) { return it.m_obj->getNumLooks(); })
-        .def("__getitem__", [](LookIterator & it, int i) 
-            { 
+    clsLookIterator.def("__len__", [](LookIterator & it) { return it.m_obj->getNumLooks(); })
+        .def(
+            "__getitem__",
+            [](LookIterator & it, int i) {
                 it.checkIndex(i, it.m_obj->getNumLooks());
                 return it.m_obj->getLook(i);
             })
         .def("__iter__", [](LookIterator & it) -> LookIterator & { return it; })
-        .def("__next__", [](LookIterator & it)
-            {
-                int i = it.nextIndex(it.m_obj->getNumLooks());
-                return it.m_obj->getLook(i);
-            });
+        .def("__next__", [](LookIterator & it) {
+            int i = it.nextIndex(it.m_obj->getNumLooks());
+            return it.m_obj->getLook(i);
+        });
 }
 
 } // namespace OCIO_NAMESPACE

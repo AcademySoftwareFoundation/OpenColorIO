@@ -16,15 +16,13 @@ bool IsNotSpace(char c)
 // Trim from start.
 static inline void LTrim(std::string & s)
 {
-    s.erase(s.begin(),
-        std::find_if(s.begin(), s.end(), IsNotSpace));
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), IsNotSpace));
 }
 
 // Trim from end.
 static inline void RTrim(std::string & s)
 {
-    s.erase(std::find_if(s.rbegin(), s.rend(), IsNotSpace).base(),
-        s.end());
+    s.erase(std::find_if(s.rbegin(), s.rend(), IsNotSpace).base(), s.end());
 }
 
 // Trim from both ends.
@@ -40,8 +38,8 @@ void Trim(std::string & s)
 //         std::string::npos if the string only has whitespaces or is empty.
 inline size_t FindFirstNonWhiteSpace(const char * str, size_t len)
 {
-    const char *ptr = str;
-    size_t pos = 0;
+    const char * ptr = str;
+    size_t pos       = 0;
 
     for (;;)
     {
@@ -53,7 +51,8 @@ inline size_t FindFirstNonWhiteSpace(const char * str, size_t len)
         {
             return len;
         }
-        ptr++; pos++;
+        ptr++;
+        pos++;
     }
 }
 
@@ -63,8 +62,8 @@ inline size_t FindFirstNonWhiteSpace(const char * str, size_t len)
 //         std::string::npos if the string only has whitespaces or is empty.
 inline size_t FindLastNonWhiteSpace(const char * str, size_t len)
 {
-    size_t pos = len - 1;
-    const char *ptr = str + pos;
+    size_t pos       = len - 1;
+    const char * ptr = str + pos;
 
     for (;;)
     {
@@ -77,20 +76,19 @@ inline size_t FindLastNonWhiteSpace(const char * str, size_t len)
             return 0;
         }
 
-        ptr--; pos--;
+        ptr--;
+        pos--;
     }
 }
 
 // Get start (first non space character) and
 // end (just after the last non space character).
-void FindSubString(const char * str, size_t length,
-                   size_t & start,
-                   size_t & end)
+void FindSubString(const char * str, size_t length, size_t & start, size_t & end)
 {
     if (!str || !*str)
     {
         start = 0;
-        end = 0;
+        end   = 0;
         return; // nothing to Trim.
     }
 
@@ -100,7 +98,7 @@ void FindSubString(const char * str, size_t length,
         // str only contains spaces, tabs or newlines.
         // Return an empty string.
         start = 0;
-        end = 0;
+        end   = 0;
         return;
     }
 
@@ -109,8 +107,8 @@ void FindSubString(const char * str, size_t length,
     end = FindLastNonWhiteSpace(str, length);
 
     // end-start should give the number of valid characters.
-    if (!IsSpace(str[end])) ++end;
+    if (!IsSpace(str[end]))
+        ++end;
 }
 
 } // namespace OCIO_NAMESPACE
-

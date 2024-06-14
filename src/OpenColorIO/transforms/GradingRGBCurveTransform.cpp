@@ -11,7 +11,8 @@ namespace OCIO_NAMESPACE
 {
 GradingRGBCurveTransformRcPtr GradingRGBCurveTransform::Create(GradingStyle style)
 {
-    return GradingRGBCurveTransformRcPtr(new GradingRGBCurveTransformImpl(style),
+    return GradingRGBCurveTransformRcPtr(
+        new GradingRGBCurveTransformImpl(style),
         &GradingRGBCurveTransformImpl::deleter);
 }
 
@@ -28,7 +29,7 @@ void GradingRGBCurveTransformImpl::deleter(GradingRGBCurveTransform * t)
 TransformRcPtr GradingRGBCurveTransformImpl::createEditableCopy() const
 {
     GradingRGBCurveTransformRcPtr transform = GradingRGBCurveTransform::Create(getStyle());
-    dynamic_cast<GradingRGBCurveTransformImpl*>(transform.get())->data() = data();
+    dynamic_cast<GradingRGBCurveTransformImpl *>(transform.get())->data() = data();
     return transform;
 }
 
@@ -67,11 +68,11 @@ const FormatMetadata & GradingRGBCurveTransformImpl::getFormatMetadata() const n
     return data().getFormatMetadata();
 }
 
-
 bool GradingRGBCurveTransformImpl::equals(const GradingRGBCurveTransform & other) const noexcept
 {
-    if (this == &other) return true;
-    return data() == dynamic_cast<const GradingRGBCurveTransformImpl*>(&other)->data();
+    if (this == &other)
+        return true;
+    return data() == dynamic_cast<const GradingRGBCurveTransformImpl *>(&other)->data();
 }
 
 GradingStyle GradingRGBCurveTransformImpl::getStyle() const noexcept
@@ -134,7 +135,7 @@ void GradingRGBCurveTransformImpl::makeNonDynamic() noexcept
     data().getDynamicPropertyInternal()->makeNonDynamic();
 }
 
-std::ostream& operator<< (std::ostream & os, const GradingRGBCurveTransform & t) noexcept
+std::ostream & operator<<(std::ostream & os, const GradingRGBCurveTransform & t) noexcept
 {
     os << "<GradingRGBCurveTransform ";
     os << "direction=" << TransformDirectionToString(t.getDirection());

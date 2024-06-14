@@ -4,12 +4,10 @@
 #ifndef INCLUDED_OCIO_SYSTEM_MONITOR_H
 #define INCLUDED_OCIO_SYSTEM_MONITOR_H
 
-
 #include <string>
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
-
 
 namespace OCIO_NAMESPACE
 {
@@ -17,10 +15,10 @@ namespace OCIO_NAMESPACE
 class SystemMonitorsImpl : public SystemMonitors
 {
 public:
-    SystemMonitorsImpl() = default;
-    SystemMonitorsImpl(const SystemMonitorsImpl &) = delete;
-    SystemMonitorsImpl & operator= (const SystemMonitorsImpl &) = delete;
-    virtual ~SystemMonitorsImpl() = default;
+    SystemMonitorsImpl()                                       = default;
+    SystemMonitorsImpl(const SystemMonitorsImpl &)             = delete;
+    SystemMonitorsImpl & operator=(const SystemMonitorsImpl &) = delete;
+    virtual ~SystemMonitorsImpl()                              = default;
 
     bool isSupported() const noexcept override;
 
@@ -37,18 +35,19 @@ private:
     {
         MonitorInfo() = default;
         MonitorInfo(const std::string & monitorName, const std::string & ICCFilepath)
-            :   m_monitorName(monitorName)
-            ,   m_ICCFilepath(ICCFilepath)
-        {}
+            : m_monitorName(monitorName)
+            , m_ICCFilepath(ICCFilepath)
+        {
+        }
         ~MonitorInfo() = default;
 
-        std::string m_monitorName; // Name built using the vendor information from the monitor if accessible.
+        std::string m_monitorName; // Name built using the vendor information from the monitor if
+                                   // accessible.
         std::string m_ICCFilepath; // The ICC profile path.
     };
 
     std::vector<MonitorInfo> m_monitors;
 };
-
 
 } // namespace OCIO_NAMESPACE
 

@@ -7,9 +7,9 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "GpuShaderUtils.h"
+#include "ops/gradingprimary/GradingPrimaryOp.h"
 #include "ops/gradingprimary/GradingPrimaryOpCPU.h"
 #include "ops/gradingprimary/GradingPrimaryOpGPU.h"
-#include "ops/gradingprimary/GradingPrimaryOp.h"
 #include "transforms/GradingPrimaryTransform.h"
 
 namespace OCIO_NAMESPACE
@@ -25,7 +25,7 @@ typedef OCIO_SHARED_PTR<const GradingPrimaryOp> ConstGradingPrimaryOpRcPtr;
 class GradingPrimaryOp : public Op
 {
 public:
-    GradingPrimaryOp() = delete;
+    GradingPrimaryOp()                         = delete;
     GradingPrimaryOp(const GradingPrimaryOp &) = delete;
     explicit GradingPrimaryOp(GradingPrimaryOpDataRcPtr & prim);
 
@@ -46,8 +46,9 @@ public:
     bool isDynamic() const override;
     bool hasDynamicProperty(DynamicPropertyType type) const override;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const override;
-    void replaceDynamicProperty(DynamicPropertyType type,
-                                DynamicPropertyGradingPrimaryImplRcPtr & prop) override;
+    void replaceDynamicProperty(
+        DynamicPropertyType type,
+        DynamicPropertyGradingPrimaryImplRcPtr & prop) override;
     void removeDynamicProperties() override;
 
     ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
@@ -59,15 +60,11 @@ protected:
     {
         return DynamicPtrCast<const GradingPrimaryOpData>(data());
     }
-    GradingPrimaryOpDataRcPtr primaryData()
-    {
-        return DynamicPtrCast<GradingPrimaryOpData>(data());
-    }
+    GradingPrimaryOpDataRcPtr primaryData() { return DynamicPtrCast<GradingPrimaryOpData>(data()); }
 };
 
-
 GradingPrimaryOp::GradingPrimaryOp(GradingPrimaryOpDataRcPtr & prim)
-    :   Op()
+    : Op()
 {
     data() = prim;
 }
@@ -101,7 +98,8 @@ bool GradingPrimaryOp::isSameType(ConstOpRcPtr & op) const
 bool GradingPrimaryOp::isInverse(ConstOpRcPtr & op) const
 {
     ConstGradingPrimaryOpRcPtr typedRcPtr = DynamicPtrCast<const GradingPrimaryOp>(op);
-    if (!typedRcPtr) return false;
+    if (!typedRcPtr)
+        return false;
 
     ConstGradingPrimaryOpDataRcPtr primOpData = typedRcPtr->primaryData();
     return primaryData()->isInverse(primOpData);
@@ -160,8 +158,9 @@ DynamicPropertyRcPtr GradingPrimaryOp::getDynamicProperty(DynamicPropertyType ty
     return primaryData()->getDynamicProperty();
 }
 
-void GradingPrimaryOp::replaceDynamicProperty(DynamicPropertyType type,
-                                              DynamicPropertyGradingPrimaryImplRcPtr & prop)
+void GradingPrimaryOp::replaceDynamicProperty(
+    DynamicPropertyType type,
+    DynamicPropertyGradingPrimaryImplRcPtr & prop)
 {
     if (type != DYNAMIC_PROPERTY_GRADING_PRIMARY)
     {
@@ -196,18 +195,14 @@ void GradingPrimaryOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreato
     GetGradingPrimaryGPUShaderProgram(shaderCreator, data);
 }
 
-
-}  // Anon namespace
-
-
-
+} // namespace
 
 ///////////////////////////////////////////////////////////////////////////
 
-
-void CreateGradingPrimaryOp(OpRcPtrVec & ops,
-                            GradingPrimaryOpDataRcPtr & primData,
-                            TransformDirection direction)
+void CreateGradingPrimaryOp(
+    OpRcPtrVec & ops,
+    GradingPrimaryOpDataRcPtr & primData,
+    TransformDirection direction)
 {
     auto prim = primData;
     if (direction == TRANSFORM_DIR_INVERSE)
@@ -227,19 +222,20 @@ void CreateGradingPrimaryTransform(GroupTransformRcPtr & group, ConstOpRcPtr & o
     {
         throw Exception("CreateGradingPrimaryTransform: op has to be a GradingPrimaryOp.");
     }
-    auto primData = DynamicPtrCast<const GradingPrimaryOpData>(op->data());
+    auto primData      = DynamicPtrCast<const GradingPrimaryOpData>(op->data());
     auto primTransform = GradingPrimaryTransform::Create(primData->getStyle());
-    auto & data = dynamic_cast<GradingPrimaryTransformImpl *>(primTransform.get())->data();
-    data = *primData;
+    auto & data        = dynamic_cast<GradingPrimaryTransformImpl *>(primTransform.get())->data();
+    data               = *primData;
 
     group->appendTransform(primTransform);
 }
 
-void BuildGradingPrimaryOp(OpRcPtrVec & ops,
-                           const Config & /*config*/,
-                           const ConstContextRcPtr & /*context*/,
-                           const GradingPrimaryTransform & transform,
-                           TransformDirection dir)
+void BuildGradingPrimaryOp(
+    OpRcPtrVec & ops,
+    const Config & /*config*/,
+    const ConstContextRcPtr & /*context*/,
+    const GradingPrimaryTransform & transform,
+    TransformDirection dir)
 {
     const auto & data = dynamic_cast<const GradingPrimaryTransformImpl &>(transform).data();
     data.validate();
@@ -248,6 +244,4 @@ void BuildGradingPrimaryOp(OpRcPtrVec & ops,
     CreateGradingPrimaryOp(ops, primData, dir);
 }
 
-
 } // namespace OCIO_NAMESPACE
-

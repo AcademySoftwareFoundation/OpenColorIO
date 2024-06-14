@@ -13,7 +13,6 @@
 #include "PrivateTypes.h"
 #include "utils/StringUtils.h"
 
-
 namespace OCIO_NAMESPACE
 {
 namespace
@@ -24,25 +23,26 @@ Mutex g_logmutex;
 
 LoggingLevel g_logginglevel = LOGGING_LEVEL_UNKNOWN;
 
-bool g_initialized = false;
+bool g_initialized     = false;
 bool g_loggingOverride = false;
 
 // You must manually acquire the logging mutex before calling this.
 // This will set g_logginglevel, g_initialized, g_loggingOverride
 void InitLogging()
 {
-    if(g_initialized) return;
+    if (g_initialized)
+        return;
 
     g_initialized = true;
 
     std::string levelstr;
     Platform::Getenv(OCIO_LOGGING_LEVEL_ENVVAR, levelstr);
-    if(!levelstr.empty())
+    if (!levelstr.empty())
     {
         g_loggingOverride = true;
-        g_logginglevel = LoggingLevelFromString(levelstr.c_str());
+        g_logginglevel    = LoggingLevelFromString(levelstr.c_str());
 
-        if(g_logginglevel == LOGGING_LEVEL_UNKNOWN)
+        if (g_logginglevel == LOGGING_LEVEL_UNKNOWN)
         {
             std::cerr << "[OpenColorIO Warning]: Invalid $OCIO_LOGGING_LEVEL specified. ";
             std::cerr << "Options: none (0), warning (1), info (2), debug (3)" << std::endl;
@@ -56,8 +56,7 @@ void InitLogging()
 
     if (g_logginglevel == LOGGING_LEVEL_DEBUG)
     {
-        std::cerr << "[OpenColorIO Debug]: Using OpenColorIO version: "
-                  << GetVersion() << "\n";
+        std::cerr << "[OpenColorIO Debug]: Using OpenColorIO version: " << GetVersion() << "\n";
     }
 }
 
@@ -70,12 +69,11 @@ void DefaultLoggingFunction(const char * message)
 // Hold the default logging function.
 LoggingFunction g_loggingFunction = DefaultLoggingFunction;
 
-// If the message contains multiple lines, then preprocess it 
+// If the message contains multiple lines, then preprocess it
 // to output the content line by line.
 void LogMessage(const char * messagePrefix, const std::string & message)
 {
-    const StringUtils::StringVec parts
-        = StringUtils::SplitByLines(StringUtils::RightTrim(message));
+    const StringUtils::StringVec parts = StringUtils::SplitByLines(StringUtils::RightTrim(message));
 
     for (const auto & part : parts)
     {
@@ -87,7 +85,7 @@ void LogMessage(const char * messagePrefix, const std::string & message)
     }
 }
 
-}
+} // namespace
 
 LoggingLevel GetLoggingLevel()
 {
@@ -106,7 +104,7 @@ void SetLoggingLevel(LoggingLevel level)
     // is specified.  This is to allow users to optionally debug OCIO at
     // runtime even in applications that disable logging.
 
-    if(!g_loggingOverride)
+    if (!g_loggingOverride)
     {
         g_logginglevel = level;
     }
@@ -124,7 +122,7 @@ void ResetToDefaultLoggingFunction()
 
 void LogMessage(LoggingLevel level, const char * message)
 {
-    switch(level)
+    switch (level)
     {
         case LOGGING_LEVEL_WARNING:
         {
@@ -158,11 +156,12 @@ void LogError(const std::string & text)
     AutoMutex lock(g_logmutex);
     InitLogging();
 
-    // Did not add a LOGGING_LEVEL_ERROR since the enum values are part of the user-facing 
-    // documentation and it is therefore difficult to insert an ERROR value since it would 
-    // naturally need to fall between 0 and 1. But there is no need since presumably users 
+    // Did not add a LOGGING_LEVEL_ERROR since the enum values are part of the user-facing
+    // documentation and it is therefore difficult to insert an ERROR value since it would
+    // naturally need to fall between 0 and 1. But there is no need since presumably users
     // that want to see warnings would also want to see errors.
-    if(g_logginglevel<LOGGING_LEVEL_WARNING) return;
+    if (g_logginglevel < LOGGING_LEVEL_WARNING)
+        return;
 
     LogMessage("[OpenColorIO Error]: ", text);
 }
@@ -172,7 +171,8 @@ void LogWarning(const std::string & text)
     AutoMutex lock(g_logmutex);
     InitLogging();
 
-    if(g_logginglevel<LOGGING_LEVEL_WARNING) return;
+    if (g_logginglevel < LOGGING_LEVEL_WARNING)
+        return;
 
     LogMessage("[OpenColorIO Warning]: ", text);
 }
@@ -182,7 +182,8 @@ void LogInfo(const std::string & text)
     AutoMutex lock(g_logmutex);
     InitLogging();
 
-    if(g_logginglevel<LOGGING_LEVEL_INFO) return;
+    if (g_logginglevel < LOGGING_LEVEL_INFO)
+        return;
 
     LogMessage("[OpenColorIO Info]: ", text);
 }
@@ -192,14 +193,15 @@ void LogDebug(const std::string & text)
     AutoMutex lock(g_logmutex);
     InitLogging();
 
-    if(g_logginglevel<LOGGING_LEVEL_DEBUG) return;
+    if (g_logginglevel < LOGGING_LEVEL_DEBUG)
+        return;
 
     LogMessage("[OpenColorIO Debug]: ", text);
 }
 
 bool IsDebugLoggingEnabled()
 {
-    return (GetLoggingLevel()>=LOGGING_LEVEL_DEBUG);
+    return (GetLoggingLevel() >= LOGGING_LEVEL_DEBUG);
 }
 
 } // namespace OCIO_NAMESPACE

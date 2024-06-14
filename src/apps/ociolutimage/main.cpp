@@ -5,8 +5,8 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
-#include <string>
 #include <sstream>
+#include <string>
 
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
@@ -22,16 +22,14 @@ enum Lut3DOrder
     LUT3DORDER_FAST_BLUE
 };
 
-void WriteLut3D(const std::string & filename, const float* lutdata, int edgeLen);
-void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels, Lut3DOrder lut3DOrder);
+void WriteLut3D(const std::string & filename, const float * lutdata, int edgeLen);
+void GenerateIdentityLut3D(float * img, int edgeLen, int numChannels, Lut3DOrder lut3DOrder);
 
-
-void GetLutImageSize(int & width, int & height,
-                     int cubesize, int maxwidth)
+void GetLutImageSize(int & width, int & height, int cubesize, int maxwidth)
 {
     // Compute the image width / height
-    width = cubesize*cubesize;
-    if (maxwidth>0 && width>=maxwidth)
+    width = cubesize * cubesize;
+    if (maxwidth > 0 && width >= maxwidth)
     {
         // TODO: Do something smarter here to find a better multiple,
         // to create a more pleasing gradient rendition.
@@ -39,28 +37,26 @@ void GetLutImageSize(int & width, int & height,
         width = std::min(maxwidth, width);
     }
 
-    int numpixels = cubesize*cubesize*cubesize;
-    height = (int)(ceilf((float)numpixels/(float)width));
+    int numpixels = cubesize * cubesize * cubesize;
+    height        = (int)(ceilf((float)numpixels / (float)width));
 }
 
-
-void Generate(int cubesize, int maxwidth,
-              const std::string & outputfile,
-              const std::string & configfile,
-              const std::string & incolorspace,
-              const std::string & outcolorspace)
+void Generate(
+    int cubesize,
+    int maxwidth,
+    const std::string & outputfile,
+    const std::string & configfile,
+    const std::string & incolorspace,
+    const std::string & outcolorspace)
 {
-    int width = 0;
-    int height = 0;
+    int width       = 0;
+    int height      = 0;
     int numchannels = 3;
     GetLutImageSize(width, height, cubesize, maxwidth);
 
-    OCIO::ImageIO img(width,
-                      height,
-                      OCIO::CHANNEL_ORDERING_RGB,
-                      OCIO::BIT_DEPTH_F32);
+    OCIO::ImageIO img(width, height, OCIO::CHANNEL_ORDERING_RGB, OCIO::BIT_DEPTH_F32);
 
-    float * pixels = (float*) img.getData();
+    float * pixels = (float *)img.getData();
 
     GenerateIdentityLut3D(pixels, cubesize, numchannels, LUT3DORDER_FAST_RED);
 
@@ -83,10 +79,9 @@ void Generate(int cubesize, int maxwidth,
             throw OCIO::Exception(os.str().c_str());
         }
 
-        OCIO::ConstCPUProcessorRcPtr processor =
-            config->getProcessor(incolorspace.c_str(),
-                                 outcolorspace.c_str()
-                                )->getDefaultCPUProcessor();
+        OCIO::ConstCPUProcessorRcPtr processor
+            = config->getProcessor(incolorspace.c_str(), outcolorspace.c_str())
+                  ->getDefaultCPUProcessor();
 
         processor->apply(*img.getImageDesc());
     }
@@ -95,14 +90,15 @@ void Generate(int cubesize, int maxwidth,
     img.write(outputfile);
 }
 
-
-void Extract(int cubesize, int maxwidth,
-             const std::string & inputfile,
-             const std::string & outputfile)
+void Extract(
+    int cubesize,
+    int maxwidth,
+    const std::string & inputfile,
+    const std::string & outputfile)
 {
     OCIO::ImageIO img(inputfile);
 
-    int width = 0;
+    int width  = 0;
     int height = 0;
     GetLutImageSize(width, height, cubesize, maxwidth);
 
@@ -120,24 +116,22 @@ void Extract(int cubesize, int maxwidth,
         throw OCIO::Exception("Image must have 3 channels.");
     }
 
-    int lut3DNumPixels = cubesize*cubesize*cubesize;
+    int lut3DNumPixels = cubesize * cubesize * cubesize;
 
     if (img.getWidth() * img.getHeight() < lut3DNumPixels)
     {
         throw OCIO::Exception("Image is not large enough to contain expected 3D LUT.");
     }
 
-    WriteLut3D(outputfile, (float*) img.getData(), cubesize);
+    WriteLut3D(outputfile, (float *)img.getData(), cubesize);
 }
 
-
-
-int main(int argc, const char* argv[])
+int main(int argc, const char * argv[])
 {
     bool generate = false;
-    bool extract = false;
-    int cubesize = 32;
-    int maxwidth = 2048;
+    bool extract  = false;
+    int cubesize  = 32;
+    int maxwidth  = 2048;
     std::string inputfile;
     std::string outputfile;
     std::string config;
@@ -146,6 +140,7 @@ int main(int argc, const char* argv[])
 
     // TODO: Add optional allocation transform instead of colorconvert
     ArgParse ap;
+    // clang-format off
     ap.options("ociolutimage -- Convert a 3D LUT to or from an image\n\n"
                "usage:  ociolutimage [options] <OUTPUTFILE.LUT>\n\n"
                "example:  ociolutimage --generate --output lut.exr\n"
@@ -162,6 +157,7 @@ int main(int argc, const char* argv[])
                "--config %s", &config, ".ocio configuration file (default: $OCIO)",
                "--colorconvert %s %s", &incolorspace, &outcolorspace, "Apply a color space conversion to the image.",
                NULL);
+    // clang-format on
 
     if (ap.parse(argc, argv) < 0)
     {
@@ -171,7 +167,7 @@ int main(int argc, const char* argv[])
         return 1;
     }
 
-    if (argc == 1 )
+    if (argc == 1)
     {
         ap.usage();
         std::cout << "\n";
@@ -182,12 +178,7 @@ int main(int argc, const char* argv[])
     {
         try
         {
-            Generate(cubesize,
-                     maxwidth,
-                     outputfile,
-                     config,
-                     incolorspace,
-                     outcolorspace);
+            Generate(cubesize, maxwidth, outputfile, config, incolorspace, outcolorspace);
         }
         catch (const std::exception & e)
         {
@@ -204,10 +195,7 @@ int main(int argc, const char* argv[])
     {
         try
         {
-            Extract(cubesize,
-                    maxwidth,
-                    inputfile,
-                    outputfile);
+            Extract(cubesize, maxwidth, inputfile, outputfile);
         }
         catch (const std::exception & e)
         {
@@ -234,14 +222,13 @@ int main(int argc, const char* argv[])
 // TODO: These should be exposed from inside OCIO, in appropriate time.
 //
 
-inline int GetLut3DIndex_RedFast(int indexR, int indexG, int indexB,
-                                 int sizeR,  int sizeG,  int /*sizeB*/)
+inline int
+GetLut3DIndex_RedFast(int indexR, int indexG, int indexB, int sizeR, int sizeG, int /*sizeB*/)
 {
     return 3 * (indexR + sizeR * (indexG + sizeG * indexB));
 }
 
-void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels,
-                           Lut3DOrder lut3DOrder)
+void GenerateIdentityLut3D(float * img, int edgeLen, int numChannels, Lut3DOrder lut3DOrder)
 {
     if (!img)
     {
@@ -257,20 +244,20 @@ void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels,
 
     if (lut3DOrder == LUT3DORDER_FAST_RED)
     {
-        for (int i=0; i<edgeLen*edgeLen*edgeLen; i++)
+        for (int i = 0; i < edgeLen * edgeLen * edgeLen; i++)
         {
-            img[numChannels*i+0] = (float)(i%edgeLen) * c;
-            img[numChannels*i+1] = (float)((i/edgeLen)%edgeLen) * c;
-            img[numChannels*i+2] = (float)((i/edgeLen/edgeLen)%edgeLen) * c;
+            img[numChannels * i + 0] = (float)(i % edgeLen) * c;
+            img[numChannels * i + 1] = (float)((i / edgeLen) % edgeLen) * c;
+            img[numChannels * i + 2] = (float)((i / edgeLen / edgeLen) % edgeLen) * c;
         }
     }
     else if (lut3DOrder == LUT3DORDER_FAST_BLUE)
     {
-        for (int i=0; i<edgeLen*edgeLen*edgeLen; i++)
+        for (int i = 0; i < edgeLen * edgeLen * edgeLen; i++)
         {
-            img[numChannels*i+0] = (float)((i/edgeLen/edgeLen)%edgeLen) * c;
-            img[numChannels*i+1] = (float)((i/edgeLen)%edgeLen) * c;
-            img[numChannels*i+2] = (float)(i%edgeLen) * c;
+            img[numChannels * i + 0] = (float)((i / edgeLen / edgeLen) % edgeLen) * c;
+            img[numChannels * i + 1] = (float)((i / edgeLen) % edgeLen) * c;
+            img[numChannels * i + 2] = (float)(i % edgeLen) * c;
         }
     }
     else
@@ -279,7 +266,7 @@ void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels,
     }
 }
 
-void WriteLut3D(const std::string & filename, const float* lutdata, int edgeLen)
+void WriteLut3D(const std::string & filename, const float * lutdata, int edgeLen)
 {
     if (!StringUtils::EndsWith(filename, ".spi3d"))
     {
@@ -295,7 +282,7 @@ void WriteLut3D(const std::string & filename, const float* lutdata, int edgeLen)
     if (!output.is_open())
     {
         std::ostringstream os;
-        os <<  "Error opening " << filename << " for writing.";
+        os << "Error opening " << filename << " for writing.";
         throw OCIO::Exception(os.str().c_str());
     }
 
@@ -304,19 +291,18 @@ void WriteLut3D(const std::string & filename, const float* lutdata, int edgeLen)
     output << edgeLen << " " << edgeLen << " " << edgeLen << "\n";
 
     int index = 0;
-    for (int rindex=0; rindex<edgeLen; ++rindex)
+    for (int rindex = 0; rindex < edgeLen; ++rindex)
     {
-        for (int gindex=0; gindex<edgeLen; ++gindex)
+        for (int gindex = 0; gindex < edgeLen; ++gindex)
         {
-            for (int bindex=0; bindex<edgeLen; ++bindex)
+            for (int bindex = 0; bindex < edgeLen; ++bindex)
             {
-                index = GetLut3DIndex_RedFast(rindex, gindex, bindex,
-                                              edgeLen, edgeLen, edgeLen);
+                index = GetLut3DIndex_RedFast(rindex, gindex, bindex, edgeLen, edgeLen, edgeLen);
 
                 output << rindex << " " << gindex << " " << bindex << " ";
-                output << lutdata[index+0] << " ";
-                output << lutdata[index+1] << " ";
-                output << lutdata[index+2] << "\n";
+                output << lutdata[index + 0] << " ";
+                output << lutdata[index + 1] << " ";
+                output << lutdata[index + 2] << "\n";
             }
         }
     }

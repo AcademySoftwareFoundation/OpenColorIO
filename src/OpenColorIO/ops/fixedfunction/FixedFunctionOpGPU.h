@@ -12,11 +12,10 @@
 namespace OCIO_NAMESPACE
 {
 
-void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
-                                      ConstFixedFunctionOpDataRcPtr & func);
+void GetFixedFunctionGPUShaderProgram(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstFixedFunctionOpDataRcPtr & func);
 
 } // namespace OCIO_NAMESPACE
 
 #endif
-
-

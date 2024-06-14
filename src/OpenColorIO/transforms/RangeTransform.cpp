@@ -23,8 +23,8 @@ void RangeTransformImpl::deleter(RangeTransform * t)
 
 TransformRcPtr RangeTransformImpl::createEditableCopy() const
 {
-    RangeTransformRcPtr transform = RangeTransform::Create();
-    dynamic_cast<RangeTransformImpl*>(transform.get())->data() = data();
+    RangeTransformRcPtr transform                               = RangeTransform::Create();
+    dynamic_cast<RangeTransformImpl *>(transform.get())->data() = data();
     transform->setStyle(m_style);
     return transform;
 }
@@ -64,7 +64,7 @@ void RangeTransformImpl::validate() const
             }
         }
     }
-    catch(Exception & ex)
+    catch (Exception & ex)
     {
         std::string errMsg("RangeTransform validation failed: ");
         errMsg += ex.what();
@@ -101,9 +101,10 @@ void RangeTransformImpl::setFileOutputBitDepth(BitDepth bitDepth) noexcept
 
 bool RangeTransformImpl::equals(const RangeTransform & other) const noexcept
 {
-    if (this == &other) return true;
-    return data() == dynamic_cast<const RangeTransformImpl*>(&other)->data()
-        && m_style == other.getStyle();
+    if (this == &other)
+        return true;
+    return data() == dynamic_cast<const RangeTransformImpl *>(&other)->data()
+           && m_style == other.getStyle();
 }
 
 void RangeTransformImpl::setMinInValue(double val) noexcept
@@ -126,7 +127,6 @@ void RangeTransformImpl::unsetMinInValue() noexcept
     data().unsetMinInValue();
 }
 
-
 void RangeTransformImpl::setMaxInValue(double val) noexcept
 {
     data().setMaxInValue(val);
@@ -146,7 +146,6 @@ void RangeTransformImpl::unsetMaxInValue() noexcept
 {
     data().unsetMaxInValue();
 }
-
 
 void RangeTransformImpl::setMinOutValue(double val) noexcept
 {
@@ -168,7 +167,6 @@ void RangeTransformImpl::unsetMinOutValue() noexcept
     data().unsetMinOutValue();
 }
 
-
 void RangeTransformImpl::setMaxOutValue(double val) noexcept
 {
     data().setMaxOutValue(val);
@@ -189,22 +187,24 @@ void RangeTransformImpl::unsetMaxOutValue() noexcept
     data().unsetMaxOutValue();
 }
 
-
-std::ostream& operator<< (std::ostream & os, const RangeTransform & t) noexcept
+std::ostream & operator<<(std::ostream & os, const RangeTransform & t) noexcept
 {
     os << "<RangeTransform ";
     os << "direction=" << TransformDirectionToString(t.getDirection());
     os << ", fileindepth=" << BitDepthToString(t.getFileInputBitDepth());
     os << ", fileoutdepth=" << BitDepthToString(t.getFileOutputBitDepth());
-    if(t.getStyle()!=RANGE_CLAMP) os << ", style="       << RangeStyleToString(t.getStyle());
-    if(t.hasMinInValue())         os << ", minInValue="  << t.getMinInValue();
-    if(t.hasMaxInValue())         os << ", maxInValue="  << t.getMaxInValue();
-    if(t.hasMinOutValue())        os << ", minOutValue=" << t.getMinOutValue();
-    if(t.hasMaxOutValue())        os << ", maxOutValue=" << t.getMaxOutValue();
+    if (t.getStyle() != RANGE_CLAMP)
+        os << ", style=" << RangeStyleToString(t.getStyle());
+    if (t.hasMinInValue())
+        os << ", minInValue=" << t.getMinInValue();
+    if (t.hasMaxInValue())
+        os << ", maxInValue=" << t.getMaxInValue();
+    if (t.hasMinOutValue())
+        os << ", minOutValue=" << t.getMinOutValue();
+    if (t.hasMaxOutValue())
+        os << ", maxOutValue=" << t.getMaxOutValue();
     os << ">";
     return os;
 }
-
-
 
 } // namespace OCIO_NAMESPACE

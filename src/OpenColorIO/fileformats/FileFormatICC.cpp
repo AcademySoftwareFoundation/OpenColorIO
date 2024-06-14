@@ -1,24 +1,22 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
-#include <sstream>
 #include <fstream>
+#include <sstream>
 
 #include <pystring.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Logging.h"
+#include "Platform.h"
 #include "fileformats/FileFormatUtils.h"
 #include "iccProfileReader.h"
 #include "ops/gamma/GammaOp.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/matrix/MatrixOp.h"
 #include "ops/range/RangeOp.h"
-#include "Platform.h"
 #include "transforms/FileTransform.h"
-
 
 /*
 Support for ICC profiles.
@@ -37,17 +35,17 @@ namespace OCIO_NAMESPACE
 class LocalCachedFile : public CachedFile
 {
 public:
-    LocalCachedFile() = default;
+    LocalCachedFile()  = default;
     ~LocalCachedFile() = default;
 
     // The profile description.
     std::string mProfileDescription;
 
     // Matrix part
-    double mMatrix44[16]{ 0.0 };
+    double mMatrix44[16]{0.0};
 
     // Gamma
-    float mGammaRGB[4]{ 1.0f };
+    float mGammaRGB[4]{1.0f};
 
     // 1D LUT
     Lut1DOpDataRcPtr lut;
@@ -58,65 +56,60 @@ typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
 class LocalFileFormat : public FileFormat
 {
 public:
-    LocalFileFormat() = default;
+    LocalFileFormat()  = default;
     ~LocalFileFormat() = default;
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
     // Only reads the information data of the file.
-    static LocalCachedFileRcPtr ReadInfo(std::istream & istream, 
-                                         const std::string & fileName,
-                                         SampleICC::IccContent & icc);
+    static LocalCachedFileRcPtr
+    ReadInfo(std::istream & istream, const std::string & fileName, SampleICC::IccContent & icc);
 
-    CachedFileRcPtr read(std::istream & istream,
-                         const std::string & fileName,
-                         Interpolation interp) const override;
+    CachedFileRcPtr read(std::istream & istream, const std::string & fileName, Interpolation interp)
+        const override;
 
-    void buildFileOps(OpRcPtrVec & ops,
-                        const Config & config,
-                        const ConstContextRcPtr & context,
-                        CachedFileRcPtr untypedCachedFile,
-                        const FileTransform & fileTransform,
-                        TransformDirection dir) const override;
+    void buildFileOps(
+        OpRcPtrVec & ops,
+        const Config & config,
+        const ConstContextRcPtr & context,
+        CachedFileRcPtr untypedCachedFile,
+        const FileTransform & fileTransform,
+        TransformDirection dir) const override;
 
-    bool isBinary() const override
-    {
-        return true;
-    }
+    bool isBinary() const override { return true; }
 
 private:
     static void ThrowErrorMessage(const std::string & error, const std::string & fileName);
 
-    static void ValidateParametricCurve(icUInt16Number type,
-                                        icUInt16Number numParams,
-                                        const icS15Fixed16Number * params,
-                                        const std::string & fileName);
-    static float ApplyParametricCurve(float v,
-                                      icUInt16Number type,
-                                      const icS15Fixed16Number * params);
+    static void ValidateParametricCurve(
+        icUInt16Number type,
+        icUInt16Number numParams,
+        const icS15Fixed16Number * params,
+        const std::string & fileName);
+    static float
+    ApplyParametricCurve(float v, icUInt16Number type, const icS15Fixed16Number * params);
 };
 
 void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 {
     FormatInfo info;
-    info.name = "International Color Consortium profile";
-    info.extension = "icc";
+    info.name         = "International Color Consortium profile";
+    info.extension    = "icc";
     info.capabilities = FORMAT_CAPABILITY_READ;
     formatInfoVec.push_back(info);
 
     // .icm and .pf file extensions are also fine.
 
-    info.name = "Image Color Matching profile";
+    info.name      = "Image Color Matching profile";
     info.extension = "icm";
     formatInfoVec.push_back(info);
 
-    info.name = "ICC profile";
+    info.name      = "ICC profile";
     info.extension = "pf";
     formatInfoVec.push_back(info);
 }
 
-void LocalFileFormat::ThrowErrorMessage(const std::string & error,
-                                        const std::string & fileName)
+void LocalFileFormat::ThrowErrorMessage(const std::string & error, const std::string & fileName)
 {
     std::ostringstream os;
     os << "Error parsing .icc file (";
@@ -127,13 +120,13 @@ void LocalFileFormat::ThrowErrorMessage(const std::string & error,
     throw Exception(os.str().c_str());
 }
 
-LocalCachedFileRcPtr LocalFileFormat::ReadInfo(std::istream & istream, 
-                                               const std::string & fileName,
-                                               SampleICC::IccContent & icc)
+LocalCachedFileRcPtr LocalFileFormat::ReadInfo(
+    std::istream & istream,
+    const std::string & fileName,
+    SampleICC::IccContent & icc)
 {
     istream.seekg(0);
-    if (!istream.good()
-        || !SampleICC::Read32(istream, &icc.mHeader.size, 1)
+    if (!istream.good() || !SampleICC::Read32(istream, &icc.mHeader.size, 1)
         || !SampleICC::Read32(istream, &icc.mHeader.cmmId, 1)
         || !SampleICC::Read32(istream, &icc.mHeader.version, 1)
         || !SampleICC::Read32(istream, &icc.mHeader.deviceClass, 1)
@@ -156,15 +149,10 @@ LocalCachedFileRcPtr LocalFileFormat::ReadInfo(std::istream & istream,
         || !SampleICC::Read32(istream, &icc.mHeader.illuminant.Y, 1)
         || !SampleICC::Read32(istream, &icc.mHeader.illuminant.Z, 1)
         || !SampleICC::Read32(istream, &icc.mHeader.creator, 1)
-        || (SampleICC::Read8(istream, 
-            &icc.mHeader.profileID,
-            sizeof(icc.mHeader.profileID))
-                != sizeof(icc.mHeader.profileID))
-        || (SampleICC::Read8(istream,
-            &icc.mHeader.reserved[0],
-            sizeof(icc.mHeader.reserved))
-                != sizeof(icc.mHeader.reserved))
-        )
+        || (SampleICC::Read8(istream, &icc.mHeader.profileID, sizeof(icc.mHeader.profileID))
+            != sizeof(icc.mHeader.profileID))
+        || (SampleICC::Read8(istream, &icc.mHeader.reserved[0], sizeof(icc.mHeader.reserved))
+            != sizeof(icc.mHeader.reserved)))
     {
         ThrowErrorMessage("Error loading header.", fileName);
     }
@@ -183,8 +171,8 @@ LocalCachedFileRcPtr LocalFileFormat::ReadInfo(std::istream & istream,
 
     icc.mTags.resize(count);
 
-    // Read Tag offset table. 
-    for (i = 0; i<count; i++)
+    // Read Tag offset table.
+    for (i = 0; i < count; i++)
     {
         if (!SampleICC::Read32(istream, &icc.mTags[i].mTagInfo.sig, 1)
             || !SampleICC::Read32(istream, &icc.mTags[i].mTagInfo.offset, 1)
@@ -221,8 +209,8 @@ LocalCachedFileRcPtr LocalFileFormat::ReadInfo(std::istream & istream,
             return cachedFile;
         }
 
-        const SampleICC::IccTextDescriptionTypeReader * desc =
-            dynamic_cast<const SampleICC::IccTextDescriptionTypeReader *>(reader);
+        const SampleICC::IccTextDescriptionTypeReader * desc
+            = dynamic_cast<const SampleICC::IccTextDescriptionTypeReader *>(reader);
         if (desc)
         {
             cachedFile->mProfileDescription = desc->GetText();
@@ -231,8 +219,8 @@ LocalCachedFileRcPtr LocalFileFormat::ReadInfo(std::istream & istream,
         {
             // The profile description implementation is a list of localized unicode strings. But
             // the OCIO implementation only returns the english string.
-            const SampleICC::IccMultiLocalizedUnicodeTypeReader * desc = 
-                dynamic_cast<const SampleICC::IccMultiLocalizedUnicodeTypeReader *>(reader);
+            const SampleICC::IccMultiLocalizedUnicodeTypeReader * desc
+                = dynamic_cast<const SampleICC::IccMultiLocalizedUnicodeTypeReader *>(reader);
             if (desc)
             {
                 cachedFile->mProfileDescription = desc->GetText();
@@ -251,13 +239,13 @@ LocalCachedFileRcPtr LocalFileFormat::ReadInfo(std::istream & istream,
 // be monotonically non-decreasing (flat segments allowed).
 // More information can be found in:
 // https://www.color.org/whitepapers/ICC_White_Paper35-Use_of_the_parametricCurveType.pdf
-void LocalFileFormat::ValidateParametricCurve(icUInt16Number type,
-                                              icUInt16Number numParams,
-                                              const icS15Fixed16Number * params,
-                                              const std::string & fileName)
+void LocalFileFormat::ValidateParametricCurve(
+    icUInt16Number type,
+    icUInt16Number numParams,
+    const icS15Fixed16Number * params,
+    const std::string & fileName)
 {
-    auto ThrowParaError = [=](const std::string & msg)
-    {
+    auto ThrowParaError = [=](const std::string & msg) {
         std::ostringstream oss;
         oss << "Error parsing ICC Parametric Curve (with arguments ";
         for (int i = 0; i < numParams; ++i)
@@ -272,8 +260,7 @@ void LocalFileFormat::ValidateParametricCurve(icUInt16Number type,
         ThrowErrorMessage(oss.str(), fileName);
     };
 
-    auto LogParaWarning = [=](const std::string & msg)
-    {
+    auto LogParaWarning = [=](const std::string & msg) {
         std::ostringstream oss;
         oss << "Parsing .icc file (";
         oss << fileName;
@@ -291,19 +278,18 @@ void LocalFileFormat::ValidateParametricCurve(icUInt16Number type,
         LogWarning(oss.str());
     };
 
-    auto QuantizeF = [](float v, uint8_t bitdepth = 10) -> float
-    {
+    auto QuantizeF = [](float v, uint8_t bitdepth = 10) -> float {
         float maxVal = std::pow(2.f, static_cast<float>(bitdepth)) - 1.f;
         return std::lround(v * maxVal) / maxVal;
     };
 
     // Expected number of arguments
     const std::map<icUInt16Number, icUInt16Number> NParamsPerType = {
-        {0 , 1},
-        {1 , 3},
-        {2 , 4},
-        {3 , 5},
-        {4 , 7},
+        {0, 1},
+        {1, 3},
+        {2, 4},
+        {3, 5},
+        {4, 7},
     };
 
     if (NParamsPerType.count(type) == 0)
@@ -356,11 +342,11 @@ void LocalFileFormat::ValidateParametricCurve(icUInt16Number type,
         const float d = SampleICC::icFtoD(params[4]);
 
         float lin_segment_break = QuantizeF(c * d);
-        float power_law_break = QuantizeF(std::pow(a * d + b, g));
+        float power_law_break   = QuantizeF(std::pow(a * d + b, g));
 
         if (lin_segment_break > power_law_break)
         {
-            ThrowParaError( "Expecting no negative discontinuity at linear segment boundary.");
+            ThrowParaError("Expecting no negative discontinuity at linear segment boundary.");
         }
     }
     else if (type == 4)
@@ -373,7 +359,7 @@ void LocalFileFormat::ValidateParametricCurve(icUInt16Number type,
         const float f = SampleICC::icFtoD(params[6]);
 
         float lin_segment_break = QuantizeF(c * d + f);
-        float power_law_break = QuantizeF(std::pow(a * d + b, g) + e);
+        float power_law_break   = QuantizeF(std::pow(a * d + b, g) + e);
 
         if (lin_segment_break > power_law_break)
         {
@@ -467,9 +453,10 @@ void LocalFileFormat::ValidateParametricCurve(icUInt16Number type,
 
 // Apply Parametric curve to a single float value.
 // ICC specify these functions shall clip any values outside [0.0, 1.0] range.
-float LocalFileFormat::ApplyParametricCurve(float v,
-                                            icUInt16Number type,
-                                            const icS15Fixed16Number * params)
+float LocalFileFormat::ApplyParametricCurve(
+    float v,
+    icUInt16Number type,
+    const icS15Fixed16Number * params)
 {
     v = std::min(std::max(0.0f, v), 1.0f);
 
@@ -530,43 +517,43 @@ float LocalFileFormat::ApplyParametricCurve(float v,
 
 // Try and load the format
 // Raise an exception if it can't be loaded.
-CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
-                                      const std::string & fileName,
-                                      Interpolation /*interp*/) const
+CachedFileRcPtr LocalFileFormat::read(
+    std::istream & istream,
+    const std::string & fileName,
+    Interpolation /*interp*/) const
 {
     SampleICC::IccContent icc;
     LocalCachedFileRcPtr cachedFile = ReadInfo(istream, fileName, icc);
 
     // Matrix part of the Matrix/TRC Model
     {
-        const SampleICC::IccXYZArrayTypeReader * red =
-            dynamic_cast<SampleICC::IccXYZArrayTypeReader*>(
+        const SampleICC::IccXYZArrayTypeReader * red
+            = dynamic_cast<SampleICC::IccXYZArrayTypeReader *>(
                 icc.LoadTag(istream, icSigRedColorantTag));
-        const SampleICC::IccXYZArrayTypeReader * green =
-            dynamic_cast<SampleICC::IccXYZArrayTypeReader*>(
+        const SampleICC::IccXYZArrayTypeReader * green
+            = dynamic_cast<SampleICC::IccXYZArrayTypeReader *>(
                 icc.LoadTag(istream, icSigGreenColorantTag));
-        const SampleICC::IccXYZArrayTypeReader * blue =
-            dynamic_cast<SampleICC::IccXYZArrayTypeReader*>(
+        const SampleICC::IccXYZArrayTypeReader * blue
+            = dynamic_cast<SampleICC::IccXYZArrayTypeReader *>(
                 icc.LoadTag(istream, icSigBlueColorantTag));
 
         if (!red || !green || !blue)
         {
-            ThrowErrorMessage("Illegal matrix tag in ICC profile.",
-                fileName);
+            ThrowErrorMessage("Illegal matrix tag in ICC profile.", fileName);
         }
 
-        cachedFile->mMatrix44[0] =  (double)(*red).GetXYZ().X / 65536.0;
-        cachedFile->mMatrix44[1] =  (double)(*green).GetXYZ().X / 65536.0;
-        cachedFile->mMatrix44[2] =  (double)(*blue).GetXYZ().X / 65536.0;
-        cachedFile->mMatrix44[3] =  0.0;
+        cachedFile->mMatrix44[0] = (double)(*red).GetXYZ().X / 65536.0;
+        cachedFile->mMatrix44[1] = (double)(*green).GetXYZ().X / 65536.0;
+        cachedFile->mMatrix44[2] = (double)(*blue).GetXYZ().X / 65536.0;
+        cachedFile->mMatrix44[3] = 0.0;
 
-        cachedFile->mMatrix44[4] =  (double)(*red).GetXYZ().Y / 65536.0;
-        cachedFile->mMatrix44[5] =  (double)(*green).GetXYZ().Y / 65536.0;
-        cachedFile->mMatrix44[6] =  (double)(*blue).GetXYZ().Y / 65536.0;
-        cachedFile->mMatrix44[7] =  0.0;
+        cachedFile->mMatrix44[4] = (double)(*red).GetXYZ().Y / 65536.0;
+        cachedFile->mMatrix44[5] = (double)(*green).GetXYZ().Y / 65536.0;
+        cachedFile->mMatrix44[6] = (double)(*blue).GetXYZ().Y / 65536.0;
+        cachedFile->mMatrix44[7] = 0.0;
 
-        cachedFile->mMatrix44[8] =  (double)(*red).GetXYZ().Z / 65536.0;
-        cachedFile->mMatrix44[9] =  (double)(*green).GetXYZ().Z / 65536.0;
+        cachedFile->mMatrix44[8]  = (double)(*red).GetXYZ().Z / 65536.0;
+        cachedFile->mMatrix44[9]  = (double)(*green).GetXYZ().Z / 65536.0;
         cachedFile->mMatrix44[10] = (double)(*blue).GetXYZ().Z / 65536.0;
         cachedFile->mMatrix44[11] = 0.0;
 
@@ -585,8 +572,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
         ThrowErrorMessage("Illegal curve tag in ICC profile.", fileName);
     }
 
-    static const std::string strSameType(
-        "All curves in the ICC profile must be of the same type.");
+    static const std::string strSameType("All curves in the ICC profile must be of the same type.");
     if (redTRC->IsParametricCurve())
     {
         if (!greenTRC->IsParametricCurve() || !blueTRC->IsParametricCurve())
@@ -594,12 +580,12 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
             ThrowErrorMessage(strSameType, fileName);
         }
 
-        const SampleICC::IccParametricCurveTypeReader * red =
-            dynamic_cast<const SampleICC::IccParametricCurveTypeReader*>(redTRC);
-        const SampleICC::IccParametricCurveTypeReader * green =
-            dynamic_cast<const SampleICC::IccParametricCurveTypeReader*>(greenTRC);
-        const SampleICC::IccParametricCurveTypeReader * blue =
-            dynamic_cast<const SampleICC::IccParametricCurveTypeReader*>(blueTRC);
+        const SampleICC::IccParametricCurveTypeReader * red
+            = dynamic_cast<const SampleICC::IccParametricCurveTypeReader *>(redTRC);
+        const SampleICC::IccParametricCurveTypeReader * green
+            = dynamic_cast<const SampleICC::IccParametricCurveTypeReader *>(greenTRC);
+        const SampleICC::IccParametricCurveTypeReader * blue
+            = dynamic_cast<const SampleICC::IccParametricCurveTypeReader *>(blueTRC);
 
         if (!red || !green || !blue)
         {
@@ -614,18 +600,25 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
         }
 
         ValidateParametricCurve(
-            red->GetFunctionType(), red->GetNumParam(), red->GetParam(), fileName);
+            red->GetFunctionType(),
+            red->GetNumParam(),
+            red->GetParam(),
+            fileName);
         ValidateParametricCurve(
-            green->GetFunctionType(), green->GetNumParam(), green->GetParam(), fileName);
+            green->GetFunctionType(),
+            green->GetNumParam(),
+            green->GetParam(),
+            fileName);
         ValidateParametricCurve(
-            blue->GetFunctionType(), blue->GetNumParam(), blue->GetParam(), fileName);
+            blue->GetFunctionType(),
+            blue->GetNumParam(),
+            blue->GetParam(),
+            fileName);
 
         // Handle type 0 with a GammaOp.
         if (red->GetFunctionType() == 0)
         {
-            if (red->GetNumParam() != 1
-                || green->GetNumParam() != 1
-                || blue->GetNumParam() != 1)
+            if (red->GetNumParam() != 1 || green->GetNumParam() != 1 || blue->GetNumParam() != 1)
             {
                 ThrowErrorMessage(
                     "Expecting 1 param in parametric curve tag (type 0) of ICC profile.",
@@ -641,7 +634,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
         else
         {
             const auto lutLength = 1024;
-            cachedFile->lut = std::make_shared<Lut1DOpData>(lutLength);
+            cachedFile->lut      = std::make_shared<Lut1DOpData>(lutLength);
             cachedFile->lut->setFileOutputBitDepth(BIT_DEPTH_F32);
 
             auto & lutData = cachedFile->lut->getArray();
@@ -650,9 +643,12 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
             {
                 float v = i / (lutLength - 1.f);
 
-                lutData[i * 3 + 0] = ApplyParametricCurve(v, red->GetFunctionType(), red->GetParam());
-                lutData[i * 3 + 1] = ApplyParametricCurve(v, green->GetFunctionType(), green->GetParam());
-                lutData[i * 3 + 2] = ApplyParametricCurve(v, blue->GetFunctionType(), blue->GetParam());
+                lutData[i * 3 + 0]
+                    = ApplyParametricCurve(v, red->GetFunctionType(), red->GetParam());
+                lutData[i * 3 + 1]
+                    = ApplyParametricCurve(v, green->GetFunctionType(), green->GetParam());
+                lutData[i * 3 + 2]
+                    = ApplyParametricCurve(v, blue->GetFunctionType(), blue->GetParam());
             }
         }
     }
@@ -662,12 +658,12 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
         {
             ThrowErrorMessage(strSameType, fileName);
         }
-        const SampleICC::IccCurveTypeReader * red =
-            dynamic_cast<const SampleICC::IccCurveTypeReader*>(redTRC);
-        const SampleICC::IccCurveTypeReader * green =
-            dynamic_cast<const SampleICC::IccCurveTypeReader*>(greenTRC);
-        const SampleICC::IccCurveTypeReader * blue =
-            dynamic_cast<const SampleICC::IccCurveTypeReader*>(blueTRC);
+        const SampleICC::IccCurveTypeReader * red
+            = dynamic_cast<const SampleICC::IccCurveTypeReader *>(redTRC);
+        const SampleICC::IccCurveTypeReader * green
+            = dynamic_cast<const SampleICC::IccCurveTypeReader *>(greenTRC);
+        const SampleICC::IccCurveTypeReader * blue
+            = dynamic_cast<const SampleICC::IccCurveTypeReader *>(blueTRC);
 
         if (!red || !green || !blue)
         {
@@ -675,8 +671,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
         }
 
         const size_t curveSize = red->GetCurve().size();
-        if (green->GetCurve().size() != curveSize
-            || blue->GetCurve().size() != curveSize)
+        if (green->GetCurve().size() != curveSize || blue->GetCurve().size() != curveSize)
         {
             ThrowErrorMessage(
                 "All curves in the ICC profile must be of the same length.",
@@ -685,8 +680,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 
         if (0 == curveSize)
         {
-            ThrowErrorMessage("Curves with no values in ICC profile.",
-                fileName);
+            ThrowErrorMessage("Curves with no values in ICC profile.", fileName);
         }
         else if (1 == curveSize)
         {
@@ -696,14 +690,10 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
             // an unsigned fixed-point 8.8 number.
             // (But we want to multiply by 65535 to undo the normalization
             // applied by SampleICC)
-            cachedFile->mGammaRGB[0] =
-                red->GetCurve()[0] * 65535.0f / 256.0f;
-            cachedFile->mGammaRGB[1] =
-                green->GetCurve()[0] * 65535.0f / 256.0f;
-            cachedFile->mGammaRGB[2] =
-                blue->GetCurve()[0] * 65535.0f / 256.0f;
+            cachedFile->mGammaRGB[0] = red->GetCurve()[0] * 65535.0f / 256.0f;
+            cachedFile->mGammaRGB[1] = green->GetCurve()[0] * 65535.0f / 256.0f;
+            cachedFile->mGammaRGB[2] = blue->GetCurve()[0] * 65535.0f / 256.0f;
             cachedFile->mGammaRGB[3] = 1.0f;
-
         }
         else
         {
@@ -714,7 +704,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
             // The LUT will be inverted to convert output-linear values
             // into values that may be sent to the display.
             const auto lutLength = static_cast<unsigned long>(curveSize);
-            cachedFile->lut = std::make_shared<Lut1DOpData>(lutLength);
+            cachedFile->lut      = std::make_shared<Lut1DOpData>(lutLength);
 
             const auto & rc = red->GetCurve();
             const auto & gc = green->GetCurve();
@@ -738,16 +728,15 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
     return cachedFile;
 }
 
-void
-LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
-                                const Config & /*config*/,
-                                const ConstContextRcPtr & /*context*/,
-                                CachedFileRcPtr untypedCachedFile,
-                                const FileTransform & fileTransform,
-                                TransformDirection dir) const
+void LocalFileFormat::buildFileOps(
+    OpRcPtrVec & ops,
+    const Config & /*config*/,
+    const ConstContextRcPtr & /*context*/,
+    CachedFileRcPtr untypedCachedFile,
+    const FileTransform & fileTransform,
+    TransformDirection dir) const
 {
-    LocalCachedFileRcPtr cachedFile =
-        DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
+    LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
 
     // This should never happen.
     if (!cachedFile)
@@ -772,12 +761,14 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     // a D50 XYZ to a D65 XYZ.
     // In most cases, combining this with the matrix in the ICC profile
     // recovers what would be the actual matrix for a D65 native monitor.
+    // clang-format off
     static constexpr double D50_to_D65_m44[] = {
             0.955509474537, -0.023074829492, 0.063312392987, 0.0,
            -0.028327238868,  1.00994465504,  0.021055592145, 0.0,
             0.012329273379, -0.020536209966, 1.33072998567,  0.0,
             0.0,             0.0,            0.0,            1.0
     };
+    // clang-format on
 
     const auto fileInterp = fileTransform.getInterpolation();
 
@@ -786,7 +777,7 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     if (cachedFile->lut)
     {
         bool fileInterpUsed = false;
-        lut = HandleLUT1D(cachedFile->lut, fileInterp, fileInterpUsed);
+        lut                 = HandleLUT1D(cachedFile->lut, fileInterp, fileInterpUsed);
 
         if (!fileInterpUsed)
         {
@@ -804,76 +795,84 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 
     switch (newDir)
     {
-    case TRANSFORM_DIR_INVERSE:
-    {
-        // Monitor code value to CIE XYZ.
-        if (lut)
+        case TRANSFORM_DIR_INVERSE:
         {
-            CreateLut1DOp(ops, lut, TRANSFORM_DIR_FORWARD);
+            // Monitor code value to CIE XYZ.
+            if (lut)
+            {
+                CreateLut1DOp(ops, lut, TRANSFORM_DIR_FORWARD);
+            }
+            else
+            {
+                const GammaOpData::Params redParams   = {cachedFile->mGammaRGB[0]};
+                const GammaOpData::Params greenParams = {cachedFile->mGammaRGB[1]};
+                const GammaOpData::Params blueParams  = {cachedFile->mGammaRGB[2]};
+                const GammaOpData::Params alphaParams = {cachedFile->mGammaRGB[3]};
+                auto gamma                            = std::make_shared<GammaOpData>(
+                    GammaOpData::BASIC_FWD,
+                    redParams,
+                    greenParams,
+                    blueParams,
+                    alphaParams);
+
+                // GammaOp will clamp at 0 so we don't do it in the RangeOp.
+                CreateRangeOp(
+                    ops,
+                    RangeOpData::EmptyValue(),
+                    1,
+                    RangeOpData::EmptyValue(),
+                    1,
+                    TRANSFORM_DIR_FORWARD);
+
+                CreateGammaOp(ops, gamma, TRANSFORM_DIR_FORWARD);
+            }
+
+            CreateMatrixOp(ops, cachedFile->mMatrix44, TRANSFORM_DIR_FORWARD);
+
+            CreateMatrixOp(ops, D50_to_D65_m44, TRANSFORM_DIR_FORWARD);
+            break;
         }
-        else
+        case TRANSFORM_DIR_FORWARD:
         {
-            const GammaOpData::Params redParams   = { cachedFile->mGammaRGB[0] };
-            const GammaOpData::Params greenParams = { cachedFile->mGammaRGB[1] };
-            const GammaOpData::Params blueParams  = { cachedFile->mGammaRGB[2] };
-            const GammaOpData::Params alphaParams = { cachedFile->mGammaRGB[3] };
-            auto gamma = std::make_shared<GammaOpData>(GammaOpData::BASIC_FWD, 
-                                                       redParams,
-                                                       greenParams,
-                                                       blueParams,
-                                                       alphaParams);
+            // CIE XYZ to monitor code value.
 
-            // GammaOp will clamp at 0 so we don't do it in the RangeOp.
-            CreateRangeOp(ops,
-                          RangeOpData::EmptyValue(), 1,
-                          RangeOpData::EmptyValue(), 1,
-                          TRANSFORM_DIR_FORWARD);
+            CreateMatrixOp(ops, D50_to_D65_m44, TRANSFORM_DIR_INVERSE);
 
-            CreateGammaOp(ops, gamma, TRANSFORM_DIR_FORWARD);
+            // The ICC profile tags form a matrix that converts RGB to CIE XYZ.
+            // Invert since we are building a PCS -> device transform.
+            CreateMatrixOp(ops, cachedFile->mMatrix44, TRANSFORM_DIR_INVERSE);
+
+            // The LUT / gamma stored in the ICC profile works in
+            // the gamma->linear direction.
+            if (lut)
+            {
+                CreateLut1DOp(ops, lut, TRANSFORM_DIR_INVERSE);
+            }
+            else
+            {
+                const GammaOpData::Params redParams   = {cachedFile->mGammaRGB[0]};
+                const GammaOpData::Params greenParams = {cachedFile->mGammaRGB[1]};
+                const GammaOpData::Params blueParams  = {cachedFile->mGammaRGB[2]};
+                const GammaOpData::Params alphaParams = {cachedFile->mGammaRGB[3]};
+                auto gamma                            = std::make_shared<GammaOpData>(
+                    GammaOpData::BASIC_REV,
+                    redParams,
+                    greenParams,
+                    blueParams,
+                    alphaParams);
+
+                CreateGammaOp(ops, gamma, TRANSFORM_DIR_FORWARD);
+
+                CreateRangeOp(
+                    ops,
+                    RangeOpData::EmptyValue(),
+                    1,
+                    RangeOpData::EmptyValue(),
+                    1,
+                    TRANSFORM_DIR_FORWARD);
+            }
+            break;
         }
-
-        CreateMatrixOp(ops, cachedFile->mMatrix44, TRANSFORM_DIR_FORWARD);
-
-        CreateMatrixOp(ops, D50_to_D65_m44, TRANSFORM_DIR_FORWARD);
-        break;
-    }
-    case TRANSFORM_DIR_FORWARD:
-    {
-        // CIE XYZ to monitor code value.
-        
-        CreateMatrixOp(ops, D50_to_D65_m44, TRANSFORM_DIR_INVERSE);
-
-        // The ICC profile tags form a matrix that converts RGB to CIE XYZ.
-        // Invert since we are building a PCS -> device transform.
-        CreateMatrixOp(ops, cachedFile->mMatrix44, TRANSFORM_DIR_INVERSE);
-
-        // The LUT / gamma stored in the ICC profile works in
-        // the gamma->linear direction.
-        if (lut)
-        {
-            CreateLut1DOp(ops, lut, TRANSFORM_DIR_INVERSE);
-        }
-        else
-        {
-            const GammaOpData::Params redParams   = { cachedFile->mGammaRGB[0] };
-            const GammaOpData::Params greenParams = { cachedFile->mGammaRGB[1] };
-            const GammaOpData::Params blueParams  = { cachedFile->mGammaRGB[2] };
-            const GammaOpData::Params alphaParams = { cachedFile->mGammaRGB[3] };
-            auto gamma = std::make_shared<GammaOpData>(GammaOpData::BASIC_REV,
-                                                       redParams,
-                                                       greenParams,
-                                                       blueParams,
-                                                       alphaParams);
-
-            CreateGammaOp(ops, gamma, TRANSFORM_DIR_FORWARD);
-
-            CreateRangeOp(ops,
-                          RangeOpData::EmptyValue(), 1,
-                          RangeOpData::EmptyValue(), 1,
-                          TRANSFORM_DIR_FORWARD);
-        }
-        break;
-    }
     }
 }
 
@@ -884,7 +883,8 @@ FileFormat * CreateFileFormatICC()
 
 std::string GetProfileDescriptionFromICCProfile(const char * ICCProfileFilepath)
 {
-    std::ifstream filestream = Platform::CreateInputFileStream(ICCProfileFilepath, std::ios_base::binary);
+    std::ifstream filestream
+        = Platform::CreateInputFileStream(ICCProfileFilepath, std::ios_base::binary);
     if (!filestream.good())
     {
         std::ostringstream os;

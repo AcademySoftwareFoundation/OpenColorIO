@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_NAMEDTRANSFORM_H
 #define INCLUDED_OCIO_NAMEDTRANSFORM_H
 
@@ -17,7 +16,7 @@ namespace OCIO_NAMESPACE
 class NamedTransformImpl : public NamedTransform
 {
 public:
-    NamedTransformImpl() = default;
+    NamedTransformImpl()  = default;
     ~NamedTransformImpl() = default;
 
     NamedTransformRcPtr createEditableCopy() const override;
@@ -64,8 +63,9 @@ private:
     std::string m_encoding;
 };
 
-ConstTransformRcPtr GetTransform(const ConstNamedTransformRcPtr & src,
-                                 const ConstNamedTransformRcPtr & dst);
+ConstTransformRcPtr GetTransform(
+    const ConstNamedTransformRcPtr & src,
+    const ConstNamedTransformRcPtr & dst);
 
 } // namespace OCIO_NAMESPACE
 

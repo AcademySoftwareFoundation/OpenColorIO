@@ -10,22 +10,22 @@
 #include "ops/lut3d/Lut3DOpGPU.h"
 #include "utils/StringUtils.h"
 
-
 namespace OCIO_NAMESPACE
 {
 
-void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DOpDataRcPtr & lutData)
+void GetLut3DGPUShaderProgram(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstLut3DOpDataRcPtr & lutData)
 {
 
     if (shaderCreator->getLanguage() == LANGUAGE_OSL_1)
     {
-        throw Exception("The Lut3DOp is not yet supported by the 'Open Shading language (OSL)' translation");
+        throw Exception(
+            "The Lut3DOp is not yet supported by the 'Open Shading language (OSL)' translation");
     }
 
     std::ostringstream resName;
-    resName << shaderCreator->getResourcePrefix()
-            << std::string("_")
-            << std::string("lut3d_")
+    resName << shaderCreator->getResourcePrefix() << std::string("_") << std::string("lut3d_")
             << shaderCreator->getNextResourceIndex();
 
     // Note: Remove potentially problematic double underscores from GLSL resource names.
@@ -39,11 +39,12 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
         samplerInterpolation = INTERP_NEAREST;
     }
     // (Using CacheID here to potentially allow reuse of existing textures.)
-    shaderCreator->add3DTexture(name.c_str(),
-                                GpuShaderText::getSamplerName(name).c_str(),
-                                lutData->getGridSize(),
-                                samplerInterpolation,
-                                &lutData->getArray()[0]);
+    shaderCreator->add3DTexture(
+        name.c_str(),
+        GpuShaderText::getSamplerName(name).c_str(),
+        lutData->getGridSize(),
+        samplerInterpolation,
+        &lutData->getArray()[0]);
 
     {
         GpuShaderText ss(shaderCreator->getLanguage());
@@ -51,11 +52,12 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
         shaderCreator->addToDeclareShaderCode(ss.string().c_str());
     }
 
-
     const float dim = (float)lutData->getGridSize();
 
     // incr = 1/dim (amount needed to increment one index in the grid)
     const float incr = 1.0f / dim;
+
+    // clang-format off
 
     {
         GpuShaderText ss(shaderCreator->getLanguage());
@@ -241,7 +243,8 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
 
         shaderCreator->addToFunctionShaderCode(ss.string().c_str());
     }
-}
 
+    // clang-format on
+}
 
 } // namespace OCIO_NAMESPACE

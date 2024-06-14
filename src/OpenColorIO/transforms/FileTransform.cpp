@@ -3,11 +3,11 @@
 
 #include <algorithm>
 #include <fstream>
+#include <iostream>
+#include <iterator>
 #include <map>
 #include <sstream>
 #include <string.h>
-#include <iostream>
-#include <iterator>
 
 #include <pystring.h>
 
@@ -18,9 +18,9 @@
 #include "Logging.h"
 #include "Mutex.h"
 #include "OCIOZArchive.h"
-#include "ops/noop/NoOps.h"
 #include "PathUtils.h"
 #include "Platform.h"
+#include "ops/noop/NoOps.h"
 #include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE
@@ -30,7 +30,7 @@ FileTransformRcPtr FileTransform::Create()
     return FileTransformRcPtr(new FileTransform(), &deleter);
 }
 
-void FileTransform::deleter(FileTransform* t)
+void FileTransform::deleter(FileTransform * t)
 {
     delete t;
 }
@@ -38,17 +38,17 @@ void FileTransform::deleter(FileTransform* t)
 class FileTransform::Impl
 {
 public:
-    TransformDirection m_dir{ TRANSFORM_DIR_FORWARD };
-    Interpolation m_interp{ INTERP_DEFAULT };
+    TransformDirection m_dir{TRANSFORM_DIR_FORWARD};
+    Interpolation m_interp{INTERP_DEFAULT};
     std::string m_src;
 
     std::string m_cccid;
-    CDLStyle m_cdlStyle{ CDL_TRANSFORM_DEFAULT };
+    CDLStyle m_cdlStyle{CDL_TRANSFORM_DEFAULT};
 
-    Impl() = default;
-    Impl(const Impl &) = delete;
-    Impl & operator= (const Impl &) = default;
-    ~Impl() = default;
+    Impl()                         = default;
+    Impl(const Impl &)             = delete;
+    Impl & operator=(const Impl &) = default;
+    ~Impl()                        = default;
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -61,7 +61,7 @@ FileTransform::FileTransform()
 TransformRcPtr FileTransform::createEditableCopy() const
 {
     FileTransformRcPtr transform = FileTransform::Create();
-    *(transform->m_impl) = *m_impl;
+    *(transform->m_impl)         = *m_impl;
     return transform;
 }
 
@@ -163,7 +163,7 @@ bool FileTransform::IsFormatExtensionSupported(const char * extension)
     return FormatRegistry::GetInstance().isFormatExtensionSupported(extension);
 }
 
-std::ostream& operator<< (std::ostream& os, const FileTransform& t)
+std::ostream & operator<<(std::ostream & os, const FileTransform & t)
 {
     os << "<FileTransform ";
     os << "direction=" << TransformDirectionToString(t.getDirection());
@@ -185,26 +185,21 @@ std::ostream& operator<< (std::ostream& os, const FileTransform& t)
 }
 
 // Wrapper around ConfigIOProxy getLutData implementation.
-std::unique_ptr<std::istream> getLutData(
-    const Config & config, 
-    const std::string & filepath, 
-    std::ios_base::openmode mode)
+std::unique_ptr<std::istream>
+getLutData(const Config & config, const std::string & filepath, std::ios_base::openmode mode)
 {
     if (config.getConfigIOProxy())
     {
         std::vector<uint8_t> buffer = config.getConfigIOProxy()->getLutData(filepath.c_str());
         std::stringstream ss;
-        ss.write(reinterpret_cast<const char*>(buffer.data()), buffer.size());
+        ss.write(reinterpret_cast<const char *>(buffer.data()), buffer.size());
 
-        return std::unique_ptr<std::stringstream>(
-            new std::stringstream(std::move(ss))
-        );
+        return std::unique_ptr<std::stringstream>(new std::stringstream(std::move(ss)));
     }
 
     // Default behavior. Return file stream.
     return std::unique_ptr<std::ifstream>(
-        new std::ifstream(Platform::filenameToUTF(filepath).c_str(), mode)
-    );
+        new std::ifstream(Platform::filenameToUTF(filepath).c_str(), mode));
 }
 
 // Close stream returned by getLutData
@@ -215,7 +210,7 @@ void closeLutStream(const Config & config, const std::istream & istream)
     {
         // The std::istream is coming from a std::ifstream.
         // Pointer cast to ifstream and then close it.
-        std::ifstream * pIfStream = (std::ifstream *) &istream;
+        std::ifstream * pIfStream = (std::ifstream *)&istream;
         if (pIfStream->is_open())
         {
             pIfStream->close();
@@ -223,19 +218,21 @@ void closeLutStream(const Config & config, const std::istream & istream)
     }
 }
 
-bool CollectContextVariables(const Config &, 
-                             const Context & context,
-                             const FileTransform & tr,
-                             ContextRcPtr & usedContextVars)
+bool CollectContextVariables(
+    const Config &,
+    const Context & context,
+    const FileTransform & tr,
+    ContextRcPtr & usedContextVars)
 {
     const char * src = tr.getSrc();
 
-    if (!src || !*src) return false;
+    if (!src || !*src)
+        return false;
 
     bool foundContextVars = false;
 
     // Used to collect the context variables needed to resolve the src string itself (not involving
-    // the search_path yet). 
+    // the search_path yet).
     ContextRcPtr ctxFilename = Context::Create();
     ctxFilename->setSearchPath(context.getSearchPath());
     ctxFilename->setWorkingDir(context.getWorkingDir());
@@ -252,7 +249,7 @@ bool CollectContextVariables(const Config &,
     // resolveFileLocation returns all usedContextVars in the search_path, regardless of whether
     // they are needed for the given file.  The work-around is to compare the resolved location
     // with and without using the environment -- if they are the same, it means the environment
-    // was not used. So we create an empty context for this purpose.    
+    // was not used. So we create an empty context for this purpose.
 
     ContextRcPtr emptyContext = Context::Create();
     emptyContext->setSearchPath(context.getSearchPath());
@@ -273,8 +270,10 @@ bool CollectContextVariables(const Config &,
         const std::string resolvedFilename
             = context.resolveFileLocation(resolvedString.c_str(), ctxFilepath);
 
-        if (0 != strcmp(resolvedFilename.c_str(),
-                        emptyContext->resolveFileLocation(resolvedString.c_str())))
+        if (0
+            != strcmp(
+                resolvedFilename.c_str(),
+                emptyContext->resolveFileLocation(resolvedString.c_str())))
         {
             foundContextVars = true;
             usedContextVars->addStringVars(ctxFilepath);
@@ -289,8 +288,8 @@ bool CollectContextVariables(const Config &,
     }
 
     // Check if the CCCID is using a context variable and add it to the context if that's the case.
-    ContextRcPtr ctxCCCID = Context::Create();
-    const char * cccid = tr.getCCCId();
+    ContextRcPtr ctxCCCID     = Context::Create();
+    const char * cccid        = tr.getCCCId();
     std::string resolvedCCCID = context.resolveStringVar(cccid, ctxCCCID);
     if (0 != strcmp(resolvedCCCID.c_str(), cccid))
     {
@@ -300,7 +299,6 @@ bool CollectContextVariables(const Config &,
 
     return foundContextVars;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -314,15 +312,15 @@ bool CollectContextVariables(const Config &,
 
 namespace
 {
-FormatRegistry* g_formatRegistry = NULL;
+FormatRegistry * g_formatRegistry = NULL;
 Mutex g_formatRegistryLock;
-}
+} // namespace
 
 FormatRegistry & FormatRegistry::GetInstance()
 {
     AutoMutex lock(g_formatRegistryLock);
 
-    if(!g_formatRegistry)
+    if (!g_formatRegistry)
     {
         g_formatRegistry = new FormatRegistry();
     }
@@ -357,31 +355,32 @@ FormatRegistry::~FormatRegistry()
 {
 }
 
-FileFormat* FormatRegistry::getFileFormatByName(const std::string & name) const
+FileFormat * FormatRegistry::getFileFormatByName(const std::string & name) const
 {
     FileFormatMap::const_iterator iter = m_formatsByName.find(StringUtils::Lower(name));
-    if(iter != m_formatsByName.end())
+    if (iter != m_formatsByName.end())
         return iter->second;
 
     return nullptr;
 }
 
-void FormatRegistry::getFileFormatForExtension(const std::string & extension,
-                                               FileFormatVector & possibleFormats) const
+void FormatRegistry::getFileFormatForExtension(
+    const std::string & extension,
+    FileFormatVector & possibleFormats) const
 {
     FileFormatVectorMap::const_iterator iter
         = m_formatsByExtension.find(StringUtils::Lower(extension));
 
-    if(iter != m_formatsByExtension.end())
+    if (iter != m_formatsByExtension.end())
         possibleFormats = iter->second;
 }
 
-void FormatRegistry::registerFileFormat(FileFormat* format)
+void FormatRegistry::registerFileFormat(FileFormat * format)
 {
     FormatInfoVec formatInfoVec;
     format->getFormatInfo(formatInfoVec);
 
-    if(formatInfoVec.empty())
+    if (formatInfoVec.empty())
     {
         std::ostringstream os;
         os << "FileFormat Registry error. ";
@@ -389,9 +388,9 @@ void FormatRegistry::registerFileFormat(FileFormat* format)
         throw Exception(os.str().c_str());
     }
 
-    for(unsigned int i=0; i<formatInfoVec.size(); ++i)
+    for (unsigned int i = 0; i < formatInfoVec.size(); ++i)
     {
-        if(formatInfoVec[i].capabilities == FORMAT_CAPABILITY_NONE)
+        if (formatInfoVec[i].capabilities == FORMAT_CAPABILITY_NONE)
         {
             std::ostringstream os;
             os << "FileFormat Registry error. ";
@@ -400,7 +399,7 @@ void FormatRegistry::registerFileFormat(FileFormat* format)
             throw Exception(os.str().c_str());
         }
 
-        if(getFileFormatByName(formatInfoVec[i].name))
+        if (getFileFormatByName(formatInfoVec[i].name))
         {
             std::ostringstream os;
             os << "Cannot register multiple file formats named, '";
@@ -412,7 +411,7 @@ void FormatRegistry::registerFileFormat(FileFormat* format)
 
         m_formatsByExtension[formatInfoVec[i].extension].push_back(format);
 
-        if(formatInfoVec[i].capabilities & FORMAT_CAPABILITY_READ)
+        if (formatInfoVec[i].capabilities & FORMAT_CAPABILITY_READ)
         {
             m_readFormatNames.push_back(formatInfoVec[i].name);
             m_readFormatExtensions.push_back(formatInfoVec[i].extension);
@@ -424,7 +423,7 @@ void FormatRegistry::registerFileFormat(FileFormat* format)
             m_bakeFormatExtensions.push_back(formatInfoVec[i].extension);
         }
 
-        if(formatInfoVec[i].capabilities & FORMAT_CAPABILITY_WRITE)
+        if (formatInfoVec[i].capabilities & FORMAT_CAPABILITY_WRITE)
         {
             m_writeFormatNames.push_back(formatInfoVec[i].name);
             m_writeFormatExtensions.push_back(formatInfoVec[i].extension);
@@ -439,9 +438,9 @@ int FormatRegistry::getNumRawFormats() const
     return static_cast<int>(m_rawFormats.size());
 }
 
-FileFormat* FormatRegistry::getRawFormatByIndex(int index) const
+FileFormat * FormatRegistry::getRawFormatByIndex(int index) const
 {
-    if(index<0 || index>=getNumRawFormats())
+    if (index < 0 || index >= getNumRawFormats())
     {
         return NULL;
     }
@@ -451,7 +450,7 @@ FileFormat* FormatRegistry::getRawFormatByIndex(int index) const
 
 int FormatRegistry::getNumFormats(int capability) const noexcept
 {
-    if(capability == FORMAT_CAPABILITY_READ)
+    if (capability == FORMAT_CAPABILITY_READ)
     {
         return static_cast<int>(m_readFormatNames.size());
     }
@@ -468,9 +467,9 @@ int FormatRegistry::getNumFormats(int capability) const noexcept
 
 const char * FormatRegistry::getFormatNameByIndex(int capability, int index) const noexcept
 {
-    if(capability == FORMAT_CAPABILITY_READ)
+    if (capability == FORMAT_CAPABILITY_READ)
     {
-        if(index<0 || index>=static_cast<int>(m_readFormatNames.size()))
+        if (index < 0 || index >= static_cast<int>(m_readFormatNames.size()))
         {
             return "";
         }
@@ -478,15 +477,15 @@ const char * FormatRegistry::getFormatNameByIndex(int capability, int index) con
     }
     else if (capability == FORMAT_CAPABILITY_BAKE)
     {
-        if (index<0 || index >= static_cast<int>(m_bakeFormatNames.size()))
+        if (index < 0 || index >= static_cast<int>(m_bakeFormatNames.size()))
         {
             return "";
         }
         return m_bakeFormatNames[index].c_str();
     }
-    else if(capability == FORMAT_CAPABILITY_WRITE)
+    else if (capability == FORMAT_CAPABILITY_WRITE)
     {
-        if(index<0 || index>=static_cast<int>(m_writeFormatNames.size()))
+        if (index < 0 || index >= static_cast<int>(m_writeFormatNames.size()))
         {
             return "";
         }
@@ -497,10 +496,9 @@ const char * FormatRegistry::getFormatNameByIndex(int capability, int index) con
 
 const char * FormatRegistry::getFormatExtensionByIndex(int capability, int index) const noexcept
 {
-    if(capability == FORMAT_CAPABILITY_READ)
+    if (capability == FORMAT_CAPABILITY_READ)
     {
-        if(index<0 
-            || index>=static_cast<int>(m_readFormatExtensions.size()))
+        if (index < 0 || index >= static_cast<int>(m_readFormatExtensions.size()))
         {
             return "";
         }
@@ -508,17 +506,15 @@ const char * FormatRegistry::getFormatExtensionByIndex(int capability, int index
     }
     else if (capability == FORMAT_CAPABILITY_BAKE)
     {
-        if (index<0
-            || index >= static_cast<int>(m_bakeFormatExtensions.size()))
+        if (index < 0 || index >= static_cast<int>(m_bakeFormatExtensions.size()))
         {
             return "";
         }
         return m_bakeFormatExtensions[index].c_str();
     }
-    else if(capability == FORMAT_CAPABILITY_WRITE)
+    else if (capability == FORMAT_CAPABILITY_WRITE)
     {
-        if(index<0 
-            || index>=static_cast<int>(m_writeFormatExtensions.size()))
+        if (index < 0 || index >= static_cast<int>(m_writeFormatExtensions.size()))
         {
             return "";
         }
@@ -557,34 +553,35 @@ bool FormatRegistry::isFormatExtensionSupported(const char * extension) const
 
 FileFormat::~FileFormat()
 {
-
 }
 
 std::string FileFormat::getName() const
 {
     FormatInfoVec infoVec;
     getFormatInfo(infoVec);
-    if(infoVec.size()>0)
+    if (infoVec.size() > 0)
     {
         return infoVec[0].name;
     }
     return "Unknown Format";
 }
 
-void FileFormat::bake(const Baker & /*baker*/,
-                      const std::string & formatName,
-                      std::ostream & /*ostream*/) const
+void FileFormat::bake(
+    const Baker & /*baker*/,
+    const std::string & formatName,
+    std::ostream & /*ostream*/) const
 {
     std::ostringstream os;
     os << "Format '" << formatName << "' does not support baking.";
     throw Exception(os.str().c_str());
 }
 
-void FileFormat::write(const ConstConfigRcPtr & /*config*/,
-                       const ConstContextRcPtr & /*context*/,
-                       const GroupTransform & /*group*/,
-                       const std::string & formatName,
-                       std::ostream & /*ostream*/) const
+void FileFormat::write(
+    const ConstConfigRcPtr & /*config*/,
+    const ConstContextRcPtr & /*context*/,
+    const GroupTransform & /*group*/,
+    const std::string & formatName,
+    std::ostream & /*ostream*/) const
 {
     std::ostringstream os;
     os << "Format '" << formatName << "' does not support writing.";
@@ -594,18 +591,18 @@ void FileFormat::write(const ConstConfigRcPtr & /*config*/,
 namespace
 {
 
-void LoadFileUncached(FileFormat * & returnFormat,
-                      CachedFileRcPtr & returnCachedFile,
-                      const std::string & filepath,
-                      Interpolation interp,
-                      const Config& config)
+void LoadFileUncached(
+    FileFormat *& returnFormat,
+    CachedFileRcPtr & returnCachedFile,
+    const std::string & filepath,
+    Interpolation interp,
+    const Config & config)
 {
     returnFormat = NULL;
 
     {
         std::ostringstream oss;
-        oss << "**" << std::endl
-            << "Opening " << filepath;
+        oss << "**" << std::endl << "Opening " << filepath;
         LogDebug(oss.str());
     }
 
@@ -615,28 +612,27 @@ void LoadFileUncached(FileFormat * & returnFormat,
     std::string root, extension;
     pystring::os::path::splitext(root, extension, filepath);
     // remove the leading '.'
-    extension = pystring::replace(extension,".","",1);
+    extension = pystring::replace(extension, ".", "", 1);
 
     FormatRegistry & formatRegistry = FormatRegistry::GetInstance();
 
     FileFormatVector possibleFormats;
     formatRegistry.getFileFormatForExtension(extension, possibleFormats);
     FileFormatVector::const_iterator endFormat = possibleFormats.end();
-    FileFormatVector::const_iterator itFormat = possibleFormats.begin();
-    while(itFormat != endFormat)
+    FileFormatVector::const_iterator itFormat  = possibleFormats.begin();
+    while (itFormat != endFormat)
     {
 
-        FileFormat * tryFormat = *itFormat;
+        FileFormat * tryFormat                = *itFormat;
         std::unique_ptr<std::istream> pStream = nullptr;
         try
         {
             pStream = getLutData(
                 config,
-                filepath, 
-                tryFormat->isBinary() ? std::ios_base::binary : std::ios_base::in 
-            );
+                filepath,
+                tryFormat->isBinary() ? std::ios_base::binary : std::ios_base::in);
             auto & filestream = *pStream;
-            
+
             if (!filestream.good())
             {
                 std::ostringstream os;
@@ -649,7 +645,7 @@ void LoadFileUncached(FileFormat * & returnFormat,
 
             CachedFileRcPtr cachedFile = tryFormat->read(filestream, filepath, interp);
 
-            if(IsDebugLoggingEnabled())
+            if (IsDebugLoggingEnabled())
             {
                 std::ostringstream os;
                 os << "    Loaded primary format ";
@@ -657,18 +653,18 @@ void LoadFileUncached(FileFormat * & returnFormat,
                 LogDebug(os.str());
             }
 
-            returnFormat = tryFormat;
+            returnFormat     = tryFormat;
             returnCachedFile = cachedFile;
 
             closeLutStream(config, filestream);
 
             return;
         }
-        catch(std::exception & e)
+        catch (std::exception & e)
         {
             if (pStream)
             {
-                closeLutStream(config, *pStream); 
+                closeLutStream(config, *pStream);
             }
 
             primaryErrorText += "    '";
@@ -676,7 +672,7 @@ void LoadFileUncached(FileFormat * & returnFormat,
             primaryErrorText += "' failed with: ";
             primaryErrorText += e.what();
 
-            if(IsDebugLoggingEnabled())
+            if (IsDebugLoggingEnabled())
             {
                 std::ostringstream os;
                 os << "    Failed primary format ";
@@ -692,16 +688,14 @@ void LoadFileUncached(FileFormat * & returnFormat,
     CachedFileRcPtr cachedFile;
     FileFormat * altFormat = NULL;
 
-    for(int findex = 0;
-        findex<formatRegistry.getNumRawFormats();
-        ++findex)
+    for (int findex = 0; findex < formatRegistry.getNumRawFormats(); ++findex)
     {
         altFormat = formatRegistry.getRawFormatByIndex(findex);
 
         // Do not try primary formats twice.
-        FileFormatVector::const_iterator itAlt = std::find(
-            possibleFormats.begin(), possibleFormats.end(), altFormat);
-        if(itAlt != endFormat)
+        FileFormatVector::const_iterator itAlt
+            = std::find(possibleFormats.begin(), possibleFormats.end(), altFormat);
+        if (itAlt != endFormat)
             continue;
 
         std::unique_ptr<std::istream> pStream = nullptr;
@@ -709,11 +703,10 @@ void LoadFileUncached(FileFormat * & returnFormat,
         {
             pStream = getLutData(
                 config,
-                filepath, 
-                altFormat->isBinary() ? std::ios_base::binary : std::ios_base::in 
-            );
-            auto& filestream = *pStream;
-            
+                filepath,
+                altFormat->isBinary() ? std::ios_base::binary : std::ios_base::in);
+            auto & filestream = *pStream;
+
             if (!filestream.good())
             {
                 std::ostringstream os;
@@ -727,7 +720,7 @@ void LoadFileUncached(FileFormat * & returnFormat,
 
             cachedFile = altFormat->read(filestream, filepath, interp);
 
-            if(IsDebugLoggingEnabled())
+            if (IsDebugLoggingEnabled())
             {
                 std::ostringstream os;
                 os << "    Loaded alt format ";
@@ -735,21 +728,21 @@ void LoadFileUncached(FileFormat * & returnFormat,
                 LogDebug(os.str());
             }
 
-            returnFormat = altFormat;
+            returnFormat     = altFormat;
             returnCachedFile = cachedFile;
 
             closeLutStream(config, filestream);
 
             return;
         }
-        catch(std::exception & e)
+        catch (std::exception & e)
         {
             if (pStream)
             {
-                closeLutStream(config, *pStream); 
+                closeLutStream(config, *pStream);
             }
-            
-            if(IsDebugLoggingEnabled())
+
+            if (IsDebugLoggingEnabled())
             {
                 std::ostringstream os;
                 os << "    Failed alt format ";
@@ -775,7 +768,7 @@ void LoadFileUncached(FileFormat * & returnFormat,
         os << "(Enable debug log for errors from all formats.) ";
     }
 
-    if(!possibleFormats.empty())
+    if (!possibleFormats.empty())
     {
         if (possibleFormats.size() == 1)
         {
@@ -799,8 +792,8 @@ struct FileCacheResult
 {
     Mutex mutex;
     FileFormat * format = nullptr;
-    bool ready = false;
-    bool error = false;
+    bool ready          = false;
+    bool error          = false;
     CachedFileRcPtr cachedFile;
     std::string exceptionText;
 
@@ -811,16 +804,16 @@ typedef OCIO_SHARED_PTR<FileCacheResult> FileCacheResultPtr;
 
 } // namespace
 
-
 // A global file content cache.
 template class GenericCache<std::string, FileCacheResultPtr>;
 GenericCache<std::string, FileCacheResultPtr> g_fileCache;
 
-void GetCachedFileAndFormat(FileFormat * & format,
-                            CachedFileRcPtr & cachedFile,
-                            const std::string & filepath,
-                            Interpolation interp,
-                            const Config& config)
+void GetCachedFileAndFormat(
+    FileFormat *& format,
+    CachedFileRcPtr & cachedFile,
+    const std::string & filepath,
+    Interpolation interp,
+    const Config & config)
 {
     // Have a two-mutex approach to decouple the cache entry creation from
     // the data creation. It was originally done to improve the multi-threaded
@@ -830,7 +823,7 @@ void GetCachedFileAndFormat(FileFormat * & format,
     FileCacheResultPtr result;
     {
         AutoMutex guard(g_fileCache.lock());
-    
+
         if (g_fileCache.isEnabled())
         {
             // As the entry is a shared pointer instance, having an empty one
@@ -839,7 +832,7 @@ void GetCachedFileAndFormat(FileFormat * & format,
             result = g_fileCache[filepath];
             if (!result)
             {
-                result = std::make_shared<FileCacheResult>();
+                result                = std::make_shared<FileCacheResult>();
                 g_fileCache[filepath] = result;
             }
         }
@@ -863,7 +856,7 @@ void GetCachedFileAndFormat(FileFormat * & format,
         }
         catch (std::exception & e)
         {
-            result->error = true;
+            result->error         = true;
             result->exceptionText = e.what();
         }
         catch (...)
@@ -882,7 +875,7 @@ void GetCachedFileAndFormat(FileFormat * & format,
     }
     else
     {
-        format = result->format;
+        format     = result->format;
         cachedFile = result->cachedFile;
     }
 
@@ -910,14 +903,15 @@ void ClearFileTransformCaches()
     g_fileCache.clear();
 }
 
-void BuildFileTransformOps(OpRcPtrVec & ops,
-                           const Config& config,
-                           const ConstContextRcPtr & context,
-                           const FileTransform& fileTransform,
-                           TransformDirection dir)
+void BuildFileTransformOps(
+    OpRcPtrVec & ops,
+    const Config & config,
+    const ConstContextRcPtr & context,
+    const FileTransform & fileTransform,
+    TransformDirection dir)
 {
     std::string src = fileTransform.getSrc();
-    if(src.empty())
+    if (src.empty())
     {
         std::ostringstream os;
         os << "The transform file has not been specified.";
@@ -931,13 +925,13 @@ void BuildFileTransformOps(OpRcPtrVec & ops,
     {
         ConstOpRcPtr const_op(op);
         ConstOpDataRcPtr data = const_op->data();
-        auto fileData = DynamicPtrCast<const FileNoOpData>(data);
+        auto fileData         = DynamicPtrCast<const FileNoOpData>(data);
         if (fileData)
         {
             // Error if file is still being loaded and is the same as the
             // one about to be loaded.
-            if (!fileData->getComplete() &&
-                Platform::Strcasecmp(fileData->getPath().c_str(), filepath.c_str()) == 0)
+            if (!fileData->getComplete()
+                && Platform::Strcasecmp(fileData->getPath().c_str(), filepath.c_str()) == 0)
             {
                 std::ostringstream os;
                 os << "Reference to: " << filepath;
@@ -948,14 +942,10 @@ void BuildFileTransformOps(OpRcPtrVec & ops,
         }
     }
 
-    FileFormat* format = NULL;
+    FileFormat * format = NULL;
     CachedFileRcPtr cachedFile;
 
-    GetCachedFileAndFormat(format, 
-                           cachedFile, 
-                           filepath, 
-                           fileTransform.getInterpolation(),
-                           config);
+    GetCachedFileAndFormat(format, cachedFile, filepath, fileTransform.getInterpolation(), config);
 
     try
     {
@@ -963,7 +953,7 @@ void BuildFileTransformOps(OpRcPtrVec & ops,
         CreateFileNoOp(ops, filepath);
 
         ConstOpRcPtr fileNoOpConst = ops.back();
-        OpRcPtr fileNoOp = ops.back();
+        OpRcPtr fileNoOp           = ops.back();
 
         // CTF implementation of FileFormat::buildFileOps might call
         // BuildFileTransformOps for References.
@@ -971,7 +961,7 @@ void BuildFileTransformOps(OpRcPtrVec & ops,
 
         // File has been loaded completely. It may now be referenced again.
         ConstOpDataRcPtr data = fileNoOpConst->data();
-        auto fileData = DynamicPtrCast<const FileNoOpData>(data);
+        auto fileData         = DynamicPtrCast<const FileNoOpData>(data);
         if (fileData)
         {
             fileData->setComplete();

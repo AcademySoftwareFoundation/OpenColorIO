@@ -11,7 +11,6 @@
 #include "CDLOpCPU.h"
 #include "SSE.h"
 
-
 namespace OCIO_NAMESPACE
 {
 
@@ -24,9 +23,9 @@ inline float Reciprocal(float x)
 
 RenderParams::RenderParams()
 {
-    setSlope (1.0f, 1.0f, 1.0f);
+    setSlope(1.0f, 1.0f, 1.0f);
     setOffset(0.0f, 0.0f, 0.0f);
-    setPower (1.0f, 1.0f, 1.0f);
+    setPower(1.0f, 1.0f, 1.0f);
     setSaturation(1.0f);
 }
 
@@ -66,7 +65,7 @@ void RenderParams::update(ConstCDLOpDataRcPtr & cdl)
     cdl->getOffsetParams().getRGB(offset);
     cdl->getPowerParams().getRGB(power);
 
-    const float saturation = (float)cdl->getSaturation();
+    const float saturation       = (float)cdl->getSaturation();
     const CDLOpData::Style style = cdl->getStyle();
 
     m_isReverse = (style == CDLOpData::CDL_V1_2_REV) || (style == CDLOpData::CDL_NO_CLAMP_REV);
@@ -76,15 +75,17 @@ void RenderParams::update(ConstCDLOpDataRcPtr & cdl)
     if (isReverse())
     {
         // Reverse render parameters
-        setSlope(Reciprocal((float)slope[0]),
-                 Reciprocal((float)slope[1]),
-                 Reciprocal((float)slope[2]));
+        setSlope(
+            Reciprocal((float)slope[0]),
+            Reciprocal((float)slope[1]),
+            Reciprocal((float)slope[2]));
 
         setOffset((float)-offset[0], (float)-offset[1], (float)-offset[2]);
 
-        setPower(Reciprocal((float)power[0]),
-                 Reciprocal((float)power[1]),
-                 Reciprocal((float)power[2]));
+        setPower(
+            Reciprocal((float)power[0]),
+            Reciprocal((float)power[1]),
+            Reciprocal((float)power[2]));
 
         setSaturation(Reciprocal(saturation));
     }
@@ -97,7 +98,6 @@ void RenderParams::update(ConstCDLOpDataRcPtr & cdl)
         setSaturation(saturation);
     }
 }
-
 
 #if OCIO_USE_SSE2
 
@@ -121,14 +121,12 @@ inline void StorePixel(float * rgbaBuffer, const __m128 pix, const float outAlph
 // When the template argument is true, the clamp mode is used,
 // and the values in pix are clamped to the range [0,1]. When
 // the argument is false, nothing is done.
-template<bool>
-inline void ApplyClamp(__m128& pix)
+template <bool> inline void ApplyClamp(__m128 & pix)
 {
     pix = _mm_min_ps(_mm_max_ps(pix, EZERO), EONE);
 }
 
-template<>
-inline void ApplyClamp<false>(__m128&)
+template <> inline void ApplyClamp<false>(__m128 &)
 {
 }
 
@@ -139,32 +137,30 @@ inline void ApplyClamp<false>(__m128&)
 // not clamped before the power operation is applied. When the
 // base is negative in this mode, pixel values are just passed
 // through.
-template<bool CLAMP>
-inline void ApplyPower(__m128& pix, const __m128& power)
+template <bool CLAMP> inline void ApplyPower(__m128 & pix, const __m128 & power)
 {
     ApplyClamp<CLAMP>(pix);
     pix = ssePower(pix, power);
 }
 
-template<>
-inline void ApplyPower<false>(__m128& pix, const __m128& power)
+template <> inline void ApplyPower<false>(__m128 & pix, const __m128 & power)
 {
-    __m128 negMask = _mm_cmplt_ps(pix, EZERO);
+    __m128 negMask  = _mm_cmplt_ps(pix, EZERO);
     __m128 pixPower = ssePower(pix, power);
-    pix = sseSelect(negMask, pix, pixPower);
+    pix             = sseSelect(negMask, pix, pixPower);
 }
 
 // Apply the saturation component to the the pixel's values
-inline void ApplySaturation(__m128& pix, const __m128 saturation)
+inline void ApplySaturation(__m128 & pix, const __m128 saturation)
 {
     // Compute luma: dot product of pixel values and the luma weights
     __m128 luma = _mm_mul_ps(pix, LumaWeights);
 
     // luma = [ x+y , y+x , z+w , w+z ]
-    luma = _mm_add_ps(luma, _mm_shuffle_ps(luma, luma, _MM_SHUFFLE(2,3,0,1)));
+    luma = _mm_add_ps(luma, _mm_shuffle_ps(luma, luma, _MM_SHUFFLE(2, 3, 0, 1)));
 
     // luma = [ x+y+z+w , y+x+w+z , z+w+x+y , w+z+y+x ]
-    luma = _mm_add_ps(luma, _mm_shuffle_ps(luma, luma, _MM_SHUFFLE(1,0,3,2)));
+    luma = _mm_add_ps(luma, _mm_shuffle_ps(luma, luma, _MM_SHUFFLE(1, 0, 3, 2)));
 
     // Apply saturation
     pix = _mm_add_ps(luma, _mm_mul_ps(saturation, _mm_sub_ps(pix, luma)));
@@ -198,9 +194,9 @@ inline void ApplyOffset(float * pix, const float * offset)
 // Apply the saturation component to the the pixel's values
 inline void ApplySaturation(float * pix, const float saturation)
 {
-    const float srcpix[3] = { pix[0], pix[1], pix[2] };
+    const float srcpix[3] = {pix[0], pix[1], pix[2]};
 
-    static const float LumaWeights[3] = { 0.2126f, 0.7152f, 0.0722f };
+    static const float LumaWeights[3] = {0.2126f, 0.7152f, 0.0722f};
 
     // Compute luma: dot product of pixel values and the luma weights
     ApplySlope(pix, LumaWeights);
@@ -218,8 +214,7 @@ inline void ApplySaturation(float * pix, const float saturation)
 // When the template argument is true, the clamp mode is used,
 // and the values in pix are clamped to the range [0,1]. When
 // the argument is false, nothing is done.
-template<bool>
-inline void ApplyClamp(float * pix)
+template <bool> inline void ApplyClamp(float * pix)
 {
     // NaNs become 0.
     pix[0] = Clamp(pix[0], 0.f, 1.f);
@@ -227,8 +222,7 @@ inline void ApplyClamp(float * pix)
     pix[2] = Clamp(pix[2], 0.f, 1.f);
 }
 
-template<>
-inline void ApplyClamp<false>(float *)
+template <> inline void ApplyClamp<false>(float *)
 {
 }
 
@@ -239,8 +233,7 @@ inline void ApplyClamp<false>(float *)
 // not clamped before the power operation is applied. When the
 // base is negative in this mode, pixel values are just passed
 // through.
-template<bool>
-inline void ApplyPower(float * pix, const float * power)
+template <bool> inline void ApplyPower(float * pix, const float * power)
 {
     ApplyClamp<true>(pix);
     pix[0] = powf(pix[0], power[0]);
@@ -248,13 +241,12 @@ inline void ApplyPower(float * pix, const float * power)
     pix[2] = powf(pix[2], power[2]);
 }
 
-template<>
-inline void ApplyPower<false>(float * pix, const float * power)
+template <> inline void ApplyPower<false>(float * pix, const float * power)
 {
     // Note: Set NaNs to 0 to match the SSE path.
-    pix[0] = IsNan(pix[0]) ? 0.0f : (pix[0]<0.f ? pix[0] : powf(pix[0], power[0]));
-    pix[1] = IsNan(pix[1]) ? 0.0f : (pix[1]<0.f ? pix[1] : powf(pix[1], power[1]));
-    pix[2] = IsNan(pix[2]) ? 0.0f : (pix[2]<0.f ? pix[2] : powf(pix[2], power[2]));
+    pix[0] = IsNan(pix[0]) ? 0.0f : (pix[0] < 0.f ? pix[0] : powf(pix[0], power[0]));
+    pix[1] = IsNan(pix[1]) ? 0.0f : (pix[1] < 0.f ? pix[1] : powf(pix[1], power[1]));
+    pix[2] = IsNan(pix[2]) ? 0.0f : (pix[2] < 0.f ? pix[2] : powf(pix[2], power[2]));
 }
 
 class CDLOpCPU;
@@ -271,8 +263,7 @@ protected:
     RenderParams m_renderParams;
 };
 
-template<bool CLAMP>
-class CDLRendererFwd : public CDLOpCPU
+template <bool CLAMP> class CDLRendererFwd : public CDLOpCPU
 {
 public:
     CDLRendererFwd(ConstCDLOpDataRcPtr & cdl)
@@ -284,8 +275,7 @@ public:
 };
 
 #if OCIO_USE_SSE2
-template<bool CLAMP>
-class CDLRendererFwdSSE : public CDLRendererFwd<CLAMP>
+template <bool CLAMP> class CDLRendererFwdSSE : public CDLRendererFwd<CLAMP>
 {
 public:
     CDLRendererFwdSSE(ConstCDLOpDataRcPtr & cdl)
@@ -297,8 +287,7 @@ public:
 };
 #endif
 
-template<bool CLAMP>
-class CDLRendererRev : public CDLOpCPU
+template <bool CLAMP> class CDLRendererRev : public CDLOpCPU
 {
 public:
     CDLRendererRev(ConstCDLOpDataRcPtr & cdl)
@@ -310,8 +299,7 @@ public:
 };
 
 #if OCIO_USE_SSE2
-template<bool CLAMP>
-class CDLRendererRevSSE : public CDLRendererRev<CLAMP>
+template <bool CLAMP> class CDLRendererRevSSE : public CDLRendererRev<CLAMP>
 {
 public:
     CDLRendererRevSSE(ConstCDLOpDataRcPtr & cdl)
@@ -324,17 +312,18 @@ public:
 #endif
 
 CDLOpCPU::CDLOpCPU(ConstCDLOpDataRcPtr & cdl)
-    :   OpCPU()
+    : OpCPU()
 {
     m_renderParams.update(cdl);
 }
 
 #if OCIO_USE_SSE2
-void LoadRenderParams(const RenderParams & renderParams,
-                      __m128 & slope,
-                      __m128 & offset,
-                      __m128 & power,
-                      __m128 & saturation)
+void LoadRenderParams(
+    const RenderParams & renderParams,
+    __m128 & slope,
+    __m128 & offset,
+    __m128 & power,
+    __m128 & saturation)
 {
     slope      = _mm_loadu_ps(renderParams.getSlope());
     offset     = _mm_loadu_ps(renderParams.getOffset());
@@ -344,7 +333,7 @@ void LoadRenderParams(const RenderParams & renderParams,
 #endif
 
 #if OCIO_USE_SSE2
-template<bool CLAMP>
+template <bool CLAMP>
 void CDLRendererFwdSSE<CLAMP>::apply(const void * inImg, void * outImg, long numPixels) const
 {
     __m128 slope, offset, power, saturation, pix;
@@ -353,9 +342,9 @@ void CDLRendererFwdSSE<CLAMP>::apply(const void * inImg, void * outImg, long num
     float inAlpha;
 
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for(long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         pix = LoadPixel(in, inAlpha);
 
@@ -369,22 +358,22 @@ void CDLRendererFwdSSE<CLAMP>::apply(const void * inImg, void * outImg, long num
 
         StorePixel(out, pix, inAlpha);
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
 #endif
 
-template<bool CLAMP>
+template <bool CLAMP>
 void CDLRendererFwd<CLAMP>::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
     const float * slope = m_renderParams.getSlope();
-    float inSlope[3] = {slope[0], slope[1], slope[2]};
+    float inSlope[3]    = {slope[0], slope[1], slope[2]};
 
-    for (long idx = 0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         const float inAlpha = in[3];
 
@@ -401,13 +390,13 @@ void CDLRendererFwd<CLAMP>::apply(const void * inImg, void * outImg, long numPix
 
         out[3] = inAlpha;
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
 
 #if OCIO_USE_SSE2
-template<bool CLAMP>
+template <bool CLAMP>
 void CDLRendererRevSSE<CLAMP>::apply(const void * inImg, void * outImg, long numPixels) const
 {
     __m128 slopeRev, offsetRev, powerRev, saturationRev, pix;
@@ -416,9 +405,9 @@ void CDLRendererRevSSE<CLAMP>::apply(const void * inImg, void * outImg, long num
     float inAlpha = 1.0f;
 
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for(long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         pix = LoadPixel(in, inAlpha);
 
@@ -433,19 +422,19 @@ void CDLRendererRevSSE<CLAMP>::apply(const void * inImg, void * outImg, long num
 
         StorePixel(out, pix, inAlpha);
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
 #endif
 
-template<bool CLAMP>
+template <bool CLAMP>
 void CDLRendererRev<CLAMP>::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for (long idx = 0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         const float inAlpha = in[3];
 
@@ -463,7 +452,7 @@ void CDLRendererRev<CLAMP>::apply(const void * inImg, void * outImg, long numPix
 
         out[3] = inAlpha;
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
@@ -475,29 +464,33 @@ ConstOpCPURcPtr GetCDLCPURenderer(ConstCDLOpDataRcPtr & cdl, bool fastPower)
 #if OCIO_USE_SSE2 == 0
     std::ignore = fastPower;
 #endif
-    switch(cdl->getStyle())
+    switch (cdl->getStyle())
     {
         case CDLOpData::CDL_V1_2_FWD:
 #if OCIO_USE_SSE2
-            if (fastPower) return std::make_shared<CDLRendererFwdSSE<true>>(cdl);
+            if (fastPower)
+                return std::make_shared<CDLRendererFwdSSE<true>>(cdl);
             else
 #endif
                 return std::make_shared<CDLRendererFwd<true>>(cdl);
         case CDLOpData::CDL_NO_CLAMP_FWD:
 #if OCIO_USE_SSE2
-            if (fastPower) return std::make_shared<CDLRendererFwdSSE<false>>(cdl);
+            if (fastPower)
+                return std::make_shared<CDLRendererFwdSSE<false>>(cdl);
             else
 #endif
                 return std::make_shared<CDLRendererFwd<false>>(cdl);
         case CDLOpData::CDL_V1_2_REV:
 #if OCIO_USE_SSE2
-            if (fastPower) return std::make_shared<CDLRendererRevSSE<true>>(cdl);
+            if (fastPower)
+                return std::make_shared<CDLRendererRevSSE<true>>(cdl);
             else
 #endif
                 return std::make_shared<CDLRendererRev<true>>(cdl);
         case CDLOpData::CDL_NO_CLAMP_REV:
 #if OCIO_USE_SSE2
-            if (fastPower) return std::make_shared<CDLRendererRevSSE<false>>(cdl);
+            if (fastPower)
+                return std::make_shared<CDLRendererRevSSE<false>>(cdl);
             else
 #endif
                 return std::make_shared<CDLRendererRev<false>>(cdl);

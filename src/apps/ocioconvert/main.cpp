@@ -23,9 +23,9 @@ namespace OCIO = OCIO_NAMESPACE;
 static std::vector<std::string> args;
 
 // Fill 'args' array with OpenColorIO arguments.
-static int parse_end_args(int argc, const char *argv[])
+static int parse_end_args(int argc, const char * argv[])
 {
-    while (argc>0)
+    while (argc > 0)
     {
         args.push_back(argv[0]);
         argc--;
@@ -35,13 +35,13 @@ static int parse_end_args(int argc, const char *argv[])
     return 0;
 }
 
-bool ParseNameValuePair(std::string& name, std::string& value, const std::string& input);
+bool ParseNameValuePair(std::string & name, std::string & value, const std::string & input);
 
 bool StringToFloat(float * fval, const char * str);
 
 bool StringToInt(int * ival, const char * str);
 
-int main(int argc, const char **argv)
+int main(int argc, const char ** argv)
 {
     ArgParse ap;
 
@@ -58,6 +58,7 @@ int main(int argc, const char **argv)
     bool useDisplayView = false;
     bool useInvertView  = false;
 
+    // clang-format off
     ap.options("ocioconvert -- apply colorspace transform to an image \n\n"
                "usage: ocioconvert [options] inputimage inputcolorspace outputimage outputcolorspace\n"
                "   or: ocioconvert [options] --lut lutfile inputimage outputimage\n"
@@ -86,11 +87,12 @@ int main(int argc, const char **argv)
                                                        "for outputimage",
                NULL
                );
+    // clang-format on
 
-    if (ap.parse (argc, argv) < 0)
+    if (ap.parse(argc, argv) < 0)
     {
         std::cerr << ap.geterror() << std::endl;
-        ap.usage ();
+        ap.usage();
         exit(1);
     }
 
@@ -121,8 +123,7 @@ int main(int argc, const char **argv)
     {
         if (args.size() != 4)
         {
-            std::cerr << "ERROR: Expecting 4 arguments, found " 
-                      << args.size() << "." << std::endl;
+            std::cerr << "ERROR: Expecting 4 arguments, found " << args.size() << "." << std::endl;
             ap.usage();
             exit(1);
         }
@@ -141,8 +142,8 @@ int main(int argc, const char **argv)
     {
         if (args.size() != 3)
         {
-            std::cerr << "ERROR: Expecting 3 arguments for --lut option, found "
-                      << args.size() << "." << std::endl;
+            std::cerr << "ERROR: Expecting 3 arguments for --lut option, found " << args.size()
+                      << "." << std::endl;
             ap.usage();
             exit(1);
         }
@@ -154,8 +155,8 @@ int main(int argc, const char **argv)
     {
         if (args.size() != 5)
         {
-            std::cerr << "ERROR: Expecting 5 arguments for --view option, found "
-                      << args.size() << "." << std::endl;
+            std::cerr << "ERROR: Expecting 5 arguments for --view option, found " << args.size()
+                      << "." << std::endl;
             ap.usage();
             exit(1);
         }
@@ -167,11 +168,12 @@ int main(int argc, const char **argv)
     }
     else if (useDisplayView && useInvertView)
     {
-        std::cerr << "ERROR: Options view & invertview can't be used at the same time." << std::endl;
+        std::cerr << "ERROR: Options view & invertview can't be used at the same time."
+                  << std::endl;
         ap.usage();
         exit(1);
     }
-    else if (useInvertView) 
+    else if (useInvertView)
     {
         if (args.size() != 5)
         {
@@ -180,11 +182,11 @@ int main(int argc, const char **argv)
             ap.usage();
             exit(1);
         }
-        inputimage          = args[0].c_str();
-        display             = args[1].c_str();
-        view                = args[2].c_str();
-        outputimage         = args[3].c_str();
-        outputcolorspace    = args[4].c_str();
+        inputimage       = args[0].c_str();
+        display          = args[1].c_str();
+        view             = args[2].c_str();
+        outputimage      = args[3].c_str();
+        outputcolorspace = args[4].c_str();
     }
 
     if (verbose)
@@ -200,8 +202,8 @@ int main(int argc, const char **argv)
                 std::cout << std::endl;
                 std::cout << "OCIO Config. file:    '" << env << "'" << std::endl;
                 OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-                std::cout << "OCIO Config. version: " << config->getMajorVersion() << "." 
-                                                      << config->getMinorVersion() << std::endl;
+                std::cout << "OCIO Config. version: " << config->getMajorVersion() << "."
+                          << config->getMinorVersion() << std::endl;
                 std::cout << "OCIO search_path:     " << config->getSearchPath() << std::endl;
             }
             catch (const OCIO::Exception & e)
@@ -232,7 +234,7 @@ int main(int argc, const char **argv)
     OCIO::ImageIO imgInput;
     OCIO::ImageIO imgOutputCPU;
     // Default is to perform in-place conversion.
-    OCIO::ImageIO *imgOutput = &imgInput;
+    OCIO::ImageIO * imgOutput = &imgInput;
 
     // Load the image.
     std::cout << std::endl;
@@ -278,8 +280,8 @@ int main(int argc, const char **argv)
         }
         else
         {
-            std::cerr << "Cannot convert image with " << imgInput.getNumChannels()
-                      << " components." << std::endl;
+            std::cerr << "Cannot convert image with " << imgInput.getNumChannels() << " components."
+                      << std::endl;
             exit(1);
         }
 
@@ -300,8 +302,12 @@ int main(int argc, const char **argv)
 
         oglApp->setPrintShader(outputgpuInfo);
 
-        oglApp->initImage(imgInput.getWidth(), imgInput.getHeight(), comp, (float *)imgInput.getData());
-        
+        oglApp->initImage(
+            imgInput.getWidth(),
+            imgInput.getHeight(),
+            comp,
+            (float *)imgInput.getData());
+
         oglApp->createGLBuffers();
     }
 #endif // OCIO_GPU_ENABLED
@@ -324,7 +330,7 @@ int main(int argc, const char **argv)
                 OCIO::FileTransformRcPtr t = OCIO::FileTransform::Create();
                 t->setSrc(lutFile);
                 t->setInterpolation(OCIO::INTERP_BEST);
-    
+
                 processor = config->getProcessor(t);
             }
             else if (useDisplayView)
@@ -367,8 +373,9 @@ int main(int argc, const char **argv)
             shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
 
             OCIO::ConstGPUProcessorRcPtr gpu
-                = usegpuLegacy ? processor->getOptimizedLegacyGPUProcessor(OCIO::OPTIMIZATION_DEFAULT, 32)
-                               : processor->getDefaultGPUProcessor();
+                = usegpuLegacy
+                      ? processor->getOptimizedLegacyGPUProcessor(OCIO::OPTIMIZATION_DEFAULT, 32)
+                      : processor->getDefaultGPUProcessor();
             gpu->extractGpuShaderInfo(shaderDesc);
 
             oglApp->setShader(shaderDesc);
@@ -408,13 +415,14 @@ int main(int argc, const char **argv)
             }
             else
             {
-                throw OCIO::Exception("Unsupported input bitdepth, must be uint8, uint16, half or float.");
+                throw OCIO::Exception(
+                    "Unsupported input bitdepth, must be uint8, uint16, half or float.");
             }
 
-            OCIO::ConstCPUProcessorRcPtr cpuProcessor
-                = processor->getOptimizedCPUProcessor(inputBitDepth,
-                                                      outputBitDepth,
-                                                      OCIO::OPTIMIZATION_DEFAULT);
+            OCIO::ConstCPUProcessorRcPtr cpuProcessor = processor->getOptimizedCPUProcessor(
+                inputBitDepth,
+                outputBitDepth,
+                OCIO::OPTIMIZATION_DEFAULT);
 
             const bool useOutputBuffer = inputBitDepth != outputBitDepth;
 
@@ -447,9 +455,7 @@ int main(int argc, const char **argv)
                 std::chrono::duration<float, std::milli> duration = end - start;
 
                 std::cout << std::endl;
-                std::cout << "CPU processing took: " 
-                          << duration.count()
-                          <<  " ms" << std::endl;
+                std::cout << "CPU processing took: " << duration.count() << " ms" << std::endl;
             }
         }
     }
@@ -466,13 +472,12 @@ int main(int argc, const char **argv)
 
     // Set the provided image attributes.
     bool parseError = false;
-    for (unsigned int i=0; i<floatAttrs.size(); ++i)
+    for (unsigned int i = 0; i < floatAttrs.size(); ++i)
     {
         std::string name, value;
         float fval = 0.0f;
 
-        if (!ParseNameValuePair(name, value, floatAttrs[i]) ||
-           !StringToFloat(&fval,value.c_str()))
+        if (!ParseNameValuePair(name, value, floatAttrs[i]) || !StringToFloat(&fval, value.c_str()))
         {
             std::cerr << "ERROR: Attribute string '" << floatAttrs[i]
                       << "' should be in the form name=floatvalue." << std::endl;
@@ -483,12 +488,11 @@ int main(int argc, const char **argv)
         imgOutput->attribute(name, fval);
     }
 
-    for (unsigned int i=0; i<intAttrs.size(); ++i)
+    for (unsigned int i = 0; i < intAttrs.size(); ++i)
     {
         std::string name, value;
         int ival = 0;
-        if (!ParseNameValuePair(name, value, intAttrs[i]) ||
-           !StringToInt(&ival,value.c_str()))
+        if (!ParseNameValuePair(name, value, intAttrs[i]) || !StringToInt(&ival, value.c_str()))
         {
             std::cerr << "ERROR: Attribute string '" << intAttrs[i]
                       << "' should be in the form name=intvalue." << std::endl;
@@ -499,7 +503,7 @@ int main(int argc, const char **argv)
         imgOutput->attribute(name, ival);
     }
 
-    for (unsigned int i=0; i<stringAttrs.size(); ++i)
+    for (unsigned int i = 0; i < stringAttrs.size(); ++i)
     {
         std::string name, value;
         if (!ParseNameValuePair(name, value, stringAttrs[i]))
@@ -524,7 +528,7 @@ int main(int argc, const char **argv)
         if (useDisplayView)
         {
             OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-            outputcolorspace = config->getDisplayViewColorSpaceName(display, view);
+            outputcolorspace              = config->getDisplayViewColorSpaceName(display, view);
         }
 
         if (outputcolorspace)
@@ -546,23 +550,20 @@ int main(int argc, const char **argv)
     return 0;
 }
 
-
 // Parse name=value parts.
 // return true on success.
 
-bool ParseNameValuePair(std::string& name,
-                        std::string& value,
-                        const std::string& input)
+bool ParseNameValuePair(std::string & name, std::string & value, const std::string & input)
 {
     // split string into name=value.
     size_t pos = input.find('=');
-    if (pos==std::string::npos)
+    if (pos == std::string::npos)
     {
         return false;
     }
 
-    name = input.substr(0,pos);
-    value = input.substr(pos+1);
+    name  = input.substr(0, pos);
+    value = input.substr(pos + 1);
     return true;
 }
 

@@ -7,26 +7,29 @@ namespace OCIO_NAMESPACE
 {
 
 void bindPyTransform(py::module & m)
-{ 
+{
     // Base class
-    auto clsTransform = 
-        py::class_<Transform, TransformRcPtr>(
-            m.attr("Transform"))
+    auto clsTransform
+        = py::class_<Transform, TransformRcPtr>(m.attr("Transform"))
 
-        .def("__deepcopy__", [](const ConstTransformRcPtr & self, py::dict)
-            {
-                return self->createEditableCopy();
-            },
-            "memo"_a)
+              .def(
+                  "__deepcopy__",
+                  [](const ConstTransformRcPtr & self, py::dict) {
+                      return self->createEditableCopy();
+                  },
+                  "memo"_a)
 
-        .def("validate", &Transform::validate,
-             DOC(Transform, validate))
-        .def("getTransformType", &Transform::getTransformType,
-             DOC(Transform, getTransformType))
-        .def("getDirection", &Transform::getDirection,
-             DOC(Transform, getDirection))
-        .def("setDirection", &Transform::setDirection, "direction"_a,
-             DOC(Transform, setDirection));
+              .def("validate", &Transform::validate, DOC(Transform, validate))
+              .def(
+                  "getTransformType",
+                  &Transform::getTransformType,
+                  DOC(Transform, getTransformType))
+              .def("getDirection", &Transform::getDirection, DOC(Transform, getDirection))
+              .def(
+                  "setDirection",
+                  &Transform::setDirection,
+                  "direction"_a,
+                  DOC(Transform, setDirection));
 
     defRepr(clsTransform);
 

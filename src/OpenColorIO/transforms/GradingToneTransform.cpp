@@ -12,8 +12,9 @@ namespace OCIO_NAMESPACE
 
 GradingToneTransformRcPtr GradingToneTransform::Create(GradingStyle style)
 {
-    return GradingToneTransformRcPtr(new GradingToneTransformImpl(style),
-                                     &GradingToneTransformImpl::deleter);
+    return GradingToneTransformRcPtr(
+        new GradingToneTransformImpl(style),
+        &GradingToneTransformImpl::deleter);
 }
 
 GradingToneTransformImpl::GradingToneTransformImpl(GradingStyle style)
@@ -29,7 +30,7 @@ void GradingToneTransformImpl::deleter(GradingToneTransform * t)
 TransformRcPtr GradingToneTransformImpl::createEditableCopy() const
 {
     GradingToneTransformRcPtr transform = GradingToneTransform::Create(getStyle());
-    dynamic_cast<GradingToneTransformImpl*>(transform.get())->data() = data();
+    dynamic_cast<GradingToneTransformImpl *>(transform.get())->data() = data();
     return transform;
 }
 
@@ -50,7 +51,7 @@ void GradingToneTransformImpl::validate() const
         Transform::validate();
         data().validate();
     }
-    catch(Exception & ex)
+    catch (Exception & ex)
     {
         std::string errMsg("GradingToneTransform validation failed: ");
         errMsg += ex.what();
@@ -68,11 +69,11 @@ const FormatMetadata & GradingToneTransformImpl::getFormatMetadata() const noexc
     return data().getFormatMetadata();
 }
 
-
 bool GradingToneTransformImpl::equals(const GradingToneTransform & other) const noexcept
 {
-    if (this == &other) return true;
-    return data() == dynamic_cast<const GradingToneTransformImpl*>(&other)->data();
+    if (this == &other)
+        return true;
+    return data() == dynamic_cast<const GradingToneTransformImpl *>(&other)->data();
 }
 
 GradingStyle GradingToneTransformImpl::getStyle() const noexcept
@@ -110,7 +111,7 @@ void GradingToneTransformImpl::makeNonDynamic() noexcept
     data().getDynamicPropertyInternal()->makeNonDynamic();
 }
 
-std::ostream& operator<< (std::ostream & os, const GradingToneTransform & t) noexcept
+std::ostream & operator<<(std::ostream & os, const GradingToneTransform & t) noexcept
 {
     os << "<GradingToneTransform ";
     os << "direction=" << TransformDirectionToString(t.getDirection());
@@ -127,19 +128,19 @@ std::ostream& operator<< (std::ostream & os, const GradingToneTransform & t) noe
 std::ostream & operator<<(std::ostream & ost, const GradingRGBMSW & rgbmsw)
 {
     ost << "<red=" << rgbmsw.m_red << " green=" << rgbmsw.m_green << " blue=" << rgbmsw.m_blue
-        << " master=" << rgbmsw.m_master
-        << " start=" << rgbmsw.m_start << " width=" << rgbmsw.m_width << ">";
+        << " master=" << rgbmsw.m_master << " start=" << rgbmsw.m_start
+        << " width=" << rgbmsw.m_width << ">";
     return ost;
 }
 
 std::ostream & operator<<(std::ostream & os, const GradingTone & tone)
 {
-    os << "<blacks="      << tone.m_blacks;
-    os << " shadows="     << tone.m_shadows    ;
-    os << " midtones="    << tone.m_midtones   ;
-    os << " highlights="  << tone.m_highlights ;
-    os << " whites="      << tone.m_whites;
-    os << " s_contrast="  << tone.m_scontrast  ;
+    os << "<blacks=" << tone.m_blacks;
+    os << " shadows=" << tone.m_shadows;
+    os << " midtones=" << tone.m_midtones;
+    os << " highlights=" << tone.m_highlights;
+    os << " whites=" << tone.m_whites;
+    os << " s_contrast=" << tone.m_scontrast;
     os << ">";
 
     return os;

@@ -7,17 +7,17 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "utils/StringUtils.h"
 #include "LegacyViewingPipeline.h"
+#include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE
 {
 
 LegacyViewingPipelineRcPtr LegacyViewingPipeline::Create()
 {
-    return LegacyViewingPipelineRcPtr(new LegacyViewingPipelineImpl(),
-                                      &LegacyViewingPipelineImpl::Deleter);
-
+    return LegacyViewingPipelineRcPtr(
+        new LegacyViewingPipelineImpl(),
+        &LegacyViewingPipelineImpl::Deleter);
 }
 
 void LegacyViewingPipelineImpl::Deleter(LegacyViewingPipeline * vp)
@@ -30,12 +30,13 @@ ConstDisplayViewTransformRcPtr LegacyViewingPipelineImpl::getDisplayViewTransfor
     return m_displayViewTransform;
 }
 
-void LegacyViewingPipelineImpl::setDisplayViewTransform(const ConstDisplayViewTransformRcPtr & dt) noexcept
+void LegacyViewingPipelineImpl::setDisplayViewTransform(
+    const ConstDisplayViewTransformRcPtr & dt) noexcept
 {
     if (dt)
     {
-        TransformRcPtr tr = dt->createEditableCopy();
-        m_displayViewTransform = OCIO_DYNAMIC_POINTER_CAST<DisplayViewTransform>(tr);
+        TransformRcPtr tr       = dt->createEditableCopy();
+        m_displayViewTransform  = OCIO_DYNAMIC_POINTER_CAST<DisplayViewTransform>(tr);
         m_dtOriginalLooksBypass = m_displayViewTransform->getLooksBypass();
         m_displayViewTransform->setLooksBypass(true);
     }
@@ -113,7 +114,6 @@ void LegacyViewingPipelineImpl::setDisplayCC(const ConstTransformRcPtr & cc) noe
     }
 }
 
-
 void LegacyViewingPipelineImpl::setLooksOverrideEnabled(bool enable)
 {
     m_looksOverrideEnabled = enable;
@@ -166,8 +166,7 @@ void LegacyViewingPipelineImpl::validate() const
     catch (Exception & e)
     {
         std::ostringstream oss;
-        oss << "LegacyViewingPipeline is not valid: "
-            << e.what();
+        oss << "LegacyViewingPipeline is not valid: " << e.what();
         throw Exception(oss.str().c_str());
     }
 }
@@ -177,8 +176,9 @@ ConstProcessorRcPtr LegacyViewingPipelineImpl::getProcessor(const ConstConfigRcP
     return getProcessor(config, config->getCurrentContext());
 }
 
-ConstProcessorRcPtr LegacyViewingPipelineImpl::getProcessor(const ConstConfigRcPtr & configIn,
-                                                            const ConstContextRcPtr & context) const
+ConstProcessorRcPtr LegacyViewingPipelineImpl::getProcessor(
+    const ConstConfigRcPtr & configIn,
+    const ConstContextRcPtr & context) const
 {
     validate();
 
@@ -188,7 +188,7 @@ ConstProcessorRcPtr LegacyViewingPipelineImpl::getProcessor(const ConstConfigRcP
     ConstConfigRcPtr config = configIn;
 
     const std::string inputColorSpaceName = m_displayViewTransform->getSrc();
-    ConstColorSpaceRcPtr inputColorSpace = config->getColorSpace(inputColorSpaceName.c_str());
+    ConstColorSpaceRcPtr inputColorSpace  = config->getColorSpace(inputColorSpaceName.c_str());
 
     if (!inputColorSpace)
     {
@@ -206,10 +206,10 @@ ConstProcessorRcPtr LegacyViewingPipelineImpl::getProcessor(const ConstConfigRcP
     }
 
     const std::string display = m_displayViewTransform->getDisplay();
-    const std::string view = m_displayViewTransform->getView();
+    const std::string view    = m_displayViewTransform->getView();
 
-    const std::string viewTransformName = config->getDisplayViewTransformName(display.c_str(),
-                                                                              view.c_str());
+    const std::string viewTransformName
+        = config->getDisplayViewTransformName(display.c_str(), view.c_str());
     ConstViewTransformRcPtr viewTransform;
     if (!viewTransformName.empty())
     {
@@ -218,18 +218,18 @@ ConstProcessorRcPtr LegacyViewingPipelineImpl::getProcessor(const ConstConfigRcP
 
     // NB: If the viewTransform is present, then displayColorSpace is a true display color space
     // rather than a traditional color space.
-    const std::string name{ config->getDisplayViewColorSpaceName(display.c_str(), view.c_str()) };
+    const std::string name{config->getDisplayViewColorSpaceName(display.c_str(), view.c_str())};
     // A shared view containing a view transform may set the color space to USE_DISPLAY_NAME,
     // in which case we look for a display color space with the same name as the display.
     const bool nameFromDisplay = (0 == strcmp(name.c_str(), OCIO_VIEW_USE_DISPLAY_NAME));
-    const std::string displayColorSpaceName{ nameFromDisplay ? display : name };
+    const std::string displayColorSpaceName{nameFromDisplay ? display : name};
     ConstColorSpaceRcPtr displayColorSpace = config->getColorSpace(displayColorSpaceName.c_str());
     // If this is not a color space it can be a named transform. Error handling (missing color
     // space or named transform) is handled by display view transform.
 
     const bool dataBypass = m_displayViewTransform->getDataBypass();
-    const bool displayData = (!displayColorSpace ||
-                              (displayColorSpace && displayColorSpace->isData())) ? true : false;
+    const bool displayData
+        = (!displayColorSpace || (displayColorSpace && displayColorSpace->isData())) ? true : false;
     bool skipColorSpaceConversions = dataBypass && (inputColorSpace->isData() || displayData);
 
     if (dataBypass)
@@ -247,14 +247,14 @@ ConstProcessorRcPtr LegacyViewingPipelineImpl::getProcessor(const ConstConfigRcP
             double matrix44[16];
             typedChannelView->getMatrix(matrix44);
 
-            if ((matrix44[3]>0.0) || (matrix44[7]>0.0) || (matrix44[11]>0.0))
+            if ((matrix44[3] > 0.0) || (matrix44[7] > 0.0) || (matrix44[11] > 0.0))
             {
                 skipColorSpaceConversions = true;
             }
         }
     }
 
-    std::string currentCSName{ inputColorSpaceName };
+    std::string currentCSName{inputColorSpaceName};
     ConstColorSpaceRcPtr dtInputColorSpace = inputColorSpace;
 
     GroupTransformRcPtr group = GroupTransform::Create();
@@ -266,7 +266,7 @@ ConstProcessorRcPtr LegacyViewingPipelineImpl::getProcessor(const ConstConfigRcP
         if (!linearCC->isNoOp())
         {
             auto sceneLinearCS = config->getColorSpace(ROLE_SCENE_LINEAR);
-            dtInputColorSpace = sceneLinearCS;
+            dtInputColorSpace  = sceneLinearCS;
             if (!dtInputColorSpace)
             {
                 std::ostringstream os;
@@ -296,7 +296,7 @@ ConstProcessorRcPtr LegacyViewingPipelineImpl::getProcessor(const ConstConfigRcP
         if (!colorTimingCC->isNoOp())
         {
             auto colorTimingCS = config->getColorSpace(ROLE_COLOR_TIMING);
-            dtInputColorSpace = colorTimingCS;
+            dtInputColorSpace  = colorTimingCS;
             if (!dtInputColorSpace)
             {
                 std::ostringstream os;
@@ -318,7 +318,7 @@ ConstProcessorRcPtr LegacyViewingPipelineImpl::getProcessor(const ConstConfigRcP
         }
     }
 
-    TransformRcPtr trans = m_displayViewTransform->createEditableCopy();
+    TransformRcPtr trans         = m_displayViewTransform->createEditableCopy();
     DisplayViewTransformRcPtr dt = OCIO_DYNAMIC_POINTER_CAST<DisplayViewTransform>(trans);
     dt->setDirection(TRANSFORM_DIR_FORWARD);
 
@@ -326,8 +326,9 @@ ConstProcessorRcPtr LegacyViewingPipelineImpl::getProcessor(const ConstConfigRcP
     dt->setSrc(currentCSName.c_str());
 
     // NB: If looksOverrideEnabled is true, always apply the look, even to data color spaces.
-    // In other cases, follow what the DisplayViewTransform would do, except skip color space conversions
-    // to the process space for Look transforms for data spaces (DisplayViewTransform never skips).
+    // In other cases, follow what the DisplayViewTransform would do, except skip color space
+    // conversions to the process space for Look transforms for data spaces (DisplayViewTransform
+    // never skips).
     std::string looks;
     if (m_looksOverrideEnabled)
     {
@@ -341,9 +342,10 @@ ConstProcessorRcPtr LegacyViewingPipelineImpl::getProcessor(const ConstConfigRcP
     if (!looks.empty())
     {
         const char * inCS = dtInputColorSpace->getName();
-        const char * outCS = skipColorSpaceConversions ? inCS :
-                             LookTransform::GetLooksResultColorSpace(configIn, context,
-                                                                     looks.c_str());
+        const char * outCS
+            = skipColorSpaceConversions
+                  ? inCS
+                  : LookTransform::GetLooksResultColorSpace(configIn, context, looks.c_str());
 
         // Resulting color space could be null in case of a noop look.
         if (outCS && *outCS)
@@ -433,7 +435,7 @@ std::ostream & operator<<(std::ostream & os, const LegacyViewingPipeline & pipel
         os << "LooksOverrideEnabled";
         first = false;
     }
-    const std::string lo{ pipeline.getLooksOverride() };
+    const std::string lo{pipeline.getLooksOverride()};
     if (!lo.empty())
     {
         if (!first)

@@ -16,7 +16,7 @@ public:
     std::string m_name;
     std::string m_family;
     std::string m_description;
-    ReferenceSpaceType m_referenceSpaceType{ REFERENCE_SPACE_SCENE };
+    ReferenceSpaceType m_referenceSpaceType{REFERENCE_SPACE_SCENE};
 
     TransformRcPtr m_toRefTransform;
     TransformRcPtr m_fromRefTransform;
@@ -30,9 +30,9 @@ public:
     }
 
     Impl(const Impl &) = delete;
-    ~Impl() = default;
+    ~Impl()            = default;
 
-    Impl & operator= (const Impl & rhs)
+    Impl & operator=(const Impl & rhs)
     {
         if (this != &rhs)
         {
@@ -42,19 +42,18 @@ public:
 
             m_referenceSpaceType = rhs.m_referenceSpaceType;
 
-            m_toRefTransform = rhs.m_toRefTransform ? rhs.m_toRefTransform->createEditableCopy() :
-                                                      rhs.m_toRefTransform;
+            m_toRefTransform = rhs.m_toRefTransform ? rhs.m_toRefTransform->createEditableCopy()
+                                                    : rhs.m_toRefTransform;
 
-            m_fromRefTransform = rhs.m_fromRefTransform ?
-                                 rhs.m_fromRefTransform->createEditableCopy() :
-                                 rhs.m_fromRefTransform;
+            m_fromRefTransform = rhs.m_fromRefTransform
+                                     ? rhs.m_fromRefTransform->createEditableCopy()
+                                     : rhs.m_fromRefTransform;
 
             m_categories = rhs.m_categories;
         }
         return *this;
     }
 };
-
 
 ViewTransformRcPtr ViewTransform::Create(ReferenceSpaceType referenceSpace)
 {
@@ -69,7 +68,7 @@ void ViewTransform::deleter(ViewTransform * v)
 ViewTransformRcPtr ViewTransform::createEditableCopy() const
 {
     ViewTransformRcPtr cs = ViewTransform::Create(getImpl()->m_referenceSpaceType);
-    *cs->m_impl = *m_impl;
+    *cs->m_impl           = *m_impl;
     return cs;
 }
 
@@ -143,7 +142,6 @@ void ViewTransform::clearCategories()
     getImpl()->m_categories.clearTokens();
 }
 
-
 ReferenceSpaceType ViewTransform::getReferenceSpaceType() const noexcept
 {
     return getImpl()->m_referenceSpaceType;
@@ -153,10 +151,10 @@ ConstTransformRcPtr ViewTransform::getTransform(ViewTransformDirection dir) cons
 {
     switch (dir)
     {
-    case VIEWTRANSFORM_DIR_TO_REFERENCE:
-        return getImpl()->m_toRefTransform;
-    case VIEWTRANSFORM_DIR_FROM_REFERENCE:
-        return getImpl()->m_fromRefTransform;
+        case VIEWTRANSFORM_DIR_TO_REFERENCE:
+            return getImpl()->m_toRefTransform;
+        case VIEWTRANSFORM_DIR_FROM_REFERENCE:
+            return getImpl()->m_fromRefTransform;
     }
     return ConstTransformRcPtr();
 }
@@ -171,41 +169,42 @@ void ViewTransform::setTransform(const ConstTransformRcPtr & transform, ViewTran
 
     switch (dir)
     {
-    case VIEWTRANSFORM_DIR_TO_REFERENCE:
-        getImpl()->m_toRefTransform = transformCopy; 
-        break;
-    case VIEWTRANSFORM_DIR_FROM_REFERENCE:
-        getImpl()->m_fromRefTransform = transformCopy; 
-        break;
+        case VIEWTRANSFORM_DIR_TO_REFERENCE:
+            getImpl()->m_toRefTransform = transformCopy;
+            break;
+        case VIEWTRANSFORM_DIR_FROM_REFERENCE:
+            getImpl()->m_fromRefTransform = transformCopy;
+            break;
     }
 }
 
-
 namespace
 {
-static constexpr char REFERENCE_SPACE_SCENE_STR[]{ "scene" };
-static constexpr char REFERENCE_SPACE_DISPLAY_STR[]{ "display" };
+static constexpr char REFERENCE_SPACE_SCENE_STR[]{"scene"};
+static constexpr char REFERENCE_SPACE_DISPLAY_STR[]{"display"};
 
 const char * ReferenceSpaceTypeToString(ReferenceSpaceType reference)
 {
     switch (reference)
     {
-    case REFERENCE_SPACE_SCENE:   return REFERENCE_SPACE_SCENE_STR;
-    case REFERENCE_SPACE_DISPLAY: return REFERENCE_SPACE_DISPLAY_STR;
+        case REFERENCE_SPACE_SCENE:
+            return REFERENCE_SPACE_SCENE_STR;
+        case REFERENCE_SPACE_DISPLAY:
+            return REFERENCE_SPACE_DISPLAY_STR;
     }
 
     // Default type is meaningless.
     throw Exception("Unknown reference type");
 }
-}
+} // namespace
 
-std::ostream & operator<< (std::ostream & os, const ViewTransform & vt)
+std::ostream & operator<<(std::ostream & os, const ViewTransform & vt)
 {
     os << "<ViewTransform ";
     os << "name=" << vt.getName() << ", ";
     os << "family=" << vt.getFamily() << ", ";
     os << "referenceSpaceType=" << ReferenceSpaceTypeToString(vt.getReferenceSpaceType());
-    const std::string desc{ vt.getDescription() };
+    const std::string desc{vt.getDescription()};
     if (!desc.empty())
     {
         os << ", description=" << desc;
@@ -225,4 +224,3 @@ std::ostream & operator<< (std::ostream & os, const ViewTransform & vt)
 }
 
 } // namespace OCIO_NAMESPACE
-

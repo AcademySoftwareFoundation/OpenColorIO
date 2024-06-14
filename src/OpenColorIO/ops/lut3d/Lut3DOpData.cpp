@@ -8,11 +8,11 @@
 #include "BitDepthUtils.h"
 #include "HashUtils.h"
 #include "MathUtils.h"
+#include "Platform.h"
+#include "ops/OpTools.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ops/lut3d/Lut3DOpData.h"
-#include "ops/OpTools.h"
 #include "ops/range/RangeOpData.h"
-#include "Platform.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -40,7 +40,7 @@ Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut)
     // Make a domain for the composed Lut3D.
     // TODO: Using a large number like 48 here is better for accuracy,
     // but it causes a delay when creating the renderer.
-    const long GridSize = 48u;
+    const long GridSize        = 48u;
     Lut3DOpDataRcPtr newDomain = std::make_shared<Lut3DOpData>(GridSize);
 
     newDomain->setFileOutputBitDepth(lut->getFileOutputBitDepth());
@@ -54,7 +54,7 @@ Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut)
     // style of forward evaluation.
     // TODO: Although this seems like the "correct" thing to do, it does
     // not seem to help accuracy (and is slower).  To investigate ...
-    //result->setInterpolation(INTERP_TETRAHEDRAL);
+    // result->setInterpolation(INTERP_TETRAHEDRAL);
     return result;
 }
 
@@ -71,8 +71,7 @@ const unsigned long Lut3DOpData::maxSupportedLength = 129;
 // needs to render values through the ops.  In some cases the domain of
 // the first op is sufficient, in other cases we need to create a new more
 // finely sampled domain to try and make the result less lossy.
-Lut3DOpDataRcPtr Lut3DOpData::Compose(ConstLut3DOpDataRcPtr & lutc1,
-                                      ConstLut3DOpDataRcPtr & lutc2)
+Lut3DOpDataRcPtr Lut3DOpData::Compose(ConstLut3DOpDataRcPtr & lutc1, ConstLut3DOpDataRcPtr & lutc2)
 {
     // TODO: Composition of LUTs is a potentially lossy operation.
     // We try to be safe by making the result at least as big as either lut1 or
@@ -83,8 +82,9 @@ Lut3DOpDataRcPtr Lut3DOpData::Compose(ConstLut3DOpDataRcPtr & lutc1,
 
     Lut3DOpDataRcPtr lut1 = std::const_pointer_cast<Lut3DOpData>(lutc1);
     Lut3DOpDataRcPtr lut2 = std::const_pointer_cast<Lut3DOpData>(lutc2);
-    bool restoreInverse = false;
-    if (lut1->getDirection() == TRANSFORM_DIR_INVERSE && lut2->getDirection() == TRANSFORM_DIR_INVERSE)
+    bool restoreInverse   = false;
+    if (lut1->getDirection() == TRANSFORM_DIR_INVERSE
+        && lut2->getDirection() == TRANSFORM_DIR_INVERSE)
     {
         // Using the fact that: iInv(l2 x l1) = inv(l1) x inv(l2).
         // Compute l2 x l1 and inverse the result.
@@ -95,8 +95,8 @@ Lut3DOpDataRcPtr Lut3DOpData::Compose(ConstLut3DOpDataRcPtr & lutc1,
         restoreInverse = true;
     }
 
-    const long min_sz = lut2->getArray().getLength();
-    const long n = lut1->getArray().getLength();
+    const long min_sz      = lut2->getArray().getLength();
+    const long n           = lut1->getArray().getLength();
     const long domain_size = std::max(min_sz, n);
     OpRcPtrVec ops;
 
@@ -116,7 +116,7 @@ Lut3DOpDataRcPtr Lut3DOpData::Compose(ConstLut3DOpDataRcPtr & lutc1,
 
         result = std::make_shared<Lut3DOpData>(lut1->getInterpolation(), domain_size);
 
-        auto metadata = lut1->getFormatMetadata();
+        auto metadata               = lut1->getFormatMetadata();
         result->getFormatMetadata() = metadata;
 
         // Interpolate through both LUTs in this case (resample).
@@ -137,13 +137,10 @@ Lut3DOpDataRcPtr Lut3DOpData::Compose(ConstLut3DOpDataRcPtr & lutc1,
     result->setFileOutputBitDepth(fileOutBD);
 
     const Array::Values & domain = result->getArray().getValues();
-    const long gridSize = result->getArray().getLength();
-    const long numPixels = gridSize * gridSize * gridSize;
+    const long gridSize          = result->getArray().getLength();
+    const long numPixels         = gridSize * gridSize * gridSize;
 
-    EvalTransform((const float*)(&domain[0]),
-                  (float*)(&domain[0]),
-                  numPixels,
-                  ops);
+    EvalTransform((const float *)(&domain[0]), (float *)(&domain[0]), numPixels, ops);
 
     if (restoreInverse)
     {
@@ -165,11 +162,11 @@ Lut3DOpData::Lut3DArray::~Lut3DArray()
 {
 }
 
-Lut3DOpData::Lut3DArray& Lut3DOpData::Lut3DArray::operator=(const Array& a)
+Lut3DOpData::Lut3DArray & Lut3DOpData::Lut3DArray::operator=(const Array & a)
 {
     if (this != &a)
     {
-        *(Array*)this = a;
+        *(Array *)this = a;
     }
     return *this;
 }
@@ -177,20 +174,20 @@ Lut3DOpData::Lut3DArray& Lut3DOpData::Lut3DArray::operator=(const Array& a)
 void Lut3DOpData::Lut3DArray::fill()
 {
     // Make an identity LUT.
-    const long length = getLength();
+    const long length      = getLength();
     const long maxChannels = getMaxColorComponents();
 
-    Array::Values& values = getValues();
+    Array::Values & values = getValues();
 
     const float stepValue = 1.0f / ((float)length - 1.0f);
 
-    const long maxEntries = length*length*length;
+    const long maxEntries = length * length * length;
 
-    for (long idx = 0; idx<maxEntries; idx++)
+    for (long idx = 0; idx < maxEntries; idx++)
     {
-        values[maxChannels*idx + 0] = (float)((idx / length / length) % length) * stepValue;
-        values[maxChannels*idx + 1] = (float)((idx / length) % length) * stepValue;
-        values[maxChannels*idx + 2] = (float)(idx%length) * stepValue;
+        values[maxChannels * idx + 0] = (float)((idx / length / length) % length) * stepValue;
+        values[maxChannels * idx + 1] = (float)((idx / length) % length) * stepValue;
+        values[maxChannels * idx + 2] = (float)(idx % length) * stepValue;
     }
 }
 
@@ -199,8 +196,8 @@ void Lut3DOpData::Lut3DArray::resize(unsigned long length, unsigned long numColo
     if (length > maxSupportedLength)
     {
         std::ostringstream oss;
-        oss << "LUT 3D: Grid size '" << length
-            << "' must not be greater than '" << maxSupportedLength << "'.";
+        oss << "LUT 3D: Grid size '" << length << "' must not be greater than '"
+            << maxSupportedLength << "'.";
         throw Exception(oss.str().c_str());
     }
     Array::resize(length, numColorComponents);
@@ -208,30 +205,30 @@ void Lut3DOpData::Lut3DArray::resize(unsigned long length, unsigned long numColo
 
 unsigned long Lut3DOpData::Lut3DArray::getNumValues() const
 {
-    const unsigned long numEntries = getLength()*getLength()*getLength();
-    return numEntries*getMaxColorComponents();
+    const unsigned long numEntries = getLength() * getLength() * getLength();
+    return numEntries * getMaxColorComponents();
 }
 
-void Lut3DOpData::Lut3DArray::getRGB(long i, long j, long k, float* RGB) const
+void Lut3DOpData::Lut3DArray::getRGB(long i, long j, long k, float * RGB) const
 {
-    const long length = getLength();
-    const long maxChannels = getMaxColorComponents();
-    const Array::Values& values = getValues();
+    const long length            = getLength();
+    const long maxChannels       = getMaxColorComponents();
+    const Array::Values & values = getValues();
     // Array order matches ctf order: channels vary most rapidly, then B, G, R.
-    long offset = (i*length*length + j*length + k) * maxChannels;
-    RGB[0] = values[offset];
-    RGB[1] = values[++offset];
-    RGB[2] = values[++offset];
+    long offset = (i * length * length + j * length + k) * maxChannels;
+    RGB[0]      = values[offset];
+    RGB[1]      = values[++offset];
+    RGB[2]      = values[++offset];
 }
 
-void Lut3DOpData::Lut3DArray::setRGB(long i, long j, long k, float* RGB)
+void Lut3DOpData::Lut3DArray::setRGB(long i, long j, long k, float * RGB)
 {
-    const long length = getLength();
+    const long length      = getLength();
     const long maxChannels = getMaxColorComponents();
-    Array::Values& values = getValues();
+    Array::Values & values = getValues();
     // Array order matches ctf order: channels vary most rapidly, then B, G, R.
-    long offset = (i*length*length + j*length + k) * maxChannels;
-    values[offset] = RGB[0];
+    long offset      = (i * length * length + j * length + k) * maxChannels;
+    values[offset]   = RGB[0];
     values[++offset] = RGB[1];
     values[++offset] = RGB[2];
 }
@@ -241,8 +238,8 @@ void Lut3DOpData::Lut3DArray::scale(float scaleFactor)
     // Don't scale if scaleFactor = 1.0f.
     if (scaleFactor != 1.0f)
     {
-        Array::Values& arrayVals = getValues();
-        const size_t size = arrayVals.size();
+        Array::Values & arrayVals = getValues();
+        const size_t size         = arrayVals.size();
 
         for (size_t i = 0; i < size; i++)
         {
@@ -293,33 +290,33 @@ Interpolation Lut3DOpData::GetConcreteInterpolation(Interpolation interp)
 {
     switch (interp)
     {
-    case INTERP_BEST:
-    case INTERP_TETRAHEDRAL:
-        return INTERP_TETRAHEDRAL;
+        case INTERP_BEST:
+        case INTERP_TETRAHEDRAL:
+            return INTERP_TETRAHEDRAL;
 
-    case INTERP_DEFAULT:
-    case INTERP_LINEAR:
-    case INTERP_CUBIC:
-    case INTERP_NEAREST:
-        // NB: In OCIO v2, INTERP_NEAREST is implemented as trilinear,
-        // this is a change from OCIO v1.
-    case INTERP_UNKNOWN:
-        // NB: INTERP_UNKNOWN is not valid and will make validate() throw.
-    default:
-        return INTERP_LINEAR;
+        case INTERP_DEFAULT:
+        case INTERP_LINEAR:
+        case INTERP_CUBIC:
+        case INTERP_NEAREST:
+            // NB: In OCIO v2, INTERP_NEAREST is implemented as trilinear,
+            // this is a change from OCIO v1.
+        case INTERP_UNKNOWN:
+            // NB: INTERP_UNKNOWN is not valid and will make validate() throw.
+        default:
+            return INTERP_LINEAR;
     }
 }
 
 void Lut3DOpData::setArrayFromRedFastestOrder(const std::vector<float> & lut)
 {
-    Array & lutArray = getArray();
+    Array & lutArray   = getArray();
     const auto lutSize = lutArray.getLength();
 
     if (lutSize * lutSize * lutSize * 3 != lut.size())
     {
         std::ostringstream oss;
         oss << "Lut3D length '" << lutSize << " * " << lutSize << " * " << lutSize << " * 3";
-        oss << "' does not match the vector size '"<< lut.size()  <<"'.";
+        oss << "' does not match the vector size '" << lut.size() << "'.";
         throw Exception(oss.str().c_str());
     }
 
@@ -330,10 +327,10 @@ void Lut3DOpData::setArrayFromRedFastestOrder(const std::vector<float> & lut)
             for (unsigned long r = 0; r < lutSize; ++r)
             {
                 // Lut3DOpData Array index. Blue changes fastest.
-                const unsigned long blueFastIdx = 3 * ((r*lutSize + g)*lutSize + b);
+                const unsigned long blueFastIdx = 3 * ((r * lutSize + g) * lutSize + b);
 
                 // Float array index. Red changes fastest.
-                const unsigned long redFastIdx = 3 * ((b*lutSize + g)*lutSize + r);
+                const unsigned long redFastIdx = 3 * ((b * lutSize + g) * lutSize + r);
 
                 lutArray[blueFastIdx + 0] = lut[redFastIdx + 0];
                 lutArray[blueFastIdx + 1] = lut[redFastIdx + 1];
@@ -347,16 +344,16 @@ bool Lut3DOpData::IsValidInterpolation(Interpolation interpolation)
 {
     switch (interpolation)
     {
-    case INTERP_BEST:
-    case INTERP_TETRAHEDRAL:
-    case INTERP_DEFAULT:
-    case INTERP_LINEAR:
-    case INTERP_NEAREST:
-        return true;
-    case INTERP_CUBIC:
-    case INTERP_UNKNOWN:
-    default:
-        return false;
+        case INTERP_BEST:
+        case INTERP_TETRAHEDRAL:
+        case INTERP_DEFAULT:
+        case INTERP_LINEAR:
+        case INTERP_NEAREST:
+            return true;
+        case INTERP_CUBIC:
+        case INTERP_UNKNOWN:
+        default:
+            return false;
     }
 }
 
@@ -375,7 +372,7 @@ void Lut3DOpData::validate() const
     {
         getArray().validate();
     }
-    catch (const Exception& e)
+    catch (const Exception & e)
     {
         std::ostringstream oss;
         oss << "Lut3D content array issue: ";
@@ -389,7 +386,7 @@ void Lut3DOpData::validate() const
         throw Exception("Lut3D has an incorrect number of color components. ");
     }
 
-    if (getArray().getLength()>maxSupportedLength)
+    if (getArray().getLength() > maxSupportedLength)
     {
         // This should never happen. Enforced by resize.
         std::ostringstream oss;
@@ -424,12 +421,12 @@ bool Lut3DOpData::haveEqualBasics(const Lut3DOpData & other) const
 
 bool Lut3DOpData::equals(const OpData & other) const
 {
-    if (!OpData::equals(other)) return false;
+    if (!OpData::equals(other))
+        return false;
 
-    const Lut3DOpData* lop = static_cast<const Lut3DOpData*>(&other);
+    const Lut3DOpData * lop = static_cast<const Lut3DOpData *>(&other);
 
-    if (m_direction != lop->m_direction
-        || m_interpolation != lop->m_interpolation)
+    if (m_direction != lop->m_direction || m_interpolation != lop->m_interpolation)
     {
         return false;
     }
@@ -444,10 +441,8 @@ Lut3DOpDataRcPtr Lut3DOpData::clone() const
 
 bool Lut3DOpData::isInverse(ConstLut3DOpDataRcPtr & other) const
 {
-    if ((m_direction == TRANSFORM_DIR_FORWARD
-         && other->m_direction == TRANSFORM_DIR_INVERSE) ||
-        (m_direction == TRANSFORM_DIR_INVERSE
-         && other->m_direction == TRANSFORM_DIR_FORWARD))
+    if ((m_direction == TRANSFORM_DIR_FORWARD && other->m_direction == TRANSFORM_DIR_INVERSE)
+        || (m_direction == TRANSFORM_DIR_INVERSE && other->m_direction == TRANSFORM_DIR_FORWARD))
     {
         return haveEqualBasics(*other);
     }
@@ -458,8 +453,8 @@ Lut3DOpDataRcPtr Lut3DOpData::inverse() const
 {
     Lut3DOpDataRcPtr invLut = clone();
 
-    invLut->m_direction = (m_direction == TRANSFORM_DIR_FORWARD) ?
-                          TRANSFORM_DIR_INVERSE : TRANSFORM_DIR_FORWARD;
+    invLut->m_direction
+        = (m_direction == TRANSFORM_DIR_FORWARD) ? TRANSFORM_DIR_INVERSE : TRANSFORM_DIR_FORWARD;
 
     // Note that any existing metadata could become stale at this point but
     // trying to update it is also challenging since inverse() is sometimes
@@ -479,11 +474,12 @@ std::string Lut3DOpData::getCacheID() const
         cacheIDStream << getID() << " ";
     }
 
-    cacheIDStream << CacheIDHash(reinterpret_cast<const char*>(&values[0]),
-                                 values.size() * sizeof(values[0]))
+    cacheIDStream << CacheIDHash(
+        reinterpret_cast<const char *>(&values[0]),
+        values.size() * sizeof(values[0]))
                   << " ";
 
-    cacheIDStream << InterpolationToString(m_interpolation)  << " ";
+    cacheIDStream << InterpolationToString(m_interpolation) << " ";
     cacheIDStream << TransformDirectionToString(m_direction) << " ";
 
     return cacheIDStream.str();

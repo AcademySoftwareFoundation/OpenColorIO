@@ -1,22 +1,19 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_COLOR_MATRIX_HELPERS_H
 #define INCLUDED_OCIO_COLOR_MATRIX_HELPERS_H
-
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/matrix/MatrixOpData.h"
-
 
 namespace OCIO_NAMESPACE
 {
 
 struct Chromaticities
 {
-    Chromaticities() = delete;
+    Chromaticities()  = delete;
     ~Chromaticities() = default;
 
     Chromaticities(double x, double y)
@@ -33,7 +30,8 @@ struct Chromaticities
 
     Chromaticities & operator=(const Chromaticities & xy)
     {
-        if (this == &xy) return *this;
+        if (this == &xy)
+            return *this;
 
         m_xy[0] = xy.m_xy[0];
         m_xy[1] = xy.m_xy[1];
@@ -41,32 +39,38 @@ struct Chromaticities
         return *this;
     }
 
-    double m_xy[2] { 0., 0. };
+    double m_xy[2]{0., 0.};
 };
 
 struct Primaries
 {
-    Primaries() = delete;
+    Primaries()  = delete;
     ~Primaries() = default;
 
-    Primaries(const Chromaticities & red, const Chromaticities & grn, const Chromaticities & blu,
-              const Chromaticities & wht)
-        :   m_red(red)
-        ,   m_grn(grn)
-        ,   m_blu(blu)
-        ,   m_wht(wht)
-    {}
+    Primaries(
+        const Chromaticities & red,
+        const Chromaticities & grn,
+        const Chromaticities & blu,
+        const Chromaticities & wht)
+        : m_red(red)
+        , m_grn(grn)
+        , m_blu(blu)
+        , m_wht(wht)
+    {
+    }
 
     Primaries(const Primaries & primaries)
-        :   m_red(primaries.m_red)
-        ,   m_grn(primaries.m_grn)
-        ,   m_blu(primaries.m_blu)
-        ,   m_wht(primaries.m_wht)
-    {}
+        : m_red(primaries.m_red)
+        , m_grn(primaries.m_grn)
+        , m_blu(primaries.m_blu)
+        , m_wht(primaries.m_wht)
+    {
+    }
 
     Primaries & operator=(const Primaries & primaries)
     {
-        if (this == &primaries) return *this;
+        if (this == &primaries)
+            return *this;
 
         m_red = primaries.m_red;
         m_grn = primaries.m_grn;
@@ -127,7 +131,7 @@ namespace WHITEPOINT
 extern const MatrixOpData::Offsets D60_XYZ;
 extern const MatrixOpData::Offsets D65_XYZ;
 extern const MatrixOpData::Offsets DCI_XYZ;
-}
+} // namespace WHITEPOINT
 
 // Calculate a matrix to convert arbitrary RGB primary tristimulus values
 // to CIE XYZ tristimulus values using the CIE xy chromaticity coordinates
@@ -146,39 +150,44 @@ enum AdaptationMethod
     ADAPTATION_CAT02
 };
 
-// Build a von Kries type chromatic adaptation matrix from source white point src_XYZ to 
+// Build a von Kries type chromatic adaptation matrix from source white point src_XYZ to
 // destination white point dst_XYZ, using the chosen cone primary matrix.
 
-MatrixOpData::MatrixArrayPtr build_vonkries_adapt(const MatrixOpData::Offsets & src_XYZ,
-                                                  const MatrixOpData::Offsets & dst_XYZ,
-                                                  AdaptationMethod method);
+MatrixOpData::MatrixArrayPtr build_vonkries_adapt(
+    const MatrixOpData::Offsets & src_XYZ,
+    const MatrixOpData::Offsets & dst_XYZ,
+    AdaptationMethod method);
 
 // Build a conversion matrix from source primaries to destination primaries.
 // The resulting matrix will map [1,1,1] input RGB to [1,1,1] output RGB.
 
-MatrixOpData::MatrixArrayPtr build_conversion_matrix(const Primaries & src_prims,
-                                                     const Primaries & dst_prims,
-                                                     AdaptationMethod method);
+MatrixOpData::MatrixArrayPtr build_conversion_matrix(
+    const Primaries & src_prims,
+    const Primaries & dst_prims,
+    AdaptationMethod method);
 
 // Build a conversion matrix from source primaries to destination primaries with the option of
 // setting the adaptation source and destination manually.  If you pass zeros for either of the
 // white points, that corresponding white point will be taken from the primaries.
 
-MatrixOpData::MatrixArrayPtr build_conversion_matrix(const Primaries & src_prims,
-                                                     const Primaries & dst_prims,
-                                                     const MatrixOpData::Offsets & src_wht_XYZ,
-                                                     const MatrixOpData::Offsets & dst_wht_XYZ,
-                                                     AdaptationMethod method);
+MatrixOpData::MatrixArrayPtr build_conversion_matrix(
+    const Primaries & src_prims,
+    const Primaries & dst_prims,
+    const MatrixOpData::Offsets & src_wht_XYZ,
+    const MatrixOpData::Offsets & dst_wht_XYZ,
+    AdaptationMethod method);
 
 // Build a conversion matrix to CIE XYZ D65 from the source primaries.
 
-MatrixOpData::MatrixArrayPtr build_conversion_matrix_to_XYZ_D65(const Primaries & src_prims,
-                                                                AdaptationMethod method);
+MatrixOpData::MatrixArrayPtr build_conversion_matrix_to_XYZ_D65(
+    const Primaries & src_prims,
+    AdaptationMethod method);
 
 // Build a conversion matrix from CIE XYZ D65 to the destination primaries.
 
-MatrixOpData::MatrixArrayPtr build_conversion_matrix_from_XYZ_D65(const Primaries & dst_prims,
-                                                                  AdaptationMethod method);
+MatrixOpData::MatrixArrayPtr build_conversion_matrix_from_XYZ_D65(
+    const Primaries & dst_prims,
+    AdaptationMethod method);
 } // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_COLOR_MATRIX_HELPERS_H

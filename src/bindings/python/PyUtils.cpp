@@ -9,7 +9,7 @@
 namespace OCIO_NAMESPACE
 {
 
-namespace 
+namespace
 {
 
 // Reference:
@@ -17,9 +17,9 @@ namespace
 //   https://docs.python.org/3.7/c-api/arg.html#numbers
 //   https://numpy.org/devdocs/user/basics.types.html
 
-const std::vector<std::string>  UINT_FORMATS = { "B", "H", "I", "L", "Q", "N" };
-const std::vector<std::string>   INT_FORMATS = { "b", "h", "i", "l", "q", "n" };
-const std::vector<std::string> FLOAT_FORMATS = { "e", "f", "d", "g", "Ze", "Zf", "Zd", "Zg" };
+const std::vector<std::string> UINT_FORMATS  = {"B", "H", "I", "L", "Q", "N"};
+const std::vector<std::string> INT_FORMATS   = {"b", "h", "i", "l", "q", "n"};
+const std::vector<std::string> FLOAT_FORMATS = {"e", "f", "d", "g", "Ze", "Zf", "Zd", "Zg"};
 
 } // namespace
 
@@ -27,25 +27,23 @@ std::string formatCodeToDtypeName(const std::string & format, py::ssize_t numBit
 {
     std::ostringstream os;
 
-    if (std::find(std::begin(FLOAT_FORMATS), 
-                  std::end(FLOAT_FORMATS), 
-                  format) != std::end(FLOAT_FORMATS))
+    if (std::find(std::begin(FLOAT_FORMATS), std::end(FLOAT_FORMATS), format)
+        != std::end(FLOAT_FORMATS))
     {
         os << "float" << numBits;
     }
-    else if (std::find(std::begin(UINT_FORMATS), 
-                       std::end(UINT_FORMATS), 
-                       format) != std::end(UINT_FORMATS))
+    else if (
+        std::find(std::begin(UINT_FORMATS), std::end(UINT_FORMATS), format)
+        != std::end(UINT_FORMATS))
     {
         os << "uint" << numBits;
     }
-    else if (std::find(std::begin(INT_FORMATS), 
-                       std::end(INT_FORMATS), 
-                       format) != std::end(INT_FORMATS))
+    else if (
+        std::find(std::begin(INT_FORMATS), std::end(INT_FORMATS), format) != std::end(INT_FORMATS))
     {
         os << "int" << numBits;
     }
-    else 
+    else
     {
         os << "'" << format << "' (" << numBits << "-bit)";
     }
@@ -57,7 +55,7 @@ py::dtype bitDepthToDtype(BitDepth bitDepth)
 {
     std::string name, err;
 
-    switch(bitDepth)
+    switch (bitDepth)
     {
         case BIT_DEPTH_UINT8:
             name = "uint8";
@@ -89,7 +87,7 @@ py::ssize_t bitDepthToBytes(BitDepth bitDepth)
 {
     std::string name, err;
 
-    switch(bitDepth)
+    switch (bitDepth)
     {
         case BIT_DEPTH_UINT8:
             return 1;
@@ -130,9 +128,9 @@ std::string getBufferShapeStr(const py::buffer_info & info)
 {
     std::ostringstream os;
     os << "(";
-    for (size_t i = 0; i < info.shape.size(); i++) 
+    for (size_t i = 0; i < info.shape.size(); i++)
     {
-        os << info.shape[i] << (i < info.shape.size()-1 ? ", " : "" );
+        os << info.shape[i] << (i < info.shape.size() - 1 ? ", " : "");
     }
     os << ")";
     return os.str();
@@ -141,8 +139,8 @@ std::string getBufferShapeStr(const py::buffer_info & info)
 BitDepth getBufferBitDepth(const py::buffer_info & info)
 {
     BitDepth bitDepth;
-    
-    std::string dtName = formatCodeToDtypeName(info.format, info.itemsize*8);
+
+    std::string dtName = formatCodeToDtypeName(info.format, info.itemsize * 8);
 
     if (dtName == "float32")
         bitDepth = BIT_DEPTH_F32;
@@ -152,7 +150,7 @@ BitDepth getBufferBitDepth(const py::buffer_info & info)
         bitDepth = BIT_DEPTH_UINT16;
     else if (dtName == "uint8")
         bitDepth = BIT_DEPTH_UINT8;
-    else 
+    else
     {
         std::ostringstream os;
         os << "Unsupported data type: " << dtName;
@@ -168,8 +166,8 @@ void checkBufferType(const py::buffer_info & info, const py::dtype & dt)
     {
         std::ostringstream os;
         os << "Incompatible buffer format: expected ";
-        os << formatCodeToDtypeName(std::string(1, dt.kind()), dt.itemsize()*8);
-        os << ", but received " << formatCodeToDtypeName(info.format, info.itemsize*8);
+        os << formatCodeToDtypeName(std::string(1, dt.kind()), dt.itemsize() * 8);
+        os << ", but received " << formatCodeToDtypeName(info.format, info.itemsize * 8);
         throw std::runtime_error(os.str().c_str());
     }
 }
@@ -205,7 +203,7 @@ unsigned long getBufferLut3DGridSize(const py::buffer_info & info)
 {
     checkBufferDivisible(info, 3);
 
-    unsigned long gs = 2;
+    unsigned long gs   = 2;
     unsigned long size = (info.size >= 0 ? static_cast<unsigned long>(info.size) : 0);
 
     if (info.ndim == 1)
@@ -217,7 +215,7 @@ unsigned long getBufferLut3DGridSize(const py::buffer_info & info)
         gs = (info.size >= 0 ? static_cast<unsigned long>(info.shape[0]) : 0);
     }
 
-    if (gs*gs*gs * 3 != size)
+    if (gs * gs * gs * 3 != size)
     {
         std::ostringstream os;
         os << "Incompatible buffer dimensions: failed to calculate grid size from shape ";

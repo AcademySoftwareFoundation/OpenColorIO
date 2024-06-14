@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_IMAGEPACKING_H
 #define INCLUDED_OCIO_IMAGEPACKING_H
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -32,8 +30,7 @@ struct GenericImageDesc
     // Is the image buffer a RGBA packed buffer?
     bool m_isRGBAPacked = false;
     // Is the image buffer a 32-bit float image buffer?
-    bool m_isFloat      = false;
-
+    bool m_isFloat = false;
 
     // Resolves all AutoStride.
     void init(const ImageDesc & img, BitDepth bitDepth, const ConstOpCPURcPtr & bitDepthOp);
@@ -46,20 +43,21 @@ struct GenericImageDesc
     bool isFloat() const;
 };
 
-template<typename Type>
-struct Generic
+template <typename Type> struct Generic
 {
-    static void PackRGBAFromImageDesc(const GenericImageDesc & srcImg,
-                                      Type * inBitDepthBuffer,
-                                      float * outputBuffer,
-                                      int outputBufferSize,
-                                      long imagePixelStartIndex);
+    static void PackRGBAFromImageDesc(
+        const GenericImageDesc & srcImg,
+        Type * inBitDepthBuffer,
+        float * outputBuffer,
+        int outputBufferSize,
+        long imagePixelStartIndex);
 
-    static void UnpackRGBAToImageDesc(GenericImageDesc & dstImg,
-                                      float * inputBuffer,
-                                      Type * outBitDepthBuffer,
-                                      int numPixelsToUnpack,
-                                      long imagePixelStartIndex);
+    static void UnpackRGBAToImageDesc(
+        GenericImageDesc & dstImg,
+        float * inputBuffer,
+        Type * outBitDepthBuffer,
+        int numPixelsToUnpack,
+        long imagePixelStartIndex);
 };
 
 } // namespace OCIO_NAMESPACE

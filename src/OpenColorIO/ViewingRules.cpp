@@ -5,11 +5,11 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "TokensManager.h"
 #include "CustomKeys.h"
 #include "Logging.h"
 #include "ParseUtils.h"
 #include "Platform.h"
+#include "TokensManager.h"
 #include "ViewingRules.h"
 
 namespace OCIO_NAMESPACE
@@ -20,11 +20,11 @@ namespace
 bool IsEncodingUsed(const ColorSpaceSetRcPtr & colorspaces, const char * encName)
 {
     const std::string teststr = StringUtils::Lower(encName);
-    const int numCS = colorspaces->getNumColorSpaces();
+    const int numCS           = colorspaces->getNumColorSpaces();
     for (int cs = 0; cs < numCS; ++cs)
     {
         auto colorspace = colorspaces->getColorSpaceByIndex(cs);
-        const std::string csis{ colorspace->getEncoding() };
+        const std::string csis{colorspace->getEncoding()};
         if (StringUtils::Lower(csis) == teststr)
         {
             return true;
@@ -32,16 +32,15 @@ bool IsEncodingUsed(const ColorSpaceSetRcPtr & colorspaces, const char * encName
     }
     return false;
 }
-}
+} // namespace
 
 class ViewingRule
 {
 public:
-
     using CustomKeys = std::map<std::string, std::string>;
 
-    ViewingRule() = delete;
-    ViewingRule(const ViewingRule &) = delete;
+    ViewingRule()                                = delete;
+    ViewingRule(const ViewingRule &)             = delete;
     ViewingRule & operator=(const ViewingRule &) = delete;
 
     explicit ViewingRule(const char * name)
@@ -60,13 +59,11 @@ public:
         return rule;
     }
 
-    const char * getName() const noexcept
-    {
-        return m_name.c_str();
-    }
+    const char * getName() const noexcept { return m_name.c_str(); }
 
-    void validate(std::function<ConstColorSpaceRcPtr(const char *)> colorSpaceAccesssor,
-                     const ColorSpaceSetRcPtr & colorspaces) const
+    void validate(
+        std::function<ConstColorSpaceRcPtr(const char *)> colorSpaceAccesssor,
+        const ColorSpaceSetRcPtr & colorspaces) const
     {
         const auto numCS = m_colorSpaces.getNumTokens();
         for (int csIdx = 0; csIdx < numCS; ++csIdx)
@@ -112,13 +109,11 @@ public:
         }
     }
 
-
     CustomKeysContainer m_customKeys;
     TokensManager m_colorSpaces;
     TokensManager m_encodings;
 
 private:
-
     const std::string m_name;
 };
 
@@ -146,7 +141,7 @@ void ViewingRules::deleter(ViewingRules * vr)
 ViewingRulesRcPtr ViewingRules::createEditableCopy() const
 {
     ViewingRulesRcPtr rules = Create();
-    *rules->m_impl = *m_impl; // Deep copy.
+    *rules->m_impl          = *m_impl; // Deep copy.
     return rules;
 }
 
@@ -171,8 +166,8 @@ void ViewingRules::Impl::validatePosition(size_t ruleIndex) const
     if (ruleIndex >= numRules)
     {
         std::ostringstream oss;
-        oss << "Viewing rules: rule index '" << ruleIndex << "' invalid."
-            << " There are only '" << numRules << "' rules.";
+        oss << "Viewing rules: rule index '" << ruleIndex << "' invalid." << " There are only '"
+            << numRules << "' rules.";
         throw Exception(oss.str().c_str());
     }
 }
@@ -183,11 +178,10 @@ void ViewingRules::Impl::validateNewRule(const char * name) const
     {
         throw Exception("Viewing rules: rule must have a non-empty name.");
     }
-    auto existingRule = std::find_if(m_rules.begin(), m_rules.end(),
-                                     [name](const ViewingRuleRcPtr & rule)
-                                     {
-                                         return 0 == Platform::Strcasecmp(name, rule->getName());
-                                     });
+    auto existingRule
+        = std::find_if(m_rules.begin(), m_rules.end(), [name](const ViewingRuleRcPtr & rule) {
+              return 0 == Platform::Strcasecmp(name, rule->getName());
+          });
     if (existingRule != m_rules.end())
     {
         std::ostringstream oss;
@@ -407,7 +401,7 @@ void ViewingRules::removeRule(size_t ruleIndex)
     m_impl->m_rules.erase(m_impl->m_rules.begin() + ruleIndex);
 }
 
-std::ostream & operator<< (std::ostream & os, const ViewingRules & vr)
+std::ostream & operator<<(std::ostream & os, const ViewingRules & vr)
 {
     const size_t numRules = vr.getNumEntries();
     for (size_t r = 0; r < numRules; ++r)
@@ -450,7 +444,7 @@ std::ostream & operator<< (std::ostream & os, const ViewingRules & vr)
             {
                 os << "(" << vr.getCustomKeyName(r, ck);
                 os << ", " << vr.getCustomKeyValue(r, ck) << ")";
-                if (ck +1 != numCK)
+                if (ck + 1 != numCK)
                 {
                     os << ", ";
                 }
@@ -471,7 +465,7 @@ bool FindRule(ConstViewingRulesRcPtr vr, const std::string & name, size_t & rule
     const auto numrules = vr->getNumEntries();
     for (size_t index = 0; index < numrules; ++index)
     {
-        const std::string ruleName{ vr->getName(index) };
+        const std::string ruleName{vr->getName(index)};
         if (StrEqualsCaseIgnore(ruleName, name))
         {
             ruleIndex = index;

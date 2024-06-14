@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/cdl/CDLOpCPU.h"
 #include "ops/cdl/CDLOpGPU.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -35,14 +33,14 @@ void GetCDLGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstCDLOpDat
     const std::string pixrgb = pix + std::string(".rgb");
 
     // Since alpha is not affected, only need to use the RGB components
-    ss.declareFloat3("lumaWeights", 0.2126f,   0.7152f,   0.0722f  );
-    ss.declareFloat3("slope",       slope [0], slope [1], slope [2]);
-    ss.declareFloat3("offset",      offset[0], offset[1], offset[2]);
-    ss.declareFloat3("power",       power [0], power [1], power [2]);
+    ss.declareFloat3("lumaWeights", 0.2126f, 0.7152f, 0.0722f);
+    ss.declareFloat3("slope", slope[0], slope[1], slope[2]);
+    ss.declareFloat3("offset", offset[0], offset[1], offset[2]);
+    ss.declareFloat3("power", power[0], power[1], power[2]);
 
-    ss.declareVar("saturation" , saturation);
+    ss.declareVar("saturation", saturation);
 
-    if ( !params.isReverse() )
+    if (!params.isReverse())
     {
         // Forward style
 
@@ -53,7 +51,7 @@ void GetCDLGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstCDLOpDat
         ss.newLine() << pixrgb << " = " << pixrgb << " + offset;";
 
         // Power
-        if ( !params.isNoClamp() )
+        if (!params.isNoClamp())
         {
             ss.newLine() << pixrgb << " = clamp(" << pixrgb << ", 0.0, 1.0);";
             ss.newLine() << pixrgb << " = pow(" << pixrgb << ", power);";
@@ -70,7 +68,7 @@ void GetCDLGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstCDLOpDat
         ss.newLine() << pixrgb << " = luma + saturation * (" << pixrgb << " - luma);";
 
         // Post-saturation clamp
-        if ( !params.isNoClamp() )
+        if (!params.isNoClamp())
         {
             ss.newLine() << pixrgb << " = clamp(" << pixrgb << ", 0.0, 1.0);";
         }
@@ -80,7 +78,7 @@ void GetCDLGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstCDLOpDat
         // Reverse style
 
         // Pre-saturation clamp
-        if ( !params.isNoClamp() )
+        if (!params.isNoClamp())
         {
             ss.newLine() << pixrgb << "  = clamp(" << pixrgb << ", 0.0, 1.0);";
         }
@@ -90,7 +88,7 @@ void GetCDLGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstCDLOpDat
         ss.newLine() << pixrgb << " = luma + saturation * (" << pixrgb << " - luma);";
 
         // Power
-        if ( !params.isNoClamp() )
+        if (!params.isNoClamp())
         {
             ss.newLine() << pixrgb << " = clamp(" << pixrgb << ", 0.0, 1.0);";
             ss.newLine() << pixrgb << " = pow(" << pixrgb << ", power);";
@@ -109,7 +107,7 @@ void GetCDLGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstCDLOpDat
         ss.newLine() << pixrgb << " = " << pixrgb << " * slope;";
 
         // Post-slope clamp
-        if ( !params.isNoClamp() )
+        if (!params.isNoClamp())
         {
             ss.newLine() << pixrgb << " = clamp(" << pixrgb << ", 0.0, 1.0);";
         }

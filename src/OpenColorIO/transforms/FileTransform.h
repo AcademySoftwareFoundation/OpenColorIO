@@ -1,20 +1,17 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_FILETRANSFORM_H
 #define INCLUDED_OCIO_FILETRANSFORM_H
-
 
 #include <map>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
-#include "ops/noop/NoOps.h"
 #include "PrivateTypes.h"
+#include "ops/noop/NoOps.h"
 #include "utils/StringUtils.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -23,13 +20,10 @@ void ClearFileTransformCaches();
 class CachedFile
 {
 public:
-    CachedFile() {};
-    virtual ~CachedFile() {};
+    CachedFile(){};
+    virtual ~CachedFile(){};
 
-    virtual GroupTransformRcPtr getCDLGroup() const
-    {
-        throw Exception("Not a CDL file format.");
-    }
+    virtual GroupTransformRcPtr getCDLGroup() const { throw Exception("Not a CDL file format."); }
 };
 
 typedef OCIO_SHARED_PTR<CachedFile> CachedFileRcPtr;
@@ -52,15 +46,16 @@ enum FormatBakeFlags : unsigned int
 
 struct FormatInfo
 {
-    std::string name;       // Name must be globally unique
-    std::string extension;  // Extension has to be lower case and does not need to be unique
+    std::string name;      // Name must be globally unique
+    std::string extension; // Extension has to be lower case and does not need to be unique
     FormatCapabilityFlags capabilities;
     FormatBakeFlags bake_capabilities;
 
-    FormatInfo():
-        capabilities(FORMAT_CAPABILITY_NONE),
-        bake_capabilities(FORMAT_BAKE_CAPABILITY_NONE)
-    { }
+    FormatInfo()
+        : capabilities(FORMAT_CAPABILITY_NONE)
+        , bake_capabilities(FORMAT_BAKE_CAPABILITY_NONE)
+    {
+    }
 };
 
 typedef std::vector<FormatInfo> FormatInfoVec;
@@ -75,47 +70,48 @@ public:
     // read an istream. originalFileName is used by parsers that make use
     // of aspects of the file name as part of the parsing.
     // It may be set to an empty string if not known.
-    virtual CachedFileRcPtr read(std::istream & istream,
-                                 const std::string & originalFileName,
-                                 Interpolation interp) const = 0;
+    virtual CachedFileRcPtr
+    read(std::istream & istream, const std::string & originalFileName, Interpolation interp) const
+        = 0;
 
-    virtual void bake(const Baker & baker,
-                      const std::string & formatName,
-                      std::ostream & ostream) const;
+    virtual void bake(const Baker & baker, const std::string & formatName, std::ostream & ostream)
+        const;
 
-    virtual void write(const ConstConfigRcPtr & config,
-                       const ConstContextRcPtr & context,
-                       const GroupTransform & group,
-                       const std::string & formatName,
-                       std::ostream & ostream) const;
+    virtual void write(
+        const ConstConfigRcPtr & config,
+        const ConstContextRcPtr & context,
+        const GroupTransform & group,
+        const std::string & formatName,
+        std::ostream & ostream) const;
 
-    virtual void buildFileOps(OpRcPtrVec & ops,
-                                const Config & config,
-                                const ConstContextRcPtr & context,
-                                CachedFileRcPtr cachedFile,
-                                const FileTransform & fileTransform,
-                                TransformDirection dir) const = 0;
+    virtual void buildFileOps(
+        OpRcPtrVec & ops,
+        const Config & config,
+        const ConstContextRcPtr & context,
+        CachedFileRcPtr cachedFile,
+        const FileTransform & fileTransform,
+        TransformDirection dir) const
+        = 0;
 
     // True if the file is a binary rather than text-based format.
-    virtual bool isBinary() const
-    {
-        return false;
-    }
+    virtual bool isBinary() const { return false; }
 
     // For logging purposes.
     std::string getName() const;
+
 private:
-    FileFormat& operator= (const FileFormat &);
+    FileFormat & operator=(const FileFormat &);
 };
 
-void GetCachedFileAndFormat(FileFormat * & format,
-                            CachedFileRcPtr & cachedFile,
-                            const std::string & filepath,
-                            Interpolation interp,
-                            const Config& config);
+void GetCachedFileAndFormat(
+    FileFormat *& format,
+    CachedFileRcPtr & cachedFile,
+    const std::string & filepath,
+    Interpolation interp,
+    const Config & config);
 
-typedef std::map<std::string, FileFormat*> FileFormatMap;
-typedef std::vector<FileFormat*> FileFormatVector;
+typedef std::map<std::string, FileFormat *> FileFormatMap;
+typedef std::vector<FileFormat *> FileFormatVector;
 typedef std::map<std::string, FileFormatVector> FileFormatVectorMap;
 
 // TODO: This interface is ugly. What private API is actually appropriate?
@@ -128,21 +124,24 @@ class FormatRegistry
 public:
     static FormatRegistry & GetInstance();
 
-    FileFormat* getFileFormatByName(const std::string & name) const;
-    void getFileFormatForExtension(const std::string & extension, FileFormatVector & possibleFormats) const;
+    FileFormat * getFileFormatByName(const std::string & name) const;
+    void getFileFormatForExtension(
+        const std::string & extension,
+        FileFormatVector & possibleFormats) const;
 
     int getNumRawFormats() const;
-    FileFormat* getRawFormatByIndex(int index) const;
+    FileFormat * getRawFormatByIndex(int index) const;
 
     int getNumFormats(int capability) const noexcept;
     const char * getFormatNameByIndex(int capability, int index) const noexcept;
     const char * getFormatExtensionByIndex(int capability, int index) const noexcept;
     bool isFormatExtensionSupported(const char * extension) const;
+
 private:
     FormatRegistry();
     ~FormatRegistry();
 
-    void registerFileFormat(FileFormat* format);
+    void registerFileFormat(FileFormat * format);
 
     FileFormatMap m_formatsByName;
     FileFormatVectorMap m_formatsByExtension;

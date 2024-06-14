@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_GRADINGBSPLINECURVE_H
 #define INCLUDED_OCIO_GRADINGBSPLINECURVE_H
 
@@ -76,7 +75,7 @@ public:
         // The max number of control points must be kept to a minimum, otherwise we may reach the
         // max number of allowed uniforms (1024), resulting in linking errors.
         //
-        // On older hardware, even if it links, the responsiveness may become extremely slow if 
+        // On older hardware, even if it links, the responsiveness may become extremely slow if
         // the number is too large.  It's not clear how to estimate what that limit is but
         // 200 knots & 600 coefs is too many.
         //
@@ -87,7 +86,7 @@ public:
         // -1.  The number of knots is chosen dynamically based on what is needed to fit the
         // control points but the number of knots may be, at most, the number of control
         // points * 2 - 1.
-        // 
+        //
         // There are 4 RGB curves (R, G, B, M) each represented by one RGBCurve.  We want to keep
         // the total for two curves well below the 200 knot, 600 coef limit.
         // (TODO: 6 Hue curves (H/H, H/S, H/L, L/S, L/L, S/S)).
@@ -103,8 +102,8 @@ public:
         static constexpr int MAX_NUM_COEFS = 180;
 
         // Pre-processing arrays of length MAX_NUM_KNOTS and MAX_NUM_COEFS.
-        std::vector<float> m_coefsArray;  // Contains packed coefs of ALL curves.
-        std::vector<float> m_knotsArray;  // Contains packed knots of ALL curves.
+        std::vector<float> m_coefsArray; // Contains packed coefs of ALL curves.
+        std::vector<float> m_knotsArray; // Contains packed knots of ALL curves.
 
         float evalCurve(int curveIdx, float x) const;
         float evalCurveRev(int curveIdx, float x) const;
@@ -114,14 +113,19 @@ public:
     // each curve using a given curve order.
     void computeKnotsAndCoefs(KnotsCoefs & knotsCoefs, int curveIdx) const;
 
-    static void AddShaderEval(GpuShaderText & st,
-                              const std::string & knotsOffsets, const std::string & coefsOffsets,
-                              const std::string & knots, const std::string & coefs, bool isInv);
+    static void AddShaderEval(
+        GpuShaderText & st,
+        const std::string & knotsOffsets,
+        const std::string & coefsOffsets,
+        const std::string & knots,
+        const std::string & coefs,
+        bool isInv);
+
 private:
     void validateIndex(size_t index) const;
 
     std::vector<GradingControlPoint> m_controlPoints;
-    std::vector<float> m_slopesArray;  // Optional slope values for the control points.
+    std::vector<float> m_slopesArray; // Optional slope values for the control points.
 };
 
 bool IsGradingCurveIdentity(const ConstGradingBSplineCurveRcPtr & curve);

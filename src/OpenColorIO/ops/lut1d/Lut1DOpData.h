@@ -7,9 +7,8 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
-#include "ops/OpArray.h"
 #include "PrivateTypes.h"
-
+#include "ops/OpArray.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -20,7 +19,6 @@ typedef OCIO_SHARED_PTR<const Lut1DOpData> ConstLut1DOpDataRcPtr;
 class Lut1DOpData : public OpData
 {
 public:
-
     // List of flags that describe 1-D LUT index and value encoding.
     //
     // 1-D LUT indices and values can either be expressed in standard numeric
@@ -28,14 +26,14 @@ public:
     // representations of a 16 bit floating point value. See:
     // http://en.wikipedia.org/wiki/Half-precision_floating-point_format.
     //
-    enum HalfFlags {
-        LUT_STANDARD = 0x00,         // Indices & values use standard encoding.
-        LUT_INPUT_HALF_CODE = 0x01,  // LUT indices are half float codes.
+    enum HalfFlags
+    {
+        LUT_STANDARD         = 0x00, // Indices & values use standard encoding.
+        LUT_INPUT_HALF_CODE  = 0x01, // LUT indices are half float codes.
         LUT_OUTPUT_HALF_CODE = 0x02, // LUT values are half float codes.
 
-        LUT_INPUT_OUTPUT_HALF_CODE =
-        LUT_INPUT_HALF_CODE
-        | LUT_OUTPUT_HALF_CODE       // Indices and values are half float codes.
+        LUT_INPUT_OUTPUT_HALF_CODE
+        = LUT_INPUT_HALF_CODE | LUT_OUTPUT_HALF_CODE // Indices and values are half float codes.
     };
 
     // Contains properties needed for inversion of a single channel of a LUT.
@@ -46,7 +44,9 @@ public:
             , startDomain(0)
             , endDomain(0)
             , negStartDomain(0)
-            , negEndDomain(0) {}
+            , negEndDomain(0)
+        {
+        }
 
         bool isIncreasing;            // Represents the overall increasing state.
         unsigned long startDomain;    // Is the lowest index such that LUT[start] != LUT[start+1].
@@ -62,9 +62,9 @@ public:
     // Control behavior of 1D LUT composition.
     enum ComposeMethod
     {
-        COMPOSE_RESAMPLE_NO  = 0,     // Preserve original domain.
-        COMPOSE_RESAMPLE_BIG = 1,     // Min size is 65536.
-        COMPOSE_RESAMPLE_HD  = 2      // Half-domain.
+        COMPOSE_RESAMPLE_NO  = 0, // Preserve original domain.
+        COMPOSE_RESAMPLE_BIG = 1, // Min size is 65536.
+        COMPOSE_RESAMPLE_HD  = 2  // Half-domain.
     };
 
     // Calculate a new LUT by evaluating a new domain (lut) through a set of ops (ops).
@@ -73,11 +73,10 @@ public:
     // The ops are a set of ops to compose the LUT with. It will be finalized.
     static void ComposeVec(Lut1DOpDataRcPtr & lut, OpRcPtrVec & ops);
 
-    // Use functional composition to generate a single op that 
+    // Use functional composition to generate a single op that
     // approximates the effect of the pair of ops.
-    static Lut1DOpDataRcPtr Compose(ConstLut1DOpDataRcPtr & lut1,
-                                    ConstLut1DOpDataRcPtr & lut2,
-                                    ComposeMethod compFlag);
+    static Lut1DOpDataRcPtr
+    Compose(ConstLut1DOpDataRcPtr & lut1, ConstLut1DOpDataRcPtr & lut2, ComposeMethod compFlag);
 
     // Return the size to use for an identity LUT of the specified bit-depth.
     static unsigned long GetLutIdealSize(BitDepth incomingBitDepth);
@@ -119,13 +118,9 @@ public:
     // Return returns true if this LUT requires half code indices as input.
     static inline bool IsInputHalfDomain(HalfFlags halfFlags) noexcept
     {
-        return ((halfFlags & LUT_INPUT_HALF_CODE) ==
-                LUT_INPUT_HALF_CODE);
+        return ((halfFlags & LUT_INPUT_HALF_CODE) == LUT_INPUT_HALF_CODE);
     }
-    inline bool isInputHalfDomain() const noexcept
-    {
-        return IsInputHalfDomain(m_halfFlags);
-    }
+    inline bool isInputHalfDomain() const noexcept { return IsInputHalfDomain(m_halfFlags); }
 
     // Note: this function is used by the xml reader to build the op and is
     //       not intended for other use.
@@ -135,9 +130,9 @@ public:
     //       not intended for other use.
     void setOutputRawHalfs(bool isRawHalfs) noexcept;
 
-    inline bool isOutputRawHalfs() const noexcept {
-        return ((m_halfFlags & LUT_OUTPUT_HALF_CODE) ==
-                LUT_OUTPUT_HALF_CODE);
+    inline bool isOutputRawHalfs() const noexcept
+    {
+        return ((m_halfFlags & LUT_OUTPUT_HALF_CODE) == LUT_OUTPUT_HALF_CODE);
     }
 
     inline HalfFlags getHalfFlags() const noexcept { return m_halfFlags; }
@@ -164,12 +159,9 @@ public:
 
     bool mayCompose(ConstLut1DOpDataRcPtr & other) const;
 
-    // Return true if this Lut1DOp applies the same LUT 
+    // Return true if this Lut1DOp applies the same LUT
     // to each of r, g, and b.
-    inline bool hasSingleLut() const
-    {
-        return (m_array.getNumColorComponents() == 1);
-    }
+    inline bool hasSingleLut() const { return (m_array.getNumColorComponents() == 1); }
 
     // Determine if the LUT has an appropriate domain to allow
     // lookup rather than interpolation.
@@ -181,10 +173,7 @@ public:
 
     OpDataRcPtr getPairIdentityReplacement(ConstLut1DOpDataRcPtr & lut2) const;
 
-    inline const ComponentProperties & getRedProperties() const
-    {
-        return m_componentProperties[0];
-    }
+    inline const ComponentProperties & getRedProperties() const { return m_componentProperties[0]; }
 
     inline const ComponentProperties & getGreenProperties() const
     {
@@ -212,10 +201,11 @@ public:
     {
     public:
         explicit Lut3by1DArray(HalfFlags halfFlags);
-        Lut3by1DArray(HalfFlags halfFlags,
-                      unsigned long numChannels,
-                      unsigned long length,
-                      bool filterNANs);
+        Lut3by1DArray(
+            HalfFlags halfFlags,
+            unsigned long numChannels,
+            unsigned long length,
+            bool filterNANs);
         ~Lut3by1DArray();
 
         bool isIdentity(HalfFlags halfFlags) const;
@@ -225,15 +215,15 @@ public:
         unsigned long getNumValues() const override;
 
     protected:
-        // Fill the LUT 1D with appropriate default values 
+        // Fill the LUT 1D with appropriate default values
         // representing an identity LUT.
         void fill(HalfFlags halfFlags, bool filterNANs);
 
     public:
         // Default copy constructor and assignation operator are fine.
-        Lut3by1DArray() = default;
-        Lut3by1DArray(const Lut3by1DArray &) = default;
-        Lut3by1DArray & operator= (const Lut3by1DArray &) = default;
+        Lut3by1DArray()                                  = default;
+        Lut3by1DArray(const Lut3by1DArray &)             = default;
+        Lut3by1DArray & operator=(const Lut3by1DArray &) = default;
     };
 
 private:
@@ -249,15 +239,14 @@ private:
 
     // Get the LUT length that would allow a look-up for inputBitDepth.
     // - halfFlags except if the LUT has a half domain, always return 65536
-    static unsigned long GetLutIdealSize(BitDepth inputBitDepth,
-                                         HalfFlags halfFlags);
+    static unsigned long GetLutIdealSize(BitDepth inputBitDepth, HalfFlags halfFlags);
 
-    Interpolation       m_interpolation;
-    Lut3by1DArray       m_array;
-    HalfFlags           m_halfFlags;
-    Lut1DHueAdjust      m_hueAdjust;
+    Interpolation m_interpolation;
+    Lut3by1DArray m_array;
+    HalfFlags m_halfFlags;
+    Lut1DHueAdjust m_hueAdjust;
 
-    TransformDirection  m_direction;
+    TransformDirection m_direction;
 
     // Members for inverse LUT.
     ComponentProperties m_componentProperties[3];

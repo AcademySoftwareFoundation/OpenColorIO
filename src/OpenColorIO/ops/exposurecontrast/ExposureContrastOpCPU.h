@@ -8,7 +8,6 @@
 
 #include "ops/exposurecontrast/ExposureContrastOpData.h"
 
-
 namespace OCIO_NAMESPACE
 {
 

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "NamedTransform.h"
@@ -20,13 +19,13 @@ void NamedTransformImpl::Deleter(NamedTransform * t)
 
 NamedTransformRcPtr NamedTransformImpl::createEditableCopy() const
 {
-    auto copy = std::make_shared<NamedTransformImpl>();
-    copy->m_name = m_name;
-    copy->m_aliases = m_aliases;
+    auto copy           = std::make_shared<NamedTransformImpl>();
+    copy->m_name        = m_name;
+    copy->m_aliases     = m_aliases;
     copy->m_description = m_description;
-    copy->m_family = m_family;
-    copy->m_categories = m_categories;
-    copy->m_encoding = m_encoding;
+    copy->m_family      = m_family;
+    copy->m_categories  = m_categories;
+    copy->m_encoding    = m_encoding;
     if (m_forwardTransform)
     {
         copy->m_forwardTransform = m_forwardTransform->createEditableCopy();
@@ -82,7 +81,7 @@ void NamedTransformImpl::removeAlias(const char * name) noexcept
 {
     if (name && *name)
     {
-        const std::string alias{ name };
+        const std::string alias{name};
         StringUtils::Remove(m_aliases, alias);
     }
 }
@@ -165,8 +164,9 @@ ConstTransformRcPtr NamedTransformImpl::getTransform(TransformDirection dir) con
     throw Exception("Named transform: Unspecified TransformDirection.");
 }
 
-ConstTransformRcPtr NamedTransform::GetTransform(const ConstNamedTransformRcPtr & nt,
-                                                 TransformDirection dir)
+ConstTransformRcPtr NamedTransform::GetTransform(
+    const ConstNamedTransformRcPtr & nt,
+    TransformDirection dir)
 {
     if (nt)
     {
@@ -236,10 +236,10 @@ void NamedTransformImpl::setTransform(const ConstTransformRcPtr & transform, Tra
     }
 }
 
-std::ostream & operator<< (std::ostream & os, const NamedTransform & t)
+std::ostream & operator<<(std::ostream & os, const NamedTransform & t)
 {
     os << "<NamedTransform ";
-    const std::string strName{ t.getName() };
+    const std::string strName{t.getName()};
     os << "name=" << strName;
     const auto numAliases = t.getNumAliases();
     if (numAliases == 1)
@@ -255,7 +255,7 @@ std::ostream & operator<< (std::ostream & os, const NamedTransform & t)
         }
         os << "], ";
     }
-    const std::string strFamily{ t.getFamily() };
+    const std::string strFamily{t.getFamily()};
     if (!strFamily.empty())
     {
         os << ", family=" << strFamily;
@@ -269,12 +269,12 @@ std::ostream & operator<< (std::ostream & os, const NamedTransform & t)
         }
         os << ", categories=[" << StringUtils::Join(categories, ',') << "]";
     }
-    const std::string desc{ t.getDescription() };
+    const std::string desc{t.getDescription()};
     if (!desc.empty())
     {
         os << ", description=" << desc;
     }
-    const std::string enc{ t.getEncoding() };
+    const std::string enc{t.getEncoding()};
     if (!enc.empty())
     {
         os << ", encoding=" << enc;
@@ -293,13 +293,14 @@ std::ostream & operator<< (std::ostream & os, const NamedTransform & t)
     return os;
 }
 
-ConstTransformRcPtr GetTransform(const ConstNamedTransformRcPtr & src,
-                                 const ConstNamedTransformRcPtr & dst)
+ConstTransformRcPtr GetTransform(
+    const ConstNamedTransformRcPtr & src,
+    const ConstNamedTransformRcPtr & dst)
 {
     if (src && dst)
     {
         // Both are named transforms.
-        auto group = GroupTransform::Create();
+        auto group        = GroupTransform::Create();
         auto srcTransform = NamedTransform::GetTransform(src, TRANSFORM_DIR_FORWARD);
         group->appendTransform(srcTransform->createEditableCopy());
         auto dstTransform = NamedTransform::GetTransform(dst, TRANSFORM_DIR_INVERSE);

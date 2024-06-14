@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_COLORSPACE_HELPERS_H
 #define INCLUDED_OCIO_COLORSPACE_HELPERS_H
 
@@ -12,7 +11,6 @@
 #include "CategoryHelpers.h"
 #include "utils/StringUtils.h"
 
-
 namespace OCIO_NAMESPACE
 {
 
@@ -22,35 +20,38 @@ namespace OCIO_NAMESPACE
 class ColorSpaceInfo
 {
 public:
-    static ConstColorSpaceInfoRcPtr Create(const ConstConfigRcPtr & config,
-                                           const char * name,
-                                           const char * family,
-                                           const char * description);
+    static ConstColorSpaceInfoRcPtr Create(
+        const ConstConfigRcPtr & config,
+        const char * name,
+        const char * family,
+        const char * description);
 
-    static ConstColorSpaceInfoRcPtr Create(const ConstConfigRcPtr & config,
-                                           const char * name,
-                                           const char * uiName,
-                                           const char * family,
-                                           const char * description);
+    static ConstColorSpaceInfoRcPtr Create(
+        const ConstConfigRcPtr & config,
+        const char * name,
+        const char * uiName,
+        const char * family,
+        const char * description);
 
-    static ConstColorSpaceInfoRcPtr Create(const ConstConfigRcPtr & config,
-                                           const ColorSpace & cs);
+    static ConstColorSpaceInfoRcPtr Create(const ConstConfigRcPtr & config, const ColorSpace & cs);
 
-    static ConstColorSpaceInfoRcPtr Create(const ConstConfigRcPtr & config,
-                                           const NamedTransform & nt);
+    static ConstColorSpaceInfoRcPtr Create(
+        const ConstConfigRcPtr & config,
+        const NamedTransform & nt);
 
-    static ConstColorSpaceInfoRcPtr CreateFromRole(const ConstConfigRcPtr & config,
-                                                   const char * role,
-                                                   const char * family);
+    static ConstColorSpaceInfoRcPtr
+    CreateFromRole(const ConstConfigRcPtr & config, const char * role, const char * family);
 
-    static ConstColorSpaceInfoRcPtr CreateFromSingleRole(const ConstConfigRcPtr & config,
-                                                         const char * role);
+    static ConstColorSpaceInfoRcPtr CreateFromSingleRole(
+        const ConstConfigRcPtr & config,
+        const char * role);
 
-    ColorSpaceInfo(const ConstConfigRcPtr & config,
-                   const char * name,
-                   const char * uiName,
-                   const char * family,
-                   const char * description);
+    ColorSpaceInfo(
+        const ConstConfigRcPtr & config,
+        const char * name,
+        const char * uiName,
+        const char * family,
+        const char * description);
 
     const char * getName() const noexcept;
     const char * getUIName() const noexcept;
@@ -63,9 +64,9 @@ public:
 
     static void Deleter(ColorSpaceInfo * cs);
 
-    ColorSpaceInfo() = default;
-    virtual ~ColorSpaceInfo() = default;
-    ColorSpaceInfo(const ColorSpaceInfo &) = delete;
+    ColorSpaceInfo()                                   = default;
+    virtual ~ColorSpaceInfo()                          = default;
+    ColorSpaceInfo(const ColorSpaceInfo &)             = delete;
     ColorSpaceInfo & operator=(const ColorSpaceInfo &) = delete;
 
 private:
@@ -78,13 +79,12 @@ private:
     StringUtils::StringVec m_hierarchyLevels;
 };
 
-
 class ColorSpaceMenuParametersImpl : public ColorSpaceMenuParameters
 {
 public:
     ColorSpaceMenuParametersImpl(ConstConfigRcPtr config);
 
-    ColorSpaceMenuParametersImpl() = delete;
+    ColorSpaceMenuParametersImpl()                                                 = delete;
     ColorSpaceMenuParametersImpl & operator=(const ColorSpaceMenuParametersImpl &) = delete;
 
     void setParameters(ConstColorSpaceMenuParametersRcPtr parameters);
@@ -114,7 +114,7 @@ public:
     void clearAddedColorSpaces() noexcept override;
 
     ColorSpaceMenuParametersImpl(const ColorSpaceMenuParametersImpl &) = delete;
-    virtual ~ColorSpaceMenuParametersImpl() = default;
+    virtual ~ColorSpaceMenuParametersImpl()                            = default;
 
     static void Deleter(ColorSpaceMenuParameters * p);
 
@@ -124,26 +124,24 @@ public:
     std::string m_appCategories;
     std::string m_userCategories;
     std::string m_encodings;
-    bool m_includeColorSpaces = true;
-    bool m_includeRoles = false;
-    bool m_includeNamedTransforms = false;
+    bool m_includeColorSpaces                 = true;
+    bool m_includeRoles                       = false;
+    bool m_includeNamedTransforms             = false;
     SearchReferenceSpaceType m_colorSpaceType = SEARCH_REFERENCE_SPACE_ALL;
 
     StringUtils::StringVec m_additionalColorSpaces;
 };
 
-
 class ColorSpaceMenuHelperImpl : public ColorSpaceMenuHelper
 {
 public:
-
-    ColorSpaceMenuHelperImpl() = delete;
+    ColorSpaceMenuHelperImpl()                                             = delete;
     ColorSpaceMenuHelperImpl & operator=(const ColorSpaceMenuHelperImpl &) = delete;
 
     ColorSpaceMenuHelperImpl(ConstColorSpaceMenuParametersRcPtr parameters);
 
     ColorSpaceMenuHelperImpl(const ColorSpaceMenuHelperImpl &) = delete;
-    virtual ~ColorSpaceMenuHelperImpl() = default;
+    virtual ~ColorSpaceMenuHelperImpl()                        = default;
 
     size_t getNumColorSpaces() const noexcept override;
     const char * getName(size_t idx) const noexcept override;
@@ -175,7 +173,6 @@ private:
     Infos m_entries;
 };
 
-
-}  // namespace OCIO_NAMESPACE
+} // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_COLORSPACE_HELPERS_H

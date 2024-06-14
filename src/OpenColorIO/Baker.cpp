@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <iostream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "transforms/FileTransform.h"
 #include "BakingUtils.h"
 #include "MathUtils.h"
-
+#include "transforms/FileTransform.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -19,7 +17,7 @@ BakerRcPtr Baker::Create()
     return BakerRcPtr(new Baker(), &deleter);
 }
 
-void Baker::deleter(Baker* c)
+void Baker::deleter(Baker * c)
 {
     delete c;
 }
@@ -27,10 +25,9 @@ void Baker::deleter(Baker* c)
 class Baker::Impl
 {
 public:
-
     ConfigRcPtr m_config;
     std::string m_formatName;
-	FormatMetadataImpl m_formatMetadata{ METADATA_ROOT, "" };
+    FormatMetadataImpl m_formatMetadata{METADATA_ROOT, ""};
     std::string m_inputSpace;
     std::string m_shaperSpace;
     std::string m_looks;
@@ -40,40 +37,38 @@ public:
     int m_shapersize;
     int m_cubesize;
 
-    Impl() :
-        m_shapersize(-1),
-        m_cubesize(-1)
+    Impl()
+        : m_shapersize(-1)
+        , m_cubesize(-1)
     {
     }
 
     Impl(const Impl &) = delete;
 
-    ~Impl()
-    {
-    }
+    ~Impl() {}
 
-    Impl& operator= (const Impl & rhs)
+    Impl & operator=(const Impl & rhs)
     {
         if (this != &rhs)
         {
-            m_config = rhs.m_config;
-            m_formatName = rhs.m_formatName;
+            m_config         = rhs.m_config;
+            m_formatName     = rhs.m_formatName;
             m_formatMetadata = rhs.m_formatMetadata;
-            m_inputSpace = rhs.m_inputSpace;
-            m_shaperSpace = rhs.m_shaperSpace;
-            m_looks = rhs.m_looks;
-            m_targetSpace = rhs.m_targetSpace;
-            m_display = rhs.m_display;
-            m_view = rhs.m_view;
-            m_shapersize = rhs.m_shapersize;
-            m_cubesize = rhs.m_cubesize;
+            m_inputSpace     = rhs.m_inputSpace;
+            m_shaperSpace    = rhs.m_shaperSpace;
+            m_looks          = rhs.m_looks;
+            m_targetSpace    = rhs.m_targetSpace;
+            m_display        = rhs.m_display;
+            m_view           = rhs.m_view;
+            m_shapersize     = rhs.m_shapersize;
+            m_cubesize       = rhs.m_cubesize;
         }
         return *this;
     }
 };
 
 Baker::Baker()
-: m_impl(new Baker::Impl)
+    : m_impl(new Baker::Impl)
 {
 }
 
@@ -86,7 +81,7 @@ Baker::~Baker()
 BakerRcPtr Baker::createEditableCopy() const
 {
     BakerRcPtr oven = Baker::Create();
-    *oven->m_impl = *m_impl;
+    *oven->m_impl   = *m_impl;
     return oven;
 }
 
@@ -211,7 +206,7 @@ void Baker::setDisplayView(const char * display, const char * view)
     }
 
     getImpl()->m_display = display;
-    getImpl()->m_view = view;
+    getImpl()->m_view    = view;
 }
 
 void Baker::setShaperSize(int shapersize)
@@ -236,9 +231,9 @@ int Baker::getCubeSize() const
 
 void Baker::bake(std::ostream & os) const
 {
-    FileFormat* fmt = FormatRegistry::GetInstance().getFileFormatByName(getImpl()->m_formatName);
+    FileFormat * fmt = FormatRegistry::GetInstance().getFileFormatByName(getImpl()->m_formatName);
 
-    if(!fmt)
+    if (!fmt)
     {
         std::ostringstream err;
         err << "The format named '" << getImpl()->m_formatName;
@@ -250,58 +245,57 @@ void Baker::bake(std::ostream & os) const
     fmt->getFormatInfo(fmtInfoVec);
     FormatInfo fmtInfo = fmtInfoVec[0];
 
-    const std::string & inputSpace = getImpl()->m_inputSpace;
+    const std::string & inputSpace  = getImpl()->m_inputSpace;
     const std::string & targetSpace = getImpl()->m_targetSpace;
     const std::string & shaperSpace = getImpl()->m_shaperSpace;
-    const std::string & display = getImpl()->m_display;
-    const std::string & view = getImpl()->m_view;
+    const std::string & display     = getImpl()->m_display;
+    const std::string & view        = getImpl()->m_view;
 
     const bool displayViewMode = !display.empty() && !view.empty();
-    const bool colorSpaceMode = !targetSpace.empty();
+    const bool colorSpaceMode  = !targetSpace.empty();
 
     // Settings validation.
-    if(!getConfig())
+    if (!getConfig())
     {
         throw Exception("No OCIO config has been set.");
     }
 
-    if(inputSpace.empty())
+    if (inputSpace.empty())
     {
         throw Exception("No input space has been set.");
     }
 
-    if(!displayViewMode && !colorSpaceMode)
+    if (!displayViewMode && !colorSpaceMode)
     {
         throw Exception("No display / view or target colorspace has been set.");
     }
 
-    if(displayViewMode && colorSpaceMode)
+    if (displayViewMode && colorSpaceMode)
     {
         throw Exception("Cannot use both display / view and target colorspace.");
     }
 
-    if(!getConfig()->getColorSpace(inputSpace.c_str()))
+    if (!getConfig()->getColorSpace(inputSpace.c_str()))
     {
         std::ostringstream os;
         os << "Could not find input colorspace '" << inputSpace << "'.";
         throw Exception(os.str().c_str());
     }
 
-    if(colorSpaceMode && !getConfig()->getColorSpace(targetSpace.c_str()))
+    if (colorSpaceMode && !getConfig()->getColorSpace(targetSpace.c_str()))
     {
         std::ostringstream os;
         os << "Could not find target colorspace '" << targetSpace << "'.";
         throw Exception(os.str().c_str());
     }
 
-    if(displayViewMode)
+    if (displayViewMode)
     {
         bool foundDisplay = false;
-        bool foundView = false;
+        bool foundView    = false;
 
         // Make sure we also search through inactive views.
-        auto hasViewByType = [this](ViewType type, const char * display, const char * view)
-        {
+        auto hasViewByType = [this](ViewType type, const char * display, const char * view) {
             for (int i = 0; i < getConfig()->getNumViews(type, display); ++i)
             {
                 if (std::string(getConfig()->getView(type, display, i)) == std::string(view))
@@ -343,7 +337,7 @@ void Baker::bake(std::ostream & os) const
     }
 
     const bool bake_1D = fmtInfo.bake_capabilities == FORMAT_BAKE_CAPABILITY_1DLUT;
-    if(bake_1D && GetInputToTargetProcessor(*this)->hasChannelCrosstalk())
+    if (bake_1D && GetInputToTargetProcessor(*this)->hasChannelCrosstalk())
     {
         std::ostringstream os;
         os << "The format '" << getImpl()->m_formatName << "' does not support";
@@ -351,22 +345,21 @@ void Baker::bake(std::ostream & os) const
         throw Exception(os.str().c_str());
     }
 
-    if(getCubeSize() != -1 && getCubeSize() < 2)
+    if (getCubeSize() != -1 && getCubeSize() < 2)
     {
         throw Exception("Cube size must be at least 2 if set.");
     }
 
-    const bool supportShaper =
-        fmtInfo.bake_capabilities & FORMAT_BAKE_CAPABILITY_1D_3D_LUT ||
-        fmtInfo.bake_capabilities & FORMAT_BAKE_CAPABILITY_1DLUT;
-    if(!shaperSpace.empty() && !supportShaper)
+    const bool supportShaper = fmtInfo.bake_capabilities & FORMAT_BAKE_CAPABILITY_1D_3D_LUT
+                               || fmtInfo.bake_capabilities & FORMAT_BAKE_CAPABILITY_1DLUT;
+    if (!shaperSpace.empty() && !supportShaper)
     {
         std::ostringstream os;
         os << "The format '" << getImpl()->m_formatName << "' does not support shaper space.";
         throw Exception(os.str().c_str());
     }
 
-    if(!shaperSpace.empty() && getShaperSize() != -1 && getShaperSize() < 2)
+    if (!shaperSpace.empty() && getShaperSize() != -1 && getShaperSize() < 2)
     {
         std::ostringstream os;
         os << "A shaper space '" << getShaperSpace() << "' has";
@@ -374,12 +367,12 @@ void Baker::bake(std::ostream & os) const
         throw Exception(os.str().c_str());
     }
 
-    if(!shaperSpace.empty())
+    if (!shaperSpace.empty())
     {
         ConstCPUProcessorRcPtr inputToShaper = GetInputToShaperProcessor(*this);
         ConstCPUProcessorRcPtr shaperToInput = GetShaperToInputProcessor(*this);
 
-        if(inputToShaper->hasChannelCrosstalk() || shaperToInput->hasChannelCrosstalk())
+        if (inputToShaper->hasChannelCrosstalk() || shaperToInput->hasChannelCrosstalk())
         {
             std::ostringstream os;
             os << "The specified shaper space, '" << getShaperSpace();
@@ -394,7 +387,7 @@ void Baker::bake(std::ostream & os) const
     {
         fmt->bake(*this, getImpl()->m_formatName, os);
     }
-    catch(std::exception & e)
+    catch (std::exception & e)
     {
         std::ostringstream err;
         err << "Error baking " << getImpl()->m_formatName << ":";
@@ -402,9 +395,9 @@ void Baker::bake(std::ostream & os) const
         throw Exception(err.str().c_str());
     }
 
-    // 
+    //
     // TODO:
-    // 
+    //
     // - check limits of shaper and target, throw exception if we can't
     //   write that much data in x format
     // - add some checks to make sure we are monotonic

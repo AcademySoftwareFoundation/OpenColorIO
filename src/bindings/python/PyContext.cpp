@@ -8,7 +8,7 @@
 
 namespace OCIO_NAMESPACE
 {
-namespace 
+namespace
 {
 
 enum ContextIterator
@@ -37,7 +37,7 @@ std::map<std::string, std::string> getStringVarsStdMap(const ContextRcPtr & p)
     std::map<std::string, std::string> stringVars;
     for (int i = 0; i < p->getNumStringVars(); i++)
     {
-        const char * name = p->getStringVarNameByIndex(i);
+        const char * name             = p->getStringVarNameByIndex(i);
         stringVars[std::string(name)] = std::string(p->getStringVar(name));
     }
     return stringVars;
@@ -49,33 +49,27 @@ void bindPyContext(py::module & m)
 {
     ContextRcPtr DEFAULT = Context::Create();
 
-    auto clsContext = 
-        py::class_<Context, ContextRcPtr>(
-            m.attr("Context"));
+    auto clsContext = py::class_<Context, ContextRcPtr>(m.attr("Context"));
 
-    auto clsStringVarNameIterator = 
-        py::class_<StringVarNameIterator>(
-            clsContext, "StringVarNameIterator");
+    auto clsStringVarNameIterator
+        = py::class_<StringVarNameIterator>(clsContext, "StringVarNameIterator");
 
-    auto clsStringVarIterator = 
-        py::class_<StringVarIterator>(
-            clsContext, "StringVarIterator");
+    auto clsStringVarIterator = py::class_<StringVarIterator>(clsContext, "StringVarIterator");
 
-    auto clsSearchPathIterator = 
-        py::class_<SearchPathIterator>(
-            clsContext, "SearchPathIterator");
+    auto clsSearchPathIterator = py::class_<SearchPathIterator>(clsContext, "SearchPathIterator");
 
-    clsContext
-        .def(py::init(&Context::Create), 
-             DOC(Context, Create))
-        .def(py::init([](const std::string & workingDir,
-                         const std::vector<std::string> & searchPaths,
-                         const std::map<std::string, std::string> stringVars,
-                         EnvironmentMode environmentMode) 
-            {
+    clsContext.def(py::init(&Context::Create), DOC(Context, Create))
+        .def(
+            py::init([](const std::string & workingDir,
+                        const std::vector<std::string> & searchPaths,
+                        const std::map<std::string, std::string> stringVars,
+                        EnvironmentMode environmentMode) {
                 ContextRcPtr p = Context::Create();
-                if (!workingDir.empty()) { p->setWorkingDir(workingDir.c_str()); }
-                
+                if (!workingDir.empty())
+                {
+                    p->setWorkingDir(workingDir.c_str());
+                }
+
                 if (!searchPaths.empty())
                 {
                     for (const auto & path : searchPaths)
@@ -86,7 +80,7 @@ void bindPyContext(py::module & m)
 
                 if (!stringVars.empty())
                 {
-                    for (const auto & var: stringVars)
+                    for (const auto & var : stringVars)
                     {
                         p->setStringVar(var.first.c_str(), var.second.c_str());
                     }
@@ -94,27 +88,23 @@ void bindPyContext(py::module & m)
 
                 p->setEnvironmentMode(environmentMode);
                 return p;
-            }), 
-             "workingDir"_a = DEFAULT->getWorkingDir(),
-             "searchPaths"_a = getSearchPathsStdVec(DEFAULT),
-             "stringVars"_a = getStringVarsStdMap(DEFAULT),
-             "environmentMode"_a = DEFAULT->getEnvironmentMode(), 
-             DOC(Context, Create))
+            }),
+            "workingDir"_a      = DEFAULT->getWorkingDir(),
+            "searchPaths"_a     = getSearchPathsStdVec(DEFAULT),
+            "stringVars"_a      = getStringVarsStdMap(DEFAULT),
+            "environmentMode"_a = DEFAULT->getEnvironmentMode(),
+            DOC(Context, Create))
 
-        .def("__deepcopy__", [](const ConstContextRcPtr & self, py::dict)
-            {
-                return self->createEditableCopy();
-            },
+        .def(
+            "__deepcopy__",
+            [](const ConstContextRcPtr & self, py::dict) { return self->createEditableCopy(); },
             "memo"_a)
 
-        .def("__iter__", [](ContextRcPtr & self) 
-            { 
-                return StringVarNameIterator(self); 
-            })
-        .def("__len__", &Context::getNumStringVars, 
-             DOC(Context, getNumStringVars))
-        .def("__getitem__", [](ContextRcPtr & self, const std::string & name) -> const char *
-            { 
+        .def("__iter__", [](ContextRcPtr & self) { return StringVarNameIterator(self); })
+        .def("__len__", &Context::getNumStringVars, DOC(Context, getNumStringVars))
+        .def(
+            "__getitem__",
+            [](ContextRcPtr & self, const std::string & name) -> const char * {
                 for (int i = 0; i < self->getNumStringVars(); i++)
                 {
                     const char * varName = self->getStringVarNameByIndex(i);
@@ -123,17 +113,17 @@ void bindPyContext(py::module & m)
                         return self->getStringVar(name.c_str());
                     }
                 }
-                
+
                 std::ostringstream os;
                 os << "'" << name << "'";
                 throw py::key_error(os.str().c_str());
             },
-             "name"_a, 
-             DOC(Context, getStringVar))
-        .def("__setitem__", &Context::setStringVar, "name"_a, "value"_a, 
-             DOC(Context, setStringVar))
-        .def("__contains__", [](ContextRcPtr & self, const std::string & name) -> bool
-            { 
+            "name"_a,
+            DOC(Context, getStringVar))
+        .def("__setitem__", &Context::setStringVar, "name"_a, "value"_a, DOC(Context, setStringVar))
+        .def(
+            "__contains__",
+            [](ContextRcPtr & self, const std::string & name) -> bool {
                 for (int i = 0; i < self->getNumStringVars(); i++)
                 {
                     const char * varName = self->getStringVarNameByIndex(i);
@@ -146,105 +136,96 @@ void bindPyContext(py::module & m)
             },
             "name"_a)
 
-        .def("getCacheID", &Context::getCacheID, 
-             DOC(Context, getCacheID))
-        .def("getSearchPath", (const char * (Context::*)() const) &Context::getSearchPath, 
-             DOC(Context, getSearchPath))
-        .def("setSearchPath", &Context::setSearchPath, "path"_a, 
-             DOC(Context, setSearchPath))
-        .def("getSearchPaths", [](ContextRcPtr & self) 
-            { 
-                return SearchPathIterator(self); 
-            })
-        .def("clearSearchPaths", &Context::clearSearchPaths, 
-             DOC(Context, clearSearchPaths))
-        .def("addSearchPath", &Context::addSearchPath, "path"_a, 
-             DOC(Context, addSearchPath))
-        .def("getWorkingDir", &Context::getWorkingDir, 
-             DOC(Context, getWorkingDir))
-        .def("setWorkingDir", &Context::setWorkingDir, "dirName"_a, 
-             DOC(Context, setWorkingDir))
-        .def("getStringVars", [](ContextRcPtr & self) 
-            { 
-                return StringVarIterator(self); 
-            })
-        .def("clearStringVars", &Context::clearStringVars, 
-             DOC(Context, clearStringVars))
-        .def("getEnvironmentMode", &Context::getEnvironmentMode, 
-             DOC(Context, getEnvironmentMode))
-        .def("setEnvironmentMode", &Context::setEnvironmentMode, "mode"_a, 
-             DOC(Context, setEnvironmentMode))
-        .def("loadEnvironment", &Context::loadEnvironment, 
-             DOC(Context, loadEnvironment))
-        .def("resolveStringVar", 
-             (const char * (Context::*)(const char *) const noexcept) 
-             &Context::resolveStringVar, 
-             "string"_a, 
-             DOC(Context, resolveStringVar))
-        .def("resolveStringVar", 
-             (const char * (Context::*)(const char *, ContextRcPtr &) const noexcept) 
-             &Context::resolveStringVar, 
-             "string"_a, "usedContextVars"_a, 
-             DOC(Context, resolveStringVar, 2))
-        .def("resolveFileLocation", 
-             (const char * (Context::*)(const char *) const) 
-             &Context::resolveFileLocation, 
-             "filename"_a, 
-             DOC(Context, resolveFileLocation))
-        .def("resolveFileLocation", 
-             (const char * (Context::*)(const char *, ContextRcPtr &) const) 
-             &Context::resolveFileLocation, 
-             "filename"_a, "usedContextVars"_a, 
-             DOC(Context, resolveFileLocation, 2));
+        .def("getCacheID", &Context::getCacheID, DOC(Context, getCacheID))
+        .def(
+            "getSearchPath",
+            (const char * (Context::*)() const) & Context::getSearchPath,
+            DOC(Context, getSearchPath))
+        .def("setSearchPath", &Context::setSearchPath, "path"_a, DOC(Context, setSearchPath))
+        .def("getSearchPaths", [](ContextRcPtr & self) { return SearchPathIterator(self); })
+        .def("clearSearchPaths", &Context::clearSearchPaths, DOC(Context, clearSearchPaths))
+        .def("addSearchPath", &Context::addSearchPath, "path"_a, DOC(Context, addSearchPath))
+        .def("getWorkingDir", &Context::getWorkingDir, DOC(Context, getWorkingDir))
+        .def("setWorkingDir", &Context::setWorkingDir, "dirName"_a, DOC(Context, setWorkingDir))
+        .def("getStringVars", [](ContextRcPtr & self) { return StringVarIterator(self); })
+        .def("clearStringVars", &Context::clearStringVars, DOC(Context, clearStringVars))
+        .def("getEnvironmentMode", &Context::getEnvironmentMode, DOC(Context, getEnvironmentMode))
+        .def(
+            "setEnvironmentMode",
+            &Context::setEnvironmentMode,
+            "mode"_a,
+            DOC(Context, setEnvironmentMode))
+        .def("loadEnvironment", &Context::loadEnvironment, DOC(Context, loadEnvironment))
+        .def(
+            "resolveStringVar",
+            (const char * (Context::*)(const char *) const noexcept) & Context::resolveStringVar,
+            "string"_a,
+            DOC(Context, resolveStringVar))
+        .def(
+            "resolveStringVar",
+            (const char * (Context::*)(const char *, ContextRcPtr &) const noexcept)
+                & Context::resolveStringVar,
+            "string"_a,
+            "usedContextVars"_a,
+            DOC(Context, resolveStringVar, 2))
+        .def(
+            "resolveFileLocation",
+            (const char * (Context::*)(const char *) const) & Context::resolveFileLocation,
+            "filename"_a,
+            DOC(Context, resolveFileLocation))
+        .def(
+            "resolveFileLocation",
+            (const char * (Context::*)(const char *, ContextRcPtr &) const)
+                & Context::resolveFileLocation,
+            "filename"_a,
+            "usedContextVars"_a,
+            DOC(Context, resolveFileLocation, 2));
 
     defRepr(clsContext);
 
     clsStringVarNameIterator
-        .def("__len__", [](StringVarNameIterator & it) 
-            { 
-                return it.m_obj->getNumStringVars(); 
-            })
-        .def("__getitem__", [](StringVarNameIterator & it, int i) 
-            { 
+        .def("__len__", [](StringVarNameIterator & it) { return it.m_obj->getNumStringVars(); })
+        .def(
+            "__getitem__",
+            [](StringVarNameIterator & it, int i) {
                 it.checkIndex(i, it.m_obj->getNumStringVars());
                 return it.m_obj->getStringVarNameByIndex(i);
             })
         .def("__iter__", [](StringVarNameIterator & it) -> StringVarNameIterator & { return it; })
-        .def("__next__", [](StringVarNameIterator & it)
-            {
-                int i = it.nextIndex(it.m_obj->getNumStringVars());
-                return it.m_obj->getStringVarNameByIndex(i);
-            });
+        .def("__next__", [](StringVarNameIterator & it) {
+            int i = it.nextIndex(it.m_obj->getNumStringVars());
+            return it.m_obj->getStringVarNameByIndex(i);
+        });
 
     clsStringVarIterator
         .def("__len__", [](StringVarIterator & it) { return it.m_obj->getNumStringVars(); })
-        .def("__getitem__", [](StringVarIterator & it, int i) 
-            { 
+        .def(
+            "__getitem__",
+            [](StringVarIterator & it, int i) {
                 it.checkIndex(i, it.m_obj->getNumStringVars());
                 const char * name = it.m_obj->getStringVarNameByIndex(i);
                 return py::make_tuple(name, it.m_obj->getStringVar(name));
             })
         .def("__iter__", [](StringVarIterator & it) -> StringVarIterator & { return it; })
-        .def("__next__", [](StringVarIterator & it)
-            {
-                int i = it.nextIndex(it.m_obj->getNumStringVars());
-                const char * name = it.m_obj->getStringVarNameByIndex(i);
-                return py::make_tuple(name, it.m_obj->getStringVar(name));
-            });
+        .def("__next__", [](StringVarIterator & it) {
+            int i             = it.nextIndex(it.m_obj->getNumStringVars());
+            const char * name = it.m_obj->getStringVarNameByIndex(i);
+            return py::make_tuple(name, it.m_obj->getStringVar(name));
+        });
 
     clsSearchPathIterator
         .def("__len__", [](SearchPathIterator & it) { return it.m_obj->getNumSearchPaths(); })
-        .def("__getitem__", [](SearchPathIterator & it, int i) 
-            { 
+        .def(
+            "__getitem__",
+            [](SearchPathIterator & it, int i) {
                 it.checkIndex(i, it.m_obj->getNumSearchPaths());
                 return it.m_obj->getSearchPath(i);
             })
         .def("__iter__", [](SearchPathIterator & it) -> SearchPathIterator & { return it; })
-        .def("__next__", [](SearchPathIterator & it)
-            {
-                int i = it.nextIndex(it.m_obj->getNumSearchPaths());
-                return it.m_obj->getSearchPath(i);
-            });
+        .def("__next__", [](SearchPathIterator & it) {
+            int i = it.nextIndex(it.m_obj->getNumSearchPaths());
+            return it.m_obj->getSearchPath(i);
+        });
 }
 
 } // namespace OCIO_NAMESPACE

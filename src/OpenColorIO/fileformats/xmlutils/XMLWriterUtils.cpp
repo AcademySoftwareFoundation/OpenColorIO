@@ -3,21 +3,19 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "fileformats/xmlutils/XMLWriterUtils.h"
 #include "ParseUtils.h"
+#include "fileformats/xmlutils/XMLWriterUtils.h"
 
 namespace OCIO_NAMESPACE
 {
 
-XmlFormatter::XmlFormatter(std::ostream& stream)
- : m_stream(stream)
+XmlFormatter::XmlFormatter(std::ostream & stream)
+    : m_stream(stream)
 {
-
 }
 
 XmlFormatter::~XmlFormatter()
 {
-
 }
 
 void XmlFormatter::incrementIndent()
@@ -30,8 +28,7 @@ void XmlFormatter::decrementIndent()
     --m_indentLevel;
 }
 
-void XmlFormatter::writeStartTag(const std::string & tagName,
-                                 const Attributes & attributes)
+void XmlFormatter::writeStartTag(const std::string & tagName, const Attributes & attributes)
 {
     writeIndent();
     m_stream << "<" << tagName;
@@ -58,16 +55,16 @@ void XmlFormatter::writeEndTag(const std::string & tagName)
     m_stream << "</" << tagName << ">\n";
 }
 
-void XmlFormatter::writeContentTag(const std::string & tagName,
-                                   const std::string & content)
+void XmlFormatter::writeContentTag(const std::string & tagName, const std::string & content)
 {
     Attributes atts;
     writeContentTag(tagName, atts, content);
 }
 
-void XmlFormatter::writeContentTag(const std::string & tagName,
-                                   const Attributes & attributes,
-                                   const std::string & content)
+void XmlFormatter::writeContentTag(
+    const std::string & tagName,
+    const Attributes & attributes,
+    const std::string & content)
 {
     writeIndent();
     m_stream << "<" << tagName;
@@ -90,14 +87,12 @@ void XmlFormatter::writeContent(const std::string & content)
     m_stream << "\n";
 }
 
-void XmlFormatter::writeEmptyTag(const std::string & tagName,
-                                 const Attributes & attributes)
+void XmlFormatter::writeEmptyTag(const std::string & tagName, const Attributes & attributes)
 {
     writeIndent();
     m_stream << "<" << tagName;
 
-    for (Attributes::const_iterator it(attributes.begin());
-        it != attributes.end(); it++)
+    for (Attributes::const_iterator it(attributes.begin()); it != attributes.end(); it++)
     {
         m_stream << " " << (*it).first << "=\"";
         writeString((*it).second);
@@ -136,7 +131,6 @@ XmlScopeIndent::~XmlScopeIndent()
 {
     m_formatter.decrementIndent();
 }
-
 
 XmlElementWriter::XmlElementWriter(XmlFormatter & formatter)
     : m_formatter(formatter)

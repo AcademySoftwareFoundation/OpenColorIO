@@ -4,15 +4,14 @@
 #ifndef INCLUDED_OCIO_JNIUTIL_H
 #define INCLUDED_OCIO_JNIUTIL_H
 
+#include "OpenColorIOJNI.h"
 #include <sstream>
 #include <vector>
-#include "OpenColorIOJNI.h"
 
 namespace OCIO_NAMESPACE
 {
 
-template<typename C, typename E>
-struct JObject
+template <typename C, typename E> struct JObject
 {
     jobject back_ptr;
     C * constcppobj;
@@ -29,58 +28,58 @@ typedef OCIO_SHARED_PTR<PackedImageDesc> PackedImageDescRcPtr;
 typedef OCIO_SHARED_PTR<const PlanarImageDesc> ConstPlanarImageDescRcPtr;
 typedef OCIO_SHARED_PTR<PlanarImageDesc> PlanarImageDescRcPtr;
 
-typedef JObject <ConstConfigRcPtr, ConfigRcPtr> ConfigJNI;
-typedef JObject <ConstContextRcPtr, ContextRcPtr> ContextJNI;
-typedef JObject <ConstProcessorRcPtr, ProcessorRcPtr> ProcessorJNI;
-typedef JObject <ConstColorSpaceRcPtr, ColorSpaceRcPtr> ColorSpaceJNI;
-typedef JObject <ConstLookRcPtr, LookRcPtr> LookJNI;
-typedef JObject <ConstBakerRcPtr, BakerRcPtr> BakerJNI;
-typedef JObject <ConstGpuShaderDescRcPtr, GpuShaderDescRcPtr> GpuShaderDescJNI;
-typedef JObject <ConstImageDescRcPtr, ImageDescRcPtr> ImageDescJNI;
-typedef JObject <ConstTransformRcPtr, TransformRcPtr> TransformJNI;
-typedef JObject <ConstAllocationTransformRcPtr, AllocationTransformRcPtr> AllocationTransformJNI;
-typedef JObject <ConstCDLTransformRcPtr, CDLTransformRcPtr> CDLTransformJNI;
-typedef JObject <ConstColorSpaceTransformRcPtr, ColorSpaceTransformRcPtr> ColorSpaceTransformJNI;
-typedef JObject <ConstDisplayTransformRcPtr, DisplayTransformRcPtr> DisplayTransformJNI;
-typedef JObject <ConstExponentTransformRcPtr, ExponentTransformRcPtr> ExponentTransformJNI;
-typedef JObject <ConstFileTransformRcPtr, FileTransformRcPtr> FileTransformJNI;
-typedef JObject <ConstGroupTransformRcPtr, GroupTransformRcPtr> GroupTransformJNI;
-typedef JObject <ConstLogTransformRcPtr, LogTransformRcPtr> LogTransformJNI;
-typedef JObject <ConstLookTransformRcPtr, LookTransformRcPtr> LookTransformJNI;
-typedef JObject <ConstMatrixTransformRcPtr, MatrixTransformRcPtr> MatrixTransformJNI;
+typedef JObject<ConstConfigRcPtr, ConfigRcPtr> ConfigJNI;
+typedef JObject<ConstContextRcPtr, ContextRcPtr> ContextJNI;
+typedef JObject<ConstProcessorRcPtr, ProcessorRcPtr> ProcessorJNI;
+typedef JObject<ConstColorSpaceRcPtr, ColorSpaceRcPtr> ColorSpaceJNI;
+typedef JObject<ConstLookRcPtr, LookRcPtr> LookJNI;
+typedef JObject<ConstBakerRcPtr, BakerRcPtr> BakerJNI;
+typedef JObject<ConstGpuShaderDescRcPtr, GpuShaderDescRcPtr> GpuShaderDescJNI;
+typedef JObject<ConstImageDescRcPtr, ImageDescRcPtr> ImageDescJNI;
+typedef JObject<ConstTransformRcPtr, TransformRcPtr> TransformJNI;
+typedef JObject<ConstAllocationTransformRcPtr, AllocationTransformRcPtr> AllocationTransformJNI;
+typedef JObject<ConstCDLTransformRcPtr, CDLTransformRcPtr> CDLTransformJNI;
+typedef JObject<ConstColorSpaceTransformRcPtr, ColorSpaceTransformRcPtr> ColorSpaceTransformJNI;
+typedef JObject<ConstDisplayTransformRcPtr, DisplayTransformRcPtr> DisplayTransformJNI;
+typedef JObject<ConstExponentTransformRcPtr, ExponentTransformRcPtr> ExponentTransformJNI;
+typedef JObject<ConstFileTransformRcPtr, FileTransformRcPtr> FileTransformJNI;
+typedef JObject<ConstGroupTransformRcPtr, GroupTransformRcPtr> GroupTransformJNI;
+typedef JObject<ConstLogTransformRcPtr, LogTransformRcPtr> LogTransformJNI;
+typedef JObject<ConstLookTransformRcPtr, LookTransformRcPtr> LookTransformJNI;
+typedef JObject<ConstMatrixTransformRcPtr, MatrixTransformRcPtr> MatrixTransformJNI;
 
-template<typename T, typename S>
+template <typename T, typename S>
 inline jobject BuildJConstObject(JNIEnv * env, jobject self, jclass cls, T ptr)
 {
-    S * jnistruct = new S ();
-    jnistruct->back_ptr = env->NewGlobalRef(self);
-    jnistruct->constcppobj = new T ();
+    S * jnistruct           = new S();
+    jnistruct->back_ptr     = env->NewGlobalRef(self);
+    jnistruct->constcppobj  = new T();
     *jnistruct->constcppobj = ptr;
-    jnistruct->isconst = true;
-    jmethodID mid = env->GetMethodID(cls, "<init>", "(J)V");
+    jnistruct->isconst      = true;
+    jmethodID mid           = env->GetMethodID(cls, "<init>", "(J)V");
     return env->NewObject(cls, mid, (jlong)jnistruct);
 }
 
-template<typename T, typename S>
+template <typename T, typename S>
 inline jobject BuildJObject(JNIEnv * env, jobject self, jclass cls, T ptr)
 {
-    S * jnistruct = new S ();
+    S * jnistruct       = new S();
     jnistruct->back_ptr = env->NewGlobalRef(self);
-    jnistruct->cppobj = new T ();
-    *jnistruct->cppobj = ptr;
-    jnistruct->isconst = false;
-    jmethodID mid = env->GetMethodID(cls, "<init>", "(J)V");
+    jnistruct->cppobj   = new T();
+    *jnistruct->cppobj  = ptr;
+    jnistruct->isconst  = false;
+    jmethodID mid       = env->GetMethodID(cls, "<init>", "(J)V");
     return env->NewObject(cls, mid, (jlong)jnistruct);
 }
 
-template<typename S>
-inline void DisposeJOCIO(JNIEnv * env, jobject self)
+template <typename S> inline void DisposeJOCIO(JNIEnv * env, jobject self)
 {
     jclass wclass = env->GetObjectClass(self);
-    jfieldID fid = env->GetFieldID(wclass, "m_impl", "J");
-    jlong m_impl = env->GetLongField(self, fid);
-    if(m_impl == 0) return; // nothing to do 
-    S * jni = reinterpret_cast<S *> (m_impl);
+    jfieldID fid  = env->GetFieldID(wclass, "m_impl", "J");
+    jlong m_impl  = env->GetLongField(self, fid);
+    if (m_impl == 0)
+        return; // nothing to do
+    S * jni = reinterpret_cast<S *>(m_impl);
     delete jni->constcppobj;
     delete jni->cppobj;
     env->DeleteGlobalRef(jni->back_ptr);
@@ -89,61 +88,65 @@ inline void DisposeJOCIO(JNIEnv * env, jobject self)
     return;
 }
 
-template<typename T, typename S>
-inline T GetConstJOCIO(JNIEnv * env, jobject self)
+template <typename T, typename S> inline T GetConstJOCIO(JNIEnv * env, jobject self)
 {
     jclass wclass = env->GetObjectClass(self);
-    jfieldID fid = env->GetFieldID(wclass, "m_impl", "J");
-    jlong m_impl = env->GetLongField(self, fid);
-    if(m_impl == 0) {
+    jfieldID fid  = env->GetFieldID(wclass, "m_impl", "J");
+    jlong m_impl  = env->GetLongField(self, fid);
+    if (m_impl == 0)
+    {
         throw Exception("Java object doesn't point to a OCIO object");
     }
-    S * jni = reinterpret_cast<S *> (m_impl);
-    if(jni->isconst && jni->constcppobj) {
+    S * jni = reinterpret_cast<S *>(m_impl);
+    if (jni->isconst && jni->constcppobj)
+    {
         return *jni->constcppobj;
     }
-    if(!jni->isconst && jni->cppobj) {
+    if (!jni->isconst && jni->cppobj)
+    {
         return *jni->cppobj;
     }
     throw Exception("Could not get a const OCIO object");
 }
 
-template<typename T, typename S>
-inline T GetEditableJOCIO(JNIEnv * env, jobject self)
+template <typename T, typename S> inline T GetEditableJOCIO(JNIEnv * env, jobject self)
 {
     jclass wclass = env->GetObjectClass(self);
-    jfieldID fid = env->GetFieldID(wclass, "m_impl", "J");
-    jlong m_impl = env->GetLongField(self, fid);
-    if(m_impl == 0) {
+    jfieldID fid  = env->GetFieldID(wclass, "m_impl", "J");
+    jlong m_impl  = env->GetLongField(self, fid);
+    if (m_impl == 0)
+    {
         throw Exception("Java object doesn't point to a OCIO object");
     }
-    S * jni = reinterpret_cast<S *> (m_impl);
-    if(!jni->isconst && jni->cppobj) {
+    S * jni = reinterpret_cast<S *>(m_impl);
+    if (!jni->isconst && jni->cppobj)
+    {
         return *jni->cppobj;
     }
     throw Exception("Could not get an editable OCIO object");
 }
 
-template<typename T>
-inline T GetJEnum(JNIEnv * env, jobject j_enum)
+template <typename T> inline T GetJEnum(JNIEnv * env, jobject j_enum)
 {
-    jclass cls = env->GetObjectClass(j_enum);
+    jclass cls   = env->GetObjectClass(j_enum);
     jfieldID fid = env->GetFieldID(cls, "m_enum", "I");
     return (T)env->GetIntField(j_enum, fid);
 }
 
-template<typename T>
-inline jobject BuildJEnum(JNIEnv * env, const char* ociotype, T val)
+template <typename T> inline jobject BuildJEnum(JNIEnv * env, const char * ociotype, T val)
 {
-    jclass cls = env->FindClass(ociotype);
+    jclass cls    = env->FindClass(ociotype);
     jmethodID mid = env->GetMethodID(cls, "<init>", "(I)V");
     return env->NewObject(cls, mid, (int)val);
 }
 
-template<typename T>
-inline void CheckArrayLength(JNIEnv * env, const char* name, T ptr, int32_t length) {
-    if(ptr == NULL) return;
-    if(env->GetArrayLength(ptr) < length) {
+template <typename T>
+inline void CheckArrayLength(JNIEnv * env, const char * name, T ptr, int32_t length)
+{
+    if (ptr == NULL)
+        return;
+    if (env->GetArrayLength(ptr) < length)
+    {
         std::ostringstream err;
         err << name << " needs to have " << length;
         err << " elements but found only " << env->GetArrayLength(ptr);
@@ -154,45 +157,51 @@ inline void CheckArrayLength(JNIEnv * env, const char* name, T ptr, int32_t leng
 class GetJFloatArrayValue
 {
 public:
-    GetJFloatArrayValue(JNIEnv* env, jfloatArray val, const char* name, int32_t len) {
+    GetJFloatArrayValue(JNIEnv * env, jfloatArray val, const char * name, int32_t len)
+    {
         CheckArrayLength(env, name, val, len);
         m_env = env;
         m_val = val;
-        if(val != NULL) m_ptr = env->GetFloatArrayElements(val, JNI_FALSE);
+        if (val != NULL)
+            m_ptr = env->GetFloatArrayElements(val, JNI_FALSE);
     }
-    ~GetJFloatArrayValue() {
-        if(m_val != NULL) m_env->ReleaseFloatArrayElements(m_val, m_ptr, JNI_FALSE);
+    ~GetJFloatArrayValue()
+    {
+        if (m_val != NULL)
+            m_env->ReleaseFloatArrayElements(m_val, m_ptr, JNI_FALSE);
         m_val = NULL;
         m_ptr = NULL;
     }
-    jfloat* operator() () {
-        return m_ptr;
-    }
+    jfloat * operator()() { return m_ptr; }
+
 private:
-    JNIEnv* m_env;
-    jfloat* m_ptr;
+    JNIEnv * m_env;
+    jfloat * m_ptr;
     jfloatArray m_val;
 };
 
 class SetJFloatArrayValue
 {
 public:
-    SetJFloatArrayValue(JNIEnv* env, jfloatArray val, const char* name, int32_t len) {
+    SetJFloatArrayValue(JNIEnv * env, jfloatArray val, const char * name, int32_t len)
+    {
         CheckArrayLength(env, name, val, len);
         m_env = env;
         m_val = val;
-        if(val != NULL) m_tmp.resize(len);
+        if (val != NULL)
+            m_tmp.resize(len);
     }
-    ~SetJFloatArrayValue() {
-        if(m_val != NULL) m_env->SetFloatArrayRegion(m_val, 0, m_tmp.size(), &m_tmp[0]);
+    ~SetJFloatArrayValue()
+    {
+        if (m_val != NULL)
+            m_env->SetFloatArrayRegion(m_val, 0, m_tmp.size(), &m_tmp[0]);
         m_val = NULL;
         m_tmp.clear();
     }
-    float* operator() () {
-        return &m_tmp[0];
-    }
+    float * operator()() { return &m_tmp[0]; }
+
 private:
-    JNIEnv* m_env;
+    JNIEnv * m_env;
     std::vector<float> m_tmp;
     jfloatArray m_val;
 };
@@ -200,55 +209,69 @@ private:
 class GetJIntArrayValue
 {
 public:
-    GetJIntArrayValue(JNIEnv* env, jintArray val, const char* name, int32_t len) {
+    GetJIntArrayValue(JNIEnv * env, jintArray val, const char * name, int32_t len)
+    {
         CheckArrayLength(env, name, val, len);
         m_env = env;
         m_val = val;
-        if(val != NULL) m_ptr = env->GetIntArrayElements(val, JNI_FALSE);
+        if (val != NULL)
+            m_ptr = env->GetIntArrayElements(val, JNI_FALSE);
     }
-    ~GetJIntArrayValue() {
-        if(m_val != NULL) m_env->ReleaseIntArrayElements(m_val, m_ptr, JNI_FALSE);
+    ~GetJIntArrayValue()
+    {
+        if (m_val != NULL)
+            m_env->ReleaseIntArrayElements(m_val, m_ptr, JNI_FALSE);
         m_val = NULL;
         m_ptr = NULL;
     }
-    jint* operator() () {
-        return m_ptr;
-    }
+    jint * operator()() { return m_ptr; }
+
 private:
-    JNIEnv* m_env;
-    jint* m_ptr;
+    JNIEnv * m_env;
+    jint * m_ptr;
     jintArray m_val;
 };
 
 class GetJStringValue
 {
 public:
-    GetJStringValue(JNIEnv* env, jstring val) {
+    GetJStringValue(JNIEnv * env, jstring val)
+    {
         m_env = env;
         m_val = val;
-        if(val != NULL) m_tmp = env->GetStringUTFChars(m_val, 0);
+        if (val != NULL)
+            m_tmp = env->GetStringUTFChars(m_val, 0);
     }
-    ~GetJStringValue() {
-        if(m_val != NULL) m_env->ReleaseStringUTFChars(m_val, m_tmp);
+    ~GetJStringValue()
+    {
+        if (m_val != NULL)
+            m_env->ReleaseStringUTFChars(m_val, m_tmp);
         m_val = NULL;
         m_tmp = NULL;
     }
-    const char* operator() () {
-        return m_tmp;
-    }
+    const char * operator()() { return m_tmp; }
+
 private:
-    JNIEnv* m_env;
-    const char* m_tmp;
+    JNIEnv * m_env;
+    const char * m_tmp;
     jstring m_val;
 };
 
-jobject NewJFloatBuffer(JNIEnv * env, float* ptr, int32_t len);
-float* GetJFloatBuffer(JNIEnv * env, jobject buffer, int32_t len);
-const char* GetOCIOTClass(ConstTransformRcPtr tran);
+jobject NewJFloatBuffer(JNIEnv * env, float * ptr, int32_t len);
+float * GetJFloatBuffer(JNIEnv * env, jobject buffer, int32_t len);
+const char * GetOCIOTClass(ConstTransformRcPtr tran);
 void JNI_Handle_Exception(JNIEnv * env);
 
-#define OCIO_JNITRY_ENTER() try {
-#define OCIO_JNITRY_EXIT(ret) } catch(...) { JNI_Handle_Exception(env); return ret; }
+#define OCIO_JNITRY_ENTER()                                                                        \
+    try                                                                                            \
+    {
+#define OCIO_JNITRY_EXIT(ret)                                                                      \
+    }                                                                                              \
+    catch (...)                                                                                    \
+    {                                                                                              \
+        JNI_Handle_Exception(env);                                                                 \
+        return ret;                                                                                \
+    }
 
 } // namespace OCIO_NAMESPACE
 

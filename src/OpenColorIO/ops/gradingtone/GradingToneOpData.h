@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_GRADINGTONE_OPDATA_H
 #define INCLUDED_OCIO_GRADINGTONE_OPDATA_H
-
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -18,15 +15,12 @@ class GradingToneOpData;
 typedef OCIO_SHARED_PTR<GradingToneOpData> GradingToneOpDataRcPtr;
 typedef OCIO_SHARED_PTR<const GradingToneOpData> ConstGradingToneOpDataRcPtr;
 
-
 class GradingToneOpData : public OpData
 {
 public:
-
-    static void ConvertStringToStyleAndDir(const char * str, GradingStyle & style,
-                                           TransformDirection & dir);
-    static const char * ConvertStyleAndDirToString(GradingStyle style,
-                                                   TransformDirection dir);
+    static void
+    ConvertStringToStyleAndDir(const char * str, GradingStyle & style, TransformDirection & dir);
+    static const char * ConvertStyleAndDirToString(GradingStyle style, TransformDirection dir);
 
     explicit GradingToneOpData(GradingStyle style);
     GradingToneOpData() = delete;
@@ -72,9 +66,9 @@ public:
     bool equals(const OpData & other) const override;
 
 private:
-    GradingStyle                        m_style;
+    GradingStyle m_style;
     DynamicPropertyGradingToneImplRcPtr m_value;
-    TransformDirection                  m_direction{ TRANSFORM_DIR_FORWARD };
+    TransformDirection m_direction{TRANSFORM_DIR_FORWARD};
 };
 
 bool operator==(const GradingToneOpData & lhs, const GradingToneOpData & rhs);

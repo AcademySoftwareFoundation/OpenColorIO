@@ -51,9 +51,8 @@ protected:
     GammaOpDataRcPtr gammaData() { return DynamicPtrCast<GammaOpData>(data()); }
 };
 
-
 GammaOp::GammaOp(GammaOpDataRcPtr & gamma)
-    :   Op()
+    : Op()
 {
     data() = gamma;
 }
@@ -82,7 +81,8 @@ bool GammaOp::isSameType(ConstOpRcPtr & op) const
 bool GammaOp::isInverse(ConstOpRcPtr & op) const
 {
     ConstGammaOpRcPtr typedRcPtr = DynamicPtrCast<const GammaOp>(op);
-    if(!typedRcPtr) return false;
+    if (!typedRcPtr)
+        return false;
 
     return gammaData()->isInverse(*typedRcPtr->gammaData());
 }
@@ -95,7 +95,7 @@ bool GammaOp::canCombineWith(ConstOpRcPtr & op) const
 
 void GammaOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
 {
-    if(!canCombineWith(secondOp))
+    if (!canCombineWith(secondOp))
     {
         throw Exception("GammaOp: canCombineWith must be checked before calling combineWith.");
     }
@@ -129,11 +129,9 @@ void GammaOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
     GetGammaGPUShaderProgram(shaderCreator, data);
 }
 
-}  // Anon namespace
+} // namespace
 
-void CreateGammaOp(OpRcPtrVec & ops,
-                   GammaOpDataRcPtr & gammaData,
-                   TransformDirection direction)
+void CreateGammaOp(OpRcPtrVec & ops, GammaOpDataRcPtr & gammaData, TransformDirection direction)
 {
     auto gamma = gammaData;
     if (direction == TRANSFORM_DIR_INVERSE)
@@ -157,11 +155,11 @@ void CreateGammaTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
 
     const auto style = gammaData->getStyle();
 
-    if (style == GammaOpData::MONCURVE_FWD || style == GammaOpData::MONCURVE_MIRROR_FWD ||
-        style == GammaOpData::MONCURVE_REV || style == GammaOpData::MONCURVE_MIRROR_REV)
+    if (style == GammaOpData::MONCURVE_FWD || style == GammaOpData::MONCURVE_MIRROR_FWD
+        || style == GammaOpData::MONCURVE_REV || style == GammaOpData::MONCURVE_MIRROR_REV)
     {
         auto expTransform = ExponentWithLinearTransform::Create();
-        auto & data = dynamic_cast<ExponentWithLinearTransformImpl*>(expTransform.get())->data();
+        auto & data = dynamic_cast<ExponentWithLinearTransformImpl *>(expTransform.get())->data();
 
         data = *gammaData;
         group->appendTransform(expTransform);
@@ -169,16 +167,17 @@ void CreateGammaTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     else
     {
         auto expTransform = ExponentTransform::Create();
-        auto & data = dynamic_cast<ExponentTransformImpl*>(expTransform.get())->data();
+        auto & data       = dynamic_cast<ExponentTransformImpl *>(expTransform.get())->data();
 
         data = *gammaData;
         group->appendTransform(expTransform);
     }
 }
 
-void BuildExponentWithLinearOp(OpRcPtrVec & ops,
-                               const ExponentWithLinearTransform & transform,
-                               TransformDirection dir)
+void BuildExponentWithLinearOp(
+    OpRcPtrVec & ops,
+    const ExponentWithLinearTransform & transform,
+    TransformDirection dir)
 {
     const auto & data = dynamic_cast<const ExponentWithLinearTransformImpl &>(transform).data();
     data.validate();
@@ -187,23 +186,22 @@ void BuildExponentWithLinearOp(OpRcPtrVec & ops,
     CreateGammaOp(ops, gamma, dir);
 }
 
-void BuildExponentOp(OpRcPtrVec & ops,
-                     const Config & config,
-                     const ExponentTransform & transform,
-                     TransformDirection dir)
+void BuildExponentOp(
+    OpRcPtrVec & ops,
+    const Config & config,
+    const ExponentTransform & transform,
+    TransformDirection dir)
 {
     if (config.getMajorVersion() == 1)
     {
         // Ignore style, use a simple exponent.
         TransformDirection combinedDir = CombineTransformDirections(dir, transform.getDirection());
 
-        double vec4[4] = { 1., 1., 1., 1. };
+        double vec4[4] = {1., 1., 1., 1.};
         transform.getValue(vec4);
-        ExponentOpDataRcPtr expData = std::make_shared<ExponentOpData>(vec4);
+        ExponentOpDataRcPtr expData  = std::make_shared<ExponentOpData>(vec4);
         expData->getFormatMetadata() = transform.getFormatMetadata();
-        CreateExponentOp(ops,
-                         expData,
-                         combinedDir);
+        CreateExponentOp(ops, expData, combinedDir);
     }
     else
     {
@@ -216,4 +214,3 @@ void BuildExponentOp(OpRcPtrVec & ops,
 }
 
 } // namespace OCIO_NAMESPACE
-

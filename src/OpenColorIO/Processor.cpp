@@ -13,9 +13,9 @@
 #include "HashUtils.h"
 #include "Logging.h"
 #include "OpBuilders.h"
-#include "ops/noop/NoOps.h"
 #include "Processor.h"
 #include "TransformBuilder.h"
+#include "ops/noop/NoOps.h"
 #include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE
@@ -38,7 +38,8 @@ ProcessorMetadataRcPtr ProcessorMetadata::Create()
 
 ProcessorMetadata::ProcessorMetadata()
     : m_impl(new ProcessorMetadata::Impl)
-{ }
+{
+}
 
 ProcessorMetadata::~ProcessorMetadata()
 {
@@ -46,7 +47,7 @@ ProcessorMetadata::~ProcessorMetadata()
     m_impl = nullptr;
 }
 
-void ProcessorMetadata::deleter(ProcessorMetadata* c)
+void ProcessorMetadata::deleter(ProcessorMetadata * c)
 {
     delete c;
 }
@@ -58,14 +59,13 @@ int ProcessorMetadata::getNumFiles() const
 
 const char * ProcessorMetadata::getFile(int index) const
 {
-    if(index < 0 ||
-        index >= (static_cast<int>(getImpl()->files.size())))
+    if (index < 0 || index >= (static_cast<int>(getImpl()->files.size())))
     {
         return "";
     }
 
     StringSet::const_iterator iter = getImpl()->files.begin();
-    std::advance( iter, index );
+    std::advance(iter, index);
 
     return iter->c_str();
 }
@@ -82,8 +82,7 @@ int ProcessorMetadata::getNumLooks() const
 
 const char * ProcessorMetadata::getLook(int index) const
 {
-    if(index < 0 ||
-        index >= (static_cast<int>(getImpl()->looks.size())))
+    if (index < 0 || index >= (static_cast<int>(getImpl()->looks.size())))
     {
         return "";
     }
@@ -103,7 +102,7 @@ ProcessorRcPtr Processor::Create()
     return ProcessorRcPtr(new Processor(), &deleter);
 }
 
-void Processor::deleter(Processor* c)
+void Processor::deleter(Processor * c)
 {
     delete c;
 }
@@ -179,8 +178,8 @@ ConstProcessorRcPtr Processor::getOptimizedProcessor(OptimizationFlags oFlags) c
     return getImpl()->getOptimizedProcessor(oFlags);
 }
 
-ConstProcessorRcPtr Processor::getOptimizedProcessor(BitDepth inBD, BitDepth outBD, 
-                                                     OptimizationFlags oFlags) const
+ConstProcessorRcPtr
+Processor::getOptimizedProcessor(BitDepth inBD, BitDepth outBD, OptimizationFlags oFlags) const
 {
     return getImpl()->getOptimizedProcessor(inBD, outBD, oFlags);
 }
@@ -195,8 +194,9 @@ ConstGPUProcessorRcPtr Processor::getOptimizedGPUProcessor(OptimizationFlags oFl
     return getImpl()->getOptimizedGPUProcessor(oFlags);
 }
 
-ConstGPUProcessorRcPtr Processor::getOptimizedLegacyGPUProcessor(OptimizationFlags oFlags,
-                                                                 unsigned edgelen) const
+ConstGPUProcessorRcPtr Processor::getOptimizedLegacyGPUProcessor(
+    OptimizationFlags oFlags,
+    unsigned edgelen) const
 {
     return getImpl()->getOptimizedLegacyGPUProcessor(oFlags, edgelen);
 }
@@ -211,22 +211,21 @@ ConstCPUProcessorRcPtr Processor::getOptimizedCPUProcessor(OptimizationFlags oFl
     return getImpl()->getOptimizedCPUProcessor(oFlags);
 }
 
-ConstCPUProcessorRcPtr Processor::getOptimizedCPUProcessor(BitDepth inBitDepth,
-                                                            BitDepth outBitDepth,
-                                                            OptimizationFlags oFlags) const
+ConstCPUProcessorRcPtr Processor::getOptimizedCPUProcessor(
+    BitDepth inBitDepth,
+    BitDepth outBitDepth,
+    OptimizationFlags oFlags) const
 {
     return getImpl()->getOptimizedCPUProcessor(inBitDepth, outBitDepth, oFlags);
 }
-
 
 // Instantiate the cache with the right types.
 template class ProcessorCache<std::size_t, ProcessorRcPtr>;
 template class ProcessorCache<std::size_t, GPUProcessorRcPtr>;
 template class ProcessorCache<std::size_t, CPUProcessorRcPtr>;
 
-
-Processor::Impl::Impl():
-    m_metadata(ProcessorMetadata::Create())
+Processor::Impl::Impl()
+    : m_metadata(ProcessorMetadata::Create())
 {
 }
 
@@ -328,16 +327,17 @@ const char * Processor::Impl::getCacheID() const
 {
     AutoMutex lock(m_resultsCacheMutex);
 
-    if(!m_cacheID.empty()) return m_cacheID.c_str();
+    if (!m_cacheID.empty())
+        return m_cacheID.c_str();
 
-    if(m_ops.empty())
+    if (m_ops.empty())
     {
         m_cacheID = "<NOOP>";
     }
     else
     {
         const std::string fullstr = m_ops.getCacheID();
-        m_cacheID = CacheIDHash(fullstr.c_str(), fullstr.size());
+        m_cacheID                 = CacheIDHash(fullstr.c_str(), fullstr.size());
     }
 
     return m_cacheID.c_str();
@@ -357,25 +357,25 @@ OptimizationFlags EnvironmentOverride(OptimizationFlags oFlags)
     }
     return oFlags;
 }
-}
+} // namespace
 
 ConstProcessorRcPtr Processor::Impl::getOptimizedProcessor(OptimizationFlags oFlags) const
 {
     return getOptimizedProcessor(BIT_DEPTH_F32, BIT_DEPTH_F32, oFlags);
 }
 
-ConstProcessorRcPtr Processor::Impl::getOptimizedProcessor(BitDepth inBitDepth, 
-                                                           BitDepth outBitDepth,
-                                                           OptimizationFlags oFlags) const
+ConstProcessorRcPtr Processor::Impl::getOptimizedProcessor(
+    BitDepth inBitDepth,
+    BitDepth outBitDepth,
+    OptimizationFlags oFlags) const
 {
     // Helper method.
     auto CreateProcessor = [](const Processor::Impl & procImpl,
                               BitDepth inBitDepth,
                               BitDepth outBitDepth,
-                              OptimizationFlags oFlags) -> ProcessorRcPtr
-    {
+                              OptimizationFlags oFlags) -> ProcessorRcPtr {
         ProcessorRcPtr proc = Create();
-        *proc->getImpl() = procImpl;
+        *proc->getImpl()    = procImpl;
 
         proc->getImpl()->m_ops.finalize();
         proc->getImpl()->m_ops.optimize(oFlags);
@@ -384,7 +384,6 @@ ConstProcessorRcPtr Processor::Impl::getOptimizedProcessor(BitDepth inBitDepth,
 
         return proc;
     };
-
 
     oFlags = EnvironmentOverride(oFlags);
 
@@ -429,8 +428,9 @@ ConstGPUProcessorRcPtr Processor::Impl::getOptimizedGPUProcessor(OptimizationFla
     return getGPUProcessor(m_ops, oFlags);
 }
 
-ConstGPUProcessorRcPtr Processor::Impl::getOptimizedLegacyGPUProcessor(OptimizationFlags oFlags,
-                                                                       unsigned edgelen) const
+ConstGPUProcessorRcPtr Processor::Impl::getOptimizedLegacyGPUProcessor(
+    OptimizationFlags oFlags,
+    unsigned edgelen) const
 {
 
     OpRcPtrVec gpuOps = m_ops;
@@ -453,10 +453,7 @@ ConstGPUProcessorRcPtr Processor::Impl::getOptimizedLegacyGPUProcessor(Optimizat
         OpRcPtrVec gpuOpsCpuLatticeProcess;
         OpRcPtrVec gpuOpsHwPostProcess;
 
-        PartitionGPUOps(gpuOpsHwPreProcess,
-                        gpuOpsCpuLatticeProcess,
-                        gpuOpsHwPostProcess,
-                        gpuOps);
+        PartitionGPUOps(gpuOpsHwPreProcess, gpuOpsCpuLatticeProcess, gpuOpsHwPostProcess, gpuOps);
 
         LogDebug("Legacy GPU Ops: 3DLUT");
         gpuOpsCpuLatticeProcess.finalize();
@@ -473,13 +470,13 @@ ConstGPUProcessorRcPtr Processor::Impl::getOptimizedLegacyGPUProcessor(Optimizat
     return getGPUProcessor(gpuOps, oFlags);
 }
 
-ConstGPUProcessorRcPtr Processor::Impl::getGPUProcessor(const OpRcPtrVec & gpuOps,
-                                                        OptimizationFlags oFlags) const
+ConstGPUProcessorRcPtr Processor::Impl::getGPUProcessor(
+    const OpRcPtrVec & gpuOps,
+    OptimizationFlags oFlags) const
 {
     // Helper method.
-    auto CreateProcessor = [](const OpRcPtrVec & ops,
-                              OptimizationFlags oFlags) -> GPUProcessorRcPtr
-    {
+    auto CreateProcessor
+        = [](const OpRcPtrVec & ops, OptimizationFlags oFlags) -> GPUProcessorRcPtr {
         GPUProcessorRcPtr gpu = GPUProcessorRcPtr(new GPUProcessor(), &GPUProcessor::deleter);
         gpu->getImpl()->finalize(ops, oFlags);
         return gpu;
@@ -498,7 +495,7 @@ ConstGPUProcessorRcPtr Processor::Impl::getGPUProcessor(const OpRcPtrVec & gpuOp
         {
             processor = CreateProcessor(gpuOps, oFlags);
         }
-        
+
         return processor;
     }
     else
@@ -519,16 +516,16 @@ ConstCPUProcessorRcPtr Processor::Impl::getOptimizedCPUProcessor(OptimizationFla
     return getOptimizedCPUProcessor(BIT_DEPTH_F32, BIT_DEPTH_F32, oFlags);
 }
 
-ConstCPUProcessorRcPtr Processor::Impl::getOptimizedCPUProcessor(BitDepth inBitDepth,
-                                                                 BitDepth outBitDepth,
-                                                                 OptimizationFlags oFlags) const
+ConstCPUProcessorRcPtr Processor::Impl::getOptimizedCPUProcessor(
+    BitDepth inBitDepth,
+    BitDepth outBitDepth,
+    OptimizationFlags oFlags) const
 {
     // Helper method.
     auto CreateProcessor = [](const OpRcPtrVec & ops,
                               BitDepth inBitDepth,
                               BitDepth outBitDepth,
-                              OptimizationFlags oFlags) -> CPUProcessorRcPtr
-    {
+                              OptimizationFlags oFlags) -> CPUProcessorRcPtr {
         CPUProcessorRcPtr cpu = CPUProcessorRcPtr(new CPUProcessor(), &CPUProcessor::deleter);
         cpu->getImpl()->finalize(ops, inBitDepth, outBitDepth, oFlags);
         return cpu;
@@ -536,8 +533,8 @@ ConstCPUProcessorRcPtr Processor::Impl::getOptimizedCPUProcessor(BitDepth inBitD
 
     oFlags = EnvironmentOverride(oFlags);
 
-    const bool shareDynamicProperties 
-        = (m_cacheFlags & PROCESSOR_CACHE_SHARE_DYN_PROPERTIES) == PROCESSOR_CACHE_SHARE_DYN_PROPERTIES;
+    const bool shareDynamicProperties = (m_cacheFlags & PROCESSOR_CACHE_SHARE_DYN_PROPERTIES)
+                                        == PROCESSOR_CACHE_SHARE_DYN_PROPERTIES;
 
     const bool useCache = m_ops.isDynamic() ? shareDynamicProperties : true;
 
@@ -557,7 +554,7 @@ ConstCPUProcessorRcPtr Processor::Impl::getOptimizedCPUProcessor(BitDepth inBitD
         {
             processor = CreateProcessor(m_ops, inBitDepth, outBitDepth, oFlags);
         }
-        
+
         return processor;
     }
     else
@@ -579,11 +576,11 @@ void Processor::Impl::setProcessorCacheFlags(ProcessorCacheFlags flags) noexcept
 
 ///////////////////////////////////////////////////////////////////////////
 
-
-void Processor::Impl::setColorSpaceConversion(const Config & config,
-                                              const ConstContextRcPtr & context,
-                                              const ConstColorSpaceRcPtr & srcColorSpace,
-                                              const ConstColorSpaceRcPtr & dstColorSpace)
+void Processor::Impl::setColorSpaceConversion(
+    const Config & config,
+    const ConstContextRcPtr & context,
+    const ConstColorSpaceRcPtr & srcColorSpace,
+    const ConstColorSpaceRcPtr & dstColorSpace)
 {
     if (!m_ops.empty())
     {
@@ -595,8 +592,8 @@ void Processor::Impl::setColorSpaceConversion(const Config & config,
     BuildColorSpaceOps(m_ops, config, context, srcColorSpace, dstColorSpace, true);
 
     std::ostringstream desc;
-    desc << "Color space conversion from " << srcColorSpace->getName()
-         << " to " << dstColorSpace->getName();
+    desc << "Color space conversion from " << srcColorSpace->getName() << " to "
+         << dstColorSpace->getName();
     m_ops.getFormatMetadata().addAttribute(METADATA_DESCRIPTION, desc.str().c_str());
 
     // NB: No-ops are not removed yet since they are still needed to build the legacy GPU processor.
@@ -605,10 +602,11 @@ void Processor::Impl::setColorSpaceConversion(const Config & config,
     m_ops.validateDynamicProperties();
 }
 
-void Processor::Impl::setTransform(const Config & config,
-                                   const ConstContextRcPtr & context,
-                                   const ConstTransformRcPtr & transform,
-                                   TransformDirection direction)
+void Processor::Impl::setTransform(
+    const Config & config,
+    const ConstContextRcPtr & context,
+    const ConstTransformRcPtr & transform,
+    TransformDirection direction)
 {
     if (!m_ops.empty())
     {
@@ -636,13 +634,12 @@ void Processor::Impl::concatenate(ConstProcessorRcPtr & p1, ConstProcessorRcPtr 
     m_ops.validateDynamicProperties();
 }
 
-
 void Processor::Impl::computeMetadata()
 {
     AutoMutex lock(m_resultsCacheMutex);
 
     // Pull out metadata, before the no-ops are removed.
-    for(auto & op : m_ops)
+    for (auto & op : m_ops)
     {
         op->dumpMetadata(m_metadata);
     }

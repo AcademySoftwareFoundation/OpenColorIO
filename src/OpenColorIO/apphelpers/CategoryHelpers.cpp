@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "CategoryHelpers.h"
 #include "ColorSpaceHelpers.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -21,8 +19,7 @@ namespace
 // TODO: Enhance ColorSpaceSet to allow its use here.
 typedef std::vector<const ColorSpace *> ColorSpaceVec;
 
-template<class T>
-void AddElement(std::vector<T> & vec, T elt)
+template <class T> void AddElement(std::vector<T> & vec, T elt)
 {
     for (auto & entry : vec)
     {
@@ -35,23 +32,22 @@ void AddElement(std::vector<T> & vec, T elt)
     vec.push_back(elt);
 }
 
-template<class T>
-bool HasCategory(const T & elt, const std::string & category)
+template <class T> bool HasCategory(const T & elt, const std::string & category)
 {
     return elt->hasCategory(category.c_str());
 }
 
-template<class T>
-bool HasEncoding(const T & elt, const std::string & encoding)
+template <class T> bool HasEncoding(const T & elt, const std::string & encoding)
 {
     return StringUtils::Compare(encoding, elt->getEncoding());
 }
 
-ColorSpaceVec GetColorSpaces(ConstConfigRcPtr config,
-                             bool includeColorSpaces,
-                             SearchReferenceSpaceType colorSpaceType,
-                             const Categories & categories,
-                             const Encodings & encodings)
+ColorSpaceVec GetColorSpaces(
+    ConstConfigRcPtr config,
+    bool includeColorSpaces,
+    SearchReferenceSpaceType colorSpaceType,
+    const Categories & categories,
+    const Encodings & encodings)
 {
     ColorSpaceVec css;
     if (includeColorSpaces && !categories.empty() && !encodings.empty())
@@ -59,9 +55,8 @@ ColorSpaceVec GetColorSpaces(ConstConfigRcPtr config,
         const auto numCS = config->getNumColorSpaces(colorSpaceType, COLORSPACE_ACTIVE);
         for (int idx = 0; idx < numCS; ++idx)
         {
-            auto cs = config->getColorSpace(config->getColorSpaceNameByIndex(colorSpaceType,
-                                                                             COLORSPACE_ACTIVE,
-                                                                             idx));
+            auto cs = config->getColorSpace(
+                config->getColorSpaceNameByIndex(colorSpaceType, COLORSPACE_ACTIVE, idx));
             for (const auto & cat : categories)
             {
                 for (const auto & enc : encodings)
@@ -77,10 +72,11 @@ ColorSpaceVec GetColorSpaces(ConstConfigRcPtr config,
     return css;
 }
 
-ColorSpaceVec GetColorSpaces(ConstConfigRcPtr config,
-                             bool includeColorSpaces,
-                             SearchReferenceSpaceType colorSpaceType,
-                             const Categories & categories)
+ColorSpaceVec GetColorSpaces(
+    ConstConfigRcPtr config,
+    bool includeColorSpaces,
+    SearchReferenceSpaceType colorSpaceType,
+    const Categories & categories)
 {
     ColorSpaceVec css;
     if (includeColorSpaces && !categories.empty())
@@ -88,9 +84,8 @@ ColorSpaceVec GetColorSpaces(ConstConfigRcPtr config,
         const auto numCS = config->getNumColorSpaces(colorSpaceType, COLORSPACE_ACTIVE);
         for (int idx = 0; idx < numCS; ++idx)
         {
-            auto cs = config->getColorSpace(config->getColorSpaceNameByIndex(colorSpaceType,
-                                                                             COLORSPACE_ACTIVE,
-                                                                             idx));
+            auto cs = config->getColorSpace(
+                config->getColorSpaceNameByIndex(colorSpaceType, COLORSPACE_ACTIVE, idx));
             for (const auto & cat : categories)
             {
                 if (HasCategory(cs, cat))
@@ -99,14 +94,15 @@ ColorSpaceVec GetColorSpaces(ConstConfigRcPtr config,
                 }
             }
         }
-        }
+    }
     return css;
 }
 
-ColorSpaceVec GetColorSpacesFromEncodings(ConstConfigRcPtr config,
-                                          bool includeColorSpaces,
-                                          SearchReferenceSpaceType colorSpaceType,
-                                          const Encodings & encodings)
+ColorSpaceVec GetColorSpacesFromEncodings(
+    ConstConfigRcPtr config,
+    bool includeColorSpaces,
+    SearchReferenceSpaceType colorSpaceType,
+    const Encodings & encodings)
 {
     ColorSpaceVec css;
     if (includeColorSpaces && !encodings.empty())
@@ -114,9 +110,8 @@ ColorSpaceVec GetColorSpacesFromEncodings(ConstConfigRcPtr config,
         const auto numCS = config->getNumColorSpaces(colorSpaceType, COLORSPACE_ACTIVE);
         for (int idx = 0; idx < numCS; ++idx)
         {
-            auto cs = config->getColorSpace(config->getColorSpaceNameByIndex(colorSpaceType,
-                                                                             COLORSPACE_ACTIVE,
-                                                                             idx));
+            auto cs = config->getColorSpace(
+                config->getColorSpaceNameByIndex(colorSpaceType, COLORSPACE_ACTIVE, idx));
             for (const auto & enc : encodings)
             {
                 if (HasEncoding(cs, enc))
@@ -131,10 +126,11 @@ ColorSpaceVec GetColorSpacesFromEncodings(ConstConfigRcPtr config,
 
 typedef std::vector<const NamedTransform *> NamedTransformVec;
 
-NamedTransformVec GetNamedTransforms(ConstConfigRcPtr config,
-                                     bool includeNamedTransforms,
-                                     const Categories & categories,
-                                     const Encodings & encodings)
+NamedTransformVec GetNamedTransforms(
+    ConstConfigRcPtr config,
+    bool includeNamedTransforms,
+    const Categories & categories,
+    const Encodings & encodings)
 {
     NamedTransformVec nts;
     if (includeNamedTransforms && !categories.empty() && !encodings.empty())
@@ -157,9 +153,10 @@ NamedTransformVec GetNamedTransforms(ConstConfigRcPtr config,
     return nts;
 }
 
-NamedTransformVec GetNamedTransforms(ConstConfigRcPtr config,
-                                     bool includeNamedTransforms,
-                                     const Categories & categories)
+NamedTransformVec GetNamedTransforms(
+    ConstConfigRcPtr config,
+    bool includeNamedTransforms,
+    const Categories & categories)
 {
     NamedTransformVec nts;
     if (includeNamedTransforms && !categories.empty())
@@ -179,9 +176,10 @@ NamedTransformVec GetNamedTransforms(ConstConfigRcPtr config,
     return nts;
 }
 
-NamedTransformVec GetNamedTransformsFromEncodings(ConstConfigRcPtr config,
-                                                  bool includeNamedTransforms,
-                                                  const Encodings & encodings)
+NamedTransformVec GetNamedTransformsFromEncodings(
+    ConstConfigRcPtr config,
+    bool includeNamedTransforms,
+    const Encodings & encodings)
 {
     NamedTransformVec nts;
     if (includeNamedTransforms && !encodings.empty())
@@ -201,9 +199,7 @@ NamedTransformVec GetNamedTransformsFromEncodings(ConstConfigRcPtr config,
     return nts;
 }
 
-Infos GetInfos(ConstConfigRcPtr & config,
-               const ColorSpaceVec & css,
-               const NamedTransformVec & nts)
+Infos GetInfos(ConstConfigRcPtr & config, const ColorSpaceVec & css, const NamedTransformVec & nts)
 {
     Infos allInfos;
     for (const auto & cs : css)
@@ -217,8 +213,7 @@ Infos GetInfos(ConstConfigRcPtr & config,
     return allInfos;
 }
 
-template<typename T>
-ColorSpaceNames GetNames(const T & list)
+template <typename T> ColorSpaceNames GetNames(const T & list)
 {
     ColorSpaceNames allNames;
 
@@ -230,12 +225,11 @@ ColorSpaceNames GetNames(const T & list)
     return allNames;
 }
 
-template<typename T>
-T Intersection(const T & list0, const T & list1)
+template <typename T> T Intersection(const T & list0, const T & list1)
 {
     T result;
     const auto begin1 = list1.begin();
-    const auto end1 = list1.end();
+    const auto end1   = list1.end();
     for (const auto & i0 : list0)
     {
         if (std::find(begin1, end1, i0) != end1)
@@ -246,7 +240,7 @@ T Intersection(const T & list0, const T & list1)
     return result;
 }
 
-} // anon.
+} // namespace
 
 StringUtils::StringVec ExtractItems(const char * strings)
 {
@@ -283,17 +277,16 @@ enum CategoryUsage
 };
 struct LogMessageHelper
 {
-    bool m_ignoreEncodings = false;
-    bool m_ignoreCategories = false;
+    bool m_ignoreEncodings   = false;
+    bool m_ignoreCategories  = false;
     bool m_emptyIntersection = false;
-    CategoryUsage m_appCats = NOT_USED;
+    CategoryUsage m_appCats  = NOT_USED;
     CategoryUsage m_userCats = NOT_USED;
     ~LogMessageHelper()
     {
-        if (GetLoggingLevel() >= LOGGING_LEVEL_INFO && (m_emptyIntersection ||
-            m_ignoreEncodings || m_ignoreCategories ||
-            m_appCats == NONE_FOUND || m_userCats == NONE_FOUND ||
-            m_userCats == IGNORED))
+        if (GetLoggingLevel() >= LOGGING_LEVEL_INFO
+            && (m_emptyIntersection || m_ignoreEncodings || m_ignoreCategories
+                || m_appCats == NONE_FOUND || m_userCats == NONE_FOUND || m_userCats == IGNORED))
         {
             std::stringstream os;
             os << "All parameters could not be used to create the menu:";
@@ -331,15 +324,16 @@ struct LogMessageHelper
         }
     }
 };
-}
+} // namespace
 
-Infos FindColorSpaceInfos(ConstConfigRcPtr config,
-                          const Categories & appCategories,
-                          const Categories & userCategories,
-                          bool includeColorSpaces,
-                          bool includeNamedTransforms,
-                          const Encodings & encodings,
-                          SearchReferenceSpaceType colorSpaceType)
+Infos FindColorSpaceInfos(
+    ConstConfigRcPtr config,
+    const Categories & appCategories,
+    const Categories & userCategories,
+    bool includeColorSpaces,
+    bool includeNamedTransforms,
+    const Encodings & encodings,
+    SearchReferenceSpaceType colorSpaceType)
 {
     // At least one of include flags is true.
 
@@ -352,9 +346,9 @@ Infos FindColorSpaceInfos(ConstConfigRcPtr config,
         NamedTransformVec appNT;
         ColorSpaceVec appCSNoEncodings;
         NamedTransformVec appNTNoEncodings;
-        bool appNoEncodingsComputed{ false };
+        bool appNoEncodingsComputed{false};
 
-        size_t appSize{ 0 };
+        size_t appSize{0};
 
         bool encsIgnored = encodings.empty();
 
@@ -369,36 +363,43 @@ Infos FindColorSpaceInfos(ConstConfigRcPtr config,
 
             if (!encsIgnored)
             {
-                appCS = GetColorSpaces(config, includeColorSpaces, colorSpaceType,
-                                       appCategories, encodings);
-                appNT = GetNamedTransforms(config, includeNamedTransforms, appCategories,
-                                           encodings);
+                appCS = GetColorSpaces(
+                    config,
+                    includeColorSpaces,
+                    colorSpaceType,
+                    appCategories,
+                    encodings);
+                appNT
+                    = GetNamedTransforms(config, includeNamedTransforms, appCategories, encodings);
                 appSize = appCS.size() + appNT.size();
             }
 
             // Do not use encodings if empty or drop them if no result is found with them.
             if (appSize == 0)
             {
-                encsIgnored = true;
+                encsIgnored           = true;
                 log.m_ignoreEncodings = !encodings.empty();
-                appCS = GetColorSpaces(config, includeColorSpaces, colorSpaceType, appCategories);
-                appNT = GetNamedTransforms(config, includeNamedTransforms, appCategories);
+                appCS   = GetColorSpaces(config, includeColorSpaces, colorSpaceType, appCategories);
+                appNT   = GetNamedTransforms(config, includeNamedTransforms, appCategories);
                 appSize = appCS.size() + appNT.size();
 
                 // Keep these results in case we need them later.
                 appNoEncodingsComputed = true;
-                appCSNoEncodings = appCS;
-                appNTNoEncodings = appNT;
+                appCSNoEncodings       = appCS;
+                appNTNoEncodings       = appNT;
             }
 
             // Drop app categories and use encoding if no results.
             if (appSize == 0 && !encodings.empty())
             {
-                encsIgnored = false;
+                encsIgnored           = false;
                 log.m_ignoreEncodings = false;
-                log.m_appCats = NONE_FOUND;
-                appCS = GetColorSpacesFromEncodings(config, includeColorSpaces, colorSpaceType,
-                                                    encodings);
+                log.m_appCats         = NONE_FOUND;
+                appCS                 = GetColorSpacesFromEncodings(
+                    config,
+                    includeColorSpaces,
+                    colorSpaceType,
+                    encodings);
                 appNT = GetNamedTransformsFromEncodings(config, includeNamedTransforms, encodings);
                 appSize = appCS.size() + appNT.size();
             }
@@ -410,22 +411,25 @@ Infos FindColorSpaceInfos(ConstConfigRcPtr config,
         }
         else if (!encsIgnored)
         {
-            appCS = GetColorSpacesFromEncodings(config, includeColorSpaces, colorSpaceType,
-                                                encodings);
-            appNT = GetNamedTransformsFromEncodings(config, includeNamedTransforms, encodings);
+            appCS = GetColorSpacesFromEncodings(
+                config,
+                includeColorSpaces,
+                colorSpaceType,
+                encodings);
+            appNT   = GetNamedTransformsFromEncodings(config, includeNamedTransforms, encodings);
             appSize = appCS.size() + appNT.size();
         }
 
         ColorSpaceVec userCS;
         NamedTransformVec userNT;
-        size_t userSize{ 0 };
+        size_t userSize{0};
 
         if (!userCategories.empty())
         {
             // 3b) Items using user categories.
 
-            userCS = GetColorSpaces(config, includeColorSpaces, colorSpaceType, userCategories);
-            userNT = GetNamedTransforms(config, includeNamedTransforms, userCategories);
+            userCS   = GetColorSpaces(config, includeColorSpaces, colorSpaceType, userCategories);
+            userNT   = GetNamedTransforms(config, includeNamedTransforms, userCategories);
             userSize = userCS.size() + userNT.size();
             if (userSize == 0)
             {
@@ -437,9 +441,9 @@ Infos FindColorSpaceInfos(ConstConfigRcPtr config,
         {
             // 3c) and 3d) Use intersection of app and user categories.
 
-            ColorSpaceVec * appCSTest = &appCS;
-            NamedTransformVec * appNTTest = &appNT;
-            const auto encsIgnoredBack = encsIgnored;
+            ColorSpaceVec * appCSTest      = &appCS;
+            NamedTransformVec * appNTTest  = &appNT;
+            const auto encsIgnoredBack     = encsIgnored;
             const auto ignoreEncodingsBack = log.m_ignoreEncodings;
 
             // Allow to run twice, with and without encodings.
@@ -458,16 +462,19 @@ Infos FindColorSpaceInfos(ConstConfigRcPtr config,
                 {
                     // Intersection is empty, but encodings can be dropped if they were not dropped
                     // already.
-                    encsIgnored = true;
+                    encsIgnored           = true;
                     log.m_ignoreEncodings = true;
                     if (!appNoEncodingsComputed)
                     {
                         // If not already computed, compute list with app categories and no
                         // encodings.
-                        appCSNoEncodings = GetColorSpaces(config, includeColorSpaces,
-                                                          colorSpaceType, appCategories);
-                        appNTNoEncodings = GetNamedTransforms(config, includeNamedTransforms,
-                                                              appCategories);
+                        appCSNoEncodings = GetColorSpaces(
+                            config,
+                            includeColorSpaces,
+                            colorSpaceType,
+                            appCategories);
+                        appNTNoEncodings
+                            = GetNamedTransforms(config, includeNamedTransforms, appCategories);
                     }
                     appCSTest = &appCSNoEncodings;
                     appNTTest = &appNTNoEncodings;
@@ -478,8 +485,8 @@ Infos FindColorSpaceInfos(ConstConfigRcPtr config,
                 }
             }
             log.m_emptyIntersection = true;
-            encsIgnored = encsIgnoredBack;
-            log.m_ignoreEncodings = ignoreEncodingsBack;
+            encsIgnored             = encsIgnoredBack;
+            log.m_ignoreEncodings   = ignoreEncodingsBack;
         }
 
         if (appSize)
@@ -508,8 +515,8 @@ Infos FindColorSpaceInfos(ConstConfigRcPtr config,
     const auto numCS = config->getNumColorSpaces(colorSpaceType, COLORSPACE_ACTIVE);
     for (int idx = 0; idx < numCS; ++idx)
     {
-        const char * csName = config->getColorSpaceNameByIndex(colorSpaceType,
-                                                               COLORSPACE_ACTIVE, idx);
+        const char * csName
+            = config->getColorSpaceNameByIndex(colorSpaceType, COLORSPACE_ACTIVE, idx);
         ConstColorSpaceRcPtr cs = config->getColorSpace(csName);
         allInfos.push_back(ColorSpaceInfo::Create(config, *cs));
     }
@@ -526,14 +533,13 @@ Infos FindColorSpaceInfos(ConstConfigRcPtr config,
     // Nothing is found, no need to log anything.
     if (allInfos.size() == 0)
     {
-        log.m_appCats = NOT_USED;
-        log.m_userCats = NOT_USED;
+        log.m_appCats           = NOT_USED;
+        log.m_userCats          = NOT_USED;
         log.m_emptyIntersection = false;
-        log.m_ignoreCategories = false;
-        log.m_ignoreEncodings = false;
+        log.m_ignoreCategories  = false;
+        log.m_ignoreEncodings   = false;
     }
     return allInfos;
 }
-
 
 } // namespace OCIO_NAMESPACE

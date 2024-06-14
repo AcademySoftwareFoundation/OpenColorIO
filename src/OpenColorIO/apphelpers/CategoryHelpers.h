@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_CATEGORY_HELPERS_H
 #define INCLUDED_OCIO_CATEGORY_HELPERS_H
 
@@ -25,20 +24,21 @@ class ColorSpaceMenuParametersImpl;
 StringUtils::StringVec ExtractItems(const char * strings);
 
 using Categories = StringUtils::StringVec;
-using Encodings = StringUtils::StringVec;
+using Encodings  = StringUtils::StringVec;
 
 using ColorSpaceNames = StringUtils::StringVec;
 // Return all the active color space names having at least one of the categories.
 ColorSpaceNames FindColorSpaceNames(ConstConfigRcPtr config, const Categories & categories);
 
 using Infos = std::vector<ConstColorSpaceInfoRcPtr>;
-Infos FindColorSpaceInfos(ConstConfigRcPtr config,
-                          const Categories & appCategories,
-                          const Categories & userCategories,
-                          bool includeColorSpaces,
-                          bool includeNamedTransforms,
-                          const Encodings & encodings,
-                          SearchReferenceSpaceType colorSpaceType);
+Infos FindColorSpaceInfos(
+    ConstConfigRcPtr config,
+    const Categories & appCategories,
+    const Categories & userCategories,
+    bool includeColorSpaces,
+    bool includeNamedTransforms,
+    const Encodings & encodings,
+    SearchReferenceSpaceType colorSpaceType);
 
 } // namespace OCIO_NAMESPACE
 

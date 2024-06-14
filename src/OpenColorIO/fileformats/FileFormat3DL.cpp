@@ -8,16 +8,15 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "BakingUtils.h"
 #include "BitDepthUtils.h"
-#include "fileformats/FileFormatUtils.h"
 #include "MathUtils.h"
+#include "ParseUtils.h"
+#include "fileformats/FileFormatUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
-#include "BakingUtils.h"
-#include "ParseUtils.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
-
 
 // Discreet's Flame LUT Format
 // Use a loose interpretation of the format to allow other 3D LUTs that look
@@ -62,15 +61,14 @@ Mesh 4 12
 LUT8
 gamma 1.0
 
-In this example, the 3D LUT has an input bit depth of 4 bits and an output 
-bit depth of 12 bits. You use the input value to calculate the RGB triplet 
-to be 17*17*17 (where 17=(2 to the power of 4)+1, and 4 is the input bit 
+In this example, the 3D LUT has an input bit depth of 4 bits and an output
+bit depth of 12 bits. You use the input value to calculate the RGB triplet
+to be 17*17*17 (where 17=(2 to the power of 4)+1, and 4 is the input bit
 depth). The first triplet is the output value at (0,0,0);(0,0,1);...;
-(0,0,16) r,g,b coordinates; the second triplet is the output value at 
-(0,1,0);(0,1,1);...;(0,1,16) r,g,b coordinates; and so on. You use the output 
+(0,0,16) r,g,b coordinates; the second triplet is the output value at
+(0,1,0);(0,1,1);...;(0,1,16) r,g,b coordinates; and so on. You use the output
 bit depth to set the output bit depth range (12 bits or 0-4095).
 */
-
 
 namespace OCIO_NAMESPACE
 {
@@ -81,7 +79,7 @@ namespace
 class LocalCachedFile : public CachedFile
 {
 public:
-    LocalCachedFile() = default;
+    LocalCachedFile()  = default;
     ~LocalCachedFile() = default;
 
     Lut1DOpDataRcPtr lut1D;
@@ -90,37 +88,28 @@ public:
 
 typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
 
-
-
 class LocalFileFormat : public FileFormat
 {
 public:
-
-    LocalFileFormat() = default;
+    LocalFileFormat()  = default;
     ~LocalFileFormat() = default;
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-    CachedFileRcPtr read(std::istream & istream,
-                         const std::string & fileName,
-                         Interpolation interp) const override;
+    CachedFileRcPtr read(std::istream & istream, const std::string & fileName, Interpolation interp)
+        const override;
 
-    void bake(const Baker & baker,
-                const std::string & formatName,
-                std::ostream & ostream) const override;
+    void bake(const Baker & baker, const std::string & formatName, std::ostream & ostream)
+        const override;
 
-    void buildFileOps(OpRcPtrVec & ops,
-                        const Config & config,
-                        const ConstContextRcPtr & context,
-                        CachedFileRcPtr untypedCachedFile,
-                        const FileTransform & fileTransform,
-                        TransformDirection dir) const override;
+    void buildFileOps(
+        OpRcPtrVec & ops,
+        const Config & config,
+        const ConstContextRcPtr & context,
+        CachedFileRcPtr untypedCachedFile,
+        const FileTransform & fileTransform,
+        TransformDirection dir) const override;
 };
-
-
-
-
-
 
 // We use the maximum value found in the LUT to infer
 // the bit depth.  While this is fugly. We dont believe
@@ -129,10 +118,10 @@ public:
 //
 // Note:  We allow for 2x overshoot in the LUTs.
 // As we dont allow for odd bit depths, this isn't a big deal.
-// So sizes from 1/2 max - 2x max are valid 
+// So sizes from 1/2 max - 2x max are valid
 //
-// FILE      EXPECTED MAX    CORRECTLY DECODED IF MAX IN THIS RANGE 
-// 8-bit     255             [0, 511]      
+// FILE      EXPECTED MAX    CORRECTLY DECODED IF MAX IN THIS RANGE
+// 8-bit     255             [0, 511]
 // 10-bit    1023            [512, 2047]
 // 12-bit    4095            [2048, 8191]
 // 14-bit    16383           [8192, 32767]
@@ -143,19 +132,20 @@ int GetLikelyLutBitDepth(int testval)
     const int MIN_BIT_DEPTH = 8;
     const int MAX_BIT_DEPTH = 16;
 
-    if(testval < 0) return -1;
+    if (testval < 0)
+        return -1;
 
     // Only test even bit depths
-    for(int bitDepth = MIN_BIT_DEPTH;
-        bitDepth <= MAX_BIT_DEPTH; bitDepth+=2)
+    for (int bitDepth = MIN_BIT_DEPTH; bitDepth <= MAX_BIT_DEPTH; bitDepth += 2)
     {
-        int maxcode = static_cast<int>(pow(2.0,bitDepth));
+        int maxcode     = static_cast<int>(pow(2.0, bitDepth));
         int adjustedMax = maxcode * 2 - 1;
         if (testval <= adjustedMax)
         {
-            // Since 14-bit scaling is not used in practice, if the 
+            // Since 14-bit scaling is not used in practice, if the
             // max is more than 8192, they are likely 16-bit values.
-            if (bitDepth == 14) bitDepth = 16;
+            if (bitDepth == 14)
+                bitDepth = 16;
 
             return bitDepth;
         }
@@ -168,23 +158,23 @@ BitDepth GetOCIOBitdepth(int bitdepth)
 {
     switch (bitdepth)
     {
-    case 8:
-        return BIT_DEPTH_UINT8;
-    case 10:
-        return BIT_DEPTH_UINT10;
-    case 12:
-        return BIT_DEPTH_UINT12;
-    case 16:
-        return BIT_DEPTH_UINT16;
-    case 14:
-    default:
-        return BIT_DEPTH_UNKNOWN;
+        case 8:
+            return BIT_DEPTH_UINT8;
+        case 10:
+            return BIT_DEPTH_UINT10;
+        case 12:
+            return BIT_DEPTH_UINT12;
+        case 16:
+            return BIT_DEPTH_UINT16;
+        case 14:
+        default:
+            return BIT_DEPTH_UNKNOWN;
     }
 }
 
 int GetMaxValueFromIntegerBitDepth(int bitDepth)
 {
-    return static_cast<int>( pow(2.0, bitDepth) ) - 1;
+    return static_cast<int>(pow(2.0, bitDepth)) - 1;
 }
 
 int GetClampedIntFromNormFloat(float val, float scale)
@@ -196,14 +186,14 @@ int GetClampedIntFromNormFloat(float val, float scale)
 void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 {
     FormatInfo info;
-    info.name = "flame";
-    info.extension = "3dl";
-    info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
+    info.name              = "flame";
+    info.extension         = "3dl";
+    info.capabilities      = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
     info.bake_capabilities = FORMAT_BAKE_CAPABILITY_3DLUT;
     formatInfoVec.push_back(info);
 
     FormatInfo info2 = info;
-    info2.name = "lustre";
+    info2.name       = "lustre";
     formatInfoVec.push_back(info2);
 }
 
@@ -216,9 +206,8 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 // isIdentity method here.
 bool IsIdentity(const std::vector<int> & rawshaper, BitDepth outBitDepth)
 {
-    unsigned int dim = (unsigned int)rawshaper.size();
-    const float stepValue = (float)GetBitDepthMaxValue(outBitDepth)
-        / ((float)dim - 1.0f);
+    unsigned int dim      = (unsigned int)rawshaper.size();
+    const float stepValue = (float)GetBitDepthMaxValue(outBitDepth) / ((float)dim - 1.0f);
 
     for (unsigned int i = 0; i < dim; ++i)
     {
@@ -233,9 +222,10 @@ bool IsIdentity(const std::vector<int> & rawshaper, BitDepth outBitDepth)
 // Try and load the format
 // Raise an exception if it can't be loaded.
 
-CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
-                                      const std::string & /* fileName unused */,
-                                      Interpolation interp) const
+CachedFileRcPtr LocalFileFormat::read(
+    std::istream & istream,
+    const std::string & /* fileName unused */,
+    Interpolation interp) const
 {
     std::vector<int> rawshaper;
     std::vector<int> raw3d;
@@ -252,7 +242,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 
         int lineNumber = 0;
 
-        while(istream.good())
+        while (istream.good())
         {
             istream.getline(lineBuffer, MAX_LINE_SIZE);
             ++lineNumber;
@@ -260,7 +250,8 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
             // Strip and split the line.
             lineParts = StringUtils::SplitByWhiteSpaces(StringUtils::Trim(lineBuffer));
 
-            if(lineParts.empty()) continue;
+            if (lineParts.empty())
+                continue;
             if (lineParts.size() > 0)
             {
                 if (StringUtils::StartsWith(lineParts[0], "#"))
@@ -291,7 +282,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 
             // If we've found more than 3 ints, and dont have
             // a shaper LUT yet, we've got it!
-            if(tmpData.size()>3)
+            if (tmpData.size() > 3)
             {
                 if (rawshaper.empty())
                 {
@@ -312,7 +303,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                 }
             }
             // If we've found 3 ints, add it to our 3D LUT.
-            else if(tmpData.size() == 3)
+            else if (tmpData.size() == 3)
             {
                 raw3d.push_back(tmpData[0]);
                 raw3d.push_back(tmpData[1]);
@@ -335,7 +326,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
         }
     }
 
-    if(raw3d.empty() && rawshaper.empty())
+    if (raw3d.empty() && rawshaper.empty())
     {
         std::ostringstream os;
         os << "Error parsing .3dl file. ";
@@ -357,7 +348,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
     BitDepth out1DBD = BIT_DEPTH_UNKNOWN;
 
     // Interpret the shaper LUT
-    if(!rawshaper.empty())
+    if (!rawshaper.empty())
     {
         // Find the maximum shaper LUT value to infer bit-depth.
         int shapermax = 0;
@@ -366,7 +357,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
             shapermax = std::max(shapermax, i);
         }
 
-        if(shapermax<FORMAT3DL_CODEVALUE_LOWEST_PLAUSIBLE_MAXINT)
+        if (shapermax < FORMAT3DL_CODEVALUE_LOWEST_PLAUSIBLE_MAXINT)
         {
             std::ostringstream os;
             os << "Error parsing .3dl file. ";
@@ -379,7 +370,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
         }
 
         int shaperbitdepth = GetLikelyLutBitDepth(shapermax);
-        if(shaperbitdepth<0)
+        if (shaperbitdepth < 0)
         {
             std::ostringstream os;
             os << "Error parsing .3dl file. ";
@@ -403,7 +394,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
         if (!IsIdentity(rawshaper, out1DBD))
         {
             unsigned long length = (unsigned long)rawshaper.size();
-            cachedFile->lut1D = std::make_shared<Lut1DOpData>(length);
+            cachedFile->lut1D    = std::make_shared<Lut1DOpData>(length);
             if (Lut1DOpData::IsValidInterpolation(interp))
             {
                 cachedFile->lut1D->setInterpolation(interp);
@@ -411,7 +402,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
             cachedFile->lut1D->setFileOutputBitDepth(out1DBD);
 
             const float scale = (float)GetBitDepthMaxValue(out1DBD);
-            Array & lutArray = cachedFile->lut1D->getArray();
+            Array & lutArray  = cachedFile->lut1D->getArray();
             for (unsigned int i = 0, p = 0; i < rawshaper.size(); ++i)
             {
                 for (int j = 0; j < 3; ++j, ++p)
@@ -422,13 +413,11 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
         }
     }
 
-
-
     // Interpret the parsed data.
-    if(!raw3d.empty())
+    if (!raw3d.empty())
     {
         // lut3dmax has been stored while reading values.
-        if (lut3dmax<FORMAT3DL_CODEVALUE_LOWEST_PLAUSIBLE_MAXINT)
+        if (lut3dmax < FORMAT3DL_CODEVALUE_LOWEST_PLAUSIBLE_MAXINT)
         {
             std::ostringstream os;
             os << "Error parsing .3dl file.";
@@ -441,7 +430,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
         }
 
         int lut3dbitdepth = GetLikelyLutBitDepth(lut3dmax);
-        if (lut3dbitdepth<0)
+        if (lut3dbitdepth < 0)
         {
             std::ostringstream os;
             os << "Error parsing .3dl file.";
@@ -468,7 +457,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
         cachedFile->lut3D->setFileOutputBitDepth(out3DBD);
 
         const float scale = (float)GetBitDepthMaxValue(out3DBD);
-        Array & lutArray = cachedFile->lut3D->getArray();
+        Array & lutArray  = cachedFile->lut3D->getArray();
         for (size_t i = 0; i < raw3d.size(); ++i)
         {
             lutArray[(unsigned long)i] = static_cast<float>(raw3d[i]) / scale;
@@ -483,27 +472,27 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 
 int CubeDimensionLenToLustreBitDepth(int size)
 {
-    float logval = logf(static_cast<float>(size-1)) / logf(2.0);
+    float logval = logf(static_cast<float>(size - 1)) / logf(2.0);
     return static_cast<int>(logval);
 }
 
-void LocalFileFormat::bake(const Baker & baker,
-                           const std::string & formatName,
-                           std::ostream & ostream) const
+void LocalFileFormat::bake(
+    const Baker & baker,
+    const std::string & formatName,
+    std::ostream & ostream) const
 {
     int DEFAULT_CUBE_SIZE = 0;
-    int SHAPER_BIT_DEPTH = 10;
-    int CUBE_BIT_DEPTH = 12;
-
+    int SHAPER_BIT_DEPTH  = 10;
+    int CUBE_BIT_DEPTH    = 12;
 
     // NOTE: This code is very old, Lustre and Flame have long been able
     //       to support much larger cube sizes.  Furthermore there is no
     //       need to use the legacy 3dl format since CLF/CTF is supported.
-    if(formatName == "lustre")
+    if (formatName == "lustre")
     {
         DEFAULT_CUBE_SIZE = 33;
     }
-    else if(formatName == "flame")
+    else if (formatName == "flame")
     {
         DEFAULT_CUBE_SIZE = 17;
     }
@@ -518,16 +507,18 @@ void LocalFileFormat::bake(const Baker & baker,
     ConstConfigRcPtr config = baker.getConfig();
 
     int cubeSize = baker.getCubeSize();
-    if(cubeSize==-1) cubeSize = DEFAULT_CUBE_SIZE;
+    if (cubeSize == -1)
+        cubeSize = DEFAULT_CUBE_SIZE;
     cubeSize = std::max(2, cubeSize); // smallest cube is 2x2x2
 
     int shaperSize = baker.getShaperSize();
-    if(shaperSize==-1) shaperSize = cubeSize;
+    if (shaperSize == -1)
+        shaperSize = cubeSize;
 
     std::vector<float> cubeData;
-    cubeData.resize(cubeSize*cubeSize*cubeSize*3);
+    cubeData.resize(cubeSize * cubeSize * cubeSize * 3);
     GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_BLUE);
-    PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
+    PackedImageDesc cubeImg(&cubeData[0], cubeSize * cubeSize * cubeSize, 1, 3);
     ConstCPUProcessorRcPtr inputToTarget = GetInputToTargetProcessor(baker);
     inputToTarget->apply(cubeImg);
 
@@ -535,7 +526,7 @@ void LocalFileFormat::bake(const Baker & baker,
     // For for maximum compatibility with other apps, we will
     // not utilize the shaper or output any metadata.
 
-    if(formatName == "lustre")
+    if (formatName == "lustre")
     {
         int meshInputBitDepth = CubeDimensionLenToLustreBitDepth(cubeSize);
         ostream << "3DMESH\n";
@@ -545,49 +536,48 @@ void LocalFileFormat::bake(const Baker & baker,
     std::vector<float> shaperData(shaperSize);
     GenerateIdentityLut1D(&shaperData[0], shaperSize, 1);
 
-    float shaperScale = static_cast<float>(
-        GetMaxValueFromIntegerBitDepth(SHAPER_BIT_DEPTH));
+    float shaperScale = static_cast<float>(GetMaxValueFromIntegerBitDepth(SHAPER_BIT_DEPTH));
 
-    for(unsigned int i=0; i<shaperData.size(); ++i)
+    for (unsigned int i = 0; i < shaperData.size(); ++i)
     {
-        if(i != 0) ostream << " ";
+        if (i != 0)
+            ostream << " ";
         int val = GetClampedIntFromNormFloat(shaperData[i], shaperScale);
         ostream << val;
     }
     ostream << "\n";
 
     // Write out the 3D Cube.
-    float cubeScale = static_cast<float>(
-        GetMaxValueFromIntegerBitDepth(CUBE_BIT_DEPTH));
+    float cubeScale = static_cast<float>(GetMaxValueFromIntegerBitDepth(CUBE_BIT_DEPTH));
 
-    for(int i=0; i<cubeSize*cubeSize*cubeSize; ++i)
+    for (int i = 0; i < cubeSize * cubeSize * cubeSize; ++i)
     {
-        int r = GetClampedIntFromNormFloat(cubeData[3*i+0], cubeScale);
-        int g = GetClampedIntFromNormFloat(cubeData[3*i+1], cubeScale);
-        int b = GetClampedIntFromNormFloat(cubeData[3*i+2], cubeScale);
+        int r = GetClampedIntFromNormFloat(cubeData[3 * i + 0], cubeScale);
+        int g = GetClampedIntFromNormFloat(cubeData[3 * i + 1], cubeScale);
+        int b = GetClampedIntFromNormFloat(cubeData[3 * i + 2], cubeScale);
         ostream << r << " " << g << " " << b << "\n";
     }
     ostream << "\n";
 
-    if(formatName == "lustre")
+    if (formatName == "lustre")
     {
         ostream << "LUT8\n";
         ostream << "gamma 1.0\n";
     }
 }
 
-void
-LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
-                                const Config & /*config*/,
-                                const ConstContextRcPtr & /*context*/,
-                                CachedFileRcPtr untypedCachedFile,
-                                const FileTransform & fileTransform,
-                                TransformDirection dir) const
+void LocalFileFormat::buildFileOps(
+    OpRcPtrVec & ops,
+    const Config & /*config*/,
+    const ConstContextRcPtr & /*context*/,
+    CachedFileRcPtr untypedCachedFile,
+    const FileTransform & fileTransform,
+    TransformDirection dir) const
 {
     LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
 
     // This should never happen.
-    if(!cachedFile || (!cachedFile->lut1D && !cachedFile->lut3D))
+    if (!cachedFile || (!cachedFile->lut1D && !cachedFile->lut3D))
     {
         std::ostringstream os;
         os << "Cannot build .3dl Op. Invalid cache type.";
@@ -602,8 +592,8 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     const auto fileInterp = fileTransform.getInterpolation();
 
     bool fileInterpUsed = false;
-    auto lut1D = HandleLUT1D(cachedFile->lut1D, fileInterp, fileInterpUsed);
-    auto lut3D = HandleLUT3D(cachedFile->lut3D, fileInterp, fileInterpUsed);
+    auto lut1D          = HandleLUT1D(cachedFile->lut1D, fileInterp, fileInterpUsed);
+    auto lut3D          = HandleLUT3D(cachedFile->lut3D, fileInterp, fileInterpUsed);
 
     if (!fileInterpUsed)
     {
@@ -612,29 +602,29 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 
     switch (newDir)
     {
-    case TRANSFORM_DIR_FORWARD:
-        if (lut1D)
-        {
-            CreateLut1DOp(ops, lut1D, newDir);
-        }
-        if (lut3D)
-        {
-            CreateLut3DOp(ops, lut3D, newDir);
-        }
-        break;
-    case TRANSFORM_DIR_INVERSE:
-        if (lut3D)
-        {
-            CreateLut3DOp(ops, lut3D, newDir);
-        }
-        if (lut1D)
-        {
-            CreateLut1DOp(ops, lut1D, newDir);
-        }
-        break;
+        case TRANSFORM_DIR_FORWARD:
+            if (lut1D)
+            {
+                CreateLut1DOp(ops, lut1D, newDir);
+            }
+            if (lut3D)
+            {
+                CreateLut3DOp(ops, lut3D, newDir);
+            }
+            break;
+        case TRANSFORM_DIR_INVERSE:
+            if (lut3D)
+            {
+                CreateLut3DOp(ops, lut3D, newDir);
+            }
+            if (lut1D)
+            {
+                CreateLut1DOp(ops, lut1D, newDir);
+            }
+            break;
     }
 }
-}
+} // namespace
 
 FileFormat * CreateFileFormat3DL()
 {

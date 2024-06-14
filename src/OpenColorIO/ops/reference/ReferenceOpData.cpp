@@ -3,10 +3,9 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ops/reference/ReferenceOpData.h"
 #include "Platform.h"
+#include "ops/reference/ReferenceOpData.h"
 #include "transforms/FileTransform.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -39,21 +38,26 @@ bool ReferenceOpData::hasChannelCrosstalk() const
     return true;
 }
 
-bool ReferenceOpData::equals(const OpData& other) const
+bool ReferenceOpData::equals(const OpData & other) const
 {
-    if (!OpData::equals(other)) return false;
+    if (!OpData::equals(other))
+        return false;
 
-    const ReferenceOpData* rop = static_cast<const ReferenceOpData*>(&other);
+    const ReferenceOpData * rop = static_cast<const ReferenceOpData *>(&other);
 
-    if (m_referenceStyle != rop->m_referenceStyle) return false;
-    if (m_direction != rop->m_direction) return false;
+    if (m_referenceStyle != rop->m_referenceStyle)
+        return false;
+    if (m_direction != rop->m_direction)
+        return false;
     if (m_referenceStyle == REF_PATH)
     {
-        if (m_path != rop->m_path) return false;
+        if (m_path != rop->m_path)
+            return false;
     }
     else
     {
-        if (m_alias != rop->m_alias) return false;
+        if (m_alias != rop->m_alias)
+            return false;
     }
 
     return true;

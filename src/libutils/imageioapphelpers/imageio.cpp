@@ -11,8 +11,8 @@ namespace OCIO_NAMESPACE
 namespace
 {
 
-const std::vector<std::string> RgbaChans = { "R", "G", "B", "A" };
-const std::vector<std::string> RgbChans  = { "R", "G", "B" };
+const std::vector<std::string> RgbaChans = {"R", "G", "B", "A"};
+const std::vector<std::string> RgbChans  = {"R", "G", "B"};
 
 std::vector<std::string> GetChannelNames(const ChannelOrdering & chanOrder)
 {
@@ -56,7 +56,7 @@ size_t GetNumChannels(const ChannelOrdering & chanOrder)
 
 unsigned GetChannelSizeInBytes(BitDepth bitdepth)
 {
-    switch(bitdepth)
+    switch (bitdepth)
     {
         case BIT_DEPTH_UINT8:
             return 1;
@@ -82,33 +82,32 @@ unsigned GetChannelSizeInBytes(BitDepth bitdepth)
 
 } // anonymous namespace
 
-} // OCIO_NAMESPACE
+} // namespace OCIO_NAMESPACE
 
 #ifdef USE_OPENIMAGEIO
-#   include "imageio_oiio.cpp"
+#include "imageio_oiio.cpp"
 #elif USE_OPENEXR
-#   include "imageio_exr.cpp"
+#include "imageio_exr.cpp"
 #else
-#   error "No image backend found to compile ImageIO."
+#error "No image backend found to compile ImageIO."
 #endif
 
 namespace OCIO_NAMESPACE
 {
 
 ImageIO::ImageIO()
-: m_impl(new ImageIO::Impl())
+    : m_impl(new ImageIO::Impl())
 {
-
 }
 
 ImageIO::ImageIO(const std::string & filename)
-: m_impl(new ImageIO::Impl())
+    : m_impl(new ImageIO::Impl())
 {
     m_impl->read(filename, BIT_DEPTH_UNKNOWN);
 }
 
 ImageIO::ImageIO(long width, long height, ChannelOrdering chanOrder, BitDepth bitDepth)
-: m_impl(new ImageIO::Impl())
+    : m_impl(new ImageIO::Impl())
 {
     m_impl->init(width, height, chanOrder, bitDepth);
 }
@@ -223,6 +222,5 @@ void ImageIO::write(const std::string & filename, BitDepth bitdepth) const
 {
     m_impl->write(filename, bitdepth);
 }
-
 
 } // namespace OCIO_NAMESPACE

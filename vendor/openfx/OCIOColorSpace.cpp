@@ -46,7 +46,7 @@ void OCIOColorSpace::render(const OFX::RenderArguments & args)
     // Get transform parameters
     std::string srcCsName = getChoiceParamOption(srcCsNameParam_);
     std::string dstCsName = getChoiceParamOption(dstCsNameParam_);
-    bool inverse = inverseParam_->getValue();
+    bool inverse          = inverseParam_->getValue();
 
     // Create context with overrides
     OCIO::ContextRcPtr context = createOCIOContext(contextParams_);
@@ -62,15 +62,18 @@ void OCIOColorSpace::render(const OFX::RenderArguments & args)
     proc.setDstImg(dst.get());
     proc.setSrcImg(src.get());
     proc.setRenderWindow(args.renderWindow);
-    proc.setTransform(context, tr, (inverse ? OCIO::TRANSFORM_DIR_INVERSE 
-                                            : OCIO::TRANSFORM_DIR_FORWARD));
+    proc.setTransform(
+        context,
+        tr,
+        (inverse ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD));
 
     proc.process();
 }
 
-bool OCIOColorSpace::isIdentity(const OFX::IsIdentityArguments & args, 
-                                OFX::Clip *& identityClip, 
-                                double & identityTime)
+bool OCIOColorSpace::isIdentity(
+    const OFX::IsIdentityArguments & args,
+    OFX::Clip *& identityClip,
+    double & identityTime)
 {
     std::string srcCsName = getChoiceParamOption(srcCsNameParam_);
     std::string dstCsName = getChoiceParamOption(dstCsNameParam_);
@@ -86,22 +89,21 @@ bool OCIOColorSpace::isIdentity(const OFX::IsIdentityArguments & args,
     return false;
 }
 
-void OCIOColorSpace::changedParam(const OFX::InstanceChangedArgs & /*args*/, 
-                                  const std::string & paramName)
+void OCIOColorSpace::changedParam(
+    const OFX::InstanceChangedArgs & /*args*/,
+    const std::string & paramName)
 {
     if (paramName == "src_cs" || paramName == "dst_cs")
     {
         OCIO::ConstConfigRcPtr config = getOCIOConfig();
 
-        std::string srcCsName = getChoiceParamOption(srcCsNameParam_);
-        OCIO::ConstColorSpaceRcPtr srcCs = 
-            config->getColorSpace(srcCsName.c_str());
-        OCIO::ReferenceSpaceType srcRef = srcCs->getReferenceSpaceType();
+        std::string srcCsName            = getChoiceParamOption(srcCsNameParam_);
+        OCIO::ConstColorSpaceRcPtr srcCs = config->getColorSpace(srcCsName.c_str());
+        OCIO::ReferenceSpaceType srcRef  = srcCs->getReferenceSpaceType();
 
-        std::string dstCsName = getChoiceParamOption(dstCsNameParam_);
-        OCIO::ConstColorSpaceRcPtr dstCs = 
-            config->getColorSpace(dstCsName.c_str());
-        OCIO::ReferenceSpaceType dstRef = dstCs->getReferenceSpaceType();
+        std::string dstCsName            = getChoiceParamOption(dstCsNameParam_);
+        OCIO::ConstColorSpaceRcPtr dstCs = config->getColorSpace(dstCsName.c_str());
+        OCIO::ReferenceSpaceType dstRef  = dstCs->getReferenceSpaceType();
 
         // Suggest using OCIODisplayView instead
         int numViewTransforms = config->getNumViewTransforms();
@@ -114,8 +116,8 @@ void OCIOColorSpace::changedParam(const OFX::InstanceChangedArgs & /*args*/,
                 configName = " '" + configName + "'";
             }
 
-            OCIO::ConstViewTransformRcPtr defaultViewTr = 
-                config->getDefaultSceneToDisplayViewTransform();
+            OCIO::ConstViewTransformRcPtr defaultViewTr
+                = config->getDefaultSceneToDisplayViewTransform();
 
             std::ostringstream os;
             os << PLUGIN_TYPE << " WARNING: Color space '";
@@ -130,9 +132,7 @@ void OCIOColorSpace::changedParam(const OFX::InstanceChangedArgs & /*args*/,
             os << "use 'OCIODisplayView' to select your desired view";
             os << "transform.";
 
-            sendMessage(OFX::Message::eMessageWarning,
-                        "view_transform_warning",
-                        os.str());
+            sendMessage(OFX::Message::eMessageWarning, "view_transform_warning", os.str());
         }
 
         // Store config values
@@ -155,13 +155,14 @@ void OCIOColorSpace::changedParam(const OFX::InstanceChangedArgs & /*args*/,
     }
 }
 
-void OCIOColorSpaceFactory::describe(OFX::ImageEffectDescriptor& desc)
+void OCIOColorSpaceFactory::describe(OFX::ImageEffectDescriptor & desc)
 {
     baseDescribe(PLUGIN_TYPE, desc);
 }
 
-void OCIOColorSpaceFactory::describeInContext(OFX::ImageEffectDescriptor& desc, 
-                                              OFX::ContextEnum /*context*/)
+void OCIOColorSpaceFactory::describeInContext(
+    OFX::ImageEffectDescriptor & desc,
+    OFX::ContextEnum /*context*/)
 {
     baseDescribeInContext(desc);
 
@@ -169,39 +170,35 @@ void OCIOColorSpaceFactory::describeInContext(OFX::ImageEffectDescriptor& desc,
     OFX::PageParamDescriptor * page = desc.definePageParam(PARAM_NAME_PAGE_0);
 
     // Src color space
-    defineCsNameParam(desc, page, 
-                      "src_cs", 
-                      "Source Color Space", 
-                      "Source color space name", 
-                      0);
+    defineCsNameParam(desc, page, "src_cs", "Source Color Space", "Source color space name", 0);
 
     // Dst color space
-    defineCsNameParam(desc, page, 
-                      "dst_cs", 
-                      "Destination Color Space", 
-                      "Destination color space name", 
-                      0);
+    defineCsNameParam(
+        desc,
+        page,
+        "dst_cs",
+        "Destination Color Space",
+        "Destination color space name",
+        0);
 
     // Inverse
-    defineBooleanParam(desc, page,
-                       "inverse", 
-                       "Inverse", 
-                       "Invert the transform",
-                       0);
+    defineBooleanParam(desc, page, "inverse", "Inverse", "Invert the transform", 0);
 
     // Swap color spaces
-    definePushButtonParam(desc, page,
-                          "swap_src_dst", 
-                          "Swap color spaces", 
-                          "Swap src and dst color spaces",
-                          0);
+    definePushButtonParam(
+        desc,
+        page,
+        "swap_src_dst",
+        "Swap color spaces",
+        "Swap src and dst color spaces",
+        0);
 
     // Context overrides
     defineContextParams(desc, page);
 }
 
 OFX::ImageEffect * OCIOColorSpaceFactory::createInstance(
-    OfxImageEffectHandle handle, 
+    OfxImageEffectHandle handle,
     OFX::ContextEnum /*context*/)
 {
     return new OCIOColorSpace(handle);

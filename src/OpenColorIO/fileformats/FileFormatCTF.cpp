@@ -2,33 +2,32 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <cstdio>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 
 #include <pystring.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "BakingUtils.h"
+#include "OpBuilders.h"
+#include "Platform.h"
+#include "TransformBuilder.h"
 #include "expat.h"
-#include "fileformats/ctf/CTFTransform.h"
+#include "fileformats/FileFormatUtils.h"
 #include "fileformats/ctf/CTFReaderHelper.h"
 #include "fileformats/ctf/CTFReaderUtils.h"
-#include "fileformats/FileFormatUtils.h"
+#include "fileformats/ctf/CTFTransform.h"
 #include "fileformats/xmlutils/XMLReaderHelper.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "fileformats/xmlutils/XMLWriterUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
-#include "ops/range/RangeOp.h"
-#include "BakingUtils.h"
-#include "OpBuilders.h"
 #include "ops/noop/NoOps.h"
-#include "Platform.h"
-#include "TransformBuilder.h"
+#include "ops/range/RangeOp.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
-
 
 /*
 
@@ -102,14 +101,11 @@ namespace
 class LocalCachedFile : public CachedFile
 {
 public:
-    LocalCachedFile ()
-    {
-    };
-    ~LocalCachedFile() {};
+    LocalCachedFile(){};
+    ~LocalCachedFile(){};
 
     CTFReaderTransformPtr m_transform;
     std::string m_filePath;
-
 };
 
 typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -117,62 +113,59 @@ typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
 class LocalFileFormat : public FileFormat
 {
 public:
-
     ~LocalFileFormat() {}
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-    CachedFileRcPtr read(std::istream & istream,
-                         const std::string & fileName,
-                         Interpolation interp) const override;
+    CachedFileRcPtr read(std::istream & istream, const std::string & fileName, Interpolation interp)
+        const override;
 
-    void buildFileOps(OpRcPtrVec & ops,
-                      const Config & config,
-                      const ConstContextRcPtr & context,
-                      CachedFileRcPtr untypedCachedFile,
-                      const FileTransform & fileTransform,
-                      TransformDirection dir) const override;
+    void buildFileOps(
+        OpRcPtrVec & ops,
+        const Config & config,
+        const ConstContextRcPtr & context,
+        CachedFileRcPtr untypedCachedFile,
+        const FileTransform & fileTransform,
+        TransformDirection dir) const override;
 
-    void bake(const Baker & baker,
-              const std::string & formatName,
-              std::ostream & ostream) const override;
+    void bake(const Baker & baker, const std::string & formatName, std::ostream & ostream)
+        const override;
 
-    void write(const ConstConfigRcPtr & config,
-               const ConstContextRcPtr & context,
-               const GroupTransform & group,
-               const std::string & formatName,
-               std::ostream & /*ostream*/) const override;
+    void write(
+        const ConstConfigRcPtr & config,
+        const ConstContextRcPtr & context,
+        const GroupTransform & group,
+        const std::string & formatName,
+        std::ostream & /*ostream*/) const override;
 };
 
 void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 {
     FormatInfo info;
-    info.name = FILEFORMAT_CLF;
-    info.extension = "clf";
-    info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ |
-                                              FORMAT_CAPABILITY_BAKE |
-                                              FORMAT_CAPABILITY_WRITE);
-    info.bake_capabilities = FormatBakeFlags(FORMAT_BAKE_CAPABILITY_3DLUT |
-                                             FORMAT_BAKE_CAPABILITY_1DLUT |
-                                             FORMAT_BAKE_CAPABILITY_1D_3D_LUT);
+    info.name         = FILEFORMAT_CLF;
+    info.extension    = "clf";
+    info.capabilities = FormatCapabilityFlags(
+        FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE | FORMAT_CAPABILITY_WRITE);
+    info.bake_capabilities = FormatBakeFlags(
+        FORMAT_BAKE_CAPABILITY_3DLUT | FORMAT_BAKE_CAPABILITY_1DLUT
+        | FORMAT_BAKE_CAPABILITY_1D_3D_LUT);
     formatInfoVec.push_back(info);
 
     FormatInfo info2;
-    info2.name = FILEFORMAT_CTF;
-    info2.extension = "ctf";
-    info2.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ |
-                                               FORMAT_CAPABILITY_BAKE |
-                                               FORMAT_CAPABILITY_WRITE);
-    info.bake_capabilities = FormatBakeFlags(FORMAT_BAKE_CAPABILITY_3DLUT |
-                                             FORMAT_BAKE_CAPABILITY_1DLUT |
-                                             FORMAT_BAKE_CAPABILITY_1D_3D_LUT);
+    info2.name         = FILEFORMAT_CTF;
+    info2.extension    = "ctf";
+    info2.capabilities = FormatCapabilityFlags(
+        FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE | FORMAT_CAPABILITY_WRITE);
+    info.bake_capabilities = FormatBakeFlags(
+        FORMAT_BAKE_CAPABILITY_3DLUT | FORMAT_BAKE_CAPABILITY_1DLUT
+        | FORMAT_BAKE_CAPABILITY_1D_3D_LUT);
     formatInfoVec.push_back(info2);
 }
 
 class XMLParserHelper
 {
 public:
-    XMLParserHelper() = delete;
+    XMLParserHelper()                        = delete;
     XMLParserHelper(const XMLParserHelper &) = delete;
 
     explicit XMLParserHelper(const std::string & fileName)
@@ -188,10 +181,7 @@ public:
         m_isCLF = StringUtils::Lower(extension) == ".clf";
     }
 
-    ~XMLParserHelper()
-    {
-        XML_ParserFree(m_parser);
-    }
+    ~XMLParserHelper() { XML_ParserFree(m_parser); }
 
     void Parse(std::istream & istream)
     {
@@ -219,29 +209,25 @@ public:
             throwMessage(error);
         }
 
-        const CTFReaderTransformPtr& pT = getTransform();
+        const CTFReaderTransformPtr & pT = getTransform();
         if (pT.use_count() == 0)
         {
-            static const std::string error(
-                "CTF/CLF parsing error: Invalid transform.");
+            static const std::string error("CTF/CLF parsing error: Invalid transform.");
             throwMessage(error);
         }
 
         if (pT->getOps().empty())
         {
-            static const std::string error(
-                "CTF/CLF parsing error: No color operator in file.");
+            static const std::string error("CTF/CLF parsing error: No color operator in file.");
             throwMessage(error);
         }
     }
 
     void Parse(const std::string & buffer, bool lastLine)
     {
-        const int done = lastLine?1:0;
+        const int done = lastLine ? 1 : 0;
 
-        if (XML_STATUS_ERROR == XML_Parse(m_parser,
-                                          buffer.c_str(),
-                                          (int)buffer.size(), done))
+        if (XML_STATUS_ERROR == XML_Parse(m_parser, buffer.c_str(), (int)buffer.size(), done))
         {
             XML_Error eXpatErrorCode = XML_GetErrorCode(m_parser);
             if (eXpatErrorCode == XML_ERROR_TAG_MISMATCH)
@@ -270,16 +256,11 @@ public:
                 throwMessage(error);
             }
         }
-
     }
 
-    CTFReaderTransformPtr getTransform()
-    {
-        return m_transform;
-    }
+    CTFReaderTransformPtr getTransform() { return m_transform; }
 
 private:
-
     void AddOpReader(CTFReaderOpElt::Type type, const char * xmlTag)
     {
         if (m_elms.size() != 1)
@@ -299,7 +280,8 @@ private:
             ElementRcPtr pElt = m_elms.back();
 
             auto pT = std::dynamic_pointer_cast<CTFReaderTransformElt>(pElt);
-            CTFReaderOpEltRcPtr pOp = CTFReaderOpElt::GetReader(type, pT->getVersion(), pT->isCLF());
+            CTFReaderOpEltRcPtr pOp
+                = CTFReaderOpElt::GetReader(type, pT->getVersion(), pT->isCLF());
 
             if (!pOp)
             {
@@ -333,11 +315,12 @@ private:
     }
 
     // Determines if the element name is supported in the current context.
-    static bool SupportedElement(const char * name,
-                                 ElementRcPtr & parent,
-                                 const char * tag,
-                                 const char * parentName,
-                                 bool & recognizedName)
+    static bool SupportedElement(
+        const char * name,
+        ElementRcPtr & parent,
+        const char * tag,
+        const char * parentName,
+        bool & recognizedName)
     {
         if (name && *name && tag && *tag)
         {
@@ -345,10 +328,8 @@ private:
             {
                 recognizedName |= true;
 
-                if (!parentName || !strlen(parentName) ||
-                    (parent &&
-                     0 == Platform::Strcasecmp(parent->getName().c_str(),
-                                               parentName)))
+                if (!parentName || !strlen(parentName)
+                    || (parent && 0 == Platform::Strcasecmp(parent->getName().c_str(), parentName)))
                 {
                     return true;
                 }
@@ -358,17 +339,18 @@ private:
         return false;
     }
 
-    static bool SupportedElement(const char * name,
-                                 ElementRcPtr & parent,
-                                 const std::vector<const char *> & tags,
-                                 const char * parentName,
-                                 bool & recognizedName)
+    static bool SupportedElement(
+        const char * name,
+        ElementRcPtr & parent,
+        const std::vector<const char *> & tags,
+        const char * parentName,
+        bool & recognizedName)
     {
         if (name && *name)
         {
             const size_t numTags(tags.size());
             size_t i = 0;
-            for (; i<numTags; ++i)
+            for (; i < numTags; ++i)
             {
                 if (0 == Platform::Strcasecmp(name, tags[i]))
                 {
@@ -380,8 +362,8 @@ private:
             // If found name in the tag list, test the parent name.
             if (i < numTags)
             {
-                if (!parentName || !strlen(parentName) ||
-                    (parent && 0 == Platform::Strcasecmp(parent->getName().c_str(), parentName)))
+                if (!parentName || !strlen(parentName)
+                    || (parent && 0 == Platform::Strcasecmp(parent->getName().c_str(), parentName)))
                 {
                     return true;
                 }
@@ -391,21 +373,22 @@ private:
         return false;
     }
 
-    static bool SupportedElement(const char * name,
-                                 ElementRcPtr & parent,
-                                 const char * tag,
-                                 const std::vector<const char *> & parentNames,
-                                 bool & recognizedName)
+    static bool SupportedElement(
+        const char * name,
+        ElementRcPtr & parent,
+        const char * tag,
+        const std::vector<const char *> & parentNames,
+        bool & recognizedName)
     {
         if (name && *name && tag && *tag && parent)
         {
             if (0 == Platform::Strcasecmp(name, tag))
             {
                 recognizedName |= true;
-                
+
                 const size_t numParents(parentNames.size());
                 size_t i = 0;
-                for (; i<numParents; ++i)
+                for (; i < numParents; ++i)
                 {
                     if (0 == Platform::Strcasecmp(parent->getName().c_str(), parentNames[i]))
                     {
@@ -419,53 +402,37 @@ private:
     }
 
     // Start the parsing of one element.
-    static void StartElementHandler(void * userData,
-                                    const XML_Char * name,
-                                    const XML_Char ** atts)
+    static void StartElementHandler(void * userData, const XML_Char * name, const XML_Char ** atts)
     {
-        static const std::vector<const char *> rangeSubElements = {
-            TAG_MIN_IN_VALUE,
-            TAG_MAX_IN_VALUE,
-            TAG_MIN_OUT_VALUE,
-            TAG_MAX_OUT_VALUE
-        };
+        static const std::vector<const char *> rangeSubElements
+            = {TAG_MIN_IN_VALUE, TAG_MAX_IN_VALUE, TAG_MIN_OUT_VALUE, TAG_MAX_OUT_VALUE};
 
-        static const std::vector<const char *> sopSubElements = {
-            TAG_SLOPE,
-            TAG_OFFSET,
-            TAG_POWER
-        };
+        static const std::vector<const char *> sopSubElements = {TAG_SLOPE, TAG_OFFSET, TAG_POWER};
 
-        static const std::vector<const char *> gradingPrimarySubElements = {
-            TAG_PRIMARY_BRIGHTNESS,
-            TAG_PRIMARY_CLAMP,
-            TAG_PRIMARY_CONTRAST,
-            TAG_PRIMARY_EXPOSURE,
-            TAG_PRIMARY_GAIN,
-            TAG_PRIMARY_GAMMA,
-            TAG_PRIMARY_LIFT,
-            TAG_PRIMARY_OFFSET,
-            TAG_PRIMARY_PIVOT,
-            TAG_PRIMARY_SATURATION
-        };
+        static const std::vector<const char *> gradingPrimarySubElements
+            = {TAG_PRIMARY_BRIGHTNESS,
+               TAG_PRIMARY_CLAMP,
+               TAG_PRIMARY_CONTRAST,
+               TAG_PRIMARY_EXPOSURE,
+               TAG_PRIMARY_GAIN,
+               TAG_PRIMARY_GAMMA,
+               TAG_PRIMARY_LIFT,
+               TAG_PRIMARY_OFFSET,
+               TAG_PRIMARY_PIVOT,
+               TAG_PRIMARY_SATURATION};
 
-        static const std::vector<const char *> gradingToneSubElements = {
-            TAG_TONE_BLACKS,
-            TAG_TONE_SHADOWS,
-            TAG_TONE_MIDTONES,
-            TAG_TONE_HIGHLIGHTS,
-            TAG_TONE_WHITES,
-            TAG_TONE_SCONTRAST
-        };
+        static const std::vector<const char *> gradingToneSubElements
+            = {TAG_TONE_BLACKS,
+               TAG_TONE_SHADOWS,
+               TAG_TONE_MIDTONES,
+               TAG_TONE_HIGHLIGHTS,
+               TAG_TONE_WHITES,
+               TAG_TONE_SCONTRAST};
 
-        static const std::vector<const char *> gradingRGBCurveSubElements = {
-            TAG_RGB_CURVE_BLUE,
-            TAG_RGB_CURVE_GREEN,
-            TAG_RGB_CURVE_MASTER,
-            TAG_RGB_CURVE_RED
-        };
+        static const std::vector<const char *> gradingRGBCurveSubElements
+            = {TAG_RGB_CURVE_BLUE, TAG_RGB_CURVE_GREEN, TAG_RGB_CURVE_MASTER, TAG_RGB_CURVE_RED};
 
-        XMLParserHelper * pImpl = (XMLParserHelper*)userData;
+        XMLParserHelper * pImpl = (XMLParserHelper *)userData;
 
         if (!pImpl || !name || !*name)
         {
@@ -488,12 +455,11 @@ private:
 
             if (pMD)
             {
-                pImpl->m_elms.push_back(
-                    std::make_shared<CTFReaderMetadataElt>(
-                        name,
-                        pMD,
-                        pImpl->m_lineNumber,
-                        pImpl->m_fileName));
+                pImpl->m_elms.push_back(std::make_shared<CTFReaderMetadataElt>(
+                    name,
+                    pMD,
+                    pImpl->m_lineNumber,
+                    pImpl->m_fileName));
 
                 pImpl->m_elms.back()->start(atts);
                 return;
@@ -506,23 +472,22 @@ private:
             if (pImpl->m_transform.get())
             {
                 ElementRcPtr pElt = pImpl->m_elms.front();
-                auto pT = std::dynamic_pointer_cast<CTFReaderTransformElt>(pElt);
+                auto pT           = std::dynamic_pointer_cast<CTFReaderTransformElt>(pElt);
 
-                pImpl->m_elms.push_back(
-                    std::make_shared<XmlReaderDummyElt>(
-                        name, pT,
-                        pImpl->getXmLineNumber(),
-                        pImpl->getXmlFilename(),
-                        "The Transform already exists"));
+                pImpl->m_elms.push_back(std::make_shared<XmlReaderDummyElt>(
+                    name,
+                    pT,
+                    pImpl->getXmLineNumber(),
+                    pImpl->getXmlFilename(),
+                    "The Transform already exists"));
             }
             else
             {
-                CTFReaderTransformEltRcPtr pT
-                    = std::make_shared<CTFReaderTransformElt>(
-                        name,
-                        pImpl->getXmLineNumber(),
-                        pImpl->getXmlFilename(),
-                        pImpl->isCLF());
+                CTFReaderTransformEltRcPtr pT = std::make_shared<CTFReaderTransformElt>(
+                    name,
+                    pImpl->getXmLineNumber(),
+                    pImpl->getXmlFilename(),
+                    pImpl->isCLF());
 
                 pImpl->m_elms.push_back(pT);
                 pImpl->m_transform = pT->getTransform();
@@ -557,23 +522,31 @@ private:
             {
                 pImpl->AddOpReader(CTFReaderOpElt::CDLType, name);
             }
-            else if (SupportedElement(name, pElt, TAG_EXPOSURE_CONTRAST,
-                                      TAG_PROCESS_LIST, recognizedName))
+            else if (SupportedElement(
+                         name,
+                         pElt,
+                         TAG_EXPOSURE_CONTRAST,
+                         TAG_PROCESS_LIST,
+                         recognizedName))
             {
                 pImpl->AddOpReader(CTFReaderOpElt::ExposureContrastType, name);
             }
-            else if (SupportedElement(name, pElt, TAG_FIXED_FUNCTION,
-                                      TAG_PROCESS_LIST, recognizedName))
+            else if (SupportedElement(
+                         name,
+                         pElt,
+                         TAG_FIXED_FUNCTION,
+                         TAG_PROCESS_LIST,
+                         recognizedName))
             {
                 pImpl->AddOpReader(CTFReaderOpElt::FixedFunctionType, name);
             }
-            else if (SupportedElement(name, pElt, TAG_FUNCTION,
-                                      TAG_PROCESS_LIST, recognizedName))
+            else if (SupportedElement(name, pElt, TAG_FUNCTION, TAG_PROCESS_LIST, recognizedName))
             {
                 pImpl->AddOpReader(CTFReaderOpElt::FunctionType, name);
             }
-            else if (SupportedElement(name, pElt, TAG_GAMMA, TAG_PROCESS_LIST, recognizedName) ||
-                     SupportedElement(name, pElt, TAG_EXPONENT, TAG_PROCESS_LIST, recognizedName))
+            else if (
+                SupportedElement(name, pElt, TAG_GAMMA, TAG_PROCESS_LIST, recognizedName)
+                || SupportedElement(name, pElt, TAG_EXPONENT, TAG_PROCESS_LIST, recognizedName))
             {
                 pImpl->AddOpReader(CTFReaderOpElt::GammaType, name);
             }
@@ -581,8 +554,7 @@ private:
             {
                 pImpl->AddOpReader(CTFReaderOpElt::GradingPrimaryType, name);
             }
-            else if (SupportedElement(name, pElt, TAG_RGB_CURVE,
-                                      TAG_PROCESS_LIST, recognizedName))
+            else if (SupportedElement(name, pElt, TAG_RGB_CURVE, TAG_PROCESS_LIST, recognizedName))
             {
                 pImpl->AddOpReader(CTFReaderOpElt::GradingRGBCurveType, name);
             }
@@ -618,8 +590,7 @@ private:
             {
                 pImpl->AddOpReader(CTFReaderOpElt::RangeType, name);
             }
-            else if (SupportedElement(name, pElt, TAG_REFERENCE,
-                                      TAG_PROCESS_LIST, recognizedName))
+            else if (SupportedElement(name, pElt, TAG_REFERENCE, TAG_PROCESS_LIST, recognizedName))
             {
                 pImpl->AddOpReader(CTFReaderOpElt::ReferenceType, name);
             }
@@ -633,127 +604,139 @@ private:
                 auto pContainer = std::dynamic_pointer_cast<XmlReaderContainerElt>(pElt);
                 if (!pContainer)
                 {
-                    pImpl->m_elms.push_back(
-                        std::make_shared<XmlReaderDummyElt>(
-                            name,
-                            pElt,
-                            pImpl->getXmLineNumber(),
-                            pImpl->getXmlFilename(),
-                            nullptr));
+                    pImpl->m_elms.push_back(std::make_shared<XmlReaderDummyElt>(
+                        name,
+                        pElt,
+                        pImpl->getXmLineNumber(),
+                        pImpl->getXmlFilename(),
+                        nullptr));
                 }
-                else if (SupportedElement(name, pElt, TAG_ACES_PARAMS,
-                                          TAG_ACES, recognizedName))
+                else if (SupportedElement(name, pElt, TAG_ACES_PARAMS, TAG_ACES, recognizedName))
                 {
-                    pImpl->m_elms.push_back(
-                        std::make_shared<CTFReaderACESParamsElt>(
-                            name,
-                            pContainer,
-                            pImpl->getXmLineNumber(),
-                            pImpl->getXmlFilename()));
+                    pImpl->m_elms.push_back(std::make_shared<CTFReaderACESParamsElt>(
+                        name,
+                        pContainer,
+                        pImpl->getXmLineNumber(),
+                        pImpl->getXmlFilename()));
                 }
-                else if (SupportedElement(name, pElt, TAG_ARRAY, TAG_LUT1D, recognizedName) ||
-                         SupportedElement(name, pElt, TAG_ARRAY, TAG_INVLUT1D, recognizedName) ||
-                         SupportedElement(name, pElt, TAG_ARRAY, TAG_LUT3D, recognizedName) ||
-                         SupportedElement(name, pElt, TAG_ARRAY, TAG_INVLUT3D, recognizedName) ||
-                         SupportedElement(name, pElt, TAG_ARRAY, TAG_MATRIX, recognizedName))
+                else if (
+                    SupportedElement(name, pElt, TAG_ARRAY, TAG_LUT1D, recognizedName)
+                    || SupportedElement(name, pElt, TAG_ARRAY, TAG_INVLUT1D, recognizedName)
+                    || SupportedElement(name, pElt, TAG_ARRAY, TAG_LUT3D, recognizedName)
+                    || SupportedElement(name, pElt, TAG_ARRAY, TAG_INVLUT3D, recognizedName)
+                    || SupportedElement(name, pElt, TAG_ARRAY, TAG_MATRIX, recognizedName))
                 {
                     auto pA = std::dynamic_pointer_cast<CTFArrayMgt>(pContainer);
                     if (!pA || pA->isCompleted())
                     {
                         if (!pA)
                         {
-                            pImpl->m_elms.push_back(
-                                std::make_shared<XmlReaderDummyElt>(
-                                    name,
-                                    (pImpl->m_elms.empty() ? 0 : pImpl->m_elms.back()),
-                                    pImpl->getXmLineNumber(),
-                                    pImpl->getXmlFilename(),
-                                    "Array not allowed in this element"));
+                            pImpl->m_elms.push_back(std::make_shared<XmlReaderDummyElt>(
+                                name,
+                                (pImpl->m_elms.empty() ? 0 : pImpl->m_elms.back()),
+                                pImpl->getXmLineNumber(),
+                                pImpl->getXmlFilename(),
+                                "Array not allowed in this element"));
                         }
                         else
                         {
-                            pImpl->m_elms.push_back(
-                                std::make_shared<XmlReaderDummyElt>(
-                                    name,
-                                    (pImpl->m_elms.empty() ? 0 : pImpl->m_elms.back()),
-                                    pImpl->getXmLineNumber(),
-                                    pImpl->getXmlFilename(),
-                                    "Only one Array allowed per op"));
+                            pImpl->m_elms.push_back(std::make_shared<XmlReaderDummyElt>(
+                                name,
+                                (pImpl->m_elms.empty() ? 0 : pImpl->m_elms.back()),
+                                pImpl->getXmLineNumber(),
+                                pImpl->getXmlFilename(),
+                                "Only one Array allowed per op"));
                         }
                     }
                     else
                     {
-                        pImpl->m_elms.push_back(
-                            std::make_shared<CTFReaderArrayElt>(
-                                name, pContainer,
-                                pImpl->getXmLineNumber(),
-                                pImpl->getXmlFilename()));
+                        pImpl->m_elms.push_back(std::make_shared<CTFReaderArrayElt>(
+                            name,
+                            pContainer,
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename()));
                     }
                 }
-                else if (SupportedElement(name, pElt, TAG_DESCRIPTION, "", recognizedName) ||
-                         SupportedElement(name, pElt, METADATA_INPUT_DESCRIPTION, TAG_CDL, recognizedName) ||
-                         SupportedElement(name, pElt, METADATA_VIEWING_DESCRIPTION, TAG_CDL, recognizedName))
+                else if (
+                    SupportedElement(name, pElt, TAG_DESCRIPTION, "", recognizedName)
+                    || SupportedElement(
+                        name,
+                        pElt,
+                        METADATA_INPUT_DESCRIPTION,
+                        TAG_CDL,
+                        recognizedName)
+                    || SupportedElement(
+                        name,
+                        pElt,
+                        METADATA_VIEWING_DESCRIPTION,
+                        TAG_CDL,
+                        recognizedName))
                 {
-                    pImpl->m_elms.push_back(
-                        std::make_shared<XmlReaderDescriptionElt>(
-                            name,
-                            pContainer,
-                            pImpl->getXmLineNumber(),
-                            pImpl->getXmlFilename()));
+                    pImpl->m_elms.push_back(std::make_shared<XmlReaderDescriptionElt>(
+                        name,
+                        pContainer,
+                        pImpl->getXmLineNumber(),
+                        pImpl->getXmlFilename()));
                 }
                 // Dynamic Property is valid under any operator parent. First
-                // test if the tag is supported to set the recognizedName 
+                // test if the tag is supported to set the recognizedName
                 // accordingly, without testing for parents. Test for the
                 // parent type prior to testing the name.
-                else if (SupportedElement(name, pElt, TAG_DYNAMIC_PARAMETER,
-                                          "", recognizedName) &&
-                         std::dynamic_pointer_cast<CTFReaderOpElt>(pContainer))
+                else if (
+                    SupportedElement(name, pElt, TAG_DYNAMIC_PARAMETER, "", recognizedName)
+                    && std::dynamic_pointer_cast<CTFReaderOpElt>(pContainer))
                 {
-                    pImpl->m_elms.push_back(
-                        std::make_shared<CTFReaderDynamicParamElt>(
-                            name,
-                            pContainer,
-                            pImpl->getXmLineNumber(),
-                            pImpl->getXmlFilename()));
+                    pImpl->m_elms.push_back(std::make_shared<CTFReaderDynamicParamElt>(
+                        name,
+                        pContainer,
+                        pImpl->getXmLineNumber(),
+                        pImpl->getXmlFilename()));
                 }
-                else if (SupportedElement(name, pElt, TAG_EC_PARAMS,
-                                          TAG_EXPOSURE_CONTRAST, recognizedName))
+                else if (SupportedElement(
+                             name,
+                             pElt,
+                             TAG_EC_PARAMS,
+                             TAG_EXPOSURE_CONTRAST,
+                             recognizedName))
                 {
-                    pImpl->m_elms.push_back(
-                        std::make_shared<CTFReaderECParamsElt>(
-                            name,
-                            pContainer,
-                            pImpl->getXmLineNumber(),
-                            pImpl->getXmlFilename()));
+                    pImpl->m_elms.push_back(std::make_shared<CTFReaderECParamsElt>(
+                        name,
+                        pContainer,
+                        pImpl->getXmLineNumber(),
+                        pImpl->getXmlFilename()));
                 }
-                else if (SupportedElement(name, pElt, TAG_GAMMA_PARAMS, TAG_GAMMA,
-                                          recognizedName) ||
-                         SupportedElement(name, pElt, TAG_EXPONENT_PARAMS, TAG_EXPONENT,
-                                          recognizedName))
+                else if (
+                    SupportedElement(name, pElt, TAG_GAMMA_PARAMS, TAG_GAMMA, recognizedName)
+                    || SupportedElement(
+                        name,
+                        pElt,
+                        TAG_EXPONENT_PARAMS,
+                        TAG_EXPONENT,
+                        recognizedName))
                 {
-                    CTFReaderGammaElt * pGamma = dynamic_cast<CTFReaderGammaElt*>(pContainer.get());
-                    pImpl->m_elms.push_back(
-                        pGamma->createGammaParamsElt(
-                            name,
-                            pContainer,
-                            pImpl->getXmLineNumber(),
-                            pImpl->getXmlFilename()));
+                    CTFReaderGammaElt * pGamma
+                        = dynamic_cast<CTFReaderGammaElt *>(pContainer.get());
+                    pImpl->m_elms.push_back(pGamma->createGammaParamsElt(
+                        name,
+                        pContainer,
+                        pImpl->getXmLineNumber(),
+                        pImpl->getXmlFilename()));
                 }
-                else if (SupportedElement(name, pElt, TAG_INDEX_MAP, TAG_LUT1D, recognizedName) ||
-                         SupportedElement(name, pElt, TAG_INDEX_MAP, TAG_LUT3D, recognizedName))
+                else if (
+                    SupportedElement(name, pElt, TAG_INDEX_MAP, TAG_LUT1D, recognizedName)
+                    || SupportedElement(name, pElt, TAG_INDEX_MAP, TAG_LUT3D, recognizedName))
                 {
                     auto pA = std::dynamic_pointer_cast<CTFIndexMapMgt>(pContainer);
                     if (!pA || pA->isCompletedIM())
                     {
                         if (!pA)
                         {
-                            pImpl->m_elms.push_back(
-                                std::make_shared<XmlReaderDummyElt>(
-                                    name,
-                                    (pImpl->m_elms.empty() ? 0 : pImpl->m_elms.back()),
-                                    pImpl->getXmLineNumber(),
-                                    pImpl->getXmlFilename(),
-                                    "IndexMap not allowed in this element"));
+                            pImpl->m_elms.push_back(std::make_shared<XmlReaderDummyElt>(
+                                name,
+                                (pImpl->m_elms.empty() ? 0 : pImpl->m_elms.back()),
+                                pImpl->getXmLineNumber(),
+                                pImpl->getXmlFilename(),
+                                "IndexMap not allowed in this element"));
                         }
                         else
                         {
@@ -763,88 +746,84 @@ private:
                     }
                     else
                     {
-                        pImpl->m_elms.push_back(
-                            std::make_shared<CTFReaderIndexMapElt>(
-                                name, pContainer,
-                                pImpl->getXmLineNumber(),
-                                pImpl->getXmlFilename()));
+                        pImpl->m_elms.push_back(std::make_shared<CTFReaderIndexMapElt>(
+                            name,
+                            pContainer,
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename()));
                     }
-
                 }
-                else if (SupportedElement(name, pElt, TAG_INFO, 
-                                          TAG_PROCESS_LIST, recognizedName))
+                else if (SupportedElement(name, pElt, TAG_INFO, TAG_PROCESS_LIST, recognizedName))
                 {
-                    pImpl->m_elms.push_back(
-                        std::make_shared<CTFReaderInfoElt>(
-                            name,
-                            pContainer,
-                            pImpl->getXmLineNumber(),
-                            pImpl->getXmlFilename()));
+                    pImpl->m_elms.push_back(std::make_shared<CTFReaderInfoElt>(
+                        name,
+                        pContainer,
+                        pImpl->getXmLineNumber(),
+                        pImpl->getXmlFilename()));
                 }
-                else if (SupportedElement(name, pElt, METADATA_INPUT_DESCRIPTOR,
-                                          TAG_PROCESS_LIST, recognizedName))
+                else if (SupportedElement(
+                             name,
+                             pElt,
+                             METADATA_INPUT_DESCRIPTOR,
+                             TAG_PROCESS_LIST,
+                             recognizedName))
                 {
-                    pImpl->m_elms.push_back(
-                        std::make_shared<CTFReaderInputDescriptorElt>(
-                            name,
-                            pContainer,
-                            pImpl->getXmLineNumber(),
-                            pImpl->getXmlFilename()));
+                    pImpl->m_elms.push_back(std::make_shared<CTFReaderInputDescriptorElt>(
+                        name,
+                        pContainer,
+                        pImpl->getXmLineNumber(),
+                        pImpl->getXmlFilename()));
                 }
-                else if (SupportedElement(name, pElt, TAG_LOG_PARAMS,
-                                          TAG_LOG, recognizedName))
+                else if (SupportedElement(name, pElt, TAG_LOG_PARAMS, TAG_LOG, recognizedName))
                 {
-                    auto pLog = std::dynamic_pointer_cast<CTFReaderLogElt>(pContainer);
+                    auto pLog        = std::dynamic_pointer_cast<CTFReaderLogElt>(pContainer);
                     const auto style = pLog->getCTFParams().m_style;
-                    if (!(style == LogUtil::LOG_TO_LIN || style == LogUtil::LIN_TO_LOG ||
-                          style == LogUtil::CAMERA_LOG_TO_LIN ||
-                          style == LogUtil::CAMERA_LIN_TO_LOG))
+                    if (!(style == LogUtil::LOG_TO_LIN || style == LogUtil::LIN_TO_LOG
+                          || style == LogUtil::CAMERA_LOG_TO_LIN
+                          || style == LogUtil::CAMERA_LIN_TO_LOG))
                     {
-                        pImpl->m_elms.push_back(
-                            std::make_shared<XmlReaderDummyElt>(
-                                name,
-                                (pImpl->m_elms.empty() ? 0 : pImpl->m_elms.back()),
-                                pImpl->getXmLineNumber(),
-                                pImpl->getXmlFilename(),
-                                "Log Params not allowed in this element"));
+                        pImpl->m_elms.push_back(std::make_shared<XmlReaderDummyElt>(
+                            name,
+                            (pImpl->m_elms.empty() ? 0 : pImpl->m_elms.back()),
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename(),
+                            "Log Params not allowed in this element"));
                     }
                     else
                     {
-                        pImpl->m_elms.push_back(
-                            pLog->createLogParamsElt(
-                                name,
-                                pContainer,
-                                pImpl->getXmLineNumber(),
-                                pImpl->getXmlFilename()));
+                        pImpl->m_elms.push_back(pLog->createLogParamsElt(
+                            name,
+                            pContainer,
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename()));
                     }
                 }
-                else if (SupportedElement(name, pElt, METADATA_OUTPUT_DESCRIPTOR,
-                                          TAG_PROCESS_LIST, recognizedName))
+                else if (SupportedElement(
+                             name,
+                             pElt,
+                             METADATA_OUTPUT_DESCRIPTOR,
+                             TAG_PROCESS_LIST,
+                             recognizedName))
                 {
-                    pImpl->m_elms.push_back(
-                        std::make_shared<CTFReaderOutputDescriptorElt>(
-                            name,
-                            pContainer,
-                            pImpl->getXmLineNumber(),
-                            pImpl->getXmlFilename()));
+                    pImpl->m_elms.push_back(std::make_shared<CTFReaderOutputDescriptorElt>(
+                        name,
+                        pContainer,
+                        pImpl->getXmLineNumber(),
+                        pImpl->getXmlFilename()));
                 }
-                else if (SupportedElement(name, pElt, rangeSubElements,
-                                          TAG_RANGE, recognizedName))
+                else if (SupportedElement(name, pElt, rangeSubElements, TAG_RANGE, recognizedName))
                 {
-                    pImpl->m_elms.push_back(
-                        std::make_shared<CTFReaderRangeValueElt>(
-                            name,
-                            pContainer,
-                            pImpl->getXmLineNumber(),
-                            pImpl->getXmlFilename()));
+                    pImpl->m_elms.push_back(std::make_shared<CTFReaderRangeValueElt>(
+                        name,
+                        pContainer,
+                        pImpl->getXmLineNumber(),
+                        pImpl->getXmlFilename()));
                 }
-                else if (SupportedElement(name, pElt, TAG_SATNODE,
-                                          TAG_CDL, recognizedName) ||
-                         SupportedElement(name, pElt, TAG_SATNODEALT,
-                                          TAG_CDL, recognizedName))
+                else if (
+                    SupportedElement(name, pElt, TAG_SATNODE, TAG_CDL, recognizedName)
+                    || SupportedElement(name, pElt, TAG_SATNODEALT, TAG_CDL, recognizedName))
                 {
-                    auto pCDL =
-                        std::dynamic_pointer_cast<CTFReaderCDLElt>(pContainer);
+                    auto pCDL = std::dynamic_pointer_cast<CTFReaderCDLElt>(pContainer);
 
                     auto satNodeElt = std::make_shared<CTFReaderSatNodeElt>(
                         name,
@@ -853,21 +832,17 @@ private:
                         pImpl->getXmlFilename());
                     pImpl->m_elms.push_back(satNodeElt);
                 }
-                else if (SupportedElement(name, pElt, TAG_SATURATION,
-                                          TAG_SATNODE, recognizedName))
+                else if (SupportedElement(name, pElt, TAG_SATURATION, TAG_SATNODE, recognizedName))
                 {
-                    pImpl->m_elms.push_back(
-                        std::make_shared<XmlReaderSaturationElt>(
-                            name,
-                            pContainer,
-                            pImpl->getXmLineNumber(),
-                            pImpl->getXmlFilename()));
+                    pImpl->m_elms.push_back(std::make_shared<XmlReaderSaturationElt>(
+                        name,
+                        pContainer,
+                        pImpl->getXmLineNumber(),
+                        pImpl->getXmlFilename()));
                 }
-                else if (SupportedElement(name, pElt, TAG_SOPNODE,
-                                          TAG_CDL, recognizedName))
+                else if (SupportedElement(name, pElt, TAG_SOPNODE, TAG_CDL, recognizedName))
                 {
-                    auto pCDL =
-                        std::dynamic_pointer_cast<CTFReaderCDLElt>(pContainer);
+                    auto pCDL = std::dynamic_pointer_cast<CTFReaderCDLElt>(pContainer);
 
                     auto sopNodeElt = std::make_shared<CTFReaderSOPNodeElt>(
                         name,
@@ -876,65 +851,78 @@ private:
                         pImpl->getXmlFilename());
                     pImpl->m_elms.push_back(sopNodeElt);
                 }
-                else if (SupportedElement(name, pElt, sopSubElements,
-                                          TAG_SOPNODE, recognizedName))
+                else if (SupportedElement(name, pElt, sopSubElements, TAG_SOPNODE, recognizedName))
                 {
-                    pImpl->m_elms.push_back(
-                        std::make_shared<XmlReaderSOPValueElt>(
-                            name,
-                            pContainer,
-                            pImpl->getXmLineNumber(),
-                            pImpl->getXmlFilename()));
+                    pImpl->m_elms.push_back(std::make_shared<XmlReaderSOPValueElt>(
+                        name,
+                        pContainer,
+                        pImpl->getXmLineNumber(),
+                        pImpl->getXmlFilename()));
                 }
-                else if (SupportedElement(name, pElt, gradingPrimarySubElements,
-                                          TAG_PRIMARY, recognizedName))
+                else if (SupportedElement(
+                             name,
+                             pElt,
+                             gradingPrimarySubElements,
+                             TAG_PRIMARY,
+                             recognizedName))
                 {
-                    pImpl->m_elms.push_back(
-                        std::make_shared<CTFReaderGradingPrimaryParamElt>(
-                            name,
-                            pContainer,
-                            pImpl->getXmLineNumber(),
-                            pImpl->getXmlFilename()));
+                    pImpl->m_elms.push_back(std::make_shared<CTFReaderGradingPrimaryParamElt>(
+                        name,
+                        pContainer,
+                        pImpl->getXmLineNumber(),
+                        pImpl->getXmlFilename()));
                 }
-                else if (SupportedElement(name, pElt, gradingRGBCurveSubElements,
-                                          TAG_RGB_CURVE, recognizedName))
+                else if (SupportedElement(
+                             name,
+                             pElt,
+                             gradingRGBCurveSubElements,
+                             TAG_RGB_CURVE,
+                             recognizedName))
                 {
-                    pImpl->m_elms.push_back(
-                        std::make_shared<CTFReaderGradingCurveElt>(
-                            name,
-                            pContainer,
-                            pImpl->getXmLineNumber(),
-                            pImpl->getXmlFilename()));
+                    pImpl->m_elms.push_back(std::make_shared<CTFReaderGradingCurveElt>(
+                        name,
+                        pContainer,
+                        pImpl->getXmLineNumber(),
+                        pImpl->getXmlFilename()));
                 }
-                else if (SupportedElement(name, pElt, TAG_CURVE_CTRL_PNTS,
-                                          gradingRGBCurveSubElements, recognizedName))
+                else if (SupportedElement(
+                             name,
+                             pElt,
+                             TAG_CURVE_CTRL_PNTS,
+                             gradingRGBCurveSubElements,
+                             recognizedName))
                 {
-                    pImpl->m_elms.push_back(
-                        std::make_shared<CTFReaderGradingCurvePointsElt>(
-                            name,
-                            pContainer,
-                            pImpl->getXmLineNumber(),
-                            pImpl->getXmlFilename()));
+                    pImpl->m_elms.push_back(std::make_shared<CTFReaderGradingCurvePointsElt>(
+                        name,
+                        pContainer,
+                        pImpl->getXmLineNumber(),
+                        pImpl->getXmlFilename()));
                 }
-                else if (SupportedElement(name, pElt, TAG_CURVE_SLOPES,
-                                          gradingRGBCurveSubElements, recognizedName))
+                else if (SupportedElement(
+                             name,
+                             pElt,
+                             TAG_CURVE_SLOPES,
+                             gradingRGBCurveSubElements,
+                             recognizedName))
                 {
-                    pImpl->m_elms.push_back(
-                        std::make_shared<CTFReaderGradingCurveSlopesElt>(
-                            name,
-                            pContainer,
-                            pImpl->getXmLineNumber(),
-                            pImpl->getXmlFilename()));
+                    pImpl->m_elms.push_back(std::make_shared<CTFReaderGradingCurveSlopesElt>(
+                        name,
+                        pContainer,
+                        pImpl->getXmLineNumber(),
+                        pImpl->getXmlFilename()));
                 }
-                else if (SupportedElement(name, pElt, gradingToneSubElements,
-                                          TAG_TONE, recognizedName))
+                else if (SupportedElement(
+                             name,
+                             pElt,
+                             gradingToneSubElements,
+                             TAG_TONE,
+                             recognizedName))
                 {
-                    pImpl->m_elms.push_back(
-                        std::make_shared<CTFReaderGradingToneParamElt>(
-                            name,
-                            pContainer,
-                            pImpl->getXmLineNumber(),
-                            pImpl->getXmlFilename()));
+                    pImpl->m_elms.push_back(std::make_shared<CTFReaderGradingToneParamElt>(
+                        name,
+                        pContainer,
+                        pImpl->getXmLineNumber(),
+                        pImpl->getXmlFilename()));
                 }
                 else
                 {
@@ -943,23 +931,21 @@ private:
                         std::ostringstream oss;
                         oss << "'" << name << "' not allowed in this element";
 
-                        pImpl->m_elms.push_back(
-                            std::make_shared<XmlReaderDummyElt>(
-                                name,
-                                (pImpl->m_elms.empty() ? 0 : pImpl->m_elms.back()),
-                                pImpl->getXmLineNumber(),
-                                pImpl->getXmlFilename(),
-                                oss.str().c_str()));
+                        pImpl->m_elms.push_back(std::make_shared<XmlReaderDummyElt>(
+                            name,
+                            (pImpl->m_elms.empty() ? 0 : pImpl->m_elms.back()),
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename(),
+                            oss.str().c_str()));
                     }
                     else
                     {
-                        pImpl->m_elms.push_back(
-                            std::make_shared<XmlReaderDummyElt>(
-                                name,
-                                (pImpl->m_elms.empty() ? 0 : pImpl->m_elms.back()),
-                                pImpl->getXmLineNumber(),
-                                pImpl->getXmlFilename(),
-                                "Unknown element"));
+                        pImpl->m_elms.push_back(std::make_shared<XmlReaderDummyElt>(
+                            name,
+                            (pImpl->m_elms.empty() ? 0 : pImpl->m_elms.back()),
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename(),
+                            "Unknown element"));
                     }
                 }
             }
@@ -969,10 +955,9 @@ private:
     }
 
     // End the parsing of one element.
-    static void EndElementHandler(void * userData,
-                                  const XML_Char * name)
+    static void EndElementHandler(void * userData, const XML_Char * name)
     {
-        XMLParserHelper * pImpl = (XMLParserHelper*)userData;
+        XMLParserHelper * pImpl = (XMLParserHelper *)userData;
         if (!pImpl || !name || !*name)
         {
             throw Exception("CTF/CLF internal parsing error.");
@@ -1021,8 +1006,7 @@ private:
             auto pParent = pImpl->m_elms.back();
 
             // Is it at the right location in the stack?
-            if (!pParent || !pParent->isContainer() ||
-                pParent != pPlainElt->getParent())
+            if (!pParent || !pParent->isContainer() || pParent != pPlainElt->getParent())
             {
                 std::stringstream ss;
                 ss << "CTF/CLF parsing error: Tag '";
@@ -1036,23 +1020,23 @@ private:
     }
 
     // Handle of strings within an element.
-    static void CharacterDataHandler(void * userData,
-                                     const XML_Char * s, 
-                                     int len)
+    static void CharacterDataHandler(void * userData, const XML_Char * s, int len)
     {
-        XMLParserHelper * pImpl = (XMLParserHelper*)userData;
+        XMLParserHelper * pImpl = (XMLParserHelper *)userData;
         if (!pImpl)
         {
             throw Exception("CTF/CLF internal parsing error.");
         }
 
-        if (len == 0) return;
-        if (len<0 || !s || !*s)
+        if (len == 0)
+            return;
+        if (len < 0 || !s || !*s)
         {
             pImpl->throwMessage("CTF/CLF parsing error: attribute illegal. ");
         }
         // Parsing a single new line. This is valid.
-        if (len == 1 && s[0] == '\n') return;
+        if (len == 1 && s[0] == '\n')
+            return;
 
         auto pElt = pImpl->m_elms.back();
         if (!pElt)
@@ -1064,8 +1048,7 @@ private:
             pImpl->throwMessage(oss.str());
         }
 
-        auto pDescriptionElt =
-            std::dynamic_pointer_cast<XmlReaderDescriptionElt>(pElt);
+        auto pDescriptionElt = std::dynamic_pointer_cast<XmlReaderDescriptionElt>(pElt);
         if (pDescriptionElt)
         {
             pDescriptionElt->setRawData(s, len, pImpl->getXmLineNumber());
@@ -1074,20 +1057,18 @@ private:
         {
             // Strip white spaces.
             size_t start = 0;
-            size_t end = len;
+            size_t end   = len;
             FindSubString(s, len, start, end);
 
-            if (end>0)
+            if (end > 0)
             {
                 // CTFReaderMetadataElt is a special element: it is used
                 // to process container elements, but it is also used to
                 // process the terminal/plain elements.
-                auto pMetadataElt =
-                    std::dynamic_pointer_cast<CTFReaderMetadataElt>(pElt);
+                auto pMetadataElt = std::dynamic_pointer_cast<CTFReaderMetadataElt>(pElt);
                 if (pMetadataElt)
                 {
-                    pMetadataElt->setRawData(s + start, end - start,
-                                             pImpl->getXmLineNumber());
+                    pMetadataElt->setRawData(s + start, end - start, pImpl->getXmLineNumber());
                 }
                 else
                 {
@@ -1100,8 +1081,7 @@ private:
                         pImpl->throwMessage(oss.str());
                     }
 
-                    auto pPlainElt = 
-                        std::dynamic_pointer_cast<XmlReaderPlainElt>(pElt);
+                    auto pPlainElt = std::dynamic_pointer_cast<XmlReaderPlainElt>(pElt);
                     if (!pPlainElt)
                     {
                         std::ostringstream oss;
@@ -1110,27 +1090,17 @@ private:
                         oss << "'.";
                         pImpl->throwMessage(oss.str());
                     }
-                    pPlainElt->setRawData(s + start, end - start,
-                                          pImpl->getXmLineNumber());
+                    pPlainElt->setRawData(s + start, end - start, pImpl->getXmLineNumber());
                 }
             }
         }
     }
 
-    unsigned int getXmLineNumber() const
-    {
-        return m_lineNumber;
-    }
+    unsigned int getXmLineNumber() const { return m_lineNumber; }
 
-    const std::string & getXmlFilename() const
-    {
-        return m_fileName;
-    }
+    const std::string & getXmlFilename() const { return m_fileName; }
 
-    bool isCLF() const
-    {
-        return m_isCLF;
-    }
+    bool isCLF() const { return m_isCLF; }
 
     XML_Parser m_parser;
     unsigned int m_lineNumber;
@@ -1138,7 +1108,6 @@ private:
     bool m_isCLF;
     XmlReaderElementStack m_elms; // Parsing stack
     CTFReaderTransformPtr m_transform;
-
 };
 
 bool isLoadableCTF(std::istream & istream)
@@ -1146,8 +1115,8 @@ bool isLoadableCTF(std::istream & istream)
     std::streampos curPos = istream.tellg();
 
     const unsigned limit(5 * 1024); // 5 kilobytes.
-    const char *pattern = "<ProcessList";
-    bool foundPattern = false;
+    const char * pattern = "<ProcessList";
+    bool foundPattern    = false;
     unsigned sizeProcessed(0);
     char line[limit + 1];
 
@@ -1158,7 +1127,8 @@ bool isLoadableCTF(std::istream & istream)
         while (istream.good() && !foundPattern && (sizeProcessed < limit))
         {
             istream.getline(line, limit);
-            if (strstr(line, pattern)) foundPattern = true;
+            if (strstr(line, pattern))
+                foundPattern = true;
             sizeProcessed += (unsigned)strlen(line);
         }
     }
@@ -1170,9 +1140,10 @@ bool isLoadableCTF(std::istream & istream)
 
 // Try and load the format.
 // Raise an exception if it can't be loaded.
-CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
-                                      const std::string & filePath,
-                                      Interpolation /*interp*/) const
+CachedFileRcPtr LocalFileFormat::read(
+    std::istream & istream,
+    const std::string & filePath,
+    Interpolation /*interp*/) const
 {
     if (!isLoadableCTF(istream))
     {
@@ -1188,17 +1159,18 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 
     // Keep transform.
     cachedFile->m_transform = parser.getTransform();
-    cachedFile->m_filePath = filePath;
+    cachedFile->m_filePath  = filePath;
 
     return cachedFile;
 }
 
 // Helper called by LocalFileFormat::buildFileOps
-void BuildOp(OpRcPtrVec & ops,
-             const Config& config,
-             const ConstContextRcPtr & context,
-             const ConstOpDataRcPtr & opData,
-             TransformDirection dir)
+void BuildOp(
+    OpRcPtrVec & ops,
+    const Config & config,
+    const ConstContextRcPtr & context,
+    const ConstOpDataRcPtr & opData,
+    TransformDirection dir)
 {
     if (opData->getType() == OpData::ReferenceType)
     {
@@ -1206,7 +1178,7 @@ void BuildOp(OpRcPtrVec & ops,
         ConstReferenceOpDataRcPtr ref = DynamicPtrCast<const ReferenceOpData>(opData);
         if (ref->getReferenceStyle() == REF_PATH)
         {
-            dir = CombineTransformDirections(dir, ref->getDirection());
+            dir                              = CombineTransformDirections(dir, ref->getDirection());
             FileTransformRcPtr fileTransform = FileTransform::Create();
             fileTransform->setInterpolation(INTERP_DEFAULT);
             fileTransform->setDirection(TRANSFORM_DIR_FORWARD);
@@ -1223,23 +1195,21 @@ void BuildOp(OpRcPtrVec & ops,
     {
         CreateOpVecFromOpData(ops, opData, dir);
     }
-
 }
 
 // CLF/CTF is different from other formats because the syntax allows specifying an interpolation
 // method in the file itself. If a LUT does specify an interpolation, use it. If it does not
 // (cached LUT interpolation is DEFAULT), then use the FileTransform interpolation if it is valid.
 template <class Lut>
-void HandleLUTInterpolation(ConstOpDataRcPtr & opData,
-                            Interpolation fileInterp)
+void HandleLUTInterpolation(ConstOpDataRcPtr & opData, Interpolation fileInterp)
 {
     auto lut = OCIO_DYNAMIC_POINTER_CAST<const Lut>(opData);
     if (Lut::IsValidInterpolation(fileInterp))
     {
         const auto lutInterpolation = lut->getInterpolation();
-        if (lutInterpolation == INTERP_DEFAULT &&
-            Lut::GetConcreteInterpolation(lutInterpolation) !=
-            Lut::GetConcreteInterpolation(fileInterp))
+        if (lutInterpolation == INTERP_DEFAULT
+            && Lut::GetConcreteInterpolation(lutInterpolation)
+                   != Lut::GetConcreteInterpolation(fileInterp))
         {
             // The FileTransform interpolation does not match the cached file LUT interpolation,
             // so clone the LUT.
@@ -1263,17 +1233,18 @@ void HandleLUT(ConstOpDataRcPtr & opData, Interpolation fileInterp)
     }
 }
 
-void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
-                                   const Config& config,
-                                   const ConstContextRcPtr & context,
-                                   CachedFileRcPtr untypedCachedFile,
-                                   const FileTransform& fileTransform,
-                                   TransformDirection dir) const
+void LocalFileFormat::buildFileOps(
+    OpRcPtrVec & ops,
+    const Config & config,
+    const ConstContextRcPtr & context,
+    CachedFileRcPtr untypedCachedFile,
+    const FileTransform & fileTransform,
+    TransformDirection dir) const
 {
     LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
 
     // This should never happen.
-    if(!cachedFile)
+    if (!cachedFile)
     {
         throw Exception("Cannot build clf ops. Invalid cache type.");
     }
@@ -1295,26 +1266,26 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 
     switch (newDir)
     {
-    case TRANSFORM_DIR_FORWARD:
-    {
-        for (auto opData : opDataVec)
+        case TRANSFORM_DIR_FORWARD:
         {
-            // Note: HandleLUT does nothing if opData is not a LUT.
-            HandleLUT(opData, fileInterpolation);
-            BuildOp(ops, config, context, opData, newDir);
+            for (auto opData : opDataVec)
+            {
+                // Note: HandleLUT does nothing if opData is not a LUT.
+                HandleLUT(opData, fileInterpolation);
+                BuildOp(ops, config, context, opData, newDir);
+            }
+            break;
         }
-        break;
-    }
-    case TRANSFORM_DIR_INVERSE:
-    {
-        for (int idx = (int)opDataVec.size() - 1; idx >= 0; --idx)
+        case TRANSFORM_DIR_INVERSE:
         {
-            auto opData = opDataVec[idx];
-            HandleLUT(opData, fileInterpolation);
-            BuildOp(ops, config, context, opData, newDir);
+            for (int idx = (int)opDataVec.size() - 1; idx >= 0; --idx)
+            {
+                auto opData = opDataVec[idx];
+                HandleLUT(opData, fileInterpolation);
+                BuildOp(ops, config, context, opData, newDir);
+            }
+            break;
         }
-        break;
-    }
     }
 }
 
@@ -1324,9 +1295,10 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 // TODO: The CLF format is more powerful than those older formats and there is
 // no need to be limited to a Lut1D + Lut3D structure -- more ops could be used
 // when necessary for a more accurate bake.
-void LocalFileFormat::bake(const Baker & baker,
-                           const std::string & formatName,
-                           std::ostream & ostream) const
+void LocalFileFormat::bake(
+    const Baker & baker,
+    const std::string & formatName,
+    std::ostream & ostream) const
 {
     static constexpr int DEFAULT_1D_SIZE = 4096;
     static constexpr int DEFAULT_3D_SIZE = 64;
@@ -1367,8 +1339,8 @@ void LocalFileFormat::bake(const Baker & baker,
     // Determine required LUT type.
     //
 
-    constexpr int CTF_1D = 1;    // 1D LUT version number
-    constexpr int CTF_3D = 2;    // 3D LUT version number
+    constexpr int CTF_1D    = 1; // 1D LUT version number
+    constexpr int CTF_3D    = 2; // 3D LUT version number
     constexpr int CTF_1D_3D = 3; // 3D LUT with 1D prelut
 
     int required_lut = -1;
@@ -1406,7 +1378,7 @@ void LocalFileFormat::bake(const Baker & baker,
 
     Lut1DOpDataRcPtr shaperLut;
     float fromInStart = 0.0f;
-    float fromInEnd = 1.0f;
+    float fromInEnd   = 1.0f;
 
     if (required_lut == CTF_1D_3D)
     {
@@ -1415,8 +1387,8 @@ void LocalFileFormat::bake(const Baker & baker,
         {
             // Generate the identity shaper values, then apply the transform.
             // Using a half-domain to accurately handle floating-point, linear-space inputs.
-            shaperLut = std::make_shared<Lut1DOpData>(Lut1DOpData::LUT_INPUT_HALF_CODE,
-                                                      65536, true);
+            shaperLut
+                = std::make_shared<Lut1DOpData>(Lut1DOpData::LUT_INPUT_HALF_CODE, 65536, true);
         }
         else
         {
@@ -1428,11 +1400,14 @@ void LocalFileFormat::bake(const Baker & baker,
             {
                 GenerateLinearScaleLut1D(
                     shaperLut->getArray().getValues().data(),
-                    shaperSizeRequest, 3, fromInStart, fromInEnd);
+                    shaperSizeRequest,
+                    3,
+                    fromInStart,
+                    fromInEnd);
             }
         }
         const auto shaperSize = shaperLut->getArray().getLength();
-        PackedImageDesc shaperImg(shaperLut->getArray().getValues().data(),shaperSize, 1, 3);
+        PackedImageDesc shaperImg(shaperLut->getArray().getValues().data(), shaperSize, 1, 3);
         ConstCPUProcessorRcPtr inputToShaper = GetInputToShaperProcessor(baker);
         inputToShaper->apply(shaperImg);
     }
@@ -1444,9 +1419,9 @@ void LocalFileFormat::bake(const Baker & baker,
     std::vector<float> cubeData;
     if (required_lut == CTF_3D || required_lut == CTF_1D_3D)
     {
-        cubeData.resize(cubeSize*cubeSize*cubeSize * 3);
+        cubeData.resize(cubeSize * cubeSize * cubeSize * 3);
         GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_BLUE);
-        PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
+        PackedImageDesc cubeImg(&cubeData[0], cubeSize * cubeSize * cubeSize, 1, 3);
 
         ConstCPUProcessorRcPtr cubeProc;
         if (required_lut == CTF_1D_3D)
@@ -1467,7 +1442,7 @@ void LocalFileFormat::bake(const Baker & baker,
 
     std::vector<float> onedData;
 
-    if(required_lut == CTF_1D)
+    if (required_lut == CTF_1D)
     {
         onedData.resize(onedSize * 3);
 
@@ -1498,7 +1473,7 @@ void LocalFileFormat::bake(const Baker & baker,
         {
             CreateRangeOp(ops, fromInStart, fromInEnd, 0, 1, TRANSFORM_DIR_FORWARD);
         }
-        Lut1DOpDataRcPtr lut1D = std::make_shared<Lut1DOpData>((unsigned long)onedSize);
+        Lut1DOpDataRcPtr lut1D        = std::make_shared<Lut1DOpData>((unsigned long)onedSize);
         lut1D->getArray().getValues() = onedData;
         CreateLut1DOp(ops, lut1D, TRANSFORM_DIR_FORWARD);
     }
@@ -1514,7 +1489,7 @@ void LocalFileFormat::bake(const Baker & baker,
     // 3D data.
     if (required_lut == CTF_3D || required_lut == CTF_1D_3D)
     {
-        Lut3DOpDataRcPtr lut3D = std::make_shared<Lut3DOpData>((unsigned long)cubeSize);
+        Lut3DOpDataRcPtr lut3D        = std::make_shared<Lut3DOpData>((unsigned long)cubeSize);
         lut3D->getArray().getValues() = cubeData;
         CreateLut3DOp(ops, lut3D, TRANSFORM_DIR_FORWARD);
     }
@@ -1525,16 +1500,17 @@ void LocalFileFormat::bake(const Baker & baker,
     {
         CreateTransform(group, op);
     }
-    const auto & metadata = baker.getFormatMetadata();
+    const auto & metadata      = baker.getFormatMetadata();
     group->getFormatMetadata() = metadata;
     write(config, config->getCurrentContext(), *group, formatName, ostream);
 }
 
-void LocalFileFormat::write(const ConstConfigRcPtr & config,
-                            const ConstContextRcPtr & context,
-                            const GroupTransform & group,
-                            const std::string & formatName,
-                            std::ostream & ostream) const
+void LocalFileFormat::write(
+    const ConstConfigRcPtr & config,
+    const ConstContextRcPtr & context,
+    const GroupTransform & group,
+    const std::string & formatName,
+    std::ostream & ostream) const
 {
     bool isCLF = false;
     if (Platform::Strcasecmp(formatName.c_str(), FILEFORMAT_CLF) == 0)
@@ -1559,7 +1535,7 @@ void LocalFileFormat::write(const ConstConfigRcPtr & config,
     ops.optimize(OPTIMIZATION_NONE);
 
     const FormatMetadataImpl & metadata = group.getFormatMetadata();
-    CTFReaderTransformPtr transform = std::make_shared<CTFReaderTransform>(ops, metadata);
+    CTFReaderTransformPtr transform     = std::make_shared<CTFReaderTransform>(ops, metadata);
 
     // Write XML Header.
     ostream << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl;
@@ -1575,6 +1551,5 @@ FileFormat * CreateFileFormatCLF()
 {
     return new LocalFileFormat();
 }
-
 
 } // namespace OCIO_NAMESPACE

@@ -5,9 +5,9 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "ops/exposurecontrast/ExposureContrastOp.h"
 #include "ops/exposurecontrast/ExposureContrastOpCPU.h"
 #include "ops/exposurecontrast/ExposureContrastOpGPU.h"
-#include "ops/exposurecontrast/ExposureContrastOp.h"
 #include "transforms/ExposureContrastTransform.h"
 
 namespace OCIO_NAMESPACE
@@ -23,7 +23,7 @@ typedef OCIO_SHARED_PTR<const ExposureContrastOp> ConstExposureContrastOpRcPtr;
 class ExposureContrastOp : public Op
 {
 public:
-    ExposureContrastOp() = delete;
+    ExposureContrastOp()                           = delete;
     ExposureContrastOp(const ExposureContrastOp &) = delete;
     explicit ExposureContrastOp(ExposureContrastOpDataRcPtr & ec);
 
@@ -44,7 +44,8 @@ public:
     bool isDynamic() const override;
     bool hasDynamicProperty(DynamicPropertyType type) const override;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const override;
-    void replaceDynamicProperty(DynamicPropertyType type, DynamicPropertyDoubleImplRcPtr & prop) override;
+    void replaceDynamicProperty(DynamicPropertyType type, DynamicPropertyDoubleImplRcPtr & prop)
+        override;
     void removeDynamicProperties() override;
 
     ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
@@ -56,12 +57,8 @@ protected:
     {
         return DynamicPtrCast<const ExposureContrastOpData>(data());
     }
-    ExposureContrastOpDataRcPtr ecData()
-    {
-        return DynamicPtrCast<ExposureContrastOpData>(data());
-    }
+    ExposureContrastOpDataRcPtr ecData() { return DynamicPtrCast<ExposureContrastOpData>(data()); }
 };
-
 
 ExposureContrastOp::ExposureContrastOp(ExposureContrastOpDataRcPtr & ec)
     : Op()
@@ -98,7 +95,8 @@ bool ExposureContrastOp::isSameType(ConstOpRcPtr & op) const
 bool ExposureContrastOp::isInverse(ConstOpRcPtr & op) const
 {
     ConstExposureContrastOpRcPtr typedRcPtr = DynamicPtrCast<const ExposureContrastOp>(op);
-    if (!typedRcPtr) return false;
+    if (!typedRcPtr)
+        return false;
 
     ConstExposureContrastOpDataRcPtr ecOpData = typedRcPtr->ecData();
     return ecData()->isInverse(ecOpData);
@@ -156,8 +154,9 @@ DynamicPropertyRcPtr ExposureContrastOp::getDynamicProperty(DynamicPropertyType 
     return ecData()->getDynamicProperty(type);
 }
 
-void ExposureContrastOp::replaceDynamicProperty(DynamicPropertyType type,
-                                                DynamicPropertyDoubleImplRcPtr & prop)
+void ExposureContrastOp::replaceDynamicProperty(
+    DynamicPropertyType type,
+    DynamicPropertyDoubleImplRcPtr & prop)
 {
     ecData()->replaceDynamicProperty(type, prop);
 }
@@ -167,28 +166,28 @@ void ExposureContrastOp::removeDynamicProperties()
     ecData()->removeDynamicProperties();
 }
 
-}  // Anon namespace
-
+} // namespace
 
 ///////////////////////////////////////////////////////////////////////////
 
-void CreateExposureContrastOp(OpRcPtrVec & ops,
-                              ExposureContrastOpDataRcPtr & data,
-                              TransformDirection direction)
+void CreateExposureContrastOp(
+    OpRcPtrVec & ops,
+    ExposureContrastOpDataRcPtr & data,
+    TransformDirection direction)
 {
     switch (direction)
     {
-    case TRANSFORM_DIR_FORWARD:
-    {
-        ops.push_back(std::make_shared<ExposureContrastOp>(data));
-        break;
-    }
-    case TRANSFORM_DIR_INVERSE:
-    {
-        ExposureContrastOpDataRcPtr dataInv = data->inverse();
-        ops.push_back(std::make_shared<ExposureContrastOp>(dataInv));
-        break;
-    }
+        case TRANSFORM_DIR_FORWARD:
+        {
+            ops.push_back(std::make_shared<ExposureContrastOp>(data));
+            break;
+        }
+        case TRANSFORM_DIR_INVERSE:
+        {
+            ExposureContrastOpDataRcPtr dataInv = data->inverse();
+            ops.push_back(std::make_shared<ExposureContrastOp>(dataInv));
+            break;
+        }
     }
 }
 
@@ -201,17 +200,18 @@ void CreateExposureContrastTransform(GroupTransformRcPtr & group, ConstOpRcPtr &
     {
         throw Exception("CreateExposureContrastTransform: op has to be a ExposureContrastOp");
     }
-    auto ecData = DynamicPtrCast<const ExposureContrastOpData>(op->data());
+    auto ecData      = DynamicPtrCast<const ExposureContrastOpData>(op->data());
     auto ecTransform = ExposureContrastTransform::Create();
-    auto & data = dynamic_cast<ExposureContrastTransformImpl *>(ecTransform.get())->data();
-    data = *ecData;
+    auto & data      = dynamic_cast<ExposureContrastTransformImpl *>(ecTransform.get())->data();
+    data             = *ecData;
 
     group->appendTransform(ecTransform);
 }
 
-void BuildExposureContrastOp(OpRcPtrVec & ops,
-                             const ExposureContrastTransform & transform,
-                             TransformDirection dir)
+void BuildExposureContrastOp(
+    OpRcPtrVec & ops,
+    const ExposureContrastTransform & transform,
+    TransformDirection dir)
 {
     const auto & data = dynamic_cast<const ExposureContrastTransformImpl &>(transform).data();
     data.validate();
@@ -221,4 +221,3 @@ void BuildExposureContrastOp(OpRcPtrVec & ops,
 }
 
 } // namespace OCIO_NAMESPACE
-

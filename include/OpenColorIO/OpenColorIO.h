@@ -1,22 +1,21 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_OPENCOLORIO_H
 #define INCLUDED_OCIO_OPENCOLORIO_H
 
 #include <cstddef>
+#include <fstream>
 #include <iosfwd>
 #include <limits>
 #include <stdexcept>
 #include <string>
-#include <fstream>
 #include <vector>
 
 #include "OpenColorABI.h"
-#include "OpenColorTypes.h"
-#include "OpenColorTransforms.h"
 #include "OpenColorAppHelpers.h"
+#include "OpenColorTransforms.h"
+#include "OpenColorTypes.h"
 
 /*
 
@@ -64,8 +63,8 @@ namespace OCIO_NAMESPACE
 // Silence warning C4275 under Visual Studio:
 // Exceptions derive from std::runtime_error but STL classes are not exportable.
 #ifdef _MSC_VER
-#pragma warning( push )
-#pragma warning( disable : 4275 )
+#pragma warning(push)
+#pragma warning(disable : 4275)
 #endif
 
 /**
@@ -82,16 +81,16 @@ public:
     explicit Exception(const char *);
     /// Constructor that takes an existing exception.
     Exception(const Exception &);
-    Exception & operator= (const Exception &) = delete;
+    Exception & operator=(const Exception &) = delete;
 
     ~Exception();
 };
 
 /**
  * \brief An exception class for errors detected at runtime.
- * 
- * Thrown when OCIO cannot find a file that is expected to exist. This is provided as a custom 
- * type to distinguish cases where one wants to continue looking for missing files, but wants 
+ *
+ * Thrown when OCIO cannot find a file that is expected to exist. This is provided as a custom
+ * type to distinguish cases where one wants to continue looking for missing files, but wants
  * to properly fail for other error conditions.
  */
 class OCIOEXPORT ExceptionMissingFile : public Exception
@@ -102,14 +101,14 @@ public:
     explicit ExceptionMissingFile(const char *);
     /// Constructor that takes an existing exception.
     ExceptionMissingFile(const ExceptionMissingFile &);
-    ExceptionMissingFile & operator= (const ExceptionMissingFile &) = delete;
+    ExceptionMissingFile & operator=(const ExceptionMissingFile &) = delete;
 
     ~ExceptionMissingFile();
 };
 
 // Restore default warning behaviour for Visual Studio.
 #ifdef _MSC_VER
-#pragma warning( pop )
+#pragma warning(pop)
 #endif
 
 ///////////////////////////////////////////////////////////////////////////
@@ -125,18 +124,18 @@ public:
  * Under normal usage, this is not necessary, but it can be helpful in particular instances,
  * such as designing OCIO profiles, and wanting to re-read luts without restarting.
  *
- * \note 
+ * \note
  *   This method does not apply to instance-specific caches such as the Processor cache in
  *   a Config instance or the GPU and CPU Processor caches in a Processor instance. So in cases
- *   where you still have a Config instance after calling ClearAllCaches, you should also call 
+ *   where you still have a Config instance after calling ClearAllCaches, you should also call
  *   the Config's clearProcessorCache method.
  */
 extern OCIOEXPORT void ClearAllCaches();
 
 /**
- * \brief Get the version number for the library, as a dot-delimited string 
+ * \brief Get the version number for the library, as a dot-delimited string
  *     (e.g., "1.0.0").
- * 
+ *
  * This is also available at compile time as OCIO_VERSION_FULL_STR.
  */
 extern OCIOEXPORT const char * GetVersion();
@@ -145,14 +144,14 @@ extern OCIOEXPORT const char * GetVersion();
  * \brief Get the version number for the library, as a
  * single 4-byte hex number (e.g., 0x01050200 for "1.5.2"), to be used
  * for numeric comparisons.
- * 
+ *
  * This is also at compile time as OCIO_VERSION_HEX.
  */
 extern OCIOEXPORT int GetVersionHex();
 
 /**
  * \brief Get the global logging level.
- * 
+ *
  * You can override this at runtime using the \ref OCIO_LOGGING_LEVEL
  * environment variable. The client application that sets this should use
  * \ref SetLoggingLevel, and not the environment variable. The default value is INFO.
@@ -165,8 +164,8 @@ extern OCIOEXPORT void SetLoggingLevel(LoggingLevel level);
 /**
  * \brief Set the logging function to use; otherwise, use the default
  * (i.e. std::cerr).
- * 
- * \note 
+ *
+ * \note
  *     The logging mechanism is thread-safe.
  */
 extern OCIOEXPORT void SetLoggingFunction(LoggingFunction logFunction);
@@ -176,9 +175,9 @@ extern OCIOEXPORT void LogMessage(LoggingLevel level, const char * message);
 
 /**
  * \brief Set the Compute Hash Function to use; otherwise, use the default.
- * 
+ *
  * This is not used when using CreateFromFile with an OCIOZ archive or CreateFromConfigIOProxy.
- * 
+ *
  * \param ComputeHashFunction
  */
 extern OCIOEXPORT void SetComputeHashFunction(ComputeHashFunction hashFunction);
@@ -188,7 +187,7 @@ extern OCIOEXPORT void ResetComputeHashFunction();
 // Note that the following environment variable access methods are not thread safe.
 //
 
-/** 
+/**
  * Another call modifies the string obtained from a previous call as the method always uses the
  * same memory buffer.
  */
@@ -197,7 +196,7 @@ extern OCIOEXPORT const char * GetEnvVariable(const char * name);
 extern OCIOEXPORT void SetEnvVariable(const char * name, const char * value);
 /// \warning This method is not thread safe.
 extern OCIOEXPORT void UnsetEnvVariable(const char * name);
-//!cpp:function::
+//! cpp:function::
 extern OCIOEXPORT bool IsEnvVariablePresent(const char * name);
 
 /// Get the current configuration.
@@ -207,70 +206,67 @@ extern OCIOEXPORT ConstConfigRcPtr GetCurrentConfig();
 extern OCIOEXPORT void SetCurrentConfig(const ConstConfigRcPtr & config);
 
 /**
- * \brief Make a config path forward-compatible by replacing special built-in config names 
+ * \brief Make a config path forward-compatible by replacing special built-in config names
  *        with the current name.
- * 
- * Application developers should call this function on any config path they intend to persist 
+ *
+ * Application developers should call this function on any config path they intend to persist
  * (e.g., to include in a file saved from a DCC).
- * 
- * As the built-in config collection evolves, special names such as "ocio://default" and 
- * "ocio://studio-config-latest" will point to newer versions of those configs. Therefore, it is 
- * recommended that application developers not save those strings and instead save the string that 
- * refers to the current version of that config. That way, it's guaranteed that there will be no 
+ *
+ * As the built-in config collection evolves, special names such as "ocio://default" and
+ * "ocio://studio-config-latest" will point to newer versions of those configs. Therefore, it is
+ * recommended that application developers not save those strings and instead save the string that
+ * refers to the current version of that config. That way, it's guaranteed that there will be no
  * change of behavior in the future. For example, as of OCIO 2.3, "ocio://default" should be saved
  * as "ocio://cg-config-v2.1.0_aces-v1.3_ocio-v2.3".
- * 
- * Note that there is no validation done on the path. That is left to the application since 
+ *
+ * Note that there is no validation done on the path. That is left to the application since
  * typically the application will load the config before attempting to save its path
  * and therefore catch, for example, a badly formed URI such as "ocio:default".
- * 
+ *
  * \return Resolved path if possible. Otherwise, the original path is returned unmodified.
  */
 extern OCIOEXPORT const char * ResolveConfigPath(const char * originalPath) noexcept;
 
 /**
  * \brief Extract an OCIO Config archive.
- * 
+ *
  * Converts an archived config file (.ocioz file) back to its original form as a config file
  * and associated LUT files.  This creates destinationDir and then creates a config.ocio file
  * at the root of that working directory and then unpacks the LUT files into their relative
  * locations relative to that working directory, creating any necessary sub-directories in the
  * process.  Note that configs which contain LUT files outside the working directory are not
  * archivable, and so this function will not create directories outside the working directory.
- * 
+ *
  * \param archivePath Absolute path to the .ocioz file.
  * \param destinationDir Absolute path of the directory you want to be created to contain the
  * contents of the unarchived config.
  * \throw Exception If the archive is not found or there is a problem extracting it.
  */
-extern OCIOEXPORT void ExtractOCIOZArchive(
-    const char * archivePath, 
-    const char * destinationDir
-);
+extern OCIOEXPORT void ExtractOCIOZArchive(const char * archivePath, const char * destinationDir);
 
 /**
  * \brief
  * A config defines all the color spaces to be available at runtime.
  *
- * The color configuration (Config) is the main object for interacting with this library. It 
+ * The color configuration (Config) is the main object for interacting with this library. It
  * encapsulates all of the information necessary to use customized ColorSpaceTransform and
  * DisplayViewTransform operations.
  *
- * See the \ref user-guide for more information on selecting, creating, and working with custom 
+ * See the \ref user-guide for more information on selecting, creating, and working with custom
  * color configurations.
  *
  * For applications interested in using only one color config at a time (this is the vast majority
- * of apps), their API would traditionally get the global configuration and use that, as opposed 
- * to creating a new one. This simplifies the use case for plugins and bindings, as it alleviates 
+ * of apps), their API would traditionally get the global configuration and use that, as opposed
+ * to creating a new one. This simplifies the use case for plugins and bindings, as it alleviates
  * the need to pass around configuration handles.
  *
  * An example of an application where this would not be sufficient would be a multi-threaded image
- * proxy server (daemon), which wished to handle multiple show configurations in a single process 
+ * proxy server (daemon), which wished to handle multiple show configurations in a single process
  * concurrently. This app would need to keep multiple configurations alive, and to manage them
  * appropriately.
  *
- * Roughly speaking, a novice user should select a default configuration that most closely 
- * approximates the use case (animation, visual effects, etc.), and set the :envvar:`OCIO` 
+ * Roughly speaking, a novice user should select a default configuration that most closely
+ * approximates the use case (animation, visual effects, etc.), and set the :envvar:`OCIO`
  * environment variable to point at the root of that configuration.
  *
  * \note
@@ -283,8 +279,7 @@ extern OCIOEXPORT void ExtractOCIOZArchive(
 class OCIOEXPORT Config
 {
 public:
-
-    // 
+    //
     // Initialization
     //
 
@@ -298,7 +293,7 @@ public:
 
     /**
      * \brief Create a fall-back config.
-     * 
+     *
      * This may be useful to allow client apps to launch in cases when the
      * supplied config path is not loadable.
      * \return The Config object.
@@ -307,11 +302,11 @@ public:
 
     /**
      * \brief Create a configuration using the OCIO environment variable.
-     * 
+     *
      * Also supports the OCIO URI format for Built-in configs and supports archived configs.
      * See \ref Config::CreateFromFile.
-     * 
-     * If the variable is missing or empty, returns the same result as 
+     *
+     * If the variable is missing or empty, returns the same result as
      * \ref Config::CreateRaw.
      * \return The Config object.
      */
@@ -319,12 +314,12 @@ public:
 
     /**
      * \brief Create a configuration using a specific config file.
-     * 
+     *
      * Supports the OCIO URI format for Built-in configs.
      * See \ref Config::CreateFromBuiltinConfig.
      *
      * Supports archived configs (.ocioz files).
-     * 
+     *
      * \throw Exception If the file may not be read or does not parse.
      * \return The Config object.
      */
@@ -332,14 +327,14 @@ public:
 
     /**
      * \brief Create a configuration using a stream.
-     * 
+     *
      * Note that CreateFromStream does not set the working directory so the caller would need to
      * set that separately in order to resolve FileTransforms.  This function is typically only
      * used for self-contained configs (no LUTs).
      *
-     * Configs created from CreateFromStream can not be archived unless the working directory is 
+     * Configs created from CreateFromStream can not be archived unless the working directory is
      * set and contains any necessary LUT files.
-     * 
+     *
      * \param istream Stream to the config.
      * \throw Exception If the stream does not parse.
      * \return The Config object.
@@ -350,41 +345,41 @@ public:
      * \brief Create a config from the supplied ConfigIOProxy object. This allows the calling
      * program to directly provide the config and associated LUTs rather than reading them from
      * the standard file system.
-     * 
+     *
      * See the \ref ConfigIOProxy class documentation for more info.
-     * 
+     *
      * \param ciop ConfigIOProxy object providing access to the config's files.
      * \throw Exception If the config may not be read from the proxy, or does not parse.
      * \return The Config object.
      */
     static ConstConfigRcPtr CreateFromConfigIOProxy(ConfigIOProxyRcPtr ciop);
-    
+
     /**
      * \brief Create a configuration using an OCIO built-in config.
-     * 
+     *
      * \param configName Built-in config name (with or without the "ocio://" URI prefix).
-     * 
+     *
      * Also supports the following OCIO URI format for Built-in configs:
      *  "ocio://default"                - Default Built-in config.
      *  "ocio://cg-config-latest"       - Latest Built-in CG config.
      *  "ocio://studio-config-latest"   - Latest Built-in Studio config.
      *  "ocio://<CONFIG NAME>"          - A specific Built-in config.
-     * 
+     *
      * The available configNames are:
-     * 
+     *
      * ACES Studio config, contains a more complete collection of color spaces and displays:
      * "studio-config-v1.0.0_aces-v1.3_ocio-v2.1"
      * "studio-config-v2.1.0_aces-v1.3_ocio-v2.3"
-     * 
+     *
      * ACES CG config, basic color spaces for computer graphics apps:
      * "cg-config-v1.0.0_aces-v1.3_ocio-v2.1"
      * "cg-config-v2.1.0_aces-v1.3_ocio-v2.3"
-     * 
-     * More information is available at: 
+     *
+     * More information is available at:
      * %https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES
-     * 
+     *
      * Information about the available configs is available from the \ref BuiltinConfigRegistry.
-     * 
+     *
      * \throw Exception If the configName is not recognized.
      * \return One of the configs built into the OCIO library.
      */
@@ -416,7 +411,7 @@ public:
 
     /**
      * \brief Performs a thorough validation for the most common user errors.
-     * 
+     *
      * This will throw an exception if the config is malformed. The most
      * common error occurs when references are made to colorspaces that do not
      * exist.
@@ -435,7 +430,7 @@ public:
 
     /**
      * \brief Get the family separator
-     * 
+     *
      * A single character used to separate the family string into tokens for use in hierarchical
      * menus.  Defaults to '/'.
      */
@@ -455,27 +450,27 @@ public:
 
     /**
      * \brief Returns the string representation of the Config in YAML text form.
-     * 
+     *
      * This is typically stored on disk in a file with the extension .ocio.
      * NB: This does not validate the config.  Applications should validate before serializing.
      */
     void serialize(std::ostream & os) const;
 
     /**
-     * This will produce a hash of the all colorspace definitions, etc. All external references, 
-     * such as files used in FileTransforms, etc., will be incorporated into the cacheID. While 
-     * the contents of the files are not read, the file system is queried for relevant information 
+     * This will produce a hash of the all colorspace definitions, etc. All external references,
+     * such as files used in FileTransforms, etc., will be incorporated into the cacheID. While
+     * the contents of the files are not read, the file system is queried for relevant information
      * (mtime, inode) so that the config's cacheID will change when the underlying luts are updated.
-     * 
+     *
      * If a context is not provided, the current Context will be used.
-     * 
-     * If a null context is provided, file references will not be taken into 
+     *
+     * If a null context is provided, file references will not be taken into
      * account (this is essentially a hash of Config::serialize).
      */
     const char * getCacheID() const;
     const char * getCacheID(const ConstContextRcPtr & context) const;
 
-    // 
+    //
     // Resources
     //
 
@@ -507,8 +502,8 @@ public:
 
     const char * getSearchPath() const;
     /**
-     * \brief Set all search paths as a concatenated string, use ':' to separate the paths. 
-     * 
+     * \brief Set all search paths as a concatenated string, use ':' to separate the paths.
+     *
      * See \ref addSearchPath for a more robust and platform-agnostic method of
      * setting the search paths.
      */
@@ -517,7 +512,7 @@ public:
     int getNumSearchPaths() const;
     /**
      * Get a search path from the list.
-     * 
+     *
      * The paths are in the order they will be searched (that is, highest to
      * lowest priority).
      */
@@ -525,7 +520,7 @@ public:
     void clearSearchPaths();
     /**
      * \brief Add a single search path to the end of the list.
-     * 
+     *
      * Paths may be either absolute or relative. Relative paths are
      * relative to the working directory. Forward slashes will be
      * normalized to reverse for Windows. Environment (context) variables
@@ -536,7 +531,7 @@ public:
     const char * getWorkingDir() const;
     /**
      * \brief
-     * 
+     *
      * The working directory defaults to the location of the
      * config file. It is used to convert any relative paths to absolute.
      * If no search paths have been set, the working directory will be used
@@ -545,7 +540,7 @@ public:
      */
     void setWorkingDir(const char * dirname);
 
-    // 
+    //
     // ColorSpaces
     //
 
@@ -570,21 +565,24 @@ public:
      * \brief Work on the color spaces selected by the reference color space type
      * and visibility.
      */
-    int getNumColorSpaces(SearchReferenceSpaceType searchReferenceType,
-                          ColorSpaceVisibility visibility) const;
+    int getNumColorSpaces(
+        SearchReferenceSpaceType searchReferenceType,
+        ColorSpaceVisibility visibility) const;
 
     /**
      * \brief Work on the color spaces selected by the reference color space
      *      type and visibility (active or inactive).
-     * 
+     *
      * Return empty for invalid index.
      */
-    const char * getColorSpaceNameByIndex(SearchReferenceSpaceType searchReferenceType,
-                                          ColorSpaceVisibility visibility, int index) const;
+    const char * getColorSpaceNameByIndex(
+        SearchReferenceSpaceType searchReferenceType,
+        ColorSpaceVisibility visibility,
+        int index) const;
 
     /**
      * \brief Work on the active color spaces only.
-     * 
+     *
      * \note
      *     Only works from the list of active color spaces.
      */
@@ -592,7 +590,7 @@ public:
 
     /**
      * Work on the active color spaces only and return null for invalid index.
-     * 
+     *
      * \note
      *      Only works from the list of active color spaces.
      */
@@ -685,46 +683,46 @@ public:
 
     /// Return true if the color space name is present in the inactive_colorspaces list.
     bool isInactiveColorSpace(const char * colorspace) const noexcept;
-    
+
     /**
      * \brief Return true if the specified color space is linear.
-     * 
-     * The determination of linearity is made with respect to one of the two reference spaces 
-     * (i.e., either the scene-referred one or the display-referred one). If the reference space 
-     * type of the color space is the opposite of the requested reference space type, false is 
-     * returned immediately rather than trying to invoke the default view transform to convert 
+     *
+     * The determination of linearity is made with respect to one of the two reference spaces
+     * (i.e., either the scene-referred one or the display-referred one). If the reference space
+     * type of the color space is the opposite of the requested reference space type, false is
+     * returned immediately rather than trying to invoke the default view transform to convert
      * between the reference spaces.
-     * 
-     * Note: This function relies on heuristics that may sometimes give an incorrect result. 
-     * For example, if the encoding attribute is not set appropriately or the sampled values fail 
+     *
+     * Note: This function relies on heuristics that may sometimes give an incorrect result.
+     * For example, if the encoding attribute is not set appropriately or the sampled values fail
      * to detect non-linearity.
-     * 
+     *
      * The algorithm proceeds as follows:
      * -- If the color space isdata attribute is true, return false.
-     * -- If the reference space type of the color space differs from the requested reference 
+     * -- If the reference space type of the color space differs from the requested reference
      *    space type, return false.
-     * -- If the color space's encoding attribute is present, return true if it matches the 
-     *    expected reference space type (i.e., "scene-linear" for REFERENCE_SPACE_SCENE or 
+     * -- If the color space's encoding attribute is present, return true if it matches the
+     *    expected reference space type (i.e., "scene-linear" for REFERENCE_SPACE_SCENE or
      *    "display-linear" for REFERENCE_SPACE_DISPLAY) and false otherwise.
      * -- If the color space has no to_reference or from_reference transform, return true.
-     * -- Evaluate several points through the color space's transform and check if the output only 
+     * -- Evaluate several points through the color space's transform and check if the output only
      *    differs by a scale factor (which may be different per channel, e.g. allowing an arbitrary
      *    matrix transform, with no offset).
-     * 
-     * Note that the encoding test happens before the sampled value test to give config authors 
-     * ultimate control over the linearity determination. For example, they could set the encoding 
-     * attribute to indicate linearity if they want to ignore some areas of non-linearity 
-     * (e.g., at extreme values). Or they could set it to indicate that a color space should not 
+     *
+     * Note that the encoding test happens before the sampled value test to give config authors
+     * ultimate control over the linearity determination. For example, they could set the encoding
+     * attribute to indicate linearity if they want to ignore some areas of non-linearity
+     * (e.g., at extreme values). Or they could set it to indicate that a color space should not
      * be considered linear, even if it is, in a mathematical sense.
-     * 
+     *
      * \param colorSpace Color space to evaluate.
-     * \param referenceSpaceType Evaluate linearity with respect to the specified reference space 
+     * \param referenceSpaceType Evaluate linearity with respect to the specified reference space
      *                           (either scene-referred or display-referred).
      */
     bool isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType referenceSpaceType) const;
 
     /**
-     * \brief Find the name of the color space in the source config that is the same as 
+     * \brief Find the name of the color space in the source config that is the same as
      *        a color space in the default built-in config.  For example, setting the
      *        builtinColorSpaceName to "sRGB - Texture" (a color space name from that
      *        config), would return the name for the corresponding sRGB texture space in
@@ -734,20 +732,22 @@ public:
      *
      *        The method only looks at active color spaces.  If the interchange roles are
      *        missing and heuristics are used, only scene-referred color spaces are searched.
-     * 
+     *
      * \param srcConfig The config to search for the desired color space.
      * \param builtinConfig The built-in config to use.  See \ref Config::CreateFromBuiltinConfig.
      * \param builtinColorSpaceName Color space name in the built-in default config.
      * \return Matching color space name from the source config. Empty if not found.
-     * 
-     * \throw Exception if an interchange space cannot be found or the equivalent space cannot be found.
+     *
+     * \throw Exception if an interchange space cannot be found or the equivalent space cannot be
+     * found.
      */
-    static const char * IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
-                                                  const ConstConfigRcPtr & builtinConfig, 
-                                                  const char * builtinColorSpaceName);
+    static const char * IdentifyBuiltinColorSpace(
+        const ConstConfigRcPtr & srcConfig,
+        const ConstConfigRcPtr & builtinConfig,
+        const char * builtinColorSpaceName);
 
     /**
-     * \brief Identify the two names of a common color space that exists in both the 
+     * \brief Identify the two names of a common color space that exists in both the
      *        given config and the provided built-in config that may be used for converting
      *        color spaces between the two configs.  If both configs have the interchange
      *        role set, than the color spaces set to that role will be returned.  Otherwise,
@@ -756,7 +756,7 @@ public:
      *        identifyBuiltinColorSpace and GetProcessorTo/FromBuiltinColorSpace.
      *
      *        Using this method in connection with GetProcessorFromConfigs is more efficient
-     *        if you need to call GetProcessorTo/FromBuiltinColorSpace multiple times since it 
+     *        if you need to call GetProcessorTo/FromBuiltinColorSpace multiple times since it
      *        is only necessary to run the heuristics once (to identify the interchange spaces).
      *
      *        The srcColorSpaceName and builtinColorSpace name are used to decide which
@@ -766,32 +766,33 @@ public:
      *        so it is not necessary to call this function multiple times if all the spaces
      *        are of the same type.  (These are the same arguments that would also be set if
      *        you were instead calling GetProcessorTo/FromBuiltinColorSpace.)
-     * 
+     *
      * \param[out] srcInterchangeName Color space name from the source config.
      * \param[out] builtinInterchangeName Corresponding color space name from the built-in config.
      * \param srcConfig The config to search for the desired color space.
      * \param srcColorSpaceName Color space name in the given config to convert to/from.
      * \param builtinConfig The built-in config to use.  See \ref Config::CreateFromBuiltinConfig.
      * \param builtinColorSpaceName Color space name in the default built-in config.
-     * 
+     *
      * \throw Exception if either the srcInterchange or builtinInterchange cannot be identified.
      */
-    static void IdentifyInterchangeSpace(const char ** srcInterchangeName,
-                                         const char ** builtinInterchangeName,
-                                         const ConstConfigRcPtr & srcConfig,
-                                         const char * srcColorSpaceName,
-                                         const ConstConfigRcPtr & builtinConfig,
-                                         const char * builtinColorSpaceName);
+    static void IdentifyInterchangeSpace(
+        const char ** srcInterchangeName,
+        const char ** builtinInterchangeName,
+        const ConstConfigRcPtr & srcConfig,
+        const char * srcColorSpaceName,
+        const ConstConfigRcPtr & builtinConfig,
+        const char * builtinColorSpaceName);
 
     /**
      * Methods related to Roles.
      *
      * A role allows a config author to indicate that a given color space should be used
-     * for a particular purpose.  
+     * for a particular purpose.
      *
-     * Role names may be passed to most functions that accept color space names, such as 
-     * getColorSpace.  So for example, you may find the name of the color space assigned 
-     * to the scene_linear role by getting the color space object for "scene_linear" and 
+     * Role names may be passed to most functions that accept color space names, such as
+     * getColorSpace.  So for example, you may find the name of the color space assigned
+     * to the scene_linear role by getting the color space object for "scene_linear" and
      * then calling getName on the color space object.
      */
 
@@ -808,19 +809,19 @@ public:
     /**
      * \brief Get the role name at index, this will return values
      * like 'scene_linear', 'compositing_log'.
-     * 
+     *
      * Return empty string if index is out of range.
      */
     const char * getRoleName(int index) const;
     /**
      * \brief Get the role color space at index.
-     * 
+     *
      * Return empty string if index is out of range.
      */
     const char * getRoleColorSpace(int index) const;
     /**
      * \brief Get the color space name used for the specified role.
-     * 
+     *
      * Return an empty string if the role is not present
      */
     const char * getRoleColorSpace(const char * roleName) const noexcept;
@@ -850,9 +851,13 @@ public:
      * the matching display color space.
      */
     /// Will throw if view or colorSpaceName are null or empty.
-    void addSharedView(const char * view, const char * viewTransformName,
-                       const char * colorSpaceName, const char * looks,
-                       const char * ruleName, const char * description);
+    void addSharedView(
+        const char * view,
+        const char * viewTransformName,
+        const char * colorSpaceName,
+        const char * looks,
+        const char * ruleName,
+        const char * description);
     /// Remove a shared view.  Will throw if the view does not exist.
     void removeSharedView(const char * view);
 
@@ -901,12 +906,15 @@ public:
      * For the (display, view) pair, specify which color space and look to use.
      * If a look is not desired, then just pass a null or empty string.
      */
-    void addDisplayView(const char * display, const char * view,
-                        const char * colorSpaceName, const char * looks);
+    void addDisplayView(
+        const char * display,
+        const char * view,
+        const char * colorSpaceName,
+        const char * looks);
 
     /**
      * \brief
-     * 
+     *
      * For the (display, view) pair, specify the color space or alternatively
      * specify the view transform and display color space.  The looks, viewing rule, and
      * description are optional.  Pass a null or empty string for any optional arguments.
@@ -916,15 +924,20 @@ public:
      * * Display, view or colorSpace are null or empty.
      * * Display already has a shared view with the same name.
      */
-    void addDisplayView(const char * display, const char * view, const char * viewTransformName,
-                        const char * colorSpaceName, const char * looks,
-                        const char * ruleName, const char * description);
+    void addDisplayView(
+        const char * display,
+        const char * view,
+        const char * viewTransformName,
+        const char * colorSpaceName,
+        const char * looks,
+        const char * ruleName,
+        const char * description);
 
     /**
      * \brief Add a (reference to a) shared view to a display.
-     * 
+     *
      * The shared view must be part of the config. See \ref Config::addSharedView
-     * 
+     *
      * This will throw if:
      * * Display or view are null or empty.
      * * Display already has a view (shared or not) with the same name.
@@ -933,11 +946,11 @@ public:
 
     /**
      * \brief Remove the view and the display if no more views.
-     * 
+     *
      * It does not remove the associated color space. If the view name is a
      * shared view, it only removes the reference to the view from the display
      * but the shared view, remains in the config.
-     * 
+     *
      * Will throw if the view does not exist.
      */
     void removeDisplayView(const char * display, const char * view);
@@ -954,18 +967,19 @@ public:
      * create a new display for an ICC profile. They serve as a kind of template that lets OCIO
      * know how to build the new display.
      *
-     * Typically the views will define a View Transform and set the colorSpaceName to 
+     * Typically the views will define a View Transform and set the colorSpaceName to
      * "<USE_DISPLAY_NAME>" so that it will use the display color space with the same name as the
      * display, in this case corresponding to the ICC profile.
      *
      */
 
-    void addVirtualDisplayView(const char * view,
-                               const char * viewTransformName,
-                               const char * colorSpaceName,
-                               const char * looks,
-                               const char * ruleName,
-                               const char * description);
+    void addVirtualDisplayView(
+        const char * view,
+        const char * viewTransformName,
+        const char * colorSpaceName,
+        const char * looks,
+        const char * ruleName,
+        const char * description);
 
     void addVirtualDisplaySharedView(const char * sharedView);
 
@@ -988,7 +1002,7 @@ public:
 
     /**
      * \brief Instantiate a new display from a virtual display, using the monitor name.
-     * 
+     *
      * This method uses the virtual display to create an actual display for the given monitorName.
      * The new display will receive the views from the virtual display.
      *
@@ -1004,7 +1018,8 @@ public:
      * config file. If there is a need to make it a permanent color space, it may be desirable to
      * copy the ICC profile somewhere under the config search_path.
      *
-     * Will throw if the config does not have a virtual display or if the monitorName does not exist.
+     * Will throw if the config does not have a virtual display or if the monitorName does not
+     * exist.
      *
      * If there is already a display or a display color space with the name monitorName, it will be
      * replaced/updated.
@@ -1015,10 +1030,11 @@ public:
 
     /**
      * \brief Instantiate a new display from a virtual display, using an ICC profile.
-     * 
+     *
      * On platforms such as Linux, where the SystemMonitors class is not able to obtain a list of
-     * ICC profiles from the OS, this method may be used to manually specify a path to an ICC profile.
-     * 
+     * ICC profiles from the OS, this method may be used to manually specify a path to an ICC
+     * profile.
+     *
      * Will throw if the virtual display definition is missing from the config.
      *
      * Returns the index of the display.
@@ -1027,14 +1043,14 @@ public:
 
     /**
      * \brief
-     * 
+     *
      * $OCIO_ACTIVE_DISPLAYS envvar can, at runtime, optionally override the
      * allowed displays. It is a comma or colon delimited list. Active displays
      * that are not in the specified profile will be ignored, and the
      * left-most defined display will be the default.
-     * 
+     *
      * Comma-delimited list of names to filter and order the active displays.
-     * 
+     *
      * \note
      *      The setter does not override the envvar.  The getter does not take into
      *      account the envvar value and thus may not represent what the user is seeing.
@@ -1044,14 +1060,14 @@ public:
 
     /**
      * \brief
-     * 
+     *
      * $OCIO_ACTIVE_VIEWS envvar can, at runtime, optionally override the allowed views.
      * It is a comma or colon delimited list.
      * Active views that are not in the specified profile will be ignored, and the
      * left-most defined view will be the default.
-     * 
+     *
      * Comma-delimited list of names to filter and order the active views.
-     * 
+     *
      * \note
      *     The setter does not override the envvar. The getter does not take
      *     into account the envvar value and thus may not represent what the
@@ -1079,7 +1095,7 @@ public:
     int getNumViews(ViewType type, const char * display) const;
     const char * getView(ViewType type, const char * display, int index) const;
 
-    // 
+    //
     // Viewing Rules
     //
 
@@ -1088,13 +1104,13 @@ public:
 
     /**
      * \brief Set viewing rules.
-     * 
+     *
      * \note
      *    The argument is cloned.
      */
     void setViewingRules(ConstViewingRulesRcPtr viewingRules);
 
-    // 
+    //
     // Luma
     // ^^^^
 
@@ -1115,8 +1131,7 @@ public:
     /// These should be normalized (sum to 1.0 exactly).
     void setDefaultLumaCoefs(const double * rgb);
 
-
-    // 
+    //
     // Look
     //
 
@@ -1131,7 +1146,6 @@ public:
     void addLook(const ConstLookRcPtr & look);
 
     void clearLooks();
-
 
     //
     // View Transforms
@@ -1149,7 +1163,7 @@ public:
 
     /**
      * \brief
-     * 
+     *
      * This view transform is the one that will be used by default if a ColorSpaceTransform is
      * needed between a scene-referred and display-referred color space.  The config author may
      * specify a transform to use via the default_view_transform entry in the config.  If that is
@@ -1161,13 +1175,12 @@ public:
 
     /**
      * Get or set the default_view_transform string from the config.
-     * 
+     *
      * Note that if this is not the name of a valid view transform from the scene-referred
      * connection space, it will be ignored.
      */
     const char * getDefaultViewTransformName() const noexcept;
     void setDefaultViewTransformName(const char * defaultName) noexcept;
-
 
     void clearViewTransforms();
 
@@ -1185,8 +1198,8 @@ public:
      *
      * Return an empty string for invalid index.
      */
-    const char * getNamedTransformNameByIndex(NamedTransformVisibility visibility,
-                                              int index) const noexcept;
+    const char * getNamedTransformNameByIndex(NamedTransformVisibility visibility, int index)
+        const noexcept;
 
     /// Work on the active named transforms only.
     int getNumNamedTransforms() const noexcept;
@@ -1215,7 +1228,7 @@ public:
     /// Clear all named transforms.
     void clearNamedTransforms();
 
-    // 
+    //
     // File Rules
     //
 
@@ -1224,7 +1237,7 @@ public:
 
     /**
      * \brief Set file rules.
-     * 
+     *
      * \note
      *    The argument is cloned.
      */
@@ -1244,7 +1257,7 @@ public:
 
     /**
      * \brief
-     * 
+     *
      * Returns true if the only rule matched by filePath is the default rule.
      * This is a convenience method for applications that want to require the user to manually
      * choose a color space when strictParsing is true and no other rules match.
@@ -1260,7 +1273,8 @@ public:
      * * If strict parsing is disabled, return ROLE_DEFAULT (if defined).
      * * If the default role is not defined, return an empty string.
      */
-    OCIO_DEPRECATED("This was marked as deprecated starting in v2.0, please use Config::getColorSpaceFromFilepath().")
+    OCIO_DEPRECATED("This was marked as deprecated starting in v2.0, please use "
+                    "Config::getColorSpaceFromFilepath().")
     const char * parseColorSpaceFromString(const char * str) const;
 
     bool isStrictParsingEnabled() const;
@@ -1276,11 +1290,13 @@ public:
 
     /// Get the processor to apply a ColorSpaceTransform from a source to a destination
     /// color space.
-    ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
-                                     const ConstColorSpaceRcPtr & srcColorSpace,
-                                     const ConstColorSpaceRcPtr & dstColorSpace) const;
-    ConstProcessorRcPtr getProcessor(const ConstColorSpaceRcPtr & srcColorSpace,
-                                     const ConstColorSpaceRcPtr & dstColorSpace) const;
+    ConstProcessorRcPtr getProcessor(
+        const ConstContextRcPtr & context,
+        const ConstColorSpaceRcPtr & srcColorSpace,
+        const ConstColorSpaceRcPtr & dstColorSpace) const;
+    ConstProcessorRcPtr getProcessor(
+        const ConstColorSpaceRcPtr & srcColorSpace,
+        const ConstColorSpaceRcPtr & dstColorSpace) const;
 
     /**
      * \brief
@@ -1288,189 +1304,208 @@ public:
      * \note
      *    Names can be colorspace name, role name, or a combination of both.
      */
-    ConstProcessorRcPtr getProcessor(const char * srcColorSpaceName,
-                                     const char * dstColorSpaceName) const;
-    ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
-                                     const char * srcColorSpaceName,
-                                     const char * dstColorSpaceName) const;
-    
+    ConstProcessorRcPtr getProcessor(const char * srcColorSpaceName, const char * dstColorSpaceName)
+        const;
+    ConstProcessorRcPtr getProcessor(
+        const ConstContextRcPtr & context,
+        const char * srcColorSpaceName,
+        const char * dstColorSpaceName) const;
+
     /// Get the processor to apply a DisplayViewTransform for a display and view.  Refer to the
     /// Display/View Registration section above for more info on the display and view arguments.
-    ConstProcessorRcPtr getProcessor(const char * srcColorSpaceName,
-                                     const char * display,
-                                     const char * view,
-                                     TransformDirection direction) const;
-                                     
-    ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
-                                     const char * srcColorSpaceName,
-                                     const char * display,
-                                     const char * view,
-                                     TransformDirection direction) const;
+    ConstProcessorRcPtr getProcessor(
+        const char * srcColorSpaceName,
+        const char * display,
+        const char * view,
+        TransformDirection direction) const;
+
+    ConstProcessorRcPtr getProcessor(
+        const ConstContextRcPtr & context,
+        const char * srcColorSpaceName,
+        const char * display,
+        const char * view,
+        TransformDirection direction) const;
 
     /// Get the processor to apply a NamedTransform in the specified direction.
-    ConstProcessorRcPtr getProcessor(const ConstNamedTransformRcPtr & namedTransform,
-                                     TransformDirection direction) const;
-    ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
-                                     const ConstNamedTransformRcPtr & namedTransform,
-                                     TransformDirection direction) const;
+    ConstProcessorRcPtr getProcessor(
+        const ConstNamedTransformRcPtr & namedTransform,
+        TransformDirection direction) const;
+    ConstProcessorRcPtr getProcessor(
+        const ConstContextRcPtr & context,
+        const ConstNamedTransformRcPtr & namedTransform,
+        TransformDirection direction) const;
 
-    ConstProcessorRcPtr getProcessor(const char * namedTransformName,
-                                     TransformDirection direction) const;
-    ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
-                                     const char * namedTransformName,
-                                     TransformDirection direction) const;
+    ConstProcessorRcPtr getProcessor(const char * namedTransformName, TransformDirection direction)
+        const;
+    ConstProcessorRcPtr getProcessor(
+        const ConstContextRcPtr & context,
+        const char * namedTransformName,
+        TransformDirection direction) const;
 
     /**
      * \brief Get the processor for the specified transform.
-     * 
+     *
      *  Not often needed, but will allow for the re-use of atomic OCIO
      *  functionality (such as to apply an individual LUT file).
      */
     ConstProcessorRcPtr getProcessor(const ConstTransformRcPtr & transform) const;
-    ConstProcessorRcPtr getProcessor(const ConstTransformRcPtr & transform,
-                                     TransformDirection direction) const;
-    ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
-                                     const ConstTransformRcPtr & transform,
-                                     TransformDirection direction) const;
+    ConstProcessorRcPtr getProcessor(
+        const ConstTransformRcPtr & transform,
+        TransformDirection direction) const;
+    ConstProcessorRcPtr getProcessor(
+        const ConstContextRcPtr & context,
+        const ConstTransformRcPtr & transform,
+        TransformDirection direction) const;
 
     /**
      * \brief Get a Processor to or from a known external color space.
-     * 
-     * These methods provide a way to interface color spaces in a config with known standard 
-     * external color spaces. The set of external color space are those contained in the current 
-     * default Built-in config. This includes common spaces such as "Linear Rec.709 (sRGB)", 
+     *
+     * These methods provide a way to interface color spaces in a config with known standard
+     * external color spaces. The set of external color space are those contained in the current
+     * default Built-in config. This includes common spaces such as "Linear Rec.709 (sRGB)",
      * "sRGB - Texture", "ACEScg", and "ACES2065-1".
-     * 
-     * If the source config defines the necessary Interchange Role (typically "aces_interchange"), 
+     *
+     * If the source config defines the necessary Interchange Role (typically "aces_interchange"),
      * then the conversion will be well-defined and equivalent to calling GetProcessorFromConfigs
      * with the source config and the Built-in config.
-     * 
-     * However, if the Interchange Roles are not present, heuristics will be used to try and 
-     * identify a common color space in the source config that may be used to allow the conversion 
-     * to proceed. If the heuristics fail to find a suitable space, an exception is thrown. 
-     * The heuristics may evolve, so the results returned by this function for a given source config 
-     * and color space may change in future releases of the library. However, the Interchange Roles 
-     * are required in config versions 2.2 and higher, so it is hoped that the need for the heuristics 
-     * will decrease over time.
-     * 
+     *
+     * However, if the Interchange Roles are not present, heuristics will be used to try and
+     * identify a common color space in the source config that may be used to allow the conversion
+     * to proceed. If the heuristics fail to find a suitable space, an exception is thrown.
+     * The heuristics may evolve, so the results returned by this function for a given source config
+     * and color space may change in future releases of the library. However, the Interchange Roles
+     * are required in config versions 2.2 and higher, so it is hoped that the need for the
+     * heuristics will decrease over time.
+     *
      * \param srcConfig The user's source config.
      * \param srcColorSpaceName The name of the color space in the source config.
-     * \param builtinColorSpaceName The name of the color space in the current default Built-in config.
-     * 
+     * \param builtinColorSpaceName The name of the color space in the current default Built-in
+     * config.
+     *
      * \throw Exception if either the src or builtin interchange space cannot be identified.
      */
-    static ConstProcessorRcPtr GetProcessorToBuiltinColorSpace(ConstConfigRcPtr srcConfig,
-                                                               const char * srcColorSpaceName, 
-                                                               const char * builtinColorSpaceName);
+    static ConstProcessorRcPtr GetProcessorToBuiltinColorSpace(
+        ConstConfigRcPtr srcConfig,
+        const char * srcColorSpaceName,
+        const char * builtinColorSpaceName);
     /**
      * \brief See description of GetProcessorToBuiltinColorSpace.
-     * 
-     * \param builtinColorSpaceName The name of the color space in the current default Built-in config.
-     * \param srcConfig The user's source config.
-     * \param srcColorSpaceName The name of the color space in the source config. 
+     *
+     * \param builtinColorSpaceName The name of the color space in the current default Built-in
+     * config. \param srcConfig The user's source config. \param srcColorSpaceName The name of the
+     * color space in the source config.
      */
-    static ConstProcessorRcPtr GetProcessorFromBuiltinColorSpace(const char * builtinColorSpaceName,
-                                                                 ConstConfigRcPtr srcConfig,
-                                                                 const char * srcColorSpaceName);
+    static ConstProcessorRcPtr GetProcessorFromBuiltinColorSpace(
+        const char * builtinColorSpaceName,
+        ConstConfigRcPtr srcConfig,
+        const char * srcColorSpaceName);
 
     /**
      * \brief Get a processor to convert between color spaces in two separate configs.
-     * 
+     *
      * This relies on both configs having the aces_interchange role (when srcName
      * is scene-referred) or the role cie_xyz_d65_interchange (when srcName is
      * display-referred) defined.  An exception is thrown if that is not the case.
      */
-    static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstConfigRcPtr & srcConfig,
-                                                       const char * srcColorSpaceName,
-                                                       const ConstConfigRcPtr & dstConfig,
-                                                       const char * dstColorSpaceName);
-    static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstContextRcPtr & srcContext, 
-                                                       const ConstConfigRcPtr & srcConfig,
-                                                       const char * srcColorSpaceName,
-                                                       const ConstContextRcPtr & dstContext,
-                                                       const ConstConfigRcPtr & dstConfig,
-                                                       const char * dstColorSpaceName);
+    static ConstProcessorRcPtr GetProcessorFromConfigs(
+        const ConstConfigRcPtr & srcConfig,
+        const char * srcColorSpaceName,
+        const ConstConfigRcPtr & dstConfig,
+        const char * dstColorSpaceName);
+    static ConstProcessorRcPtr GetProcessorFromConfigs(
+        const ConstContextRcPtr & srcContext,
+        const ConstConfigRcPtr & srcConfig,
+        const char * srcColorSpaceName,
+        const ConstContextRcPtr & dstContext,
+        const ConstConfigRcPtr & dstConfig,
+        const char * dstColorSpaceName);
 
     /**
      * The srcInterchangeName and dstInterchangeName must refer to a pair of
      * color spaces in the two configs that are the same.  A role name may also be used.
      *
-     * Note: For all of the two-config GetProcessor functions, if either the source or 
+     * Note: For all of the two-config GetProcessor functions, if either the source or
      * destination color spaces are data spaces, the entire processor will be a no-op.
      */
-    static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstConfigRcPtr & srcConfig,
-                                                       const char * srcColorSpaceName,
-                                                       const char * srcInterchangeName,
-                                                       const ConstConfigRcPtr & dstConfig,
-                                                       const char * dstColorSpaceName,
-                                                       const char * dstInterchangeName);
+    static ConstProcessorRcPtr GetProcessorFromConfigs(
+        const ConstConfigRcPtr & srcConfig,
+        const char * srcColorSpaceName,
+        const char * srcInterchangeName,
+        const ConstConfigRcPtr & dstConfig,
+        const char * dstColorSpaceName,
+        const char * dstInterchangeName);
 
-    static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstContextRcPtr & srcContext,
-                                                       const ConstConfigRcPtr & srcConfig,
-                                                       const char * srcColorSpaceName,
-                                                       const char * srcInterchangeName,
-                                                       const ConstContextRcPtr & dstContext,
-                                                       const ConstConfigRcPtr & dstConfig,
-                                                       const char * dstColorSpaceName,
-                                                       const char * dstInterchangeName);
+    static ConstProcessorRcPtr GetProcessorFromConfigs(
+        const ConstContextRcPtr & srcContext,
+        const ConstConfigRcPtr & srcConfig,
+        const char * srcColorSpaceName,
+        const char * srcInterchangeName,
+        const ConstContextRcPtr & dstContext,
+        const ConstConfigRcPtr & dstConfig,
+        const char * dstColorSpaceName,
+        const char * dstInterchangeName);
 
     /**
      * \brief Get a processor to convert from a color space to a display and view in
      *      two separate configs.
      */
-    static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstConfigRcPtr & srcConfig,
-                                                       const char * srcColorSpaceName,
-                                                       const ConstConfigRcPtr & dstConfig,
-                                                       const char * dstDisplay,
-                                                       const char * dstView,
-                                                       TransformDirection direction);
+    static ConstProcessorRcPtr GetProcessorFromConfigs(
+        const ConstConfigRcPtr & srcConfig,
+        const char * srcColorSpaceName,
+        const ConstConfigRcPtr & dstConfig,
+        const char * dstDisplay,
+        const char * dstView,
+        TransformDirection direction);
 
-    static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstContextRcPtr & srcContext,
-                                                       const ConstConfigRcPtr & srcConfig,
-                                                       const char * srcColorSpaceName,
-                                                       const ConstContextRcPtr & dstContext,
-                                                       const ConstConfigRcPtr & dstConfig,
-                                                       const char * dstDisplay,
-                                                       const char * dstView,
-                                                       TransformDirection direction);
+    static ConstProcessorRcPtr GetProcessorFromConfigs(
+        const ConstContextRcPtr & srcContext,
+        const ConstConfigRcPtr & srcConfig,
+        const char * srcColorSpaceName,
+        const ConstContextRcPtr & dstContext,
+        const ConstConfigRcPtr & dstConfig,
+        const char * dstDisplay,
+        const char * dstView,
+        TransformDirection direction);
 
     /**
      * The srcInterchangeName and dstInterchangeName must refer to a pair of
      * color spaces in the two configs that are the same.  A role name may also be used.
      */
-    static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstConfigRcPtr & srcConfig,
-                                                       const char * srcColorSpaceName,
-                                                       const char * srcInterchangeName,
-                                                       const ConstConfigRcPtr & dstConfig,
-                                                       const char * dstDisplay,
-                                                       const char * dstView,
-                                                       const char * dstInterchangeName,
-                                                       TransformDirection direction);
+    static ConstProcessorRcPtr GetProcessorFromConfigs(
+        const ConstConfigRcPtr & srcConfig,
+        const char * srcColorSpaceName,
+        const char * srcInterchangeName,
+        const ConstConfigRcPtr & dstConfig,
+        const char * dstDisplay,
+        const char * dstView,
+        const char * dstInterchangeName,
+        TransformDirection direction);
 
-    static ConstProcessorRcPtr GetProcessorFromConfigs(const ConstContextRcPtr & srcContext,
-                                                       const ConstConfigRcPtr & srcConfig,
-                                                       const char * srcColorSpaceName,
-                                                       const char * srcInterchangeName,
-                                                       const ConstContextRcPtr & dstContext,
-                                                       const ConstConfigRcPtr & dstConfig,
-                                                       const char * dstDisplay,
-                                                       const char * dstView,
-                                                       const char * dstInterchangeName,
-                                                       TransformDirection direction);
+    static ConstProcessorRcPtr GetProcessorFromConfigs(
+        const ConstContextRcPtr & srcContext,
+        const ConstConfigRcPtr & srcConfig,
+        const char * srcColorSpaceName,
+        const char * srcInterchangeName,
+        const ConstContextRcPtr & dstContext,
+        const ConstConfigRcPtr & dstConfig,
+        const char * dstDisplay,
+        const char * dstView,
+        const char * dstInterchangeName,
+        TransformDirection direction);
 
     /// Get the Processor Cache flags.
     ProcessorCacheFlags getProcessorCacheFlags() const noexcept;
 
-    /// Control the caching of processors in the config instance.  By default, caching is on.  
+    /// Control the caching of processors in the config instance.  By default, caching is on.
     /// The flags allow turning caching off entirely or only turning it off if dynamic
     /// properties are being used by the processor.
     void setProcessorCacheFlags(ProcessorCacheFlags flags) const noexcept;
 
     /**
-     * \brief Clears this config's cache of Processor, CPUProcessor, and GPUProcessor instances. 
-     * 
-     * This must be done if any of the LUT files used by these Processors have been modified. 
-     * Note that setProcessorCacheFlags(PROCESSOR_CACHE_OFF) turns off caching but does not clear 
+     * \brief Clears this config's cache of Processor, CPUProcessor, and GPUProcessor instances.
+     *
+     * This must be done if any of the LUT files used by these Processors have been modified.
+     * Note that setProcessorCacheFlags(PROCESSOR_CACHE_OFF) turns off caching but does not clear
      * any existing cache.
      */
     void clearProcessorCache() noexcept;
@@ -1488,26 +1523,26 @@ public:
      * -- It contains FileTransforms with a src outside the working directory
      * -- The search path contains paths outside the working directory
      * -- The search path contains paths that start with a context variable
-     * 
+     *
      * Context variables are allowed but the intent is that they may only resolve to paths that
      * are within or below the working directory.  This is because the archiving function will
      * only archive files that are within the working directory in order to ensure that if it is
      * later expanded, that it will not create any files outside this directory.
      *
-     * For example, a context variable on the search path intended to contain the name of a 
+     * For example, a context variable on the search path intended to contain the name of a
      * sub-directory under the working directory must have the form "./$DIR_NAME" rather than just
      * "$DIR_NAME" to be considered archivable.  This is imperfect since there is no way to
      * prevent the context variable from creating a path outside the working dir, but it should
      * at least draw attention to the fact that the archive would fail if used with context vars
      * that try to abuse the intended functionality.
-     * 
+     *
      * \return bool Archivable if true.
      */
     bool isArchivable() const;
 
     /**
      * \brief Archive the config and its LUTs into the specified output stream.
-     * 
+     *
      * The config is archived by serializing the Config object into a file named "config.ocio" and
      * then walking through the current working directory and any sub-directories.  Any files that
      * have an extension matching a supported LUT file format are added to the archive.  Any files
@@ -1520,19 +1555,19 @@ public:
      * The reason the archive is created using all supported LUT file extensions rather than by
      * trying to resolve all the FileTransforms in the Config to specific files is because of the
      * goal to allow context variables to continue to work.
-     * 
-     * If a Config is created with CreateFromStream, CreateFromFile with an OCIOZ archive, or 
-     * CreateFromConfigIOProxy, it cannot be archived unless the working directory is manually set 
-     * to a directory that contains any necessary LUT files. 
-     * 
+     *
+     * If a Config is created with CreateFromStream, CreateFromFile with an OCIOZ archive, or
+     * CreateFromConfigIOProxy, it cannot be archived unless the working directory is manually set
+     * to a directory that contains any necessary LUT files.
+     *
      * The provided output stream must be closed by the caller, if necessary (e.g., an ofstream).
      *
      * \param ostream The output stream to write to.
      */
     void archive(std::ostream & ostream) const;
 
-    Config(const Config &) = delete;
-    Config& operator= (const Config &) = delete;
+    Config(const Config &)             = delete;
+    Config & operator=(const Config &) = delete;
 
     /// Do not use (needed only for pybind11).
     ~Config();
@@ -1540,7 +1575,7 @@ public:
 private:
     Config();
 
-    static void deleter(Config* c);
+    static void deleter(Config * c);
 
     class Impl;
     Impl * m_impl;
@@ -1548,8 +1583,7 @@ private:
     const Impl * getImpl() const { return m_impl; }
 };
 
-extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
-
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const Config &);
 
 /**
  * \brief
@@ -1566,13 +1600,13 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
  *     * pattern: Glob pattern to be used for the main part of the name/path.
  *     * extension: Glob pattern to be used for the file extension. Note that if glob tokens
  *       are not used, the extension will be used in a non-case-sensitive way by default.
- * 
+ *
  * * *Regex Rule*: This is similar to the basic rule but allows additional capabilities for
  *   power-users. It contains the keys:
  *     * name: Name of the rule
  *     * colorspace: Color space name to be returned.
  *     * regex: Regular expression to be evaluated.
- * 
+ *
  * * *OCIO v1 style Rule*: This rule allows the use of the OCIO v1 style, where the string
  *   is searched for color space names from the config. This rule may occur 0 or 1 times
  *   in the list. The position in the list prioritizes it with respect to the other rules.
@@ -1581,7 +1615,7 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
  *   see \ref insertPathSearchRule.
  *   It has the key:
  *     * name: Must be "ColorSpaceNamePathSearch".
- * 
+ *
  * * *Default Rule*: The file_rules must always end with this rule. If no prior rules match,
  *   this rule specifies the color space applications will use.
  *   see \ref setDefaultRuleColorSpace.
@@ -1598,14 +1632,13 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
  * getter will return NULL and setter will throw.
  *
  * When loading a v1 config, a set of FileRules are created with ColorSpaceNamePathSearch followed
- * by the Default rule pointing to the default role. This allows getColorSpaceFromFilepath to emulate
- * OCIO v1 code that used parseColorSpaceFromString with strictparsing set to false.
+ * by the Default rule pointing to the default role. This allows getColorSpaceFromFilepath to
+ * emulate OCIO v1 code that used parseColorSpaceFromString with strictparsing set to false.
  */
 
 class OCIOEXPORT FileRules
 {
 public:
-
     /// Reserved rule name for the default rule.
     static const char * DefaultRuleName;
     /// Reserved rule name for the file path search rule \see FileRules::insertPathSearchRule.
@@ -1659,7 +1692,7 @@ public:
 
     /**
      * \brief Insert a rule at a given ruleIndex.
-     * 
+     *
      * Rule currently at ruleIndex will be pushed to index: ruleIndex + 1.
      * Name must be unique.
      * - "Default" is a reserved name for the default rule. The default rule is automatically
@@ -1671,13 +1704,17 @@ public:
      *
      * Will throw if ruleIndex is not less than \ref FileRules::getNumEntries .
      */
-    void insertRule(size_t ruleIndex, const char * name, const char * colorSpace,
-                    const char * pattern, const char * extension);
-    void insertRule(size_t ruleIndex, const char * name, const char * colorSpace,
-                    const char * regex);
+    void insertRule(
+        size_t ruleIndex,
+        const char * name,
+        const char * colorSpace,
+        const char * pattern,
+        const char * extension);
+    void
+    insertRule(size_t ruleIndex, const char * name, const char * colorSpace, const char * regex);
     /**
-     * \brief Helper function to insert a rule. 
-     * 
+     * \brief Helper function to insert a rule.
+     *
      * Uses \ref Config:parseColorSpaceFromString to search the path for any of
      * the color spaces named in the config (as per OCIO v1).
      */
@@ -1687,7 +1724,7 @@ public:
 
     /**
      * \brief
-     * 
+     *
      * \note
      *      Default rule can't be removed.
      * Will throw if ruleIndex + 1 is not less than \ref FileRules::getNumEntries .
@@ -1706,8 +1743,8 @@ public:
      */
     bool isDefault() const noexcept;
 
-    FileRules(const FileRules &) = delete;
-    FileRules & operator= (const FileRules &) = delete;
+    FileRules(const FileRules &)             = delete;
+    FileRules & operator=(const FileRules &) = delete;
 
     /// Do not use (needed only for pybind11).
     virtual ~FileRules();
@@ -1715,7 +1752,7 @@ public:
 private:
     FileRules();
 
-    static void deleter(FileRules* c);
+    static void deleter(FileRules * c);
 
     friend class Config;
 
@@ -1725,19 +1762,17 @@ private:
     const Impl * getImpl() const { return m_impl; }
 };
 
-extern OCIOEXPORT std::ostream & operator<< (std::ostream &, const FileRules &);
-
-
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const FileRules &);
 
 /**
  * ViewingRules
- * 
+ *
  * Viewing Rules allow config authors to filter the list of views an application should offer
  * based on the color space of an image.  For example, a config may define a large number of
  * views but not all of them may be appropriate for use with all color spaces.  E.g., some views
  * may be intended for use with scene-linear color space encodings and others with video color
  * space encodings.
- * 
+ *
  * Each rule has a name key for applications to refer to the rule.  Name values must be unique
  * (using case insensitive comparison). Viewing Rules may also have the following keys:
  *
@@ -1750,7 +1785,7 @@ extern OCIOEXPORT std::ostream & operator<< (std::ostream &, const FileRules &);
  *
  * Getters and setters are using the rule position, they will throw if the position is not
  * valid.
-*/
+ */
 class OCIOEXPORT ViewingRules
 {
 public:
@@ -1777,7 +1812,7 @@ public:
     const char * getColorSpace(size_t ruleIndex, size_t colorSpaceIndex) const;
     /**
      * \brief
-     * 
+     *
      * Add colorspace name. Will throw if:
      * * RuleIndex is invalid.
      * * \ref ViewingRules::getNumEncodings is not 0.
@@ -1815,8 +1850,8 @@ public:
 
     /**
      * \brief Insert a rule at a given ruleIndex.
-     * 
-     * Rule currently at ruleIndex will be pushed to index: ruleIndex + 1. If ruleIndex is 
+     *
+     * Rule currently at ruleIndex will be pushed to index: ruleIndex + 1. If ruleIndex is
      * \ref ViewingRules::getNumEntries, a new rule will be added at the end. Will throw if:
      * * RuleIndex is invalid (must be less than or equal to
      *   \ref ViewingRules::getNumEntries).
@@ -1827,15 +1862,15 @@ public:
     /// Remove a rule. Throws if ruleIndex is not valid.
     void removeRule(size_t ruleIndex);
 
-    ViewingRules(const ViewingRules &) = delete;
-    ViewingRules & operator= (const ViewingRules &) = delete;
+    ViewingRules(const ViewingRules &)             = delete;
+    ViewingRules & operator=(const ViewingRules &) = delete;
     /// Do not use (needed only for pybind11).
     virtual ~ViewingRules();
 
 private:
     ViewingRules();
 
-    static void deleter(ViewingRules* c);
+    static void deleter(ViewingRules * c);
 
     friend class Config;
 
@@ -1845,7 +1880,7 @@ private:
     const Impl * getImpl() const { return m_impl; }
 };
 
-extern OCIOEXPORT std::ostream & operator<< (std::ostream &, const ViewingRules &);
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const ViewingRules &);
 
 //
 // ColorSpace
@@ -1920,38 +1955,38 @@ public:
     // Categories
     //
 
-     /**
+    /**
      * A category is used to allow applications to filter the list of color spaces
      * they display in menus based on what that color space is used for.
      *
      * Here is an example config entry that could appear under a ColorSpace:
-     * 
+     *
      * \code{.yaml}
      *     categories: [ file-io, working-space, basic-3d ]
      * \endcode
-     * 
+     *
      * The example contains three categories: 'file-io', 'working-space' and 'basic-3d'.
-     * 
+     *
      * \note
      *     Category strings are not case-sensitive and the order is not significant.
-     * 
+     *
      * There is no limit imposed on length or number. Although users may add their own categories,
-     * the strings will typically come from a fixed set listed in the documentation (similar to 
+     * the strings will typically come from a fixed set listed in the documentation (similar to
      * roles).
      */
     /// Return true if the category is present.
     bool hasCategory(const char * category) const;
     /**
      * \brief Add a single category.
-     * 
+     *
      * \note
      *     Will do nothing if the category already exists.
      */
     void addCategory(const char * category);
     /**
      * \brief Remove a category.
-     * 
-     * \note 
+     *
+     * \note
      *     Will do nothing if the category is missing.
      */
     void removeCategory(const char * category);
@@ -1959,7 +1994,7 @@ public:
     int getNumCategories() const;
     /**
      * \brief Return the category name using its index
-     * 
+     *
      * \note
      *     Will be null if the index is invalid.
      */
@@ -1977,7 +2012,7 @@ public:
      * (rather than being config-specific) to make it easier for applications to utilize.
      *
      * Here is an example config entry that could appear under a ColorSpace:
-     * 
+     *
      * \code{.yaml}
      *     encoding: scene-linear
      * \endcode
@@ -1990,7 +2025,7 @@ public:
 
     /**
      * *Data*
-     * 
+     *
      * ColorSpaces that are data are treated a bit special. Basically, any colorspace transforms
      * you try to apply to them are ignored. (Think of applying a gamut mapping transform to an
      * ID pass). However, the setDataBypass method on ColorSpaceTransform and DisplayViewTransform
@@ -2005,7 +2040,7 @@ public:
 
     /**
      * *Allocation*
-     * 
+     *
      * If this colorspace needs to be transferred to a limited dynamic
      * range coding space (such as during display with a GPU path), use this
      * allocation to maximize bit efficiency.
@@ -2032,7 +2067,7 @@ public:
 
     /**
      * *Transform*
-     * 
+     *
      * If a transform in the specified direction has been specified,
      * return it. Otherwise return a null ConstTransformRcPtr
      */
@@ -2043,8 +2078,8 @@ public:
      */
     void setTransform(const ConstTransformRcPtr & transform, ColorSpaceDirection dir);
 
-    ColorSpace(const ColorSpace &) = delete;
-    ColorSpace& operator= (const ColorSpace &) = delete;
+    ColorSpace(const ColorSpace &)             = delete;
+    ColorSpace & operator=(const ColorSpace &) = delete;
     /// Do not use (needed only for pybind11).
     ~ColorSpace();
 
@@ -2052,7 +2087,7 @@ private:
     explicit ColorSpace(ReferenceSpaceType referenceSpace);
     ColorSpace();
 
-    static void deleter(ColorSpace* c);
+    static void deleter(ColorSpace * c);
 
     class Impl;
     Impl * m_impl;
@@ -2060,15 +2095,11 @@ private:
     const Impl * getImpl() const { return m_impl; }
 };
 
-extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ColorSpace&);
-
-
-
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const ColorSpace &);
 
 //
 // ColorSpaceSet
 //
-
 
 /**
  * The *ColorSpaceSet* is a set of color spaces (i.e. no color space duplication)
@@ -2092,7 +2123,7 @@ public:
 
     /**
      * \brief Return true if the two sets are equal.
-     * 
+     *
      * \note
      *    The comparison is done on the color space names (not a deep comparison).
      */
@@ -2115,29 +2146,29 @@ public:
 
     /**
      * \brief
-     * 
+     *
      * \note
      *   Only accepts color space names (i.e. no role name).
-     * 
+     *
      * Will return null if the name is not found.
      */
     ConstColorSpaceRcPtr getColorSpace(const char * name) const;
     /**
      * Will return -1 if the name is not found.
-     * 
+     *
      * \note
      *    Only accepts color space names (i.e. no role name).
      */
     int getColorSpaceIndex(const char * name) const;
     /**
-     * \brief 
-     * 
+     * \brief
+     *
      * \note
      *     Only accepts color space names (i.e. no role name)
-     * 
-     * \param name 
-     * \return true 
-     * \return false 
+     *
+     * \param name
+     * \return true
+     * \return false
      */
     bool hasColorSpace(const char * name) const;
 
@@ -2172,7 +2203,7 @@ private:
     ColorSpaceSet();
 
     ColorSpaceSet(const ColorSpaceSet &);
-    ColorSpaceSet & operator= (const ColorSpaceSet &);
+    ColorSpaceSet & operator=(const ColorSpaceSet &);
 
     static void deleter(ColorSpaceSet * c);
 
@@ -2187,41 +2218,40 @@ private:
 
 /**
  * \brief Perform the union of two sets.
- * 
- * \note
- *      This function provides operations on two color space sets
- *      where the result contains copied color spaces and no duplicates.
- * 
- * \param lcss 
- * \param rcss 
- */
-extern OCIOEXPORT ConstColorSpaceSetRcPtr operator||(const ConstColorSpaceSetRcPtr & lcss,
-                                                     const ConstColorSpaceSetRcPtr & rcss);
- /**
-  * \brief Perform the intersection of two sets.
-  * 
-  * \note
-  *      This function provides operations on two color space sets
-  *      where the result contains copied color spaces and no duplicates.
-  *
-  * \param lcss 
-  * \param rcss 
- */
-extern OCIOEXPORT ConstColorSpaceSetRcPtr operator&&(const ConstColorSpaceSetRcPtr & lcss,
-                                                     const ConstColorSpaceSetRcPtr & rcss);
-/**
- * \brief Perform the difference of two sets. 
- * 
+ *
  * \note
  *      This function provides operations on two color space sets
  *      where the result contains copied color spaces and no duplicates.
  *
- * \param lcss 
- * \param rcss 
+ * \param lcss
+ * \param rcss
  */
-extern OCIOEXPORT ConstColorSpaceSetRcPtr operator-(const ConstColorSpaceSetRcPtr & lcss,
-                                                    const ConstColorSpaceSetRcPtr & rcss);
-
+extern OCIOEXPORT ConstColorSpaceSetRcPtr
+operator||(const ConstColorSpaceSetRcPtr & lcss, const ConstColorSpaceSetRcPtr & rcss);
+/**
+ * \brief Perform the intersection of two sets.
+ *
+ * \note
+ *      This function provides operations on two color space sets
+ *      where the result contains copied color spaces and no duplicates.
+ *
+ * \param lcss
+ * \param rcss
+ */
+extern OCIOEXPORT ConstColorSpaceSetRcPtr
+operator&&(const ConstColorSpaceSetRcPtr & lcss, const ConstColorSpaceSetRcPtr & rcss);
+/**
+ * \brief Perform the difference of two sets.
+ *
+ * \note
+ *      This function provides operations on two color space sets
+ *      where the result contains copied color spaces and no duplicates.
+ *
+ * \param lcss
+ * \param rcss
+ */
+extern OCIOEXPORT ConstColorSpaceSetRcPtr
+operator-(const ConstColorSpaceSetRcPtr & lcss, const ConstColorSpaceSetRcPtr & rcss);
 
 //
 // Look
@@ -2257,15 +2287,15 @@ public:
     const char * getDescription() const;
     void setDescription(const char * description);
 
-    Look(const Look &) = delete;
-    Look& operator= (const Look &) = delete;
+    Look(const Look &)             = delete;
+    Look & operator=(const Look &) = delete;
     /// Do not use (needed only for pybind11).
     ~Look();
 
 private:
     Look();
 
-    static void deleter(Look* c);
+    static void deleter(Look * c);
 
     class Impl;
     Impl * m_impl;
@@ -2273,8 +2303,7 @@ private:
     const Impl * getImpl() const { return m_impl; }
 };
 
-extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Look&);
-
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const Look &);
 
 /**
  * \brief NamedTransform.
@@ -2291,7 +2320,7 @@ public:
 
     virtual NamedTransformRcPtr createEditableCopy() const = 0;
 
-    virtual const char * getName() const noexcept = 0;
+    virtual const char * getName() const noexcept    = 0;
     virtual void setName(const char * name) noexcept = 0;
 
     /// Aliases can be used instead of the name. They must be unique within the config.
@@ -2299,20 +2328,20 @@ public:
     /// Return empty string if idx is  out of range.
     virtual const char * getAlias(size_t idx) const noexcept = 0;
     /**
-    * Nothing is done if alias is NULL or empty, if it is already there, or if it is already
-    * the named transform name.
-    */
+     * Nothing is done if alias is NULL or empty, if it is already there, or if it is already
+     * the named transform name.
+     */
     virtual void addAlias(const char * alias) noexcept = 0;
     /// Does nothing if alias is not present.
     virtual void removeAlias(const char * alias) noexcept = 0;
-    virtual void clearAliases() noexcept = 0;
+    virtual void clearAliases() noexcept                  = 0;
 
     /// \see ColorSpace::getFamily
     virtual const char * getFamily() const noexcept = 0;
     /// \see ColorSpace::setFamily
     virtual void setFamily(const char * family) noexcept = 0;
 
-    virtual const char * getDescription() const noexcept = 0;
+    virtual const char * getDescription() const noexcept           = 0;
     virtual void setDescription(const char * description) noexcept = 0;
 
     /// \see ColorSpace::hasCategory
@@ -2333,21 +2362,22 @@ public:
      * However, it may be useful to associate a color space encoding that the transform is intended
      * to be used with, for organizational purposes.
      */
-    virtual const char * getEncoding() const noexcept = 0;
+    virtual const char * getEncoding() const noexcept        = 0;
     virtual void setEncoding(const char * encoding) noexcept = 0;
 
-    virtual ConstTransformRcPtr getTransform(TransformDirection dir) const = 0;
+    virtual ConstTransformRcPtr getTransform(TransformDirection dir) const                   = 0;
     virtual void setTransform(const ConstTransformRcPtr & transform, TransformDirection dir) = 0;
 
     /**
      * Will create the transform from the inverse direction if the transform for requested
      * direction is missing.
      */
-    static ConstTransformRcPtr GetTransform(const ConstNamedTransformRcPtr & nt,
-                                            TransformDirection dir);
+    static ConstTransformRcPtr GetTransform(
+        const ConstNamedTransformRcPtr & nt,
+        TransformDirection dir);
 
-    NamedTransform(const NamedTransform &) = delete;
-    NamedTransform & operator= (const NamedTransform &) = delete;
+    NamedTransform(const NamedTransform &)             = delete;
+    NamedTransform & operator=(const NamedTransform &) = delete;
     // Do not use (needed only for pybind11).
     virtual ~NamedTransform() = default;
 
@@ -2355,8 +2385,7 @@ protected:
     NamedTransform() = default;
 };
 
-extern OCIOEXPORT std::ostream & operator<< (std::ostream &, const NamedTransform &);
-
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const NamedTransform &);
 
 /**
  * A *ViewTransform* provides a conversion from the main (usually scene-referred) reference space
@@ -2417,8 +2446,8 @@ public:
      */
     void setTransform(const ConstTransformRcPtr & transform, ViewTransformDirection dir);
 
-    ViewTransform(const ViewTransform &) = delete;
-    ViewTransform & operator= (const ViewTransform &) = delete;
+    ViewTransform(const ViewTransform &)             = delete;
+    ViewTransform & operator=(const ViewTransform &) = delete;
     /// Do not use (needed only for pybind11).
     ~ViewTransform();
 
@@ -2434,12 +2463,11 @@ private:
     const Impl * getImpl() const { return m_impl; }
 };
 
-extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ViewTransform&);
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const ViewTransform &);
 
 //
 // Processor
 //
-
 
 /**
  * The *Processor* represents a specific color transformation which is
@@ -2458,7 +2486,8 @@ public:
 
     /**
      * Returns a hash string generated by hashing the cachedIDs of the (unoptimized) list of ops
-     * contained in the Processor. (This forms part of the key used by the config's processor cache.)
+     * contained in the Processor. (This forms part of the key used by the config's processor
+     * cache.)
      */
     const char * getCacheID() const;
 
@@ -2482,7 +2511,7 @@ public:
     int getNumTransforms() const;
     /**
      * Get a FormatMetadata containing the metadata for a
-     * transform within the processor. For a processor from a CLF file, this 
+     * transform within the processor. For a processor from a CLF file, this
      * corresponds to the metadata associated with an individual process node.
      */
     const FormatMetadata & getTransformFormatMetadata(int index) const;
@@ -2501,7 +2530,7 @@ public:
      * that if the processor contains several ops that support the requested property, only one
      * can be dynamic and only this one will be controlled.
      *
-     * \note The dynamic properties are a convenient way to change on-the-fly values without 
+     * \note The dynamic properties are a convenient way to change on-the-fly values without
      * generating again and again a CPU or GPU processor instance. Color transformations can
      * contain dynamic properties from a ExposureContrastTransform for example.
      * So, Processor, CPUProcessor and GpuShaderCreator all have ways to manage dynamic
@@ -2528,11 +2557,11 @@ public:
     ConstProcessorRcPtr getOptimizedProcessor(OptimizationFlags oFlags) const;
 
     /**
-     * Create a Processor that is optimized for a specific in and out bit-depth (as CPUProcessor 
+     * Create a Processor that is optimized for a specific in and out bit-depth (as CPUProcessor
      * would do).  This method is provided primarily for diagnostic purposes.
      */
-    ConstProcessorRcPtr getOptimizedProcessor(BitDepth inBD, BitDepth outBD,
-                                              OptimizationFlags oFlags) const;
+    ConstProcessorRcPtr
+    getOptimizedProcessor(BitDepth inBD, BitDepth outBD, OptimizationFlags oFlags) const;
 
     //
     // GPU Renderer
@@ -2542,13 +2571,14 @@ public:
     ConstGPUProcessorRcPtr getDefaultGPUProcessor() const;
     ConstGPUProcessorRcPtr getOptimizedGPUProcessor(OptimizationFlags oFlags) const;
 
-    /** 
+    /**
      * Get an optimized GPUProcessor instance that will emulate the OCIO v1 GPU path. This approach
      * bakes some of the ops into a single Lut3D and so is less accurate than the current GPU
      * processing methods.
      */
-    ConstGPUProcessorRcPtr getOptimizedLegacyGPUProcessor(OptimizationFlags oFlags, 
-                                                          unsigned edgelen) const;
+    ConstGPUProcessorRcPtr getOptimizedLegacyGPUProcessor(
+        OptimizationFlags oFlags,
+        unsigned edgelen) const;
 
     //
     // CPU Renderer
@@ -2579,17 +2609,18 @@ public:
      *
      *     OCIO::PackedImageDesc img(imgDataPtr, imgWidth, imgHeight, imgChannels);
      *     cpuProcessor->apply(img);
-     * 
+     *
      * \endcode
      */
     ConstCPUProcessorRcPtr getDefaultCPUProcessor() const;
     ConstCPUProcessorRcPtr getOptimizedCPUProcessor(OptimizationFlags oFlags) const;
-    ConstCPUProcessorRcPtr getOptimizedCPUProcessor(BitDepth inBitDepth,
-                                                    BitDepth outBitDepth,
-                                                    OptimizationFlags oFlags) const;
+    ConstCPUProcessorRcPtr getOptimizedCPUProcessor(
+        BitDepth inBitDepth,
+        BitDepth outBitDepth,
+        OptimizationFlags oFlags) const;
 
-    Processor(const Processor &) = delete;
-    Processor & operator= (const Processor &) = delete;
+    Processor(const Processor &)             = delete;
+    Processor & operator=(const Processor &) = delete;
     /// Do not use (needed only for pybind11).
     ~Processor();
 
@@ -2598,7 +2629,7 @@ private:
 
     static ProcessorRcPtr Create();
 
-    static void deleter(Processor* c);
+    static void deleter(Processor * c);
 
     friend class Config;
 
@@ -2607,7 +2638,6 @@ private:
     Impl * getImpl() { return m_impl; }
     const Impl * getImpl() const { return m_impl; }
 };
-
 
 ///////////////////////////////////////////////////////////////////////////
 // CPUProcessor
@@ -2619,7 +2649,7 @@ public:
     bool isNoOp() const;
 
     /**
-     * Equivalent to isNoOp from the underlying Processor, i.e., it ignores 
+     * Equivalent to isNoOp from the underlying Processor, i.e., it ignores
      * in/out bit-depth differences.
      */
     bool isIdentity() const;
@@ -2667,8 +2697,8 @@ public:
     void applyRGB(float * pixel) const;
     void applyRGBA(float * pixel) const;
 
-    CPUProcessor(const CPUProcessor &) = delete;
-    CPUProcessor& operator= (const CPUProcessor &) = delete;
+    CPUProcessor(const CPUProcessor &)             = delete;
+    CPUProcessor & operator=(const CPUProcessor &) = delete;
     /// Do not use (needed only for pybind11).
     ~CPUProcessor();
 
@@ -2684,7 +2714,6 @@ private:
     Impl * getImpl() { return m_impl; }
     const Impl * getImpl() const { return m_impl; }
 };
-
 
 ///////////////////////////////////////////////////////////////////////////
 // GPUProcessor
@@ -2703,9 +2732,9 @@ public:
 
     /// Extract the shader information using a custom GpuShaderCreator class.
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const;
-    
-    GPUProcessor(const GPUProcessor &) = delete;
-    GPUProcessor& operator= (const GPUProcessor &) = delete;
+
+    GPUProcessor(const GPUProcessor &)             = delete;
+    GPUProcessor & operator=(const GPUProcessor &) = delete;
     /// Do not use (needed only for pybind11).
     ~GPUProcessor();
 
@@ -2722,10 +2751,9 @@ private:
     const Impl * getImpl() const { return m_impl; }
 };
 
-
 /**
  * \brief
- * 
+ *
  * This class contains meta information about the process that generated
  * this processor.  The results of these functions do not
  * impact the pixel processing.
@@ -2744,23 +2772,21 @@ public:
     void addFile(const char * fname);
     void addLook(const char * look);
 
-    ProcessorMetadata(const ProcessorMetadata &) = delete;
-    ProcessorMetadata& operator= (const ProcessorMetadata &) = delete;
+    ProcessorMetadata(const ProcessorMetadata &)             = delete;
+    ProcessorMetadata & operator=(const ProcessorMetadata &) = delete;
     /// Do not use (needed only for pybind11).
     ~ProcessorMetadata();
 
 private:
     ProcessorMetadata();
 
-    static void deleter(ProcessorMetadata* c);
+    static void deleter(ProcessorMetadata * c);
 
     class Impl;
     Impl * m_impl;
     Impl * getImpl() { return m_impl; }
     const Impl * getImpl() const { return m_impl; }
 };
-
-
 
 /**
  * In certain situations it is necessary to serialize transforms into a variety
@@ -2769,7 +2795,7 @@ private:
  *
  * **Usage Example:** *Bake a CSP sRGB viewer LUT*
  *
- * \code{.cpp} 
+ * \code{.cpp}
  *
  *    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromEnv();
  *    OCIO::BakerRcPtr baker = OCIO::Baker::Create();
@@ -2784,7 +2810,7 @@ private:
  *    std::ostringstream out;
  *    baker->bake(out); // fresh bread anyone!
  *    std::cout << out.str();
- * 
+ *
  * \endcode
  */
 class OCIOEXPORT Baker
@@ -2838,12 +2864,14 @@ public:
     void setLooks(const char * looks);
 
     const char * getTargetSpace() const;
-    /// Set the target (i.e., output) color space for the LUT. Must not be used if setDisplayView is used.
+    /// Set the target (i.e., output) color space for the LUT. Must not be used if setDisplayView is
+    /// used.
     void setTargetSpace(const char * targetSpace);
 
     const char * getDisplay() const;
     const char * getView() const;
-    /// Set the display and view to apply during the baking. Must not be used if setTargetSpace is used.
+    /// Set the display and view to apply during the baking. Must not be used if setTargetSpace is
+    /// used.
     void setDisplayView(const char * display, const char * view);
 
     int getShaperSize() const;
@@ -2878,22 +2906,21 @@ public:
      */
     static const char * getFormatExtensionByIndex(int index);
 
-    Baker(const Baker &) = delete;
-    Baker& operator= (const Baker &) = delete;
+    Baker(const Baker &)             = delete;
+    Baker & operator=(const Baker &) = delete;
     /// Do not use (needed only for pybind11).
     ~Baker();
 
 private:
     Baker();
 
-    static void deleter(Baker* o);
+    static void deleter(Baker * o);
 
     class Impl;
     Impl * m_impl;
     Impl * getImpl() { return m_impl; }
     const Impl * getImpl() const { return m_impl; }
 };
-
 
 ///////////////////////////////////////////////////////////////////////////
 // ImageDesc
@@ -2951,11 +2978,10 @@ public:
 
 private:
     ImageDesc(const ImageDesc &);
-    ImageDesc & operator= (const ImageDesc &);
+    ImageDesc & operator=(const ImageDesc &);
 };
 
-extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ImageDesc&);
-
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const ImageDesc &);
 
 ///////////////////////////////////////////////////////////////////////////
 // PackedImageDesc
@@ -2974,38 +3000,37 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ImageDesc&);
 class OCIOEXPORT PackedImageDesc : public ImageDesc
 {
 public:
+    /**
+     * \note
+     *    numChannels must be 3 (RGB) or 4 (RGBA).
+     */
+    PackedImageDesc(void * data, long width, long height, long numChannels);
 
     /**
      * \note
      *    numChannels must be 3 (RGB) or 4 (RGBA).
      */
-    PackedImageDesc(void * data,
-                    long width, long height,
-                    long numChannels);
+    PackedImageDesc(
+        void * data,
+        long width,
+        long height,
+        long numChannels,
+        BitDepth bitDepth,
+        ptrdiff_t chanStrideBytes,
+        ptrdiff_t xStrideBytes,
+        ptrdiff_t yStrideBytes);
 
-    /**
-     * \note
-     *    numChannels must be 3 (RGB) or 4 (RGBA).
-     */
-    PackedImageDesc(void * data,
-                    long width, long height,
-                    long numChannels,
-                    BitDepth bitDepth,
-                    ptrdiff_t chanStrideBytes,
-                    ptrdiff_t xStrideBytes,
-                    ptrdiff_t yStrideBytes);
+    PackedImageDesc(void * data, long width, long height, ChannelOrdering chanOrder);
 
-    PackedImageDesc(void * data,
-                    long width, long height,
-                    ChannelOrdering chanOrder);
-
-    PackedImageDesc(void * data,
-                    long width, long height,
-                    ChannelOrdering chanOrder,
-                    BitDepth bitDepth,
-                    ptrdiff_t chanStrideBytes,
-                    ptrdiff_t xStrideBytes,
-                    ptrdiff_t yStrideBytes);
+    PackedImageDesc(
+        void * data,
+        long width,
+        long height,
+        ChannelOrdering chanOrder,
+        BitDepth bitDepth,
+        ptrdiff_t chanStrideBytes,
+        ptrdiff_t xStrideBytes,
+        ptrdiff_t yStrideBytes);
 
     virtual ~PackedImageDesc();
 
@@ -3042,9 +3067,8 @@ private:
 
     PackedImageDesc();
     PackedImageDesc(const PackedImageDesc &);
-    PackedImageDesc& operator= (const PackedImageDesc &);
+    PackedImageDesc & operator=(const PackedImageDesc &);
 };
-
 
 ///////////////////////////////////////////////////////////////////////////
 // PlanarImageDesc
@@ -3061,9 +3085,13 @@ private:
 class OCIOEXPORT PlanarImageDesc : public ImageDesc
 {
 public:
-
-    PlanarImageDesc(void * rData, void * gData, void * bData, void * aData,
-                    long width, long height);
+    PlanarImageDesc(
+        void * rData,
+        void * gData,
+        void * bData,
+        void * aData,
+        long width,
+        long height);
 
     /**
      *
@@ -3072,11 +3100,16 @@ public:
      * a PackedImageDesc where possible since that allows for additional
      * optimizations.
      */
-    PlanarImageDesc(void * rData, void * gData, void * bData, void * aData,
-                    long width, long height,
-                    BitDepth bitDepth,
-                    ptrdiff_t xStrideBytes,
-                    ptrdiff_t yStrideBytes);
+    PlanarImageDesc(
+        void * rData,
+        void * gData,
+        void * bData,
+        void * aData,
+        long width,
+        long height,
+        BitDepth bitDepth,
+        ptrdiff_t xStrideBytes,
+        ptrdiff_t yStrideBytes);
 
     virtual ~PlanarImageDesc();
 
@@ -3105,15 +3138,14 @@ private:
 
     PlanarImageDesc();
     PlanarImageDesc(const PlanarImageDesc &);
-    PlanarImageDesc& operator= (const PlanarImageDesc &);
+    PlanarImageDesc & operator=(const PlanarImageDesc &);
 };
-
 
 ///////////////////////////////////////////////////////////////////////////
 // GpuShaderCreator
 /**
  * Inherit from the class to fully customize the implementation of a GPU shader program
- * from a color transformation. 
+ * from a color transformation.
  *
  * When no customizations are needed and the intermediate in-memory step is acceptable then the
  * \ref GpuShaderDesc is a better choice.
@@ -3124,7 +3156,7 @@ private:
  *   \ref ExposureContrastTransform instance owns three \ref DynamicProperties and they are all
  *   implemented by a double. When creating the GPU fragment shader program, the addUniform() with
  *   GpuShaderCreator::DoubleGetter is called when property is dynamic, up to three times.
- * 
+ *
  * **An OCIO shader program could contain:**
  *
  * * A declaration part  e.g., uniform sampled3D tex3;
@@ -3136,17 +3168,17 @@ private:
  *    * The function header  e.g., void OCIODisplay(in vec4 inColor) {
  *    * The function body    e.g.,   vec4 outColor.rgb = texture3D(tex3, inColor.rgb).rgb;
  *    * The function footer  e.g.,   return outColor; }
- * 
- * 
+ *
+ *
  * **Usage Example:**
- * 
+ *
  * Below is a code snippet to highlight the different parts of the OCIO shader program.
- * 
+ *
  * \code{.cpp}
- *     
+ *
  *     // All global declarations
  *     uniform sampled3D tex3;
- *   
+ *
  *     // All helper methods
  *     vec3 computePosition(vec3 color)
  *     {
@@ -3154,23 +3186,22 @@ private:
  *        // Some processing...
  *        return coords;
  *     }
- *     
+ *
  *     // The shader function
  *     vec4 OCIODisplay(in vec4 inColor)     //
  *     {                                     // Function Header
  *        vec4 outColor = inColor;           //
- *     
+ *
  *        outColor.rgb = texture3D(tex3, computePosition(inColor.rgb)).rgb;
- *     
+ *
  *        return outColor;                   // Function Footer
  *     }                                     //
- * 
+ *
  * \endcode
  */
 class OCIOEXPORT GpuShaderCreator
 {
 public:
-
     virtual GpuShaderCreatorRcPtr clone() const = 0;
 
     const char * getUniqueID() const noexcept;
@@ -3207,12 +3238,12 @@ public:
     virtual void end();
 
     /// Some graphic cards could have 1D & 2D textures with size limitations.
-    virtual void setTextureMaxWidth(unsigned maxWidth) = 0;
+    virtual void setTextureMaxWidth(unsigned maxWidth)   = 0;
     virtual unsigned getTextureMaxWidth() const noexcept = 0;
 
     /// Allow 1D GPU resource type, otherwise always using 2D resources for 1D LUTs.
     virtual void setAllowTexture1D(bool allowed) = 0;
-    virtual bool getAllowTexture1D() const = 0;
+    virtual bool getAllowTexture1D() const       = 0;
 
     /**
      * To avoid global texture sampler and uniform name clashes always append an increasing index
@@ -3233,22 +3264,21 @@ public:
     /// Function returning an int *, used by uniforms.
     typedef std::function<const int *()> VectorIntGetter;
 
-    virtual bool addUniform(const char * name,
-                            const DoubleGetter & getDouble) = 0;
+    virtual bool addUniform(const char * name, const DoubleGetter & getDouble) = 0;
 
-    virtual bool addUniform(const char * name,
-                            const BoolGetter & getBool) = 0;
+    virtual bool addUniform(const char * name, const BoolGetter & getBool) = 0;
 
-    virtual bool addUniform(const char * name,
-                            const Float3Getter & getFloat3) = 0;
+    virtual bool addUniform(const char * name, const Float3Getter & getFloat3) = 0;
 
-    virtual bool addUniform(const char * name,
-                            const SizeGetter & getSize,
-                            const VectorFloatGetter & getVectorFloat) = 0;
+    virtual bool addUniform(
+        const char * name,
+        const SizeGetter & getSize,
+        const VectorFloatGetter & getVectorFloat)
+        = 0;
 
-    virtual bool addUniform(const char * name,
-                            const SizeGetter & getSize,
-                            const VectorIntGetter & getVectorInt) = 0;
+    virtual bool
+    addUniform(const char * name, const SizeGetter & getSize, const VectorIntGetter & getVectorInt)
+        = 0;
 
     /// Adds the property (used internally).
     void addDynamicProperty(DynamicPropertyRcPtr & prop);
@@ -3273,7 +3303,8 @@ public:
     /**
      * Dimension enum used to differentiate between 1D and 2D object/resource types.
      */
-    enum TextureDimensions : uint8_t {
+    enum TextureDimensions : uint8_t
+    {
         TEXTURE_1D = 1,
         TEXTURE_2D = 2,
     };
@@ -3283,29 +3314,35 @@ public:
      *
      * \note
      *   The 'values' parameter contains the LUT data which must be used as-is as the dimensions and
-     *   origin are hard-coded in the fragment shader program. So, it means one GPU texture per entry.
+     *   origin are hard-coded in the fragment shader program. So, it means one GPU texture per
+     *entry.
      **/
-    virtual void addTexture(const char * textureName,
-                            const char * samplerName,
-                            unsigned width, unsigned height,
-                            TextureType channel,
-                            TextureDimensions dimensions,
-                            Interpolation interpolation,
-                            const float * values) = 0;
+    virtual void addTexture(
+        const char * textureName,
+        const char * samplerName,
+        unsigned width,
+        unsigned height,
+        TextureType channel,
+        TextureDimensions dimensions,
+        Interpolation interpolation,
+        const float * values)
+        = 0;
 
     /**
      *  Add a 3D texture with RGB channel type.
-     * 
-     * \note 
+     *
+     * \note
      *   The 'values' parameter contains the 3D LUT data which must be used as-is as the dimension
      *   and origin are hard-coded in the fragment shader program. So, it means one GPU 3D texture
      *   per entry.
      **/
-    virtual void add3DTexture(const char * textureName,
-                              const char * samplerName,
-                              unsigned edgelen,
-                              Interpolation interpolation,
-                              const float * values) = 0;
+    virtual void add3DTexture(
+        const char * textureName,
+        const char * samplerName,
+        unsigned edgelen,
+        Interpolation interpolation,
+        const float * values)
+        = 0;
 
     // Methods to specialize parts of a OCIO shader program
     virtual void addToDeclareShaderCode(const char * shaderCode);
@@ -3322,16 +3359,17 @@ public:
      *   to change some parts. Some product integrations add the color processing
      *   within a client shader program, imposing constraints requiring this flexibility.
      */
-    virtual void createShaderText(const char * shaderDeclarations,
-                                  const char * shaderHelperMethods,
-                                  const char * shaderFunctionHeader,
-                                  const char * shaderFunctionBody,
-                                  const char * shaderFunctionFooter);
+    virtual void createShaderText(
+        const char * shaderDeclarations,
+        const char * shaderHelperMethods,
+        const char * shaderFunctionHeader,
+        const char * shaderFunctionBody,
+        const char * shaderFunctionFooter);
 
     virtual void finalize();
-    
-    GpuShaderCreator(const GpuShaderCreator &) = delete;
-    GpuShaderCreator & operator= (const GpuShaderCreator &) = delete;
+
+    GpuShaderCreator(const GpuShaderCreator &)             = delete;
+    GpuShaderCreator & operator=(const GpuShaderCreator &) = delete;
     /// Do not use (needed only for pybind11).
     virtual ~GpuShaderCreator();
 
@@ -3426,7 +3464,7 @@ protected:
  *  //                                                                    //
  *  ////////////////////////////////////////////////////////////////////////
  * \endcode
- * 
+ *
  * **Usage Example:** *Building a GPU shader*
  *
  *   This example is based on the code in: src/apps/ociodisplay/main.cpp
@@ -3497,7 +3535,6 @@ protected:
 class OCIOEXPORT GpuShaderDesc : public GpuShaderCreator
 {
 public:
-
     /// Create the default shader description.
     static GpuShaderDescRcPtr CreateShaderDesc();
 
@@ -3514,7 +3551,7 @@ public:
      */
     struct UniformData
     {
-        UniformDataType m_type{ UNIFORM_UNKNOWN };
+        UniformDataType m_type{UNIFORM_UNKNOWN};
         DoubleGetter m_getDouble{};
         BoolGetter m_getBool{};
         Float3Getter m_getFloat3{};
@@ -3535,30 +3572,34 @@ public:
 
     // 1D lut related methods
     virtual unsigned getNumTextures() const noexcept = 0;
-    virtual void getTexture(unsigned index,
-                            const char *& textureName,
-                            const char *& samplerName,
-                            unsigned & width,
-                            unsigned & height,
-                            TextureType & channel,
-                            TextureDimensions & dimensions,
-                            Interpolation & interpolation) const = 0;
+    virtual void getTexture(
+        unsigned index,
+        const char *& textureName,
+        const char *& samplerName,
+        unsigned & width,
+        unsigned & height,
+        TextureType & channel,
+        TextureDimensions & dimensions,
+        Interpolation & interpolation) const
+        = 0;
     virtual void getTextureValues(unsigned index, const float *& values) const = 0;
 
     // 3D lut related methods
     virtual unsigned getNum3DTextures() const noexcept = 0;
-    virtual void get3DTexture(unsigned index,
-                              const char *& textureName,
-                              const char *& samplerName,
-                              unsigned & edgelen,
-                              Interpolation & interpolation) const = 0;
+    virtual void get3DTexture(
+        unsigned index,
+        const char *& textureName,
+        const char *& samplerName,
+        unsigned & edgelen,
+        Interpolation & interpolation) const
+        = 0;
     virtual void get3DTextureValues(unsigned index, const float *& values) const = 0;
 
     /// Get the complete OCIO shader program.
     const char * getShaderText() const noexcept;
 
-    GpuShaderDesc(const GpuShaderDesc &) = delete;
-    GpuShaderDesc& operator= (const GpuShaderDesc &) = delete;
+    GpuShaderDesc(const GpuShaderDesc &)             = delete;
+    GpuShaderDesc & operator=(const GpuShaderDesc &) = delete;
     /// Do not use (needed only for pybind11).
     virtual ~GpuShaderDesc();
 
@@ -3566,19 +3607,18 @@ protected:
     GpuShaderDesc();
 };
 
-
 /**
  * Context
- * 
+ *
  * A context defines some overrides to a Config. For example, it can override the
  * search path or change the value of a context variable.
  *
- * \note 
+ * \note
  *    Only some \ref Config::getProcessor methods accept a custom context; otherwise,
  *    the default context instance is used (see \ref Config::getCurrentContext).
  *
  * Context Variables
- * 
+ *
  * The context variables allow changes at runtime using environment variables. For example,
  * a color space name (such as src & dst for the ColorSpaceTransform) or a file
  * name (such as LUT file name for the FileTransform) could be defined by context
@@ -3627,13 +3667,13 @@ public:
     /// Note that a Context StringVar is the same thing as a Config EnvironmentVar and these
     /// are both often referred to as a "context var".
     void setStringVar(const char * name, const char * value) noexcept;
-    /// Get the context variable value. It returns an empty string if the context 
+    /// Get the context variable value. It returns an empty string if the context
     /// variable is null or does not exist.
     const char * getStringVar(const char * name) const noexcept;
 
     int getNumStringVars() const;
     const char * getStringVarNameByIndex(int index) const;
-    
+
     const char * getStringVarByIndex(int index) const;
 
     void clearStringVars();
@@ -3650,11 +3690,12 @@ public:
 
     /// Resolve all the context variables from the string. It could be color space
     /// names or file names. Note that it recursively applies the context variable resolution.
-    /// Returns the string unchanged if it does not contain any context variable.  
+    /// Returns the string unchanged if it does not contain any context variable.
     const char * resolveStringVar(const char * string) const noexcept;
     /// Resolve all the context variables from the string and return all the context
     /// variables used to resolve the string (empty if no context variables were used).
-    const char * resolveStringVar(const char * string, ContextRcPtr & usedContextVars) const noexcept;
+    const char * resolveStringVar(const char * string, ContextRcPtr & usedContextVars)
+        const noexcept;
 
     /**
      * Build the resolved and expanded filepath using the search_path when needed,
@@ -3676,15 +3717,15 @@ public:
     void setConfigIOProxy(ConfigIOProxyRcPtr ciop);
     ConfigIOProxyRcPtr getConfigIOProxy() const;
 
-    Context(const Context &) = delete;
-    Context& operator= (const Context &) = delete;
+    Context(const Context &)             = delete;
+    Context & operator=(const Context &) = delete;
     /// Do not use (needed only for pybind11).
     ~Context();
 
 private:
     Context();
 
-    static void deleter(Context* c);
+    static void deleter(Context * c);
 
     class Impl;
     Impl * m_impl;
@@ -3692,8 +3733,7 @@ private:
     const Impl * getImpl() const { return m_impl; }
 };
 
-extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Context&);
-
+extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const Context &);
 
 ///////////////////////////////////////////////////////////////////////////
 // BuiltinTransformRegistry
@@ -3705,8 +3745,8 @@ extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Context&);
 class OCIOEXPORT BuiltinTransformRegistry
 {
 public:
-    BuiltinTransformRegistry(const BuiltinTransformRegistry &) = delete;
-    BuiltinTransformRegistry & operator= (const BuiltinTransformRegistry &) = delete;
+    BuiltinTransformRegistry(const BuiltinTransformRegistry &)             = delete;
+    BuiltinTransformRegistry & operator=(const BuiltinTransformRegistry &) = delete;
 
     /// Get the current built-in transform registry.
     static ConstBuiltinTransformRegistryRcPtr Get() noexcept;
@@ -3722,7 +3762,7 @@ public:
     virtual const char * getBuiltinDescription(size_t index) const = 0;
 
 protected:
-    BuiltinTransformRegistry() = default;
+    BuiltinTransformRegistry()          = default;
     virtual ~BuiltinTransformRegistry() = default;
 };
 
@@ -3735,8 +3775,8 @@ protected:
 class OCIOEXPORT BuiltinConfigRegistry
 {
 public:
-    BuiltinConfigRegistry(const BuiltinConfigRegistry &) = delete;
-    BuiltinConfigRegistry & operator= (const BuiltinConfigRegistry &) = delete;
+    BuiltinConfigRegistry(const BuiltinConfigRegistry &)             = delete;
+    BuiltinConfigRegistry & operator=(const BuiltinConfigRegistry &) = delete;
 
     /// Get the current built-in configs registry.
     static const BuiltinConfigRegistry & Get() noexcept;
@@ -3744,61 +3784,64 @@ public:
     /// Get the number of built-in configs available.
     virtual size_t getNumBuiltinConfigs() const noexcept = 0;
 
-    /// Get the name of the config at the specified (zero-based) index. 
+    /// Get the name of the config at the specified (zero-based) index.
     /// Throws for illegal index.
     virtual const char * getBuiltinConfigName(size_t configIndex) const = 0;
 
-    // Get a user-friendly name for a built-in config, appropriate for displaying in a user interface.
+    // Get a user-friendly name for a built-in config, appropriate for displaying in a user
+    // interface.
     /// Throws for illegal index.
     virtual const char * getBuiltinConfigUIName(size_t configIndex) const = 0;
 
     /// Get Yaml text of the built-in config at the specified index.
     /// Throws for illegal index.
     virtual const char * getBuiltinConfig(size_t configIndex) const = 0;
-    
-    /// Get the Yaml text of the built-in config with the specified name. 
+
+    /// Get the Yaml text of the built-in config with the specified name.
     /// Throws if the name is not found.
     virtual const char * getBuiltinConfigByName(const char * configName) const = 0;
 
     /**
      * @brief Check if a specific built-in config is recommended.
-     * 
+     *
      * For backwards compatibility reasons, configs will remain in the registry even if they have
-     * been superseded. If an app is presenting a list of configs to users, it should not include 
+     * been superseded. If an app is presenting a list of configs to users, it should not include
      * configs that are no longer recommended.
-     * 
+     *
      * Throws if the name is not found.
-     * 
+     *
      * @param configIndex Index of built-in config.
      * @return true if the config is recommended.
      */
     virtual bool isBuiltinConfigRecommended(size_t configIndex) const = 0;
 
     // Return the full forward-compatible name of the default built-in config.
-    OCIO_DEPRECATED("This was marked as deprecated starting in v2.3, please use ResolveConfigPath(\"ocio://default\").")
+    OCIO_DEPRECATED("This was marked as deprecated starting in v2.3, please use "
+                    "ResolveConfigPath(\"ocio://default\").")
     virtual const char * getDefaultBuiltinConfigName() const = 0;
+
 protected:
-    BuiltinConfigRegistry() = default;
+    BuiltinConfigRegistry()          = default;
     virtual ~BuiltinConfigRegistry() = default;
 };
-
 
 ///////////////////////////////////////////////////////////////////////////
 // SystemMonitors
 
 /**
- * Provides access to the ICC monitor profile provided by the operating system for each active display.
+ * Provides access to the ICC monitor profile provided by the operating system for each active
+ * display.
  */
 class OCIOEXPORT SystemMonitors
 {
 public:
-    SystemMonitors(const SystemMonitors &) = delete;
-    SystemMonitors & operator= (const SystemMonitors &) = delete;
+    SystemMonitors(const SystemMonitors &)             = delete;
+    SystemMonitors & operator=(const SystemMonitors &) = delete;
 
-    /// Get the existing instance. 
+    /// Get the existing instance.
     static ConstSystemMonitorsRcPtr Get() noexcept;
 
-    /** 
+    /**
      * True if the OS is able to provide ICC profiles for the attached monitors (macOS, Windows)
      * and false otherwise.
      */
@@ -3811,7 +3854,7 @@ public:
     /// Get the number of active monitors reported by the operating system.
     virtual size_t getNumMonitors() const noexcept = 0;
 
-    /** 
+    /**
      * \brief  Get the monitor profile name.
      *
      * Get the string describing the monitor. It is used as an argument to instantiateDisplay. It
@@ -3823,57 +3866,56 @@ public:
     virtual const char * getProfileFilepath(size_t idx) const = 0;
 
 protected:
-    SystemMonitors() = default;
+    SystemMonitors()          = default;
     virtual ~SystemMonitors() = default;
 };
-
 
 ///////////////////////////////////////////////////////////////////////////
 // ConfigIOProxy
 
 /**
  * ConfigIOProxy is a proxy class to allow the calling program to supply the config and any
- * associated LUT files directly, without relying on the standard file system. 
- * 
+ * associated LUT files directly, without relying on the standard file system.
+ *
  * The OCIOZ archive feature is implemented using this mechanism.
  */
 class OCIOEXPORT ConfigIOProxy
 {
 public:
-    ConfigIOProxy() = default;
+    ConfigIOProxy()          = default;
     virtual ~ConfigIOProxy() = default;
 
     /**
      * \brief Provide the contents of a LUT file as a buffer of uint8_t data.
-     * 
+     *
      * \param filepath Fully resolved path to the "file."
-     * 
+     *
      * The file path is based on the Config's current working directory and is the same absolute
      * path that would have been provided to the file system.
-     * 
+     *
      * \return Vector of uint8 with the content of the LUT.
      */
     virtual std::vector<uint8_t> getLutData(const char * filepath) const = 0;
 
     /**
      * \brief Provide the config file Yaml to be parsed.
-     * 
+     *
      * \return String with the config Yaml.
      */
     virtual std::string getConfigData() const = 0;
 
     /**
      * \brief Provide a fast unique ID for a LUT file.
-     * 
+     *
      * This is intended to supply the string that will be used in OCIO's FileCacheMap.
      * This should be highly performant and typically should not require extensive
      * computation such as calculating the md5 hash of the file, unless it is pre-computed.
-     * 
+     *
      * If the "file" does not exist, in other words, if the proxy is unable to supply the requested
      * file contents, the function must return an empty string.
-     * 
+     *
      * \param filepath Fully resolve the path to the "file."
-     * 
+     *
      * The file path is based on the Config's current working directory and is the same absolute
      * path that would have been provided to the file system.
      *

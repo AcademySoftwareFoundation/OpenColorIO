@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_CUSTOMKEYS_H
 #define INCLUDED_OCIO_CUSTOMKEYS_H
-
 
 #include <map>
 #include <sstream>
@@ -18,16 +16,13 @@ namespace OCIO_NAMESPACE
 class CustomKeysContainer
 {
 public:
-    CustomKeysContainer() = default;
-    CustomKeysContainer(const CustomKeysContainer &) = default;
+    CustomKeysContainer()                                        = default;
+    CustomKeysContainer(const CustomKeysContainer &)             = default;
     CustomKeysContainer & operator=(const CustomKeysContainer &) = default;
 
     using CustomKeys = std::map<std::string, std::string>;
 
-    size_t getSize() const noexcept
-    {
-        return m_customKeys.size();
-    }
+    size_t getSize() const noexcept { return m_customKeys.size(); }
 
     const char * getName(size_t key) const
     {
@@ -75,6 +70,6 @@ private:
     CustomKeys m_customKeys;
 };
 
-}  // namespace OCIO_NAMESPACE
+} // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_CUSTOMKEYS_H

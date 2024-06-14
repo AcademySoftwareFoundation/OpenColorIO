@@ -15,15 +15,16 @@ namespace OCIO_NAMESPACE
 
 GradingBSplineCurveRcPtr GradingBSplineCurve::Create(size_t size)
 {
-    auto newSpline = std::make_shared<GradingBSplineCurveImpl>(size);
+    auto newSpline               = std::make_shared<GradingBSplineCurveImpl>(size);
     GradingBSplineCurveRcPtr res = newSpline;
     return res;
 }
 
-GradingBSplineCurveRcPtr GradingBSplineCurve::Create(std::initializer_list<GradingControlPoint> values)
+GradingBSplineCurveRcPtr GradingBSplineCurve::Create(
+    std::initializer_list<GradingControlPoint> values)
 {
     auto newSpline = std::make_shared<GradingBSplineCurveImpl>(values.size());
-    size_t i = 0;
+    size_t i       = 0;
     for (const auto & c : values)
     {
         newSpline->getControlPoint(i++) = c;
@@ -34,20 +35,23 @@ GradingBSplineCurveRcPtr GradingBSplineCurve::Create(std::initializer_list<Gradi
 }
 
 GradingBSplineCurveImpl::GradingBSplineCurveImpl(size_t size)
-    : m_controlPoints(size), m_slopesArray(size, 0.f)
+    : m_controlPoints(size)
+    , m_slopesArray(size, 0.f)
 {
 }
 
-GradingBSplineCurveImpl::GradingBSplineCurveImpl(const std::vector<GradingControlPoint> & controlPoints)
-    : m_controlPoints(controlPoints), m_slopesArray(controlPoints.size(), 0.f)
+GradingBSplineCurveImpl::GradingBSplineCurveImpl(
+    const std::vector<GradingControlPoint> & controlPoints)
+    : m_controlPoints(controlPoints)
+    , m_slopesArray(controlPoints.size(), 0.f)
 {
 }
 
 GradingBSplineCurveRcPtr GradingBSplineCurveImpl::createEditableCopy() const
 {
-    auto copy = std::make_shared<GradingBSplineCurveImpl>(0);
+    auto copy             = std::make_shared<GradingBSplineCurveImpl>(0);
     copy->m_controlPoints = m_controlPoints;
-    copy->m_slopesArray = m_slopesArray;
+    copy->m_slopesArray   = m_slopesArray;
     GradingBSplineCurveRcPtr res;
     res = copy;
     return res;
@@ -70,7 +74,7 @@ void GradingBSplineCurveImpl::validateIndex(size_t index) const
     if (index >= numPoints)
     {
         std::ostringstream oss;
-        oss << "There are '"<< numPoints << "' control points. '" << index << "' is invalid.";
+        oss << "There are '" << numPoints << "' control points. '" << index << "' is invalid.";
         throw Exception(oss.str().c_str());
     }
 }
@@ -210,33 +214,34 @@ void EstimateSlopes(const std::vector<GradingControlPoint> & ctrlPnts, std::vect
     slopes.push_back(0.f);
     for (size_t k = 1; k < numCtrlPnts - 1; ++k)
     {
-        const float s = (secantLen[k] * secantSlope[k] + secantLen[k - 1] * secantSlope[k - 1]) /
-                        (secantLen[k] + secantLen[k - 1]);
+        const float s = (secantLen[k] * secantSlope[k] + secantLen[k - 1] * secantSlope[k - 1])
+                        / (secantLen[k] + secantLen[k - 1]);
         slopes.push_back(s);
     }
-    slopes.push_back(std::max(0.01f, 0.5f * (3.f * secantSlope[numCtrlPnts - 2] -
-                                     slopes[numCtrlPnts - 2])));
+    slopes.push_back(
+        std::max(0.01f, 0.5f * (3.f * secantSlope[numCtrlPnts - 2] - slopes[numCtrlPnts - 2])));
     slopes[0] = std::max(0.01f, 0.5f * (3.f * secantSlope[0] - slopes[1]));
 }
 
-void FitSpline(const std::vector<GradingControlPoint> & ctrlPnts,
-               const std::vector<float> & slopes,
-               std::vector<float> & knots,
-               std::vector<float> & coefsA,
-               std::vector<float> & coefsB,
-               std::vector<float> & coefsC)
+void FitSpline(
+    const std::vector<GradingControlPoint> & ctrlPnts,
+    const std::vector<float> & slopes,
+    std::vector<float> & knots,
+    std::vector<float> & coefsA,
+    std::vector<float> & coefsB,
+    std::vector<float> & coefsC)
 {
     const size_t numCtrlPnts = ctrlPnts.size();
 
     knots.push_back(ctrlPnts[0].m_x);
     for (size_t i = 0; i < numCtrlPnts - 1; ++i)
     {
-        const float xi = ctrlPnts[i].m_x;
-        const float xi_pl1 = ctrlPnts[i + 1].m_x;
-        const float yi = ctrlPnts[i].m_y;
-        const float yi_pl1 = ctrlPnts[i + 1].m_y;
-        const float del_x = xi_pl1 - xi;
-        const float del_y = yi_pl1 - yi;
+        const float xi          = ctrlPnts[i].m_x;
+        const float xi_pl1      = ctrlPnts[i + 1].m_x;
+        const float yi          = ctrlPnts[i].m_y;
+        const float yi_pl1      = ctrlPnts[i + 1].m_y;
+        const float del_x       = xi_pl1 - xi;
+        const float del_y       = yi_pl1 - yi;
         const float secantSlope = del_y / del_x;
         if (std::fabs((slopes[i] + slopes[i + 1]) - 2.f * secantSlope) < 1e-6f)
         {
@@ -246,7 +251,7 @@ void FitSpline(const std::vector<GradingControlPoint> & ctrlPnts,
         }
         else
         {
-            float ksi = 0.f;
+            float ksi      = 0.f;
             const float aa = slopes[i] - secantSlope;
             const float bb = slopes[i + 1] - secantSlope;
             if (aa * bb >= 0.f)
@@ -264,8 +269,8 @@ void FitSpline(const std::vector<GradingControlPoint> & ctrlPnts,
                     ksi = xi + bb * del_x / (slopes[i + 1] - slopes[i]);
                 }
             }
-            const float s_bar = (2.f * secantSlope - slopes[i + 1]) +
-                (slopes[i + 1] - slopes[i]) * (ksi - xi) / del_x;
+            const float s_bar = (2.f * secantSlope - slopes[i + 1])
+                                + (slopes[i + 1] - slopes[i]) * (ksi - xi) / del_x;
             const float eta = (s_bar - slopes[i]) / (ksi - xi);
             coefsC.push_back(yi);
             coefsB.push_back(slopes[i]);
@@ -279,9 +284,10 @@ void FitSpline(const std::vector<GradingControlPoint> & ctrlPnts,
     }
 }
 
-bool AdjustSlopes(const std::vector<GradingControlPoint> & ctrlPnts,
-                  std::vector<float> & slopes,
-                  std::vector<float> & knots)
+bool AdjustSlopes(
+    const std::vector<GradingControlPoint> & ctrlPnts,
+    std::vector<float> & slopes,
+    std::vector<float> & knots)
 {
     bool adjustment_done = false;
     size_t i = 0, j = 0;
@@ -290,27 +296,28 @@ bool AdjustSlopes(const std::vector<GradingControlPoint> & ctrlPnts,
     {
         if (ctrlPnts[i].m_x != knots[j])
         {
-            const float ksi = knots[j];
-            const float xi = ctrlPnts[i].m_x;
+            const float ksi    = knots[j];
+            const float xi     = ctrlPnts[i].m_x;
             const float xi_pl1 = ctrlPnts[i + 1].m_x;
-            const float yi = ctrlPnts[i].m_y;
+            const float yi     = ctrlPnts[i].m_y;
             const float yi_pl1 = ctrlPnts[i + 1].m_y;
-            const float s_bar = (2.f * (yi_pl1 - yi) - (ksi - xi) * slopes[i] -
-                                 (xi_pl1 - ksi) * slopes[i + 1]) / (xi_pl1 - xi);
+            const float s_bar
+                = (2.f * (yi_pl1 - yi) - (ksi - xi) * slopes[i] - (xi_pl1 - ksi) * slopes[i + 1])
+                  / (xi_pl1 - xi);
             if (s_bar < 0.f)
             {
                 adjustment_done = true;
-                float secant = (yi_pl1 - yi) / (xi_pl1 - xi);
-                const float blend_slope = ((ksi - xi) * slopes[i] + (xi_pl1 - ksi) * slopes[i + 1]) /
-                                          (xi_pl1 - xi);
+                float secant    = (yi_pl1 - yi) / (xi_pl1 - xi);
+                const float blend_slope
+                    = ((ksi - xi) * slopes[i] + (xi_pl1 - ksi) * slopes[i + 1]) / (xi_pl1 - xi);
                 float aim_slope = 0.01f * 0.5f * (slopes[i] + slopes[i + 1]);
                 if (aim_slope > secant)
                 {
                     aim_slope = secant;
                 }
                 const float adjust = (2.f * secant - aim_slope) / blend_slope;
-                slopes[i] = slopes[i] * adjust;
-                slopes[i + 1] = slopes[i + 1] * adjust;
+                slopes[i]          = slopes[i] * adjust;
+                slopes[i + 1]      = slopes[i + 1] * adjust;
             }
             i++;
         }
@@ -319,7 +326,7 @@ bool AdjustSlopes(const std::vector<GradingControlPoint> & ctrlPnts,
     return adjustment_done;
 }
 
-}   // namespace
+} // namespace
 
 void GradingBSplineCurveImpl::computeKnotsAndCoefs(KnotsCoefs & knotsCoefs, int curveIdx) const
 {
@@ -327,9 +334,9 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefs(KnotsCoefs & knotsCoefs, int 
     if (m_controlPoints.size() < 2 || isIdentity())
     {
         // Identity curve: offset is -1 and count is 0.
-        knotsCoefs.m_knotsOffsetsArray[curveIdx * 2] = -1;
+        knotsCoefs.m_knotsOffsetsArray[curveIdx * 2]     = -1;
         knotsCoefs.m_knotsOffsetsArray[curveIdx * 2 + 1] = 0;
-        knotsCoefs.m_coefsOffsetsArray[curveIdx * 2] = -1;
+        knotsCoefs.m_coefsOffsetsArray[curveIdx * 2]     = -1;
         knotsCoefs.m_coefsOffsetsArray[curveIdx * 2 + 1] = 0;
     }
     else
@@ -340,7 +347,7 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefs(KnotsCoefs & knotsCoefs, int 
         std::vector<float> coefsC;
         std::vector<float> slopes;
 
-        if ( !slopesAreDefault() && (m_slopesArray.size() == m_controlPoints.size()) )
+        if (!slopesAreDefault() && (m_slopesArray.size() == m_controlPoints.size()))
         {
             // If the user-supplied slopes are non-zero, use those.
             slopes = m_slopesArray;
@@ -358,7 +365,9 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefs(KnotsCoefs & knotsCoefs, int 
         if (adjustment_done)
         {
             knots.clear();
-            coefsA.clear();  coefsB.clear();  coefsC.clear();
+            coefsA.clear();
+            coefsB.clear();
+            coefsC.clear();
             FitSpline(m_controlPoints, slopes, knots, coefsA, coefsB, coefsC);
         }
 
@@ -367,15 +376,15 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefs(KnotsCoefs & knotsCoefs, int 
         const int numCoefs = static_cast<int>(knotsCoefs.m_coefsArray.size());
         const int newCoefs = static_cast<int>(coefsA.size() * 3);
 
-        if (numKnots + newKnots > KnotsCoefs::MAX_NUM_KNOTS ||
-            numCoefs + newCoefs > KnotsCoefs::MAX_NUM_COEFS)
+        if (numKnots + newKnots > KnotsCoefs::MAX_NUM_KNOTS
+            || numCoefs + newCoefs > KnotsCoefs::MAX_NUM_COEFS)
         {
             throw Exception("RGB curve: maximum number of control points reached.");
         }
 
-        knotsCoefs.m_knotsOffsetsArray[curveIdx * 2] = numKnots;
+        knotsCoefs.m_knotsOffsetsArray[curveIdx * 2]     = numKnots;
         knotsCoefs.m_knotsOffsetsArray[curveIdx * 2 + 1] = newKnots;
-        knotsCoefs.m_coefsOffsetsArray[curveIdx * 2] = numCoefs;
+        knotsCoefs.m_coefsOffsetsArray[curveIdx * 2]     = numCoefs;
         knotsCoefs.m_coefsOffsetsArray[curveIdx * 2 + 1] = newCoefs;
 
         knotsCoefs.m_knotsArray.insert(knotsCoefs.m_knotsArray.end(), knots.begin(), knots.end());
@@ -385,13 +394,15 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefs(KnotsCoefs & knotsCoefs, int 
     }
 }
 
-void GradingBSplineCurveImpl::AddShaderEval(GpuShaderText & st, 
-                                            const std::string & knotsOffsets,
-                                            const std::string & coefsOffsets,
-                                            const std::string & knots, 
-                                            const std::string & coefs, bool isInv)
+void GradingBSplineCurveImpl::AddShaderEval(
+    GpuShaderText & st,
+    const std::string & knotsOffsets,
+    const std::string & coefsOffsets,
+    const std::string & knots,
+    const std::string & coefs,
+    bool isInv)
 {
-    if (!isInv)     // Forward
+    if (!isInv) // Forward
     {
         st.newLine() << "int knotsOffs = " << knotsOffsets << "[curveIdx * 2];";
         st.newLine() << "int knotsCnt = " << knotsOffsets << "[curveIdx * 2 + 1];";
@@ -443,7 +454,7 @@ void GradingBSplineCurveImpl::AddShaderEval(GpuShaderText & st,
         st.newLine() << "float t = x - kn;";
         st.newLine() << "return ( A * t + B ) * t + C;";
     }
-    else            // Inverse
+    else // Inverse
     {
         st.newLine() << "int knotsOffs = " << knotsOffsets << "[curveIdx * 2];";
         st.newLine() << "int knotsCnt = " << knotsOffsets << "[curveIdx * 2 + 1];";
@@ -516,11 +527,11 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurve(int c, float x) const
         return x;
     }
     const int coefsOffs = m_coefsOffsetsArray[2 * c];
-    const int knotsCnt = m_knotsOffsetsArray[2 * c + 1];
+    const int knotsCnt  = m_knotsOffsetsArray[2 * c + 1];
     const int knotsOffs = m_knotsOffsetsArray[2 * c];
 
     const float knStart = m_knotsArray[knotsOffs];
-    const float knEnd = m_knotsArray[knotsOffs + knotsCnt - 1];
+    const float knEnd   = m_knotsArray[knotsOffs + knotsCnt - 1];
 
     if (x <= knStart)
     {
@@ -530,13 +541,13 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurve(int c, float x) const
     }
     else if (x >= knEnd)
     {
-        const float A  = m_coefsArray[coefsOffs + coefsSets - 1];
-        const float B  = m_coefsArray[coefsOffs + coefsSets * 2 - 1];
-        const float C  = m_coefsArray[coefsOffs + coefsSets * 3 - 1];
-        const float kn = m_knotsArray[knotsOffs + knotsCnt - 2];
-        const float t = knEnd - kn;
+        const float A     = m_coefsArray[coefsOffs + coefsSets - 1];
+        const float B     = m_coefsArray[coefsOffs + coefsSets * 2 - 1];
+        const float C     = m_coefsArray[coefsOffs + coefsSets * 3 - 1];
+        const float kn    = m_knotsArray[knotsOffs + knotsCnt - 2];
+        const float t     = knEnd - kn;
         const float slope = 2.f * A * t + B;
-        const float offs = (A * t + B) * t + C;
+        const float offs  = (A * t + B) * t + C;
         return (x - knEnd) * slope + offs;
     }
     else
@@ -551,7 +562,7 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurve(int c, float x) const
         const float B  = m_coefsArray[coefsOffs + coefsSets + i];
         const float C  = m_coefsArray[coefsOffs + coefsSets * 2 + i];
         const float kn = m_knotsArray[knotsOffs + i];
-        const float t = x - kn;
+        const float t  = x - kn;
         return (A * t + B) * t + C;
     }
 }
@@ -564,11 +575,11 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRev(int c, float y) const
         return y;
     }
     const int coefsOffs = m_coefsOffsetsArray[2 * c];
-    const int knotsCnt = m_knotsOffsetsArray[2 * c + 1];
+    const int knotsCnt  = m_knotsOffsetsArray[2 * c + 1];
     const int knotsOffs = m_knotsOffsetsArray[2 * c];
 
-    const float knStart = m_knotsArray[knotsOffs];
-    const float knEnd = m_knotsArray[knotsOffs + knotsCnt - 1];
+    const float knStart  = m_knotsArray[knotsOffs];
+    const float knEnd    = m_knotsArray[knotsOffs + knotsCnt - 1];
     const float knStartY = m_coefsArray[coefsOffs + coefsSets * 2];
     float knEndY;
     {
@@ -576,8 +587,8 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRev(int c, float y) const
         const float B  = m_coefsArray[coefsOffs + coefsSets * 2 - 1];
         const float C  = m_coefsArray[coefsOffs + coefsSets * 3 - 1];
         const float kn = m_knotsArray[knotsOffs + knotsCnt - 2];
-        const float t = knEnd - kn;
-        knEndY = (A * t + B) * t + C;
+        const float t  = knEnd - kn;
+        knEndY         = (A * t + B) * t + C;
     }
 
     if (y <= knStartY)
@@ -588,13 +599,13 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRev(int c, float y) const
     }
     else if (y >= knEndY)
     {
-        const float A  = m_coefsArray[coefsOffs + coefsSets - 1];
-        const float B  = m_coefsArray[coefsOffs + coefsSets * 2 - 1];
-        const float C  = m_coefsArray[coefsOffs + coefsSets * 3 - 1];
-        const float kn = m_knotsArray[knotsOffs + knotsCnt - 2];
-        const float t = knEnd - kn;
+        const float A     = m_coefsArray[coefsOffs + coefsSets - 1];
+        const float B     = m_coefsArray[coefsOffs + coefsSets * 2 - 1];
+        const float C     = m_coefsArray[coefsOffs + coefsSets * 3 - 1];
+        const float kn    = m_knotsArray[knotsOffs + knotsCnt - 2];
+        const float t     = knEnd - kn;
         const float slope = 2.f * A * t + B;
-        const float offs = (A * t + B) * t + C;
+        const float offs  = (A * t + B) * t + C;
         return std::fabs(slope) < 1e-5f ? knEnd : (y - offs) / slope + knEnd;
     }
     else
@@ -605,11 +616,11 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRev(int c, float y) const
             if (y < m_coefsArray[coefsOffs + coefsSets * 2 + i + 1])
                 break;
         }
-        const float A  = m_coefsArray[coefsOffs + i];
-        const float B  = m_coefsArray[coefsOffs + coefsSets + i];
-        const float C  = m_coefsArray[coefsOffs + coefsSets * 2 + i];
-        const float kn = m_knotsArray[knotsOffs + i];
-        const float C0 = C - y;
+        const float A       = m_coefsArray[coefsOffs + i];
+        const float B       = m_coefsArray[coefsOffs + coefsSets + i];
+        const float C       = m_coefsArray[coefsOffs + coefsSets * 2 + i];
+        const float kn      = m_knotsArray[knotsOffs + i];
+        const float C0      = C - y;
         const float discrim = sqrt(B * B - 4.f * A * C0);
         return kn + (-2.f * C0) / (discrim + B);
     }
@@ -648,4 +659,3 @@ bool operator!=(const GradingBSplineCurve & lhs, const GradingBSplineCurve & rhs
 }
 
 } // namespace OCIO_NAMESPACE
-

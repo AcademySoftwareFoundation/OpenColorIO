@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_ALLOCATIONOP_H
 #define INCLUDED_OCIO_ALLOCATIONOP_H
 
@@ -16,20 +15,17 @@ struct AllocationData
     Allocation allocation;
     std::vector<float> vars;
 
-    AllocationData():
-        allocation(ALLOCATION_UNIFORM)
-        {};
+    AllocationData()
+        : allocation(ALLOCATION_UNIFORM){};
 
     std::string getCacheID() const;
 };
 
-std::ostream& operator<< (std::ostream&, const AllocationData&);
+std::ostream & operator<<(std::ostream &, const AllocationData &);
 
 void CreateGpuAllocationNoOp(OpRcPtrVec & ops, const AllocationData & allocationData);
 
-void CreateAllocationOps(OpRcPtrVec & ops,
-                         const AllocationData & data,
-                         TransformDirection dir);
+void CreateAllocationOps(OpRcPtrVec & ops, const AllocationData & data, TransformDirection dir);
 
 } // namespace OCIO_NAMESPACE
 

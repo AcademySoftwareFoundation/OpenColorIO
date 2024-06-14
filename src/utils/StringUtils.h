@@ -11,13 +11,11 @@
 #include <string>
 #include <vector>
 
-
 // Note: Most of the implementations heavily rely on the C++ std::move() in order
 //       to simplify the writing without performance penalty.
 
 namespace StringUtils
 {
-
 
 using StringVec = std::vector<std::string>;
 
@@ -25,10 +23,12 @@ using StringVec = std::vector<std::string>;
 // std::tolower, to avoid the "Turkish I" problem in file parsing.
 inline unsigned char Lower(unsigned char c)
 {
-    if(c >= 'A' && c <= 'Z') {
+    if (c >= 'A' && c <= 'Z')
+    {
         return c + ('a' - 'A');
     }
-    else {
+    else
+    {
         return c;
     }
 }
@@ -36,10 +36,12 @@ inline unsigned char Lower(unsigned char c)
 // Return the upper case character, without taking into account locale.
 inline unsigned char Upper(unsigned char c)
 {
-    if(c >= 'a' && c <= 'z') {
+    if (c >= 'a' && c <= 'z')
+    {
         return c - ('a' - 'A');
     }
-    else {
+    else
+    {
         return c;
     }
 }
@@ -47,30 +49,30 @@ inline unsigned char Upper(unsigned char c)
 // Return the lower case string.
 inline std::string Lower(std::string str)
 {
-    std::transform(str.begin(), str.end(), str.begin(),
-                   [](unsigned char c) { return Lower(c); });
+    std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) { return Lower(c); });
     return str;
 }
 
 inline std::string Lower(const char * str)
 {
-    if (!str) return "";
-    const std::string s{ str };
+    if (!str)
+        return "";
+    const std::string s{str};
     return Lower(s);
 }
 
 // Return the upper case string.
 inline std::string Upper(std::string str)
 {
-    std::transform(str.begin(), str.end(), str.begin(),
-                   [](unsigned char c) { return Upper(c); });
+    std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) { return Upper(c); });
     return str;
 }
 
 inline std::string Upper(const char * str)
 {
-    if (!str) return "";
-    const std::string s{ str };
+    if (!str)
+        return "";
+    const std::string s{str};
     return Upper(s);
 }
 
@@ -84,8 +86,8 @@ inline bool Compare(const std::string & left, const std::string & right)
 // Note: The comparison is case sensitive.
 inline bool EndsWith(const std::string & str, const std::string & suffix)
 {
-    return str.size() >= suffix.size() &&
-           0 == str.compare(str.size() - suffix.size(), suffix.size(), suffix);
+    return str.size() >= suffix.size()
+           && 0 == str.compare(str.size() - suffix.size(), suffix.size(), suffix);
 }
 
 // Return true if the string starts with the prefix.
@@ -98,7 +100,7 @@ inline bool StartsWith(const std::string & str, const std::string & prefix)
 // Starting from the left, trim the character.
 inline std::string LeftTrim(std::string str, char c)
 {
-    const auto it = std::find_if(str.begin(), str.end(), [&c](char ch) { return c!=ch; });
+    const auto it = std::find_if(str.begin(), str.end(), [&c](char ch) { return c != ch; });
     str.erase(str.begin(), it);
     return str;
 }
@@ -106,7 +108,9 @@ inline std::string LeftTrim(std::string str, char c)
 // Starting from the left, trim all the space characters i.e. space, tabulation, etc.
 inline std::string LeftTrim(std::string str)
 {
-    const auto it = std::find_if(str.begin(), str.end(), [](char ch) { return !std::isspace(static_cast<unsigned char>(ch)); });
+    const auto it = std::find_if(str.begin(), str.end(), [](char ch) {
+        return !std::isspace(static_cast<unsigned char>(ch));
+    });
     str.erase(str.begin(), it);
     return str;
 }
@@ -114,7 +118,7 @@ inline std::string LeftTrim(std::string str)
 // Starting from the right, trim the character.
 inline std::string RightTrim(std::string str, char c)
 {
-    const auto it = std::find_if(str.rbegin(), str.rend(), [&c](char ch) { return c!=ch; });
+    const auto it = std::find_if(str.rbegin(), str.rend(), [&c](char ch) { return c != ch; });
     str.erase(it.base(), str.end());
     return str;
 }
@@ -122,8 +126,9 @@ inline std::string RightTrim(std::string str, char c)
 // Starting from the right, trim all the space characters i.e. space, tabulation, etc.
 inline std::string RightTrim(std::string str)
 {
-    const auto it =
-        std::find_if(str.rbegin(), str.rend(), [](char ch) { return !std::isspace(static_cast<unsigned char>(ch)); });
+    const auto it = std::find_if(str.rbegin(), str.rend(), [](char ch) {
+        return !std::isspace(static_cast<unsigned char>(ch));
+    });
     str.erase(it.base(), str.end());
     return str;
 }
@@ -151,7 +156,8 @@ inline void Trim(StringVec & list)
 // Split a string content using an arbitrary separator.
 inline StringVec Split(const std::string & str, char separator)
 {
-    if (str.empty())  return {""};
+    if (str.empty())
+        return {""};
 
     StringVec results;
 
@@ -173,16 +179,18 @@ inline StringVec Split(const std::string & str, char separator)
 // Join a list of strings using an arbitrary separator.
 inline std::string Join(const StringVec & strings, char separator)
 {
-    if (strings.empty()) return "";
+    if (strings.empty())
+        return "";
 
     const StringVec::size_type len = strings.size();
 
-    if (len==1) return strings[0];
+    if (len == 1)
+        return strings[0];
 
     const std::string sep(1, separator);
 
     std::string result{strings[0]};
-    for (StringVec::size_type i=1; i<len; ++i)
+    for (StringVec::size_type i = 1; i < len; ++i)
     {
         result += sep + " " + strings[i];
     }
@@ -193,7 +201,8 @@ inline std::string Join(const StringVec & strings, char separator)
 // Split a string content by line feeds.
 inline StringVec SplitByLines(const std::string & str)
 {
-    if (str.empty())  return {""};
+    if (str.empty())
+        return {""};
 
     StringVec results;
 
@@ -211,8 +220,9 @@ inline StringVec SplitByLines(const std::string & str)
 inline StringVec SplitByWhiteSpaces(const std::string & str)
 {
     std::stringstream stream(str);
-    return std::vector<std::string>(std::istream_iterator<std::string>(stream),
-                                    std::istream_iterator<std::string>());
+    return std::vector<std::string>(
+        std::istream_iterator<std::string>(stream),
+        std::istream_iterator<std::string>());
 }
 
 // Find the position of 'search' substring.
@@ -230,11 +240,12 @@ inline std::string::size_type ReverseFind(const std::string & subject, const std
 }
 
 // In place replace the 'search' substring by the 'replace' string in 'str'.
-inline bool ReplaceInPlace(std::string & subject, const std::string & search, const std::string & replace)
+inline bool
+ReplaceInPlace(std::string & subject, const std::string & search, const std::string & replace)
 {
     bool changed = false;
 
-    size_t pos =  0;
+    size_t pos = 0;
     while ((pos = subject.find(search, pos)) != std::string::npos)
     {
         subject.replace(pos, search.length(), replace);
@@ -246,7 +257,8 @@ inline bool ReplaceInPlace(std::string & subject, const std::string & search, co
 }
 
 // Replace the 'search' substring by the 'replace' string in 'str'.
-inline std::string Replace(const std::string & subject, const std::string & search, const std::string & replace)
+inline std::string
+Replace(const std::string & subject, const std::string & search, const std::string & replace)
 {
     std::string str{subject};
     ReplaceInPlace(str, search, replace);
@@ -256,24 +268,20 @@ inline std::string Replace(const std::string & subject, const std::string & sear
 // Check if the 'entry' is in the 'list' using a case insensitive comparison.
 inline bool Contain(const StringVec & list, const std::string & entry)
 {
-    const auto it = std::find_if(list.begin(), list.end(), 
-                                 [entry](const std::string & ent) 
-                                 { 
-                                    return Compare(ent.c_str(), entry.c_str()); 
-                                 });
-    return it!=list.end();
+    const auto it = std::find_if(list.begin(), list.end(), [entry](const std::string & ent) {
+        return Compare(ent.c_str(), entry.c_str());
+    });
+    return it != list.end();
 }
 
 // Remove the 'entry' from the 'list' using a case insensitive comparison.
 // It returns true if found.
 inline bool Remove(StringVec & list, const std::string & entry)
 {
-    const auto it = std::find_if(list.begin(), list.end(), 
-                                 [entry](const std::string & ent) 
-                                 { 
-                                    return Compare(ent.c_str(), entry.c_str()); 
-                                 });
-    if (it!=list.end())
+    const auto it = std::find_if(list.begin(), list.end(), [entry](const std::string & ent) {
+        return Compare(ent.c_str(), entry.c_str());
+    });
+    if (it != list.end())
     {
         list.erase(it);
         return true;

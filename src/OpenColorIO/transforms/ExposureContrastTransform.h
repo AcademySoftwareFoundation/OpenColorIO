@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_EXPOSURECONTRASTTRANSFORM_H
 #define INCLUDED_OCIO_EXPOSURECONTRASTTRANSFORM_H
 
@@ -9,17 +8,16 @@
 
 #include "ops/exposurecontrast/ExposureContrastOpData.h"
 
-
 namespace OCIO_NAMESPACE
 {
 
 class ExposureContrastTransformImpl : public ExposureContrastTransform
 {
 public:
-    ExposureContrastTransformImpl() = default;
-    ExposureContrastTransformImpl(const ExposureContrastTransformImpl &) = delete;
+    ExposureContrastTransformImpl()                                                  = default;
+    ExposureContrastTransformImpl(const ExposureContrastTransformImpl &)             = delete;
     ExposureContrastTransformImpl & operator=(const ExposureContrastTransformImpl &) = delete;
-    virtual ~ExposureContrastTransformImpl() = default;
+    virtual ~ExposureContrastTransformImpl()                                         = default;
 
     TransformRcPtr createEditableCopy() const override;
 
@@ -72,7 +70,6 @@ private:
     ExposureContrastOpData m_data;
 };
 
-
 } // namespace OCIO_NAMESPACE
 
-#endif  // INCLUDED_OCIO_EXPOSURECONTRASTTRANSFORM_H
+#endif // INCLUDED_OCIO_EXPOSURECONTRASTTRANSFORM_H
