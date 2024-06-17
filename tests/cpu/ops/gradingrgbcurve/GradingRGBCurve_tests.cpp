@@ -107,6 +107,7 @@ OCIO_ADD_TEST(GradingRGBCurve, curves)
     OCIO_CHECK_EQUAL(curves->getCurve(OCIO::RGB_GREEN)->getNumControlPoints(), 4);
 }
 
+// TODO:: Move this test in the HueCurve version since it is easier to reach the max control points.
 OCIO_ADD_TEST(GradingRGBCurve, max_ctrl_pnts)
 {
     auto curveR = OCIO::GradingBSplineCurve::Create({ { 0.f, 10.f },{ 2.f, 10.f },{ 3.f, 10.f },{ 5.f, 10.f },{ 6.f, 10.f },
