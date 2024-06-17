@@ -265,7 +265,6 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
         st.indent();
     }    
 
-    
     // Add the conversion from RGB to HSY.
     {
       FixedFunctionOpData::Style hsyStyle = FixedFunctionOpData::RGB_TO_HSY_LIN;

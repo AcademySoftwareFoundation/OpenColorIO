@@ -45,8 +45,8 @@ static const std::vector<GradingControlPoint> DefaultLumLumLinCtrl{ { -7.0f, -7.
 }
 
 const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultHueHue(DefaultHueHueCtrl, BSplineCurveType::HUE_HUE_B_SPLINE );
-const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultHueSat(DefaultHueSatCtrl, BSplineCurveType::PERIODIC_HORIZONTAL1_B_SPLINE );
-const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultHueFx(DefaultHueFxCtrl, BSplineCurveType::PERIODIC_HORIZONTAL0_B_SPLINE );
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultHueSat(DefaultHueSatCtrl, BSplineCurveType::PERIODIC_1_B_SPLINE );
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultHueFx(DefaultHueFxCtrl, BSplineCurveType::PERIODIC_0_B_SPLINE );
 const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultLumSat(DefaultLumSatCtrl, BSplineCurveType::HORIZONTAL1_B_SPLINE);
 const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultLumSatLin(DefaultLumSatLinCtrl, BSplineCurveType::HORIZONTAL1_B_SPLINE);
 const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultSatSat(DefaultSatSatCtrl, BSplineCurveType::DIAGONAL_B_SPLINE);
@@ -56,24 +56,24 @@ const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultLumLumLin(DefaultLumLu
 
 const std::array<std::reference_wrapper<const GradingBSplineCurveImpl>, static_cast<size_t>(HUE_NUM_CURVES)> 
    GradingHueCurveImpl::DefaultCurvesLin( {  std::ref(DefaultHueHue),
-                                      std::ref(DefaultHueSat),
-                                      std::ref(DefaultHueSat),
-                                      std::ref(DefaultLumSatLin),
-                                      std::ref(DefaultSatSat),
-                                      std::ref(DefaultLumLumLin),
-                                      std::ref(DefaultSatLum),
-                                      std::ref(DefaultHueFx) });
+                                             std::ref(DefaultHueSat),
+                                             std::ref(DefaultHueSat), // HUE_LUM use the same as HUE_SAT
+                                             std::ref(DefaultLumSatLin),
+                                             std::ref(DefaultSatSat),
+                                             std::ref(DefaultLumLumLin),
+                                             std::ref(DefaultSatLum),
+                                             std::ref(DefaultHueFx) });
 
 
 const std::array<std::reference_wrapper<const GradingBSplineCurveImpl>, static_cast<size_t>(HUE_NUM_CURVES)> 
    GradingHueCurveImpl::DefaultCurves(  {  std::ref(DefaultHueHue),
-                                    std::ref(DefaultHueSat),
-                                    std::ref(DefaultHueSat),
-                                    std::ref(DefaultLumSat),
-                                    std::ref(DefaultSatSat),
-                                    std::ref(DefaultLumLum),
-                                    std::ref(DefaultSatLum),
-                                    std::ref(DefaultHueFx) });
+                                           std::ref(DefaultHueSat),
+                                           std::ref(DefaultHueSat), // HUE_LUM use the same as HUE_SAT
+                                           std::ref(DefaultLumSat),
+                                           std::ref(DefaultSatSat),
+                                           std::ref(DefaultLumLum),
+                                           std::ref(DefaultSatLum),
+                                           std::ref(DefaultHueFx) });
 
 GradingHueCurveImpl::GradingHueCurveImpl() : 
     GradingHueCurveImpl(GRADING_LOG)

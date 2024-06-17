@@ -13,7 +13,7 @@ namespace OCIO_NAMESPACE
 GradingHueCurveTransformRcPtr GradingHueCurveTransform::Create(GradingStyle style)
 {
     return GradingHueCurveTransformRcPtr(new GradingHueCurveTransformImpl(style),
-                                      &GradingHueCurveTransformImpl::deleter);
+                                         &GradingHueCurveTransformImpl::deleter);
 }
 
 GradingHueCurveTransformImpl::GradingHueCurveTransformImpl(GradingStyle style) :

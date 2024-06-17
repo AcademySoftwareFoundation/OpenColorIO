@@ -1705,21 +1705,21 @@ void Add_RGB_TO_HSY(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, f
     ss.newLine() << "float distRGB  = dot( abs(RGBm), ones );";
     if (min0 > 0.f)
     {
-      ss.newLine() << "float sumRGB  = dot( " << pxl << ".rgb, ones );";
-      ss.newLine() << "float sat_hi  = distRGB / (0.15 + sumRGB);";
-      ss.newLine() << "float sat_lo  = distRGB * 5.;";
-      ss.newLine() << "float alpha  = clamp( (luma - 0.001) / (0.01 - 0.001), 0., 1.);";
+        ss.newLine() << "float sumRGB  = dot( " << pxl << ".rgb, ones );";
+        ss.newLine() << "float sat_hi  = distRGB / (0.15 + sumRGB);";
+        ss.newLine() << "float sat_lo  = distRGB * 5.;";
+        ss.newLine() << "float alpha  = clamp( (luma - 0.001) / (0.01 - 0.001), 0., 1.);";
 
-      ss.newLine() << "float sat = sat_lo + alpha * (sat_hi - sat_lo);";
-      ss.newLine() << "sat *= 1.4;";
+        ss.newLine() << "float sat = sat_lo + alpha * (sat_hi - sat_lo);";
+        ss.newLine() << "sat *= 1.4;";
     }
     else if (min0 < 0.f)
     {
-      ss.newLine() << "float sat = distRGB * 4.;";
+        ss.newLine() << "float sat = distRGB * 4.;";
     }
     else
     {
-      ss.newLine() << "float sat = distRGB * 1.25;";
+        ss.newLine() << "float sat = distRGB * 1.25;";
     }
     ss.newLine() << "float hue = 0.0;";
     ss.newLine() << "if (minRGB != maxRGB) {";
@@ -1754,30 +1754,30 @@ void Add_HSY_TO_RGB(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, f
     ss.newLine() << "float distRGB = dot( abs(RGB0 - luma), ones );";
     if (min0 > 0.f)
     {
-      ss.newLine() << "float sumRGB  = dot( RGB0, ones );";
-      ss.newLine() << "float k = 0.15;";
-      ss.newLine() << "float lo_gain = 5.;";
-      ss.newLine() << "sat /= 1.4;";
-      ss.newLine() << "float tmp = -sat * sumRGB + sat * 3. * luma + distRGB;";
-      ss.newLine() << "float s1 = (tmp == 0.) ? 0. : sat * (k + 3. * luma) / tmp;";
-      ss.newLine() << "float s0 = sat / max(1e-10, distRGB * lo_gain);";
-      ss.newLine() << "float alpha  = clamp( (luma - 0.001) / (0.01 - 0.001), 0., 1.);";
-      ss.newLine() << "float a = distRGB * lo_gain * (1. - alpha) * (sumRGB - 3. * luma);";
-      ss.newLine() << "float b = distRGB * lo_gain * (1. - alpha) * (k + 3. * luma) + distRGB * alpha - sat * (sumRGB - 3. * luma);";
-      ss.newLine() << "float c = -sat * (k + 3. * luma);";
-      ss.newLine() << "float discrim = sqrt( b * b - 4. * a * c );";
-      ss.newLine() << "float denom = -discrim - b;";
-      ss.newLine() << "float sm = (2. * c) / denom;";
-      ss.newLine() << "sm = (sm >= 0.) ? sm : (2. * c) / (denom + discrim * 2.);";
-      ss.newLine() << "float gainS = (alpha == 1.) ? s1 : (alpha == 0.) ? s0 : sm;";
+        ss.newLine() << "float sumRGB  = dot( RGB0, ones );";
+        ss.newLine() << "float k = 0.15;";
+        ss.newLine() << "float lo_gain = 5.;";
+        ss.newLine() << "sat /= 1.4;";
+        ss.newLine() << "float tmp = -sat * sumRGB + sat * 3. * luma + distRGB;";
+        ss.newLine() << "float s1 = (tmp == 0.) ? 0. : sat * (k + 3. * luma) / tmp;";
+        ss.newLine() << "float s0 = sat / max(1e-10, distRGB * lo_gain);";
+        ss.newLine() << "float alpha  = clamp( (luma - 0.001) / (0.01 - 0.001), 0., 1.);";
+        ss.newLine() << "float a = distRGB * lo_gain * (1. - alpha) * (sumRGB - 3. * luma);";
+        ss.newLine() << "float b = distRGB * lo_gain * (1. - alpha) * (k + 3. * luma) + distRGB * alpha - sat * (sumRGB - 3. * luma);";
+        ss.newLine() << "float c = -sat * (k + 3. * luma);";
+        ss.newLine() << "float discrim = sqrt( b * b - 4. * a * c );";
+        ss.newLine() << "float denom = -discrim - b;";
+        ss.newLine() << "float sm = (2. * c) / denom;";
+        ss.newLine() << "sm = (sm >= 0.) ? sm : (2. * c) / (denom + discrim * 2.);";
+        ss.newLine() << "float gainS = (alpha == 1.) ? s1 : (alpha == 0.) ? s0 : sm;";
     }
     else if (min0 < 0.f)
     {
-      ss.newLine() << "float gainS = sat / max(1e-10, distRGB * 4.);";
+        ss.newLine() << "float gainS = sat / max(1e-10, distRGB * 4.);";
     }
     else
     {
-      ss.newLine() << "float gainS = sat / max(1e-10, distRGB * 1.25);";
+        ss.newLine() << "float gainS = sat / max(1e-10, distRGB * 1.25);";
     }
     ss.newLine() << "" << pxl << ".rgb = luma + gainS * (RGB0 - luma);";
 }

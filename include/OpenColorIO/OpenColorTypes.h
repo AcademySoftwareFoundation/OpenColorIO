@@ -592,13 +592,12 @@ enum HueCurveType
 
 enum BSplineCurveType
 {
-   B_SPLINE = 0,                   //!< Monotonic quadratic B-spline based function.
-   DIAGONAL_B_SPLINE,              //!< Monotonic quadratic B-spline based function (newer algorithm).
-   HUE_HUE_B_SPLINE,               //!< Special B-spline used for the hue vs. hue curve (monotonic and periodic).
-   PERIODIC_HORIZONTAL1_B_SPLINE,  //!< Periodic non-monotonic B-spline centered at 1 used for some of the hue curves.
-   PERIODIC_HORIZONTAL0_B_SPLINE,  //!< Periodic non-monotonic B-spline centered at 0 used for some of the hue curves.
-   HORIZONTAL1_B_SPLINE,           //!< Non-monotonic B-spline, centered at 1, used for HueSat, HueLum, and SatLum curves.
-   HORIZONTAL0_B_SPLINE            //!< Non-monotonic B-spline, centered at 0, used for HueFX curve.
+   B_SPLINE = 0,                   //!< Monotonic quadratic B-spline used for the RGBM curves.
+   DIAGONAL_B_SPLINE,              //!< Monotonic quadratic B-spline for the sat-sat and lum-lum curves.
+   HUE_HUE_B_SPLINE,               //!< Monotonic and periodic B-spline used for the hue-hue curve.
+   PERIODIC_1_B_SPLINE,            //!< Periodic, horizontal (at 1) B-spline for hue-sat and hue-lum curves.
+   PERIODIC_0_B_SPLINE,            //!< Periodic, horizontal (at 0) B-spline used for the hue-fx curve.
+   HORIZONTAL1_B_SPLINE,           //!< Horizontal (at 1) B-spline used for the lum-sat and sat-lum curves.
 };
 
 /// Types for uniform data.

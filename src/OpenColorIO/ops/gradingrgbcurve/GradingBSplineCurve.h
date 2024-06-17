@@ -125,10 +125,6 @@ private:
     void computeKnotsAndCoefsForHueCurve(KnotsCoefs & knotsCoefs, int curveIdx) const;
 
     void validateIndex(size_t index) const;
-    void prepData(const std::vector<GradingControlPoint>& inCtrlPnts,
-                   std::vector<GradingControlPoint>& outCtrlPnt,
-                   bool isPeriodic,
-                   bool isHorizontal) const;
 
     std::vector<GradingControlPoint> m_controlPoints;
     std::vector<float> m_slopesArray;  // Optional slope values for the control points.

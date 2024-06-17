@@ -1639,7 +1639,7 @@ private:
 };
 
 GradingHueCurveWriter::GradingHueCurveWriter(XmlFormatter & formatter,
-                               ConstGradingHueCurveOpDataRcPtr curves)
+                                             ConstGradingHueCurveOpDataRcPtr curves)
     : OpWriter(formatter)
     , m_curves(curves)
 {
@@ -1676,7 +1676,7 @@ void GradingHueCurveWriter::getAttributes(XmlFormatter::Attributes& attributes) 
 }
 
 void GradingHueCurveWriter::writeCurve(const char * tag,
-                                const ConstGradingBSplineCurveRcPtr & curve) const
+                                       const ConstGradingBSplineCurveRcPtr & curve) const
 {
     m_formatter.writeStartTag(tag, XmlFormatter::Attributes());
     {
@@ -1726,7 +1726,7 @@ void GradingHueCurveWriter::writeContent() const
     const auto & vals = m_curves->getValue();
 
     auto & defCurve = (m_curves->getStyle() == GRADING_LIN) ? GradingHueCurveImpl::DefaultCurvesLin:
-                                                                                                                                                               GradingHueCurveImpl::DefaultCurves;
+                                                              GradingHueCurveImpl::DefaultCurves;
     static const std::vector<const char *> curveTags = { 
         TAG_HUE_CURVE_HUE_HUE,
         TAG_HUE_CURVE_HUE_SAT,
