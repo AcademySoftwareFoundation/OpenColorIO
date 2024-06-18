@@ -7,7 +7,7 @@
 
 namespace OCIO = OCIO_NAMESPACE;
 
-void GradingHueCurveLog(OCIOGPUTest & test, OCIO::TransformDirection dir, bool dynamic)
+void GradingHueCurveLog(OCIOGPUTest & /*test*/, OCIO::TransformDirection /*dir*/, bool /*dynamic*/)
 {
     // TODO: Put back the GradingHueCurve test once the CPU implementation is available.'
     //       GPU test compares the result of the GPU processor to the CPU processor.
@@ -58,7 +58,7 @@ OCIO_ADD_GPU_TEST(GradingHueCurve, style_log_rev_dynamic)
     GradingHueCurveLog(test, OCIO::TRANSFORM_DIR_INVERSE, true);
 }
 
-void HueCurveLin(OCIOGPUTest & test, OCIO::TransformDirection dir, bool dynamic)
+void HueCurveLin(OCIOGPUTest & /*test*/, OCIO::TransformDirection /*dir*/, bool /*dynamic*/)
 {
     // TODO: Put back the GradingHueCurve test once the CPU implementation is available.'
     //       GPU test compares the result of the GPU processor to the CPU processor.
@@ -109,7 +109,7 @@ OCIO_ADD_GPU_TEST(GradingHueCurve, style_lin_rev_dynamic)
     HueCurveLin(test, OCIO::TRANSFORM_DIR_INVERSE, true);
 }
 
-void HueSCurve(OCIOGPUTest & test, OCIO::TransformDirection dir, bool dynamic)
+void HueSCurve(OCIOGPUTest & /*test*/, OCIO::TransformDirection /*dir*/, bool /*dynamic*/)
 {
     // TODO: Implement this GradingHueCurve test once the CPU implementation is available.'
     //       GPU test compares the result of the GPU processor to the CPU processor.
