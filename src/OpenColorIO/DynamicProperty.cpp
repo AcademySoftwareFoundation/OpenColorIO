@@ -225,12 +225,12 @@ bool DynamicPropertyGradingRGBCurveImpl::getLocalBypass() const
 
 int DynamicPropertyGradingRGBCurveImpl::getNumKnots() const
 {
-    return static_cast<int>(m_knotsCoefs.m_knotsArray.size());
+    return static_cast<int>(m_knotsCoefs.m_numKnots);
 }
 
 int DynamicPropertyGradingRGBCurveImpl::getNumCoefs() const
 {
-    return static_cast<int>(m_knotsCoefs.m_coefsArray.size());
+    return static_cast<int>(m_knotsCoefs.m_numCoefs);
 }
 
 const int * DynamicPropertyGradingRGBCurveImpl::getKnotsOffsetsArray() const
