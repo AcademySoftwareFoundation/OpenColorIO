@@ -250,10 +250,10 @@ OCIO_ADD_TEST(GradingHueCurveTransform, serialization)
     //curve->setValue(data);
 
     //static constexpr char CURVE_STR[]
-    //    = "<GradingRGBCurveTransform direction=forward, style=log, "\
-    //      "values=<red=<control_points=[<x=0, y=0><x=0.2, y=0.2><x=0.5, y=0.7><x=1, y=1>]>, "\
-    //      "green=<control_points=[<x=0, y=0.5><x=0.3, y=0.7><x=0.5, y=1.1><x=1, y=1.5>]>, "\
-    //      "blue=<control_points=[<x=0, y=-0.5><x=0.2, y=-0.4><x=0.3, y=0.1><x=0.5, y=0.4><x=0.7, y=0.9><x=1, y=1.1>]>, "\
+    //    = "<GradingRGBCurveTransform direction=forward, style=log, "
+    //      "values=<red=<control_points=[<x=0, y=0><x=0.2, y=0.2><x=0.5, y=0.7><x=1, y=1>]>, "
+    //      "green=<control_points=[<x=0, y=0.5><x=0.3, y=0.7><x=0.5, y=1.1><x=1, y=1.5>]>, "
+    //      "blue=<control_points=[<x=0, y=-0.5><x=0.2, y=-0.4><x=0.3, y=0.1><x=0.5, y=0.4><x=0.7, y=0.9><x=1, y=1.1>]>, "
     //      "master=<control_points=[<x=0, y=0><x=1, y=1>]>>>";
 //
     //{
