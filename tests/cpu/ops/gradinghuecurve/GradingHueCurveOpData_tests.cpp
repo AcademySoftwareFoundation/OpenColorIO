@@ -8,6 +8,7 @@
 
 namespace OCIO = OCIO_NAMESPACE;
 
+// Test coming from GradingRGBCurveOpData_tests.cpp
 OCIO_ADD_TEST(GradingHueCurveOpData, accessors)
 {
     // Create GradingHueCurveOpData and check values. Changes them and check.
@@ -30,7 +31,7 @@ OCIO_ADD_TEST(GradingHueCurveOpData, accessors)
     OCIO_CHECK_ASSERT(curves->isIdentity());
     OCIO_CHECK_ASSERT(gc.isIdentity());
     OCIO_CHECK_ASSERT(gc.isNoOp());
-    OCIO_CHECK_ASSERT(!gc.hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(gc.hasChannelCrosstalk());
     OCIO_CHECK_ASSERT(!gc.getBypassLinToLog());
     
     gc.setStyle(OCIO::GRADING_LIN);
@@ -91,7 +92,7 @@ OCIO_ADD_TEST(GradingHueCurveOpData, accessors)
     OCIO_CHECK_ASSERT(!gc1.slopesAreDefault(OCIO::HUE_SAT));
 
     OCIO_CHECK_EQUAL(gc1.isIdentity(), false);
-    OCIO_CHECK_ASSERT(!gc1.hasChannelCrosstalk());
+    OCIO_CHECK_ASSERT(gc1.hasChannelCrosstalk());
 
     // Check isInverse.
 

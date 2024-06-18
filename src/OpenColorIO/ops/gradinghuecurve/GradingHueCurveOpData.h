@@ -39,7 +39,7 @@ public:
     bool isNoOp() const override;
     bool isIdentity() const override;
 
-    bool hasChannelCrosstalk() const override { return false; }
+    bool hasChannelCrosstalk() const override { return true; }
 
     bool isInverse(ConstGradingHueCurveOpDataRcPtr & r) const;
     GradingHueCurveOpDataRcPtr inverse() const;
