@@ -2322,6 +2322,45 @@ ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func
             /// TODO: SIMD implementation
             return std::make_shared<Renderer_DOUBLE_LOG_TO_LIN>(func);
         }
+
+        case FixedFunctionOpData::RGB_TO_HSY_LOG:
+        {
+            // TODO: Handle CPU rendering for this FixedFunction   
+            return nullptr;
+            //return std::make_shared<Renderer_RGB_TO_HSY_LOG>(func);
+        }
+        case FixedFunctionOpData::HSY_LOG_TO_RGB:
+        {
+            // TODO: Handle CPU rendering for this FixedFunction   
+            return nullptr;
+            //return std::make_shared<Renderer_HSY_LOG_TO_RGB>(func);
+        }
+
+        case FixedFunctionOpData::RGB_TO_HSY_LIN:
+        {
+            // TODO: Handle CPU rendering for this FixedFunction   
+            return nullptr;
+            //return std::make_shared<Renderer_RGB_TO_HSY_LIN>(func);
+        }
+        case FixedFunctionOpData::HSY_LIN_TO_RGB:
+        {
+            // TODO: Handle CPU rendering for this FixedFunction   
+            return nullptr;
+            //return std::make_shared<Renderer_HSY_LIN_TO_RGB>(func);
+        }
+
+        case FixedFunctionOpData::RGB_TO_HSY_VID:
+        {
+            // TODO: Handle CPU rendering for this FixedFunction   
+            return nullptr;
+            //return std::make_shared<Renderer_RGB_TO_HSY_VID>(func);
+        }
+        case FixedFunctionOpData::HSY_VID_TO_RGB:
+        {
+            // TODO: Handle CPU rendering for this FixedFunction   
+            return nullptr;
+            //return std::make_shared<Renderer_HSY_VID_TO_RGB>(func);
+        }
     }
 
     throw Exception("Unsupported FixedFunction style");
