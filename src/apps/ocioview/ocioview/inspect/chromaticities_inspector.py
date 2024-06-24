@@ -24,7 +24,7 @@ from ..constants import ICON_SIZE_TAB
 from ..message_router import MessageRouter
 from ..processor_context import ProcessorContext
 from ..utils import (
-    color_space_to_RGB_Colourspace,
+    color_space_to_rgb_colourspace,
     get_glyph_icon,
     subsampling_factor,
 )
@@ -503,7 +503,7 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
                     self._context.transform_item_name,
                 ]
 
-            rgb_colourspace = color_space_to_RGB_Colourspace(
+            rgb_colourspace = color_space_to_rgb_colourspace(
                 self._context.input_color_space
             )
 
@@ -535,7 +535,7 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
                 ),
             ]
 
-            rgb_colourspace = color_space_to_RGB_Colourspace(
+            rgb_colourspace = color_space_to_rgb_colourspace(
                 chromaticities_colorspace
             )
 
