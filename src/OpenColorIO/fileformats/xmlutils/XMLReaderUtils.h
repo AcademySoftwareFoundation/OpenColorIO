@@ -4,13 +4,15 @@
 #ifndef INCLUDED_OCIO_FILEFORMATS_XML_XMLREADERUTILS_H
 #define INCLUDED_OCIO_FILEFORMATS_XML_XMLREADERUTILS_H
 
+#include <OpenColorIO/OpenColorIO.h>
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #include <type_traits>
 #include <string>
 #include <sstream>
 #include <vector>
 
-#include <OpenColorIO/OpenColorIO.h>
 
 #include "MathUtils.h"
 #include "utils/StringUtils.h"
@@ -244,5 +246,6 @@ std::vector<T> GetNumbers(const char * str, size_t len)
 }
 
 } // namespace OCIO_NAMESPACE
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #endif

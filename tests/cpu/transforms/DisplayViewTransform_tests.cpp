@@ -1341,6 +1341,7 @@ colorspaces:
     );
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT // This test need FileTransform
 OCIO_ADD_TEST(DisplayViewTransform, context_variables)
 {
     constexpr const char * OCIO_CONFIG{ R"(
@@ -1481,3 +1482,4 @@ colorspaces:
     dt->setView("View18");
     OCIO_CHECK_ASSERT(!CollectContextVariables(*cfg, *cfg->getCurrentContext(), *dt, usedContextVars));
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

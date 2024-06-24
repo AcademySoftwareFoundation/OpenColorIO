@@ -149,6 +149,7 @@ option(OCIO_BUILD_DOCS "Specify whether to build documentation" ${OCIO_BUILD_FRO
 
 option(OCIO_BUILD_PYTHON "Specify whether to build python bindings" ON)
 
+option(OCIO_LUT_AND_FILETRANSFORM_SUPPORT "Specify whether to build with LUT and file-transform support. Requies Expat dependency" ON)
 option(OCIO_USE_HALF_LOOKUP_TABLE "Determines if the Imath library should use a 64k LUT for half conversions" ON)
 option(OCIO_ARCHIVE_SUPPORT "Specify whether to build with OCIOZ archive support. Requires ZLIB and minizip-ng dependencies" ON)
 option(OCIO_HAS_BUILTIN_YAML_CONFIGS "If OFF, built-in yaml-based configs will be removed from the library" ON)
@@ -443,6 +444,13 @@ if (NOT BUILD_SHARED_LIBS AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
    The following mandatory dependencies MUST be linked to the consumer application or shared library:
    expat, yaml-cpp, Imath, pystring, minizip-ng and ZLIB")
 endif()
+
+if(OCIO_BUILD_PYTHON AND NOT OCIO_LUT_AND_FILETRANSFORM_SUPPORT )
+    message(WARNING "Python bindings require LUT and File-Transform support which is turned off,\
+    thus OCIO_BUILD_PYTHON option will be turned off too.")
+    set(OCIO_BUILD_PYTHON OFF CACHE BOOL "Specify whether to build python bindings" FORCE)
+endif()
+    
 
 
 ###############################################################################

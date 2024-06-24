@@ -139,12 +139,15 @@ void CreateCPUEngine(const OpRcPtrVec & ops,
 
         if(idx==0)
         {
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
             if(opData->getType()==OpData::Lut1DType)
             {
                 ConstLut1DOpDataRcPtr lut = DynamicPtrCast<const Lut1DOpData>(opData);
                 inBitDepthOp = GetLut1DRenderer(lut, in, BIT_DEPTH_F32);
             }
-            else if(in==BIT_DEPTH_F32)
+            else 
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+            if(in==BIT_DEPTH_F32)
             {
                 inBitDepthOp = op->getCPUOp(fastLogExpPow);
             }
@@ -161,12 +164,15 @@ void CreateCPUEngine(const OpRcPtrVec & ops,
         }
         else if(idx==(maxOps-1))
         {
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
             if(opData->getType()==OpData::Lut1DType)
             {
                 ConstLut1DOpDataRcPtr lut = DynamicPtrCast<const Lut1DOpData>(opData);
                 outBitDepthOp = GetLut1DRenderer(lut, BIT_DEPTH_F32, out);
             }
-            else if(out==BIT_DEPTH_F32)
+            else 
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+            if(out==BIT_DEPTH_F32)
             {
                 outBitDepthOp = op->getCPUOp(fastLogExpPow);
             }

@@ -199,7 +199,7 @@ void OglApp::setShader(GpuShaderDescRcPtr & shaderDesc)
     m_oglBuilder = OpenGLBuilder::Create(shaderDesc);
     m_oglBuilder->setVerbose(m_printShader);
 
-    // Allocate & upload all the LUTs in a dedicated GPU texture.
+    // Allocate & upload all the LUTs (if any) in a dedicated GPU texture.
     // Note: The start index for the texture indices is 1 as one texture
     //       was already created for the input image.
     m_oglBuilder->allocateAllTextures(1);
@@ -221,8 +221,10 @@ void OglApp::setShader(GpuShaderDescRcPtr & shaderDesc)
     m_oglBuilder->useProgram();
     // The image texture.
     glUniform1i(glGetUniformLocation(m_oglBuilder->getProgramHandle(), "img"), 0);
-    // The LUT textures.
+    
+    // The LUT textures (if the transform needs any LUTs)
     m_oglBuilder->useAllTextures();
+
     // Enable uniforms for dynamic properties.
     m_oglBuilder->useAllUniforms();
 }

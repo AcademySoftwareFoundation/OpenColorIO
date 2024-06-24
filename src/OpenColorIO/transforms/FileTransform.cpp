@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <OpenColorIO/OpenColorIO.h>
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 #include <algorithm>
 #include <fstream>
 #include <map>
@@ -11,7 +15,6 @@
 
 #include <pystring.h>
 
-#include <OpenColorIO/OpenColorIO.h>
 
 #include "Caching.h"
 #include "FileTransform.h"
@@ -988,3 +991,5 @@ void BuildFileTransformOps(OpRcPtrVec & ops,
 }
 
 } // namespace OCIO_NAMESPACE
+
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

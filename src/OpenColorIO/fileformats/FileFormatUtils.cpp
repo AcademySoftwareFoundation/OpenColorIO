@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include "fileformats/FileFormatUtils.h"
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #include "Logging.h"
 
@@ -65,3 +66,5 @@ void LogWarningInterpolationNotUsed(Interpolation interp, const FileTransform & 
     LogWarning(oss.str());
 }
 } // OCIO_NAMESPACE
+
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

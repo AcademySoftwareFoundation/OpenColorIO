@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include "transforms/CDLTransform.cpp"
 
 #include <cstdio>
 
 #include "ops/exponent/ExponentOp.h"
 #include "ops/matrix/MatrixOpData.h"
-#include "transforms/CDLTransform.cpp"
 
 #include "testutils/UnitTest.h"
 #include "UnitTestLogUtils.h"
@@ -37,6 +37,7 @@ OCIO_ADD_TEST(CDLTransform, equality)
     OCIO_CHECK_ASSERT(!cdl1->equals(*cdl2));
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 OCIO_ADD_TEST(CDLTransform, create_from_cc_file)
 {
     const std::string filePath(OCIO::GetTestFilesDir() + "/cdl_test1.cc");
@@ -202,6 +203,7 @@ OCIO_ADD_TEST(CDLTransform, create_from_cdl_file)
         OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 5);
     }
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 namespace
 {
@@ -224,7 +226,7 @@ struct FileGuard
 
 } //anon.
 
-
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 OCIO_ADD_TEST(CDLTransform, escape_xml)
 {
     const std::string inputXML(
@@ -260,6 +262,7 @@ OCIO_ADD_TEST(CDLTransform, escape_xml)
         OCIO_CHECK_EQUAL("These: < & \" ' > are escape chars", descStr);
     }
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 namespace
 {
@@ -315,6 +318,7 @@ static const std::string kContentsB = {
 
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 OCIO_ADD_TEST(CDLTransform, clear_caches)
 {
     FileGuard guard(__LINE__);
@@ -396,6 +400,7 @@ OCIO_ADD_TEST(CDLTransform, faulty_file_content)
                               OCIO::Exception, "Not a CDL file format");
     }
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 OCIO_ADD_TEST(CDLTransform, buildops)
 {
@@ -620,3 +625,4 @@ OCIO_ADD_TEST(CDLTransform, apply_optimize_simplify)
     OCIO_CHECK_CLOSE(pixNoSimplify[1], pixSimplify[1], error);
     OCIO_CHECK_CLOSE(pixNoSimplify[2], pixSimplify[2], error);
 }
+

@@ -5,10 +5,10 @@
 #ifndef INCLUDED_OCIO_CGCONFIG_H
 #define INCLUDED_OCIO_CGCONFIG_H
 
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #if OCIO_HAS_BUILTIN_YAML_CONFIGS
+
 #include "builtinconfigs/BuiltinConfigRegistry.h"
 
 namespace OCIO_NAMESPACE

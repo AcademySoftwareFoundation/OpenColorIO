@@ -70,8 +70,10 @@ public:
     // Get an optimized GPU processor instance for F32 images.
     ConstGPUProcessorRcPtr getOptimizedGPUProcessor(OptimizationFlags oFlags) const;
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     // Get an optimized legacy GPU processor for F32 images.
     ConstGPUProcessorRcPtr getOptimizedLegacyGPUProcessor(OptimizationFlags oFlags, unsigned edgelen) const;
+#endif
 
     // Get an optimized CPU processor instance for F32 images with default optimizations.
     ConstCPUProcessorRcPtr getDefaultCPUProcessor() const;

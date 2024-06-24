@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include "Lut3DOpCPU_AVX512.h"
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 #if OCIO_USE_AVX512
 
 #include <immintrin.h>
@@ -257,3 +259,4 @@ void applyTetrahedralAVX512(const float *lut3d, int dim, const float *src, float
 } // OCIO_NAMESPACE
 
 #endif // OCIO_USE_AVX512
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

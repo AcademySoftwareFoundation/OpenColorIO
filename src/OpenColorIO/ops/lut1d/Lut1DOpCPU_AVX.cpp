@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include "Lut1DOpCPU_AVX.h"
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 #if OCIO_USE_AVX
 
 #include <immintrin.h>
@@ -197,3 +199,4 @@ Lut1DOpCPUApplyFunc * AVXGetLut1DApplyFunc(BitDepth inBD, BitDepth outBD)
 } // OCIO_NAMESPACE
 
 #endif // OCIO_USE_AVX
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

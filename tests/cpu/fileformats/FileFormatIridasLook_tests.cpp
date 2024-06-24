@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include "fileformats/FileFormatIridasLook.cpp"
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #include "testutils/UnitTest.h"
 
@@ -966,3 +967,4 @@ OCIO_ADD_TEST(FileFormatIridasLook, fail_on_mask)
 
 }
 
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

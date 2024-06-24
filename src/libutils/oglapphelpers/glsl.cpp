@@ -57,6 +57,7 @@ void CheckStatus()
     }
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 void SetTextureParameters(GLenum textureType, Interpolation interpolation)
 {
     if(interpolation==INTERP_NEAREST)
@@ -144,6 +145,7 @@ void AllocateTexture(unsigned index, unsigned & texId,
         break;
     }
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 GLuint CompileShaderText(GLenum shaderType, const char * text)
 {
@@ -285,8 +287,9 @@ OpenGLBuilder::OpenGLBuilder(const GpuShaderDescRcPtr & shaderDesc)
 
 OpenGLBuilder::~OpenGLBuilder()
 {
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     deleteAllTextures();
-
+#endif
     if(m_fragShader)
     {
         glDetachShader(m_program, m_fragShader);
@@ -301,6 +304,7 @@ OpenGLBuilder::~OpenGLBuilder()
     }
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
 {
     deleteAllTextures();
@@ -417,6 +421,7 @@ void OpenGLBuilder::useAllTextures()
                                  GLint(m_startIndex + idx) );
     }
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 void OpenGLBuilder::linkAllUniforms()
 {
@@ -522,6 +527,7 @@ unsigned OpenGLBuilder::getProgramHandle()
     return m_program;
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 unsigned OpenGLBuilder::GetTextureMaxWidth()
 {
     // Arbitrary huge number only to find the limit.
@@ -586,5 +592,7 @@ unsigned OpenGLBuilder::GetTextureMaxWidth()
 
     return w;
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 
 } // namespace OCIO_NAMESPACE

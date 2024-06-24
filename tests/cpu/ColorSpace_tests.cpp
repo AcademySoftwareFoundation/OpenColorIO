@@ -720,6 +720,7 @@ colorspaces:
                      "colorspace");
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT // This test needs FileTransform
 OCIO_ADD_TEST(Config, is_colorspace_linear)
 {
 
@@ -975,6 +976,7 @@ colorspaces:
         testDisplayReferred("linear_lut3d_from_file", false, __LINE__);
     }
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #if OCIO_HAS_BUILTIN_YAML_CONFIGS
 OCIO_ADD_TEST(ConfigUtils, processor_to_known_colorspace)
@@ -1689,4 +1691,4 @@ colorspaces:
         );
     }
 }
-#endif //OCIO_HAS_BUILTIN_YAML_CONFIGS
+#endif // OCIO_HAS_BUILTIN_YAML_CONFIGS

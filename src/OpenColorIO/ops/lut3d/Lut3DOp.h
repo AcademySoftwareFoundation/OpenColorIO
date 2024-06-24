@@ -7,6 +7,8 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 #include "ops/lut3d/Lut3DOpData.h"
 
 namespace OCIO_NAMESPACE
@@ -58,5 +60,7 @@ void CreateLut3DOp(OpRcPtrVec & ops,
 void CreateLut3DTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op);
 
 } // namespace OCIO_NAMESPACE
+
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #endif

@@ -6,6 +6,8 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 #include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE
@@ -25,5 +27,7 @@ void ExtractCDLMetadata(const FormatMetadata & metadata,
                         StringUtils::StringVec & satDesc);
 
 } // namespace OCIO_NAMESPACE
+
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #endif

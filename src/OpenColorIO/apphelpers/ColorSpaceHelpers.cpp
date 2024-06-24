@@ -723,8 +723,10 @@ std::ostream & operator<<(std::ostream & os, const ColorSpaceMenuHelper & menu)
 namespace ColorSpaceHelpers
 {
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 namespace
 {
+
 void AddColorSpace(ConfigRcPtr & config,
                    ColorSpaceRcPtr & colorSpace,
                    FileTransformRcPtr & userTransform,
@@ -833,6 +835,7 @@ void AddColorSpace(ConfigRcPtr & config,
 
     AddColorSpace(config, *info, file, categories, connectionColorSpaceName);
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 } // ColorSpaceHelpers
 

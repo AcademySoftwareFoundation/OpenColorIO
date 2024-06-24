@@ -4,6 +4,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #if OCIO_HAS_BUILTIN_YAML_CONFIGS
+
 #include "builtinconfigs/BuiltinConfigRegistry.h"
 #include "builtinconfigs/CGConfig.h"
 
@@ -39,4 +40,5 @@ void Register(BuiltinConfigRegistryImpl & registry) noexcept
 
 } // namespace CGCONFIG
 } // namespace OCIO_NAMESPACE
+
 #endif // OCIO_HAS_BUILTIN_YAML_CONFIGS

@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include "fileformats/xmlutils/XMLReaderHelper.h"
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 #include <sstream>
 
-#include "fileformats/xmlutils/XMLReaderHelper.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "Logging.h"
 #include "ParseUtils.h"
@@ -282,3 +285,4 @@ void XmlReaderSaturationElt::setRawData(const char* str, size_t len, unsigned in
 }
 
 } // namespace OCIO_NAMESPACE
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

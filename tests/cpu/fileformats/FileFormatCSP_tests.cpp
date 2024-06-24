@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include "fileformats/FileFormatCSP.cpp"
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #include "testutils/UnitTest.h"
 
@@ -1126,3 +1127,4 @@ OCIO_ADD_TEST(FileFormatCSP, failures_3d)
 
 // TODO: More strenuous tests of prelut resampling (non-noop preluts)
 
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

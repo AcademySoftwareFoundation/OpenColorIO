@@ -110,9 +110,11 @@ void BuiltinTransformRegistryImpl::registerAll() noexcept
     ACES::RegisterAll(*this);
 
     // Camera support.
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     CAMERA::APPLE::RegisterAll(*this);
-    CAMERA::ARRI::RegisterAll(*this);
     CAMERA::CANON::RegisterAll(*this);
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+    CAMERA::ARRI::RegisterAll(*this);
     CAMERA::PANASONIC::RegisterAll(*this);
     CAMERA::RED::RegisterAll(*this);
     CAMERA::SONY::RegisterAll(*this);

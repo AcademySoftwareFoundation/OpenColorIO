@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <OpenColorIO/OpenColorIO.h>
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 #include <stdio.h>
 #include <sstream>
 #include <string>
 
-#include <OpenColorIO/OpenColorIO.h>
 
 #include "GPUHelpers.h"
 #include "GPUUnitTest.h"
@@ -390,3 +393,4 @@ OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_biggest_supported)
     test.setErrorThreshold(1e-4f);
 }
 
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

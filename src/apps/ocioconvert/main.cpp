@@ -65,14 +65,18 @@ int main(int argc, const char **argv)
                "   or: ocioconvert [options] --invertview inputimage displayname viewname outputimage outputcolorspace\n\n",
                "%*", parse_end_args, "",
                "<SEPARATOR>", "Options:",
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
                "--lut",         &useLut,            "Convert using a LUT rather than a config file",
+#endif
                "--view",        &useDisplayView,    "Convert to a (display,view) pair rather than to "
                                                     "an output color space",
                "--invertview",  &useInvertView,     "Convert from a (display,view) pair rather than "
                                                     "from a color space",
                "--gpu",         &usegpu,            "Use GPU color processing instead of CPU (CPU is the default)",
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
                "--gpulegacy",   &usegpuLegacy,      "Use the legacy (i.e. baked) GPU color processing "
                                                     "instead of the CPU one (--gpu is ignored)",
+#endif
                "--gpuinfo",     &outputgpuInfo,     "Output the OCIO shader program",
                "--h",           &help,              "Display the help and exit",
                "--help",        &help,              "Display the help and exit",
@@ -320,12 +324,17 @@ int main(int argc, const char **argv)
         {
             if (useLut)
             {
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
                 // Create the OCIO processor for the specified transform.
                 OCIO::FileTransformRcPtr t = OCIO::FileTransform::Create();
                 t->setSrc(lutFile);
                 t->setInterpolation(OCIO::INTERP_BEST);
     
                 processor = config->getProcessor(t);
+#else 
+                std::cout << "ERROR OCIO LUT support is turned off." << std::endl;
+                exit(1);
+#endif 
             }
             else if (useDisplayView)
             {
@@ -366,9 +375,19 @@ int main(int argc, const char **argv)
             OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
             shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
 
-            OCIO::ConstGPUProcessorRcPtr gpu
-                = usegpuLegacy ? processor->getOptimizedLegacyGPUProcessor(OCIO::OPTIMIZATION_DEFAULT, 32)
-                               : processor->getDefaultGPUProcessor();
+            OCIO::ConstGPUProcessorRcPtr gpu;
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+            if (usegpuLegacy)
+            {
+                gpu = processor->getOptimizedLegacyGPUProcessor(OCIO::OPTIMIZATION_DEFAULT, 32);
+            }
+            else
+#endif
+            {
+                gpu = processor->getDefaultGPUProcessor();
+            }
+             
             gpu->extractGpuShaderInfo(shaderDesc);
 
             oglApp->setShader(shaderDesc);

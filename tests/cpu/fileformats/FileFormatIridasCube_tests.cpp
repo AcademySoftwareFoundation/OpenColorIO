@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include "fileformats/FileFormatIridasCube.cpp"
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
@@ -359,4 +360,6 @@ OCIO_ADD_TEST(FileFormatIridasCube, load_3d_op)
     OCIO_CHECK_EQUAL(lutArray[22], 2.0f);
     OCIO_CHECK_EQUAL(lutArray[23], 2.0f);
 }
+
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 

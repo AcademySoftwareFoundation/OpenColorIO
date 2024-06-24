@@ -5,10 +5,11 @@
 #ifndef INCLUDED_OCIO_FILEFORMATS_CTF_CTFTRANSFORM_H
 #define INCLUDED_OCIO_FILEFORMATS_CTF_CTFTRANSFORM_H
 
+#include <OpenColorIO/OpenColorIO.h>
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #include <vector>
-
-#include <OpenColorIO/OpenColorIO.h>
 
 #include "fileformats/FormatMetadata.h"
 #include "fileformats/xmlutils/XMLWriterUtils.h"
@@ -289,5 +290,7 @@ void GetElementsValues(const FormatMetadataImpl::Elements & elements,
                        StringUtils::StringVec & values);
 
 } // namespace OCIO_NAMESPACE
+
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #endif

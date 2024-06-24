@@ -13,9 +13,10 @@
 
 namespace OCIO_NAMESPACE
 {
-
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 // Create a 3D LUT from an arbitrary list of ops.
 OpRcPtrVec Create3DLut(const OpRcPtrVec & ops, unsigned edgelen);
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 // Partition an opvec into 3 segments for GPU Processing
 //

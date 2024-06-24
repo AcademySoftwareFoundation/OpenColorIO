@@ -399,9 +399,19 @@ void UpdateOCIOGLState()
     shaderDesc->setResourcePrefix("ocio_");
 
     // Extract the shader information.
-    OCIO::ConstGPUProcessorRcPtr gpu
-        = g_gpulegacy ? processor->getOptimizedLegacyGPUProcessor(g_optimization, 32)
-                      : processor->getOptimizedGPUProcessor(g_optimization);
+    OCIO::ConstGPUProcessorRcPtr gpu;
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+    if (g_gpulegacy)
+    {
+        gpu = processor->getOptimizedLegacyGPUProcessor(g_optimization, 32);
+    }
+    else
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+    {
+        gpu = processor->getOptimizedGPUProcessor(g_optimization);
+    }
+
     gpu->extractGpuShaderInfo(shaderDesc);
 
     g_oglApp->setShader(shaderDesc);
@@ -597,10 +607,12 @@ void parseArguments(int argc, char **argv)
         {
             g_verbose = true;
         }
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
         else if (0==strcmp(argv[i], "-gpulegacy"))
         {
             g_gpulegacy = true;
         }
+#endif
         else if (0==strcmp(argv[i], "-gpuinfo"))
         {
             g_gpuinfo = true;
@@ -620,7 +632,9 @@ void parseArguments(int argc, char **argv)
             std::cout << "  OPTIONS:" << std::endl;
             std::cout << "     -h         :  displays the help and exit" << std::endl;
             std::cout << "     -v         :  displays the color space information" << std::endl;
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
             std::cout << "     -gpulegacy :  use the legacy (i.e. baked) GPU color processing" << std::endl;
+#endif
             std::cout << "     -gpuinfo   :  output the OCIO shader program" << std::endl;
 #if __APPLE__
             std::cout << "     -metal     :  use metal OCIO shader backend " << std::endl;

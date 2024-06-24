@@ -1246,6 +1246,8 @@ inline void save(YAML::Emitter& out, ConstExposureContrastTransformRcPtr t)
     out << YAML::EndMap;
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 // FileTransform
 
 inline void load(const YAML::Node& node, FileTransformRcPtr& t)
@@ -1330,6 +1332,7 @@ inline void save(YAML::Emitter& out, ConstFileTransformRcPtr t, unsigned int maj
     EmitBaseTransformKeyValues(out, t);
     out << YAML::EndMap;
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 // FixedFunctionTransform
 
@@ -2982,12 +2985,16 @@ void load(const YAML::Node& node, TransformRcPtr& t)
         load(node, temp);
         t = temp;
     }
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
     else if(type == "FileTransform")
     {
         FileTransformRcPtr temp;
         load(node, temp);
         t = temp;
     }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
     else if(type == "FixedFunctionTransform")
     {
         FixedFunctionTransformRcPtr temp;
@@ -3095,9 +3102,11 @@ void save(YAML::Emitter& out, ConstTransformRcPtr t, unsigned int majorVersion)
     else if (ConstExponentWithLinearTransformRcPtr ExpLinear_tran = \
         DynamicPtrCast<const ExponentWithLinearTransform>(t))
         save(out, ExpLinear_tran);
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     else if(ConstFileTransformRcPtr File_tran = \
         DynamicPtrCast<const FileTransform>(t))
         save(out, File_tran, majorVersion);
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     else if (ConstExposureContrastTransformRcPtr File_tran = \
         DynamicPtrCast<const ExposureContrastTransform>(t))
         save(out, File_tran);

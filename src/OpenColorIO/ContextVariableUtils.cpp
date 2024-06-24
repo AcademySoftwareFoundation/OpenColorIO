@@ -178,10 +178,12 @@ bool CollectContextVariables(const Config & config,
     {
         if (CollectContextVariables(config, context, *tr, usedContextVars)) return true;
     }
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     else if(ConstFileTransformRcPtr tr = DynamicPtrCast<const FileTransform>(transform))
     {
         if (CollectContextVariables(config, context, *tr, usedContextVars)) return true;
     }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     else if(ConstGroupTransformRcPtr tr = DynamicPtrCast<const GroupTransform>(transform))
     {
         if (CollectContextVariables(config, context, *tr, usedContextVars)) return true;

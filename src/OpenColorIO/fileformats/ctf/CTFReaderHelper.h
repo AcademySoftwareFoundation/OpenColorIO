@@ -5,6 +5,9 @@
 #define INCLUDED_OCIO_FILEFORMATS_CTF_CTFREADERHELPER_H
 
 #include "fileformats/xmlutils/XMLReaderHelper.h"
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 #include "fileformats/ctf/CTFTransform.h"
 #include "fileformats/ctf/IndexMapping.h"
 #include "fileformats/FormatMetadata.h"
@@ -1214,5 +1217,7 @@ public:
 };
 
 } // namespace OCIO_NAMESPACE
+
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #endif

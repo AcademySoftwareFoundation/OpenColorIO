@@ -6,6 +6,9 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
+
 #include "CPUInfo.h"
 
 typedef void (Lut1DOpCPUApplyFunc)(const float *, const float *, const float *, int, const void *, void *, long);
@@ -21,3 +24,4 @@ Lut1DOpCPUApplyFunc * AVX2GetLut1DApplyFunc(BitDepth inBD, BitDepth outBD);
 #endif // OCIO_USE_AVX2
 
 #endif /* INCLUDED_OCIO_LUT1DOP_CPU_AVX2_H */
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

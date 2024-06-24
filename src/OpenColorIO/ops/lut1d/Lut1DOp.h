@@ -5,10 +5,11 @@
 #ifndef INCLUDED_OCIO_LUT1DOP_H
 #define INCLUDED_OCIO_LUT1DOP_H
 
-#include <vector>
-
 #include <OpenColorIO/OpenColorIO.h>
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
+#include <vector>
 #include "ops/lut1d/Lut1DOpData.h"
 
 namespace OCIO_NAMESPACE
@@ -28,5 +29,7 @@ void CreateLut1DOp(OpRcPtrVec & ops,
 void CreateLut1DTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op);
 
 } // namespace OCIO_NAMESPACE
+
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #endif

@@ -43,6 +43,7 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
         OCIO_CHECK_NE(std::string(shaderDesc->getCacheID()), id);
     }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     {
         const unsigned width  = 3;
         const unsigned height = 2;
@@ -170,6 +171,7 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
                                                   &values[0]),
                          OCIO::Exception);
     }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
     {
         OCIO_CHECK_NO_THROW(shaderDesc->addToDeclareShaderCode("vec2 coords;\n"));
@@ -197,6 +199,7 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
     }
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT // uses getOptimizedLegacyGPUProcessor which needs LUT support
 OCIO_ADD_TEST(GpuShader, MetalLutTest)
 {
     static constexpr char sFromSpace[] = "ACEScg";
@@ -286,6 +289,8 @@ float4 Display(
         OCIO_CHECK_EQUAL(expected, text);
     }
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 
 OCIO_ADD_TEST(GpuShader, MetalLutTest2)
 {
@@ -376,6 +381,7 @@ float4 Display(
     }
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT // This test need FileTransform
 OCIO_ADD_TEST(GpuShader, MetalSupport3)
 {
     // The unit test validates a single 1D LUT.
@@ -860,6 +866,7 @@ float4 OCIOMain(
         OCIO_CHECK_EQUAL(expected, text);
     }
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 OCIO_ADD_TEST(GpuShader, MetalSupport7)
 {

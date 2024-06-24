@@ -315,7 +315,6 @@ target_include_directories(OpenColorIO
 
 target_link_libraries(OpenColorIO
     PRIVATE
-        expat::expat
         Imath::Imath
         pystring::pystring
         "$<BUILD_INTERFACE:sampleicc::sampleicc>"
@@ -324,6 +323,10 @@ target_link_libraries(OpenColorIO
         "$<BUILD_INTERFACE:xxHash>"
         ${YAML_CPP_LIBRARIES}
 )
+
+if(OCIO_LUT_AND_FILETRANSFORM_SUPPORT)
+    target_link_libraries(OpenColorIO PRIVATE expat::expat)
+endif()
 
 if(OCIO_ARCHIVE_SUPPORT)
     target_link_libraries(OpenColorIO PRIVATE MINIZIP::minizip-ng)
@@ -390,6 +393,7 @@ if(WIN32)
 endif()
 
 set(CUSTOM_LINK_FLAGS ${PLATFORM_LINK_OPTIONS})
+
 
 if(UNIX AND NOT APPLE)
     # Also hide all the symbols of dependent libraries to prevent clashes if

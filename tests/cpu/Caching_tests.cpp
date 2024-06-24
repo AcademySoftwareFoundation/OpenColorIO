@@ -158,6 +158,7 @@ OCIO_ADD_TEST(Caching, processor_cache)
         OCIO_CHECK_ASSERT(cache2.isEnabled());
     }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT // This test needs FileTransform
     // Test the processor cache reset.
     {
     static const std::string CONFIG = 
@@ -244,4 +245,6 @@ OCIO_ADD_TEST(Caching, processor_cache)
             OCIO_CHECK_EQUAL(procA, procB); 
         }
     }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 }

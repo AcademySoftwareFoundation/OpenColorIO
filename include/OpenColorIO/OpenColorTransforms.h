@@ -226,7 +226,6 @@ private:
 //
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const BuiltinTransform &) noexcept;
 
-
 /**
  * \brief 
  *     An implementation of the ASC Color Decision List (CDL), based on the ASC v1.2
@@ -245,7 +244,7 @@ class OCIOEXPORT CDLTransform : public Transform
 {
 public:
     static CDLTransformRcPtr Create();
-
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     /**
      * \brief Load the CDL from the src .cdl, .cc, or .ccc file.
      *
@@ -266,6 +265,7 @@ public:
      *    resolution is performed.
      */
     static GroupTransformRcPtr CreateGroupFromFile(const char * src);
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
     TransformType getTransformType() const noexcept override { return TRANSFORM_TYPE_CDL; }
 
@@ -1022,7 +1022,7 @@ private:
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &,
                                             const ExposureContrastTransform &);
 
-
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 class OCIOEXPORT FileTransform : public Transform
 {
 public:
@@ -1095,6 +1095,7 @@ private:
 };
 
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const FileTransform &);
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 
 /**
@@ -1608,7 +1609,7 @@ private:
 
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const LookTransform &);
 
-
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 /// Represents a 1D-LUT transform.
 class OCIOEXPORT Lut1DTransform : public Transform
 {
@@ -1785,6 +1786,8 @@ protected:
 };
 
 extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Lut3DTransform&);
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 
 /**
  * Represents an MX+B Matrix transform.

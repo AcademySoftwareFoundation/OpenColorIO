@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include "ops/lut3d/Lut3DOp.cpp"
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #include <cstring>
 #include <cstdlib>
@@ -10,7 +13,6 @@
 
 #include "BitDepthUtils.h"
 #include "OpBuilders.h"
-#include "ops/lut3d/Lut3DOp.cpp"
 #include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
 
@@ -669,3 +671,5 @@ OCIO_ADD_TEST(Lut3DTransform, build_op)
 // TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT3D_Green
 // TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT3D_Red
 // TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT3D_Example
+
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

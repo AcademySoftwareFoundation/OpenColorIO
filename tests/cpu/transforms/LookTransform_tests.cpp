@@ -270,6 +270,7 @@ colorspaces:
     OCIO_CHECK_ASSERT(op->isNoOpType());
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT // This test need FileTransform
 OCIO_ADD_TEST(LookTransform, build_look_options_ops)
 {
     constexpr const char * OCIO_CONFIG{ R"(
@@ -561,6 +562,7 @@ colorspaces:
     OCIO_CHECK_EQUAL(std::string("cdl_test1.cc"), usedContextVars->getStringVarByIndex(0));
     OCIO_CHECK_EQUAL(std::string("FILE2"), usedContextVars->getStringVarNameByIndex(1));
     OCIO_CHECK_EQUAL(std::string("cdl_test1.cc"), usedContextVars->getStringVarByIndex(1));}
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 
 OCIO_ADD_TEST(LookTransform, inverse_look_transform)

@@ -111,5 +111,5 @@ private:
 
 } // namespace OCIO_NAMESPACE
 
-#endif //OCIO_ARCHIVE_SUPPORT
+#endif // OCIO_ARCHIVE_SUPPORT
 #endif

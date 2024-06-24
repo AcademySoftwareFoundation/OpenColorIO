@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include "fileformats/ctf/CTFTransform.h"
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 #include <sstream>
 
 #include "BitDepthUtils.h"
 #include "fileformats/ctf/CTFReaderUtils.h"
-#include "fileformats/ctf/CTFTransform.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "HashUtils.h"
 #include "ops/cdl/CDLOpData.h"
@@ -1870,7 +1873,6 @@ void LogWriter::writeContent() const
 
 
 ///////////////////////////////////////////////////////////////////////////////
-
 class Lut1DWriter : public OpWriter
 {
 public:
@@ -2772,3 +2774,4 @@ void TransformWriter::writeOps(const CTFVersion & version) const
 }
 
 } // namespace OCIO_NAMESPACE
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

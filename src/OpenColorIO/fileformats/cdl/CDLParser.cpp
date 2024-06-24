@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include "transforms/CDLTransform.h"
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 #include <sstream>
 
 #include "expat.h"
@@ -8,7 +12,6 @@
 #include "fileformats/cdl/CDLReaderHelper.h"
 #include "fileformats/xmlutils/XMLReaderHelper.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
-#include "transforms/CDLTransform.h"
 #include "Platform.h"
 
 namespace OCIO_NAMESPACE
@@ -1015,3 +1018,5 @@ bool CDLParser::isCCC() const
 }
 
 } // namespace OCIO_NAMESPACE
+
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

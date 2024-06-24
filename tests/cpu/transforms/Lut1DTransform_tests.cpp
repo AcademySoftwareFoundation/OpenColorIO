@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include "transforms/Lut1DTransform.cpp"
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #include "testutils/UnitTest.h"
 
@@ -199,3 +200,6 @@ OCIO_ADD_TEST(Lut1DTransform, format_metadata)
     OCIO_CHECK_EQUAL(std::string(cfmd.getName()), "test LUT");
     OCIO_CHECK_EQUAL(std::string(cfmd.getID()), "LUTID");
 }
+
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+

@@ -26,8 +26,9 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 #include "fileformats/FileFormatCDL.cpp"
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #include "testutils/UnitTest.h"
 #include "UnitTestLogUtils.h"
@@ -399,3 +400,5 @@ OCIO_ADD_TEST(FileFormatCDL, write)
     OCIO_CHECK_THROW_WHAT(group->write(cfg, OCIO::FILEFORMAT_COLOR_DECISION_LIST, oss),
                           OCIO::Exception, "only CDL can be written");
 }
+
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

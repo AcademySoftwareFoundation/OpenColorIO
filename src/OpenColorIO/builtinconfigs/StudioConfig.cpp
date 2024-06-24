@@ -2,6 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <OpenColorIO/OpenColorIO.h>
+
 #if OCIO_HAS_BUILTIN_YAML_CONFIGS
 
 #include "builtinconfigs/BuiltinConfigRegistry.h"
@@ -39,4 +40,5 @@ void Register(BuiltinConfigRegistryImpl & registry) noexcept
 
 } // namespace STUDIOCONFIG
 } // namespace OCIO_NAMESPACE
-#endif //OCIO_HAS_BUILTIN_YAML_CONFIGS
+
+#endif // OCIO_HAS_BUILTIN_YAML_CONFIGS

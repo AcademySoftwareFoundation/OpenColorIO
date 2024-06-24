@@ -33,6 +33,7 @@ OCIO_ADD_TEST(Reference, accessors)
     OCIO_CHECK_EQUAL(r.getPath(), file);
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 namespace
 {
 // Use OCIO public interface to load a file transform.
@@ -112,6 +113,7 @@ OCIO_ADD_TEST(Reference, load_cycle_rel_resolve_failing)
     OCIO_CHECK_THROW_WHAT(GetTransformFileProcessor(fileName), OCIO::Exception,
                           "is creating a recursion");
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 namespace
 {
@@ -132,7 +134,7 @@ bool GetFilePath(std::string & path, OCIO::ConstOpRcPtr & op)
 // The following tests load files using the non-public API in order to validate
 // the referenced files are loaded correctly.
 //
-
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 OCIO_ADD_TEST(Reference, load_one_reference)
 {
     OCIO::ContextRcPtr context = OCIO::Context::Create();
@@ -240,6 +242,7 @@ OCIO_ADD_TEST(Reference, load_nested_resolve_internal)
     auto matrixData = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(op->data());
     OCIO_REQUIRE_ASSERT(matrixData);
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 // TODO: Once searchPath for Windows is fixed, add test where files are in different directories
 // and several path are being searched.

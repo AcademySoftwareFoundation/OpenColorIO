@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
+#include <OpenColorIO/OpenColorIO.h>
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #include <cmath>
 
-#include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/matrix/MatrixOp.h"
 #include "transforms/builtins/ACES.h"
@@ -134,3 +135,5 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
 } // namespace CAMERA
 
 } // namespace OCIO_NAMESPACE
+
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

@@ -67,6 +67,7 @@ id<MTLSamplerState> GetSamplerState(id<MTLDevice> device, Interpolation interpol
     return samplerState;
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 id<MTLTexture> AllocateTexture3D(id<MTLDevice> device,
                        unsigned edgelen, const float * lutValues)
 {
@@ -148,6 +149,7 @@ id<MTLTexture> AllocateTexture2D(id<MTLDevice> device,
     
     return tex;
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 }
 
 //////////////////////////////////////////////////////////
@@ -168,7 +170,9 @@ MetalBuilderRcPtr MetalBuilder::Create(const GpuShaderDescRcPtr & shaderDesc)
 MetalBuilder::MetalBuilder(const GpuShaderDescRcPtr & shaderDesc)
     :   m_shaderDesc(shaderDesc)
     ,   m_startIndex(0)
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     ,   m_textureIds{}
+#endif
     ,   m_uniformData{}
     ,   m_verbose(false)
 {
@@ -189,10 +193,13 @@ MetalBuilder::~MetalBuilder()
         [m_PSO release];
     }
     m_PSO = nil;
-
+    
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     deleteAllTextures();
+#endif
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 void MetalBuilder::allocateAllTextures(unsigned startIndex)
 {
     deleteAllTextures();
@@ -289,6 +296,7 @@ void MetalBuilder::deleteAllTextures()
     }
     m_textureIds.clear();
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 void MetalBuilder::fillUniformBufferData()
 {
@@ -508,6 +516,7 @@ void MetalBuilder::applyColorCorrection(id<MTLTexture> inputTexture, id<MTLTextu
     
     setUniforms(renderCmdEncoder);
     
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     const size_t max = m_textureIds.size();
     for (size_t idx=0; idx<max; ++idx)
     {
@@ -515,6 +524,7 @@ void MetalBuilder::applyColorCorrection(id<MTLTexture> inputTexture, id<MTLTextu
         [renderCmdEncoder setFragmentTexture:data.m_texture atIndex:(m_startIndex + idx)];
         [renderCmdEncoder setFragmentSamplerState:data.m_samplerState atIndex:(m_startIndex + idx)];
     }
+#endif 
     
     [renderCmdEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:3];
     

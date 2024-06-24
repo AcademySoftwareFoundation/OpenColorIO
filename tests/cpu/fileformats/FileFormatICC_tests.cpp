@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include "fileformats/FileFormatICC.cpp"
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
@@ -646,3 +647,5 @@ OCIO_ADD_TEST(FileFormatICC, endian)
     OCIO_CHECK_EQUAL(test[0], 0x66);
 
 }
+
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

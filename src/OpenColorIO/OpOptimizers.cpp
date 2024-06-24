@@ -244,6 +244,7 @@ int RemoveInverseOps(OpRcPtrVec & opVec, OptimizationFlags oFlags)
             // mean inserting a Range to emulate the clamping done by the original ops.
 
             OpRcPtr replacedBy;
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
             if (type1 == OpData::Lut1DType)
             {
                 // Lut1D gets special handling so that both halfs of the pair are available.
@@ -270,6 +271,7 @@ int RemoveInverseOps(OpRcPtrVec & opVec, OptimizationFlags oFlags)
                 replacedBy = ops[0];
             }
             else
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
             {
                 replacedBy = op1->getIdentityReplacement();
             }
@@ -364,6 +366,7 @@ int ReplaceInverseLuts(OpRcPtrVec & opVec)
         ConstOpRcPtr op = opVec[i];
         auto opData = op->data();
         const auto type = opData->getType();
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
         if (type == OpData::Lut1DType)
         {
             auto lutData = OCIO_DYNAMIC_POINTER_CAST<const Lut1DOpData>(opData);
@@ -390,6 +393,8 @@ int ReplaceInverseLuts(OpRcPtrVec & opVec)
                 ++count;
             }
         }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
     }
     return count;
 
@@ -448,6 +453,7 @@ int RemoveTrailingClampIdentity(OpRcPtrVec & opVec)
     return count;
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 // (Note: the term "separable" in mathematics refers to a multi-dimensional
 // function where the dimensions are independent of each other.)
 //
@@ -581,6 +587,8 @@ void OptimizeSeparablePrefix(OpRcPtrVec & ops, BitDepth in)
 
     ops.insert(ops.begin(), lutOps.begin(), lutOps.end());
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 } // namespace
 
 void OpRcPtrVec::finalize()
@@ -747,10 +755,12 @@ void OpRcPtrVec::optimizeForBitdepth(const BitDepth & inBitDepth,
         {
             RemoveTrailingClampIdentity(*this);
         }
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
         if (HasFlag(oFlags, OPTIMIZATION_COMP_SEPARABLE_PREFIX))
         {
             OptimizeSeparablePrefix(*this, inBitDepth);
         }
+#endif 
     }
 }
 

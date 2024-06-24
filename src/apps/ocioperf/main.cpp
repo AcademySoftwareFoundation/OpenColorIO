@@ -266,8 +266,8 @@ int main(int argc, const char **argv)
     try
     {
         // Load the current config.
-
         OCIO::ConstProcessorRcPtr processor;
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
         if (!transformFile.empty())
         {
             OCIO::ConfigRcPtr config  = OCIO::Config::CreateRaw()->createEditableCopy();
@@ -293,8 +293,10 @@ int main(int argc, const char **argv)
                 }
             }
         }
+        else
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
         // Checking for an input colorspace or input (display, view) pair.
-        else if (!inColorSpace.empty() || (!display.empty() && !view.empty()))
+        if (!inColorSpace.empty() || (!display.empty() && !view.empty()))
         {
             if (verbose)
             {

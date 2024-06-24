@@ -26,7 +26,8 @@
 #define OCIO_VERSION_MAJOR @OpenColorIO_VERSION_MAJOR@
 #define OCIO_VERSION_MINOR @OpenColorIO_VERSION_MINOR@
 
-// Experimental switches to streamline OCIO library.
+// Optional features that can be turned on/off at compile-time.
+#cmakedefine01  OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 #cmakedefine01  OCIO_ARCHIVE_SUPPORT
 
 // Highlight deprecated methods or classes.

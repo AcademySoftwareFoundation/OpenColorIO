@@ -75,6 +75,7 @@ std::string createConfig()
     return ocioConfigStr;
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 OCIO_ADD_GPU_TEST(Config, several_1D_luts_legacy_shader)
 {
     std::string configStr = createConfig();
@@ -219,3 +220,4 @@ OCIO_ADD_GPU_TEST(Config, with_underscores)
     test.setTestNaN(false);
     test.setTestInfinity(false);
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <OpenColorIO/OpenColorIO.h>
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #include <stdio.h>
 #include <sstream>
 #include <string>
 
-#include <OpenColorIO/OpenColorIO.h>
 
 #include "GPUUnitTest.h"
 #include "GPUHelpers.h"
@@ -409,3 +411,5 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_inverse_half_hue_adjust_file1_test)
 // TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1D_File1_test
 // TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1D_too_small
 // TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1D_half_domain_test
+
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

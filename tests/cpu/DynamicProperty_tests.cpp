@@ -68,6 +68,7 @@ OCIO_ADD_TEST(DynamicPropertyImpl, equal_double)
     OCIO_CHECK_ASSERT(!(*dp0 == *dp1));
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 namespace
 {
 OCIO::ConstProcessorRcPtr LoadTransformFile(const std::string & fileName)
@@ -150,6 +151,7 @@ OCIO_ADD_TEST(DynamicProperty, get_dynamic_via_cpu_processor)
                           OCIO::Exception,
                           "Cannot find dynamic property");
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 OCIO_ADD_TEST(DynamicPropertyImpl, equal_grading_primary)
 {

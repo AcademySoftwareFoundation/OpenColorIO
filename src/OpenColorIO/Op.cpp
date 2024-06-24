@@ -558,6 +558,7 @@ void CreateOpVecFromOpData(OpRcPtrVec & ops,
         break;
     }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT 
     case OpData::Lut1DType:
     {
         auto lutSrc = std::dynamic_pointer_cast<const Lut1DOpData>(opData);
@@ -573,6 +574,12 @@ void CreateOpVecFromOpData(OpRcPtrVec & ops,
         CreateLut3DOp(ops, lut, dir);
         break;
     }
+#else
+    case OpData::Lut1DType:
+    case OpData::Lut3DType:
+        throw Exception("LUT support is not enabled in this build");
+        break;
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
     case OpData::MatrixType:
     {

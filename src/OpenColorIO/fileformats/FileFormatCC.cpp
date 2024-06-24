@@ -3,6 +3,8 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 #include "fileformats/cdl/CDLParser.h"
 #include "fileformats/cdl/CDLWriter.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
@@ -166,3 +168,4 @@ FileFormat * CreateFileFormatCC()
 }
 
 } // namespace OCIO_NAMESPACE
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <OpenColorIO/OpenColorIO.h>
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 #include <algorithm>
 #include <iterator>
 
-#include <OpenColorIO/OpenColorIO.h>
 
 #include "GpuShaderUtils.h"
 #include "MathUtils.h"
@@ -388,3 +391,4 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
 } // namespace OCIO_NAMESPACE
 
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include "ops/noop/NoOps.cpp"
 
 #include "ops/lut1d/Lut1DOp.h"
@@ -29,6 +28,7 @@ void CreateGenericScaleOp(OCIO::OpRcPtrVec & ops)
     OCIO::CreateScaleOp(ops, scale4, OCIO::TRANSFORM_DIR_FORWARD);
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 void CreateGenericLutOp(OCIO::OpRcPtrVec & ops)
 {
     // Make a LUT that squares the input.
@@ -49,6 +49,8 @@ void CreateGenericLutOp(OCIO::OpRcPtrVec & ops)
 
     OCIO::CreateLut1DOp(ops, lut, OCIO::TRANSFORM_DIR_FORWARD);
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 
 void AssertPartitionIntegrity(OCIO::OpRcPtrVec & gpuPreOps,
                               OCIO::OpRcPtrVec & gpuLatticeOps,
@@ -154,6 +156,7 @@ OCIO_ADD_TEST(NoOps, partition_gpu_ops)
                                                   gpuPostOps) );
     }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     {
     OCIO::OpRcPtrVec ops;
 
@@ -251,8 +254,11 @@ OCIO_ADD_TEST(NoOps, partition_gpu_ops)
     std::cerr << SerializeOpVec(gpuPostOps, 4) << std::endl;
     */
     }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 } // PartitionGPUOps
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 OCIO_ADD_TEST(NoOps, throw)
 {
     // PartitionGPUOps might throw, but could not find how
@@ -280,6 +286,7 @@ OCIO_ADD_TEST(NoOps, throw)
         OCIO::Exception, "One gpuPostOps op does not support GPU");
 
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 OCIO_ADD_TEST(NoOps, allocation_op)
 {
@@ -343,4 +350,3 @@ OCIO_ADD_TEST(NoOps, look_op)
     OCIO_CHECK_EQUAL(clonedOp->hasChannelCrosstalk(), false);
     OCIO_CHECK_EQUAL(clonedOp->supportedByLegacyShader(), true);
 }
-

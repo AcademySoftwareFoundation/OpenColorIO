@@ -4,6 +4,8 @@
 
 #include "fileformats/FileFormatDiscreet1DL.cpp"
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 #include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
 
@@ -213,3 +215,5 @@ OCIO_ADD_TEST(FileFormatD1DL, test_bad_file)
     const std::string truncatedLut("error_truncated_file.lut");
     OCIO_CHECK_THROW(LoadLutFile(truncatedLut), OCIO::Exception);
 }
+
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

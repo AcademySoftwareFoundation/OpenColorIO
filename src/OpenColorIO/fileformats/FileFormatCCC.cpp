@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <map>
+#include "transforms/FileTransform.h"
 
-#include <OpenColorIO/OpenColorIO.h>
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
+#include <map>
 
 #include "fileformats/cdl/CDLParser.h"
 #include "fileformats/cdl/CDLWriter.h"
@@ -11,7 +13,6 @@
 #include "fileformats/xmlutils/XMLWriterUtils.h"
 #include "fileformats/FormatMetadata.h"
 #include "transforms/CDLTransform.h"
-#include "transforms/FileTransform.h"
 #include "OpBuilders.h"
 #include "ParseUtils.h"
 
@@ -257,3 +258,4 @@ FileFormat * CreateFileFormatCCC()
     return new LocalFileFormat();
 }
 } // namespace OCIO_NAMESPACE
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

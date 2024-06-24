@@ -2,11 +2,8 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 if(OCIO_BUILD_APPS)
-	add_subdirectory(ociobakelut)
 	add_subdirectory(ociocheck)
-	add_subdirectory(ociochecklut)
 	add_subdirectory(ociocpuinfo)
-	add_subdirectory(ociomakeclf)
 	add_subdirectory(ocioperf)
 	add_subdirectory(ociowrite)
 
@@ -14,8 +11,16 @@ if(OCIO_BUILD_APPS)
 		add_subdirectory(ocioarchive)
 	endif()
 
+	if(OCIO_LUT_AND_FILETRANSFORM_SUPPORT)
+		add_subdirectory(ociobakelut)
+		add_subdirectory(ociochecklut)
+		add_subdirectory(ociomakeclf)
+	endif()
+
 	if(TARGET OpenColorIO::ImageIOBackend)
-		add_subdirectory(ociolutimage)
+		if(OCIO_LUT_AND_FILETRANSFORM_SUPPORT)
+			add_subdirectory(ociolutimage)
+		endif()
 		add_subdirectory(ocioconvert)
 		add_subdirectory(ociodisplay)
 	else()

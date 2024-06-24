@@ -3,6 +3,7 @@
 
 #include "Lut3DOpCPU_SSE2.h"
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 #if OCIO_USE_SSE2
 
 #include "SSE2.h"
@@ -319,3 +320,4 @@ void applyTetrahedralSSE2(const float *lut3d, int dim, const float *src, float *
 } // OCIO_NAMESPACE
 
 #endif // OCIO_USE_SSE2
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

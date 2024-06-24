@@ -35,6 +35,7 @@ const std::string & GetTestFilesDir()
     return ocioTestFilesDir;
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 // Create a FileTransform.
 FileTransformRcPtr CreateFileTransform(const std::string & fileName)
 {
@@ -70,6 +71,7 @@ ConstProcessorRcPtr GetFileTransformProcessor(const std::string & fileName)
     // Get the processor corresponding to the transform.
     return config->getProcessor(fileTransform);
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 std::string CreateTemporaryDirectory(const std::string & name)
 {

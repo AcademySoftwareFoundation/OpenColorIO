@@ -111,6 +111,7 @@ void GroupTransformImpl::prependTransform(TransformRcPtr transform) noexcept
     m_vec.insert(m_vec.begin(), transform);
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 void GroupTransformImpl::write(const ConstConfigRcPtr & config,
                                const char * formatName,
                                std::ostream & os) const
@@ -152,6 +153,29 @@ const char * GroupTransform::GetFormatExtensionByIndex(int index) noexcept
 {
     return FormatRegistry::GetInstance().getFormatExtensionByIndex(FORMAT_CAPABILITY_WRITE, index);
 }
+#else
+void GroupTransformImpl::write(const ConstConfigRcPtr& config,
+    const char* formatName,
+    std::ostream& os) const
+{
+    throw Exception("LUT and File-Transform support is turned OFF.");
+}
+
+int GroupTransform::GetNumWriteFormats() noexcept
+{
+    return 0;
+}
+
+const char* GroupTransform::GetFormatNameByIndex(int index) noexcept
+{
+    return nullptr;
+}
+
+const char* GroupTransform::GetFormatExtensionByIndex(int index) noexcept
+{
+    return nullptr;
+}
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 std::ostream & operator<< (std::ostream & os, const GroupTransform & groupTransform)
 {

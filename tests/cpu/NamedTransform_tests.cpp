@@ -1216,6 +1216,7 @@ colorspaces:
     }
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT // needs DISPLAY - CIE-XYZ-D65_to_REC.2100-PQ
 OCIO_ADD_TEST(Config, colorspace_transform_named_transform)
 {
     // Validate Config::validate() on config with ColorSpace or DisplayView Transforms,
@@ -1282,6 +1283,7 @@ named_transforms:
     OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
     OCIO_CHECK_NO_THROW(config->validate());
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 namespace
 {

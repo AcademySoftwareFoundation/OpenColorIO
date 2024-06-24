@@ -22,6 +22,7 @@ void RGB_to_RGBA(const float* lutValues, int valueCount, std::vector<float>& flo
 
 class MetalBuilder
 {
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     struct TextureId
     {
         std::string         m_textureName;
@@ -65,6 +66,7 @@ class MetalBuilder
     };
 
     typedef std::vector<TextureId> TextureIds;
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
     // Uniform are used for dynamic parameters.
     class Uniform
@@ -88,9 +90,13 @@ public:
     inline void setVerbose(bool verbose) { m_verbose = verbose; }
     inline bool isVerbose() const { return m_verbose; }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     // Allocate & upload all the needed textures
     //  (i.e. the index is the first available index for any kind of textures).
     void allocateAllTextures(unsigned startIndex);
+#else
+    void allocateAllTextures(unsigned startIndex) {;}
+#endif
 
     // Update all uniforms.
     void setUniforms(id<MTLRenderCommandEncoder> renderCmdEncoder);
@@ -111,7 +117,9 @@ protected:
     void triggerProgrammaticCaptureScope();
     void stopProgrammaticCaptureScope();
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     void deleteAllTextures();
+#endif
 
     // Critical for declaring primitive data types like float2, float3, ...
     std::string getMSLHeader();
@@ -131,7 +139,9 @@ private:
     id<MTLRenderPipelineState> m_PSO;
     
     unsigned m_startIndex;                 // Starting index for texture allocations
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     TextureIds m_textureIds;               // Texture ids of all needed textures
+#endif
     std::vector<uint8_t> m_uniformData;    // Uniform buffer Data
     std::string m_shaderCacheID;           // Current shader program key
     bool m_verbose;                        // Print shader code to std::cout for debugging purposes

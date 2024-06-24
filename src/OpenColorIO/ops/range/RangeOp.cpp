@@ -112,6 +112,7 @@ bool RangeOp::canCombineWith(ConstOpRcPtr & op2) const
     if (range1->isIdentity())
     {
         // If op is LUT range op can be removed.
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
         if (type2 == OpData::Lut1DType)
         {
             auto lut = OCIO_DYNAMIC_POINTER_CAST<const Lut1DOpData>(opData2);
@@ -129,6 +130,7 @@ bool RangeOp::canCombineWith(ConstOpRcPtr & op2) const
                 return true;
             }
         }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     }
 
     if (type2 == OpData::RangeType)

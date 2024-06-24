@@ -11,6 +11,7 @@
 namespace OCIO_NAMESPACE
 {
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 double Interpolate1D(unsigned lutSize, const double * lutValues, double in)
 {
     // The LUT values are organized that way:
@@ -137,5 +138,6 @@ void CreateHalfLut(OpRcPtrVec & ops, std::function<float(double)> lutValueGenera
 
     CreateLut1DOp(ops, lut, TRANSFORM_DIR_FORWARD);
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 } // namespace OCIO_NAMESPACE

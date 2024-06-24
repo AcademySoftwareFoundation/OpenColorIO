@@ -6,6 +6,8 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 #include "CPUInfo.h"
 
 #if OCIO_USE_SSE2
@@ -19,3 +21,4 @@ void applyTetrahedralSSE2(const float *lut3d, int dim, const float *src, float *
 #endif // OCIO_USE_SSE2
 
 #endif /* INCLUDED_OCIO_LUT3DOP_CPU_SSE2_H */
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

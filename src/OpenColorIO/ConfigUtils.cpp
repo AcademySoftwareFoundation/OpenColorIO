@@ -313,6 +313,7 @@ bool hasNonTrivialMatrixTransform(const ConstProcessorRcPtr & proc)
 //
 bool containsBlockedTransform(const ConstTransformRcPtr & transform)
 {
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     // If it's a GroupTransform, need to recurse into it to check the contents.
     if (transform->getTransformType() == TRANSFORM_TYPE_GROUP)
     {
@@ -326,7 +327,6 @@ bool containsBlockedTransform(const ConstTransformRcPtr & transform)
             }
         }
     }
-
     // Prevent FileTransforms from being used, except for spi1d and spimtx since these
     // may be used with OCIO v1 configs to implement the type of color spaces the heuristics
     // are designed to look for.  (E.g. The sRGB Texture space in the legacy ACES configs.)
@@ -359,6 +359,7 @@ bool containsBlockedTransform(const ConstTransformRcPtr & transform)
     {
         return true;
     }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     return false;
 }
 

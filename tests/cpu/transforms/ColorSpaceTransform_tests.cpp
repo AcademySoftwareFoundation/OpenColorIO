@@ -757,6 +757,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, build_colorspace_ops_with_reference_conversio
     }
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 OCIO_ADD_TEST(ColorSpaceTransform, context_variables)
 {
     OCIO::ContextRcPtr usedContextVars = OCIO::Context::Create();
@@ -853,6 +854,7 @@ OCIO_ADD_TEST(ColorSpaceTransform, context_variables)
     OCIO_CHECK_EQUAL(std::string("exposure_contrast_linear.ctf"),
                      usedContextVars->getStringVarByIndex(0));
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 // Please see (Config, named_transform_processor) in NamedTransform_tests.cpp for coverage of
 // ColorSpaceTransform where the arguments are NamedTransforms.

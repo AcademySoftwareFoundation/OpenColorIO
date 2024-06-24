@@ -25,6 +25,7 @@ constexpr double offset[3] = { 0.05, -0.23, 0.11 };
 constexpr double power[3]  = { 0.93,  0.81, 1.27 };
 };
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT 
 // Use the legacy shader description with the CDL from OCIO v1 implementation.
 OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1_legacy_shader)
 {
@@ -47,6 +48,7 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1_legacy_shader)
     // from all of these tests.
     test.setTestNaN(false);
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT 
 
 // Use the generic shader description with the CDL from OCIO v1 implementation.
 OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1)
@@ -153,6 +155,7 @@ constexpr double power[3]  = { 1.20,  0.95, 1.13 };
 constexpr double saturation = 0.9;
 };
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 // Use the legacy shader description with the CDL from OCIO v1 implementation.
 OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1_legacy_shader_Data_2)
 {
@@ -173,6 +176,7 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1_legacy_shader_Data_2)
     test.setErrorThreshold(1e-6f);
     test.setTestNaN(false);
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 // Use the generic shader description with the CDL from OCIO v1 implementation.
 OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1_Data_2)

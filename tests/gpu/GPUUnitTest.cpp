@@ -334,8 +334,15 @@ namespace
         OCIO::ConstGPUProcessorRcPtr gpu;
         if (test->isLegacyShader())
         {
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
             gpu = processor->getOptimizedLegacyGPUProcessor(OCIO::OPTIMIZATION_DEFAULT, 
                                                             test->getLegacyShaderLutEdge());
+#else
+            // we shouldn't be here as tests asking for legacy shader should
+            // have been disabled in the main loop. If we're here, something is
+            // wrong!
+            throw OCIO::Exception("Test with legacy shader was not turned off!");
+#endif
         }
         else
         {
@@ -657,6 +664,15 @@ int main(int argc, const char ** argv)
             test->setup();
 
             enabledTest = test->isEnabled();
+
+#if !OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+            // Legacy shaders always need Lut3D thus we need to skip them if LUT
+            // support is turned off.
+            if(test->isLegacyShader())
+            { 
+                enabledTest = false;
+            }
+#endif
 
             constexpr size_t maxCharToDisplay = 49;
 

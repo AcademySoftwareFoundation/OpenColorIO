@@ -5,10 +5,12 @@
 #ifndef INCLUDED_OCIO_FILETRANSFORM_H
 #define INCLUDED_OCIO_FILETRANSFORM_H
 
+#include <OpenColorIO/OpenColorIO.h>
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #include <map>
 
-#include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
 #include "ops/noop/NoOps.h"
@@ -185,4 +187,5 @@ static constexpr char FILEFORMAT_COLOR_DECISION_LIST[]         = "ColorDecisionL
 
 } // namespace OCIO_NAMESPACE
 
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 #endif

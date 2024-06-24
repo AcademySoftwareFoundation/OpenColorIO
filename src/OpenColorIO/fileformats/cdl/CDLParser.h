@@ -4,10 +4,12 @@
 #ifndef INCLUDED_OCIO_FILEFORMATS_CDL_CDLPARSER_H
 #define INCLUDED_OCIO_FILEFORMATS_CDL_CDLPARSER_H
 
+#include <OpenColorIO/OpenColorIO.h>
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 #include <string>
 #include <istream>
-
-#include <OpenColorIO/OpenColorIO.h>
 
 #include "transforms/CDLTransform.h"
 
@@ -50,5 +52,7 @@ static constexpr char CDL_TAG_COLOR_CORRECTION_COLLECTION[] = "ColorCorrectionCo
 static constexpr char CDL_TAG_COLOR_DECISION[]              = "ColorDecision";
 
 } // namespace OCIO_NAMESPACE
+
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #endif

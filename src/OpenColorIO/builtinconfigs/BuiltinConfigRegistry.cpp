@@ -88,7 +88,7 @@ void BuiltinConfigRegistryImpl::init() noexcept
 #if OCIO_HAS_BUILTIN_YAML_CONFIGS
         CGCONFIG::Register(*this);
         STUDIOCONFIG::Register(*this);
-#endif //OCIO_HAS_BUILTIN_YAML_CONFIGS
+#endif // OCIO_HAS_BUILTIN_YAML_CONFIGS
     }
 }
 

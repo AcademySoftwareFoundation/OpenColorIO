@@ -29,7 +29,6 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
     )
     target_link_libraries(${TEST_BINARY}
         PRIVATE
-            expat::expat
             Imath::Imath
             pystring::pystring
             sampleicc::sampleicc
@@ -39,6 +38,10 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
             testutils
             xxHash
     )
+
+    if(OCIO_LUT_AND_FILETRANSFORM_SUPPORT)
+        target_link_libraries(${TEST_BINARY} PRIVATE expat::expat)
+    endif()
 
     if(OCIO_ARCHIVE_SUPPORT)
         target_link_libraries(${TEST_BINARY} PRIVATE MINIZIP::minizip-ng)

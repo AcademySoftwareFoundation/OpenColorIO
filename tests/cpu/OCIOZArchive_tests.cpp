@@ -2,6 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include "OpenColorIO/OpenColorIO.h"
+
 #if OCIO_ARCHIVE_SUPPORT
 
 #include "testutils/UnitTest.h"
@@ -44,7 +45,7 @@ struct DirectoryCreationGuard
 };
 } //anon.
 
-
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT // This test uses FileTransform
 OCIO_ADD_TEST(OCIOZArchive, is_config_archivable)
 {
     // This test primarily tests the isArchivable method from the Config object
@@ -574,5 +575,6 @@ OCIO_ADD_TEST(OCIOZArchive, extract_config_and_compare_to_original)
         );
     }
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
-#endif //OCIO_ARCHIVE_SUPPORT
+#endif // OCIO_ARCHIVE_SUPPORT

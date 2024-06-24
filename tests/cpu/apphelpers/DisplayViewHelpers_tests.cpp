@@ -23,7 +23,6 @@ static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
 // The configuration file used by the unit tests.
 #include "configs.data"
 
-
 OCIO_ADD_TEST(DisplayViewHelpers, basic)
 {
     std::istringstream is(category_test_config);
@@ -63,6 +62,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, basic)
 
     OCIO_CHECK_EQUAL(connectionMenuHelper->getName(0), std::string("lut_input_1"));
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT // Steps 3-8 rely on file transform.
     //
     // Step 3 - Create a (display, view) pair.
     //
@@ -269,7 +269,6 @@ OCIO_ADD_TEST(DisplayViewHelpers, basic)
     //
     // Step 7 - Some faulty scenarios.
     //
-
     {
         // Color space already exists.
         OCIO_CHECK_THROW_WHAT(
@@ -320,6 +319,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, basic)
 
     OCIO_CHECK_ASSERT(!config->getColorSpace("view_5"));
     OCIO_CHECK_NO_THROW(val = config->getView("DISP_1", 2));
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 }
 
 OCIO_ADD_TEST(DisplayViewHelpers, display_view_without_look)
@@ -424,6 +424,7 @@ private:
 
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 OCIO_ADD_TEST(DisplayViewHelpers, active_display_view)
 {
     std::istringstream is(category_test_config);
@@ -556,6 +557,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, active_display_view)
             "Forbidden to add an active view as 'OCIO_ACTIVE_VIEWS' controls the active list.");
     }
 }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 OCIO_ADD_TEST(DisplayViewHelpers, remove_display_view)
 {

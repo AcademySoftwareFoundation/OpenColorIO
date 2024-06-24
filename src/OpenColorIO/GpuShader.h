@@ -26,11 +26,14 @@ class GenericGpuShaderDesc : public GpuShaderDesc
 public:
     static GpuShaderDescRcPtr Create();
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
     unsigned getTextureMaxWidth() const noexcept override;
     void setTextureMaxWidth(unsigned maxWidth) override;
 
     bool getAllowTexture1D() const noexcept override;
     void setAllowTexture1D(bool allowed) override;
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
     // Accessors to the uniforms
     //
@@ -45,7 +48,7 @@ public:
     bool addUniform(const char * name,
                     const SizeGetter & getSize,
                     const VectorIntGetter & getVectorInt) override;
-
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     // Accessors to the 1D & 2D textures built from 1D LUT
     //
     unsigned getNumTextures() const noexcept override;
@@ -79,6 +82,7 @@ public:
                       unsigned & edgelen,
                       Interpolation & interpolation) const override;
     void get3DTextureValues(unsigned index, const float *& value) const override;
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 private:
 

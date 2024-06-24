@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include "fileformats/xmlutils/XMLReaderUtils.h"
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 #include <algorithm>
 
-#include "fileformats/xmlutils/XMLReaderUtils.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -114,3 +117,4 @@ void FindSubString(const char * str, size_t length,
 
 } // namespace OCIO_NAMESPACE
 
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

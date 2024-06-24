@@ -2,6 +2,9 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include "fileformats/cdl/CDLReaderHelper.h"
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 
 namespace OCIO_NAMESPACE
@@ -85,3 +88,5 @@ void CDLReaderColorCorrectionElt::appendMetadata(const std::string & name, const
 }
 
 } // namespace OCIO_NAMESPACE
+
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

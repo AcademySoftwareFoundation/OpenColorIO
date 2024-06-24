@@ -257,7 +257,7 @@ vertex VertexOut ColorCorrectionVS(unsigned int vId [[ vertex_id ]])
         }
         
         separator = "";
-        
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
         int tex_slot = 1;
         for(unsigned int i = 0; i < shaderDesc->getNum3DTextures(); ++i)
         {
@@ -325,6 +325,7 @@ vertex VertexOut ColorCorrectionVS(unsigned int vId [[ vertex_id ]])
             
             separator = ", ";
         }
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
         
         if(uniformParams.str().size() > 0 || params.str().size() > 0)
         {

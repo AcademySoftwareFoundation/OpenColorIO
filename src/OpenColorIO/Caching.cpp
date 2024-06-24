@@ -24,6 +24,9 @@ const char * OCIO_DISABLE_CACHE_FALLBACK   = "OCIO_DISABLE_CACHE_FALLBACK";
 void ClearAllCaches()
 {
     ClearPathCaches();
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     ClearFileTransformCaches();
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
 }
 } // namespace OCIO_NAMESPACE
