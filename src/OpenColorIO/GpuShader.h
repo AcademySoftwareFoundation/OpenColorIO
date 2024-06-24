@@ -71,12 +71,14 @@ public:
     void add3DTexture(const char * textureName,
                       const char * samplerName,
                       unsigned edgelen,
+                      TextureType channel,
                       Interpolation interpolation,
                       const float * values) override;
     void get3DTexture(unsigned index,
                       const char *& textureName,
                       const char *& samplerName,
                       unsigned & edgelen,
+                      TextureType& channel,
                       Interpolation & interpolation) const override;
     void get3DTextureValues(unsigned index, const float *& value) const override;
 
