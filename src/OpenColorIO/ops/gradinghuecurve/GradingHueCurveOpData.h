@@ -26,7 +26,14 @@ public:
     GradingHueCurveOpData(GradingStyle style);
     GradingHueCurveOpData(const GradingHueCurveOpData & rhs);
     GradingHueCurveOpData(GradingStyle style,
-                   const GradingHueCurves & curve);
+       ConstGradingBSplineCurveRcPtr hueHue,
+       ConstGradingBSplineCurveRcPtr hueSat,
+       ConstGradingBSplineCurveRcPtr hueLum,
+       ConstGradingBSplineCurveRcPtr lumSat,
+       ConstGradingBSplineCurveRcPtr satSat,
+       ConstGradingBSplineCurveRcPtr lumLum,
+       ConstGradingBSplineCurveRcPtr satLum,
+       ConstGradingBSplineCurveRcPtr hueFx);
     GradingHueCurveOpData & operator=(const GradingHueCurveOpData & rhs);
     virtual ~GradingHueCurveOpData();
 

@@ -21,7 +21,15 @@ class GradingHueCurveImpl : public GradingHueCurve
 public:
     GradingHueCurveImpl();
     GradingHueCurveImpl(GradingStyle style);
-    GradingHueCurveImpl(const GradingHueCurves & curves );
+    GradingHueCurveImpl(
+      ConstGradingBSplineCurveRcPtr hueHue,
+      ConstGradingBSplineCurveRcPtr hueSat,
+      ConstGradingBSplineCurveRcPtr hueLum,
+      ConstGradingBSplineCurveRcPtr lumSat,
+      ConstGradingBSplineCurveRcPtr satSat,
+      ConstGradingBSplineCurveRcPtr lumLum,
+      ConstGradingBSplineCurveRcPtr satLum,
+      ConstGradingBSplineCurveRcPtr hueFx );
     GradingHueCurveImpl(const ConstGradingHueCurveRcPtr & rhs);
 
     GradingHueCurveRcPtr createEditableCopy() const override;

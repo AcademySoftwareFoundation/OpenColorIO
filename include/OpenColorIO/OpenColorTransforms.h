@@ -575,18 +575,6 @@ extern OCIOEXPORT bool operator==(const GradingRGBCurve & lhs, const GradingRGBC
 extern OCIOEXPORT bool operator!=(const GradingRGBCurve & lhs, const GradingRGBCurve & rhs);
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingRGBCurve &);
 
-struct OCIOEXPORT GradingHueCurves
-{
-   ConstGradingBSplineCurveRcPtr hueHue;
-   ConstGradingBSplineCurveRcPtr hueSat;
-   ConstGradingBSplineCurveRcPtr hueLum;
-   ConstGradingBSplineCurveRcPtr lumSat;
-   ConstGradingBSplineCurveRcPtr satSat;
-   ConstGradingBSplineCurveRcPtr lumLum;
-   ConstGradingBSplineCurveRcPtr satLum;
-   ConstGradingBSplineCurveRcPtr hueFx;
-};
-
 /**
  * A set of HUE/SAT/LUM curves. It is used by GradingHueCurveTransform and can be used as
  * a dynamic property (see \ref DynamicPropertyGradingHueCurve).
@@ -596,7 +584,15 @@ class OCIOEXPORT GradingHueCurve
 public:
     static GradingHueCurveRcPtr Create(GradingStyle style);
     static GradingHueCurveRcPtr Create(const ConstGradingHueCurveRcPtr & rhs);
-    static GradingHueCurveRcPtr Create(const GradingHueCurves & curves);
+    static GradingHueCurveRcPtr Create(
+       ConstGradingBSplineCurveRcPtr hueHue,
+       ConstGradingBSplineCurveRcPtr hueSat,
+       ConstGradingBSplineCurveRcPtr hueLum,
+       ConstGradingBSplineCurveRcPtr lumSat,
+       ConstGradingBSplineCurveRcPtr satSat,
+       ConstGradingBSplineCurveRcPtr lumLum,
+       ConstGradingBSplineCurveRcPtr satLum,
+       ConstGradingBSplineCurveRcPtr hueFx);
 
     virtual GradingHueCurveRcPtr createEditableCopy() const = 0;
     virtual void validate() const = 0;

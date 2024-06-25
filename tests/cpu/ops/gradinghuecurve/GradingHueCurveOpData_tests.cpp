@@ -123,8 +123,7 @@ OCIO_ADD_TEST(GradingHueCurveOpData, validate)
 
     // Curves with a single control point are not valid.
     auto curve = OCIO::GradingBSplineCurve::Create(1);
-    OCIO::GradingHueCurves curvesStruct{curve, curve, curve, curve, curve, curve, curve, curve};
-    auto curves = OCIO::GradingHueCurve::Create(curvesStruct);
+    auto curves = OCIO::GradingHueCurve::Create(curve, curve, curve, curve, curve, curve, curve, curve);
     OCIO_CHECK_THROW_WHAT(gc.setValue(curves), OCIO::Exception,
                           "There must be at least 2 control points.");
 
@@ -132,16 +131,14 @@ OCIO_ADD_TEST(GradingHueCurveOpData, validate)
     curve = OCIO::GradingBSplineCurve::Create({ { 0.f,0.f },{ 0.7f,0.3f },
                                                 { 0.5f,0.7f },{ 1.f,1.f } });
 
-    curvesStruct = OCIO::GradingHueCurves{curve, curve, curve, curve, curve, curve, curve, curve};
-    curves = OCIO::GradingHueCurve::Create(curvesStruct);
+    curves = OCIO::GradingHueCurve::Create(curve, curve, curve, curve, curve, curve, curve, curve);
     OCIO_CHECK_THROW_WHAT(gc.setValue(curves), OCIO::Exception,
                           "has a x coordinate '0.5' that is less from previous control "
                           "point x cooordinate '0.7'.");
 
     // Fix the curve x coordinate.
     curve->getControlPoint(1).m_x = 0.3f;
-    curvesStruct = OCIO::GradingHueCurves{curve, curve, curve, curve, curve, curve, curve, curve};
-    curves = OCIO::GradingHueCurve::Create(curvesStruct);
+    curves = OCIO::GradingHueCurve::Create(curve, curve, curve, curve, curve, curve, curve, curve);
     OCIO_CHECK_NO_THROW(gc.setValue(curves));
     OCIO_CHECK_NO_THROW(gc.validate());
 }

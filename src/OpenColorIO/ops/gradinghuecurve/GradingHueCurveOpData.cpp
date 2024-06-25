@@ -5,6 +5,8 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include <iostream>
+
 #include "ops/gradinghuecurve/GradingHueCurve.h"
 #include "ops/gradinghuecurve/GradingHueCurveOpData.h"
 #include "Platform.h"
@@ -35,12 +37,27 @@ GradingHueCurveOpData::GradingHueCurveOpData(const GradingHueCurveOpData & rhs)
     *this = rhs;
 }
 
-GradingHueCurveOpData::GradingHueCurveOpData(GradingStyle style, 
-                               const GradingHueCurves & curves)
+GradingHueCurveOpData::GradingHueCurveOpData(GradingStyle style,                     
+   ConstGradingBSplineCurveRcPtr hueHue,
+   ConstGradingBSplineCurveRcPtr hueSat,
+   ConstGradingBSplineCurveRcPtr hueLum,
+   ConstGradingBSplineCurveRcPtr lumSat,
+   ConstGradingBSplineCurveRcPtr satSat,
+   ConstGradingBSplineCurveRcPtr lumLum,
+   ConstGradingBSplineCurveRcPtr satLum,
+   ConstGradingBSplineCurveRcPtr hueFx)
     : OpData()
     , m_style(style)
 {
-    ConstGradingHueCurveRcPtr hueCurve = GradingHueCurve::Create(curves);
+    ConstGradingHueCurveRcPtr hueCurve = GradingHueCurve::Create(
+       hueHue,
+       hueSat,
+       hueLum,
+       lumSat,
+       satSat,
+       lumLum,
+       satLum,
+       hueFx);
     m_value = std::make_shared<DynamicPropertyGradingHueCurveImpl>(hueCurve, false);
 }
 

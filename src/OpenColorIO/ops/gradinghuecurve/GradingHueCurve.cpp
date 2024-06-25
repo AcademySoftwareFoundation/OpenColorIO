@@ -90,16 +90,24 @@ GradingHueCurveImpl::GradingHueCurveImpl(GradingStyle style)
    }
 }
 
-GradingHueCurveImpl::GradingHueCurveImpl(const GradingHueCurves & curves)
+GradingHueCurveImpl::GradingHueCurveImpl(
+   ConstGradingBSplineCurveRcPtr hueHue,
+   ConstGradingBSplineCurveRcPtr hueSat,
+   ConstGradingBSplineCurveRcPtr hueLum,
+   ConstGradingBSplineCurveRcPtr lumSat,
+   ConstGradingBSplineCurveRcPtr satSat,
+   ConstGradingBSplineCurveRcPtr lumLum,
+   ConstGradingBSplineCurveRcPtr satLum,
+   ConstGradingBSplineCurveRcPtr hueFx)
 {
-    m_curves[HUE_HUE] = curves.hueHue->createEditableCopy();
-    m_curves[HUE_SAT] = curves.hueSat->createEditableCopy();
-    m_curves[HUE_LUM] = curves.hueLum->createEditableCopy();
-    m_curves[LUM_SAT] = curves.lumSat->createEditableCopy();
-    m_curves[SAT_SAT] = curves.satSat->createEditableCopy();
-    m_curves[LUM_LUM] = curves.lumLum->createEditableCopy();
-    m_curves[SAT_LUM] = curves.satLum->createEditableCopy();
-    m_curves[HUE_FX] = curves.hueFx->createEditableCopy();
+    m_curves[HUE_HUE] = hueHue->createEditableCopy();
+    m_curves[HUE_SAT] = hueSat->createEditableCopy();
+    m_curves[HUE_LUM] = hueLum->createEditableCopy();
+    m_curves[LUM_SAT] = lumSat->createEditableCopy();
+    m_curves[SAT_SAT] = satSat->createEditableCopy();
+    m_curves[LUM_LUM] = lumLum->createEditableCopy();
+    m_curves[SAT_LUM] = satLum->createEditableCopy();
+    m_curves[HUE_FX] = hueFx->createEditableCopy();
 }
 
 GradingHueCurveImpl::GradingHueCurveImpl(const ConstGradingHueCurveRcPtr & rhs)
@@ -227,9 +235,25 @@ GradingHueCurveRcPtr GradingHueCurve::Create(const ConstGradingHueCurveRcPtr & r
     return res;
 }
 
-GradingHueCurveRcPtr GradingHueCurve::Create(const GradingHueCurves & curves)
+GradingHueCurveRcPtr GradingHueCurve::Create(
+   ConstGradingBSplineCurveRcPtr hueHue,
+   ConstGradingBSplineCurveRcPtr hueSat,
+   ConstGradingBSplineCurveRcPtr hueLum,
+   ConstGradingBSplineCurveRcPtr lumSat,
+   ConstGradingBSplineCurveRcPtr satSat,
+   ConstGradingBSplineCurveRcPtr lumLum,
+   ConstGradingBSplineCurveRcPtr satLum,
+   ConstGradingBSplineCurveRcPtr hueFx)
 {
-    auto newCurve = std::make_shared<GradingHueCurveImpl>(curves);
+    auto newCurve = std::make_shared<GradingHueCurveImpl>(
+       hueHue,
+       hueSat,
+       hueLum,
+       lumSat,
+       satSat,
+       lumLum,
+       satLum,
+       hueFx);
     GradingHueCurveRcPtr res = newCurve;
     return res;
 }

@@ -170,19 +170,19 @@ float CalcKsi(unsigned i,
 
 //------------------------------------------------------------------------------------------------
 //
-void FitHueSpline(const std::vector<GradingControlPoint>& outCtrlPnts,
+void FitHueSpline(const std::vector<GradingControlPoint>& ctrlPnts,
                   const std::vector<float>& slopes,
                   std::vector<float>& knots,
                   std::vector<float>& coefsA,
                   std::vector<float>& coefsB,
                   std::vector<float>& coefsC)
 {
-    knots.push_back( outCtrlPnts[0].m_x );
-    unsigned numCtrlPnts = outCtrlPnts.size();
+    knots.push_back( ctrlPnts[0].m_x );
+    size_t numCtrlPnts = ctrlPnts.size();
     for (unsigned i = 0; i < numCtrlPnts - 1; ++i)
     {
-        const GradingControlPoint& p0 = outCtrlPnts[i];
-        const GradingControlPoint& p1 = outCtrlPnts[i + 1];
+        const GradingControlPoint& p0 = ctrlPnts[i];
+        const GradingControlPoint& p1 = ctrlPnts[i + 1];
     
         const float dx = p1.m_x - p0.m_x;
         const float secantSlope = (p1.m_y - p0.m_y) / dx;
@@ -196,7 +196,7 @@ void FitHueSpline(const std::vector<GradingControlPoint>& outCtrlPnts,
         else
         {
             // Calculate the middle knot.
-            const float ksi = CalcKsi(i, outCtrlPnts, slopes);
+            const float ksi = CalcKsi(i, ctrlPnts, slopes);
       
             // Calculate the coefficients.
             const float m_bar = (2.f * secantSlope - slopes[i + 1]) +
@@ -217,19 +217,19 @@ void FitHueSpline(const std::vector<GradingControlPoint>& outCtrlPnts,
  
 //------------------------------------------------------------------------------------------------
 //
-void EstimateHueSlopes(std::vector<GradingControlPoint>& outCtrlPnts,
+void EstimateHueSlopes(const std::vector<GradingControlPoint>& ctrlPnts,
                        std::vector<float>& slopes,
                        bool isPeriodic,
                        bool isHorizontal)
 {
     slopes.clear();
-    unsigned numCtrlPnts = outCtrlPnts.size();
+    size_t numCtrlPnts = ctrlPnts.size();
     std::vector<float> secantSlope;
     std::vector<float> secantLen;
     for (unsigned i = 0; i < numCtrlPnts - 1; ++i)
     {
-        const GradingControlPoint& p0 = outCtrlPnts[i];
-        const GradingControlPoint& p1 = outCtrlPnts[i + 1];
+        const GradingControlPoint& p0 = ctrlPnts[i];
+        const GradingControlPoint& p1 = ctrlPnts[i + 1];
     
         const float del_x = p1.m_x - p0.m_x;  // PrepHueCurveData ensures this is > 0
         const float del_y = p1.m_y - p0.m_y;
@@ -653,20 +653,20 @@ bool GradingBSplineCurveImpl::isIdentity() const
     bool isIdentity = true;
     if( m_curveType == DIAGONAL_B_SPLINE || m_curveType == B_SPLINE || m_curveType == HUE_HUE_B_SPLINE )
     {    
-       isIdentity = std::all_of(m_controlPoints.begin(), 
-                                m_controlPoints.end(), 
+       isIdentity = std::all_of(m_controlPoints.cbegin(), 
+                                m_controlPoints.cend(), 
                                 [](const GradingControlPoint& cp) { return cp.m_x == cp.m_y; });
     } 
     else if( m_curveType == PERIODIC_0_B_SPLINE )
     {
-       isIdentity = std::all_of(m_controlPoints.begin(), 
-                                m_controlPoints.end(), 
+       isIdentity = std::all_of(m_controlPoints.cbegin(), 
+                                m_controlPoints.cend(), 
                                 [](const GradingControlPoint& cp) { return cp.m_y == 0.f; });
     } 
     else if( m_curveType == HORIZONTAL1_B_SPLINE || m_curveType == PERIODIC_1_B_SPLINE )
     {
-       isIdentity = std::all_of(m_controlPoints.begin(), 
-                                m_controlPoints.end(), 
+       isIdentity = std::all_of(m_controlPoints.cbegin(), 
+                                m_controlPoints.cend(), 
                                 [](const GradingControlPoint& cp) { return cp.m_y == 1.f; });
     } else
     {
@@ -804,6 +804,12 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefsForHueCurve(KnotsCoefs & knots
     {
         // If the user-supplied slopes are non-zero, use those.
         slopes = m_slopesArray;
+        
+        // We need to ensure equal number of slopes and control points for the spline fit.
+        while(slopes.size() < resultCtrlPnts.size())
+        {
+            slopes.push_back(0.0f);
+        }
     }
     else
     {
