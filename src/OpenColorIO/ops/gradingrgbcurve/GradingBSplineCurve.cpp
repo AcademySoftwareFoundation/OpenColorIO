@@ -806,9 +806,13 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefsForHueCurve(KnotsCoefs & knots
         slopes = m_slopesArray;
         
         // We need to ensure equal number of slopes and control points for the spline fit.
-        while(slopes.size() < resultCtrlPnts.size())
+        if(isPeriodic)
         {
-            slopes.push_back(0.0f);
+            float firstSlope = slopes.back();
+            slopes.insert(slopes.begin(), firstSlope);
+
+            float lastSlope = slopes.front();
+            slopes.push_back(lastSlope);
         }
     }
     else
