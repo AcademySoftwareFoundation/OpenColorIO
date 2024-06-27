@@ -353,17 +353,22 @@ const char * FixedFunctionStyleToString(FixedFunctionStyle style)
 {
     switch(style)
     {
-        case FIXED_FUNCTION_ACES_RED_MOD_03:     return "ACES_RedMod03";
-        case FIXED_FUNCTION_ACES_RED_MOD_10:     return "ACES_RedMod10";
-        case FIXED_FUNCTION_ACES_GLOW_03:        return "ACES_Glow03";
-        case FIXED_FUNCTION_ACES_GLOW_10:        return "ACES_Glow10";
-        case FIXED_FUNCTION_ACES_DARK_TO_DIM_10: return "ACES_DarkToDim10";
-        case FIXED_FUNCTION_ACES_GAMUT_COMP_13:  return "ACES_GamutComp13";
-        case FIXED_FUNCTION_REC2100_SURROUND:    return "REC2100_Surround";
-        case FIXED_FUNCTION_RGB_TO_HSV:          return "RGB_TO_HSV";
-        case FIXED_FUNCTION_XYZ_TO_xyY:          return "XYZ_TO_xyY";
-        case FIXED_FUNCTION_XYZ_TO_uvY:          return "XYZ_TO_uvY";
-        case FIXED_FUNCTION_XYZ_TO_LUV:          return "XYZ_TO_LUV";
+        case FIXED_FUNCTION_ACES_RED_MOD_03:          return "ACES_RedMod03";
+        case FIXED_FUNCTION_ACES_RED_MOD_10:          return "ACES_RedMod10";
+        case FIXED_FUNCTION_ACES_GLOW_03:             return "ACES_Glow03";
+        case FIXED_FUNCTION_ACES_GLOW_10:             return "ACES_Glow10";
+        case FIXED_FUNCTION_ACES_DARK_TO_DIM_10:      return "ACES_DarkToDim10";
+        case FIXED_FUNCTION_ACES_GAMUT_COMP_13:       return "ACES_GamutComp13";
+        case FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20: return "ACES_OutputTransform20";
+        case FIXED_FUNCTION_ACES_AP0_TO_JMH_20:       return "ACES2_AP0_TO_JMh";
+        case FIXED_FUNCTION_ACES_TONESCALE_20:        return "ACES2_Tonescale";
+        case FIXED_FUNCTION_ACES_GAMUTMAP_20:         return "ACES2_GamutMap";
+        case FIXED_FUNCTION_ACES_RGB_TO_JMH_20:       return "ACES2_RGB_TO_JMh";
+        case FIXED_FUNCTION_REC2100_SURROUND:         return "REC2100_Surround";
+        case FIXED_FUNCTION_RGB_TO_HSV:               return "RGB_TO_HSV";
+        case FIXED_FUNCTION_XYZ_TO_xyY:               return "XYZ_TO_xyY";
+        case FIXED_FUNCTION_XYZ_TO_uvY:               return "XYZ_TO_uvY";
+        case FIXED_FUNCTION_XYZ_TO_LUV:               return "XYZ_TO_LUV";
         case FIXED_FUNCTION_ACES_GAMUTMAP_02:
         case FIXED_FUNCTION_ACES_GAMUTMAP_07:
             throw Exception("Unimplemented fixed function types: "

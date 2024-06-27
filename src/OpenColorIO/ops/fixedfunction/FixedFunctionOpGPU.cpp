@@ -622,6 +622,38 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
             );
             break;
         }
+
+        case FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_FWD:
+            // Not implemented
+            break;
+        case FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_INV:
+            // Not implemented
+            break;
+        case FixedFunctionOpData::ACES_AP0_TO_JMh_20:
+            // Not implemented
+            break;
+        case FixedFunctionOpData::ACES_JMh_TO_AP0_20:
+            // Not implemented
+            break;
+        case FixedFunctionOpData::ACES_TONESCALE_20_FWD:
+            // Not implemented
+            break;
+        case FixedFunctionOpData::ACES_TONESCALE_20_INV:
+            // Not implemented
+            break;
+        case FixedFunctionOpData::ACES_GAMUT_MAP_20_FWD:
+            // Not implemented
+            break;
+        case FixedFunctionOpData::ACES_GAMUT_MAP_20_INV:
+            // Not implemented
+            break;
+        case FixedFunctionOpData::ACES_RGB_TO_JMh_20:
+            // Not implemented
+            break;
+        case FixedFunctionOpData::ACES_JMh_TO_RGB_20:
+            // Not implemented
+            break;
+
         case FixedFunctionOpData::REC2100_SURROUND_FWD:
         {
             Add_Surround_Shader(shaderCreator, ss, (float) func->getParams()[0]);

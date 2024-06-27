@@ -497,7 +497,6 @@ void Generate_roll_white_d65_ops(OpRcPtrVec & ops)
 
 }  // namespace ACES_OUTPUT
 
-
 //
 // Create the built-in transforms.
 //
@@ -1046,6 +1045,69 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
         registry.addBuiltin("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-CINEMA-108nit-7.2nit-P3lim_1.1", 
                             "Component of ACES Output Transforms for 108 nit HDR D65 cinema",
                             ACES2065_1_to_CIE_XYZ_hdr_cinema_108nits_p3lim_1_1_Functor);
+    }
+
+    //
+    // ACES 2 OUTPUT TRANSFORMS
+    //
+
+    {
+        auto ACES2065_1_to_CIE_XYZ_video_rec709lim_2_0_Functor = [](OpRcPtrVec & ops)
+        {
+            // TODO: Should sync with CTL white scaling and surround gamma factor
+            // TODO: Should we apply the clamp to AP1 here, outside the fixed function?
+
+            CreateFixedFunctionOp(ops, FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_FWD, {
+                100.f,              // Peak luminance in nits
+                // Limiting gamut
+                0.6400f, 0.3300f,   // Red
+                0.3000f, 0.6000f,   // Green
+                0.1500f, 0.0600f,   // Blue
+                0.3127f, 0.3290f,   // White
+                1.f                 // Apply AP1 clamp
+            });
+
+            CreateRangeOp(ops,
+                        0., RangeOpData::EmptyValue(),
+                        0., RangeOpData::EmptyValue(),
+                        TRANSFORM_DIR_FORWARD);
+
+            MatrixOpData::MatrixArrayPtr matrix
+                = build_conversion_matrix_to_XYZ_D65(REC709::primaries, ADAPTATION_BRADFORD);
+            CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
+        };
+
+        registry.addBuiltin("ACES-2-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-REC709lim",
+                            "Component of ACES 2 Output Transforms for SDR D65 video",
+                            ACES2065_1_to_CIE_XYZ_video_rec709lim_2_0_Functor);
+    }
+
+    {
+        auto ACES2065_1_to_CIE_XYZ_hdr_video_1000nits_p3lim_2_0_Functor = [](OpRcPtrVec & ops)
+        {
+            CreateFixedFunctionOp(ops, FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_FWD, {
+                1000.f,              // Peak luminance in nits
+                // Limiting gamut
+                0.6800f, 0.3200f,   // Red
+                0.2650f, 0.6900f,   // Green
+                0.1500f, 0.0600f,   // Blue
+                0.3127f, 0.3290f,   // White
+                1.f                 // Apply AP1 clamp
+            });
+
+            CreateRangeOp(ops,
+                        0., RangeOpData::EmptyValue(),
+                        0., RangeOpData::EmptyValue(),
+                        TRANSFORM_DIR_FORWARD);
+
+            MatrixOpData::MatrixArrayPtr matrix
+                = build_conversion_matrix_to_XYZ_D65(P3_D65::primaries, ADAPTATION_BRADFORD);
+            CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
+        };
+
+        registry.addBuiltin("ACES-2-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-VIDEO-1000nit-P3D65lim",
+                            "Component of ACES 2 Output Transforms for 1000 nit HDR D65 video",
+                            ACES2065_1_to_CIE_XYZ_hdr_video_1000nits_p3lim_2_0_Functor);
     }
 }
 

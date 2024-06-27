@@ -405,7 +405,171 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_gamut_map_13)
                            1e-6f,
                            __LINE__);
     }
-}   
+}
+
+OCIO_ADD_TEST(FixedFunctionOpCPU, aces_ap0_to_jmh_20)
+{
+    const unsigned num_samples = 4;
+
+    float input_32f[num_samples*4] = {
+        // OCIO test values
+        0.11f,  0.02f,  0.04f, 0.5f,
+        0.71f,  0.51f,  0.81f, 1.0f,
+        0.43f,  0.82f,  0.71f, 0.0f,
+        // cyan patch of digitalLAD
+        0.2644043f, 0.9433594f, 0.69873047f, 1.0f,
+    };
+
+    float input2_32f[num_samples * 4];
+    memcpy(&input2_32f[0], &input_32f[0], sizeof(float)*num_samples * 4);
+
+    const float expected_32f[num_samples*4] = {
+        26.11251812f, 42.52357806f,   4.17316853f, 0.5f,
+        79.19047559f, 25.00227658f, 332.15973493f, 1.0f,
+        81.91257516f, 39.75480967f, 182.92574447f, 0.0f,
+        81.501397816914f, 68.473033019782f, 180.79165077273f, 1.0f
+    };
+
+    OCIO::FixedFunctionOpData::Params params;
+    OCIO::ConstFixedFunctionOpDataRcPtr funcData
+        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::ACES_AP0_TO_JMh_20,
+                                                      params);
+
+    ApplyFixedFunction(&input2_32f[0], &expected_32f[0], num_samples,
+                       funcData,
+                       1e-5f,
+                       __LINE__);
+
+    OCIO::ConstFixedFunctionOpDataRcPtr funcData2
+        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::ACES_JMh_TO_AP0_20,
+                                                      params);
+
+    ApplyFixedFunction(&input2_32f[0], &input_32f[0], num_samples,
+                       funcData2,
+                       1e-5f,
+                       __LINE__);
+}
+
+OCIO_ADD_TEST(FixedFunctionOpCPU, aces_tonescale_20)
+{
+    const unsigned num_samples = 5;
+
+    float input_32f[num_samples*4] = {
+        26.11251812f, 42.52357806f,   4.17316853f, 0.5f,
+        79.19047559f, 25.00227658f, 332.15973493f, 1.0f,
+        81.91257516f, 39.75480967f, 182.92574447f, 0.0f,
+        44.93741371f, 62.34540120f, 268.73561646f, 0.0f,
+        81.501397816914f, 68.473033019782f, 180.79165077273f, 1.0f
+    };
+
+    float input2_32f[num_samples * 4];
+    memcpy(&input2_32f[0], &input_32f[0], sizeof(float)*num_samples * 4);
+
+    const float expected_32f[num_samples*4] = {
+        15.86298519f, 30.60572714f,   4.17316853f, 0.5f,
+        59.32347917f, 12.70321289f, 332.15973493f, 1.0f,
+        60.85709181f, 25.34647230f, 182.92574447f, 0.0f,
+        34.07446518f, 47.99006933f, 268.73561646f, 0.0f,
+        60.629492471415f, 52.631022123103f, 180.79165077273f, 1.0f
+    };
+
+    OCIO::FixedFunctionOpData::Params params = {100.f};
+    OCIO::ConstFixedFunctionOpDataRcPtr funcData
+        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::ACES_TONESCALE_20_FWD,
+                                                      params);
+
+    ApplyFixedFunction(&input2_32f[0], &expected_32f[0], num_samples,
+                       funcData,
+                       1e-5f,
+                       __LINE__);
+
+    OCIO::ConstFixedFunctionOpDataRcPtr funcData2
+        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::ACES_TONESCALE_20_INV,
+                                                      params);
+
+    ApplyFixedFunction(&input2_32f[0], &input_32f[0], num_samples,
+                       funcData2,
+                       1e-5f,
+                       __LINE__);
+}
+
+OCIO_ADD_TEST(FixedFunctionOpCPU, aces_gamut_map_20)
+{
+    const unsigned num_samples = 5;
+
+    float input_32f[num_samples*4] = {
+        15.86298519f, 30.60572714f,   4.17316853f, 0.5f,
+        59.32347917f, 12.70321289f, 332.15973493f, 1.0f,
+        60.85709181f, 25.34647230f, 182.92574447f, 0.0f,
+        34.07446518f, 47.99006933f, 268.73561646f, 0.0f,
+        60.629492471415f, 52.631022123103f, 180.79165077273f, 1.0f
+    };
+
+    float input2_32f[num_samples * 4];
+    memcpy(&input2_32f[0], &input_32f[0], sizeof(float)*num_samples * 4);
+
+    const float expected_32f[num_samples*4] = {
+        16.31238931f, 24.27810930f,   4.17316853f, 0.5f,
+        59.32347917f, 12.70321289f, 332.15973493f, 1.0f,
+        60.89667436f, 23.02176424f, 182.92574447f, 0.0f,
+        34.33494992f, 32.32098704f, 268.73561646f, 0.0f,
+        60.992832055704f, 26.66339303119f, 180.79165077273f, 1.0f
+    };
+
+    OCIO::FixedFunctionOpData::Params params = {100.f};
+    OCIO::ConstFixedFunctionOpDataRcPtr funcData
+        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::ACES_GAMUT_MAP_20_FWD,
+                                                      params);
+
+    ApplyFixedFunction(&input2_32f[0], &expected_32f[0], num_samples,
+                       funcData,
+                       1e-5f,
+                       __LINE__);
+
+    OCIO::ConstFixedFunctionOpDataRcPtr funcData2
+        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::ACES_GAMUT_MAP_20_INV,
+                                                      params);
+
+    ApplyFixedFunction(&input2_32f[0], &input_32f[0], num_samples,
+                       funcData2,
+                       1e-5f,
+                       __LINE__);
+}
+
+OCIO_ADD_TEST(FixedFunctionOpCPU, aces_jmh_to_rgb_20)
+{
+    const unsigned num_samples = 1;
+
+    float input_32f[num_samples*4] = {
+        60.992832055704f, 26.66339303119f, 180.79165077273f, 1.0f
+    };
+
+    float input2_32f[num_samples * 4];
+    memcpy(&input2_32f[0], &input_32f[0], sizeof(float)*num_samples * 4);
+
+    const float expected_32f[num_samples*4] = {
+        -0.007594340689f, 0.479518403457f, 0.35265165304f, 1.0f
+    };
+
+    OCIO::FixedFunctionOpData::Params params = {100.f};
+    OCIO::ConstFixedFunctionOpDataRcPtr funcData
+        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::ACES_JMh_TO_RGB_20,
+                                                      params);
+
+    ApplyFixedFunction(&input2_32f[0], &expected_32f[0], num_samples,
+                       funcData,
+                       1e-5f,
+                       __LINE__);
+
+    OCIO::ConstFixedFunctionOpDataRcPtr funcData2
+        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::ACES_RGB_TO_JMh_20,
+                                                      params);
+
+    ApplyFixedFunction(&input2_32f[0], &input_32f[0], num_samples,
+                       funcData2,
+                       1e-5f,
+                       __LINE__);
+}
 
 OCIO_ADD_TEST(FixedFunctionOpCPU, rec2100_surround)
 {

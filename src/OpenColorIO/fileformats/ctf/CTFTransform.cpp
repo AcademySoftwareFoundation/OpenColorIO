@@ -255,7 +255,19 @@ CTFVersion GetOpMinimumVersion(const ConstOpDataRcPtr & op)
         {
             minVersion = CTF_PROCESS_LIST_VERSION_2_1;
         }
-
+        else if (ff->getStyle() == FixedFunctionOpData::ACES_AP0_TO_JMh_20
+                || ff->getStyle() == FixedFunctionOpData::ACES_JMh_TO_AP0_20
+                || ff->getStyle() == FixedFunctionOpData::ACES_TONESCALE_20_FWD
+                || ff->getStyle() == FixedFunctionOpData::ACES_TONESCALE_20_INV
+                || ff->getStyle() == FixedFunctionOpData::ACES_GAMUT_MAP_20_FWD
+                || ff->getStyle() == FixedFunctionOpData::ACES_GAMUT_MAP_20_INV
+                || ff->getStyle() == FixedFunctionOpData::ACES_RGB_TO_JMh_20
+                || ff->getStyle() == FixedFunctionOpData::ACES_JMh_TO_RGB_20
+                || ff->getStyle() == FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_FWD
+                || ff->getStyle() == FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_INV)
+        {
+            minVersion = CTF_PROCESS_LIST_VERSION_2_4;
+        }
         break;
     }
     case OpData::GradingPrimaryType:
