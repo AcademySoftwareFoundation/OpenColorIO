@@ -5,8 +5,6 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include <iostream>
-
 #include "ops/gradinghuecurve/GradingHueCurve.h"
 #include "ops/gradinghuecurve/GradingHueCurveOpData.h"
 #include "Platform.h"
