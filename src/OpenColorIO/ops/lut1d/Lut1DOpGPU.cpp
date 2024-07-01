@@ -234,7 +234,7 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
             {
                 static const float NEG_MIN_EXP = 15.0f;
                 static const float EXP_SCALE = 1024.0f;
-                static const float HALF_DENRM_MAX = 6.09755515e-05f;  // e.g. 2^-14 - 2^-24
+                static const float INV_DENRM_STEP = 16777216.0f;  // 1 / 2^-24
 
                 ss.newLine() << "float dep;";
                 ss.newLine() << "float abs_f = abs(f);";
@@ -258,15 +258,15 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
                 ss.newLine() << "else";
                 ss.newLine() << "{";
                 ss.indent();
-                // Extract bits from denormalized values
-                ss.newLine() << "dep = abs_f * 1023.0 / " << HALF_DENRM_MAX << ";";
+                // Extract bits from denormalized values.
+                ss.newLine() << "dep = abs_f * " << INV_DENRM_STEP << ";";
                 ss.dedent();
                 ss.newLine() << "}";
 
-                // Adjust position for negative values
-                ss.newLine() << "dep += step(f, 0.0) * 32768.0;";
+                // Adjust position for negative values.
+                ss.newLine() << "dep += (f < 0.) ? 32768.0 : 0.0;";
 
-                // At this point 'dep' contains the raw half
+                // At this point 'dep' contains the raw half.
                 // Note: Raw halfs for NaN floats cannot be computed using
                 //       floating-point operations.
             }

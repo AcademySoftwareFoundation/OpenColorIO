@@ -12,7 +12,7 @@
 namespace OCIO = OCIO_NAMESPACE;
 
 
-OCIO_ADD_TEST(Processor, basic)
+OCIO_ADD_TEST(Processor, basic_cache)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
@@ -54,6 +54,36 @@ OCIO_ADD_TEST(Processor, basic)
     mat->setMatrix(matrix);
     processorMat = config->getProcessor(mat);
     OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "1b1880136f7669351adb0dcae0f4f9fd");
+}
+
+OCIO_ADD_TEST(Processor, basic_cache_lut)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+
+    auto processorEmptyGroup = config->getProcessor(group);
+    OCIO_CHECK_EQUAL(processorEmptyGroup->getNumTransforms(), 0);
+    OCIO_CHECK_EQUAL(std::string(processorEmptyGroup->getCacheID()), "<NOOP>");
+
+    auto lut = OCIO::Lut3DTransform::Create(3);
+    // Make sure it's not an identity.
+    lut->setValue(2, 2, 2, 2.f, 3.f, 4.f);
+
+    auto processorLut = config->getProcessor(lut);
+    OCIO_CHECK_EQUAL(processorLut->getNumTransforms(), 1);
+    OCIO_CHECK_EQUAL(std::string(processorLut->getCacheID()), "2b26d0097cdcf8f141fe3b3d6e21b5ec");
+
+    // Check behaviour of the cacheID
+
+    // Change a value and check that the cacheID changes.
+    lut->setValue(2, 2, 2, 1.f, 3.f, 4.f);
+    processorLut = config->getProcessor(lut);
+    OCIO_CHECK_EQUAL(std::string(processorLut->getCacheID()), "288ec8ea132adaca5b5aed24a296a1a2");
+
+    // Restore the original value, check that the cache ID matches what it used to be.
+    lut->setValue(2, 2, 2, 2.f, 3.f, 4.f);
+    processorLut = config->getProcessor(lut);
+    OCIO_CHECK_EQUAL(std::string(processorLut->getCacheID()), "2b26d0097cdcf8f141fe3b3d6e21b5ec");
 }
 
 OCIO_ADD_TEST(Processor, unique_dynamic_properties)
