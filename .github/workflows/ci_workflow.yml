@@ -60,7 +60,9 @@ jobs:
       image: aswf/ci-ocio:${{ matrix.vfx-cy }}
     strategy:
       matrix:
-        build: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+#        build: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        # Temporarily turn off docs builds.
+        build: [1, 2, 3, 4, 5, 6, 7, 9, 10, 12]
         include:
           # -------------------------------------------------------------------
           # VFX CY2023 (Python 3.10)
