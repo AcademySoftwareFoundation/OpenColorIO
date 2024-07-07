@@ -320,7 +320,7 @@ jobs:
   # ---------------------------------------------------------------------------
 
   macos:
-    name: 'macOS 11
+    name: 'macOS 12
       <AppleClang 
        arch=${{ matrix.arch-type }},
        config=${{ matrix.build-type }}, 
@@ -334,7 +334,7 @@ jobs:
     if: |
       github.event_name == 'push' ||
       github.event.pull_request.head.repo.full_name != github.repository
-    runs-on: macos-11
+    runs-on: macos-12
     strategy:
       matrix:
         build: [1, 2, 3, 4]
