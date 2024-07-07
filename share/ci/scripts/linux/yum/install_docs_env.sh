@@ -6,5 +6,9 @@ set -ex
 
 HERE=$(dirname $0)
 
-bash $HERE/install_doxygen.sh latest
+# The yum install doxygen command started failing since mirrorlist.centos.org
+# was turned off. However, it seems that Doxygen is already installed on our containers
+# so this command is not currently necessary:
+# bash $HERE/install_doxygen.sh latest
+
 pip install -r $HERE/../../../../../docs/requirements.txt

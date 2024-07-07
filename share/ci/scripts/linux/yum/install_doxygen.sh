@@ -7,11 +7,7 @@ set -ex
 DOXYGEN_VERSION="$1"
 
 if [ "$DOXYGEN_VERSION" == "latest" ]; then
-    yum repolist
-    yum --disablerepo=mirrorlist.centos.org
     yum install -y doxygen
 else
-    yum repolist
-    yum --disablerepo=mirrorlist.centos.org
     yum install -y doxygen-${DOXYGEN_VERSION}
 fi
