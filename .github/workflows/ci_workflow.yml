@@ -60,24 +60,8 @@ jobs:
       image: aswf/ci-ocio:${{ matrix.vfx-cy }}
     strategy:
       matrix:
-        build: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+        build: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
         include:
-          # -------------------------------------------------------------------
-          # VFX CY2023 (Python 3.10)
-          # -------------------------------------------------------------------
-          - build: 13
-            build-type: Debug
-            build-shared: 'ON'
-            build-docs: 'OFF'
-            build-openfx: 'OFF'
-            use-simd: 'ON'
-            use-oiio: 'OFF'
-            cxx-standard: 17
-            cxx-compiler: clang++
-            cc-compiler: clang
-            compiler-desc: Clang
-            vfx-cy: 2024
-            install-ext-packages: MISSING
           # -------------------------------------------------------------------
           # VFX CY2023 (Python 3.10)
           # -------------------------------------------------------------------
