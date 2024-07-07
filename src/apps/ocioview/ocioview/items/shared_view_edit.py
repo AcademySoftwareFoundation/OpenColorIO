@@ -25,23 +25,31 @@ class SharedViewParamEdit(BaseConfigItemParamEdit):
         # Widgets
         self.color_space_combo = CallbackComboBox(
             lambda: [ocio.OCIO_VIEW_USE_DISPLAY_NAME]
-            + ConfigCache.get_color_space_names(ocio.SEARCH_REFERENCE_SPACE_DISPLAY)
+            + ConfigCache.get_color_space_names(
+                ocio.SEARCH_REFERENCE_SPACE_DISPLAY
+            )
         )
         self.view_transform_combo = CallbackComboBox(
             ConfigCache.get_view_transform_names
         )
         self.looks_edit = LineEdit()
-        self.rule_combo = CallbackComboBox(ConfigCache.get_viewing_rule_names)
+        self.rule_combo = CallbackComboBox(
+            lambda: [""] + ConfigCache.get_viewing_rule_names()
+        )
         self.description_edit = LineEdit()
 
         # Layout
-        self._param_layout.addRow(self.model.COLOR_SPACE.label, self.color_space_combo)
+        self._param_layout.addRow(
+            self.model.COLOR_SPACE.label, self.color_space_combo
+        )
         self._param_layout.addRow(
             self.model.VIEW_TRANSFORM.label, self.view_transform_combo
         )
         self._param_layout.addRow(self.model.LOOKS.label, self.looks_edit)
         self._param_layout.addRow(self.model.RULE.label, self.rule_combo)
-        self._param_layout.addRow(self.model.DESCRIPTION.label, self.description_edit)
+        self._param_layout.addRow(
+            self.model.DESCRIPTION.label, self.description_edit
+        )
 
 
 class SharedViewEdit(BaseConfigItemEdit):
