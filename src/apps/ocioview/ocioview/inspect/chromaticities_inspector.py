@@ -371,9 +371,9 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
         )
         self._visuals["rgb_color_space_input_3d"].visible = False
         self._visuals["rgb_color_space_chromaticities_2d"].visible = False
-        self._visuals["rgb_color_space_chromaticities_2d"].local.position = (
-            np.array([0, 0, 0.00005])
-        )
+        self._visuals[
+            "rgb_color_space_chromaticities_2d"
+        ].local.position = np.array([0, 0, 0.00005])
         self._visuals["rgb_color_space_chromaticities_3d"].visible = False
         self._visuals["rgb_scatter_3d"].visible = False
 
@@ -508,12 +508,12 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
             )
 
             if rgb_colourspace is not None:
-                self._visuals["rgb_color_space_input_2d"].colourspace = (
-                    rgb_colourspace
-                )
-                self._visuals["rgb_color_space_input_3d"].colourspace = (
-                    rgb_colourspace
-                )
+                self._visuals[
+                    "rgb_color_space_input_2d"
+                ].colourspace = rgb_colourspace
+                self._visuals[
+                    "rgb_color_space_input_3d"
+                ].colourspace = rgb_colourspace
             self._processor.applyRGB(image_array)
 
         # 2. Convert from chromaticities input space to "CIE-XYZ-D65" interchange

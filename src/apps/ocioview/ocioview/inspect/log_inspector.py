@@ -31,8 +31,12 @@ class LogInspector(QtWidgets.QWidget):
 
         # Widgets
         self.log_level_box = ComboBox()
-        self.log_level_box.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
-        self.log_level_box.addItem("Warning", userData=ocio.LOGGING_LEVEL_WARNING)
+        self.log_level_box.setSizeAdjustPolicy(
+            QtWidgets.QComboBox.AdjustToContents
+        )
+        self.log_level_box.addItem(
+            "Warning", userData=ocio.LOGGING_LEVEL_WARNING
+        )
         self.log_level_box.addItem("Info", userData=ocio.LOGGING_LEVEL_INFO)
         self.log_level_box.addItem("Debug", userData=ocio.LOGGING_LEVEL_DEBUG)
         self.log_level_box.setCurrentText(
@@ -55,7 +59,9 @@ class LogInspector(QtWidgets.QWidget):
         self.setLayout(layout)
 
         # Initialize
-        self.log_level_box.currentIndexChanged[int].connect(self._on_log_level_changed)
+        self.log_level_box.currentIndexChanged[int].connect(
+            self._on_log_level_changed
+        )
         self.clear_button.released.connect(self.reset)
 
         log_router = MessageRouter.get_instance()

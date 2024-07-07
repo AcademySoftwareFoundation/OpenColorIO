@@ -54,12 +54,18 @@ class ConfigPropertiesParamEdit(BaseConfigItemParamEdit):
 
         # Layout
         self._param_layout.addRow(self.model.VERSION.label, self.version_edit)
-        self._param_layout.addRow(self.model.DESCRIPTION.label, self.description_edit)
+        self._param_layout.addRow(
+            self.model.DESCRIPTION.label, self.description_edit
+        )
         self._param_layout.addRow(
             self.model.ENVIRONMENT_VARS.label, self.env_vars_table
         )
-        self._param_layout.addRow(self.model.SEARCH_PATH.label, self.search_path_list)
-        self._param_layout.addRow(self.model.WORKING_DIR.label, self.working_dir_edit)
+        self._param_layout.addRow(
+            self.model.SEARCH_PATH.label, self.search_path_list
+        )
+        self._param_layout.addRow(
+            self.model.WORKING_DIR.label, self.working_dir_edit
+        )
         self._param_layout.addRow(
             self.model.FAMILY_SEPARATOR.label, self.family_separator_edit
         )
@@ -106,7 +112,9 @@ class ConfigPropertiesEdit(BaseConfigItemEdit):
         model = self.model
 
         # Map widgets to model columns
-        self._mapper.addMapping(self.param_edit.version_edit, model.VERSION.column)
+        self._mapper.addMapping(
+            self.param_edit.version_edit, model.VERSION.column
+        )
         self._mapper.addMapping(
             self.param_edit.description_edit, model.DESCRIPTION.column
         )
@@ -120,7 +128,8 @@ class ConfigPropertiesEdit(BaseConfigItemEdit):
             self.param_edit.working_dir_edit, model.WORKING_DIR.column
         )
         self._mapper.addMapping(
-            self.param_edit.family_separator_edit, model.FAMILY_SEPARATOR.column
+            self.param_edit.family_separator_edit,
+            model.FAMILY_SEPARATOR.column,
         )
         self._mapper.addMapping(
             self.param_edit.default_luma_coefs_edit,
@@ -128,8 +137,12 @@ class ConfigPropertiesEdit(BaseConfigItemEdit):
         )
 
         # Table and list widgets need manual data submission back to model
-        self.param_edit.env_vars_table.items_changed.connect(self._mapper.submit)
-        self.param_edit.search_path_list.items_changed.connect(self._mapper.submit)
+        self.param_edit.env_vars_table.items_changed.connect(
+            self._mapper.submit
+        )
+        self.param_edit.search_path_list.items_changed.connect(
+            self._mapper.submit
+        )
 
         # Reload sole item on reset
         model.modelReset.connect(lambda: self._mapper.setCurrentIndex(0))

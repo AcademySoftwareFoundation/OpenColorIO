@@ -15,7 +15,10 @@ class DockTitleBar(QtWidgets.QFrame):
     """Dock widget title bar widget with icon."""
 
     def __init__(
-        self, title: str, icon: QtGui.QIcon, parent: Optional[QtCore.QObject] = None
+        self,
+        title: str,
+        icon: QtGui.QIcon,
+        parent: Optional[QtCore.QObject] = None,
     ):
         """
         :param title: Title text
@@ -65,7 +68,10 @@ class TabbedDockWidget(QtWidgets.QDockWidget):
     _tab_icons = {}
 
     def __init__(
-        self, title: str, icon: QtGui.QIcon, parent: Optional[QtCore.QObject] = None
+        self,
+        title: str,
+        icon: QtGui.QIcon,
+        parent: Optional[QtCore.QObject] = None,
     ):
         """
         :param title: Title text
@@ -144,7 +150,9 @@ class TabbedDockWidget(QtWidgets.QDockWidget):
         return QtGui.QIcon(pixmap)
 
     @QtCore.Slot(QtCore.Qt.DockWidgetArea)
-    def _on_dock_location_changed(self, area: QtCore.Qt.DockWidgetArea) -> None:
+    def _on_dock_location_changed(
+        self, area: QtCore.Qt.DockWidgetArea
+    ) -> None:
         """
         Adjust tab icons to always orient upward on dock area move.
         """
@@ -211,5 +219,6 @@ class ExpandingStackedWidget(QtWidgets.QStackedWidget):
                 )
             else:
                 widget.setSizePolicy(
-                    QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored
+                    QtWidgets.QSizePolicy.Ignored,
+                    QtWidgets.QSizePolicy.Ignored,
                 )

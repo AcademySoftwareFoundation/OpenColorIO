@@ -76,17 +76,23 @@ class OCIOView(QtWidgets.QMainWindow):
             "Save config", self.save_config, QtGui.QKeySequence("Ctrl+S")
         )
         self.file_menu.addAction(
-            "Save Config As...", self.save_config_as, QtGui.QKeySequence("Ctrl+Shift+S")
+            "Save Config As...",
+            self.save_config_as,
+            QtGui.QKeySequence("Ctrl+Shift+S"),
         )
         self.file_menu.addAction(
             "Save and Backup Config",
             self.save_and_backup_config,
             QtGui.QKeySequence("Ctrl+Alt+S"),
         )
-        self.file_menu.addAction("Restore Config Backup...", self.restore_config_backup)
+        self.file_menu.addAction(
+            "Restore Config Backup...", self.restore_config_backup
+        )
         self.file_menu.addSeparator()
         self.file_menu.addAction(
-            "Load Image...", self.viewer_dock.load_image, QtGui.QKeySequence("Ctrl+I")
+            "Load Image...",
+            self.viewer_dock.load_image,
+            QtGui.QKeySequence("Ctrl+I"),
         )
         self.file_menu.addMenu(self.recent_images_menu)
         self.file_menu.addAction(
@@ -95,7 +101,9 @@ class OCIOView(QtWidgets.QMainWindow):
             QtGui.QKeySequence("Ctrl+Shift+I"),
         )
         self.file_menu.addSeparator()
-        self.file_menu.addAction("Exit", self.close, QtGui.QKeySequence("Ctrl+X"))
+        self.file_menu.addAction(
+            "Exit", self.close, QtGui.QKeySequence("Ctrl+X")
+        )
 
         self.edit_menu = QtWidgets.QMenu("Edit")
         undo_action = undo_stack.createUndoAction(self.edit_menu)
@@ -116,9 +124,15 @@ class OCIOView(QtWidgets.QMainWindow):
             QtWidgets.QMainWindow.ForceTabbedDocks
             | QtWidgets.QMainWindow.GroupedDragging
         )
-        self.setTabPosition(QtCore.Qt.BottomDockWidgetArea, QtWidgets.QTabWidget.North)
-        self.setTabPosition(QtCore.Qt.LeftDockWidgetArea, QtWidgets.QTabWidget.North)
-        self.setTabPosition(QtCore.Qt.RightDockWidgetArea, QtWidgets.QTabWidget.North)
+        self.setTabPosition(
+            QtCore.Qt.BottomDockWidgetArea, QtWidgets.QTabWidget.North
+        )
+        self.setTabPosition(
+            QtCore.Qt.LeftDockWidgetArea, QtWidgets.QTabWidget.North
+        )
+        self.setTabPosition(
+            QtCore.Qt.RightDockWidgetArea, QtWidgets.QTabWidget.North
+        )
 
         for corner in (QtCore.Qt.TopLeftCorner, QtCore.Qt.BottomLeftCorner):
             self.setCorner(corner, QtCore.Qt.LeftDockWidgetArea)
@@ -131,7 +145,9 @@ class OCIOView(QtWidgets.QMainWindow):
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.config_dock)
 
         # Connections
-        self.config_dock.config_changed.connect(self.viewer_dock.update_current_viewer)
+        self.config_dock.config_changed.connect(
+            self.viewer_dock.update_current_viewer
+        )
         self.config_dock.config_changed.connect(self._update_window_title)
 
         # Restore settings
@@ -141,7 +157,8 @@ class OCIOView(QtWidgets.QMainWindow):
         if settings.contains(self.SETTING_STATE):
             # If the version is not recognized, the restore will be bypassed
             self.restoreState(
-                settings.value(self.SETTING_STATE), version=self.SETTING_STATE_VERSION
+                settings.value(self.SETTING_STATE),
+                version=self.SETTING_STATE_VERSION,
             )
         settings.endGroup()
 
@@ -208,14 +225,22 @@ class OCIOView(QtWidgets.QMainWindow):
 
         if config_path is None or not config_path.is_file():
             config_dir = self._get_config_dir(config_path)
-            config_path_str, file_filter = QtWidgets.QFileDialog.getOpenFileName(
-                self, "Load Config", dir=config_dir, filter="OCIO Config (*.ocio)"
+            (
+                config_path_str,
+                file_filter,
+            ) = QtWidgets.QFileDialog.getOpenFileName(
+                self,
+                "Load Config",
+                dir=config_dir,
+                filter="OCIO Config (*.ocio)",
             )
             if not config_path_str:
                 return
 
             config_path = Path(config_path_str)
-            settings.setValue(self.SETTING_CONFIG_DIR, config_path.parent.as_posix())
+            settings.setValue(
+                self.SETTING_CONFIG_DIR, config_path.parent.as_posix()
+            )
 
         self._config_path = config_path
 
@@ -271,7 +296,10 @@ class OCIOView(QtWidgets.QMainWindow):
         try:
             if config_path is None or not config_path.is_file():
                 config_dir = self._get_config_dir(config_path)
-                config_path_str, file_filter = QtWidgets.QFileDialog.getSaveFileName(
+                (
+                    config_path_str,
+                    file_filter,
+                ) = QtWidgets.QFileDialog.getSaveFileName(
                     self,
                     "Save Config",
                     dir=config_dir,
@@ -310,7 +338,10 @@ class OCIOView(QtWidgets.QMainWindow):
         """
         if self.save_config():
             try:
-                if self._config_path is not None and self._config_path.is_file():
+                if (
+                    self._config_path is not None
+                    and self._config_path.is_file()
+                ):
                     next_version_path = self._get_next_version_path()
                     shutil.copy2(self._config_path, next_version_path)
                     return True
@@ -335,7 +366,10 @@ class OCIOView(QtWidgets.QMainWindow):
 
         backup_dir = self._get_backup_dir()
         if backup_dir is not None:
-            version_path_str, file_filter = QtWidgets.QFileDialog.getOpenFileName(
+            (
+                version_path_str,
+                file_filter,
+            ) = QtWidgets.QFileDialog.getOpenFileName(
                 self,
                 "Restore Config",
                 dir=backup_dir.as_posix(),
@@ -368,7 +402,9 @@ class OCIOView(QtWidgets.QMainWindow):
             return None
 
         max_version = 0
-        for other_version_path in backup_dir.glob(self._format_version_filename()):
+        for other_version_path in backup_dir.glob(
+            self._format_version_filename()
+        ):
             if other_version_path.is_file() and other_version_path.suffixes:
                 other_version_str = other_version_path.suffixes[0].strip(".")
                 if other_version_str.isdigit():
@@ -434,7 +470,9 @@ class OCIOView(QtWidgets.QMainWindow):
         num_configs = settings.beginReadArray(self.SETTING_RECENT_CONFIGS)
         for i in range(num_configs):
             settings.setArrayIndex(i)
-            recent_config_path_str = settings.value(self.SETTING_RECENT_CONFIG_PATH)
+            recent_config_path_str = settings.value(
+                self.SETTING_RECENT_CONFIG_PATH
+            )
             if recent_config_path_str:
                 recent_config_path = Path(recent_config_path_str)
                 if recent_config_path.is_file():
@@ -480,7 +518,9 @@ class OCIOView(QtWidgets.QMainWindow):
 
     def _update_window_title(self) -> None:
         filename = (
-            "untitiled" if self._config_path is None else self._config_path.name
+            "untitiled"
+            if self._config_path is None
+            else self._config_path.name
         ) + ("*" if self._has_unsaved_changes() else "")
 
         self.setWindowTitle(f"ocioview {ocio.__version__} | {filename}")

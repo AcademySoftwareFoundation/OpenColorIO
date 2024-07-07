@@ -14,7 +14,11 @@ import PyOpenColorIO as ocio
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from .processor_context import ProcessorContext
-from .utils import config_to_html, processor_to_ctf_html, processor_to_shader_html
+from .utils import (
+    config_to_html,
+    processor_to_ctf_html,
+    processor_to_shader_html,
+)
 
 
 # Global message queue
@@ -206,7 +210,9 @@ class MessageRunner(QtCore.QObject):
             self.config_html_ready.emit(config_html_data)
         except Exception as e:
             # Pass error to log
-            self._handle_log_message(str(e), force_level=self.LOG_LEVEL_WARNING)
+            self._handle_log_message(
+                str(e), force_level=self.LOG_LEVEL_WARNING
+            )
 
     def _handle_processor_message(
         self,
@@ -221,7 +227,9 @@ class MessageRunner(QtCore.QObject):
         """
         try:
             if self._processor_updates_allowed:
-                self.processor_ready.emit(proc_context, proc.getDefaultCPUProcessor())
+                self.processor_ready.emit(
+                    proc_context, proc.getDefaultCPUProcessor()
+                )
 
             if self._ctf_updates_allowed:
                 ctf_html_data, group_tf = processor_to_ctf_html(proc)
@@ -236,7 +244,9 @@ class MessageRunner(QtCore.QObject):
 
         except Exception as e:
             # Pass error to log
-            self._handle_log_message(str(e), force_level=self.LOG_LEVEL_WARNING)
+            self._handle_log_message(
+                str(e), force_level=self.LOG_LEVEL_WARNING
+            )
 
     def _handle_image_message(self, image_array: np.ndarray) -> None:
         """
@@ -248,7 +258,9 @@ class MessageRunner(QtCore.QObject):
             self.image_ready.emit(image_array)
         except Exception as e:
             # Pass error to log
-            self._handle_log_message(str(e), force_level=self.LOG_LEVEL_WARNING)
+            self._handle_log_message(
+                str(e), force_level=self.LOG_LEVEL_WARNING
+            )
 
     def _handle_log_message(
         self, log_record: str, force_level: Optional[str] = None

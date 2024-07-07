@@ -56,7 +56,9 @@ def get_view_type(display: str, view: str) -> tuple[ViewType, str | None]:
         return ViewType.VIEW_SCENE, warning
 
 
-def adapt_splitter_sizes(from_sizes: list[int], to_sizes: list[int]) -> list[int]:
+def adapt_splitter_sizes(
+    from_sizes: list[int], to_sizes: list[int]
+) -> list[int]:
     """
     Given source and destination splitter size lists, adapt the
     destination sizes to match the source sizes. Supports between two

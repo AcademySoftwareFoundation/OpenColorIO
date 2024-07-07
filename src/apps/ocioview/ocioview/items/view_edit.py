@@ -57,7 +57,8 @@ class ViewParamEdit(BaseConfigItemParamEdit):
         self.description_edits = {}
 
         self.edit_shared_view_button = QtWidgets.QPushButton(
-            self.model.get_view_type_icon(ViewType.VIEW_SHARED), "Edit Shared View"
+            self.model.get_view_type_icon(ViewType.VIEW_SHARED),
+            "Edit Shared View",
         )
 
         for view_type in self.VIEW_LAYERS:
@@ -77,7 +78,9 @@ class ViewParamEdit(BaseConfigItemParamEdit):
                     view_transform_combo = CallbackComboBox(
                         ConfigCache.get_view_transform_names
                     )
-                    self.view_transform_combos[view_type] = view_transform_combo
+                    self.view_transform_combos[
+                        view_type
+                    ] = view_transform_combo
                     params_layout.addRow(
                         self.model.VIEW_TRANSFORM.label, view_transform_combo
                     )
@@ -95,22 +98,30 @@ class ViewParamEdit(BaseConfigItemParamEdit):
                         )
                     )
 
-                color_space_combo = CallbackComboBox(get_view_color_space_names)
+                color_space_combo = CallbackComboBox(
+                    get_view_color_space_names
+                )
                 self.color_space_combos[view_type] = color_space_combo
-                params_layout.addRow(self.model.COLOR_SPACE.label, color_space_combo)
+                params_layout.addRow(
+                    self.model.COLOR_SPACE.label, color_space_combo
+                )
 
                 looks_edit = LineEdit()
                 self.looks_edits[view_type] = looks_edit
                 params_layout.addRow(self.model.LOOKS.label, looks_edit)
 
                 if view_type == ViewType.VIEW_DISPLAY:
-                    rule_combo = CallbackComboBox(ConfigCache.get_viewing_rule_names)
+                    rule_combo = CallbackComboBox(
+                        ConfigCache.get_viewing_rule_names
+                    )
                     self.rule_combos[view_type] = rule_combo
                     params_layout.addRow(self.model.RULE.label, rule_combo)
 
                     description_edit = LineEdit()
                     self.description_edits[view_type] = description_edit
-                    params_layout.addRow(self.model.DESCRIPTION.label, description_edit)
+                    params_layout.addRow(
+                        self.model.DESCRIPTION.label, description_edit
+                    )
 
             elif view_type == ViewType.VIEW_SHARED:
                 params_layout.addRow(self.edit_shared_view_button)
@@ -146,10 +157,14 @@ class ViewParamEdit(BaseConfigItemParamEdit):
         )
 
         if view_type in (ViewType.VIEW_DISPLAY, ViewType.VIEW_SCENE):
-            view_mapper.addMapping(self.name_edits[view_type], self.model.NAME.column)
+            view_mapper.addMapping(
+                self.name_edits[view_type], self.model.NAME.column
+            )
 
             color_space_combo = self.color_space_combos[view_type]
-            view_mapper.addMapping(color_space_combo, self.model.COLOR_SPACE.column)
+            view_mapper.addMapping(
+                color_space_combo, self.model.COLOR_SPACE.column
+            )
 
             # Trigger color space update before losing focus
             if color_space_combo not in self._connected[view_mapper]:
@@ -158,7 +173,9 @@ class ViewParamEdit(BaseConfigItemParamEdit):
                 )
                 self._connected[view_mapper].append(color_space_combo)
 
-            view_mapper.addMapping(self.looks_edits[view_type], self.model.LOOKS.column)
+            view_mapper.addMapping(
+                self.looks_edits[view_type], self.model.LOOKS.column
+            )
 
             if view_type == ViewType.VIEW_DISPLAY:
                 view_transform_combo = self.view_transform_combos[view_type]
@@ -178,7 +195,8 @@ class ViewParamEdit(BaseConfigItemParamEdit):
                     self.rule_combos[view_type], self.model.RULE.column
                 )
                 view_mapper.addMapping(
-                    self.description_edits[view_type], self.model.DESCRIPTION.column
+                    self.description_edits[view_type],
+                    self.model.DESCRIPTION.column,
                 )
 
 
@@ -193,7 +211,9 @@ class ViewEdit(BaseConfigItemEdit):
 
     @classmethod
     def item_type_label(cls, plural: bool = False) -> str:
-        return f"Display{'s' if plural else ''} and View{'s' if plural else ''}"
+        return (
+            f"Display{'s' if plural else ''} and View{'s' if plural else ''}"
+        )
 
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None):
         super().__init__(parent=parent)
@@ -210,7 +230,9 @@ class ViewEdit(BaseConfigItemEdit):
             item_icon=DisplayModel.item_type_icon(),
         )
         self.display_list.current_row_changed.connect(self._on_display_changed)
-        self.display_model.item_added.connect(self.display_list.set_current_item)
+        self.display_model.item_added.connect(
+            self.display_list.set_current_item
+        )
         self.display_model.item_selection_requested.connect(
             lambda index: self.display_list.set_current_row(index.row())
         )
@@ -219,11 +241,15 @@ class ViewEdit(BaseConfigItemEdit):
         # Map display widget to model
         self._display_mapper = QtWidgets.QDataWidgetMapper()
         self._display_mapper.setOrientation(QtCore.Qt.Horizontal)
-        self._display_mapper.setSubmitPolicy(QtWidgets.QDataWidgetMapper.ManualSubmit)
+        self._display_mapper.setSubmitPolicy(
+            QtWidgets.QDataWidgetMapper.ManualSubmit
+        )
         self._display_mapper.setModel(self.display_model)
 
         for view_type, display_edit in self.param_edit.display_edits.items():
-            display_edit.editingFinished.connect(self._on_display_editing_finished)
+            display_edit.editingFinished.connect(
+                self._on_display_editing_finished
+            )
 
         self.param_edit.edit_shared_view_button.released.connect(
             self._on_edit_shared_view_button_clicked
@@ -280,7 +306,9 @@ class ViewEdit(BaseConfigItemEdit):
             prev_item_label = self.model.format_subscription_item_label(
                 view_index, display=prev_display
             )
-            slot = TransformManager.get_subscription_slot(self.model, prev_item_label)
+            slot = TransformManager.get_subscription_slot(
+                self.model, prev_item_label
+            )
             if slot != -1:
                 TransformManager.set_subscription(slot, self.model, item_label)
 
@@ -298,7 +326,9 @@ class ViewEdit(BaseConfigItemEdit):
         else:
             # Get display and view names
             display = self.display_model.data(
-                self.display_model.index(display_row, self.display_model.NAME.column)
+                self.display_model.index(
+                    display_row, self.display_model.NAME.column
+                )
             )
 
             # Update view model
@@ -332,7 +362,9 @@ class ViewEdit(BaseConfigItemEdit):
         view_type = None
         if view_row != -1:
             self._prev_view = self.model.data(
-                self.model.index(self.list.current_row(), self.model.NAME.column)
+                self.model.index(
+                    self.list.current_row(), self.model.NAME.column
+                )
             )
             view_type = self.model.data(
                 self.model.index(view_row, self.model.VIEW_TYPE.column),
@@ -345,7 +377,9 @@ class ViewEdit(BaseConfigItemEdit):
         )
 
         # Update display params
-        self._display_mapper.setCurrentIndex(self._display_mapper.currentIndex())
+        self._display_mapper.setCurrentIndex(
+            self._display_mapper.currentIndex()
+        )
 
         # Update view params
         super()._on_current_row_changed(view_row)
