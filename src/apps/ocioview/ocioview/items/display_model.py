@@ -20,7 +20,7 @@ class View:
     type: ViewType
     name: str
     color_space: str
-    view_transform: str
+    view_transform: str = ""
     looks: str = ""
     rule: str = ""
     description: str = ""
@@ -75,9 +75,13 @@ class DisplayModel(BaseConfigItemModel):
             for view in ConfigCache.get_views(
                 name, view_type=ocio.VIEW_DISPLAY_DEFINED
             ):
+                view_type, warning = get_view_type(name, view)
+                if warning:
+                    self.warning_raised.emit(warning)
+
                 display.views.append(
                     View(
-                        get_view_type(name, view),
+                        view_type,
                         view,
                         config.getDisplayViewColorSpaceName(name, view),
                         config.getDisplayViewTransformName(name, view),
@@ -88,7 +92,9 @@ class DisplayModel(BaseConfigItemModel):
                 )
 
             # Shared views
-            for view in ConfigCache.get_views(name, view_type=ocio.VIEW_SHARED):
+            for view in ConfigCache.get_views(
+                name, view_type=ocio.VIEW_SHARED
+            ):
                 display.views.append(
                     View(
                         ViewType.VIEW_SHARED,
@@ -175,7 +181,9 @@ class DisplayModel(BaseConfigItemModel):
                     displayColorSpaceName=color_space,
                 )
             else:
-                config.addDisplayView(name, new_view, colorSpaceName=color_space)
+                config.addDisplayView(
+                    name, new_view, colorSpaceName=color_space
+                )
 
     def _get_value(self, item: Display, column_desc: ColumnDesc) -> Any:
         # Get parameters

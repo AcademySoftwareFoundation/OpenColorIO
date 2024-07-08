@@ -326,7 +326,7 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
             if checked_column_desc is not None:
                 column_desc = checked_column_desc
                 index = index.sibling(index.row(), column_desc.column)
-                value = value == QtCore.Qt.Checked
+                value = value == QtCore.Qt.Checked.value
                 role = QtCore.Qt.EditRole
 
         undo_cmd_type = self._get_undo_command_type(column_desc)

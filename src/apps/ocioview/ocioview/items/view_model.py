@@ -356,7 +356,7 @@ class ViewModel(BaseConfigItemModel):
                     )
                 )
 
-        return View(ViewType.VIEW_SCENE, "_", color_space, "")
+        return View(ViewType.VIEW_SCENE, "_", color_space)
 
     def _reset_cache(self) -> None:
         self._items = []
@@ -505,15 +505,13 @@ class ViewModel(BaseConfigItemModel):
             color_space = config.getColorSpace(value)
             if color_space:
                 if (
-                    item.view_transform
-                    and (
-                        color_space.getReferenceSpaceType()
-                        == ocio.REFERENCE_SPACE_DISPLAY
-                    )
-                ) or (
-                    not item.view_transform
+                    item.type == ViewType.VIEW_SCENE
                     and color_space.getReferenceSpaceType()
                     == ocio.REFERENCE_SPACE_SCENE
+                ) or (
+                    item.type == ViewType.VIEW_DISPLAY
+                    and color_space.getReferenceSpaceType()
+                    == ocio.REFERENCE_SPACE_DISPLAY
                 ):
                     items[item_index].color_space = value
 
