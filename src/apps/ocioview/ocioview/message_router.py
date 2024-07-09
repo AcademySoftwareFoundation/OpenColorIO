@@ -195,7 +195,7 @@ class MessageRunner(QtCore.QObject):
 
             # Python or OCIO log record
             else:
-                self._handle_log_message(str(msg_raw))
+                self._handle_log_message(msg_raw)
 
         self._is_routing = False
 
