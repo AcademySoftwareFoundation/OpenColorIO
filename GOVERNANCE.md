@@ -69,7 +69,14 @@ A subset of the Committers forms the Technical Steering Committee (TSC), which
 has final authority over this project. As defined in the project charter, TSC
 responsibilities include, but are not limited to:
 
-* Coordinating technical direction of the Project
+* Coordinating technical direction of the Project, including but not limited to:
+    * Participating in roadmapping and feature priority each year
+    * Participating in Working Groups as appropriate
+    * Actively tracking development & giving feedback promptly
+    * Participating in maintenance of technical documentation
+    * Actively discussing issues & reviewing pull requests
+    * Actively monitoring and assisting contributors on GitHub
+    * Actively monitoring and assisting folks on the OCIO slack instance
 * Project governance and process (including this policy)
 * Contribution policy
 * GitHub repository hosting
@@ -81,7 +88,7 @@ communities
 matters relating to the code base that affect multiple projects
 * Coordinating any marketing, events, or communications regarding the project
 
-Within the TSC are three elected leadership roles to be held by its members and
+Within the TSC are two elected leadership roles to be held by its members and
 voted on annually. Any TSC member can express interest in serving in a role, or
 nominate another member to serve. There are no term limits, and one person may
 hold multiple roles simultaneously. Should a TSC member resign from a leadership
@@ -96,10 +103,6 @@ providing oversight to project administration.
 technical decisions, and is responsible for avoiding "design by committee"
 pitfalls.
 
-* ACES TAC Rep: This position maintains oversight of the critical relationship
-between OCIO and ACES, representing OCIO on the ACES TAC and facilitating 
-coordination of shared initiatives between both project's leadership.
-
 At the time of election, the TSC will also agree upon which of these two leaders
 will serve as the OpenColorIO ASWF (Academy Software Foundation) TAC (Technical
 Advisory Council) representative for the term. This member represents the
@@ -109,7 +112,6 @@ project at all ASWF TAC meetings.
 
 * Chair: Carol Payne
 * Chief Architect: Doug Walker
-* ACES TAC Rep: Sean Cooper
 
 ### TSC Members
 
@@ -118,14 +120,19 @@ project at all ASWF TAC meetings.
 * Mei Chu - Sony Pictures Imageworks
 * Sean Cooper - ARRI
 * Michael Dolan - Epic Games
-* Patrick Hodoul - Autodesk
 * Zach Lewis - Method Studios
-* Thomas Mansencal - WetaFX
-* Carol Payne - Netflix
-* Carl Rand - Weta Digital
+* Thomas Mansencal - Wētā FX
+* Cuneyt Ozdas - Autodesk
+* Carol Payne - Independent Consultant
 * Mark Titchener - Foundry
+* Mark Reid - Animal Logic
 * Doug Walker - Autodesk
 * Kevin Wheatley - Framestore
+
+### TSC Emeritus
+
+* Patrick Hodoul - Autodesk
+* Carl Rand - Wētā FX
 
 ### TSC Meetings
 
@@ -146,7 +153,7 @@ happen continuously on GitHub and be handled by the larger group of Committers.
 
 Any community member or Contributor can ask that something be reviewed by the
 TSC by logging a GitHub issue. Any Committer, TSC member, or the meeting chair
-can bring the issue to the TSC's attention by applying the `tsc-review` label.
+can bring the issue to the TSC's attention by applying the `Needs Discussion` label.
 
 Prior to each TSC meeting, the meeting chair will share the agenda with members
 of the TSC. TSC members can also add items to the agenda at the beginning of
@@ -155,11 +162,11 @@ each meeting. The meeting chair and the TSC cannot veto or remove items.
 The TSC may invite additional persons to participate in a non-voting capacity.
 
 The meeting chair is responsible for ensuring that minutes are taken and that
-notes are submitted after the meeting to the public mailing list.
+notes are submitted after the meeting to the public wiki.
 
 Due to the challenges of scheduling a global meeting with participants in
 several time zones, the TSC will seek to resolve as many agenda items as
-possible outside of meetings on the public mailing list.
+possible outside of meetings via discussion on Slack or other methods.
 
 ### TSC Nomination
 

@@ -5,6 +5,7 @@ from typing import Optional
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
+from ..constants import ICON_SIZE_ITEM
 from ..utils import get_glyph_icon
 from .active_display_view_edit import ActiveDisplayViewEdit
 from .shared_view_edit import SharedViewEdit
@@ -22,7 +23,7 @@ class DisplayViewEdit(QtWidgets.QWidget):
         """
         :return: Item type icon
         """
-        return get_glyph_icon("mdi6.monitor-eye")
+        return get_glyph_icon("mdi6.monitor-eye", size=ICON_SIZE_ITEM)
 
     @classmethod
     def item_type_label(cls, plural: bool = False) -> str:

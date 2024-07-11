@@ -8,6 +8,7 @@ import PyOpenColorIO as ocio
 from pygments.formatters import HtmlFormatter
 from PySide6 import QtCore, QtGui, QtWidgets
 
+from ..constants import ICON_SIZE_TAB
 from ..message_router import MessageRouter
 from ..utils import get_glyph_icon, processor_to_shader_html
 from ..widgets import EnumComboBox, LogView
@@ -26,7 +27,7 @@ class CodeInspector(QtWidgets.QWidget):
 
     @classmethod
     def icon(cls) -> QtGui.QIcon:
-        return get_glyph_icon("mdi6.code-json")
+        return get_glyph_icon("mdi6.code-json", size=ICON_SIZE_TAB)
 
     def __init__(self, parent: Optional[QtCore.QObject] = None):
         super().__init__(parent=parent)
@@ -40,7 +41,9 @@ class CodeInspector(QtWidgets.QWidget):
 
         html_css = HtmlFormatter(style="material").get_style_defs()
         # Update line number colors to match palette
-        html_css = html_css.replace("#263238", palette.color(palette.ColorRole.Base).name())
+        html_css = html_css.replace(
+            "#263238", palette.color(palette.ColorRole.Base).name()
+        )
         html_css = html_css.replace(
             "#37474F", palette.color(palette.ColorRole.Text).darker(150).name()
         )
@@ -61,9 +64,7 @@ class CodeInspector(QtWidgets.QWidget):
 
         self.gpu_language_box = EnumComboBox(ocio.GpuLanguage)
         self.gpu_language_box.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
-        self.gpu_language_box.set_member(
-            MessageRouter.get_instance().get_gpu_language()
-        )
+        self.gpu_language_box.set_member(MessageRouter.get_instance().gpu_language)
         self.gpu_language_box.currentIndexChanged[int].connect(
             self._on_gpu_language_changed
         )
@@ -74,12 +75,20 @@ class CodeInspector(QtWidgets.QWidget):
 
         # Layout
         self.tabs = QtWidgets.QTabWidget()
-        self.tabs.addTab(self.config_view, get_glyph_icon("mdi6.code-json"), "Config")
         self.tabs.addTab(
-            self.ctf_view, get_glyph_icon("mdi6.code-tags"), "Processor (CTF)"
+            self.config_view,
+            get_glyph_icon("mdi6.code-json", size=ICON_SIZE_TAB),
+            "Config",
         )
         self.tabs.addTab(
-            self.shader_view, get_glyph_icon("mdi6.dots-grid"), "Processor (Shader)"
+            self.ctf_view,
+            get_glyph_icon("mdi6.code-tags", size=ICON_SIZE_TAB),
+            "Processor (CTF)",
+        )
+        self.tabs.addTab(
+            self.shader_view,
+            get_glyph_icon("mdi6.dots-grid", size=ICON_SIZE_TAB),
+            "Processor (Shader)",
         )
 
         layout = QtWidgets.QVBoxLayout()
@@ -186,7 +195,7 @@ class CodeInspector(QtWidgets.QWidget):
         MessageRouter, which will provide future GPU processors.
         """
         gpu_language = self.gpu_language_box.currentData()
-        MessageRouter.get_instance().set_gpu_language(gpu_language)
+        MessageRouter.get_instance().gpu_language = gpu_language
         if self._prev_gpu_proc is not None:
             shader_html_data = processor_to_shader_html(
                 self._prev_gpu_proc, gpu_language
@@ -210,22 +219,22 @@ class CodeInspector(QtWidgets.QWidget):
         msg_router = MessageRouter.get_instance()
 
         if index == -1:
-            msg_router.set_config_updates_allowed(False)
-            msg_router.set_ctf_updates_allowed(False)
-            msg_router.set_shader_updates_allowed(False)
+            msg_router.config_updates_allowed = False
+            msg_router.ctf_updates_allowed = False
+            msg_router.shader_updates_allowed = False
             return
 
         widget = self.tabs.widget(index)
 
         if widget == self.config_view:
-            msg_router.set_config_updates_allowed(True)
-            msg_router.set_ctf_updates_allowed(False)
-            msg_router.set_shader_updates_allowed(False)
+            msg_router.config_updates_allowed = True
+            msg_router.ctf_updates_allowed = False
+            msg_router.shader_updates_allowed = False
         elif widget == self.ctf_view:
-            msg_router.set_config_updates_allowed(False)
-            msg_router.set_ctf_updates_allowed(True)
-            msg_router.set_shader_updates_allowed(False)
+            msg_router.config_updates_allowed = False
+            msg_router.ctf_updates_allowed = True
+            msg_router.shader_updates_allowed = False
         elif widget == self.shader_view:
-            msg_router.set_config_updates_allowed(False)
-            msg_router.set_ctf_updates_allowed(False)
-            msg_router.set_shader_updates_allowed(True)
+            msg_router.config_updates_allowed = False
+            msg_router.ctf_updates_allowed = False
+            msg_router.shader_updates_allowed = True

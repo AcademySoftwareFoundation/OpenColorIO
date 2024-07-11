@@ -14,6 +14,11 @@ class ReferenceSpaceManager:
     _ref_subscribers: list[Callable] = []
 
     @classmethod
+    def init_reference_spaces(cls) -> None:
+        cls._update_scene_reference_space()
+        cls._update_display_reference_space()
+
+    @classmethod
     def subscribe_to_reference_spaces(cls, ref_callback: Callable) -> None:
         """
         Subscribe to reference space updates.

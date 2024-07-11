@@ -6,6 +6,7 @@ from typing import Optional
 from PySide6 import QtCore, QtWidgets
 
 from ..config_cache import ConfigCache
+from ..constants import ICON_SIZE_ITEM
 from ..utils import get_glyph_icon
 from ..widgets import (
     FormLayout,
@@ -43,7 +44,7 @@ class ViewingRuleParamEdit(BaseConfigItemParamEdit):
         self.color_space_list.view.setItemDelegate(ColorSpaceDelegate())
         self.custom_keys_table_a = StringMapTableWidget(
             ("Key Name", "Key Value"),
-            item_icon=get_glyph_icon("ph.key"),
+            item_icon=get_glyph_icon("ph.key", size=ICON_SIZE_ITEM),
             default_key_prefix="key_",
             default_value="value",
         )
@@ -61,7 +62,7 @@ class ViewingRuleParamEdit(BaseConfigItemParamEdit):
         )
         self.custom_keys_table_b = StringMapTableWidget(
             ("Key Name", "Key Value"),
-            item_icon=get_glyph_icon("ph.key"),
+            item_icon=get_glyph_icon("ph.key", size=ICON_SIZE_ITEM),
             default_key_prefix="key_",
             default_value="value",
         )
