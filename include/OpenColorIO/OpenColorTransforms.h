@@ -1788,6 +1788,75 @@ protected:
 extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Lut3DTransform&);
 #endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
+/// A pair of chromaticity coordinates.
+struct OCIOEXPORT Chromaticities
+{
+    Chromaticities() = delete;
+    ~Chromaticities() = default;
+
+    Chromaticities(double x, double y)
+    {
+        m_xy[0] = x;
+        m_xy[1] = y;
+    }
+
+    Chromaticities(const Chromaticities & xy)
+    {
+        m_xy[0] = xy.m_xy[0];
+        m_xy[1] = xy.m_xy[1];
+    }
+
+    Chromaticities & operator=(const Chromaticities & xy)
+    {
+        if (this == &xy) return *this;
+
+        m_xy[0] = xy.m_xy[0];
+        m_xy[1] = xy.m_xy[1];
+
+        return *this;
+    }
+
+    double m_xy[2] { 0., 0. };
+};
+
+/// A set of color primaries, consisting of R, G, B, and white chromaticities.
+struct OCIOEXPORT Primaries
+{
+    Primaries() = delete;
+    ~Primaries() = default;
+
+    Primaries(const Chromaticities & red, const Chromaticities & grn, const Chromaticities & blu,
+              const Chromaticities & wht)
+        :   m_red(red)
+        ,   m_grn(grn)
+        ,   m_blu(blu)
+        ,   m_wht(wht)
+    {}
+
+    Primaries(const Primaries & primaries)
+        :   m_red(primaries.m_red)
+        ,   m_grn(primaries.m_grn)
+        ,   m_blu(primaries.m_blu)
+        ,   m_wht(primaries.m_wht)
+    {}
+
+    Primaries & operator=(const Primaries & primaries)
+    {
+        if (this == &primaries) return *this;
+
+        m_red = primaries.m_red;
+        m_grn = primaries.m_grn;
+        m_blu = primaries.m_blu;
+        m_wht = primaries.m_wht;
+
+        return *this;
+    }
+
+    Chromaticities m_red; // CIE xy chromaticity coordinates for red primary.
+    Chromaticities m_grn; // CIE xy chromaticity coordinates for green primary.
+    Chromaticities m_blu; // CIE xy chromaticity coordinates for blue primary.
+    Chromaticities m_wht; // CIE xy chromaticities for white (or gray).
+};
 
 /**
  * Represents an MX+B Matrix transform.
@@ -1877,6 +1946,21 @@ public:
     static void View(double * m44, double * offset4,
                      int * channelHot4,
                      const double * lumaCoef3);
+
+    /// Generate a matrix to convert RGB values in a given set of color primaries
+    /// to CIE XYZ. The white point of the primaries is mapped to D65 using the
+    /// specified chromatic adaptation method. (The offsets are always 0.)
+    static void ConvertTo_XYZ_D65(double * m44, double * offset4,
+                                  const Primaries & src_prims,
+                                  AdaptationMethod method);
+
+    /// Generate a matrix to convert RGB values in a given set of color primaries
+    /// to the AP0 primaries used in ACES2065-1. The white point of the primaries
+    /// is mapped to D60 using the specified chromatic adaptation method. (The offsets
+    /// are always 0.)
+    static void ConvertTo_AP0(double * m44, double * offset4,
+                              const Primaries & src_prims,
+                              AdaptationMethod method);
 
     MatrixTransform(const MatrixTransform &) = delete;
     MatrixTransform & operator= (const MatrixTransform &) = delete;

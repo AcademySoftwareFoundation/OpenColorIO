@@ -7,6 +7,7 @@
 
 #include "MathUtils.h"
 #include "transforms/MatrixTransform.h"
+#include "transforms/builtins/ColorMatrixHelpers.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -330,6 +331,57 @@ void MatrixTransform::View(double * m44, double * offset4,
             // Preserve alpha
             m44[15] = 1.0;
         }
+    }
+}
+
+void MatrixTransform::ConvertTo_XYZ_D65(double * m44, double * offset4,
+                                        const Primaries & src_prims,
+                                        AdaptationMethod method)
+{
+    if(!m44)
+    {
+        return;
+    }
+
+    MatrixOpData::MatrixArrayPtr matrix = build_conversion_matrix_to_XYZ_D65(src_prims,
+                                                                             method);
+    for(int i = 0; i < 16; ++i)
+    {
+        m44[i] = matrix->getDoubleValue(i);
+    }
+
+    if(offset4)
+    {
+        offset4[0] = 0.0;
+        offset4[1] = 0.0;
+        offset4[2] = 0.0;
+        offset4[3] = 0.0;
+    }
+}
+
+void MatrixTransform::ConvertTo_AP0(double * m44, double * offset4,
+                                    const Primaries & src_prims,
+                                    AdaptationMethod method)
+{
+    if(!m44)
+    {
+        return;
+    }
+
+    MatrixOpData::MatrixArrayPtr matrix = build_conversion_matrix(src_prims,
+                                                                  ACES_AP0::primaries,
+                                                                  method);
+    for(int i = 0; i < 16; ++i)
+    {
+        m44[i] = matrix->getDoubleValue(i);
+    }
+
+    if(offset4)
+    {
+        offset4[0] = 0.0;
+        offset4[1] = 0.0;
+        offset4[2] = 0.0;
+        offset4[3] = 0.0;
     }
 }
 

@@ -301,6 +301,142 @@ OCIO_ADD_TEST(Builtins, color_matrix_helpers)
     }
 }
 
+OCIO_ADD_TEST(MatrixTransform, matrix_factories)
+{
+    // Test ConvertTo_XYZ_D65.
+    {
+        const OCIO::Chromaticities red_xy(0.7347,  0.2653 );
+        const OCIO::Chromaticities grn_xy(0.0000,  1.0000 );
+        const OCIO::Chromaticities blu_xy(0.0001, -0.0770 );
+        const OCIO::Chromaticities wht_xy(0.32168, 0.33767);
+
+        const OCIO::Primaries AP0(red_xy, grn_xy, blu_xy, wht_xy);
+
+        double matrix[16];
+        double offset[4];
+        OCIO::MatrixTransform::ConvertTo_XYZ_D65(matrix, offset,
+                                                 AP0,
+                                                 OCIO::ADAPTATION_BRADFORD);
+
+        ValidateValues( 0U, matrix[ 0],  0.93827985, 1e-7, __LINE__);
+        ValidateValues( 1U, matrix[ 1], -0.00445145, 1e-7, __LINE__);
+        ValidateValues( 2U, matrix[ 2],  0.01662752, 1e-7, __LINE__);
+
+        ValidateValues( 4U, matrix[ 4],  0.33736889, 1e-7, __LINE__);
+        ValidateValues( 5U, matrix[ 5],  0.72952157, 1e-7, __LINE__);
+        ValidateValues( 6U, matrix[ 6], -0.06689046, 1e-7, __LINE__);
+
+        ValidateValues( 8U, matrix[ 8],  0.00117395, 1e-7, __LINE__);
+        ValidateValues( 9U, matrix[ 9], -0.00371071, 1e-7, __LINE__);
+        ValidateValues(10U, matrix[10],  1.09159451, 1e-7, __LINE__);
+
+        OCIO_CHECK_EQUAL(matrix[ 3], 0.);
+        OCIO_CHECK_EQUAL(matrix[ 7], 0.);
+        OCIO_CHECK_EQUAL(matrix[11], 0.);
+        OCIO_CHECK_EQUAL(matrix[12], 0.);
+        OCIO_CHECK_EQUAL(matrix[13], 0.);
+        OCIO_CHECK_EQUAL(matrix[14], 0.);
+        OCIO_CHECK_EQUAL(matrix[15], 1.);
+    }
+
+    // Test ConvertTo_AP0.
+    {
+        const OCIO::Chromaticities red_xy(0.64,   0.33  );
+        const OCIO::Chromaticities grn_xy(0.30,   0.60  );
+        const OCIO::Chromaticities blu_xy(0.15,   0.06  );
+        const OCIO::Chromaticities wht_xy(0.3127, 0.3290);
+
+        const OCIO::Primaries Rec709(red_xy, grn_xy, blu_xy, wht_xy);
+
+        double matrix[16];
+        double offset[4];
+        OCIO::MatrixTransform::ConvertTo_AP0(matrix, offset,
+                                             Rec709,
+                                             OCIO::ADAPTATION_BRADFORD);
+
+        ValidateValues( 0U, matrix[ 0],  0.43963298, 1e-7, __LINE__);
+        ValidateValues( 1U, matrix[ 1],  0.38298870, 1e-7, __LINE__);
+        ValidateValues( 2U, matrix[ 2],  0.17737832, 1e-7, __LINE__);
+
+        ValidateValues( 4U, matrix[ 4],  0.08977644, 1e-7, __LINE__);
+        ValidateValues( 5U, matrix[ 5],  0.81343943, 1e-7, __LINE__);
+        ValidateValues( 6U, matrix[ 6],  0.09678413, 1e-7, __LINE__);
+
+        ValidateValues( 8U, matrix[ 8],  0.01754117, 1e-7, __LINE__);
+        ValidateValues( 9U, matrix[ 9],  0.11154655, 1e-7, __LINE__);
+        ValidateValues(10U, matrix[10],  0.87091228, 1e-7, __LINE__);
+
+        OCIO_CHECK_EQUAL(matrix[ 3], 0.);
+        OCIO_CHECK_EQUAL(matrix[ 7], 0.);
+        OCIO_CHECK_EQUAL(matrix[11], 0.);
+        OCIO_CHECK_EQUAL(matrix[12], 0.);
+        OCIO_CHECK_EQUAL(matrix[13], 0.);
+        OCIO_CHECK_EQUAL(matrix[14], 0.);
+        OCIO_CHECK_EQUAL(matrix[15], 1.);
+    }
+
+    // Demonstrate how to create a custom color space from chromaticity coordinates.
+    {
+        OCIO::ConfigRcPtr config = OCIO::Config::CreateRaw()->createEditableCopy();
+
+        {
+            const OCIO::Chromaticities red_xy(0.64,   0.33  );
+            const OCIO::Chromaticities grn_xy(0.30,   0.60  );
+            const OCIO::Chromaticities blu_xy(0.15,   0.06  );
+            const OCIO::Chromaticities wht_xy(0.3127, 0.3290);
+            const OCIO::Primaries Rec709(red_xy, grn_xy, blu_xy, wht_xy);
+
+            double matrix[16];
+            double offset[4];
+            OCIO::MatrixTransform::ConvertTo_AP0(matrix, offset,
+                                                 Rec709,
+                                                 OCIO::ADAPTATION_BRADFORD);
+
+            OCIO::MatrixTransformRcPtr mt = OCIO::MatrixTransform::Create();
+            mt->setMatrix(matrix);
+            mt->setOffset(offset);
+
+            OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+            cs->setName("lin_rec709");
+            cs->setTransform(mt, OCIO::COLORSPACE_DIR_TO_REFERENCE);
+
+            config->addColorSpace(cs);
+        }
+        {
+            const OCIO::Chromaticities red_xy(0.713,   0.293  );
+            const OCIO::Chromaticities grn_xy(0.165,   0.830  );
+            const OCIO::Chromaticities blu_xy(0.128,   0.044  );
+            const OCIO::Chromaticities wht_xy(0.32168, 0.33767);
+            const OCIO::Primaries AP1(red_xy, grn_xy, blu_xy, wht_xy);
+
+            double matrix[16];
+            double offset[4];
+            OCIO::MatrixTransform::ConvertTo_AP0(matrix, offset,
+                                                 AP1,
+                                                 OCIO::ADAPTATION_BRADFORD);
+
+            OCIO::MatrixTransformRcPtr mt = OCIO::MatrixTransform::Create();
+            mt->setMatrix(matrix);
+            mt->setOffset(offset);
+
+            OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+            cs->setName("lin_ap1");
+            cs->setTransform(mt, OCIO::COLORSPACE_DIR_TO_REFERENCE);
+
+            config->addColorSpace(cs);
+        }
+
+        OCIO::ConstProcessorRcPtr proc = config->getProcessor("lin_rec709", "lin_ap1");
+        OCIO::ConstCPUProcessorRcPtr cpu = proc->getDefaultCPUProcessor();
+
+        float pixel[]{ 0.5f, 0.4f, 0.3f };
+        cpu->applyRGB(pixel);
+        OCIO_CHECK_CLOSE(pixel[0], 0.45657180f, 1e-6f);
+        OCIO_CHECK_CLOSE(pixel[1], 0.40567413f, 1e-6f);
+        OCIO_CHECK_CLOSE(pixel[2], 0.31508010f, 1e-6f);
+    }
+}
+
 #if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 OCIO_ADD_TEST(Builtins, interpolate)
 {

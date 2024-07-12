@@ -430,6 +430,14 @@ enum Lut1DHueAdjust
     HUE_WYPN      ///< Weighted Yellow Power Norm -- NOT IMPLEMENTED YET
 };
 
+/// Chromatic adaptation method.
+enum AdaptationMethod
+{
+    ADAPTATION_NONE = 0,
+    ADAPTATION_BRADFORD,
+    ADAPTATION_CAT02
+};
+
 /// Used by \ref PackedImageDesc to indicate the channel ordering of the image to process.
 enum ChannelOrdering
 {
