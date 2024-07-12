@@ -42,9 +42,9 @@ void bindPyBuiltinConfigRegistry(py::module & m)
             DOC(BuiltinConfigRegistry, getNumBuiltinConfigs))
         .def("__getitem__", [](PyBuiltinConfigRegistry & self, const std::string & name) 
             { 
-                return self.getBuiltinConfigByName(name.c_str());
+                return self.createBuiltinConfigByName(name.c_str());
             },
-            DOC(BuiltinConfigRegistry, getBuiltinConfigByName))
+            DOC(BuiltinConfigRegistry, createBuiltinConfigByName))
         .def("__contains__", [](PyBuiltinConfigRegistry & self, const std::string & name) 
             {
                 for (size_t i = 0; i < self.getNumBuiltinConfigs(); i++)

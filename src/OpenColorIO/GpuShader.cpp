@@ -165,7 +165,11 @@ public:
     typedef std::vector<Uniform> Uniforms;
 
 public:
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     PrivateImpl() : m_max1DLUTWidth(4 * 1024), m_allowTexture1D(true) {}
+#else
+    PrivateImpl() = default;
+#endif
     PrivateImpl(const PrivateImpl & rhs) = delete;
     PrivateImpl& operator= (const PrivateImpl & rhs) = delete;
 
@@ -398,8 +402,10 @@ private:
         }
         return false;
     }
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     unsigned m_max1DLUTWidth;
     bool m_allowTexture1D;
+#endif
 };
 
 } // namespace GPUShaderImpl

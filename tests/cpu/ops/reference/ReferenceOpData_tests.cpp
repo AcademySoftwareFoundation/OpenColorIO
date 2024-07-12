@@ -113,7 +113,6 @@ OCIO_ADD_TEST(Reference, load_cycle_rel_resolve_failing)
     OCIO_CHECK_THROW_WHAT(GetTransformFileProcessor(fileName), OCIO::Exception,
                           "is creating a recursion");
 }
-#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 namespace
 {
@@ -134,7 +133,6 @@ bool GetFilePath(std::string & path, OCIO::ConstOpRcPtr & op)
 // The following tests load files using the non-public API in order to validate
 // the referenced files are loaded correctly.
 //
-#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 OCIO_ADD_TEST(Reference, load_one_reference)
 {
     OCIO::ContextRcPtr context = OCIO::Context::Create();

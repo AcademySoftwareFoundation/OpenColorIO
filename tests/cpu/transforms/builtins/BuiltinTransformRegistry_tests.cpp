@@ -167,7 +167,7 @@ colorspaces:
     iss.str(configStr);
 
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(iss), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
 
     // Serialize all the existing builtin transforms.
@@ -216,9 +216,10 @@ colorspaces:
     std::istringstream iss;
     iss.str(CONFIG);
 
-    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(iss),
+    OCIO_CHECK_THROW_WHAT_COND(OCIO::Config::CreateFromStream(iss),
                           OCIO::Exception,
-                          "Only config version 2 (or higher) can have BuiltinInTransform.");
+                          "Only config version 2 (or higher) can have BuiltinInTransform.",
+                          OCIO_YAML_SUPPORT);
 }
 
 OCIO_ADD_TEST(Builtins, version_2_validation)
@@ -259,10 +260,11 @@ colorspaces:
     std::istringstream iss;
     iss.str(CONFIG);
 
-    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(iss),
+    OCIO_CHECK_THROW_WHAT_COND(OCIO::Config::CreateFromStream(iss),
                           OCIO::Exception,
                           "Only config version 2.1 (or higher) can have BuiltinTransform style "\
-                          "'ACES-LMT - ACES 1.3 Reference Gamut Compression'.");
+                          "'ACES-LMT - ACES 1.3 Reference Gamut Compression'.",
+                          OCIO_YAML_SUPPORT);
 }
 
 OCIO_ADD_TEST(Builtins, version_2_1_validation)
@@ -303,8 +305,9 @@ colorspaces:
     std::istringstream iss;
     iss.str(CONFIG);
 
-    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(iss),
+    OCIO_CHECK_THROW_WHAT_COND(OCIO::Config::CreateFromStream(iss),
                           OCIO::Exception,
                           "Only config version 2.2 (or higher) can have BuiltinTransform style "\
-                          "'ARRI_LOGC4_to_ACES2065-1'.");
+                          "'ARRI_LOGC4_to_ACES2065-1'.",
+                          OCIO_YAML_SUPPORT);
 }

@@ -47,7 +47,7 @@ OCIO_ADD_TEST(FileRules, config_v1)
         is.str(CONFIG);
 
         OCIO::ConstConfigRcPtr config;
-        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
         OCIO_CHECK_NO_THROW(config->validate());
 
         OCIO_REQUIRE_EQUAL(config->getFileRules()->getNumEntries(), 2);
@@ -81,7 +81,7 @@ OCIO_ADD_TEST(FileRules, config_v1)
         is.str(CONFIG);
 
         OCIO::ConstConfigRcPtr config;
-        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
         OCIO_CHECK_NO_THROW(config->validate());
 
         OCIO_REQUIRE_EQUAL(config->getFileRules()->getNumEntries(), 2);
@@ -113,7 +113,7 @@ OCIO_ADD_TEST(FileRules, config_v1)
         is.str(CONFIG);
 
         OCIO::ConstConfigRcPtr config;
-        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
         OCIO_CHECK_NO_THROW(config->validate());
 
         OCIO_REQUIRE_EQUAL(config->getFileRules()->getNumEntries(), 2);
@@ -142,7 +142,7 @@ OCIO_ADD_TEST(FileRules, config_v1)
         is.str(CONFIG);
 
         OCIO::ConstConfigRcPtr config;
-        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
         OCIO_CHECK_NO_THROW(config->validate());
 
         OCIO_REQUIRE_EQUAL(config->getFileRules()->getNumEntries(), 2);
@@ -176,7 +176,7 @@ OCIO_ADD_TEST(FileRules, config_v1)
         is.str(CONFIG);
 
         OCIO::ConstConfigRcPtr config;
-        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
         OCIO_CHECK_NO_THROW(config->validate());
 
         OCIO_REQUIRE_EQUAL(config->getFileRules()->getNumEntries(), 2);
@@ -365,7 +365,7 @@ OCIO_ADD_TEST(FileRules, config_rule_customkeys)
     config->setFileRules(fileRules);
 
     std::ostringstream os;
-    config->serialize(os);
+    OCIO_CHECK_NO_THROW_COND(config->serialize(os), OCIO_YAML_SUPPORT);
 
     const std::string expected{ R"(ocio_profile_version: 2
 
@@ -442,7 +442,7 @@ OCIO_ADD_TEST(FileRules, config_rule_u8)
     config->setFileRules(fileRules);
 
     std::ostringstream os;
-    config->serialize(os);
+    OCIO_REQUIRE_NO_THROW_COND(config->serialize(os), OCIO_YAML_SUPPORT);
 
     // Reload.
     std::istringstream is_reload;
@@ -496,7 +496,7 @@ OCIO_ADD_TEST(FileRules, rule_invalid)
     std::istringstream is;
     is.str(g_config);
     OCIO::ConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is)->createEditableCopy(), OCIO_YAML_SUPPORT);
 
     OCIO_CHECK_NO_THROW(config->validate());
     auto rules = config->getFileRules()->createEditableCopy();
@@ -589,7 +589,7 @@ OCIO_ADD_TEST(FileRules, multiple_rules)
     std::istringstream is;
     is.str(g_config);
     OCIO::ConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is)->createEditableCopy(), OCIO_YAML_SUPPORT);
 
     OCIO_CHECK_NO_THROW(config->validate());
     auto rules = config->getFileRules()->createEditableCopy();
@@ -629,7 +629,7 @@ OCIO_ADD_TEST(FileRules, rules_filepattern)
     std::istringstream is;
     is.str(g_config);
     OCIO::ConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is)->createEditableCopy(), OCIO_YAML_SUPPORT);
     auto rules = config->getFileRules()->createEditableCopy();
 
     // Add pattern + extension rule.
@@ -928,7 +928,7 @@ OCIO_ADD_TEST(FileRules, rules_regex)
     std::istringstream is;
     is.str(g_config);
     OCIO::ConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is)->createEditableCopy(), OCIO_YAML_SUPPORT);
     auto rules = config->getFileRules()->createEditableCopy();
 
     // Add pattern + extension rule.
@@ -961,7 +961,7 @@ OCIO_ADD_TEST(FileRules, rules_long_filepattern)
     std::istringstream is;
     is.str(g_config);
     OCIO::ConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is)->createEditableCopy(), OCIO_YAML_SUPPORT);
     auto rules = config->getFileRules()->createEditableCopy();
 
     // Add pattern + extension rule.
@@ -1023,7 +1023,7 @@ OCIO_ADD_TEST(FileRules, rules_test)
     std::istringstream is;
     is.str(g_config);
     OCIO::ConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is)->createEditableCopy(), OCIO_YAML_SUPPORT);
     auto rules = config->getFileRules()->createEditableCopy();
     OCIO_CHECK_NO_THROW(rules->insertPathSearchRule(0));
     OCIO_CHECK_NO_THROW(rules->insertRule(1, "dpx file", "raw", "*", "dpx"));
@@ -1066,7 +1066,7 @@ OCIO_ADD_TEST(FileRules, rules_priority)
     std::istringstream is;
     is.str(g_config);
     OCIO::ConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is)->createEditableCopy(), OCIO_YAML_SUPPORT);
     auto rules = config->getFileRules()->createEditableCopy();
     OCIO_CHECK_NO_THROW(rules->insertRule(0, "pattern dpx file", "raw", "*cs2*", "dpx"));
     OCIO_CHECK_NO_THROW(rules->insertPathSearchRule(1));
@@ -1113,8 +1113,9 @@ colorspaces:
 
     std::istringstream is;
     is.str(configNoDefault);
-    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
-                          "must contain either a Default file rule or the 'default' role");
+    OCIO_CHECK_THROW_WHAT_COND(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                          "must contain either a Default file rule or the 'default' role",
+                          OCIO_YAML_SUPPORT);
 }
 
 OCIO_ADD_TEST(FileRules, config_default_missmatch)
@@ -1147,7 +1148,7 @@ file_rules:
     std::istringstream is;
     is.str(configDefaultMissmatch);
     OCIO::ConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is)->createEditableCopy(), OCIO_YAML_SUPPORT);
 
     const auto foundString = guard.output().find("that does not match the default role");
     OCIO_CHECK_ASSERT(foundString != std::string::npos);
@@ -1195,7 +1196,7 @@ file_rules:
     std::istringstream is;
     is.str(configNoDefault);
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
 
     OCIO_CHECK_ASSERT(guard.output().empty());
 
@@ -1226,8 +1227,9 @@ file_rules:
 
     std::istringstream is;
     is.str(configDefaultMissmatch);
-    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
-                          "'Default' rule cannot have an empty color space name");
+    OCIO_CHECK_THROW_WHAT_COND(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                          "'Default' rule cannot have an empty color space name",
+                          OCIO_YAML_SUPPORT);
 }
 
 OCIO_ADD_TEST(FileRules, config_no_default_rule)
@@ -1254,8 +1256,9 @@ file_rules:
 
     std::istringstream is;
     is.str(configNoDefaultRule);
-    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
-                          "'file_rules' does not contain a Default <Rule>");
+    OCIO_CHECK_THROW_WHAT_COND(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                          "'file_rules' does not contain a Default <Rule>",
+                          OCIO_YAML_SUPPORT);
 }
 
 OCIO_ADD_TEST(FileRules, config_filerule_no_colorspace)
@@ -1283,8 +1286,9 @@ file_rules:
 
     std::istringstream is;
     is.str(configNoDefaultRule);
-    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
-                          "File rule 'Custom' cannot have an empty color space name");
+    OCIO_CHECK_THROW_WHAT_COND(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                          "File rule 'Custom' cannot have an empty color space name",
+                          OCIO_YAML_SUPPORT);
 }
 
 OCIO_ADD_TEST(FileRules, config_v1_faulty)
@@ -1311,8 +1315,9 @@ file_rules:
 
     std::istringstream is;
     is.str(config_v1);
-    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
-                          "Config v1 can't use 'file_rules'");
+    OCIO_CHECK_THROW_WHAT_COND(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                          "Config v1 can't use 'file_rules'",
+                          OCIO_YAML_SUPPORT);
 
 }
 
@@ -1347,7 +1352,7 @@ colorspaces:
         std::istringstream is;
         is.str(config_v1);
         OCIO::ConfigRcPtr config;
-        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+        OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is)->createEditableCopy(), OCIO_YAML_SUPPORT);
         OCIO_CHECK_NO_THROW(config->validate());
 
         // Check the version.
@@ -1428,7 +1433,7 @@ colorspaces:
         std::istringstream is;
         is.str(config_v1);
         OCIO::ConfigRcPtr config;
-        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+        OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is)->createEditableCopy(), OCIO_YAML_SUPPORT);
         OCIO_CHECK_NO_THROW(config->validate());
 
         // Check the version.
@@ -1508,7 +1513,7 @@ colorspaces:
         std::istringstream is;
         is.str(config_v1);
         OCIO::ConstConfigRcPtr config;
-        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
         OCIO_CHECK_NO_THROW(config->validate());
 
         // Check the version.
@@ -1532,7 +1537,7 @@ colorspaces:
             // In v2, the first active color space is then used for the 'Default' rule.
 
             OCIO::ConfigRcPtr cfg;
-            OCIO_CHECK_NO_THROW(cfg = config->createEditableCopy());
+            OCIO_REQUIRE_NO_THROW(cfg = config->createEditableCopy());
 
             // Upgrading is making sure to build a valid v2 config.
 
@@ -1573,7 +1578,7 @@ colorspaces:
             // color spaces.
 
             OCIO::ConfigRcPtr cfg;
-            OCIO_CHECK_NO_THROW(cfg = config->createEditableCopy());
+            OCIO_REQUIRE_NO_THROW(cfg = config->createEditableCopy());
 
             // Upgrading is making sure to build a valid v2 config.
 
@@ -1842,8 +1847,9 @@ OCIO_ADD_TEST(FileRules, config_v2_wrong_rule)
 )";
         std::istringstream is;
         is.str(config_v2);
-        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
-                              "Default rule has to be the last rule");
+        OCIO_CHECK_THROW_WHAT_COND(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "Default rule has to be the last rule",
+                              OCIO_YAML_SUPPORT);
 
     }
     // Default rule parameters.
@@ -1854,8 +1860,9 @@ OCIO_ADD_TEST(FileRules, config_v2_wrong_rule)
 )";
         std::istringstream is;
         is.str(config_v2);
-        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
-                              "'Default' rule can't use pattern, extension or regex.");
+        OCIO_CHECK_THROW_WHAT_COND(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "'Default' rule can't use pattern, extension or regex.", 
+                              OCIO_YAML_SUPPORT);
 
     }
     // Default should be at the end.
@@ -1867,8 +1874,9 @@ OCIO_ADD_TEST(FileRules, config_v2_wrong_rule)
 )";
         std::istringstream is;
         is.str(config_v2);
-        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
-                              "Default rule has to be the last rule");
+        OCIO_CHECK_THROW_WHAT_COND(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "Default rule has to be the last rule",
+                              OCIO_YAML_SUPPORT);
 
     }
     // 2 parse rules.
@@ -1881,8 +1889,9 @@ OCIO_ADD_TEST(FileRules, config_v2_wrong_rule)
 )";
         std::istringstream is;
         is.str(config_v2);
-        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
-                              "A rule named 'ColorSpaceNamePathSearch' already exists");
+        OCIO_CHECK_THROW_WHAT_COND(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "A rule named 'ColorSpaceNamePathSearch' already exists",
+                              OCIO_YAML_SUPPORT);
 
     }
     // Rule with regex & glob.
@@ -1894,8 +1903,9 @@ OCIO_ADD_TEST(FileRules, config_v2_wrong_rule)
 )";
         std::istringstream is;
         is.str(config_v2);
-        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
-                              R"(can't use regex '.*\.TIF?F$' and pattern & extension)");
+        OCIO_CHECK_THROW_WHAT_COND(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              R"(can't use regex '.*\.TIF?F$' and pattern & extension)",
+                              OCIO_YAML_SUPPORT);
 
     }
 }
@@ -1905,7 +1915,7 @@ OCIO_ADD_TEST(FileRules, rule_move)
     std::istringstream is;
     is.str(g_config);
     OCIO::ConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is)->createEditableCopy(), OCIO_YAML_SUPPORT);
 
     OCIO_CHECK_NO_THROW(config->validate());
     auto rules = config->getFileRules()->createEditableCopy();

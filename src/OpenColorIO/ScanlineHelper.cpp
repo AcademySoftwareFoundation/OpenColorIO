@@ -142,7 +142,7 @@ void GenericScanlineHelper<InType, OutType>::prepRGBAScanline(float** buffer, lo
         Generic<InType>::PackRGBAFromImageDesc(m_srcImg,
                                                &m_inBitDepthBuffer[0],
                                                *buffer,
-                                               m_dstImg.m_width,
+                                               int(m_dstImg.m_width),
                                                m_yIndex * m_dstImg.m_width);
     }
 
@@ -169,7 +169,7 @@ void GenericScanlineHelper<InType, OutType>::finishRGBAScanline()
         Generic<OutType>::UnpackRGBAToImageDesc(m_dstImg,
                                                 &m_rgbaFloatBuffer[0],
                                                 &m_outBitDepthBuffer[0],
-                                                m_dstImg.m_width,
+                                                int(m_dstImg.m_width),
                                                 m_yIndex * m_dstImg.m_width);
     }
 

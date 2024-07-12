@@ -502,7 +502,7 @@ int main(int argc, const char **argv)
         std::cout << std::endl;
         std::cout << "** Validation **" << std::endl;
 
-        std::string cacheID;
+        std::string cacheID = "N/A";
         bool isArchivable = false;
         try
         {
@@ -511,7 +511,9 @@ int main(int argc, const char **argv)
             config->validate();
             std::cout << logGuard.output();
             
+#if OCIO_YAML_SUPPORT
             cacheID = config->getCacheID();
+#endif
             isArchivable = config->isArchivable();
 
             // Passed if there are no Error level logs.

@@ -234,7 +234,7 @@ colorspaces:
         iss.str(CONFIG);
 
         OCIO::ConstConfigRcPtr mOCIOCfg;
-        OCIO_CHECK_NO_THROW(mOCIOCfg = OCIO::Config::CreateFromStream(iss));
+        OCIO_REQUIRE_NO_THROW_COND(mOCIOCfg = OCIO::Config::CreateFromStream(iss), OCIO_YAML_SUPPORT);
         OCIO_CHECK_NO_THROW(mOCIOCfg->validate());
 
         OCIO::DisplayViewTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
@@ -326,7 +326,7 @@ colorspaces:
         iss.str(CONFIG);
 
         OCIO::ConstConfigRcPtr mOCIOCfg;
-        OCIO_CHECK_NO_THROW(mOCIOCfg = OCIO::Config::CreateFromStream(iss));
+        OCIO_REQUIRE_NO_THROW_COND(mOCIOCfg = OCIO::Config::CreateFromStream(iss), OCIO_YAML_SUPPORT);
         OCIO_CHECK_NO_THROW(mOCIOCfg->validate());
 
         OCIO::DisplayViewTransformRcPtr transform = OCIO::DisplayViewTransform::Create();
@@ -414,7 +414,7 @@ OCIO_ADD_TEST(GpuShader, MetalSupport3)
         iss.str(CONFIG);
 
         OCIO::ConstConfigRcPtr mOCIOCfg;
-        OCIO_CHECK_NO_THROW(mOCIOCfg = OCIO::Config::CreateFromStream(iss));
+        OCIO_REQUIRE_NO_THROW_COND(mOCIOCfg = OCIO::Config::CreateFromStream(iss), OCIO_YAML_SUPPORT);
         OCIO_CHECK_NO_THROW(mOCIOCfg->validate());
 
         OCIO::ColorSpaceTransformRcPtr transform = OCIO::ColorSpaceTransform::Create();
@@ -522,7 +522,7 @@ OCIO_ADD_TEST(GpuShader, MetalSupport4)
         iss.str(CONFIG);
 
         OCIO::ConstConfigRcPtr mOCIOCfg;
-        OCIO_CHECK_NO_THROW(mOCIOCfg = OCIO::Config::CreateFromStream(iss));
+        OCIO_REQUIRE_NO_THROW_COND(mOCIOCfg = OCIO::Config::CreateFromStream(iss), OCIO_YAML_SUPPORT);
         OCIO_CHECK_NO_THROW(mOCIOCfg->validate());
 
         OCIO::ColorSpaceTransformRcPtr transform = OCIO::ColorSpaceTransform::Create();
@@ -626,7 +626,7 @@ OCIO_ADD_TEST(GpuShader, MetalSupport5)
         iss.str(CONFIG);
 
         OCIO::ConstConfigRcPtr mOCIOCfg;
-        OCIO_CHECK_NO_THROW(mOCIOCfg = OCIO::Config::CreateFromStream(iss));
+        OCIO_REQUIRE_NO_THROW_COND(mOCIOCfg = OCIO::Config::CreateFromStream(iss), OCIO_YAML_SUPPORT);
         OCIO_CHECK_NO_THROW(mOCIOCfg->validate());
 
         OCIO::ColorSpaceTransformRcPtr transform = OCIO::ColorSpaceTransform::Create();
@@ -747,7 +747,7 @@ OCIO_ADD_TEST(GpuShader, MetalSupport6)
         iss.str(CONFIG);
 
         OCIO::ConstConfigRcPtr mOCIOCfg;
-        OCIO_CHECK_NO_THROW(mOCIOCfg = OCIO::Config::CreateFromStream(iss));
+        OCIO_REQUIRE_NO_THROW_COND(mOCIOCfg = OCIO::Config::CreateFromStream(iss), OCIO_YAML_SUPPORT);
         OCIO_CHECK_NO_THROW(mOCIOCfg->validate());
 
         OCIO::ColorSpaceTransformRcPtr transform = OCIO::ColorSpaceTransform::Create();
@@ -899,7 +899,7 @@ OCIO_ADD_TEST(GpuShader, MetalSupport7)
         iss.str(CONFIG);
 
         OCIO::ConstConfigRcPtr mOCIOCfg;
-        OCIO_CHECK_NO_THROW(mOCIOCfg = OCIO::Config::CreateFromStream(iss));
+        OCIO_REQUIRE_NO_THROW_COND(mOCIOCfg = OCIO::Config::CreateFromStream(iss), OCIO_YAML_SUPPORT);
         OCIO_CHECK_NO_THROW(mOCIOCfg->validate());
 
         OCIO::ColorSpaceTransformRcPtr transform = OCIO::ColorSpaceTransform::Create();
@@ -1009,7 +1009,7 @@ OCIO_ADD_TEST(GpuShader, MetalSupport8)
         iss.str(CONFIG);
 
         OCIO::ConstConfigRcPtr mOCIOCfg;
-        OCIO_CHECK_NO_THROW(mOCIOCfg = OCIO::Config::CreateFromStream(iss));
+        OCIO_REQUIRE_NO_THROW_COND(mOCIOCfg = OCIO::Config::CreateFromStream(iss), OCIO_YAML_SUPPORT);
         OCIO_CHECK_NO_THROW(mOCIOCfg->validate());
 
         OCIO::ColorSpaceTransformRcPtr transform = OCIO::ColorSpaceTransform::Create();

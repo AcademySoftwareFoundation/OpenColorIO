@@ -115,7 +115,7 @@ OCIO_ADD_TEST(Baker, bake_3dlut)
 
     std::istringstream is(myProfile);
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
     OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(), 2);
     OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(), 1);
@@ -330,7 +330,7 @@ OCIO_ADD_TEST(Baker, baking_validation)
 
     std::istringstream is(myProfile);
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_REQUIRE_ASSERT(config);
     OCIO_CHECK_NO_THROW(config->validate());
 

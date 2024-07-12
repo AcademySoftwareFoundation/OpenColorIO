@@ -3,7 +3,6 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #include <cmath>
 
@@ -20,7 +19,7 @@ namespace OCIO_NAMESPACE
 
 namespace APPLE_LOG
 {
-
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 void GenerateAppleLogToLinearOps(OpRcPtrVec & ops)
 {
     auto GenerateLutValues = [](double in) -> float
@@ -50,7 +49,7 @@ void GenerateAppleLogToLinearOps(OpRcPtrVec & ops)
     CreateHalfLut(ops, GenerateLutValues);
 
 }
-
+#endif
 } // namespace APPLE_LOG
 
 namespace CAMERA
@@ -62,7 +61,10 @@ namespace APPLE
 void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
 {
     {
-        auto APPLE_LOG_to_ACES2065_1_Functor = [](OpRcPtrVec & ops)
+        // FIXME: needs LUT-free implementation
+        std::function<void(OpRcPtrVec& ops)> APPLE_LOG_to_ACES2065_1_Functor;
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+        APPLE_LOG_to_ACES2065_1_Functor = [](OpRcPtrVec & ops)
         {
             APPLE_LOG::GenerateAppleLogToLinearOps(ops);
             
@@ -70,16 +72,21 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             = build_conversion_matrix(REC2020::primaries, ACES_AP0::primaries, ADAPTATION_BRADFORD);
             CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
         };
+#endif
         
         registry.addBuiltin("APPLE_LOG_to_ACES2065-1",
                             "Convert Apple Log to ACES2065-1",
                             APPLE_LOG_to_ACES2065_1_Functor);
     }
     {
-        auto APPLE_LOG_to_Linear_Functor = [](OpRcPtrVec & ops)
+        // FIXME: needs LUT-free implementation
+        std::function<void(OpRcPtrVec& ops)> APPLE_LOG_to_Linear_Functor;
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+        APPLE_LOG_to_Linear_Functor = [](OpRcPtrVec & ops)
         {
             APPLE_LOG::GenerateAppleLogToLinearOps(ops);
         };
+#endif
         
         registry.addBuiltin("CURVE - APPLE_LOG_to_LINEAR",
                             "Convert Apple Log to linear",
@@ -92,5 +99,3 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
 } // namespace CAMERA
 
 } // namespace OCIO_NAMESPACE
-
-#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

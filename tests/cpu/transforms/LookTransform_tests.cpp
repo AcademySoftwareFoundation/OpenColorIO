@@ -139,7 +139,7 @@ colorspaces:
     is.str(OCIO_CONFIG);
 
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
 
     // Create look transform with source and destination color spaces, and 3 looks. Each look
@@ -345,7 +345,7 @@ colorspaces:
     is.str(OCIO_CONFIG);
 
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
 
     // LookTransform options test.  First option (1) gets missing file error,
@@ -505,7 +505,7 @@ colorspaces:
     OCIO::ContextRcPtr usedContextVars = OCIO::Context::Create();
 
     OCIO::ConfigRcPtr cfg;
-    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    OCIO_REQUIRE_NO_THROW_COND(cfg = OCIO::Config::CreateFromStream(is)->createEditableCopy(), OCIO_YAML_SUPPORT);
     cfg->setSearchPath(OCIO::GetTestFilesDir().c_str());
     OCIO_CHECK_NO_THROW(cfg->validate());
 
@@ -616,7 +616,7 @@ colorspaces:
     is.str(OCIO_CONFIG);
 
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::ConstColorSpaceRcPtr srcColorSpace;

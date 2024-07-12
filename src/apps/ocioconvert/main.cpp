@@ -332,6 +332,7 @@ int main(int argc, const char **argv)
     
                 processor = config->getProcessor(t);
 #else 
+                (void)lutFile;
                 std::cout << "ERROR OCIO LUT support is turned off." << std::endl;
                 exit(1);
 #endif 

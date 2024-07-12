@@ -149,10 +149,16 @@ option(OCIO_BUILD_DOCS "Specify whether to build documentation" ${OCIO_BUILD_FRO
 
 option(OCIO_BUILD_PYTHON "Specify whether to build python bindings" ON)
 
+###############################################################################
+# OCIO Library Features
+
+set(OCIO_FEATURE_SET "Nano" CACHE STRING "Determines which core library features are enabled. [Full, Nano, Custom]")
+set_property(CACHE OCIO_FEATURE_SET PROPERTY STRINGS Nano Full Custom)
 option(OCIO_LUT_AND_FILETRANSFORM_SUPPORT "Specify whether to build with LUT and file-transform support. Requies Expat dependency" ON)
 option(OCIO_USE_HALF_LOOKUP_TABLE "Determines if the Imath library should use a 64k LUT for half conversions" ON)
 option(OCIO_ARCHIVE_SUPPORT "Specify whether to build with OCIOZ archive support. Requires ZLIB and minizip-ng dependencies" ON)
-option(OCIO_HAS_BUILTIN_YAML_CONFIGS "If OFF, built-in yaml-based configs will be removed from the library" ON)
+option(OCIO_YAML_SUPPORT "Specify whether to build with YAML support. If turned off yaml based config files won't be supported. Requires yaml dependency'" ON)
+mark_as_advanced(OCIO_LUT_AND_FILETRANSFORM_SUPPORT OCIO_USE_HALF_LOOKUP_TABLE OCIO_ARCHIVE_SUPPORT OCIO_YAML_SUPPORT)
 
 set (OCIO_PYTHON_VERSION "" CACHE STRING
      "Preferred Python version (if any) in case multiple are available")
@@ -445,13 +451,64 @@ if (NOT BUILD_SHARED_LIBS AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
    expat, yaml-cpp, Imath, pystring, minizip-ng and ZLIB")
 endif()
 
+###############################################################################
+# Dynamic feature enabling/disabling
+
+function(SetFeatureOptions IsEnabled)
+    if(NOT OCIO_LUT_AND_FILETRANSFORM_SUPPORT STREQUAL IsEnabled )
+        message(WARNING "Turning OCIO_LUT_AND_FILETRANSFORM_SUPPORT ${IsEnabled} as '${OCIO_FEATURE_SET}' feature set is selected.")
+        set(OCIO_LUT_AND_FILETRANSFORM_SUPPORT ${IsEnabled} CACHE BOOL "Specify whether to build with LUT and file-transform support. Requies Expat dependency" FORCE)
+    endif()
+    
+    if(NOT OCIO_USE_HALF_LOOKUP_TABLE STREQUAL IsEnabled )
+        message(WARNING "Turning OCIO_USE_HALF_LOOKUP_TABLE ${IsEnabled} as '${OCIO_FEATURE_SET}' feature set is selected.")
+        set(OCIO_USE_HALF_LOOKUP_TABLE ${IsEnabled} CACHE BOOL "Determines if the Imath library should use a 64k LUT for half conversions" FORCE)
+    endif()
+    
+    if(NOT OCIO_ARCHIVE_SUPPORT STREQUAL IsEnabled )
+        message(WARNING "Turning OCIO_ARCHIVE_SUPPORT ${IsEnabled} as '${OCIO_FEATURE_SET}' feature set is selected.")
+        set(OCIO_ARCHIVE_SUPPORT ${IsEnabled} CACHE BOOL "Specify whether to build with OCIOZ archive support. Requires ZLIB and minizip-ng dependencies" FORCE)
+    endif()
+    
+    if(NOT OCIO_YAML_SUPPORT STREQUAL IsEnabled )
+        message(WARNING "Turning OCIO_YAML_SUPPORT ${IsEnabled} as '${OCIO_FEATURE_SET}' feature set is selected.")
+        set(OCIO_YAML_SUPPORT ${IsEnabled} CACHE BOOL "Specify whether to build with YAML support. If turned off yaml based config files won't be supported. Requires yaml dependency'" FORCE)
+    endif()
+endfunction()
+
+if(OCIO_FEATURE_SET MATCHES "[Nn][Aa][Nn][Oo]")
+    message(STATUS "'Nano' feature set is selected. All the optional features will be turned OFF.")
+    SetFeatureOptions(OFF)
+elseif(OCIO_FEATURE_SET MATCHES "[Ff][Uu][Ll][Ll]")
+    message(STATUS "'Full' feature set is selected. All the optional features will be turned ON.")
+    SetFeatureOptions(ON)
+elseif(NOT OCIO_FEATURE_SET MATCHES "[Cc][Uu][Ss][Tt][Oo][Mm]")
+    message(SEND_ERROR "OCIO_FEATURE_SET can take only 'Nano', 'Full' or 'Custom' values.")
+endif()
+
 if(OCIO_BUILD_PYTHON AND NOT OCIO_LUT_AND_FILETRANSFORM_SUPPORT )
     message(WARNING "Python bindings require LUT and File-Transform support which is turned off,\
     thus OCIO_BUILD_PYTHON option will be turned off too.")
     set(OCIO_BUILD_PYTHON OFF CACHE BOOL "Specify whether to build python bindings" FORCE)
 endif()
-    
 
+if(OCIO_ARCHIVE_SUPPORT AND NOT OCIO_YAML_SUPPORT )
+    message(WARNING "Archive support requires YAML support which is turned off,\
+    thus OCIO_ARCHIVE_SUPPORT option will be turned off too.")
+    set(OCIO_ARCHIVE_SUPPORT OFF CACHE BOOL "Specify whether to build with OCIOZ archive support. Requires ZLIB and minizip-ng dependencies" FORCE)
+endif()
+
+if(OCIO_BUILD_DOCS AND NOT OCIO_BUILD_PYTHON )
+    message(WARNING "Documentation requires Python bindings which is turned off,\
+    thus OCIO_BUILD_DOCS option will be turned off too.")
+    set(OCIO_BUILD_DOCS OFF CACHE BOOL "Specify whether to build documentation" FORCE)
+endif()
+
+if(OCIO_FEATURE_SET MATCHES "[Nn][Aa][Nn][Oo]" AND OCIO_BUILD_OPENFX)
+    message(WARNING "OpenFx is not compatible with Nano feature set,\
+    thus OCIO_BUILD_OPENFX option will be turned off.")
+    set(OCIO_BUILD_OPENFX OFF CACHE BOOL "Specify whether to build OpenFX plugins" FORCE)
+endif()
 
 ###############################################################################
 # Find or install external dependencies

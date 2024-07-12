@@ -94,7 +94,10 @@ void BuiltinTransformRegistryImpl::createOps(size_t index, OpRcPtrVec & ops) con
         throw Exception("Invalid index.");
     }
     
-    m_builtins[index].m_creator(ops);
+    if(m_builtins[index].m_creator)
+    {
+        m_builtins[index].m_creator(ops);
+    }
 }
 
 void BuiltinTransformRegistryImpl::registerAll() noexcept
@@ -110,10 +113,8 @@ void BuiltinTransformRegistryImpl::registerAll() noexcept
     ACES::RegisterAll(*this);
 
     // Camera support.
-#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     CAMERA::APPLE::RegisterAll(*this);
     CAMERA::CANON::RegisterAll(*this);
-#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     CAMERA::ARRI::RegisterAll(*this);
     CAMERA::PANASONIC::RegisterAll(*this);
     CAMERA::RED::RegisterAll(*this);

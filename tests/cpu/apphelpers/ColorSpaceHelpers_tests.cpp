@@ -28,7 +28,7 @@ OCIO_ADD_TEST(ColorSpaceInfo, read_values)
     std::istringstream is(category_test_config);
 
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
 
     // Tests with 'in_1'.
@@ -70,7 +70,7 @@ OCIO_ADD_TEST(ColorSpaceInfo, read_values)
 OCIO_ADD_TEST(ColorSpaceInfo, change_values)
 {
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateRaw());
+    OCIO_REQUIRE_NO_THROW(config = OCIO::Config::CreateRaw());
     OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::ColorSpaceRcPtr cs;
@@ -199,7 +199,7 @@ colorspaces:
  )" };
 
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::ColorSpaceMenuHelperRcPtr menuHelper;
@@ -245,7 +245,7 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, categories)
     std::istringstream is(category_test_config);
 
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::ColorSpaceMenuHelperRcPtr menuHelper;
@@ -485,7 +485,7 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, user_categories)
     std::istringstream is(category_test_config);
 
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::ColorSpaceMenuHelperRcPtr menuHelper;
@@ -567,7 +567,7 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, encodings)
     std::istringstream is(category_test_config);
 
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::ColorSpaceMenuHelperRcPtr menuHelper;
@@ -691,7 +691,7 @@ colorspaces:
  )" };
 
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::ColorSpaceMenuHelperRcPtr menuHelper;
@@ -715,7 +715,7 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, input_color_transformation)
     std::istringstream is(category_test_config);
 
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
 
     //
@@ -814,7 +814,7 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, additional_color_space)
     std::istringstream is(category_test_config);
 
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
 
     // Use an arbitrary menu helper.

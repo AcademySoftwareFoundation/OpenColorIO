@@ -313,8 +313,9 @@ void ColorSpaceMenuParametersImpl::Deleter(ColorSpaceMenuParameters * p)
 std::ostream & operator<<(std::ostream & os, const ColorSpaceMenuParameters & p)
 {
     const auto & impl = dynamic_cast<const ColorSpaceMenuParametersImpl &>(p);
-
+#if OCIO_YAML_SUPPORT
     os << "config: " << (impl.m_config ? impl.m_config->getCacheID() : "missing");
+#endif
     if (!impl.m_role.empty())
     {
         os << ", role: " << impl.m_role;

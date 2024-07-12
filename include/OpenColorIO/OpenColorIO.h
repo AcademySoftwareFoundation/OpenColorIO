@@ -464,6 +464,10 @@ public:
      */
     void serialize(std::ostream & os) const;
 
+    // Currently cacheID depends on YAML output to generate unique ID's, thus to
+    // avoid confusion if the YAML support is turned off, these functions will
+    // be unavailable.
+#if OCIO_YAML_SUPPORT
     /**
      * This will produce a hash of the all colorspace definitions, etc. All external references, 
      * such as files used in FileTransforms, etc., will be incorporated into the cacheID. While 
@@ -477,6 +481,7 @@ public:
      */
     const char * getCacheID() const;
     const char * getCacheID(const ConstContextRcPtr & context) const;
+#endif
 
     // 
     // Resources
@@ -3769,13 +3774,13 @@ public:
     /// Throws for illegal index.
     virtual const char * getBuiltinConfigUIName(size_t configIndex) const = 0;
 
-    /// Get Yaml text of the built-in config at the specified index.
+    /// Creates the built-in config at the specified index and returns a pointer to it.
     /// Throws for illegal index.
-    virtual const char * getBuiltinConfig(size_t configIndex) const = 0;
-    
-    /// Get the Yaml text of the built-in config with the specified name. 
+    virtual ConstConfigRcPtr createBuiltinConfig(size_t configIndex) const = 0;
+
+    /// Creates the built-in config with the specified name and returns a pointer to it.
     /// Throws if the name is not found.
-    virtual const char * getBuiltinConfigByName(const char * configName) const = 0;
+    virtual ConstConfigRcPtr createBuiltinConfigByName(const char* configName) const = 0;
 
     /**
      * @brief Check if a specific built-in config is recommended.

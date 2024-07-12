@@ -360,6 +360,7 @@ bool containsBlockedTransform(const ConstTransformRcPtr & transform)
         return true;
     }
 #endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+    (void)transform; // silence the unused variable warning.
     return false;
 }
 

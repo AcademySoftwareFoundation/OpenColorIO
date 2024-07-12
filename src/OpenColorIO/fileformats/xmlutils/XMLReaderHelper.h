@@ -5,9 +5,11 @@
 #define INCLUDED_OCIO_FILEFORMATS_XMLUTILS_XMLREADERHELPER_H
 
 
-#include <string.h>
-
 #include <OpenColorIO/OpenColorIO.h>
+
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+
+#include <string.h>
 
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "ops/cdl/CDLOpData.h"
@@ -521,5 +523,7 @@ private:
 };
 
 } // namespace OCIO_NAMESPACE
+
+#endif //OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #endif

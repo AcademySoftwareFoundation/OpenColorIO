@@ -85,16 +85,14 @@ void BuiltinConfigRegistryImpl::init() noexcept
     {
         m_builtinConfigs.clear();
         
-#if OCIO_HAS_BUILTIN_YAML_CONFIGS
         CGCONFIG::Register(*this);
         STUDIOCONFIG::Register(*this);
-#endif // OCIO_HAS_BUILTIN_YAML_CONFIGS
     }
 }
 
-void BuiltinConfigRegistryImpl::addBuiltin(const char * name, const char * uiName, const char * const config, bool isRecommended)
+void BuiltinConfigRegistryImpl::addBuiltin(const char * uiName, const char * const config, bool isRecommended, std::function<ConstConfigRcPtr()> creatorFn)
 {
-    BuiltinConfigData data { name, uiName, config, isRecommended };
+    BuiltinConfigData data { uiName, config, isRecommended, creatorFn };
 
     for (auto & builtin : m_builtinConfigs)
     {
@@ -134,24 +132,40 @@ const char * BuiltinConfigRegistryImpl::getBuiltinConfigUIName(size_t configInde
     return m_builtinConfigs[configIndex].m_uiName.c_str();
 }
 
-const char * BuiltinConfigRegistryImpl::getBuiltinConfig(size_t configIndex) const
+ConstConfigRcPtr BuiltinConfigRegistryImpl::createBuiltinConfig(size_t configIndex) const
 {
     if (configIndex >= m_builtinConfigs.size())
     {
         throw Exception(OUT_OF_RANGE_EXCEPTION_TEXT);
     }
 
-    return m_builtinConfigs[configIndex].m_config;
+    auto& builtin = m_builtinConfigs[configIndex];
+
+    if (!builtin.m_creatorFn)
+    {
+        std::ostringstream os;
+        os << "Creator function for the built-in config at index '" << configIndex << " is missing.'";
+        throw Exception(os.str().c_str());
+    }
+    
+    return builtin.m_creatorFn();
 }
 
-const char * BuiltinConfigRegistryImpl::getBuiltinConfigByName(const char * configName) const
+ConstConfigRcPtr BuiltinConfigRegistryImpl::createBuiltinConfigByName(const char* configName) const
 {
     // Search for config name.
     for (auto & builtin : m_builtinConfigs)
     {
         if (Platform::Strcasecmp(configName, builtin.m_name.c_str()) == 0)
         {
-            return builtin.m_config;
+            if (!builtin.m_creatorFn)
+            {
+                std::ostringstream os;
+                os << "Creator function for the built-in config '" << configName << " is missing.'";
+                throw Exception(os.str().c_str());
+            }
+            
+            return builtin.m_creatorFn();
         }
     }
 

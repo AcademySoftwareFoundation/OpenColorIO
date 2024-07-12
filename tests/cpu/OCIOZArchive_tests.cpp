@@ -78,7 +78,7 @@ OCIO_ADD_TEST(OCIOZArchive, is_config_archivable)
     iss.str(CONFIG);
 
     OCIO::ConfigRcPtr cfg;
-    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+    OCIO_REQUIRE_NO_THROW_COND(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy(), OCIO_YAML_SUPPORT);
     // Since a working directory is needed to archive a config, setting a fake working directory 
     // in order to test the search paths and FileTransform source logic.
 #ifdef _WIN32
@@ -248,9 +248,10 @@ OCIO_ADD_TEST(OCIOZArchive, context_test_for_search_paths_and_filetransform_sour
     );
 
     OCIO::ConfigRcPtr cfgWindowsArchive;
-    OCIO_CHECK_NO_THROW(
+    OCIO_REQUIRE_NO_THROW_COND(
         cfgWindowsArchive = OCIO::Config::CreateFromFile(
-            archivePathWindows.c_str())->createEditableCopy());
+            archivePathWindows.c_str())->createEditableCopy(),
+        OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(cfgWindowsArchive->validate());
 
     std::vector<std::string> pathsLinux = { 
@@ -264,9 +265,10 @@ OCIO_ADD_TEST(OCIOZArchive, context_test_for_search_paths_and_filetransform_sour
     );
 
     OCIO::ConfigRcPtr cfgLinuxArchive;
-    OCIO_CHECK_NO_THROW(
+    OCIO_REQUIRE_NO_THROW_COND(
         cfgLinuxArchive = OCIO::Config::CreateFromFile(
-            archivePathLinux.c_str())->createEditableCopy());
+            archivePathLinux.c_str())->createEditableCopy(),
+        OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(cfgLinuxArchive->validate());
 
     //  OCIO will pick up context vars from the environment that runs the test,

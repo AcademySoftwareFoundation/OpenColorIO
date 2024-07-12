@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
 #include <OpenColorIO/OpenColorIO.h>
+
+#if OCIO_YAML_SUPPORT
 
 #ifndef INCLUDED_OCIO_YAML_H
 #define INCLUDED_OCIO_YAML_H
@@ -20,3 +23,4 @@ void Write(std::ostream & ostream, const Config & c);
 } // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_YAML_H
+#endif // OCIO_YAML_SUPPORT

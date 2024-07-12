@@ -2,7 +2,6 @@
 // Copyright Contributors to the OpenColorIO Project.
 #include <OpenColorIO/OpenColorIO.h>
 
-#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 #include <cmath>
 
@@ -28,6 +27,7 @@ static const Chromaticities wht_xy(0.3127,  0.3290);
 const Primaries primaries(red_xy, grn_xy, blu_xy, wht_xy);
 }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 namespace CANON_CLOG2
 {
 auto GenerateLutValues = [](double in) -> float
@@ -46,6 +46,7 @@ auto GenerateLutValues = [](double in) -> float
     return float(out * 0.9);
 };
 }
+
 
 namespace CANON_CLOG3
 {
@@ -69,6 +70,7 @@ auto GenerateLutValues = [](double in) -> float
     return float(out * 0.9);
 };
 }
+#endif
 
 
 namespace CAMERA
@@ -80,7 +82,10 @@ namespace CANON
 void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
 {
     {
-        auto CANON_CLOG2_CGAMUT_to_ACES2065_1_Functor = [](OpRcPtrVec & ops)
+        // FIXME: needs LUT-free implementation
+        std::function<void(OpRcPtrVec& ops)> CANON_CLOG2_CGAMUT_to_ACES2065_1_Functor;
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+        CANON_CLOG2_CGAMUT_to_ACES2065_1_Functor = [](OpRcPtrVec & ops)
         {
             CreateLut(ops, 4096, CANON_CLOG2::GenerateLutValues);
 
@@ -88,16 +93,21 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
                 = build_conversion_matrix(CANON_CGAMUT::primaries, ACES_AP0::primaries, ADAPTATION_CAT02);
             CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
         };
+#endif
 
         registry.addBuiltin("CANON_CLOG2-CGAMUT_to_ACES2065-1",
                             "Convert Canon Log 2 Cinema Gamut to ACES2065-1",
                             CANON_CLOG2_CGAMUT_to_ACES2065_1_Functor);
     }
     {
-        auto CANON_CLOG2_to_Linear_Functor = [](OpRcPtrVec & ops)
+        // FIXME: needs LUT-free implementation
+        std::function<void(OpRcPtrVec& ops)> CANON_CLOG2_to_Linear_Functor;
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+        CANON_CLOG2_to_Linear_Functor = [](OpRcPtrVec & ops)
         {
             CreateLut(ops, 4096, CANON_CLOG2::GenerateLutValues);
         };
+#endif
 
         registry.addBuiltin("CURVE - CANON_CLOG2_to_LINEAR",
                             "Convert Canon Log 2 to linear",
@@ -105,7 +115,10 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
     }
 
     {
-        auto CANON_CLOG3_CGAMUT_to_ACES2065_1_Functor = [](OpRcPtrVec & ops)
+        // FIXME: needs LUT-free implementation
+        std::function<void(OpRcPtrVec& ops)> CANON_CLOG3_CGAMUT_to_ACES2065_1_Functor;
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+        CANON_CLOG3_CGAMUT_to_ACES2065_1_Functor = [](OpRcPtrVec & ops)
         {
             CreateLut(ops, 4096, CANON_CLOG3::GenerateLutValues);
 
@@ -113,16 +126,21 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
                 = build_conversion_matrix(CANON_CGAMUT::primaries, ACES_AP0::primaries, ADAPTATION_CAT02);
             CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
         };
+#endif
 
         registry.addBuiltin("CANON_CLOG3-CGAMUT_to_ACES2065-1",
                             "Convert Canon Log 3 Cinema Gamut to ACES2065-1",
                             CANON_CLOG3_CGAMUT_to_ACES2065_1_Functor);
     }
     {
-        auto CANON_CLOG3_to_Linear_Functor = [](OpRcPtrVec & ops)
+        // FIXME: needs LUT-free implementation
+        std::function<void(OpRcPtrVec& ops)> CANON_CLOG3_to_Linear_Functor;
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+        CANON_CLOG3_to_Linear_Functor = [](OpRcPtrVec & ops)
         {
             CreateLut(ops, 4096, CANON_CLOG3::GenerateLutValues);
         };
+#endif
 
         registry.addBuiltin("CURVE - CANON_CLOG3_to_LINEAR",
                             "Convert Canon Log 3 to linear",
@@ -135,5 +153,3 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
 } // namespace CAMERA
 
 } // namespace OCIO_NAMESPACE
-
-#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

@@ -320,6 +320,7 @@ int main(int argc, const char **argv)
             config->setProcessorCacheFlags(nocache ? OCIO::PROCESSOR_CACHE_OFF 
                                                    : OCIO::PROCESSOR_CACHE_DEFAULT);
 
+#if OCIO_YAML_SUPPORT
             {
                 CustomMeasure m("Create the config identifier:\t\t", iterations);
                 for (unsigned iter = 0; iter < iterations; ++iter)
@@ -329,7 +330,7 @@ int main(int argc, const char **argv)
                     m.pause();
                 }
             }
-
+#endif
             {
                 CustomMeasure m("Create the context identifier:\t\t", iterations);
                 for (unsigned iter = 0; iter < iterations; ++iter)

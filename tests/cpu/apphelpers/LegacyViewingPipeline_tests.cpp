@@ -153,7 +153,7 @@ OCIO_ADD_TEST(LegacyViewingPipeline, processorWithLooks)
     std::istringstream is(category_test_config);
 
     OCIO::ConstConfigRcPtr cfg;
-    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(cfg = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(cfg->validate());
 
     OCIO::DisplayViewTransformRcPtr dt = OCIO::DisplayViewTransform::Create();
@@ -911,7 +911,7 @@ OCIO_ADD_TEST(LegacyViewingPipeline, processorWithNoOpLook)
     std::istringstream is(category_test_config);
 
     OCIO::ConstConfigRcPtr cfg;
-    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(cfg = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(cfg->validate());
 
     OCIO::DisplayViewTransformRcPtr dt = OCIO::DisplayViewTransform::Create();

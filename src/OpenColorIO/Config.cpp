@@ -70,27 +70,6 @@ constexpr double DEFAULT_LUMA_COEFF_R = 0.2126;
 constexpr double DEFAULT_LUMA_COEFF_G = 0.7152;
 constexpr double DEFAULT_LUMA_COEFF_B = 0.0722;
 
-
-constexpr char INTERNAL_RAW_PROFILE[] =
-    "ocio_profile_version: 2\n"
-    "strictparsing: false\n"
-    "roles:\n"
-    "  default: raw\n"
-    "file_rules:\n"
-    "  - !<Rule> {name: Default, colorspace: default}\n"
-    "displays:\n"
-    "  sRGB:\n"
-    "  - !<View> {name: Raw, colorspace: raw}\n"
-    "colorspaces:\n"
-    "  - !<ColorSpace>\n"
-    "      name: raw\n"
-    "      family: raw\n"
-    "      equalitygroup:\n"
-    "      bitdepth: 32f\n"
-    "      isdata: true\n"
-    "      allocation: uniform\n"
-    "      description: 'A raw color space. Conversions to and from this space are no-ops.'\n";
-
 } // anon.
 
 
@@ -1129,10 +1108,26 @@ void Config::deleter(Config* c)
 
 ConstConfigRcPtr Config::CreateRaw()
 {
-    std::istringstream istream;
-    istream.str(INTERNAL_RAW_PROFILE);
+    ConfigRcPtr cfg = Create();
+    cfg->setVersion(2, 0);
+    cfg->setStrictParsingEnabled(false);
+    cfg->setRole("default", "raw");
+    cfg->addDisplayView("sRGB", "Raw", "", "raw", "", "", "");
 
-    return CreateFromStream(istream);
+    // raw color space
+    {
+        auto cs = ColorSpace::Create(REFERENCE_SPACE_SCENE);
+        cs->setBitDepth(BIT_DEPTH_F32);
+        cs->setDescription("A raw color space. Conversions to and from this space are no-ops.");
+        cs->setEncoding("");
+        cs->setEqualityGroup("");
+        cs->setFamily("raw");
+        cs->setName("raw");
+        cs->setIsData(true);
+        cfg->addColorSpace(cs);
+    }
+
+    return cfg;
 }
 
 ConstConfigRcPtr Config::CreateFromEnv()
@@ -1260,11 +1255,7 @@ ConstConfigRcPtr Config::CreateFromBuiltinConfig(const char * configName)
     ConstConfigRcPtr builtinConfig;
     const BuiltinConfigRegistry & reg = BuiltinConfigRegistry::Get();
 
-    // getBuiltinConfigByName will throw if config name not found.
-    const char * builtinConfigStr = reg.getBuiltinConfigByName(builtinConfigName.c_str());
-    std::istringstream iss;
-    iss.str(builtinConfigStr);
-    builtinConfig = Config::CreateFromStream(iss);
+    builtinConfig = reg.createBuiltinConfigByName(builtinConfigName.c_str());
 
     return builtinConfig;
 }
@@ -4865,7 +4856,7 @@ std::ostream& operator<< (std::ostream& os, const Config& config)
 
 ///////////////////////////////////////////////////////////////////////////
 //  CacheID
-
+#if OCIO_YAML_SUPPORT
 const char * Config::getCacheID() const
 {
     return getCacheID(getCurrentContext());
@@ -4885,6 +4876,11 @@ const char * Config::getCacheID(const ConstContextRcPtr & context) const
         return cacheiditer->second.c_str();
     }
 
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // FIXME: Without the YAML representation of the config, the generated
+    // cacheID's will collide a lot! We need to implement a new way to generate
+    // unique ID's that doesn't need YAML.
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // Include the hash of the yaml config serialization
     if(getImpl()->m_cacheidnocontext.empty())
     {
@@ -4938,12 +4934,14 @@ const char * Config::getCacheID(const ConstContextRcPtr & context) const
     getImpl()->m_cacheids[contextcacheid] = getImpl()->m_cacheidnocontext + ":" + fileReferencesFastHash;
     return getImpl()->m_cacheids[contextcacheid].c_str();
 }
+#endif // OCIO_YAML_SUPPORT
 
 ///////////////////////////////////////////////////////////////////////////
 //  Serialization
 
 void Config::serialize(std::ostream& os) const
 {
+#if OCIO_YAML_SUPPORT
     try
     {
         getImpl()->checkVersionConsistency();
@@ -4956,6 +4954,10 @@ void Config::serialize(std::ostream& os) const
         error << "Error building YAML: " << e.what();
         throw Exception(error.str().c_str());
     }
+#else
+    (void)os; // silence the unused variable warning.
+    throw Exception("YAML support is turned off");
+#endif
 }
 
 ProcessorCacheFlags Config::getProcessorCacheFlags() const noexcept
@@ -5175,6 +5177,7 @@ void Config::Impl::getAllInternalTransforms(ConstTransformVec & transformVec) co
 
 ConstConfigRcPtr Config::Impl::Read(std::istream & istream, const char * filename)
 {
+#if OCIO_YAML_SUPPORT
     ConfigRcPtr config = Config::Create();
     OCIOYaml::Read(istream, config, filename);
 
@@ -5187,10 +5190,18 @@ ConstConfigRcPtr Config::Impl::Read(std::istream & istream, const char * filenam
     config->getImpl()->refreshActiveColorSpaces();
 
     return config;
+#else
+    (void)istream;  // silence the unused variable warnings.
+    (void)filename; 
+
+    throw Exception("YAML support is turned off.");
+    return nullptr;
+#endif
 }
 
 ConstConfigRcPtr Config::Impl::Read(std::istream & istream, ConfigIOProxyRcPtr ciop)
 {
+#if OCIO_YAML_SUPPORT
     ConfigRcPtr config = Config::Create();
     // Passing special string for the file path to enable the parser to provide a more
     // meaningful error message if a problem is encountered.  (The working directory is not
@@ -5209,6 +5220,13 @@ ConstConfigRcPtr Config::Impl::Read(std::istream & istream, ConfigIOProxyRcPtr c
     config->setConfigIOProxy(ciop);
 
     return config;
+#else
+    (void)istream;  // silence the unused variable warnings.
+    (void)ciop;
+
+    throw Exception("YAML support is turned off.");
+    return nullptr;
+#endif
 }
 
 void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) const

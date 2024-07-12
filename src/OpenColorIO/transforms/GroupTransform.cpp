@@ -158,6 +158,9 @@ void GroupTransformImpl::write(const ConstConfigRcPtr& config,
     const char* formatName,
     std::ostream& os) const
 {
+    (void)config; // silence the unused variable warning.
+    (void)formatName; 
+    (void)os; 
     throw Exception("LUT and File-Transform support is turned OFF.");
 }
 
@@ -168,11 +171,13 @@ int GroupTransform::GetNumWriteFormats() noexcept
 
 const char* GroupTransform::GetFormatNameByIndex(int index) noexcept
 {
+    (void)index; // silence the unused variable warning.
     return nullptr;
 }
 
 const char* GroupTransform::GetFormatExtensionByIndex(int index) noexcept
 {
+    (void)index; // silence the unused variable warning.
     return nullptr;
 }
 #endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT

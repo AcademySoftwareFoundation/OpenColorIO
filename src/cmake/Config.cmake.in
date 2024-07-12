@@ -22,7 +22,7 @@ if (NOT @BUILD_SHARED_LIBS@) # NOT @BUILD_SHARED_LIBS@
     # Required dependencies 
     ########################
 
-    if (NOT TARGET expat::expat)
+    if (@OCIO_LUT_AND_FILETRANSFORM_SUPPORT@ AND NOT TARGET expat::expat)
         find_dependency(expat @expat_VERSION@)
     endif()
 
@@ -34,14 +34,14 @@ if (NOT @BUILD_SHARED_LIBS@) # NOT @BUILD_SHARED_LIBS@
         find_dependency(pystring @pystring_VERSION@)
     endif()
 
-    if (NOT TARGET yaml-cpp::yaml-cpp)
+    if (@OCIO_YAML_SUPPORT@ AND NOT TARGET yaml-cpp::yaml-cpp)
         find_dependency(yaml-cpp @yaml-cpp_VERSION@)
         if (TARGET yaml-cpp AND NOT TARGET yaml-cpp::yaml-cpp)
             add_library(yaml-cpp::yaml-cpp ALIAS yaml-cpp)
         endif()
     endif()
 
-    if (NOT TARGET ZLIB::ZLIB)
+    if (@OCIO_ARCHIVE_SUPPORT@ AND NOT TARGET ZLIB::ZLIB)
         # ZLIB_VERSION is available starting CMake 3.26+.
         # ZLIB_VERSION_STRING is still available for backward compatibility.
         # See https://cmake.org/cmake/help/git-stage/module/FindZLIB.html
@@ -53,7 +53,7 @@ if (NOT @BUILD_SHARED_LIBS@) # NOT @BUILD_SHARED_LIBS@
         endif()
     endif()
 
-    if (NOT TARGET MINIZIP::minizip-ng)
+    if (@OCIO_ARCHIVE_SUPPORT@ AND NOT TARGET MINIZIP::minizip-ng)
         find_dependency(minizip-ng @minizip-ng_VERSION@)
     endif()
 

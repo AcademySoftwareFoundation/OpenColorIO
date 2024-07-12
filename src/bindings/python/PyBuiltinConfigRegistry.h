@@ -31,14 +31,14 @@ public:
         return BuiltinConfigRegistry::Get().getBuiltinConfigUIName(configIndex);
     }
 
-    const char * getBuiltinConfig(size_t configIndex) const
+    ConstConfigRcPtr createBuiltinConfig(size_t configIndex) const
     {
-        return BuiltinConfigRegistry::Get().getBuiltinConfig(configIndex);
+        return BuiltinConfigRegistry::Get().createBuiltinConfig(configIndex);
     }
 
-    const char * getBuiltinConfigByName(const char * configName) const
+    ConstConfigRcPtr createBuiltinConfigByName(const char* configName) const
     {
-        return BuiltinConfigRegistry::Get().getBuiltinConfigByName(configName);
+        return BuiltinConfigRegistry::Get().createBuiltinConfigByName(configName);
     }
 
     bool isBuiltinConfigRecommended(size_t configIndex) const

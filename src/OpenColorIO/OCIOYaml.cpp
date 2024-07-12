@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+
+#include <OpenColorIO/OpenColorIO.h>
+
+#if OCIO_YAML_SUPPORT
+
 #include <cstring>
 #include <unordered_set>
 
 #include <pystring.h>
-
-#include <OpenColorIO/OpenColorIO.h>
 
 #include "Display.h"
 #include "FileRules.h"
@@ -5141,3 +5144,4 @@ void OCIOYaml::Write(std::ostream & ostream, const Config & config)
 }
 
 } // namespace OCIO_NAMESPACE
+#endif // OCIO_YAML_SUPPORT

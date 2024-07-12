@@ -79,7 +79,7 @@ public:
 #else
     // When the LUT support is turned off, textures are not needed anymore thus
     // these functions become NO-OP.
-    void allocateAllTextures(unsigned startIndex) { ; }
+    void allocateAllTextures(unsigned startIndex) { (void)startIndex; }
     void useAllTextures() { ; }
 #endif
 

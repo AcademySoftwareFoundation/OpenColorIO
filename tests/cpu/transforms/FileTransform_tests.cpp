@@ -321,7 +321,7 @@ OCIO_ADD_TEST(FileTransform, validate)
 OCIO_ADD_TEST(FileTransform, interpolation_validity)
 {
     OCIO::ConfigRcPtr cfg;
-    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateRaw()->createEditableCopy());
+    OCIO_REQUIRE_NO_THROW(cfg = OCIO::Config::CreateRaw()->createEditableCopy());
     cfg->setSearchPath(OCIO::GetTestFilesDir().c_str());
     OCIO_CHECK_NO_THROW(cfg->validate());
 
@@ -479,7 +479,7 @@ OCIO_ADD_TEST(FileTransform, context_variables)
             iss.str(CONFIG);
 
             OCIO::ConstConfigRcPtr cfg;
-            OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss));
+            OCIO_REQUIRE_NO_THROW_COND(cfg = OCIO::Config::CreateFromStream(iss), OCIO_YAML_SUPPORT);
             OCIO_CHECK_NO_THROW(cfg->validate());
 
             ctx = cfg->getCurrentContext()->createEditableCopy();
@@ -541,7 +541,7 @@ OCIO_ADD_TEST(FileTransform, cc_file_with_different_file_extension)
         iss.str(CONFIG);
 
         OCIO::ConstConfigRcPtr cfg;
-        OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss));
+        OCIO_REQUIRE_NO_THROW_COND(cfg = OCIO::Config::CreateFromStream(iss), OCIO_YAML_SUPPORT);
         OCIO_CHECK_NO_THROW(cfg->validate());
 
 
@@ -559,7 +559,7 @@ OCIO_ADD_TEST(FileTransform, cc_file_with_different_file_extension)
         iss.str(CONFIG);
 
         OCIO::ConstConfigRcPtr cfg;
-        OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss));
+        OCIO_REQUIRE_NO_THROW_COND(cfg = OCIO::Config::CreateFromStream(iss), OCIO_YAML_SUPPORT);
         OCIO_CHECK_NO_THROW(cfg->validate());
 
 

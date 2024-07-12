@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-3-Clause
+// SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <algorithm>
@@ -365,8 +365,9 @@ int ReplaceInverseLuts(OpRcPtrVec & opVec)
     {
         ConstOpRcPtr op = opVec[i];
         auto opData = op->data();
-        const auto type = opData->getType();
 #if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+        const auto type = opData->getType();
+
         if (type == OpData::Lut1DType)
         {
             auto lutData = OCIO_DYNAMIC_POINTER_CAST<const Lut1DOpData>(opData);
@@ -760,6 +761,8 @@ void OpRcPtrVec::optimizeForBitdepth(const BitDepth & inBitDepth,
         {
             OptimizeSeparablePrefix(*this, inBitDepth);
         }
+#else
+        (void)oFlags; // silence the unused variable warning.
 #endif 
     }
 }

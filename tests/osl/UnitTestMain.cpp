@@ -32,11 +32,13 @@ public:
 
     OCIO::GpuShaderCreatorRcPtr clone() const override { return OCIO::GpuShaderCreatorRcPtr(); } 
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     void setTextureMaxWidth(unsigned /*maxWidth*/) override {}
     unsigned getTextureMaxWidth() const noexcept override { return 0; }
 
     void setAllowTexture1D(bool /*allowed*/) override {}
     bool getAllowTexture1D() const noexcept override { return true; }
+#endif
 
     bool addUniform(const char * /*name*/, const DoubleGetter & /*getDouble*/) override
     {
@@ -70,6 +72,7 @@ public:
         return false; 
     }
 
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     void addTexture(const char * /*textureName*/,
                     const char * /*samplerName*/,
                     unsigned /*width*/, 
@@ -90,6 +93,7 @@ public:
     {
         throw OCIO::Exception("Unsupported by OSL unit tests.");
     }
+#endif
 
     void createShaderText(const char * shaderDeclarations,
                           const char * shaderHelperMethods,

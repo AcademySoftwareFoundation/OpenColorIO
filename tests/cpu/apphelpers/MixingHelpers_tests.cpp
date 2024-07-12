@@ -20,7 +20,7 @@ OCIO_ADD_TEST(MixingColorSpaceManager, basic)
     std::istringstream is(category_test_config);
 
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::MixingColorSpaceManagerRcPtr mixingHelper;
@@ -142,7 +142,7 @@ OCIO_ADD_TEST(MixingColorSpaceManager, color_picker_role)
     std::istringstream is(category_test_config);
 
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::MixingColorSpaceManagerRcPtr mixingHelper;
@@ -236,7 +236,7 @@ OCIO_ADD_TEST(MixingSlider, basic)
     std::istringstream is(category_test_config);
 
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::MixingColorSpaceManagerRcPtr mixingHelper;
@@ -379,7 +379,7 @@ OCIO_ADD_TEST(MixingSlider, color_picker_role)
     std::istringstream is(category_test_config);
 
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::MixingColorSpaceManagerRcPtr mixingHelper;

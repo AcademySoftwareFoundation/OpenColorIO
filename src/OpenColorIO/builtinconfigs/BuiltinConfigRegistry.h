@@ -15,11 +15,11 @@ class BuiltinConfigRegistryImpl : public BuiltinConfigRegistry
 {
 struct BuiltinConfigData
 {
-    BuiltinConfigData(const char * name, const char * uiName, const char * config, bool isRecommended)
-        : m_config(config ? config : "")
-        , m_name(name ? name : "")
+    BuiltinConfigData(const char * name, const char * uiName, bool isRecommended, std::function<ConstConfigRcPtr()> creatorFn)
+        : m_name(name ? name : "")
         , m_uiName(uiName ? uiName : "")
         , m_isRecommended(isRecommended)
+        , m_creatorFn(creatorFn)
     {
     }
 
@@ -28,11 +28,10 @@ struct BuiltinConfigData
     BuiltinConfigData(BuiltinConfigData &&) = default;
     BuiltinConfigData & operator= (const BuiltinConfigData &) = default;
 
-    // m_config is accessing a global static pointer so there is not need to manage it.
-    const char * m_config;
     std::string m_name;
     std::string m_uiName;
     bool m_isRecommended;
+    std::function<ConstConfigRcPtr()> m_creatorFn;
 };
 using BuiltinConfigs = std::vector<BuiltinConfigData>;
 
@@ -64,10 +63,10 @@ public:
      * 
      * @param name Name for the built-in config.
      * @param uiName User-friendly config name.
-     * @param config Config as string
      * @param isRecommended Is the built-in config recommended or not.
+     * @param creatorFn Pointer to the function which will create and return the config object upon request.
      */
-    void addBuiltin(const char * name, const char * uiName, const char * config, bool isRecommended);
+    void addBuiltin(const char * uiName, const char * config, bool isRecommended, std::function<ConstConfigRcPtr()> creatorFn);
 
     /// Get the number of built-in configs available.
     size_t getNumBuiltinConfigs() const noexcept override;
@@ -81,13 +80,13 @@ public:
     /// Throws for illegal index.
     const char * getBuiltinConfigUIName(size_t configIndex) const override;
 
-    /// Get Yaml text of the built-in config at the specified index.
+    /// Creates the built-in config at the specified index and returns a pointer to it.
     /// Throws for illegal index.
-    const char * getBuiltinConfig(size_t configIndex) const override;
+    ConstConfigRcPtr createBuiltinConfig(size_t configIndex) const override;
 
-    /// Get the Yaml text of the built-in config with the specified name. 
+    /// Creates the built-in config with the specified name and returns a pointer to it.
     /// Throws if the name is not found.
-    const char * getBuiltinConfigByName(const char * configName) const override;
+    ConstConfigRcPtr createBuiltinConfigByName(const char* configName) const override;
 
     /// Check if a specific built-in config is recommended.
     /// Throws for illegal index.

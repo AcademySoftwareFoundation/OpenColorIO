@@ -316,7 +316,7 @@ OCIO_ADD_TEST(FileFormatResolveCube, bake_1d_shaper)
 
     std::istringstream is(myProfile);
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_REQUIRE_ASSERT(config);
 
     {

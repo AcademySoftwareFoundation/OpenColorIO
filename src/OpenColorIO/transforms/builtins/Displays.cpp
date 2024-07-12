@@ -235,12 +235,15 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
                             CIE_XYZ_D65_to_DisplayP3_Functor);
     }
 
-#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
     {
-        auto ST2084_to_Linear_Functor = [](OpRcPtrVec & ops)
+        // FIXME: needs LUT-free implementation
+        std::function<void(OpRcPtrVec& ops)> ST2084_to_Linear_Functor;
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+        ST2084_to_Linear_Functor = [](OpRcPtrVec & ops)
         {
             ST_2084::GeneratePQToLinearOps(ops);
         };
+#endif
 
         registry.addBuiltin("CURVE - ST-2084_to_LINEAR",
                             "Convert SMPTE ST-2084 (PQ) full-range to linear nits/100",
@@ -248,10 +251,14 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
     }
 
     {
-        auto Linear_to_ST2084_Functor = [](OpRcPtrVec & ops)
+        // FIXME: needs LUT-free implementation
+        std::function<void(OpRcPtrVec& ops)> Linear_to_ST2084_Functor;
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+        Linear_to_ST2084_Functor = [](OpRcPtrVec & ops)
         {
             ST_2084::GenerateLinearToPQOps(ops);
         };
+#endif
 
         registry.addBuiltin("CURVE - LINEAR_to_ST-2084",
                             "Convert linear nits/100 to SMPTE ST-2084 (PQ) full-range",
@@ -259,7 +266,10 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
     }
 
     {
-        auto CIE_XYZ_D65_to_REC2100_PQ_Functor = [](OpRcPtrVec & ops)
+        // FIXME: needs LUT-free implementation
+        std::function<void(OpRcPtrVec& ops)> CIE_XYZ_D65_to_REC2100_PQ_Functor;
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+        CIE_XYZ_D65_to_REC2100_PQ_Functor = [](OpRcPtrVec & ops)
         {
             MatrixOpData::MatrixArrayPtr matrix
                 = build_conversion_matrix_from_XYZ_D65(REC2020::primaries, ADAPTATION_NONE);
@@ -267,6 +277,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
 
             ST_2084::GenerateLinearToPQOps(ops);
         };
+#endif
 
         registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_REC.2100-PQ", 
                             "Convert CIE XYZ (D65 white) to Rec.2100-PQ",
@@ -274,7 +285,10 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
     }
 
     {
-        auto CIE_XYZ_D65_to_ST2084_P3_D65_Functor = [](OpRcPtrVec & ops)
+        // FIXME: needs LUT-free implementation
+        std::function<void(OpRcPtrVec& ops)> CIE_XYZ_D65_to_ST2084_P3_D65_Functor;
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+        CIE_XYZ_D65_to_ST2084_P3_D65_Functor = [](OpRcPtrVec & ops)
         {
             MatrixOpData::MatrixArrayPtr matrix
                 = build_conversion_matrix_from_XYZ_D65(P3_D65::primaries, ADAPTATION_NONE);
@@ -282,6 +296,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
 
             ST_2084::GenerateLinearToPQOps(ops);
         };
+#endif
 
         registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65", 
                             "Convert CIE XYZ (D65 white) to ST-2084 (PQ), P3-D65 primaries",
@@ -289,7 +304,10 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
     }
 
     {
-        auto CIE_XYZ_D65_to_REC2100_HLG_1000nit_Functor = [](OpRcPtrVec & ops)
+        // FIXME: needs LUT-free implementation
+        std::function<void(OpRcPtrVec& ops)> CIE_XYZ_D65_to_REC2100_HLG_1000nit_Functor;
+#if OCIO_LUT_AND_FILETRANSFORM_SUPPORT
+        CIE_XYZ_D65_to_REC2100_HLG_1000nit_Functor = [](OpRcPtrVec & ops)
         {
             MatrixOpData::MatrixArrayPtr matrix
                 = build_conversion_matrix_from_XYZ_D65(REC2020::primaries, ADAPTATION_NONE);
@@ -335,12 +353,12 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
 
             CreateHalfLut(ops, GenerateLutValues);
         };
+#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
         registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_REC.2100-HLG-1000nit", 
                             "Convert CIE XYZ (D65 white) to Rec.2100-HLG, 1000 nit",
                             CIE_XYZ_D65_to_REC2100_HLG_1000nit_Functor);
     }
-#endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 
 }
 

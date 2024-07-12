@@ -236,11 +236,12 @@ OCIO_ADD_TEST(ViewingRules, config_io)
 
     // Save config and load back.
     std::ostringstream oss;
-    oss << *config.get();
+    OCIO_REQUIRE_NO_THROW_COND(oss << *config.get(), OCIO_YAML_SUPPORT);
     auto configStr = oss.str();
     std::istringstream back;
     back.str(configStr);
-    auto configBack = OCIO::Config::CreateFromStream(back);
+    OCIO::ConstConfigRcPtr configBack;
+    OCIO_REQUIRE_NO_THROW_COND(configBack = OCIO::Config::CreateFromStream(back), OCIO_YAML_SUPPORT);
 
     // Verify rules have been loaded.
     auto vr = configBack->getViewingRules();
@@ -395,7 +396,7 @@ colorspaces:
 
     std::istringstream is(SIMPLE_CONFIG);
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
 
     // Check 2 rules of 2 non-existing display/views.

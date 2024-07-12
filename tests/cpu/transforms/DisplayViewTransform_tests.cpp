@@ -479,7 +479,7 @@ named_transforms:
     is.str(CONFIG);
 
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
 
     auto dt = OCIO::DisplayViewTransform::Create();
@@ -1018,7 +1018,7 @@ colorspaces:
     std::istringstream is;
     is.str(SIMPLE_CONFIG);
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
 
     OCIO::ConstColorSpaceRcPtr cs = config->getColorSpace("test");
     OCIO_REQUIRE_ASSERT(cs);
@@ -1096,7 +1096,7 @@ colorspaces:
     is.str(CONFIG);
 
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
 
     // Create a display transform using a view that use a view transform and a scene-referred
@@ -1427,7 +1427,7 @@ colorspaces:
     OCIO::ContextRcPtr usedContextVars = OCIO::Context::Create();
 
     OCIO::ConfigRcPtr cfg;
-    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    OCIO_REQUIRE_NO_THROW_COND(cfg = OCIO::Config::CreateFromStream(is)->createEditableCopy(), OCIO_YAML_SUPPORT);
     cfg->setSearchPath(OCIO::GetTestFilesDir().c_str());
     OCIO_CHECK_NO_THROW(cfg->validate());
 

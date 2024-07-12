@@ -191,7 +191,7 @@ OCIO_ADD_TEST(Caching, processor_cache)
         iss.str(CONFIG);
 
         OCIO::ConstConfigRcPtr config;
-        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+        OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(iss), OCIO_YAML_SUPPORT);
 
         // Creating a editable config to clear the processor cache later in the test.
         OCIO::ConfigRcPtr cfg = config->createEditableCopy();

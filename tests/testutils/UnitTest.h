@@ -231,38 +231,78 @@ bool StringFloatVecClose(std::string value, std::string expected, float eps);
 
 #define OCIO_CHECK_STR_FLOAT_VEC_CLOSE(x,y,tol) OCIO_CHECK_STR_FLOAT_VEC_CLOSE_FROM(x,y,tol,__LINE__)
 
-/// Check that an exception E is thrown and that what() contains W
-/// When a function can throw different exceptions this can be used
-/// to verify that the right one is thrown.
-#define OCIO_CHECK_THROW_WHAT(S, E, W)                                  \
+// Check that an exception E is thrown and that what() contains W. When a
+// function can throw different exceptions this can be used to verify that the
+// right one is thrown. If condition is false, it marks the test skipped instead of
+// failed. 
+#define OCIO_CHECK_THROW_WHAT(S, E, W) OCIO_CHECK_THROW_WHAT_COND(S, E, W, true)                       
+#define OCIO_CHECK_THROW_WHAT_COND(S, E, W, condition)                  \
     try { S; throw "throwanything"; } catch (E const& ex) {             \
         const std::string what(ex.what());                              \
         if (std::string(W).empty() || what.empty()                      \
                 || what.find(W) == std::string::npos) {                 \
+            if(!condition)                                              \
+                throw SkipException{};                                  \
             std::cout << __FILE__ << ":" << __LINE__ << ":\n"           \
             << "FAILED: " << FIELD_STR(E) << " was thrown with \""      \
             << what <<  "\". Expecting to contain \"" << W << "\"\n";   \
             ++unit_test_failures;                                       \
         }                                                               \
     } catch (...) {                                                     \
+        if(!condition)                                                  \
+            throw SkipException{};                                      \
         std::cout << __FILE__ << ":" << __LINE__ << ":\n"               \
         << "FAILED: " << FIELD_STR(E) << " is expected to be thrown\n"; \
         ++unit_test_failures; }
 
+// Expects no throw. If the condition is true, fails the test if it throws but
+// continues. If the condition is false, it'll mark the test skipped instead of
+// failed.
 #define OCIO_CHECK_NO_THROW(S) OCIO_CHECK_NO_THROW_FROM(S, __LINE__)
-
-#define OCIO_CHECK_NO_THROW_FROM(S, line)                               \
+#define OCIO_CHECK_NO_THROW_COND(S, condition) OCIO_CHECK_NO_THROW_FROM_COND(S, __LINE__, condition)
+#define OCIO_CHECK_NO_THROW_FROM(S, line) OCIO_CHECK_NO_THROW_FROM_COND(S, line, true)
+#define OCIO_CHECK_NO_THROW_FROM_COND(S, line, condition)               \
     try {                                                               \
         S;                                                              \
     } catch (std::exception & ex ) {                                    \
+        if(!condition)                                                  \
+            throw SkipException{};                                      \
         std::cout << __FILE__ << ":" << line << ":\n"                   \
             << "FAILED: exception thrown from " << FIELD_STR(S)         \
             << ": \"" << ex.what() << "\"\n";                           \
         ++unit_test_failures;                                           \
     } catch (...) {                                                     \
+        if(!condition)                                                  \
+            throw SkipException{};                                      \
         std::cout << __FILE__ << ":" << line << ":\n"                   \
         << "FAILED: exception thrown from " << FIELD_STR(S) <<"\n";     \
         ++unit_test_failures; }
+
+// Expects no throw. If the condition is true, fails the test if it throws AND
+// DOES NOT CONTINUE. If the condition is false, it'll mark the test skipped
+// instead of failed.
+#define OCIO_REQUIRE_NO_THROW(S) OCIO_REQUIRE_NO_THROW_FROM(S, __LINE__)
+#define OCIO_REQUIRE_NO_THROW_COND(S, condition) OCIO_REQUIRE_NO_THROW_FROM_COND(S, __LINE__, condition)
+#define OCIO_REQUIRE_NO_THROW_FROM(S, line) OCIO_REQUIRE_NO_THROW_FROM_COND(S, line, true)
+#define OCIO_REQUIRE_NO_THROW_FROM_COND(S, line, condition)             \
+    try {                                                               \
+        S;                                                              \
+    } catch (std::exception & ex ) {                                    \
+        if(!condition)                                                  \
+            throw SkipException{};                                      \
+        std::stringstream ss;                                           \
+        ss << __FILE__ << ":" << line << ":\n"                          \
+            << "FAILED: exception thrown from " << FIELD_STR(S)         \
+            << ": \"" << ex.what() << "\"\n";                           \
+        throw std::runtime_error(ss.str());                             \
+    } catch (...) {                                                     \
+        if(!condition)                                                  \
+            throw SkipException{};                                      \
+        std::stringstream ss;                                           \
+        ss << __FILE__ << ":" << line << ":\n"                          \
+        << "FAILED: exception thrown from " << FIELD_STR(S) <<"\n";     \
+        throw std::runtime_error(ss.str()); }
+
 
 // Note: Add a SonarCloud tag to suppress all warnings for the following method.
 #define OCIO_ADD_TEST(group, name)                                      \

@@ -774,7 +774,7 @@ OCIO_ADD_TEST(CPUProcessor, with_several_ops)
         is.str(str);
 
         OCIO::ConstConfigRcPtr config;
-        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
         OCIO_CHECK_NO_THROW(config->validate());
 
         OCIO::ConstProcessorRcPtr processor;
@@ -940,7 +940,7 @@ OCIO_ADD_TEST(CPUProcessor, with_several_ops)
         is.str(str);
 
         OCIO::ConstConfigRcPtr config;
-        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
         OCIO_CHECK_NO_THROW(config->validate());
 
         OCIO::ConstProcessorRcPtr processor;
@@ -1033,7 +1033,7 @@ OCIO_ADD_TEST(CPUProcessor, with_several_ops)
         is.str(str);
 
         OCIO::ConstConfigRcPtr config;
-        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
         OCIO_CHECK_NO_THROW(config->validate());
 
         OCIO::ConstProcessorRcPtr processor;
@@ -1123,7 +1123,7 @@ OCIO_ADD_TEST(CPUProcessor, image_desc)
     is.str(str);
 
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO::ConstProcessorRcPtr processor;

@@ -25,7 +25,7 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
         all_names = []
         for name in self.REGISTRY:
             self.assertIsInstance(name, STRING_TYPES)
-            self.assertIsInstance(self.REGISTRY[name], STRING_TYPES)
+            self.assertIsInstance(self.REGISTRY[name], OCIO.Config)
             all_names.append(name)
         
         # All names were iterated over, and __len__ and list() behave.

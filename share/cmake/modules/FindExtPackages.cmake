@@ -54,13 +54,6 @@ message(STATUS "Checking for mandatory dependencies...")
 
 
 
-# yaml-cpp
-# https://github.com/jbeder/yaml-cpp
-ocio_handle_dependency(  yaml-cpp REQUIRED ALLOW_INSTALL
-                         MIN_VERSION 0.6.3
-                         RECOMMENDED_VERSION 0.7.0
-                         RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
-
 # pystring
 # https://github.com/imageworks/pystring
 ocio_handle_dependency(  pystring REQUIRED ALLOW_INSTALL
@@ -84,6 +77,15 @@ ocio_handle_dependency(  Imath REQUIRED ALLOW_INSTALL
 ###############################################################################
 message(STATUS "")
 message(STATUS "Checking for optional dependencies...")
+
+if(OCIO_YAML_SUPPORT)
+	# yaml-cpp
+	# https://github.com/jbeder/yaml-cpp
+	ocio_handle_dependency(  yaml-cpp REQUIRED ALLOW_INSTALL
+							 MIN_VERSION 0.6.3
+							 RECOMMENDED_VERSION 0.7.0
+							 RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
+endif()
 
 if(OCIO_LUT_AND_FILETRANSFORM_SUPPORT)
     # expat

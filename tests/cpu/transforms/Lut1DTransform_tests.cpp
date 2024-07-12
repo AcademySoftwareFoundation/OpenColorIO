@@ -147,7 +147,7 @@ OCIO_ADD_TEST(Lut1DTransform, non_monotonic)
 
     OCIO_CHECK_NO_THROW(lut->validate());
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateRaw());
+    OCIO_REQUIRE_NO_THROW(config = OCIO::Config::CreateRaw());
 
     // Processor from forward LUT.
     auto proc = config->getProcessor(lut);

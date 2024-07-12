@@ -29,6 +29,7 @@
 // Optional features that can be turned on/off at compile-time.
 #cmakedefine01  OCIO_LUT_AND_FILETRANSFORM_SUPPORT
 #cmakedefine01  OCIO_ARCHIVE_SUPPORT
+#cmakedefine01  OCIO_YAML_SUPPORT
 
 // Highlight deprecated methods or classes.
 #if defined(_MSC_VER)

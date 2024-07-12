@@ -383,7 +383,7 @@ named_transforms:
     iss.str(Config);
 
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(iss), OCIO_YAML_SUPPORT);
 
     OCIO::ConstContextRcPtr context;
     OCIO_CHECK_NO_THROW(context = config->getCurrentContext());
@@ -1136,7 +1136,7 @@ colorspaces:
         is.str(configStr);
 
         OCIO::ConstConfigRcPtr config;
-        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
         OCIO_CHECK_NO_THROW(config->validate());
 
         OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(), 2);
@@ -1210,7 +1210,7 @@ colorspaces:
         is.str(configStr);
 
         OCIO::ConstConfigRcPtr config;
-        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
         OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
                               "ColorSpaceTransform: empty destination color space name");
     }
@@ -1280,7 +1280,7 @@ named_transforms:
     is.str(configStr);
 
     OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
 }
 #endif // OCIO_LUT_AND_FILETRANSFORM_SUPPORT
@@ -1384,7 +1384,7 @@ OCIO_ADD_TEST(Config, inactive_named_transforms)
     is.str(configStr);
 
     OCIO::ConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is)->createEditableCopy(), OCIO_YAML_SUPPORT);
     OCIO_REQUIRE_ASSERT(config);
     OCIO_CHECK_NO_THROW(config->validate());
 
@@ -1510,7 +1510,7 @@ OCIO_ADD_TEST(Config, inactive_named_transform_precedence)
     is.str(configStr);
 
     OCIO::ConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is)->createEditableCopy(), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_INACTIVE), 1);
@@ -1528,7 +1528,7 @@ OCIO_ADD_TEST(Config, inactive_named_transform_precedence)
     InactiveCSGuard guard;
 
     is.str(configStr);
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(is)->createEditableCopy(), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
 
     OCIO_REQUIRE_EQUAL(config->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_INACTIVE), 2);

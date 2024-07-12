@@ -28,7 +28,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, basic)
     std::istringstream is(category_test_config);
 
     OCIO::ConstConfigRcPtr cfg;
-    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(cfg = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(cfg->validate());
 
     //
@@ -327,7 +327,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, display_view_without_look)
     std::istringstream is(category_test_config);
 
     OCIO::ConstConfigRcPtr cfg;
-    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(is));
+    OCIO_REQUIRE_NO_THROW_COND(cfg = OCIO::Config::CreateFromStream(is), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(cfg->validate());
 
     OCIO::ConstProcessorRcPtr processor;
@@ -430,7 +430,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, active_display_view)
     std::istringstream is(category_test_config);
 
     OCIO::ConfigRcPtr cfg;
-    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    OCIO_REQUIRE_NO_THROW_COND(cfg = OCIO::Config::CreateFromStream(is)->createEditableCopy(), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(cfg->validate());
 
     // Step 1 - Check the current status.
@@ -512,7 +512,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, active_display_view)
 
         // Grab the envvar value.
         is.seekg(std::ios_base::beg);
-        OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+        OCIO_REQUIRE_NO_THROW_COND(cfg = OCIO::Config::CreateFromStream(is)->createEditableCopy(), OCIO_YAML_SUPPORT);
 
         OCIO_REQUIRE_EQUAL(cfg->getNumDisplays(), 1);
         OCIO_CHECK_EQUAL(cfg->getDisplay(0), std::string("DISP_1"));
@@ -538,7 +538,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, active_display_view)
 
         // Grab the envvar value.
         is.seekg(std::ios_base::beg);
-        OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+        OCIO_REQUIRE_NO_THROW_COND(cfg = OCIO::Config::CreateFromStream(is)->createEditableCopy(), OCIO_YAML_SUPPORT);
 
         OCIO_REQUIRE_EQUAL(cfg->getNumDisplays(), 2);
         OCIO_CHECK_EQUAL(cfg->getDisplay(0), std::string("DISP_1"));
@@ -600,7 +600,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, remove_display_view)
     iss.str(CONFIG);
 
     OCIO::ConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+    OCIO_REQUIRE_NO_THROW_COND(config = OCIO::Config::CreateFromStream(iss)->createEditableCopy(), OCIO_YAML_SUPPORT);
     OCIO_CHECK_NO_THROW(config->validate());
     OCIO_CHECK_EQUAL(config->getNumViews("disp1"), 4);
 

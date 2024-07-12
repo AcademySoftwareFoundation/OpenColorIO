@@ -34,10 +34,13 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
             sampleicc::sampleicc
             unittest_data
             utils::strings
-            ${YAML_CPP_LIBRARIES}
             testutils
             xxHash
     )
+
+	if(OCIO_YAML_SUPPORT)
+        target_link_libraries(${TEST_BINARY} PRIVATE ${YAML_CPP_LIBRARIES})
+    endif()
 
     if(OCIO_LUT_AND_FILETRANSFORM_SUPPORT)
         target_link_libraries(${TEST_BINARY} PRIVATE expat::expat)

@@ -17,8 +17,9 @@ OCIO_ADD_TEST(SharedViews, basic)
     config->setMajorVersion(1);
     OCIO_CHECK_NO_THROW(config->addSharedView("shared1", "", "colorspace", "", "", ""));
     std::ostringstream oss;
-    OCIO_CHECK_THROW_WHAT(config->serialize(oss), OCIO::Exception,
-                          "Only version 2 (or higher) can have shared views");
+    OCIO_CHECK_THROW_WHAT_COND(config->serialize(oss), OCIO::Exception,
+                          "Only version 2 (or higher) can have shared views",
+                          OCIO_YAML_SUPPORT);
 
     // Using a v2 config.
     config = OCIO::Config::CreateRaw()->createEditableCopy();

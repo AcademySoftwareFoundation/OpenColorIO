@@ -351,7 +351,9 @@ MixingSlider & MixingColorSpaceManagerImpl::getSlider(float sliderMixingMinEdge,
 
 std::ostream & MixingColorSpaceManagerImpl::serialize(std::ostream & os) const
 {
+#if OCIO_YAML_SUPPORT
     os << "config: " << m_config->getCacheID();
+#endif
     os << ", slider: [" << m_slider << "]";
     if (!m_mixingSpaces.empty())
     {

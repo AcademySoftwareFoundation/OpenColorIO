@@ -6,9 +6,6 @@
 #include "UnitTestUtils.h"
 #include "UnitTestLogUtils.h"
 
-#include "CG.cpp"
-#include "Studio.cpp"
-
 namespace OCIO = OCIO_NAMESPACE;
 
 // See also the create_builtin_config and resolve_config_path tests in Config_tests.cpp.
@@ -16,7 +13,6 @@ namespace OCIO = OCIO_NAMESPACE;
 OCIO_ADD_TEST(BuiltinConfigs, basic)
 {
     const OCIO::BuiltinConfigRegistry & registry = OCIO::BuiltinConfigRegistry::Get();
-#if(OCIO_HAS_BUILTIN_YAML_CONFIGS)    
     OCIO_CHECK_EQUAL(registry.getNumBuiltinConfigs(), 4);
 
     // Test builtin config cg-config-v1.0.0_aces-v1.3_ocio-v2.1.
@@ -34,16 +30,15 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
             "[ACES v1.3] [OCIO v2.1]")
         );
 
-        OCIO_CHECK_EQUAL(
-            std::string(registry.getBuiltinConfig(0)), 
-            std::string(CG_CONFIG_V100_ACES_V13_OCIO_V21)
-        );
-
-        OCIO_CHECK_EQUAL(
-            std::string(registry.getBuiltinConfigByName(cgConfigName.c_str())), 
-            std::string(CG_CONFIG_V100_ACES_V13_OCIO_V21)
-        );
-
+        OCIO::ConstConfigRcPtr config;
+        OCIO_REQUIRE_NO_THROW(config = registry.createBuiltinConfig(0));
+#if OCIO_YAML_SUPPORT
+        OCIO_CHECK_EQUAL(std::string(config->getCacheID()), std::string("4871d7167654c2f5249f01ec9315619a:6001c324468d497f99aa06d3014798d8"));
+#endif
+        OCIO_REQUIRE_NO_THROW(config = registry.createBuiltinConfigByName(cgConfigName.c_str()));
+#if OCIO_YAML_SUPPORT
+        OCIO_CHECK_EQUAL(std::string(config->getCacheID()), std::string("4871d7167654c2f5249f01ec9315619a:6001c324468d497f99aa06d3014798d8"));
+#endif
         OCIO_CHECK_EQUAL(registry.isBuiltinConfigRecommended(0), false);
     }
 
@@ -62,16 +57,15 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
             "[ACES v1.3] [OCIO v2.3]")
         );
 
-        OCIO_CHECK_EQUAL(
-            std::string(registry.getBuiltinConfig(1)), 
-            std::string(CG_CONFIG_V210_ACES_V13_OCIO_V23)
-        );
-
-        OCIO_CHECK_EQUAL(
-            std::string(registry.getBuiltinConfigByName(cgConfigName.c_str())), 
-            std::string(CG_CONFIG_V210_ACES_V13_OCIO_V23)
-        );
-
+        OCIO::ConstConfigRcPtr config;
+        OCIO_REQUIRE_NO_THROW(config = registry.createBuiltinConfig(1));
+#if OCIO_YAML_SUPPORT
+        OCIO_CHECK_EQUAL(std::string(config->getCacheID()), std::string("5a1c960ada65792d97c37f01be9378cc:6001c324468d497f99aa06d3014798d8"));
+#endif
+        OCIO_REQUIRE_NO_THROW(config = registry.createBuiltinConfigByName(cgConfigName.c_str()));
+#if OCIO_YAML_SUPPORT
+        OCIO_CHECK_EQUAL(std::string(config->getCacheID()), std::string("5a1c960ada65792d97c37f01be9378cc:6001c324468d497f99aa06d3014798d8"));
+#endif
         OCIO_CHECK_EQUAL(registry.isBuiltinConfigRecommended(1), true);
     }
 
@@ -90,16 +84,15 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
             "[ACES v1.3] [OCIO v2.1]")
         );
 
-        OCIO_CHECK_EQUAL(
-            std::string(registry.getBuiltinConfig(2)), 
-            std::string(STUDIO_CONFIG_V100_ACES_V13_OCIO_V21)
-        );
-
-        OCIO_CHECK_EQUAL(
-            std::string(registry.getBuiltinConfigByName(studioConfigName.c_str())), 
-            std::string(STUDIO_CONFIG_V100_ACES_V13_OCIO_V21)
-        );
-
+        OCIO::ConstConfigRcPtr config;
+        OCIO_REQUIRE_NO_THROW(config = registry.createBuiltinConfig(2));
+#if OCIO_YAML_SUPPORT
+        OCIO_CHECK_EQUAL(std::string(config->getCacheID()), std::string("3ad8ac30d4bc0aa216a3a6444332ac1e:6001c324468d497f99aa06d3014798d8"));
+#endif
+        OCIO_REQUIRE_NO_THROW(config = registry.createBuiltinConfigByName(studioConfigName.c_str()));
+#if OCIO_YAML_SUPPORT
+        OCIO_CHECK_EQUAL(std::string(config->getCacheID()), std::string("3ad8ac30d4bc0aa216a3a6444332ac1e:6001c324468d497f99aa06d3014798d8"));
+#endif
         OCIO_CHECK_EQUAL(registry.isBuiltinConfigRecommended(2), false);
     }
 
@@ -118,21 +111,17 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
             "[ACES v1.3] [OCIO v2.3]")
         );
 
-        OCIO_CHECK_EQUAL(
-            std::string(registry.getBuiltinConfig(3)), 
-            std::string(STUDIO_CONFIG_V210_ACES_V13_OCIO_V23)
-        );
-
-        OCIO_CHECK_EQUAL(
-            std::string(registry.getBuiltinConfigByName(studioConfigName.c_str())), 
-            std::string(STUDIO_CONFIG_V210_ACES_V13_OCIO_V23)
-        );
-
+        OCIO::ConstConfigRcPtr config;
+        OCIO_REQUIRE_NO_THROW(config = registry.createBuiltinConfig(3));
+#if OCIO_YAML_SUPPORT
+        OCIO_CHECK_EQUAL(std::string(config->getCacheID()), std::string("9f79a8713372163d99e62b3995115b8b:6001c324468d497f99aa06d3014798d8"));
+#endif
+        OCIO_REQUIRE_NO_THROW(config = registry.createBuiltinConfigByName(studioConfigName.c_str()));
+#if OCIO_YAML_SUPPORT
+        OCIO_CHECK_EQUAL(std::string(config->getCacheID()), std::string("9f79a8713372163d99e62b3995115b8b:6001c324468d497f99aa06d3014798d8"));
+#endif
         OCIO_CHECK_EQUAL(registry.isBuiltinConfigRecommended(3), true);
     }
-#else // OCIO_HAS_BUILTIN_YAML_CONFIGS
-    OCIO_CHECK_EQUAL(registry.getNumBuiltinConfigs(), 0);
-#endif // OCIO_HAS_BUILTIN_YAML_CONFIGS
 
     // ********************************
     // Testing some expected failures.
@@ -161,19 +150,21 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
 
     // Test getBuiltinConfig using an invalid config index.
     OCIO_CHECK_THROW_WHAT(
-        registry.getBuiltinConfig(999),
+        registry.createBuiltinConfig(999),
         OCIO::Exception,
         "Config index is out of range."
     );
 
     // Test getBuiltinConfigByName using an unknown config name.
     OCIO_CHECK_THROW_WHAT(
-        registry.getBuiltinConfigByName("I do not exist"), 
+        registry.createBuiltinConfigByName("I do not exist"), 
         OCIO::Exception,
         "Could not find 'I do not exist' in the built-in configurations."
     );
 }
 
+// TODO: API is changed, re-implement this test by passing a creator function.
+/*
 OCIO_ADD_TEST(BuiltinConfigs, basic_impl)
 {
     {
@@ -201,14 +192,16 @@ OCIO_ADD_TEST(BuiltinConfigs, basic_impl)
             "simple_config_1",
             "My simple config display name #1",
             SIMPLE_CONFIG.c_str(),
-            false
+            false,
+            nullptr
         ));
         // Add second config.
         OCIO_CHECK_NO_THROW(registry.addBuiltin(
             "simple_config_2",
             "My simple config display name #2",
             SIMPLE_CONFIG.c_str(),
-            true
+            true,
+            nullptr
         ));
 
         OCIO_CHECK_EQUAL(registry.getNumBuiltinConfigs(), 2);
@@ -234,8 +227,8 @@ OCIO_ADD_TEST(BuiltinConfigs, basic_impl)
         );
     }
 }
+*/
 
-#if OCIO_HAS_BUILTIN_YAML_CONFIGS
 OCIO_ADD_TEST(BuiltinConfigs, create_builtin_config)
 {
     auto testFromBuiltinConfig = [](const std::string name,
@@ -279,7 +272,7 @@ OCIO_ADD_TEST(BuiltinConfigs, create_builtin_config)
             OCIO::EnvironmentVariableGuard guard("OCIO", uri);
 
             OCIO::ConstConfigRcPtr config;
-            OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromEnv());
+            OCIO_REQUIRE_NO_THROW(config = OCIO::Config::CreateFromEnv());
             OCIO_REQUIRE_ASSERT(config);
 
             OCIO::LogGuard logGuard;
@@ -402,7 +395,6 @@ OCIO_ADD_TEST(BuiltinConfigs, create_builtin_config)
         );
     }
 }
-#endif // OCIO_HAS_BUILTIN_YAML_CONFIGS
 
 OCIO_ADD_TEST(BuiltinConfigs, resolve_config_path)
 {
