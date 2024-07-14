@@ -155,7 +155,7 @@ option(OCIO_BUILD_PYTHON "Specify whether to build python bindings" ON)
 set(OCIO_FEATURE_SET "Nano" CACHE STRING "Determines which core library features are enabled. [Full, Nano, Custom]")
 set_property(CACHE OCIO_FEATURE_SET PROPERTY STRINGS Nano Full Custom)
 option(OCIO_LUT_AND_FILETRANSFORM_SUPPORT "Specify whether to build with LUT and file-transform support. Requies Expat dependency" ON)
-option(OCIO_USE_HALF_LOOKUP_TABLE "Determines if the Imath library should use a 64k LUT for half conversions" ON)
+option(OCIO_USE_HALF_LOOKUP_TABLE "Determines if the half<->float conversions should use a 64k LUT. Requires Imath dependency" ON)
 option(OCIO_ARCHIVE_SUPPORT "Specify whether to build with OCIOZ archive support. Requires ZLIB and minizip-ng dependencies" ON)
 option(OCIO_YAML_SUPPORT "Specify whether to build with YAML support. If turned off yaml based config files won't be supported. Requires yaml dependency'" ON)
 mark_as_advanced(OCIO_LUT_AND_FILETRANSFORM_SUPPORT OCIO_USE_HALF_LOOKUP_TABLE OCIO_ARCHIVE_SUPPORT OCIO_YAML_SUPPORT)
@@ -462,7 +462,7 @@ function(SetFeatureOptions IsEnabled)
     
     if(NOT OCIO_USE_HALF_LOOKUP_TABLE STREQUAL IsEnabled )
         message(WARNING "Turning OCIO_USE_HALF_LOOKUP_TABLE ${IsEnabled} as '${OCIO_FEATURE_SET}' feature set is selected.")
-        set(OCIO_USE_HALF_LOOKUP_TABLE ${IsEnabled} CACHE BOOL "Determines if the Imath library should use a 64k LUT for half conversions" FORCE)
+        set(OCIO_USE_HALF_LOOKUP_TABLE ${IsEnabled} CACHE BOOL "Determines if the half<->float conversions should use a 64k LUT. Requires Imath dependency" FORCE)
     endif()
     
     if(NOT OCIO_ARCHIVE_SUPPORT STREQUAL IsEnabled )
@@ -487,27 +487,28 @@ elseif(NOT OCIO_FEATURE_SET MATCHES "[Cc][Uu][Ss][Tt][Oo][Mm]")
 endif()
 
 if(OCIO_BUILD_PYTHON AND NOT OCIO_LUT_AND_FILETRANSFORM_SUPPORT )
-    message(WARNING "Python bindings require LUT and File-Transform support which is turned off,\
-    thus OCIO_BUILD_PYTHON option will be turned off too.")
+    message(WARNING "Python bindings require LUT and File-Transform support which is turned off, thus OCIO_BUILD_PYTHON option will be turned off too.")
     set(OCIO_BUILD_PYTHON OFF CACHE BOOL "Specify whether to build python bindings" FORCE)
 endif()
 
 if(OCIO_ARCHIVE_SUPPORT AND NOT OCIO_YAML_SUPPORT )
-    message(WARNING "Archive support requires YAML support which is turned off,\
-    thus OCIO_ARCHIVE_SUPPORT option will be turned off too.")
+    message(WARNING "Archive support requires YAML support which is turned off, thus OCIO_ARCHIVE_SUPPORT option will be turned off too.")
     set(OCIO_ARCHIVE_SUPPORT OFF CACHE BOOL "Specify whether to build with OCIOZ archive support. Requires ZLIB and minizip-ng dependencies" FORCE)
 endif()
 
 if(OCIO_BUILD_DOCS AND NOT OCIO_BUILD_PYTHON )
-    message(WARNING "Documentation requires Python bindings which is turned off,\
-    thus OCIO_BUILD_DOCS option will be turned off too.")
+    message(WARNING "Documentation requires Python bindings which is turned off, thus OCIO_BUILD_DOCS option will be turned off too.")
     set(OCIO_BUILD_DOCS OFF CACHE BOOL "Specify whether to build documentation" FORCE)
 endif()
 
-if(OCIO_FEATURE_SET MATCHES "[Nn][Aa][Nn][Oo]" AND OCIO_BUILD_OPENFX)
-    message(WARNING "OpenFx is not compatible with Nano feature set,\
-    thus OCIO_BUILD_OPENFX option will be turned off.")
-    set(OCIO_BUILD_OPENFX OFF CACHE BOOL "Specify whether to build OpenFX plugins" FORCE)
+if(OCIO_USE_OIIO_FOR_APPS AND NOT OCIO_USE_HALF_LOOKUP_TABLE)
+	message(WARNING "OIIO needs OCIO_USE_HALF_LOOKUP_TABLE which is turned off, thus OCIO_USE_OIIO_FOR_APPS option will be turned off too.")
+	set(OCIO_USE_OIIO_FOR_APPS OFF CACHE BOOL "Request OIIO to build apps (ociolutimage, ocioconvert and ociodisplay), the default uses OpenEXR." FORCE)
+endif()
+
+if(OCIO_BUILD_OPENFX AND OCIO_FEATURE_SET MATCHES "[Nn][Aa][Nn][Oo]")
+	message(WARNING "OpenFx is not compatible with Nano feature set thus OCIO_BUILD_OPENFX option will be turned off.")
+	set(OCIO_BUILD_OPENFX OFF CACHE BOOL "Specify whether to build OpenFX plugins" FORCE)
 endif()
 
 ###############################################################################

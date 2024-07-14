@@ -9,3 +9,8 @@ add_subdirectory(sampleicc)
 
 # xxHash
 add_subdirectory(xxHash)
+
+# header only imath half
+if(NOT OCIO_USE_HALF_LOOKUP_TABLE)
+	add_subdirectory(half)
+endif()

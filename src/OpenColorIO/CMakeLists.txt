@@ -269,13 +269,18 @@ target_include_directories(OpenColorIO
 
 target_link_libraries(OpenColorIO
     PRIVATE
-        Imath::Imath
         pystring::pystring
         "$<BUILD_INTERFACE:sampleicc::sampleicc>"
         "$<BUILD_INTERFACE:utils::from_chars>"
         "$<BUILD_INTERFACE:utils::strings>"
         "$<BUILD_INTERFACE:xxHash>"
 )
+
+if(OCIO_USE_HALF_LOOKUP_TABLE)
+    target_link_libraries(OpenColorIO PRIVATE Imath::Imath)    
+else()
+    target_link_libraries(OpenColorIO PRIVATE "$<BUILD_INTERFACE:half>")    
+endif()
 
 if(OCIO_YAML_SUPPORT)
     target_link_libraries(OpenColorIO PRIVATE ${YAML_CPP_LIBRARIES})

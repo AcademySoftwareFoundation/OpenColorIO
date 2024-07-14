@@ -26,7 +26,7 @@ if (NOT @BUILD_SHARED_LIBS@) # NOT @BUILD_SHARED_LIBS@
         find_dependency(expat @expat_VERSION@)
     endif()
 
-    if (NOT TARGET Imath::Imath)
+    if (@OCIO_USE_HALF_LOOKUP_TABLE AND NOT TARGET Imath::Imath)
         find_dependency(Imath @Imath_VERSION@)
     endif()
 

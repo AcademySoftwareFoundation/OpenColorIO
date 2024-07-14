@@ -9,7 +9,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include <Imath/half.h>
+#include <half.h>
 
 namespace OCIO_NAMESPACE
 {

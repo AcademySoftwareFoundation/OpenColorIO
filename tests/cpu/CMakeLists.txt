@@ -29,7 +29,6 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
     )
     target_link_libraries(${TEST_BINARY}
         PRIVATE
-            Imath::Imath
             pystring::pystring
             sampleicc::sampleicc
             unittest_data
@@ -37,6 +36,12 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
             testutils
             xxHash
     )
+
+	if(OCIO_USE_HALF_LOOKUP_TABLE)
+		target_link_libraries(${TEST_BINARY} PRIVATE Imath::Imath)    
+	else()
+		target_link_libraries(${TEST_BINARY} PRIVATE "$<BUILD_INTERFACE:half>")    
+	endif()
 
 	if(OCIO_YAML_SUPPORT)
         target_link_libraries(${TEST_BINARY} PRIVATE ${YAML_CPP_LIBRARIES})
