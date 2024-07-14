@@ -147,25 +147,23 @@ class ViewingRuleEdit(BaseConfigItemEdit):
         model = self.model
 
         # Map widgets to model columns
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.color_space_list, model.COLOR_SPACES.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.encoding_list, model.ENCODINGS.column
         )
 
         # list and table widgets need manual data submission back to model
         self.param_edit.color_space_list.items_changed.connect(
-            self._mapper.submit
+            self.mapper.submit
         )
-        self.param_edit.encoding_list.items_changed.connect(
-            self._mapper.submit
-        )
+        self.param_edit.encoding_list.items_changed.connect(self.mapper.submit)
         self.param_edit.custom_keys_table_a.items_changed.connect(
-            self._mapper.submit
+            self.mapper.submit
         )
         self.param_edit.custom_keys_table_b.items_changed.connect(
-            self._mapper.submit
+            self.mapper.submit
         )
 
         # Initialize
@@ -182,7 +180,7 @@ class ViewingRuleEdit(BaseConfigItemEdit):
                 QtCore.Qt.EditRole,
             )
             self.param_edit.update_available_params(
-                self._mapper, viewing_rule_type
+                self.mapper, viewing_rule_type
             )
 
         super()._on_current_row_changed(row)

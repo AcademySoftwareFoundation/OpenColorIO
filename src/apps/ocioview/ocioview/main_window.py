@@ -174,7 +174,7 @@ class OCIOView(QtWidgets.QMainWindow):
             self.load_config(config_path)
         else:
             # New config
-            self._init_config_tracking()
+            self.new_config()
 
         self._update_recent_configs_menu()
         self._update_window_title()
@@ -213,8 +213,12 @@ class OCIOView(QtWidgets.QMainWindow):
         """
         Create and load a new OCIO raw config.
         """
-        if not self._can_close_config():
-            return
+        if (
+            self._config_path is not None
+            or self._config_save_cache_id is not None
+        ):
+            if not self._can_close_config():
+                return
 
         self._config_path = None
         self._config_save_cache_id = None

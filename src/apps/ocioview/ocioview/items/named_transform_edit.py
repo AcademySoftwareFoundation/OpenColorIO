@@ -88,26 +88,26 @@ class NamedTransformEdit(BaseConfigItemEdit):
         model = self.model
 
         # Map widgets to model columns
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.aliases_list, model.ALIASES.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.family_edit, model.FAMILY.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.encoding_edit, model.ENCODING.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.description_edit, model.DESCRIPTION.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.categories_list, model.CATEGORIES.column
         )
 
         # list widgets need manual data submission back to model
-        self.param_edit.aliases_list.items_changed.connect(self._mapper.submit)
+        self.param_edit.aliases_list.items_changed.connect(self.mapper.submit)
         self.param_edit.categories_list.items_changed.connect(
-            self._mapper.submit
+            self.mapper.submit
         )
 
         # Initialize

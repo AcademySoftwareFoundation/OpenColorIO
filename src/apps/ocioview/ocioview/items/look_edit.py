@@ -28,7 +28,9 @@ class LookParamEdit(BaseConfigItemParamEdit):
 
         # Widgets
         self.process_space_combo = CallbackComboBox(
-            lambda: ConfigCache.get_color_space_names(ocio.SEARCH_REFERENCE_SPACE_SCENE)
+            lambda: ConfigCache.get_color_space_names(
+                ocio.SEARCH_REFERENCE_SPACE_SCENE
+            )
         )
         self.description_edit = TextEdit()
 
@@ -36,7 +38,9 @@ class LookParamEdit(BaseConfigItemParamEdit):
         self._param_layout.addRow(
             self.model.PROCESS_SPACE.label, self.process_space_combo
         )
-        self._param_layout.addRow(self.model.DESCRIPTION.label, self.description_edit)
+        self._param_layout.addRow(
+            self.model.DESCRIPTION.label, self.description_edit
+        )
 
 
 class LookEdit(BaseConfigItemEdit):
@@ -52,16 +56,16 @@ class LookEdit(BaseConfigItemEdit):
         model = self.model
 
         # Map widgets to model columns
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.process_space_combo, model.PROCESS_SPACE.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.description_edit, model.DESCRIPTION.column
         )
 
         # Trigger immediate update from widgets that update the model upon losing focus
         self.param_edit.process_space_combo.currentIndexChanged.connect(
-            partial(self.param_edit.submit_mapper_deferred, self._mapper)
+            partial(self.param_edit.submit_mapper_deferred, self.mapper)
         )
 
         # Initialize

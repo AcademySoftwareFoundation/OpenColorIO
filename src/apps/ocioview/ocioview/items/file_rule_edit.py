@@ -179,11 +179,11 @@ class FileRuleEdit(BaseConfigItemEdit):
         model = self.model
 
         # Clear default mapped widgets. Widgets will be remapped per file rule type.
-        self._mapper.clearMapping()
+        self.mapper.clearMapping()
 
         # Table widgets need manual data submission back to model
         for custom_keys_table in self.param_edit.custom_keys_tables.values():
-            custom_keys_table.items_changed.connect(self._mapper.submit)
+            custom_keys_table.items_changed.connect(self.mapper.submit)
 
         # Initialize
         if model.rowCount():
@@ -199,7 +199,7 @@ class FileRuleEdit(BaseConfigItemEdit):
                 QtCore.Qt.EditRole,
             )
             self.param_edit.update_available_params(
-                self._mapper, file_rule_type
+                self.mapper, file_rule_type
             )
 
         super()._on_current_row_changed(row)

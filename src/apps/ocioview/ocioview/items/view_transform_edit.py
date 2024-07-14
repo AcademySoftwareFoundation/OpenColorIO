@@ -97,28 +97,28 @@ class ViewTransformEdit(BaseConfigItemEdit):
         model = self.model
 
         # Map widgets to model columns
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.reference_space_type_combo,
             model.REFERENCE_SPACE_TYPE.column,
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.family_edit, model.FAMILY.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.description_edit, model.DESCRIPTION.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.categories_list, model.CATEGORIES.column
         )
 
         # list widgets need manual data submission back to model
         self.param_edit.categories_list.items_changed.connect(
-            self._mapper.submit
+            self.mapper.submit
         )
 
         # Trigger immediate update from widgets that update the model upon losing focus
         self.param_edit.reference_space_type_combo.currentIndexChanged.connect(
-            partial(self.param_edit.submit_mapper_deferred, self._mapper)
+            partial(self.param_edit.submit_mapper_deferred, self.mapper)
         )
 
         # Initialize

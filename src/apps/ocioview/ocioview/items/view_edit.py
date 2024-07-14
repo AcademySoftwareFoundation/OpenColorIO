@@ -257,7 +257,7 @@ class ViewEdit(BaseConfigItemEdit):
 
         # Clear default mapped widgets from view model. Widgets will be remapped per
         # view type.
-        self._mapper.clearMapping()
+        self.mapper.clearMapping()
 
         # Layout
         self.splitter.insertWidget(0, self.display_list)
@@ -373,7 +373,7 @@ class ViewEdit(BaseConfigItemEdit):
 
         # Update parameter widget states, since view type may have changed
         self.param_edit.update_available_params(
-            self._display_mapper, self._mapper, view_type
+            self._display_mapper, self.mapper, view_type
         )
 
         # Update display params

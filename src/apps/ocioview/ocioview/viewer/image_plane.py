@@ -500,7 +500,11 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         cpu_viewing_pipeline = ocio.GroupTransform()
 
         # Convert to scene linear space if input space is known
-        if has_scene_linear and self._ocio_proc_context:
+        if (
+            has_scene_linear
+            and self._ocio_proc_context
+            and self._ocio_proc_context.input_color_space
+        ):
             to_scene_linear = ocio.ColorSpaceTransform(
                 src=self._ocio_proc_context.input_color_space,
                 dst=ocio.ROLE_SCENE_LINEAR,

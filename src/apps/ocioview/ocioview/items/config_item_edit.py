@@ -248,13 +248,13 @@ class BaseConfigItemEdit(QtWidgets.QWidget):
             )
 
         # Map widgets to model columns
-        self._mapper = QtWidgets.QDataWidgetMapper()
-        self._mapper.setOrientation(QtCore.Qt.Horizontal)
-        self._mapper.setSubmitPolicy(QtWidgets.QDataWidgetMapper.AutoSubmit)
-        self._mapper.setModel(model)
+        self.mapper = QtWidgets.QDataWidgetMapper()
+        self.mapper.setOrientation(QtCore.Qt.Horizontal)
+        self.mapper.setSubmitPolicy(QtWidgets.QDataWidgetMapper.AutoSubmit)
+        self.mapper.setModel(model)
 
         try:
-            self._mapper.addMapping(
+            self.mapper.addMapping(
                 self.param_edit.name_edit, model.NAME.column
             )
         except RuntimeError:
@@ -352,7 +352,7 @@ class BaseConfigItemEdit(QtWidgets.QWidget):
         if row < 0:
             self.param_edit.reset()
         else:
-            self._mapper.setCurrentIndex(row)
+            self.mapper.setCurrentIndex(row)
 
             # Manually update transform stacks from model, on current row change
             if self.param_edit.__has_transforms__:

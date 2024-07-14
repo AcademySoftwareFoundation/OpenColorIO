@@ -156,53 +156,53 @@ class ColorSpaceEdit(BaseConfigItemEdit):
         model = self.model
 
         # Map widgets to model columns
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.reference_space_type_combo,
             model.REFERENCE_SPACE_TYPE.column,
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.aliases_list, model.ALIASES.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.family_edit, model.FAMILY.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.encoding_edit, model.ENCODING.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.equality_group_edit, model.EQUALITY_GROUP.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.description_edit, model.DESCRIPTION.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.bit_depth_combo, model.BIT_DEPTH.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.is_data_check, model.IS_DATA.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.allocation_combo, model.ALLOCATION.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.allocation_vars_edit, model.ALLOCATION_VARS.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.categories_list, model.CATEGORIES.column
         )
 
         # list widgets need manual data submission back to model
-        self.param_edit.aliases_list.items_changed.connect(self._mapper.submit)
+        self.param_edit.aliases_list.items_changed.connect(self.mapper.submit)
         self.param_edit.categories_list.items_changed.connect(
-            self._mapper.submit
+            self.mapper.submit
         )
 
         # Trigger immediate update from widgets that update the model upon losing focus
         self.param_edit.reference_space_type_combo.currentIndexChanged.connect(
-            partial(self.param_edit.submit_mapper_deferred, self._mapper)
+            partial(self.param_edit.submit_mapper_deferred, self.mapper)
         )
         self.param_edit.is_data_check.stateChanged.connect(
-            partial(self.param_edit.submit_mapper_deferred, self._mapper)
+            partial(self.param_edit.submit_mapper_deferred, self.mapper)
         )
 
         # Initialize

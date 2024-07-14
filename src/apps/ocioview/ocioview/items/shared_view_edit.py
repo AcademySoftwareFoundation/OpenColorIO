@@ -65,24 +65,24 @@ class SharedViewEdit(BaseConfigItemEdit):
         model = self.model
 
         # Map widgets to model columns
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.color_space_combo, model.COLOR_SPACE.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.view_transform_combo, model.VIEW_TRANSFORM.column
         )
-        self._mapper.addMapping(self.param_edit.looks_edit, model.LOOKS.column)
-        self._mapper.addMapping(self.param_edit.rule_combo, model.RULE.column)
-        self._mapper.addMapping(
+        self.mapper.addMapping(self.param_edit.looks_edit, model.LOOKS.column)
+        self.mapper.addMapping(self.param_edit.rule_combo, model.RULE.column)
+        self.mapper.addMapping(
             self.param_edit.description_edit, model.DESCRIPTION.column
         )
 
         # Trigger immediate update from widgets that update the model upon losing focus
         self.param_edit.color_space_combo.currentIndexChanged.connect(
-            partial(self.param_edit.submit_mapper_deferred, self._mapper)
+            partial(self.param_edit.submit_mapper_deferred, self.mapper)
         )
         self.param_edit.view_transform_combo.currentIndexChanged.connect(
-            partial(self.param_edit.submit_mapper_deferred, self._mapper)
+            partial(self.param_edit.submit_mapper_deferred, self.mapper)
         )
 
         # Initialize

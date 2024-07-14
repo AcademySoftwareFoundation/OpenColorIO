@@ -33,7 +33,7 @@ def ocio():
 
 
 @pytest.fixture
-def ocio_view(qtbot):
+def ocio_view(ocio, qtbot):
     from ocioview.main_window import OCIOView
 
     ocio_view = OCIOView(transient=True)
@@ -41,3 +41,14 @@ def ocio_view(qtbot):
     qtbot.addWidget(ocio_view)
 
     return ocio_view
+
+
+@pytest.fixture
+def ocio_config(ocio):
+    """
+    .. note::
+        This fixture should be used AFTER the `ocio_view` fixture,
+        since `OCIOView` instantiation resets the current config,
+        invalidating any existing references.
+    """
+    return ocio.GetCurrentConfig()
