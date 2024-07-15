@@ -1,137 +1,73 @@
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 <!-- Copyright Contributors to the OpenColorIO Project. -->
 
-OpenColorIO
-===========
+OpenColorIO nanoColor
+=====================
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
-[![CI Status](https://github.com/AcademySoftwareFoundation/OpenColorIO/workflows/CI/badge.svg)](https://github.com/AcademySoftwareFoundation/OpenColorIO/actions?query=workflow%3ACI)
-[![GPU CI Status](https://github.com/AcademySoftwareFoundation/OpenColorIO/workflows/GPU/badge.svg)](https://github.com/AcademySoftwareFoundation/OpenColorIO/actions?query=workflow%3AGPU)
-[![Analysis Status](https://github.com/AcademySoftwareFoundation/OpenColorIO/workflows/Analysis/badge.svg)](https://github.com/AcademySoftwareFoundation/OpenColorIO/actions?query=workflow%3AAnalysis)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=AcademySoftwareFoundation_OpenColorIO&metric=alert_status)](https://sonarcloud.io/dashboard?id=AcademySoftwareFoundation_OpenColorIO)
-[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2612/badge)](https://bestpractices.coreinfrastructure.org/projects/2612)
-[![Wheels](https://github.com/AcademySoftwareFoundation/OpenColorIO/workflows/Wheel/badge.svg)](https://github.com/AcademySoftwareFoundation/OpenColorIO/actions?query=workflow%3AWheel)
 
 Introduction
 ------------
 
-[linear]: https://origin-flash.sonypictures.com/ist/imageworks/cloudy1.jpg
-[log]: https://origin-flash.sonypictures.com/ist/imageworks/cloudy3.jpg
-[vd]: https://origin-flash.sonypictures.com/ist/imageworks/cloudy2.jpg
+OpenColorIO nanoColor is a light-weight version of OCIO that has no
+external dependencies. It is aimed at applications requiring basic
+color management in resource-constrained settings, such as running
+in a web browser or on a mobile phone.
 
-![lnh][linear] ![lm10][log] ![vd8][vd]
+NanoColor does not support custom config files or LUTs like full OCIO.
+Several config files are built into the library itself and these provide
+complete implementation of ACES color management. In addition, it's
+possible for clients to copy and edit the built-in configs to suit their
+needs. This includes the addition of custom color spaces.
 
-OpenColorIO (OCIO) is a complete color management solution geared towards
-motion picture production with an emphasis on visual effects and computer
-animation. OCIO provides a straightforward and consistent user experience
-across all supporting applications while allowing for sophisticated back-end
-configuration options suitable for high-end production usage. OCIO is
-compatible with the Academy Color Encoding Specification (ACES) and is
-LUT-format agnostic, supporting many popular formats.
+NanoColor uses the same underlying transform chain optimization and
+CPU and GPU rendering paths as full OCIO. For developers, working with
+either nanoColor or full OCIO is very similar. The build process uses
+the same CMake set-up, though there are no external dependencies used
+in nanoColor mode.
 
-OpenColorIO is released as version 2.0 and has been in development since 2003.
-OCIO represents the culmination of years of production experience earned on
-such films as SpiderMan 2 (2004), Surf's Up (2007), Cloudy with a Chance of
-Meatballs (2009), Alice in Wonderland (2010), and many more. OpenColorIO is
-natively supported in commercial applications like Katana, Mari, Nuke, Maya,
-Houdini, Silhouette FX, and
-[others](https://opencolorio.org/#supported_apps).
+The nanoColor API is virtually the same as the full OCIO API, though
+a few functions have been removed in alignment with the feature set. For
+example, there are no functions related to uploading texture LUTs to the
+GPU, since there is no texture usage in the nanoColor GPU path. All 
+supported transforms have a closed-form invertible analytic
+representation that does not require LUTs.
 
-OpenColorIO is free and open source software ([LICENSE](LICENSE)), and
-one of several projects actively sponsored by the ASWF
-([Academy Software Foundation](https://www.aswf.io/)).
-
-OpenColorIO Project Mission
----------------------------
-
-The OpenColorIO project is committed to providing an industry standard solution 
-for highly precise, performant, and consistent color management across digital 
-content creation applications and pipelines.
-
-OpenColorIO aims to:
-
-* be stable, secure, and thoroughly tested on Linux, macOS, and Windows
-* be performant on modern CPUs and GPUs
-* be simple, scalable, and well documented
-* be compatible with critical color and imaging standards
-* provide lossless color processing wherever possible
-* maintain config backwards compatibility across major versions
-* have every new feature carefully reviewed by leaders from the motion picture, 
-  VFX, animation, and video game industries
-* have a healthy and active community
-* receive wide industry adoption
-
-OpenColorIO Project Governance
-------------------------------
-
-OpenColorIO is governed by the Academy Software Foundation (ASWF). See 
-[GOVERNANCE.md](GOVERNANCE.md) for detailed information about how the project 
-operates.
-
-Web Resources
--------------
-
-* Website: <http://opencolorio.org>
-* Documentation: <https://opencolorio.readthedocs.io/en/latest/>
-* Mailing lists:
-  * Developer: <ocio-dev@lists.aswf.io>
-  * User: <ocio-user@lists.aswf.io>
-* Slack workspace: <https://opencolorio.slack.com>
-  * New users can join via <http://slack.opencolorio.org>
-
-Reference Configs
------------------
-
-Reference OCIO configuration files and associated LUTs can be found at the
-Imageworks [OpenColorIO-Configs](https://github.com/imageworks/OpenColorIO-Configs)
-repository.
-
-The following reference implementations are provided:
-
-* SPI: Sony Pictures Imageworks
-  * spi-anim
-  * spi-vfx
-* ACES: Academy Color Encoding System
-  * aces_1.0.3
-  * aces_1.0.2
-  * aces_1.0.1
-  * aces_0.7.1
-  * aces_0.1.1
-* Other
-  * nuke-default
-
-Sources for the newer builtin ACES configuration files can be found in the releases section of the
-[OpenColorIO-Config-ACES](https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES)
-repository.
+One new feature that has been added is a convenience function for 
+generating a MatrixTransform based on the chromaticity coordinates of
+a set of color primaries. These are methods on the MatrixTransform class:
+ConvertTo_XYZ_D65 and ConvertTo_AP0. Usage is demonstrated in unit test:
+OpenColorIO/tests/cpu/transforms/BuiltinTransform_tests.cpp:line 304.
 
 
-Acknowledgements
-----------------
+Installation instructions
+-------------------------
 
-OpenColorIO represents the generous contributions of many organizations and
-individuals. The "Contributors to the OpenColorIO Project" copyright statement
-used throughout the project reflects that the OCIO source is a collaborative
-effort, often with multiple copyright holders within a single file. Copyright
-for specific portions of code can be traced to an originating contributor using
-git commit history.
+The CMake flag OCIO_FEATURE_SET may be set to "Full" to build full OCIO
+and set to "Nano" to build nanoColor. In the nanoColor branch, the default
+is "Nano". Here are the basic steps for macOS or Linux (Windows is supported
+as well, but the commands are slightly different)::
 
-OpenColorIO was originally developed and made open source by
-[Sony Pictures Imageworks](http://opensource.imageworks.com). The core design,
-and the majority of OCIO 1.0 code was authored by Imageworks, who continue to
-support and contribute to OCIO 2.0 development.
+    $ git clone git@github.com:autodesk-forks/OpenColorIO.git
+    $ cd OpenColorIO
+    $ git checkout feature/nanocolor
+    $ mkdir build && cd build
+    $ cmake ..
+    $ make -j8
+    $ make install
 
-The design and development of OpenColorIO 2.0 is being led by Autodesk.
-Autodesk submitted a proposal to revitalize the project in 2017, and have
-authored the majority of OCIO 2.0 code in the years since.
 
-Significant contributions have also been made by Industrial Light & Magic,
-DNEG, and many individuals. See
-[Contributors](https://github.com/AcademySoftwareFoundation/OpenColorIO/graphs/contributors)
-for a complete list.
+TODO
+----
 
-See [THIRD-PARTY.md](THIRD-PARTY.md) for license information
-about portions of OpenColorIO that have been imported from other projects.
+This is currently a prototype and there are a number of tasks remaining:
 
----
-Images from "Cloudy With A Chance of Meatballs" Copyright 2011 Sony Pictures Inc.
-All Rights Reserved.
+* Add the built-in config for the Color Interop Forum core color space set
+  (although note that the built-in configs already have most of the spaces).
+* Prevent clients from overriding the core color space set.
+* A few built-in transforms have been disabled since they required LUTs but
+  could be re-enabled by converting to use fixed functions instead.
+* Clean up the removal of Imath and Pystring.
+* Make further optimizations to reduce the size of the library.
+* Add JavaScript binding.
+* Add documentation.
