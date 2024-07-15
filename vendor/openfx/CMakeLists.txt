@@ -60,7 +60,7 @@ target_link_libraries(ofxplugin
     PRIVATE
         openfx::module
         OpenColorIO
-        pystring::pystring
+        pystring
 )
 
 # Detect OFX architecture

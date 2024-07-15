@@ -269,7 +269,7 @@ target_include_directories(OpenColorIO
 
 target_link_libraries(OpenColorIO
     PRIVATE
-        pystring::pystring
+        "$<BUILD_INTERFACE:pystring>"
         "$<BUILD_INTERFACE:sampleicc::sampleicc>"
         "$<BUILD_INTERFACE:utils::from_chars>"
         "$<BUILD_INTERFACE:utils::strings>"

@@ -30,10 +30,6 @@ if (NOT @BUILD_SHARED_LIBS@) # NOT @BUILD_SHARED_LIBS@
         find_dependency(Imath @Imath_VERSION@)
     endif()
 
-    if (NOT TARGET pystring::pystring)
-        find_dependency(pystring @pystring_VERSION@)
-    endif()
-
     if (@OCIO_YAML_SUPPORT@ AND NOT TARGET yaml-cpp::yaml-cpp)
         find_dependency(yaml-cpp @yaml-cpp_VERSION@)
         if (TARGET yaml-cpp AND NOT TARGET yaml-cpp::yaml-cpp)

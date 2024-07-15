@@ -35,7 +35,7 @@ target_link_libraries(test_gpu_exec
 	PRIVATE
 		OpenColorIO
 		oglapphelpers
-		pystring::pystring
+		pystring
 		unittest_data
 		utils::strings
 		testutils

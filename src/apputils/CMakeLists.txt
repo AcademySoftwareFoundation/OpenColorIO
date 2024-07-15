@@ -17,7 +17,7 @@ target_include_directories(apputils
 target_link_libraries(apputils
     PRIVATE
         OpenColorIO
-        pystring::pystring
+        pystring
 )
 
 set_target_properties(apputils PROPERTIES 

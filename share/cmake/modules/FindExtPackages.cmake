@@ -44,24 +44,6 @@ message(STATUS "Alternatively, try -D<pkg>_LIBRARY=<path to lib file> and/or -D<
 message(STATUS "")
 message(STATUS "Please refer to the find module under share/cmake/modules for extra information.")
 
-###############################################################################
-##
-## Required dependencies
-##
-###############################################################################
-message(STATUS "")
-message(STATUS "Checking for mandatory dependencies...")
-
-
-
-# pystring
-# https://github.com/imageworks/pystring
-ocio_handle_dependency(  pystring REQUIRED ALLOW_INSTALL
-                         MIN_VERSION 1.1.3
-                         RECOMMENDED_VERSION 1.1.3
-                         RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
-
-
 
 
 ###############################################################################

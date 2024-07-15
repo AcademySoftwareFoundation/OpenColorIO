@@ -448,7 +448,7 @@ if (NOT BUILD_SHARED_LIBS AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
    application or shared library that uses static OpenColorIO.
 
    The following mandatory dependencies MUST be linked to the consumer application or shared library:
-   expat, yaml-cpp, Imath, pystring, minizip-ng and ZLIB")
+   expat, yaml-cpp, Imath, minizip-ng and ZLIB")
 endif()
 
 ###############################################################################
@@ -593,7 +593,6 @@ if (NOT BUILD_SHARED_LIBS)
     install(FILES
         ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findexpat.cmake
         ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/FindImath.cmake
-        ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findpystring.cmake
         ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findminizip-ng.cmake
         ${CMAKE_CURRENT_LIST_DIR}/share/cmake/modules/Findyaml-cpp.cmake
         DESTINATION ${OCIO_CUSTOM_FIND_MODULE_DIR}

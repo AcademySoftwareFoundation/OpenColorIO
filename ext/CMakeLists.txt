@@ -14,3 +14,6 @@ add_subdirectory(xxHash)
 if(NOT OCIO_USE_HALF_LOOKUP_TABLE)
 	add_subdirectory(half)
 endif()
+
+# header-only pystring
+add_subdirectory(pystring)
