@@ -463,7 +463,7 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         transform: Optional[ocio.Transform] = None,
         channel: Optional[int] = None,
         force_update: bool = False,
-    ):
+    ) -> None:
         """
         Update one or more aspects of the OCIO GPU renderer. Parameters
         are cached, so not providing a parameter maintains the existing
@@ -573,9 +573,14 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         )
 
         # Create GPU processor
-        gpu_proc = config.getProcessor(
-            gpu_viewing_pipeline, ocio.TRANSFORM_DIR_FORWARD
-        )
+        try:
+            gpu_proc = config.getProcessor(
+                gpu_viewing_pipeline, ocio.TRANSFORM_DIR_FORWARD
+            )
+        except ocio.Exception:
+            # Config may have changed between transform creation and now. If this
+            # doesn't error, CPU processor construction should succeed.
+            return
 
         if gpu_proc.getCacheID() != self._ocio_proc_cache_id:
             # Update CPU processor

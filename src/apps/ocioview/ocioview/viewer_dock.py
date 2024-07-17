@@ -10,7 +10,7 @@ from PySide6 import QtCore, QtWidgets
 from .settings import settings
 from .transform_manager import TransformManager
 from .utils import get_glyph_icon
-from .viewer import ImageViewer
+from .viewer import BaseImageViewer
 from .widgets.structure import TabbedDockWidget
 
 
@@ -26,13 +26,17 @@ class ViewerDock(TabbedDockWidget):
     def __init__(
         self,
         recent_images_menu: QtWidgets.QMenu,
+        image_viewer_type: type[BaseImageViewer],
         parent: Optional[QtCore.QObject] = None,
     ):
         super().__init__(
-            "Viewer", get_glyph_icon("mdi6.image-filter-center-focus"), parent=parent
+            "Viewer",
+            get_glyph_icon("mdi6.image-filter-center-focus"),
+            parent=parent,
         )
 
         self._recent_images_menu = recent_images_menu
+        self._image_viewer_type = image_viewer_type
 
         self.setAllowedAreas(QtCore.Qt.NoDockWidgetArea)
         self.tabs.setTabPosition(QtWidgets.QTabWidget.West)
@@ -48,7 +52,9 @@ class ViewerDock(TabbedDockWidget):
         # Initialize
         self._update_recent_images_menu()
 
-    def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
+    def eventFilter(
+        self, watched: QtCore.QObject, event: QtCore.QEvent
+    ) -> bool:
         """Tab context menu implementation."""
         if watched == self._tab_bar:
             if event.type() == QtCore.QEvent.ContextMenu:
@@ -73,7 +79,7 @@ class ViewerDock(TabbedDockWidget):
 
     def load_image(
         self, image_path: Optional[Path] = None, new_tab: bool = False
-    ) -> ImageViewer:
+    ) -> BaseImageViewer:
         """
         Load an image into a new or existing viewer tab.
 
@@ -82,14 +88,14 @@ class ViewerDock(TabbedDockWidget):
             the current or first available image viewer.
         :return: Image viewer instance
         """
-        if new_tab or not self._viewers.get(ImageViewer):
+        if new_tab or not self._viewers.get(self._image_viewer_type):
             image_viewer = self.add_image_viewer()
         else:
             current_viewer = self.tabs.currentWidget()
-            if isinstance(current_viewer, ImageViewer):
+            if isinstance(current_viewer, self._image_viewer_type):
                 image_viewer = current_viewer
             else:
-                image_viewer = self._viewers[ImageViewer][0]
+                image_viewer = self._viewers[self._image_viewer_type][0]
 
         self.tabs.setCurrentWidget(image_viewer)
 
@@ -112,14 +118,14 @@ class ViewerDock(TabbedDockWidget):
 
         return image_viewer
 
-    def add_image_viewer(self) -> ImageViewer:
+    def add_image_viewer(self) -> BaseImageViewer:
         """
         Add a new image viewer tab to the dock.
 
         :return: Image viewer instance
         """
-        image_viewer = ImageViewer()
-        self._viewers[ImageViewer].append(image_viewer)
+        image_viewer = self._image_viewer_type()
+        self._viewers[self._image_viewer_type].append(image_viewer)
 
         self.add_tab(
             image_viewer,
@@ -193,7 +199,9 @@ class ViewerDock(TabbedDockWidget):
         num_images = settings.beginReadArray(self.SETTING_RECENT_IMAGES)
         for i in range(num_images):
             settings.setArrayIndex(i)
-            recent_image_path_str = settings.value(self.SETTING_RECENT_IMAGE_PATH)
+            recent_image_path_str = settings.value(
+                self.SETTING_RECENT_IMAGE_PATH
+            )
             if recent_image_path_str:
                 recent_image_path = Path(recent_image_path_str)
                 if recent_image_path.is_file():

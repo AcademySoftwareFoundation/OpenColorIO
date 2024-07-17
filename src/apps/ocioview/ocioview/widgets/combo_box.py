@@ -134,6 +134,7 @@ class CallbackComboBox(ComboBox):
         """
         # Get current state
         current_item = None
+        current_item_restored = False
         if not self.count():
             if self._get_default_item is not None:
                 current_item = self._get_default_item()
@@ -156,11 +157,13 @@ class CallbackComboBox(ComboBox):
                 else:
                     self.addItems(self._get_items())
 
-        # Restore original state
-        index = self.findText(current_item)
-        if index != -1:
-            self.setCurrentIndex(index)
-        elif self._get_default_item is not None:
+            # Restore original state
+            index = self.findText(current_item)
+            if index != -1:
+                self.setCurrentIndex(index)
+                current_item_restored = True
+
+        if not current_item_restored and self._get_default_item is not None:
             self.setCurrentText(self._get_default_item())
 
         return self.currentText()
