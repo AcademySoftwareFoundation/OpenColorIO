@@ -1308,6 +1308,18 @@ public:
     virtual bool getBypassLinToLog() const = 0;
     virtual void setBypassLinToLog(bool bypass) = 0;
 
+    /**
+     * Enable drawCurveOnly mode to return the output value of a spline curve without any of the 
+     * other associated processing of the RGB values. This is useful when the curves need to be 
+     * graphed independently in a user interface. To use this, set the curve parameters on the 
+     * Hue-Sat curve. The R, G, and B values will be sent through that curve but with the interpretation 
+     * that they are the input axis to the curve (which would be hue, sat, or luma) rather than RGB.
+     * This mode ignores the setting of BypassLinToLog, so for scene-linear curves the luma values are 
+     * interpreted as already being in the logarithmic (f-stop) space.
+     */
+    virtual bool getDrawCurveOnly() const = 0;
+    virtual void setDrawCurveOnly( bool drawCurveOnly ) = 0;
+
     ///**
     // * Parameters can be made dynamic so the values can be changed through the CPU or GPU processor,
     // * but if there are several GradingHueCurveTransform only one can have dynamic parameters.

@@ -48,6 +48,9 @@ public:
 
     bool getBypassLinToLog() const noexcept override;
     void setBypassLinToLog(bool bypass) noexcept override;
+    
+    bool getDrawCurveOnly() const noexcept override;
+    void setDrawCurveOnly(bool drawCurveOnly) noexcept override;
 
     bool isDynamic() const noexcept override;
     void makeDynamic() noexcept override;

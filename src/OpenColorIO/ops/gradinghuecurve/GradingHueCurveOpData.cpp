@@ -68,6 +68,7 @@ GradingHueCurveOpData & GradingHueCurveOpData::operator=(const GradingHueCurveOp
     m_direction = rhs.m_direction;
     m_style = rhs.m_style;
     m_bypassLinToLog = rhs.m_bypassLinToLog;
+    m_drawCurveOnly = rhs.m_drawCurveOnly;
 
     // Copy dynamic properties. Sharing happens when needed, with CPUOp for instance.
     m_value->setValue(rhs.m_value->getValue());
@@ -75,6 +76,7 @@ GradingHueCurveOpData & GradingHueCurveOpData::operator=(const GradingHueCurveOp
     {
         m_value->makeDynamic();
     }
+
 
     return *this;
 }
@@ -228,6 +230,7 @@ bool GradingHueCurveOpData::equals(const OpData & other) const
     if (m_direction      != rop->m_direction ||
         m_style          != rop->m_style ||
         m_bypassLinToLog != rop->m_bypassLinToLog ||
+        m_drawCurveOnly  != rop->m_drawCurveOnly ||
        !m_value->equals(  *(rop->m_value)  ))
     {
         return false;

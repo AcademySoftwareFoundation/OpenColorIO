@@ -256,8 +256,18 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
                         const GCProperties & props,
                         bool dyn,
                         bool doLinToLog,
+                        bool drawCurveOnly,
                         GradingStyle style)
 {
+    const std::string pix(shaderCreator->getPixelName());
+    if(drawCurveOnly)
+    {
+        st.newLine() << pix << ".r = " << props.m_eval << "(1, " << pix << ".r, 1.);"; // HUE-SAT
+        st.newLine() << pix << ".g = " << props.m_eval << "(1, " << pix << ".g, 1.);"; // HUE-SAT
+        st.newLine() << pix << ".b = " << props.m_eval << "(1, " << pix << ".b, 1.);"; // HUE-SAT
+        return;
+    }
+
     if (dyn)
     {
         st.newLine() << "if (!" << props.m_localBypass << ")";
@@ -298,8 +308,6 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
         AddLinToLogShaderChannelBlue(shaderCreator, st);
         st.newLine() << "";
     }
-
-    const std::string pix(shaderCreator->getPixelName());
 
     st.newLine() << "";
     st.newLine() << "float hueSatGain = max(0., " << props.m_eval << "(1, " << pix << ".r, 1.));"; // HUE-SAT
@@ -463,10 +471,10 @@ void GetHueCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         shaderCreator->addDynamicProperty(newProp);
 
         // Add uniforms only if needed.
-        AddGCPropertiesUniforms(shaderCreator, shaderProp, properties); // _addAttributeTextToShaderProgram
+        AddGCPropertiesUniforms(shaderCreator, shaderProp, properties);
 
         // Add helper function plus global variables if they are not dynamic.
-        AddCurveEvalMethodTextToShaderProgram(shaderCreator, gcData, properties, dyn); // _addHelperMethodTextToShaderProgram
+        AddCurveEvalMethodTextToShaderProgram(shaderCreator, gcData, properties, dyn);
     }
     else
     {
@@ -474,14 +482,14 @@ void GetHueCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         AddCurveEvalMethodTextToShaderProgram(shaderCreator, gcData, properties, dyn);
     }
 
-    const bool bypassLinToLog = (style == GRADING_LIN) && !gcData->getBypassLinToLog();
+    const bool doLinToLog = (style == GRADING_LIN) && !gcData->getBypassLinToLog();
     switch (dir)
     {
     case TRANSFORM_DIR_FORWARD:
-        AddGCForwardShader(shaderCreator, st, properties, dyn, bypassLinToLog, style); // _addProcessingTextToShaderProgram
+        AddGCForwardShader(shaderCreator, st, properties, dyn, doLinToLog, gcData->getDrawCurveOnly(), style);
         break;
     case TRANSFORM_DIR_INVERSE: // TODO: Implement the inverse shader.
-        //AddGCInverseShader(shaderCreator, st, properties, dyn, bypassLinToLog, style); // _addProcessingTextToShaderProgram
+        //AddGCInverseShader(shaderCreator, st, properties, dyn, bypassLinToLog, style);
         break;
     }
 

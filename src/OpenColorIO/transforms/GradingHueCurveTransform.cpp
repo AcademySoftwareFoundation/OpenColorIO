@@ -121,6 +121,16 @@ void GradingHueCurveTransformImpl::setBypassLinToLog(bool bypass) noexcept
     data().setBypassLinToLog(bypass);
 }
 
+bool GradingHueCurveTransformImpl::getDrawCurveOnly() const noexcept
+{
+    return data().getDrawCurveOnly();
+}
+
+void GradingHueCurveTransformImpl::setDrawCurveOnly( bool drawCurveOnly ) noexcept
+{
+    data().setDrawCurveOnly( drawCurveOnly );
+}
+
 bool GradingHueCurveTransformImpl::isDynamic() const noexcept
 {
     return data().isDynamic();

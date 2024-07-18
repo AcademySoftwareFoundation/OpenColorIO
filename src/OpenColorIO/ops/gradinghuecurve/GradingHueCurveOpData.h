@@ -66,6 +66,9 @@ public:
     bool getBypassLinToLog() const noexcept { return m_bypassLinToLog; }
     void setBypassLinToLog(bool bypass) noexcept { m_bypassLinToLog = bypass; }
 
+    bool getDrawCurveOnly() const noexcept { return m_drawCurveOnly; }
+    void setDrawCurveOnly(bool drawCurveOnly) noexcept { m_drawCurveOnly = drawCurveOnly; }
+
     TransformDirection getDirection() const noexcept;
     void setDirection(TransformDirection dir) noexcept;
 
@@ -85,6 +88,7 @@ private:
     GradingStyle                            m_style;
     DynamicPropertyGradingHueCurveImplRcPtr m_value;
     bool                                    m_bypassLinToLog{ false };
+    bool                                    m_drawCurveOnly{ false };
     TransformDirection                      m_direction{ TRANSFORM_DIR_FORWARD };
 };
 
