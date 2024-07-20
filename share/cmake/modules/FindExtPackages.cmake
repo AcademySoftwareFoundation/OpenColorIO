@@ -67,12 +67,12 @@ if(OCIO_USE_HALF_LOOKUP_TABLE)
 endif()
 
 if(OCIO_YAML_SUPPORT)
-	# yaml-cpp
-	# https://github.com/jbeder/yaml-cpp
-	ocio_handle_dependency(  yaml-cpp REQUIRED ALLOW_INSTALL
-							 MIN_VERSION 0.6.3
-							 RECOMMENDED_VERSION 0.7.0
-							 RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
+    # yaml-cpp
+    # https://github.com/jbeder/yaml-cpp
+    ocio_handle_dependency(  yaml-cpp REQUIRED ALLOW_INSTALL
+                             MIN_VERSION 0.6.3
+                             RECOMMENDED_VERSION 0.7.0
+                             RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
 endif()
 
 if(OCIO_LUT_AND_FILETRANSFORM_SUPPORT)

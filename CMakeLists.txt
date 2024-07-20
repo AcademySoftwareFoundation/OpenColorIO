@@ -397,7 +397,7 @@ endif()
 # Namespace
 
 if(NOT DEFINED OCIO_NAMESPACE)
-	set(OCIO_NAMESPACE "OpenColorIO_v${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}${OpenColorIO_VERSION_RELEASE_TYPE}" CACHE STRING 
+    set(OCIO_NAMESPACE "OpenColorIO_v${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}${OpenColorIO_VERSION_RELEASE_TYPE}" CACHE STRING 
         "Specify the main OCIO C++ namespace: Options include OpenColorIO OpenColorIO_<YOURFACILITY> etc.")
 elseif(OCIO_NAMESPACE STREQUAL "")
     message(FATAL_ERROR "A namespace cannot be empty.")
@@ -422,24 +422,24 @@ set (OCIO_LIBNAME_SUFFIX "" CACHE STRING
 # Error checking
 
 if(OCIO_BUILD_SHARED AND OCIO_BUILD_STATIC)
-	message(FATAL_ERROR 
+    message(FATAL_ERROR 
             "Deprecated options OCIO_BUILD_SHARED and OCIO_BUILD_STATIC cannot both be used at once")
 endif()
 
 if(OCIO_BUILD_SHARED)
-	message(DEPRECATION 
+    message(DEPRECATION 
             "Option OCIO_BUILD_SHARED is deprecated. Please use the cmake standard BUILD_SHARED_LIBS=ON (default ON)")
-	if(NOT BUILD_SHARED_LIBS)
-		set(BUILD_SHARED_LIBS ON)
-	endif()
+    if(NOT BUILD_SHARED_LIBS)
+        set(BUILD_SHARED_LIBS ON)
+    endif()
 endif()
 
 if(OCIO_BUILD_STATIC)
-	message(DEPRECATION 
+    message(DEPRECATION 
             "Option OCIO_BUILD_STATIC is deprecated. Please use the cmake standard BUILD_SHARED_LIBS=OFF (default ON)")
-	if(BUILD_SHARED_LIBS)
-		set(BUILD_SHARED_LIBS OFF)
-	endif()
+    if(BUILD_SHARED_LIBS)
+        set(BUILD_SHARED_LIBS OFF)
+    endif()
 endif()
 
 if (NOT BUILD_SHARED_LIBS AND NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL NONE)
@@ -476,13 +476,21 @@ function(SetFeatureOptions IsEnabled)
     endif()
 endfunction()
 
+unset(OCIO_FEATURESET_FULL)
+unset(OCIO_FEATURESET_NANO)
+unset(OCIO_FEATURESET_CUSTOM)
+
 if(OCIO_FEATURE_SET MATCHES "[Nn][Aa][Nn][Oo]")
+set(OCIO_FEATURESET_NANO ON)
     message(STATUS "'Nano' feature set is selected. All the optional features will be turned OFF.")
     SetFeatureOptions(OFF)
 elseif(OCIO_FEATURE_SET MATCHES "[Ff][Uu][Ll][Ll]")
+    set(OCIO_FEATURESET_FULL ON)
     message(STATUS "'Full' feature set is selected. All the optional features will be turned ON.")
     SetFeatureOptions(ON)
-elseif(NOT OCIO_FEATURE_SET MATCHES "[Cc][Uu][Ss][Tt][Oo][Mm]")
+elseif(OCIO_FEATURE_SET MATCHES "[Cc][Uu][Ss][Tt][Oo][Mm]")
+    set(OCIO_FEATURESET_CUSTOM ON)
+else()
     message(SEND_ERROR "OCIO_FEATURE_SET can take only 'Nano', 'Full' or 'Custom' values.")
 endif()
 
@@ -502,13 +510,13 @@ if(OCIO_BUILD_DOCS AND NOT OCIO_BUILD_PYTHON )
 endif()
 
 if(OCIO_USE_OIIO_FOR_APPS AND NOT OCIO_USE_HALF_LOOKUP_TABLE)
-	message(WARNING "OIIO needs OCIO_USE_HALF_LOOKUP_TABLE which is turned off, thus OCIO_USE_OIIO_FOR_APPS option will be turned off too.")
-	set(OCIO_USE_OIIO_FOR_APPS OFF CACHE BOOL "Request OIIO to build apps (ociolutimage, ocioconvert and ociodisplay), the default uses OpenEXR." FORCE)
+    message(WARNING "OIIO needs OCIO_USE_HALF_LOOKUP_TABLE which is turned off, thus OCIO_USE_OIIO_FOR_APPS option will be turned off too.")
+    set(OCIO_USE_OIIO_FOR_APPS OFF CACHE BOOL "Request OIIO to build apps (ociolutimage, ocioconvert and ociodisplay), the default uses OpenEXR." FORCE)
 endif()
 
-if(OCIO_BUILD_OPENFX AND OCIO_FEATURE_SET MATCHES "[Nn][Aa][Nn][Oo]")
-	message(WARNING "OpenFx is not compatible with Nano feature set thus OCIO_BUILD_OPENFX option will be turned off.")
-	set(OCIO_BUILD_OPENFX OFF CACHE BOOL "Specify whether to build OpenFX plugins" FORCE)
+if(OCIO_BUILD_OPENFX AND OCIO_FEATURESET_NANO)
+    message(WARNING "OpenFx is not compatible with Nano feature set thus OCIO_BUILD_OPENFX option will be turned off.")
+    set(OCIO_BUILD_OPENFX OFF CACHE BOOL "Specify whether to build OpenFX plugins" FORCE)
 endif()
 
 ###############################################################################
@@ -525,7 +533,7 @@ include(FindExtPackages)
 
 add_subdirectory(vendor)
 if(OCIO_BUILD_DOCS)
-	add_subdirectory(docs)
+    add_subdirectory(docs)
 endif()
 add_subdirectory(tests)
 add_subdirectory(src)

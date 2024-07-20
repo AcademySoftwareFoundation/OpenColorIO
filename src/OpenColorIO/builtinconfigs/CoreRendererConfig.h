@@ -2,19 +2,19 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#ifndef INCLUDED_OCIO_STUDIOCONFIG_H
-#define INCLUDED_OCIO_STUDIOCONFIG_H
+#ifndef INCLUDED_OCIO_CORE_RENDERER_CONFIG_H
+#define INCLUDED_OCIO_CORE_RENDERER_CONFIG_H
 
 namespace OCIO_NAMESPACE
 {
 
 class BuiltinConfigRegistryImpl;
 
-namespace STUDIOCONFIG
+namespace CORERENDERERCONFIG
 {
     void Register(BuiltinConfigRegistryImpl & registry) noexcept;
-} // namespace STUDIOCONFIG
+} // namespace CORERENDERERCONFIG
 
 } // namespace OCIO_NAMESPACE
 
-#endif // INCLUDED_OCIO_STUDIOCONFIG_H
+#endif // INCLUDED_OCIO_CORE_RENDERER_CONFIG_H

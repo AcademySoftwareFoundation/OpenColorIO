@@ -1,0 +1,232 @@
+ocio_profile_version: 2
+
+environment:
+  {}
+search_path: ""
+strictparsing: false
+luma: [0.2126, 0.7152, 0.0722]
+name: core-renderer-config-v1.0.0-rc1
+description: |
+  Color Space Encodings for Texture Assets and CG Rendering
+  ASWF Color Interop Forum Recommendation
+
+roles:
+  aces_interchange: ACES2065-1
+  default: sRGB - Scene-referred
+  scene_linear: ACEScg
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  Raw:
+    - !<View> {name: Raw, colorspace: Data}
+
+active_displays: []
+active_views: []
+
+colorspaces:
+  - !<ColorSpace>
+    name: ACES2065-1
+    aliases: [lin_ap0_scene]
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    description: This is the config reference space, other transforms convert to this space.
+    isdata: false
+    encoding: scene-linear
+    allocation: uniform
+
+  - !<ColorSpace>
+    name: ACEScg
+    aliases: [lin_ap1_scene]
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    isdata: false
+    encoding: scene-linear
+    allocation: uniform
+    to_scene_reference: !<GroupTransform>
+      children:
+        - !<MatrixTransform> {matrix: [0.695452241357452, 0.140678696470294, 0.163869062172254, 0, 0.0447945633720377, 0.859671118456422, 0.0955343181715404, 0, -0.00552588255811355, 0.00402521030597869, 1.00150067225214, 0, 0, 0, 0, 1]}
+
+  - !<ColorSpace>
+    name: Linear Rec.709 (sRGB)
+    aliases: [lin_rec709_scene]
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    isdata: false
+    encoding: scene-linear
+    allocation: uniform
+    to_scene_reference: !<GroupTransform>
+      children:
+        - !<MatrixTransform> {matrix: [0.439632981919491, 0.382988698151554, 0.177378319928955, 0, 0.0897764429588424, 0.813439428748981, 0.0967841282921771, 0, 0.0175411703831727, 0.111546553302387, 0.87091227631444, 0, 0, 0, 0, 1]}
+
+  - !<ColorSpace>
+    name: Linear P3-D65
+    aliases: [lin_displayp3_scene]
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    isdata: false
+    encoding: scene-linear
+    allocation: uniform
+    to_scene_reference: !<GroupTransform>
+      children:
+        - !<MatrixTransform> {matrix: [0.518933487597981, 0.28625658638669, 0.194809926015329, 0, 0.0738593830470598, 0.819845163936986, 0.106295453015954, 0, -0.000307011368446647, 0.0438070502536223, 0.956499961114824, 0, 0, 0, 0, 1]}
+
+  - !<ColorSpace>
+    name: Linear Rec.2020
+    aliases: [lin_rec2020_scene]
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    isdata: false
+    encoding: scene-linear
+    allocation: uniform
+    to_scene_reference: !<GroupTransform>
+      children:
+        - !<MatrixTransform> {matrix: [0.679085634706912, 0.157700914643159, 0.163213450649929, 0, 0.0460020030800595, 0.859054673002908, 0.0949433239170327, 0, -0.000573943187616196, 0.0284677684080264, 0.97210617477959, 0, 0, 0, 0, 1]}
+
+  - !<ColorSpace>
+    name: Linear AdobeRGB
+    aliases: [lin_adobergb_scene]
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    isdata: false
+    encoding: scene-linear
+    allocation: uniform
+    to_scene_reference: !<GroupTransform>
+      children:
+        - !<MatrixTransform> {matrix: [0.614763305501725, 0.200243702572018, 0.184992991926256, 0, 0.125539404683864, 0.773521622216629, 0.100938973099507, 0, 0.0245287963611042, 0.0671715435381276, 0.908299660100768, 0, 0, 0, 0, 1]}
+
+  - !<ColorSpace>
+    name: CIE XYZ-D65 - Scene-referred
+    aliases: [lin_ciexyzd65_scene]
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    isdata: false
+    encoding: scene-linear
+    allocation: uniform
+    to_scene_reference: !<GroupTransform>
+      children:
+        - !<MatrixTransform> {matrix: [1.0634954914942, 0.00640891019711789, -0.0158067866176054, 0, -0.492074127923892, 1.36822340747333, 0.0913370883144736, 0, -0.00281646163925351, 0.00464417105680067, 0.916418574593656, 0, 0, 0, 0, 1]}
+
+  - !<ColorSpace>
+    name: sRGB - Scene-referred
+    aliases: [srgb_rec709_scene]
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    isdata: false
+    encoding: sdr-video
+    allocation: uniform
+    to_scene_reference: !<GroupTransform>
+      children:
+        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055}
+        - !<MatrixTransform> {matrix: [0.439632981919491, 0.382988698151554, 0.177378319928955, 0, 0.0897764429588424, 0.813439428748981, 0.0967841282921771, 0, 0.0175411703831727, 0.111546553302387, 0.87091227631444, 0, 0, 0, 0, 1]}
+
+  - !<ColorSpace>
+    name: Gamma 2.2 Rec.709 - Scene-referred
+    aliases: [g22_rec709_scene]
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    isdata: false
+    encoding: sdr-video
+    allocation: uniform
+    to_scene_reference: !<GroupTransform>
+      children:
+        - !<ExponentTransform> {value: 2.2, style: pass_thru}
+        - !<MatrixTransform> {matrix: [0.439632981919491, 0.382988698151554, 0.177378319928955, 0, 0.0897764429588424, 0.813439428748981, 0.0967841282921771, 0, 0.0175411703831727, 0.111546553302387, 0.87091227631444, 0, 0, 0, 0, 1]}
+
+  - !<ColorSpace>
+    name: Gamma 1.8 Rec.709 - Scene-referred
+    aliases: [g18_rec709_scene]
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    isdata: false
+    encoding: sdr-video
+    allocation: uniform
+    to_scene_reference: !<GroupTransform>
+      children:
+        - !<ExponentTransform> {value: 1.8, style: pass_thru}
+        - !<MatrixTransform> {matrix: [0.439632981919491, 0.382988698151554, 0.177378319928955, 0, 0.0897764429588424, 0.813439428748981, 0.0967841282921771, 0, 0.0175411703831727, 0.111546553302387, 0.87091227631444, 0, 0, 0, 0, 1]}
+
+  - !<ColorSpace>
+    name: sRGB Encoded AP1 - Scene-referred
+    aliases: [srgb_ap1_scene]
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    isdata: false
+    encoding: sdr-video
+    allocation: uniform
+    to_scene_reference: !<GroupTransform>
+      children:
+        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055}
+        - !<MatrixTransform> {matrix: [0.695452241357452, 0.140678696470294, 0.163869062172254, 0, 0.0447945633720377, 0.859671118456422, 0.0955343181715404, 0, -0.00552588255811355, 0.00402521030597869, 1.00150067225214, 0, 0, 0, 0, 1]}
+
+  - !<ColorSpace>
+    name: Gamma 2.2 AP1 - Scene-referred
+    aliases: [g22_ap1_scene]
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    isdata: false
+    encoding: sdr-video
+    allocation: uniform
+    to_scene_reference: !<GroupTransform>
+      children:
+        - !<ExponentTransform> {value: 2.2, style: pass_thru}
+        - !<MatrixTransform> {matrix: [0.695452241357452, 0.140678696470294, 0.163869062172254, 0, 0.0447945633720377, 0.859671118456422, 0.0955343181715404, 0, -0.00552588255811355, 0.00402521030597869, 1.00150067225214, 0, 0, 0, 0, 1]}
+
+  - !<ColorSpace>
+    name: sRGB Encoded P3-D65 - Scene-referred
+    aliases: [srgb_displayp3_scene]
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    isdata: false
+    encoding: sdr-video
+    allocation: uniform
+    to_scene_reference: !<GroupTransform>
+      children:
+        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055}
+        - !<MatrixTransform> {matrix: [0.518933487597981, 0.28625658638669, 0.194809926015329, 0, 0.0738593830470598, 0.819845163936986, 0.106295453015954, 0, -0.000307011368446647, 0.0438070502536223, 0.956499961114824, 0, 0, 0, 0, 1]}
+
+  - !<ColorSpace>
+    name: AdobeRGB - Scene-referred
+    aliases: [g22_adobergb_scene]
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    isdata: false
+    encoding: sdr-video
+    allocation: uniform
+    to_scene_reference: !<GroupTransform>
+      children:
+        - !<ExponentTransform> {value: 2.19921875, style: pass_thru}
+        - !<MatrixTransform> {matrix: [0.614763305501725, 0.200243702572018, 0.184992991926256, 0, 0.125539404683864, 0.773521622216629, 0.100938973099507, 0, 0.0245287963611042, 0.0671715435381276, 0.908299660100768, 0, 0, 0, 0, 1]}
+
+  - !<ColorSpace>
+    name: Data
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    isdata: true
+    encoding: data
+    allocation: uniform
+
+  - !<ColorSpace>
+    name: Unknown
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    description: This is not actually a color space, but adding it to reserve the name.
+    isdata: true
+    allocation: uniform

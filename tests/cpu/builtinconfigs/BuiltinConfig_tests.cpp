@@ -13,7 +13,7 @@ namespace OCIO = OCIO_NAMESPACE;
 OCIO_ADD_TEST(BuiltinConfigs, basic)
 {
     const OCIO::BuiltinConfigRegistry & registry = OCIO::BuiltinConfigRegistry::Get();
-    OCIO_CHECK_EQUAL(registry.getNumBuiltinConfigs(), 4);
+    OCIO_CHECK_EQUAL(registry.getNumBuiltinConfigs(), 5);
 
     // Test builtin config cg-config-v1.0.0_aces-v1.3_ocio-v2.1.
     {
@@ -122,6 +122,33 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
 #endif
         OCIO_CHECK_EQUAL(registry.isBuiltinConfigRecommended(3), true);
     }
+
+    // Test builtin config ocio://core-renderer-config-v1.0.0-rc1.
+    {
+        const std::string coreRendererConfigName = "core-renderer-config-v1.0.0-rc1";
+
+        OCIO_CHECK_EQUAL(
+            std::string(registry.getBuiltinConfigName(4)),
+            coreRendererConfigName
+        );
+
+        OCIO_CHECK_EQUAL(
+            std::string(registry.getBuiltinConfigUIName(4)),
+            std::string("ASWF Color Interop Forum -- Color Space Encodings for Texture Assets and CG Rendering")
+        );
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_REQUIRE_NO_THROW(config = registry.createBuiltinConfig(4));
+#if OCIO_YAML_SUPPORT
+        OCIO_CHECK_EQUAL(std::string(config->getCacheID()), std::string("d08df5fbe04c6f7440a60bdb66447af4:6001c324468d497f99aa06d3014798d8"));
+#endif
+        OCIO_REQUIRE_NO_THROW(config = registry.createBuiltinConfigByName(coreRendererConfigName.c_str()));
+#if OCIO_YAML_SUPPORT
+        OCIO_CHECK_EQUAL(std::string(config->getCacheID()), std::string("d08df5fbe04c6f7440a60bdb66447af4:6001c324468d497f99aa06d3014798d8"));
+#endif
+        OCIO_CHECK_EQUAL(registry.isBuiltinConfigRecommended(4), true);
+    }
+
 
     // ********************************
     // Testing some expected failures.
