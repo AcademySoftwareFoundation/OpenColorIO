@@ -9,6 +9,7 @@ import PyOpenColorIO as ocio
 
 from ..config_cache import ConfigCache
 from ..constants import ICON_SIZE_ITEM
+from ..signal_router import SignalRouter
 from ..utils import get_glyph_icon
 from ..widgets import (
     CheckBox,
@@ -149,6 +150,7 @@ class ColorSpaceEdit(BaseConfigItemEdit):
     """
 
     __param_edit_type__ = ColorSpaceParamEdit
+    __signal_router_emit__ = SignalRouter.emit_color_spaces_changed.__name__
 
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None):
         super().__init__(parent=parent)

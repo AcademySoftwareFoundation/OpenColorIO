@@ -58,8 +58,7 @@ class InspectDock(TabbedDockWidget):
         )
 
     def reset(self) -> None:
-        """Reset data for all inspectors."""
+        """Reset data for all inspectors, except the log."""
         self.chromaticities_inspector.reset()
         self.curve_inspector.reset()
         self.code_inspector.reset()
-        self.log_inspector.reset()

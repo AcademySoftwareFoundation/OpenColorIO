@@ -191,10 +191,11 @@ class OCIOView(QtWidgets.QMainWindow):
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.config_dock)
 
         # Connections
-        self.config_dock.config_changed.connect(
+        signal_router = SignalRouter.get_instance()
+        signal_router.config_changed.connect(
             lambda: self._get_viewer_dock().update_current_viewer()
         )
-        self.config_dock.config_changed.connect(self._update_window_title)
+        signal_router.config_reloaded.connect(self._update_window_title)
 
         # Restore settings
         settings.beginGroup(self.__class__.__name__)
@@ -272,6 +273,8 @@ class OCIOView(QtWidgets.QMainWindow):
         ocio.SetCurrentConfig(config)
         self.reset()
 
+        SignalRouter.get_instance().emit_config_reloaded()
+
     def load_config(self, config_path: Optional[Path] = None) -> None:
         """
         Load a user specified OCIO config.
@@ -316,6 +319,8 @@ class OCIOView(QtWidgets.QMainWindow):
         config = ocio.Config.CreateFromFile(self._config_path.as_posix())
         ocio.SetCurrentConfig(config)
         self.reset()
+
+        SignalRouter.get_instance().emit_config_reloaded()
 
     def save_config(self) -> bool:
         """

@@ -7,6 +7,7 @@ from typing import Optional
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..constants import MARGIN_WIDTH, ICON_SIZE_TAB
+from ..signal_router import SignalRouter
 from ..transform_manager import TransformManager
 from ..transforms import TransformEditStack
 from ..utils import get_glyph_icon, SignalsBlocked
@@ -206,6 +207,9 @@ class BaseConfigItemEdit(QtWidgets.QWidget):
     # By default, this inherits from __has_list__.
     __has_splitter__: bool = None
 
+    # If set, call the named signal router method on model change
+    __signal_router_emit__: str = None
+
     @classmethod
     def item_type_icon(cls) -> QtGui.QIcon:
         """
@@ -232,6 +236,16 @@ class BaseConfigItemEdit(QtWidgets.QWidget):
             self.param_edit.setEnabled(False)
 
         model = self.model
+
+        # Connect signal router to model change
+        if self.__signal_router_emit__:
+            signal_router = SignalRouter.get_instance()
+            emit_method = getattr(signal_router, self.__signal_router_emit__)
+            model.dataChanged.connect(lambda *a, **kw: emit_method())
+            model.item_renamed.connect(lambda *a, **kw: emit_method())
+            model.item_added.connect(lambda *a, **kw: emit_method())
+            model.item_moved.connect(lambda *a, **kw: emit_method())
+            model.item_removed.connect(lambda *a, **kw: emit_method())
 
         if self.__has_list__:
             self.list = ItemModelListWidget(

@@ -15,16 +15,19 @@ class SignalRouter(QtCore.QObject):
     """
 
     mode_changed = QtCore.Signal()
-    """
-    Signal that is emitted whenever the current application mode is 
-    changed.
-    """
+    """Emitted when the current application mode is changed."""
 
     config_changed = QtCore.Signal()
-    """
-    Signal that is emitted whenever the current config is modified or 
-    replaced.
-    """
+    """Emitted when the current config is modified."""
+
+    config_reloaded = QtCore.Signal()
+    """Emitted when the current config is reloaded or replaced."""
+
+    color_spaces_changed = QtCore.Signal()
+    """Emitted when a color space is added, removed, or changed."""
+
+    roles_changed = QtCore.Signal()
+    """Emitted when a color space role is added, removed, or changed."""
 
     __instance: SignalRouter = None
 
@@ -47,15 +50,35 @@ class SignalRouter(QtCore.QObject):
         else:
             self.__instance = self
 
-    def emit_config_changed(self) -> None:
-        """
-        Notify listeners that the current OCIO config has been modified
-        or replaced.
-        """
-        self.config_changed.emit()
-
     def emit_mode_changed(self) -> None:
         """
         Notify listeners that the current application mode has changed.
         """
         self.mode_changed.emit()
+
+    def emit_config_changed(self) -> None:
+        """
+        Notify listeners that the current OCIO config has been modified.
+        """
+        self.config_changed.emit()
+
+    def emit_config_reloaded(self) -> None:
+        """
+        Notify listeners that the current OCIO config has been reloaded
+        or replaced.
+        """
+        self.config_reloaded.emit()
+
+    def emit_color_spaces_changed(self) -> None:
+        """
+        Notify listeners when a color space is added, removed, or
+        changed.
+        """
+        self.color_spaces_changed.emit()
+
+    def emit_roles_changed(self) -> None:
+        """
+        Notify listeners when a color space role is added, removed, or
+        changed.
+        """
+        self.roles_changed.emit()

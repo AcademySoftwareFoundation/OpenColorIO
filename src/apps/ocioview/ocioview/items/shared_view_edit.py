@@ -8,7 +8,7 @@ import PyOpenColorIO as ocio
 from PySide6 import QtWidgets
 
 from ..config_cache import ConfigCache
-from ..widgets import CallbackComboBox, LineEdit
+from ..widgets import CallbackComboBox, ColorSpaceComboBox, LineEdit
 from .config_item_edit import BaseConfigItemParamEdit, BaseConfigItemEdit
 from .shared_view_model import SharedViewModel
 
@@ -23,11 +23,10 @@ class SharedViewParamEdit(BaseConfigItemParamEdit):
         super().__init__(parent=parent)
 
         # Widgets
-        self.color_space_combo = CallbackComboBox(
-            lambda: [ocio.OCIO_VIEW_USE_DISPLAY_NAME]
-            + ConfigCache.get_color_space_names(
-                ocio.SEARCH_REFERENCE_SPACE_DISPLAY
-            )
+        self.color_space_combo = ColorSpaceComboBox(
+            reference_space_type=ocio.SEARCH_REFERENCE_SPACE_DISPLAY,
+            visibility=ocio.COLORSPACE_ALL,
+            include_use_display_name=True,
         )
         self.view_transform_combo = CallbackComboBox(
             ConfigCache.get_view_transform_names
@@ -78,7 +77,7 @@ class SharedViewEdit(BaseConfigItemEdit):
         )
 
         # Trigger immediate update from widgets that update the model upon losing focus
-        self.param_edit.color_space_combo.currentIndexChanged.connect(
+        self.param_edit.color_space_combo.color_space_changed.connect(
             partial(self.param_edit.submit_mapper_deferred, self.mapper)
         )
         self.param_edit.view_transform_combo.currentIndexChanged.connect(

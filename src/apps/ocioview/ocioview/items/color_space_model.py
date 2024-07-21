@@ -228,7 +228,8 @@ class ColorSpaceModel(BaseConfigItemModel):
 
         # Update parameters
         if column_desc == self.NAME:
-            new_item.setName(value)
+            if value:
+                new_item.setName(value)
         elif column_desc == self.ALIASES:
             new_item.clearAliases()
             for alias in value:

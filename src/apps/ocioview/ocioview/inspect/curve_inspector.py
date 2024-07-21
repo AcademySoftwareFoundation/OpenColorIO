@@ -256,6 +256,7 @@ class CurveView(QtWidgets.QGraphicsView):
         )
 
         # Cached processor from which the OCIO transform is derived
+        self._prev_proc_context = None
         self._prev_cpu_proc = None
 
         # Graphics scene
@@ -591,8 +592,13 @@ class CurveView(QtWidgets.QGraphicsView):
         processor.
         """
         self._update_x_samples()
-        if self._prev_cpu_proc is not None:
-            self._on_processor_ready(self._prev_cpu_proc)
+        if (
+            self._prev_proc_context is not None
+            and self._prev_cpu_proc is not None
+        ):
+            self._on_processor_ready(
+                self._prev_proc_context, self._prev_cpu_proc
+            )
 
     def _update_x_samples(self):
         """
@@ -670,6 +676,7 @@ class CurveView(QtWidgets.QGraphicsView):
         """
         self.reset()
 
+        self._prev_proc_context = proc_context
         self._prev_cpu_proc = cpu_proc
 
         # Get input samples

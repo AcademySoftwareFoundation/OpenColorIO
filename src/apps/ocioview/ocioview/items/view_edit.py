@@ -11,6 +11,7 @@ from ..config_cache import ConfigCache
 from ..transform_manager import TransformManager
 from ..widgets import (
     CallbackComboBox,
+    ColorSpaceComboBox,
     ExpandingStackedWidget,
     FormLayout,
     ItemModelListWidget,
@@ -86,21 +87,15 @@ class ViewParamEdit(BaseConfigItemParamEdit):
                     )
 
                 if view_type == ViewType.VIEW_SCENE:
-                    get_view_color_space_names = (
-                        lambda: ConfigCache.get_color_space_names(
-                            ocio.SEARCH_REFERENCE_SPACE_SCENE
-                        )
+                    color_space_combo = ColorSpaceComboBox(
+                        reference_space_type=ocio.SEARCH_REFERENCE_SPACE_SCENE,
+                        visibility=ocio.COLORSPACE_ALL,
                     )
                 else:  # ViewType.VIEW_DISPLAY
-                    get_view_color_space_names = (
-                        lambda: ConfigCache.get_color_space_names(
-                            ocio.SEARCH_REFERENCE_SPACE_DISPLAY
-                        )
+                    color_space_combo = ColorSpaceComboBox(
+                        reference_space_type=ocio.SEARCH_REFERENCE_SPACE_DISPLAY,
+                        visibility=ocio.COLORSPACE_ALL,
                     )
-
-                color_space_combo = CallbackComboBox(
-                    get_view_color_space_names
-                )
                 self.color_space_combos[view_type] = color_space_combo
                 params_layout.addRow(
                     self.model.COLOR_SPACE.label, color_space_combo
@@ -168,7 +163,7 @@ class ViewParamEdit(BaseConfigItemParamEdit):
 
             # Trigger color space update before losing focus
             if color_space_combo not in self._connected[view_mapper]:
-                color_space_combo.currentIndexChanged.connect(
+                color_space_combo.color_space_changed.connect(
                     partial(self.submit_mapper_deferred, view_mapper)
                 )
                 self._connected[view_mapper].append(color_space_combo)
@@ -286,7 +281,7 @@ class ViewEdit(BaseConfigItemEdit):
         signal is emitted twice when pressing enter. See:
             https://forum.qt.io/topic/39141/qlineedit-editingfinished-signal-is-emitted-twice
         """
-        view_type, _ = self._get_view_type(self.list.current_row())
+        view_type = self._get_view_type(self.list.current_row())
         self.param_edit.display_edits[view_type].blockSignals(True)
         self._display_mapper.submit()
         self.param_edit.display_edits[view_type].blockSignals(False)

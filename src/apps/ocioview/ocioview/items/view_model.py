@@ -374,12 +374,19 @@ class ViewModel(BaseConfigItemModel):
 
         # Display views
         for name in config.getViews(ocio.VIEW_DISPLAY_DEFINED, self._display):
-            view_type, warning = get_view_type(self._display, name)
-            if warning:
-                self.warning_raised.emit(warning)
+            view_type = get_view_type(self._display, name)
 
-            self._items.append(
-                View(
+            if view_type == ViewType.VIEW_SCENE:
+                view = View(
+                    view_type,
+                    name,
+                    config.getDisplayViewColorSpaceName(self._display, name),
+                    looks=config.getDisplayViewLooks(self._display, name),
+                )
+                self._items.append(view)
+
+            else:  # VIEW_DISPLAY
+                view = View(
                     view_type,
                     name,
                     config.getDisplayViewColorSpaceName(self._display, name),
@@ -388,21 +395,20 @@ class ViewModel(BaseConfigItemModel):
                     config.getDisplayViewRule(self._display, name),
                     config.getDisplayViewDescription(self._display, name),
                 )
-            )
+                self._items.append(view)
 
         # Shared views
         for name in config.getViews(ocio.VIEW_SHARED, self._display):
-            self._items.append(
-                View(
-                    ViewType.VIEW_SHARED,
-                    name,
-                    config.getDisplayViewColorSpaceName("", name),
-                    config.getDisplayViewTransformName("", name),
-                    config.getDisplayViewLooks("", name),
-                    config.getDisplayViewRule("", name),
-                    config.getDisplayViewDescription("", name),
-                )
+            view = View(
+                ViewType.VIEW_SHARED,
+                name,
+                config.getDisplayViewColorSpaceName("", name),
+                config.getDisplayViewTransformName("", name),
+                config.getDisplayViewLooks("", name),
+                config.getDisplayViewRule("", name),
+                config.getDisplayViewDescription("", name),
             )
+            self._items.append(view)
 
         return self._items
 

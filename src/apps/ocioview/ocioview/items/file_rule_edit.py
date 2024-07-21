@@ -3,13 +3,13 @@
 
 from typing import Optional
 
+import PyOpenColorIO as ocio
 from PySide6 import QtCore, QtWidgets
 
-from ..config_cache import ConfigCache
 from ..constants import ICON_SIZE_ITEM
 from ..utils import get_glyph_icon
 from ..widgets import (
-    CallbackComboBox,
+    ColorSpaceComboBox,
     ExpandingStackedWidget,
     FormLayout,
     LineEdit,
@@ -49,8 +49,8 @@ class FileRuleParamEdit(BaseConfigItemParamEdit):
             params_layout.addRow(self.model.NAME.label, name_edit)
 
             if file_rule_type != FileRuleType.RULE_OCIO_V1:
-                color_space_combo = CallbackComboBox(
-                    ConfigCache.get_color_space_names
+                color_space_combo = ColorSpaceComboBox(
+                    visibility=ocio.COLORSPACE_ALL
                 )
                 self.color_space_combos[file_rule_type] = color_space_combo
                 params_layout.addRow(

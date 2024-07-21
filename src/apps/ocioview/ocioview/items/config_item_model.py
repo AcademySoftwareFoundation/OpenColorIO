@@ -478,42 +478,45 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
         Remove ``count`` items from the current config, starting at
         ``row`` index.
         """
-        self.beginRemoveRows(parent, row, row + count - 1)
-
         items = self._get_items()
         item_names = self.get_item_names()
         num_items = len(items)
-        do_not_remove = []
+        remove_rows = []
+        could_not_remove = []
 
-        with ConfigSnapshotUndoCommand(
-            f"Delete {self.item_type_label()}",
-            model=self,
-            item_name=item_names[row],
-        ):
-            for i in reversed(range(row, row + count)):
-                if i < num_items:
-                    item = items[i]
-                    can_be_removed, reason = self._can_item_be_removed(item)
-                    if not can_be_removed:
-                        do_not_remove.append((item_names[i], reason))
-                    else:
-                        self._remove_item(item)
+        for i in range(row, row + count):
+            if i < num_items:
+                item = items[i]
+                can_be_removed, reason = self._can_item_be_removed(item)
+                if not can_be_removed:
+                    could_not_remove.append((item_names[i], reason))
+                else:
+                    remove_rows.append(i)
 
-            if num_items:
+        if remove_rows:
+            with ConfigSnapshotUndoCommand(
+                f"Delete {self.item_type_label()}",
+                model=self,
+                item_name=item_names[row],
+            ):
+                self.beginRemoveRows(parent, row, row + count - 1)
+
+                for i in reversed(remove_rows):
+                    self._remove_item(items[i])
+
                 self.item_removed.emit()
-
-            self.endRemoveRows()
+                self.endRemoveRows()
 
         # Warn user about refused item removals
-        if do_not_remove:
+        if could_not_remove:
             item_warning_lines = []
-            for item_name, reason in do_not_remove:
+            for item_name, reason in could_not_remove:
                 item_warning_lines.append(f"<b>{item_name}</b> {reason}")
             item_warnings = "<br><br>".join(item_warning_lines)
 
             self.warning_raised.emit(
-                f"{len(do_not_remove)} "
-                f"{self.item_type_label(plural=len(do_not_remove) != 1).lower()} could "
+                f"{len(could_not_remove)} "
+                f"{self.item_type_label(plural=len(could_not_remove) != 1).lower()} could "
                 f"not be removed:<br><br>{item_warnings}"
             )
 

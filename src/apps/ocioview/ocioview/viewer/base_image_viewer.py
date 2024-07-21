@@ -20,7 +20,7 @@ from ..constants import (
 )
 from ..processor_context import ProcessorContext
 from ..utils import float_to_uint8, get_glyph_icon, SignalsBlocked
-from ..widgets import CallbackComboBox
+from ..widgets import CallbackComboBox, ColorSpaceComboBox
 from .image_plane import ImagePlane
 
 
@@ -74,15 +74,9 @@ class BaseImageViewer(QtWidgets.QWidget):
             "mdi6.import", as_widget=True
         )
         self.input_color_space_label.setToolTip("Input color space")
-        self.input_color_space_box = CallbackComboBox(
-            self._get_color_spaces,
-            get_default_item=self._get_default_color_space,
-        )
+        self.input_color_space_box = ColorSpaceComboBox(include_roles=True)
         self.input_color_space_box.setToolTip(
             self.input_color_space_label.toolTip()
-        )
-        self.input_color_space_box.setSizeAdjustPolicy(
-            QtWidgets.QComboBox.AdjustToContents
         )
 
         self.exposure_label = get_glyph_icon("ph.aperture", as_widget=True)
@@ -273,7 +267,7 @@ class BaseImageViewer(QtWidgets.QWidget):
         self.image_plane.image_loaded.connect(self._on_image_loaded)
         self.image_plane.scale_changed.connect(self._on_scale_changed)
         self.image_plane.sample_changed.connect(self._on_sample_changed)
-        self.input_color_space_box.currentTextChanged[str].connect(
+        self.input_color_space_box.color_space_changed.connect(
             self._on_input_color_space_changed
         )
         self.exposure_box.valueChanged.connect(self._on_exposure_changed)
@@ -331,7 +325,7 @@ class BaseImageViewer(QtWidgets.QWidget):
 
     def input_color_space(self) -> str:
         """Get input color space name."""
-        return self.input_color_space_box.currentText()
+        return self.input_color_space_box.color_space_name()
 
     def set_input_color_space(self, color_space: str) -> None:
         """
@@ -342,8 +336,7 @@ class BaseImageViewer(QtWidgets.QWidget):
 
         :param color_space: OCIO color space name
         """
-        self.input_color_space_box.update_items()
-        self.input_color_space_box.setCurrentText(color_space)
+        self.input_color_space_box.set_color_space(color_space)
 
     def view_channel(self, channel: int) -> None:
         """
@@ -492,8 +485,7 @@ class BaseImageViewer(QtWidgets.QWidget):
             )
         )
 
-    @QtCore.Slot(str)
-    def _on_input_color_space_changed(self, input_color_space: str) -> None:
+    def _on_input_color_space_changed(self) -> None:
         self.image_plane.update_ocio_proc(
             proc_context=self._make_processor_context()
         )

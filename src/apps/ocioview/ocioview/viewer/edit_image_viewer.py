@@ -87,13 +87,9 @@ class EditImageViewer(BaseImageViewer):
         self.update(force=True)
 
     def update(self, force: bool = False, update_items: bool = True) -> None:
-        if update_items:
-            self.input_color_space_box.update_items()
-
         self.image_plane.update_ocio_proc(
             proc_context=self._make_processor_context(), force_update=force
         )
-
         super().update()
 
     def reset(self) -> None:

@@ -67,7 +67,6 @@ class PreviewImageViewer(BaseImageViewer):
 
     def update(self, force: bool = False, update_items: bool = True) -> None:
         if update_items:
-            self.input_color_space_box.update_items()
             self.display_box.update_items()
             self.view_box.update_items()
 
@@ -116,7 +115,11 @@ class PreviewImageViewer(BaseImageViewer):
         Get all active OCIO views, given the current input color space.
         """
         config = ocio.GetCurrentConfig()
-        return config.getViews(self.display(), self.input_color_space())
+        input_color_space = self.input_color_space()
+        if input_color_space:
+            return config.getViews(self.display(), input_color_space)
+        else:
+            return config.getViews(self.display())
 
     def _get_default_view(self) -> str:
         """

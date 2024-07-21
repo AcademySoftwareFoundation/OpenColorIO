@@ -7,8 +7,7 @@ from typing import Optional
 import PyOpenColorIO as ocio
 from PySide6 import QtWidgets
 
-from ..config_cache import ConfigCache
-from ..widgets import CallbackComboBox, TextEdit
+from ..widgets import ColorSpaceComboBox, TextEdit
 from .look_model import LookModel
 from .config_item_edit import BaseConfigItemParamEdit, BaseConfigItemEdit
 
@@ -27,10 +26,10 @@ class LookParamEdit(BaseConfigItemParamEdit):
         super().__init__(parent=parent)
 
         # Widgets
-        self.process_space_combo = CallbackComboBox(
-            lambda: ConfigCache.get_color_space_names(
-                ocio.SEARCH_REFERENCE_SPACE_SCENE
-            )
+        self.process_space_combo = ColorSpaceComboBox(
+            ocio.SEARCH_REFERENCE_SPACE_SCENE,
+            visibility=ocio.COLORSPACE_ALL,
+            include_roles=True,
         )
         self.description_edit = TextEdit()
 
@@ -64,7 +63,7 @@ class LookEdit(BaseConfigItemEdit):
         )
 
         # Trigger immediate update from widgets that update the model upon losing focus
-        self.param_edit.process_space_combo.currentIndexChanged.connect(
+        self.param_edit.process_space_combo.color_space_changed.connect(
             partial(self.param_edit.submit_mapper_deferred, self.mapper)
         )
 

@@ -68,44 +68,46 @@ class DisplayModel(BaseConfigItemModel):
         self._items = []
 
         # Get views to preserve through display name changes
-        for name in ConfigCache.get_displays():
+        for name in config.getDisplays():
             display = Display(name)
 
             # Display-defined views
-            for view in ConfigCache.get_views(
-                name, view_type=ocio.VIEW_DISPLAY_DEFINED
-            ):
-                view_type, warning = get_view_type(name, view)
-                if warning:
-                    self.warning_raised.emit(warning)
+            for view in config.getViews(ocio.VIEW_DISPLAY_DEFINED, name):
+                view_type = get_view_type(name, view)
 
-                display.views.append(
-                    View(
+                if view_type == ViewType.VIEW_SCENE:
+                    view_ref = View(
                         view_type,
-                        view,
+                        name,
+                        config.getDisplayViewColorSpaceName(name, view),
+                        looks=config.getDisplayViewLooks(name, view),
+                    )
+                    display.views.append(view_ref)
+
+                else:  # VIEW_DISPLAY
+                    view_ref = View(
+                        view_type,
+                        name,
                         config.getDisplayViewColorSpaceName(name, view),
                         config.getDisplayViewTransformName(name, view),
                         config.getDisplayViewLooks(name, view),
                         config.getDisplayViewRule(name, view),
                         config.getDisplayViewDescription(name, view),
                     )
-                )
+                    display.views.append(view_ref)
 
             # Shared views
-            for view in ConfigCache.get_views(
-                name, view_type=ocio.VIEW_SHARED
-            ):
-                display.views.append(
-                    View(
-                        ViewType.VIEW_SHARED,
-                        view,
-                        config.getDisplayViewColorSpaceName("", view),
-                        config.getDisplayViewTransformName("", view),
-                        config.getDisplayViewLooks("", view),
-                        config.getDisplayViewRule("", view),
-                        config.getDisplayViewDescription("", view),
-                    )
+            for view in config.getViews(ocio.VIEW_SHARED, name):
+                view_ref = View(
+                    ViewType.VIEW_SHARED,
+                    view,
+                    config.getDisplayViewColorSpaceName("", view),
+                    config.getDisplayViewTransformName("", view),
+                    config.getDisplayViewLooks("", view),
+                    config.getDisplayViewRule("", view),
+                    config.getDisplayViewDescription("", view),
                 )
+                display.views.append(view_ref)
 
             self._items.append(display)
 

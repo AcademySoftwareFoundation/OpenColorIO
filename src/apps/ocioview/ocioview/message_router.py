@@ -342,7 +342,14 @@ class MessageRouter(QtCore.QObject):
         self._thread = QtCore.QThread()
         self._runner = MessageRunner()
         self._runner.moveToThread(self._thread)
-        self._thread.started.connect(self._runner.start_routing)
+
+        # Delay router start to ease application startup
+        self._timer = QtCore.QTimer()
+        self._timer.setSingleShot(True)
+        self._timer.setInterval(int(MessageRunner.LOOP_INTERVAL * 1000))
+        self._timer.timeout.connect(self._runner.start_routing)
+
+        self._thread.started.connect(self._timer.start)
 
         # Make sure thread stops and routing is cleaned up on app close
         app = QtWidgets.QApplication.instance()

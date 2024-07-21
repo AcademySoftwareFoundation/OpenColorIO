@@ -6,6 +6,7 @@ from typing import Optional
 import PyOpenColorIO as ocio
 from PySide6 import QtCore, QtWidgets
 
+from .signal_router import SignalRouter
 from .items import (
     ColorSpaceEdit,
     ConfigPropertiesEdit,
@@ -26,10 +27,10 @@ class ConfigDock(TabbedDockWidget):
     Dockable widget for editing the current config.
     """
 
-    config_changed = QtCore.Signal()
-
     def __init__(self, parent: Optional[QtCore.QObject] = None):
-        super().__init__("Config", get_glyph_icon("ph.file-text"), parent=parent)
+        super().__init__(
+            "Config", get_glyph_icon("ph.file-text"), parent=parent
+        )
 
         self._models = []
 
@@ -50,9 +51,13 @@ class ConfigDock(TabbedDockWidget):
         self._connect_config_item_model(self.rule_edit.viewing_rule_edit.model)
 
         self.display_view_edit = DisplayViewEdit()
-        self._connect_config_item_model(self.display_view_edit.view_edit.display_model)
+        self._connect_config_item_model(
+            self.display_view_edit.view_edit.display_model
+        )
         self._connect_config_item_model(self.display_view_edit.view_edit.model)
-        self._connect_config_item_model(self.display_view_edit.shared_view_edit.model)
+        self._connect_config_item_model(
+            self.display_view_edit.shared_view_edit.model
+        )
         self._connect_config_item_model(
             self.display_view_edit.active_display_view_edit.active_display_edit.model
         )
@@ -137,7 +142,9 @@ class ConfigDock(TabbedDockWidget):
         """
         message_queue.put_nowait(ocio.GetCurrentConfig())
 
-    def _connect_config_item_model(self, model: QtCore.QAbstractItemModel) -> None:
+    def _connect_config_item_model(
+        self, model: QtCore.QAbstractItemModel
+    ) -> None:
         """
         Collect model and route all config changes to the
         'config_changed' signal.
@@ -154,7 +161,7 @@ class ConfigDock(TabbedDockWidget):
         """
         Broadcast to the wider application that the config has changed.
         """
-        self.config_changed.emit()
+        SignalRouter.get_instance().emit_config_changed()
         self.update_config_views()
 
     def _on_warning_raised(self, message: str) -> None:
