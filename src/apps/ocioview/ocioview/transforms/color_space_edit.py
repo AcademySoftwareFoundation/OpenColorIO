@@ -18,14 +18,10 @@ class ColorSpaceTransformEdit(BaseTransformEdit):
         super().__init__(parent=parent)
 
         # Widget
-        self.src_combo = ColorSpaceComboBox(
-            visibility=ocio.COLORSPACE_ALL, include_roles=True
-        )
+        self.src_combo = ColorSpaceComboBox(include_roles=True)
         self.src_combo.color_space_changed.connect(self._on_edit)
 
-        self.dst_combo = ColorSpaceComboBox(
-            visibility=ocio.COLORSPACE_ALL, include_roles=True
-        )
+        self.dst_combo = ColorSpaceComboBox(include_roles=True)
         self.dst_combo.color_space_changed.connect(self._on_edit)
 
         self.data_bypass_check = CheckBox("Data Bypass")

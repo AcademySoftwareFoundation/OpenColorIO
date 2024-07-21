@@ -89,12 +89,10 @@ class ViewParamEdit(BaseConfigItemParamEdit):
                 if view_type == ViewType.VIEW_SCENE:
                     color_space_combo = ColorSpaceComboBox(
                         reference_space_type=ocio.SEARCH_REFERENCE_SPACE_SCENE,
-                        visibility=ocio.COLORSPACE_ALL,
                     )
                 else:  # ViewType.VIEW_DISPLAY
                     color_space_combo = ColorSpaceComboBox(
                         reference_space_type=ocio.SEARCH_REFERENCE_SPACE_DISPLAY,
-                        visibility=ocio.COLORSPACE_ALL,
                     )
                 self.color_space_combos[view_type] = color_space_combo
                 params_layout.addRow(

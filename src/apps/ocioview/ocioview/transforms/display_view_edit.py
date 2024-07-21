@@ -21,9 +21,7 @@ class DisplayViewTransformEdit(BaseTransformEdit):
 
         # Widget
         self.src_combo = ColorSpaceComboBox(
-            ocio.SEARCH_REFERENCE_SPACE_SCENE,
-            visibility=ocio.COLORSPACE_ALL,
-            include_roles=True,
+            ocio.SEARCH_REFERENCE_SPACE_SCENE, include_roles=True
         )
         self.src_combo.color_space_changed.connect(self._on_edit)
 

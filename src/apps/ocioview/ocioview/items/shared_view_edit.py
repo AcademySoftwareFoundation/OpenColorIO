@@ -25,7 +25,6 @@ class SharedViewParamEdit(BaseConfigItemParamEdit):
         # Widgets
         self.color_space_combo = ColorSpaceComboBox(
             reference_space_type=ocio.SEARCH_REFERENCE_SPACE_DISPLAY,
-            visibility=ocio.COLORSPACE_ALL,
             include_use_display_name=True,
         )
         self.view_transform_combo = CallbackComboBox(

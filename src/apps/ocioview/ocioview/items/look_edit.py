@@ -27,9 +27,7 @@ class LookParamEdit(BaseConfigItemParamEdit):
 
         # Widgets
         self.process_space_combo = ColorSpaceComboBox(
-            ocio.SEARCH_REFERENCE_SPACE_SCENE,
-            visibility=ocio.COLORSPACE_ALL,
-            include_roles=True,
+            ocio.SEARCH_REFERENCE_SPACE_SCENE, include_roles=True
         )
         self.description_edit = TextEdit()
 

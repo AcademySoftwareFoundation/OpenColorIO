@@ -49,9 +49,7 @@ class FileRuleParamEdit(BaseConfigItemParamEdit):
             params_layout.addRow(self.model.NAME.label, name_edit)
 
             if file_rule_type != FileRuleType.RULE_OCIO_V1:
-                color_space_combo = ColorSpaceComboBox(
-                    visibility=ocio.COLORSPACE_ALL
-                )
+                color_space_combo = ColorSpaceComboBox()
                 self.color_space_combos[file_rule_type] = color_space_combo
                 params_layout.addRow(
                     self.model.COLOR_SPACE.label, color_space_combo
