@@ -283,6 +283,53 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_half_domain_unequal_channels)
     test.setTestInfinity(false);
 }
 
+OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_half_domain_negative_zero)
+{
+    // This is an edge case, but this test documents that the behavior of CPU & GPU
+    // are different with respect to where in the LUT negative zero looks up at.
+    // This is only visible with half-domain LUTs that set different values for
+    // positive and negative zero, which really should be considered a bug in the LUT.
+    // Given that IEEE arithmetic specifies that -0 == +0 in comparisons, this does
+    // not seem to be worth fixing in OCIO at the cost of reduced performance.
+
+    // Create a half-domain LUT1D.
+    const auto lut = OCIO::Lut1DTransform::Create(65536, true);
+
+    // Set the positive and negative denorms to large values to make it easy
+    // to check that the processing is correct.
+    for (unsigned i=0; i<1024; i++)
+    {
+        const float x = static_cast<float>(i);
+        // Positive denorms.
+        lut->setValue(0 + i, x, x, x);
+        // Negative denorms.  Create a jump between +0 and -0.
+        lut->setValue(32768 + i, x + 10.f, x + 10.f, x + 10.f);
+    }
+
+    test.setProcessor(lut);
+
+    // TODO: Would like this to be lower.
+    test.setErrorThreshold(2e-3f);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues =
+        {
+        // Negative zero uses the positive 0 LUT value on the GPU, and negative 0 LUT on CPU.
+        // -0.00f, -0.00f, -0.000f,   0.0f,
+            0.00f,  0.00f,  0.000f,   1.0f,
+        // Use values that fall in the middle of the first, second, and third LUT segments
+        // to test accuracy in the denormals.
+            3e-8f,  9e-8f,  15e-8f,   0.0f,
+           -3e-8f, -9e-8f, -15e-8f,   0.0f,
+        // Throw in a more typical value.
+            0.50f,  0.05f,  0.005f,   0.5f,
+        };
+    test.setCustomValues(values);
+
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
+}
+
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_file2_test)
 {
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_green.ctf");
