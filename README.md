@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 <!-- Copyright Contributors to the OpenColorIO Project. -->
 
-OpenColorIO nanoColor
+OpenColorIO NanoColor
 =====================
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
@@ -9,7 +9,7 @@ OpenColorIO nanoColor
 Introduction
 ------------
 
-OpenColorIO nanoColor is a light-weight version of OCIO that has no
+OpenColorIO NanoColor is a light-weight version of OCIO that has no
 external dependencies. It is aimed at applications requiring basic
 color management in resource-constrained settings, such as running
 in a web browser or on a mobile phone.
@@ -18,18 +18,24 @@ NanoColor does not support custom config files or LUTs like full OCIO.
 Several config files are built into the library itself and these provide
 complete implementation of ACES color management. In addition, it's
 possible for clients to copy and edit the built-in configs to suit their
-needs. This includes the addition of custom color spaces.
+needs. This includes the addition of custom color spaces. However, the
+color spaces in the ASWF Color Interop Forum rendering core set reserved 
+and the behavior of that set may not be modified.
+
+There is a new built-in config that only contains the color spaces in
+the ASWF Color Interop Forum core set. This config is available via
+the string: "core-renderer-config-v1.0.0-rc1".
 
 NanoColor uses the same underlying transform chain optimization and
 CPU and GPU rendering paths as full OCIO. For developers, working with
-either nanoColor or full OCIO is very similar. The build process uses
+either NanoColor or full OCIO is very similar. The build process uses
 the same CMake set-up, though there are no external dependencies used
-in nanoColor mode.
+in NanoColor mode.
 
-The nanoColor API is virtually the same as the full OCIO API, though
+The NanoColor API is virtually the same as the full OCIO API, though
 a few functions have been removed in alignment with the feature set. For
 example, there are no functions related to uploading texture LUTs to the
-GPU, since there is no texture usage in the nanoColor GPU path. All 
+GPU, since there is no texture usage in the NanoColor GPU path. All 
 supported transforms have a closed-form invertible analytic
 representation that does not require LUTs.
 
@@ -44,7 +50,7 @@ Installation instructions
 -------------------------
 
 The CMake flag OCIO_FEATURE_SET may be set to "Full" to build full OCIO
-and set to "Nano" to build nanoColor. In the nanoColor branch, the default
+and set to "Nano" to build NanoColor. In the NanoColor branch, the default
 is "Nano". Here are the basic steps for macOS or Linux (Windows is supported
 as well, but the commands are slightly different)::
 
@@ -62,12 +68,12 @@ TODO
 
 This is currently a prototype and there are a number of tasks remaining:
 
-* Add the built-in config for the Color Interop Forum core color space set
-  (although note that the built-in configs already have most of the spaces).
 * Prevent clients from overriding the core color space set.
 * A few built-in transforms have been disabled since they required LUTs but
   could be re-enabled by converting to use fixed functions instead.
+* Add function to check NanoColor compatibility of a color space
 * Clean up the removal of Imath and Pystring.
 * Make further optimizations to reduce the size of the library.
 * Add JavaScript binding.
 * Add documentation.
+* Improve the Config cacheID algorithm to not require Yaml.
