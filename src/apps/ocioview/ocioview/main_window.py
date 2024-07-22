@@ -141,7 +141,7 @@ class OCIOView(QtWidgets.QMainWindow):
         self.menu_bar.addMenu(self.edit_menu)
         self.setMenuBar(self.menu_bar)
 
-        # Status bar
+        # Application mode selector in menu bar
         self.mode_box = EnumComboBox(
             OCIOViewMode,
             icons={
@@ -162,8 +162,7 @@ class OCIOView(QtWidgets.QMainWindow):
         self.mode_box.currentIndexChanged[int].connect(
             self._on_mode_box_index_changed
         )
-
-        self.statusBar().addPermanentWidget(self.mode_box, stretch=0)
+        self.menu_bar.setCornerWidget(self.mode_box)
 
         # Dock areas
         self.setDockOptions(
