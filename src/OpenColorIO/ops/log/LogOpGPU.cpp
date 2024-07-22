@@ -15,11 +15,16 @@ namespace OCIO_NAMESPACE
 namespace
 {
 
-void AddLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & /* logData */, float base)
+void AddLogShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstLogOpDataRcPtr & /* logData */,
+    float base)
 {
     const float minValue = std::numeric_limits<float>::min();
 
     GpuShaderText st(shaderCreator->getLanguage());
+
+    // clang-format off
 
     st.indent();
     st.newLine() << "";
@@ -47,11 +52,18 @@ void AddLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & /
     st.newLine() << "}";
 
     shaderCreator->addToFunctionShaderCode(st.string().c_str());
+
+    // clang-format on
 }
 
-void AddAntiLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & /* logData */, float base)
+void AddAntiLogShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstLogOpDataRcPtr & /* logData */,
+    float base)
 {
     GpuShaderText st(shaderCreator->getLanguage());
+
+    // clang-format off
 
     st.indent();
     st.newLine() << "";
@@ -69,6 +81,8 @@ void AddAntiLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr
     st.newLine() << "}";
 
     shaderCreator->addToFunctionShaderCode(st.string().c_str());
+
+    // clang-format on
 }
 
 void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & logData)
@@ -76,17 +90,21 @@ void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPt
     const auto & paramsR = logData->getRedParams();
     const auto & paramsG = logData->getGreenParams();
     const auto & paramsB = logData->getBlueParams();
-    const double base = logData->getBase();
+    const double base    = logData->getBase();
 
-    const float logSlopeInv[3] = { 1.0f / (float)paramsR[LOG_SIDE_SLOPE],
-                                   1.0f / (float)paramsG[LOG_SIDE_SLOPE],
-                                   1.0f / (float)paramsB[LOG_SIDE_SLOPE] };
+    const float logSlopeInv[3]
+        = {1.0f / (float)paramsR[LOG_SIDE_SLOPE],
+           1.0f / (float)paramsG[LOG_SIDE_SLOPE],
+           1.0f / (float)paramsB[LOG_SIDE_SLOPE]};
 
-    const float linSlopeInv[3] = { 1.0f / (float)paramsR[LIN_SIDE_SLOPE],
-                                   1.0f / (float)paramsG[LIN_SIDE_SLOPE],
-                                   1.0f / (float)paramsB[LIN_SIDE_SLOPE] };
+    const float linSlopeInv[3]
+        = {1.0f / (float)paramsR[LIN_SIDE_SLOPE],
+           1.0f / (float)paramsG[LIN_SIDE_SLOPE],
+           1.0f / (float)paramsB[LIN_SIDE_SLOPE]};
 
     GpuShaderText st(shaderCreator->getLanguage());
+
+    // clang-format off
 
     st.indent();
     st.newLine() << "";
@@ -116,6 +134,8 @@ void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPt
     st.newLine() << "}";
 
     shaderCreator->addToFunctionShaderCode(st.string().c_str());
+
+    // clang-format on
 }
 
 void AddLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & logData)
@@ -125,11 +145,13 @@ void AddLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPt
     const auto & paramsR = logData->getRedParams();
     const auto & paramsG = logData->getGreenParams();
     const auto & paramsB = logData->getBlueParams();
-    const double base = logData->getBase();
+    const double base    = logData->getBase();
 
     const float minValue = std::numeric_limits<float>::min();
 
     GpuShaderText st(shaderCreator->getLanguage());
+
+    // clang-format off
 
     st.indent();
     st.newLine() << "";
@@ -160,10 +182,11 @@ void AddLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPt
     st.newLine() << "}";
 
     shaderCreator->addToFunctionShaderCode(st.string().c_str());
+
+    // clang-format on
 }
 
-void AddCameraLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator,
-                             ConstLogOpDataRcPtr & logData)
+void AddCameraLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & logData)
 {
     // if in <= logBreak
     //  out = ( in - linearOffset ) / linearSlope
@@ -174,11 +197,11 @@ void AddCameraLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator,
     const auto & paramsR = logData->getRedParams();
     const auto & paramsG = logData->getGreenParams();
     const auto & paramsB = logData->getBlueParams();
-    const double base = logData->getBase();
+    const double base    = logData->getBase();
 
-    float linearSlopeR = LogUtil::GetLinearSlope(paramsR, base);
-    float linearSlopeG = LogUtil::GetLinearSlope(paramsG, base);
-    float linearSlopeB = LogUtil::GetLinearSlope(paramsB, base);
+    float linearSlopeR  = LogUtil::GetLinearSlope(paramsR, base);
+    float linearSlopeG  = LogUtil::GetLinearSlope(paramsG, base);
+    float linearSlopeB  = LogUtil::GetLinearSlope(paramsB, base);
     float logSideBreakR = LogUtil::GetLogSideBreak(paramsR, base);
     float logSideBreakG = LogUtil::GetLogSideBreak(paramsG, base);
     float logSideBreakB = LogUtil::GetLogSideBreak(paramsB, base);
@@ -186,16 +209,19 @@ void AddCameraLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator,
     float linearOffsetG = LogUtil::GetLinearOffset(paramsG, linearSlopeG, logSideBreakG);
     float linearOffsetB = LogUtil::GetLinearOffset(paramsB, linearSlopeB, logSideBreakB);
 
-    const float logSlopeInv[3] = { 1.0f / (float)paramsR[LOG_SIDE_SLOPE],
-                                   1.0f / (float)paramsG[LOG_SIDE_SLOPE],
-                                   1.0f / (float)paramsB[LOG_SIDE_SLOPE] };
+    const float logSlopeInv[3]
+        = {1.0f / (float)paramsR[LOG_SIDE_SLOPE],
+           1.0f / (float)paramsG[LOG_SIDE_SLOPE],
+           1.0f / (float)paramsB[LOG_SIDE_SLOPE]};
 
-    const float linSlopeInv[3] = { 1.0f / (float)paramsR[LIN_SIDE_SLOPE],
-                                   1.0f / (float)paramsG[LIN_SIDE_SLOPE],
-                                   1.0f / (float)paramsB[LIN_SIDE_SLOPE] };
-
+    const float linSlopeInv[3]
+        = {1.0f / (float)paramsR[LIN_SIDE_SLOPE],
+           1.0f / (float)paramsG[LIN_SIDE_SLOPE],
+           1.0f / (float)paramsB[LIN_SIDE_SLOPE]};
 
     GpuShaderText st(shaderCreator->getLanguage());
+
+    // clang-format off
 
     st.indent();
     st.newLine() << "";
@@ -239,10 +265,11 @@ void AddCameraLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << "}";
 
     shaderCreator->addToFunctionShaderCode(st.string().c_str());
+
+    // clang-format on
 }
 
-void AddCameraLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator,
-                             ConstLogOpDataRcPtr & logData)
+void AddCameraLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & logData)
 {
     // if in <= linBreak
     //  out = linearSlope * in + linearOffset
@@ -252,11 +279,11 @@ void AddCameraLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator,
     const auto & paramsR = logData->getRedParams();
     const auto & paramsG = logData->getGreenParams();
     const auto & paramsB = logData->getBlueParams();
-    const double base = logData->getBase();
+    const double base    = logData->getBase();
 
-    float linearSlopeR = LogUtil::GetLinearSlope(paramsR, base);
-    float linearSlopeG = LogUtil::GetLinearSlope(paramsG, base);
-    float linearSlopeB = LogUtil::GetLinearSlope(paramsB, base);
+    float linearSlopeR  = LogUtil::GetLinearSlope(paramsR, base);
+    float linearSlopeG  = LogUtil::GetLinearSlope(paramsG, base);
+    float linearSlopeB  = LogUtil::GetLinearSlope(paramsB, base);
     float logSideBreakR = LogUtil::GetLogSideBreak(paramsR, base);
     float logSideBreakG = LogUtil::GetLogSideBreak(paramsG, base);
     float logSideBreakB = LogUtil::GetLogSideBreak(paramsB, base);
@@ -265,13 +292,16 @@ void AddCameraLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator,
     float linearOffsetB = LogUtil::GetLinearOffset(paramsB, linearSlopeB, logSideBreakB);
 
     // We account for the change of base by rolling the multiplier in with log slope.
-    const float logSlopeNew[3] = { (float)(paramsR[LOG_SIDE_SLOPE] / log(base)),
-                                   (float)(paramsG[LOG_SIDE_SLOPE] / log(base)),
-                                   (float)(paramsB[LOG_SIDE_SLOPE] / log(base)) };
+    const float logSlopeNew[3]
+        = {(float)(paramsR[LOG_SIDE_SLOPE] / log(base)),
+           (float)(paramsG[LOG_SIDE_SLOPE] / log(base)),
+           (float)(paramsB[LOG_SIDE_SLOPE] / log(base))};
 
     const float minValue = std::numeric_limits<float>::min();
 
     GpuShaderText st(shaderCreator->getLanguage());
+
+    // clang-format off
 
     st.indent();
     st.newLine() << "";
@@ -310,9 +340,11 @@ void AddCameraLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << "}";
 
     shaderCreator->addToFunctionShaderCode(st.string().c_str());
+
+    // clang-format on
 }
 
-}
+} // namespace
 
 void GetLogGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDataRcPtr & logData)
 {
@@ -321,24 +353,24 @@ void GetLogGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDat
     {
         switch (dir)
         {
-        case TRANSFORM_DIR_FORWARD:
-            AddLogShader(shaderCreator, logData, 2.0f);
-            break;
-        case TRANSFORM_DIR_INVERSE:
-            AddAntiLogShader(shaderCreator, logData, 2.0f);
-            break;
+            case TRANSFORM_DIR_FORWARD:
+                AddLogShader(shaderCreator, logData, 2.0f);
+                break;
+            case TRANSFORM_DIR_INVERSE:
+                AddAntiLogShader(shaderCreator, logData, 2.0f);
+                break;
         }
     }
     else if (logData->isLog10())
     {
         switch (dir)
         {
-        case TRANSFORM_DIR_FORWARD:
-            AddLogShader(shaderCreator, logData, 10.0f);
-            break;
-        case TRANSFORM_DIR_INVERSE:
-            AddAntiLogShader(shaderCreator, logData, 10.0f);
-            break;
+            case TRANSFORM_DIR_FORWARD:
+                AddLogShader(shaderCreator, logData, 10.0f);
+                break;
+            case TRANSFORM_DIR_INVERSE:
+                AddAntiLogShader(shaderCreator, logData, 10.0f);
+                break;
         }
     }
     else
@@ -347,28 +379,27 @@ void GetLogGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLogOpDat
         {
             switch (dir)
             {
-            case TRANSFORM_DIR_FORWARD:
-                AddCameraLinToLogShader(shaderCreator, logData);
-                break;
-            case TRANSFORM_DIR_INVERSE:
-                AddCameraLogToLinShader(shaderCreator, logData);
-                break;
+                case TRANSFORM_DIR_FORWARD:
+                    AddCameraLinToLogShader(shaderCreator, logData);
+                    break;
+                case TRANSFORM_DIR_INVERSE:
+                    AddCameraLogToLinShader(shaderCreator, logData);
+                    break;
             }
         }
         else
         {
             switch (dir)
             {
-            case TRANSFORM_DIR_FORWARD:
-                AddLinToLogShader(shaderCreator, logData);
-                break;
-            case TRANSFORM_DIR_INVERSE:
-                AddLogToLinShader(shaderCreator, logData);
-                break;
+                case TRANSFORM_DIR_FORWARD:
+                    AddLinToLogShader(shaderCreator, logData);
+                    break;
+                case TRANSFORM_DIR_INVERSE:
+                    AddLogToLinShader(shaderCreator, logData);
+                    break;
             }
         }
     }
-
 }
 
 } // namespace OCIO_NAMESPACE

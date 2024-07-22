@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_CACHING_H
 #define INCLUDED_OCIO_CACHING_H
-
 
 #include <map>
 
@@ -13,30 +11,27 @@
 #include "Mutex.h"
 #include "Platform.h"
 
-
 namespace OCIO_NAMESPACE
 {
 
 // Generic cache mechanism where EntryType is the instance type to cache and KeyType is the
 // instance type of the key. Note that having efficient key generation & comparison are critical.
 // For example integer comparison is efficent but string one could be far less efficient depending
-// of its length & where changes occur (e.g. absolute filepaths are inefficient). 
-template<typename KeyType, typename EntryType>
-class GenericCache
+// of its length & where changes occur (e.g. absolute filepaths are inefficient).
+template <typename KeyType, typename EntryType> class GenericCache
 {
 public:
-
-    using Entries = std::map<KeyType, EntryType>;
+    using Entries  = std::map<KeyType, EntryType>;
     using Iterator = typename Entries::iterator;
 
-    // Forbid copy & move semantics. 
-    GenericCache(const GenericCache &)  = delete;
-    GenericCache(GenericCache && other) = delete;
+    // Forbid copy & move semantics.
+    GenericCache(const GenericCache &)              = delete;
+    GenericCache(GenericCache && other)             = delete;
     GenericCache & operator=(const GenericCache &)  = delete;
     GenericCache & operator=(GenericCache && other) = delete;
 
     GenericCache()
-        :   m_envDisableAllCaches(Platform::isEnvPresent(OCIO_DISABLE_ALL_CACHES))
+        : m_envDisableAllCaches(Platform::isEnvPresent(OCIO_DISABLE_ALL_CACHES))
     {
     }
 
@@ -77,16 +72,16 @@ public:
     }
 
     Iterator begin() noexcept { return m_entries.begin(); }
-    Iterator end()   noexcept { return m_entries.end();   }
+    Iterator end() noexcept { return m_entries.end(); }
 
 protected:
     explicit GenericCache(bool disableCaches)
-        :   m_envDisableAllCaches(Platform::isEnvPresent(OCIO_DISABLE_ALL_CACHES) || disableCaches)
+        : m_envDisableAllCaches(Platform::isEnvPresent(OCIO_DISABLE_ALL_CACHES) || disableCaches)
     {
     }
 
     const bool m_envDisableAllCaches = false;
-    bool m_enabled = true;
+    bool m_enabled                   = true;
 
 private:
     Mutex m_mutex;
@@ -96,20 +91,18 @@ private:
 // A Processor instance uses this class to cache its derived optimized, CPU, and GPU Processors.
 // These caches may be disabled using either of two environment variables. The env. variables allow
 // either disabling all caches (including the FileTransform cache), or just the Processor caches.
-template<typename KeyType, typename EntryType>
+template <typename KeyType, typename EntryType>
 class ProcessorCache : public GenericCache<KeyType, EntryType>
 {
 public:
     ProcessorCache()
-        :   GenericCache<KeyType, EntryType>(Platform::isEnvPresent(OCIO_DISABLE_PROCESSOR_CACHES))
+        : GenericCache<KeyType, EntryType>(Platform::isEnvPresent(OCIO_DISABLE_PROCESSOR_CACHES))
     {
     }
 
     ~ProcessorCache() = default;
 };
 
-
 } // namespace OCIO_NAMESPACE
-
 
 #endif // INCLUDED_OCIO_CACHING_H

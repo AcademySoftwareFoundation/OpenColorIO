@@ -1,29 +1,30 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <string>
 #include <sstream>
+#include <string>
 #include <vector>
 
+#include "JNIUtil.h"
 #include "OpenColorIO/OpenColorIO.h"
 #include "OpenColorIOJNI.h"
-#include "JNIUtil.h"
 using namespace OCIO_NAMESPACE;
 
-JNIEXPORT void JNICALL
-Java_org_OpenColorIO_ColorSpace_dispose(JNIEnv * env, jobject self)
+JNIEXPORT void JNICALL Java_org_OpenColorIO_ColorSpace_dispose(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     DisposeJOCIO<ColorSpaceJNI>(env, self);
     OCIO_JNITRY_EXIT()
 }
 
-JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_ColorSpace_Create(JNIEnv * env, jobject self)
+JNIEXPORT jobject JNICALL Java_org_OpenColorIO_ColorSpace_Create(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
-    return BuildJObject<ColorSpaceRcPtr, ColorSpaceJNI>(env, self,
-             env->FindClass("org/OpenColorIO/ColorSpace"), ColorSpace::Create());
+    return BuildJObject<ColorSpaceRcPtr, ColorSpaceJNI>(
+        env,
+        self,
+        env->FindClass("org/OpenColorIO/ColorSpace"),
+        ColorSpace::Create());
     OCIO_JNITRY_EXIT(NULL)
 }
 
@@ -32,13 +33,15 @@ Java_org_OpenColorIO_ColorSpace_createEditableCopy(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstColorSpaceRcPtr col = GetConstJOCIO<ConstColorSpaceRcPtr, ColorSpaceJNI>(env, self);
-    return BuildJObject<ColorSpaceRcPtr, ColorSpaceJNI>(env, self,
-             env->FindClass("org/OpenColorIO/ColorSpace"), col->createEditableCopy());
+    return BuildJObject<ColorSpaceRcPtr, ColorSpaceJNI>(
+        env,
+        self,
+        env->FindClass("org/OpenColorIO/ColorSpace"),
+        col->createEditableCopy());
     OCIO_JNITRY_EXIT(NULL)
 }
 
-JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_ColorSpace_getName(JNIEnv * env, jobject self)
+JNIEXPORT jstring JNICALL Java_org_OpenColorIO_ColorSpace_getName(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstColorSpaceRcPtr col = GetConstJOCIO<ConstColorSpaceRcPtr, ColorSpaceJNI>(env, self);
@@ -55,8 +58,7 @@ Java_org_OpenColorIO_ColorSpace_setName(JNIEnv * env, jobject self, jstring name
     OCIO_JNITRY_EXIT()
 }
 
-JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_ColorSpace_getFamily(JNIEnv * env, jobject self)
+JNIEXPORT jstring JNICALL Java_org_OpenColorIO_ColorSpace_getFamily(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstColorSpaceRcPtr col = GetConstJOCIO<ConstColorSpaceRcPtr, ColorSpaceJNI>(env, self);
@@ -91,8 +93,7 @@ Java_org_OpenColorIO_ColorSpace_setEqualityGroup(JNIEnv * env, jobject self, jst
     OCIO_JNITRY_EXIT()
 }
 
-JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_ColorSpace_getDescription(JNIEnv * env, jobject self)
+JNIEXPORT jstring JNICALL Java_org_OpenColorIO_ColorSpace_getDescription(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstColorSpaceRcPtr col = GetConstJOCIO<ConstColorSpaceRcPtr, ColorSpaceJNI>(env, self);
@@ -109,8 +110,7 @@ Java_org_OpenColorIO_ColorSpace_setDescription(JNIEnv * env, jobject self, jstri
     OCIO_JNITRY_EXIT()
 }
 
-JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_ColorSpace_getBitDepth(JNIEnv * env, jobject self)
+JNIEXPORT jobject JNICALL Java_org_OpenColorIO_ColorSpace_getBitDepth(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstColorSpaceRcPtr col = GetConstJOCIO<ConstColorSpaceRcPtr, ColorSpaceJNI>(env, self);
@@ -127,8 +127,7 @@ Java_org_OpenColorIO_ColorSpace_setBitDepth(JNIEnv * env, jobject self, jobject 
     OCIO_JNITRY_EXIT()
 }
 
-JNIEXPORT jboolean JNICALL
-Java_org_OpenColorIO_ColorSpace_isData(JNIEnv * env, jobject self)
+JNIEXPORT jboolean JNICALL Java_org_OpenColorIO_ColorSpace_isData(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstColorSpaceRcPtr col = GetConstJOCIO<ConstColorSpaceRcPtr, ColorSpaceJNI>(env, self);
@@ -145,8 +144,7 @@ Java_org_OpenColorIO_ColorSpace_setIsData(JNIEnv * env, jobject self, jboolean i
     OCIO_JNITRY_EXIT()
 }
 
-JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_ColorSpace_getAllocation(JNIEnv * env, jobject self)
+JNIEXPORT jobject JNICALL Java_org_OpenColorIO_ColorSpace_getAllocation(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstColorSpaceRcPtr col = GetConstJOCIO<ConstColorSpaceRcPtr, ColorSpaceJNI>(env, self);
@@ -181,8 +179,11 @@ Java_org_OpenColorIO_ColorSpace_getAllocationVars(JNIEnv * env, jobject self, jf
     OCIO_JNITRY_EXIT()
 }
 
-JNIEXPORT void JNICALL
-Java_org_OpenColorIO_ColorSpace_setAllocationVars(JNIEnv * env, jobject self, jint numvars, jfloatArray vars)
+JNIEXPORT void JNICALL Java_org_OpenColorIO_ColorSpace_setAllocationVars(
+    JNIEnv * env,
+    jobject self,
+    jint numvars,
+    jfloatArray vars)
 {
     OCIO_JNITRY_ENTER()
     ColorSpaceRcPtr col = GetEditableJOCIO<ColorSpaceRcPtr, ColorSpaceJNI>(env, self);
@@ -195,19 +196,25 @@ Java_org_OpenColorIO_ColorSpace_getTransform(JNIEnv * env, jobject self, jobject
 {
     OCIO_JNITRY_ENTER()
     ConstColorSpaceRcPtr col = GetConstJOCIO<ConstColorSpaceRcPtr, ColorSpaceJNI>(env, self);
-    ColorSpaceDirection cd = GetJEnum<ColorSpaceDirection>(env, dir);
-    ConstTransformRcPtr tr = col->getTransform(cd);
-    return BuildJConstObject<ConstTransformRcPtr, TransformJNI>(env, self,
-             env->FindClass(GetOCIOTClass(tr)), tr);
+    ColorSpaceDirection cd   = GetJEnum<ColorSpaceDirection>(env, dir);
+    ConstTransformRcPtr tr   = col->getTransform(cd);
+    return BuildJConstObject<ConstTransformRcPtr, TransformJNI>(
+        env,
+        self,
+        env->FindClass(GetOCIOTClass(tr)),
+        tr);
     OCIO_JNITRY_EXIT(NULL)
 }
 
-JNIEXPORT void JNICALL
-Java_org_OpenColorIO_ColorSpace_setTransform(JNIEnv * env, jobject self, jobject transform, jobject dir)
+JNIEXPORT void JNICALL Java_org_OpenColorIO_ColorSpace_setTransform(
+    JNIEnv * env,
+    jobject self,
+    jobject transform,
+    jobject dir)
 {
     OCIO_JNITRY_ENTER()
-    ColorSpaceRcPtr col = GetEditableJOCIO<ColorSpaceRcPtr, ColorSpaceJNI>(env, self);
-    ColorSpaceDirection cd = GetJEnum<ColorSpaceDirection>(env, dir);
+    ColorSpaceRcPtr col      = GetEditableJOCIO<ColorSpaceRcPtr, ColorSpaceJNI>(env, self);
+    ColorSpaceDirection cd   = GetJEnum<ColorSpaceDirection>(env, dir);
     ConstTransformRcPtr tran = GetConstJOCIO<ConstTransformRcPtr, TransformJNI>(env, transform);
     col->setTransform(tran, cd);
     OCIO_JNITRY_EXIT()

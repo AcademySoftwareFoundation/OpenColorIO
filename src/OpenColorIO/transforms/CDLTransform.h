@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_CDLTRANSFORM_H
 #define INCLUDED_OCIO_CDLTRANSFORM_H
 
@@ -14,10 +13,10 @@
 
 namespace OCIO_NAMESPACE
 {
-static constexpr char METADATA_INPUT_DESCRIPTION[] = "InputDescription";
+static constexpr char METADATA_INPUT_DESCRIPTION[]   = "InputDescription";
 static constexpr char METADATA_VIEWING_DESCRIPTION[] = "ViewingDescription";
-static constexpr char METADATA_SOP_DESCRIPTION[] = "SOPDescription";
-static constexpr char METADATA_SAT_DESCRIPTION[] = "SATDescription";
+static constexpr char METADATA_SOP_DESCRIPTION[]     = "SOPDescription";
+static constexpr char METADATA_SAT_DESCRIPTION[]     = "SATDescription";
 
 class CDLTransformImpl;
 typedef OCIO_SHARED_PTR<CDLTransformImpl> CDLTransformImplRcPtr;
@@ -30,10 +29,10 @@ class CDLTransformImpl : public CDLTransform
 public:
     static CDLTransformImplRcPtr Create();
 
-    CDLTransformImpl() = default;
-    CDLTransformImpl(const CDLTransformImpl &) = delete;
+    CDLTransformImpl()                                     = default;
+    CDLTransformImpl(const CDLTransformImpl &)             = delete;
     CDLTransformImpl & operator=(const CDLTransformImpl &) = delete;
-    virtual ~CDLTransformImpl() = default;
+    virtual ~CDLTransformImpl()                            = default;
 
     TransformRcPtr createEditableCopy() const override;
 

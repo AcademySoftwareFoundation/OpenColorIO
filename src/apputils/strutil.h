@@ -28,44 +28,38 @@
   (This is the Modified BSD License)
 */
 
-
 /////////////////////////////////////////////////////////////////////////
 /// @file  strutil.h
 ///
 /// @brief String-related utilities, all in namespace Strutil.
 /////////////////////////////////////////////////////////////////////////
 
-
-
 #ifndef INCLUDED_OCIO_STRUTIL_H
 #define INCLUDED_OCIO_STRUTIL_H
 
 #include <cstdarg>
-#include <string>
 #include <cstring>
 #include <map>
-
+#include <string>
 
 #ifndef OPENCOLORIO_PRINTF_ARGS
-#   ifndef __GNUC__
-#       define __attribute__(x)
-#   endif
-    // Enable printf-like warnings with gcc by attaching
-    // OPENIMAGEIO_PRINTF_ARGS to printf-like functions.  Eg:
-    //
-    // void foo (const char* fmt, ...) OPENCOLORIO_PRINTF_ARGS(1,2);
-    //
-    // The arguments specify the positions of the format string and the
-    // beginning of the varargs parameter list respectively.
-    //
-    // For member functions with arguments like the example above, you need
-    // OPENCOLORIO_PRINTF_ARGS(2,3) instead.  (gcc includes the implicit this
-    // pointer when it counts member function arguments.)
-#   define OPENCOLORIO_PRINTF_ARGS(fmtarg_pos, vararg_pos) \
-        __attribute__ ((format (printf, fmtarg_pos, vararg_pos) ))
+#ifndef __GNUC__
+#define __attribute__(x)
 #endif
-
-
+// Enable printf-like warnings with gcc by attaching
+// OPENIMAGEIO_PRINTF_ARGS to printf-like functions.  Eg:
+//
+// void foo (const char* fmt, ...) OPENCOLORIO_PRINTF_ARGS(1,2);
+//
+// The arguments specify the positions of the format string and the
+// beginning of the varargs parameter list respectively.
+//
+// For member functions with arguments like the example above, you need
+// OPENCOLORIO_PRINTF_ARGS(2,3) instead.  (gcc includes the implicit this
+// pointer when it counts member function arguments.)
+#define OPENCOLORIO_PRINTF_ARGS(fmtarg_pos, vararg_pos)                                            \
+    __attribute__((format(printf, fmtarg_pos, vararg_pos)))
+#endif
 
 /// @namespace Strutil
 ///
@@ -75,10 +69,8 @@ namespace Strutil
 
 /// Return a std::string formatted from printf-like arguments -- passed
 /// already as a va_list.
-std::string vformat (const char *fmt, va_list ap)
-                                         OPENCOLORIO_PRINTF_ARGS(1,0);
+std::string vformat(const char * fmt, va_list ap) OPENCOLORIO_PRINTF_ARGS(1, 0);
 
-}  // namespace Strutil
-
+} // namespace Strutil
 
 #endif // INCLUDED_OCIO_STRUTIL_H

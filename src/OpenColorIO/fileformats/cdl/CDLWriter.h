@@ -17,12 +17,13 @@ void Write(XmlFormatter & fmt, const ConstCDLTransformRcPtr & cdl);
 
 void WriteStrings(XmlFormatter & fmt, const char * tag, const StringUtils::StringVec & strings);
 
-void ExtractCDLMetadata(const FormatMetadata & metadata,
-                        StringUtils::StringVec & mainDesc,
-                        StringUtils::StringVec & inputDesc,
-                        StringUtils::StringVec & viewingDesc,
-                        StringUtils::StringVec & sopDesc,
-                        StringUtils::StringVec & satDesc);
+void ExtractCDLMetadata(
+    const FormatMetadata & metadata,
+    StringUtils::StringVec & mainDesc,
+    StringUtils::StringVec & inputDesc,
+    StringUtils::StringVec & viewingDesc,
+    StringUtils::StringVec & sopDesc,
+    StringUtils::StringVec & satDesc);
 
 } // namespace OCIO_NAMESPACE
 

@@ -7,9 +7,9 @@
 
 #include "BitDepthUtils.h"
 #include "MathUtils.h"
+#include "Platform.h"
 #include "fileformats/ctf/IndexMapping.h"
 #include "ops/range/RangeOpData.h"
-#include "Platform.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -19,46 +19,47 @@ namespace DefaultValues
 const int FLOAT_DECIMALS = 7;
 }
 
-
 RangeOpData::RangeOpData()
-    :   OpData()
-    ,   m_minInValue(RangeOpData::EmptyValue())
-    ,   m_maxInValue(RangeOpData::EmptyValue())
-    ,   m_minOutValue(RangeOpData::EmptyValue())
-    ,   m_maxOutValue(RangeOpData::EmptyValue())
+    : OpData()
+    , m_minInValue(RangeOpData::EmptyValue())
+    , m_maxInValue(RangeOpData::EmptyValue())
+    , m_minOutValue(RangeOpData::EmptyValue())
+    , m_maxOutValue(RangeOpData::EmptyValue())
 
-    ,   m_scale(1.)
-    ,   m_offset(0.)
+    , m_scale(1.)
+    , m_offset(0.)
 {
 }
 
-RangeOpData::RangeOpData(double minInValue,
-                         double maxInValue,
-                         double minOutValue,
-                         double maxOutValue)
-    :   OpData()
-    ,   m_minInValue(minInValue)
-    ,   m_maxInValue(maxInValue)
-    ,   m_minOutValue(minOutValue)
-    ,   m_maxOutValue(maxOutValue)
-    ,   m_scale(0.)
-    ,   m_offset(0.)
+RangeOpData::RangeOpData(
+    double minInValue,
+    double maxInValue,
+    double minOutValue,
+    double maxOutValue)
+    : OpData()
+    , m_minInValue(minInValue)
+    , m_maxInValue(maxInValue)
+    , m_minOutValue(minOutValue)
+    , m_maxOutValue(maxOutValue)
+    , m_scale(0.)
+    , m_offset(0.)
 {
     validate();
 }
 
-RangeOpData::RangeOpData(double minInValue,
-                         double maxInValue,
-                         double minOutValue,
-                         double maxOutValue,
-                         TransformDirection dir)
-    :   OpData()
-    ,   m_minInValue(minInValue)
-    ,   m_maxInValue(maxInValue)
-    ,   m_minOutValue(minOutValue)
-    ,   m_maxOutValue(maxOutValue)
-    ,   m_scale(0.)
-    ,   m_offset(0.)
+RangeOpData::RangeOpData(
+    double minInValue,
+    double maxInValue,
+    double minOutValue,
+    double maxOutValue,
+    TransformDirection dir)
+    : OpData()
+    , m_minInValue(minInValue)
+    , m_maxInValue(maxInValue)
+    , m_minOutValue(minOutValue)
+    , m_maxOutValue(maxOutValue)
+    , m_scale(0.)
+    , m_offset(0.)
 {
     setDirection(dir);
     validate();
@@ -66,14 +67,14 @@ RangeOpData::RangeOpData(double minInValue,
 
 RangeOpData::RangeOpData(const IndexMapping & pIM, unsigned int len, BitDepth bitdepth)
     : OpData()
-    ,   m_minInValue(RangeOpData::EmptyValue())
-    ,   m_maxInValue(RangeOpData::EmptyValue())
-    ,   m_minOutValue(RangeOpData::EmptyValue())
-    ,   m_maxOutValue(RangeOpData::EmptyValue())
-    ,   m_scale(0.)
-    ,   m_offset(0.)
-    ,   m_fileInBitDepth(bitdepth)
-    ,   m_fileOutBitDepth(bitdepth)
+    , m_minInValue(RangeOpData::EmptyValue())
+    , m_maxInValue(RangeOpData::EmptyValue())
+    , m_minOutValue(RangeOpData::EmptyValue())
+    , m_maxOutValue(RangeOpData::EmptyValue())
+    , m_scale(0.)
+    , m_offset(0.)
+    , m_fileInBitDepth(bitdepth)
+    , m_fileOutBitDepth(bitdepth)
 {
     if (pIM.getDimension() != 2)
     {
@@ -96,7 +97,7 @@ RangeOpData::RangeOpData(const IndexMapping & pIM, unsigned int len, BitDepth bi
     // are already clipped safely on input to the LUT renderers).
 
     pIM.getPair(1u, first, second);
-    m_maxInValue = first * scaleIn;
+    m_maxInValue  = first * scaleIn;
     m_maxOutValue = second / (double)(len - 1u);
 
     validate();
@@ -116,66 +117,62 @@ void RangeOpData::setMinInValue(double value)
     m_minInValue = value;
 }
 
-bool RangeOpData::hasMinInValue() const 
+bool RangeOpData::hasMinInValue() const
 {
     return !IsNan((float)m_minInValue);
 }
 
 void RangeOpData::unsetMinInValue()
 {
-    m_minInValue = EmptyValue(); 
+    m_minInValue = EmptyValue();
 }
-
 
 void RangeOpData::setMaxInValue(double value)
 {
     m_maxInValue = value;
 }
 
-bool RangeOpData::hasMaxInValue() const 
+bool RangeOpData::hasMaxInValue() const
 {
     return !IsNan((float)m_maxInValue);
 }
 
 void RangeOpData::unsetMaxInValue()
 {
-    m_maxInValue = EmptyValue(); 
+    m_maxInValue = EmptyValue();
 }
-
 
 void RangeOpData::setMinOutValue(double value)
 {
     m_minOutValue = value;
 }
 
-bool RangeOpData::hasMinOutValue() const 
+bool RangeOpData::hasMinOutValue() const
 {
     return !IsNan((float)m_minOutValue);
 }
 
 void RangeOpData::unsetMinOutValue()
 {
-    m_minOutValue = EmptyValue(); 
+    m_minOutValue = EmptyValue();
 }
-
 
 void RangeOpData::setMaxOutValue(double value)
 {
     m_maxOutValue = value;
 }
 
-bool RangeOpData::hasMaxOutValue() const 
+bool RangeOpData::hasMaxOutValue() const
 {
     return !IsNan((float)m_maxOutValue);
 }
 
 void RangeOpData::unsetMaxOutValue()
 {
-    m_maxOutValue = EmptyValue(); 
+    m_maxOutValue = EmptyValue();
 }
 
-
-// Important: The spec allows max/min elements to be missing.  When this 
+// Important: The spec allows max/min elements to be missing.  When this
 // happens, we set the member variables to NaN.  The interpretation of this
 // is that no clamping is requested at that bound.  The use of the NaN
 // technique is not exposed outside this module.
@@ -243,22 +240,22 @@ void RangeOpData::validate() const
 
     // A one-sided clamp must have matching in & out values.
 
-    if (IsNan((float)m_maxInValue) && !IsNan((float)m_minInValue) &&
-        FloatsDiffer(m_minOutValue, m_minInValue))
+    if (IsNan((float)m_maxInValue) && !IsNan((float)m_minInValue)
+        && FloatsDiffer(m_minOutValue, m_minInValue))
     {
         throw Exception("In and out minimum limits must be equal "
                         "if maximum values are missing in Range.");
     }
 
-    if (IsNan((float)m_minInValue) && !IsNan((float)m_maxInValue) &&
-        FloatsDiffer(m_maxOutValue, m_maxInValue))
+    if (IsNan((float)m_minInValue) && !IsNan((float)m_maxInValue)
+        && FloatsDiffer(m_maxOutValue, m_maxInValue))
     {
         throw Exception("In and out maximum limits must be equal "
                         "if minimum values are missing in Range.");
     }
 
     // Complete the initialization of the object.
-    fillScaleOffset();  // This also validates that maxIn - minIn != 0.
+    fillScaleOffset(); // This also validates that maxIn - minIn != 0.
 }
 
 // A RangeOp always clamps (the noClamp style is converted to a Matrix).
@@ -277,12 +274,12 @@ bool RangeOpData::isIdentity() const
         return false;
     }
 
-    if ( !minIsEmpty() && m_minInValue > 0.0 )
+    if (!minIsEmpty() && m_minInValue > 0.0)
     {
         return false;
     }
 
-    if ( !maxIsEmpty() && m_maxInValue < 1.0 )
+    if (!maxIsEmpty() && m_maxInValue < 1.0)
     {
         return false;
     }
@@ -292,12 +289,12 @@ bool RangeOpData::isIdentity() const
 
 bool RangeOpData::clampsToLutDomain() const
 {
-    if ( minIsEmpty() || m_minInValue < 0.0 )
+    if (minIsEmpty() || m_minInValue < 0.0)
     {
         return false;
     }
 
-    if ( maxIsEmpty() || m_maxInValue > 1.0 )
+    if (maxIsEmpty() || m_maxInValue > 1.0)
     {
         return false;
     }
@@ -307,7 +304,7 @@ bool RangeOpData::clampsToLutDomain() const
 
 bool RangeOpData::isClampNegs() const
 {
-    return  maxIsEmpty() && ! minIsEmpty() && m_minInValue == 0.0;
+    return maxIsEmpty() && !minIsEmpty() && m_minInValue == 0.0;
 }
 
 bool RangeOpData::FloatsDiffer(double x1, double x2)
@@ -317,13 +314,13 @@ bool RangeOpData::FloatsDiffer(double x1, double x2)
 
     bool different = false;
 
-    if ( fabs(x1) < 1e-3 )
+    if (fabs(x1) < 1e-3)
     {
-        different = fabs( x1 - x2 ) > 1e-6;  // absolute error near zero
+        different = fabs(x1 - x2) > 1e-6; // absolute error near zero
     }
     else
     {
-        different = fabs( 1.0 - (x2 / x1) ) > 1e-6; // relative error otherwise
+        different = fabs(1.0 - (x2 / x1)) > 1e-6; // relative error otherwise
     }
 
     return different;
@@ -334,14 +331,14 @@ bool RangeOpData::scales() const
     // Check if offset is non-zero or scale is not unity.
 
     // Offset is likely to be zero, so cannot do a relative comparison.
-    if ( fabs(m_offset) > 1e-6 )
+    if (fabs(m_offset) > 1e-6)
     {
         return true;
     }
 
     // Scale may vary from very small to vary large, however it's also allowed to be 0, so neither
     // relative or absolute comparison is appropriate for all cases.
-    if ( FloatsDiffer(m_scale, 1.0) )
+    if (FloatsDiffer(m_scale, 1.0))
     {
         return true;
     }
@@ -351,8 +348,8 @@ bool RangeOpData::scales() const
 
 RangeOpDataRcPtr RangeOpData::compose(ConstRangeOpDataRcPtr & r) const
 {
-    double minInNew = m_minInValue;
-    double maxInNew = m_maxInValue;
+    double minInNew  = m_minInValue;
+    double maxInNew  = m_maxInValue;
     double minOutNew = r->m_minOutValue;
     double maxOutNew = r->m_maxOutValue;
     if (!minIsEmpty())
@@ -455,15 +452,15 @@ void RangeOpData::fillScaleOffset() const
 
     if (minIsEmpty())
     {
-        m_offset = 0.;        // Bottom unlimited but top clamps
+        m_offset = 0.; // Bottom unlimited but top clamps
     }
     else
     {
-        if (maxIsEmpty())     // Top unlimited but bottom clamps
+        if (maxIsEmpty()) // Top unlimited but bottom clamps
         {
             m_offset = 0.;
         }
-        else                  // Both ends clamp
+        else // Both ends clamp
         {
             double denom = m_maxInValue - m_minInValue;
             if (fabs(denom) < 1e-6)
@@ -471,7 +468,7 @@ void RangeOpData::fillScaleOffset() const
                 throw Exception("Range maxInValue is too close to minInValue");
             }
             // NB: Allowing out min == max as it could be useful to create a constant.
-            m_scale = (m_maxOutValue - m_minOutValue) / denom;
+            m_scale  = (m_maxOutValue - m_minOutValue) / denom;
             m_offset = m_minOutValue - m_scale * m_minInValue;
         }
     }
@@ -491,7 +488,7 @@ MatrixOpDataRcPtr RangeOpData::convertToMatrix() const
         fwdThis = tempFwd.get();
     }
     // Create an identity matrix.
-    MatrixOpDataRcPtr mtx = std::make_shared<MatrixOpData>();
+    MatrixOpDataRcPtr mtx    = std::make_shared<MatrixOpData>();
     mtx->getFormatMetadata() = fwdThis->getFormatMetadata();
     mtx->setFileInputBitDepth(fwdThis->getFileInputBitDepth());
     mtx->setFileOutputBitDepth(fwdThis->getFileOutputBitDepth());
@@ -515,31 +512,31 @@ MatrixOpDataRcPtr RangeOpData::convertToMatrix() const
 bool RangeOpData::equals(const OpData & other) const
 {
     // NB: FormatMetadata and fileIn/OutDepths are ignored.
-    if (!OpData::equals(other)) return false;
+    if (!OpData::equals(other))
+        return false;
 
-    const RangeOpData* rop = static_cast<const RangeOpData*>(&other);
+    const RangeOpData * rop = static_cast<const RangeOpData *>(&other);
 
     if (m_direction != rop->m_direction)
     {
         return false;
     }
 
-    if ( (minIsEmpty() != rop->minIsEmpty()) || 
-         (maxIsEmpty() != rop->maxIsEmpty()) )
+    if ((minIsEmpty() != rop->minIsEmpty()) || (maxIsEmpty() != rop->maxIsEmpty()))
     {
         return false;
     }
 
-    if (!minIsEmpty() && !rop->minIsEmpty() &&
-        ( FloatsDiffer(m_minInValue, rop->m_minInValue) ||
-          FloatsDiffer(m_minOutValue, rop->m_minOutValue) ) )
+    if (!minIsEmpty() && !rop->minIsEmpty()
+        && (FloatsDiffer(m_minInValue, rop->m_minInValue)
+            || FloatsDiffer(m_minOutValue, rop->m_minOutValue)))
     {
         return false;
     }
 
-    if (!maxIsEmpty() && !rop->maxIsEmpty() &&
-        ( FloatsDiffer(m_maxInValue, rop->m_maxInValue) ||
-          FloatsDiffer(m_maxOutValue, rop->m_maxOutValue) ) )
+    if (!maxIsEmpty() && !rop->maxIsEmpty()
+        && (FloatsDiffer(m_maxInValue, rop->m_maxInValue)
+            || FloatsDiffer(m_maxOutValue, rop->m_maxOutValue)))
     {
         return false;
     }
@@ -558,16 +555,17 @@ RangeOpDataRcPtr RangeOpData::getAsForward() const
     {
         return clone();
     }
-    RangeOpDataRcPtr invOp = std::make_shared<RangeOpData>(getMinOutValue(),
-                                                           getMaxOutValue(),
-                                                           getMinInValue(),
-                                                           getMaxInValue());
+    RangeOpDataRcPtr invOp = std::make_shared<RangeOpData>(
+        getMinOutValue(),
+        getMaxOutValue(),
+        getMinInValue(),
+        getMaxInValue());
 
     // Note any existing metadata may be stale at this point, but trying to update it is
     // challenging.
     invOp->getFormatMetadata() = getFormatMetadata();
-    invOp->m_fileInBitDepth = m_fileOutBitDepth;
-    invOp->m_fileOutBitDepth = m_fileInBitDepth;
+    invOp->m_fileInBitDepth    = m_fileOutBitDepth;
+    invOp->m_fileOutBitDepth   = m_fileInBitDepth;
 
     invOp->validate();
 
@@ -588,18 +586,15 @@ std::string RangeOpData::getCacheID() const
 
     cacheIDStream.precision(DefaultValues::FLOAT_DECIMALS);
 
-    cacheIDStream << "[" << m_minInValue
-                  << ", " << m_maxInValue
-                  << ", " << m_minOutValue
-                  << ", " << m_maxOutValue
-                  << "]";
+    cacheIDStream << "[" << m_minInValue << ", " << m_maxInValue << ", " << m_minOutValue << ", "
+                  << m_maxOutValue << "]";
 
     return cacheIDStream.str();
 }
 
 void RangeOpData::normalize()
 {
-    const double inScale = 1.0 / GetBitDepthMaxValue(getFileInputBitDepth());
+    const double inScale  = 1.0 / GetBitDepthMaxValue(getFileInputBitDepth());
     const double outScale = 1.0 / GetBitDepthMaxValue(getFileOutputBitDepth());
     if (!minIsEmpty())
     {

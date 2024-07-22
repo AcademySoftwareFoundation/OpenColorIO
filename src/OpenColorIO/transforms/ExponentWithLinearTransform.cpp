@@ -13,8 +13,9 @@ namespace OCIO_NAMESPACE
 
 ExponentWithLinearTransformRcPtr ExponentWithLinearTransform::Create()
 {
-    return ExponentWithLinearTransformRcPtr(new ExponentWithLinearTransformImpl(),
-                                            &ExponentWithLinearTransformImpl::deleter);
+    return ExponentWithLinearTransformRcPtr(
+        new ExponentWithLinearTransformImpl(),
+        &ExponentWithLinearTransformImpl::deleter);
 }
 
 void ExponentWithLinearTransformImpl::deleter(ExponentWithLinearTransform * t)
@@ -24,10 +25,10 @@ void ExponentWithLinearTransformImpl::deleter(ExponentWithLinearTransform * t)
 
 ExponentWithLinearTransformImpl::ExponentWithLinearTransformImpl()
 {
-    data().setRedParams({ 1., 0. });
-    data().setGreenParams({ 1., 0. });
-    data().setBlueParams({ 1., 0. });
-    data().setAlphaParams({ 1., 0. });
+    data().setRedParams({1., 0.});
+    data().setGreenParams({1., 0.});
+    data().setBlueParams({1., 0.});
+    data().setAlphaParams({1., 0.});
 
     data().setStyle(GammaOpData::MONCURVE_FWD);
 }
@@ -35,7 +36,7 @@ ExponentWithLinearTransformImpl::ExponentWithLinearTransformImpl()
 TransformRcPtr ExponentWithLinearTransformImpl::createEditableCopy() const
 {
     TransformRcPtr transform = ExponentWithLinearTransform::Create();
-    dynamic_cast<ExponentWithLinearTransformImpl*>(transform.get())->data() = data();
+    dynamic_cast<ExponentWithLinearTransformImpl *>(transform.get())->data() = data();
     return transform;
 }
 
@@ -82,34 +83,36 @@ const FormatMetadata & ExponentWithLinearTransformImpl::getFormatMetadata() cons
     return data().getFormatMetadata();
 }
 
-bool ExponentWithLinearTransformImpl::equals(const ExponentWithLinearTransform & other) const noexcept
+bool ExponentWithLinearTransformImpl::equals(
+    const ExponentWithLinearTransform & other) const noexcept
 {
-    if (this == &other) return true;
-    return data() == dynamic_cast<const ExponentWithLinearTransformImpl*>(&other)->data();
+    if (this == &other)
+        return true;
+    return data() == dynamic_cast<const ExponentWithLinearTransformImpl *>(&other)->data();
 }
 
-void ExponentWithLinearTransformImpl::setGamma(const double(&values)[4]) noexcept
+void ExponentWithLinearTransformImpl::setGamma(const double (&values)[4]) noexcept
 {
-    data().getRedParams()  [0] = values[0];
+    data().getRedParams()[0]   = values[0];
     data().getGreenParams()[0] = values[1];
-    data().getBlueParams() [0] = values[2];
+    data().getBlueParams()[0]  = values[2];
     data().getAlphaParams()[0] = values[3];
 }
 
-void ExponentWithLinearTransformImpl::getGamma(double(&values)[4]) const noexcept
+void ExponentWithLinearTransformImpl::getGamma(double (&values)[4]) const noexcept
 {
-    values[0] = data().getRedParams()  [0];
+    values[0] = data().getRedParams()[0];
     values[1] = data().getGreenParams()[0];
-    values[2] = data().getBlueParams() [0];
+    values[2] = data().getBlueParams()[0];
     values[3] = data().getAlphaParams()[0];
 }
 
-void ExponentWithLinearTransformImpl::setOffset(const double(&values)[4]) noexcept
+void ExponentWithLinearTransformImpl::setOffset(const double (&values)[4]) noexcept
 {
-    const GammaOpData::Params red = { data().getRedParams()  [0], values[0] };
-    const GammaOpData::Params grn = { data().getGreenParams()[0], values[1] };
-    const GammaOpData::Params blu = { data().getBlueParams() [0], values[2] };
-    const GammaOpData::Params alp = { data().getAlphaParams()[0], values[3] };
+    const GammaOpData::Params red = {data().getRedParams()[0], values[0]};
+    const GammaOpData::Params grn = {data().getGreenParams()[0], values[1]};
+    const GammaOpData::Params blu = {data().getBlueParams()[0], values[2]};
+    const GammaOpData::Params alp = {data().getAlphaParams()[0], values[3]};
 
     data().setRedParams(red);
     data().setGreenParams(grn);
@@ -117,12 +120,12 @@ void ExponentWithLinearTransformImpl::setOffset(const double(&values)[4]) noexce
     data().setAlphaParams(alp);
 }
 
-void ExponentWithLinearTransformImpl::getOffset(double(&values)[4]) const noexcept
+void ExponentWithLinearTransformImpl::getOffset(double (&values)[4]) const noexcept
 {
-    values[0] = data().getRedParams().size()  == 2 ? data().getRedParams()  [1] : 0.;
-    values[1] = data().getGreenParams().size()== 2 ? data().getGreenParams()[1] : 0.;
-    values[2] = data().getBlueParams().size() == 2 ? data().getBlueParams() [1] : 0.;
-    values[3] = data().getAlphaParams().size()== 2 ? data().getAlphaParams()[1] : 0.;
+    values[0] = data().getRedParams().size() == 2 ? data().getRedParams()[1] : 0.;
+    values[1] = data().getGreenParams().size() == 2 ? data().getGreenParams()[1] : 0.;
+    values[2] = data().getBlueParams().size() == 2 ? data().getBlueParams()[1] : 0.;
+    values[3] = data().getAlphaParams().size() == 2 ? data().getAlphaParams()[1] : 0.;
 }
 
 NegativeStyle ExponentWithLinearTransformImpl::getNegativeStyle() const
@@ -133,11 +136,11 @@ NegativeStyle ExponentWithLinearTransformImpl::getNegativeStyle() const
 void ExponentWithLinearTransformImpl::setNegativeStyle(NegativeStyle style)
 {
     const auto dir = getDirection();
-    auto styleOp = GammaOpData::ConvertStyleMonCurve(style, dir);
+    auto styleOp   = GammaOpData::ConvertStyleMonCurve(style, dir);
     data().setStyle(styleOp);
 }
 
-std::ostream & operator<< (std::ostream & os, const ExponentWithLinearTransform & t)
+std::ostream & operator<<(std::ostream & os, const ExponentWithLinearTransform & t)
 {
     os << "<ExponentWithLinearTransform ";
     os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
@@ -148,7 +151,7 @@ std::ostream & operator<< (std::ostream & os, const ExponentWithLinearTransform 
     os << "gamma=" << gamma[0];
     for (int i = 1; i < 4; ++i)
     {
-      os << " " << gamma[i];
+        os << " " << gamma[i];
     }
 
     double offset[4];
@@ -157,7 +160,7 @@ std::ostream & operator<< (std::ostream & os, const ExponentWithLinearTransform 
     os << ", offset=" << offset[0];
     for (int i = 1; i < 4; ++i)
     {
-      os << " " << offset[i];
+        os << " " << offset[i];
     }
 
     os << ", style=" << NegativeStyleToString(t.getNegativeStyle());
@@ -166,4 +169,3 @@ std::ostream & operator<< (std::ostream & os, const ExponentWithLinearTransform 
 }
 
 } // namespace OCIO_NAMESPACE
-

@@ -7,10 +7,9 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "TokensManager.h"
 #include "PrivateTypes.h"
+#include "TokensManager.h"
 #include "utils/StringUtils.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -25,19 +24,19 @@ public:
     std::string m_encoding;
     StringUtils::StringVec m_aliases;
 
-    BitDepth m_bitDepth{ BIT_DEPTH_UNKNOWN };
-    bool m_isData{ false };
+    BitDepth m_bitDepth{BIT_DEPTH_UNKNOWN};
+    bool m_isData{false};
 
-    ReferenceSpaceType m_referenceSpaceType{ REFERENCE_SPACE_SCENE };
+    ReferenceSpaceType m_referenceSpaceType{REFERENCE_SPACE_SCENE};
 
-    Allocation m_allocation{ ALLOCATION_UNIFORM };
+    Allocation m_allocation{ALLOCATION_UNIFORM};
     std::vector<float> m_allocationVars;
 
     TransformRcPtr m_toRefTransform;
     TransformRcPtr m_fromRefTransform;
 
-    bool m_toRefSpecified{ false };
-    bool m_fromRefSpecified{ false };
+    bool m_toRefSpecified{false};
+    bool m_fromRefSpecified{false};
 
     TokensManager m_categories;
 
@@ -51,39 +50,36 @@ public:
 
     ~Impl() = default;
 
-    Impl& operator= (const Impl & rhs)
+    Impl & operator=(const Impl & rhs)
     {
         if (this != &rhs)
         {
-            m_name = rhs.m_name;
-            m_aliases = rhs.m_aliases;
-            m_family = rhs.m_family;
-            m_equalityGroup = rhs.m_equalityGroup;
-            m_description = rhs.m_description;
-            m_encoding = rhs.m_encoding;
-            m_bitDepth = rhs.m_bitDepth;
-            m_isData = rhs.m_isData;
+            m_name               = rhs.m_name;
+            m_aliases            = rhs.m_aliases;
+            m_family             = rhs.m_family;
+            m_equalityGroup      = rhs.m_equalityGroup;
+            m_description        = rhs.m_description;
+            m_encoding           = rhs.m_encoding;
+            m_bitDepth           = rhs.m_bitDepth;
+            m_isData             = rhs.m_isData;
             m_referenceSpaceType = rhs.m_referenceSpaceType;
-            m_allocation = rhs.m_allocation;
-            m_allocationVars = rhs.m_allocationVars;
+            m_allocation         = rhs.m_allocation;
+            m_allocationVars     = rhs.m_allocationVars;
 
-            m_toRefTransform = rhs.m_toRefTransform?
-                rhs.m_toRefTransform->createEditableCopy()
-                : rhs.m_toRefTransform;
+            m_toRefTransform = rhs.m_toRefTransform ? rhs.m_toRefTransform->createEditableCopy()
+                                                    : rhs.m_toRefTransform;
 
-            m_fromRefTransform = rhs.m_fromRefTransform?
-                rhs.m_fromRefTransform->createEditableCopy()
-                : rhs.m_fromRefTransform;
+            m_fromRefTransform = rhs.m_fromRefTransform
+                                     ? rhs.m_fromRefTransform->createEditableCopy()
+                                     : rhs.m_fromRefTransform;
 
-            m_toRefSpecified = rhs.m_toRefSpecified;
+            m_toRefSpecified   = rhs.m_toRefSpecified;
             m_fromRefSpecified = rhs.m_fromRefSpecified;
-            m_categories = rhs.m_categories;
+            m_categories       = rhs.m_categories;
         }
         return *this;
     }
-
 };
-
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -92,7 +88,7 @@ ColorSpaceRcPtr ColorSpace::Create()
     return ColorSpaceRcPtr(new ColorSpace(REFERENCE_SPACE_SCENE), &deleter);
 }
 
-void ColorSpace::deleter(ColorSpace* c)
+void ColorSpace::deleter(ColorSpace * c)
 {
     delete c;
 }
@@ -104,7 +100,7 @@ ColorSpaceRcPtr ColorSpace::Create(ReferenceSpaceType referenceSpace)
 }
 
 ColorSpace::ColorSpace(ReferenceSpaceType referenceSpace)
-: m_impl(new ColorSpace::Impl(referenceSpace))
+    : m_impl(new ColorSpace::Impl(referenceSpace))
 {
 }
 
@@ -117,7 +113,7 @@ ColorSpace::~ColorSpace()
 ColorSpaceRcPtr ColorSpace::createEditableCopy() const
 {
     ColorSpaceRcPtr cs = ColorSpace::Create();
-    *cs->m_impl = *m_impl;
+    *cs->m_impl        = *m_impl;
     return cs;
 }
 
@@ -165,7 +161,7 @@ void ColorSpace::removeAlias(const char * name) noexcept
 {
     if (name && *name)
     {
-        const std::string alias{ name };
+        const std::string alias{name};
         StringUtils::Remove(getImpl()->m_aliases, alias);
     }
 }
@@ -287,11 +283,12 @@ int ColorSpace::getAllocationNumVars() const
 
 void ColorSpace::getAllocationVars(float * vars) const
 {
-    if(!getImpl()->m_allocationVars.empty())
+    if (!getImpl()->m_allocationVars.empty())
     {
-        memcpy(vars,
+        memcpy(
+            vars,
             &getImpl()->m_allocationVars[0],
-            getImpl()->m_allocationVars.size()*sizeof(float));
+            getImpl()->m_allocationVars.size() * sizeof(float));
     }
 }
 
@@ -299,11 +296,9 @@ void ColorSpace::setAllocationVars(int numvars, const float * vars)
 {
     getImpl()->m_allocationVars.resize(numvars);
 
-    if(!getImpl()->m_allocationVars.empty())
+    if (!getImpl()->m_allocationVars.empty())
     {
-        memcpy(&getImpl()->m_allocationVars[0],
-            vars,
-            numvars*sizeof(float));
+        memcpy(&getImpl()->m_allocationVars[0], vars, numvars * sizeof(float));
     }
 }
 
@@ -311,32 +306,32 @@ ConstTransformRcPtr ColorSpace::getTransform(ColorSpaceDirection dir) const noex
 {
     switch (dir)
     {
-    case COLORSPACE_DIR_TO_REFERENCE:
-        return getImpl()->m_toRefTransform;
-    case COLORSPACE_DIR_FROM_REFERENCE:
-        return getImpl()->m_fromRefTransform;
+        case COLORSPACE_DIR_TO_REFERENCE:
+            return getImpl()->m_toRefTransform;
+        case COLORSPACE_DIR_FROM_REFERENCE:
+            return getImpl()->m_fromRefTransform;
     }
     return ConstTransformRcPtr();
 }
 
-void ColorSpace::setTransform(const ConstTransformRcPtr & transform,
-                                ColorSpaceDirection dir)
+void ColorSpace::setTransform(const ConstTransformRcPtr & transform, ColorSpaceDirection dir)
 {
     TransformRcPtr transformCopy;
-    if(transform) transformCopy = transform->createEditableCopy();
+    if (transform)
+        transformCopy = transform->createEditableCopy();
 
     switch (dir)
     {
-    case COLORSPACE_DIR_TO_REFERENCE:
-        getImpl()->m_toRefTransform = transformCopy;
-        break;
-    case COLORSPACE_DIR_FROM_REFERENCE:
-        getImpl()->m_fromRefTransform = transformCopy;
-        break;
+        case COLORSPACE_DIR_TO_REFERENCE:
+            getImpl()->m_toRefTransform = transformCopy;
+            break;
+        case COLORSPACE_DIR_FROM_REFERENCE:
+            getImpl()->m_fromRefTransform = transformCopy;
+            break;
     }
 }
 
-std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
+std::ostream & operator<<(std::ostream & os, const ColorSpace & cs)
 {
     const int numVars(cs.getAllocationNumVars());
     std::vector<float> vars(numVars);
@@ -350,15 +345,15 @@ std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
     const auto refType = cs.getReferenceSpaceType();
     switch (refType)
     {
-    case REFERENCE_SPACE_SCENE:
-        os << "scene, ";
-        break;
-    case REFERENCE_SPACE_DISPLAY:
-        os << "display, ";
-        break;
+        case REFERENCE_SPACE_SCENE:
+            os << "scene, ";
+            break;
+        case REFERENCE_SPACE_DISPLAY:
+            os << "display, ";
+            break;
     }
     os << "name=" << cs.getName() << ", ";
-    std::string str{ cs.getFamily() };
+    std::string str{cs.getFamily()};
     const auto numAliases = cs.getNumAliases();
     if (numAliases == 1)
     {
@@ -416,12 +411,12 @@ std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
     {
         os << ", description=" << str;
     }
-    if(cs.getTransform(COLORSPACE_DIR_TO_REFERENCE))
+    if (cs.getTransform(COLORSPACE_DIR_TO_REFERENCE))
     {
         os << ",\n    " << cs.getName() << " --> Reference";
         os << "\n        " << *cs.getTransform(COLORSPACE_DIR_TO_REFERENCE);
     }
-    if(cs.getTransform(COLORSPACE_DIR_FROM_REFERENCE))
+    if (cs.getTransform(COLORSPACE_DIR_FROM_REFERENCE))
     {
         os << ",\n    Reference --> " << cs.getName();
         os << "\n        " << *cs.getTransform(COLORSPACE_DIR_FROM_REFERENCE);
@@ -430,4 +425,3 @@ std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
     return os;
 }
 } // namespace OCIO_NAMESPACE
-

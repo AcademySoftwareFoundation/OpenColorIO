@@ -9,8 +9,8 @@
 
 #include "BitDepthUtils.h"
 #include "MathUtils.h"
-#include "ops/gradingprimary/GradingPrimaryOpCPU.h"
 #include "SSE.h"
+#include "ops/gradingprimary/GradingPrimaryOpCPU.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -20,7 +20,7 @@ namespace
 class GradingPrimaryOpCPU : public OpCPU
 {
 public:
-    GradingPrimaryOpCPU() = delete;
+    GradingPrimaryOpCPU()                            = delete;
     GradingPrimaryOpCPU(const GradingPrimaryOpCPU &) = delete;
 
     explicit GradingPrimaryOpCPU(ConstGradingPrimaryOpDataRcPtr & gp);
@@ -134,22 +134,22 @@ inline void ApplyContrast(__m128 & pix, const __m128 contrast, const __m128 pivo
 
 inline void ApplyLinContrast(__m128 & pix, const __m128 contrast, const __m128 pivot)
 {
-    pix = _mm_div_ps(pix, pivot);
+    pix             = _mm_div_ps(pix, pivot);
     __m128 sign_pix = _mm_and_ps(pix, ESIGN_MASK);
     __m128 abs_pix  = _mm_and_ps(pix, EABS_MASK);
-    pix = _mm_mul_ps(ssePower(abs_pix, contrast), pivot);
-    pix = _mm_xor_ps(pix, sign_pix);
+    pix             = _mm_mul_ps(ssePower(abs_pix, contrast), pivot);
+    pix             = _mm_xor_ps(pix, sign_pix);
 }
 
 inline void ApplyGamma(__m128 & pix, const __m128 gamma, __m128 blackPivot, __m128 whitePivot)
 {
-    pix = _mm_sub_ps(pix, blackPivot);
+    pix             = _mm_sub_ps(pix, blackPivot);
     __m128 sign_pix = _mm_and_ps(pix, ESIGN_MASK);
-    __m128 abs_pix = _mm_and_ps(pix, EABS_MASK);
-    __m128 range = _mm_sub_ps(whitePivot, blackPivot);
-    pix = _mm_div_ps(abs_pix, range);
-    pix = ssePower(pix, gamma);
-    pix = _mm_add_ps(_mm_mul_ps(_mm_xor_ps(pix, sign_pix), range), blackPivot);
+    __m128 abs_pix  = _mm_and_ps(pix, EABS_MASK);
+    __m128 range    = _mm_sub_ps(whitePivot, blackPivot);
+    pix             = _mm_div_ps(abs_pix, range);
+    pix             = ssePower(pix, gamma);
+    pix             = _mm_add_ps(_mm_mul_ps(_mm_xor_ps(pix, sign_pix), range), blackPivot);
 }
 
 static const __m128 LumaWeights = _mm_setr_ps(0.2126f, 0.7152f, 0.0722f, 0.0);
@@ -208,12 +208,15 @@ inline void ApplyOffset(float * pix, const float * m_offset)
 
 inline void ApplyGamma(float * pix, const float * gamma, float blackPivot, float whitePivot)
 {
-    pix[0] = std::pow(std::abs(pix[0] - blackPivot) / (whitePivot - blackPivot), gamma[0]) *
-             std::copysign(1.f, pix[0] - blackPivot) * (whitePivot - blackPivot) + blackPivot;
-    pix[1] = std::pow(std::abs(pix[1] - blackPivot) / (whitePivot - blackPivot), gamma[1]) *
-             std::copysign(1.f, pix[1] - blackPivot) * (whitePivot - blackPivot) + blackPivot;
-    pix[2] = std::pow(std::abs(pix[2] - blackPivot) / (whitePivot - blackPivot), gamma[2]) *
-             std::copysign(1.f, pix[2] - blackPivot) * (whitePivot - blackPivot) + blackPivot;
+    pix[0] = std::pow(std::abs(pix[0] - blackPivot) / (whitePivot - blackPivot), gamma[0])
+                 * std::copysign(1.f, pix[0] - blackPivot) * (whitePivot - blackPivot)
+             + blackPivot;
+    pix[1] = std::pow(std::abs(pix[1] - blackPivot) / (whitePivot - blackPivot), gamma[1])
+                 * std::copysign(1.f, pix[1] - blackPivot) * (whitePivot - blackPivot)
+             + blackPivot;
+    pix[2] = std::pow(std::abs(pix[2] - blackPivot) / (whitePivot - blackPivot), gamma[2])
+                 * std::copysign(1.f, pix[2] - blackPivot) * (whitePivot - blackPivot)
+             + blackPivot;
 }
 
 // Apply the saturation component to the the pixel's values.
@@ -221,9 +224,9 @@ inline void ApplySaturation(float * pix, const float m_saturation)
 {
     if (m_saturation != 1.f)
     {
-        const float srcpix[3] = { pix[0], pix[1], pix[2] };
+        const float srcpix[3] = {pix[0], pix[1], pix[2]};
 
-        static const float LumaWeights[3] = { 0.2126f, 0.7152f, 0.0722f };
+        static const float LumaWeights[3] = {0.2126f, 0.7152f, 0.0722f};
 
         // Compute luma: dot product of pixel values and the luma weights.
         ApplySlope(pix, LumaWeights);
@@ -268,24 +271,24 @@ void GradingPrimaryLogFwdOpCPU::apply(const void * inImg, void * outImg, long nu
     }
 
     const float * in = (float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    auto & v = m_gp->getValue();
+    auto & v    = m_gp->getValue();
     auto & comp = m_gp->getComputedValue();
 
     const bool isGammaIdentity = comp.isGammaIdentity();
 
 #if OCIO_USE_SSE2
-    const __m128 brightness = _mm_set_ps(0.f, comp.getBrightness()[2],
-                                              comp.getBrightness()[1],
-                                              comp.getBrightness()[0]);
-    const __m128 contrast = _mm_set_ps(1.f, comp.getContrast()[2],
-                                            comp.getContrast()[1],
-                                            comp.getContrast()[0]);
-    const __m128 gamma = _mm_set_ps(1.f, comp.getGamma()[2],
-                                         comp.getGamma()[1],
-                                         comp.getGamma()[0]);
-    const __m128 pivot = _mm_set1_ps(static_cast<float>(comp.getPivot()));
+    const __m128 brightness = _mm_set_ps(
+        0.f,
+        comp.getBrightness()[2],
+        comp.getBrightness()[1],
+        comp.getBrightness()[0]);
+    const __m128 contrast
+        = _mm_set_ps(1.f, comp.getContrast()[2], comp.getContrast()[1], comp.getContrast()[0]);
+    const __m128 gamma
+        = _mm_set_ps(1.f, comp.getGamma()[2], comp.getGamma()[1], comp.getGamma()[0]);
+    const __m128 pivot      = _mm_set1_ps(static_cast<float>(comp.getPivot()));
     const __m128 saturation = _mm_set1_ps(static_cast<float>(v.m_saturation));
     const __m128 blackPivot = _mm_set1_ps(static_cast<float>(v.m_pivotBlack));
     const __m128 whitePivot = _mm_set1_ps(static_cast<float>(v.m_pivotWhite));
@@ -299,7 +302,7 @@ void GradingPrimaryLogFwdOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 pixel = _mm_add_ps(pixel, brightness);
                 ApplyContrast(pixel, contrast, pivot);
@@ -319,7 +322,7 @@ void GradingPrimaryLogFwdOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 pixel = _mm_add_ps(pixel, brightness);
                 ApplyContrast(pixel, contrast, pivot);
@@ -341,7 +344,7 @@ void GradingPrimaryLogFwdOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 pixel = _mm_add_ps(pixel, brightness);
                 ApplyContrast(pixel, contrast, pivot);
@@ -360,7 +363,7 @@ void GradingPrimaryLogFwdOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 pixel = _mm_add_ps(pixel, brightness);
                 ApplyContrast(pixel, contrast, pivot);
@@ -376,15 +379,15 @@ void GradingPrimaryLogFwdOpCPU::apply(const void * inImg, void * outImg, long nu
     }
 #else
     const float * brightness = comp.getBrightness().data();
-    const float * contrast = comp.getContrast().data();
-    const float * gamma = comp.getGamma().data();
+    const float * contrast   = comp.getContrast().data();
+    const float * gamma      = comp.getGamma().data();
 
     const float actualPivot = static_cast<float>(comp.getPivot());
-    const float saturation = static_cast<float>(v.m_saturation);
-    const float pivotBlack = static_cast<float>(v.m_pivotBlack);
-    const float pivotWhite = static_cast<float>(v.m_pivotWhite);
-    const float clampBlack = static_cast<float>(v.m_clampBlack);
-    const float clampWhite = static_cast<float>(v.m_clampWhite);
+    const float saturation  = static_cast<float>(v.m_saturation);
+    const float pivotBlack  = static_cast<float>(v.m_pivotBlack);
+    const float pivotWhite  = static_cast<float>(v.m_pivotWhite);
+    const float clampBlack  = static_cast<float>(v.m_clampBlack);
+    const float clampWhite  = static_cast<float>(v.m_clampWhite);
     if (!isGammaIdentity)
     {
         for (long idx = 0; idx < numPixels; ++idx)
@@ -427,7 +430,7 @@ void GradingPrimaryLogFwdOpCPU::apply(const void * inImg, void * outImg, long nu
             out += 4;
         }
     }
-#endif  // OCIO_USE_SSE2
+#endif // OCIO_USE_SSE2
 }
 
 GradingPrimaryLogRevOpCPU::GradingPrimaryLogRevOpCPU(ConstGradingPrimaryOpDataRcPtr & gp)
@@ -447,28 +450,28 @@ void GradingPrimaryLogRevOpCPU::apply(const void * inImg, void * outImg, long nu
     }
 
     const float * in = (float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    auto & v = m_gp->getValue();
+    auto & v    = m_gp->getValue();
     auto & comp = m_gp->getComputedValue();
 
     const bool isGammaIdentity = comp.isGammaIdentity();
 
 #if OCIO_USE_SSE2
-    const __m128 brightnessInv = _mm_set_ps(0.f, comp.getBrightness()[2],
-                                                 comp.getBrightness()[1],
-                                                 comp.getBrightness()[0]);
-    const __m128 contrastInv = _mm_set_ps(1.f, comp.getContrast()[2],
-                                               comp.getContrast()[1],
-                                               comp.getContrast()[0]);
-    const __m128 gammaInv = _mm_set_ps(1.f, comp.getGamma()[2],
-                                            comp.getGamma()[1],
-                                            comp.getGamma()[0]);
+    const __m128 brightnessInv = _mm_set_ps(
+        0.f,
+        comp.getBrightness()[2],
+        comp.getBrightness()[1],
+        comp.getBrightness()[0]);
+    const __m128 contrastInv
+        = _mm_set_ps(1.f, comp.getContrast()[2], comp.getContrast()[1], comp.getContrast()[0]);
+    const __m128 gammaInv
+        = _mm_set_ps(1.f, comp.getGamma()[2], comp.getGamma()[1], comp.getGamma()[0]);
 
     const __m128 pivotBlack = _mm_set1_ps(static_cast<float>(v.m_pivotBlack));
     const __m128 pivotWhite = _mm_set1_ps(static_cast<float>(v.m_pivotWhite));
-    const __m128 clampB = _mm_set1_ps(static_cast<float>(v.m_clampBlack));
-    const __m128 clampW = _mm_set1_ps(static_cast<float>(v.m_clampWhite));
+    const __m128 clampB     = _mm_set1_ps(static_cast<float>(v.m_clampBlack));
+    const __m128 clampW     = _mm_set1_ps(static_cast<float>(v.m_clampWhite));
 
     const __m128 actualPivot = _mm_set1_ps(static_cast<float>(comp.getPivot()));
 
@@ -480,7 +483,7 @@ void GradingPrimaryLogRevOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 ApplyClamp(pixel, clampB, clampW);
                 ApplySaturation(pixel, satInv);
@@ -500,7 +503,7 @@ void GradingPrimaryLogRevOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 ApplyClamp(pixel, clampB, clampW);
                 ApplySaturation(pixel, satInv);
@@ -522,7 +525,7 @@ void GradingPrimaryLogRevOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 ApplyClamp(pixel, clampB, clampW);
                 ApplyGamma(pixel, gammaInv, pivotBlack, pivotWhite);
@@ -541,7 +544,7 @@ void GradingPrimaryLogRevOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 ApplyClamp(pixel, clampB, clampW);
                 ApplyContrast(pixel, contrastInv, actualPivot);
@@ -558,8 +561,8 @@ void GradingPrimaryLogRevOpCPU::apply(const void * inImg, void * outImg, long nu
 
 #else
     const float * brightnessInv = comp.getBrightness().data();
-    const float * contrastInv = comp.getContrast().data();
-    const float * gammaInv = comp.getGamma().data();
+    const float * contrastInv   = comp.getContrast().data();
+    const float * gammaInv      = comp.getGamma().data();
 
     const float pivotBlack = static_cast<float>(v.m_pivotBlack);
     const float pivotWhite = static_cast<float>(v.m_pivotWhite);
@@ -567,8 +570,8 @@ void GradingPrimaryLogRevOpCPU::apply(const void * inImg, void * outImg, long nu
     const float clampWhite = static_cast<float>(v.m_clampWhite);
 
     const float actualPivot = static_cast<float>(comp.getPivot());
-    const float sat = static_cast<float>(v.m_saturation);
-    const float satInv = 1.f / (sat != 0.f ? sat : 1.f);
+    const float sat         = static_cast<float>(v.m_saturation);
+    const float satInv      = 1.f / (sat != 0.f ? sat : 1.f);
 
     if (!isGammaIdentity)
     {
@@ -621,27 +624,24 @@ void GradingPrimaryLinFwdOpCPU::apply(const void * inImg, void * outImg, long nu
     }
 
     const float * in = (float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    auto & v = m_gp->getValue();
+    auto & v    = m_gp->getValue();
     auto & comp = m_gp->getComputedValue();
 
     const bool isContrastIdentity = comp.isContrastIdentity();
 
 #if OCIO_USE_SSE2
-    const __m128 offset = _mm_set_ps(0.f, comp.getOffset()[2],
-                                          comp.getOffset()[1],
-                                          comp.getOffset()[0]);
-    const __m128 exposure = _mm_set_ps(1.f, comp.getExposure()[2],
-                                            comp.getExposure()[1],
-                                            comp.getExposure()[0]);
-    const __m128 contrast = _mm_set_ps(1.f, comp.getContrast()[2],
-                                            comp.getContrast()[1],
-                                            comp.getContrast()[0]);
-    const __m128 pivot = _mm_set1_ps(static_cast<float>(comp.getPivot()));
+    const __m128 offset
+        = _mm_set_ps(0.f, comp.getOffset()[2], comp.getOffset()[1], comp.getOffset()[0]);
+    const __m128 exposure
+        = _mm_set_ps(1.f, comp.getExposure()[2], comp.getExposure()[1], comp.getExposure()[0]);
+    const __m128 contrast
+        = _mm_set_ps(1.f, comp.getContrast()[2], comp.getContrast()[1], comp.getContrast()[0]);
+    const __m128 pivot      = _mm_set1_ps(static_cast<float>(comp.getPivot()));
     const __m128 saturation = _mm_set1_ps(static_cast<float>(v.m_saturation));
-    const __m128 clampB = _mm_set1_ps(static_cast<float>(v.m_clampBlack));
-    const __m128 clampW = _mm_set1_ps(static_cast<float>(v.m_clampWhite));
+    const __m128 clampB     = _mm_set1_ps(static_cast<float>(v.m_clampBlack));
+    const __m128 clampW     = _mm_set1_ps(static_cast<float>(v.m_clampWhite));
 
     if (v.m_saturation != 1.0)
     {
@@ -650,7 +650,7 @@ void GradingPrimaryLinFwdOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 pixel = _mm_add_ps(pixel, offset);
                 pixel = _mm_mul_ps(pixel, exposure);
@@ -670,7 +670,7 @@ void GradingPrimaryLinFwdOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 pixel = _mm_add_ps(pixel, offset);
                 pixel = _mm_mul_ps(pixel, exposure);
@@ -692,7 +692,7 @@ void GradingPrimaryLinFwdOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 pixel = _mm_add_ps(pixel, offset);
                 pixel = _mm_mul_ps(pixel, exposure);
@@ -711,7 +711,7 @@ void GradingPrimaryLinFwdOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 pixel = _mm_add_ps(pixel, offset);
                 pixel = _mm_mul_ps(pixel, exposure);
@@ -795,24 +795,21 @@ void GradingPrimaryLinRevOpCPU::apply(const void * inImg, void * outImg, long nu
     }
 
     const float * in = (float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    auto & v = m_gp->getValue();
+    auto & v    = m_gp->getValue();
     auto & comp = m_gp->getComputedValue();
 
     const bool isContrastIdentity = comp.isContrastIdentity();
 
 #if OCIO_USE_SSE2
-    const __m128 offsetInv = _mm_set_ps(0.f, comp.getOffset()[2],
-                                             comp.getOffset()[1],
-                                             comp.getOffset()[0]);
-    const __m128 exposureInv = _mm_set_ps(1.f, comp.getExposure()[2],
-                                               comp.getExposure()[1],
-                                               comp.getExposure()[0]);
-    const __m128 contrastInv = _mm_set_ps(1.f, comp.getContrast()[2],
-                                               comp.getContrast()[1],
-                                               comp.getContrast()[0]);
-    const __m128 pivot = _mm_set1_ps(static_cast<float>(comp.getPivot()));
+    const __m128 offsetInv
+        = _mm_set_ps(0.f, comp.getOffset()[2], comp.getOffset()[1], comp.getOffset()[0]);
+    const __m128 exposureInv
+        = _mm_set_ps(1.f, comp.getExposure()[2], comp.getExposure()[1], comp.getExposure()[0]);
+    const __m128 contrastInv
+        = _mm_set_ps(1.f, comp.getContrast()[2], comp.getContrast()[1], comp.getContrast()[0]);
+    const __m128 pivot  = _mm_set1_ps(static_cast<float>(comp.getPivot()));
     const __m128 clampB = _mm_set1_ps(static_cast<float>(v.m_clampBlack));
     const __m128 clampW = _mm_set1_ps(static_cast<float>(v.m_clampWhite));
 
@@ -824,7 +821,7 @@ void GradingPrimaryLinRevOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 ApplyClamp(pixel, clampB, clampW);
                 ApplySaturation(pixel, satInv);
@@ -844,7 +841,7 @@ void GradingPrimaryLinRevOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 ApplyClamp(pixel, clampB, clampW);
                 ApplySaturation(pixel, satInv);
@@ -866,7 +863,7 @@ void GradingPrimaryLinRevOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 ApplyClamp(pixel, clampB, clampW);
                 ApplyLinContrast(pixel, contrastInv, pivot);
@@ -885,7 +882,7 @@ void GradingPrimaryLinRevOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 ApplyClamp(pixel, clampB, clampW);
                 ApplyLinContrast(pixel, contrastInv, pivot);
@@ -906,10 +903,10 @@ void GradingPrimaryLinRevOpCPU::apply(const void * inImg, void * outImg, long nu
     const float * contrastInv = comp.getContrast().data();
 
     const float actualPivot = static_cast<float>(comp.getPivot());
-    const float sat = static_cast<float>(v.m_saturation);
-    const float satInv = 1.f / (sat != 0.f ? sat : 1.f);
-    const float clampBlack = static_cast<float>(v.m_clampBlack);
-    const float clampWhite = static_cast<float>(v.m_clampWhite);
+    const float sat         = static_cast<float>(v.m_saturation);
+    const float satInv      = 1.f / (sat != 0.f ? sat : 1.f);
+    const float clampBlack  = static_cast<float>(v.m_clampBlack);
+    const float clampWhite  = static_cast<float>(v.m_clampWhite);
 
     if (!isContrastIdentity)
     {
@@ -963,29 +960,26 @@ void GradingPrimaryVidFwdOpCPU::apply(const void * inImg, void * outImg, long nu
     }
 
     const float * in = (float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    auto & v = m_gp->getValue();
+    auto & v    = m_gp->getValue();
     auto & comp = m_gp->getComputedValue();
 
     const bool isGammaIdentity = comp.isGammaIdentity();
 
 #if OCIO_USE_SSE2
-    const __m128 offset = _mm_set_ps(0.f, comp.getOffset()[2],
-                                          comp.getOffset()[1],
-                                          comp.getOffset()[0]);
-    const __m128 slope = _mm_set_ps(1.f, comp.getSlope()[2],
-                                         comp.getSlope()[1],
-                                         comp.getSlope()[0]);
-    const __m128 gamma = _mm_set_ps(1.f, comp.getGamma()[2],
-                                         comp.getGamma()[1],
-                                         comp.getGamma()[0]);
+    const __m128 offset
+        = _mm_set_ps(0.f, comp.getOffset()[2], comp.getOffset()[1], comp.getOffset()[0]);
+    const __m128 slope
+        = _mm_set_ps(1.f, comp.getSlope()[2], comp.getSlope()[1], comp.getSlope()[0]);
+    const __m128 gamma
+        = _mm_set_ps(1.f, comp.getGamma()[2], comp.getGamma()[1], comp.getGamma()[0]);
 
     const __m128 saturation = _mm_set1_ps(static_cast<float>(v.m_saturation));
     const __m128 pivotBlack = _mm_set1_ps(static_cast<float>(v.m_pivotBlack));
     const __m128 pivotWhite = _mm_set1_ps(static_cast<float>(v.m_pivotWhite));
-    const __m128 clampB = _mm_set1_ps(static_cast<float>(v.m_clampBlack));
-    const __m128 clampW = _mm_set1_ps(static_cast<float>(v.m_clampWhite));
+    const __m128 clampB     = _mm_set1_ps(static_cast<float>(v.m_clampBlack));
+    const __m128 clampW     = _mm_set1_ps(static_cast<float>(v.m_clampWhite));
 
     if (v.m_saturation != 1.0)
     {
@@ -994,7 +988,7 @@ void GradingPrimaryVidFwdOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 pixel = _mm_add_ps(pixel, offset);
                 ApplyContrast(pixel, slope, pivotBlack);
@@ -1014,7 +1008,7 @@ void GradingPrimaryVidFwdOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 pixel = _mm_add_ps(pixel, offset);
                 ApplyContrast(pixel, slope, pivotBlack);
@@ -1036,7 +1030,7 @@ void GradingPrimaryVidFwdOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 pixel = _mm_add_ps(pixel, offset);
                 ApplyContrast(pixel, slope, pivotBlack);
@@ -1055,7 +1049,7 @@ void GradingPrimaryVidFwdOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 pixel = _mm_add_ps(pixel, offset);
                 ApplyContrast(pixel, slope, pivotBlack);
@@ -1143,28 +1137,25 @@ void GradingPrimaryVidRevOpCPU::apply(const void * inImg, void * outImg, long nu
     }
 
     const float * in = (float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    auto & v = m_gp->getValue();
+    auto & v    = m_gp->getValue();
     auto & comp = m_gp->getComputedValue();
 
     const bool isGammaIdentity = comp.isGammaIdentity();
 
 #if OCIO_USE_SSE2
-    const __m128 offsetInv = _mm_set_ps(0.f, comp.getOffset()[2],
-                                             comp.getOffset()[1],
-                                             comp.getOffset()[0]);
-    const __m128 slopeInv = _mm_set_ps(1.f, comp.getSlope()[2],
-                                            comp.getSlope()[1],
-                                            comp.getSlope()[0]);
-    const __m128 gammaInv = _mm_set_ps(1.f, comp.getGamma()[2],
-                                            comp.getGamma()[1],
-                                            comp.getGamma()[0]);
+    const __m128 offsetInv
+        = _mm_set_ps(0.f, comp.getOffset()[2], comp.getOffset()[1], comp.getOffset()[0]);
+    const __m128 slopeInv
+        = _mm_set_ps(1.f, comp.getSlope()[2], comp.getSlope()[1], comp.getSlope()[0]);
+    const __m128 gammaInv
+        = _mm_set_ps(1.f, comp.getGamma()[2], comp.getGamma()[1], comp.getGamma()[0]);
 
     const __m128 pivotBlack = _mm_set1_ps(static_cast<float>(v.m_pivotBlack));
     const __m128 pivotWhite = _mm_set1_ps(static_cast<float>(v.m_pivotWhite));
-    const __m128 clampB = _mm_set1_ps(static_cast<float>(v.m_clampBlack));
-    const __m128 clampW = _mm_set1_ps(static_cast<float>(v.m_clampWhite));
+    const __m128 clampB     = _mm_set1_ps(static_cast<float>(v.m_clampBlack));
+    const __m128 clampW     = _mm_set1_ps(static_cast<float>(v.m_clampWhite));
 
     if (v.m_saturation != 1. && v.m_saturation != 0.)
     {
@@ -1174,7 +1165,7 @@ void GradingPrimaryVidRevOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 ApplyClamp(pixel, clampB, clampW);
                 ApplySaturation(pixel, satInv);
@@ -1194,7 +1185,7 @@ void GradingPrimaryVidRevOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 ApplyClamp(pixel, clampB, clampW);
                 ApplySaturation(pixel, satInv);
@@ -1216,7 +1207,7 @@ void GradingPrimaryVidRevOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 ApplyClamp(pixel, clampB, clampW);
                 ApplyGamma(pixel, gammaInv, pivotBlack, pivotWhite);
@@ -1235,7 +1226,7 @@ void GradingPrimaryVidRevOpCPU::apply(const void * inImg, void * outImg, long nu
             for (long idx = 0; idx < numPixels; ++idx)
             {
                 const float outAlpha = in[3];
-                __m128 pixel = _mm_set_ps(in[3], in[2], in[1], in[0]);
+                __m128 pixel         = _mm_set_ps(in[3], in[2], in[1], in[0]);
 
                 ApplyClamp(pixel, clampB, clampW);
                 ApplyContrast(pixel, slopeInv, pivotBlack);
@@ -1258,8 +1249,8 @@ void GradingPrimaryVidRevOpCPU::apply(const void * inImg, void * outImg, long nu
     const float pivotWhite = static_cast<float>(v.m_pivotWhite);
     const float clampBlack = static_cast<float>(v.m_clampBlack);
     const float clampWhite = static_cast<float>(v.m_clampWhite);
-    const float sat = static_cast<float>(v.m_saturation);
-    const float satInv = 1.f / (sat != 0.f ? sat : 1.f);
+    const float sat        = static_cast<float>(v.m_saturation);
+    const float satInv     = 1.f / (sat != 0.f ? sat : 1.f);
 
     if (!isGammaIdentity)
     {
@@ -1293,7 +1284,7 @@ void GradingPrimaryVidRevOpCPU::apply(const void * inImg, void * outImg, long nu
             out += 4;
         }
     }
-#endif  // OCIO_USE_SSE2
+#endif // OCIO_USE_SSE2
 }
 } // Anonymous namespace
 
@@ -1305,30 +1296,30 @@ ConstOpCPURcPtr GetGradingPrimaryCPURenderer(ConstGradingPrimaryOpDataRcPtr & pr
     {
         switch (prim->getStyle())
         {
-        case GRADING_LOG:
-            return std::make_shared<GradingPrimaryLogFwdOpCPU>(prim);
-            break;
-        case GRADING_LIN:
-            return std::make_shared<GradingPrimaryLinFwdOpCPU>(prim);
-            break;
-        case GRADING_VIDEO:
-            return std::make_shared<GradingPrimaryVidFwdOpCPU>(prim);
-            break;
+            case GRADING_LOG:
+                return std::make_shared<GradingPrimaryLogFwdOpCPU>(prim);
+                break;
+            case GRADING_LIN:
+                return std::make_shared<GradingPrimaryLinFwdOpCPU>(prim);
+                break;
+            case GRADING_VIDEO:
+                return std::make_shared<GradingPrimaryVidFwdOpCPU>(prim);
+                break;
         }
     }
     else if (prim->getDirection() == TRANSFORM_DIR_INVERSE)
     {
         switch (prim->getStyle())
         {
-        case GRADING_LOG:
-            return std::make_shared<GradingPrimaryLogRevOpCPU>(prim);
-            break;
-        case GRADING_LIN:
-            return std::make_shared<GradingPrimaryLinRevOpCPU>(prim);
-            break;
-        case GRADING_VIDEO:
-            return std::make_shared<GradingPrimaryVidRevOpCPU>(prim);
-            break;
+            case GRADING_LOG:
+                return std::make_shared<GradingPrimaryLogRevOpCPU>(prim);
+                break;
+            case GRADING_LIN:
+                return std::make_shared<GradingPrimaryLinRevOpCPU>(prim);
+                break;
+            case GRADING_VIDEO:
+                return std::make_shared<GradingPrimaryVidRevOpCPU>(prim);
+                break;
         }
     }
 

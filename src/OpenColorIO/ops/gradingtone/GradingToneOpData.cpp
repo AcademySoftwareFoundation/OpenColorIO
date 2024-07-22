@@ -6,9 +6,9 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "MathUtils.h"
+#include "Platform.h"
 #include "ops/gradingtone/GradingTone.h"
 #include "ops/gradingtone/GradingToneOpData.h"
-#include "Platform.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -28,14 +28,18 @@ GradingToneOpData::GradingToneOpData(GradingStyle style)
 GradingToneOpData::GradingToneOpData(const GradingToneOpData & other)
     : OpData(other)
     , m_style(other.m_style)
-    , m_value(std::make_shared<DynamicPropertyGradingToneImpl>(GradingTone(other.m_style), other.m_style, false))
+    , m_value(std::make_shared<DynamicPropertyGradingToneImpl>(
+          GradingTone(other.m_style),
+          other.m_style,
+          false))
 {
     *this = other;
 }
 
 GradingToneOpData & GradingToneOpData::operator=(const GradingToneOpData & rhs)
 {
-    if (this == &rhs) return *this;
+    if (this == &rhs)
+        return *this;
 
     OpData::operator=(rhs);
 
@@ -74,7 +78,8 @@ bool GradingToneOpData::isNoOp() const
 
 bool GradingToneOpData::isIdentity() const
 {
-    if (isDynamic()) return false;
+    if (isDynamic())
+        return false;
 
     auto & value = m_value->getValue();
 
@@ -100,7 +105,7 @@ bool GradingToneOpData::isInverse(ConstGradingToneOpDataRcPtr & r) const
 
 GradingToneOpDataRcPtr GradingToneOpData::inverse() const
 {
-    auto res = clone();
+    auto res         = clone();
     res->m_direction = GetInverseTransformDirection(m_direction);
     return res;
 }
@@ -169,13 +174,13 @@ void GradingToneOpData::removeDynamicProperty() noexcept
 
 bool GradingToneOpData::equals(const OpData & other) const
 {
-    if (!OpData::equals(other)) return false;
+    if (!OpData::equals(other))
+        return false;
 
-    const GradingToneOpData* rop = static_cast<const GradingToneOpData*>(&other);
+    const GradingToneOpData * rop = static_cast<const GradingToneOpData *>(&other);
 
-    if (m_direction         != rop->m_direction ||
-        m_style             != rop->m_style ||
-       !m_value->equals(     *(rop->m_value) ))
+    if (m_direction != rop->m_direction || m_style != rop->m_style
+        || !m_value->equals(*(rop->m_value)))
     {
         return false;
     }
@@ -187,6 +192,5 @@ bool operator==(const GradingToneOpData & lhs, const GradingToneOpData & rhs)
 {
     return lhs.equals(rhs);
 }
-
 
 } // namespace OCIO_NAMESPACE

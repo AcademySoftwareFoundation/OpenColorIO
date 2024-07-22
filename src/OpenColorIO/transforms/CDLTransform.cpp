@@ -7,16 +7,15 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "fileformats/cdl/CDLParser.h"
 #include "Logging.h"
 #include "MathUtils.h"
 #include "Mutex.h"
 #include "OpBuilders.h"
 #include "ParseUtils.h"
 #include "Platform.h"
+#include "fileformats/cdl/CDLParser.h"
 #include "transforms/CDLTransform.h"
 #include "transforms/FileTransform.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -29,7 +28,6 @@ CDLTransformImplRcPtr CDLTransformImpl::Create()
 {
     return CDLTransformImplRcPtr(new CDLTransformImpl(), &CDLTransformImpl::deleter);
 }
-
 
 CDLTransformRcPtr GetCDL(GroupTransformRcPtr & group, const std::string & cdlId)
 {
@@ -97,7 +95,7 @@ CDLTransformRcPtr CDLTransform::CreateFromFile(const char * src, const char * cd
     GetCachedFileAndFormat(format, cachedFile, src, INTERP_DEFAULT, *(Config::Create()));
     GroupTransformRcPtr group = cachedFile->getCDLGroup();
 
-    const std::string cdlId{ cdlId_ ? cdlId_ : "" };
+    const std::string cdlId{cdlId_ ? cdlId_ : ""};
     return GetCDL(group, cdlId);
 }
 
@@ -124,12 +122,12 @@ void CDLTransformImpl::deleter(CDLTransform * t)
 
 TransformRcPtr CDLTransformImpl::createEditableCopy() const
 {
-    TransformRcPtr transform = CDLTransform::Create();
-    dynamic_cast<CDLTransformImpl*>(transform.get())->data() = data();
+    TransformRcPtr transform                                  = CDLTransform::Create();
+    dynamic_cast<CDLTransformImpl *>(transform.get())->data() = data();
     return transform;
 }
 
-TransformDirection CDLTransformImpl::getDirection() const  noexcept
+TransformDirection CDLTransformImpl::getDirection() const noexcept
 {
     return data().getDirection();
 }
@@ -169,9 +167,10 @@ const FormatMetadata & CDLTransformImpl::getFormatMetadata() const noexcept
 
 bool CDLTransformImpl::equals(const CDLTransform & other) const noexcept
 {
-    if (this == &other) return true;
+    if (this == &other)
+        return true;
     // NB: A tolerance of 1e-9 is used when comparing the parameters.
-    return data() == dynamic_cast<const CDLTransformImpl*>(&other)->data();
+    return data() == dynamic_cast<const CDLTransformImpl *>(&other)->data();
 }
 
 CDLStyle CDLTransformImpl::getStyle() const
@@ -203,9 +202,9 @@ void CDLTransformImpl::getSlope(double * rgb) const
     }
 
     const CDLOpData::ChannelParams & params = data().getSlopeParams();
-    rgb[0] = params[0];
-    rgb[1] = params[1];
-    rgb[2] = params[2];
+    rgb[0]                                  = params[0];
+    rgb[1]                                  = params[1];
+    rgb[2]                                  = params[2];
 }
 
 void CDLTransformImpl::setOffset(const double * rgb)
@@ -226,9 +225,9 @@ void CDLTransformImpl::getOffset(double * rgb) const
     }
 
     const CDLOpData::ChannelParams & params = data().getOffsetParams();
-    rgb[0] = params[0];
-    rgb[1] = params[1];
-    rgb[2] = params[2];
+    rgb[0]                                  = params[0];
+    rgb[1]                                  = params[1];
+    rgb[2]                                  = params[2];
 }
 
 void CDLTransformImpl::setPower(const double * rgb)
@@ -249,9 +248,9 @@ void CDLTransformImpl::getPower(double * rgb) const
     }
 
     const CDLOpData::ChannelParams & params = data().getPowerParams();
-    rgb[0] = params[0];
-    rgb[1] = params[1];
-    rgb[2] = params[2];
+    rgb[0]                                  = params[0];
+    rgb[1]                                  = params[1];
+    rgb[2]                                  = params[2];
 }
 
 void CDLTransformImpl::setSOP(const double * vec9)
@@ -274,19 +273,19 @@ void CDLTransformImpl::getSOP(double * vec9) const
     }
 
     const CDLOpData::ChannelParams & slopes = data().getSlopeParams();
-    vec9[0] = slopes[0];
-    vec9[1] = slopes[1];
-    vec9[2] = slopes[2];
+    vec9[0]                                 = slopes[0];
+    vec9[1]                                 = slopes[1];
+    vec9[2]                                 = slopes[2];
 
     const CDLOpData::ChannelParams & offsets = data().getOffsetParams();
-    vec9[3] = offsets[0];
-    vec9[4] = offsets[1];
-    vec9[5] = offsets[2];
+    vec9[3]                                  = offsets[0];
+    vec9[4]                                  = offsets[1];
+    vec9[5]                                  = offsets[2];
 
     const CDLOpData::ChannelParams & powers = data().getPowerParams();
-    vec9[6] = powers[0];
-    vec9[7] = powers[1];
-    vec9[8] = powers[2];
+    vec9[6]                                 = powers[0];
+    vec9[7]                                 = powers[1];
+    vec9[8]                                 = powers[2];
 }
 
 void CDLTransformImpl::setSat(double sat)
@@ -331,7 +330,7 @@ void CDLTransformImpl::setID(const char * id)
 const char * CDLTransformImpl::getFirstSOPDescription() const
 {
     const auto & info = data().getFormatMetadata();
-    int descIndex = info.getFirstChildIndex(METADATA_SOP_DESCRIPTION);
+    int descIndex     = info.getFirstChildIndex(METADATA_SOP_DESCRIPTION);
     if (descIndex == -1)
     {
         return "";
@@ -344,7 +343,7 @@ const char * CDLTransformImpl::getFirstSOPDescription() const
 
 void CDLTransformImpl::setFirstSOPDescription(const char * description)
 {
-    auto & info = data().getFormatMetadata();
+    auto & info   = data().getFormatMetadata();
     int descIndex = info.getFirstChildIndex(METADATA_SOP_DESCRIPTION);
     if (descIndex == -1)
     {
@@ -366,7 +365,7 @@ void CDLTransformImpl::setFirstSOPDescription(const char * description)
     }
 }
 
-std::ostream & operator<< (std::ostream & os, const CDLTransform & t)
+std::ostream & operator<<(std::ostream & os, const CDLTransform & t)
 {
     double sop[9];
     t.getSOP(sop);
@@ -376,7 +375,8 @@ std::ostream & operator<< (std::ostream & os, const CDLTransform & t)
     os << ", sop=";
     for (unsigned int i = 0; i < 9; ++i)
     {
-        if (i != 0) os << " ";
+        if (i != 0)
+            os << " ";
         os << sop[i];
     }
     os << ", sat=" << t.getSat();
@@ -386,4 +386,3 @@ std::ostream & operator<< (std::ostream & os, const CDLTransform & t)
 }
 
 } // namespace OCIO_NAMESPACE
-

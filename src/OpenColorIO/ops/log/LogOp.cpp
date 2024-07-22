@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <iostream>
-#include <algorithm>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "HashUtils.h"
 #include "GpuShaderUtils.h"
+#include "HashUtils.h"
 #include "MathUtils.h"
+#include "ops/log/LogOp.h"
 #include "ops/log/LogOpCPU.h"
 #include "ops/log/LogOpData.h"
 #include "ops/log/LogOpGPU.h"
-#include "ops/log/LogOp.h"
 #include "transforms/LogAffineTransform.h"
 #include "transforms/LogCameraTransform.h"
 #include "transforms/LogTransform.h"
@@ -23,10 +23,10 @@ namespace OCIO_NAMESPACE
 {
 namespace
 {
-class LogOp: public Op
+class LogOp : public Op
 {
 public:
-    LogOp() = delete;
+    LogOp()              = delete;
     LogOp(const LogOp &) = delete;
     explicit LogOp(LogOpDataRcPtr & log);
 
@@ -70,7 +70,8 @@ OpRcPtr LogOp::clone() const
 }
 
 LogOp::~LogOp()
-{ }
+{
+}
 
 std::string LogOp::getInfo() const
 {
@@ -80,14 +81,16 @@ std::string LogOp::getInfo() const
 bool LogOp::isSameType(ConstOpRcPtr & op) const
 {
     ConstLogOpRcPtr typedRcPtr = DynamicPtrCast<const LogOp>(op);
-    if (!typedRcPtr) return false;
+    if (!typedRcPtr)
+        return false;
     return true;
 }
 
 bool LogOp::isInverse(ConstOpRcPtr & op) const
 {
     ConstLogOpRcPtr typedRcPtr = DynamicPtrCast<const LogOp>(op);
-    if (!typedRcPtr) return false;
+    if (!typedRcPtr)
+        return false;
 
     ConstLogOpDataRcPtr logOpData = typedRcPtr->logData();
     return logData()->isInverse(logOpData);
@@ -116,20 +119,21 @@ void LogOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
     GetLogGPUShaderProgram(shaderCreator, data);
 }
 
-}  // Anon namespace
+} // namespace
 
 ///////////////////////////////////////////////////////////////////////////
 
-void CreateLogOp(OpRcPtrVec & ops,
-                 double base,
-                 const double(&logSlope)[3],
-                 const double(&logOffset)[3],
-                 const double(&linSlope)[3],
-                 const double(&linOffset)[3],
-                 TransformDirection direction)
+void CreateLogOp(
+    OpRcPtrVec & ops,
+    double base,
+    const double (&logSlope)[3],
+    const double (&logOffset)[3],
+    const double (&linSlope)[3],
+    const double (&linOffset)[3],
+    TransformDirection direction)
 {
-    auto opData = std::make_shared<LogOpData>(base, logSlope, logOffset,
-                                              linSlope, linOffset, direction);
+    auto opData
+        = std::make_shared<LogOpData>(base, logSlope, logOffset, linSlope, linOffset, direction);
     ops.push_back(std::make_shared<LogOp>(opData));
 }
 
@@ -139,9 +143,7 @@ void CreateLogOp(OpRcPtrVec & ops, double base, TransformDirection direction)
     ops.push_back(std::make_shared<LogOp>(opData));
 }
 
-void CreateLogOp(OpRcPtrVec & ops,
-                 LogOpDataRcPtr & logData,
-                 TransformDirection direction)
+void CreateLogOp(OpRcPtrVec & ops, LogOpDataRcPtr & logData, TransformDirection direction)
 {
     auto log = logData;
     if (direction == TRANSFORM_DIR_INVERSE)
@@ -151,7 +153,6 @@ void CreateLogOp(OpRcPtrVec & ops,
 
     ops.push_back(std::make_shared<LogOp>(log));
 }
-
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -165,31 +166,29 @@ void CreateLogTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     auto logData = DynamicPtrCast<const LogOpData>(op->data());
     if (logData->isCamera())
     {
-        double linSB[]{ 0.1, 0.1, 0.1 };
+        double linSB[]{0.1, 0.1, 0.1};
         auto logTransform = LogCameraTransform::Create(linSB);
-        auto & data = dynamic_cast<LogCameraTransformImpl*>(logTransform.get())->data();
-        data = *logData;
+        auto & data       = dynamic_cast<LogCameraTransformImpl *>(logTransform.get())->data();
+        data              = *logData;
         group->appendTransform(logTransform);
     }
     else if (logData->isSimpleLog())
     {
         auto logTransform = LogTransform::Create();
-        auto & data = dynamic_cast<LogTransformImpl*>(logTransform.get())->data();
-        data = *logData;
+        auto & data       = dynamic_cast<LogTransformImpl *>(logTransform.get())->data();
+        data              = *logData;
         group->appendTransform(logTransform);
     }
     else
     {
         auto logTransform = LogAffineTransform::Create();
-        auto & data = dynamic_cast<LogAffineTransformImpl*>(logTransform.get())->data();
-        data = *logData;
+        auto & data       = dynamic_cast<LogAffineTransformImpl *>(logTransform.get())->data();
+        data              = *logData;
         group->appendTransform(logTransform);
     }
 }
 
-void BuildLogOp(OpRcPtrVec & ops,
-                const LogAffineTransform & transform,
-                TransformDirection dir)
+void BuildLogOp(OpRcPtrVec & ops, const LogAffineTransform & transform, TransformDirection dir)
 {
     const auto & data = dynamic_cast<const LogAffineTransformImpl &>(transform).data();
     data.validate();
@@ -198,9 +197,7 @@ void BuildLogOp(OpRcPtrVec & ops,
     CreateLogOp(ops, log, dir);
 }
 
-void BuildLogOp(OpRcPtrVec & ops,
-                const LogCameraTransform & transform,
-                TransformDirection dir)
+void BuildLogOp(OpRcPtrVec & ops, const LogCameraTransform & transform, TransformDirection dir)
 {
     const auto & data = dynamic_cast<const LogCameraTransformImpl &>(transform).data();
     data.validate();
@@ -209,9 +206,7 @@ void BuildLogOp(OpRcPtrVec & ops,
     CreateLogOp(ops, log, dir);
 }
 
-void BuildLogOp(OpRcPtrVec & ops,
-                const LogTransform & transform,
-                TransformDirection dir)
+void BuildLogOp(OpRcPtrVec & ops, const LogTransform & transform, TransformDirection dir)
 {
     const auto & data = dynamic_cast<const LogTransformImpl &>(transform).data();
     data.validate();
@@ -221,4 +216,3 @@ void BuildLogOp(OpRcPtrVec & ops,
 }
 
 } // namespace OCIO_NAMESPACE
-

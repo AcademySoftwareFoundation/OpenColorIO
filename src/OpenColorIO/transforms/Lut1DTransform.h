@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_LUT1DTRANSFORM_H
 #define INCLUDED_OCIO_LUT1DTRANSFORM_H
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/lut1d/Lut1DOpData.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -18,9 +16,9 @@ class Lut1DTransformImpl : public Lut1DTransform
 public:
     Lut1DTransformImpl();
     Lut1DTransformImpl(Lut1DOpData::HalfFlags halfFlag, unsigned long length);
-    Lut1DTransformImpl(const Lut1DTransformImpl &) = delete;
-    Lut1DTransformImpl& operator=(const Lut1DTransformImpl &) = delete;
-    virtual ~Lut1DTransformImpl() = default;
+    Lut1DTransformImpl(const Lut1DTransformImpl &)             = delete;
+    Lut1DTransformImpl & operator=(const Lut1DTransformImpl &) = delete;
+    virtual ~Lut1DTransformImpl()                              = default;
 
     TransformRcPtr createEditableCopy() const override;
 
@@ -61,10 +59,9 @@ public:
     static void deleter(Lut1DTransform * t);
 
 private:
-    Lut1DOpData m_data{ 2 };
+    Lut1DOpData m_data{2};
 };
-
 
 } // namespace OCIO_NAMESPACE
 
-#endif  // INCLUDED_OCIO_LUT1DTRANSFORM_H
+#endif // INCLUDED_OCIO_LUT1DTRANSFORM_H

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_OPENCOLORTYPES_H
 #define INCLUDED_OCIO_OPENCOLORTYPES_H
 
@@ -12,10 +11,9 @@
 #endif
 
 #include <array>
+#include <functional>
 #include <limits>
 #include <string>
-#include <functional>
-
 
 /*!rst::
 C++ Types
@@ -120,7 +118,6 @@ typedef OCIO_SHARED_PTR<ConfigIOProxy> ConfigIOProxyRcPtr;
 
 typedef std::array<float, 3> Float3;
 
-
 // Transforms
 
 class OCIOEXPORT Transform;
@@ -156,11 +153,13 @@ typedef OCIO_SHARED_PTR<const DynamicPropertyDouble> ConstDynamicPropertyDoubleR
 typedef OCIO_SHARED_PTR<DynamicPropertyDouble> DynamicPropertyDoubleRcPtr;
 
 class OCIOEXPORT DynamicPropertyGradingPrimary;
-typedef OCIO_SHARED_PTR<const DynamicPropertyGradingPrimary> ConstDynamicPropertyGradingPrimaryRcPtr;
+typedef OCIO_SHARED_PTR<const DynamicPropertyGradingPrimary>
+    ConstDynamicPropertyGradingPrimaryRcPtr;
 typedef OCIO_SHARED_PTR<DynamicPropertyGradingPrimary> DynamicPropertyGradingPrimaryRcPtr;
 
 class OCIOEXPORT DynamicPropertyGradingRGBCurve;
-typedef OCIO_SHARED_PTR<const DynamicPropertyGradingRGBCurve> ConstDynamicPropertyGradingRGBCurveRcPtr;
+typedef OCIO_SHARED_PTR<const DynamicPropertyGradingRGBCurve>
+    ConstDynamicPropertyGradingRGBCurveRcPtr;
 typedef OCIO_SHARED_PTR<DynamicPropertyGradingRGBCurve> DynamicPropertyGradingRGBCurveRcPtr;
 
 class OCIOEXPORT DynamicPropertyGradingTone;
@@ -235,7 +234,6 @@ class OCIOEXPORT RangeTransform;
 typedef OCIO_SHARED_PTR<const RangeTransform> ConstRangeTransformRcPtr;
 typedef OCIO_SHARED_PTR<RangeTransform> RangeTransformRcPtr;
 
-
 // Application Helpers
 
 class ColorSpaceMenuHelper;
@@ -254,24 +252,22 @@ class LegacyViewingPipeline;
 typedef OCIO_SHARED_PTR<LegacyViewingPipeline> LegacyViewingPipelineRcPtr;
 typedef OCIO_SHARED_PTR<const LegacyViewingPipeline> ConstLegacyViewingPipelineRcPtr;
 
-
-template <class T, class U>
-inline OCIO_SHARED_PTR<T> DynamicPtrCast(OCIO_SHARED_PTR<U> const & ptr)
+template <class T, class U> inline OCIO_SHARED_PTR<T> DynamicPtrCast(OCIO_SHARED_PTR<U> const & ptr)
 {
-    return OCIO_DYNAMIC_POINTER_CAST<T,U>(ptr);
+    return OCIO_DYNAMIC_POINTER_CAST<T, U>(ptr);
 }
 
 /// Define the logging function signature.
-using LoggingFunction = std::function<void(const char*)>;
+using LoggingFunction = std::function<void(const char *)>;
 
 // Enums
 
 enum LoggingLevel
 {
-    LOGGING_LEVEL_NONE = 0,
+    LOGGING_LEVEL_NONE    = 0,
     LOGGING_LEVEL_WARNING = 1,
-    LOGGING_LEVEL_INFO = 2,
-    LOGGING_LEVEL_DEBUG = 3,
+    LOGGING_LEVEL_INFO    = 2,
+    LOGGING_LEVEL_DEBUG   = 3,
     LOGGING_LEVEL_UNKNOWN = 255,
 
     LOGGING_LEVEL_DEFAULT = LOGGING_LEVEL_INFO
@@ -290,8 +286,8 @@ using ComputeHashFunction = std::function<std::string(const std::string &)>;
  */
 enum ReferenceSpaceType
 {
-    REFERENCE_SPACE_SCENE = 0,  ///< the main scene reference space
-    REFERENCE_SPACE_DISPLAY     ///< the reference space for display color spaces
+    REFERENCE_SPACE_SCENE = 0, ///< the main scene reference space
+    REFERENCE_SPACE_DISPLAY    ///< the reference space for display color spaces
 };
 
 enum SearchReferenceSpaceType
@@ -389,19 +385,19 @@ enum TransformType
  */
 enum Interpolation
 {
-    INTERP_UNKNOWN = 0,
-    INTERP_NEAREST = 1,     ///< nearest neighbor
-    INTERP_LINEAR = 2,      ///< linear interpolation (trilinear for Lut3D)
+    INTERP_UNKNOWN     = 0,
+    INTERP_NEAREST     = 1, ///< nearest neighbor
+    INTERP_LINEAR      = 2, ///< linear interpolation (trilinear for Lut3D)
     INTERP_TETRAHEDRAL = 3, ///< tetrahedral interpolation (Lut3D only)
-    INTERP_CUBIC = 4,       ///< cubic interpolation (not supported)
+    INTERP_CUBIC       = 4, ///< cubic interpolation (not supported)
 
-    INTERP_DEFAULT = 254,   ///< the default interpolation type
-    INTERP_BEST = 255       ///< the 'best' suitable interpolation type
+    INTERP_DEFAULT = 254, ///< the default interpolation type
+    INTERP_BEST    = 255  ///< the 'best' suitable interpolation type
 };
 
 /**
  * Used in a configuration file to indicate the bit-depth of a color space,
- * and by the \ref Processor to specify the input and output bit-depths of 
+ * and by the \ref Processor to specify the input and output bit-depths of
  * images to process.
  * Note that \ref Processor only supports: UINT8, UINT10, UINT12, UINT16, F16 and F32.
  */
@@ -436,7 +432,8 @@ enum ChannelOrdering
     CHANNEL_ORDERING_BGR
 };
 
-enum Allocation {
+enum Allocation
+{
     ALLOCATION_UNKNOWN = 0,
     ALLOCATION_UNIFORM,
     ALLOCATION_LG2
@@ -445,15 +442,15 @@ enum Allocation {
 /// Used when there is a choice of hardware shader language.
 enum GpuLanguage
 {
-    GPU_LANGUAGE_CG = 0,            ///< Nvidia Cg shader
-    GPU_LANGUAGE_GLSL_1_2,          ///< OpenGL Shading Language
-    GPU_LANGUAGE_GLSL_1_3,          ///< OpenGL Shading Language
-    GPU_LANGUAGE_GLSL_4_0,          ///< OpenGL Shading Language
-    GPU_LANGUAGE_HLSL_DX11,         ///< DirectX Shading Language
-    LANGUAGE_OSL_1,                 ///< Open Shading Language
-    GPU_LANGUAGE_GLSL_ES_1_0,       ///< OpenGL ES Shading Language
-    GPU_LANGUAGE_GLSL_ES_3_0,       ///< OpenGL ES Shading Language
-    GPU_LANGUAGE_MSL_2_0            ///< Metal Shading Language
+    GPU_LANGUAGE_CG = 0,      ///< Nvidia Cg shader
+    GPU_LANGUAGE_GLSL_1_2,    ///< OpenGL Shading Language
+    GPU_LANGUAGE_GLSL_1_3,    ///< OpenGL Shading Language
+    GPU_LANGUAGE_GLSL_4_0,    ///< OpenGL Shading Language
+    GPU_LANGUAGE_HLSL_DX11,   ///< DirectX Shading Language
+    LANGUAGE_OSL_1,           ///< Open Shading Language
+    GPU_LANGUAGE_GLSL_ES_1_0, ///< OpenGL ES Shading Language
+    GPU_LANGUAGE_GLSL_ES_3_0, ///< OpenGL ES Shading Language
+    GPU_LANGUAGE_MSL_2_0      ///< Metal Shading Language
 };
 
 /// Controls which environment variables are loaded into a Context object.
@@ -479,35 +476,37 @@ enum FixedFunctionStyle
     FIXED_FUNCTION_ACES_GLOW_03,        ///< Glow function (ACES 0.3/0.7)
     FIXED_FUNCTION_ACES_GLOW_10,        ///< Glow function (ACES 1.0)
     FIXED_FUNCTION_ACES_DARK_TO_DIM_10, ///< Dark to dim surround correction (ACES 1.0)
-    FIXED_FUNCTION_REC2100_SURROUND,    ///< Rec.2100 surround correction (takes one double for the gamma param)
+    FIXED_FUNCTION_REC2100_SURROUND,    ///< Rec.2100 surround correction (takes one double for the
+                                        ///< gamma param)
     FIXED_FUNCTION_RGB_TO_HSV,          ///< Classic RGB to HSV function
     FIXED_FUNCTION_XYZ_TO_xyY,          ///< CIE XYZ to 1931 xy chromaticity coordinates
     FIXED_FUNCTION_XYZ_TO_uvY,          ///< CIE XYZ to 1976 u'v' chromaticity coordinates
     FIXED_FUNCTION_XYZ_TO_LUV,          ///< CIE XYZ to 1976 CIELUV colour space (D65 white)
-    FIXED_FUNCTION_ACES_GAMUTMAP_02,    ///< ACES 0.2 Gamut clamping algorithm -- NOT IMPLEMENTED YET
-    FIXED_FUNCTION_ACES_GAMUTMAP_07,    ///< ACES 0.7 Gamut clamping algorithm -- NOT IMPLEMENTED YET
-    FIXED_FUNCTION_ACES_GAMUT_COMP_13   ///< ACES 1.3 Parametric Gamut Compression (expects ACEScg values)
+    FIXED_FUNCTION_ACES_GAMUTMAP_02,  ///< ACES 0.2 Gamut clamping algorithm -- NOT IMPLEMENTED YET
+    FIXED_FUNCTION_ACES_GAMUTMAP_07,  ///< ACES 0.7 Gamut clamping algorithm -- NOT IMPLEMENTED YET
+    FIXED_FUNCTION_ACES_GAMUT_COMP_13 ///< ACES 1.3 Parametric Gamut Compression (expects ACEScg
+                                      ///< values)
 };
 
 /// Enumeration of the :cpp:class:`ExposureContrastTransform` transform algorithms.
 enum ExposureContrastStyle
 {
-    EXPOSURE_CONTRAST_LINEAR = 0,      ///< E/C to be applied to a linear space image
-    EXPOSURE_CONTRAST_VIDEO,           ///< E/C to be applied to a video space image
-    EXPOSURE_CONTRAST_LOGARITHMIC      ///< E/C to be applied to a log space image
+    EXPOSURE_CONTRAST_LINEAR = 0, ///< E/C to be applied to a linear space image
+    EXPOSURE_CONTRAST_VIDEO,      ///< E/C to be applied to a video space image
+    EXPOSURE_CONTRAST_LOGARITHMIC ///< E/C to be applied to a log space image
 };
 
 /**
  * Enumeration of the :cpp:class:`CDLTransform` transform algorithms.
- * 
+ *
  * \note
  *      The default for reading .cc/.ccc/.cdl files, config file YAML, and CDLTransform is no-clamp,
  *      since that is what is primarily desired in VFX.  However, the CLF format default is ASC.
  */
 enum CDLStyle
 {
-    CDL_ASC = 0,    ///< ASC CDL specification v1.2
-    CDL_NO_CLAMP,   ///< CDL that does not clamp
+    CDL_ASC = 0,  ///< ASC CDL specification v1.2
+    CDL_NO_CLAMP, ///< CDL that does not clamp
     CDL_TRANSFORM_DEFAULT = CDL_NO_CLAMP
 };
 
@@ -518,7 +517,8 @@ enum CDLStyle
 enum NegativeStyle
 {
     NEGATIVE_CLAMP = 0, ///< Clamp negative values
-    NEGATIVE_MIRROR,    ///< Positive curve is rotated 180 degrees around the origin to handle negatives.
+    NEGATIVE_MIRROR,    ///< Positive curve is rotated 180 degrees around the origin to handle
+                        ///< negatives.
     NEGATIVE_PASS_THRU, ///< Negative values are passed through unchanged.
     NEGATIVE_LINEAR     ///< Linearly extrapolate the curve for negative values.
 };
@@ -526,9 +526,9 @@ enum NegativeStyle
 /// Styles for grading transforms.
 enum GradingStyle
 {
-    GRADING_LOG = 0,    ///< Algorithms for Logarithmic color spaces.
-    GRADING_LIN,        ///< Algorithms for Scene Linear color spaces.
-    GRADING_VIDEO       ///< Algorithms for Video color spaces.
+    GRADING_LOG = 0, ///< Algorithms for Logarithmic color spaces.
+    GRADING_LIN,     ///< Algorithms for Scene Linear color spaces.
+    GRADING_VIDEO    ///< Algorithms for Video color spaces.
 };
 
 /// Types for dynamic properties.
@@ -557,9 +557,9 @@ enum UniformDataType
 {
     UNIFORM_DOUBLE = 0,
     UNIFORM_BOOL,
-    UNIFORM_FLOAT3,        ///< Array of 3 floats.
-    UNIFORM_VECTOR_FLOAT,  ///< Vector of floats (size is set by uniform).
-    UNIFORM_VECTOR_INT,    ///< Vector of int pairs (size is set by uniform).
+    UNIFORM_FLOAT3,       ///< Array of 3 floats.
+    UNIFORM_VECTOR_FLOAT, ///< Vector of floats (size is set by uniform).
+    UNIFORM_VECTOR_INT,   ///< Vector of int pairs (size is set by uniform).
     UNIFORM_UNKNOWN
 };
 
@@ -569,12 +569,12 @@ enum OptimizationFlags : unsigned long
     // Below are listed all the optimization types.
 
     /// Do not optimize.
-    OPTIMIZATION_NONE                            = 0x00000000,
+    OPTIMIZATION_NONE = 0x00000000,
 
     /// Replace identity ops (other than gamma).
-    OPTIMIZATION_IDENTITY                        = 0x00000001,
+    OPTIMIZATION_IDENTITY = 0x00000001,
     /// Replace identity gamma ops.
-    OPTIMIZATION_IDENTITY_GAMMA                  = 0x00000002,
+    OPTIMIZATION_IDENTITY_GAMMA = 0x00000002,
 
     /// Replace a pair of ops where one is the inverse of the other.
     OPTIMIZATION_PAIR_IDENTITY_CDL               = 0x00000040,
@@ -587,75 +587,65 @@ enum OptimizationFlags : unsigned long
     OPTIMIZATION_PAIR_IDENTITY_GRADING           = 0x00002000,
 
     /// Compose a pair of ops into a single op.
-    OPTIMIZATION_COMP_EXPONENT                   = 0x00040000,
-    OPTIMIZATION_COMP_GAMMA                      = 0x00080000,
-    OPTIMIZATION_COMP_MATRIX                     = 0x00100000,
-    OPTIMIZATION_COMP_LUT1D                      = 0x00200000,
-    OPTIMIZATION_COMP_LUT3D                      = 0x00400000,
-    OPTIMIZATION_COMP_RANGE                      = 0x00800000,
+    OPTIMIZATION_COMP_EXPONENT = 0x00040000,
+    OPTIMIZATION_COMP_GAMMA    = 0x00080000,
+    OPTIMIZATION_COMP_MATRIX   = 0x00100000,
+    OPTIMIZATION_COMP_LUT1D    = 0x00200000,
+    OPTIMIZATION_COMP_LUT3D    = 0x00400000,
+    OPTIMIZATION_COMP_RANGE    = 0x00800000,
 
     /**
      * For integer and half bit-depths only, replace separable ops (i.e. no channel crosstalk
      * ops) by a single 1D LUT of input bit-depth domain.
      */
-    OPTIMIZATION_COMP_SEPARABLE_PREFIX           = 0x01000000,
+    OPTIMIZATION_COMP_SEPARABLE_PREFIX = 0x01000000,
 
     /**
      * Implement inverse Lut1D and Lut3D evaluations using a a forward LUT (faster but less
      * accurate).  Note that GPU evals always do FAST.
      */
-    OPTIMIZATION_LUT_INV_FAST                    = 0x02000000,
+    OPTIMIZATION_LUT_INV_FAST = 0x02000000,
 
     // For CPU processor, in SSE mode, use a faster approximation for log, exp, and pow.
-    OPTIMIZATION_FAST_LOG_EXP_POW                = 0x04000000,
+    OPTIMIZATION_FAST_LOG_EXP_POW = 0x04000000,
 
     // Break down certain ops into simpler components where possible.  For example, convert a CDL
     // to a matrix when possible.
-    OPTIMIZATION_SIMPLIFY_OPS                    = 0x08000000,
+    OPTIMIZATION_SIMPLIFY_OPS = 0x08000000,
 
     /**
      * Turn off dynamic control of any ops that offer adjustment of parameter values after
      * finalization (e.g. ExposureContrast).
      */
-    OPTIMIZATION_NO_DYNAMIC_PROPERTIES           = 0x10000000,
+    OPTIMIZATION_NO_DYNAMIC_PROPERTIES = 0x10000000,
 
     /// Apply all possible optimizations.
-    OPTIMIZATION_ALL                             = 0xFFFFFFFF,
+    OPTIMIZATION_ALL = 0xFFFFFFFF,
 
     // The following groupings of flags are provided as a convenient way to select an overall
     // optimization level.
 
-    OPTIMIZATION_LOSSLESS = (OPTIMIZATION_IDENTITY |
-                             OPTIMIZATION_IDENTITY_GAMMA |
-                             OPTIMIZATION_PAIR_IDENTITY_CDL |
-                             OPTIMIZATION_PAIR_IDENTITY_EXPOSURE_CONTRAST |
-                             OPTIMIZATION_PAIR_IDENTITY_FIXED_FUNCTION |
-                             OPTIMIZATION_PAIR_IDENTITY_GAMMA |
-                             OPTIMIZATION_PAIR_IDENTITY_GRADING |
-                             OPTIMIZATION_PAIR_IDENTITY_LOG |
-                             OPTIMIZATION_PAIR_IDENTITY_LUT1D |
-                             OPTIMIZATION_PAIR_IDENTITY_LUT3D |
-                             OPTIMIZATION_COMP_EXPONENT |
-                             OPTIMIZATION_COMP_GAMMA |
-                             OPTIMIZATION_COMP_MATRIX |
-                             OPTIMIZATION_COMP_RANGE |
-                             OPTIMIZATION_SIMPLIFY_OPS),
+    OPTIMIZATION_LOSSLESS
+    = (OPTIMIZATION_IDENTITY | OPTIMIZATION_IDENTITY_GAMMA | OPTIMIZATION_PAIR_IDENTITY_CDL
+       | OPTIMIZATION_PAIR_IDENTITY_EXPOSURE_CONTRAST | OPTIMIZATION_PAIR_IDENTITY_FIXED_FUNCTION
+       | OPTIMIZATION_PAIR_IDENTITY_GAMMA | OPTIMIZATION_PAIR_IDENTITY_GRADING
+       | OPTIMIZATION_PAIR_IDENTITY_LOG | OPTIMIZATION_PAIR_IDENTITY_LUT1D
+       | OPTIMIZATION_PAIR_IDENTITY_LUT3D | OPTIMIZATION_COMP_EXPONENT | OPTIMIZATION_COMP_GAMMA
+       | OPTIMIZATION_COMP_MATRIX | OPTIMIZATION_COMP_RANGE | OPTIMIZATION_SIMPLIFY_OPS),
 
-    OPTIMIZATION_VERY_GOOD = (OPTIMIZATION_LOSSLESS |
-                              OPTIMIZATION_COMP_LUT1D |
-                              OPTIMIZATION_LUT_INV_FAST |
-                              OPTIMIZATION_FAST_LOG_EXP_POW |
-                              OPTIMIZATION_COMP_SEPARABLE_PREFIX),
+    OPTIMIZATION_VERY_GOOD
+    = (OPTIMIZATION_LOSSLESS | OPTIMIZATION_COMP_LUT1D | OPTIMIZATION_LUT_INV_FAST
+       | OPTIMIZATION_FAST_LOG_EXP_POW | OPTIMIZATION_COMP_SEPARABLE_PREFIX),
 
-    OPTIMIZATION_GOOD      = OPTIMIZATION_VERY_GOOD | OPTIMIZATION_COMP_LUT3D,
+    OPTIMIZATION_GOOD = OPTIMIZATION_VERY_GOOD | OPTIMIZATION_COMP_LUT3D,
 
     /// For quite lossy optimizations.
-    OPTIMIZATION_DRAFT     = OPTIMIZATION_ALL,
+    OPTIMIZATION_DRAFT = OPTIMIZATION_ALL,
 
-    OPTIMIZATION_DEFAULT   = OPTIMIZATION_VERY_GOOD
+    OPTIMIZATION_DEFAULT = OPTIMIZATION_VERY_GOOD
 };
 
-//!cpp:type:: Enum to control the behavior of the internal caches e.g. the processor cache in
+//! cpp:type:: Enum to control the behavior of the internal caches e.g. the processor cache in
 // :cpp:class:`Config` and :cpp:class:`Processor` instances. When debugging problems, it be useful
 // to disable all the internal caches for example.
 //
@@ -663,14 +653,14 @@ enum OptimizationFlags : unsigned long
 // even if it contains some dynamic properties i.e. it speeds up the processor retrieval. That's the
 // default behavior to avoid the processor creation hit. However, the caller app must then always
 // set the dynamic property values prior to any color processing call (in CPU and GPU modes) as the
-// same processor instance can now be used between several viewports for example. 
+// same processor instance can now be used between several viewports for example.
 enum ProcessorCacheFlags : unsigned int
 {
     PROCESSOR_CACHE_OFF                  = 0x00,
     PROCESSOR_CACHE_ENABLED              = 0x01, // Enable the cache.
-    PROCESSOR_CACHE_SHARE_DYN_PROPERTIES = 0x02, // i.e. When the cache is enabled processor instances
-                                                 // are shared even if they contain some dynamic
-                                                 // properties.
+    PROCESSOR_CACHE_SHARE_DYN_PROPERTIES = 0x02, // i.e. When the cache is enabled processor
+                                                 // instances are shared even if they contain some
+                                                 // dynamic properties.
 
     PROCESSOR_CACHE_DEFAULT = (PROCESSOR_CACHE_ENABLED | PROCESSOR_CACHE_SHARE_DYN_PROPERTIES)
 };
@@ -688,8 +678,8 @@ extern OCIOEXPORT const char * TransformDirectionToString(TransformDirection dir
 extern OCIOEXPORT TransformDirection TransformDirectionFromString(const char * s);
 
 extern OCIOEXPORT TransformDirection GetInverseTransformDirection(TransformDirection dir);
-extern OCIOEXPORT TransformDirection CombineTransformDirections(TransformDirection d1,
-                                                                TransformDirection d2);
+extern OCIOEXPORT TransformDirection
+CombineTransformDirections(TransformDirection d1, TransformDirection d2);
 
 extern OCIOEXPORT const char * BitDepthToString(BitDepth bitDepth);
 extern OCIOEXPORT BitDepth BitDepthFromString(const char * s);
@@ -733,7 +723,6 @@ extern OCIOEXPORT NegativeStyle NegativeStyleFromString(const char * style);
  */
 
 // These variables are defined in src/OpenColorIO/Config.cpp.
-
 
 /// The envvar 'OCIO' provides a path to the config file used by \ref Config::CreateFromEnv
 extern OCIOEXPORT const char * OCIO_CONFIG_ENVVAR;
@@ -916,28 +905,27 @@ Caches
 
 */
 
-//!rst::
+//! rst::
 // .. c:var:: const char * OCIO_DISABLE_ALL_CACHES
 //
 // Disable all caches, including for FileTransforms and Optimized/CPU/GPU Processors. (Provided only
 // to facilitate developer investigations.)
 extern OCIOEXPORT const char * OCIO_DISABLE_ALL_CACHES;
 
-//!rst::
+//! rst::
 // .. c:var:: const char * OCIO_DISABLE_PROCESSOR_CACHES
 //
 // Disable only the Optimized, CPU, and GPU Processor caches. (Provided only to facilitate developer
 // investigations.)
 extern OCIOEXPORT const char * OCIO_DISABLE_PROCESSOR_CACHES;
 
-//!rst::
+//! rst::
 // .. c:var:: const char * OCIO_DISABLE_CACHE_FALLBACK
 //
 // By default the processor caches check for identical color transformations when cache keys do
 // not match. That fallback introduces a major performance hit in some cases so there is an env.
 // variable to disable the fallback.
 extern OCIOEXPORT const char * OCIO_DISABLE_CACHE_FALLBACK;
-
 
 // Archive config feature
 // Default filename (with extension) of an config.

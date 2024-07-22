@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include "CPUInfo.h"
 #include <string.h>
 
 #if _WIN32
-#include <limits.h>
 #include <intrin.h>
-typedef unsigned __int32  uint32_t;
-typedef __int64  int64_t;
+#include <limits.h>
+typedef unsigned __int32 uint32_t;
+typedef __int64 int64_t;
 #else
 #include <stdint.h>
 #endif
@@ -19,13 +18,15 @@ namespace OCIO_NAMESPACE
 
 #if !defined(__aarch64__) && OCIO_ARCH_X86 // Intel-based processor or Apple Rosetta x86_64.
 
-namespace {
+namespace
+{
 
 union CPUIDResult
 {
     int i[4];
     char c[16];
-    struct {
+    struct
+    {
         uint32_t eax;
         uint32_t ebx;
         uint32_t ecx;
@@ -41,29 +42,27 @@ static inline int64_t xgetbv()
 #else
     int eax = 0;
     int edx = 0;
-    __asm__ volatile (".byte 0x0f, 0x01, 0xd0" : "=a"(eax), "=d"(edx) : "c" (index));
-    return  (int64_t)edx << 32 | (int64_t)eax;
+    __asm__ volatile(".byte 0x0f, 0x01, 0xd0" : "=a"(eax), "=d"(edx) : "c"(index));
+    return (int64_t)edx << 32 | (int64_t)eax;
 #endif
 }
 
-static inline void cpuid(int index, int *data)
+static inline void cpuid(int index, int * data)
 {
 #if _MSC_VER
     __cpuid(data, index);
 #elif OCIO_ARCH_X86_32
-    __asm__ volatile (
-        "mov    %%ebx, %%esi \n\t"
-        "cpuid               \n\t"
-        "xchg   %%ebx, %%esi"
-        : "=a" (data[0]), "=S" (data[1]), "=c" (data[2]), "=d" (data[3])
-        : "0" (index), "2"(0));
+    __asm__ volatile("mov    %%ebx, %%esi \n\t"
+                     "cpuid               \n\t"
+                     "xchg   %%ebx, %%esi"
+                     : "=a"(data[0]), "=S"(data[1]), "=c"(data[2]), "=d"(data[3])
+                     : "0"(index), "2"(0));
 #else
-    __asm__ volatile (
-        "mov    %%rbx, %%rsi \n\t"
-        "cpuid               \n\t"
-        "xchg   %%rbx, %%rsi"
-        : "=a" (data[0]), "=S" (data[1]), "=c" (data[2]), "=d" (data[3])
-        : "0" (index), "2"(0));
+    __asm__ volatile("mov    %%rbx, %%rsi \n\t"
+                     "cpuid               \n\t"
+                     "xchg   %%rbx, %%rsi"
+                     : "=a"(data[0]), "=S"(data[1]), "=c"(data[2]), "=d"(data[3])
+                     : "0"(index), "2"(0));
 #endif
 }
 
@@ -110,10 +109,12 @@ CPUInfo::CPUInfo()
         if ((info.reg.ecx & 0x18000000) == 0x18000000)
         {
             xcr = xgetbv();
-            if((xcr & 0x6) == 0x6) {
+            if ((xcr & 0x6) == 0x6)
+            {
                 flags |= X86_CPU_FLAG_AVX;
 
-                if(info.reg.ecx & 0x20000000) {
+                if (info.reg.ecx & 0x20000000)
+                {
                     flags |= X86_CPU_FLAG_F16C;
                 }
             }
@@ -128,7 +129,8 @@ CPUInfo::CPUInfo()
             flags |= X86_CPU_FLAG_AVX2;
 
         /* OPMASK/ZMM state */
-        if ((xcr & 0xe0) == 0xe0) {
+        if ((xcr & 0xe0) == 0xe0)
+        {
             if ((flags & X86_CPU_FLAG_AVX2) && ((info.reg.ebx & 0xd0030000) == 0xd0030000))
                 flags |= X86_CPU_FLAG_AVX512;
         }
@@ -140,7 +142,8 @@ CPUInfo::CPUInfo()
     if (max_ext_level >= 0x80000001)
     {
         cpuid(0x80000001, info.i);
-        if (!strncmp(vendor, "AuthenticAMD", 12)) {
+        if (!strncmp(vendor, "AuthenticAMD", 12))
+        {
 
             /* Athlon64, some Opteron, and some Sempron processors */
             if (flags & X86_CPU_FLAG_SSE2 && !(info.reg.ecx & 0x00000040))
@@ -168,7 +171,8 @@ CPUInfo::CPUInfo()
         }
 
         /* Conroe has a slow shuffle unit */
-        if ((flags & X86_CPU_FLAG_SSSE3) && !(flags & X86_CPU_FLAG_SSE4) && family == 6 && model < 23)
+        if ((flags & X86_CPU_FLAG_SSSE3) && !(flags & X86_CPU_FLAG_SSE4) && family == 6
+            && model < 23)
             flags |= X86_CPU_FLAG_SSSE3_SLOW;
 
         /* Haswell has slow gather */
@@ -177,9 +181,9 @@ CPUInfo::CPUInfo()
     }
 
     // get cpu brand string
-    for(int index = 0; index < 3; index++)
+    for (int index = 0; index < 3; index++)
     {
-      cpuid(0x80000002 + index, (int *)(name + 16*index));
+        cpuid(0x80000002 + index, (int *)(name + 16 * index));
     }
 }
 
@@ -194,7 +198,7 @@ CPUInfo::CPUInfo()
     snprintf(name, sizeof(name), "%s", "ARM");
 #if __APPLE__
     snprintf(vendor, sizeof(vendor), "%s", "Apple");
-# else
+#else
     snprintf(vendor, sizeof(vendor), "%s", "ARM");
 #endif
 
@@ -223,7 +227,7 @@ CPUInfo::CPUInfo() // Unknown Processor
 
 #endif
 
-CPUInfo& CPUInfo::instance()
+CPUInfo & CPUInfo::instance()
 {
     static CPUInfo singleton = CPUInfo();
     return singleton;

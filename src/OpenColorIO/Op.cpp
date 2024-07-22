@@ -41,8 +41,9 @@ DynamicPropertyRcPtr OpCPU::getDynamicProperty(DynamicPropertyType /* type */) c
 }
 
 OpData::OpData()
-    :   m_metadata()
-{ }
+    : m_metadata()
+{
+}
 
 OpData::OpData(const OpData & rhs)
     : m_metadata()
@@ -71,7 +72,8 @@ void OpData::getSimplerReplacement(OpDataVec & /* ops */) const
 
 bool OpData::equals(const OpData & other) const
 {
-    if (this == &other) return true;
+    if (this == &other)
+        return true;
 
     // Ignore metadata.
     return getType() == other.getType();
@@ -106,35 +108,35 @@ const char * GetTypeName(OpData::Type type)
 {
     switch (type)
     {
-    case OpData::CDLType:
-        return "CDL";
-    case OpData::ExponentType:
-        return "Exponent";
-    case OpData::ExposureContrastType:
-        return "ExposureContrast";
-    case OpData::FixedFunctionType:
-        return "FixedFunction";
-    case OpData::GammaType:
-        return "Gamma";
-    case OpData::GradingPrimaryType:
-        return "GradingPrimary";
-    case OpData::GradingRGBCurveType:
-        return "GradingRGBCurve";
-    case OpData::GradingToneType:
-        return "GradingTone";
-    case OpData::LogType:
-        return "Log";
-    case OpData::Lut1DType:
-        return "LUT1D";
-    case OpData::Lut3DType:
-        return "LUT3D";
-    case OpData::MatrixType:
-        return "Matrix";
-    case OpData::RangeType:
-        return "Range";
-    case OpData::ReferenceType:
-    case OpData::NoOpType:
-        break;
+        case OpData::CDLType:
+            return "CDL";
+        case OpData::ExponentType:
+            return "Exponent";
+        case OpData::ExposureContrastType:
+            return "ExposureContrast";
+        case OpData::FixedFunctionType:
+            return "FixedFunction";
+        case OpData::GammaType:
+            return "Gamma";
+        case OpData::GradingPrimaryType:
+            return "GradingPrimary";
+        case OpData::GradingRGBCurveType:
+            return "GradingRGBCurve";
+        case OpData::GradingToneType:
+            return "GradingTone";
+        case OpData::LogType:
+            return "Log";
+        case OpData::Lut1DType:
+            return "LUT1D";
+        case OpData::Lut3DType:
+            return "LUT3D";
+        case OpData::MatrixType:
+            return "Matrix";
+        case OpData::RangeType:
+            return "Range";
+        case OpData::ReferenceType:
+        case OpData::NoOpType:
+            break;
     }
     throw Exception("Unexpected op type.");
 }
@@ -216,14 +218,14 @@ OpRcPtrVec::OpRcPtrVec()
 OpRcPtrVec::OpRcPtrVec(const OpRcPtrVec & v)
     : OpRcPtrVec()
 {
-    *this = v; 
+    *this = v;
 }
 
 OpRcPtrVec & OpRcPtrVec::operator=(const OpRcPtrVec & v)
 {
-    if(this!=&v)
+    if (this != &v)
     {
-        m_ops = v.m_ops;
+        m_ops      = v.m_ops;
         m_metadata = v.m_metadata;
     }
 
@@ -245,25 +247,27 @@ OpRcPtrVec & OpRcPtrVec::operator+=(const OpRcPtrVec & v)
     }
 }
 
-OpRcPtrVec::iterator OpRcPtrVec::erase(OpRcPtrVec::const_iterator position) 
-{ 
-    return m_ops.erase(position); 
+OpRcPtrVec::iterator OpRcPtrVec::erase(OpRcPtrVec::const_iterator position)
+{
+    return m_ops.erase(position);
 }
 
-OpRcPtrVec::iterator OpRcPtrVec::erase(OpRcPtrVec::const_iterator first, 
-                                        OpRcPtrVec::const_iterator last)
-{ 
-    return m_ops.erase(first, last); 
+OpRcPtrVec::iterator OpRcPtrVec::erase(
+    OpRcPtrVec::const_iterator first,
+    OpRcPtrVec::const_iterator last)
+{
+    return m_ops.erase(first, last);
 }
 
-void OpRcPtrVec::insert(OpRcPtrVec::const_iterator position, 
-                        OpRcPtrVec::const_iterator first, 
-                        OpRcPtrVec::const_iterator last)
+void OpRcPtrVec::insert(
+    OpRcPtrVec::const_iterator position,
+    OpRcPtrVec::const_iterator first,
+    OpRcPtrVec::const_iterator last)
 {
     m_ops.insert(position, first, last);
 }
 
-void OpRcPtrVec::push_back(const OpRcPtrVec::value_type & val) 
+void OpRcPtrVec::push_back(const OpRcPtrVec::value_type & val)
 {
     m_ops.push_back(val);
 }
@@ -282,7 +286,8 @@ bool OpRcPtrVec::isNoOp() const noexcept
 {
     for (const auto & op : m_ops)
     {
-        if(!op->isNoOp()) return false;
+        if (!op->isNoOp())
+            return false;
     }
 
     return true;
@@ -290,23 +295,23 @@ bool OpRcPtrVec::isNoOp() const noexcept
 
 bool OpRcPtrVec::hasChannelCrosstalk() const noexcept
 {
-    return m_ops.end() != std::find_if(m_ops.begin(),
-                                       m_ops.end(),
-                                       [](const OpRcPtr & op) { return op->hasChannelCrosstalk(); } );
+    return m_ops.end() != std::find_if(m_ops.begin(), m_ops.end(), [](const OpRcPtr & op) {
+               return op->hasChannelCrosstalk();
+           });
 }
 
 bool OpRcPtrVec::isDynamic() const noexcept
 {
-    return m_ops.end() != std::find_if(m_ops.begin(),
-                                       m_ops.end(),
-                                       [](const OpRcPtr & op) { return op->isDynamic(); } );
+    return m_ops.end() != std::find_if(m_ops.begin(), m_ops.end(), [](const OpRcPtr & op) {
+               return op->isDynamic();
+           });
 }
 
 bool OpRcPtrVec::hasDynamicProperty(DynamicPropertyType type) const noexcept
 {
-    return m_ops.end() != std::find_if(m_ops.begin(),
-                                       m_ops.end(),
-                                       [type](const OpRcPtr & op) { return op->hasDynamicProperty(type); } );
+    return m_ops.end() != std::find_if(m_ops.begin(), m_ops.end(), [type](const OpRcPtr & op) {
+               return op->hasDynamicProperty(type);
+           });
 }
 
 DynamicPropertyRcPtr OpRcPtrVec::getDynamicProperty(DynamicPropertyType type) const
@@ -322,7 +327,7 @@ DynamicPropertyRcPtr OpRcPtrVec::getDynamicProperty(DynamicPropertyType type) co
     throw Exception("Cannot find dynamic property.");
 }
 
-OpRcPtrVec OpRcPtrVec::clone() const 
+OpRcPtrVec OpRcPtrVec::clone() const
 {
     OpRcPtrVec cloned;
 
@@ -340,7 +345,7 @@ OpRcPtrVec OpRcPtrVec::invert() const
 
     OpRcPtrVec::const_reverse_iterator iter = m_ops.rbegin();
     OpRcPtrVec::const_reverse_iterator end  = m_ops.rend();
-    for (; iter!=end; ++iter)
+    for (; iter != end; ++iter)
     {
         ConstOpRcPtr op = *iter;
         if (op->isNoOpType())
@@ -368,7 +373,7 @@ void OpRcPtrVec::validate() const
 
 namespace
 {
-template<typename T>
+template <typename T>
 void ValidateDynamicProperty(OpRcPtr op, std::shared_ptr<T> & prop, DynamicPropertyType type)
 {
     if (op->hasDynamicProperty(type))
@@ -377,7 +382,7 @@ void ValidateDynamicProperty(OpRcPtr op, std::shared_ptr<T> & prop, DynamicPrope
         {
             // Initialize property.
             DynamicPropertyRcPtr dp = op->getDynamicProperty(type);
-            prop = OCIO_DYNAMIC_POINTER_CAST<T>(dp);
+            prop                    = OCIO_DYNAMIC_POINTER_CAST<T>(dp);
         }
         else
         {
@@ -386,31 +391,31 @@ void ValidateDynamicProperty(OpRcPtr op, std::shared_ptr<T> & prop, DynamicPrope
             std::ostringstream os;
             switch (type)
             {
-            case DYNAMIC_PROPERTY_EXPOSURE:
-                os << "Exposure";
-                break;
-            case DYNAMIC_PROPERTY_CONTRAST:
-                os << "Contrast";
-                break;
-            case DYNAMIC_PROPERTY_GAMMA:
-                os << "Gamma";
-                break;
-            case DYNAMIC_PROPERTY_GRADING_PRIMARY:
-                os << "Grading primary";
-                break;
-            case DYNAMIC_PROPERTY_GRADING_RGBCURVE:
-                os << "Grading RGB curve";
-                break;
-            case DYNAMIC_PROPERTY_GRADING_TONE:
-                os << "Grading tone";
-                break;
+                case DYNAMIC_PROPERTY_EXPOSURE:
+                    os << "Exposure";
+                    break;
+                case DYNAMIC_PROPERTY_CONTRAST:
+                    os << "Contrast";
+                    break;
+                case DYNAMIC_PROPERTY_GAMMA:
+                    os << "Gamma";
+                    break;
+                case DYNAMIC_PROPERTY_GRADING_PRIMARY:
+                    os << "Grading primary";
+                    break;
+                case DYNAMIC_PROPERTY_GRADING_RGBCURVE:
+                    os << "Grading RGB curve";
+                    break;
+                case DYNAMIC_PROPERTY_GRADING_TONE:
+                    os << "Grading tone";
+                    break;
             }
             os << " dynamic property can only be there once.";
             LogWarning(os.str());
         }
     }
 }
-}
+} // namespace
 
 // Warn if there is more than one property of a given type that is currently dynamic.  There may
 // be more than one property of a given type, but only one will respond to parameter updates, the
@@ -456,7 +461,7 @@ std::string OpRcPtrVec::getCacheID() const
     return stream.str();
 }
 
-std::ostream& operator<< (std::ostream & os, const Op & op)
+std::ostream & operator<<(std::ostream & os, const Op & op)
 {
     os << op.getInfo();
     return os;
@@ -480,126 +485,126 @@ std::string SerializeOpVec(const OpRcPtrVec & ops, int indent)
     return oss.str();
 }
 
-void CreateOpVecFromOpData(OpRcPtrVec & ops,
-                           const ConstOpDataRcPtr & opData,
-                           TransformDirection dir)
+void CreateOpVecFromOpData(
+    OpRcPtrVec & ops,
+    const ConstOpDataRcPtr & opData,
+    TransformDirection dir)
 {
     switch (opData->getType())
     {
-    case OpData::CDLType:
-    {
-        auto cdlSrc = std::dynamic_pointer_cast<const CDLOpData>(opData);
-        auto cdl = std::make_shared<CDLOpData>(*cdlSrc);
-        CreateCDLOp(ops, cdl, dir);
-        break;
-    }
+        case OpData::CDLType:
+        {
+            auto cdlSrc = std::dynamic_pointer_cast<const CDLOpData>(opData);
+            auto cdl    = std::make_shared<CDLOpData>(*cdlSrc);
+            CreateCDLOp(ops, cdl, dir);
+            break;
+        }
 
-    case OpData::ExponentType:
-    {
-        auto expSrc = std::dynamic_pointer_cast<const ExponentOpData>(opData);
-        auto exp = std::make_shared<ExponentOpData>(*expSrc);
-        CreateExponentOp(ops, exp, dir);
-        break;
-    }
+        case OpData::ExponentType:
+        {
+            auto expSrc = std::dynamic_pointer_cast<const ExponentOpData>(opData);
+            auto exp    = std::make_shared<ExponentOpData>(*expSrc);
+            CreateExponentOp(ops, exp, dir);
+            break;
+        }
 
-    case OpData::ExposureContrastType:
-    {
-        auto ecSrc = std::dynamic_pointer_cast<const ExposureContrastOpData>(opData);
-        auto ec = ecSrc->clone();
-        CreateExposureContrastOp(ops, ec, dir);
-        break;
-    }
+        case OpData::ExposureContrastType:
+        {
+            auto ecSrc = std::dynamic_pointer_cast<const ExposureContrastOpData>(opData);
+            auto ec    = ecSrc->clone();
+            CreateExposureContrastOp(ops, ec, dir);
+            break;
+        }
 
-    case OpData::FixedFunctionType:
-    {
-        auto ffSrc = std::dynamic_pointer_cast<const FixedFunctionOpData>(opData);
-        auto ff = std::make_shared<FixedFunctionOpData>(*ffSrc);
-        CreateFixedFunctionOp(ops, ff, dir);
-        break;
-    }
+        case OpData::FixedFunctionType:
+        {
+            auto ffSrc = std::dynamic_pointer_cast<const FixedFunctionOpData>(opData);
+            auto ff    = std::make_shared<FixedFunctionOpData>(*ffSrc);
+            CreateFixedFunctionOp(ops, ff, dir);
+            break;
+        }
 
-    case OpData::GammaType:
-    {
-        auto gammaSrc = std::dynamic_pointer_cast<const GammaOpData>(opData);
-        auto gamma = std::make_shared<GammaOpData>(*gammaSrc);
-        CreateGammaOp(ops, gamma, dir);
-        break;
-    }
+        case OpData::GammaType:
+        {
+            auto gammaSrc = std::dynamic_pointer_cast<const GammaOpData>(opData);
+            auto gamma    = std::make_shared<GammaOpData>(*gammaSrc);
+            CreateGammaOp(ops, gamma, dir);
+            break;
+        }
 
-    case OpData::GradingPrimaryType:
-    {
-        auto primarySrc = std::dynamic_pointer_cast<const GradingPrimaryOpData>(opData);
-        auto primary = std::make_shared<GradingPrimaryOpData>(*primarySrc);
-        CreateGradingPrimaryOp(ops, primary, dir);
-        break;
-    }
+        case OpData::GradingPrimaryType:
+        {
+            auto primarySrc = std::dynamic_pointer_cast<const GradingPrimaryOpData>(opData);
+            auto primary    = std::make_shared<GradingPrimaryOpData>(*primarySrc);
+            CreateGradingPrimaryOp(ops, primary, dir);
+            break;
+        }
 
-    case OpData::GradingRGBCurveType:
-    {
-        auto rgbSrc = std::dynamic_pointer_cast<const GradingRGBCurveOpData>(opData);
-        auto rgb = std::make_shared<GradingRGBCurveOpData>(*rgbSrc);
-        CreateGradingRGBCurveOp(ops, rgb, dir);
-        break;
-    }
+        case OpData::GradingRGBCurveType:
+        {
+            auto rgbSrc = std::dynamic_pointer_cast<const GradingRGBCurveOpData>(opData);
+            auto rgb    = std::make_shared<GradingRGBCurveOpData>(*rgbSrc);
+            CreateGradingRGBCurveOp(ops, rgb, dir);
+            break;
+        }
 
-    case OpData::GradingToneType:
-    {
-        auto toneSrc = std::dynamic_pointer_cast<const GradingToneOpData>(opData);
-        auto tone = std::make_shared<GradingToneOpData>(*toneSrc);
-        CreateGradingToneOp(ops, tone, dir);
-        break;
-    }
+        case OpData::GradingToneType:
+        {
+            auto toneSrc = std::dynamic_pointer_cast<const GradingToneOpData>(opData);
+            auto tone    = std::make_shared<GradingToneOpData>(*toneSrc);
+            CreateGradingToneOp(ops, tone, dir);
+            break;
+        }
 
-    case OpData::LogType:
-    {
-        auto logSrc = std::dynamic_pointer_cast<const LogOpData>(opData);
-        auto log = std::make_shared<LogOpData>(*logSrc);
-        CreateLogOp(ops, log, dir);
-        break;
-    }
+        case OpData::LogType:
+        {
+            auto logSrc = std::dynamic_pointer_cast<const LogOpData>(opData);
+            auto log    = std::make_shared<LogOpData>(*logSrc);
+            CreateLogOp(ops, log, dir);
+            break;
+        }
 
-    case OpData::Lut1DType:
-    {
-        auto lutSrc = std::dynamic_pointer_cast<const Lut1DOpData>(opData);
-        auto lut = std::make_shared<Lut1DOpData>(*lutSrc);
-        CreateLut1DOp(ops, lut, dir);
-        break;
-    }
+        case OpData::Lut1DType:
+        {
+            auto lutSrc = std::dynamic_pointer_cast<const Lut1DOpData>(opData);
+            auto lut    = std::make_shared<Lut1DOpData>(*lutSrc);
+            CreateLut1DOp(ops, lut, dir);
+            break;
+        }
 
-    case OpData::Lut3DType:
-    {
-        auto lutSrc = std::dynamic_pointer_cast<const Lut3DOpData>(opData);
-        auto lut = std::make_shared<Lut3DOpData>(*lutSrc);
-        CreateLut3DOp(ops, lut, dir);
-        break;
-    }
+        case OpData::Lut3DType:
+        {
+            auto lutSrc = std::dynamic_pointer_cast<const Lut3DOpData>(opData);
+            auto lut    = std::make_shared<Lut3DOpData>(*lutSrc);
+            CreateLut3DOp(ops, lut, dir);
+            break;
+        }
 
-    case OpData::MatrixType:
-    {
-        auto matrixSrc = std::dynamic_pointer_cast<const MatrixOpData>(opData);
-        auto matrix = std::make_shared<MatrixOpData>(*matrixSrc);
-        CreateMatrixOp(ops, matrix, dir);
-        break;
-    }
+        case OpData::MatrixType:
+        {
+            auto matrixSrc = std::dynamic_pointer_cast<const MatrixOpData>(opData);
+            auto matrix    = std::make_shared<MatrixOpData>(*matrixSrc);
+            CreateMatrixOp(ops, matrix, dir);
+            break;
+        }
 
-    case OpData::RangeType:
-    {
-        auto rangeSrc = std::dynamic_pointer_cast<const RangeOpData>(opData);
-        auto range = std::make_shared<RangeOpData>(*rangeSrc);
-        CreateRangeOp(ops, range, dir);
-        break;
-    }
+        case OpData::RangeType:
+        {
+            auto rangeSrc = std::dynamic_pointer_cast<const RangeOpData>(opData);
+            auto range    = std::make_shared<RangeOpData>(*rangeSrc);
+            CreateRangeOp(ops, range, dir);
+            break;
+        }
 
-    case OpData::ReferenceType:
-    {
-        throw Exception("ReferenceOpData should have been replaced by referenced ops");
-    }
+        case OpData::ReferenceType:
+        {
+            throw Exception("ReferenceOpData should have been replaced by referenced ops");
+        }
 
-    case OpData::NoOpType:
-    {
-        throw Exception("OpData is not supported");
-    }
-
+        case OpData::NoOpType:
+        {
+            throw Exception("OpData is not supported");
+        }
     }
 }
 

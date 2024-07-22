@@ -10,7 +10,6 @@
 #include "MathUtils.h"
 #include "ops/fixedfunction/FixedFunctionOpCPU.h"
 
-
 namespace OCIO_NAMESPACE
 {
 
@@ -210,47 +209,43 @@ public:
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
-
 ///////////////////////////////////////////////////////////////////////////////
 
-
-
-
 // Calculate a saturation measure in a safe manner.
-__inline float CalcSatWeight(const float red, const float grn, const float blu,
-                             const float noiseLimit)
+__inline float
+CalcSatWeight(const float red, const float grn, const float blu, const float noiseLimit)
 {
-    const float minVal = std::min( red, std::min( grn, blu ) );
-    const float maxVal = std::max( red, std::max( grn, blu ) );
+    const float minVal = std::min(red, std::min(grn, blu));
+    const float maxVal = std::max(red, std::max(grn, blu));
 
     // The numerator is clamped to prevent problems from negative values,
     // the denominator is clamped higher to prevent dark noise from being
     // classified as having high saturation.
-    const float sat = ( std::max( 1e-10f, maxVal) - std::max( 1e-10f, minVal) )  /
-                        std::max( noiseLimit, maxVal);
+    const float sat
+        = (std::max(1e-10f, maxVal) - std::max(1e-10f, minVal)) / std::max(noiseLimit, maxVal);
     return sat;
 }
 
 Renderer_ACES_RedMod03_Fwd::Renderer_ACES_RedMod03_Fwd(ConstFixedFunctionOpDataRcPtr & /*data*/)
-    :   OpCPU()
+    : OpCPU()
 {
     // Constants that define a scale and offset to be applied to the red channel.
-    m_1minusScale = 1.f - 0.85f;   // (1. - scale) from the original ctl code
-    m_pivot = 0.03f; // offset will be applied to unnormalized input values
+    m_1minusScale = 1.f - 0.85f; // (1. - scale) from the original ctl code
+    m_pivot       = 0.03f;       // offset will be applied to unnormalized input values
 
-    //float width = 120;  // width of hue region (in degrees)
-    // Actually want to multiply by 4 / width (in radians).
-    // Note: _inv_width = 4 / (width * pi/180)
+    // float width = 120;  // width of hue region (in degrees)
+    //  Actually want to multiply by 4 / width (in radians).
+    //  Note: _inv_width = 4 / (width * pi/180)
     m_inv_width = 1.9098593171027443f;
 }
 
-__inline float CalcHueWeight(const float red, const float grn, const float blu, 
-                             const float inv_width)
+__inline float
+CalcHueWeight(const float red, const float grn, const float blu, const float inv_width)
 {
     // Convert RGB to Yab (luma/chroma).
-    const float a = 2.f * red - (grn + blu);
+    const float a                = 2.f * red - (grn + blu);
     static constexpr float sqrt3 = 1.7320508075688772f;
-    const float b = sqrt3 * (grn - blu);
+    const float b                = sqrt3 * (grn - blu);
 
     const float hue = std::atan2(b, a);
 
@@ -259,34 +254,35 @@ __inline float CalcHueWeight(const float red, const float grn, const float blu,
     // chosen to maintain this.
 
     // Center the hue and re-wrap to +/-pi.
-    //float _center = 0.0f;  // center hue angle (in radians, red = 0.)
+    // float _center = 0.0f;  // center hue angle (in radians, red = 0.)
     // Note: For this version, center = 0, so this is a no-op.
     // Leaving the code here in case center needs to be tweaked.
-    //hue -= _center;
-    //hue = (hue < -_pi) ? hue + _twopi: hue;
-    //hue = (hue >  _pi) ? hue - _twopi: hue;
+    // hue -= _center;
+    // hue = (hue < -_pi) ? hue + _twopi: hue;
+    // hue = (hue >  _pi) ? hue - _twopi: hue;
 
     // Determine normalized input coords to B-spline.
     const float knot_coord = hue * inv_width + 2.f;
-    const int j = (int) knot_coord;    // index
+    const int j            = (int)knot_coord; // index
 
     // These are the coefficients for a quadratic B-spline basis function.
     // (All coefs taken from the ACES ctl code on github.)
     static constexpr float _M[4][4] = {
-        { 0.25f,  0.00f,  0.00f,  0.00f},
-        {-0.75f,  0.75f,  0.75f,  0.25f},
-        { 0.75f, -1.50f,  0.00f,  1.00f},
-        {-0.25f,  0.75f, -0.75f,  0.25f} };
+        { 0.25f,  0.00f,  0.00f, 0.00f},
+        {-0.75f,  0.75f,  0.75f, 0.25f},
+        { 0.75f, -1.50f,  0.00f, 1.00f},
+        {-0.25f,  0.75f, -0.75f, 0.25f}
+    };
 
     // Hue is in range of the window, calculate weight.
     float f_H = 0.f;
-    if ( j >= 0 && j < 4)
+    if (j >= 0 && j < 4)
     {
-        const float t = knot_coord - j;  // fractional component
+        const float t = knot_coord - j; // fractional component
 
         // Calculate quadratic B-spline weighting function.
-        const float* coefs = _M[j];
-        f_H = coefs[3] + t * (coefs[2] + t * (coefs[1] + t * coefs[0]));
+        const float * coefs = _M[j];
+        f_H                 = coefs[3] + t * (coefs[2] + t * (coefs[1] + t * coefs[0]));
     }
 
     return f_H;
@@ -295,9 +291,9 @@ __inline float CalcHueWeight(const float red, const float grn, const float blu,
 void Renderer_ACES_RedMod03_Fwd::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for(long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         float red = in[0];
         float grn = in[1];
@@ -312,22 +308,22 @@ void Renderer_ACES_RedMod03_Fwd::apply(const void * inImg, void * outImg, long n
 
             // Apply red modifier.  NB:  Red is still at inScale.
 
-            //const float modRed = (red - _pivot) * _scale + _pivot;
-            //const float tmp = red * (1.f - f_S) + f_S * modRed;
-            //const float newRed = red * (1.f - f_H) + f_H * tmp;
-            // The above is easier to understand, but reduces down to the following:
+            // const float modRed = (red - _pivot) * _scale + _pivot;
+            // const float tmp = red * (1.f - f_S) + f_S * modRed;
+            // const float newRed = red * (1.f - f_H) + f_H * tmp;
+            //  The above is easier to understand, but reduces down to the following:
             const float newRed = red + f_H * f_S * (m_pivot - red) * m_1minusScale;
 
             // Restore hue.
             if (grn >= blu) // red >= grn >= blu
             {
-                const float hue_fac = (grn - blu) / std::max( 1e-10f, red - blu);
-                grn = hue_fac * (newRed - blu) + blu;
+                const float hue_fac = (grn - blu) / std::max(1e-10f, red - blu);
+                grn                 = hue_fac * (newRed - blu) + blu;
             }
-            else            // red >= blu >= grn
+            else // red >= blu >= grn
             {
-                const float hue_fac = (blu - grn) / std::max( 1e-10f, red - grn);
-                blu = hue_fac * (newRed - grn) + grn;
+                const float hue_fac = (blu - grn) / std::max(1e-10f, red - grn);
+                blu                 = hue_fac * (newRed - grn) + grn;
             }
 
             red = newRed;
@@ -338,22 +334,22 @@ void Renderer_ACES_RedMod03_Fwd::apply(const void * inImg, void * outImg, long n
         out[2] = blu;
         out[3] = in[3];
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
 
 Renderer_ACES_RedMod03_Inv::Renderer_ACES_RedMod03_Inv(ConstFixedFunctionOpDataRcPtr & data)
-    :   Renderer_ACES_RedMod03_Fwd(data)
+    : Renderer_ACES_RedMod03_Fwd(data)
 {
 }
 
 void Renderer_ACES_RedMod03_Inv::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for(long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         float red = in[0];
         float grn = in[1];
@@ -362,24 +358,24 @@ void Renderer_ACES_RedMod03_Inv::apply(const void * inImg, void * outImg, long n
         const float f_H = CalcHueWeight(red, grn, blu, m_inv_width);
         if (f_H > 0.f)
         {
-            const float minChan = (grn < blu) ? grn: blu;
+            const float minChan = (grn < blu) ? grn : blu;
 
             const float a = f_H * m_1minusScale - 1.f;
             const float b = red - f_H * (m_pivot + minChan) * m_1minusScale;
             const float c = f_H * m_pivot * minChan * m_1minusScale;
 
-            const float newRed = ( -b - sqrt( b * b - 4.f * a * c)) / ( 2.f * a);
+            const float newRed = (-b - sqrt(b * b - 4.f * a * c)) / (2.f * a);
 
             // Restore hue.
             if (grn >= blu) // red >= grn >= blu
             {
-                const float hue_fac = (grn - blu) / std::max( 1e-10f, red - blu);
-                grn = hue_fac * (newRed - blu) + blu;
+                const float hue_fac = (grn - blu) / std::max(1e-10f, red - blu);
+                grn                 = hue_fac * (newRed - blu) + blu;
             }
-            else            // red >= blu >= grn
+            else // red >= blu >= grn
             {
-                const float hue_fac = (blu - grn) / std::max( 1e-10f, red - grn);
-                blu = hue_fac * (newRed - grn) + grn;
+                const float hue_fac = (blu - grn) / std::max(1e-10f, red - grn);
+                blu                 = hue_fac * (newRed - grn) + grn;
             }
 
             red = newRed;
@@ -390,32 +386,32 @@ void Renderer_ACES_RedMod03_Inv::apply(const void * inImg, void * outImg, long n
         out[2] = blu;
         out[3] = in[3];
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
 
 Renderer_ACES_RedMod10_Fwd::Renderer_ACES_RedMod10_Fwd(ConstFixedFunctionOpDataRcPtr & /*data*/)
-    :   OpCPU()
+    : OpCPU()
 {
     // Constants that define a scale and offset to be applied to the red channel.
-    m_1minusScale = 1.f - 0.82f;  // (1. - scale) from the original ctl code
-    m_pivot = 0.03f;  // offset will be applied to unnormalized input values
+    m_1minusScale = 1.f - 0.82f; // (1. - scale) from the original ctl code
+    m_pivot       = 0.03f;       // offset will be applied to unnormalized input values
 
-    //float width = 135;  // width of hue region (in degrees)
-    // Actually want to multiply by 4 / width (in radians).
-    // Note: _inv_width = 4 / (width * pi/180)
+    // float width = 135;  // width of hue region (in degrees)
+    //  Actually want to multiply by 4 / width (in radians).
+    //  Note: _inv_width = 4 / (width * pi/180)
     m_inv_width = 1.6976527263135504f;
 }
 
 void Renderer_ACES_RedMod10_Fwd::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for(long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
-        float red = in[0];
+        float red       = in[0];
         const float grn = in[1];
         const float blu = in[2];
 
@@ -428,10 +424,10 @@ void Renderer_ACES_RedMod10_Fwd::apply(const void * inImg, void * outImg, long n
 
             // Apply red modifier.  NB:  Red is still at inScale.
 
-            //const float modRed = (red - _pivot) * _scale + _pivot;
-            //const float tmp = red * (1.f - f_S) + f_S * modRed;
-            //const float newRed = red * (1.f - f_H) + f_H * tmp;
-            // The above is easier to understand, but reduces down to the following:
+            // const float modRed = (red - _pivot) * _scale + _pivot;
+            // const float tmp = red * (1.f - f_S) + f_S * modRed;
+            // const float newRed = red * (1.f - f_H) + f_H * tmp;
+            //  The above is easier to understand, but reduces down to the following:
             red = red + f_H * f_S * (m_pivot - red) * m_1minusScale;
         }
 
@@ -440,38 +436,38 @@ void Renderer_ACES_RedMod10_Fwd::apply(const void * inImg, void * outImg, long n
         out[2] = blu;
         out[3] = in[3];
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
 
 Renderer_ACES_RedMod10_Inv::Renderer_ACES_RedMod10_Inv(ConstFixedFunctionOpDataRcPtr & data)
-    :   Renderer_ACES_RedMod10_Fwd(data)
+    : Renderer_ACES_RedMod10_Fwd(data)
 {
 }
 
 void Renderer_ACES_RedMod10_Inv::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for(long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
-        float red = in[0];
+        float red       = in[0];
         const float grn = in[1];
         const float blu = in[2];
 
         const float f_H = CalcHueWeight(red, grn, blu, m_inv_width);
         if (f_H > 0.f)
         {
-            const float minChan = (grn < blu) ? grn: blu;
+            const float minChan = (grn < blu) ? grn : blu;
 
             const float a = f_H * m_1minusScale - 1.f;
             const float b = red - f_H * (m_pivot + minChan) * m_1minusScale;
             const float c = f_H * m_pivot * minChan * m_1minusScale;
 
             // TODO: Replace sqrt with faster approx. (also in RedMod03 above).
-            red = ( -b - sqrt( b * b - 4.f * a * c)) / ( 2.f * a);
+            red = (-b - sqrt(b * b - 4.f * a * c)) / (2.f * a);
         }
 
         out[0] = red;
@@ -479,44 +475,45 @@ void Renderer_ACES_RedMod10_Inv::apply(const void * inImg, void * outImg, long n
         out[2] = blu;
         out[3] = in[3];
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
 
-Renderer_ACES_Glow03_Fwd::Renderer_ACES_Glow03_Fwd(ConstFixedFunctionOpDataRcPtr & /*data*/,
-                                                   float glowGain,
-                                                   float glowMid)
-    :   OpCPU()
+Renderer_ACES_Glow03_Fwd::Renderer_ACES_Glow03_Fwd(
+    ConstFixedFunctionOpDataRcPtr & /*data*/,
+    float glowGain,
+    float glowMid)
+    : OpCPU()
 {
     m_glowGain = glowGain;
-    m_glowMid = glowMid;
+    m_glowMid  = glowMid;
 }
 
 __inline float rgbToYC(const float red, const float grn, const float blu)
 {
     // Convert RGB to YC (luma + chroma factor).
     const float YCRadiusWeight = 1.75f;
-    const float chroma = sqrt( blu*(blu-grn) + grn*(grn-red) + red*(red-blu) );
-    const float YC = (blu + grn + red + YCRadiusWeight * chroma) / 3.f;
+    const float chroma         = sqrt(blu * (blu - grn) + grn * (grn - red) + red * (red - blu));
+    const float YC             = (blu + grn + red + YCRadiusWeight * chroma) / 3.f;
     return YC;
 }
 
 __inline float SigmoidShaper(const float sat)
 {
-    const float x = (sat - 0.4f) * 5.f;
+    const float x    = (sat - 0.4f) * 5.f;
     const float sign = std::copysignf(1.f, x);
-    const float t = std::max(0.f, 1.f - 0.5f * sign * x);
-    const float s = (1.f + sign * (1.f - t * t)) * 0.5f;
+    const float t    = std::max(0.f, 1.f - 0.5f * sign * x);
+    const float s    = (1.f + sign * (1.f - t * t)) * 0.5f;
     return s;
 }
 
 void Renderer_ACES_Glow03_Fwd::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for(long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         const float red = in[0];
         const float grn = in[1];
@@ -530,7 +527,7 @@ void Renderer_ACES_Glow03_Fwd::apply(const void * inImg, void * outImg, long num
         const float s = SigmoidShaper(sat);
 
         const float GlowGain = m_glowGain * s;
-        const float GlowMid = m_glowMid;
+        const float GlowMid  = m_glowMid;
 
         // Apply FwdGlow.
         float glowGainOut;
@@ -555,24 +552,25 @@ void Renderer_ACES_Glow03_Fwd::apply(const void * inImg, void * outImg, long num
         out[2] = blu * addedGlow;
         out[3] = in[3];
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
 
-Renderer_ACES_Glow03_Inv::Renderer_ACES_Glow03_Inv(ConstFixedFunctionOpDataRcPtr & data,
-                                                   float glowGain,
-                                                   float glowMid)
-    :   Renderer_ACES_Glow03_Fwd(data, glowGain, glowMid)
+Renderer_ACES_Glow03_Inv::Renderer_ACES_Glow03_Inv(
+    ConstFixedFunctionOpDataRcPtr & data,
+    float glowGain,
+    float glowMid)
+    : Renderer_ACES_Glow03_Fwd(data, glowGain, glowMid)
 {
 }
 
 void Renderer_ACES_Glow03_Inv::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for(long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         const float red = in[0];
         const float grn = in[1];
@@ -586,7 +584,7 @@ void Renderer_ACES_Glow03_Inv::apply(const void * inImg, void * outImg, long num
         const float s = SigmoidShaper(sat);
 
         const float GlowGain = m_glowGain * s;
-        const float GlowMid = m_glowMid;
+        const float GlowMid  = m_glowMid;
 
         // Apply InvGlow.
         float glowGainOut;
@@ -611,38 +609,39 @@ void Renderer_ACES_Glow03_Inv::apply(const void * inImg, void * outImg, long num
         out[2] = blu * reducedGlow;
         out[3] = in[3];
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
 
-Renderer_ACES_DarkToDim10_Fwd::Renderer_ACES_DarkToDim10_Fwd(ConstFixedFunctionOpDataRcPtr & /*data*/,
-                                                             float gamma)
-    :   OpCPU()
+Renderer_ACES_DarkToDim10_Fwd::Renderer_ACES_DarkToDim10_Fwd(
+    ConstFixedFunctionOpDataRcPtr & /*data*/,
+    float gamma)
+    : OpCPU()
 {
-    m_gamma = gamma - 1.f;  // compute Y^gamma / Y
+    m_gamma = gamma - 1.f; // compute Y^gamma / Y
 }
 
 void Renderer_ACES_DarkToDim10_Fwd::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for(long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         const float red = in[0];
         const float grn = in[1];
         const float blu = in[2];
-
 
         // With the modest 2% ACES surround, this minLum allows the min/max gain
         // applied to dark colors to be about 0.6 to 1.6.
         static constexpr float minLum = 1e-10f;
 
         // Calculate luminance assuming input is AP1 RGB.
-        const float Y = std::max( minLum, ( 0.27222871678091454f  * red + 
-                                            0.67408176581114831f  * grn + 
-                                            0.053689517407937051f * blu ) );
+        const float Y = std::max(
+            minLum,
+            (0.27222871678091454f * red + 0.67408176581114831f * grn
+             + 0.053689517407937051f * blu));
 
         // TODO: Currently our fast approx. requires SSE registers.
         //       Either make this whole routine SSE or make fast scalar pow.
@@ -653,7 +652,7 @@ void Renderer_ACES_DarkToDim10_Fwd::apply(const void * inImg, void * outImg, lon
         out[2] = blu * Ypow_over_Y;
         out[3] = in[3];
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
@@ -662,7 +661,7 @@ float compress(float dist, float thr, float scale, float power)
 {
     // Normalize distance outside threshold by scale factor.
     const float nd = (dist - thr) / scale;
-    const float p = std::pow(nd, power);
+    const float p  = std::pow(nd, power);
 
     // Note: assume the compiler will optimize out "1.0f / power".
     return thr + scale * nd / (std::pow(1.0f + p, 1.0f / power));
@@ -679,7 +678,7 @@ float uncompress(float dist, float thr, float scale, float power)
     {
         // Normalize distance outside threshold by scale factor.
         const float nd = (dist - thr) / scale;
-        const float p = std::pow(nd, power);
+        const float p  = std::pow(nd, power);
 
         // Note: assume the compiler will optimize out "1.0f / power".
         return thr + scale * std::pow(-(p / (p - 1.0f)), 1.0f / power);
@@ -719,31 +718,32 @@ float gamut_comp(float val, float ach, float thr, float scale, float power, Func
 }
 
 Renderer_ACES_GamutComp13_Fwd::Renderer_ACES_GamutComp13_Fwd(ConstFixedFunctionOpDataRcPtr & data)
-    :   OpCPU()
+    : OpCPU()
 {
-    m_limCyan        = (float) data->getParams()[0];
-    m_limMagenta     = (float) data->getParams()[1];
-    m_limYellow      = (float) data->getParams()[2];
-    m_thrCyan        = (float) data->getParams()[3];
-    m_thrMagenta     = (float) data->getParams()[4];
-    m_thrYellow      = (float) data->getParams()[5];
-    m_power          = (float) data->getParams()[6];
+    m_limCyan    = (float)data->getParams()[0];
+    m_limMagenta = (float)data->getParams()[1];
+    m_limYellow  = (float)data->getParams()[2];
+    m_thrCyan    = (float)data->getParams()[3];
+    m_thrMagenta = (float)data->getParams()[4];
+    m_thrYellow  = (float)data->getParams()[5];
+    m_power      = (float)data->getParams()[6];
 
     // Precompute scale factor for y = 1 intersect
     auto f_scale = [this](float lim, float thr) {
-        return (lim - thr) / std::pow(std::pow((1.0f - thr) / (lim - thr), -m_power) - 1.0f, 1.0f / m_power);
+        return (lim - thr)
+               / std::pow(std::pow((1.0f - thr) / (lim - thr), -m_power) - 1.0f, 1.0f / m_power);
     };
-    m_scaleCyan      = f_scale(m_limCyan,    m_thrCyan);
-    m_scaleMagenta   = f_scale(m_limMagenta, m_thrMagenta);
-    m_scaleYellow    = f_scale(m_limYellow,  m_thrYellow);
+    m_scaleCyan    = f_scale(m_limCyan, m_thrCyan);
+    m_scaleMagenta = f_scale(m_limMagenta, m_thrMagenta);
+    m_scaleYellow  = f_scale(m_limYellow, m_thrYellow);
 }
 
 void Renderer_ACES_GamutComp13_Fwd::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for(long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         const float red = in[0];
         const float grn = in[1];
@@ -752,27 +752,27 @@ void Renderer_ACES_GamutComp13_Fwd::apply(const void * inImg, void * outImg, lon
         // Achromatic axis
         const float ach = std::max(red, std::max(grn, blu));
 
-        out[0] = gamut_comp(red, ach, m_thrCyan,    m_scaleCyan,    m_power, compress);
+        out[0] = gamut_comp(red, ach, m_thrCyan, m_scaleCyan, m_power, compress);
         out[1] = gamut_comp(grn, ach, m_thrMagenta, m_scaleMagenta, m_power, compress);
-        out[2] = gamut_comp(blu, ach, m_thrYellow,  m_scaleYellow,  m_power, compress);
+        out[2] = gamut_comp(blu, ach, m_thrYellow, m_scaleYellow, m_power, compress);
         out[3] = in[3];
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
 
 Renderer_ACES_GamutComp13_Inv::Renderer_ACES_GamutComp13_Inv(ConstFixedFunctionOpDataRcPtr & data)
-    :   Renderer_ACES_GamutComp13_Fwd(data)
+    : Renderer_ACES_GamutComp13_Fwd(data)
 {
 }
 
 void Renderer_ACES_GamutComp13_Inv::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for(long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         const float red = in[0];
         const float grn = in[1];
@@ -781,31 +781,31 @@ void Renderer_ACES_GamutComp13_Inv::apply(const void * inImg, void * outImg, lon
         // Achromatic axis
         const float ach = std::max(red, std::max(grn, blu));
 
-        out[0] = gamut_comp(red, ach, m_thrCyan,    m_scaleCyan,    m_power, uncompress);
+        out[0] = gamut_comp(red, ach, m_thrCyan, m_scaleCyan, m_power, uncompress);
         out[1] = gamut_comp(grn, ach, m_thrMagenta, m_scaleMagenta, m_power, uncompress);
-        out[2] = gamut_comp(blu, ach, m_thrYellow,  m_scaleYellow,  m_power, uncompress);
+        out[2] = gamut_comp(blu, ach, m_thrYellow, m_scaleYellow, m_power, uncompress);
         out[3] = in[3];
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
 
 Renderer_REC2100_Surround::Renderer_REC2100_Surround(ConstFixedFunctionOpDataRcPtr & data)
-    :   OpCPU()
+    : OpCPU()
 {
-    const auto fwd = FixedFunctionOpData::REC2100_SURROUND_FWD == data->getStyle();
+    const auto fwd    = FixedFunctionOpData::REC2100_SURROUND_FWD == data->getStyle();
     const float gamma = fwd ? (float)data->getParams()[0] : (float)(1. / data->getParams()[0]);
 
-    m_gamma = gamma - 1.f;  // compute Y^gamma / Y
+    m_gamma = gamma - 1.f; // compute Y^gamma / Y
 }
 
 void Renderer_REC2100_Surround::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for(long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         const float red = in[0];
         const float grn = in[1];
@@ -814,16 +814,14 @@ void Renderer_REC2100_Surround::apply(const void * inImg, void * outImg, long nu
         // This threshold needs to be bigger than 1e-10 (used above) to prevent extreme
         // gain in dark colors, yet smaller than 1e-2 to prevent distorting the shape of
         // the HLG EOTF curve.  Max gain = 1e-4 ** (0.78-1) = 7.6 for HLG min gamma of 0.78.
-        // 
+        //
         // TODO: Should have forward & reverse versions of this so the threshold can be
         //       adjusted correctly for the reverse direction.
         constexpr float minLum = 1e-4f;
 
         // Calculate luminance assuming input is Rec.2100 RGB.
         // TODO: Add another parameter to allow using other primaries.
-        const float Y = std::max( minLum, ( 0.2627f * red + 
-                                            0.6780f * grn + 
-                                            0.0593f * blu ) );
+        const float Y = std::max(minLum, (0.2627f * red + 0.6780f * grn + 0.0593f * blu));
 
         // TODO: Currently our fast approx. requires SSE registers.
         //       Either make this whole routine SSE or make fast scalar pow.
@@ -834,13 +832,13 @@ void Renderer_REC2100_Surround::apply(const void * inImg, void * outImg, long nu
         out[2] = blu * Ypow_over_Y;
         out[3] = in[3];
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
 
 Renderer_RGB_TO_HSV::Renderer_RGB_TO_HSV(ConstFixedFunctionOpDataRcPtr & /*data*/)
-    :   OpCPU()
+    : OpCPU()
 {
 }
 
@@ -852,16 +850,16 @@ Renderer_RGB_TO_HSV::Renderer_RGB_TO_HSV(ConstFixedFunctionOpDataRcPtr & /*data*
 void Renderer_RGB_TO_HSV::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for(long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         const float red = in[0];
         const float grn = in[1];
         const float blu = in[2];
 
-        const float rgb_min = std::min( std::min( red, grn ), blu );
-        const float rgb_max = std::max( std::max( red, grn ), blu );
+        const float rgb_min = std::min(std::min(red, grn), blu);
+        const float rgb_max = std::max(std::max(red, grn), blu);
 
         float val = rgb_max;
         float sat = 0.f;
@@ -914,14 +912,14 @@ void Renderer_RGB_TO_HSV::apply(const void * inImg, void * outImg, long numPixel
         out[2] = val;
         out[3] = in[3];
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
 
 Renderer_HSV_TO_RGB::Renderer_HSV_TO_RGB(ConstFixedFunctionOpDataRcPtr & /*data*/)
-    :   OpCPU()
-{   
+    : OpCPU()
+{
 }
 
 // This algorithm is designed to handle extended range values.  H is nominally on [0,1],
@@ -934,19 +932,19 @@ Renderer_HSV_TO_RGB::Renderer_HSV_TO_RGB(ConstFixedFunctionOpDataRcPtr & /*data*
 void Renderer_HSV_TO_RGB::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for (long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         constexpr float MAX_SAT = 1.999f;
 
-        const float hue = ( in[0] - std::floor( in[0] ) ) * 6.f;
-        const float sat = Clamp( in[1], 0.f, MAX_SAT );
+        const float hue = (in[0] - std::floor(in[0])) * 6.f;
+        const float sat = Clamp(in[1], 0.f, MAX_SAT);
         const float val = in[2];
 
-        const float red = Clamp( std::fabs(hue - 3.f) - 1.f, 0.f, 1.f );
-        const float grn = Clamp( 2.f - std::fabs(hue - 2.f), 0.f, 1.f );
-        const float blu = Clamp( 2.f - std::fabs(hue - 4.f), 0.f, 1.f );
+        const float red = Clamp(std::fabs(hue - 3.f) - 1.f, 0.f, 1.f);
+        const float grn = Clamp(2.f - std::fabs(hue - 2.f), 0.f, 1.f);
+        const float blu = Clamp(2.f - std::fabs(hue - 4.f), 0.f, 1.f);
 
         float rgb_max = val;
         float rgb_min = val * (1.f - sat);
@@ -964,34 +962,34 @@ void Renderer_HSV_TO_RGB::apply(const void * inImg, void * outImg, long numPixel
         }
 
         const float delta = rgb_max - rgb_min;
-        out[0] = red * delta + rgb_min;
-        out[1] = grn * delta + rgb_min;
-        out[2] = blu * delta + rgb_min;
-        out[3] = in[3];
+        out[0]            = red * delta + rgb_min;
+        out[1]            = grn * delta + rgb_min;
+        out[2]            = blu * delta + rgb_min;
+        out[3]            = in[3];
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
 
 Renderer_XYZ_TO_xyY::Renderer_XYZ_TO_xyY(ConstFixedFunctionOpDataRcPtr & /*data*/)
-    :   OpCPU()
-{   
+    : OpCPU()
+{
 }
 
 void Renderer_XYZ_TO_xyY::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for(long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         const float X = in[0];
         const float Y = in[1];
         const float Z = in[2];
 
-        float d = X + Y + Z;
-        d = (d == 0.f) ? 0.f : 1.f / d;
+        float d       = X + Y + Z;
+        d             = (d == 0.f) ? 0.f : 1.f / d;
         const float x = X * d;
         const float y = Y * d;
 
@@ -1000,22 +998,22 @@ void Renderer_XYZ_TO_xyY::apply(const void * inImg, void * outImg, long numPixel
         out[2] = Y;
         out[3] = in[3];
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
 
 Renderer_xyY_TO_XYZ::Renderer_xyY_TO_XYZ(ConstFixedFunctionOpDataRcPtr & /*data*/)
-    :   OpCPU()
-{   
+    : OpCPU()
+{
 }
 
 void Renderer_xyY_TO_XYZ::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for(long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         const float x = in[0];
         const float y = in[1];
@@ -1030,22 +1028,22 @@ void Renderer_xyY_TO_XYZ::apply(const void * inImg, void * outImg, long numPixel
         out[2] = Z;
         out[3] = in[3];
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
 
 Renderer_XYZ_TO_uvY::Renderer_XYZ_TO_uvY(ConstFixedFunctionOpDataRcPtr & /*data*/)
-    :   OpCPU()
-{   
+    : OpCPU()
+{
 }
 
 void Renderer_XYZ_TO_uvY::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for(long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         // TODO: Check robustness for arbitrary float inputs.
 
@@ -1053,8 +1051,8 @@ void Renderer_XYZ_TO_uvY::apply(const void * inImg, void * outImg, long numPixel
         const float Y = in[1];
         const float Z = in[2];
 
-        float d = X + 15.f * Y + 3.f * Z;
-        d = (d == 0.f) ? 0.f : 1.f / d;
+        float d       = X + 15.f * Y + 3.f * Z;
+        d             = (d == 0.f) ? 0.f : 1.f / d;
         const float u = 4.f * X * d;
         const float v = 9.f * Y * d;
 
@@ -1063,22 +1061,22 @@ void Renderer_XYZ_TO_uvY::apply(const void * inImg, void * outImg, long numPixel
         out[2] = Y;
         out[3] = in[3];
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
 
 Renderer_uvY_TO_XYZ::Renderer_uvY_TO_XYZ(ConstFixedFunctionOpDataRcPtr & /*data*/)
-    :   OpCPU()
-{   
+    : OpCPU()
+{
 }
 
 void Renderer_uvY_TO_XYZ::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for(long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         // TODO: Check robustness for arbitrary float inputs.
 
@@ -1095,22 +1093,22 @@ void Renderer_uvY_TO_XYZ::apply(const void * inImg, void * outImg, long numPixel
         out[2] = Z;
         out[3] = in[3];
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
 
 Renderer_XYZ_TO_LUV::Renderer_XYZ_TO_LUV(ConstFixedFunctionOpDataRcPtr & /*data*/)
-    :   OpCPU()
-{   
+    : OpCPU()
+{
 }
 
 void Renderer_XYZ_TO_LUV::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for(long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         // TODO: Check robustness for arbitrary float inputs.
 
@@ -1118,37 +1116,37 @@ void Renderer_XYZ_TO_LUV::apply(const void * inImg, void * outImg, long numPixel
         const float Y = in[1];
         const float Z = in[2];
 
-        float d = X + 15.f * Y + 3.f * Z;
-        d = (d == 0.f) ? 0.f : 1.f / d;
+        float d       = X + 15.f * Y + 3.f * Z;
+        d             = (d == 0.f) ? 0.f : 1.f / d;
         const float u = 4.f * X * d;
         const float v = 9.f * Y * d;
 
-        const float Lstar = ( Y <= 0.008856451679f ) ? 9.0329629629629608f * Y : 
-                                                     1.16f * powf( Y, 0.333333333f ) - 0.16f;
-        const float ustar = 13.f * Lstar * (u - 0.19783001f);   // D65 white
-        const float vstar = 13.f * Lstar * (v - 0.46831999f);   // D65 white
+        const float Lstar = (Y <= 0.008856451679f) ? 9.0329629629629608f * Y
+                                                   : 1.16f * powf(Y, 0.333333333f) - 0.16f;
+        const float ustar = 13.f * Lstar * (u - 0.19783001f); // D65 white
+        const float vstar = 13.f * Lstar * (v - 0.46831999f); // D65 white
 
         out[0] = Lstar;
         out[1] = ustar;
         out[2] = vstar;
         out[3] = in[3];
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
 
 Renderer_LUV_TO_XYZ::Renderer_LUV_TO_XYZ(ConstFixedFunctionOpDataRcPtr & /*data*/)
-    :   OpCPU()
-{   
+    : OpCPU()
+{
 }
 
 void Renderer_LUV_TO_XYZ::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for(long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         // TODO: Check robustness for arbitrary float inputs.
 
@@ -1157,36 +1155,31 @@ void Renderer_LUV_TO_XYZ::apply(const void * inImg, void * outImg, long numPixel
         const float vstar = in[2];
 
         const float d = (Lstar == 0.f) ? 0.f : 0.076923076923076927f / Lstar;
-        const float u = ustar * d + 0.19783001f;    // D65 white
-        const float v = vstar * d + 0.46831999f;    // D65 white
+        const float u = ustar * d + 0.19783001f; // D65 white
+        const float v = vstar * d + 0.46831999f; // D65 white
 
         const float tmp = (Lstar + 0.16f) * 0.86206896551724144f;
-        const float Y = (Lstar <= 0.08f) ? 0.11070564598794539f * Lstar : tmp * tmp * tmp;
+        const float Y   = (Lstar <= 0.08f) ? 0.11070564598794539f * Lstar : tmp * tmp * tmp;
 
         const float dd = (v == 0.f) ? 0.f : 0.25f / v;
-        const float X = 9.f * Y * u * dd;
-        const float Z = Y * (12.f - 3.f * u - 20.f * v) * dd;
+        const float X  = 9.f * Y * u * dd;
+        const float Z  = Y * (12.f - 3.f * u - 20.f * v) * dd;
 
         out[0] = X;
         out[1] = Y;
         out[2] = Z;
         out[3] = in[3];
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
 
-
-
-
 ///////////////////////////////////////////////////////////////////////////////
-
-
 
 ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func)
 {
-    switch(func->getStyle())
+    switch (func->getStyle())
     {
         case FixedFunctionOpData::ACES_RED_MOD_03_FWD:
         {

@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <sstream>
 #include <string.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ops/allocation/AllocationOp.h"
 #include "NoOps.h"
-#include "OpBuilders.h"
 #include "Op.h"
+#include "OpBuilders.h"
+#include "ops/allocation/AllocationOp.h"
 #include "ops/lut3d/Lut3DOp.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -22,13 +20,13 @@ namespace
 class AllocationNoOp : public Op
 {
 public:
-    AllocationNoOp() = delete;
-    AllocationNoOp(const AllocationNoOp &) = delete;
-    AllocationNoOp& operator=(const AllocationNoOp &) = delete;
+    AllocationNoOp()                                   = delete;
+    AllocationNoOp(const AllocationNoOp &)             = delete;
+    AllocationNoOp & operator=(const AllocationNoOp &) = delete;
 
     explicit AllocationNoOp(const AllocationData & allocationData)
-        :   Op()
-        ,   m_allocationData(allocationData)
+        : Op()
+        , m_allocationData(allocationData)
     {
         data().reset(new NoOpData());
     }
@@ -49,7 +47,9 @@ public:
     void apply(void * /*img*/, long /*numPixels*/) const override {}
 
     void apply(const void * inImg, void * outImg, long numPixels) const override
-    { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
+    {
+        memcpy(outImg, inImg, numPixels * 4 * sizeof(float));
+    }
 
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & /*shaderCreator*/) const override {}
 
@@ -70,13 +70,15 @@ OpRcPtr AllocationNoOp::clone() const
 bool AllocationNoOp::isSameType(ConstOpRcPtr & op) const
 {
     ConstAllocationNoOpRcPtr typedRcPtr = DynamicPtrCast<const AllocationNoOp>(op);
-    if(!typedRcPtr) return false;
+    if (!typedRcPtr)
+        return false;
     return true;
 }
 
 bool AllocationNoOp::isInverse(ConstOpRcPtr & op) const
 {
-    if(!isSameType(op)) return false;
+    if (!isSameType(op))
+        return false;
     return true;
 }
 
@@ -93,19 +95,18 @@ void AllocationNoOp::getGpuAllocation(AllocationData & allocation) const
 // Return whether the op defines an Allocation
 bool DefinesGpuAllocation(const OpRcPtr & op)
 {
-    ConstAllocationNoOpRcPtr allocationNoOpRcPtr =
-        DynamicPtrCast<const AllocationNoOp>(op);
+    ConstAllocationNoOpRcPtr allocationNoOpRcPtr = DynamicPtrCast<const AllocationNoOp>(op);
 
-    if(allocationNoOpRcPtr) return true;
+    if (allocationNoOpRcPtr)
+        return true;
     return false;
 }
-}
+} // namespace
 
 void CreateGpuAllocationNoOp(OpRcPtrVec & ops, const AllocationData & allocationData)
 {
-    ops.push_back( std::make_shared<AllocationNoOp>(allocationData) );
+    ops.push_back(std::make_shared<AllocationNoOp>(allocationData));
 }
-
 
 namespace
 {
@@ -118,26 +119,26 @@ namespace
 // If the entire opVec supports GPU generation, both the
 // startIndex and endIndex will equal -1
 
-void GetGpuUnsupportedIndexRange(int * startIndex, int * endIndex,
-                                    const OpRcPtrVec & opVec)
+void GetGpuUnsupportedIndexRange(int * startIndex, int * endIndex, const OpRcPtrVec & opVec)
 {
     int start = -1;
-    int end = -1;
+    int end   = -1;
 
-    for(unsigned int i=0; i<opVec.size(); ++i)
+    for (unsigned int i = 0; i < opVec.size(); ++i)
     {
         // We've found a gpu unsupported op.
         // If it's the first, save it as our start.
         // Otherwise, update the end.
 
-        if(!opVec[i]->supportedByLegacyShader())
+        if (!opVec[i]->supportedByLegacyShader())
         {
-            if(start<0)
+            if (start < 0)
             {
                 start = i;
-                end = i;
+                end   = i;
             }
-            else end = i;
+            else
+                end = i;
         }
     }
 
@@ -145,24 +146,24 @@ void GetGpuUnsupportedIndexRange(int * startIndex, int * endIndex,
     // one that defines a GpuAllocation. (we can only upload to
     // the gpu at a location are tagged with an allocation)
 
-    while(start>0)
+    while (start > 0)
     {
-        if(DefinesGpuAllocation(opVec[start])) break;
-            --start;
+        if (DefinesGpuAllocation(opVec[start]))
+            break;
+        --start;
     }
 
-    if(startIndex) *startIndex = start;
-    if(endIndex) *endIndex = end;
+    if (startIndex)
+        *startIndex = start;
+    if (endIndex)
+        *endIndex = end;
 }
 
-
-bool GetGpuAllocation(AllocationData & allocation,
-                        const OpRcPtr & op)
+bool GetGpuAllocation(AllocationData & allocation, const OpRcPtr & op)
 {
-    AllocationNoOpRcPtr allocationNoOpRcPtr =
-        DynamicPtrCast<AllocationNoOp>(op);
+    AllocationNoOpRcPtr allocationNoOpRcPtr = DynamicPtrCast<AllocationNoOp>(op);
 
-    if(!allocationNoOpRcPtr)
+    if (!allocationNoOpRcPtr)
     {
         return false;
     }
@@ -170,34 +171,35 @@ bool GetGpuAllocation(AllocationData & allocation,
     allocationNoOpRcPtr->getGpuAllocation(allocation);
     return true;
 }
-}
+} // namespace
 
 OpRcPtrVec Create3DLut(const OpRcPtrVec & ops, unsigned edgelen)
 {
-    if(ops.size()==0) return OpRcPtrVec();
+    if (ops.size() == 0)
+        return OpRcPtrVec();
 
     const unsigned lut3DEdgeLen   = edgelen;
-    const unsigned lut3DNumPixels = lut3DEdgeLen*lut3DEdgeLen*lut3DEdgeLen;
+    const unsigned lut3DNumPixels = lut3DEdgeLen * lut3DEdgeLen * lut3DEdgeLen;
 
     Lut3DOpDataRcPtr lut = std::make_shared<Lut3DOpData>(lut3DEdgeLen);
 
     // Allocate 3D LUT image, RGBA
-    std::vector<float> lut3D(lut3DNumPixels*4);
+    std::vector<float> lut3D(lut3DNumPixels * 4);
     GenerateIdentityLut3D(&lut3D[0], lut3DEdgeLen, 4, LUT3DORDER_FAST_BLUE);
 
     // Apply the lattice ops to it
-    for(const auto & op : ops)
+    for (const auto & op : ops)
     {
         op->apply(&lut3D[0], &lut3D[0], lut3DNumPixels);
     }
 
     // Convert the RGBA image to an RGB image, in place.
     auto & lutArray = lut->getArray();
-    for(unsigned i=0; i<lut3DNumPixels; ++i)
+    for (unsigned i = 0; i < lut3DNumPixels; ++i)
     {
-        lutArray[3*i+0] = lut3D[4*i+0];
-        lutArray[3*i+1] = lut3D[4*i+1];
-        lutArray[3*i+2] = lut3D[4*i+2];
+        lutArray[3 * i + 0] = lut3D[4 * i + 0];
+        lutArray[3 * i + 1] = lut3D[4 * i + 1];
+        lutArray[3 * i + 2] = lut3D[4 * i + 2];
     }
 
     OpRcPtrVec newOps;
@@ -205,10 +207,11 @@ OpRcPtrVec Create3DLut(const OpRcPtrVec & ops, unsigned edgelen)
     return newOps;
 }
 
-void PartitionGPUOps(OpRcPtrVec & gpuPreOps,
-                        OpRcPtrVec & gpuLatticeOps,
-                        OpRcPtrVec & gpuPostOps,
-                        const OpRcPtrVec & ops)
+void PartitionGPUOps(
+    OpRcPtrVec & gpuPreOps,
+    OpRcPtrVec & gpuLatticeOps,
+    OpRcPtrVec & gpuPostOps,
+    const OpRcPtrVec & ops)
 {
     //
     // Partition the original, raw opvec into 3 segments for GPU Processing
@@ -218,31 +221,28 @@ void PartitionGPUOps(OpRcPtrVec & gpuPreOps,
     // Additional ops will be inserted to take into account allocations
     // transformations.
 
-
     // This is used to bound our analytical shader text generation
     // start index and end index are inclusive.
 
     int gpuLut3DOpStartIndex = 0;
-    int gpuLut3DOpEndIndex = 0;
-    GetGpuUnsupportedIndexRange(&gpuLut3DOpStartIndex,
-                                &gpuLut3DOpEndIndex,
-                                ops);
+    int gpuLut3DOpEndIndex   = 0;
+    GetGpuUnsupportedIndexRange(&gpuLut3DOpStartIndex, &gpuLut3DOpEndIndex, ops);
 
     // Write the entire shader using only shader text (3D LUT is unused)
-    if(gpuLut3DOpStartIndex == -1 && gpuLut3DOpEndIndex == -1)
+    if (gpuLut3DOpStartIndex == -1 && gpuLut3DOpEndIndex == -1)
     {
-        for(unsigned int i=0; i<ops.size(); ++i)
+        for (unsigned int i = 0; i < ops.size(); ++i)
         {
-            gpuPreOps.push_back( ops[i]->clone() );
+            gpuPreOps.push_back(ops[i]->clone());
         }
     }
     // Analytical -> 3D LUT -> analytical
     else
     {
         // Handle analytical shader block before start index.
-        for(int i=0; i<gpuLut3DOpStartIndex; ++i)
+        for (int i = 0; i < gpuLut3DOpStartIndex; ++i)
         {
-            gpuPreOps.push_back( ops[i]->clone() );
+            gpuPreOps.push_back(ops[i]->clone());
         }
 
         // Get the GPU Allocation at the cross-over point
@@ -253,7 +253,7 @@ void PartitionGPUOps(OpRcPtrVec & gpuPreOps,
         // color-wise
 
         AllocationData allocation;
-        if(gpuLut3DOpStartIndex<0 || gpuLut3DOpStartIndex>=(int)ops.size())
+        if (gpuLut3DOpStartIndex < 0 || gpuLut3DOpStartIndex >= (int)ops.size())
         {
             std::ostringstream error;
             error << "Invalid GpuUnsupportedIndexRange: ";
@@ -266,22 +266,22 @@ void PartitionGPUOps(OpRcPtrVec & gpuPreOps,
         // If the specified location defines an allocation, use it.
         // It's possible that this index wont define an allocation.
         // (For example in the case of getProcessor(FileTransform)
-        if(GetGpuAllocation(allocation, ops[gpuLut3DOpStartIndex]))
+        if (GetGpuAllocation(allocation, ops[gpuLut3DOpStartIndex]))
         {
             CreateAllocationOps(gpuPreOps, allocation, TRANSFORM_DIR_FORWARD);
             CreateAllocationOps(gpuLatticeOps, allocation, TRANSFORM_DIR_INVERSE);
         }
 
         // Handle cpu lattice processing
-        for(int i=gpuLut3DOpStartIndex; i<=gpuLut3DOpEndIndex; ++i)
+        for (int i = gpuLut3DOpStartIndex; i <= gpuLut3DOpEndIndex; ++i)
         {
-            gpuLatticeOps.push_back( ops[i]->clone() );
+            gpuLatticeOps.push_back(ops[i]->clone());
         }
 
         // And then handle the gpu post processing
-        for(int i=gpuLut3DOpEndIndex+1; i<(int)ops.size(); ++i)
+        for (int i = gpuLut3DOpEndIndex + 1; i < (int)ops.size(); ++i)
         {
-            gpuPostOps.push_back( ops[i]->clone() );
+            gpuPostOps.push_back(ops[i]->clone());
         }
     }
 }
@@ -293,9 +293,9 @@ namespace
 class FileNoOp : public Op
 {
 public:
-    FileNoOp() = delete;
-    FileNoOp(const FileNoOp &) = delete;
-    FileNoOp& operator=(const FileNoOp &) = delete;
+    FileNoOp()                             = delete;
+    FileNoOp(const FileNoOp &)             = delete;
+    FileNoOp & operator=(const FileNoOp &) = delete;
 
     explicit FileNoOp(const std::string & fileReference)
         : Op()
@@ -320,7 +320,9 @@ public:
     void apply(void * /*img*/, long /*numPixels*/) const override {}
 
     void apply(const void * inImg, void * outImg, long numPixels) const override
-    { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
+    {
+        memcpy(outImg, inImg, numPixels * 4 * sizeof(float));
+    }
 
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & /*shaderCreator*/) const override {}
 
@@ -340,7 +342,8 @@ OpRcPtr FileNoOp::clone() const
 bool FileNoOp::isSameType(ConstOpRcPtr & op) const
 {
     ConstFileNoOpRcPtr typedRcPtr = DynamicPtrCast<const FileNoOp>(op);
-    if(!typedRcPtr) return false;
+    if (!typedRcPtr)
+        return false;
     return true;
 }
 
@@ -360,16 +363,12 @@ std::string FileNoOp::getCacheID() const
     return m_fileReference;
 }
 
-}
+} // namespace
 
-void CreateFileNoOp(OpRcPtrVec & ops,
-                    const std::string & fileReference)
+void CreateFileNoOp(OpRcPtrVec & ops, const std::string & fileReference)
 {
-    ops.push_back( std::make_shared<FileNoOp>(fileReference) );
+    ops.push_back(std::make_shared<FileNoOp>(fileReference));
 }
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -378,13 +377,13 @@ namespace
 class LookNoOp : public Op
 {
 public:
-    LookNoOp() = delete;
-    LookNoOp(const LookNoOp &) = delete;
-    LookNoOp& operator=(const LookNoOp &) = delete;
+    LookNoOp()                             = delete;
+    LookNoOp(const LookNoOp &)             = delete;
+    LookNoOp & operator=(const LookNoOp &) = delete;
 
     explicit LookNoOp(const std::string & look)
-        :   Op()
-        ,   m_look(look)
+        : Op()
+        , m_look(look)
     {
         data().reset(new NoOpData());
     }
@@ -406,7 +405,9 @@ public:
     void apply(void * /*img*/, long /*numPixels*/) const override {}
 
     void apply(const void * inImg, void * outImg, long numPixels) const override
-    { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
+    {
+        memcpy(outImg, inImg, numPixels * 4 * sizeof(float));
+    }
 
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & /*shaderCreator*/) const override {}
 
@@ -425,7 +426,8 @@ OpRcPtr LookNoOp::clone() const
 bool LookNoOp::isSameType(ConstOpRcPtr & op) const
 {
     ConstLookNoOpRcPtr typedRcPtr = DynamicPtrCast<const LookNoOp>(op);
-    if(!typedRcPtr) return false;
+    if (!typedRcPtr)
+        return false;
     return true;
 }
 
@@ -444,13 +446,11 @@ std::string LookNoOp::getCacheID() const
     return m_look;
 }
 
-}
+} // namespace
 
-void CreateLookNoOp(OpRcPtrVec & ops,
-                    const std::string & look)
+void CreateLookNoOp(OpRcPtrVec & ops, const std::string & look)
 {
-    ops.push_back( std::make_shared<LookNoOp>(look) );
+    ops.push_back(std::make_shared<LookNoOp>(look));
 }
 
 } // namespace OCIO_NAMESPACE
-

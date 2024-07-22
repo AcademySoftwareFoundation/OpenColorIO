@@ -17,7 +17,6 @@
 #include "ops/lut3d/Lut3DOp.h"
 #include "ops/noop/NoOps.h"
 
-
 namespace OCIO_NAMESPACE
 {
 
@@ -43,8 +42,8 @@ void WriteShaderHeader(GpuShaderCreatorRcPtr & shaderCreator)
     }
     else
     {
-        ss.newLine() << ss.float4Keyword() << " " << fcnName 
-                     << "(" << ss.float4Keyword() << " inPixel)";
+        ss.newLine() << ss.float4Keyword() << " " << fcnName << "(" << ss.float4Keyword()
+                     << " inPixel)";
         ss.newLine() << "{";
         ss.indent();
         ss.newLine() << ss.float4Decl(shaderCreator->getPixelName()) << " = inPixel;";
@@ -52,7 +51,6 @@ void WriteShaderHeader(GpuShaderCreatorRcPtr & shaderCreator)
 
     shaderCreator->addToFunctionHeaderShaderCode(ss.string().c_str());
 }
-
 
 void WriteShaderFooter(GpuShaderCreatorRcPtr & shaderCreator)
 {
@@ -67,8 +65,7 @@ void WriteShaderFooter(GpuShaderCreatorRcPtr & shaderCreator)
     shaderCreator->addToFunctionFooterShaderCode(ss.string().c_str());
 }
 
-
-}
+} // namespace
 
 void GPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps, OptimizationFlags oFlags)
 {
@@ -83,7 +80,7 @@ void GPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps, OptimizationFlags o
     m_ops.validateDynamicProperties();
 
     // Is NoOp ?
-    m_isNoOp  = m_ops.isNoOp();
+    m_isNoOp = m_ops.isNoOp();
 
     // Does the color processing introduce crosstalk between the pixel channels?
     m_hasChannelCrosstalk = m_ops.hasChannelCrosstalk();
@@ -91,8 +88,7 @@ void GPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps, OptimizationFlags o
     // Calculate and assemble the GPU cache ID from the ops.
 
     std::stringstream ss;
-    ss << "GPU Processor: oFlags " << oFlags
-       << " ops : " << m_ops.getCacheID();
+    ss << "GPU Processor: oFlags " << oFlags << " ops : " << m_ops.getCacheID();
 
     m_cacheID = ss.str();
 }
@@ -102,7 +98,7 @@ void GPUProcessor::Impl::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCrea
     AutoMutex lock(m_mutex);
 
     // Create the shader program information.
-    for(const auto & op : m_ops)
+    for (const auto & op : m_ops)
     {
         op->extractGpuShaderInfo(shaderCreator);
     }
@@ -113,9 +109,7 @@ void GPUProcessor::Impl::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCrea
     shaderCreator->finalize();
 }
 
-
 //////////////////////////////////////////////////////////////////////////
-
 
 void GPUProcessor::deleter(GPUProcessor * c)
 {
@@ -123,7 +117,7 @@ void GPUProcessor::deleter(GPUProcessor * c)
 }
 
 GPUProcessor::GPUProcessor()
-    :   m_impl(new Impl)
+    : m_impl(new Impl)
 {
 }
 
@@ -172,7 +166,7 @@ void GPUProcessor::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) c
     std::string key(CacheIDHash(tmpKey.c_str(), tmpKey.size()));
 
     // Prepend a user defined uid if any.
-    if (std::strlen(shaderCreator->getUniqueID())!=0)
+    if (std::strlen(shaderCreator->getUniqueID()) != 0)
     {
         key = shaderCreator->getUniqueID() + key;
     }
@@ -184,9 +178,12 @@ void GPUProcessor::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) c
     }
 
     // A resource name only accepts alphanumeric characters.
-    key.erase(std::remove_if(key.begin(), key.end(),
-                             [](char const & c) -> bool { return !std::isalnum(c) && c!='_'; } ),
-              key.end());
+    key.erase(
+        std::remove_if(
+            key.begin(),
+            key.end(),
+            [](char const & c) -> bool { return !std::isalnum(c) && c != '_'; }),
+        key.end());
 
     // Extract the information to fully build the fragment shader program.
 
@@ -196,7 +193,7 @@ void GPUProcessor::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) c
     {
         getImpl()->extractGpuShaderInfo(shaderCreator);
     }
-    catch(const Exception &)
+    catch (const Exception &)
     {
         shaderCreator->end();
         throw;
@@ -204,6 +201,5 @@ void GPUProcessor::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) c
 
     shaderCreator->end();
 }
-
 
 } // namespace OCIO_NAMESPACE

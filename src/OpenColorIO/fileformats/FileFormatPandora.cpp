@@ -8,13 +8,12 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "BitDepthUtils.h"
+#include "ParseUtils.h"
 #include "fileformats/FileFormatUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
-#include "ParseUtils.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -23,7 +22,7 @@ namespace
 class LocalCachedFile : public CachedFile
 {
 public:
-    LocalCachedFile () = default;
+    LocalCachedFile()  = default;
     ~LocalCachedFile() = default;
 
     Lut3DOpDataRcPtr lut3D;
@@ -31,36 +30,35 @@ public:
 
 typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
 
-
-
 class LocalFileFormat : public FileFormat
 {
 public:
-
-    LocalFileFormat() = default;
+    LocalFileFormat()  = default;
     ~LocalFileFormat() = default;
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-    CachedFileRcPtr read(std::istream & istream,
-                         const std::string & fileName,
-                         Interpolation interp) const override;
+    CachedFileRcPtr read(std::istream & istream, const std::string & fileName, Interpolation interp)
+        const override;
 
-    void buildFileOps(OpRcPtrVec & ops,
-                        const Config & config,
-                        const ConstContextRcPtr & context,
-                        CachedFileRcPtr untypedCachedFile,
-                        const FileTransform & fileTransform,
-                        TransformDirection dir) const override;
+    void buildFileOps(
+        OpRcPtrVec & ops,
+        const Config & config,
+        const ConstContextRcPtr & context,
+        CachedFileRcPtr untypedCachedFile,
+        const FileTransform & fileTransform,
+        TransformDirection dir) const override;
 
 private:
-    static void ThrowErrorMessage(const std::string & error,
+    static void ThrowErrorMessage(
+        const std::string & error,
         const std::string & fileName,
         int line,
         const std::string & lineContent);
 };
 
-void LocalFileFormat::ThrowErrorMessage(const std::string & error,
+void LocalFileFormat::ThrowErrorMessage(
+    const std::string & error,
     const std::string & fileName,
     int line,
     const std::string & lineContent)
@@ -82,27 +80,28 @@ void LocalFileFormat::ThrowErrorMessage(const std::string & error,
 void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 {
     FormatInfo info;
-    info.name = "pandora_mga";
-    info.extension = "mga";
+    info.name         = "pandora_mga";
+    info.extension    = "mga";
     info.capabilities = FORMAT_CAPABILITY_READ;
     formatInfoVec.push_back(info);
 
     FormatInfo info2;
-    info2.name = "pandora_m3d";
-    info2.extension = "m3d";
+    info2.name         = "pandora_m3d";
+    info2.extension    = "m3d";
     info2.capabilities = FORMAT_CAPABILITY_READ;
     formatInfoVec.push_back(info2);
 }
 
-CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
-                                      const std::string & fileName,
-                                      Interpolation interp) const
+CachedFileRcPtr LocalFileFormat::read(
+    std::istream & istream,
+    const std::string & fileName,
+    Interpolation interp) const
 {
     // this shouldn't happen
-    if(!istream)
+    if (!istream)
     {
-        throw Exception ("File stream empty when trying "
-                            "to read Pandora LUT");
+        throw Exception("File stream empty when trying "
+                        "to read Pandora LUT");
     }
 
     // Validate the file type
@@ -110,31 +109,32 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 
     // Parse the file
     std::string format;
-    int lutEdgeLen = 0;
+    int lutEdgeLen             = 0;
     int outputBitDepthMaxValue = 0;
     std::vector<int> raw3d;
 
     {
         StringUtils::StringVec parts;
         std::vector<int> tmpints;
-        bool inLut3d = false;
+        bool inLut3d   = false;
         int lineNumber = 0;
 
-        while(nextline(istream, line))
+        while (nextline(istream, line))
         {
             ++lineNumber;
 
             // Strip, lowercase, and split the line
             parts = StringUtils::SplitByWhiteSpaces(StringUtils::Lower(StringUtils::Trim(line)));
-            if(parts.empty()) continue;
+            if (parts.empty())
+                continue;
 
             // Skip all lines starting with '#'
-            if(StringUtils::StartsWith(parts[0],"#")) continue;
+            if (StringUtils::StartsWith(parts[0], "#"))
+                continue;
 
-            if(parts[0] == "channel")
+            if (parts[0] == "channel")
             {
-                if(parts.size() != 2 
-                    || StringUtils::Lower(parts[1]) != "3d")
+                if (parts.size() != 2 || StringUtils::Lower(parts[1]) != "3d")
                 {
                     ThrowErrorMessage(
                         "Only 3D LUTs are currently supported "
@@ -144,38 +144,26 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                         line);
                 }
             }
-            else if(parts[0] == "in")
+            else if (parts[0] == "in")
             {
                 int inval = 0;
-                if(parts.size() != 2
-                    || !StringToInt( &inval, parts[1].c_str()))
+                if (parts.size() != 2 || !StringToInt(&inval, parts[1].c_str()))
                 {
-                    ThrowErrorMessage(
-                        "Malformed 'in' tag.",
-                        fileName,
-                        lineNumber,
-                        line);
+                    ThrowErrorMessage("Malformed 'in' tag.", fileName, lineNumber, line);
                 }
-                raw3d.reserve(inval*3);
+                raw3d.reserve(inval * 3);
                 lutEdgeLen = Get3DLutEdgeLenFromNumPixels(inval);
             }
-            else if(parts[0] == "out")
+            else if (parts[0] == "out")
             {
-                if(parts.size() != 2 
-                    || !StringToInt(&outputBitDepthMaxValue,
-                                    parts[1].c_str()))
+                if (parts.size() != 2 || !StringToInt(&outputBitDepthMaxValue, parts[1].c_str()))
                 {
-                    ThrowErrorMessage(
-                        "Malformed 'out' tag.",
-                        fileName,
-                        lineNumber,
-                        line);
+                    ThrowErrorMessage("Malformed 'out' tag.", fileName, lineNumber, line);
                 }
             }
-            else if(parts[0] == "format")
+            else if (parts[0] == "format")
             {
-                if(parts.size() != 2 
-                    || StringUtils::Lower(parts[1]) != "lut")
+                if (parts.size() != 2 || StringUtils::Lower(parts[1]) != "lut")
                 {
                     ThrowErrorMessage(
                         "Only LUTs are currently supported "
@@ -185,12 +173,11 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                         line);
                 }
             }
-            else if(parts[0] == "values")
+            else if (parts[0] == "values")
             {
-                if(parts.size() != 4 || 
-                    StringUtils::Lower(parts[1]) != "red" ||
-                    StringUtils::Lower(parts[2]) != "green" ||
-                    StringUtils::Lower(parts[3]) != "blue")
+                if (parts.size() != 4 || StringUtils::Lower(parts[1]) != "red"
+                    || StringUtils::Lower(parts[2]) != "green"
+                    || StringUtils::Lower(parts[3]) != "blue")
                 {
                     ThrowErrorMessage(
                         "Only rgb LUTs are currently supported "
@@ -202,15 +189,11 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 
                 inLut3d = true;
             }
-            else if(inLut3d)
+            else if (inLut3d)
             {
-                if(!StringVecToIntVec(tmpints, parts) || tmpints.size() != 4)
+                if (!StringVecToIntVec(tmpints, parts) || tmpints.size() != 4)
                 {
-                    ThrowErrorMessage(
-                        "Expected to find 4 integers.",
-                        fileName,
-                        lineNumber,
-                        line);
+                    ThrowErrorMessage("Expected to find 4 integers.", fileName, lineNumber, line);
                 }
 
                 raw3d.push_back(tmpints[1]);
@@ -221,29 +204,23 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
     }
 
     // Interpret the parsed data, validate LUT sizes
-    if(lutEdgeLen*lutEdgeLen*lutEdgeLen != static_cast<int>(raw3d.size()/3))
+    if (lutEdgeLen * lutEdgeLen * lutEdgeLen != static_cast<int>(raw3d.size() / 3))
     {
         std::ostringstream os;
         os << "Incorrect number of 3D LUT entries. ";
         os << "Found " << raw3d.size() / 3 << ", expected ";
-        os << lutEdgeLen*lutEdgeLen*lutEdgeLen << ".";
-        ThrowErrorMessage(
-            os.str().c_str(),
-            fileName, -1, "");
+        os << lutEdgeLen * lutEdgeLen * lutEdgeLen << ".";
+        ThrowErrorMessage(os.str().c_str(), fileName, -1, "");
     }
 
-    if(lutEdgeLen*lutEdgeLen*lutEdgeLen == 0)
+    if (lutEdgeLen * lutEdgeLen * lutEdgeLen == 0)
     {
-        ThrowErrorMessage(
-            "No 3D LUT entries found.",
-            fileName, -1, "");
+        ThrowErrorMessage("No 3D LUT entries found.", fileName, -1, "");
     }
 
-    if(outputBitDepthMaxValue <= 0)
+    if (outputBitDepthMaxValue <= 0)
     {
-        ThrowErrorMessage(
-            "A valid 'out' tag was not found.",
-            fileName, -1, "");
+        ThrowErrorMessage("A valid 'out' tag was not found.", fileName, -1, "");
     }
 
     LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
@@ -271,18 +248,18 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
     return cachedFile;
 }
 
-void
-LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
-                                const Config& /*config*/,
-                                const ConstContextRcPtr & /*context*/,
-                                CachedFileRcPtr untypedCachedFile,
-                                const FileTransform& fileTransform,
-                                TransformDirection dir) const
+void LocalFileFormat::buildFileOps(
+    OpRcPtrVec & ops,
+    const Config & /*config*/,
+    const ConstContextRcPtr & /*context*/,
+    CachedFileRcPtr untypedCachedFile,
+    const FileTransform & fileTransform,
+    TransformDirection dir) const
 {
     LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
 
     // This should never happen.
-    if(!cachedFile || !cachedFile->lut3D)
+    if (!cachedFile || !cachedFile->lut3D)
     {
         std::ostringstream os;
         os << "Cannot build Pandora LUT. Invalid cache type.";
@@ -294,7 +271,7 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     const auto fileInterp = fileTransform.getInterpolation();
 
     bool fileInterpUsed = false;
-    auto lut3D = HandleLUT3D(cachedFile->lut3D, fileInterp, fileInterpUsed);
+    auto lut3D          = HandleLUT3D(cachedFile->lut3D, fileInterp, fileInterpUsed);
 
     if (!fileInterpUsed)
     {
@@ -303,7 +280,7 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 
     CreateLut3DOp(ops, lut3D, newDir);
 }
-}
+} // namespace
 
 FileFormat * CreateFileFormatPandora()
 {
@@ -311,4 +288,3 @@ FileFormat * CreateFileFormatPandora()
 }
 
 } // namespace OCIO_NAMESPACE
-

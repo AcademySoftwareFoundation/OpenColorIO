@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_GRADINGRGBCURVE_H
 #define INCLUDED_OCIO_GRADINGRGBCURVE_H
-
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -20,10 +18,11 @@ class GradingRGBCurveImpl : public GradingRGBCurve
 {
 public:
     GradingRGBCurveImpl(GradingStyle style);
-    GradingRGBCurveImpl(const ConstGradingBSplineCurveRcPtr & red,
-                        const ConstGradingBSplineCurveRcPtr & green,
-                        const ConstGradingBSplineCurveRcPtr & blue,
-                        const ConstGradingBSplineCurveRcPtr & master);
+    GradingRGBCurveImpl(
+        const ConstGradingBSplineCurveRcPtr & red,
+        const ConstGradingBSplineCurveRcPtr & green,
+        const ConstGradingBSplineCurveRcPtr & blue,
+        const ConstGradingBSplineCurveRcPtr & master);
     GradingRGBCurveImpl(const ConstGradingRGBCurveRcPtr & rhs);
 
     GradingRGBCurveRcPtr createEditableCopy() const override;
@@ -43,6 +42,6 @@ private:
 typedef OCIO_SHARED_PTR<const GradingRGBCurveImpl> ConstGradingRGBCurveImplRcPtr;
 typedef OCIO_SHARED_PTR<GradingRGBCurveImpl> GradingRGBCurveImplRcPtr;
 
-}
+} // namespace OCIO_NAMESPACE
 
-#endif //INCLUDED_OCIO_GRADINGRGBCURVE_H
+#endif // INCLUDED_OCIO_GRADINGRGBCURVE_H

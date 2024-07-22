@@ -9,15 +9,15 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "BitDepthUtils.h"
-#include "HashUtils.h"
 #include "GpuShaderUtils.h"
+#include "HashUtils.h"
 #include "MathUtils.h"
+#include "SSE.h"
+#include "ops/OpTools.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut1d/Lut1DOpCPU.h"
 #include "ops/lut1d/Lut1DOpGPU.h"
 #include "ops/matrix/MatrixOp.h"
-#include "ops/OpTools.h"
-#include "SSE.h"
 #include "transforms/Lut1DTransform.h"
 
 namespace OCIO_NAMESPACE
@@ -32,7 +32,7 @@ typedef OCIO_SHARED_PTR<const Lut1DOp> ConstLut1DOpRcPtr;
 class Lut1DOp : public Op
 {
 public:
-    Lut1DOp() = delete;
+    Lut1DOp()                = delete;
     Lut1DOp(const Lut1DOp &) = delete;
     explicit Lut1DOp(Lut1DOpDataRcPtr & lutData);
     virtual ~Lut1DOp();
@@ -117,13 +117,13 @@ void Lut1DOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
                         "before calling combineWith.");
     }
     ConstLut1DOpRcPtr typedRcPtr = DynamicPtrCast<const Lut1DOp>(secondOp);
-    auto secondLut = typedRcPtr->lut1DData();
+    auto secondLut               = typedRcPtr->lut1DData();
 
     // We want compose to upsample the LUTs to minimize precision loss.
-    const auto compFlag = Lut1DOpData::COMPOSE_RESAMPLE_BIG;
-    auto thisLut = lut1DData();
-    Lut1DOpDataRcPtr result =  Lut1DOpData::Compose(thisLut, secondLut, compFlag);
-    auto composedOp = std::make_shared<Lut1DOp>(result);
+    const auto compFlag     = Lut1DOpData::COMPOSE_RESAMPLE_BIG;
+    auto thisLut            = lut1DData();
+    Lut1DOpDataRcPtr result = Lut1DOpData::Compose(thisLut, secondLut, compFlag);
+    auto composedOp         = std::make_shared<Lut1DOp>(result);
     ops.push_back(composedOp);
 }
 
@@ -173,11 +173,9 @@ void Lut1DOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
 
     GetLut1DGPUShaderProgram(shaderCreator, lutData);
 }
-}
+} // namespace
 
-void CreateLut1DOp(OpRcPtrVec & ops,
-                    Lut1DOpDataRcPtr & lut,
-                    TransformDirection direction)
+void CreateLut1DOp(OpRcPtrVec & ops, Lut1DOpDataRcPtr & lut, TransformDirection direction)
 {
     // TODO: Detect if 1D LUT can be exactly approximated as y = mx + b
     // If so, return a mtx instead.
@@ -191,35 +189,36 @@ void CreateLut1DOp(OpRcPtrVec & ops,
     ops.push_back(std::make_shared<Lut1DOp>(lutData));
 }
 
-void GenerateIdentityLut1D(float* img, int numElements, int numChannels)
+void GenerateIdentityLut1D(float * img, int numElements, int numChannels)
 {
-    if(!img) return;
+    if (!img)
+        return;
     int numChannelsToFill = std::min(3, numChannels);
 
-    float scale = 1.0f / ((float) numElements - 1.0f);
-    for(int i=0; i<numElements; i++)
+    float scale = 1.0f / ((float)numElements - 1.0f);
+    for (int i = 0; i < numElements; i++)
     {
-        for(int c=0; c<numChannelsToFill; ++c)
+        for (int c = 0; c < numChannelsToFill; ++c)
         {
-            img[numChannels*i+c] = scale * (float)(i);
+            img[numChannels * i + c] = scale * (float)(i);
         }
     }
 }
 
-void GenerateLinearScaleLut1D(float* img, int numElements, int numChannels,
-                              float start, float end)
+void GenerateLinearScaleLut1D(float * img, int numElements, int numChannels, float start, float end)
 {
-    if(!img) return;
+    if (!img)
+        return;
     int numChannelsToFill = std::min(3, numChannels);
 
     for (int i = 0; i < numElements; ++i)
     {
-        const float x = (float)(double(i) / double(numElements - 1));
+        const float x   = (float)(double(i) / double(numElements - 1));
         const float val = lerpf(start, end, x);
 
-        for(int c=0; c<numChannelsToFill; ++c)
+        for (int c = 0; c < numChannelsToFill; ++c)
         {
-            img[numChannels*i+c] = val;
+            img[numChannels * i + c] = val;
         }
     }
 }
@@ -233,17 +232,15 @@ void CreateLut1DTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     {
         throw Exception("CreateLut1DTransform: op has to be a Lut1DOp");
     }
-    auto lutData = DynamicPtrCast<const Lut1DOpData>(op->data());
+    auto lutData      = DynamicPtrCast<const Lut1DOpData>(op->data());
     auto lutTransform = Lut1DTransform::Create();
-    auto & data = dynamic_cast<Lut1DTransformImpl *>(lutTransform.get())->data();
+    auto & data       = dynamic_cast<Lut1DTransformImpl *>(lutTransform.get())->data();
 
     data = *lutData;
     group->appendTransform(lutTransform);
 }
 
-void BuildLut1DOp(OpRcPtrVec & ops,
-                  const Lut1DTransform & transform,
-                  TransformDirection dir)
+void BuildLut1DOp(OpRcPtrVec & ops, const Lut1DTransform & transform, TransformDirection dir)
 {
     const auto & data = dynamic_cast<const Lut1DTransformImpl &>(transform).data();
     data.validate();

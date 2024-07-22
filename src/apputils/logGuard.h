@@ -13,7 +13,7 @@ class LogGuard
 {
 public:
     LogGuard();
-    LogGuard(const LogGuard &) = delete;
+    LogGuard(const LogGuard &)             = delete;
     LogGuard & operator=(const LogGuard &) = delete;
     ~LogGuard();
 

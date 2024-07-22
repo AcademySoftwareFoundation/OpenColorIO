@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <sstream>
-#include <string>
 #include <string.h>
+#include <string>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Mutex.h"
 #include "SystemMonitor.h"
-
 
 #ifdef OCIO_HEADLESS_ENABLED
 
@@ -21,7 +19,6 @@ void SystemMonitorsImpl::getAllMonitors()
 {
     // A headless machine does not have any monitors.
 }
-
 
 } // namespace OCIO_NAMESPACE
 
@@ -48,7 +45,6 @@ void SystemMonitorsImpl::getAllMonitors()
 
 #endif
 
-
 namespace OCIO_NAMESPACE
 {
 
@@ -58,7 +54,7 @@ ConstSystemMonitorsRcPtr SystemMonitors::Get() noexcept
     static Mutex mutex;
 
     AutoMutex guard(mutex);
-    
+
     if (!monitors)
     {
         SystemMonitorsRcPtr m = std::make_shared<SystemMonitorsImpl>();
@@ -84,8 +80,8 @@ const char * SystemMonitorsImpl::getMonitorName(size_t index) const
     if (index >= m_monitors.size())
     {
         std::ostringstream oss;
-        oss << "Invalid index for the monitor name " << index
-            << " where the number of monitors is " << m_monitors.size() << ".";
+        oss << "Invalid index for the monitor name " << index << " where the number of monitors is "
+            << m_monitors.size() << ".";
         throw Exception(oss.str().c_str());
     }
 
@@ -97,8 +93,8 @@ const char * SystemMonitorsImpl::getProfileFilepath(size_t index) const
     if (index >= m_monitors.size())
     {
         std::ostringstream oss;
-        oss << "Invalid index for the monitor name " << index
-            << " where the number of monitors is " << m_monitors.size() << ".";
+        oss << "Invalid index for the monitor name " << index << " where the number of monitors is "
+            << m_monitors.size() << ".";
         throw Exception(oss.str().c_str());
     }
 

@@ -8,17 +8,16 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "BakingUtils.h"
+#include "Logging.h"
+#include "MathUtils.h"
+#include "ParseUtils.h"
 #include "fileformats/FileFormatUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ops/matrix/MatrixOp.h"
-#include "BakingUtils.h"
-#include "ParseUtils.h"
-#include "MathUtils.h"
-#include "Logging.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
-
 
 /*
 
@@ -37,7 +36,7 @@ While described as a 3D LUT format the .cube file could contain ...
 Irrespective of what data a .cube file contains (1D, 3D or both), it is always
 displayed by Resolve in the 3D LUT section.
 
-Lines beginning with # are considered comments. All comment lines need to be 
+Lines beginning with # are considered comments. All comment lines need to be
 placed before the header lines.
 
 3D LUT data (only)
@@ -171,7 +170,6 @@ LUT_3D_INPUT_RANGE 0.0 1.0
 
 */
 
-
 namespace OCIO_NAMESPACE
 {
 namespace
@@ -179,7 +177,7 @@ namespace
 class LocalCachedFile : public CachedFile
 {
 public:
-    LocalCachedFile() = default;
+    LocalCachedFile()  = default;
     ~LocalCachedFile() = default;
 
     Lut1DOpDataRcPtr lut1D;
@@ -193,39 +191,38 @@ public:
 
 typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
 
-
-
 class LocalFileFormat : public FileFormat
 {
 public:
-
-    LocalFileFormat() = default;
+    LocalFileFormat()  = default;
     ~LocalFileFormat() = default;
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-    CachedFileRcPtr read(std::istream & istream,
-                         const std::string & fileName,
-                         Interpolation interp) const override;
+    CachedFileRcPtr read(std::istream & istream, const std::string & fileName, Interpolation interp)
+        const override;
 
-    void bake(const Baker & baker,
-                const std::string & formatName,
-                std::ostream & ostream) const override;
+    void bake(const Baker & baker, const std::string & formatName, std::ostream & ostream)
+        const override;
 
-    void buildFileOps(OpRcPtrVec & ops,
-                        const Config & config,
-                        const ConstContextRcPtr & context,
-                        CachedFileRcPtr untypedCachedFile,
-                        const FileTransform & fileTransform,
-                        TransformDirection dir) const override;
+    void buildFileOps(
+        OpRcPtrVec & ops,
+        const Config & config,
+        const ConstContextRcPtr & context,
+        CachedFileRcPtr untypedCachedFile,
+        const FileTransform & fileTransform,
+        TransformDirection dir) const override;
+
 private:
-    static void ThrowErrorMessage(const std::string & error,
+    static void ThrowErrorMessage(
+        const std::string & error,
         const std::string & fileName,
         int line,
         const std::string & lineContent);
 };
 
-void LocalFileFormat::ThrowErrorMessage(const std::string & error,
+void LocalFileFormat::ThrowErrorMessage(
+    const std::string & error,
     const std::string & fileName,
     int line,
     const std::string & lineContent)
@@ -247,24 +244,25 @@ void LocalFileFormat::ThrowErrorMessage(const std::string & error,
 void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 {
     FormatInfo info;
-    info.name = "resolve_cube";
-    info.extension = "cube";
-    info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
-    info.bake_capabilities = FormatBakeFlags(FORMAT_BAKE_CAPABILITY_3DLUT |
-                                             FORMAT_BAKE_CAPABILITY_1DLUT |
-                                             FORMAT_BAKE_CAPABILITY_1D_3D_LUT);
+    info.name              = "resolve_cube";
+    info.extension         = "cube";
+    info.capabilities      = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
+    info.bake_capabilities = FormatBakeFlags(
+        FORMAT_BAKE_CAPABILITY_3DLUT | FORMAT_BAKE_CAPABILITY_1DLUT
+        | FORMAT_BAKE_CAPABILITY_1D_3D_LUT);
     formatInfoVec.push_back(info);
 }
 
-CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
-                                      const std::string & fileName,
-                                      Interpolation interp) const
+CachedFileRcPtr LocalFileFormat::read(
+    std::istream & istream,
+    const std::string & fileName,
+    Interpolation interp) const
 {
 
     // this shouldn't happen
-    if(!istream)
+    if (!istream)
     {
-        throw Exception ("File stream empty when trying to read Resolve .cube lut");
+        throw Exception("File stream empty when trying to read Resolve .cube lut");
     }
 
     // Parse the file
@@ -287,18 +285,18 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
         std::string line;
         StringUtils::StringVec parts;
         std::vector<float> tmpfloats;
-        int lineNumber = 0;
+        int lineNumber      = 0;
         bool headerComplete = false;
-        int tripletNumber = 0;
+        int tripletNumber   = 0;
 
-        while(nextline(istream, line))
+        while (nextline(istream, line))
         {
             ++lineNumber;
 
             // All lines starting with '#' are comments
-            if(StringUtils::StartsWith(line,"#"))
+            if (StringUtils::StartsWith(line, "#"))
             {
-                if(headerComplete)
+                if (headerComplete)
                 {
                     ThrowErrorMessage(
                         "Comments not allowed after header.",
@@ -314,59 +312,41 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 
             // Strip, lowercase, and split the line
             parts = StringUtils::SplitByWhiteSpaces(StringUtils::Lower(StringUtils::Trim(line)));
-            if(parts.empty()) continue;
+            if (parts.empty())
+                continue;
 
-            if(StringUtils::Lower(parts[0]) == "title")
+            if (StringUtils::Lower(parts[0]) == "title")
             {
-                ThrowErrorMessage(
-                    "Unsupported tag: 'TITLE'.",
-                    fileName,
-                    lineNumber,
-                    line);
+                ThrowErrorMessage("Unsupported tag: 'TITLE'.", fileName, lineNumber, line);
             }
-            else if(StringUtils::Lower(parts[0]) == "lut_1d_size")
+            else if (StringUtils::Lower(parts[0]) == "lut_1d_size")
             {
-                if(parts.size() != 2
-                    || !StringToInt( &size1d, parts[1].c_str()))
+                if (parts.size() != 2 || !StringToInt(&size1d, parts[1].c_str()))
                 {
-                    ThrowErrorMessage(
-                        "Malformed LUT_1D_SIZE tag.",
-                        fileName,
-                        lineNumber,
-                        line);
+                    ThrowErrorMessage("Malformed LUT_1D_SIZE tag.", fileName, lineNumber, line);
                 }
 
-                raw1d.reserve(3*size1d);
+                raw1d.reserve(3 * size1d);
                 has1d = true;
             }
-            else if(StringUtils::Lower(parts[0]) == "lut_2d_size")
+            else if (StringUtils::Lower(parts[0]) == "lut_2d_size")
             {
-                ThrowErrorMessage(
-                    "Unsupported tag: 'LUT_2D_SIZE'.",
-                    fileName,
-                    lineNumber,
-                    line);
+                ThrowErrorMessage("Unsupported tag: 'LUT_2D_SIZE'.", fileName, lineNumber, line);
             }
-            else if(StringUtils::Lower(parts[0]) == "lut_3d_size")
+            else if (StringUtils::Lower(parts[0]) == "lut_3d_size")
             {
-                if(parts.size() != 2
-                    || !StringToInt( &size3d, parts[1].c_str()))
+                if (parts.size() != 2 || !StringToInt(&size3d, parts[1].c_str()))
                 {
-                    ThrowErrorMessage(
-                        "Malformed LUT_3D_SIZE tag.",
-                        fileName,
-                        lineNumber,
-                        line);
+                    ThrowErrorMessage("Malformed LUT_3D_SIZE tag.", fileName, lineNumber, line);
                 }
 
-                raw3d.reserve(3*size3d*size3d*size3d);
+                raw3d.reserve(3 * size3d * size3d * size3d);
                 has3d = true;
             }
-            else if(StringUtils::Lower(parts[0]) == "lut_1d_input_range")
+            else if (StringUtils::Lower(parts[0]) == "lut_1d_input_range")
             {
-                if(parts.size() != 3 || 
-                    !StringToFloat( &range1d_min, parts[1].c_str()) ||
-                    !StringToFloat( &range1d_max, parts[2].c_str()))
+                if (parts.size() != 3 || !StringToFloat(&range1d_min, parts[1].c_str())
+                    || !StringToFloat(&range1d_max, parts[2].c_str()))
                 {
                     ThrowErrorMessage(
                         "Malformed LUT_1D_INPUT_RANGE tag.",
@@ -375,11 +355,10 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                         line);
                 }
             }
-            else if(StringUtils::Lower(parts[0]) == "lut_3d_input_range")
+            else if (StringUtils::Lower(parts[0]) == "lut_3d_input_range")
             {
-                if(parts.size() != 3 || 
-                    !StringToFloat( &range3d_min, parts[1].c_str()) ||
-                    !StringToFloat( &range3d_max, parts[2].c_str()))
+                if (parts.size() != 3 || !StringToFloat(&range3d_min, parts[1].c_str())
+                    || !StringToFloat(&range3d_max, parts[2].c_str()))
                 {
                     ThrowErrorMessage(
                         "Malformed LUT_3D_INPUT_RANGE tag.",
@@ -393,7 +372,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                 headerComplete = true;
 
                 // It must be a float triple!
-                if(!StringVecToFloatVec(tmpfloats, parts) || tmpfloats.size() != 3)
+                if (!StringVecToFloatVec(tmpfloats, parts) || tmpfloats.size() != 3)
                 {
                     ThrowErrorMessage(
                         "Malformed color triples specified.",
@@ -402,9 +381,9 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                         line);
                 }
 
-                for(int i=0; i<3; ++i)
+                for (int i = 0; i < 3; ++i)
                 {
-                    if(has1d && tripletNumber < size1d)
+                    if (has1d && tripletNumber < size1d)
                     {
                         raw1d.push_back(tmpfloats[i]);
                     }
@@ -423,21 +402,19 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 
     LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
 
-    if(has1d)
+    if (has1d)
     {
-        if(size1d != static_cast<int>(raw1d.size()/3))
+        if (size1d != static_cast<int>(raw1d.size() / 3))
         {
             std::ostringstream os;
             os << "Incorrect number of lut1d entries. ";
             os << "Found " << raw1d.size() / 3;
             os << ", expected " << size1d << ".";
-            ThrowErrorMessage(
-                os.str().c_str(),
-                fileName, -1, "");
+            ThrowErrorMessage(os.str().c_str(), fileName, -1, "");
         }
 
         // Reformat 1D data
-        if(size1d>0)
+        if (size1d > 0)
         {
             cachedFile->lut1D = std::make_shared<Lut1DOpData>(size1d);
             if (Lut1DOpData::IsValidInterpolation(interp))
@@ -458,18 +435,15 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
             }
         }
     }
-    if(has3d)
+    if (has3d)
     {
-        if(size3d*size3d*size3d 
-            != static_cast<int>(raw3d.size()/3))
+        if (size3d * size3d * size3d != static_cast<int>(raw3d.size() / 3))
         {
             std::ostringstream os;
             os << "Incorrect number of lut3d entries. ";
             os << "Found " << raw3d.size() / 3 << ", expected ";
             os << size3d * size3d * size3d << ".";
-            ThrowErrorMessage(
-                os.str().c_str(),
-                fileName, -1, "");
+            ThrowErrorMessage(os.str().c_str(), fileName, -1, "");
         }
 
         // Reformat 3D data
@@ -484,26 +458,25 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
         cachedFile->lut3D->setFileOutputBitDepth(BIT_DEPTH_F32);
         cachedFile->lut3D->setArrayFromRedFastestOrder(raw3d);
     }
-    if(!has1d && !has3d)
+    if (!has1d && !has3d)
     {
-        ThrowErrorMessage(
-            "Lut type (1D/3D) unspecified.",
-            fileName, -1, "");
+        ThrowErrorMessage("Lut type (1D/3D) unspecified.", fileName, -1, "");
     }
 
     return cachedFile;
 }
 
-void LocalFileFormat::bake(const Baker & baker,
-                           const std::string & formatName,
-                           std::ostream & ostream) const
+void LocalFileFormat::bake(
+    const Baker & baker,
+    const std::string & formatName,
+    std::ostream & ostream) const
 {
 
-    const int DEFAULT_1D_SIZE = 4096;
+    const int DEFAULT_1D_SIZE     = 4096;
     const int DEFAULT_SHAPER_SIZE = 4096;
-    const int DEFAULT_3D_SIZE = 64;
+    const int DEFAULT_3D_SIZE     = 64;
 
-    if(formatName != "resolve_cube")
+    if (formatName != "resolve_cube")
     {
         std::ostringstream os;
         os << "Unknown cube format name, '";
@@ -516,14 +489,17 @@ void LocalFileFormat::bake(const Baker & baker,
     //
 
     int onedSize = baker.getCubeSize();
-    if(onedSize==-1) onedSize = DEFAULT_1D_SIZE;
+    if (onedSize == -1)
+        onedSize = DEFAULT_1D_SIZE;
 
     int cubeSize = baker.getCubeSize();
-    if(cubeSize==-1) cubeSize = DEFAULT_3D_SIZE;
+    if (cubeSize == -1)
+        cubeSize = DEFAULT_3D_SIZE;
     cubeSize = std::max(2, cubeSize); // smallest cube is 2x2x2
 
     int shaperSize = baker.getShaperSize();
-    if(shaperSize==-1) shaperSize = DEFAULT_SHAPER_SIZE;
+    if (shaperSize == -1)
+        shaperSize = DEFAULT_SHAPER_SIZE;
 
     // Get spaces from baker
     const std::string shaperSpace = baker.getShaperSpace();
@@ -532,17 +508,17 @@ void LocalFileFormat::bake(const Baker & baker,
     // Determine required LUT type
     //
 
-    const int CUBE_1D = 1; // 1D LUT version number
-    const int CUBE_3D = 2; // 3D LUT version number
+    const int CUBE_1D    = 1; // 1D LUT version number
+    const int CUBE_3D    = 2; // 3D LUT version number
     const int CUBE_1D_3D = 3; // 3D LUT with 1D prelut
 
     int required_lut = -1;
 
     ConstCPUProcessorRcPtr inputToTarget = GetInputToTargetProcessor(baker);
 
-    if(inputToTarget->hasChannelCrosstalk())
+    if (inputToTarget->hasChannelCrosstalk())
     {
-        if(shaperSpace.empty())
+        if (shaperSpace.empty())
         {
             // Has crosstalk, but no shaper, so need 3D LUT
             required_lut = CUBE_3D;
@@ -558,11 +534,10 @@ void LocalFileFormat::bake(const Baker & baker,
         required_lut = CUBE_1D;
     }
 
-    if(required_lut == -1)
+    if (required_lut == -1)
     {
         // Unnecessary paranoia
-        throw Exception(
-            "Internal logic error, LUT type was not determined");
+        throw Exception("Internal logic error, LUT type was not determined");
     }
 
     //
@@ -572,17 +547,16 @@ void LocalFileFormat::bake(const Baker & baker,
     std::vector<float> shaperData;
 
     float fromInStart = 0.0f;
-    float fromInEnd = 1.0f;
+    float fromInEnd   = 1.0f;
 
-    if(required_lut == CUBE_1D_3D)
+    if (required_lut == CUBE_1D_3D)
     {
         GetShaperRange(baker, fromInStart, fromInEnd);
 
         // Generate the identity shaper values, then apply the transform.
         // Shaper is linearly sampled from fromInStart to fromInEnd
-        shaperData.resize(shaperSize*3);
-        GenerateLinearScaleLut1D(
-            shaperData.data(), shaperSize, 3, fromInStart, fromInEnd);
+        shaperData.resize(shaperSize * 3);
+        GenerateLinearScaleLut1D(shaperData.data(), shaperSize, 3, fromInStart, fromInEnd);
 
         PackedImageDesc shaperImg(&shaperData[0], shaperSize, 1, 3);
         ConstCPUProcessorRcPtr inputToShaper = GetInputToShaperProcessor(baker);
@@ -594,14 +568,14 @@ void LocalFileFormat::bake(const Baker & baker,
     //
 
     std::vector<float> cubeData;
-    if(required_lut == CUBE_3D || required_lut == CUBE_1D_3D)
+    if (required_lut == CUBE_3D || required_lut == CUBE_1D_3D)
     {
-        cubeData.resize(cubeSize*cubeSize*cubeSize*3);
+        cubeData.resize(cubeSize * cubeSize * cubeSize * 3);
         GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_RED);
-        PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
+        PackedImageDesc cubeImg(&cubeData[0], cubeSize * cubeSize * cubeSize, 1, 3);
 
         ConstCPUProcessorRcPtr cubeProc;
-        if(required_lut == CUBE_1D_3D)
+        if (required_lut == CUBE_1D_3D)
         {
             cubeProc = GetShaperToTargetProcessor(baker);
         }
@@ -620,7 +594,7 @@ void LocalFileFormat::bake(const Baker & baker,
 
     std::vector<float> onedData;
 
-    if(required_lut == CUBE_1D)
+    if (required_lut == CUBE_1D)
     {
         onedData.resize(onedSize * 3);
 
@@ -648,7 +622,7 @@ void LocalFileFormat::bake(const Baker & baker,
 
     // Comments
     const auto & metadata = baker.getFormatMetadata();
-    const auto nb = metadata.getNumChildrenElements();
+    const auto nb         = metadata.getNumChildrenElements();
     for (int i = 0; i < nb; ++i)
     {
         const auto & child = metadata.getChildElement(i);
@@ -664,7 +638,7 @@ void LocalFileFormat::bake(const Baker & baker,
     // These tags are optional and will default to the 0..1 range,
     // not writing them explicitly allows for wider compatibility
     // with parser based on other cube specification (eg. Iridas_Itx)
-    if(required_lut == CUBE_1D)
+    if (required_lut == CUBE_1D)
     {
         ostream << "LUT_1D_SIZE " << onedSize << "\n";
         if (fromInStart != 0.0f || fromInEnd != 1.0f)
@@ -672,61 +646,58 @@ void LocalFileFormat::bake(const Baker & baker,
             ostream << "LUT_1D_INPUT_RANGE " << fromInStart << " " << fromInEnd << "\n";
         }
     }
-    else if(required_lut == CUBE_1D_3D)
+    else if (required_lut == CUBE_1D_3D)
     {
         ostream << "LUT_1D_SIZE " << shaperSize << "\n";
         ostream << "LUT_1D_INPUT_RANGE " << fromInStart << " " << fromInEnd << "\n";
     }
-    if(required_lut == CUBE_3D || required_lut == CUBE_1D_3D)
+    if (required_lut == CUBE_3D || required_lut == CUBE_1D_3D)
     {
         ostream << "LUT_3D_SIZE " << cubeSize << "\n";
-        //ostream << "LUT_3D_INPUT_RANGE 0.0 1.0\n";
+        // ostream << "LUT_3D_INPUT_RANGE 0.0 1.0\n";
     }
 
     // Write 1D data
-    if(required_lut == CUBE_1D)
+    if (required_lut == CUBE_1D)
     {
-        for(int i=0; i<onedSize; ++i)
+        for (int i = 0; i < onedSize; ++i)
         {
-            ostream << onedData[3*i+0] << " "
-                    << onedData[3*i+1] << " "
-                    << onedData[3*i+2] << "\n";
+            ostream << onedData[3 * i + 0] << " " << onedData[3 * i + 1] << " "
+                    << onedData[3 * i + 2] << "\n";
         }
     }
-    else if(required_lut == CUBE_1D_3D)
+    else if (required_lut == CUBE_1D_3D)
     {
-        for(int i=0; i<shaperSize; ++i)
+        for (int i = 0; i < shaperSize; ++i)
         {
-            ostream << shaperData[3*i+0] << " "
-                    << shaperData[3*i+1] << " "
-                    << shaperData[3*i+2] << "\n";
+            ostream << shaperData[3 * i + 0] << " " << shaperData[3 * i + 1] << " "
+                    << shaperData[3 * i + 2] << "\n";
         }
     }
 
     // Write 3D data
-    if(required_lut == CUBE_3D || required_lut == CUBE_1D_3D)
+    if (required_lut == CUBE_3D || required_lut == CUBE_1D_3D)
     {
-        for(int i=0; i<cubeSize*cubeSize*cubeSize; ++i)
+        for (int i = 0; i < cubeSize * cubeSize * cubeSize; ++i)
         {
-            ostream << cubeData[3*i+0] << " "
-                    << cubeData[3*i+1] << " "
-                    << cubeData[3*i+2] << "\n";
+            ostream << cubeData[3 * i + 0] << " " << cubeData[3 * i + 1] << " "
+                    << cubeData[3 * i + 2] << "\n";
         }
     }
 }
 
-void
-LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
-                                const Config & /*config*/,
-                                const ConstContextRcPtr & /*context*/,
-                                CachedFileRcPtr untypedCachedFile,
-                                const FileTransform & fileTransform,
-                                TransformDirection dir) const
+void LocalFileFormat::buildFileOps(
+    OpRcPtrVec & ops,
+    const Config & /*config*/,
+    const ConstContextRcPtr & /*context*/,
+    CachedFileRcPtr untypedCachedFile,
+    const FileTransform & fileTransform,
+    TransformDirection dir) const
 {
     LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
 
     // This should never happen.
-    if(!cachedFile || (!cachedFile->lut1D && !cachedFile->lut3D))
+    if (!cachedFile || (!cachedFile->lut1D && !cachedFile->lut3D))
     {
         std::ostringstream os;
         os << "Cannot build Resolve .cube Op. Invalid cache type.";
@@ -738,8 +709,8 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     const auto fileInterp = fileTransform.getInterpolation();
 
     bool fileInterpUsed = false;
-    auto lut1D = HandleLUT1D(cachedFile->lut1D, fileInterp, fileInterpUsed);
-    auto lut3D = HandleLUT3D(cachedFile->lut3D, fileInterp, fileInterpUsed);
+    auto lut1D          = HandleLUT1D(cachedFile->lut1D, fileInterp, fileInterpUsed);
+    auto lut3D          = HandleLUT3D(cachedFile->lut3D, fileInterp, fileInterpUsed);
 
     if (!fileInterpUsed)
     {
@@ -748,37 +719,37 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 
     switch (newDir)
     {
-    case TRANSFORM_DIR_FORWARD:
-    {
-        if (lut1D)
+        case TRANSFORM_DIR_FORWARD:
         {
-            CreateMinMaxOp(ops, cachedFile->range1d_min, cachedFile->range1d_max, newDir);
-            CreateLut1DOp(ops, lut1D, newDir);
+            if (lut1D)
+            {
+                CreateMinMaxOp(ops, cachedFile->range1d_min, cachedFile->range1d_max, newDir);
+                CreateLut1DOp(ops, lut1D, newDir);
+            }
+            if (lut3D)
+            {
+                CreateMinMaxOp(ops, cachedFile->range3d_min, cachedFile->range3d_max, newDir);
+                CreateLut3DOp(ops, lut3D, newDir);
+            }
+            break;
         }
-        if (lut3D)
+        case TRANSFORM_DIR_INVERSE:
         {
-            CreateMinMaxOp(ops, cachedFile->range3d_min, cachedFile->range3d_max, newDir);
-            CreateLut3DOp(ops, lut3D, newDir);
+            if (lut3D)
+            {
+                CreateLut3DOp(ops, lut3D, newDir);
+                CreateMinMaxOp(ops, cachedFile->range3d_min, cachedFile->range3d_max, newDir);
+            }
+            if (lut1D)
+            {
+                CreateLut1DOp(ops, lut1D, newDir);
+                CreateMinMaxOp(ops, cachedFile->range1d_min, cachedFile->range1d_max, newDir);
+            }
+            break;
         }
-        break;
-    }
-    case TRANSFORM_DIR_INVERSE:
-    {
-        if (lut3D)
-        {
-            CreateLut3DOp(ops, lut3D, newDir);
-            CreateMinMaxOp(ops, cachedFile->range3d_min, cachedFile->range3d_max, newDir);
-        }
-        if (lut1D)
-        {
-            CreateLut1DOp(ops, lut1D, newDir);
-            CreateMinMaxOp(ops, cachedFile->range1d_min, cachedFile->range1d_max, newDir);
-        }
-        break;
-    }
     }
 }
-}
+} // namespace
 
 FileFormat * CreateFileFormatResolveCube()
 {

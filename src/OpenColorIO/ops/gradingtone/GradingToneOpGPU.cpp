@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Logging.h"
 #include "ops/gradingtone/GradingToneOpGPU.h"
 #include "utils/StringUtils.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -16,49 +14,50 @@ namespace
 
 struct GTProperties
 {
-    std::string blacksR{ "blacksR" };
-    std::string blacksG{ "blacksG" };
-    std::string blacksB{ "blacksB" };
-    std::string blacksM{ "blacksM" };
-    std::string blacksS{ "blacksStart" };
-    std::string blacksW{ "blacksWidth" };
+    std::string blacksR{"blacksR"};
+    std::string blacksG{"blacksG"};
+    std::string blacksB{"blacksB"};
+    std::string blacksM{"blacksM"};
+    std::string blacksS{"blacksStart"};
+    std::string blacksW{"blacksWidth"};
 
-    std::string shadowsR{ "shadowsR" };
-    std::string shadowsG{ "shadowsG" };
-    std::string shadowsB{ "shadowsB" };
-    std::string shadowsM{ "shadowsM" };
-    std::string shadowsS{ "shadowsStart" };
-    std::string shadowsW{ "shadowsWidth" };
+    std::string shadowsR{"shadowsR"};
+    std::string shadowsG{"shadowsG"};
+    std::string shadowsB{"shadowsB"};
+    std::string shadowsM{"shadowsM"};
+    std::string shadowsS{"shadowsStart"};
+    std::string shadowsW{"shadowsWidth"};
 
-    std::string midtonesR{ "midtonesR" };
-    std::string midtonesG{ "midtonesG" };
-    std::string midtonesB{ "midtonesB" };
-    std::string midtonesM{ "midtonesM" };
-    std::string midtonesS{ "midtonesStart" };
-    std::string midtonesW{ "midtonesWidth" };
+    std::string midtonesR{"midtonesR"};
+    std::string midtonesG{"midtonesG"};
+    std::string midtonesB{"midtonesB"};
+    std::string midtonesM{"midtonesM"};
+    std::string midtonesS{"midtonesStart"};
+    std::string midtonesW{"midtonesWidth"};
 
-    std::string highlightsR{ "highlightsR" };
-    std::string highlightsG{ "highlightsG" };
-    std::string highlightsB{ "highlightsB" };
-    std::string highlightsM{ "highlightsM" };
-    std::string highlightsS{ "highlightsStart" };
-    std::string highlightsW{ "highlightsWidth" };
+    std::string highlightsR{"highlightsR"};
+    std::string highlightsG{"highlightsG"};
+    std::string highlightsB{"highlightsB"};
+    std::string highlightsM{"highlightsM"};
+    std::string highlightsS{"highlightsStart"};
+    std::string highlightsW{"highlightsWidth"};
 
-    std::string whitesR{ "whitesR" };
-    std::string whitesG{ "whitesG" };
-    std::string whitesB{ "whitesB" };
-    std::string whitesM{ "whitesM" };
-    std::string whitesS{ "whitesStart" };
-    std::string whitesW{ "whitesWidth" };
+    std::string whitesR{"whitesR"};
+    std::string whitesG{"whitesG"};
+    std::string whitesB{"whitesB"};
+    std::string whitesM{"whitesM"};
+    std::string whitesS{"whitesStart"};
+    std::string whitesW{"whitesWidth"};
 
-    std::string sContrast{ "sContrast" };
+    std::string sContrast{"sContrast"};
 
-    std::string localBypass{ "localBypass" };
+    std::string localBypass{"localBypass"};
 };
 
-void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
-                const GpuShaderCreator::DoubleGetter & getter,
-                const std::string & name)
+void AddUniform(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    const GpuShaderCreator::DoubleGetter & getter,
+    const std::string & name)
 {
     // Add the uniform if it does not already exist.
     if (shaderCreator->addUniform(name.c_str(), getter))
@@ -70,9 +69,10 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
     }
 }
 
-void AddBoolUniform(GpuShaderCreatorRcPtr & shaderCreator,
-                    const GpuShaderCreator::BoolGetter & getBool,
-                    const std::string & name)
+void AddBoolUniform(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    const GpuShaderCreator::BoolGetter & getBool,
+    const std::string & name)
 {
     // Add the uniform if it does not already exist.
     if (shaderCreator->addUniform(name.c_str(), getBool))
@@ -84,13 +84,14 @@ void AddBoolUniform(GpuShaderCreatorRcPtr & shaderCreator,
     }
 }
 
-const std::string opPrefix{ "grading_tone" };
+const std::string opPrefix{"grading_tone"};
 
-void AddGTProperties(GpuShaderCreatorRcPtr & shaderCreator,
-                     GpuShaderText & st,
-                     ConstGradingToneOpDataRcPtr & gtData,
-                     GTProperties & propNames,
-                     bool dyn)
+void AddGTProperties(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    ConstGradingToneOpDataRcPtr & gtData,
+    GTProperties & propNames,
+    bool dyn)
 {
     auto prop = gtData->getDynamicPropertyInternal();
     if (dyn)
@@ -139,18 +140,18 @@ void AddGTProperties(GpuShaderCreatorRcPtr & shaderCreator,
 
         // Property is decoupled and added to shader creator.
         DynamicPropertyGradingToneImplRcPtr shaderProp = prop->createEditableCopy();
-        DynamicPropertyRcPtr newProp = shaderProp;
+        DynamicPropertyRcPtr newProp                   = shaderProp;
         shaderCreator->addDynamicProperty(newProp);
 
         // Use the shader dynamic property to bind the uniforms.
-        const auto & value = shaderProp->getValue();
-        using CompVal = GradingTonePreRender;
+        const auto & value   = shaderProp->getValue();
+        using CompVal        = GradingTonePreRender;
         const auto & compVal = shaderProp->getComputedValue();
 
         // Add uniforms if they are not already there.
-        auto getBDR = std::bind(&GradingRGBMSW::m_red,    &value.m_blacks);
-        auto getBDG = std::bind(&GradingRGBMSW::m_green,  &value.m_blacks);
-        auto getBDB = std::bind(&GradingRGBMSW::m_blue,   &value.m_blacks);
+        auto getBDR = std::bind(&GradingRGBMSW::m_red, &value.m_blacks);
+        auto getBDG = std::bind(&GradingRGBMSW::m_green, &value.m_blacks);
+        auto getBDB = std::bind(&GradingRGBMSW::m_blue, &value.m_blacks);
         auto getBDM = std::bind(&GradingRGBMSW::m_master, &value.m_blacks);
         auto getBDS = std::bind(&CompVal::m_blacksStart, &compVal);
         auto getBDW = std::bind(&CompVal::m_blacksWidth, &compVal);
@@ -161,9 +162,9 @@ void AddGTProperties(GpuShaderCreatorRcPtr & shaderCreator,
         AddUniform(shaderCreator, getBDS, propNames.blacksS);
         AddUniform(shaderCreator, getBDW, propNames.blacksW);
 
-        auto getSR = std::bind(&GradingRGBMSW::m_red,    &value.m_shadows);
-        auto getSG = std::bind(&GradingRGBMSW::m_green,  &value.m_shadows);
-        auto getSB = std::bind(&GradingRGBMSW::m_blue,   &value.m_shadows);
+        auto getSR = std::bind(&GradingRGBMSW::m_red, &value.m_shadows);
+        auto getSG = std::bind(&GradingRGBMSW::m_green, &value.m_shadows);
+        auto getSB = std::bind(&GradingRGBMSW::m_blue, &value.m_shadows);
         auto getSM = std::bind(&GradingRGBMSW::m_master, &value.m_shadows);
         auto getSS = std::bind(&CompVal::m_shadowsStart, &compVal);
         auto getSW = std::bind(&CompVal::m_shadowsWidth, &compVal);
@@ -174,12 +175,12 @@ void AddGTProperties(GpuShaderCreatorRcPtr & shaderCreator,
         AddUniform(shaderCreator, getSS, propNames.shadowsS);
         AddUniform(shaderCreator, getSW, propNames.shadowsW);
 
-        auto getMR = std::bind(&GradingRGBMSW::m_red,    &value.m_midtones);
-        auto getMG = std::bind(&GradingRGBMSW::m_green,  &value.m_midtones);
-        auto getMB = std::bind(&GradingRGBMSW::m_blue,   &value.m_midtones);
+        auto getMR = std::bind(&GradingRGBMSW::m_red, &value.m_midtones);
+        auto getMG = std::bind(&GradingRGBMSW::m_green, &value.m_midtones);
+        auto getMB = std::bind(&GradingRGBMSW::m_blue, &value.m_midtones);
         auto getMM = std::bind(&GradingRGBMSW::m_master, &value.m_midtones);
-        auto getMS = std::bind(&GradingRGBMSW::m_start,  &value.m_midtones);
-        auto getMW = std::bind(&GradingRGBMSW::m_width,  &value.m_midtones);
+        auto getMS = std::bind(&GradingRGBMSW::m_start, &value.m_midtones);
+        auto getMW = std::bind(&GradingRGBMSW::m_width, &value.m_midtones);
         AddUniform(shaderCreator, getMR, propNames.midtonesR);
         AddUniform(shaderCreator, getMG, propNames.midtonesG);
         AddUniform(shaderCreator, getMB, propNames.midtonesB);
@@ -187,9 +188,9 @@ void AddGTProperties(GpuShaderCreatorRcPtr & shaderCreator,
         AddUniform(shaderCreator, getMS, propNames.midtonesS);
         AddUniform(shaderCreator, getMW, propNames.midtonesW);
 
-        auto getHR = std::bind(&GradingRGBMSW::m_red,    &value.m_highlights);
-        auto getHG = std::bind(&GradingRGBMSW::m_green,  &value.m_highlights);
-        auto getHB = std::bind(&GradingRGBMSW::m_blue,   &value.m_highlights);
+        auto getHR = std::bind(&GradingRGBMSW::m_red, &value.m_highlights);
+        auto getHG = std::bind(&GradingRGBMSW::m_green, &value.m_highlights);
+        auto getHB = std::bind(&GradingRGBMSW::m_blue, &value.m_highlights);
         auto getHM = std::bind(&GradingRGBMSW::m_master, &value.m_highlights);
         auto getHS = std::bind(&CompVal::m_highlightsStart, &compVal);
         auto getHW = std::bind(&CompVal::m_highlightsWidth, &compVal);
@@ -200,9 +201,9 @@ void AddGTProperties(GpuShaderCreatorRcPtr & shaderCreator,
         AddUniform(shaderCreator, getHS, propNames.highlightsS);
         AddUniform(shaderCreator, getHW, propNames.highlightsW);
 
-        auto getWDR = std::bind(&GradingRGBMSW::m_red,    &value.m_whites);
-        auto getWDG = std::bind(&GradingRGBMSW::m_green,  &value.m_whites);
-        auto getWDB = std::bind(&GradingRGBMSW::m_blue,   &value.m_whites);
+        auto getWDR = std::bind(&GradingRGBMSW::m_red, &value.m_whites);
+        auto getWDG = std::bind(&GradingRGBMSW::m_green, &value.m_whites);
+        auto getWDB = std::bind(&GradingRGBMSW::m_blue, &value.m_whites);
         auto getWDM = std::bind(&GradingRGBMSW::m_master, &value.m_whites);
         auto getWDS = std::bind(&CompVal::m_whitesStart, &compVal);
         auto getWDW = std::bind(&CompVal::m_whitesWidth, &compVal);
@@ -221,7 +222,7 @@ void AddGTProperties(GpuShaderCreatorRcPtr & shaderCreator,
     }
     else
     {
-        const auto & value = prop->getValue();
+        const auto & value   = prop->getValue();
         const auto & compVal = prop->getComputedValue();
 
         st.declareVarConst(propNames.blacksR, static_cast<float>(value.m_blacks.m_red));
@@ -268,8 +269,12 @@ static constexpr unsigned G = 1;
 static constexpr unsigned B = 2;
 static constexpr unsigned M = 3;
 
-void Add_MidsPre_Shader(unsigned channel, std::string & channelSuffix, GpuShaderText & st,
-                        const GTProperties & props, GradingStyle style)
+void Add_MidsPre_Shader(
+    unsigned channel,
+    std::string & channelSuffix,
+    GpuShaderText & st,
+    const GTProperties & props,
+    GradingStyle style)
 {
     // TODO: Everything in here should move to C++ (doesn't vary per pixel).
 
@@ -277,31 +282,33 @@ void Add_MidsPre_Shader(unsigned channel, std::string & channelSuffix, GpuShader
     if (channel == R)
     {
         channelSuffix = "rgb.r";
-        channelValue = props.midtonesR;
+        channelValue  = props.midtonesR;
     }
     else if (channel == G)
     {
         channelSuffix = "rgb.g";
-        channelValue = props.midtonesG;
+        channelValue  = props.midtonesG;
     }
     else if (channel == B)
     {
         channelSuffix = "rgb.b";
-        channelValue = props.midtonesB;
+        channelValue  = props.midtonesB;
     }
     else
     {
         channelSuffix = "rgb";
-        channelValue = props.midtonesM;
+        channelValue  = props.midtonesM;
     }
 
-    st.newLine() << "{";   // establish scope so local variable names won't conflict
+    st.newLine() << "{"; // establish scope so local variable names won't conflict
     st.indent();
 
-    float top{ 0.f }, topSC{ 0.f }, bottom{ 0.f }, pivot{ 0.f };
+    float top{0.f}, topSC{0.f}, bottom{0.f}, pivot{0.f};
     GradingTonePreRender::FromStyle(style, top, topSC, bottom, pivot);
 
-    std::string topPoint{ std::to_string(top) }, bottomPoint{ std::to_string(bottom) };
+    std::string topPoint{std::to_string(top)}, bottomPoint{std::to_string(bottom)};
+
+    // clang-format off
 
     st.newLine() << st.floatKeywordConst() << " halo = 0.4;";
     st.newLine() << st.floatDecl("mid_adj") << " = clamp(" << channelValue << ", 0.01, 1.99);";
@@ -366,18 +373,23 @@ void Add_MidsPre_Shader(unsigned channel, std::string & channelSuffix, GpuShader
     st.newLine() << st.floatDecl("y3") << " = y2 + (m2 + m3) * (x3 - x2) * 0.5;";
     st.newLine() << st.floatDecl("y4") << " = y3 + (m3 + m4) * (x4 - x3) * 0.5;";
     st.newLine() << st.floatDecl("y5") << " = y4 + (m4 + m5) * (x5 - x4) * 0.5;";
+
+    // clang-format on
 }
 
-void Add_MidsFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
-                        GpuShaderText & st,
-                        unsigned channel,
-                        const GTProperties & props,
-                        GradingStyle style)
+void Add_MidsFwd_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    unsigned channel,
+    const GTProperties & props,
+    GradingStyle style)
 {
     std::string channelSuffix;
     Add_MidsPre_Shader(channel, channelSuffix, st, props, style);
 
     const std::string pix(shaderCreator->getPixelName());
+
+    // clang-format off
 
     if (channel != M)
     {
@@ -444,18 +456,23 @@ void Add_MidsFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.dedent();
     st.newLine() << "}";  // local scope
+
+    // clang-format on
 }
 
-void Add_MidsRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
-                        GpuShaderText & st,
-                        unsigned channel,
-                        const GTProperties & props,
-                        GradingStyle style)
+void Add_MidsRev_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    unsigned channel,
+    const GTProperties & props,
+    GradingStyle style)
 {
     std::string channelSuffix;
     Add_MidsPre_Shader(channel, channelSuffix, st, props, style);
 
     const std::string pix(shaderCreator->getPixelName());
+
+    // clang-format off
 
     if (channel != M)
     {
@@ -622,13 +639,16 @@ void Add_MidsRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.dedent();
     st.newLine() << "}";  // local scope
+
+    // clang-format on
 }
 
-void Add_HighlightShadowPre_Shader(GpuShaderText & st,
-                                   unsigned channel,
-                                   std::string & channelSuffix,
-                                   const GTProperties & props,
-                                   bool isShadow)
+void Add_HighlightShadowPre_Shader(
+    GpuShaderText & st,
+    unsigned channel,
+    std::string & channelSuffix,
+    const GTProperties & props,
+    bool isShadow)
 {
     // TODO: Everything in here should move to C++ (doesn't vary per pixel).
 
@@ -639,23 +659,25 @@ void Add_HighlightShadowPre_Shader(GpuShaderText & st,
     if (channel == R)
     {
         channelSuffix = "rgb.r";
-        channelValue = isShadow ? props.shadowsR : props.highlightsR;
+        channelValue  = isShadow ? props.shadowsR : props.highlightsR;
     }
     else if (channel == G)
     {
         channelSuffix = "rgb.g";
-        channelValue = isShadow ? props.shadowsG : props.highlightsG;
+        channelValue  = isShadow ? props.shadowsG : props.highlightsG;
     }
     else if (channel == B)
     {
         channelSuffix = "rgb.b";
-        channelValue = isShadow ? props.shadowsB : props.highlightsB;
+        channelValue  = isShadow ? props.shadowsB : props.highlightsB;
     }
     else
     {
         channelSuffix = "rgb";
-        channelValue = isShadow ? props.shadowsM : props.highlightsM;
+        channelValue  = isShadow ? props.shadowsM : props.highlightsM;
     }
+
+    // clang-format off
 
     st.newLine() << "{";   // establish scope so local variable names won't conflict
     st.indent();
@@ -680,14 +702,19 @@ void Add_HighlightShadowPre_Shader(GpuShaderText & st,
     {
         st.newLine() << "val = 2. - val;";
     }
+
+    // clang-format on
 }
 
-void Add_FauxCubicFwdEval_Shader(GpuShaderCreatorRcPtr & shaderCreator,
-                                 GpuShaderText & st,
-                                 unsigned channel,
-                                 std::string & channelSuffix)
+void Add_FauxCubicFwdEval_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    unsigned channel,
+    std::string & channelSuffix)
 {
     const std::string pix(shaderCreator->getPixelName());
+
+    // clang-format off
 
     st.newLine() << st.floatKeyword() << " y1 = ( 0.5 / (x2 - x0) ) * "
                     "( (2.*y0 + m0 * (x1 - x0)) * (x2 - x1) + (2.*y2 - m2 * (x2 - x1)) * (x1 - x0) );";
@@ -732,14 +759,19 @@ void Add_FauxCubicFwdEval_Shader(GpuShaderCreatorRcPtr & shaderCreator,
         st.newLine() << "res.b = (t.b > x2) ? y2 + (t.b - x2) * m2 : res.b;";
     }
     st.newLine() << pix << "." << channelSuffix << " = res;";
+
+    // clang-format on
 }
 
-void Add_FauxCubicRevEval_Shader(GpuShaderCreatorRcPtr & shaderCreator,
-                                 GpuShaderText & st,
-                                 unsigned channel,
-                                 std::string & channelSuffix)
+void Add_FauxCubicRevEval_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    unsigned channel,
+    std::string & channelSuffix)
 {
     const std::string pix(shaderCreator->getPixelName());
+
+    // clang-format off
 
     st.newLine() << st.floatKeyword() << " y1 = ( 0.5 / (x2 - x0) ) * "
                     "( (2.*y0 + m0 * (x1 - x0)) * (x2 - x1) + (2.*y2 - m2 * (x2 - x1)) * (x1 - x0) );";
@@ -790,16 +822,21 @@ void Add_FauxCubicRevEval_Shader(GpuShaderCreatorRcPtr & shaderCreator,
         st.newLine() << "res.b = (t.b > y2) ? x2 + (t.b - y2) / m2 : res.b;";
     }
     st.newLine() << pix << "." << channelSuffix << " = res;";
+
+    // clang-format on
 }
 
-void Add_HighlightShadowFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
-                                   GpuShaderText & st,
-                                   unsigned channel,
-                                   bool isShadow,
-                                   const GTProperties & props)
+void Add_HighlightShadowFwd_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    unsigned channel,
+    bool isShadow,
+    const GTProperties & props)
 {
     std::string channelSuffix;
     Add_HighlightShadowPre_Shader(st, channel, channelSuffix, props, isShadow);
+
+    // clang-format off
 
     st.newLine() << "if (val < 1.)";
     st.newLine() << "{";
@@ -837,16 +874,21 @@ void Add_HighlightShadowFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.dedent();
     st.newLine() << "}";  // establish scope
+
+    // clang-format on
 }
 
-void Add_HighlightShadowRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
-                                   GpuShaderText & st,
-                                   unsigned channel,
-                                   bool isShadow,
-                                   const GTProperties & props)
+void Add_HighlightShadowRev_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    unsigned channel,
+    bool isShadow,
+    const GTProperties & props)
 {
     std::string channelSuffix;
     Add_HighlightShadowPre_Shader(st, channel, channelSuffix, props, isShadow);
+
+    // clang-format off
 
     st.newLine() << "if (val < 1.)";
     st.newLine() << "{";
@@ -883,14 +925,17 @@ void Add_HighlightShadowRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.dedent();
     st.newLine() << "}";  // establish scope
+
+    // clang-format on
 }
 
-void Add_WhiteBlackPre_Shader(GpuShaderCreatorRcPtr & shaderCreator,
-                              GpuShaderText & st, 
-                              unsigned channel,
-                              std::string & channelSuffix,
-                              bool isBlack,
-                              const GTProperties & props)
+void Add_WhiteBlackPre_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    unsigned channel,
+    std::string & channelSuffix,
+    bool isBlack,
+    const GTProperties & props)
 {
     const std::string pix(shaderCreator->getPixelName());
 
@@ -900,23 +945,25 @@ void Add_WhiteBlackPre_Shader(GpuShaderCreatorRcPtr & shaderCreator,
     if (channel == R)
     {
         channelSuffix = "rgb.r";
-        channelValue = isBlack ? props.blacksR : props.whitesR;
+        channelValue  = isBlack ? props.blacksR : props.whitesR;
     }
     else if (channel == G)
     {
         channelSuffix = "rgb.g";
-        channelValue = isBlack ? props.blacksG : props.whitesG;
+        channelValue  = isBlack ? props.blacksG : props.whitesG;
     }
-    else if(channel == B)
+    else if (channel == B)
     {
         channelSuffix = "rgb.b";
-        channelValue = isBlack ? props.blacksB : props.whitesB;
+        channelValue  = isBlack ? props.blacksB : props.whitesB;
     }
     else
     {
         channelSuffix = "rgb";
-        channelValue = isBlack ? props.blacksM : props.whitesM;
+        channelValue  = isBlack ? props.blacksM : props.whitesM;
     }
+
+    // clang-format off
 
     st.newLine() << "{";   // establish scope so local variable names won't conflict
     st.indent();
@@ -948,10 +995,14 @@ void Add_WhiteBlackPre_Shader(GpuShaderCreatorRcPtr & shaderCreator,
     {
         st.newLine() << st.colorDecl("t") << " = " << pix << ".rgb;";
     }
+
+    // clang-format on
 }
 
 void Add_WBFwd_Shader(unsigned channel, bool linearExtrap, GpuShaderText & st)
 {
+    // clang-format off
+
     if (channel != M)
     {
         st.newLine() << st.floatKeyword() << " tlocal = (t - x0) / (x1 - x0);";
@@ -979,10 +1030,14 @@ void Add_WBFwd_Shader(unsigned channel, bool linearExtrap, GpuShaderText & st)
             st.newLine() << "res.b = (t.b > x1) ? y1 + (t.b - x1) * m1 : res.b;";
         }
     }
+
+    // clang-format on
 }
 
 void Add_WBRev_Shader(unsigned channel, bool linearExtrap, GpuShaderText & st)
 {
+    // clang-format off
+
     st.newLine() << st.floatKeyword() << " a = 0.5 * (m1 - m0) * (x1 - x0);";
     st.newLine() << st.floatKeyword() << " b = m0 * (x1 - x0);";
     if (channel != M)
@@ -1017,10 +1072,14 @@ void Add_WBRev_Shader(unsigned channel, bool linearExtrap, GpuShaderText & st)
             st.newLine() << "res.b = (t.b > y1) ? x1 + (t.b - y1) / m1 : res.b;";
         }
     }
+
+    // clang-format on
 }
 
 void Add_WBExtrapPre_Shader(GpuShaderText & st)
 {
+    // clang-format off
+
     st.newLine() << "res = (res - x0) / gain + x0;";
     // Quadratic extrapolation for better HDR control.
     st.newLine() << st.floatKeyword() << " new_y1 = (x1 - x0) / gain + x0;";
@@ -1031,13 +1090,16 @@ void Add_WBExtrapPre_Shader(GpuShaderText & st)
     st.newLine() << st.floatKeyword() << " bb = 1. / m1 - 2. * aa * x1;";
     st.newLine() << st.floatKeyword() << " cc = new_y1 - bb * x1 - aa * x1 * x1;";
     st.newLine() << "t = (t - x0) / gain + x0;";
+
+    // clang-format on
 }
 
-void Add_WhiteBlackFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
-                              GpuShaderText & st,
-                              unsigned channel,
-                              bool isBlack,
-                              const GTProperties & props)
+void Add_WhiteBlackFwd_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    unsigned channel,
+    bool isBlack,
+    const GTProperties & props)
 {
     const std::string pix(shaderCreator->getPixelName());
 
@@ -1045,6 +1107,8 @@ void Add_WhiteBlackFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
     Add_WhiteBlackPre_Shader(shaderCreator, st, channel, channelSuffix, isBlack, props);
 
     // Slope is decreasing case.
+
+    // clang-format off
 
     st.newLine() << "if (mtest < 1.)";
     st.newLine() << "{";
@@ -1129,16 +1193,21 @@ void Add_WhiteBlackFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.dedent();
     st.newLine() << "}";   // establish scope so local variable names won't conflict
+
+    // clang-format on
 }
 
-void Add_WhiteBlackRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
-                              GpuShaderText & st,
-                              unsigned channel,
-                              bool isBlack,
-                              const GTProperties & props)
+void Add_WhiteBlackRev_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    unsigned channel,
+    bool isBlack,
+    const GTProperties & props)
 {
     std::string channelSuffix;
     Add_WhiteBlackPre_Shader(shaderCreator, st, channel, channelSuffix, isBlack, props);
+
+    // clang-format off
 
     // Slope is decreasing case.
 
@@ -1235,18 +1304,23 @@ void Add_WhiteBlackRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.dedent();
     st.newLine() << "}";   // establish scope so local variable names won't conflict
+
+    // clang-format on
 }
 
-void Add_SContrastTopPre_Shader(GpuShaderCreatorRcPtr & shaderCreator,
-                                GpuShaderText & st,
-                                const GTProperties & props,
-                                GradingStyle style)
+void Add_SContrastTopPre_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    const GTProperties & props,
+    GradingStyle style)
 {
     const std::string pix(shaderCreator->getPixelName());
 
-    float top{ 0.f }, topSC{ 0.f }, bottom{ 0.f }, pivot{ 0.f };
+    float top{0.f}, topSC{0.f}, bottom{0.f}, pivot{0.f};
     GradingTonePreRender::FromStyle(style, top, topSC, bottom, pivot);
-    const std::string topPoint{ std::to_string(topSC) };
+    const std::string topPoint{std::to_string(topSC)};
+
+    // clang-format off
 
     st.newLine() << st.floatKeyword() << " contrast = " << props.sContrast << ";";
     st.newLine() << "if (contrast != 1.)";
@@ -1291,13 +1365,17 @@ void Add_SContrastTopPre_Shader(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << st.floatKeyword() << " y2 = y1 + (m0 + m3) * (x2 - x1) * 0.5;";
 
     // TODO: the above should not be in the GLSL (is not per-pixel)
+
+    // clang-format on
 }
 
 void Add_SContrastBottomPre_Shader(GpuShaderText & st, GradingStyle style)
 {
-    float top{ 0.f }, topSC{ 0.f }, bottom{ 0.f }, pivot{ 0.f };
+    float top{0.f}, topSC{0.f}, bottom{0.f}, pivot{0.f};
     GradingTonePreRender::FromStyle(style, top, topSC, bottom, pivot);
-    const std::string bottomPoint{ std::to_string(bottom) };
+    const std::string bottomPoint{std::to_string(bottom)};
+
+    // clang-format off
 
     // Bottom end
     st.newLine() << "{";   // establish scope so local variable names won't conflict
@@ -1327,16 +1405,21 @@ void Add_SContrastBottomPre_Shader(GpuShaderText & st, GradingStyle style)
     st.newLine() << st.floatKeyword() << " y1 = y2 - (m0 + m3) * (x2 - x1) * 0.5;";
 
     // TODO: the above should not be in the GLSL (is not per-pixel)
+
+    // clang-format on
 }
 
-void Add_SContrastFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
-                             GpuShaderText & st,
-                             const GTProperties & props,
-                             GradingStyle style)
+void Add_SContrastFwd_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    const GTProperties & props,
+    GradingStyle style)
 {
     Add_SContrastTopPre_Shader(shaderCreator, st, props, style);
 
     const std::string pix(shaderCreator->getPixelName());
+
+    // clang-format off
 
     st.newLine() << pix << ".rgb = (t - pivot) * contrast + pivot;";
 
@@ -1368,14 +1451,19 @@ void Add_SContrastFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.dedent();
     st.newLine() << "}";  // end if contrast != 1.
+
+    // clang-format on
 }
 
-void Add_SContrastRev_Shader(GpuShaderCreatorRcPtr & shaderCreator, 
-                             GpuShaderText & st,
-                             const GTProperties & props,
-                             GradingStyle style)
+void Add_SContrastRev_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    const GTProperties & props,
+    GradingStyle style)
 {
     Add_SContrastTopPre_Shader(shaderCreator, st, props, style);
+
+    // clang-format off
 
     const std::string pix(shaderCreator->getPixelName());
 
@@ -1415,12 +1503,15 @@ void Add_SContrastRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.dedent();
     st.newLine() << "}";  // end if contrast != 1.
+
+    // clang-format on
 }
 
-void AddGTForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
-                        GpuShaderText & st,
-                        const GTProperties & props,
-                        GradingStyle style)
+void AddGTForwardShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    const GTProperties & props,
+    GradingStyle style)
 {
     if (style == GRADING_LIN)
     {
@@ -1456,7 +1547,6 @@ void AddGTForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     Add_SContrastFwd_Shader(shaderCreator, st, props, style);
 
-
     if (style == GRADING_LIN)
     {
         AddLogToLinShader(shaderCreator, st);
@@ -1470,10 +1560,11 @@ void AddGTForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << pix << " = min( " << pix << ", 65504. );";
 }
 
-void AddGTInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
-                        GpuShaderText & st,
-                        const GTProperties & props,
-                        GradingStyle style)
+void AddGTInverseShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    const GTProperties & props,
+    GradingStyle style)
 {
 
     if (style == GRADING_LIN)
@@ -1523,12 +1614,13 @@ void AddGTInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << pix << " = min( " << pix << ", 65504. );";
 }
 
-}
+} // namespace
 
-void GetGradingToneGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
-                                    ConstGradingToneOpDataRcPtr & gtData)
+void GetGradingToneGPUShaderProgram(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstGradingToneOpDataRcPtr & gtData)
 {
-    const bool dyn = gtData->isDynamic() &&  shaderCreator->getLanguage() != LANGUAGE_OSL_1;
+    const bool dyn = gtData->isDynamic() && shaderCreator->getLanguage() != LANGUAGE_OSL_1;
     if (!dyn)
     {
         auto propGT = gtData->getDynamicPropertyInternal();
@@ -1540,7 +1632,7 @@ void GetGradingToneGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
     if (gtData->isDynamic() && shaderCreator->getLanguage() == LANGUAGE_OSL_1)
     {
-        std::string msg("The dynamic properties are not yet supported by the 'Open Shading language"\
+        std::string msg("The dynamic properties are not yet supported by the 'Open Shading language"
                         " (OSL)' translation: The '");
         msg += opPrefix;
         msg += "' dynamic property is replaced by a local variable.";
@@ -1548,11 +1640,13 @@ void GetGradingToneGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         LogWarning(msg);
     }
 
-    const GradingStyle style = gtData->getStyle();
+    const GradingStyle style     = gtData->getStyle();
     const TransformDirection dir = gtData->getDirection();
 
     GpuShaderText st(shaderCreator->getLanguage());
     st.indent();
+
+    // clang-format off
 
     st.newLine() << "";
     st.newLine() << "// Add GradingTone '"
@@ -1561,6 +1655,8 @@ void GetGradingToneGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << "";
     st.newLine() << "{";
     st.indent();
+
+    // clang-format on
 
     // Properties hold shader variables names and are initialized with undecorated names suitable
     // for local variables.
@@ -1576,12 +1672,12 @@ void GetGradingToneGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
     switch (dir)
     {
-    case TRANSFORM_DIR_FORWARD:
-        AddGTForwardShader(shaderCreator, st, properties, style);
-        break;
-    case TRANSFORM_DIR_INVERSE:
-        AddGTInverseShader(shaderCreator, st, properties, style);
-        break;
+        case TRANSFORM_DIR_FORWARD:
+            AddGTForwardShader(shaderCreator, st, properties, style);
+            break;
+        case TRANSFORM_DIR_INVERSE:
+            AddGTInverseShader(shaderCreator, st, properties, style);
+            break;
     }
 
     if (dyn)
@@ -1597,4 +1693,4 @@ void GetGradingToneGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     shaderCreator->addToFunctionShaderCode(st.string().c_str());
 }
 
-} // OCIO_NAMESPACE
+} // namespace OCIO_NAMESPACE

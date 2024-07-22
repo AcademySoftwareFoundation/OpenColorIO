@@ -3,13 +3,13 @@
 
 #include <sstream>
 
+#include "Platform.h"
 #include "expat.h"
 #include "fileformats/cdl/CDLParser.h"
 #include "fileformats/cdl/CDLReaderHelper.h"
 #include "fileformats/xmlutils/XMLReaderHelper.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "transforms/CDLTransform.h"
-#include "Platform.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -19,7 +19,7 @@ class CDLParser::Impl
 public:
     Impl() = delete;
     explicit Impl(const std::string & fileName);
-    Impl(const Impl &) = delete;
+    Impl(const Impl &)             = delete;
     Impl & operator=(const Impl &) = delete;
 
     ~Impl();
@@ -31,30 +31,21 @@ public:
 
     unsigned int getXmlLocation() const;
 
-    const std::string& getXmlFilename() const;
+    const std::string & getXmlFilename() const;
 
     ElementRcPtr getBackElement() const;
 
     // Check is the last element on the stack is an instance of the type T.
-    template<typename T>
-    bool isBackElementInstanceOf() const;
+    template <typename T> bool isBackElementInstanceOf() const;
 
     // Create a dummy element.
-    DummyEltRcPtr createDummyElement(const std::string& name,
-                                     const std::string& msg) const;
+    DummyEltRcPtr createDummyElement(const std::string & name, const std::string & msg) const;
 
     // Create an element of type T.
-    template<typename T>
-    OCIO_SHARED_PTR<T> createElement(const std::string& name) const;
+    template <typename T> OCIO_SHARED_PTR<T> createElement(const std::string & name) const;
 
-    bool isCC() const
-    {
-        return m_isCC;
-    }
-    bool isCCC() const
-    {
-        return m_isCCC;
-    }
+    bool isCC() const { return m_isCC; }
+    bool isCCC() const { return m_isCCC; }
 
 protected:
     // Parse a line.
@@ -65,86 +56,75 @@ protected:
     void throwMessage(const std::string & error) const;
 
     // Start the parsing of one element in the CDL schema.
-    static void StartElementHandlerCDL(void *userData,
-                                       const XML_Char *name,
-                                       const XML_Char **atts);
+    static void
+    StartElementHandlerCDL(void * userData, const XML_Char * name, const XML_Char ** atts);
 
     // Start the parsing of one element in the CCC schema.
-    static void StartElementHandlerCCC(void *userData,
-                                       const XML_Char *name,
-                                       const XML_Char **atts);
+    static void
+    StartElementHandlerCCC(void * userData, const XML_Char * name, const XML_Char ** atts);
 
     // Start the parsing of one element in the CC schema.
-    static void StartElementHandlerCC(void *userData,
-                                      const XML_Char *name,
-                                      const XML_Char **atts);
+    static void
+    StartElementHandlerCC(void * userData, const XML_Char * name, const XML_Char ** atts);
 
     // Verify if the data for starting a CDL/CCC/CC element is valid.
-    static bool IsValidStartElement(CDLParser::Impl* pImpl,
-                                    const XML_Char *name);
+    static bool IsValidStartElement(CDLParser::Impl * pImpl, const XML_Char * name);
 
-    // Helper methods to handle the start of specific elements. 
+    // Helper methods to handle the start of specific elements.
 
     // Handle the start of a ColorDecisionList element.
-    static bool HandleColorDecisionListStartElement(CDLParser::Impl* pImpl,
-                                                    const XML_Char *name);
+    static bool HandleColorDecisionListStartElement(CDLParser::Impl * pImpl, const XML_Char * name);
 
     // Handle the start of a ColorDecision element.
-    static bool HandleColorDecisionStartElement(CDLParser::Impl* pImpl,
-                                                const XML_Char *name);
+    static bool HandleColorDecisionStartElement(CDLParser::Impl * pImpl, const XML_Char * name);
 
     // Handle the start of a ColorCorrectionCollection element.
     static bool HandleColorCorrectionCollectionStartElement(
-        CDLParser::Impl* pImpl, const XML_Char *name);
+        CDLParser::Impl * pImpl,
+        const XML_Char * name);
 
     // Handle the start of a ColorCorrection element in the CDL schema.
-    static bool HandleColorCorrectionCDLStartElement(CDLParser::Impl* pImpl,
-                                                     const XML_Char *name);
+    static bool HandleColorCorrectionCDLStartElement(
+        CDLParser::Impl * pImpl,
+        const XML_Char * name);
 
     // Handle the start of a ColorCorrection element in the CCC schema.
-    static bool HandleColorCorrectionCCCStartElement(CDLParser::Impl* pImpl,
-                                                     const XML_Char *name);
+    static bool HandleColorCorrectionCCCStartElement(
+        CDLParser::Impl * pImpl,
+        const XML_Char * name);
 
     // Handle the start of a ColorCorrection element in the CC schema.
-    static bool HandleColorCorrectionCCStartElement(CDLParser::Impl* pImpl,
-                                                    const XML_Char *name);
+    static bool HandleColorCorrectionCCStartElement(CDLParser::Impl * pImpl, const XML_Char * name);
 
     // Handle the start of a SOPNode element.
-    static bool HandleSOPNodeStartElement(CDLParser::Impl* pImpl,
-                                          const XML_Char *name);
+    static bool HandleSOPNodeStartElement(CDLParser::Impl * pImpl, const XML_Char * name);
 
     // Handle the start of a SatNode element.
-    static bool HandleSatNodeStartElement(CDLParser::Impl* pImpl,
-                                          const XML_Char *name);
+    static bool HandleSatNodeStartElement(CDLParser::Impl * pImpl, const XML_Char * name);
 
     // Handle the start of a terminal/leaf element.
     // Specific element handled are:
     // Slope, Offset, Power, and Saturation.
-    static bool HandleTerminalStartElement(CDLParser::Impl* pImpl,
-                                           const XML_Char *name);
+    static bool HandleTerminalStartElement(CDLParser::Impl * pImpl, const XML_Char * name);
 
     // Default handler for the start of an unknown element.
-    static bool HandleUnknownStartElement(CDLParser::Impl* pImpl,
-                                          const XML_Char *name);
+    static bool HandleUnknownStartElement(CDLParser::Impl * pImpl, const XML_Char * name);
 
     // End the parsing of one element.
-    static void EndElementHandler(void *userData,
-                                  const XML_Char *name);
+    static void EndElementHandler(void * userData, const XML_Char * name);
 
     // Handle of strings within an element.
-    static void CharacterDataHandler(void *userData,
-                                     const XML_Char *s, int len);
+    static void CharacterDataHandler(void * userData, const XML_Char * s, int len);
 
     // Check if a description tag matches the required schema.
-    static bool IsValidDescriptionTag(const std::string& currentId,
-                                      const std::string& parentId);
+    static bool IsValidDescriptionTag(const std::string & currentId, const std::string & parentId);
 
     // Reset the parsing.
     void reset();
 
     // Use the buffer string to detect the input schema and
     // initialize the related element handlers.
-    void initializeHandlers(const char* buffer);
+    void initializeHandlers(const char * buffer);
 
     // Validate if the parsed file or buffer was successful.
     void validateParsing() const;
@@ -240,12 +220,9 @@ void CDLParser::Impl::throwMessage(const std::string & error) const
 
 void CDLParser::Impl::parse(const std::string & buffer, bool lastLine)
 {
-    const int done = lastLine?1:0;
+    const int done = lastLine ? 1 : 0;
 
-    if (XML_STATUS_ERROR == XML_Parse(m_parser,
-                                      buffer.c_str(),
-                                      (int)buffer.size(),
-                                      done))
+    if (XML_STATUS_ERROR == XML_Parse(m_parser, buffer.c_str(), (int)buffer.size(), done))
     {
         XML_Error eXpatErrorCode = XML_GetErrorCode(m_parser);
         if (eXpatErrorCode == XML_ERROR_TAG_MISMATCH)
@@ -275,7 +252,6 @@ void CDLParser::Impl::parse(const std::string & buffer, bool lastLine)
             throwMessage(error);
         }
     }
-
 }
 
 const CDLParsingInfoRcPtr & CDLParser::Impl::getCDLParsingInfo() const
@@ -283,36 +259,30 @@ const CDLParsingInfoRcPtr & CDLParser::Impl::getCDLParsingInfo() const
     return m_parsingInfo;
 }
 
-bool FindRootElement(const std::string& header, const std::string& tag)
+bool FindRootElement(const std::string & header, const std::string & tag)
 {
     // Find root element tag at beginning of the file.
     const std::string pattern = std::string("<") + tag;
     return strstr(header.c_str(), pattern.c_str()) != 0x0;
 }
 
-void CDLParser::Impl::initializeHandlers(const char* buffer)
+void CDLParser::Impl::initializeHandlers(const char * buffer)
 {
     XML_SetUserData(m_parser, this);
     XML_SetCharacterDataHandler(m_parser, CharacterDataHandler);
 
     if (FindRootElement(buffer, CDL_TAG_COLOR_DECISION_LIST))
     {
-        XML_SetElementHandler(m_parser,
-                              StartElementHandlerCDL,
-                              EndElementHandler);
+        XML_SetElementHandler(m_parser, StartElementHandlerCDL, EndElementHandler);
     }
     else if (FindRootElement(buffer, CDL_TAG_COLOR_CORRECTION_COLLECTION))
     {
-        XML_SetElementHandler(m_parser,
-                              StartElementHandlerCCC,
-                              EndElementHandler);
+        XML_SetElementHandler(m_parser, StartElementHandlerCCC, EndElementHandler);
         m_isCCC = true;
     }
     else if (FindRootElement(buffer, CDL_TAG_COLOR_CORRECTION))
     {
-        XML_SetElementHandler(m_parser,
-                              StartElementHandlerCC,
-                              EndElementHandler);
+        XML_SetElementHandler(m_parser, StartElementHandlerCC, EndElementHandler);
         m_isCC = true;
 
         // If parsing a CC, initialize the TransformList explicitly.
@@ -334,10 +304,10 @@ void CDLParser::Impl::validateParsing() const
         throwMessage(error);
     }
 
-    const CDLTransformVec& pTransformList = getCDLParsingInfo()->m_transforms;
-    for (size_t i = 0; i<pTransformList.size(); ++i)
+    const CDLTransformVec & pTransformList = getCDLParsingInfo()->m_transforms;
+    for (size_t i = 0; i < pTransformList.size(); ++i)
     {
-        const CDLTransformRcPtr& pTransform = pTransformList.at(i);
+        const CDLTransformRcPtr & pTransform = pTransformList.at(i);
         if (pTransform.use_count() == 0)
         {
             static const std::string error("CDL parsing error: "
@@ -352,7 +322,7 @@ unsigned int CDLParser::Impl::getXmlLocation() const
     return m_lineNumber;
 }
 
-const std::string& CDLParser::Impl::getXmlFilename() const
+const std::string & CDLParser::Impl::getXmlFilename() const
 {
     static const std::string emptyName("File name not specified");
     return m_fileName.empty() ? emptyName : m_fileName;
@@ -368,29 +338,27 @@ void CDLParser::Impl::reset()
     m_elms.clear();
 
     m_lineNumber = 0;
-    m_fileName = "";
-    m_isCC = false;
-    m_isCCC = false;
+    m_fileName   = "";
+    m_isCC       = false;
+    m_isCCC      = false;
 }
 
-DummyEltRcPtr CDLParser::Impl::createDummyElement(
-    const std::string& name, const std::string& msg) const
+DummyEltRcPtr CDLParser::Impl::createDummyElement(const std::string & name, const std::string & msg)
+    const
 {
-    return std::make_shared<XmlReaderDummyElt>(name,
-                                               getBackElement(),
-                                               getXmlLocation(),
-                                               getXmlFilename(),
-                                               msg.c_str());
+    return std::make_shared<XmlReaderDummyElt>(
+        name,
+        getBackElement(),
+        getXmlLocation(),
+        getXmlFilename(),
+        msg.c_str());
 }
 
-template<typename T>
-OCIO_SHARED_PTR<T> CDLParser::Impl::createElement(const std::string& name) const
+template <typename T>
+OCIO_SHARED_PTR<T> CDLParser::Impl::createElement(const std::string & name) const
 {
     auto pContainer = std::dynamic_pointer_cast<XmlReaderContainerElt>(getBackElement());
-    return std::make_shared<T>(name,
-                               pContainer,
-                               getXmlLocation(),
-                               getXmlFilename());
+    return std::make_shared<T>(name, pContainer, getXmlLocation(), getXmlFilename());
 }
 
 ElementRcPtr CDLParser::Impl::getBackElement() const
@@ -398,88 +366,82 @@ ElementRcPtr CDLParser::Impl::getBackElement() const
     return m_elms.size() ? m_elms.back() : ElementRcPtr();
 }
 
-template<typename T>
-bool CDLParser::Impl::isBackElementInstanceOf() const
+template <typename T> bool CDLParser::Impl::isBackElementInstanceOf() const
 {
-    return dynamic_cast<T*>(getBackElement().get()) != 0x0;
+    return dynamic_cast<T *>(getBackElement().get()) != 0x0;
 }
 
-bool CDLParser::Impl::IsValidDescriptionTag(const std::string& currentId,
-                                            const std::string& parentId)
+bool CDLParser::Impl::IsValidDescriptionTag(
+    const std::string & currentId,
+    const std::string & parentId)
 {
-    const char* currId = currentId.c_str();
-    const char* parId = parentId.c_str();
+    const char * currId = currentId.c_str();
+    const char * parId  = parentId.c_str();
 
-    const bool isDesc = (0 == strcmp(currId, TAG_DESCRIPTION));
-    const bool isInputViewingDesc =
-        (0 == strcmp(currId, METADATA_INPUT_DESCRIPTION)) ||
-        (0 == strcmp(currId, METADATA_VIEWING_DESCRIPTION));
-    const bool isSOPSat = (0 == strcmp(parId, TAG_SOPNODE)) ||
-                          (0 == strcmp(parId, TAG_SATNODE)) ||
-                          (0 == strcmp(parId, TAG_SATNODEALT));
+    const bool isDesc             = (0 == strcmp(currId, TAG_DESCRIPTION));
+    const bool isInputViewingDesc = (0 == strcmp(currId, METADATA_INPUT_DESCRIPTION))
+                                    || (0 == strcmp(currId, METADATA_VIEWING_DESCRIPTION));
+    const bool isSOPSat = (0 == strcmp(parId, TAG_SOPNODE)) || (0 == strcmp(parId, TAG_SATNODE))
+                          || (0 == strcmp(parId, TAG_SATNODEALT));
 
     return isDesc || (isInputViewingDesc && !isSOPSat);
 }
 
-void CDLParser::Impl::StartElementHandlerCDL(void *userData,
-                                             const XML_Char *name,
-                                             const XML_Char **atts)
+void CDLParser::Impl::StartElementHandlerCDL(
+    void * userData,
+    const XML_Char * name,
+    const XML_Char ** atts)
 {
-    CDLParser::Impl* pImpl = (CDLParser::Impl*)userData;
+    CDLParser::Impl * pImpl = (CDLParser::Impl *)userData;
     if (IsValidStartElement(pImpl, name))
     {
-        if (HandleColorDecisionListStartElement(pImpl, name) ||
-            HandleColorDecisionStartElement(pImpl, name) ||
-            HandleColorCorrectionCDLStartElement(pImpl, name) ||
-            HandleSOPNodeStartElement(pImpl, name) ||
-            HandleSatNodeStartElement(pImpl, name) ||
-            HandleTerminalStartElement(pImpl, name) ||
-            HandleUnknownStartElement(pImpl, name))
+        if (HandleColorDecisionListStartElement(pImpl, name)
+            || HandleColorDecisionStartElement(pImpl, name)
+            || HandleColorCorrectionCDLStartElement(pImpl, name)
+            || HandleSOPNodeStartElement(pImpl, name) || HandleSatNodeStartElement(pImpl, name)
+            || HandleTerminalStartElement(pImpl, name) || HandleUnknownStartElement(pImpl, name))
         {
             pImpl->m_elms.back()->start(atts);
         }
     }
 }
 
-void CDLParser::Impl::StartElementHandlerCCC(void *userData,
-                                             const XML_Char *name,
-                                             const XML_Char **atts)
+void CDLParser::Impl::StartElementHandlerCCC(
+    void * userData,
+    const XML_Char * name,
+    const XML_Char ** atts)
 {
-    CDLParser::Impl* pImpl = (CDLParser::Impl*)userData;
+    CDLParser::Impl * pImpl = (CDLParser::Impl *)userData;
     if (IsValidStartElement(pImpl, name))
     {
-        if (HandleColorCorrectionCollectionStartElement(pImpl, name) ||
-            HandleColorCorrectionCCCStartElement(pImpl, name) ||
-            HandleSOPNodeStartElement(pImpl, name) ||
-            HandleSatNodeStartElement(pImpl, name) ||
-            HandleTerminalStartElement(pImpl, name) ||
-            HandleUnknownStartElement(pImpl, name))
+        if (HandleColorCorrectionCollectionStartElement(pImpl, name)
+            || HandleColorCorrectionCCCStartElement(pImpl, name)
+            || HandleSOPNodeStartElement(pImpl, name) || HandleSatNodeStartElement(pImpl, name)
+            || HandleTerminalStartElement(pImpl, name) || HandleUnknownStartElement(pImpl, name))
         {
             pImpl->m_elms.back()->start(atts);
         }
     }
 }
 
-void CDLParser::Impl::StartElementHandlerCC(void *userData,
-                                            const XML_Char *name,
-                                            const XML_Char **atts)
+void CDLParser::Impl::StartElementHandlerCC(
+    void * userData,
+    const XML_Char * name,
+    const XML_Char ** atts)
 {
-    CDLParser::Impl* pImpl = (CDLParser::Impl*)userData;
+    CDLParser::Impl * pImpl = (CDLParser::Impl *)userData;
     if (IsValidStartElement(pImpl, name))
     {
-        if (HandleColorCorrectionCCStartElement(pImpl, name) ||
-            HandleSOPNodeStartElement(pImpl, name) ||
-            HandleSatNodeStartElement(pImpl, name) ||
-            HandleTerminalStartElement(pImpl, name) ||
-            HandleUnknownStartElement(pImpl, name))
+        if (HandleColorCorrectionCCStartElement(pImpl, name)
+            || HandleSOPNodeStartElement(pImpl, name) || HandleSatNodeStartElement(pImpl, name)
+            || HandleTerminalStartElement(pImpl, name) || HandleUnknownStartElement(pImpl, name))
         {
             pImpl->m_elms.back()->start(atts);
         }
     }
 }
 
-bool CDLParser::Impl::IsValidStartElement(CDLParser::Impl* pImpl,
-                                          const XML_Char *name)
+bool CDLParser::Impl::IsValidStartElement(CDLParser::Impl * pImpl, const XML_Char * name)
 {
     if (!pImpl)
     {
@@ -494,8 +456,9 @@ bool CDLParser::Impl::IsValidStartElement(CDLParser::Impl* pImpl,
     return true;
 }
 
-bool CDLParser::Impl::HandleColorDecisionListStartElement(CDLParser::Impl* pImpl,
-                                                          const XML_Char *name)
+bool CDLParser::Impl::HandleColorDecisionListStartElement(
+    CDLParser::Impl * pImpl,
+    const XML_Char * name)
 {
     // Handle the ColorDecisionList element.
     if ((0 == strcmp(name, CDL_TAG_COLOR_DECISION_LIST)))
@@ -510,14 +473,16 @@ bool CDLParser::Impl::HandleColorDecisionListStartElement(CDLParser::Impl* pImpl
 
             // Bind the reader's CDLTransformList to the one in the
             // ColorDecisionList element.
-            CDLReaderColorDecisionListElt* pCDLElt =
-                dynamic_cast<CDLReaderColorDecisionListElt*>(pElt.get());
+            CDLReaderColorDecisionListElt * pCDLElt
+                = dynamic_cast<CDLReaderColorDecisionListElt *>(pElt.get());
             pImpl->m_parsingInfo = pCDLElt->getCDLParsingInfo();
         }
         else
         {
-            pElt = pImpl->createDummyElement(name, ": The ColorDecisionList "
-                                                   "already exists");
+            pElt = pImpl->createDummyElement(
+                name,
+                ": The ColorDecisionList "
+                "already exists");
         }
 
         pImpl->m_elms.push_back(pElt);
@@ -526,8 +491,9 @@ bool CDLParser::Impl::HandleColorDecisionListStartElement(CDLParser::Impl* pImpl
     return false;
 }
 
-bool CDLParser::Impl::HandleColorDecisionStartElement(CDLParser::Impl* pImpl,
-                                                      const XML_Char *name)
+bool CDLParser::Impl::HandleColorDecisionStartElement(
+    CDLParser::Impl * pImpl,
+    const XML_Char * name)
 {
     // Handle the ColorDecision element, if parsing a CDL.
     if ((0 == strcmp(name, CDL_TAG_COLOR_DECISION)))
@@ -539,8 +505,10 @@ bool CDLParser::Impl::HandleColorDecisionStartElement(CDLParser::Impl* pImpl,
         }
         else
         {
-            pElt = pImpl->createDummyElement(name, ": ColorDecision must be "
-                                                   "under a ColorDecisionList");
+            pElt = pImpl->createDummyElement(
+                name,
+                ": ColorDecision must be "
+                "under a ColorDecisionList");
         }
 
         pImpl->m_elms.push_back(pElt);
@@ -550,7 +518,8 @@ bool CDLParser::Impl::HandleColorDecisionStartElement(CDLParser::Impl* pImpl,
 }
 
 bool CDLParser::Impl::HandleColorCorrectionCollectionStartElement(
-    CDLParser::Impl* pImpl, const XML_Char *name)
+    CDLParser::Impl * pImpl,
+    const XML_Char * name)
 {
     // Handle the ColorCorrectionCollection element.
     if ((0 == strcmp(name, CDL_TAG_COLOR_CORRECTION_COLLECTION)))
@@ -559,19 +528,20 @@ bool CDLParser::Impl::HandleColorCorrectionCollectionStartElement(
         if (!pImpl->m_parsingInfo || pImpl->m_parsingInfo->m_transforms.empty())
         {
             pElt = std::make_shared<CDLReaderColorCorrectionCollectionElt>(
-                name, pImpl->getXmlLocation(), pImpl->getXmlFilename());
+                name,
+                pImpl->getXmlLocation(),
+                pImpl->getXmlFilename());
 
             // Bind the reader's CDLTransformList to the one in the
             // ColorCorrectionCollection element.
-            CDLReaderColorCorrectionCollectionElt* pCCCElt =
-                dynamic_cast<CDLReaderColorCorrectionCollectionElt*>(pElt.get());
+            CDLReaderColorCorrectionCollectionElt * pCCCElt
+                = dynamic_cast<CDLReaderColorCorrectionCollectionElt *>(pElt.get());
             pImpl->m_parsingInfo = pCCCElt->getCDLParsingInfo();
         }
         else
         {
-            pElt = pImpl->createDummyElement(
-                name,
-                ": The ColorCorrectionCollection already exists");
+            pElt
+                = pImpl->createDummyElement(name, ": The ColorCorrectionCollection already exists");
         }
 
         pImpl->m_elms.push_back(pElt);
@@ -580,7 +550,9 @@ bool CDLParser::Impl::HandleColorCorrectionCollectionStartElement(
     return false;
 }
 
-bool CDLParser::Impl::HandleColorCorrectionCDLStartElement(CDLParser::Impl* pImpl, const XML_Char *name)
+bool CDLParser::Impl::HandleColorCorrectionCDLStartElement(
+    CDLParser::Impl * pImpl,
+    const XML_Char * name)
 {
     // Handle the ColorCorrection element
     if (0 == strcmp(name, CDL_TAG_COLOR_CORRECTION))
@@ -595,12 +567,12 @@ bool CDLParser::Impl::HandleColorCorrectionCDLStartElement(CDLParser::Impl* pImp
 
             // Bind the ColorCorrection element's CDLTransformList to the
             // one in the ColorDecisionList element.
-            CDLReaderColorCorrectionElt* pCCElt =
-                dynamic_cast<CDLReaderColorCorrectionElt*>(pElt.get());
-            CDLReaderColorDecisionElt* pCDElt =
-                dynamic_cast<CDLReaderColorDecisionElt*>(pCCElt->getParent().get());
-            CDLReaderColorDecisionListElt* pCDLElt =
-                dynamic_cast<CDLReaderColorDecisionListElt*>(pCDElt->getParent().get());
+            CDLReaderColorCorrectionElt * pCCElt
+                = dynamic_cast<CDLReaderColorCorrectionElt *>(pElt.get());
+            CDLReaderColorDecisionElt * pCDElt
+                = dynamic_cast<CDLReaderColorDecisionElt *>(pCCElt->getParent().get());
+            CDLReaderColorDecisionListElt * pCDLElt
+                = dynamic_cast<CDLReaderColorDecisionListElt *>(pCDElt->getParent().get());
 
             pCCElt->setCDLParsingInfo(pCDLElt->getCDLParsingInfo());
         }
@@ -619,7 +591,9 @@ bool CDLParser::Impl::HandleColorCorrectionCDLStartElement(CDLParser::Impl* pImp
     return false;
 }
 
-bool CDLParser::Impl::HandleColorCorrectionCCCStartElement(CDLParser::Impl* pImpl, const XML_Char *name)
+bool CDLParser::Impl::HandleColorCorrectionCCCStartElement(
+    CDLParser::Impl * pImpl,
+    const XML_Char * name)
 {
     if (0 == strcmp(name, CDL_TAG_COLOR_CORRECTION))
     {
@@ -633,10 +607,10 @@ bool CDLParser::Impl::HandleColorCorrectionCCCStartElement(CDLParser::Impl* pImp
 
             // Bind the ColorCorrection element's CDLTransformList to the one
             // in the ColorCorrectionCollection element.
-            CDLReaderColorCorrectionElt* pCCElt =
-                dynamic_cast<CDLReaderColorCorrectionElt*>(pElt.get());
-            CDLReaderColorCorrectionCollectionElt* pCCCElt =
-                dynamic_cast<CDLReaderColorCorrectionCollectionElt*>(pCCElt->getParent().get());
+            CDLReaderColorCorrectionElt * pCCElt
+                = dynamic_cast<CDLReaderColorCorrectionElt *>(pElt.get());
+            CDLReaderColorCorrectionCollectionElt * pCCCElt
+                = dynamic_cast<CDLReaderColorCorrectionCollectionElt *>(pCCElt->getParent().get());
 
             pCCElt->setCDLParsingInfo(pCCCElt->getCDLParsingInfo());
         }
@@ -656,7 +630,8 @@ bool CDLParser::Impl::HandleColorCorrectionCCCStartElement(CDLParser::Impl* pImp
 }
 
 bool CDLParser::Impl::HandleColorCorrectionCCStartElement(
-    CDLParser::Impl* pImpl, const XML_Char *name)
+    CDLParser::Impl * pImpl,
+    const XML_Char * name)
 {
     // Handle the ColorCorrection element.
     if (0 == strcmp(name, CDL_TAG_COLOR_CORRECTION))
@@ -664,15 +639,14 @@ bool CDLParser::Impl::HandleColorCorrectionCCStartElement(
         ElementRcPtr pElt;
 
         // If parsing a CC, make sure it is the only CDLTransform.
-        if (!pImpl->m_parsingInfo ||
-            pImpl->m_parsingInfo->m_transforms.empty())
+        if (!pImpl->m_parsingInfo || pImpl->m_parsingInfo->m_transforms.empty())
         {
             pElt = pImpl->createElement<CDLReaderColorCorrectionElt>(name);
 
             // Bind the ColorCorrection element's CDLTransformList to the
             // one explicitly created by the reader.
-            CDLReaderColorCorrectionElt* pCCElt =
-                dynamic_cast<CDLReaderColorCorrectionElt*>(pElt.get());
+            CDLReaderColorCorrectionElt * pCCElt
+                = dynamic_cast<CDLReaderColorCorrectionElt *>(pElt.get());
 
             pCCElt->setCDLParsingInfo(pImpl->getCDLParsingInfo());
         }
@@ -691,8 +665,7 @@ bool CDLParser::Impl::HandleColorCorrectionCCStartElement(
     return false;
 }
 
-bool CDLParser::Impl::HandleSOPNodeStartElement(CDLParser::Impl* pImpl,
-                                                const XML_Char *name)
+bool CDLParser::Impl::HandleSOPNodeStartElement(CDLParser::Impl * pImpl, const XML_Char * name)
 {
     if (0 == strcmp(name, TAG_SOPNODE))
     {
@@ -703,9 +676,10 @@ bool CDLParser::Impl::HandleSOPNodeStartElement(CDLParser::Impl* pImpl,
         }
         else
         {
-            pElt = pImpl->createDummyElement(name,
-                                             ": SOPNode must be under "
-                                             "a ColorCorrection");
+            pElt = pImpl->createDummyElement(
+                name,
+                ": SOPNode must be under "
+                "a ColorCorrection");
         }
 
         pImpl->m_elms.push_back(pElt);
@@ -714,11 +688,9 @@ bool CDLParser::Impl::HandleSOPNodeStartElement(CDLParser::Impl* pImpl,
     return false;
 }
 
-bool CDLParser::Impl::HandleSatNodeStartElement(CDLParser::Impl* pImpl,
-                                                const XML_Char *name)
+bool CDLParser::Impl::HandleSatNodeStartElement(CDLParser::Impl * pImpl, const XML_Char * name)
 {
-    if (0 == strcmp(name, TAG_SATNODE) ||
-        0 == strcmp(name, TAG_SATNODEALT))
+    if (0 == strcmp(name, TAG_SATNODE) || 0 == strcmp(name, TAG_SATNODEALT))
     {
         ElementRcPtr pElt;
         if (pImpl->isBackElementInstanceOf<CDLReaderColorCorrectionElt>())
@@ -727,9 +699,10 @@ bool CDLParser::Impl::HandleSatNodeStartElement(CDLParser::Impl* pImpl,
         }
         else
         {
-            pElt = pImpl->createDummyElement(name,
-                                             ": SatNode must be under "
-                                             "a ColorCorrection");
+            pElt = pImpl->createDummyElement(
+                name,
+                ": SatNode must be under "
+                "a ColorCorrection");
         }
 
         pImpl->m_elms.push_back(pElt);
@@ -738,14 +711,12 @@ bool CDLParser::Impl::HandleSatNodeStartElement(CDLParser::Impl* pImpl,
     return false;
 }
 
-bool CDLParser::Impl::HandleTerminalStartElement(CDLParser::Impl* pImpl,
-                                                 const XML_Char *name)
+bool CDLParser::Impl::HandleTerminalStartElement(CDLParser::Impl * pImpl, const XML_Char * name)
 {
     auto pContainer = std::dynamic_pointer_cast<XmlReaderContainerElt>(pImpl->getBackElement());
     if (!pContainer)
     {
-        pImpl->m_elms.push_back(pImpl->createDummyElement(name,
-                                                          "Internal error"));
+        pImpl->m_elms.push_back(pImpl->createDummyElement(name, "Internal error"));
         return true;
     }
     else
@@ -756,17 +727,16 @@ bool CDLParser::Impl::HandleTerminalStartElement(CDLParser::Impl* pImpl,
         // at their appropriate parent container.
         if (IsValidDescriptionTag(name, containerId))
         {
-            auto pDescElt
-                = pImpl->createElement<XmlReaderDescriptionElt>(name);
+            auto pDescElt = pImpl->createElement<XmlReaderDescriptionElt>(name);
 
             pImpl->m_elms.push_back(pDescElt);
             return true;
         }
 
         // Handle Slope, Offset and Power elements.
-        else if (0 == strcmp(name, TAG_SLOPE) ||
-                 0 == strcmp(name, TAG_OFFSET) ||
-                 0 == strcmp(name, TAG_POWER))
+        else if (
+            0 == strcmp(name, TAG_SLOPE) || 0 == strcmp(name, TAG_OFFSET)
+            || 0 == strcmp(name, TAG_POWER))
         {
             ElementRcPtr pElt;
             if (pImpl->isBackElementInstanceOf<CDLReaderSOPNodeCCElt>())
@@ -795,9 +765,7 @@ bool CDLParser::Impl::HandleTerminalStartElement(CDLParser::Impl* pImpl,
             }
             else
             {
-                pElt = pImpl->createDummyElement(
-                    name,
-                    ": Saturation tags must be under SatNode");
+                pElt = pImpl->createDummyElement(name, ": Saturation tags must be under SatNode");
             }
 
             pImpl->m_elms.push_back(pElt);
@@ -807,17 +775,15 @@ bool CDLParser::Impl::HandleTerminalStartElement(CDLParser::Impl* pImpl,
     return false;
 }
 
-bool CDLParser::Impl::HandleUnknownStartElement(CDLParser::Impl* pImpl,
-                                                const XML_Char *name)
+bool CDLParser::Impl::HandleUnknownStartElement(CDLParser::Impl * pImpl, const XML_Char * name)
 {
-    pImpl->m_elms.push_back(pImpl->createDummyElement(name,
-                                                      ": Unknown element"));
+    pImpl->m_elms.push_back(pImpl->createDummyElement(name, ": Unknown element"));
     return true;
 }
 
-void CDLParser::Impl::EndElementHandler(void *userData, const XML_Char *name)
+void CDLParser::Impl::EndElementHandler(void * userData, const XML_Char * name)
 {
-    CDLParser::Impl* pImpl = (CDLParser::Impl*)userData;
+    CDLParser::Impl * pImpl = (CDLParser::Impl *)userData;
     if (!pImpl)
     {
         throw Exception("Internal CDL parsing error.");
@@ -865,8 +831,7 @@ void CDLParser::Impl::EndElementHandler(void *userData, const XML_Char *name)
         ElementRcPtr pParent = pImpl->getBackElement();
 
         // Is it at the right location in the stack?
-        if ((!pParent || !pParent->isContainer() ||
-             pParent != pPlainElt->getParent()))
+        if ((!pParent || !pParent->isContainer() || pParent != pPlainElt->getParent()))
         {
             std::ostringstream os;
             os << "Parsing error (";
@@ -879,23 +844,23 @@ void CDLParser::Impl::EndElementHandler(void *userData, const XML_Char *name)
     pElt->end();
 }
 
-void CDLParser::Impl::CharacterDataHandler(void *userData,
-                                           const XML_Char *s,
-                                           int len)
+void CDLParser::Impl::CharacterDataHandler(void * userData, const XML_Char * s, int len)
 {
-    CDLParser::Impl* pImpl = (CDLParser::Impl*)userData;
+    CDLParser::Impl * pImpl = (CDLParser::Impl *)userData;
     if (!pImpl)
     {
         throw Exception("Internal CDL parsing error.");
     }
 
-    if (len == 0) return;
-    if (len<0 || !s || !*s)
+    if (len == 0)
+        return;
+    if (len < 0 || !s || !*s)
     {
         pImpl->throwMessage("Empty attribute data");
     }
     // Parsing a single new line. This is valid.
-    if (len == 1 && s[0] == '\n') return;
+    if (len == 1 && s[0] == '\n')
+        return;
 
     ElementRcPtr pElt = pImpl->m_elms.back();
     if (!pElt)
@@ -917,10 +882,10 @@ void CDLParser::Impl::CharacterDataHandler(void *userData,
     {
         // Ignore white-spaces.
         size_t start = 0;
-        size_t end = len;
+        size_t end   = len;
         FindSubString(s, len, start, end);
 
-        if (end>0)
+        if (end > 0)
         {
             if (pElt->isContainer())
             {
@@ -941,15 +906,13 @@ void CDLParser::Impl::CharacterDataHandler(void *userData,
 
                     pImpl->throwMessage(os.str());
                 }
-                pPlainElt->setRawData(s + start,
-                                      end - start,
-                                      pImpl->getXmlLocation());
+                pPlainElt->setRawData(s + start, end - start, pImpl->getXmlLocation());
             }
         }
     }
 }
 
-CDLParser::CDLParser(const std::string& xmlFile)
+CDLParser::CDLParser(const std::string & xmlFile)
     : m_impl(new Impl(xmlFile))
 {
 }
@@ -965,14 +928,15 @@ void CDLParser::parse(std::istream & istream) const
     m_impl->parse(istream);
 }
 
-void CDLParser::getCDLTransforms(CDLTransformMap & transformMap,
-                                 CDLTransformVec & transformVec,
-                                 FormatMetadataImpl & metadata) const
+void CDLParser::getCDLTransforms(
+    CDLTransformMap & transformMap,
+    CDLTransformVec & transformVec,
+    FormatMetadataImpl & metadata) const
 {
-    const CDLTransformVec& pTransformList = m_impl->getCDLParsingInfo()->m_transforms;
+    const CDLTransformVec & pTransformList = m_impl->getCDLParsingInfo()->m_transforms;
     for (size_t i = 0; i < pTransformList.size(); ++i)
     {
-        const CDLTransformImplRcPtr& pTransform = pTransformList.at(i);
+        const CDLTransformImplRcPtr & pTransform = pTransformList.at(i);
         transformVec.push_back(pTransform);
 
         const std::string & id = pTransform->data().getID();
@@ -996,7 +960,7 @@ void CDLParser::getCDLTransforms(CDLTransformMap & transformMap,
 
 void CDLParser::getCDLTransform(CDLTransformImplRcPtr & transform) const
 {
-    const CDLTransformVec& pTransformList = m_impl->getCDLParsingInfo()->m_transforms;
+    const CDLTransformVec & pTransformList = m_impl->getCDLParsingInfo()->m_transforms;
     if (pTransformList.empty())
     {
         throw Exception("No transform found.");

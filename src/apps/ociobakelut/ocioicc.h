@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_OCIOICC_H
 #define INCLUDED_OCIO_OCIOICC_H
 
@@ -30,16 +29,16 @@ namespace OCIO_NAMESPACE
 //                          source to PCS illuminant. Required only if the actual
 //                          illumination source is not D50.
 
-void SaveICCProfileToFile(const std::string & outputfile,
-                          ConstCPUProcessorRcPtr & processor,
-                          int cubesize,
-                          int whitepointtemp,
-                          const std::string & displayicc,
-                          const std::string & description,
-                          const std::string & copyright,
-                          bool verbose);
+void SaveICCProfileToFile(
+    const std::string & outputfile,
+    ConstCPUProcessorRcPtr & processor,
+    int cubesize,
+    int whitepointtemp,
+    const std::string & displayicc,
+    const std::string & description,
+    const std::string & copyright,
+    bool verbose);
 
 } // namespace OCIO_NAMESPACE
 
 #endif
-

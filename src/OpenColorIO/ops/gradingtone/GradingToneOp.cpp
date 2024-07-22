@@ -7,9 +7,9 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "GpuShaderUtils.h"
+#include "ops/gradingtone/GradingToneOp.h"
 #include "ops/gradingtone/GradingToneOpCPU.h"
 #include "ops/gradingtone/GradingToneOpGPU.h"
-#include "ops/gradingtone/GradingToneOp.h"
 #include "transforms/GradingToneTransform.h"
 
 namespace OCIO_NAMESPACE
@@ -25,7 +25,7 @@ typedef OCIO_SHARED_PTR<const GradingToneOp> ConstGradingToneOpRcPtr;
 class GradingToneOp : public Op
 {
 public:
-    GradingToneOp() = delete;
+    GradingToneOp()                      = delete;
     GradingToneOp(const GradingToneOp &) = delete;
     explicit GradingToneOp(GradingToneOpDataRcPtr & tone);
 
@@ -46,8 +46,9 @@ public:
     bool isDynamic() const override;
     bool hasDynamicProperty(DynamicPropertyType type) const override;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const override;
-    void replaceDynamicProperty(DynamicPropertyType type,
-                                DynamicPropertyGradingToneImplRcPtr & prop) override;
+    void replaceDynamicProperty(
+        DynamicPropertyType type,
+        DynamicPropertyGradingToneImplRcPtr & prop) override;
     void removeDynamicProperties() override;
 
     ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
@@ -59,15 +60,11 @@ protected:
     {
         return DynamicPtrCast<const GradingToneOpData>(data());
     }
-    GradingToneOpDataRcPtr toneData()
-    {
-        return DynamicPtrCast<GradingToneOpData>(data());
-    }
+    GradingToneOpDataRcPtr toneData() { return DynamicPtrCast<GradingToneOpData>(data()); }
 };
 
-
 GradingToneOp::GradingToneOp(GradingToneOpDataRcPtr & tone)
-    :   Op()
+    : Op()
 {
     data() = tone;
 }
@@ -101,7 +98,8 @@ bool GradingToneOp::isSameType(ConstOpRcPtr & op) const
 bool GradingToneOp::isInverse(ConstOpRcPtr & op) const
 {
     ConstGradingToneOpRcPtr typedRcPtr = DynamicPtrCast<const GradingToneOp>(op);
-    if (!typedRcPtr) return false;
+    if (!typedRcPtr)
+        return false;
 
     ConstGradingToneOpDataRcPtr toneOpData = typedRcPtr->toneData();
     return toneData()->isInverse(toneOpData);
@@ -159,8 +157,9 @@ DynamicPropertyRcPtr GradingToneOp::getDynamicProperty(DynamicPropertyType type)
     return toneData()->getDynamicProperty();
 }
 
-void GradingToneOp::replaceDynamicProperty(DynamicPropertyType type,
-                                           DynamicPropertyGradingToneImplRcPtr & prop)
+void GradingToneOp::replaceDynamicProperty(
+    DynamicPropertyType type,
+    DynamicPropertyGradingToneImplRcPtr & prop)
 {
     if (type != DYNAMIC_PROPERTY_GRADING_TONE)
     {
@@ -190,18 +189,14 @@ void GradingToneOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) 
     GetGradingToneGPUShaderProgram(shaderCreator, data);
 }
 
-
-}  // Anon namespace
-
-
-
+} // namespace
 
 ///////////////////////////////////////////////////////////////////////////
 
-
-void CreateGradingToneOp(OpRcPtrVec & ops,
-                         GradingToneOpDataRcPtr & toneData,
-                         TransformDirection direction)
+void CreateGradingToneOp(
+    OpRcPtrVec & ops,
+    GradingToneOpDataRcPtr & toneData,
+    TransformDirection direction)
 {
     auto tone = toneData;
     if (direction == TRANSFORM_DIR_INVERSE)
@@ -221,19 +216,20 @@ void CreateGradingToneTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     {
         throw Exception("CreateGradingToneTransform: op has to be a GradingToneOp.");
     }
-    auto gtData = DynamicPtrCast<const GradingToneOpData>(op->data());
+    auto gtData      = DynamicPtrCast<const GradingToneOpData>(op->data());
     auto gtTransform = GradingToneTransform::Create(gtData->getStyle());
-    auto & data = dynamic_cast<GradingToneTransformImpl *>(gtTransform.get())->data();
-    data = *gtData;
+    auto & data      = dynamic_cast<GradingToneTransformImpl *>(gtTransform.get())->data();
+    data             = *gtData;
 
     group->appendTransform(gtTransform);
 }
 
-void BuildGradingToneOp(OpRcPtrVec & ops,
-                        const Config & /*config*/,
-                        const ConstContextRcPtr & /*context*/,
-                        const GradingToneTransform & transform,
-                        TransformDirection dir)
+void BuildGradingToneOp(
+    OpRcPtrVec & ops,
+    const Config & /*config*/,
+    const ConstContextRcPtr & /*context*/,
+    const GradingToneTransform & transform,
+    TransformDirection dir)
 {
     const auto & data = dynamic_cast<const GradingToneTransformImpl &>(transform).data();
     data.validate();
@@ -242,6 +238,4 @@ void BuildGradingToneOp(OpRcPtrVec & ops,
     CreateGradingToneOp(ops, toneData, dir);
 }
 
-
 } // namespace OCIO_NAMESPACE
-

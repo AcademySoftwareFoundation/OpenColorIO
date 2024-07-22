@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <memory>
 #include <algorithm>
-#include <sstream>
+#include <memory>
 #include <regex>
+#include <sstream>
 
 // OpenColorIO must be first - order is important.
 #include <OpenColorIO/OpenColorIO.h>
-#include "Mutex.h"
 
+#include "Mutex.h"
 #include "Platform.h"
 
 #include "builtinconfigs/BuiltinConfigRegistry.h"
@@ -24,11 +24,13 @@ static constexpr char DEFAULT_BUILTIN_CONFIG[] = "cg-config-v2.1.0_aces-v1.3_oci
 // These are used for ResolveConfigPath function and we need to return a variable that still exists
 // once the function finishes since we are returning a const char *.
 static constexpr char DEFAULT_BUILTIN_CONFIG_URI[] = "ocio://cg-config-v2.1.0_aces-v1.3_ocio-v2.3";
-static constexpr char LATEST_CG_BUILTIN_CONFIG_URI[] = "ocio://cg-config-v2.1.0_aces-v1.3_ocio-v2.3";
-static constexpr char LATEST_STUDIO_BUILTIN_CONFIG_URI[] = "ocio://studio-config-v2.1.0_aces-v1.3_ocio-v2.3";
+static constexpr char LATEST_CG_BUILTIN_CONFIG_URI[]
+    = "ocio://cg-config-v2.1.0_aces-v1.3_ocio-v2.3";
+static constexpr char LATEST_STUDIO_BUILTIN_CONFIG_URI[]
+    = "ocio://studio-config-v2.1.0_aces-v1.3_ocio-v2.3";
 
-static constexpr char BUILTIN_DEFAULT_NAME[] = "default";
-static constexpr char BUILTIN_LATEST_CG_NAME[] = "cg-config-latest";
+static constexpr char BUILTIN_DEFAULT_NAME[]       = "default";
+static constexpr char BUILTIN_LATEST_CG_NAME[]     = "cg-config-latest";
 static constexpr char BUILTIN_LATEST_STUDIO_NAME[] = "studio-config-latest";
 
 namespace OCIO_NAMESPACE
@@ -67,7 +69,7 @@ const BuiltinConfigRegistry & BuiltinConfigRegistry::Get() noexcept
 
     static BuiltinConfigRegistryImpl globalRegistry;
     static Mutex globalRegistryMutex;
-    
+
     AutoMutex guard(globalRegistryMutex);
 
     globalRegistry.init();
@@ -84,15 +86,19 @@ void BuiltinConfigRegistryImpl::init() noexcept
     if (m_builtinConfigs.empty())
     {
         m_builtinConfigs.clear();
-        
+
         CGCONFIG::Register(*this);
         STUDIOCONFIG::Register(*this);
     }
 }
 
-void BuiltinConfigRegistryImpl::addBuiltin(const char * name, const char * uiName, const char * const config, bool isRecommended)
+void BuiltinConfigRegistryImpl::addBuiltin(
+    const char * name,
+    const char * uiName,
+    const char * const config,
+    bool isRecommended)
 {
-    BuiltinConfigData data { name, uiName, config, isRecommended };
+    BuiltinConfigData data{name, uiName, config, isRecommended};
 
     for (auto & builtin : m_builtinConfigs)
     {

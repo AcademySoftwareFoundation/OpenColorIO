@@ -8,15 +8,15 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "fileformats/FileFormatUtils.h"
-#include "ops/lut1d/Lut1DOp.h"
-#include "ops/matrix/MatrixOp.h"
 #include "BakingUtils.h"
 #include "ParseUtils.h"
 #include "Platform.h"
+#include "fileformats/FileFormatUtils.h"
+#include "ops/lut1d/Lut1DOp.h"
+#include "ops/matrix/MatrixOp.h"
 #include "transforms/FileTransform.h"
-#include "utils/StringUtils.h"
 #include "utils/NumberUtils.h"
+#include "utils/StringUtils.h"
 
 /*
 Version 1
@@ -26,7 +26,7 @@ Length 4096
 {
         0.031525943963232252
         0.045645604561056156
-	...
+    ...
 }
 
 */
@@ -40,7 +40,7 @@ namespace
 class LocalCachedFile : public CachedFile
 {
 public:
-    LocalCachedFile() = default;
+    LocalCachedFile()  = default;
     ~LocalCachedFile() = default;
 
     Lut1DOpDataRcPtr lut;
@@ -53,38 +53,36 @@ typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
 class LocalFileFormat : public FileFormat
 {
 public:
-    LocalFileFormat() = default;
+    LocalFileFormat()  = default;
     ~LocalFileFormat() = default;
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-    CachedFileRcPtr read(std::istream & istream,
-                         const std::string & fileName,
-                         Interpolation interp) const override;
+    CachedFileRcPtr read(std::istream & istream, const std::string & fileName, Interpolation interp)
+        const override;
 
-    void bake(const Baker & baker,
-              const std::string & formatName,
-              std::ostream & ostream) const override;
+    void bake(const Baker & baker, const std::string & formatName, std::ostream & ostream)
+        const override;
 
-    void buildFileOps(OpRcPtrVec & ops,
-                        const Config & config,
-                        const ConstContextRcPtr & context,
-                        CachedFileRcPtr untypedCachedFile,
-                        const FileTransform & fileTransform,
-                        TransformDirection dir) const override;
+    void buildFileOps(
+        OpRcPtrVec & ops,
+        const Config & config,
+        const ConstContextRcPtr & context,
+        CachedFileRcPtr untypedCachedFile,
+        const FileTransform & fileTransform,
+        TransformDirection dir) const override;
 
 private:
-    static void ThrowErrorMessage(const std::string & error,
-                                  int line,
-                                  const std::string & lineContent);
+    static void
+    ThrowErrorMessage(const std::string & error, int line, const std::string & lineContent);
 };
 
 void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 {
     FormatInfo info;
-    info.name = "spi1d";
-    info.extension = "spi1d";
-    info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
+    info.name              = "spi1d";
+    info.extension         = "spi1d";
+    info.capabilities      = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
     info.bake_capabilities = FormatBakeFlags(FORMAT_BAKE_CAPABILITY_1DLUT);
     formatInfoVec.push_back(info);
 }
@@ -92,15 +90,16 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 // Try and load the format.
 // Raise an exception if it can't be loaded.
 
-CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
-                                      const std::string & /*fileName*/,
-                                      Interpolation interp) const
+CachedFileRcPtr LocalFileFormat::read(
+    std::istream & istream,
+    const std::string & /*fileName*/,
+    Interpolation interp) const
 {
     // Parse Header Info.
-    int lut_size = -1;
+    int lut_size   = -1;
     float from_min = 0.0;
     float from_max = 1.0;
-    int version = -1;
+    int version    = -1;
     int components = -1;
 
     const int MAX_LINE_SIZE = 4096;
@@ -116,7 +115,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
             ++currentLine;
             headerLine = std::string(lineBuffer);
 
-            if(StringUtils::StartsWith(headerLine, "Version"))
+            if (StringUtils::StartsWith(headerLine, "Version"))
             {
                 // " " in format means any number of spaces (white space,
                 // new line, tab) including 0 of them.
@@ -130,7 +129,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                     ThrowErrorMessage("Only format version 1 supported", currentLine, headerLine);
                 }
             }
-            else if(StringUtils::StartsWith(headerLine, "From"))
+            else if (StringUtils::StartsWith(headerLine, "From"))
             {
                 char fromMinS[64] = "";
                 char fromMaxS[64] = "";
@@ -144,8 +143,10 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                 }
                 else
                 {
-                    const auto fromMinAnswer = NumberUtils::from_chars(fromMinS, fromMinS + 64, from_min);
-                    const auto fromMaxAnswer = NumberUtils::from_chars(fromMaxS, fromMaxS + 64, from_max);
+                    const auto fromMinAnswer
+                        = NumberUtils::from_chars(fromMinS, fromMinS + 64, from_min);
+                    const auto fromMaxAnswer
+                        = NumberUtils::from_chars(fromMaxS, fromMaxS + 64, from_max);
 
                     if (fromMinAnswer.ec != std::errc() || fromMaxAnswer.ec != std::errc())
                     {
@@ -153,14 +154,14 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                     }
                 }
             }
-            else if(StringUtils::StartsWith(headerLine, "Components"))
+            else if (StringUtils::StartsWith(headerLine, "Components"))
             {
                 if (sscanf(lineBuffer, "Components %d", &components) != 1)
                 {
                     ThrowErrorMessage("Invalid 'Components' Tag", currentLine, headerLine);
                 }
             }
-            else if(StringUtils::StartsWith(headerLine, "Length"))
+            else if (StringUtils::StartsWith(headerLine, "Length"))
             {
                 if (sscanf(lineBuffer, "Length %d", &lut_size) != 1)
                 {
@@ -168,7 +169,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                 }
             }
         }
-        while (istream.good() && !StringUtils::StartsWith(headerLine,"{"));
+        while (istream.good() && !StringUtils::StartsWith(headerLine, "{"));
     }
 
     if (version == -1)
@@ -183,7 +184,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
     {
         ThrowErrorMessage("Could not find 'Components' Tag", -1, "");
     }
-    if (components < 0 || components>3)
+    if (components < 0 || components > 3)
     {
         ThrowErrorMessage("Components must be [1,2,3]", -1, "");
     }
@@ -196,12 +197,12 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 
     lut1d->setFileOutputBitDepth(BIT_DEPTH_F32);
     Array & lutArray = lut1d->getArray();
-    unsigned long i = 0;
+    unsigned long i  = 0;
     {
         istream.getline(lineBuffer, MAX_LINE_SIZE);
         ++currentLine;
 
-        int lineCount=0;
+        int lineCount = 0;
 
         std::vector<float> values;
 
@@ -219,12 +220,27 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 
                 char inputLUT[4][64] = {"", "", "", ""};
 #ifdef _WIN32
-                if (sscanf_s(lineBuffer, "%s %s %s %63s", inputLUT[0], 64,
-                           inputLUT[1], 64, inputLUT[2], 64, inputLUT[3],
-                           64) != components)
+                if (sscanf_s(
+                        lineBuffer,
+                        "%s %s %s %63s",
+                        inputLUT[0],
+                        64,
+                        inputLUT[1],
+                        64,
+                        inputLUT[2],
+                        64,
+                        inputLUT[3],
+                        64)
+                    != components)
 #else
-                if (sscanf(lineBuffer, "%s %s %s %63s", inputLUT[0],
-                           inputLUT[1], inputLUT[2], inputLUT[3]) != components)
+                if (sscanf(
+                        lineBuffer,
+                        "%s %s %s %63s",
+                        inputLUT[0],
+                        inputLUT[1],
+                        inputLUT[2],
+                        inputLUT[3])
+                    != components)
 #endif
                 {
                     std::ostringstream os;
@@ -243,7 +259,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 
                 for (int i = 0; i < components; i++)
                 {
-                    float v = NAN;
+                    float v           = NAN;
                     const auto result = NumberUtils::from_chars(inputLUT[i], inputLUT[i] + 64, v);
 
                     if (result.ec != std::errc())
@@ -252,8 +268,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                         os << "Malformed LUT line. Could not convert component";
                         os << i << " to a floating point number.";
 
-                        ThrowErrorMessage("Malformed LUT line", currentLine,
-                                            line);
+                        ThrowErrorMessage("Malformed LUT line", currentLine, line);
                     }
 
                     values[i] = v;
@@ -301,20 +316,21 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
     }
 
     LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
-    cachedFile->lut = lut1d;
-    cachedFile->from_min = from_min;
-    cachedFile->from_max = from_max;
+    cachedFile->lut                 = lut1d;
+    cachedFile->from_min            = from_min;
+    cachedFile->from_max            = from_max;
     return cachedFile;
 }
 
-void LocalFileFormat::bake(const Baker & baker,
-                           const std::string & formatName,
-                           std::ostream & ostream) const
+void LocalFileFormat::bake(
+    const Baker & baker,
+    const std::string & formatName,
+    std::ostream & ostream) const
 {
 
     const int DEFAULT_1D_SIZE = 4096;
 
-    if(formatName != "spi1d")
+    if (formatName != "spi1d")
     {
         std::ostringstream os;
         os << "Unknown spi format name, '";
@@ -329,12 +345,13 @@ void LocalFileFormat::bake(const Baker & baker,
     ConstConfigRcPtr config = baker.getConfig();
 
     int onedSize = baker.getCubeSize();
-    if(onedSize==-1) onedSize = DEFAULT_1D_SIZE;
+    if (onedSize == -1)
+        onedSize = DEFAULT_1D_SIZE;
 
     const std::string shaperSpace = baker.getShaperSpace();
 
     float fromInStart = 0.0f;
-    float fromInEnd = 1.0f;
+    float fromInEnd   = 1.0f;
 
     //
     // Generate 1DLUT
@@ -373,28 +390,27 @@ void LocalFileFormat::bake(const Baker & baker,
     ostream << "{" << "\n";
 
     // Write 1D data
-    for(int i=0; i<onedSize; ++i)
+    for (int i = 0; i < onedSize; ++i)
     {
-        ostream << "    "
-                << onedData[3*i+0] << " "
-                << onedData[3*i+1] << " "
-                << onedData[3*i+2] << "\n";
+        ostream << "    " << onedData[3 * i + 0] << " " << onedData[3 * i + 1] << " "
+                << onedData[3 * i + 2] << "\n";
     }
 
     // Footer
     ostream << "}" << "\n";
 }
 
-void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
-                                    const Config & /*config*/,
-                                    const ConstContextRcPtr & /*context*/,
-                                    CachedFileRcPtr untypedCachedFile,
-                                    const FileTransform& fileTransform,
-                                    TransformDirection dir) const
+void LocalFileFormat::buildFileOps(
+    OpRcPtrVec & ops,
+    const Config & /*config*/,
+    const ConstContextRcPtr & /*context*/,
+    CachedFileRcPtr untypedCachedFile,
+    const FileTransform & fileTransform,
+    TransformDirection dir) const
 {
     LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
 
-    if(!cachedFile || !cachedFile->lut) // This should never happen.
+    if (!cachedFile || !cachedFile->lut) // This should never happen.
     {
         std::ostringstream os;
         os << "Cannot build Spi1D Op. Invalid cache type.";
@@ -403,17 +419,13 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 
     const auto newDir = CombineTransformDirections(dir, fileTransform.getDirection());
 
-    const double min[3] = { cachedFile->from_min,
-                            cachedFile->from_min,
-                            cachedFile->from_min };
+    const double min[3] = {cachedFile->from_min, cachedFile->from_min, cachedFile->from_min};
 
-    const double max[3] = { cachedFile->from_max,
-                            cachedFile->from_max,
-                            cachedFile->from_max };
+    const double max[3] = {cachedFile->from_max, cachedFile->from_max, cachedFile->from_max};
 
     const auto fileInterp = fileTransform.getInterpolation();
 
-    bool fileInterpUsed = false;
+    bool fileInterpUsed  = false;
     Lut1DOpDataRcPtr lut = HandleLUT1D(cachedFile->lut, fileInterp, fileInterpUsed);
 
     if (!fileInterpUsed)
@@ -423,20 +435,21 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 
     switch (newDir)
     {
-    case TRANSFORM_DIR_FORWARD:
-        CreateMinMaxOp(ops, min, max, TRANSFORM_DIR_FORWARD);
-        CreateLut1DOp(ops, lut, TRANSFORM_DIR_FORWARD);
-        break;
-    case TRANSFORM_DIR_INVERSE:
-        CreateLut1DOp(ops, lut, TRANSFORM_DIR_INVERSE);
-        CreateMinMaxOp(ops, min, max, TRANSFORM_DIR_INVERSE);
-        break;
+        case TRANSFORM_DIR_FORWARD:
+            CreateMinMaxOp(ops, min, max, TRANSFORM_DIR_FORWARD);
+            CreateLut1DOp(ops, lut, TRANSFORM_DIR_FORWARD);
+            break;
+        case TRANSFORM_DIR_INVERSE:
+            CreateLut1DOp(ops, lut, TRANSFORM_DIR_INVERSE);
+            CreateMinMaxOp(ops, min, max, TRANSFORM_DIR_INVERSE);
+            break;
     }
 }
 
-void LocalFileFormat::ThrowErrorMessage(const std::string & error,
-                                        int line,
-                                        const std::string & lineContent)
+void LocalFileFormat::ThrowErrorMessage(
+    const std::string & error,
+    int line,
+    const std::string & lineContent)
 {
     std::ostringstream os;
     if (-1 != line)
@@ -451,7 +464,7 @@ void LocalFileFormat::ThrowErrorMessage(const std::string & error,
 
     throw Exception(os.str().c_str());
 }
-}
+} // namespace
 
 FileFormat * CreateFileFormatSpi1D()
 {

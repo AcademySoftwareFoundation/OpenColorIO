@@ -8,23 +8,23 @@
 
 #include "BitDepthUtils.h"
 #include "MathUtils.h"
+#include "Platform.h"
 #include "ops/log/LogOpData.h"
 #include "ops/log/LogUtils.h"
 #include "ops/matrix/MatrixOpData.h"
 #include "ops/range/RangeOpData.h"
-#include "Platform.h"
 
 namespace OCIO_NAMESPACE
 {
 
 namespace DefaultValues
 {
-static const double logSlope[3]  = { 1.0, 1.0, 1.0 };
-static const double linSlope[3]  = { 1.0, 1.0, 1.0 };
-static const double linOffset[3]  = { 0.0, 0.0, 0.0 };
-static const double logOffset[3] = { 0.0, 0.0, 0.0 };
+static const double logSlope[3]      = {1.0, 1.0, 1.0};
+static const double linSlope[3]      = {1.0, 1.0, 1.0};
+static const double linOffset[3]     = {0.0, 0.0, 0.0};
+static const double logOffset[3]     = {0.0, 0.0, 0.0};
 const std::streamsize FLOAT_DECIMALS = 7;
-}
+} // namespace DefaultValues
 
 namespace
 {
@@ -59,23 +59,27 @@ void ValidateParams(const LogOpData::Params & params, TransformDirection /* dire
         throw Exception(oss.str().c_str());
     }
 }
-}
+} // namespace
 
 LogOpData::LogOpData(double base, TransformDirection direction)
     : OpData()
     , m_base(base)
     , m_direction(direction)
 {
-    setParameters(DefaultValues::logSlope, DefaultValues::logOffset,
-                  DefaultValues::linSlope, DefaultValues::linOffset);
+    setParameters(
+        DefaultValues::logSlope,
+        DefaultValues::logOffset,
+        DefaultValues::linSlope,
+        DefaultValues::linOffset);
 }
 
-LogOpData::LogOpData(double base,
-                     const double(&logSlope)[3],
-                     const double(&logOffset)[3],
-                     const double(&linSlope)[3],
-                     const double(&linOffset)[3],
-                     TransformDirection direction)
+LogOpData::LogOpData(
+    double base,
+    const double (&logSlope)[3],
+    const double (&logOffset)[3],
+    const double (&linSlope)[3],
+    const double (&linOffset)[3],
+    TransformDirection direction)
     : OpData()
     , m_base(base)
     , m_direction(direction)
@@ -83,11 +87,12 @@ LogOpData::LogOpData(double base,
     setParameters(logSlope, logOffset, linSlope, linOffset);
 }
 
-LogOpData::LogOpData(double base,
-                     const Params & redParams,
-                     const Params & greenParams,
-                     const Params & blueParams,
-                     TransformDirection dir)
+LogOpData::LogOpData(
+    double base,
+    const Params & redParams,
+    const Params & greenParams,
+    const Params & blueParams,
+    TransformDirection dir)
     : OpData()
     , m_redParams(redParams)
     , m_greenParams(greenParams)
@@ -117,7 +122,7 @@ double LogOpData::getBase() const noexcept
     return m_base;
 }
 
-void LogOpData::setValue(LogAffineParameter val, const double(&values)[3])
+void LogOpData::setValue(LogAffineParameter val, const double (&values)[3])
 {
     if (val == LIN_SIDE_BREAK)
     {
@@ -157,7 +162,7 @@ void LogOpData::unsetLinearSlope()
     }
 }
 
-bool LogOpData::getValue(LogAffineParameter val, double(&values)[3]) const noexcept
+bool LogOpData::getValue(LogAffineParameter val, double (&values)[3]) const noexcept
 {
     if (val >= m_redParams.size())
     {
@@ -169,10 +174,11 @@ bool LogOpData::getValue(LogAffineParameter val, double(&values)[3]) const noexc
     return true;
 }
 
-void LogOpData::setParameters(const double(&logSlope)[3],
-                              const double(&logOffset)[3],
-                              const double(&linSlope)[3],
-                              const double(&linOffset)[3])
+void LogOpData::setParameters(
+    const double (&logSlope)[3],
+    const double (&logOffset)[3],
+    const double (&linSlope)[3],
+    const double (&linOffset)[3])
 {
     m_redParams.resize(4);
     m_greenParams.resize(4);
@@ -184,10 +190,11 @@ void LogOpData::setParameters(const double(&logSlope)[3],
     setValue(LIN_SIDE_OFFSET, linOffset);
 }
 
-void LogOpData::getParameters(double(&logSlope)[3],
-                              double(&logOffset)[3],
-                              double(&linSlope)[3],
-                              double(&linOffset)[3]) const
+void LogOpData::getParameters(
+    double (&logSlope)[3],
+    double (&logOffset)[3],
+    double (&linSlope)[3],
+    double (&linOffset)[3]) const
 {
     getValue(LOG_SIDE_SLOPE, logSlope);
     getValue(LOG_SIDE_OFFSET, logOffset);
@@ -205,8 +212,7 @@ void LogOpData::validate() const
     ValidateParams(m_greenParams, m_direction);
     ValidateParams(m_blueParams, m_direction);
 
-    if (m_redParams.size() != m_greenParams.size() ||
-        m_redParams.size() != m_blueParams.size())
+    if (m_redParams.size() != m_greenParams.size() || m_redParams.size() != m_blueParams.size())
     {
         throw Exception("Log: Red, green & blue parameters must have the same size.");
     }
@@ -244,44 +250,46 @@ OpDataRcPtr LogOpData::getIdentityReplacement() const
     {
         switch (m_direction)
         {
-        case TRANSFORM_DIR_FORWARD:
-            // The first op logarithm is not defined for negative values.
-            resOp = std::make_shared<RangeOpData>(0.,
-                                                  // Don't clamp high end.
-                                                  RangeOpData::EmptyValue(),
-                                                  0.,
-                                                  RangeOpData::EmptyValue());
-            break;
-        case TRANSFORM_DIR_INVERSE:
-            // In principle, the power function is defined over the entire domain.
-            // However, in practice the input to the following logarithm is clamped
-            // to a very small positive number and this imposes a limit.
-            // E.g., log10(FLOAT_MIN) = -37.93, but this is so small that it makes
-            // more sense to consider it an exact inverse.
-            resOp = std::make_shared<MatrixOpData>();
-            break;
+            case TRANSFORM_DIR_FORWARD:
+                // The first op logarithm is not defined for negative values.
+                resOp = std::make_shared<RangeOpData>(
+                    0.,
+                    // Don't clamp high end.
+                    RangeOpData::EmptyValue(),
+                    0.,
+                    RangeOpData::EmptyValue());
+                break;
+            case TRANSFORM_DIR_INVERSE:
+                // In principle, the power function is defined over the entire domain.
+                // However, in practice the input to the following logarithm is clamped
+                // to a very small positive number and this imposes a limit.
+                // E.g., log10(FLOAT_MIN) = -37.93, but this is so small that it makes
+                // more sense to consider it an exact inverse.
+                resOp = std::make_shared<MatrixOpData>();
+                break;
         }
     }
     else if (!isCamera())
     {
         switch (m_direction)
         {
-        case TRANSFORM_DIR_FORWARD: // LinToLog -> LogToLin
-        {
-            // Minimum value allowed is -linOffset/linSlope so that linSlope*x+linOffset > 0.
-            const double minValue = -m_redParams[LIN_SIDE_OFFSET] / m_redParams[LIN_SIDE_SLOPE];
-            resOp = std::make_shared<RangeOpData>(minValue,
-                                                  // Don't clamp high end.
-                                                  RangeOpData::EmptyValue(),
-                                                  minValue,
-                                                  RangeOpData::EmptyValue());
-            break;
-        }
-        case TRANSFORM_DIR_INVERSE: // LogToLin -> LinToLog
-        {
-            resOp = std::make_shared<MatrixOpData>();
-            break;
-        }
+            case TRANSFORM_DIR_FORWARD: // LinToLog -> LogToLin
+            {
+                // Minimum value allowed is -linOffset/linSlope so that linSlope*x+linOffset > 0.
+                const double minValue = -m_redParams[LIN_SIDE_OFFSET] / m_redParams[LIN_SIDE_SLOPE];
+                resOp                 = std::make_shared<RangeOpData>(
+                    minValue,
+                    // Don't clamp high end.
+                    RangeOpData::EmptyValue(),
+                    minValue,
+                    RangeOpData::EmptyValue());
+                break;
+            }
+            case TRANSFORM_DIR_INVERSE: // LogToLin -> LinToLog
+            {
+                resOp = std::make_shared<MatrixOpData>();
+                break;
+            }
         }
     }
     else
@@ -308,10 +316,10 @@ std::string LogOpData::getCacheID() const
 
     cacheIDStream << TransformDirectionToString(m_direction) << " ";
 
-    cacheIDStream << "Base "          << getBaseString(DefaultValues::FLOAT_DECIMALS)      << " ";
-    cacheIDStream << "LogSideSlope "  << getLogSlopeString(DefaultValues::FLOAT_DECIMALS)  << " ";
+    cacheIDStream << "Base " << getBaseString(DefaultValues::FLOAT_DECIMALS) << " ";
+    cacheIDStream << "LogSideSlope " << getLogSlopeString(DefaultValues::FLOAT_DECIMALS) << " ";
     cacheIDStream << "LogSideOffset " << getLogOffsetString(DefaultValues::FLOAT_DECIMALS) << " ";
-    cacheIDStream << "LinSideSlope "  << getLinSlopeString(DefaultValues::FLOAT_DECIMALS)  << " ";
+    cacheIDStream << "LinSideSlope " << getLinSlopeString(DefaultValues::FLOAT_DECIMALS) << " ";
     cacheIDStream << "LinSideOffset " << getLinOffsetString(DefaultValues::FLOAT_DECIMALS);
     if (m_redParams.size() > 4)
     {
@@ -324,26 +332,26 @@ std::string LogOpData::getCacheID() const
     return cacheIDStream.str();
 }
 
-bool LogOpData::equals(const OpData& other) const
+bool LogOpData::equals(const OpData & other) const
 {
-    if (!OpData::equals(other)) return false;
+    if (!OpData::equals(other))
+        return false;
 
-    const LogOpData* log = static_cast<const LogOpData*>(&other);
+    const LogOpData * log = static_cast<const LogOpData *>(&other);
 
-    return (m_direction == log->m_direction
-            && m_base == log->m_base
-            && m_redParams == log->m_redParams
-            && m_greenParams == log->m_greenParams
-            && m_blueParams == log->m_blueParams);
+    return (
+        m_direction == log->m_direction && m_base == log->m_base && m_redParams == log->m_redParams
+        && m_greenParams == log->m_greenParams && m_blueParams == log->m_blueParams);
 }
 
 LogOpDataRcPtr LogOpData::clone() const
 {
-    auto clone = std::make_shared<LogOpData>(getBase(),
-                                             getRedParams(),
-                                             getGreenParams(),
-                                             getBlueParams(),
-                                             m_direction);
+    auto clone = std::make_shared<LogOpData>(
+        getBase(),
+        getRedParams(),
+        getGreenParams(),
+        getBlueParams(),
+        m_direction);
     clone->getFormatMetadata() = getFormatMetadata();
     return clone;
 }
@@ -363,9 +371,8 @@ LogOpDataRcPtr LogOpData::inverse() const
 
 bool LogOpData::isInverse(ConstLogOpDataRcPtr & log) const
 {
-    if (GetInverseTransformDirection(m_direction) == log->m_direction
-        && allComponentsEqual() && log->allComponentsEqual()
-        && getRedParams() == log->getRedParams()
+    if (GetInverseTransformDirection(m_direction) == log->m_direction && allComponentsEqual()
+        && log->allComponentsEqual() && getRedParams() == log->getRedParams()
         && getBase() == log->getBase())
     {
         return true;
@@ -455,10 +462,8 @@ bool LogOpData::isSimpleLog() const
 {
     if (allComponentsEqual() && m_redParams.size() == 4)
     {
-        if (m_redParams[LOG_SIDE_SLOPE] == 1.0
-            && m_redParams[LIN_SIDE_SLOPE] == 1.0
-            && m_redParams[LIN_SIDE_OFFSET] == 0.0
-            && m_redParams[LOG_SIDE_OFFSET] == 0.0)
+        if (m_redParams[LOG_SIDE_SLOPE] == 1.0 && m_redParams[LIN_SIDE_SLOPE] == 1.0
+            && m_redParams[LIN_SIDE_OFFSET] == 0.0 && m_redParams[LOG_SIDE_OFFSET] == 0.0)
         {
             return true;
         }
@@ -470,7 +475,7 @@ bool LogOpData::isLogBase(double base) const
 {
     if (isSimpleLog() && m_base == base)
     {
-            return true;
+        return true;
     }
     return false;
 }

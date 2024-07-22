@@ -7,60 +7,57 @@
 
 #include "BitDepthUtils.h"
 #include "CPUProcessor.h"
+#include "ScanlineHelper.h"
 #include "ops/lut1d/Lut1DOpCPU.h"
 #include "ops/lut3d/Lut3DOpCPU.h"
 #include "ops/matrix/MatrixOp.h"
 #include "ops/range/RangeOpCPU.h"
-#include "ScanlineHelper.h"
-
 
 namespace OCIO_NAMESPACE
 {
 
-template<BitDepth inBD, BitDepth outBD>
-class BitDepthCast : public OpCPU
+template <BitDepth inBD, BitDepth outBD> class BitDepthCast : public OpCPU
 {
     typedef typename BitDepthInfo<inBD>::Type InType;
     typedef typename BitDepthInfo<outBD>::Type OutType;
 
 public:
     BitDepthCast() = default;
-    ~BitDepthCast() override {};
+    ~BitDepthCast() override{};
 
     void apply(const void * inImg, void * outImg, long numPixels) const override
     {
-        const InType * in = reinterpret_cast<const InType*>(inImg);
-        OutType * out = reinterpret_cast<OutType*>(outImg);
+        const InType * in = reinterpret_cast<const InType *>(inImg);
+        OutType * out     = reinterpret_cast<OutType *>(outImg);
 
-        for(long pxl=0; pxl<numPixels; ++pxl)
+        for (long pxl = 0; pxl < numPixels; ++pxl)
         {
             out[0] = Converter<outBD>::CastValue(in[0] * m_scale);
             out[1] = Converter<outBD>::CastValue(in[1] * m_scale);
             out[2] = Converter<outBD>::CastValue(in[2] * m_scale);
             out[3] = Converter<outBD>::CastValue(in[3] * m_scale);
 
-            in  += 4;
+            in += 4;
             out += 4;
         }
     }
 
 protected:
-    const float m_scale = float(BitDepthInfo<outBD>::maxValue)
-                            / float(BitDepthInfo<inBD>::maxValue);
+    const float m_scale
+        = float(BitDepthInfo<outBD>::maxValue) / float(BitDepthInfo<inBD>::maxValue);
 };
 
-template<>
-class BitDepthCast<BIT_DEPTH_F32, BIT_DEPTH_F32> : public OpCPU
+template <> class BitDepthCast<BIT_DEPTH_F32, BIT_DEPTH_F32> : public OpCPU
 {
 public:
     BitDepthCast() = default;
-    ~BitDepthCast() override {};
+    ~BitDepthCast() override{};
 
     void apply(const void * inImg, void * outImg, long numPixels) const override
     {
-        if(inImg!=outImg)
+        if (inImg != outImg)
         {
-            memcpy(outImg, inImg, 4*numPixels*sizeof(float));
+            memcpy(outImg, inImg, 4 * numPixels * sizeof(float));
         }
     }
 };
@@ -68,37 +65,35 @@ public:
 ConstOpCPURcPtr CreateGenericBitDepthHelper(BitDepth in, BitDepth out)
 {
 
-#define ADD_OUT_BIT_DEPTH(in, out)                    \
-case out:                                             \
-{                                                     \
-    return std::make_shared<BitDepthCast<in, out>>(); \
-    break;                                            \
-}
+#define ADD_OUT_BIT_DEPTH(in, out)                                                                 \
+    case out:                                                                                      \
+    {                                                                                              \
+        return std::make_shared<BitDepthCast<in, out>>();                                          \
+        break;                                                                                     \
+    }
 
-#define ADD_IN_BIT_DEPTH(in)                          \
-case in:                                              \
-{                                                     \
-    switch(out)                                       \
-    {                                                 \
-        ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_UINT8)        \
-        ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_UINT10)       \
-        ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_UINT12)       \
-        ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_UINT16)       \
-        ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_F16)          \
-        ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_F32)          \
-        case BIT_DEPTH_UINT14:                        \
-        case BIT_DEPTH_UINT32:                        \
-        case BIT_DEPTH_UNKNOWN:                       \
-        default:                                      \
-            throw Exception("Unsupported bit-depth"); \
-            break;                                    \
-                                                      \
-    }                                                 \
-    break;                                            \
-}
+#define ADD_IN_BIT_DEPTH(in)                                                                       \
+    case in:                                                                                       \
+    {                                                                                              \
+        switch (out)                                                                               \
+        {                                                                                          \
+            ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_UINT8)                                                 \
+            ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_UINT10)                                                \
+            ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_UINT12)                                                \
+            ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_UINT16)                                                \
+            ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_F16)                                                   \
+            ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_F32)                                                   \
+            case BIT_DEPTH_UINT14:                                                                 \
+            case BIT_DEPTH_UINT32:                                                                 \
+            case BIT_DEPTH_UNKNOWN:                                                                \
+            default:                                                                               \
+                throw Exception("Unsupported bit-depth");                                          \
+                break;                                                                             \
+        }                                                                                          \
+        break;                                                                                     \
+    }
 
-
-    switch(in)
+    switch (in)
     {
         ADD_IN_BIT_DEPTH(BIT_DEPTH_UINT8)
         ADD_IN_BIT_DEPTH(BIT_DEPTH_UINT10)
@@ -119,32 +114,33 @@ case in:                                              \
     throw Exception("Unsupported bit-depths");
 }
 
-void CreateCPUEngine(const OpRcPtrVec & ops, 
-                     BitDepth in, 
-                     BitDepth out,
-                     OptimizationFlags oFlags,
-                     // The bit-depth 'cast' or the first CPU Op.
-                     ConstOpCPURcPtr & inBitDepthOp,
-                     // The remaining CPU Ops.
-                     ConstOpCPURcPtrVec & cpuOps,
-                     // The bit-depth 'cast' or the last CPU Op.
-                     ConstOpCPURcPtr & outBitDepthOp)
+void CreateCPUEngine(
+    const OpRcPtrVec & ops,
+    BitDepth in,
+    BitDepth out,
+    OptimizationFlags oFlags,
+    // The bit-depth 'cast' or the first CPU Op.
+    ConstOpCPURcPtr & inBitDepthOp,
+    // The remaining CPU Ops.
+    ConstOpCPURcPtrVec & cpuOps,
+    // The bit-depth 'cast' or the last CPU Op.
+    ConstOpCPURcPtr & outBitDepthOp)
 {
-    const size_t maxOps = ops.size();
+    const size_t maxOps      = ops.size();
     const bool fastLogExpPow = HasFlag(oFlags, OPTIMIZATION_FAST_LOG_EXP_POW);
-    for(size_t idx=0; idx<maxOps; ++idx)
+    for (size_t idx = 0; idx < maxOps; ++idx)
     {
-        ConstOpRcPtr op = ops[idx];
+        ConstOpRcPtr op         = ops[idx];
         ConstOpDataRcPtr opData = op->data();
 
-        if(idx==0)
+        if (idx == 0)
         {
-            if(opData->getType()==OpData::Lut1DType)
+            if (opData->getType() == OpData::Lut1DType)
             {
                 ConstLut1DOpDataRcPtr lut = DynamicPtrCast<const Lut1DOpData>(opData);
-                inBitDepthOp = GetLut1DRenderer(lut, in, BIT_DEPTH_F32);
+                inBitDepthOp              = GetLut1DRenderer(lut, in, BIT_DEPTH_F32);
             }
-            else if(in==BIT_DEPTH_F32)
+            else if (in == BIT_DEPTH_F32)
             {
                 inBitDepthOp = op->getCPUOp(fastLogExpPow);
             }
@@ -154,19 +150,19 @@ void CreateCPUEngine(const OpRcPtrVec & ops,
                 cpuOps.push_back(op->getCPUOp(fastLogExpPow));
             }
 
-            if(maxOps==1)
+            if (maxOps == 1)
             {
                 outBitDepthOp = CreateGenericBitDepthHelper(BIT_DEPTH_F32, out);
             }
         }
-        else if(idx==(maxOps-1))
+        else if (idx == (maxOps - 1))
         {
-            if(opData->getType()==OpData::Lut1DType)
+            if (opData->getType() == OpData::Lut1DType)
             {
                 ConstLut1DOpDataRcPtr lut = DynamicPtrCast<const Lut1DOpData>(opData);
-                outBitDepthOp = GetLut1DRenderer(lut, BIT_DEPTH_F32, out);
+                outBitDepthOp             = GetLut1DRenderer(lut, BIT_DEPTH_F32, out);
             }
-            else if(out==BIT_DEPTH_F32)
+            else if (out == BIT_DEPTH_F32)
             {
                 outBitDepthOp = op->getCPUOp(fastLogExpPow);
             }
@@ -183,42 +179,45 @@ void CreateCPUEngine(const OpRcPtrVec & ops,
     }
 }
 
-
-ScanlineHelper * CreateScanlineHelper(BitDepth in, const ConstOpCPURcPtr & inBitDepthOp,
-                                      BitDepth out, const ConstOpCPURcPtr & outBitDepthOp)
+ScanlineHelper * CreateScanlineHelper(
+    BitDepth in,
+    const ConstOpCPURcPtr & inBitDepthOp,
+    BitDepth out,
+    const ConstOpCPURcPtr & outBitDepthOp)
 {
 
-#define ADD_OUT_BIT_DEPTH(in, out)                    \
-case out:                                             \
-{                                                     \
-    return new GenericScanlineHelper<BitDepthInfo<in>::Type,                      \
-                                     BitDepthInfo<out>::Type>(in, inBitDepthOp,   \
-                                                              out, outBitDepthOp);\
-    break;                                            \
-}
+#define ADD_OUT_BIT_DEPTH(in, out)                                                                 \
+    case out:                                                                                      \
+    {                                                                                              \
+        return new GenericScanlineHelper<BitDepthInfo<in>::Type, BitDepthInfo<out>::Type>(         \
+            in,                                                                                    \
+            inBitDepthOp,                                                                          \
+            out,                                                                                   \
+            outBitDepthOp);                                                                        \
+        break;                                                                                     \
+    }
 
-#define ADD_IN_BIT_DEPTH(in)                          \
-case in:                                              \
-{                                                     \
-    switch(out)                                       \
-    {                                                 \
-        ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_UINT8)        \
-        ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_UINT10)       \
-        ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_UINT12)       \
-        ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_UINT16)       \
-        ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_F16)          \
-        ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_F32)          \
-        case BIT_DEPTH_UINT14:                        \
-        case BIT_DEPTH_UINT32:                        \
-        case BIT_DEPTH_UNKNOWN:                       \
-        default:                                      \
-            throw Exception("Unsupported bit-depth"); \
-                                                      \
-    }                                                 \
-    break;                                            \
-}
+#define ADD_IN_BIT_DEPTH(in)                                                                       \
+    case in:                                                                                       \
+    {                                                                                              \
+        switch (out)                                                                               \
+        {                                                                                          \
+            ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_UINT8)                                                 \
+            ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_UINT10)                                                \
+            ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_UINT12)                                                \
+            ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_UINT16)                                                \
+            ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_F16)                                                   \
+            ADD_OUT_BIT_DEPTH(in, BIT_DEPTH_F32)                                                   \
+            case BIT_DEPTH_UINT14:                                                                 \
+            case BIT_DEPTH_UINT32:                                                                 \
+            case BIT_DEPTH_UNKNOWN:                                                                \
+            default:                                                                               \
+                throw Exception("Unsupported bit-depth");                                          \
+        }                                                                                          \
+        break;                                                                                     \
+    }
 
-    switch(in)
+    switch (in)
     {
         ADD_IN_BIT_DEPTH(BIT_DEPTH_UINT8)
         ADD_IN_BIT_DEPTH(BIT_DEPTH_UINT10)
@@ -308,13 +307,16 @@ DynamicPropertyRcPtr CPUProcessor::Impl::getDynamicProperty(DynamicPropertyType 
     throw Exception("Cannot find dynamic property; not used by CPU processor.");
 }
 
-void FinalizeOpsForCPU(OpRcPtrVec & ops, const OpRcPtrVec & rawOps,
-                       BitDepth in, BitDepth out,
-                       OptimizationFlags oFlags)
+void FinalizeOpsForCPU(
+    OpRcPtrVec & ops,
+    const OpRcPtrVec & rawOps,
+    BitDepth in,
+    BitDepth out,
+    OptimizationFlags oFlags)
 {
     ops = rawOps;
 
-    if(!ops.empty())
+    if (!ops.empty())
     {
         // Finalize of all ops.
         ops.finalize();
@@ -325,7 +327,7 @@ void FinalizeOpsForCPU(OpRcPtrVec & ops, const OpRcPtrVec & rawOps,
     }
 
     // The previous code could change the list of ops so an explicit check to empty is still needed.
-    if(ops.empty())
+    if (ops.empty())
     {
         // Needs at least one op (even an identity one) as the input and output buffers could be
         // different.
@@ -338,9 +340,11 @@ void FinalizeOpsForCPU(OpRcPtrVec & ops, const OpRcPtrVec & rawOps,
     }
 }
 
-void CPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
-                                  BitDepth in, BitDepth out,
-                                  OptimizationFlags oFlags)
+void CPUProcessor::Impl::finalize(
+    const OpRcPtrVec & rawOps,
+    BitDepth in,
+    BitDepth out,
+    OptimizationFlags oFlags)
 {
     AutoMutex lock(m_mutex);
 
@@ -353,7 +357,7 @@ void CPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
     m_outBitDepth = out;
 
     m_isIdentity = ops.isNoOp();
-    m_isNoOp     = m_isIdentity && m_inBitDepth==m_outBitDepth;
+    m_isNoOp     = m_isIdentity && m_inBitDepth == m_outBitDepth;
 
     // Does the color processing introduce crosstalk between the pixel channels?
     m_hasChannelCrosstalk = ops.hasChannelCrosstalk();
@@ -361,41 +365,39 @@ void CPUProcessor::Impl::finalize(const OpRcPtrVec & rawOps,
     // Get the CPU Ops while taking care of the input and output bit-depths.
 
     m_cpuOps.clear();
-    m_inBitDepthOp = nullptr;
+    m_inBitDepthOp  = nullptr;
     m_outBitDepthOp = nullptr;
     CreateCPUEngine(ops, in, out, oFlags, m_inBitDepthOp, m_cpuOps, m_outBitDepthOp);
 
     // Compute the cache id.
 
     std::stringstream ss;
-    ss << "CPU Processor: from " << BitDepthToString(in)
-       << " to "  << BitDepthToString(out)
-       << " oFlags " << oFlags
-       << " ops: " << ops.getCacheID();
+    ss << "CPU Processor: from " << BitDepthToString(in) << " to " << BitDepthToString(out)
+       << " oFlags " << oFlags << " ops: " << ops.getCacheID();
 
     m_cacheID = ss.str();
 }
 
 void CPUProcessor::Impl::apply(const ImageDesc & imgDesc) const
-{   
+{
     // Get the ScanlineHelper for this thread (no significant performance impact).
-    std::unique_ptr<ScanlineHelper> 
-        scanlineBuilder(CreateScanlineHelper(m_inBitDepth, m_inBitDepthOp,
-                                             m_outBitDepth, m_outBitDepthOp));
+    std::unique_ptr<ScanlineHelper> scanlineBuilder(
+        CreateScanlineHelper(m_inBitDepth, m_inBitDepthOp, m_outBitDepth, m_outBitDepthOp));
 
     // Prepare the processing.
     scanlineBuilder->init(imgDesc);
 
     float * rgbaBuffer = nullptr;
-    long numPixels = 0;
+    long numPixels     = 0;
 
-    while(true)
+    while (true)
     {
         scanlineBuilder->prepRGBAScanline(&rgbaBuffer, numPixels);
-        if(numPixels == 0) break;
+        if (numPixels == 0)
+            break;
 
         const size_t numOps = m_cpuOps.size();
-        for(size_t i = 0; i<numOps; ++i)
+        for (size_t i = 0; i < numOps; ++i)
         {
             m_cpuOps[i]->apply(rgbaBuffer, rgbaBuffer, numPixels);
         }
@@ -407,23 +409,23 @@ void CPUProcessor::Impl::apply(const ImageDesc & imgDesc) const
 void CPUProcessor::Impl::apply(const ImageDesc & srcImgDesc, ImageDesc & dstImgDesc) const
 {
     // Get the ScanlineHelper for this thread (no significant performance impact).
-    std::unique_ptr<ScanlineHelper> 
-        scanlineBuilder(CreateScanlineHelper(m_inBitDepth, m_inBitDepthOp,
-                                             m_outBitDepth, m_outBitDepthOp));
+    std::unique_ptr<ScanlineHelper> scanlineBuilder(
+        CreateScanlineHelper(m_inBitDepth, m_inBitDepthOp, m_outBitDepth, m_outBitDepthOp));
 
     // Prepare the processing.
     scanlineBuilder->init(srcImgDesc, dstImgDesc);
 
     float * rgbaBuffer = nullptr;
-    long numPixels = 0;
+    long numPixels     = 0;
 
-    while(true)
+    while (true)
     {
         scanlineBuilder->prepRGBAScanline(&rgbaBuffer, numPixels);
-        if(numPixels == 0) break;
+        if (numPixels == 0)
+            break;
 
         const size_t numOps = m_cpuOps.size();
-        for(size_t i = 0; i<numOps; ++i)
+        for (size_t i = 0; i < numOps; ++i)
         {
             m_cpuOps[i]->apply(rgbaBuffer, rgbaBuffer, numPixels);
         }
@@ -439,7 +441,7 @@ void CPUProcessor::Impl::applyRGB(float * pixel) const
     m_inBitDepthOp->apply(v, v, 1);
 
     const size_t numOps = m_cpuOps.size();
-    for(size_t i = 0; i<numOps; ++i)
+    for (size_t i = 0; i < numOps; ++i)
     {
         m_cpuOps[i]->apply(v, v, 1);
     }
@@ -456,7 +458,7 @@ void CPUProcessor::Impl::applyRGBA(float * pixel) const
     m_inBitDepthOp->apply(pixel, pixel, 1);
 
     const size_t numOps = m_cpuOps.size();
-    for(size_t i = 0; i<numOps; ++i)
+    for (size_t i = 0; i < numOps; ++i)
     {
         m_cpuOps[i]->apply(pixel, pixel, 1);
     }
@@ -464,13 +466,7 @@ void CPUProcessor::Impl::applyRGBA(float * pixel) const
     m_outBitDepthOp->apply(pixel, pixel, 1);
 }
 
-
-
-
 //////////////////////////////////////////////////////////////////////////
-
-
-
 
 void CPUProcessor::deleter(CPUProcessor * c)
 {
@@ -478,7 +474,7 @@ void CPUProcessor::deleter(CPUProcessor * c)
 }
 
 CPUProcessor::CPUProcessor()
-    :   m_impl(new Impl)
+    : m_impl(new Impl)
 {
 }
 

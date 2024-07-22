@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_PRIVATE_TYPES_H
 #define INCLUDED_OCIO_PRIVATE_TYPES_H
 
@@ -10,7 +9,6 @@
 #include <map>
 #include <set>
 #include <vector>
-
 
 namespace OCIO_NAMESPACE
 {
@@ -23,8 +21,6 @@ typedef std::vector<ConstTransformRcPtr> ConstTransformVec;
 typedef std::vector<LookRcPtr> LookVec;
 
 typedef std::vector<TransformDirection> TransformDirectionVec;
-
-
 
 } // namespace OCIO_NAMESPACE
 

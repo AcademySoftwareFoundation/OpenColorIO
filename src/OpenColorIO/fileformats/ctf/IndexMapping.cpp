@@ -88,17 +88,19 @@ void IndexMapping::validate() const
 
 bool IndexMapping::operator==(const IndexMapping & other) const
 {
-    if (this == &other) return true;
+    if (this == &other)
+        return true;
 
-    if (m_dimension != other.m_dimension) return false;
+    if (m_dimension != other.m_dimension)
+        return false;
 
     for (unsigned i = 0; i < getNumComponents(); i++)
     {
-        if (m_indices[i] != other.m_indices[i]) return false;
+        if (m_indices[i] != other.m_indices[i])
+            return false;
     }
 
     return true;
 }
 
 } // namespace OCIO_NAMESPACE
-

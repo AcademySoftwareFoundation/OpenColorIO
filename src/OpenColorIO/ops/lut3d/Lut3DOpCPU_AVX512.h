@@ -12,7 +12,12 @@
 namespace OCIO_NAMESPACE
 {
 
-void applyTetrahedralAVX512(const float *lut3d, int dim, const float *src, float *dst, int total_pixel_count);
+void applyTetrahedralAVX512(
+    const float * lut3d,
+    int dim,
+    const float * src,
+    float * dst,
+    int total_pixel_count);
 
 } // namespace OCIO_NAMESPACE
 

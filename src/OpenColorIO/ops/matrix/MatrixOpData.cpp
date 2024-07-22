@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <sstream>
 #include <cstring>
+#include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "HashUtils.h"
 #include "MathUtils.h"
-#include "ops/matrix/MatrixOpData.h"
 #include "Platform.h"
+#include "ops/matrix/MatrixOpData.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -27,7 +27,7 @@ MatrixOpData::Offsets::Offsets(const Offsets & o)
     memcpy(m_values, o.m_values, 4 * sizeof(double));
 }
 
-MatrixOpData::Offsets& MatrixOpData::Offsets::operator=(const Offsets & o)
+MatrixOpData::Offsets & MatrixOpData::Offsets::operator=(const Offsets & o)
 {
     if (this != &o)
     {
@@ -41,8 +41,7 @@ bool MatrixOpData::Offsets::operator==(const Offsets & o) const
     return (std::memcmp(m_values, o.m_values, 4 * sizeof(double)) == 0);
 }
 
-template<typename T>
-void MatrixOpData::Offsets::setRGB(const T * v3)
+template <typename T> void MatrixOpData::Offsets::setRGB(const T * v3)
 {
     if (!v3)
     {
@@ -58,8 +57,7 @@ void MatrixOpData::Offsets::setRGB(const T * v3)
 template void MatrixOpData::Offsets::setRGB(const float * v3);
 template void MatrixOpData::Offsets::setRGB(const double * v3);
 
-template<typename T>
-void MatrixOpData::Offsets::setRGBA(const T * v4)
+template <typename T> void MatrixOpData::Offsets::setRGBA(const T * v4)
 {
     if (!v4)
     {
@@ -77,8 +75,7 @@ template void MatrixOpData::Offsets::setRGBA(const double * v4);
 
 bool MatrixOpData::Offsets::isNotNull() const
 {
-    return m_values[0] != 0. || m_values[1] != 0. ||
-           m_values[2] != 0. || m_values[3] != 0.;
+    return m_values[0] != 0. || m_values[1] != 0. || m_values[2] != 0. || m_values[3] != 0.;
 }
 
 void MatrixOpData::Offsets::scale(double s)
@@ -97,9 +94,10 @@ MatrixOpData::MatrixArray::MatrixArray()
 
 MatrixOpData::MatrixArray & MatrixOpData::MatrixArray::operator=(const ArrayDouble & a)
 {
-    if (this == &a) return *this;
+    if (this == &a)
+        return *this;
 
-    *dynamic_cast<ArrayDouble*>(this) = a;
+    *dynamic_cast<ArrayDouble *>(this) = a;
 
     validate();
 
@@ -110,25 +108,25 @@ MatrixOpData::MatrixArrayPtr MatrixOpData::MatrixArray::inner(const MatrixArray 
 {
     // Use operator= to make sure we have a 4x4 copy
     // of the original matrices.
-    MatrixArray A_4x4 = *this;
-    MatrixArray B_4x4 = B;
+    MatrixArray A_4x4                 = *this;
+    MatrixArray B_4x4                 = B;
     const ArrayDouble::Values & Avals = A_4x4.getValues();
     const ArrayDouble::Values & Bvals = B_4x4.getValues();
 
-    MatrixArrayPtr OutPtr = std::make_shared<MatrixArray>();
-    ArrayDouble::Values& Ovals = OutPtr->getValues();
+    MatrixArrayPtr OutPtr       = std::make_shared<MatrixArray>();
+    ArrayDouble::Values & Ovals = OutPtr->getValues();
 
     const unsigned long dim = OutPtr->getLength();
 
     // Note: The matrix elements are stored in the vector
     // in row-major order.
     // [ a00, a01, a02, a03, a10, a11, a12, a13, a20, ... a44 ]
-    for (unsigned long row = 0; row<dim; ++row)
+    for (unsigned long row = 0; row < dim; ++row)
     {
-        for (unsigned long col = 0; col<dim; ++col)
+        for (unsigned long col = 0; col < dim; ++col)
         {
             double accum = 0.;
-            for (unsigned long i = 0; i<dim; ++i)
+            for (unsigned long i = 0; i < dim; ++i)
             {
                 accum += Avals[row * dim + i] * Bvals[i * dim + col];
             }
@@ -148,7 +146,7 @@ MatrixOpData::Offsets MatrixOpData::MatrixArray::inner(const MatrixOpData::Offse
 {
     MatrixOpData::Offsets out;
 
-    const unsigned long dim = getLength();
+    const unsigned long dim           = getLength();
     const ArrayDouble::Values & Avals = getValues();
 
     for (unsigned long i = 0; i < dim; ++i)
@@ -175,13 +173,13 @@ MatrixOpData::MatrixArrayPtr MatrixOpData::MatrixArray::inverse() const
     // Create a new matrix array.
     // The new matrix is initialized as identity.
     MatrixArrayPtr invPtr = std::make_shared<MatrixArray>();
-    MatrixArray & s = *invPtr;
+    MatrixArray & s       = *invPtr;
 
     const unsigned long dim = invPtr->getLength();
 
     // Inversion starts with identity (without bit-depth scaling).
-    s[0] = 1.;
-    s[5] = 1.;
+    s[0]  = 1.;
+    s[5]  = 1.;
     s[10] = 1.;
     s[15] = 1.;
 
@@ -194,21 +192,21 @@ MatrixOpData::MatrixArrayPtr MatrixOpData::MatrixArray::inverse() const
     {
         int pivot = i;
 
-        double pivotsize = t[i*dim + i];
+        double pivotsize = t[i * dim + i];
 
         if (pivotsize < 0)
             pivotsize = -pivotsize;
 
         for (int j = i + 1; j < 4; j++)
         {
-            double tmp = t[j*dim + i];
+            double tmp = t[j * dim + i];
 
             if (tmp < 0.0)
                 tmp = -tmp;
 
             if (tmp > pivotsize)
             {
-                pivot = j;
+                pivot     = j;
                 pivotsize = tmp;
             }
         }
@@ -224,24 +222,24 @@ MatrixOpData::MatrixArrayPtr MatrixOpData::MatrixArray::inverse() const
             {
                 double tmp;
 
-                tmp = t[i*dim + j];
-                t[i*dim + j] = t[pivot*dim + j];
-                t[pivot*dim + j] = tmp;
+                tmp                = t[i * dim + j];
+                t[i * dim + j]     = t[pivot * dim + j];
+                t[pivot * dim + j] = tmp;
 
-                tmp = s[i*dim + j];
-                s[i*dim + j] = s[pivot*dim + j];
-                s[pivot*dim + j] = tmp;
+                tmp                = s[i * dim + j];
+                s[i * dim + j]     = s[pivot * dim + j];
+                s[pivot * dim + j] = tmp;
             }
         }
 
         for (int j = i + 1; j < 4; j++)
         {
-            double f = t[j*dim + i] / t[i*dim + i];
+            double f = t[j * dim + i] / t[i * dim + i];
 
             for (int k = 0; k < 4; k++)
             {
-                t[j*dim + k] -= f * t[i*dim + k];
-                s[j*dim + k] -= f * s[i*dim + k];
+                t[j * dim + k] -= f * t[i * dim + k];
+                s[j * dim + k] -= f * s[i * dim + k];
             }
         }
     }
@@ -254,25 +252,25 @@ MatrixOpData::MatrixArrayPtr MatrixOpData::MatrixArray::inverse() const
 
         // TODO: Perhaps change to throw even if f is near
         //       zero (nearly singular).
-        if ((f = t[i*dim + i]) == 0.0)
+        if ((f = t[i * dim + i]) == 0.0)
         {
             throw Exception("Singular Matrix can't be inverted.");
         }
 
         for (int j = 0; j < 4; j++)
         {
-            t[i*dim + j] /= f;
-            s[i*dim + j] /= f;
+            t[i * dim + j] /= f;
+            s[i * dim + j] /= f;
         }
 
         for (int j = 0; j < i; j++)
         {
-            f = t[j*dim + i];
+            f = t[j * dim + i];
 
             for (int k = 0; k < 4; k++)
             {
-                t[j*dim + k] -= f * t[i*dim + k];
-                s[j*dim + k] -= f * s[i*dim + k];
+                t[j * dim + k] -= f * t[i * dim + k];
+                s[j * dim + k] -= f * s[i * dim + k];
             }
         }
     }
@@ -280,23 +278,22 @@ MatrixOpData::MatrixArrayPtr MatrixOpData::MatrixArray::inverse() const
     return invPtr;
 }
 
-template<typename T>
-void MatrixOpData::MatrixArray::setRGB(const T * values)
+template <typename T> void MatrixOpData::MatrixArray::setRGB(const T * values)
 {
     Values & v = getValues();
 
-    v[ 0] = double(values[0]);
-    v[ 1] = double(values[1]);
-    v[ 2] = double(values[2]);
-    v[ 3] = 0.;
+    v[0] = double(values[0]);
+    v[1] = double(values[1]);
+    v[2] = double(values[2]);
+    v[3] = 0.;
 
-    v[ 4] = double(values[3]);
-    v[ 5] = double(values[4]);
-    v[ 6] = double(values[5]);
-    v[ 7] = 0.;
+    v[4] = double(values[3]);
+    v[5] = double(values[4]);
+    v[6] = double(values[5]);
+    v[7] = 0.;
 
-    v[ 8] = double(values[6]);
-    v[ 9] = double(values[7]);
+    v[8]  = double(values[6]);
+    v[9]  = double(values[7]);
     v[10] = double(values[8]);
     v[11] = 0.;
 
@@ -316,23 +313,23 @@ unsigned long MatrixOpData::MatrixArray::getNumValues() const
 
 bool MatrixOpData::MatrixArray::isUnityDiagonal() const
 {
-    const unsigned long dim = getLength();
+    const unsigned long dim            = getLength();
     const ArrayDouble::Values & values = getValues();
 
-    for (unsigned long i = 0; i<dim; ++i)
+    for (unsigned long i = 0; i < dim; ++i)
     {
-        for (unsigned long j = 0; j<dim; ++j)
+        for (unsigned long j = 0; j < dim; ++j)
         {
             if (i == j)
             {
-                if (values[i*dim + j] != 1.0)  // Strict comparison intended
+                if (values[i * dim + j] != 1.0) // Strict comparison intended
                 {
                     return false;
                 }
             }
             else
             {
-                if (values[i*dim + j] != 0.0)  // Strict comparison intended
+                if (values[i * dim + j] != 0.0) // Strict comparison intended
                 {
                     return false;
                 }
@@ -345,18 +342,18 @@ bool MatrixOpData::MatrixArray::isUnityDiagonal() const
 
 void MatrixOpData::MatrixArray::fill()
 {
-    const unsigned long dim = getLength();
+    const unsigned long dim      = getLength();
     ArrayDouble::Values & values = getValues();
 
     std::memset(&values[0], 0, values.size() * sizeof(double));
 
-    for (unsigned long i = 0; i<dim; ++i)
+    for (unsigned long i = 0; i < dim; ++i)
     {
-        for (unsigned long j = 0; j<dim; ++j)
+        for (unsigned long j = 0; j < dim; ++j)
         {
             if (i == j)
             {
-                values[i*dim + j] = 1.0;
+                values[i * dim + j] = 1.0;
             }
         }
     }
@@ -385,8 +382,8 @@ void MatrixOpData::MatrixArray::setRGBA(const float * values)
     v[6] = values[6];
     v[7] = values[7];
 
-    v[8] = values[8];
-    v[9] = values[9];
+    v[8]  = values[8];
+    v[9]  = values[9];
     v[10] = values[10];
     v[11] = values[11];
 
@@ -413,7 +410,7 @@ void MatrixOpData::MatrixArray::validate() const
     // A 4x4 matrix is the canonical form, convert if it is only a 3x3.
     if (getLength() == 3)
     {
-        const_cast<MatrixArray*>(this)->expandFrom3x3To4x4();
+        const_cast<MatrixArray *>(this)->expandFrom3x3To4x4();
     }
     else if (getLength() != 4)
     {
@@ -466,13 +463,12 @@ double MatrixOpData::getArrayValue(unsigned long index) const
     return m_array.getValues()[index];
 }
 
-void  MatrixOpData::setRGB(const float* values)
+void MatrixOpData::setRGB(const float * values)
 {
     m_array.setRGB(values);
 }
 
-template<typename T>
-void MatrixOpData::setRGBA(const T * values)
+template <typename T> void MatrixOpData::setRGBA(const T * values)
 {
     m_array.setRGBA(values);
 }
@@ -534,17 +530,17 @@ bool MatrixOpData::isIdentity() const
 
     const double maxDiff = 1e-6;
 
-    const ArrayDouble & a = getArray();
+    const ArrayDouble & a         = getArray();
     const ArrayDouble::Values & m = a.getValues();
-    const unsigned long dim = a.getLength();
+    const unsigned long dim       = a.getLength();
 
-    for (unsigned long i = 0; i<dim; ++i)
+    for (unsigned long i = 0; i < dim; ++i)
     {
-        for (unsigned long j = 0; j<dim; ++j)
+        for (unsigned long j = 0; j < dim; ++j)
         {
             if (i == j)
             {
-                if (!EqualWithAbsError(m[i*dim + j], 1.0, maxDiff))
+                if (!EqualWithAbsError(m[i * dim + j], 1.0, maxDiff))
                 {
                     return false;
                 }
@@ -557,12 +553,12 @@ bool MatrixOpData::isIdentity() const
 
 bool MatrixOpData::isDiagonal() const
 {
-    const ArrayDouble & a = getArray();
+    const ArrayDouble & a         = getArray();
     const ArrayDouble::Values & m = a.getValues();
-    const unsigned long max = a.getNumValues();
-    const unsigned long dim = a.getLength();
+    const unsigned long max       = a.getNumValues();
+    const unsigned long dim       = a.getLength();
 
-    for (unsigned long idx = 0; idx<max; ++idx)
+    for (unsigned long idx = 0; idx < max; ++idx)
     {
         if ((idx % (dim + 1)) != 0) // Not on the diagonal
         {
@@ -578,7 +574,7 @@ bool MatrixOpData::isDiagonal() const
 
 bool MatrixOpData::hasAlpha() const
 {
-    const ArrayDouble & a = getArray();
+    const ArrayDouble & a         = getArray();
     const ArrayDouble::Values & m = a.getValues();
 
     // Now check the diagonal elements.
@@ -589,20 +585,17 @@ bool MatrixOpData::hasAlpha() const
 
         // Last column.
         (m[3] != 0.0) || // Strict comparison intended
-        (m[7] != 0.0) ||
-        (m[11] != 0.0) ||
+        (m[7] != 0.0) || (m[11] != 0.0) ||
 
         // Diagonal.
         !EqualWithAbsError(m[15], 1.0, maxDiff) ||
 
         // Bottom row.
         (m[12] != 0.0) || // Strict comparison intended
-        (m[13] != 0.0) ||
-        (m[14] != 0.0) ||
+        (m[13] != 0.0) || (m[14] != 0.0) ||
 
         // Alpha offset
         (m_offsets[3] != 0.0);
-
 }
 
 MatrixOpDataRcPtr MatrixOpData::CreateDiagonalMatrix(double diagValue)
@@ -705,9 +698,9 @@ MatrixOpDataRcPtr MatrixOpData::compose(ConstMatrixOpDataRcPtr & B) const
     double val, max_val = 0.;
     for (unsigned long i = 0; i < dim; ++i)
     {
-        val = fabs(offs[i]);
+        val     = fabs(offs[i]);
         max_val = max_val > val ? max_val : val;
-        val = fabs(B->getOffsets()[i]);
+        val     = fabs(B->getOffsets()[i]);
         max_val = max_val > val ? max_val : val;
     }
 
@@ -728,18 +721,18 @@ MatrixOpDataRcPtr MatrixOpData::compose(ConstMatrixOpDataRcPtr & B) const
 
 void MatrixOpData::cleanUp(double offsetScale)
 {
-    const ArrayDouble & a = getArray();
+    const ArrayDouble & a         = getArray();
     const ArrayDouble::Values & m = a.getValues();
-    const unsigned long dim = a.getLength();
+    const unsigned long dim       = a.getLength();
 
     // Estimate the magnitude of the matrix.
     double max_val = 0.;
-    for (unsigned long i = 0; i<dim; ++i)
+    for (unsigned long i = 0; i < dim; ++i)
     {
-        for (unsigned long j = 0; j<dim; ++j)
+        for (unsigned long j = 0; j < dim; ++j)
         {
             const double val = fabs(m[i * dim + j]);
-            max_val = max_val > val ? max_val : val;
+            max_val          = max_val > val ? max_val : val;
         }
     }
 
@@ -749,17 +742,17 @@ void MatrixOpData::cleanUp(double offsetScale)
     // either from being written to files or via the factories that take float
     // args.  In any case, the tolerance is small enough to pick up anything
     // that would be significant in the context of color management.
-    const double scale = max_val > 1e-4 ? max_val : 1e-4;
+    const double scale   = max_val > 1e-4 ? max_val : 1e-4;
     const double abs_tol = scale * 1e-7;
 
     // Replace values that are close to integers by exact values.
-    for (unsigned long i = 0; i<dim; ++i)
+    for (unsigned long i = 0; i < dim; ++i)
     {
-        for (unsigned long j = 0; j<dim; ++j)
+        for (unsigned long j = 0; j < dim; ++j)
         {
-            const double val = m[i * dim + j];
+            const double val       = m[i * dim + j];
             const double round_val = round(val);
-            const double diff = fabs(val - round_val);
+            const double diff      = fabs(val - round_val);
             if (diff < abs_tol)
             {
                 setArrayValue(i * dim + j, round_val);
@@ -768,14 +761,14 @@ void MatrixOpData::cleanUp(double offsetScale)
     }
 
     // Do likewise for the offsets.
-    const double scale2 = offsetScale > 1e-4 ? offsetScale : 1e-4;
+    const double scale2   = offsetScale > 1e-4 ? offsetScale : 1e-4;
     const double abs_tol2 = scale2 * 1e-7;
 
-    for (unsigned long i = 0; i<dim; ++i)
+    for (unsigned long i = 0; i < dim; ++i)
     {
-        const double val = getOffsets()[i];
+        const double val       = getOffsets()[i];
         const double round_val = round(val);
-        const double diff = fabs(val - round_val);
+        const double diff      = fabs(val - round_val);
         if (diff < abs_tol2)
         {
             setOffsetValue(i, round_val);
@@ -785,13 +778,13 @@ void MatrixOpData::cleanUp(double offsetScale)
 
 bool MatrixOpData::equals(const OpData & other) const
 {
-    if (!OpData::equals(other)) return false;
+    if (!OpData::equals(other))
+        return false;
 
-    const MatrixOpData* mop = static_cast<const MatrixOpData*>(&other);
+    const MatrixOpData * mop = static_cast<const MatrixOpData *>(&other);
 
-    return (m_direction == mop->m_direction &&
-            m_offsets   == mop->m_offsets   &&
-            m_array     == mop->m_array);
+    return (
+        m_direction == mop->m_direction && m_offsets == mop->m_offsets && m_array == mop->m_array);
 }
 
 void MatrixOpData::setDirection(TransformDirection dir) noexcept
@@ -811,7 +804,7 @@ MatrixOpDataRcPtr MatrixOpData::getAsForward() const
     // TODO: Perhaps calculate pseudo-inverse rather than throw.
 
     // Calculate the inverse offset.
-    const Offsets& offsets = getOffsets();
+    const Offsets & offsets = getOffsets();
     Offsets invOffsets;
     if (offsets.isNotNull())
     {
@@ -819,8 +812,8 @@ MatrixOpDataRcPtr MatrixOpData::getAsForward() const
         invOffsets.scale(-1);
     }
 
-    MatrixOpDataRcPtr invOp = std::make_shared<MatrixOpData>();
-    invOp->m_fileInBitDepth = m_fileOutBitDepth;
+    MatrixOpDataRcPtr invOp  = std::make_shared<MatrixOpData>();
+    invOp->m_fileInBitDepth  = m_fileOutBitDepth;
     invOp->m_fileOutBitDepth = m_fileInBitDepth;
 
     invOp->setRGBA(&(invMatrixArray->getValues()[0]));
@@ -848,12 +841,8 @@ std::string MatrixOpData::getCacheID() const
     cacheIDStream << TransformDirectionToString(m_direction) << " ";
 
     std::string hash;
-    hash += CacheIDHash(
-        (const char *) &(getArray().getValues()[0]),
-        16 * sizeof(double));
-    hash += CacheIDHash(
-        (const char *) getOffsets().getValues(),
-        4 * sizeof(double));
+    hash += CacheIDHash((const char *)&(getArray().getValues()[0]), 16 * sizeof(double));
+    hash += CacheIDHash((const char *)getOffsets().getValues(), 4 * sizeof(double));
 
     cacheIDStream << CacheIDHash(hash.c_str(), hash.size());
 

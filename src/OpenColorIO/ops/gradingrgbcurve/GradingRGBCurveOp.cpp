@@ -7,9 +7,9 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "GpuShaderUtils.h"
+#include "ops/gradingrgbcurve/GradingRGBCurveOp.h"
 #include "ops/gradingrgbcurve/GradingRGBCurveOpCPU.h"
 #include "ops/gradingrgbcurve/GradingRGBCurveOpGPU.h"
-#include "ops/gradingrgbcurve/GradingRGBCurveOp.h"
 #include "transforms/GradingRGBCurveTransform.h"
 
 namespace OCIO_NAMESPACE
@@ -25,7 +25,7 @@ typedef OCIO_SHARED_PTR<const GradingRGBCurveOp> ConstGradingRGBCurveOpRcPtr;
 class GradingRGBCurveOp : public Op
 {
 public:
-    GradingRGBCurveOp() = delete;
+    GradingRGBCurveOp()                          = delete;
     GradingRGBCurveOp(const GradingRGBCurveOp &) = delete;
     explicit GradingRGBCurveOp(GradingRGBCurveOpDataRcPtr & prim);
 
@@ -46,8 +46,9 @@ public:
     bool isDynamic() const override;
     bool hasDynamicProperty(DynamicPropertyType type) const override;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const override;
-    void replaceDynamicProperty(DynamicPropertyType type,
-                                DynamicPropertyGradingRGBCurveImplRcPtr & prop) override;
+    void replaceDynamicProperty(
+        DynamicPropertyType type,
+        DynamicPropertyGradingRGBCurveImplRcPtr & prop) override;
     void removeDynamicProperties() override;
 
     ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
@@ -65,9 +66,8 @@ protected:
     }
 };
 
-
 GradingRGBCurveOp::GradingRGBCurveOp(GradingRGBCurveOpDataRcPtr & prim)
-    :   Op()
+    : Op()
 {
     data() = prim;
 }
@@ -101,7 +101,8 @@ bool GradingRGBCurveOp::isSameType(ConstOpRcPtr & op) const
 bool GradingRGBCurveOp::isInverse(ConstOpRcPtr & op) const
 {
     ConstGradingRGBCurveOpRcPtr typedRcPtr = DynamicPtrCast<const GradingRGBCurveOp>(op);
-    if (!typedRcPtr) return false;
+    if (!typedRcPtr)
+        return false;
 
     ConstGradingRGBCurveOpDataRcPtr primOpData = typedRcPtr->rgbCurveData();
     return rgbCurveData()->isInverse(primOpData);
@@ -159,8 +160,9 @@ DynamicPropertyRcPtr GradingRGBCurveOp::getDynamicProperty(DynamicPropertyType t
     return rgbCurveData()->getDynamicProperty();
 }
 
-void GradingRGBCurveOp::replaceDynamicProperty(DynamicPropertyType type,
-                                               DynamicPropertyGradingRGBCurveImplRcPtr & prop)
+void GradingRGBCurveOp::replaceDynamicProperty(
+    DynamicPropertyType type,
+    DynamicPropertyGradingRGBCurveImplRcPtr & prop)
 {
     if (type != DYNAMIC_PROPERTY_GRADING_RGBCURVE)
     {
@@ -196,18 +198,14 @@ void GradingRGBCurveOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreat
     GetGradingRGBCurveGPUShaderProgram(shaderCreator, data);
 }
 
-
-}  // Anon namespace
-
-
-
+} // namespace
 
 ///////////////////////////////////////////////////////////////////////////
 
-
-void CreateGradingRGBCurveOp(OpRcPtrVec & ops,
-                             GradingRGBCurveOpDataRcPtr & curveData,
-                             TransformDirection direction)
+void CreateGradingRGBCurveOp(
+    OpRcPtrVec & ops,
+    GradingRGBCurveOpDataRcPtr & curveData,
+    TransformDirection direction)
 {
     auto curve = curveData;
     if (direction == TRANSFORM_DIR_INVERSE)
@@ -227,19 +225,20 @@ void CreateGradingRGBCurveTransform(GroupTransformRcPtr & group, ConstOpRcPtr & 
     {
         throw Exception("CreateGradingRGBCurveTransform: op has to be a GradingRGBCurveOp.");
     }
-    auto gcData = DynamicPtrCast<const GradingRGBCurveOpData>(op->data());
+    auto gcData      = DynamicPtrCast<const GradingRGBCurveOpData>(op->data());
     auto gcTransform = GradingRGBCurveTransform::Create(gcData->getStyle());
-    auto & data = dynamic_cast<GradingRGBCurveTransformImpl *>(gcTransform.get())->data();
-    data = *gcData;
+    auto & data      = dynamic_cast<GradingRGBCurveTransformImpl *>(gcTransform.get())->data();
+    data             = *gcData;
 
     group->appendTransform(gcTransform);
 }
 
-void BuildGradingRGBCurveOp(OpRcPtrVec & ops,
-                            const Config & /*config*/,
-                            const ConstContextRcPtr & /*context*/,
-                            const GradingRGBCurveTransform & transform,
-                            TransformDirection dir)
+void BuildGradingRGBCurveOp(
+    OpRcPtrVec & ops,
+    const Config & /*config*/,
+    const ConstContextRcPtr & /*context*/,
+    const GradingRGBCurveTransform & transform,
+    TransformDirection dir)
 {
     const auto & data = dynamic_cast<const GradingRGBCurveTransformImpl &>(transform).data();
     data.validate();
@@ -248,6 +247,4 @@ void BuildGradingRGBCurveOp(OpRcPtrVec & ops,
     CreateGradingRGBCurveOp(ops, curveData, dir);
 }
 
-
 } // namespace OCIO_NAMESPACE
-

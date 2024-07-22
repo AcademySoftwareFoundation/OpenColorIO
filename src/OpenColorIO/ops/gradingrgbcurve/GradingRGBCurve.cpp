@@ -12,26 +12,36 @@ namespace OCIO_NAMESPACE
 {
 namespace
 {
-static const std::vector<GradingControlPoint> DefaultCtrl{ { 0.f, 0.f },{ 0.5f, 0.5f },{ 1.0f, 1.0f } };
-static const std::vector<GradingControlPoint> DefaultCtrlLin{ { -7.0f, -7.0f },{ 0.f, 0.f },{ 7.0f, 7.0f } };
-}
+static const std::vector<GradingControlPoint> DefaultCtrl{
+    { 0.f,  0.f},
+    {0.5f, 0.5f},
+    {1.0f, 1.0f}
+};
+static const std::vector<GradingControlPoint> DefaultCtrlLin{
+    {-7.0f, -7.0f},
+    {  0.f,   0.f},
+    { 7.0f,  7.0f}
+};
+} // namespace
 
 const GradingBSplineCurveImpl GradingRGBCurveImpl::Default(DefaultCtrl);
 const GradingBSplineCurveImpl GradingRGBCurveImpl::DefaultLin(DefaultCtrlLin);
 
 GradingRGBCurveImpl::GradingRGBCurveImpl(GradingStyle style)
 {
-    m_curves[RGB_RED] = (style == GRADING_LIN ? GradingRGBCurveImpl::DefaultLin.createEditableCopy() :
-                                                GradingRGBCurveImpl::Default.createEditableCopy());
+    m_curves[RGB_RED]
+        = (style == GRADING_LIN ? GradingRGBCurveImpl::DefaultLin.createEditableCopy()
+                                : GradingRGBCurveImpl::Default.createEditableCopy());
     m_curves[RGB_GREEN]  = m_curves[RGB_RED]->createEditableCopy();
     m_curves[RGB_BLUE]   = m_curves[RGB_RED]->createEditableCopy();
     m_curves[RGB_MASTER] = m_curves[RGB_RED]->createEditableCopy();
 }
 
-GradingRGBCurveImpl::GradingRGBCurveImpl(const ConstGradingBSplineCurveRcPtr & red,
-                                         const ConstGradingBSplineCurveRcPtr & green,
-                                         const ConstGradingBSplineCurveRcPtr & blue,
-                                         const ConstGradingBSplineCurveRcPtr & master)
+GradingRGBCurveImpl::GradingRGBCurveImpl(
+    const ConstGradingBSplineCurveRcPtr & red,
+    const ConstGradingBSplineCurveRcPtr & green,
+    const ConstGradingBSplineCurveRcPtr & blue,
+    const ConstGradingBSplineCurveRcPtr & master)
 {
     if (!red || !green || !blue || !master)
     {
@@ -57,10 +67,11 @@ GradingRGBCurveImpl::GradingRGBCurveImpl(const ConstGradingRGBCurveRcPtr & rhs)
 
 GradingRGBCurveRcPtr GradingRGBCurveImpl::createEditableCopy() const
 {
-    auto newCurve = std::make_shared<GradingRGBCurveImpl>(m_curves[RGB_RED],
-                                                          m_curves[RGB_GREEN],
-                                                          m_curves[RGB_BLUE],
-                                                          m_curves[RGB_MASTER]);
+    auto newCurve = std::make_shared<GradingRGBCurveImpl>(
+        m_curves[RGB_RED],
+        m_curves[RGB_GREEN],
+        m_curves[RGB_BLUE],
+        m_curves[RGB_MASTER]);
     GradingRGBCurveRcPtr res = newCurve;
     return res;
 }
@@ -72,22 +83,22 @@ const char * CurveType(int c)
     const RGBCurveType curve = static_cast<RGBCurveType>(c);
     switch (curve)
     {
-    case RGB_RED:
-        return "red";
-    case RGB_GREEN:
-        return "green";
-    case RGB_BLUE:
-        return "blue";
-    case RGB_MASTER:
-        return "master";
+        case RGB_RED:
+            return "red";
+        case RGB_GREEN:
+            return "green";
+        case RGB_BLUE:
+            return "blue";
+        case RGB_MASTER:
+            return "master";
 
-    case RGB_NUM_CURVES:
-    default:
-        break;
+        case RGB_NUM_CURVES:
+        default:
+            break;
     }
     return "invalid";
 }
-}
+} // namespace
 
 void GradingRGBCurveImpl::validate() const
 {
@@ -139,34 +150,35 @@ GradingBSplineCurveRcPtr GradingRGBCurveImpl::getCurve(RGBCurveType c)
 
 GradingRGBCurveRcPtr GradingRGBCurve::Create(GradingStyle style)
 {
-    auto newCurve = std::make_shared<GradingRGBCurveImpl>(style);
+    auto newCurve            = std::make_shared<GradingRGBCurveImpl>(style);
     GradingRGBCurveRcPtr res = newCurve;
     return res;
 }
 
 GradingRGBCurveRcPtr GradingRGBCurve::Create(const ConstGradingRGBCurveRcPtr & rhs)
 {
-    auto newCurve = std::make_shared<GradingRGBCurveImpl>(rhs);
+    auto newCurve            = std::make_shared<GradingRGBCurveImpl>(rhs);
     GradingRGBCurveRcPtr res = newCurve;
     return res;
 }
 
-GradingRGBCurveRcPtr GradingRGBCurve::Create(const ConstGradingBSplineCurveRcPtr & red,
-                                             const ConstGradingBSplineCurveRcPtr & green,
-                                             const ConstGradingBSplineCurveRcPtr & blue,
-                                             const ConstGradingBSplineCurveRcPtr & master)
+GradingRGBCurveRcPtr GradingRGBCurve::Create(
+    const ConstGradingBSplineCurveRcPtr & red,
+    const ConstGradingBSplineCurveRcPtr & green,
+    const ConstGradingBSplineCurveRcPtr & blue,
+    const ConstGradingBSplineCurveRcPtr & master)
 {
-    auto newCurve = std::make_shared<GradingRGBCurveImpl>(red, green, blue, master);
+    auto newCurve            = std::make_shared<GradingRGBCurveImpl>(red, green, blue, master);
     GradingRGBCurveRcPtr res = newCurve;
     return res;
 }
 
 bool operator==(const GradingRGBCurve & lhs, const GradingRGBCurve & rhs)
 {
-    if (*(lhs.getCurve(RGB_RED)) == *(rhs.getCurve(RGB_RED)) &&
-        *(lhs.getCurve(RGB_GREEN)) == *(rhs.getCurve(RGB_GREEN)) &&
-        *(lhs.getCurve(RGB_BLUE)) == *(rhs.getCurve(RGB_BLUE)) &&
-        *(lhs.getCurve(RGB_MASTER)) == *(rhs.getCurve(RGB_MASTER)))
+    if (*(lhs.getCurve(RGB_RED)) == *(rhs.getCurve(RGB_RED))
+        && *(lhs.getCurve(RGB_GREEN)) == *(rhs.getCurve(RGB_GREEN))
+        && *(lhs.getCurve(RGB_BLUE)) == *(rhs.getCurve(RGB_BLUE))
+        && *(lhs.getCurve(RGB_MASTER)) == *(rhs.getCurve(RGB_MASTER)))
     {
         return true;
     }
@@ -178,6 +190,4 @@ bool operator!=(const GradingRGBCurve & lhs, const GradingRGBCurve & rhs)
     return !(lhs == rhs);
 }
 
-
 } // namespace OCIO_NAMESPACE
-

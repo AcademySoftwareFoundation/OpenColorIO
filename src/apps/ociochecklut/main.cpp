@@ -22,8 +22,8 @@ namespace
 class ProcessorWrapper
 {
 public:
-    ProcessorWrapper() = delete;
-    ProcessorWrapper(const ProcessorWrapper &) = delete;
+    ProcessorWrapper()                                     = delete;
+    ProcessorWrapper(const ProcessorWrapper &)             = delete;
     ProcessorWrapper & operator=(const ProcessorWrapper &) = delete;
 
     explicit ProcessorWrapper(bool verbose)
@@ -41,10 +41,7 @@ public:
 #endif // OCIO_GPU_ENABLED
     }
 
-    void setCPU(OCIO::ConstCPUProcessorRcPtr cpu)
-    {
-        m_cpu = cpu;
-    }
+    void setCPU(OCIO::ConstCPUProcessorRcPtr cpu) { m_cpu = cpu; }
 
 #ifdef OCIO_GPU_ENABLED
     void setGPU(OCIO::ConstGPUProcessorRcPtr gpu)
@@ -61,7 +58,7 @@ public:
         }
 
         m_oglApp->setPrintShader(m_verbose);
-        float image[4]{ 0.f, 0.f, 0.f, 0.f };
+        float image[4]{0.f, 0.f, 0.f, 0.f};
         m_oglApp->initImage(1, 1, OCIO::OglApp::COMPONENTS_RGBA, image);
         m_oglApp->createGLBuffers();
         OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
@@ -89,7 +86,6 @@ public:
     }
 
 private:
-
 #ifdef OCIO_GPU_ENABLED
     void applyGPU(std::vector<float> & pixel)
     {
@@ -100,9 +96,7 @@ private:
     }
     OCIO::OglAppRcPtr m_oglApp;
 #else
-    void applyGPU(std::vector<float> &)
-    {
-    }
+    void applyGPU(std::vector<float> &) {}
 #endif // OCIO_GPU_ENABLED
 
     OCIO::ConstCPUProcessorRcPtr m_cpu;
@@ -120,7 +114,7 @@ static std::string inputfile;
 static int parsed = 0;
 static std::vector<float> input;
 
-static int parse_end_args(int /* argc */, const char *argv[])
+static int parse_end_args(int /* argc */, const char * argv[])
 {
     if (parsed == 0)
     {
@@ -149,8 +143,10 @@ void PrintFirstComponent(const std::string & in, const std::string & out)
     std::cout << in;
 }
 
-void PrintAlignedVec(const std::vector<std::string> & str, const std::vector<std::string> & strAlign,
-                     size_t comp)
+void PrintAlignedVec(
+    const std::vector<std::string> & str,
+    const std::vector<std::string> & strAlign,
+    size_t comp)
 {
     PrintFirstComponent(str[0], strAlign[0]);
     std::cout << " ";
@@ -162,11 +158,13 @@ void PrintAlignedVec(const std::vector<std::string> & str, const std::vector<std
         std::cout << " ";
         PrintFirstComponent(str[3], strAlign[3]);
     }
-
 }
 
-void ToString(std::vector<std::string> & str, const std::vector<float> & vec, size_t index,
-              size_t comp)
+void ToString(
+    std::vector<std::string> & str,
+    const std::vector<float> & vec,
+    size_t index,
+    size_t comp)
 {
     str.push_back(ToString(vec[index + 0]));
     str.push_back(ToString(vec[index + 1]));
@@ -177,16 +175,17 @@ void ToString(std::vector<std::string> & str, const std::vector<float> & vec, si
     }
 }
 
-const char * DESC_STRING = "\n"
-"OCIOCHECKLUT loads any LUT type supported by OCIO and prints any errors\n"
-"encountered.  Provide a normalized RGB or RGBA value to send that through\n"
-"the LUT.  Alternatively use the -t option to evaluate a set of test values.\n"
-"Otherwise, if no RGB value is provided, a list of the operators in the LUT is printed.\n"
-"Use -v to print warnings while parsing the LUT.\n";
+const char * DESC_STRING
+    = "\n"
+      "OCIOCHECKLUT loads any LUT type supported by OCIO and prints any errors\n"
+      "encountered.  Provide a normalized RGB or RGBA value to send that through\n"
+      "the LUT.  Alternatively use the -t option to evaluate a set of test values.\n"
+      "Otherwise, if no RGB value is provided, a list of the operators in the LUT is printed.\n"
+      "Use -v to print warnings while parsing the LUT.\n";
 
-}
+} // namespace
 
-int main (int argc, const char* argv[])
+int main(int argc, const char * argv[])
 {
     bool verbose       = false;
     bool help          = false;
@@ -198,6 +197,7 @@ int main (int argc, const char* argv[])
     bool stepInfo      = false;
 
     ArgParse ap;
+    // clang-format off
     ap.options("ociochecklut -- check any LUT file and optionally convert a pixel\n\n"
                "usage:  ociochecklut <INPUTFILE> <R G B> or <R G B A>\n",
                "%*", parse_end_args, "",
@@ -212,6 +212,7 @@ int main (int argc, const char* argv[])
                                              "instead of the CPU one (--gpu is ignored)",
                "--gpuinfo", &outputgpuInfo, "Output the OCIO shader program",
                nullptr);
+    // clang-format on
 
     if (ap.parse(argc, argv) < 0 || help || inputfile.empty())
     {
@@ -288,8 +289,10 @@ int main (int argc, const char* argv[])
             }
             if (usegpu || usegpuLegacy)
             {
-                proc.setGPU(usegpuLegacy ? processor->getOptimizedLegacyGPUProcessor(OCIO::OPTIMIZATION_DEFAULT, 32)
-                                         : processor->getDefaultGPUProcessor());
+                proc.setGPU(
+                    usegpuLegacy
+                        ? processor->getOptimizedLegacyGPUProcessor(OCIO::OPTIMIZATION_DEFAULT, 32)
+                        : processor->getDefaultGPUProcessor());
             }
             else
             {
@@ -319,10 +322,11 @@ int main (int argc, const char* argv[])
 
         if (test && numInput > 0)
         {
-            std::cerr << "ERROR: Expecting either RGB (or RGBA) pixel or predefined RGB values (i.e. -t)."
-                      << std::endl;
+            std::cerr
+                << "ERROR: Expecting either RGB (or RGBA) pixel or predefined RGB values (i.e. -t)."
+                << std::endl;
             return 1;
-        }            
+        }
 
         size_t comp = 3;
         if (numInput == 4)
@@ -331,26 +335,18 @@ int main (int argc, const char* argv[])
         }
         else if (numInput != 3 && !test)
         {
-            std::cerr << "ERROR: Expecting either RGB or RGBA pixel."
-                      << std::endl;
+            std::cerr << "ERROR: Expecting either RGB or RGBA pixel." << std::endl;
             return 1;
         }
 
         // Process the input values.
 
         bool validInput = true;
-        size_t curPix = 0;
+        size_t curPix   = 0;
 
-        static const std::vector<float> input4test = {
-              0.f,   0.f,   0.f,
-              0.18f, 0.18f, 0.18f,
-              0.5f,  0.5f,  0.5f,
-              1.f,   1.f,   1.f,
-              2.f,   2.f,   2.f,
-            100.f, 100.f, 100.f,
-              1.f,   0.f,   0.f,
-              0.f,   1.f,   0.f,
-              0.f,   0.f,   1.f };
+        static const std::vector<float> input4test
+            = {0.f, 0.f,   0.f,   0.18f, 0.18f, 0.18f, 0.5f, 0.5f, 0.5f, 1.f, 1.f, 1.f, 2.f, 2.f,
+               2.f, 100.f, 100.f, 100.f, 1.f,   0.f,   0.f,  0.f,  1.f,  0.f, 0.f, 0.f, 1.f};
 
         if (verbose || stepInfo)
         {
@@ -361,21 +357,24 @@ int main (int argc, const char* argv[])
         {
             if (curPix < numInput)
             {
-                std::vector<float> pixel = { input[curPix], input[curPix+1], input[curPix+2],
-                                             comp == 3 ? 0.0f : input[curPix + 3] };
+                std::vector<float> pixel
+                    = {input[curPix],
+                       input[curPix + 1],
+                       input[curPix + 2],
+                       comp == 3 ? 0.0f : input[curPix + 3]};
 
                 if (stepInfo)
                 {
                     // Process each step in a multi - transform LUT
                     try
                     {
-                        // Create GroupTransform so that each can be processed one at a time. 
-                        auto processor = config->getProcessor(t);
-                        auto transform = processor->createGroupTransform();
-                        std::vector<float> inputPixel = pixel;
+                        // Create GroupTransform so that each can be processed one at a time.
+                        auto processor                 = config->getProcessor(t);
+                        auto transform                 = processor->createGroupTransform();
+                        std::vector<float> inputPixel  = pixel;
                         std::vector<float> outputPixel = pixel;
-                        const auto numTransforms = transform->getNumTransforms();
-                        
+                        const auto numTransforms       = transform->getNumTransforms();
+
                         std::cout << std::endl;
 
                         for (int i = 0; i < numTransforms; ++i)
@@ -385,14 +384,17 @@ int main (int argc, const char* argv[])
 
                             if (usegpu || usegpuLegacy)
                             {
-                                proc.setGPU(usegpuLegacy ? processorStep->getOptimizedLegacyGPUProcessor(OCIO::OPTIMIZATION_DEFAULT, 32)
-                                    : processorStep->getDefaultGPUProcessor());
+                                proc.setGPU(
+                                    usegpuLegacy ? processorStep->getOptimizedLegacyGPUProcessor(
+                                                       OCIO::OPTIMIZATION_DEFAULT,
+                                                       32)
+                                                 : processorStep->getDefaultGPUProcessor());
                             }
                             else
                             {
                                 proc.setCPU(processorStep->getDefaultCPUProcessor());
                             }
-                            
+
                             // Process the pixel
                             proc.apply(outputPixel);
 
@@ -422,17 +424,19 @@ int main (int argc, const char* argv[])
                             PrintAlignedVec(out, in, comp);
                             std::cout << "]" << std::endl;
 
-                            inputPixel = outputPixel;         
+                            inputPixel = outputPixel;
                         }
                     }
-                    catch (const OCIO::Exception& exception)
+                    catch (const OCIO::Exception & exception)
                     {
                         std::cerr << "ERROR: " << exception.what() << std::endl;
                         return 1;
                     }
                     catch (...)
                     {
-                        std::cerr << "ERROR: Unknown error encountered while processing single step operator." << std::endl;
+                        std::cerr << "ERROR: Unknown error encountered while processing single "
+                                     "step operator."
+                                  << std::endl;
                         return 1;
                     }
 
@@ -445,14 +449,15 @@ int main (int argc, const char* argv[])
                     {
                         proc.apply(pixel);
                     }
-                    catch (const OCIO::Exception& e)
+                    catch (const OCIO::Exception & e)
                     {
                         std::cerr << "ERROR: Processing pixel: " << e.what() << std::endl;
                         return 1;
                     }
                     catch (...)
                     {
-                        std::cerr << "ERROR: Unknown error encountered while processing pixel." << std::endl;
+                        std::cerr << "ERROR: Unknown error encountered while processing pixel."
+                                  << std::endl;
                         return 1;
                     }
 
@@ -496,7 +501,7 @@ int main (int argc, const char* argv[])
                         std::cout << std::endl;
                     }
                     curPix += comp;
-                }               
+                }
             }
             else if (test)
             {
@@ -504,11 +509,11 @@ int main (int argc, const char* argv[])
                 {
                     std::cout << "Testing with predefined set of RGB pixels." << std::endl;
                 }
-                input = input4test;
-                comp = 3;
+                input    = input4test;
+                comp     = 3;
                 numInput = input4test.size();
-                curPix = 0;
-                test = false;
+                curPix   = 0;
+                test     = false;
             }
             else
             {

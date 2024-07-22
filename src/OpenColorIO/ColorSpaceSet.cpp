@@ -9,25 +9,24 @@
 #include "PrivateTypes.h"
 #include "utils/StringUtils.h"
 
-
 namespace OCIO_NAMESPACE
 {
 
 class ColorSpaceSet::Impl
 {
 public:
-    Impl() = default;
+    Impl()  = default;
     ~Impl() = default;
 
     Impl(const Impl &) = delete;
 
-    Impl & operator= (const Impl & rhs)
+    Impl & operator=(const Impl & rhs)
     {
         if (this != &rhs)
         {
             clear();
 
-            for (auto & cs: rhs.m_colorSpaces)
+            for (auto & cs : rhs.m_colorSpaces)
             {
                 m_colorSpaces.push_back(cs->createEditableCopy());
             }
@@ -35,9 +34,10 @@ public:
         return *this;
     }
 
-    bool operator== (const Impl & rhs) const
+    bool operator==(const Impl & rhs) const
     {
-        if (this == &rhs) return true;
+        if (this == &rhs)
+            return true;
 
         if (m_colorSpaces.size() != rhs.m_colorSpaces.size())
         {
@@ -56,12 +56,9 @@ public:
         return true;
     }
 
-    int size() const 
-    { 
-        return static_cast<int>(m_colorSpaces.size()); 
-    }
+    int size() const { return static_cast<int>(m_colorSpaces.size()); }
 
-    ConstColorSpaceRcPtr get(int index) const 
+    ConstColorSpaceRcPtr get(int index) const
     {
         if (index < 0 || index >= size())
         {
@@ -71,7 +68,7 @@ public:
         return m_colorSpaces[index];
     }
 
-    const char * getName(int index) const 
+    const char * getName(int index) const
     {
         if (index < 0 || index >= size())
         {
@@ -81,12 +78,9 @@ public:
         return m_colorSpaces[index]->getName();
     }
 
-    ConstColorSpaceRcPtr getByName(const char * csName) const 
-    {
-        return get(getIndex(csName));
-    }
+    ConstColorSpaceRcPtr getByName(const char * csName) const { return get(getIndex(csName)); }
 
-    int getIndex(const char * csName) const 
+    int getIndex(const char * csName) const
     {
         // Search for name and aliases.
         if (csName && *csName)
@@ -112,10 +106,7 @@ public:
         return -1;
     }
 
-    bool isPresent(const char * csName) const
-    {
-        return -1 != getIndex(csName);
-    }
+    bool isPresent(const char * csName) const { return -1 != getIndex(csName); }
 
     void add(const ConstColorSpaceRcPtr & cs)
     {
@@ -125,7 +116,7 @@ public:
             throw Exception("Cannot add a color space with an empty name.");
         }
 
-        auto entryIdx = getIndex(csName);
+        auto entryIdx     = getIndex(csName);
         size_t replaceIdx = (size_t)-1;
         if (entryIdx != -1)
         {
@@ -148,7 +139,7 @@ public:
         for (size_t aidx = 0; aidx < numAliases; ++aidx)
         {
             const char * alias = cs->getAlias(aidx);
-            entryIdx = getIndex(alias);
+            entryIdx           = getIndex(alias);
             // Is an alias of the color space already used by a color space?
             // Skip existing colorspace that might be replaced.
             if (entryIdx != -1 && static_cast<int>(replaceIdx) != entryIdx)
@@ -181,11 +172,12 @@ public:
     void remove(const char * csName)
     {
         const std::string name = StringUtils::Lower(csName);
-        if (name.empty()) return;
+        if (name.empty())
+            return;
 
         for (auto itr = m_colorSpaces.begin(); itr != m_colorSpaces.end(); ++itr)
         {
-            if (StringUtils::Lower((*itr)->getName())==name)
+            if (StringUtils::Lower((*itr)->getName()) == name)
             {
                 m_colorSpaces.erase(itr);
                 return;
@@ -201,16 +193,12 @@ public:
         }
     }
 
-    void clear()
-    {
-        m_colorSpaces.clear();
-    }
+    void clear() { m_colorSpaces.clear(); }
 
 private:
     typedef std::vector<ColorSpaceRcPtr> ColorSpaceVec;
     ColorSpaceVec m_colorSpaces;
 };
-
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -219,18 +207,15 @@ ColorSpaceSetRcPtr ColorSpaceSet::Create()
     return ColorSpaceSetRcPtr(new ColorSpaceSet(), &deleter);
 }
 
-void ColorSpaceSet::deleter(ColorSpaceSet* c)
+void ColorSpaceSet::deleter(ColorSpaceSet * c)
 {
     delete c;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////
 
-
-
 ColorSpaceSet::ColorSpaceSet()
-    :   m_impl(new ColorSpaceSet::Impl)
+    : m_impl(new ColorSpaceSet::Impl)
 {
 }
 
@@ -243,7 +228,7 @@ ColorSpaceSet::~ColorSpaceSet()
 ColorSpaceSetRcPtr ColorSpaceSet::createEditableCopy() const
 {
     ColorSpaceSetRcPtr css = ColorSpaceSet::Create();
-    *css->m_impl = *m_impl; // Deep Copy.
+    *css->m_impl           = *m_impl; // Deep Copy.
     return css;
 }
 
@@ -254,12 +239,12 @@ bool ColorSpaceSet::operator==(const ColorSpaceSet & css) const
 
 bool ColorSpaceSet::operator!=(const ColorSpaceSet & css) const
 {
-    return !( *m_impl == *css.m_impl );
+    return !(*m_impl == *css.m_impl);
 }
 
 int ColorSpaceSet::getNumColorSpaces() const
 {
-    return m_impl->size();    
+    return m_impl->size();
 }
 
 const char * ColorSpaceSet::getColorSpaceNameByIndex(int index) const
@@ -312,16 +297,18 @@ void ColorSpaceSet::clearColorSpaces()
     m_impl->clear();
 }
 
-ConstColorSpaceSetRcPtr operator||(const ConstColorSpaceSetRcPtr & lcss, 
-                                   const ConstColorSpaceSetRcPtr & rcss)
+ConstColorSpaceSetRcPtr operator||(
+    const ConstColorSpaceSetRcPtr & lcss,
+    const ConstColorSpaceSetRcPtr & rcss)
 {
     ColorSpaceSetRcPtr css = lcss->createEditableCopy();
     css->addColorSpaces(rcss);
-    return css;    
+    return css;
 }
 
-ConstColorSpaceSetRcPtr operator&&(const ConstColorSpaceSetRcPtr & lcss, 
-                                   const ConstColorSpaceSetRcPtr & rcss)
+ConstColorSpaceSetRcPtr operator&&(
+    const ConstColorSpaceSetRcPtr & lcss,
+    const ConstColorSpaceSetRcPtr & rcss)
 {
     ColorSpaceSetRcPtr css = ColorSpaceSet::Create();
 
@@ -337,8 +324,9 @@ ConstColorSpaceSetRcPtr operator&&(const ConstColorSpaceSetRcPtr & lcss,
     return css;
 }
 
-ConstColorSpaceSetRcPtr operator-(const ConstColorSpaceSetRcPtr & lcss, 
-                                  const ConstColorSpaceSetRcPtr & rcss)
+ConstColorSpaceSetRcPtr operator-(
+    const ConstColorSpaceSetRcPtr & lcss,
+    const ConstColorSpaceSetRcPtr & rcss)
 {
     ColorSpaceSetRcPtr css = ColorSpaceSet::Create();
 
@@ -356,4 +344,3 @@ ConstColorSpaceSetRcPtr operator-(const ConstColorSpaceSetRcPtr & lcss,
 }
 
 } // namespace OCIO_NAMESPACE
-
