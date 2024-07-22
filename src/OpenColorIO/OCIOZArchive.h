@@ -23,11 +23,13 @@ namespace OCIO_NAMESPACE
  * \param ostream Output stream to write the data into.
  * \param config Config object.
  * \param configWorkingDirectory Working directory of the current config.
+ * \param flags Archive flags used to .
  */
 void archiveConfig(
     std::ostream & ostream, 
     const Config & config, 
-    const char * configWorkingDirectory);
+    const char * configWorkingDirectory,
+    ArchiveFlags flags);
 
 /**
  * \brief Get the content of a file inside an OCIOZ archive as a buffer. 
@@ -106,6 +108,11 @@ private:
     std::map<std::string, std::string> m_entries;
 };
 
+// TODO: This "duplicates" flags function from Op.h could be a template?
+inline bool HasFlag(ArchiveFlags flags, ArchiveFlags queryFlag)
+{
+    return (flags & queryFlag) == queryFlag;
+}
 } // namespace OCIO_NAMESPACE
 
 #endif
