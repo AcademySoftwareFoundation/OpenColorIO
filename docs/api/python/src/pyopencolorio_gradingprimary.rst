@@ -37,5 +37,11 @@
    .. attribute:: pivot
       :type: float
 
+   .. attribute:: pivotBlack
+      :type: float
+
+   .. attribute:: pivotWhite
+      :type: float
+
    .. attribute:: saturation
       :type: float
