@@ -282,6 +282,8 @@ class ColorSpaceComboBox(QtWidgets.QPushButton):
             action = self._color_space_actions.get(color_space_name)
             if action is None:
                 return False
+            else:
+                action.setChecked(True)
 
             # Complete selection
             self._commit_value(color_space_name, action.text())

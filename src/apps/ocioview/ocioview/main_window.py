@@ -20,7 +20,6 @@ from .signal_router import SignalRouter
 from .settings import settings
 from .undo import undo_stack
 from .utils import get_glyph_icon, SignalsBlocked
-from .viewer import EditImageViewer, PreviewImageViewer
 from .viewer_dock import ViewerDock
 from .widgets import EnumComboBox
 
@@ -74,17 +73,7 @@ class OCIOView(QtWidgets.QMainWindow):
         self.config_dock = ConfigDock()
 
         # Central widget
-        self._viewer_docks = {}
-        self._viewer_docks[OCIOViewMode.Edit] = ViewerDock(
-            self.recent_images_menu, EditImageViewer
-        )
-        self._viewer_docks[OCIOViewMode.Preview] = ViewerDock(
-            self.recent_images_menu, PreviewImageViewer
-        )
-
-        self.viewer_stack = QtWidgets.QStackedWidget()
-        self.viewer_stack.addWidget(self._viewer_docks[OCIOViewMode.Edit])
-        self.viewer_stack.addWidget(self._viewer_docks[OCIOViewMode.Preview])
+        self.viewer_dock = ViewerDock(self.recent_images_menu)
 
         # Main menu
         self.file_menu = QtWidgets.QMenu("File")
@@ -113,13 +102,13 @@ class OCIOView(QtWidgets.QMainWindow):
         self.file_menu.addSeparator()
         self.file_menu.addAction(
             "Load Image...",
-            lambda: self._get_viewer_dock().load_image(),
+            lambda: self.viewer_dock.load_image(),
             QtGui.QKeySequence("Ctrl+I"),
         )
         self.file_menu.addMenu(self.recent_images_menu)
         self.file_menu.addAction(
             "Load Image in New Tab...",
-            lambda: self._get_viewer_dock().load_image(new_tab=True),
+            lambda: self.viewer_dock.load_image(new_tab=True),
             QtGui.QKeySequence("Ctrl+Shift+I"),
         )
         self.file_menu.addSeparator()
@@ -185,14 +174,14 @@ class OCIOView(QtWidgets.QMainWindow):
             self.setCorner(corner, QtCore.Qt.RightDockWidgetArea)
 
         # Layout
-        self.setCentralWidget(self.viewer_stack)
+        self.setCentralWidget(self.viewer_dock)
         self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.inspect_dock)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.config_dock)
 
         # Connections
         signal_router = SignalRouter.get_instance()
         signal_router.config_changed.connect(
-            lambda: self._get_viewer_dock().update_current_viewer()
+            lambda: self.viewer_dock.update_current_viewer()
         )
         signal_router.config_reloaded.connect(self._update_window_title)
 
@@ -233,9 +222,7 @@ class OCIOView(QtWidgets.QMainWindow):
 
         self.config_dock.reset()
         self.inspect_dock.reset()
-
-        for mode, viewer_dock in self._viewer_docks.items():
-            viewer_dock.reset()
+        self.viewer_dock.reset()
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         if self._can_close_config():
@@ -653,22 +640,11 @@ class OCIOView(QtWidgets.QMainWindow):
         ReferenceSpaceManager.init_reference_spaces()
         self._update_cache_id()
 
-    def _get_viewer_dock(self) -> ViewerDock:
-        """Get the viewer dock for the current mode."""
-        return self._viewer_docks[OCIOViewMode.current_mode()]
-
-    def _update_viewer_dock(self) -> None:
-        """Show viewer dock for the current mode."""
-        viewer_dock = self._viewer_docks[OCIOViewMode.current_mode()]
-        self.viewer_stack.setCurrentWidget(viewer_dock)
-        viewer_dock.update_current_viewer()
-
     @QtCore.Slot(int)
     def _on_mode_box_index_changed(self, index: int) -> None:
         """Called when the application mode has been manually changed."""
         with SignalsBlocked(self.mode_box):
             OCIOViewMode.set_current_mode(self.mode_box.member())
-            self._update_viewer_dock()
 
     def _on_mode_changed_external(self) -> None:
         """
@@ -678,4 +654,3 @@ class OCIOView(QtWidgets.QMainWindow):
             mode = OCIOViewMode.current_mode()
             if mode != self.mode_box.member():
                 self.mode_box.set_member(mode)
-                self._update_viewer_dock()
