@@ -5,7 +5,7 @@ from typing import Optional
 
 from PySide6 import QtCore, QtWidgets
 
-from .inspect import CodeInspector, CurveInspector, LogInspector
+from .inspect import ChromaticitiesInspector, CodeInspector, CurveInspector, LogInspector
 from .utils import get_glyph_icon
 from .widgets.structure import TabbedDockWidget
 
@@ -25,11 +25,17 @@ class InspectDock(TabbedDockWidget):
         self.tabs.setTabPosition(QtWidgets.QTabWidget.West)
 
         # Widgets
+        self.chromaticities_inspector = ChromaticitiesInspector()
         self.curve_inspector = CurveInspector()
         self.code_inspector = CodeInspector()
         self.log_inspector = LogInspector()
 
         # Layout
+        self.add_tab(
+            self.chromaticities_inspector,
+            self.chromaticities_inspector.label(),
+            self.chromaticities_inspector.icon(),
+        )
         self.add_tab(
             self.curve_inspector,
             self.curve_inspector.label(),
@@ -48,6 +54,7 @@ class InspectDock(TabbedDockWidget):
 
     def reset(self) -> None:
         """Reset data for all inspectors."""
+        self.chromaticities_inspector.reset()
         self.curve_inspector.reset()
         self.code_inspector.reset()
         self.log_inspector.reset()

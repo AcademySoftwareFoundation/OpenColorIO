@@ -131,6 +131,7 @@ if(NOT minizip-ng_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_P
                             --config ${CMAKE_BUILD_TYPE}
                             --target install
                             --parallel
+        DEPENDS ZLIB::ZLIB        # minizip-ng depends on zlib
     )
 
     add_dependencies(MINIZIP::minizip-ng minizip-ng_install)
