@@ -1242,6 +1242,110 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSV_inv_custom)
     test.setErrorThreshold(1e-6f);
 }
 
+OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_LIN_fwd)
+{
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_LIN);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    test.setProcessor(func);
+
+    test.setErrorThreshold(1e-6f);
+
+#ifdef __APPLE__
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
+#endif
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_LIN_inv)
+{
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_LIN);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    test.setProcessor(func);
+
+    test.setErrorThreshold(1e-6f);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues = {
+        4.70554752e-01f, 9.12594033f, 3.26650218e-02f, 0.f,
+        0.75f,           0.22196741f, 0.38596f,        1.f,
+        0.08333333f,     0.12976444f, 0.034974f,       0.f,
+        0.96296296f,     9.7034f,     -0.1862f,        1.f };
+    test.setCustomValues(values);
+
+#ifdef __APPLE__
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
+#endif
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_LOG_fwd)
+{
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_LOG);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    test.setProcessor(func);
+
+    test.setErrorThreshold(1e-6f);
+
+#ifdef __APPLE__
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
+#endif
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_LOG_inv)
+{
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_LOG);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    test.setProcessor(func);
+
+    test.setErrorThreshold(1e-6f);
+
+#ifdef __APPLE__
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
+#endif
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_VID_fwd)
+{
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_VID);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    test.setProcessor(func);
+
+    test.setErrorThreshold(1e-6f);
+
+#ifdef __APPLE__
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
+#endif
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_VID_inv)
+{
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_VID);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    test.setProcessor(func);
+
+    test.setErrorThreshold(1e-6f);
+
+#ifdef __APPLE__
+    test.setTestNaN(false);
+    test.setTestInfinity(false);
+#endif
+}
+
 OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_xyY_fwd)
 {
     OCIO::FixedFunctionTransformRcPtr func =
