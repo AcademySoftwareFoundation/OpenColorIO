@@ -38,6 +38,7 @@ struct Texture3D
     std::string m_textureName;
     std::string m_samplerName;
     unsigned m_edgelen;
+    GpuShaderDesc::TextureType m_channel;
     Interpolation m_interpolation;
     GpuShaderDescRcPtr m_shaderDesc;
     int m_index;
@@ -129,6 +130,9 @@ void bindPyGpuShaderDesc(py::module & m)
                     case GpuShaderDesc::TEXTURE_RGB_CHANNEL:
                         numChannels = 3;
                         break;
+                    case GpuShaderDesc::TEXTURE_RGBA_CHANNEL:
+                        numChannels = 4;
+                        break;
                     default:
                         throw Exception("Error: Unsupported texture type");
                 }
@@ -160,6 +164,7 @@ void bindPyGpuShaderDesc(py::module & m)
                                 const std::string & textureName, 
                                 const std::string & samplerName, 
                                 unsigned edgelen,
+                                GpuShaderDesc::TextureType channel,
                                 Interpolation interpolation,
                                 const py::buffer & values)
             {
@@ -172,10 +177,11 @@ void bindPyGpuShaderDesc(py::module & m)
                 self->add3DTexture(textureName.c_str(), 
                                    samplerName.c_str(), 
                                    edgelen,
+                                   channel,
                                    interpolation,
                                    static_cast<float *>(info.ptr));
             },
-             "textureName"_a, "samplerName"_a, "edgeLen"_a, "interpolation"_a, "values"_a, 
+             "textureName"_a, "samplerName"_a, "edgeLen"_a, "channel"_a, "interpolation"_a, "values"_a, 
              DOC(GpuShaderCreator, add3DTexture))
         .def("get3DTextures", [](GpuShaderDescRcPtr & self) 
             {
@@ -266,6 +272,9 @@ void bindPyGpuShaderDesc(py::module & m)
                 case GpuShaderDesc::TEXTURE_RGB_CHANNEL:
                     numChannels = 3;
                     break;
+                case GpuShaderDesc::TEXTURE_RGBA_CHANNEL:
+                    numChannels = 4;
+                    break;
                 default:
                     throw Exception("Error: Unsupported texture type");
                 }
@@ -323,6 +332,7 @@ void bindPyGpuShaderDesc(py::module & m)
         .def_readonly("textureName", &Texture3D::m_textureName)
         .def_readonly("samplerName", &Texture3D::m_samplerName)
         .def_readonly("edgeLen", &Texture3D::m_edgelen)
+        .def_readonly("channel", &Texture3D::m_channel)
         .def_readonly("interpolation", &Texture3D::m_interpolation)
         .def("getValues", [](Texture3D & self)
             {
@@ -350,10 +360,11 @@ void bindPyGpuShaderDesc(py::module & m)
                 const char * textureName = nullptr;
                 const char * samplerName = nullptr;
                 unsigned edgelen;
+                GpuShaderDesc::TextureType channel;
                 Interpolation interpolation;
-                it.m_obj->get3DTexture(i, textureName, samplerName, edgelen, interpolation);
+                it.m_obj->get3DTexture(i, textureName, samplerName, edgelen, channel, interpolation);
 
-                return { textureName, samplerName, edgelen, interpolation, it.m_obj, i };
+                return { textureName, samplerName, edgelen, channel, interpolation, it.m_obj, i };
             })
         .def("__iter__", [](Texture3DIterator & it) -> Texture3DIterator & 
             { 
@@ -366,10 +377,11 @@ void bindPyGpuShaderDesc(py::module & m)
                 const char * textureName = nullptr;
                 const char * samplerName = nullptr;
                 unsigned edgelen;
+                GpuShaderDesc::TextureType channel;
                 Interpolation interpolation;
-                it.m_obj->get3DTexture(i, textureName, samplerName, edgelen, interpolation);
+                it.m_obj->get3DTexture(i, textureName, samplerName, edgelen, channel, interpolation);
 
-                return { textureName, samplerName, edgelen, interpolation, it.m_obj, i };
+                return { textureName, samplerName, edgelen, channel, interpolation, it.m_obj, i };
             });
 }
 

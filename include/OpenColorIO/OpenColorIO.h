@@ -3267,7 +3267,8 @@ public:
     enum TextureType
     {
         TEXTURE_RED_CHANNEL, ///< Only need a red channel texture
-        TEXTURE_RGB_CHANNEL  ///< Need a RGB texture
+        TEXTURE_RGB_CHANNEL,  ///< Need a RGB texture
+        TEXTURE_RGBA_CHANNEL ///< Need a RGBA texture
     };
 
     /**
@@ -3304,6 +3305,7 @@ public:
     virtual void add3DTexture(const char * textureName,
                               const char * samplerName,
                               unsigned edgelen,
+                              TextureType channel,
                               Interpolation interpolation,
                               const float * values) = 0;
 
@@ -3551,6 +3553,7 @@ public:
                               const char *& textureName,
                               const char *& samplerName,
                               unsigned & edgelen,
+                              TextureType& channel,
                               Interpolation & interpolation) const = 0;
     virtual void get3DTextureValues(unsigned index, const float *& values) const = 0;
 
