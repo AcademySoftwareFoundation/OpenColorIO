@@ -223,9 +223,12 @@ std::string getMatrixValues(const T * mtx, GpuLanguage lang, bool transpose)
 }
 
 
-void RGBtoRGBATexture(const float* lutValues, int valueCount, std::vector<float>& float4AdaptedLutValues){
+void RGBtoRGBATexture(const float* lutValues, int valueCount, std::vector<float>& float4AdaptedLutValues)
+{
     if(valueCount % 3 != 0)
+    {
         throw Exception("Value count should be divisible by 3.");
+    }
     
     valueCount = valueCount * 4 / 3;
     if(lutValues != nullptr)
@@ -235,7 +238,8 @@ void RGBtoRGBATexture(const float* lutValues, int valueCount, std::vector<float>
         float *rgbaLutValuesIt = float4AdaptedLutValues.data();
         const float *end = rgbaLutValuesIt + valueCount;
             
-        while(rgbaLutValuesIt != end) {
+        while(rgbaLutValuesIt != end) 
+        {
             *rgbaLutValuesIt++ = *rgbLutValuesIt++;
             *rgbaLutValuesIt++ = *rgbLutValuesIt++;
             *rgbaLutValuesIt++ = *rgbLutValuesIt++;
