@@ -186,9 +186,10 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         CreatePaddedLutChannels(width, height, lutData->getArray().getValues(), values);
         channel = GpuShaderCreator::TEXTURE_RGB_CHANNEL;
         break;
-    case 4: {
+    case 4: 
+    {
         std::vector<float> paddedChannels;
-        values.reserve(width * height * 3);
+        paddedChannels.reserve(width * height * 3);
         CreatePaddedLutChannels(width, height, lutData->getArray().getValues(), paddedChannels);
         // Insert a place holder alpha channel with value of 1. This is to support RGBA 
         // texture format for Metal shading language.
