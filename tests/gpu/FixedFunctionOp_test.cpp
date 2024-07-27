@@ -305,6 +305,156 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_gamutcomp13_inv)
     test.setErrorThreshold(3e-6f);
 }
 
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces_rgb_to_jmh_fwd)
+{
+    // ACES AP0
+    const double data[8] = { 0.7347, 0.2653, 0.0000, 1.0000, 0.0001, -0.0770, 0.32168, 0.33767 };
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_RGB_TO_JMH_20, &data[0], 8);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    test.setProcessor(func);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues =
+    {
+        // OCIO test values
+        0.11f,  0.02f,  0.04f, 0.5f,
+        0.71f,  0.51f,  0.81f, 1.0f,
+        0.43f,  0.82f,  0.71f, 0.0f,
+        // cyan patch of digitalLAD
+        0.2644043f, 0.9433594f, 0.69873047f, 1.0f
+    };
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(1e-4f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces_rgb_to_jmh_inv)
+{
+    // ACES AP0
+    const double data[8] = { 0.7347, 0.2653, 0.0000, 1.0000, 0.0001, -0.0770, 0.32168, 0.33767 };
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_RGB_TO_JMH_20, &data[0], 8);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    test.setProcessor(func);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues =
+    {
+        26.112518121164f, 42.523578060772f,   4.173168530674f,
+        79.190475589883f, 25.002276580939f, 332.159734925429f,
+        81.912575162337f, 39.754809667791f, 182.925744472942f,
+        81.501398684683f, 68.473034267987f, 180.791650090696f
+    };
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(1e-4f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces_tonescale_compress_fwd)
+{
+    const double data[1] = { 100.f };
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20, &data[0], 1);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    test.setProcessor(func);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues =
+    {
+        26.11251812f, 42.52357806f,   4.17316853f, 0.5f,
+        79.19047559f, 25.00227658f, 332.15973493f, 1.0f,
+        81.91257516f, 39.75480967f, 182.92574447f, 0.0f,
+        81.50139781f, 68.47303301f, 180.79165077f, 1.0f
+    };
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(1e-4f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces_tonescale_compress_inv)
+{
+    const double data[1] = { 100.f };
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20, &data[0], 1);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    test.setProcessor(func);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues =
+    {
+         15.86298518723f,  30.578605239002f,   4.17316853f, 0.5f,
+         59.32347917069f,  12.790217117113f, 332.15973493f, 1.0f,
+        60.857091814319f,  25.402896230683f, 182.92574447f, 0.0f,
+        60.629492467576f,  52.628372821923f, 180.79165077f, 1.0f
+    };
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(1e-4f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces_gamut_compress_fwd)
+{
+    const double data[9] = {
+        // Peak luminance
+        100.f,
+        // REC709 gamut
+        0.64, 0.33, 0.30, 0.60, 0.15, 0.06, 0.3127, 0.3290
+    };
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20, &data[0], 9);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    test.setProcessor(func);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues =
+    {
+        15.86298519f, 30.60572714f,   4.17316853f, 0.5f,
+        59.32347917f, 12.70321289f, 332.15973493f, 1.0f,
+        60.85709181f, 25.34647230f, 182.92574447f, 0.0f,
+        34.07446518f, 47.99006933f, 268.73561646f, 0.0f,
+        60.629492471415f, 52.631022123103f, 180.79165077273f, 1.0f,
+        86.734843996433f, 1.888068396171f, 171.28421125602f, 1.0f
+    };
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(1e-4f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces_gamut_compress_inv)
+{
+    const double data[9] = {
+        // Peak luminance
+        100.f,
+        // REC709 gamut
+        0.64, 0.33, 0.30, 0.60, 0.15, 0.06, 0.3127, 0.3290
+    };
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20, &data[0], 9);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    test.setProcessor(func);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues =
+    {
+        16.31238931f, 24.27810930f,   4.17316853f, 0.5f,
+        59.32347917f, 12.70321289f, 332.15973493f, 1.0f,
+        60.89667436f, 23.02176424f, 182.92574447f, 0.0f,
+        34.33494992f, 32.32098704f, 268.73561646f, 0.0f,
+        60.992832055704f, 26.66339303119f, 180.79165077273f, 1.0f
+    };
+    test.setCustomValues(values);
+
+    // TODO: Improve inversion match?
+    test.setErrorThreshold(2e-4f);
+}
+
 // The next four tests run into a problem on some graphics cards where 0.0 * Inf = 0.0,
 // rather than the correct value of NaN.  Therefore turning off TestInfinity for these tests.
 
