@@ -11,9 +11,12 @@
 #endif
 
 #include <cstdlib>
+#ifdef __APPLE__
+#include <xlocale.h>
+#else
 #include <locale>
+#endif
 #include <system_error>
-#include <type_traits>
 
 namespace OCIO_NAMESPACE
 {

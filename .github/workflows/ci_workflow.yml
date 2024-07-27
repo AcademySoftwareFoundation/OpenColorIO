@@ -59,6 +59,7 @@ jobs:
       # Source: https://github.com/AcademySoftwareFoundation/aswf-docker
       image: aswf/ci-ocio:${{ matrix.vfx-cy }}
     strategy:
+      fail-fast: true
       matrix:
         build: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
         include:
@@ -233,6 +234,8 @@ jobs:
     env:
       CXX: ${{ matrix.cxx-compiler }}
       CC: ${{ matrix.cc-compiler }}
+      ACTIONS_RUNNER_FORCE_ACTIONS_NODE_VERSION: node16
+      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -316,7 +319,7 @@ jobs:
   # ---------------------------------------------------------------------------
 
   macos:
-    name: 'macOS 11
+    name: 'macOS 12
       <AppleClang 
        arch=${{ matrix.arch-type }},
        config=${{ matrix.build-type }}, 
@@ -330,7 +333,7 @@ jobs:
     if: |
       github.event_name == 'push' ||
       github.event.pull_request.head.repo.full_name != github.repository
-    runs-on: macos-11
+    runs-on: macos-12
     strategy:
       matrix:
         build: [1, 2, 3, 4]

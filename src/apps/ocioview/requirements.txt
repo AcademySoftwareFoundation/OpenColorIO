@@ -1,7 +1,12 @@
-imageio
-numpy
-pygments
+OpenColorIO
 PyOpenGL
 PySide6
 QtAwesome
-OpenColorIO
+colour-science @ git+https://github.com/colour-science/colour.git
+colour-visuals @ git+https://github.com/colour-science/colour-visuals.git
+imageio
+networkx
+numpy
+pygfx
+pygments
+wgpu
