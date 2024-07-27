@@ -102,6 +102,11 @@ namespace REC709
 extern const Primaries primaries;
 }
 
+namespace REC709_D60
+{
+extern const Primaries primaries;
+}
+
 namespace REC2020
 {
 extern const Primaries primaries;
