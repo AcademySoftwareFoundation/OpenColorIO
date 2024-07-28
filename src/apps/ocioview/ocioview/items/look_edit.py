@@ -7,8 +7,7 @@ from typing import Optional
 import PyOpenColorIO as ocio
 from PySide6 import QtWidgets
 
-from ..config_cache import ConfigCache
-from ..widgets import CallbackComboBox, TextEdit
+from ..widgets import ColorSpaceComboBox, TextEdit
 from .look_model import LookModel
 from .config_item_edit import BaseConfigItemParamEdit, BaseConfigItemEdit
 
@@ -27,8 +26,8 @@ class LookParamEdit(BaseConfigItemParamEdit):
         super().__init__(parent=parent)
 
         # Widgets
-        self.process_space_combo = CallbackComboBox(
-            lambda: ConfigCache.get_color_space_names(ocio.SEARCH_REFERENCE_SPACE_SCENE)
+        self.process_space_combo = ColorSpaceComboBox(
+            ocio.SEARCH_REFERENCE_SPACE_SCENE, include_roles=True
         )
         self.description_edit = TextEdit()
 
@@ -36,7 +35,9 @@ class LookParamEdit(BaseConfigItemParamEdit):
         self._param_layout.addRow(
             self.model.PROCESS_SPACE.label, self.process_space_combo
         )
-        self._param_layout.addRow(self.model.DESCRIPTION.label, self.description_edit)
+        self._param_layout.addRow(
+            self.model.DESCRIPTION.label, self.description_edit
+        )
 
 
 class LookEdit(BaseConfigItemEdit):
@@ -52,16 +53,16 @@ class LookEdit(BaseConfigItemEdit):
         model = self.model
 
         # Map widgets to model columns
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.process_space_combo, model.PROCESS_SPACE.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.description_edit, model.DESCRIPTION.column
         )
 
         # Trigger immediate update from widgets that update the model upon losing focus
-        self.param_edit.process_space_combo.currentIndexChanged.connect(
-            partial(self.param_edit.submit_mapper_deferred, self._mapper)
+        self.param_edit.process_space_combo.color_space_changed.connect(
+            partial(self.param_edit.submit_mapper_deferred, self.mapper)
         )
 
         # Initialize

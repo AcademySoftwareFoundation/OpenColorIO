@@ -40,7 +40,9 @@ class LookModel(BaseConfigItemModel):
         # Get look name from subscription item label
         item_name = self.extract_subscription_item_name(item_label)
 
-        scene_ref_name = ReferenceSpaceManager.scene_reference_space().getName()
+        scene_ref_name = (
+            ReferenceSpaceManager.scene_reference_space().getName()
+        )
         return (
             ocio.LookTransform(
                 src=scene_ref_name,
@@ -59,9 +61,9 @@ class LookModel(BaseConfigItemModel):
     def _get_icon(
         self, item: ocio.ColorSpace, column_desc: ColumnDesc
     ) -> Optional[QtGui.QIcon]:
-        return self._get_subscription_icon(item, column_desc) or super()._get_icon(
+        return self._get_subscription_icon(
             item, column_desc
-        )
+        ) or super()._get_icon(item, column_desc)
 
     def _get_bg_color(
         self, item: __item_type__, column_desc: ColumnDesc
@@ -130,7 +132,10 @@ class LookModel(BaseConfigItemModel):
 
                 # Process space is unset; find a reasonable default. Start with the most
                 # common roles for shot grades or ACES LMTs.
-                for role in (ocio.ROLE_COLOR_TIMING, ocio.ROLE_INTERCHANGE_SCENE):
+                for role in (
+                    ocio.ROLE_COLOR_TIMING,
+                    ocio.ROLE_INTERCHANGE_SCENE,
+                ):
                     process_space = config.getCanonicalName(role)
                     if process_space:
                         break
@@ -195,7 +200,9 @@ class LookModel(BaseConfigItemModel):
         # Preserve item order when replacing item due to name change, which requires
         # removing the old item to add the new.
         if column_desc == self.NAME:
-            items = [copy.deepcopy(other_item) for other_item in config.getLooks()]
+            items = [
+                copy.deepcopy(other_item) for other_item in config.getLooks()
+            ]
             config.clearLooks()
             for other_look in items:
                 if other_look.getName() == prev_item_name:
@@ -212,5 +219,6 @@ class LookModel(BaseConfigItemModel):
         if column_desc in (self.NAME, self.TRANSFORM, self.INVERSE_TRANSFORM):
             item_name = new_item.getName()
             self._update_tf_subscribers(
-                item_name, prev_item_name if prev_item_name != item_name else None
+                item_name,
+                prev_item_name if prev_item_name != item_name else None,
             )

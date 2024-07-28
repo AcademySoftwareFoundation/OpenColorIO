@@ -73,8 +73,12 @@ class ViewingRuleParamEdit(BaseConfigItemParamEdit):
         params_layout_a = FormLayout()
         params_layout_a.setContentsMargins(0, 0, 0, 0)
         params_layout_a.addRow(self.model.NAME.label, self.name_edit_a)
-        params_layout_a.addRow(self.model.COLOR_SPACES.label, self.color_space_list)
-        params_layout_a.addRow(self.model.CUSTOM_KEYS.label, self.custom_keys_table_a)
+        params_layout_a.addRow(
+            self.model.COLOR_SPACES.label, self.color_space_list
+        )
+        params_layout_a.addRow(
+            self.model.CUSTOM_KEYS.label, self.custom_keys_table_a
+        )
         params_a = QtWidgets.QFrame()
         params_a.setLayout(params_layout_a)
 
@@ -82,7 +86,9 @@ class ViewingRuleParamEdit(BaseConfigItemParamEdit):
         params_layout_b.setContentsMargins(0, 0, 0, 0)
         params_layout_b.addRow(self.model.NAME.label, self.name_edit_b)
         params_layout_b.addRow(self.model.ENCODINGS.label, self.encoding_list)
-        params_layout_b.addRow(self.model.CUSTOM_KEYS.label, self.custom_keys_table_b)
+        params_layout_b.addRow(
+            self.model.CUSTOM_KEYS.label, self.custom_keys_table_b
+        )
         params_b = QtWidgets.QFrame()
         params_b.setLayout(params_layout_b)
 
@@ -101,19 +107,25 @@ class ViewingRuleParamEdit(BaseConfigItemParamEdit):
         self._param_stack.setCurrentIndex(0)
 
     def update_available_params(
-        self, mapper: QtWidgets.QDataWidgetMapper, viewing_rule_type: ViewingRuleType
+        self,
+        mapper: QtWidgets.QDataWidgetMapper,
+        viewing_rule_type: ViewingRuleType,
     ) -> None:
         """
         Map and show the interface needed to edit this rule's type.
         """
         if viewing_rule_type == ViewingRuleType.RULE_COLOR_SPACE:
             mapper.addMapping(self.name_edit_a, self.model.NAME.column)
-            mapper.addMapping(self.custom_keys_table_a, self.model.CUSTOM_KEYS.column)
+            mapper.addMapping(
+                self.custom_keys_table_a, self.model.CUSTOM_KEYS.column
+            )
             self._param_stack.setCurrentIndex(1)
 
         else:  # ViewingRuleType.RULE_ENCODING
             mapper.addMapping(self.name_edit_b, self.model.NAME.column)
-            mapper.addMapping(self.custom_keys_table_b, self.model.CUSTOM_KEYS.column)
+            mapper.addMapping(
+                self.custom_keys_table_b, self.model.CUSTOM_KEYS.column
+            )
             self._param_stack.setCurrentIndex(2)
 
     def _on_item_removed(self) -> None:
@@ -135,16 +147,24 @@ class ViewingRuleEdit(BaseConfigItemEdit):
         model = self.model
 
         # Map widgets to model columns
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.color_space_list, model.COLOR_SPACES.column
         )
-        self._mapper.addMapping(self.param_edit.encoding_list, model.ENCODINGS.column)
+        self.mapper.addMapping(
+            self.param_edit.encoding_list, model.ENCODINGS.column
+        )
 
         # list and table widgets need manual data submission back to model
-        self.param_edit.color_space_list.items_changed.connect(self._mapper.submit)
-        self.param_edit.encoding_list.items_changed.connect(self._mapper.submit)
-        self.param_edit.custom_keys_table_a.items_changed.connect(self._mapper.submit)
-        self.param_edit.custom_keys_table_b.items_changed.connect(self._mapper.submit)
+        self.param_edit.color_space_list.items_changed.connect(
+            self.mapper.submit
+        )
+        self.param_edit.encoding_list.items_changed.connect(self.mapper.submit)
+        self.param_edit.custom_keys_table_a.items_changed.connect(
+            self.mapper.submit
+        )
+        self.param_edit.custom_keys_table_b.items_changed.connect(
+            self.mapper.submit
+        )
 
         # Initialize
         if model.rowCount():
@@ -159,6 +179,8 @@ class ViewingRuleEdit(BaseConfigItemEdit):
                 self.model.index(row, self.model.VIEWING_RULE_TYPE.column),
                 QtCore.Qt.EditRole,
             )
-            self.param_edit.update_available_params(self._mapper, viewing_rule_type)
+            self.param_edit.update_available_params(
+                self.mapper, viewing_rule_type
+            )
 
         super()._on_current_row_changed(row)

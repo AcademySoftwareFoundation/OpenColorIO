@@ -98,8 +98,12 @@ class TransformManager:
         # Connect new subscription
         tf_subscription = TransformSubscription(item_model, item_label)
         tf_agent = item_model.get_transform_agent(slot)
-        tf_agent.item_name_changed.connect(partial(cls._on_item_name_changed, slot))
-        tf_agent.item_tf_changed.connect(partial(cls._on_item_tf_changed, slot))
+        tf_agent.item_name_changed.connect(
+            partial(cls._on_item_name_changed, slot)
+        )
+        tf_agent.item_tf_changed.connect(
+            partial(cls._on_item_tf_changed, slot)
+        )
         cls._tf_subscriptions[slot] = tf_subscription
 
         # Inform menu subscribers of the menu change
@@ -110,7 +114,9 @@ class TransformManager:
             init_callback(slot)
 
         # Trigger immediate update to subscribers of this slot
-        cls._on_item_tf_changed(slot, *item_model.get_item_transforms(item_label))
+        cls._on_item_tf_changed(
+            slot, *item_model.get_item_transforms(item_label)
+        )
 
         # Repaint views for previous and new model
         if prev_item_model is not None:
@@ -182,7 +188,9 @@ class TransformManager:
             }[slot]
             color = cls.get_subscription_slot_color(slot)
             return get_glyph_icon(
-                f"ph.number-circle-{slot_word}", color=color, size=ICON_SIZE_ITEM
+                f"ph.number-circle-{slot_word}",
+                color=color,
+                size=ICON_SIZE_ITEM,
             )
         else:
             return None
@@ -223,7 +231,9 @@ class TransformManager:
         menu_callback(cls.get_subscription_menu_items())
 
     @classmethod
-    def subscribe_to_transform_subscription_init(cls, init_callback: Callable) -> None:
+    def subscribe_to_transform_subscription_init(
+        cls, init_callback: Callable
+    ) -> None:
         """
         Subscribe to transform subscription initialization on all slots.
 
@@ -241,7 +251,9 @@ class TransformManager:
             break
 
     @classmethod
-    def subscribe_to_transforms_at(cls, slot: int, tf_callback: Callable) -> None:
+    def subscribe_to_transforms_at(
+        cls, slot: int, tf_callback: Callable
+    ) -> None:
         """
         Subscribe to transform updates at the given slot number.
 
@@ -306,7 +318,8 @@ class TransformManager:
         if tf_subscription is not None:
             tf_subscription.item_label = item_label
             cls._on_item_tf_changed(
-                slot, *tf_subscription.item_model.get_item_transforms(item_label)
+                slot,
+                *tf_subscription.item_model.get_item_transforms(item_label),
             )
             cls._update_menu_items()
 

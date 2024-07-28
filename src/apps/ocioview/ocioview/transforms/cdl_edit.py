@@ -14,6 +14,7 @@ from .transform_edit_factory import TransformEditFactory
 
 class CDLTransformEdit(BaseTransformEdit):
     __icon_glyph__ = "ph.circles-three"
+    __tf_type_label__ = "CDL"
 
     def __init__(self, parent: Optional[QtCore.QObject] = None):
         super().__init__(parent=parent)

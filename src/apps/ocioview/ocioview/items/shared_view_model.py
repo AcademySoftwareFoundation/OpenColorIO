@@ -65,7 +65,9 @@ class SharedViewModel(BaseConfigItemModel):
 
         shared_view_display_map = defaultdict(set)
         for display in ConfigCache.get_displays():
-            for view in ConfigCache.get_views(display, view_type=ocio.VIEW_SHARED):
+            for view in ConfigCache.get_views(
+                display, view_type=ocio.VIEW_SHARED
+            ):
                 shared_view_display_map[view].add(display)
 
         self._items = []

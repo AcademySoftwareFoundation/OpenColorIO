@@ -75,7 +75,9 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
         :return: Item type icon
         """
         if cls.__icon__ is None:
-            cls.__icon__ = get_glyph_icon(cls.__icon_glyph__, size=ICON_SIZE_ITEM)
+            cls.__icon__ = get_glyph_icon(
+                cls.__icon_glyph__, size=ICON_SIZE_ITEM
+            )
         return cls.__icon__
 
     @classmethod
@@ -221,7 +223,9 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
         if dst_row == src_row:
             return False
 
-        return self.moveRows(self.NULL_INDEX, src_row, 1, self.NULL_INDEX, dst_row)
+        return self.moveRows(
+            self.NULL_INDEX, src_row, 1, self.NULL_INDEX, dst_row
+        )
 
     def move_item_down(self, item_name: str) -> bool:
         """
@@ -240,7 +244,9 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
         if dst_row == src_row:
             return False
 
-        return self.moveRows(self.NULL_INDEX, src_row, 1, self.NULL_INDEX, dst_row)
+        return self.moveRows(
+            self.NULL_INDEX, src_row, 1, self.NULL_INDEX, dst_row
+        )
 
     def flags(self, index: QtCore.QModelIndex) -> int:
         return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
@@ -263,10 +269,15 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
         """
         :return: Column labels
         """
-        if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
+        if (
+            orientation == QtCore.Qt.Horizontal
+            and role == QtCore.Qt.DisplayRole
+        ):
             return self.COLUMNS[column].label
 
-    def data(self, index: QtCore.QModelIndex, role: int = QtCore.Qt.DisplayRole) -> Any:
+    def data(
+        self, index: QtCore.QModelIndex, role: int = QtCore.Qt.DisplayRole
+    ) -> Any:
         """
         :return: Item data pulled from the current config for the
             index-referenced column.
@@ -293,7 +304,10 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
         return None
 
     def setData(
-        self, index: QtCore.QModelIndex, value: Any, role: int = QtCore.Qt.EditRole
+        self,
+        index: QtCore.QModelIndex,
+        value: Any,
+        role: int = QtCore.Qt.EditRole,
     ) -> bool:
         """
         Push modified item data to the current config for the
@@ -312,7 +326,7 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
             if checked_column_desc is not None:
                 column_desc = checked_column_desc
                 index = index.sibling(index.row(), column_desc.column)
-                value = value == QtCore.Qt.Checked
+                value = value == QtCore.Qt.Checked.value
                 role = QtCore.Qt.EditRole
 
         undo_cmd_type = self._get_undo_command_type(column_desc)
@@ -419,7 +433,9 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
             all_names = self.get_item_names()
             all_items = {
                 name: item
-                for name, item in zip(all_names, self._get_items(preserve=True))
+                for name, item in zip(
+                    all_names, self._get_items(preserve=True)
+                )
             }
 
             insert_before = None
@@ -427,7 +443,8 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
                 insert_before = all_names[dst_row]
 
             move_names = [
-                all_names.pop(i) for i in reversed(range(src_row, src_row + count))
+                all_names.pop(i)
+                for i in reversed(range(src_row, src_row + count))
             ]
 
             if insert_before is not None:
@@ -436,7 +453,9 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
                 new_dst_row = len(all_names)
 
             with ConfigSnapshotUndoCommand(
-                f"Move {self.item_type_label()}", model=self, item_name=move_names[0]
+                f"Move {self.item_type_label()}",
+                model=self,
+                item_name=move_names[0],
             ):
                 for i in range(len(move_names)):
                     all_names.insert(new_dst_row, move_names[i])
@@ -459,40 +478,45 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
         Remove ``count`` items from the current config, starting at
         ``row`` index.
         """
-        self.beginRemoveRows(parent, row, row + count - 1)
-
         items = self._get_items()
         item_names = self.get_item_names()
         num_items = len(items)
-        do_not_remove = []
+        remove_rows = []
+        could_not_remove = []
 
-        with ConfigSnapshotUndoCommand(
-            f"Delete {self.item_type_label()}", model=self, item_name=item_names[row]
-        ):
-            for i in reversed(range(row, row + count)):
-                if i < num_items:
-                    item = items[i]
-                    can_be_removed, reason = self._can_item_be_removed(item)
-                    if not can_be_removed:
-                        do_not_remove.append((item_names[i], reason))
-                    else:
-                        self._remove_item(item)
+        for i in range(row, row + count):
+            if i < num_items:
+                item = items[i]
+                can_be_removed, reason = self._can_item_be_removed(item)
+                if not can_be_removed:
+                    could_not_remove.append((item_names[i], reason))
+                else:
+                    remove_rows.append(i)
 
-            if num_items:
+        if remove_rows:
+            with ConfigSnapshotUndoCommand(
+                f"Delete {self.item_type_label()}",
+                model=self,
+                item_name=item_names[row],
+            ):
+                self.beginRemoveRows(parent, row, row + count - 1)
+
+                for i in reversed(remove_rows):
+                    self._remove_item(items[i])
+
                 self.item_removed.emit()
-
-            self.endRemoveRows()
+                self.endRemoveRows()
 
         # Warn user about refused item removals
-        if do_not_remove:
+        if could_not_remove:
             item_warning_lines = []
-            for item_name, reason in do_not_remove:
+            for item_name, reason in could_not_remove:
                 item_warning_lines.append(f"<b>{item_name}</b> {reason}")
             item_warnings = "<br><br>".join(item_warning_lines)
 
             self.warning_raised.emit(
-                f"{len(do_not_remove)} "
-                f"{self.item_type_label(plural=len(do_not_remove) != 1).lower()} could "
+                f"{len(could_not_remove)} "
+                f"{self.item_type_label(plural=len(could_not_remove) != 1).lower()} could "
                 f"not be removed:<br><br>{item_warnings}"
             )
 
@@ -552,7 +576,9 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
         """
         return None, None
 
-    def get_index_from_item_name(self, item_name: str) -> Optional[QtCore.QModelIndex]:
+    def get_index_from_item_name(
+        self, item_name: str
+    ) -> Optional[QtCore.QModelIndex]:
         """
         Lookup the model index for the named item.
 
@@ -631,7 +657,9 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
         """
         return True, ""
 
-    def _get_display(self, item: __item_type__, column_desc: ColumnDesc) -> str:
+    def _get_display(
+        self, item: __item_type__, column_desc: ColumnDesc
+    ) -> str:
         """
         :return: Display role value for a given model column
         """
@@ -663,7 +691,9 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
         """
         slot = TransformManager.get_subscription_slot(
             self,
-            self.format_subscription_item_label(self._get_value(item, column_desc)),
+            self.format_subscription_item_label(
+                self._get_value(item, column_desc)
+            ),
         )
         return TransformManager.get_subscription_slot_color(
             slot, saturation=0.25, value=0.25
@@ -678,7 +708,9 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
         """
         slot = TransformManager.get_subscription_slot(
             self,
-            self.format_subscription_item_label(self._get_value(item, column_desc)),
+            self.format_subscription_item_label(
+                self._get_value(item, column_desc)
+            ),
         )
         return TransformManager.get_subscription_slot_icon(slot)
 
@@ -754,7 +786,9 @@ class BaseConfigItemModel(QtCore.QAbstractTableModel):
         # the model.
         item_label = self.format_subscription_item_label(item_name)
         if prev_item_name:
-            prev_item_label = self.format_subscription_item_label(prev_item_name)
+            prev_item_label = self.format_subscription_item_label(
+                prev_item_name
+            )
         else:
             prev_item_label = None
 

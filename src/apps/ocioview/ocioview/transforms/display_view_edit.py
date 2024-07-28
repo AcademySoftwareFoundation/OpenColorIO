@@ -8,7 +8,7 @@ from PySide6 import QtCore, QtWidgets
 
 from ..config_cache import ConfigCache
 from ..utils import SignalsBlocked
-from ..widgets import CheckBox, ComboBox, CallbackComboBox
+from ..widgets import CheckBox, ComboBox, CallbackComboBox, ColorSpaceComboBox
 from .transform_edit import BaseTransformEdit
 from .transform_edit_factory import TransformEditFactory
 
@@ -20,14 +20,18 @@ class DisplayViewTransformEdit(BaseTransformEdit):
         super().__init__(parent=parent)
 
         # Widget
-        self.src_combo = CallbackComboBox(ConfigCache.get_color_space_names)
-        self.src_combo.currentIndexChanged.connect(self._on_edit)
+        self.src_combo = ColorSpaceComboBox(
+            ocio.SEARCH_REFERENCE_SPACE_SCENE, include_roles=True
+        )
+        self.src_combo.color_space_changed.connect(self._on_edit)
 
         self.display_combo = CallbackComboBox(
             ConfigCache.get_displays,
             get_default_item=lambda: ocio.GetCurrentConfig().getDefaultDisplay(),
         )
-        self.display_combo.currentIndexChanged.connect(self._on_display_changed)
+        self.display_combo.currentIndexChanged.connect(
+            self._on_display_changed
+        )
         self.display_combo.currentIndexChanged.connect(self._on_edit)
 
         self.view_combo = ComboBox()
@@ -55,7 +59,7 @@ class DisplayViewTransformEdit(BaseTransformEdit):
 
     def transform(self) -> ocio.ColorSpaceTransform:
         transform = super().transform()
-        transform.setSrc(self.src_combo.currentText())
+        transform.setSrc(self.src_combo.color_space_name())
         transform.setDisplay(self.display_combo.currentText())
         transform.setView(self.view_combo.currentText())
         transform.setLooksBypass(self.looks_bypass_check.isChecked())
@@ -64,7 +68,7 @@ class DisplayViewTransformEdit(BaseTransformEdit):
 
     def update_from_transform(self, transform: ocio.Transform) -> None:
         super().update_from_transform(transform)
-        self.src_combo.setCurrentText(transform.getSrc())
+        self.src_combo.set_color_space(transform.getSrc())
         self.display_combo.setCurrentText(transform.getDisplay())
         self.view_combo.setCurrentText(transform.getView())
         self.looks_bypass_check.setChecked(transform.getLooksBypass())
@@ -75,8 +79,8 @@ class DisplayViewTransformEdit(BaseTransformEdit):
         Update available color spaces and displays from the current
         config.
         """
-        self.src_combo.update()
-        self.display_combo.update()
+        self.src_combo.update_color_spaces()
+        self.display_combo.update_items()
         self._on_display_changed(self.display_combo.currentIndex())
 
     @QtCore.Slot(int)
@@ -88,11 +92,13 @@ class DisplayViewTransformEdit(BaseTransformEdit):
         config = ocio.GetCurrentConfig()
         display = self.display_combo.itemText(index)
         view = self.view_combo.currentText()
-        color_space_name = self.src_combo.currentText()
+        color_space_name = self.src_combo.color_space_name()
 
         with SignalsBlocked(self.view_combo):
             self.view_combo.clear()
-            self.view_combo.addItems(ConfigCache.get_views(display, color_space_name))
+            self.view_combo.addItems(
+                ConfigCache.get_views(display, color_space_name)
+            )
 
         view_index = self.view_combo.findText(view)
         if view_index != -1:
@@ -103,4 +109,6 @@ class DisplayViewTransformEdit(BaseTransformEdit):
             )
 
 
-TransformEditFactory.register(ocio.DisplayViewTransform, DisplayViewTransformEdit)
+TransformEditFactory.register(
+    ocio.DisplayViewTransform, DisplayViewTransformEdit
+)

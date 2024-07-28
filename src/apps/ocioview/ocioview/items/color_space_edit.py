@@ -9,6 +9,7 @@ import PyOpenColorIO as ocio
 
 from ..config_cache import ConfigCache
 from ..constants import ICON_SIZE_ITEM
+from ..signal_router import SignalRouter
 from ..utils import get_glyph_icon
 from ..widgets import (
     CheckBox,
@@ -50,10 +51,16 @@ class ColorSpaceParamEdit(BaseConfigItemParamEdit):
         )
         self.aliases_list = StringListWidget(
             item_basename="alias",
-            item_icon=get_glyph_icon("ph.bookmark-simple", size=ICON_SIZE_ITEM),
+            item_icon=get_glyph_icon(
+                "ph.bookmark-simple", size=ICON_SIZE_ITEM
+            ),
         )
-        self.family_edit = CallbackComboBox(ConfigCache.get_families, editable=True)
-        self.encoding_edit = CallbackComboBox(ConfigCache.get_encodings, editable=True)
+        self.family_edit = CallbackComboBox(
+            ConfigCache.get_families, editable=True
+        )
+        self.encoding_edit = CallbackComboBox(
+            ConfigCache.get_encodings, editable=True
+        )
         self.equality_group_edit = CallbackComboBox(
             ConfigCache.get_equality_groups, editable=True
         )
@@ -61,34 +68,49 @@ class ColorSpaceParamEdit(BaseConfigItemParamEdit):
         self.bit_depth_combo = EnumComboBox(ocio.BitDepth)
         self.is_data_check = CheckBox()
         self.allocation_combo = EnumComboBox(ocio.Allocation)
-        self.allocation_combo.currentIndexChanged.connect(self._on_allocation_changed)
+        self.allocation_combo.currentIndexChanged.connect(
+            self._on_allocation_changed
+        )
         self.allocation_vars_edit = FloatEditArray(
             ("min", "max", "offset"), (0.0, 1.0, 0.0)
         )
         self.categories_list = StringListWidget(
             item_basename="category",
-            item_icon=get_glyph_icon("ph.bookmarks-simple", size=ICON_SIZE_ITEM),
+            item_icon=get_glyph_icon(
+                "ph.bookmarks-simple", size=ICON_SIZE_ITEM
+            ),
             get_presets=self._get_available_categories,
         )
 
         # Layout
         self._param_layout.addRow(
-            self.model.REFERENCE_SPACE_TYPE.label, self.reference_space_type_combo
+            self.model.REFERENCE_SPACE_TYPE.label,
+            self.reference_space_type_combo,
         )
         self._param_layout.addRow(self.model.ALIASES.label, self.aliases_list)
         self._param_layout.addRow(self.model.FAMILY.label, self.family_edit)
-        self._param_layout.addRow(self.model.ENCODING.label, self.encoding_edit)
+        self._param_layout.addRow(
+            self.model.ENCODING.label, self.encoding_edit
+        )
         self._param_layout.addRow(
             self.model.EQUALITY_GROUP.label, self.equality_group_edit
         )
-        self._param_layout.addRow(self.model.DESCRIPTION.label, self.description_edit)
-        self._param_layout.addRow(self.model.BIT_DEPTH.label, self.bit_depth_combo)
+        self._param_layout.addRow(
+            self.model.DESCRIPTION.label, self.description_edit
+        )
+        self._param_layout.addRow(
+            self.model.BIT_DEPTH.label, self.bit_depth_combo
+        )
         self._param_layout.addRow(self.model.IS_DATA.label, self.is_data_check)
-        self._param_layout.addRow(self.model.ALLOCATION.label, self.allocation_combo)
+        self._param_layout.addRow(
+            self.model.ALLOCATION.label, self.allocation_combo
+        )
         self._param_layout.addRow(
             self.model.ALLOCATION_VARS.label, self.allocation_vars_edit
         )
-        self._param_layout.addRow(self.model.CATEGORIES.label, self.categories_list)
+        self._param_layout.addRow(
+            self.model.CATEGORIES.label, self.categories_list
+        )
 
     def update_available_allocation_vars(self) -> None:
         """
@@ -115,7 +137,11 @@ class ColorSpaceParamEdit(BaseConfigItemParamEdit):
             to this item.
         """
         current_categories = self.categories_list.items()
-        return [c for c in ConfigCache.get_categories() if c not in current_categories]
+        return [
+            c
+            for c in ConfigCache.get_categories()
+            if c not in current_categories
+        ]
 
 
 class ColorSpaceEdit(BaseConfigItemEdit):
@@ -124,6 +150,7 @@ class ColorSpaceEdit(BaseConfigItemEdit):
     """
 
     __param_edit_type__ = ColorSpaceParamEdit
+    __signal_router_emit__ = SignalRouter.emit_color_spaces_changed.__name__
 
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None):
         super().__init__(parent=parent)
@@ -131,41 +158,53 @@ class ColorSpaceEdit(BaseConfigItemEdit):
         model = self.model
 
         # Map widgets to model columns
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.reference_space_type_combo,
             model.REFERENCE_SPACE_TYPE.column,
         )
-        self._mapper.addMapping(self.param_edit.aliases_list, model.ALIASES.column)
-        self._mapper.addMapping(self.param_edit.family_edit, model.FAMILY.column)
-        self._mapper.addMapping(self.param_edit.encoding_edit, model.ENCODING.column)
-        self._mapper.addMapping(
+        self.mapper.addMapping(
+            self.param_edit.aliases_list, model.ALIASES.column
+        )
+        self.mapper.addMapping(
+            self.param_edit.family_edit, model.FAMILY.column
+        )
+        self.mapper.addMapping(
+            self.param_edit.encoding_edit, model.ENCODING.column
+        )
+        self.mapper.addMapping(
             self.param_edit.equality_group_edit, model.EQUALITY_GROUP.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.description_edit, model.DESCRIPTION.column
         )
-        self._mapper.addMapping(self.param_edit.bit_depth_combo, model.BIT_DEPTH.column)
-        self._mapper.addMapping(self.param_edit.is_data_check, model.IS_DATA.column)
-        self._mapper.addMapping(
+        self.mapper.addMapping(
+            self.param_edit.bit_depth_combo, model.BIT_DEPTH.column
+        )
+        self.mapper.addMapping(
+            self.param_edit.is_data_check, model.IS_DATA.column
+        )
+        self.mapper.addMapping(
             self.param_edit.allocation_combo, model.ALLOCATION.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.allocation_vars_edit, model.ALLOCATION_VARS.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.categories_list, model.CATEGORIES.column
         )
 
         # list widgets need manual data submission back to model
-        self.param_edit.aliases_list.items_changed.connect(self._mapper.submit)
-        self.param_edit.categories_list.items_changed.connect(self._mapper.submit)
+        self.param_edit.aliases_list.items_changed.connect(self.mapper.submit)
+        self.param_edit.categories_list.items_changed.connect(
+            self.mapper.submit
+        )
 
         # Trigger immediate update from widgets that update the model upon losing focus
         self.param_edit.reference_space_type_combo.currentIndexChanged.connect(
-            partial(self.param_edit.submit_mapper_deferred, self._mapper)
+            partial(self.param_edit.submit_mapper_deferred, self.mapper)
         )
         self.param_edit.is_data_check.stateChanged.connect(
-            partial(self.param_edit.submit_mapper_deferred, self._mapper)
+            partial(self.param_edit.submit_mapper_deferred, self.mapper)
         )
 
         # Initialize

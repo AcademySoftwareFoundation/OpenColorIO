@@ -63,7 +63,15 @@ class FileRuleModel(BaseConfigItemModel):
     CUSTOM_KEYS = ColumnDesc(6, "Custom Keys", list)
 
     COLUMNS = sorted(
-        [FILE_RULE_TYPE, NAME, COLOR_SPACE, PATTERN, REGEX, EXTENSION, CUSTOM_KEYS],
+        [
+            FILE_RULE_TYPE,
+            NAME,
+            COLOR_SPACE,
+            PATTERN,
+            REGEX,
+            EXTENSION,
+            CUSTOM_KEYS,
+        ],
         key=lambda s: s.column,
     )
 
@@ -106,8 +114,12 @@ class FileRuleModel(BaseConfigItemModel):
         super().__init__(parent=parent)
 
         self._rule_type_icons = {
-            FileRuleType.RULE_BASIC: self.get_rule_type_icon(FileRuleType.RULE_BASIC),
-            FileRuleType.RULE_REGEX: self.get_rule_type_icon(FileRuleType.RULE_REGEX),
+            FileRuleType.RULE_BASIC: self.get_rule_type_icon(
+                FileRuleType.RULE_BASIC
+            ),
+            FileRuleType.RULE_REGEX: self.get_rule_type_icon(
+                FileRuleType.RULE_REGEX
+            ),
             FileRuleType.RULE_OCIO_V1: self.get_rule_type_icon(
                 FileRuleType.RULE_OCIO_V1
             ),
@@ -146,7 +158,9 @@ class FileRuleModel(BaseConfigItemModel):
                     ConfigCache.get_default_color_space_name(),
                 )
             else:
-                return file_rules.getIndexForRule(ocio.FILE_PATH_SEARCH_RULE_NAME)
+                return file_rules.getIndexForRule(
+                    ocio.FILE_PATH_SEARCH_RULE_NAME
+                )
 
         # Make new rule top priority
         row = 0
@@ -184,7 +198,9 @@ class FileRuleModel(BaseConfigItemModel):
                     return False
 
                 with ConfigSnapshotUndoCommand(
-                    f"Move {self.item_type_label()}", model=self, item_name=item_name
+                    f"Move {self.item_type_label()}",
+                    model=self,
+                    item_name=item_name,
                 ):
                     file_rules.increaseRulePriority(src_rule_index)
                     ocio.GetCurrentConfig().setFileRules(file_rules)
@@ -217,7 +233,9 @@ class FileRuleModel(BaseConfigItemModel):
                     return False
 
                 with ConfigSnapshotUndoCommand(
-                    f"Move {self.item_type_label()}", model=self, item_name=item_name
+                    f"Move {self.item_type_label()}",
+                    model=self,
+                    item_name=item_name,
                 ):
                     file_rules.decreaseRulePriority(src_rule_index)
                     ocio.GetCurrentConfig().setFileRules(file_rules)
@@ -233,7 +251,9 @@ class FileRuleModel(BaseConfigItemModel):
         config = ocio.GetCurrentConfig()
         file_rules = config.getFileRules()
 
-        return [file_rules.getName(i) for i in range(file_rules.getNumEntries())]
+        return [
+            file_rules.getName(i) for i in range(file_rules.getNumEntries())
+        ]
 
     def _get_icon(
         self, item: FileRule, column_desc: ColumnDesc
@@ -294,7 +314,9 @@ class FileRuleModel(BaseConfigItemModel):
         ocio.GetCurrentConfig().setFileRules(ocio.FileRules())
 
     @staticmethod
-    def _insert_rule(index: int, file_rules: ocio.FileRules, item: FileRule) -> None:
+    def _insert_rule(
+        index: int, file_rules: ocio.FileRules, item: FileRule
+    ) -> None:
         """
         Insert rule into an ``ocio.FileRules`` object from a FileRule
         instance.
@@ -308,7 +330,9 @@ class FileRuleModel(BaseConfigItemModel):
             for key_name, key_value in item.custom_keys.items():
                 file_rules.setCustomKey(index, key_name, key_value)
 
-    def _remove_named_rule(self, file_rules: ocio.ViewingRules, item: FileRule) -> None:
+    def _remove_named_rule(
+        self, file_rules: ocio.ViewingRules, item: FileRule
+    ) -> None:
         """Remove existing rule with name matching the provided rule."""
         # Default rule can't be removed
         if item.name != ocio.DEFAULT_RULE_NAME:

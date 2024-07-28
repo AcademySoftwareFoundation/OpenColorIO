@@ -10,7 +10,12 @@ import PyOpenColorIO as ocio
 from ..config_cache import ConfigCache
 from ..constants import ICON_SIZE_ITEM
 from ..utils import get_glyph_icon
-from ..widgets import EnumComboBox, CallbackComboBox, StringListWidget, TextEdit
+from ..widgets import (
+    EnumComboBox,
+    CallbackComboBox,
+    StringListWidget,
+    TextEdit,
+)
 from .config_item_edit import BaseConfigItemParamEdit, BaseConfigItemEdit
 from .view_transform_model import ViewTransformModel
 
@@ -41,21 +46,30 @@ class ViewTransformParamEdit(BaseConfigItemParamEdit):
                 ),
             },
         )
-        self.family_edit = CallbackComboBox(ConfigCache.get_families, editable=True)
+        self.family_edit = CallbackComboBox(
+            ConfigCache.get_families, editable=True
+        )
         self.description_edit = TextEdit()
         self.categories_list = StringListWidget(
             item_basename="category",
-            item_icon=get_glyph_icon("ph.bookmarks-simple", size=ICON_SIZE_ITEM),
+            item_icon=get_glyph_icon(
+                "ph.bookmarks-simple", size=ICON_SIZE_ITEM
+            ),
             get_presets=self._get_available_categories,
         )
 
         # Layout
         self._param_layout.addRow(
-            self.model.REFERENCE_SPACE_TYPE.label, self.reference_space_type_combo
+            self.model.REFERENCE_SPACE_TYPE.label,
+            self.reference_space_type_combo,
         )
         self._param_layout.addRow(self.model.FAMILY.label, self.family_edit)
-        self._param_layout.addRow(self.model.DESCRIPTION.label, self.description_edit)
-        self._param_layout.addRow(self.model.CATEGORIES.label, self.categories_list)
+        self._param_layout.addRow(
+            self.model.DESCRIPTION.label, self.description_edit
+        )
+        self._param_layout.addRow(
+            self.model.CATEGORIES.label, self.categories_list
+        )
 
     def _get_available_categories(self) -> list[str]:
         """
@@ -63,7 +77,11 @@ class ViewTransformParamEdit(BaseConfigItemParamEdit):
             to this item.
         """
         current_categories = self.categories_list.items()
-        return [c for c in ConfigCache.get_categories() if c not in current_categories]
+        return [
+            c
+            for c in ConfigCache.get_categories()
+            if c not in current_categories
+        ]
 
 
 class ViewTransformEdit(BaseConfigItemEdit):
@@ -79,24 +97,28 @@ class ViewTransformEdit(BaseConfigItemEdit):
         model = self.model
 
         # Map widgets to model columns
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.reference_space_type_combo,
             model.REFERENCE_SPACE_TYPE.column,
         )
-        self._mapper.addMapping(self.param_edit.family_edit, model.FAMILY.column)
-        self._mapper.addMapping(
+        self.mapper.addMapping(
+            self.param_edit.family_edit, model.FAMILY.column
+        )
+        self.mapper.addMapping(
             self.param_edit.description_edit, model.DESCRIPTION.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.categories_list, model.CATEGORIES.column
         )
 
         # list widgets need manual data submission back to model
-        self.param_edit.categories_list.items_changed.connect(self._mapper.submit)
+        self.param_edit.categories_list.items_changed.connect(
+            self.mapper.submit
+        )
 
         # Trigger immediate update from widgets that update the model upon losing focus
         self.param_edit.reference_space_type_combo.currentIndexChanged.connect(
-            partial(self.param_edit.submit_mapper_deferred, self._mapper)
+            partial(self.param_edit.submit_mapper_deferred, self.mapper)
         )
 
         # Initialize

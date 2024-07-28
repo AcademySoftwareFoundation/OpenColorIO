@@ -14,10 +14,14 @@ from .config_dock import ConfigDock
 from .constants import ICON_PATH_OCIO
 from .inspect_dock import InspectDock
 from .message_router import MessageRouter
+from .mode import OCIOViewMode
 from .ref_space_manager import ReferenceSpaceManager
+from .signal_router import SignalRouter
 from .settings import settings
 from .undo import undo_stack
+from .utils import get_glyph_icon, SignalsBlocked
 from .viewer_dock import ViewerDock
+from .widgets import EnumComboBox
 
 
 logger = logging.getLogger(__name__)
@@ -42,16 +46,20 @@ class OCIOView(QtWidgets.QMainWindow):
     def __init__(
         self,
         config_path: Optional[Path] = None,
+        transient: bool = False,
         parent: Optional[QtCore.QObject] = None,
     ):
         """
         :param config_path: Optional OCIO config path to load. Defaults
             to the builtin raw config.
+        :param transient: Set to True to prevent any save operations,
+            making all config edits temporary.
         """
         super().__init__(parent=parent)
 
         self._config_path = None
         self._config_save_cache_id = None
+        self._transient = transient
 
         # Configure window
         self.setWindowIcon(QtGui.QIcon(str(ICON_PATH_OCIO)))
@@ -60,9 +68,31 @@ class OCIOView(QtWidgets.QMainWindow):
         self.recent_configs_menu = QtWidgets.QMenu("Load Recent Config")
         self.recent_images_menu = QtWidgets.QMenu("Load Recent Image")
 
+        # Mode switcher
+        self.mode_box = EnumComboBox(
+            OCIOViewMode,
+            icons={
+                m: get_glyph_icon(m.value)
+                for m in OCIOViewMode.__members__.values()
+            },
+        )
+        self.mode_box.setToolTip("Application Mode")
+        self.mode_box.setMinimumContentsLength(
+            max(map(len, OCIOViewMode.__members__.keys()))
+        )
+        self.mode_box.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
+        self.mode_box.setSizePolicy(
+            QtWidgets.QSizePolicy(
+                QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Fixed
+            )
+        )
+        self.mode_box.currentIndexChanged[int].connect(
+            self._on_mode_box_index_changed
+        )
+
         # Dock widgets
         self.inspect_dock = InspectDock()
-        self.config_dock = ConfigDock()
+        self.config_dock = ConfigDock(corner_widget=self.mode_box)
 
         # Central widget
         self.viewer_dock = ViewerDock(self.recent_images_menu)
@@ -72,21 +102,30 @@ class OCIOView(QtWidgets.QMainWindow):
         self.file_menu.addAction("New Config", self.new_config)
         self.file_menu.addAction("Load Config...", self.load_config)
         self.file_menu.addMenu(self.recent_configs_menu)
-        self.file_menu.addAction(
-            "Save config", self.save_config, QtGui.QKeySequence("Ctrl+S")
-        )
-        self.file_menu.addAction(
-            "Save Config As...", self.save_config_as, QtGui.QKeySequence("Ctrl+Shift+S")
-        )
-        self.file_menu.addAction(
-            "Save and Backup Config",
-            self.save_and_backup_config,
-            QtGui.QKeySequence("Ctrl+Alt+S"),
-        )
-        self.file_menu.addAction("Restore Config Backup...", self.restore_config_backup)
+
+        if not self._transient:
+            self.file_menu.addAction(
+                "Save config", self.save_config, QtGui.QKeySequence("Ctrl+S")
+            )
+            self.file_menu.addAction(
+                "Save Config As...",
+                self.save_config_as,
+                QtGui.QKeySequence("Ctrl+Shift+S"),
+            )
+            self.file_menu.addAction(
+                "Save and Backup Config",
+                self.save_and_backup_config,
+                QtGui.QKeySequence("Ctrl+Alt+S"),
+            )
+            self.file_menu.addAction(
+                "Restore Config Backup...", self.restore_config_backup
+            )
+
         self.file_menu.addSeparator()
         self.file_menu.addAction(
-            "Load Image...", self.viewer_dock.load_image, QtGui.QKeySequence("Ctrl+I")
+            "Load Image...",
+            lambda: self.viewer_dock.load_image(),
+            QtGui.QKeySequence("Ctrl+I"),
         )
         self.file_menu.addMenu(self.recent_images_menu)
         self.file_menu.addAction(
@@ -95,7 +134,9 @@ class OCIOView(QtWidgets.QMainWindow):
             QtGui.QKeySequence("Ctrl+Shift+I"),
         )
         self.file_menu.addSeparator()
-        self.file_menu.addAction("Exit", self.close, QtGui.QKeySequence("Ctrl+X"))
+        self.file_menu.addAction(
+            "Exit", self.close, QtGui.QKeySequence("Ctrl+X")
+        )
 
         self.edit_menu = QtWidgets.QMenu("Edit")
         undo_action = undo_stack.createUndoAction(self.edit_menu)
@@ -116,9 +157,15 @@ class OCIOView(QtWidgets.QMainWindow):
             QtWidgets.QMainWindow.ForceTabbedDocks
             | QtWidgets.QMainWindow.GroupedDragging
         )
-        self.setTabPosition(QtCore.Qt.BottomDockWidgetArea, QtWidgets.QTabWidget.North)
-        self.setTabPosition(QtCore.Qt.LeftDockWidgetArea, QtWidgets.QTabWidget.North)
-        self.setTabPosition(QtCore.Qt.RightDockWidgetArea, QtWidgets.QTabWidget.North)
+        self.setTabPosition(
+            QtCore.Qt.BottomDockWidgetArea, QtWidgets.QTabWidget.North
+        )
+        self.setTabPosition(
+            QtCore.Qt.LeftDockWidgetArea, QtWidgets.QTabWidget.North
+        )
+        self.setTabPosition(
+            QtCore.Qt.RightDockWidgetArea, QtWidgets.QTabWidget.North
+        )
 
         for corner in (QtCore.Qt.TopLeftCorner, QtCore.Qt.BottomLeftCorner):
             self.setCorner(corner, QtCore.Qt.LeftDockWidgetArea)
@@ -131,8 +178,11 @@ class OCIOView(QtWidgets.QMainWindow):
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.config_dock)
 
         # Connections
-        self.config_dock.config_changed.connect(self.viewer_dock.update_current_viewer)
-        self.config_dock.config_changed.connect(self._update_window_title)
+        signal_router = SignalRouter.get_instance()
+        signal_router.config_changed.connect(
+            lambda: self.viewer_dock.update_current_viewer()
+        )
+        signal_router.config_reloaded.connect(self._update_window_title)
 
         # Restore settings
         settings.beginGroup(self.__class__.__name__)
@@ -141,16 +191,21 @@ class OCIOView(QtWidgets.QMainWindow):
         if settings.contains(self.SETTING_STATE):
             # If the version is not recognized, the restore will be bypassed
             self.restoreState(
-                settings.value(self.SETTING_STATE), version=self.SETTING_STATE_VERSION
+                settings.value(self.SETTING_STATE),
+                version=self.SETTING_STATE_VERSION,
             )
         settings.endGroup()
 
         # Initialize
+        SignalRouter.get_instance().mode_changed.connect(
+            self._on_mode_changed_external
+        )
+
         if config_path is not None:
             self.load_config(config_path)
         else:
             # New config
-            self._init_config_tracking()
+            self.new_config()
 
         self._update_recent_configs_menu()
         self._update_window_title()
@@ -165,18 +220,20 @@ class OCIOView(QtWidgets.QMainWindow):
         self._init_config_tracking()
 
         self.config_dock.reset()
-        self.viewer_dock.reset()
         self.inspect_dock.reset()
+        self.viewer_dock.reset()
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         if self._can_close_config():
             # Save settings
-            settings.beginGroup(self.__class__.__name__)
-            settings.setValue(self.SETTING_GEOMETRY, self.saveGeometry())
-            settings.setValue(
-                self.SETTING_STATE, self.saveState(self.SETTING_STATE_VERSION)
-            )
-            settings.endGroup()
+            if not self._transient:
+                settings.beginGroup(self.__class__.__name__)
+                settings.setValue(self.SETTING_GEOMETRY, self.saveGeometry())
+                settings.setValue(
+                    self.SETTING_STATE,
+                    self.saveState(self.SETTING_STATE_VERSION),
+                )
+                settings.endGroup()
 
             event.accept()
             super().closeEvent(event)
@@ -187,8 +244,12 @@ class OCIOView(QtWidgets.QMainWindow):
         """
         Create and load a new OCIO raw config.
         """
-        if not self._can_close_config():
-            return
+        if (
+            self._config_path is not None
+            or self._config_save_cache_id is not None
+        ):
+            if not self._can_close_config():
+                return
 
         self._config_path = None
         self._config_save_cache_id = None
@@ -196,6 +257,8 @@ class OCIOView(QtWidgets.QMainWindow):
         config = ocio.Config.CreateRaw()
         ocio.SetCurrentConfig(config)
         self.reset()
+
+        SignalRouter.get_instance().emit_config_reloaded()
 
     def load_config(self, config_path: Optional[Path] = None) -> None:
         """
@@ -208,19 +271,29 @@ class OCIOView(QtWidgets.QMainWindow):
 
         if config_path is None or not config_path.is_file():
             config_dir = self._get_config_dir(config_path)
-            config_path_str, file_filter = QtWidgets.QFileDialog.getOpenFileName(
-                self, "Load Config", dir=config_dir, filter="OCIO Config (*.ocio)"
+            (
+                config_path_str,
+                file_filter,
+            ) = QtWidgets.QFileDialog.getOpenFileName(
+                self,
+                "Load Config",
+                dir=config_dir,
+                filter="OCIO Config (*.ocio)",
             )
             if not config_path_str:
                 return
 
             config_path = Path(config_path_str)
-            settings.setValue(self.SETTING_CONFIG_DIR, config_path.parent.as_posix())
+            if not self._transient:
+                settings.setValue(
+                    self.SETTING_CONFIG_DIR, config_path.parent.as_posix()
+                )
 
         self._config_path = config_path
 
         # Add path to recent config files
-        self._add_recent_config_path(self._config_path)
+        if not self._transient:
+            self._add_recent_config_path(self._config_path)
 
         # Reset application with empty config to clean all components
         config = ocio.Config()
@@ -232,6 +305,8 @@ class OCIOView(QtWidgets.QMainWindow):
         ocio.SetCurrentConfig(config)
         self.reset()
 
+        SignalRouter.get_instance().emit_config_reloaded()
+
     def save_config(self) -> bool:
         """
         Save the current OCIO config to the previously loaded config
@@ -240,7 +315,9 @@ class OCIOView(QtWidgets.QMainWindow):
 
         :return: Whether config was saved
         """
-        if self._config_path is None:
+        if self._transient:
+            return False
+        elif self._config_path is None:
             return self.save_config_as()
         else:
             try:
@@ -268,10 +345,16 @@ class OCIOView(QtWidgets.QMainWindow):
         :param config_path: Config file path
         :return: Whether config was saved
         """
+        if self._transient:
+            return False
+
         try:
             if config_path is None or not config_path.is_file():
                 config_dir = self._get_config_dir(config_path)
-                config_path_str, file_filter = QtWidgets.QFileDialog.getSaveFileName(
+                (
+                    config_path_str,
+                    file_filter,
+                ) = QtWidgets.QFileDialog.getSaveFileName(
                     self,
                     "Save Config",
                     dir=config_dir,
@@ -310,7 +393,10 @@ class OCIOView(QtWidgets.QMainWindow):
         """
         if self.save_config():
             try:
-                if self._config_path is not None and self._config_path.is_file():
+                if (
+                    self._config_path is not None
+                    and self._config_path.is_file()
+                ):
                     next_version_path = self._get_next_version_path()
                     shutil.copy2(self._config_path, next_version_path)
                     return True
@@ -335,7 +421,10 @@ class OCIOView(QtWidgets.QMainWindow):
 
         backup_dir = self._get_backup_dir()
         if backup_dir is not None:
-            version_path_str, file_filter = QtWidgets.QFileDialog.getOpenFileName(
+            (
+                version_path_str,
+                file_filter,
+            ) = QtWidgets.QFileDialog.getOpenFileName(
                 self,
                 "Restore Config",
                 dir=backup_dir.as_posix(),
@@ -368,7 +457,9 @@ class OCIOView(QtWidgets.QMainWindow):
             return None
 
         max_version = 0
-        for other_version_path in backup_dir.glob(self._format_version_filename()):
+        for other_version_path in backup_dir.glob(
+            self._format_version_filename()
+        ):
             if other_version_path.is_file() and other_version_path.suffixes:
                 other_version_str = other_version_path.suffixes[0].strip(".")
                 if other_version_str.isdigit():
@@ -434,7 +525,9 @@ class OCIOView(QtWidgets.QMainWindow):
         num_configs = settings.beginReadArray(self.SETTING_RECENT_CONFIGS)
         for i in range(num_configs):
             settings.setArrayIndex(i)
-            recent_config_path_str = settings.value(self.SETTING_RECENT_CONFIG_PATH)
+            recent_config_path_str = settings.value(
+                self.SETTING_RECENT_CONFIG_PATH
+            )
             if recent_config_path_str:
                 recent_config_path = Path(recent_config_path_str)
                 if recent_config_path.is_file():
@@ -480,7 +573,9 @@ class OCIOView(QtWidgets.QMainWindow):
 
     def _update_window_title(self) -> None:
         filename = (
-            "untitiled" if self._config_path is None else self._config_path.name
+            "untitiled"
+            if self._config_path is None
+            else self._config_path.name
         ) + ("*" if self._has_unsaved_changes() else "")
 
         self.setWindowTitle(f"ocioview {ocio.__version__} | {filename}")
@@ -500,6 +595,9 @@ class OCIOView(QtWidgets.QMainWindow):
         :return: Whether the current config has unsaved changes, when
         compared to the previously saved config state.
         """
+        if self._transient:
+            return False
+
         config_cache_id, is_valid = ConfigCache.get_cache_id()
         return not is_valid or config_cache_id != self._config_save_cache_id
 
@@ -540,3 +638,18 @@ class OCIOView(QtWidgets.QMainWindow):
         """Setup app-dependent config objects and change tracking."""
         ReferenceSpaceManager.init_reference_spaces()
         self._update_cache_id()
+
+    @QtCore.Slot(int)
+    def _on_mode_box_index_changed(self, index: int) -> None:
+        """Called when the application mode has been manually changed."""
+        with SignalsBlocked(self.mode_box):
+            OCIOViewMode.set_current_mode(self.mode_box.member())
+
+    def _on_mode_changed_external(self) -> None:
+        """
+        Called when the application mode has been changed externally.
+        """
+        with SignalsBlocked(self.mode_box):
+            mode = OCIOViewMode.current_mode()
+            if mode != self.mode_box.member():
+                self.mode_box.set_member(mode)

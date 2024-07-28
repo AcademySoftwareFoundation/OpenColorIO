@@ -61,7 +61,9 @@ class ActiveDisplayViewEdit(QtWidgets.QWidget):
 
     @classmethod
     def item_type_icon(cls) -> QtGui.QIcon:
-        return get_glyph_icon("mdi6.sort-bool-ascending-variant", size=ICON_SIZE_ITEM)
+        return get_glyph_icon(
+            "mdi6.sort-bool-ascending-variant", size=ICON_SIZE_ITEM
+        )
 
     @classmethod
     def item_type_label(cls, plural: bool = False) -> str:

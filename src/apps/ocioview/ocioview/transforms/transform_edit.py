@@ -10,7 +10,10 @@ import PyOpenColorIO as ocio
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..constants import ICON_SIZE_ITEM, BORDER_COLOR_ROLE
-from ..style import apply_top_tool_bar_style, apply_widget_with_top_tool_bar_style
+from ..style import (
+    apply_top_tool_bar_style,
+    apply_widget_with_top_tool_bar_style,
+)
 from ..utils import get_glyph_icon, item_type_label
 from ..widgets import EnumComboBox, FormLayout
 
@@ -45,7 +48,9 @@ class BaseTransformEdit(QtWidgets.QFrame):
         :return: Transform type icon
         """
         if cls.__icon__ is None:
-            cls.__icon__ = get_glyph_icon(cls.__icon_glyph__, size=ICON_SIZE_ITEM)
+            cls.__icon__ = get_glyph_icon(
+                cls.__icon_glyph__, size=ICON_SIZE_ITEM
+            )
         return cls.__icon__
 
     @classmethod
@@ -55,7 +60,9 @@ class BaseTransformEdit(QtWidgets.QFrame):
         """
         if cls.__tf_type_label__ is None:
             # Remove trailing "Transform" token
-            cls.__tf_type_label__ = item_type_label(cls.__tf_type__).rsplit(" ", 1)[0]
+            cls.__tf_type_label__ = item_type_label(cls.__tf_type__).rsplit(
+                " ", 1
+            )[0]
         return cls.__tf_type_label__
 
     @classmethod
@@ -96,7 +103,9 @@ class BaseTransformEdit(QtWidgets.QFrame):
 
         self.icon_label = None
         if self.__icon_glyph__ is not None:
-            self.icon_label = get_glyph_icon(self.__icon_glyph__, as_widget=True)
+            self.icon_label = get_glyph_icon(
+                self.__icon_glyph__, as_widget=True
+            )
 
         self.expand_button = QtWidgets.QToolButton()
         self.expand_button.setIcon(self._collapse_icon)
@@ -111,7 +120,9 @@ class BaseTransformEdit(QtWidgets.QFrame):
         self.move_down_button = QtWidgets.QToolButton()
         self.move_down_button.setIcon(get_glyph_icon("ph.arrow-down"))
         self.move_down_button.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
-        self.move_down_button.released.connect(partial(self.moved_down.emit, self))
+        self.move_down_button.released.connect(
+            partial(self.moved_down.emit, self)
+        )
 
         self.delete_button = QtWidgets.QToolButton()
         self.delete_button.setIcon(get_glyph_icon("ph.x"))
@@ -238,7 +249,11 @@ class BaseTransformEdit(QtWidgets.QFrame):
         """
         if self._tf_frame.isHidden():
             self.expand_button.setIcon(self._expand_icon)
-            apply_top_tool_bar_style(self._header_frame, border_bottom_radius=3)
+            apply_top_tool_bar_style(
+                self._header_frame, border_bottom_radius=3
+            )
         else:
             self.expand_button.setIcon(self._collapse_icon)
-            apply_top_tool_bar_style(self._header_frame, border_bottom_radius=0)
+            apply_top_tool_bar_style(
+                self._header_frame, border_bottom_radius=0
+            )

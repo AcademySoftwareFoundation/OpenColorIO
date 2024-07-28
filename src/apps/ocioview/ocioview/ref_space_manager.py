@@ -78,7 +78,9 @@ class ReferenceSpaceManager:
                 or scene_ref_color_space.getTransform(
                     ocio.COLORSPACE_DIR_FROM_REFERENCE
                 )
-                or scene_ref_color_space.getTransform(ocio.COLORSPACE_DIR_TO_REFERENCE)
+                or scene_ref_color_space.getTransform(
+                    ocio.COLORSPACE_DIR_TO_REFERENCE
+                )
             ):
                 cls._ref_scene_name = None
 
@@ -89,8 +91,12 @@ class ReferenceSpaceManager:
             ):
                 if (
                     not color_space.isData()
-                    and not color_space.getTransform(ocio.COLORSPACE_DIR_FROM_REFERENCE)
-                    and not color_space.getTransform(ocio.COLORSPACE_DIR_TO_REFERENCE)
+                    and not color_space.getTransform(
+                        ocio.COLORSPACE_DIR_FROM_REFERENCE
+                    )
+                    and not color_space.getTransform(
+                        ocio.COLORSPACE_DIR_TO_REFERENCE
+                    )
                 ):
                     cls._ref_scene_name = color_space.getName()
                     break
@@ -121,7 +127,9 @@ class ReferenceSpaceManager:
 
         # Verify existing display reference space
         if cls._ref_display_name:
-            display_ref_color_space = config.getColorSpace(cls._ref_display_name)
+            display_ref_color_space = config.getColorSpace(
+                cls._ref_display_name
+            )
             if (
                 not display_ref_color_space
                 or display_ref_color_space.getReferenceSpaceType()
@@ -143,8 +151,12 @@ class ReferenceSpaceManager:
             ):
                 if (
                     not color_space.isData()
-                    and not color_space.getTransform(ocio.COLORSPACE_DIR_FROM_REFERENCE)
-                    and not color_space.getTransform(ocio.COLORSPACE_DIR_TO_REFERENCE)
+                    and not color_space.getTransform(
+                        ocio.COLORSPACE_DIR_FROM_REFERENCE
+                    )
+                    and not color_space.getTransform(
+                        ocio.COLORSPACE_DIR_TO_REFERENCE
+                    )
                 ):
                     cls._ref_display_name = color_space.getName()
                     break

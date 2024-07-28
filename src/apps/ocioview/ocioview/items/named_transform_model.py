@@ -40,7 +40,9 @@ class NamedTransformModel(BaseConfigItemModel):
     def __init__(self, parent: Optional[QtCore.QObject] = None):
         super().__init__(parent=parent)
 
-        self._item_icon = get_glyph_icon("ph.arrow-square-right", size=ICON_SIZE_ITEM)
+        self._item_icon = get_glyph_icon(
+            "ph.arrow-square-right", size=ICON_SIZE_ITEM
+        )
 
     def get_item_names(self) -> list[str]:
         return [item.getName() for item in self._get_items()]
@@ -57,15 +59,23 @@ class NamedTransformModel(BaseConfigItemModel):
 
             fwd_tf = named_transform.getTransform(ocio.TRANSFORM_DIR_FORWARD)
             if not fwd_tf:
-                inv_tf_ = named_transform.getTransform(ocio.TRANSFORM_DIR_INVERSE)
+                inv_tf_ = named_transform.getTransform(
+                    ocio.TRANSFORM_DIR_INVERSE
+                )
                 if inv_tf_:
-                    fwd_tf = ocio.GroupTransform([inv_tf_], ocio.TRANSFORM_DIR_INVERSE)
+                    fwd_tf = ocio.GroupTransform(
+                        [inv_tf_], ocio.TRANSFORM_DIR_INVERSE
+                    )
 
             inv_tf = named_transform.getTransform(ocio.TRANSFORM_DIR_INVERSE)
             if not inv_tf:
-                fwd_tf_ = named_transform.getTransform(ocio.TRANSFORM_DIR_FORWARD)
+                fwd_tf_ = named_transform.getTransform(
+                    ocio.TRANSFORM_DIR_FORWARD
+                )
                 if fwd_tf_:
-                    inv_tf = ocio.GroupTransform([fwd_tf_], ocio.TRANSFORM_DIR_INVERSE)
+                    inv_tf = ocio.GroupTransform(
+                        [fwd_tf_], ocio.TRANSFORM_DIR_INVERSE
+                    )
 
             return fwd_tf, inv_tf
         else:
@@ -74,9 +84,9 @@ class NamedTransformModel(BaseConfigItemModel):
     def _get_icon(
         self, item: ocio.ColorSpace, column_desc: ColumnDesc
     ) -> Optional[QtGui.QIcon]:
-        return self._get_subscription_icon(item, column_desc) or super()._get_icon(
+        return self._get_subscription_icon(
             item, column_desc
-        )
+        ) or super()._get_icon(item, column_desc)
 
     def _get_bg_color(
         self, item: __item_type__, column_desc: ColumnDesc
@@ -89,7 +99,8 @@ class NamedTransformModel(BaseConfigItemModel):
     def _get_items(self, preserve: bool = False) -> list[ocio.ColorSpace]:
         if preserve:
             self._items = [
-                copy.deepcopy(item) for item in ConfigCache.get_named_transforms()
+                copy.deepcopy(item)
+                for item in ConfigCache.get_named_transforms()
             ]
             return self._items
         else:
@@ -116,10 +127,14 @@ class NamedTransformModel(BaseConfigItemModel):
 
     def _new_item(self, name: str) -> None:
         ocio.GetCurrentConfig().addNamedTransform(
-            ocio.NamedTransform(name=name, forwardTransform=ocio.GroupTransform())
+            ocio.NamedTransform(
+                name=name, forwardTransform=ocio.GroupTransform()
+            )
         )
 
-    def _get_value(self, item: ocio.NamedTransform, column_desc: ColumnDesc) -> Any:
+    def _get_value(
+        self, item: ocio.NamedTransform, column_desc: ColumnDesc
+    ) -> Any:
         # Get parameters
         if column_desc == self.NAME:
             return item.getName()
@@ -203,8 +218,13 @@ class NamedTransformModel(BaseConfigItemModel):
             config.addNamedTransform(new_item)
 
         # Broadcast transform or name changes to subscribers
-        if column_desc in (self.NAME, self.FORWARD_TRANSFORM, self.INVERSE_TRANSFORM):
+        if column_desc in (
+            self.NAME,
+            self.FORWARD_TRANSFORM,
+            self.INVERSE_TRANSFORM,
+        ):
             item_name = new_item.getName()
             self._update_tf_subscribers(
-                item_name, prev_item_name if prev_item_name != item_name else None
+                item_name,
+                prev_item_name if prev_item_name != item_name else None,
             )

@@ -138,7 +138,9 @@ def item_type_label(item_type: type) -> str:
     :param item_type: Config item type
     :return: Friendly type name
     """
-    return " ".join(filter(None, re.split(r"([A-Z]+[a-z]+)", item_type.__name__)))
+    return " ".join(
+        filter(None, re.split(r"([A-Z]+[a-z]+)", item_type.__name__))
+    )
 
 
 def m44_to_m33(m44: list) -> list:
@@ -181,7 +183,9 @@ def config_to_html(config: ocio.Config) -> str:
     )
 
 
-def processor_to_ctf_html(processor: ocio.Processor) -> tuple[str, ocio.GroupTransform]:
+def processor_to_ctf_html(
+    processor: ocio.Processor,
+) -> tuple[str, ocio.GroupTransform]:
     """Return processor CTF formatted as HTML."""
     config = ocio.GetCurrentConfig()
     group_tf = processor.createGroupTransform()
@@ -223,14 +227,20 @@ def processor_to_shader_html(
     Return processor shader in the requested language, formatted as
     HTML.
     """
-    gpu_shader_desc = ocio.GpuShaderDesc.CreateShaderDesc(language=gpu_language)
+    gpu_shader_desc = ocio.GpuShaderDesc.CreateShaderDesc(
+        language=gpu_language
+    )
     gpu_proc.extractGpuShaderInfo(gpu_shader_desc)
     shader_data = gpu_shader_desc.getShaderText()
 
     return increase_html_lineno_padding(
         highlight(
             shader_data,
-            (GLShaderLexer if "GLSL" in gpu_language.name else HLSLShaderLexer)(),
+            (
+                GLShaderLexer
+                if "GLSL" in gpu_language.name
+                else HLSLShaderLexer
+            )(),
             HtmlFormatter(linenos="inline"),
         )
     )
@@ -290,7 +300,7 @@ def color_space_to_rgb_colourspace(color_space: str) -> RGB_Colourspace | None:
 
     config = ocio.GetCurrentConfig()
     if (not config.hasRole(ocio.ROLE_INTERCHANGE_DISPLAY)) or (
-            color_space not in ConfigCache.get_color_space_names()
+        color_space not in ConfigCache.get_color_space_names()
     ):
         return None
 
