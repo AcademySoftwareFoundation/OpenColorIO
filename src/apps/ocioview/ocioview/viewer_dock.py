@@ -7,12 +7,10 @@ from typing import Optional
 
 from PySide6 import QtCore, QtWidgets
 
-from .mode import OCIOViewMode
 from .settings import settings
-from .signal_router import SignalRouter
 from .transform_manager import TransformManager
 from .utils import get_glyph_icon
-from .viewer import BaseImageViewer, EditImageViewer, PreviewImageViewer
+from .viewer import ImageViewer
 from .widgets.structure import TabbedDockWidget
 
 
@@ -28,11 +26,18 @@ class ViewerDock(TabbedDockWidget):
     def __init__(
         self,
         recent_images_menu: QtWidgets.QMenu,
+        corner_widget: Optional[QtWidgets.QWidget] = None,
         parent: Optional[QtCore.QObject] = None,
     ):
+        """
+        :param recent_images_menu: Menu for managing recent images
+        :param corner_widget: Optional widget to place on the right
+            side of the dock title bar.
+        """
         super().__init__(
             "Viewer",
             get_glyph_icon("mdi6.image-filter-center-focus"),
+            corner_widget=corner_widget,
             parent=parent,
         )
 
@@ -44,9 +49,6 @@ class ViewerDock(TabbedDockWidget):
 
         self._tab_bar = self.tabs.tabBar()
         self._tab_bar.installEventFilter(self)
-
-        signal_router = SignalRouter.get_instance()
-        signal_router.mode_changed.connect(self._on_mode_changed)
 
         # Widgets
         self._viewers = defaultdict(list)
@@ -82,7 +84,7 @@ class ViewerDock(TabbedDockWidget):
 
     def load_image(
         self, image_path: Optional[Path] = None, new_tab: bool = False
-    ) -> BaseImageViewer:
+    ) -> ImageViewer:
         """
         Load an image into a new or existing viewer tab.
 
@@ -91,16 +93,14 @@ class ViewerDock(TabbedDockWidget):
             the current or first available image viewer.
         :return: Image viewer instance
         """
-        image_viewer_type = self._current_image_viewer_type()
-
-        if new_tab or not self._viewers.get(image_viewer_type):
+        if new_tab or not self._viewers.get(ImageViewer):
             image_viewer = self.add_image_viewer()
         else:
             current_viewer = self.tabs.currentWidget()
-            if isinstance(current_viewer, image_viewer_type):
+            if isinstance(current_viewer, ImageViewer):
                 image_viewer = current_viewer
             else:
-                image_viewer = self._viewers[image_viewer_type][0]
+                image_viewer = self._viewers[ImageViewer][0]
 
         self.tabs.setCurrentWidget(image_viewer)
 
@@ -123,15 +123,14 @@ class ViewerDock(TabbedDockWidget):
 
         return image_viewer
 
-    def add_image_viewer(self) -> BaseImageViewer:
+    def add_image_viewer(self) -> ImageViewer:
         """
         Add a new image viewer tab to the dock.
 
         :return: Image viewer instance
         """
-        image_viewer_type = self._current_image_viewer_type()
-        image_viewer = image_viewer_type()
-        self._viewers[image_viewer_type].append(image_viewer)
+        image_viewer = ImageViewer()
+        self._viewers[ImageViewer].append(image_viewer)
 
         self.add_tab(
             image_viewer,
@@ -158,13 +157,6 @@ class ViewerDock(TabbedDockWidget):
 
         TransformManager.reset()
 
-    def _current_image_viewer_type(self) -> type[BaseImageViewer]:
-        """Get current mode-specific image viewer type."""
-        if OCIOViewMode.current_mode() == OCIOViewMode.Preview:
-            return PreviewImageViewer
-        else:  # Edit
-            return EditImageViewer
-
     def _on_tab_changed(self, index: int) -> None:
         """
         Track GL context with the current viewer.
@@ -187,33 +179,6 @@ class ViewerDock(TabbedDockWidget):
 
             if viewer in self._viewers[viewer_type]:
                 self._viewers[viewer_type].remove(viewer)
-
-    def _on_mode_changed(self) -> None:
-        """
-        Called when the application mode is changed, to toggle
-        mode-specific viewer visibility.
-        """
-        image_viewer_type = self._current_image_viewer_type()
-
-        for viewer_type, viewers in self._viewers.items():
-            if issubclass(viewer_type, BaseImageViewer):
-                for viewer in viewers:
-                    tab_index = self.tabs.indexOf(viewer)
-                    if tab_index != -1:
-                        self.tabs.setTabVisible(
-                            tab_index, viewer_type == image_viewer_type
-                        )
-                        viewer.update()
-
-        if image_viewer_type not in self._viewers:
-            self.add_image_viewer()
-
-        current_index = self.tabs.currentIndex()
-        if not self.tabs.isTabVisible(current_index):
-            for i in range(self.tabs.count()):
-                if self.tabs.isTabVisible(i):
-                    self.tabs.setCurrentIndex(i)
-                    break
 
     def _get_image_dir(self, image_path: Optional[Path] = None) -> str:
         """
@@ -263,7 +228,7 @@ class ViewerDock(TabbedDockWidget):
         image_paths.insert(0, image_path)
 
         if len(image_paths) > 10:
-            image_paths = image_path[:10]
+            image_paths = image_paths[:10]
 
         settings.beginWriteArray(self.SETTING_RECENT_IMAGES)
         for i, recent_image_path in enumerate(image_paths):

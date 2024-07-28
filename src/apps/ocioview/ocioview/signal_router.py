@@ -65,9 +65,10 @@ class SignalRouter(QtCore.QObject):
     def emit_config_reloaded(self) -> None:
         """
         Notify listeners that the current OCIO config has been reloaded
-        or replaced.
+        or replaced and changed.
         """
         self.config_reloaded.emit()
+        self.emit_config_changed()
 
     def emit_color_spaces_changed(self) -> None:
         """

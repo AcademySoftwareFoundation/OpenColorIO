@@ -21,8 +21,21 @@ class InspectDock(TabbedDockWidget):
     transform data.
     """
 
-    def __init__(self, parent: Optional[QtCore.QObject] = None):
-        super().__init__("Inspect", get_glyph_icon("mdi6.dna"), parent=parent)
+    def __init__(
+        self,
+        corner_widget: Optional[QtWidgets.QWidget] = None,
+        parent: Optional[QtCore.QObject] = None,
+    ):
+        """
+        :param corner_widget: Optional widget to place on the right
+            side of the dock title bar.
+        """
+        super().__init__(
+            "Inspect",
+            get_glyph_icon("mdi6.dna"),
+            corner_widget=corner_widget,
+            parent=parent,
+        )
 
         self.setAllowedAreas(
             QtCore.Qt.BottomDockWidgetArea | QtCore.Qt.TopDockWidgetArea

@@ -140,13 +140,8 @@ class CallbackComboBox(ComboBox):
         :return: Current item string
         """
         # Get current state
-        current_item = None
+        current_item = self.currentText()
         current_item_restored = False
-        if not self.count():
-            if self._get_default_item is not None:
-                current_item = self._get_default_item()
-        else:
-            current_item = self.currentText()
 
         # Reload all items
         with SignalsBlocked(self):

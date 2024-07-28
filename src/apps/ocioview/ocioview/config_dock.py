@@ -27,9 +27,20 @@ class ConfigDock(TabbedDockWidget):
     Dockable widget for editing the current config.
     """
 
-    def __init__(self, parent: Optional[QtCore.QObject] = None):
+    def __init__(
+        self,
+        corner_widget: Optional[QtWidgets.QWidget] = None,
+        parent: Optional[QtCore.QObject] = None,
+    ):
+        """
+        :param corner_widget: Optional widget to place on the right
+            side of the dock title bar.
+        """
         super().__init__(
-            "Config", get_glyph_icon("ph.file-text"), parent=parent
+            "Config",
+            get_glyph_icon("ph.file-text"),
+            corner_widget=corner_widget,
+            parent=parent,
         )
 
         self._models = []

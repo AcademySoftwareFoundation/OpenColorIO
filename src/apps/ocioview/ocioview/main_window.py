@@ -68,9 +68,31 @@ class OCIOView(QtWidgets.QMainWindow):
         self.recent_configs_menu = QtWidgets.QMenu("Load Recent Config")
         self.recent_images_menu = QtWidgets.QMenu("Load Recent Image")
 
+        # Mode switcher
+        self.mode_box = EnumComboBox(
+            OCIOViewMode,
+            icons={
+                m: get_glyph_icon(m.value)
+                for m in OCIOViewMode.__members__.values()
+            },
+        )
+        self.mode_box.setToolTip("Application Mode")
+        self.mode_box.setMinimumContentsLength(
+            max(map(len, OCIOViewMode.__members__.keys()))
+        )
+        self.mode_box.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
+        self.mode_box.setSizePolicy(
+            QtWidgets.QSizePolicy(
+                QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Fixed
+            )
+        )
+        self.mode_box.currentIndexChanged[int].connect(
+            self._on_mode_box_index_changed
+        )
+
         # Dock widgets
         self.inspect_dock = InspectDock()
-        self.config_dock = ConfigDock()
+        self.config_dock = ConfigDock(corner_widget=self.mode_box)
 
         # Central widget
         self.viewer_dock = ViewerDock(self.recent_images_menu)
@@ -129,29 +151,6 @@ class OCIOView(QtWidgets.QMainWindow):
         self.menu_bar.addMenu(self.file_menu)
         self.menu_bar.addMenu(self.edit_menu)
         self.setMenuBar(self.menu_bar)
-
-        # Application mode selector in menu bar
-        self.mode_box = EnumComboBox(
-            OCIOViewMode,
-            icons={
-                m: get_glyph_icon(m.value)
-                for m in OCIOViewMode.__members__.values()
-            },
-        )
-        self.mode_box.setToolTip("Application Mode")
-        self.mode_box.setMinimumContentsLength(
-            max(map(len, OCIOViewMode.__members__.keys()))
-        )
-        self.mode_box.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
-        self.mode_box.setSizePolicy(
-            QtWidgets.QSizePolicy(
-                QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Fixed
-            )
-        )
-        self.mode_box.currentIndexChanged[int].connect(
-            self._on_mode_box_index_changed
-        )
-        self.menu_bar.setCornerWidget(self.mode_box)
 
         # Dock areas
         self.setDockOptions(
