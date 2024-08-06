@@ -52,7 +52,7 @@ public:
 
     ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
-    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator, OptimizationFlags /*oFlags*/) const override;
 
 protected:
     ConstGradingToneOpDataRcPtr toneData() const
@@ -184,7 +184,7 @@ ConstOpCPURcPtr GradingToneOp::getCPUOp(bool /*fastLogExpPow*/) const
     return GetGradingToneCPURenderer(data);
 }
 
-void GradingToneOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
+void GradingToneOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator, OptimizationFlags /*oFlags*/) const
 {
     ConstGradingToneOpDataRcPtr data = toneData();
     GetGradingToneGPUShaderProgram(shaderCreator, data);

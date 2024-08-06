@@ -619,6 +619,13 @@ enum OptimizationFlags : unsigned long
      */
     OPTIMIZATION_NO_DYNAMIC_PROPERTIES           = 0x10000000,
 
+    /**
+     * For GPU processor, use native trilinear interpolation for 3D LUTs.  This is faster,
+     * but on many GPUs also lower precision.  With low-resolution LUTs, LUTs with large
+     * extents, or LUTs applied in a linear color space this can sometimes cause color banding.
+     */
+    OPTIMIZATION_NATIVE_GPU_TRILINEAR            = 0x20000000,
+
     /// Apply all possible optimizations.
     OPTIMIZATION_ALL                             = 0xFFFFFFFF,
 
@@ -645,6 +652,7 @@ enum OptimizationFlags : unsigned long
                               OPTIMIZATION_COMP_LUT1D |
                               OPTIMIZATION_LUT_INV_FAST |
                               OPTIMIZATION_FAST_LOG_EXP_POW |
+                              OPTIMIZATION_NATIVE_GPU_TRILINEAR |
                               OPTIMIZATION_COMP_SEPARABLE_PREFIX),
 
     OPTIMIZATION_GOOD      = OPTIMIZATION_VERY_GOOD | OPTIMIZATION_COMP_LUT3D,
