@@ -105,7 +105,7 @@ if ErrorLevel 1 (
 
 echo Checking for Microsoft Visual Studio...
 set MSVS=0
-for /d %%a in ("%programfiles%\Microsoft Visual Studio*") do (
+for /d %%a in ("D:\Program Files\Microsoft Visual Studio*") do (
     for /f "tokens=3 delims=\" %%x in ("%%a") do set MSVS=1
 )
 

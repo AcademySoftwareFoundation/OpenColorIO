@@ -3,8 +3,9 @@
 
 #include "OCIOColorSpace.h"
 #include "OCIODisplayView.h"
+#include "OCIOFile.h"
 
-void OFX::Plugin::getPluginIDs(OFX::PluginFactoryArray & ids)
+void OFX::Plugin::getPluginIDs(OFX::PluginFactoryArray& ids)
 {
     static OCIOColorSpaceFactory ocioColorSpace(
         "OpenColorIO.OCIOColorSpace", 1, 0);
@@ -13,4 +14,8 @@ void OFX::Plugin::getPluginIDs(OFX::PluginFactoryArray & ids)
     static OCIODisplayViewFactory ocioDisplayView(
         "OpenColorIO.OCIODisplayView", 1, 0);
     ids.push_back(&ocioDisplayView);
+
+    static OCIOFileFactory ocioFile(
+        "OpenColorIO.OCIOFile", 1, 0);
+    ids.push_back(&ocioFile);
 }
