@@ -768,11 +768,41 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefsForHueCurve(KnotsCoefs & knots
     // Return 0 knots and coefficients when the curve is identity.
     if (m_controlPoints.size() < 2 || isIdentity()) 
     {
-        // Identity curve: offset is -1 and count is 0.
-        knotsCoefs.m_knotsOffsetsArray[curveIdx * 2] = -1;
-        knotsCoefs.m_knotsOffsetsArray[curveIdx * 2 + 1] = 0;
-        knotsCoefs.m_coefsOffsetsArray[curveIdx * 2] = -1;
-        knotsCoefs.m_coefsOffsetsArray[curveIdx * 2 + 1] = 0;
+        // Set knots and coefficients that represent identity curve.
+        const int numKnots = static_cast<int>(knotsCoefs.m_numKnots);
+        const int numCoefs = static_cast<int>(knotsCoefs.m_numCoefs);
+
+        const int N_IDENTITY_KNOTS = 2;
+        const int N_IDENTITY_COEFS = 3;
+        
+        knotsCoefs.m_knotsOffsetsArray[curveIdx * 2] = numKnots;
+        knotsCoefs.m_knotsOffsetsArray[curveIdx * 2 + 1] = N_IDENTITY_KNOTS;
+        knotsCoefs.m_coefsOffsetsArray[curveIdx * 2] = knotsCoefs.m_numCoefs;
+        knotsCoefs.m_coefsOffsetsArray[curveIdx * 2 + 1] = N_IDENTITY_COEFS;
+
+        knotsCoefs.m_knotsArray.begin()[numKnots] = 0.f;
+        knotsCoefs.m_knotsArray.begin()[numKnots + 1] = 1.f;
+        
+        // Identity curve are linear or constant, so set the quadratic coefficient to zero.
+        knotsCoefs.m_coefsArray.begin()[numCoefs] = 0.f;
+        
+        // Set the linear coefficient to match the slope of the identity curve.
+        const float linearCoef = m_curveType == BSplineCurveType::DIAGONAL_B_SPLINE || 
+                                 m_curveType == BSplineCurveType::HUE_HUE_B_SPLINE ? 
+                                 1.0f : 0.f;
+
+        knotsCoefs.m_coefsArray.begin()[numCoefs + 1] = linearCoef;
+
+        // Set the constant coefficient for an identity curve.
+        const float constantCoef = m_curveType == BSplineCurveType::PERIODIC_1_B_SPLINE || 
+                                   m_curveType == BSplineCurveType::HORIZONTAL1_B_SPLINE ? 
+                                   1.0f : 0.f;
+        
+        knotsCoefs.m_coefsArray.begin()[numCoefs + 2] = constantCoef;
+        
+
+        knotsCoefs.m_numKnots += N_IDENTITY_KNOTS;
+        knotsCoefs.m_numCoefs += N_IDENTITY_COEFS;
         return;
     }
 
