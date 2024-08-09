@@ -154,7 +154,7 @@ void RemoveTemporaryDirectory(const std::string & sDirectoryPath)
 #else
     struct dirent* entry = NULL;
     DIR* dir = NULL;
-    dir = opendir(directoryPath);
+    dir = opendir(sDirectoryPath.c_str());
     while ((entry = readdir(dir)))
     {
         DIR* sub_dir = NULL;
@@ -165,7 +165,7 @@ void RemoveTemporaryDirectory(const std::string & sDirectoryPath)
         if (!StringUtils::Compare(".", entry->d_name) &&
             !StringUtils::Compare("..", entry->d_name))
         {
-            absPath = pystring::os::path::join(directoryPath, entry->d_name);
+            absPath = pystring::os::path::join(sDirectoryPath, entry->d_name);
             sub_dir = opendir(absPath.c_str());
             if (sub_dir)
             {
@@ -183,7 +183,7 @@ void RemoveTemporaryDirectory(const std::string & sDirectoryPath)
             }
         }
     }
-    remove(directoryPath);
+    remove(sDirectoryPath.c_str());
     closedir(dir);
 #endif
 
