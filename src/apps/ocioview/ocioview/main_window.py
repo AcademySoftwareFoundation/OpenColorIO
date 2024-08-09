@@ -14,6 +14,7 @@ from .config_dock import ConfigDock
 from .constants import ICON_PATH_OCIO
 from .inspect_dock import InspectDock
 from .message_router import MessageRouter
+from .ref_space_manager import ReferenceSpaceManager
 from .settings import settings
 from .undo import undo_stack
 from .viewer_dock import ViewerDock
@@ -147,6 +148,9 @@ class OCIOView(QtWidgets.QMainWindow):
         # Initialize
         if config_path is not None:
             self.load_config(config_path)
+        else:
+            # New config
+            self._init_config_tracking()
 
         self._update_recent_configs_menu()
         self._update_window_title()
@@ -156,8 +160,10 @@ class OCIOView(QtWidgets.QMainWindow):
 
     def reset(self) -> None:
         """
-        Reset application, reloading the current OCIO config.
+        Reset application from the current OCIO config.
         """
+        self._init_config_tracking()
+
         self.config_dock.reset()
         self.viewer_dock.reset()
         self.inspect_dock.reset()
@@ -189,7 +195,6 @@ class OCIOView(QtWidgets.QMainWindow):
 
         config = ocio.Config.CreateRaw()
         ocio.SetCurrentConfig(config)
-
         self.reset()
 
     def load_config(self, config_path: Optional[Path] = None) -> None:
@@ -226,8 +231,6 @@ class OCIOView(QtWidgets.QMainWindow):
         config = ocio.Config.CreateFromFile(self._config_path.as_posix())
         ocio.SetCurrentConfig(config)
         self.reset()
-
-        self._update_cache_id()
 
     def save_config(self) -> bool:
         """
@@ -532,3 +535,8 @@ class OCIOView(QtWidgets.QMainWindow):
 
         # No unsaved changes
         return True
+
+    def _init_config_tracking(self) -> None:
+        """Setup app-dependent config objects and change tracking."""
+        ReferenceSpaceManager.init_reference_spaces()
+        self._update_cache_id()
