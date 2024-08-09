@@ -4034,7 +4034,7 @@ inline void load(const YAML::Node & node, ViewingRulesRcPtr & vr)
     catch (Exception & ex)
     {
         std::ostringstream os;
-        os << "File rules: " << ex.what();
+        os << "Viewing rules: " << ex.what();
         throwError(node, os.str().c_str());
     }
 }
@@ -4658,13 +4658,15 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
         config->setWorkingDir(configrootdir.c_str());
     }
 
-    auto defaultCS = config->getColorSpace(ROLE_DEFAULT);
     if (!fileRulesFound)
     {
         if (config->getMajorVersion() >= 2)
         {
-            if (!defaultCS)
+            if (!config->hasRole(ROLE_DEFAULT))
             {
+                // Note that no validation of the default color space is done (e.g. to check that
+                // it exists in the config) in order to enable loading configs that are only
+                // partially complete. The caller may use config->validate() after, if desired.
                 throwError(node, "The config must contain either a Default file rule or "
                                  "the 'default' role.");
             }
@@ -4683,6 +4685,7 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
     else
     {
         // If default role is also defined.
+        auto defaultCS = config->getColorSpace(ROLE_DEFAULT);
         if (defaultCS)
         {
             const auto defaultRule = fileRules->getNumEntries() - 1;
@@ -4815,18 +4818,11 @@ inline void save(YAML::Emitter & out, const Config & config)
         const char* role = config.getRoleName(i);
         if(role && *role)
         {
-            ConstColorSpaceRcPtr colorspace = config.getColorSpace(role);
-            if(colorspace)
-            {
-                out << YAML::Key << role;
-                out << YAML::Value << config.getColorSpace(role)->getName();
-            }
-            else
-            {
-                std::ostringstream os;
-                os << "Colorspace associated to the role '" << role << "', does not exist.";
-                throw Exception(os.str().c_str());
-            }
+            // Note that no validation of the name strings is done here (e.g. to check that
+            // they exist in the config) in order to enable serializing configs that are only
+            // partially complete. The caller may use config->validate() first, if desired.
+            out << YAML::Key << role;
+            out << YAML::Value << config.getRoleColorSpace(i);
         }
     }
     out << YAML::EndMap;
