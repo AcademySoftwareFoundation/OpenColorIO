@@ -71,38 +71,65 @@ ConstProcessorRcPtr GetFileTransformProcessor(const std::string & fileName)
     return config->getProcessor(fileTransform);
 }
 
+namespace
+{
+    constexpr const char* TempDirMagicPrefix = "OCIOTestTemp_";
+}
+
 std::string CreateTemporaryDirectory(const std::string & name)
 {
+    std::string extended_name = TempDirMagicPrefix + name;
+
     int nError = 0;
 
 #if defined(_WIN32)
-    std::string sPath = GetEnvVariable("TEMP");
-    static const std::string directory = pystring::os::path::join(sPath, name);
+    char cPath[MAX_PATH];
+    DWORD len = GetTempPathA(MAX_PATH, cPath);
+    if( len>MAX_PATH || len==0 )
+    {
+        throw Exception("Temp path could not be determined.");
+    }
+    
+    static const std::string directory = pystring::os::path::join(cPath, extended_name);
     nError = _mkdir(directory.c_str());
 #else 
     std::string sPath = "/tmp";
-    const std::string directory = pystring::os::path::join(sPath, name);
+    const std::string directory = pystring::os::path::join(sPath, extended_name);
     nError = mkdir(directory.c_str(), 0777);
 #endif
 
     if (nError != 0)
     {
         std::ostringstream error;
-        error << "Could not create a temporary directory." << " Make sure that the directory do "
-        << "not already exist or sufficient permissions are set";
+        error << "Could not create a temporary directory '" << directory << "'. Make sure that the directory do "
+            "not already exist or sufficient permissions are set";
         throw Exception(error.str().c_str());
     }
 
     return directory;
 }
 
-#if defined(_WIN32)
-void removeDirectory(const wchar_t* directoryPath)
+void RemoveTemporaryDirectory(const std::string & sDirectoryPath)
 {
-    std::wstring search_path = std::wstring(directoryPath) + Platform::filenameToUTF("/*.*");
-    std::wstring s_p = std::wstring(directoryPath) + Platform::filenameToUTF("/");
-    WIN32_FIND_DATA fd;
-    HANDLE hFind = ::FindFirstFile(search_path.c_str(), &fd);
+    if(sDirectoryPath.empty())
+    {
+        throw Exception("removeDirectory() is called with empty path.");
+    }
+
+    // Sanity check: don't delete the folder if we haven't created it.
+    if(std::string::npos == sDirectoryPath.find(TempDirMagicPrefix))
+    {
+        std::ostringstream error;
+        error << "removeDirectory() tries to delete folder '"<< sDirectoryPath << "' which was not created by the unit tests.";
+        throw Exception(error.str().c_str());
+    }
+
+#if defined(_WIN32)
+    std::string search_pattern = sDirectoryPath + ("/*.*");
+    std::string cur_path = sDirectoryPath + "/";
+
+    WIN32_FIND_DATAA fd;
+    HANDLE hFind = FindFirstFileA(search_pattern.c_str(), &fd);
     if (hFind != INVALID_HANDLE_VALUE) 
     {
         do 
@@ -110,68 +137,56 @@ void removeDirectory(const wchar_t* directoryPath)
             if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
             {
                 // Ignore "." and ".." directory.
-                if (wcscmp(fd.cFileName, Platform::filenameToUTF(".").c_str()) != 0 && 
-                    wcscmp(fd.cFileName, Platform::filenameToUTF("..").c_str()) != 0)
+                if ( strcmp(fd.cFileName, ".") && strcmp(fd.cFileName, "..") )
                 {
-                    removeDirectory((wchar_t*)(s_p + fd.cFileName).c_str());
+                    RemoveTemporaryDirectory(cur_path + fd.cFileName);
                 }
             }
             else 
             {
-                DeleteFile((s_p + fd.cFileName).c_str());
+                DeleteFileA((cur_path + fd.cFileName).c_str());
             }
-        } while (::FindNextFile(hFind, &fd));
+        } while (FindNextFileA(hFind, &fd));
 
-        ::FindClose(hFind);
-        _wrmdir(directoryPath);
+        FindClose(hFind);
+        RemoveDirectoryA(sDirectoryPath.c_str());
     }
-}
 #else
-void removeDirectory(const char * directoryPath)
-{
-    struct dirent *entry = NULL;
-    DIR *dir = NULL;
-    dir = opendir(directoryPath);
-    while((entry = readdir(dir)))
-    {   
-        DIR *sub_dir = NULL;
-        FILE *file = NULL;
+    struct dirent* entry = NULL;
+    DIR* dir = NULL;
+    dir = opendir(sDirectoryPath.c_str());
+    while ((entry = readdir(dir)))
+    {
+        DIR* sub_dir = NULL;
+        FILE* file = NULL;
 
         std::string absPath;
         // Ignore "." and ".." directory.
         if (!StringUtils::Compare(".", entry->d_name) &&
             !StringUtils::Compare("..", entry->d_name))
         {
-            absPath = pystring::os::path::join(directoryPath, entry->d_name);
+            absPath = pystring::os::path::join(sDirectoryPath, entry->d_name);
             sub_dir = opendir(absPath.c_str());
-            if(sub_dir)
-            {   
+            if (sub_dir)
+            {
                 closedir(sub_dir);
-                removeDirectory(absPath.c_str());
-            }   
-            else 
-            {   
+                RemoveTemporaryDirectory(absPath);
+            }
+            else
+            {
                 file = fopen(absPath.c_str(), "r");
-                if(file)
-                {   
+                if (file)
+                {
                     fclose(file);
                     remove(absPath.c_str());
-                }   
-            }   
+                }
+            }
         }
     }
-    remove(directoryPath);
+    remove(sDirectoryPath.c_str());
     closedir(dir);
-}
 #endif
 
-void RemoveTemporaryDirectory(const std::string & directoryPath)
-{
-#if defined(_WIN32)
-    removeDirectory(Platform::filenameToUTF(directoryPath).c_str());
-#else
-    removeDirectory(directoryPath.c_str());
-#endif
 }
 
 } // namespace OCIO_NAMESPACE
