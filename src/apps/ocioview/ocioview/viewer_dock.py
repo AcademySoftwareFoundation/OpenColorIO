@@ -26,10 +26,19 @@ class ViewerDock(TabbedDockWidget):
     def __init__(
         self,
         recent_images_menu: QtWidgets.QMenu,
+        corner_widget: Optional[QtWidgets.QWidget] = None,
         parent: Optional[QtCore.QObject] = None,
     ):
+        """
+        :param recent_images_menu: Menu for managing recent images
+        :param corner_widget: Optional widget to place on the right
+            side of the dock title bar.
+        """
         super().__init__(
-            "Viewer", get_glyph_icon("mdi6.image-filter-center-focus"), parent=parent
+            "Viewer",
+            get_glyph_icon("mdi6.image-filter-center-focus"),
+            corner_widget=corner_widget,
+            parent=parent,
         )
 
         self._recent_images_menu = recent_images_menu
@@ -48,7 +57,9 @@ class ViewerDock(TabbedDockWidget):
         # Initialize
         self._update_recent_images_menu()
 
-    def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
+    def eventFilter(
+        self, watched: QtCore.QObject, event: QtCore.QEvent
+    ) -> bool:
         """Tab context menu implementation."""
         if watched == self._tab_bar:
             if event.type() == QtCore.QEvent.ContextMenu:
@@ -193,7 +204,9 @@ class ViewerDock(TabbedDockWidget):
         num_images = settings.beginReadArray(self.SETTING_RECENT_IMAGES)
         for i in range(num_images):
             settings.setArrayIndex(i)
-            recent_image_path_str = settings.value(self.SETTING_RECENT_IMAGE_PATH)
+            recent_image_path_str = settings.value(
+                self.SETTING_RECENT_IMAGE_PATH
+            )
             if recent_image_path_str:
                 recent_image_path = Path(recent_image_path_str)
                 if recent_image_path.is_file():
@@ -215,7 +228,7 @@ class ViewerDock(TabbedDockWidget):
         image_paths.insert(0, image_path)
 
         if len(image_paths) > 10:
-            image_paths = image_path[:10]
+            image_paths = image_paths[:10]
 
         settings.beginWriteArray(self.SETTING_RECENT_IMAGES)
         for i, recent_image_path in enumerate(image_paths):

@@ -58,7 +58,9 @@ class ViewModel(BaseConfigItemModel):
     @classmethod
     def get_presets(cls) -> Optional[Union[list[str], dict[str, QtGui.QIcon]]]:
         presets = {
-            ViewType.VIEW_DISPLAY: cls.get_view_type_icon(ViewType.VIEW_DISPLAY),
+            ViewType.VIEW_DISPLAY: cls.get_view_type_icon(
+                ViewType.VIEW_DISPLAY
+            ),
             ViewType.VIEW_SCENE: cls.get_view_type_icon(ViewType.VIEW_SCENE),
         }
         for view in ConfigCache.get_shared_views():
@@ -72,8 +74,12 @@ class ViewModel(BaseConfigItemModel):
         self._display = None
 
         self._view_type_icons = {
-            ViewType.VIEW_SHARED: self.get_view_type_icon(ViewType.VIEW_SHARED),
-            ViewType.VIEW_DISPLAY: self.get_view_type_icon(ViewType.VIEW_DISPLAY),
+            ViewType.VIEW_SHARED: self.get_view_type_icon(
+                ViewType.VIEW_SHARED
+            ),
+            ViewType.VIEW_DISPLAY: self.get_view_type_icon(
+                ViewType.VIEW_DISPLAY
+            ),
             ViewType.VIEW_SCENE: self.get_view_type_icon(ViewType.VIEW_SCENE),
         }
 
@@ -103,10 +109,15 @@ class ViewModel(BaseConfigItemModel):
             )
             if color_spaces:
                 color_space = color_spaces[0]
-                views = ConfigCache.get_views(view_type=ocio.VIEW_DISPLAY_DEFINED)
+                views = ConfigCache.get_views(
+                    view_type=ocio.VIEW_DISPLAY_DEFINED
+                )
 
                 item = View(
-                    ViewType.VIEW_SCENE, next_name("View_", views), color_space, ""
+                    ViewType.VIEW_SCENE,
+                    next_name("View_", views),
+                    color_space,
+                    "",
                 )
             else:
                 self.warning_raised.emit(
@@ -128,7 +139,9 @@ class ViewModel(BaseConfigItemModel):
                 )
                 if color_spaces:
                     color_space = color_spaces[0]
-                    views = ConfigCache.get_views(view_type=ocio.VIEW_DISPLAY_DEFINED)
+                    views = ConfigCache.get_views(
+                        view_type=ocio.VIEW_DISPLAY_DEFINED
+                    )
 
                     item = View(
                         ViewType.VIEW_DISPLAY,
@@ -158,7 +171,9 @@ class ViewModel(BaseConfigItemModel):
 
         if item is not None:
             with ConfigSnapshotUndoCommand(
-                f"Add {self.item_type_label()}", model=self, item_name=item.name
+                f"Add {self.item_type_label()}",
+                model=self,
+                item_name=item.name,
             ):
                 self._add_item(item)
                 row = self.get_item_names().index(item.name)
@@ -246,7 +261,9 @@ class ViewModel(BaseConfigItemModel):
             # Get view name from subscription item label
             item_name = self.extract_subscription_item_name(item_label)
 
-            scene_ref_name = ReferenceSpaceManager.scene_reference_space().getName()
+            scene_ref_name = (
+                ReferenceSpaceManager.scene_reference_space().getName()
+            )
             return (
                 ocio.DisplayViewTransform(
                     src=scene_ref_name,
@@ -290,11 +307,14 @@ class ViewModel(BaseConfigItemModel):
             # Insert display name before view
             item_name = self.get_item_name(index)
             text = text.replace(
-                f"({item_name})", f"({self.format_subscription_item_label(item_name)})"
+                f"({item_name})",
+                f"({self.format_subscription_item_label(item_name)})",
             )
         return text
 
-    def _get_icon(self, item: View, column_desc: ColumnDesc) -> Optional[QtGui.QIcon]:
+    def _get_icon(
+        self, item: View, column_desc: ColumnDesc
+    ) -> Optional[QtGui.QIcon]:
         if column_desc == self.NAME:
             return (
                 self._get_subscription_icon(item, column_desc)
@@ -336,7 +356,7 @@ class ViewModel(BaseConfigItemModel):
                     )
                 )
 
-        return View(ViewType.VIEW_SCENE, "_", color_space, "")
+        return View(ViewType.VIEW_SCENE, "_", color_space)
 
     def _reset_cache(self) -> None:
         self._items = []
@@ -354,12 +374,19 @@ class ViewModel(BaseConfigItemModel):
 
         # Display views
         for name in config.getViews(ocio.VIEW_DISPLAY_DEFINED, self._display):
-            view_type, warning = get_view_type(self._display, name)
-            if warning:
-                self.warning_raised.emit(warning)
+            view_type = get_view_type(self._display, name)
 
-            self._items.append(
-                View(
+            if view_type == ViewType.VIEW_SCENE:
+                view = View(
+                    view_type,
+                    name,
+                    config.getDisplayViewColorSpaceName(self._display, name),
+                    looks=config.getDisplayViewLooks(self._display, name),
+                )
+                self._items.append(view)
+
+            else:  # VIEW_DISPLAY
+                view = View(
                     view_type,
                     name,
                     config.getDisplayViewColorSpaceName(self._display, name),
@@ -368,21 +395,20 @@ class ViewModel(BaseConfigItemModel):
                     config.getDisplayViewRule(self._display, name),
                     config.getDisplayViewDescription(self._display, name),
                 )
-            )
+                self._items.append(view)
 
         # Shared views
         for name in config.getViews(ocio.VIEW_SHARED, self._display):
-            self._items.append(
-                View(
-                    ViewType.VIEW_SHARED,
-                    name,
-                    config.getDisplayViewColorSpaceName("", name),
-                    config.getDisplayViewTransformName("", name),
-                    config.getDisplayViewLooks("", name),
-                    config.getDisplayViewRule("", name),
-                    config.getDisplayViewDescription("", name),
-                )
+            view = View(
+                ViewType.VIEW_SHARED,
+                name,
+                config.getDisplayViewColorSpaceName("", name),
+                config.getDisplayViewTransformName("", name),
+                config.getDisplayViewLooks("", name),
+                config.getDisplayViewRule("", name),
+                config.getDisplayViewDescription("", name),
             )
+            self._items.append(view)
 
         return self._items
 
@@ -393,7 +419,9 @@ class ViewModel(BaseConfigItemModel):
             # Insert placeholder view to keep display alive
             placeholder_view = self._get_placeholder_view()
             config.addDisplayView(
-                self._display, placeholder_view.name, placeholder_view.color_space
+                self._display,
+                placeholder_view.name,
+                placeholder_view.color_space,
             )
 
             # Views must be removed in reverse to preserve internal indices
@@ -461,7 +489,11 @@ class ViewModel(BaseConfigItemModel):
         return None
 
     def _set_value(
-        self, item: View, column_desc: ColumnDesc, value: Any, index: QtCore.QModelIndex
+        self,
+        item: View,
+        column_desc: ColumnDesc,
+        value: Any,
+        index: QtCore.QModelIndex,
     ) -> None:
         item_names = self.get_item_names()
         if item.name not in item_names:
@@ -479,22 +511,21 @@ class ViewModel(BaseConfigItemModel):
             color_space = config.getColorSpace(value)
             if color_space:
                 if (
-                    item.view_transform
-                    and (
-                        color_space.getReferenceSpaceType()
-                        == ocio.REFERENCE_SPACE_DISPLAY
-                    )
-                ) or (
-                    not item.view_transform
+                    item.type == ViewType.VIEW_SCENE
                     and color_space.getReferenceSpaceType()
                     == ocio.REFERENCE_SPACE_SCENE
+                ) or (
+                    item.type == ViewType.VIEW_DISPLAY
+                    and color_space.getReferenceSpaceType()
+                    == ocio.REFERENCE_SPACE_DISPLAY
                 ):
                     items[item_index].color_space = value
 
         elif column_desc == self.VIEW_TRANSFORM:
             color_space = config.getColorSpace(item.color_space)
             if color_space and (
-                color_space.getReferenceSpaceType() == ocio.REFERENCE_SPACE_DISPLAY
+                color_space.getReferenceSpaceType()
+                == ocio.REFERENCE_SPACE_DISPLAY
             ):
                 items[item_index].view_transform = value
 

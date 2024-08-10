@@ -64,7 +64,9 @@ class BaseActiveDisplayViewModel(BaseConfigItemModel):
         if dst_row == src_row:
             return False
 
-        return self.moveRows(self.NULL_INDEX, src_row, 1, self.NULL_INDEX, dst_row)
+        return self.moveRows(
+            self.NULL_INDEX, src_row, 1, self.NULL_INDEX, dst_row
+        )
 
     def move_item_down(self, item_name: str) -> bool:
         active_names = self.__get_active_items__()
@@ -77,7 +79,9 @@ class BaseActiveDisplayViewModel(BaseConfigItemModel):
         if dst_row == src_row:
             return False
 
-        return self.moveRows(self.NULL_INDEX, src_row, 1, self.NULL_INDEX, dst_row)
+        return self.moveRows(
+            self.NULL_INDEX, src_row, 1, self.NULL_INDEX, dst_row
+        )
 
     def flags(self, index: QtCore.QModelIndex) -> int:
         return super().flags(index) | QtCore.Qt.ItemIsUserCheckable
