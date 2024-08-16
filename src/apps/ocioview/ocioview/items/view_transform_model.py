@@ -11,7 +11,10 @@ from ..config_cache import ConfigCache
 from ..constants import ICON_SIZE_ITEM
 from ..utils import get_enum_member, get_glyph_icon
 from .config_item_model import ColumnDesc, BaseConfigItemModel
-from .utils import get_scene_to_display_transform, get_display_to_scene_transform
+from .utils import (
+    get_scene_to_display_transform,
+    get_display_to_scene_transform,
+)
 
 
 class ViewTransformModel(BaseConfigItemModel):
@@ -41,7 +44,9 @@ class ViewTransformModel(BaseConfigItemModel):
         super().__init__(parent=parent)
 
         self._ref_space_icons = {
-            ocio.REFERENCE_SPACE_SCENE: get_glyph_icon("ph.sun", size=ICON_SIZE_ITEM),
+            ocio.REFERENCE_SPACE_SCENE: get_glyph_icon(
+                "ph.sun", size=ICON_SIZE_ITEM
+            ),
             ocio.REFERENCE_SPACE_DISPLAY: get_glyph_icon(
                 "ph.monitor", size=ICON_SIZE_ITEM
             ),
@@ -88,7 +93,8 @@ class ViewTransformModel(BaseConfigItemModel):
     def _get_items(self, preserve: bool = False) -> list[ocio.ViewTransform]:
         if preserve:
             self._items = [
-                copy.deepcopy(item) for item in ConfigCache.get_view_transforms()
+                copy.deepcopy(item)
+                for item in ConfigCache.get_view_transforms()
             ]
             return self._items
         else:
@@ -123,7 +129,9 @@ class ViewTransformModel(BaseConfigItemModel):
             )
         )
 
-    def _get_value(self, item: ocio.ViewTransform, column_desc: ColumnDesc) -> Any:
+    def _get_value(
+        self, item: ocio.ViewTransform, column_desc: ColumnDesc
+    ) -> Any:
         # Get parameters
         if column_desc == self.REFERENCE_SPACE_TYPE:
             return int(item.getReferenceSpaceType().value)
@@ -167,7 +175,9 @@ class ViewTransformModel(BaseConfigItemModel):
                     name=item.getName(),
                     family=item.getFamily(),
                     description=item.getDescription(),
-                    toReference=item.getTransform(ocio.VIEWTRANSFORM_DIR_TO_REFERENCE),
+                    toReference=item.getTransform(
+                        ocio.VIEWTRANSFORM_DIR_TO_REFERENCE
+                    ),
                     fromReference=item.getTransform(
                         ocio.VIEWTRANSFORM_DIR_FROM_REFERENCE
                     ),
@@ -203,7 +213,8 @@ class ViewTransformModel(BaseConfigItemModel):
         # type change, which requires removing the old item to add the new.
         if column_desc in (self.REFERENCE_SPACE_TYPE, self.NAME):
             items = [
-                copy.deepcopy(other_item) for other_item in config.getViewTransforms()
+                copy.deepcopy(other_item)
+                for other_item in config.getViewTransforms()
             ]
             config.clearViewTransforms()
             for other_item in items:
@@ -223,5 +234,6 @@ class ViewTransformModel(BaseConfigItemModel):
         if column_desc in (self.NAME, self.TO_REFERENCE, self.FROM_REFERENCE):
             item_name = new_item.getName()
             self._update_tf_subscribers(
-                item_name, prev_item_name if prev_item_name != item_name else None
+                item_name,
+                prev_item_name if prev_item_name != item_name else None,
             )

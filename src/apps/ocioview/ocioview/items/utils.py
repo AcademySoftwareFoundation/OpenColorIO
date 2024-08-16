@@ -4,9 +4,13 @@
 from __future__ import annotations
 
 import enum
+import logging
 from typing import Optional
 
 import PyOpenColorIO as ocio
+
+
+logger = logging.getLogger(__name__)
 
 
 class ViewType(str, enum.Enum):
@@ -17,20 +21,17 @@ class ViewType(str, enum.Enum):
     VIEW_SCENE = "View (Scene Reference Space)"
 
 
-def get_view_type(display: str, view: str) -> tuple[ViewType, str | None]:
+def get_view_type(display: str, view: str) -> ViewType:
     """
     Get the view type from a display and view.
 
     :param display: Display name. An empty string indicates a shared
         display.
     :param view: View name
-    :return: Tuple of view type and any warning raised while inspecting
-        the display and view.
+    :return: View type
     """
-    warning = None
-
     if not display:
-        return ViewType.VIEW_SHARED, warning
+        return ViewType.VIEW_SHARED
 
     config = ocio.GetCurrentConfig()
 
@@ -39,24 +40,27 @@ def get_view_type(display: str, view: str) -> tuple[ViewType, str | None]:
 
     color_space = config.getColorSpace(color_space_name)
     if color_space is not None:
-        if color_space.getReferenceSpaceType() == ocio.REFERENCE_SPACE_DISPLAY:
+        if color_space.getReferenceSpaceType() == ocio.REFERENCE_SPACE_SCENE:
             if view_transform_name:
-                warning = (
+                logger.warning(
                     f"Invalid view '{display}/{view}' references a view transform "
-                    f"('{view_transform_name}') with a non-display color space "
+                    f"('{view_transform_name}') and a non-display color space "
                     f"('{color_space_name}'). The view transform will be dropped to "
                     f"preserve the color space selection."
                 )
-            return ViewType.VIEW_DISPLAY, warning
+            return ViewType.VIEW_SCENE
         else:
-            return ViewType.VIEW_SCENE, warning
+            return ViewType.VIEW_DISPLAY
+
     elif view_transform_name:
-        return ViewType.VIEW_DISPLAY, warning
+        return ViewType.VIEW_DISPLAY
     else:
-        return ViewType.VIEW_SCENE, warning
+        return ViewType.VIEW_SCENE
 
 
-def adapt_splitter_sizes(from_sizes: list[int], to_sizes: list[int]) -> list[int]:
+def adapt_splitter_sizes(
+    from_sizes: list[int], to_sizes: list[int]
+) -> list[int]:
     """
     Given source and destination splitter size lists, adapt the
     destination sizes to match the source sizes. Supports between two
