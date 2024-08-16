@@ -573,7 +573,7 @@ class OCIOView(QtWidgets.QMainWindow):
 
     def _update_window_title(self) -> None:
         filename = (
-            "untitiled"
+            "untitled"
             if self._config_path is None
             else self._config_path.name
         ) + ("*" if self._has_unsaved_changes() else "")
