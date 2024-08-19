@@ -7,6 +7,7 @@ from typing import Optional
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..constants import MARGIN_WIDTH, ICON_SIZE_TAB
+from ..signal_router import SignalRouter
 from ..transform_manager import TransformManager
 from ..transforms import TransformEditStack
 from ..utils import get_glyph_icon, SignalsBlocked
@@ -50,11 +51,15 @@ class BaseConfigItemParamEdit(QtWidgets.QWidget):
             no_tf_color = palette.color(
                 palette.ColorGroup.Disabled, palette.ColorRole.Text
             )
-            self._from_ref_icon = get_glyph_icon("mdi6.layers-plus", size=ICON_SIZE_TAB)
+            self._from_ref_icon = get_glyph_icon(
+                "mdi6.layers-plus", size=ICON_SIZE_TAB
+            )
             self._no_from_ref_icon = get_glyph_icon(
                 "mdi6.layers-plus", color=no_tf_color, size=ICON_SIZE_TAB
             )
-            self._to_ref_icon = get_glyph_icon("mdi6.layers-minus", size=ICON_SIZE_TAB)
+            self._to_ref_icon = get_glyph_icon(
+                "mdi6.layers-minus", size=ICON_SIZE_TAB
+            )
             self._no_to_ref_icon = get_glyph_icon(
                 "mdi6.layers-minus", color=no_tf_color, size=ICON_SIZE_TAB
             )
@@ -84,7 +89,9 @@ class BaseConfigItemParamEdit(QtWidgets.QWidget):
         param_frame.setLayout(param_spacer_layout)
 
         param_scroll_area = QtWidgets.QScrollArea()
-        param_scroll_area.setObjectName("config_item_param_edit__param_scroll_area")
+        param_scroll_area.setObjectName(
+            "config_item_param_edit__param_scroll_area"
+        )
         param_scroll_area.setSizePolicy(
             QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
         )
@@ -200,6 +207,9 @@ class BaseConfigItemEdit(QtWidgets.QWidget):
     # By default, this inherits from __has_list__.
     __has_splitter__: bool = None
 
+    # If set, call the named signal router method on model change
+    __signal_router_emit__: str = None
+
     @classmethod
     def item_type_icon(cls) -> QtGui.QIcon:
         """
@@ -213,7 +223,9 @@ class BaseConfigItemEdit(QtWidgets.QWidget):
         :param plural: Whether label should be plural
         :return: Friendly type name
         """
-        return cls.__param_edit_type__.__model_type__.item_type_label(plural=plural)
+        return cls.__param_edit_type__.__model_type__.item_type_label(
+            plural=plural
+        )
 
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None):
         super().__init__(parent=parent)
@@ -225,6 +237,16 @@ class BaseConfigItemEdit(QtWidgets.QWidget):
 
         model = self.model
 
+        # Connect signal router to model change
+        if self.__signal_router_emit__:
+            signal_router = SignalRouter.get_instance()
+            emit_method = getattr(signal_router, self.__signal_router_emit__)
+            model.dataChanged.connect(lambda *a, **kw: emit_method())
+            model.item_renamed.connect(lambda *a, **kw: emit_method())
+            model.item_added.connect(lambda *a, **kw: emit_method())
+            model.item_moved.connect(lambda *a, **kw: emit_method())
+            model.item_removed.connect(lambda *a, **kw: emit_method())
+
         if self.__has_list__:
             self.list = ItemModelListWidget(
                 model, model.NAME.column, item_icon=self.item_type_icon()
@@ -235,16 +257,20 @@ class BaseConfigItemEdit(QtWidgets.QWidget):
             model.item_selection_requested.connect(
                 lambda index: self.list.set_current_row(index.row())
             )
-            model.modelAboutToBeReset.connect(lambda: self.param_edit.setEnabled(False))
+            model.modelAboutToBeReset.connect(
+                lambda: self.param_edit.setEnabled(False)
+            )
 
         # Map widgets to model columns
-        self._mapper = QtWidgets.QDataWidgetMapper()
-        self._mapper.setOrientation(QtCore.Qt.Horizontal)
-        self._mapper.setSubmitPolicy(QtWidgets.QDataWidgetMapper.AutoSubmit)
-        self._mapper.setModel(model)
+        self.mapper = QtWidgets.QDataWidgetMapper()
+        self.mapper.setOrientation(QtCore.Qt.Horizontal)
+        self.mapper.setSubmitPolicy(QtWidgets.QDataWidgetMapper.AutoSubmit)
+        self.mapper.setModel(model)
 
         try:
-            self._mapper.addMapping(self.param_edit.name_edit, model.NAME.column)
+            self.mapper.addMapping(
+                self.param_edit.name_edit, model.NAME.column
+            )
         except RuntimeError:
             # Some derived classes may delete this widget to handle custom mapping
             pass
@@ -254,7 +280,9 @@ class BaseConfigItemEdit(QtWidgets.QWidget):
         #       in transit. Conversely, handling transform updates manually via
         #       signals/slots is stable, so used here instead.
         if self.param_edit.__has_transforms__:
-            self.param_edit.from_ref_stack.edited.connect(self._on_from_ref_edited)
+            self.param_edit.from_ref_stack.edited.connect(
+                self._on_from_ref_edited
+            )
             self.param_edit.to_ref_stack.edited.connect(self._on_to_ref_edited)
             model.dataChanged.connect(self._on_data_changed)
 
@@ -292,7 +320,9 @@ class BaseConfigItemEdit(QtWidgets.QWidget):
                 adapt_splitter_sizes(from_sizes, self.splitter.sizes())
             )
 
-    def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
+    def eventFilter(
+        self, watched: QtCore.QObject, event: QtCore.QEvent
+    ) -> bool:
         """
         Handle setting subscription for the current item's transform on
         number key press.
@@ -316,7 +346,9 @@ class BaseConfigItemEdit(QtWidgets.QWidget):
             )
         ):
             current_index = self.list.current_index()
-            item_label = self.model.format_subscription_item_label(current_index)
+            item_label = self.model.format_subscription_item_label(
+                current_index
+            )
             if item_label:
                 TransformManager.set_subscription(
                     int(event.text()), self.model, item_label
@@ -334,19 +366,21 @@ class BaseConfigItemEdit(QtWidgets.QWidget):
         if row < 0:
             self.param_edit.reset()
         else:
-            self._mapper.setCurrentIndex(row)
+            self.mapper.setCurrentIndex(row)
 
             # Manually update transform stacks from model, on current row change
             if self.param_edit.__has_transforms__:
                 model = self.model
 
                 with SignalsBlocked(
-                    self.param_edit.from_ref_stack, self.param_edit.to_ref_stack
+                    self.param_edit.from_ref_stack,
+                    self.param_edit.to_ref_stack,
                 ):
                     self.param_edit.from_ref_stack.set_transform(
                         model.data(
                             model.index(
-                                row, self.param_edit.__from_ref_column_desc__.column
+                                row,
+                                self.param_edit.__from_ref_column_desc__.column,
                             ),
                             QtCore.Qt.EditRole,
                         )
@@ -354,7 +388,8 @@ class BaseConfigItemEdit(QtWidgets.QWidget):
                     self.param_edit.to_ref_stack.set_transform(
                         model.data(
                             model.index(
-                                row, self.param_edit.__to_ref_column_desc__.column
+                                row,
+                                self.param_edit.__to_ref_column_desc__.column,
                             ),
                             QtCore.Qt.EditRole,
                         )
@@ -363,7 +398,10 @@ class BaseConfigItemEdit(QtWidgets.QWidget):
 
     @QtCore.Slot(QtCore.QModelIndex, QtCore.QModelIndex, list)
     def _on_data_changed(
-        self, top_left: QtCore.QModelIndex, bottom_right: QtCore.QModelIndex, roles=()
+        self,
+        top_left: QtCore.QModelIndex,
+        bottom_right: QtCore.QModelIndex,
+        roles=(),
     ) -> None:
         """
         Manually update transform stacks from model, on model data

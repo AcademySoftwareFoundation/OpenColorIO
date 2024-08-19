@@ -5,6 +5,7 @@ from typing import Optional
 
 from PySide6 import QtGui, QtWidgets
 
+from ..signal_router import SignalRouter
 from ..widgets import ItemModelTableWidget
 from .delegates import RoleDelegate
 from .role_model import RoleModel
@@ -34,6 +35,24 @@ class RoleEdit(QtWidgets.QWidget):
         super().__init__(parent=parent)
 
         self.model = RoleModel()
+
+        # Connect signal router to model change
+        signal_router = SignalRouter.get_instance()
+        self.model.dataChanged.connect(
+            lambda *a, **kw: signal_router.emit_roles_changed()
+        )
+        self.model.item_renamed.connect(
+            lambda *a, **kw: signal_router.emit_roles_changed()
+        )
+        self.model.item_added.connect(
+            lambda *a, **kw: signal_router.emit_roles_changed()
+        )
+        self.model.item_moved.connect(
+            lambda *a, **kw: signal_router.emit_roles_changed()
+        )
+        self.model.item_removed.connect(
+            lambda *a, **kw: signal_router.emit_roles_changed()
+        )
 
         # Widgets
         self.table = ItemModelTableWidget(self.model)

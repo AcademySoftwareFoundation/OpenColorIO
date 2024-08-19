@@ -5,7 +5,12 @@ from typing import Optional
 
 from PySide6 import QtCore, QtWidgets
 
-from .inspect import ChromaticitiesInspector, CodeInspector, CurveInspector, LogInspector
+from .inspect import (
+    ChromaticitiesInspector,
+    CodeInspector,
+    CurveInspector,
+    LogInspector,
+)
 from .utils import get_glyph_icon
 from .widgets.structure import TabbedDockWidget
 
@@ -16,8 +21,21 @@ class InspectDock(TabbedDockWidget):
     transform data.
     """
 
-    def __init__(self, parent: Optional[QtCore.QObject] = None):
-        super().__init__("Inspect", get_glyph_icon("mdi6.dna"), parent=parent)
+    def __init__(
+        self,
+        corner_widget: Optional[QtWidgets.QWidget] = None,
+        parent: Optional[QtCore.QObject] = None,
+    ):
+        """
+        :param corner_widget: Optional widget to place on the right
+            side of the dock title bar.
+        """
+        super().__init__(
+            "Inspect",
+            get_glyph_icon("mdi6.dna"),
+            corner_widget=corner_widget,
+            parent=parent,
+        )
 
         self.setAllowedAreas(
             QtCore.Qt.BottomDockWidgetArea | QtCore.Qt.TopDockWidgetArea
@@ -53,8 +71,7 @@ class InspectDock(TabbedDockWidget):
         )
 
     def reset(self) -> None:
-        """Reset data for all inspectors."""
+        """Reset data for all inspectors, except the log."""
         self.chromaticities_inspector.reset()
         self.curve_inspector.reset()
         self.code_inspector.reset()
-        self.log_inspector.reset()

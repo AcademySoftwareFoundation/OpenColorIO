@@ -9,37 +9,80 @@ namespace OCIO = OCIO_NAMESPACE;
 
 namespace
 {
-struct FileCreationGuard
-{
-    explicit FileCreationGuard(unsigned lineNo)
+    struct FileCreationGuard
     {
-        OCIO_CHECK_NO_THROW_FROM(m_filename = OCIO::Platform::CreateTempFilename(""), lineNo);
-    }
-    ~FileCreationGuard()
-    {
-        // Even if not strictly required on most OSes, perform the cleanup.
-        std::remove(m_filename.c_str());
-    }
+        explicit FileCreationGuard(unsigned lineNo)
+        {
+            try
+            {
+                m_filename = OCIO::Platform::CreateTempFilename("");
+            }
+            catch (...)
+            {
+                std::ostringstream ss;
+                ss << "Temp file creation for line " << lineNo << " failed. Test will fail.";
+                throw OCIO::Exception(ss.str().c_str());
+            }
 
-    std::string m_filename;
-};
+            if(!m_filename.empty())
+            {
+                m_isCreated = true;
+            }
+        }
+        ~FileCreationGuard()
+        {
+            // Even if not strictly required on most OSes, perform the cleanup.
+            if (m_isCreated)
+            {
+                std::remove(m_filename.c_str());
+            }
+ 
+            m_isCreated = false;
+        }
 
-struct DirectoryCreationGuard
-{
-    explicit DirectoryCreationGuard(const std::string name, unsigned lineNo)
-    {
-        OCIO_CHECK_NO_THROW_FROM(
-            m_directoryPath = OCIO::CreateTemporaryDirectory(name), lineNo
-        );
-    }
-    ~DirectoryCreationGuard()
-    {
-        // Even if not strictly required on most OSes, perform the cleanup.
-        OCIO::RemoveTemporaryDirectory(m_directoryPath);
-    }
+        std::string m_filename;
+        bool m_isCreated = false;
+    };
 
-    std::string m_directoryPath;
-};
+    struct DirectoryCreationGuard
+    {
+        explicit DirectoryCreationGuard(const std::string name, unsigned lineNo)
+        {
+            try
+            {
+                m_directoryPath = OCIO::CreateTemporaryDirectory(name);
+            }
+            catch (...)
+            {
+                std::ostringstream ss;
+                ss << "Temp folder creation for name '" << name << "' for line " << lineNo << " failed. Test will fail.";
+                throw OCIO::Exception(ss.str().c_str());
+            }
+
+            if (!m_directoryPath.empty())
+            {
+                m_isCreated = true;
+            }
+        }
+        ~DirectoryCreationGuard()
+        {
+            // Even if not strictly required on most OSes, perform the cleanup.
+            if (m_isCreated && !m_directoryPath.empty())
+            {
+                OCIO::RemoveTemporaryDirectory(m_directoryPath);
+            }
+
+            m_isCreated = false;
+        }
+
+        bool created() const 
+        { 
+            return m_isCreated; 
+        }
+
+        std::string m_directoryPath;
+        bool m_isCreated = false;
+    };
 } //anon.
 
 
@@ -524,6 +567,9 @@ OCIO_ADD_TEST(OCIOZArchive, extract_config_and_compare_to_original)
 
         // 2 - Extract the OCIOZ archive to temporary directory.
         DirectoryCreationGuard dGuard("context_test1", __LINE__);
+        
+        OCIO_REQUIRE_ASSERT(dGuard.created()); // Don't continue if the temp folder creation failed.
+
         OCIO_CHECK_NO_THROW(OCIO::ExtractOCIOZArchive(
             archivePath.c_str(), dGuard.m_directoryPath.c_str()
         ));

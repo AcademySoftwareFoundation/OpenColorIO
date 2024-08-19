@@ -3,13 +3,13 @@
 
 from typing import Optional
 
+import PyOpenColorIO as ocio
 from PySide6 import QtCore, QtWidgets
 
-from ..config_cache import ConfigCache
 from ..constants import ICON_SIZE_ITEM
 from ..utils import get_glyph_icon
 from ..widgets import (
-    CallbackComboBox,
+    ColorSpaceComboBox,
     ExpandingStackedWidget,
     FormLayout,
     LineEdit,
@@ -49,9 +49,11 @@ class FileRuleParamEdit(BaseConfigItemParamEdit):
             params_layout.addRow(self.model.NAME.label, name_edit)
 
             if file_rule_type != FileRuleType.RULE_OCIO_V1:
-                color_space_combo = CallbackComboBox(ConfigCache.get_color_space_names)
+                color_space_combo = ColorSpaceComboBox()
                 self.color_space_combos[file_rule_type] = color_space_combo
-                params_layout.addRow(self.model.COLOR_SPACE.label, color_space_combo)
+                params_layout.addRow(
+                    self.model.COLOR_SPACE.label, color_space_combo
+                )
 
             if file_rule_type == FileRuleType.RULE_BASIC:
                 pattern_edit = LineEdit()
@@ -60,14 +62,19 @@ class FileRuleParamEdit(BaseConfigItemParamEdit):
 
                 extension_edit = LineEdit()
                 self.extension_edits[file_rule_type] = extension_edit
-                params_layout.addRow(self.model.EXTENSION.label, extension_edit)
+                params_layout.addRow(
+                    self.model.EXTENSION.label, extension_edit
+                )
 
             if file_rule_type == FileRuleType.RULE_REGEX:
                 regex_edit = LineEdit()
                 self.regex_edits[file_rule_type] = regex_edit
                 params_layout.addRow(self.model.REGEX.label, regex_edit)
 
-            if file_rule_type in (FileRuleType.RULE_BASIC, FileRuleType.RULE_REGEX):
+            if file_rule_type in (
+                FileRuleType.RULE_BASIC,
+                FileRuleType.RULE_REGEX,
+            ):
                 custom_keys_table = StringMapTableWidget(
                     ("Key Name", "Key Value"),
                     item_icon=get_glyph_icon("ph.key", size=ICON_SIZE_ITEM),
@@ -75,7 +82,9 @@ class FileRuleParamEdit(BaseConfigItemParamEdit):
                     default_value="value",
                 )
                 self.custom_keys_tables[file_rule_type] = custom_keys_table
-                params_layout.addRow(self.model.CUSTOM_KEYS.label, custom_keys_table)
+                params_layout.addRow(
+                    self.model.CUSTOM_KEYS.label, custom_keys_table
+                )
 
             params = QtWidgets.QFrame()
             params.setLayout(params_layout)
@@ -102,14 +111,18 @@ class FileRuleParamEdit(BaseConfigItemParamEdit):
         )
 
         if file_rule_type in self.name_edits:
-            mapper.addMapping(self.name_edits[file_rule_type], self.model.NAME.column)
+            mapper.addMapping(
+                self.name_edits[file_rule_type], self.model.NAME.column
+            )
             self.name_edits[file_rule_type].setEnabled(
-                file_rule_type in (FileRuleType.RULE_BASIC, FileRuleType.RULE_REGEX)
+                file_rule_type
+                in (FileRuleType.RULE_BASIC, FileRuleType.RULE_REGEX)
             )
 
         if file_rule_type in self.color_space_combos:
             mapper.addMapping(
-                self.color_space_combos[file_rule_type], self.model.COLOR_SPACE.column
+                self.color_space_combos[file_rule_type],
+                self.model.COLOR_SPACE.column,
             )
             self.color_space_combos[file_rule_type].setEnabled(
                 file_rule_type != FileRuleType.RULE_OCIO_V1
@@ -124,14 +137,17 @@ class FileRuleParamEdit(BaseConfigItemParamEdit):
             )
 
         if file_rule_type in self.regex_edits:
-            mapper.addMapping(self.regex_edits[file_rule_type], self.model.REGEX.column)
+            mapper.addMapping(
+                self.regex_edits[file_rule_type], self.model.REGEX.column
+            )
             self.regex_edits[file_rule_type].setEnabled(
                 file_rule_type == FileRuleType.RULE_REGEX
             )
 
         if file_rule_type in self.extension_edits:
             mapper.addMapping(
-                self.extension_edits[file_rule_type], self.model.EXTENSION.column
+                self.extension_edits[file_rule_type],
+                self.model.EXTENSION.column,
             )
             self.extension_edits[file_rule_type].setEnabled(
                 file_rule_type == FileRuleType.RULE_BASIC
@@ -139,10 +155,12 @@ class FileRuleParamEdit(BaseConfigItemParamEdit):
 
         if file_rule_type in self.custom_keys_tables:
             mapper.addMapping(
-                self.custom_keys_tables[file_rule_type], self.model.CUSTOM_KEYS.column
+                self.custom_keys_tables[file_rule_type],
+                self.model.CUSTOM_KEYS.column,
             )
             self.custom_keys_tables[file_rule_type].setEnabled(
-                file_rule_type in (FileRuleType.RULE_BASIC, FileRuleType.RULE_REGEX)
+                file_rule_type
+                in (FileRuleType.RULE_BASIC, FileRuleType.RULE_REGEX)
             )
 
 
@@ -159,11 +177,11 @@ class FileRuleEdit(BaseConfigItemEdit):
         model = self.model
 
         # Clear default mapped widgets. Widgets will be remapped per file rule type.
-        self._mapper.clearMapping()
+        self.mapper.clearMapping()
 
         # Table widgets need manual data submission back to model
         for custom_keys_table in self.param_edit.custom_keys_tables.values():
-            custom_keys_table.items_changed.connect(self._mapper.submit)
+            custom_keys_table.items_changed.connect(self.mapper.submit)
 
         # Initialize
         if model.rowCount():
@@ -178,6 +196,8 @@ class FileRuleEdit(BaseConfigItemEdit):
                 self.model.index(row, self.model.FILE_RULE_TYPE.column),
                 QtCore.Qt.EditRole,
             )
-            self.param_edit.update_available_params(self._mapper, file_rule_type)
+            self.param_edit.update_available_params(
+                self.mapper, file_rule_type
+            )
 
         super()._on_current_row_changed(row)

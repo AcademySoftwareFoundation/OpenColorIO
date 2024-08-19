@@ -30,23 +30,37 @@ class NamedTransformParamEdit(BaseConfigItemParamEdit):
         # Widgets
         self.aliases_list = StringListWidget(
             item_basename="alias",
-            item_icon=get_glyph_icon("ph.bookmark-simple", size=ICON_SIZE_ITEM),
+            item_icon=get_glyph_icon(
+                "ph.bookmark-simple", size=ICON_SIZE_ITEM
+            ),
         )
-        self.family_edit = CallbackComboBox(ConfigCache.get_families, editable=True)
-        self.encoding_edit = CallbackComboBox(ConfigCache.get_encodings, editable=True)
+        self.family_edit = CallbackComboBox(
+            ConfigCache.get_families, editable=True
+        )
+        self.encoding_edit = CallbackComboBox(
+            ConfigCache.get_encodings, editable=True
+        )
         self.description_edit = TextEdit()
         self.categories_list = StringListWidget(
             item_basename="category",
-            item_icon=get_glyph_icon("ph.bookmarks-simple", size=ICON_SIZE_ITEM),
+            item_icon=get_glyph_icon(
+                "ph.bookmarks-simple", size=ICON_SIZE_ITEM
+            ),
             get_presets=self._get_available_categories,
         )
 
         # Layout
         self._param_layout.addRow(self.model.ALIASES.label, self.aliases_list)
         self._param_layout.addRow(self.model.FAMILY.label, self.family_edit)
-        self._param_layout.addRow(self.model.ENCODING.label, self.encoding_edit)
-        self._param_layout.addRow(self.model.DESCRIPTION.label, self.description_edit)
-        self._param_layout.addRow(self.model.CATEGORIES.label, self.categories_list)
+        self._param_layout.addRow(
+            self.model.ENCODING.label, self.encoding_edit
+        )
+        self._param_layout.addRow(
+            self.model.DESCRIPTION.label, self.description_edit
+        )
+        self._param_layout.addRow(
+            self.model.CATEGORIES.label, self.categories_list
+        )
 
     def _get_available_categories(self) -> list[str]:
         """
@@ -54,7 +68,11 @@ class NamedTransformParamEdit(BaseConfigItemParamEdit):
             to this item.
         """
         current_categories = self.categories_list.items()
-        return [c for c in ConfigCache.get_categories() if c not in current_categories]
+        return [
+            c
+            for c in ConfigCache.get_categories()
+            if c not in current_categories
+        ]
 
 
 class NamedTransformEdit(BaseConfigItemEdit):
@@ -70,19 +88,27 @@ class NamedTransformEdit(BaseConfigItemEdit):
         model = self.model
 
         # Map widgets to model columns
-        self._mapper.addMapping(self.param_edit.aliases_list, model.ALIASES.column)
-        self._mapper.addMapping(self.param_edit.family_edit, model.FAMILY.column)
-        self._mapper.addMapping(self.param_edit.encoding_edit, model.ENCODING.column)
-        self._mapper.addMapping(
+        self.mapper.addMapping(
+            self.param_edit.aliases_list, model.ALIASES.column
+        )
+        self.mapper.addMapping(
+            self.param_edit.family_edit, model.FAMILY.column
+        )
+        self.mapper.addMapping(
+            self.param_edit.encoding_edit, model.ENCODING.column
+        )
+        self.mapper.addMapping(
             self.param_edit.description_edit, model.DESCRIPTION.column
         )
-        self._mapper.addMapping(
+        self.mapper.addMapping(
             self.param_edit.categories_list, model.CATEGORIES.column
         )
 
         # list widgets need manual data submission back to model
-        self.param_edit.aliases_list.items_changed.connect(self._mapper.submit)
-        self.param_edit.categories_list.items_changed.connect(self._mapper.submit)
+        self.param_edit.aliases_list.items_changed.connect(self.mapper.submit)
+        self.param_edit.categories_list.items_changed.connect(
+            self.mapper.submit
+        )
 
         # Initialize
         if model.rowCount():
