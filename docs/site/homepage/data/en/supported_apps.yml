@@ -14,7 +14,7 @@ supported_apps:
     - name : Adobe After Effects
       image : images/supported_apps/ae.png
       categories : ["2D", "Compositing", "Animation"]
-      content :  Native support.
+      content : Native support.
       link : "https://helpx.adobe.com/after-effects/using/opencolorio-aces-color-management.html"
     
     # portfolio item loop
