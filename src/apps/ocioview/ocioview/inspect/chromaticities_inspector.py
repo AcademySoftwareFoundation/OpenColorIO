@@ -371,9 +371,9 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
         )
         self._visuals["rgb_color_space_input_3d"].visible = False
         self._visuals["rgb_color_space_chromaticities_2d"].visible = False
-        self._visuals["rgb_color_space_chromaticities_2d"].local.position = (
-            np.array([0, 0, 0.00005])
-        )
+        self._visuals[
+            "rgb_color_space_chromaticities_2d"
+        ].local.position = np.array([0, 0, 0.00005])
         self._visuals["rgb_color_space_chromaticities_3d"].visible = False
         self._visuals["rgb_scatter_3d"].visible = False
 
@@ -494,9 +494,11 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
         conversion_chain = []
 
         image_array = np.copy(self._image_array)
+        # Don't try to process single or zero pixel images
+        image_empty = image_array.size <= 3
 
         # 1. Apply current active processor
-        if self._processor is not None:
+        if not image_empty and self._processor is not None:
             if self._context.transform_item_name is not None:
                 conversion_chain += [
                     self._context.input_color_space,
@@ -508,12 +510,12 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
             )
 
             if rgb_colourspace is not None:
-                self._visuals["rgb_color_space_input_2d"].colourspace = (
-                    rgb_colourspace
-                )
-                self._visuals["rgb_color_space_input_3d"].colourspace = (
-                    rgb_colourspace
-                )
+                self._visuals[
+                    "rgb_color_space_input_2d"
+                ].colourspace = rgb_colourspace
+                self._visuals[
+                    "rgb_color_space_input_3d"
+                ].colourspace = rgb_colourspace
             self._processor.applyRGB(image_array)
 
         # 2. Convert from chromaticities input space to "CIE-XYZ-D65" interchange
@@ -559,11 +561,12 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
         # 3. Convert from "CIE-XYZ-D65" to "VisualRGBScatter3D" working space
         conversion_chain += ["CIE-XYZ-D65", self._working_space]
 
-        image_array = XYZ_to_RGB(
-            image_array,
-            self._working_space,
-            illuminant=self._working_whitepoint,
-        )
+        if not image_empty:
+            image_array = XYZ_to_RGB(
+                image_array,
+                self._working_space,
+                illuminant=self._working_whitepoint,
+            )
 
         conversion_chain = [
             color_space for color_space, _group in groupby(conversion_chain)
