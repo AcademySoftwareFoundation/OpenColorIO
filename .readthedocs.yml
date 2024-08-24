@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+
+# Read the Docs configuration file
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
+
+version: 2
+
+build:
+  os: ubuntu-20.04
+  tools:
+    python: "3.9"
+
+sphinx:
+  configuration: docs/conf.py
+
+formats:
+  - pdf
+  - htmlzip
+
+python:
+  install:
+    - requirements: docs/requirements.txt
