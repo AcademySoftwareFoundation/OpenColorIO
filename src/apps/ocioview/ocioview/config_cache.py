@@ -21,7 +21,10 @@ class ConfigCache:
     _active_views: Optional[list[str]] = None
     _all_names: Optional[list[str]] = None
     _categories: Optional[list[str]] = None
-    _color_spaces: dict[bool, list[ocio.ColorSpace]] = {}
+    _color_spaces: dict[
+        tuple[bool, ocio.SearchReferenceSpaceType, ocio.ColorSpaceVisibility],
+        Union[list[ocio.ColorSpace], ocio.ColorSpaceSet],
+    ] = {}
     _color_space_names: dict[ocio.SearchReferenceSpaceType, list[str]] = {}
     _default_color_space_name: Optional[str] = None
     _default_view_transform_name: Optional[str] = None
@@ -117,7 +120,10 @@ class ConfigCache:
             cls._active_displays = list(
                 filter(
                     None,
-                    re.split(r" *[,:] *", ocio.GetCurrentConfig().getActiveDisplays()),
+                    re.split(
+                        r" *[,:] *",
+                        ocio.GetCurrentConfig().getActiveDisplays(),
+                    ),
                 )
             )
 
@@ -132,7 +138,9 @@ class ConfigCache:
             cls._active_views = list(
                 filter(
                     None,
-                    re.split(r" *[,:] *", ocio.GetCurrentConfig().getActiveViews()),
+                    re.split(
+                        r" *[,:] *", ocio.GetCurrentConfig().getActiveViews()
+                    ),
                 )
             )
 
@@ -213,23 +221,34 @@ class ConfigCache:
 
     @classmethod
     def get_color_spaces(
-        cls, as_set: bool = False
+        cls,
+        reference_space_type: Optional[ocio.SearchReferenceSpaceType] = None,
+        visibility: Optional[ocio.ColorSpaceVisibility] = None,
+        as_set: bool = False,
     ) -> Union[list[ocio.ColorSpace], ocio.ColorSpaceSet]:
         """
         Get all (all reference space types and visibility states) color
         spaces from the current config.
 
+        :param reference_space_type: Optionally filter by reference
+            space type.
+        :param visibility: Optional filter by visibility
         :param as_set: If True, put returned color spaces into a
             ColorSpaceSet, which copies the spaces to insulate from config
             changes.
         :return: list or color space set of color spaces
         """
-        cache_key = as_set
+        if reference_space_type is None:
+            reference_space_type = ocio.SEARCH_REFERENCE_SPACE_ALL
+        if visibility is None:
+            visibility = ocio.COLORSPACE_ALL
+
+        cache_key = (as_set, reference_space_type, visibility)
 
         if not cls.validate() or cache_key not in cls._color_spaces:
             config = ocio.GetCurrentConfig()
             color_spaces = config.getColorSpaces(
-                ocio.SEARCH_REFERENCE_SPACE_ALL, ocio.COLORSPACE_ALL
+                reference_space_type, visibility
             )
             if as_set:
                 color_space_set = ocio.ColorSpaceSet()
@@ -253,7 +272,10 @@ class ConfigCache:
         """
         cache_key = reference_space_type
 
-        if not cls.validate() or reference_space_type not in cls._color_space_names:
+        if (
+            not cls.validate()
+            or reference_space_type not in cls._color_space_names
+        ):
             cls._color_space_names[cache_key] = list(
                 ocio.GetCurrentConfig().getColorSpaceNames(
                     reference_space_type, ocio.COLORSPACE_ALL
@@ -402,7 +424,9 @@ class ConfigCache:
         """
         if not cls.validate() or cls._named_transforms is None:
             cls._named_transforms = list(
-                ocio.GetCurrentConfig().getNamedTransforms(ocio.NAMEDTRANSFORM_ALL)
+                ocio.GetCurrentConfig().getNamedTransforms(
+                    ocio.NAMEDTRANSFORM_ALL
+                )
             )
 
         return cls._named_transforms
@@ -471,7 +495,9 @@ class ConfigCache:
         :return: List of view transforms from the current config
         """
         if not cls.validate() or cls._view_transforms is None:
-            cls._view_transforms = list(ocio.GetCurrentConfig().getViewTransforms())
+            cls._view_transforms = list(
+                ocio.GetCurrentConfig().getViewTransforms()
+            )
 
         return cls._view_transforms
 
@@ -496,7 +522,10 @@ class ConfigCache:
         if not cls.validate() or cls._viewing_rule_names is None:
             viewing_rules = ocio.GetCurrentConfig().getViewingRules()
             cls._viewing_rule_names = sorted(
-                [viewing_rules.getName(i) for i in range(viewing_rules.getNumEntries())]
+                [
+                    viewing_rules.getName(i)
+                    for i in range(viewing_rules.getNumEntries())
+                ]
             )
 
         return cls._viewing_rule_names

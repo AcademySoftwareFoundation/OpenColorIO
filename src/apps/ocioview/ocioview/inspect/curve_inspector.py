@@ -40,7 +40,9 @@ class CurveInspector(QtWidgets.QWidget):
 
     @classmethod
     def icon(cls) -> QtGui.QIcon:
-        return get_glyph_icon("mdi6.chart-bell-curve-cumulative", size=ICON_SIZE_TAB)
+        return get_glyph_icon(
+            "mdi6.chart-bell-curve-cumulative", size=ICON_SIZE_TAB
+        )
 
     def __init__(self, parent: Optional[QtCore.QObject] = None):
         super().__init__(parent=parent)
@@ -50,18 +52,31 @@ class CurveInspector(QtWidgets.QWidget):
         self.input_range_label.setToolTip("Input range")
         self.input_range_edit = FloatEditArray(
             labels=["min", "max"],
-            defaults=[CurveView.INPUT_MIN_DEFAULT, CurveView.INPUT_MAX_DEFAULT],
+            defaults=[
+                CurveView.INPUT_MIN_DEFAULT,
+                CurveView.INPUT_MAX_DEFAULT,
+            ],
         )
         self.input_range_edit.setToolTip(self.input_range_label.toolTip())
-        self.input_range_edit.value_changed.connect(self._on_input_range_changed)
+        self.input_range_edit.value_changed.connect(
+            self._on_input_range_changed
+        )
 
-        self.sample_count_label = get_glyph_icon("ph.line-segments", as_widget=True)
+        self.sample_count_label = get_glyph_icon(
+            "ph.line-segments", as_widget=True
+        )
         self.sample_count_label.setToolTip("Sample count")
-        self.sample_count_edit = IntEdit(default=CurveView.SAMPLE_COUNT_DEFAULT)
+        self.sample_count_edit = IntEdit(
+            default=CurveView.SAMPLE_COUNT_DEFAULT
+        )
         self.sample_count_edit.setToolTip(self.sample_count_label.toolTip())
-        self.sample_count_edit.value_changed.connect(self._on_sample_count_changed)
+        self.sample_count_edit.value_changed.connect(
+            self._on_sample_count_changed
+        )
 
-        self.sample_type_label = get_glyph_icon("mdi6.function-variant", as_widget=True)
+        self.sample_type_label = get_glyph_icon(
+            "mdi6.function-variant", as_widget=True
+        )
         self.sample_type_label.setToolTip("Sample type")
         self.sample_type_combo = EnumComboBox(SampleType)
         self.sample_type_combo.setToolTip(self.sample_type_label.toolTip())
@@ -241,6 +256,7 @@ class CurveView(QtWidgets.QGraphicsView):
         )
 
         # Cached processor from which the OCIO transform is derived
+        self._prev_proc_context = None
         self._prev_cpu_proc = None
 
         # Graphics scene
@@ -363,7 +379,10 @@ class CurveView(QtWidgets.QGraphicsView):
         :param sample_count: Number of samples. Typically, a power of 2
             number.
         """
-        if sample_count != self._sample_count and sample_count >= self.SAMPLE_COUNT_MIN:
+        if (
+            sample_count != self._sample_count
+            and sample_count >= self.SAMPLE_COUNT_MIN
+        ):
             self._sample_count = sample_count
             self._update_curves()
 
@@ -388,7 +407,9 @@ class CurveView(QtWidgets.QGraphicsView):
             self._log_base = log_base
             self._update_curves()
 
-    def drawBackground(self, painter: QtGui.QPainter, rect: QtCore.QRectF) -> None:
+    def drawBackground(
+        self, painter: QtGui.QPainter, rect: QtCore.QRectF
+    ) -> None:
         """Draw curve grid and axis values."""
         # Flood fill background
         painter.setPen(QtCore.Qt.NoPen)
@@ -413,7 +434,9 @@ class CurveView(QtWidgets.QGraphicsView):
         painter.drawRect(self._curve_rect)
 
         # Draw grid rows
-        y_text_origin = QtGui.QTextOption(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        y_text_origin = QtGui.QTextOption(
+            QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
+        )
         y_text_origin.setWrapMode(QtGui.QTextOption.NoWrap)
 
         for i, y in enumerate(
@@ -436,12 +459,16 @@ class CurveView(QtWidgets.QGraphicsView):
                 painter.scale(1, -1)
                 painter.setPen(text_pen)
                 painter.drawText(
-                    QtCore.QRectF(-42.5, -10, 40, 20), str(label_value), y_text_origin
+                    QtCore.QRectF(-42.5, -10, 40, 20),
+                    str(label_value),
+                    y_text_origin,
                 )
                 painter.restore()
 
         # Draw grid columns
-        x_text_origin = QtGui.QTextOption(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        x_text_origin = QtGui.QTextOption(
+            QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
+        )
         x_text_origin.setWrapMode(QtGui.QTextOption.NoWrap)
 
         sample_step = math.ceil(self._sample_count / 10.0)
@@ -459,7 +486,9 @@ class CurveView(QtWidgets.QGraphicsView):
 
             if x > self._x_min:
                 label_value = round(
-                    x if self._sample_type == SampleType.LINEAR else self._x_log[i],
+                    x
+                    if self._sample_type == SampleType.LINEAR
+                    else self._x_log[i],
                     2 if self._sample_type == SampleType.LINEAR else 5,
                 )
                 if label_value == 0.0:
@@ -471,11 +500,15 @@ class CurveView(QtWidgets.QGraphicsView):
                 painter.rotate(90)
                 painter.setPen(text_pen)
                 painter.drawText(
-                    QtCore.QRectF(2.5 + 1, -10, 40, 20), str(label_value), x_text_origin
+                    QtCore.QRectF(2.5 + 1, -10, 40, 20),
+                    str(label_value),
+                    x_text_origin,
                 )
                 painter.restore()
 
-    def drawForeground(self, painter: QtGui.QPainter, rect: QtCore.QRectF) -> None:
+    def drawForeground(
+        self, painter: QtGui.QPainter, rect: QtCore.QRectF
+    ) -> None:
         """Draw nearest sample point and coordinates."""
         if not self._curve_init:
             return
@@ -484,7 +517,9 @@ class CurveView(QtWidgets.QGraphicsView):
         font.setPixelSize(self.FONT_HEIGHT)
         painter.setFont(font)
 
-        text_origin = QtGui.QTextOption(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        text_origin = QtGui.QTextOption(
+            QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
+        )
         text_origin.setWrapMode(QtGui.QTextOption.NoWrap)
 
         sample_l = sample_t = None
@@ -518,12 +553,18 @@ class CurveView(QtWidgets.QGraphicsView):
                 y_label_value = f"{nearest_sample[2]:.05f}"
 
                 painter.save()
-                painter.translate(QtCore.QPointF(sample_l, sample_t + (20 * i)))
+                painter.translate(
+                    QtCore.QPointF(sample_l, sample_t + (20 * i))
+                )
                 painter.scale(1, -1)
 
                 painter.setPen(GRAY_COLOR)
-                painter.drawText(QtCore.QRectF(0, -20, 5, 10), "X:", text_origin)
-                painter.drawText(QtCore.QRectF(0, -10, 5, 10), "Y:", text_origin)
+                painter.drawText(
+                    QtCore.QRectF(0, -20, 5, 10), "X:", text_origin
+                )
+                painter.drawText(
+                    QtCore.QRectF(0, -10, 5, 10), "Y:", text_origin
+                )
 
                 if color_name == GRAY_COLOR.name():
                     palette = self.palette()
@@ -541,7 +582,9 @@ class CurveView(QtWidgets.QGraphicsView):
 
     def _invalidate(self) -> None:
         """Force repaint of visible region of graphics scene."""
-        self._scene.invalidate(QtCore.QRectF(self.visibleRegion().boundingRect()))
+        self._scene.invalidate(
+            QtCore.QRectF(self.visibleRegion().boundingRect())
+        )
 
     def _update_curves(self) -> None:
         """
@@ -549,8 +592,13 @@ class CurveView(QtWidgets.QGraphicsView):
         processor.
         """
         self._update_x_samples()
-        if self._prev_cpu_proc is not None:
-            self._on_processor_ready(self._prev_cpu_proc)
+        if (
+            self._prev_proc_context is not None
+            and self._prev_cpu_proc is not None
+        ):
+            self._on_processor_ready(
+                self._prev_proc_context, self._prev_cpu_proc
+            )
 
     def _update_x_samples(self):
         """
@@ -558,13 +606,22 @@ class CurveView(QtWidgets.QGraphicsView):
         parameters.
         """
         self._x_lin = np.linspace(
-            self._input_min, self._input_max, self._sample_count, dtype=np.float32
+            self._input_min,
+            self._input_max,
+            self._sample_count,
+            dtype=np.float32,
         )
 
         log_min = math.log(max(self.EPSILON, self._input_min))
-        log_max = max(log_min + 0.00001, math.log(self._input_max, self._log_base))
+        log_max = max(
+            log_min + 0.00001, math.log(self._input_max, self._log_base)
+        )
         self._x_log = np.logspace(
-            log_min, log_max, self._sample_count, base=self._log_base, dtype=np.float32
+            log_min,
+            log_max,
+            self._sample_count,
+            base=self._log_base,
+            dtype=np.float32,
         )
 
         self._x_min = self._x_lin.min()
@@ -589,12 +646,16 @@ class CurveView(QtWidgets.QGraphicsView):
             fm.boundingRect(
                 text_rect,
                 text_flags,
-                "100.01" if self._sample_type == SampleType.LINEAR else "100.00001",
+                "100.01"
+                if self._sample_type == SampleType.LINEAR
+                else "100.00001",
             ).width()
             + 10
         )
         pad_l = fm.boundingRect(text_rect, text_flags, "100.01").width() + 10
-        pad_r = fm.boundingRect(text_rect, text_flags, "X: 100.00001").width() + 10
+        pad_r = (
+            fm.boundingRect(text_rect, text_flags, "X: 100.00001").width() + 10
+        )
 
         fit_rect = self._curve_rect.adjusted(-pad_l, -pad_t, pad_r, pad_b)
 
@@ -615,6 +676,7 @@ class CurveView(QtWidgets.QGraphicsView):
         """
         self.reset()
 
+        self._prev_proc_context = proc_context
         self._prev_cpu_proc = cpu_proc
 
         # Get input samples
@@ -635,13 +697,15 @@ class CurveView(QtWidgets.QGraphicsView):
         b_samples = rgb_samples[2::3]
 
         # Collect sample pairs and min/max Y sample values
-        if np.allclose(r_samples, g_samples, atol=self.EPSILON) and np.allclose(
-            r_samples, b_samples, atol=self.EPSILON
-        ):
+        if np.allclose(
+            r_samples, g_samples, atol=self.EPSILON
+        ) and np.allclose(r_samples, b_samples, atol=self.EPSILON):
             palette = self.palette()
             color_name = palette.color(palette.ColorRole.Text).name()
 
-            self._samples[color_name] = np.stack((self._x_lin, r_samples), axis=-1)
+            self._samples[color_name] = np.stack(
+                (self._x_lin, r_samples), axis=-1
+            )
 
             self._y_min = r_samples.min()
             self._y_max = r_samples.max()
@@ -702,14 +766,18 @@ class CurveView(QtWidgets.QGraphicsView):
         for color_name, channel_samples in self._samples.items():
             curve = QtGui.QPainterPath(
                 self._curve_tf.map(
-                    QtCore.QPointF(channel_samples[0][0], channel_samples[0][1])
+                    QtCore.QPointF(
+                        channel_samples[0][0], channel_samples[0][1]
+                    )
                 )
             )
             curve.reserve(channel_samples.shape[0])
             for i in range(1, channel_samples.shape[0]):
                 curve.lineTo(
                     self._curve_tf.map(
-                        QtCore.QPointF(channel_samples[i][0], channel_samples[i][1])
+                        QtCore.QPointF(
+                            channel_samples[i][0], channel_samples[i][1]
+                        )
                     )
                 )
             self._curve_paths[color_name] = curve
@@ -729,7 +797,9 @@ class CurveView(QtWidgets.QGraphicsView):
 
         # Expand scene rect to fit graph
         max_dim = max(self._curve_rect.width(), self._curve_rect.height()) * 2
-        scene_rect = self._curve_rect.adjusted(-max_dim, -max_dim, max_dim, max_dim)
+        scene_rect = self._curve_rect.adjusted(
+            -max_dim, -max_dim, max_dim, max_dim
+        )
         self.setSceneRect(scene_rect)
 
         self._fit()

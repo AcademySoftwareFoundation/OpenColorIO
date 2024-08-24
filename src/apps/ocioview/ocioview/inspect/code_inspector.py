@@ -55,7 +55,9 @@ class CodeInspector(QtWidgets.QWidget):
         self.export_button = QtWidgets.QToolButton()
         self.export_button.setIcon(get_glyph_icon("mdi6.file-export-outline"))
         self.export_button.setText("Export CTF")
-        self.export_button.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
+        self.export_button.setToolButtonStyle(
+            QtCore.Qt.ToolButtonTextBesideIcon
+        )
         self.export_button.released.connect(self._on_export_button_released)
 
         self.ctf_view = LogView()
@@ -63,8 +65,12 @@ class CodeInspector(QtWidgets.QWidget):
         self.ctf_view.append_tool_bar_widget(self.export_button)
 
         self.gpu_language_box = EnumComboBox(ocio.GpuLanguage)
-        self.gpu_language_box.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
-        self.gpu_language_box.set_member(MessageRouter.get_instance().gpu_language)
+        self.gpu_language_box.setSizeAdjustPolicy(
+            QtWidgets.QComboBox.AdjustToContents
+        )
+        self.gpu_language_box.set_member(
+            MessageRouter.get_instance().gpu_language
+        )
         self.gpu_language_box.currentIndexChanged[int].connect(
             self._on_gpu_language_changed
         )
@@ -136,7 +142,9 @@ class CodeInspector(QtWidgets.QWidget):
         h_scroll_bar = log_view.horizontalScrollBar()
 
         # Get line number from bottom of view
-        prev_cursor = log_view.cursorForPosition(log_view.html_view.rect().bottomLeft())
+        prev_cursor = log_view.cursorForPosition(
+            log_view.html_view.rect().bottomLeft()
+        )
         prev_line_num = prev_cursor.blockNumber()
 
         # Get scroll bar positions
@@ -149,7 +157,9 @@ class CodeInspector(QtWidgets.QWidget):
         # Restore current line number
         cursor = QtGui.QTextCursor(log_view.document())
         cursor.movePosition(
-            QtGui.QTextCursor.Down, QtGui.QTextCursor.MoveAnchor, prev_line_num - 1
+            QtGui.QTextCursor.Down,
+            QtGui.QTextCursor.MoveAnchor,
+            prev_line_num - 1,
         )
         log_view.setTextCursor(cursor)
 
@@ -167,7 +177,9 @@ class CodeInspector(QtWidgets.QWidget):
             self.config_view.setHtml(record)
 
     @QtCore.Slot(str, ocio.GroupTransform)
-    def _on_ctf_html_ready(self, record: str, group_tf: ocio.GroupTransform) -> None:
+    def _on_ctf_html_ready(
+        self, record: str, group_tf: ocio.GroupTransform
+    ) -> None:
         """
         Update CTF view with a lossless XML representation of an
         OCIO processor.
@@ -178,7 +190,9 @@ class CodeInspector(QtWidgets.QWidget):
             self.ctf_view.setHtml(record)
 
     @QtCore.Slot(str, ocio.GPUProcessor)
-    def _on_shader_html_ready(self, record: str, gpu_proc: ocio.GPUProcessor) -> None:
+    def _on_shader_html_ready(
+        self, record: str, gpu_proc: ocio.GPUProcessor
+    ) -> None:
         """
         Update shader view with fragment shader source created
         from an OCIO GPU processor.
