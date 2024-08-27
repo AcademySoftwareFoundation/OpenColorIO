@@ -36,6 +36,8 @@
 
      FIXED_FUNCTION_ACES_GAMUT_COMP_13 : ACES 1.3 Parametric Gamut Compression (expects ACEScg values)
 
+     FIXED_FUNCTION_PQ_TO_LINEAR : SMPTE ST 2084:2014 EOTF Linearization Equation
+
    .. py:method:: name() -> str
       :property:
 
@@ -102,6 +104,11 @@
    .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_XYZ_TO_xyY
       :module: PyOpenColorIO
       :value: <FixedFunctionStyle.FIXED_FUNCTION_XYZ_TO_xyY: 7>
+
+
+   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_PQ_TO_LINEAR
+      :module: PyOpenColorIO
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_PQ_TO_LINEAR: 13>
 
 
    .. py:property:: FixedFunctionStyle.value

@@ -583,6 +583,9 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_ACES_GAMUTMAP_07))
         .value("FIXED_FUNCTION_ACES_GAMUT_COMP_13", FIXED_FUNCTION_ACES_GAMUT_COMP_13,
                DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_ACES_GAMUT_COMP_13))
+        .value("FIXED_FUNCTION_PQ_TO_LINEAR", FIXED_FUNCTION_PQ_TO_LINEAR,
+            DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_PQ_TO_LINEAR))
+
         .export_values();
 
     py::enum_<ExposureContrastStyle>(

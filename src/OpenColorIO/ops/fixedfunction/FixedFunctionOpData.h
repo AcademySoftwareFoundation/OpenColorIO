@@ -47,7 +47,9 @@ public:
         XYZ_TO_uvY,               // CIE XYZ to 1976 u'v' chromaticity coordinates
         uvY_TO_XYZ,               // Inverse of above
         XYZ_TO_LUV,               // CIE XYZ to 1976 CIELUV colour space (D65 white)
-        LUV_TO_XYZ                // Inverse of above
+        LUV_TO_XYZ,               // Inverse of above
+        PQ_TO_LINEAR,             // Perceptual Quantizer curve to linear
+        LINEAR_TO_PQ,             // Inverse of above
     };
 
     static const char * ConvertStyleToString(Style style, bool detailed);

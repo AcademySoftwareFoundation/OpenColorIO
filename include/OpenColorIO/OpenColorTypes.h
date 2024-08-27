@@ -486,7 +486,8 @@ enum FixedFunctionStyle
     FIXED_FUNCTION_XYZ_TO_LUV,          ///< CIE XYZ to 1976 CIELUV colour space (D65 white)
     FIXED_FUNCTION_ACES_GAMUTMAP_02,    ///< ACES 0.2 Gamut clamping algorithm -- NOT IMPLEMENTED YET
     FIXED_FUNCTION_ACES_GAMUTMAP_07,    ///< ACES 0.7 Gamut clamping algorithm -- NOT IMPLEMENTED YET
-    FIXED_FUNCTION_ACES_GAMUT_COMP_13   ///< ACES 1.3 Parametric Gamut Compression (expects ACEScg values)
+    FIXED_FUNCTION_ACES_GAMUT_COMP_13,  ///< ACES 1.3 Parametric Gamut Compression (expects ACEScg values)
+    FIXED_FUNCTION_PQ_TO_LINEAR,        ///< SMPTE ST-2084 EOTF linearization, scaled with 100 nits at 1.0, and with negative values mirrored
 };
 
 /// Enumeration of the :cpp:class:`ExposureContrastTransform` transform algorithms.

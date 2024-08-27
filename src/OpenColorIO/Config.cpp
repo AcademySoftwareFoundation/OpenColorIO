@@ -5300,16 +5300,26 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
         }
         else if (ConstFixedFunctionTransformRcPtr ff = DynamicPtrCast<const FixedFunctionTransform>(transform))
         {
+            auto ffstyle = ff->getStyle();
             if (m_majorVersion < 2)
             {
                 throw Exception("Only config version 2 (or higher) can have "
                                 "FixedFunctionTransform.");
             }
 
-            if (m_majorVersion == 2 && m_minorVersion < 1 && ff->getStyle() == FIXED_FUNCTION_ACES_GAMUT_COMP_13)
+            if (m_majorVersion == 2 && m_minorVersion < 1 && ffstyle == FIXED_FUNCTION_ACES_GAMUT_COMP_13)
             {
                 throw Exception("Only config version 2.1 (or higher) can have "
                                 "FixedFunctionTransform style 'ACES_GAMUT_COMP_13'.");
+            }
+
+            if (m_majorVersion == 2 && m_minorVersion < 4 )
+            {
+                if(ffstyle == FIXED_FUNCTION_PQ_TO_LINEAR)
+                {
+                    throw Exception("Only config version 2.4 (or higher) can have "
+                        "FixedFunctionTransform style 'PQ_TO_LINEAR'.");
+                }
             }
         }
         else if (DynamicPtrCast<const GradingPrimaryTransform>(transform))

@@ -39,6 +39,8 @@ constexpr char XYZ_TO_uvY_STR[]            = "XYZ_TO_uvY";
 constexpr char uvY_TO_XYZ_STR[]            = "uvY_TO_XYZ";
 constexpr char XYZ_TO_LUV_STR[]            = "XYZ_TO_LUV";
 constexpr char LUV_TO_XYZ_STR[]            = "LUV_TO_XYZ";
+constexpr char PQ_TO_LINEAR_STR[]          = "PQ_TO_LINEAR";
+constexpr char LINEAR_TO_PQ_STR[]          = "LINEAR_TO_PQ";
 
 
 // NOTE: Converts the enumeration value to its string representation (i.e. CLF reader).
@@ -94,6 +96,10 @@ const char * FixedFunctionOpData::ConvertStyleToString(Style style, bool detaile
             return XYZ_TO_LUV_STR;
         case LUV_TO_XYZ:
             return LUV_TO_XYZ_STR;
+        case PQ_TO_LINEAR:
+          return PQ_TO_LINEAR_STR;
+        case LINEAR_TO_PQ:
+          return LINEAR_TO_PQ_STR;
     }
 
     std::stringstream ss("Unknown FixedFunction style: ");
@@ -196,6 +202,14 @@ FixedFunctionOpData::Style FixedFunctionOpData::GetStyle(const char * name)
         {
             return LUV_TO_XYZ;
         }
+        else if (0 == Platform::Strcasecmp(name, PQ_TO_LINEAR_STR))
+        {
+            return PQ_TO_LINEAR;
+        }
+        else if (0 == Platform::Strcasecmp(name, LINEAR_TO_PQ_STR))
+        {
+            return LINEAR_TO_PQ;
+        }
     }
 
     std::string st("Unknown FixedFunction style: ");
@@ -270,6 +284,11 @@ FixedFunctionOpData::Style FixedFunctionOpData::ConvertStyle(FixedFunctionStyle 
                             "FIXED_FUNCTION_ACES_GAMUTMAP_02, "
                             "FIXED_FUNCTION_ACES_GAMUTMAP_07.");
         }
+        case FIXED_FUNCTION_PQ_TO_LINEAR: 
+        {
+            return isForward ? FixedFunctionOpData::PQ_TO_LINEAR :
+                               FixedFunctionOpData::LINEAR_TO_PQ;
+        }
     }
 
     std::stringstream ss("Unknown FixedFunction transform style: ");
@@ -326,6 +345,10 @@ FixedFunctionStyle FixedFunctionOpData::ConvertStyle(FixedFunctionOpData::Style 
     case FixedFunctionOpData::XYZ_TO_LUV:
     case FixedFunctionOpData::LUV_TO_XYZ:
         return FIXED_FUNCTION_XYZ_TO_LUV;
+
+    case FixedFunctionOpData::PQ_TO_LINEAR:
+    case FixedFunctionOpData::LINEAR_TO_PQ:
+        return FIXED_FUNCTION_PQ_TO_LINEAR;
     }
 
     std::stringstream ss("Unknown FixedFunction style: ");
@@ -584,6 +607,17 @@ void FixedFunctionOpData::invert() noexcept
             setStyle(XYZ_TO_LUV);
             break;
         }
+
+        case PQ_TO_LINEAR:
+        {
+            setStyle(LINEAR_TO_PQ);
+            break;
+        }
+        case LINEAR_TO_PQ:
+        {
+            setStyle(PQ_TO_LINEAR);
+            break;
+        }
     }
 
     // Note that any existing metadata could become stale at this point but
@@ -614,6 +648,7 @@ TransformDirection FixedFunctionOpData::getDirection() const noexcept
     case FixedFunctionOpData::XYZ_TO_xyY:
     case FixedFunctionOpData::XYZ_TO_uvY:
     case FixedFunctionOpData::XYZ_TO_LUV:
+    case FixedFunctionOpData::PQ_TO_LINEAR:
         return TRANSFORM_DIR_FORWARD;
 
     case FixedFunctionOpData::ACES_RED_MOD_03_INV:
@@ -627,6 +662,7 @@ TransformDirection FixedFunctionOpData::getDirection() const noexcept
     case FixedFunctionOpData::xyY_TO_XYZ:
     case FixedFunctionOpData::uvY_TO_XYZ:
     case FixedFunctionOpData::LUV_TO_XYZ:
+    case FixedFunctionOpData::LINEAR_TO_PQ:
         return TRANSFORM_DIR_INVERSE;
     }
     return TRANSFORM_DIR_FORWARD;

@@ -3838,6 +3838,8 @@ OCIO_ADD_TEST(FileFormatCTF, ff_load_save_ctf)
     ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::uvY_TO_XYZ         , __LINE__);
     ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::XYZ_TO_LUV         , __LINE__);
     ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::LUV_TO_XYZ         , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::PQ_TO_LINEAR       , __LINE__);
+    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::LINEAR_TO_PQ       , __LINE__);
 }
 
 OCIO_ADD_TEST(FileFormatCTF, load_ff_fail_version)
