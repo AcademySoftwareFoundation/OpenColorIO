@@ -4,6 +4,7 @@
 set(SOURCES
     OCIOColorSpace.cpp
     OCIODisplayView.cpp
+    OCIOFile.cpp
     OCIOMain.cpp
     OCIOProcessor.cpp
     OCIOUtils.cpp
@@ -26,6 +27,8 @@ set(RESOURCES
     ${PROJECT_SOURCE_DIR}/share/openfx/resources/OpenColorIO.OCIOColorSpace.svg
     ${PROJECT_SOURCE_DIR}/share/openfx/resources/OpenColorIO.OCIODisplayView.png
     ${PROJECT_SOURCE_DIR}/share/openfx/resources/OpenColorIO.OCIODisplayView.svg
+    ${PROJECT_SOURCE_DIR}/share/openfx/resources/OpenColorIO.OCIOFile.png
+    ${PROJECT_SOURCE_DIR}/share/openfx/resources/OpenColorIO.OCIOFile.svg
 )
 
 add_library(ofxplugin MODULE ${SOURCES} ${OFXS_SOURCES})
