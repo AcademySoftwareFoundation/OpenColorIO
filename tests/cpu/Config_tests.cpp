@@ -1911,16 +1911,6 @@ OCIO_ADD_TEST(Config, context_variable_with_search_path_v2)
     }
 }
 
-OCIO_ADD_TEST(Config, role_without_colorspace)
-{
-    OCIO::ConfigRcPtr config = OCIO::Config::Create()->createEditableCopy();
-    config->setRole("reference", "UnknownColorSpace");
-
-    std::ostringstream os;
-    OCIO_CHECK_THROW_WHAT(config->serialize(os), OCIO::Exception,
-                          "Colorspace associated to the role 'reference', does not exist");
-}
-
 OCIO_ADD_TEST(Config, env_colorspace_name)
 {
     // Unset the env. variable to make sure the test start in the right environment.

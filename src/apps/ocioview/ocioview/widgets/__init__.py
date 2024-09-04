@@ -2,7 +2,12 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 from .check_box import CheckBox
-from .combo_box import ComboBox, EnumComboBox, CallbackComboBox
+from .combo_box import (
+    ComboBox,
+    EnumComboBox,
+    CallbackComboBox,
+    ColorSpaceComboBox,
+)
 from .layout import FormLayout
 from .line_edit import (
     LineEdit,

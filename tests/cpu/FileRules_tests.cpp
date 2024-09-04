@@ -1831,6 +1831,78 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
     }
 }
 
+OCIO_ADD_TEST(FileRules, read_write_incomplete_configs)
+{
+    // It should be possible to read and write configs where that are syntactically valid 
+    // but which are incomplete and hence would not pass validation.
+
+    // The default role references a color space that has not been defined yet.
+    {
+constexpr char CONFIG[] = { R"(ocio_profile_version: 2
+roles:
+  default: cs2
+
+colorspaces:
+  - !<ColorSpace>
+      name: raw
+)" };
+
+        // Test read works.
+        std::istringstream iss;
+        iss.str(CONFIG);
+        OCIO::ConstConfigRcPtr cfg;
+        OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss));
+        OCIO_REQUIRE_ASSERT(cfg);
+
+        // Test write works.
+        std::ostringstream os;
+        OCIO_CHECK_NO_THROW(cfg->serialize(os));
+
+        // Test that validate catches the problem.
+        OCIO_CHECK_THROW_WHAT(
+            cfg->validate(),
+            OCIO::Exception,
+            "Config failed role validation. The role 'default' refers to a color space, 'cs2', "\
+            "which is not defined."
+        );
+    }
+
+    // FileRules Default rule references a color space that has not been defined yet.
+    {
+constexpr char CONFIG[] = { R"(ocio_profile_version: 2
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: cs2}
+
+displays:
+  sRGB:
+  - !<View> {name: Raw, colorspace: raw}
+colorspaces:
+  - !<ColorSpace>
+      name: raw
+)" };
+
+        // Test read works.
+        std::istringstream iss;
+        iss.str(CONFIG);
+        OCIO::ConstConfigRcPtr cfg;
+        OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss));
+        OCIO_REQUIRE_ASSERT(cfg);
+
+        // Test write works.
+        std::ostringstream os;
+        OCIO_CHECK_NO_THROW(cfg->serialize(os));
+
+        // Test that validate catches the problem.
+        OCIO_CHECK_THROW_WHAT(
+            cfg->validate(),
+            OCIO::Exception,
+            "File rules: rule named 'Default' is referencing 'cs2' that is neither "\
+            "a color space nor a named transform."
+        );
+    }
+}
+
 OCIO_ADD_TEST(FileRules, config_v2_wrong_rule)
 {
     // 2 default rules.

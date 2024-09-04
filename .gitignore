@@ -11,3 +11,5 @@ mastercopy
 *.pyc
 !*.yml
 .vscode
+
+src/apps/ocioview/poetry.lock

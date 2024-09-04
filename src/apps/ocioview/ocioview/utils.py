@@ -8,12 +8,15 @@ from types import TracebackType
 from typing import Optional, Union
 
 import PyOpenColorIO as ocio
+import numpy as np
 import qtawesome
+from colour import RGB_Colourspace, XYZ_to_xy
 from pygments import highlight
 from pygments.lexers import GLShaderLexer, HLSLShaderLexer, XmlLexer, YamlLexer
 from pygments.formatters import HtmlFormatter
 from PySide6 import QtCore, QtGui, QtWidgets
 
+from .config_cache import ConfigCache
 from .constants import ICON_SCALE_FACTOR, ICON_SIZE_BUTTON
 
 
@@ -135,7 +138,9 @@ def item_type_label(item_type: type) -> str:
     :param item_type: Config item type
     :return: Friendly type name
     """
-    return " ".join(filter(None, re.split(r"([A-Z]+[a-z]+)", item_type.__name__)))
+    return " ".join(
+        filter(None, re.split(r"([A-Z]+[a-z]+)", item_type.__name__))
+    )
 
 
 def m44_to_m33(m44: list) -> list:
@@ -178,7 +183,9 @@ def config_to_html(config: ocio.Config) -> str:
     )
 
 
-def processor_to_ctf_html(processor: ocio.Processor) -> tuple[str, ocio.GroupTransform]:
+def processor_to_ctf_html(
+    processor: ocio.Processor,
+) -> tuple[str, ocio.GroupTransform]:
     """Return processor CTF formatted as HTML."""
     config = ocio.GetCurrentConfig()
     group_tf = processor.createGroupTransform()
@@ -220,14 +227,20 @@ def processor_to_shader_html(
     Return processor shader in the requested language, formatted as
     HTML.
     """
-    gpu_shader_desc = ocio.GpuShaderDesc.CreateShaderDesc(language=gpu_language)
+    gpu_shader_desc = ocio.GpuShaderDesc.CreateShaderDesc(
+        language=gpu_language
+    )
     gpu_proc.extractGpuShaderInfo(gpu_shader_desc)
     shader_data = gpu_shader_desc.getShaderText()
 
     return increase_html_lineno_padding(
         highlight(
             shader_data,
-            (GLShaderLexer if "GLSL" in gpu_language.name else HLSLShaderLexer)(),
+            (
+                GLShaderLexer
+                if "GLSL" in gpu_language.name
+                else HLSLShaderLexer
+            )(),
             HtmlFormatter(linenos="inline"),
         )
     )
@@ -254,3 +267,62 @@ def float_to_uint8(value: float) -> int:
     :return: Integer value
     """
     return max(0, min(255, int(value * 255)))
+
+
+def subsampling_factor(a: np.ndarray, maximum_size: float) -> int:
+    """
+    Return the best factor to sub-sample given :math:`a` array and have its
+    size less or equal to given maximum size.
+
+    :param a: Array :math:`a` to find the best sub-sample factor.
+    :param maximum_size: Maximum size of the sub-sampled array :math:`a`.
+    :return: Sub-sampling factor.
+    """
+
+    size = a.size
+
+    sub_sampling_factor = 1
+    while True:
+        if size / sub_sampling_factor <= maximum_size:
+            return sub_sampling_factor
+
+        sub_sampling_factor += 1
+
+
+def color_space_to_rgb_colourspace(color_space: str) -> RGB_Colourspace | None:
+    """
+    Convert a color space name from the current Config to a
+    :class:`RGB_Colourspace` class instance.
+
+    :param color_space: Color space name from the current Config.
+    :return: :class:`RGB_Colourspace` class instance.
+    """
+
+    config = ocio.GetCurrentConfig()
+    if (not config.hasRole(ocio.ROLE_INTERCHANGE_DISPLAY)) or (
+        color_space not in ConfigCache.get_color_space_names()
+    ):
+        return None
+
+    colorspace_transform = ocio.ColorSpaceTransform(
+        src=color_space,
+        dst=ocio.ROLE_INTERCHANGE_DISPLAY,
+    )
+    processor = config.getProcessor(
+        colorspace_transform, ocio.TRANSFORM_DIR_FORWARD
+    ).getDefaultCPUProcessor()
+
+    XYZ = np.identity(3, dtype=np.float32)
+    processor.applyRGB(XYZ)
+
+    XYZ_w = np.ones(3, dtype=np.float32)
+    processor.applyRGB(XYZ_w)
+
+    return RGB_Colourspace(
+        color_space,
+        XYZ_to_xy(XYZ),
+        XYZ_to_xy(XYZ_w),
+        color_space,
+        use_derived_matrix_RGB_to_XYZ=True,
+        use_derived_matrix_XYZ_to_RGB=True,
+    )

@@ -15,11 +15,17 @@ class DockTitleBar(QtWidgets.QFrame):
     """Dock widget title bar widget with icon."""
 
     def __init__(
-        self, title: str, icon: QtGui.QIcon, parent: Optional[QtCore.QObject] = None
+        self,
+        title: str,
+        icon: QtGui.QIcon,
+        widget: Optional[QtWidgets.QWidget] = None,
+        parent: Optional[QtCore.QObject] = None,
     ):
         """
         :param title: Title text
         :param icon: Dock icon
+        :param widget: Optional widget to display opposite the title
+            and icon.
         """
         super().__init__(parent=parent)
 
@@ -33,6 +39,7 @@ class DockTitleBar(QtWidgets.QFrame):
         self.icon = QtWidgets.QLabel()
         self.icon.setPixmap(icon.pixmap(ICON_SIZE_ITEM))
         self.title = QtWidgets.QLabel(title)
+        self.widget = widget
 
         # Layout
         inner_layout = QtWidgets.QHBoxLayout()
@@ -41,6 +48,8 @@ class DockTitleBar(QtWidgets.QFrame):
         inner_layout.addWidget(self.icon)
         inner_layout.addWidget(self.title)
         inner_layout.addStretch()
+        if widget is not None:
+            inner_layout.addWidget(self.widget)
 
         inner_frame = QtWidgets.QFrame()
         inner_frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
@@ -65,14 +74,20 @@ class TabbedDockWidget(QtWidgets.QDockWidget):
     _tab_icons = {}
 
     def __init__(
-        self, title: str, icon: QtGui.QIcon, parent: Optional[QtCore.QObject] = None
+        self,
+        title: str,
+        icon: QtGui.QIcon,
+        corner_widget: Optional[QtWidgets.QWidget] = None,
+        parent: Optional[QtCore.QObject] = None,
     ):
         """
         :param title: Title text
         :param icon: Dock icon
+        :param corner_widget: Optional widget to place on the right
+            side of the dock title bar.
         """
         super().__init__(parent=parent)
-        self.setTitleBarWidget(DockTitleBar(title, icon))
+        self.setTitleBarWidget(DockTitleBar(title, icon, widget=corner_widget))
         self.setFeatures(
             QtWidgets.QDockWidget.DockWidgetMovable
             | QtWidgets.QDockWidget.DockWidgetFloatable
@@ -144,7 +159,9 @@ class TabbedDockWidget(QtWidgets.QDockWidget):
         return QtGui.QIcon(pixmap)
 
     @QtCore.Slot(QtCore.Qt.DockWidgetArea)
-    def _on_dock_location_changed(self, area: QtCore.Qt.DockWidgetArea) -> None:
+    def _on_dock_location_changed(
+        self, area: QtCore.Qt.DockWidgetArea
+    ) -> None:
         """
         Adjust tab icons to always orient upward on dock area move.
         """
@@ -211,5 +228,6 @@ class ExpandingStackedWidget(QtWidgets.QStackedWidget):
                 )
             else:
                 widget.setSizePolicy(
-                    QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored
+                    QtWidgets.QSizePolicy.Ignored,
+                    QtWidgets.QSizePolicy.Ignored,
                 )
