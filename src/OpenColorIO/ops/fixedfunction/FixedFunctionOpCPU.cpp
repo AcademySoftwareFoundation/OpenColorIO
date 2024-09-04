@@ -1319,17 +1319,16 @@ __m128 Renderer_PQ_TO_LINEAR_SSE<true>::myPower(__m128 x, __m128 exp)
     return ssePower(x, exp);
 }
 
-#ifdef _WIN32
-// Only Windows compilers have built-in _mm_pow_ps() SVML intrinsic
-// implementation, so non-fast SIMD version is available only on Windows for
-// now.
+#if (_MSC_VER >= 1920) && (OCIO_USE_AVX)
+// MSVC 2019+ has built-in _mm_pow_ps() SVML intrinsic implementation
+// accessible through immintrin.h. Therefore precise SIMD version is available
+// only when compiled with MSVC and AVX support.
 template<>
 __m128 Renderer_PQ_TO_LINEAR_SSE<false>::myPower(__m128 x, __m128 exp)
 {
     return _mm_pow_ps(x, exp);
 }
-#endif // _WIN32
-
+#endif 
 
 template<bool FAST_POWER>
 void Renderer_PQ_TO_LINEAR_SSE<FAST_POWER>::apply(const void* inImg, void* outImg, long numPixels) const
@@ -1529,14 +1528,15 @@ ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func
             {
                 return std::make_shared<Renderer_PQ_TO_LINEAR_SSE<true>>(func);
             }
-#ifdef _WIN32
-            // On Windows we can use _mm_pow_ps() SVML "sequential"
-            // intrinsic which is slower than our ssePower but precise. This
-            // will still be faster than scalar implementation.
+#if (_MSC_VER >= 1920) && (OCIO_USE_AVX)
+            // MSVC 2019+ has built-in _mm_pow_ps() SVML intrinsic
+            // implementation accessible through immintrin.h. Therefore precise
+            // SIMD version is available only when compiled with MSVC and AVX
+            // support.
             return std::make_shared<Renderer_PQ_TO_LINEAR_SSE<false>>(func);
-#endif // _WIN32
+#endif  
 #endif // OCIO_USE_SSE2
-            return std::make_shared<Renderer_PQ_TO_LINEAR<float>>(func);
+            return std::make_shared<Renderer_PQ_TO_LINEAR<double>>(func);
         }
         case FixedFunctionOpData::LINEAR_TO_PQ:
         {
@@ -1545,14 +1545,15 @@ ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func
             {
                 return std::make_shared<Renderer_LINEAR_TO_PQ_SSE<true>>(func);
             }
-#ifdef _WIN32
-            // On Windows we can use _mm_pow_ps() SVML "sequential"
-            // intrinsic which is slower than our ssePower but precise. This
-            // will still be faster than scalar implementation.
+#if (_MSC_VER >= 1920) && (OCIO_USE_AVX)
+            // MSVC 2019+ has built-in _mm_pow_ps() SVML intrinsic
+            // implementation accessible through immintrin.h. Therefore precise
+            // SIMD version is available only when compiled with MSVC and AVX
+            // support.
             return std::make_shared<Renderer_LINEAR_TO_PQ_SSE<false>>(func);
-#endif // _WIN32
+#endif
 #endif // OCIO_USE_SSE2
-            return std::make_shared<Renderer_LINEAR_TO_PQ<float>>(func);
+            return std::make_shared<Renderer_LINEAR_TO_PQ<double>>(func);
         }
     }
 

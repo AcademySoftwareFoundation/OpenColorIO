@@ -39,17 +39,17 @@ void GeneratePQToLinearOps(OpRcPtrVec& ops)
 {
 #if OCIO_LUT_SUPPORT
     auto GenerateLutValues = [](double input) -> float
-        {
-            const double N = std::abs(input);
-            const double x = std::pow(N, 1. / m2);
-            double L = std::pow(std::max(0., x - c1) / (c2 - c3 * x), 1. / m1);
-            // L is in nits/10000, convert to nits/100.
-            L *= 100.;
+    {
+        const double N = std::abs(input);
+        const double x = std::pow(N, 1. / m2);
+        double L = std::pow(std::max(0., x - c1) / (c2 - c3 * x), 1. / m1);
+        // L is in nits/10000, convert to nits/100.
+        L *= 100.;
 
-            return float(std::copysign(L, input));
-        };
+        return float(std::copysign(L, input));
+    };
 
-    CreateLut(ops, 4096, GenerateLutValues);
+    CreateHalfLut(ops, GenerateLutValues);
 #else
     CreateFixedFunctionOp(ops, FixedFunctionOpData::PQ_TO_LINEAR, {});
 #endif
@@ -59,15 +59,15 @@ void GenerateLinearToPQOps(OpRcPtrVec& ops)
 {
 #if OCIO_LUT_SUPPORT
     auto GenerateLutValues = [](double input) -> float
-        {
-            // Input is in nits/100, convert to [0,1], where 1 is 10000 nits.
-            const double L = std::abs(input * 0.01);
-            const double y = std::pow(L, m1);
-            const double ratpoly = (c1 + c2 * y) / (1. + c3 * y);
-            const double N = std::pow(std::max(0., ratpoly), m2);
+    {
+        // Input is in nits/100, convert to [0,1], where 1 is 10000 nits.
+        const double L = std::abs(input * 0.01);
+        const double y = std::pow(L, m1);
+        const double ratpoly = (c1 + c2 * y) / (1. + c3 * y);
+        const double N = std::pow(std::max(0., ratpoly), m2);
 
-            return float(std::copysign(N, input));
-        };
+        return float(std::copysign(N, input));
+    };
 
     CreateHalfLut(ops, GenerateLutValues);
 #else
@@ -77,7 +77,7 @@ void GenerateLinearToPQOps(OpRcPtrVec& ops)
 
 } // ST_2084
 
-namespace BT_2100
+namespace HLG
 {
 static constexpr double Lw = 1000.;
 static constexpr double E_MAX = 3.;
@@ -108,7 +108,7 @@ void GenerateLinearToHLGOps(OpRcPtrVec& ops)
 
     CreateHalfLut(ops, GenerateLutValues);
 }
-} // BT_2100
+} // HLG
 
 void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
 {
@@ -336,21 +336,21 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
                 = build_conversion_matrix_from_XYZ_D65(REC2020::primaries, ADAPTATION_NONE);
             CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
 
-            const double gamma            = 1.2 + 0.42 * std::log10(BT_2100::Lw / 1000.);
+            const double gamma            = 1.2 + 0.42 * std::log10(HLG::Lw / 1000.);
             {
                 static constexpr double scale     = 100.;
                 static constexpr double scale4[4] = { scale, scale, scale, 1. };
                 CreateScaleOp(ops, scale4, TRANSFORM_DIR_FORWARD);
             }
             {
-                const double scale     = std::pow(BT_2100::E_MAX, gamma) / BT_2100::Lw;
+                const double scale     = std::pow(HLG::E_MAX, gamma) / HLG::Lw;
                 const double scale4[4] = { scale, scale, scale, 1. };
                 CreateScaleOp(ops, scale4, TRANSFORM_DIR_FORWARD);
             }
 
             CreateFixedFunctionOp(ops, FixedFunctionOpData::REC2100_SURROUND_FWD, {1. / gamma});
 
-            BT_2100::GenerateLinearToHLGOps(ops);
+            HLG::GenerateLinearToHLGOps(ops);
         };
 
         registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_REC.2100-HLG-1000nit", 
