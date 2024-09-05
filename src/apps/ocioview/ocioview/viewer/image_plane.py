@@ -5,25 +5,25 @@
 #       oglapphelpers library bundled with OCIO. We should fully
 #       reimplement that in Python for direct use in applications.
 
+from __future__ import annotations
+
 import ctypes
 import logging
 import math
 from functools import partial
 from pathlib import Path
 from typing import Any, Optional
-import sys
 
 import numpy as np
 from OpenGL import GL
-try:
-    import OpenImageIO as oiio
-except:
-    import imageio as iio
+
 import PyOpenColorIO as ocio
 from PySide6 import QtCore, QtGui, QtWidgets, QtOpenGLWidgets
 
 from ..log_handlers import message_queue
+from ..processor_context import ProcessorContext
 from ..ref_space_manager import ReferenceSpaceManager
+from .utils import load_image
 
 
 logger = logging.getLogger(__name__)
@@ -97,12 +97,15 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
     """
 
     image_loaded = QtCore.Signal(Path, int, int)
-    sample_changed = QtCore.Signal(int, int, float, float, float, float, float, float)
+    sample_changed = QtCore.Signal(
+        int, int, float, float, float, float, float, float
+    )
     scale_changed = QtCore.Signal(float)
     tf_subscription_requested = QtCore.Signal(int)
 
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None):
         super().__init__(parent)
+        self.setMinimumSize(QtCore.QSize(10, 10))
 
         # Clicking on/tabbing to widget restores focus
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
@@ -113,13 +116,13 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         self._gl_ready = False
 
         # Color management
-        self._ocio_input_color_space = None
         self._ocio_tf = None
         self._ocio_exposure = 0.0
         self._ocio_gamma = 1.0
         self._ocio_channel_hot = [1, 1, 1, 1]
-        self._ocio_tf_proc = None
-        self._ocio_tf_proc_cpu = None
+        self._ocio_proc_context = ProcessorContext()
+        self._ocio_proc = None
+        self._ocio_proc_cpu = None
         self._ocio_proc_cache_id = None
         self._ocio_shader_cache_id = None
         self._ocio_shader_desc = None
@@ -165,6 +168,8 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         """
         self._gl_ready = True
 
+        self.makeCurrent()
+
         # Init image texture
         self._image_tex = GL.glGenTextures(1)
         GL.glActiveTexture(GL.GL_TEXTURE0)
@@ -172,17 +177,21 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         GL.glTexImage2D(
             GL.GL_TEXTURE_2D,
             0,
-            GL.GL_RGBA32F,
+            GL.GL_RGB32F,
             self._image_size[0],
             self._image_size[1],
             0,
-            GL.GL_RGBA,
+            GL.GL_RGB,
             GL.GL_FLOAT,
             ctypes.c_void_p(0),
         )
 
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_EDGE)
-        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_EDGE)
+        GL.glTexParameteri(
+            GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_EDGE
+        )
+        GL.glTexParameteri(
+            GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_EDGE
+        )
         self._set_ocio_tex_params(GL.GL_TEXTURE_2D, ocio.INTERP_LINEAR)
 
         # Init image plane
@@ -241,7 +250,9 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
             plane_position_data,
             GL.GL_STATIC_DRAW,
         )
-        GL.glVertexAttribPointer(0, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, ctypes.c_void_p(0))
+        GL.glVertexAttribPointer(
+            0, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, ctypes.c_void_p(0)
+        )
         GL.glEnableVertexAttribArray(0)
 
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self._plane_tex_coord_vbo)
@@ -251,7 +262,9 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
             plane_tex_coord_data,
             GL.GL_STATIC_DRAW,
         )
-        GL.glVertexAttribPointer(1, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, ctypes.c_void_p(0))
+        GL.glVertexAttribPointer(
+            1, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, ctypes.c_void_p(0)
+        )
         GL.glEnableVertexAttribArray(1)
 
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self._plane_index_vbo)
@@ -264,31 +277,6 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
         self._build_program()
 
-    def _orthographicProjMatrix(self, near, far, left, right, top, bottom):
-        rightPlusLeft  = right + left
-        rightMinusLeft = right - left
-
-        topPlusBottom  = top + bottom
-        topMinusBottom = top - bottom
-
-        farPlusNear  = far + near
-        farMinusNear = far - near
-
-        tx = -rightPlusLeft / rightMinusLeft
-        ty = -topPlusBottom / topMinusBottom
-        tz = -farPlusNear / farMinusNear
-
-        A = 2 / rightMinusLeft
-        B = 2 / topMinusBottom
-        C = -2 / farMinusNear
-
-        return np.array([
-            [A, 0, 0, tx],
-            [0, B, 0, ty],
-            [0, 0, C, tz],
-            [0, 0, 0, 1 ]
-        ])
-
     def resizeGL(self, w: int, h: int) -> None:
         """
         Called whenever the widget is resized.
@@ -296,18 +284,21 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         :param w: Window width
         :param h: Window height
         """
+        self.makeCurrent()
+
         GL.glViewport(0, 0, w, h)
 
         # Center image plane
-        # fmt: on
-        self._proj_mat = self._orthographicProjMatrix(
-                -1.0,  # Near
-                 1.0,  # Far
+        # fmt: off
+        self._proj_mat = self._orthographic_proj_matrix(
+            -1.0,      # Near
+             1.0,      # Far
             -w / 2.0,  # Left
              w / 2.0,  # Right
              h / 2.0,  # Top
             -h / 2.0,  # Bottom
         )
+        # fmt: on
 
         self._update_model_view_mat()
 
@@ -316,6 +307,8 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         Called whenever a repaint is needed. Calling ``update()`` will
         schedule a repaint.
         """
+        self.makeCurrent()
+
         GL.glClearColor(0.0, 0.0, 0.0, 1.0)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
 
@@ -327,12 +320,14 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
             # Set uniforms
             mvp_mat = self._proj_mat @ self._model_view_mat
-            mvp_mat_loc = GL.glGetUniformLocation(self._shader_program, "mvpMat")
-            GL.glUniformMatrix4fv(
-                mvp_mat_loc, 1, GL.GL_FALSE, mvp_mat.T
+            mvp_mat_loc = GL.glGetUniformLocation(
+                self._shader_program, "mvpMat"
             )
+            GL.glUniformMatrix4fv(mvp_mat_loc, 1, GL.GL_FALSE, mvp_mat.T)
 
-            image_tex_loc = GL.glGetUniformLocation(self._shader_program, "imageTex")
+            image_tex_loc = GL.glGetUniformLocation(
+                self._shader_program, "imageTex"
+            )
             GL.glUniform1i(image_tex_loc, 0)
 
             # Bind texture, VAO, and draw
@@ -346,55 +341,6 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
             )
 
             GL.glBindVertexArray(0)
-
-    def load_oiio(self, image_path: Path) -> np.ndarray:
-        image_buf = oiio.ImageBuf(image_path.as_posix())
-        spec = image_buf.spec()
-
-        # Convert to RGBA, filling missing color channels with 0.0, and a
-        # missing alpha with 1.0.
-        if spec.nchannels < 4:
-            image_buf = oiio.ImageBufAlgo.channels(
-                image_buf,
-                tuple(
-                    list(range(spec.nchannels))
-                    + ([0.0] * (4 - spec.nchannels - 1))
-                    + [1.0]
-                ),
-                newchannelnames=("R", "G", "B", "A"),
-            )
-        elif spec.nchannels > 4:
-            image_buf = oiio.ImageBufAlgo.channels(
-                image_buf, (0, 1, 2, 3), newchannelnames=("R", "G", "B", "A")
-            )
-
-        # Get pixels as 32-bit float NumPy array
-        return image_buf.get_pixels(oiio.FLOAT)
-
-    def load_iio(self, image_path: Path) -> np.ndarray:
-        data = iio.imread(image_path.as_posix())
-
-        # Convert to 32-bit float
-        if not np.issubdtype(data.dtype, np.floating):
-            data = data.astype(np.float32) / np.iinfo(data.dtype).max
-        if data.dtype != np.float32:
-            data = data.astype(np.float32)
-
-        # Convert to RGBA, filling missing color channels with 0.0, and a
-        # missing alpha with 1.0.
-        nchannels = 1
-        if len(data.shape) == 3:
-            nchannels = data.shape[-1]
-
-        while nchannels < 3:
-            data = np.dstack((data, np.zeros(data.shape[:2])))
-            nchannels += 1
-        if nchannels < 4:
-            data = np.dstack((data, np.ones(data.shape[:2])))
-        if nchannels > 4:
-            data = data[..., :4]
-
-        return data
 
     def load_image(self, image_path: Path) -> None:
         """
@@ -410,22 +356,28 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         )
         if not color_space_name:
             # Use previous or config default
-            if self._ocio_input_color_space:
-                color_space_name = self._ocio_input_color_space
+            if self._ocio_proc_context:
+                color_space_name = self._ocio_proc_context.input_color_space
             else:
                 color_space_name = ocio.ROLE_DEFAULT
-        self._ocio_input_color_space = color_space_name
 
-        if "OpenImageIO" in sys.modules:
-            self._image_array = self.load_oiio(image_path)
+        if self._ocio_proc_context:
+            proc_context = ProcessorContext(
+                color_space_name,
+                self._ocio_proc_context.transform_item_type,
+                self._ocio_proc_context.transform_item_name,
+                self._ocio_proc_context.transform_direction,
+            )
         else:
-            self._image_array = self.load_iio(image_path)
+            proc_context = ProcessorContext(color_space_name)
+
+        # Load image data via an available image library
+        self._image_array = load_image(image_path)
 
         width = self._image_array.shape[1]
         height = self._image_array.shape[0]
 
         # Stash image size for pan/zoom calculations
-
         self._image_pos = np.array([0, 1], dtype=np.float64)
         self._image_size = np.array([width, height], dtype=np.float64)
 
@@ -436,11 +388,11 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         GL.glTexImage2D(
             GL.GL_TEXTURE_2D,
             0,
-            GL.GL_RGBA32F,
+            GL.GL_RGB32F,
             width,
             height,
             0,
-            GL.GL_RGBA,
+            GL.GL_RGB,
             GL.GL_FLOAT,
             self._image_array.ravel(),
         )
@@ -449,14 +401,28 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
             image_path, int(self._image_size[0]), int(self._image_size[1])
         )
 
-        self.update_ocio_proc(input_color_space=self._ocio_input_color_space)
+        self.update_ocio_proc(proc_context=proc_context)
         self.fit()
 
-    def input_color_space(self) -> str:
+        # Log image change after load and render
+        self.broadcast_image()
+
+    def broadcast_image(self) -> None:
+        """
+        Broadcast current image array, if one is loaded, through the
+        message queue for other app components.
+        """
+        if self._image_array is not None:
+            message_queue.put_nowait(self._image_array)
+
+    def input_color_space(self) -> str | None:
         """
         :return: Current input OCIO color space name
         """
-        return self._ocio_input_color_space
+        if self._ocio_proc_context:
+            return self._ocio_proc_context.input_color_space
+        else:
+            return None
 
     def transform(self) -> Optional[ocio.Transform]:
         """
@@ -468,9 +434,13 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         """
         Clear current OCIO transform, passing through the input image.
         """
+
         self._ocio_tf = None
 
-        self.update_ocio_proc(force_update=True)
+        self.update_ocio_proc(
+            ProcessorContext(self._ocio_proc_context.input_color_space),
+            force_update=True,
+        )
 
     def reset_ocio_proc(self, update: bool = False) -> None:
         """
@@ -478,7 +448,7 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
         :param update: Whether to redraw viewport
         """
-        self._ocio_input_color_space = None
+        self._ocio_proc_context = None
         self._ocio_tf = None
         self._ocio_exposure = 0.0
         self._ocio_gamma = 1.0
@@ -489,18 +459,18 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
     def update_ocio_proc(
         self,
-        input_color_space: Optional[str] = None,
+        proc_context: Optional[ProcessorContext] = None,
         transform: Optional[ocio.Transform] = None,
         channel: Optional[int] = None,
         force_update: bool = False,
-    ):
+    ) -> None:
         """
         Update one or more aspects of the OCIO GPU renderer. Parameters
         are cached, so not providing a parameter maintains the existing
         state. This will trigger a GL update IF the underlying OCIO ops
         in the processor have changed.
 
-        :param input_color_space: Input OCIO color space name
+        :param proc_context: Processor context data
         :param transform: Optional main OCIO transform, to be applied
             from the current config's scene reference space.
         :param channel: ImagePlaneChannels value to toggle channel
@@ -508,9 +478,10 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         :param force_update: Set to True to update the viewport even
             when the processor has not been updated.
         """
+
         # Update processor parameters
-        if input_color_space is not None:
-            self._ocio_input_color_space = input_color_space
+        if proc_context is not None:
+            self._ocio_proc_context = proc_context
         if transform is not None:
             self._ocio_tf = transform
         if channel is not None:
@@ -518,7 +489,9 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
         config = ocio.GetCurrentConfig()
         has_scene_linear = config.hasRole(ocio.ROLE_SCENE_LINEAR)
-        scene_ref_name = ReferenceSpaceManager.scene_reference_space().getName()
+        scene_ref_name = (
+            ReferenceSpaceManager.scene_reference_space().getName()
+        )
 
         # Build simplified viewing pipeline:
         # - GPU: For viewport rendering
@@ -527,9 +500,14 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         cpu_viewing_pipeline = ocio.GroupTransform()
 
         # Convert to scene linear space if input space is known
-        if has_scene_linear and self._ocio_input_color_space:
+        if (
+            has_scene_linear
+            and self._ocio_proc_context
+            and self._ocio_proc_context.input_color_space
+        ):
             to_scene_linear = ocio.ColorSpaceTransform(
-                src=self._ocio_input_color_space, dst=ocio.ROLE_SCENE_LINEAR
+                src=self._ocio_proc_context.input_color_space,
+                dst=ocio.ROLE_SCENE_LINEAR,
             )
             gpu_viewing_pipeline.appendTransform(to_scene_linear)
             cpu_viewing_pipeline.appendTransform(to_scene_linear)
@@ -544,18 +522,23 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         # Convert to the scene reference space, which is the expected input space for
         # all provided transforms. If the input color space is not known, the transform
         # will be applied to unmodified input pixels.
-        if has_scene_linear and self._ocio_input_color_space:
-            to_scene_ref = ocio.ColorSpaceTransform(
-                src=ocio.ROLE_SCENE_LINEAR, dst=scene_ref_name
-            )
-            gpu_viewing_pipeline.appendTransform(to_scene_ref)
-            cpu_viewing_pipeline.appendTransform(to_scene_ref)
-        elif self._ocio_input_color_space:
-            to_scene_ref = ocio.ColorSpaceTransform(
-                src=self._ocio_input_color_space, dst=scene_ref_name
-            )
-            gpu_viewing_pipeline.appendTransform(to_scene_ref)
-            cpu_viewing_pipeline.appendTransform(to_scene_ref)
+        if (
+            self._ocio_proc_context
+            and self._ocio_proc_context.input_color_space
+        ):
+            if has_scene_linear:
+                to_scene_ref = ocio.ColorSpaceTransform(
+                    src=ocio.ROLE_SCENE_LINEAR, dst=scene_ref_name
+                )
+                gpu_viewing_pipeline.appendTransform(to_scene_ref)
+                cpu_viewing_pipeline.appendTransform(to_scene_ref)
+            else:
+                to_scene_ref = ocio.ColorSpaceTransform(
+                    src=self._ocio_proc_context.input_color_space,
+                    dst=scene_ref_name,
+                )
+                gpu_viewing_pipeline.appendTransform(to_scene_ref)
+                cpu_viewing_pipeline.appendTransform(to_scene_ref)
 
         # Main transform
         if self._ocio_tf is not None:
@@ -563,9 +546,13 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
             cpu_viewing_pipeline.appendTransform(self._ocio_tf)
 
         # Or restore input color space, if known
-        elif self._ocio_input_color_space:
+        elif (
+            self._ocio_proc_context
+            and self._ocio_proc_context.input_color_space
+        ):
             from_scene_ref = ocio.ColorSpaceTransform(
-                src=scene_ref_name, dst=self._ocio_input_color_space
+                src=scene_ref_name,
+                dst=self._ocio_proc_context.input_color_space,
             )
             gpu_viewing_pipeline.appendTransform(from_scene_ref)
             cpu_viewing_pipeline.appendTransform(from_scene_ref)
@@ -586,15 +573,22 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         )
 
         # Create GPU processor
-        gpu_proc = config.getProcessor(gpu_viewing_pipeline, ocio.TRANSFORM_DIR_FORWARD)
+        try:
+            gpu_proc = config.getProcessor(
+                gpu_viewing_pipeline, ocio.TRANSFORM_DIR_FORWARD
+            )
+        except ocio.Exception:
+            # Config may have changed between transform creation and now. If this
+            # doesn't error, CPU processor construction should succeed.
+            return
 
         if gpu_proc.getCacheID() != self._ocio_proc_cache_id:
             # Update CPU processor
             cpu_proc = config.getProcessor(
                 cpu_viewing_pipeline, ocio.TRANSFORM_DIR_FORWARD
             )
-            self._ocio_tf_proc = cpu_proc
-            self._ocio_tf_proc_cpu = cpu_proc.getDefaultCPUProcessor()
+            self._ocio_proc = cpu_proc
+            self._ocio_proc_cpu = cpu_proc.getDefaultCPUProcessor()
 
             # Update GPU processor shaders and textures
             self._ocio_shader_desc = ocio.GpuShaderDesc.CreateShaderDesc(
@@ -611,21 +605,30 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
             self._update_ocio_dyn_prop(
                 ocio.DYNAMIC_PROPERTY_EXPOSURE, self._ocio_exposure
             )
-            self._update_ocio_dyn_prop(ocio.DYNAMIC_PROPERTY_GAMMA, self._ocio_gamma)
+            self._update_ocio_dyn_prop(
+                ocio.DYNAMIC_PROPERTY_GAMMA, self._ocio_gamma
+            )
 
             self.update()
 
             # Log processor change after render
-            message_queue.put_nowait(cpu_proc)
+            message_queue.put_nowait(
+                (self._ocio_proc_context, self._ocio_proc)
+            )
 
         elif force_update:
             self.update()
 
             # The transform and processor has not changed, but other app components
-            # which view it may have dropped tje reference. Log processor to update
+            # which view it may have dropped the reference. Log processor to update
             # them as needed.
-            if self._ocio_tf_proc is not None:
-                message_queue.put_nowait(self._ocio_tf_proc)
+            if (
+                self._ocio_proc is not None
+                and self._ocio_proc_context is not None
+            ):
+                message_queue.put_nowait(
+                    (self._ocio_proc_context, self._ocio_proc)
+                )
 
     def exposure(self) -> float:
         """
@@ -680,10 +683,10 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         self._mouse_pressed = True
-        self._mouse_last_pos = event.pos()
+        self._mouse_last_pos = event.position()
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
-        pos = event.pos()
+        pos = event.position()
 
         if self._mouse_pressed:
             offset = np.array([*(pos - self._mouse_last_pos).toTuple()])
@@ -696,20 +699,28 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
             # Trace mouse position through the inverse MVP matrix to update sampled
             # pixel.
-            screen_pos = np.array([
-                pos.x() / widget_w * 2.0 - 1.0,
-                (widget_h - pos.y() - 1) / widget_h * 2.0 - 1.0,
-                0.0,
-                1.0
-            ])
-            model_pos = np.linalg.inv(self._proj_mat @ self._model_view_mat) @ screen_pos
-            pixel_pos = np.array([model_pos[0] + 0.5, model_pos[1] + 0.5]) * self._image_size
+            screen_pos = np.array(
+                [
+                    pos.x() / widget_w * 2.0 - 1.0,
+                    (widget_h - pos.y() - 1) / widget_h * 2.0 - 1.0,
+                    0.0,
+                    1.0,
+                ]
+            )
+            model_pos = (
+                np.linalg.inv(self._proj_mat @ self._model_view_mat)
+                @ screen_pos
+            )
+            pixel_pos = (
+                np.array([model_pos[0] + 0.5, model_pos[1] + 0.5])
+                * self._image_size
+            )
 
             # Broadcast sample position
             if (
                 self._image_array is not None
-                and 0 <= pixel_pos[0] <= self._image_size[0]
-                and 0 <= pixel_pos[1] <= self._image_size[1]
+                and 0 <= pixel_pos[0] < self._image_size[0]
+                and 0 <= pixel_pos[1] < self._image_size[1]
             ):
                 pixel_x = math.floor(pixel_pos[0])
                 pixel_y = math.floor(pixel_pos[1])
@@ -720,12 +731,14 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
                     pixel_input = pixel_input[:3]
 
                 # Sample output pixel with CPU processor
-                if self._ocio_tf_proc_cpu is not None:
-                    pixel_output = self._ocio_tf_proc_cpu.applyRGB(pixel_input)
+                if self._ocio_proc_cpu is not None:
+                    pixel_output = self._ocio_proc_cpu.applyRGB(pixel_input)
                 else:
                     pixel_output = pixel_input.copy()
 
-                self.sample_changed.emit(pixel_x, pixel_y, *pixel_input, *pixel_output)
+                self.sample_changed.emit(
+                    pixel_x, pixel_y, *pixel_input, *pixel_output
+                )
             else:
                 # Out of image bounds
                 self.sample_changed.emit(-1, -1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
@@ -745,24 +758,10 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         # Fill frame with 1 pixel with 0.5 pixel overscan
         max_scale = max(w, h) * 1.5
 
-        delta = event.angleDelta().y() / 360.0
-        scale = max(0.01, self._image_scale - delta)
+        delta = event.angleDelta().y() / 360.0 * self._image_scale
+        scale = min(max_scale, max(min_scale, self._image_scale - delta))
 
-        if scale > 1.0:
-            if delta > 0.0:
-                # Exponential zoom out
-                scale = pow(scale, 1.0 / 1.01)
-            else:
-                # Exponential zoom in
-                scale = pow(scale, 1.01)
-
-        scale = min(max_scale, max(min_scale, scale))
-
-        if scale < 1.0:
-            # Half zoom in/out
-            scale = (self._image_scale + scale) / 2.0
-
-        self.zoom(event.pos(), scale, update=True, absolute=True)
+        self.zoom(event.position(), scale, update=True, absolute=True)
 
     def pan(
         self, offset: np.ndarray, update: bool = True, absolute: bool = False
@@ -776,10 +775,11 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
             absolute position to translate the viewport from its
             origin.
         """
-        if absolute:
-            self._image_pos = offset / self._image_scale
-        else:
-            self._image_pos += offset / self._image_scale
+        if self._image_scale > 0:
+            if absolute:
+                self._image_pos = offset / self._image_scale
+            else:
+                self._image_pos += offset / self._image_scale
 
         self._update_model_view_mat(update=update)
 
@@ -848,7 +848,9 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
         # Number keys = Subscribe to transform @ slot
         for i in range(10):
-            subscribe_shortcut = QtGui.QShortcut(QtGui.QKeySequence(str(i)), self)
+            subscribe_shortcut = QtGui.QShortcut(
+                QtGui.QKeySequence(str(i)), self
+            )
             subscribe_shortcut.activated.connect(
                 lambda slot=i: self.tf_subscription_requested.emit(slot)
             )
@@ -882,6 +884,8 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
             enum adhering to the formatting ``GL_*_SHADER``.
         :return: Shader object ID, or None if shader compilation fails
         """
+        self.makeCurrent()
+
         shader = GL.glCreateShader(shader_type)
         GL.glShaderSource(shader, glsl_src)
         GL.glCompileShader(shader)
@@ -889,7 +893,9 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         compile_status = GL.glGetShaderiv(shader, GL.GL_COMPILE_STATUS)
         if not compile_status:
             compile_log = GL.glGetShaderInfoLog(shader)
-            logger.error("Shader program compile error: {log}".format(log=compile_log))
+            logger.error(
+                "Shader program compile error: {log}".format(log=compile_log)
+            )
             return None
 
         return shader
@@ -921,7 +927,9 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
         # Vert shader only needs to be built once
         if not self._vert_shader:
-            self._vert_shader = self._compile_shader(GLSL_VERT_SRC, GL.GL_VERTEX_SHADER)
+            self._vert_shader = self._compile_shader(
+                GLSL_VERT_SRC, GL.GL_VERTEX_SHADER
+            )
             if not self._vert_shader:
                 return
 
@@ -938,7 +946,9 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
             frag_src = GLSL_FRAG_OCIO_SRC_FMT.format(
                 ocio_src=self._ocio_shader_desc.getShaderText()
             )
-        self._frag_shader = self._compile_shader(frag_src, GL.GL_FRAGMENT_SHADER)
+        self._frag_shader = self._compile_shader(
+            frag_src, GL.GL_FRAGMENT_SHADER
+        )
         if not self._frag_shader:
             return
 
@@ -949,14 +959,52 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         GL.glBindAttribLocation(self._shader_program, 1, "in_texCoord")
 
         GL.glLinkProgram(self._shader_program)
-        link_status = GL.glGetProgramiv(self._shader_program, GL.GL_LINK_STATUS)
+        link_status = GL.glGetProgramiv(
+            self._shader_program, GL.GL_LINK_STATUS
+        )
         if not link_status:
             link_log = GL.glGetProgramInfoLog(self._shader_program)
-            logger.error("Shader program link error: {log}".format(log=link_log))
+            logger.error(
+                "Shader program link error: {log}".format(log=link_log)
+            )
             return
 
         # Store cache ID to detect reuse
         self._ocio_shader_cache_id = shader_cache_id
+
+    def _orthographic_proj_matrix(
+        self,
+        near: float,
+        far: float,
+        left: float,
+        right: float,
+        top: float,
+        bottom: float,
+    ) -> np.ndarray:
+        """
+        Build orthographic projection matrix array from camera frustum
+        parameters.
+        """
+        right_plus_left = right + left
+        right_minus_left = right - left
+
+        top_plus_bottom = top + bottom
+        top_minus_bottom = top - bottom
+
+        far_plus_near = far + near
+        far_minus_near = far - near
+
+        tx = -right_plus_left / right_minus_left
+        ty = -top_plus_bottom / top_minus_bottom
+        tz = -far_plus_near / far_minus_near
+
+        a = 2 / right_minus_left
+        b = 2 / top_minus_bottom
+        c = -2 / far_minus_near
+
+        return np.array(
+            [[a, 0, 0, tx], [0, b, 0, ty], [0, 0, c, tz], [0, 0, 0, 1]]
+        )
 
     def _update_model_view_mat(self, update: bool = True) -> None:
         """
@@ -965,15 +1013,21 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
         :param bool update: Optionally redraw the window
         """
-        size = np.array([self.width(), self.height()])
-
         self._model_view_mat = np.eye(4)
 
         # Flip Y to account for different OIIO/OpenGL image origin
         self._model_view_mat *= [1.0, -1.0, 1.0, 1.0]
 
-        self._model_view_mat *= [self._image_scale, self._image_scale, 1.0, 1.0]
-        self._model_view_mat[:2, -1] += self._image_pos / size * 2.0
+        self._model_view_mat *= [
+            self._image_scale,
+            self._image_scale,
+            1.0,
+            1.0,
+        ]
+        self._model_view_mat[:2, -1] += [
+            self._image_pos[0] * self._image_scale,
+            -self._image_pos[1] * self._image_scale,
+        ]
 
         self._model_view_mat *= self._image_size.tolist() + [1.0, 1.0]
 
@@ -996,12 +1050,22 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         :param tex_type: OpenGL texture type (GL_TEXTURE_1/2/3D)
         :param interpolation: Interpolation enum value
         """
+        self.makeCurrent()
+
         if interpolation == ocio.INTERP_NEAREST:
-            GL.glTexParameteri(tex_type, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
-            GL.glTexParameteri(tex_type, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
+            GL.glTexParameteri(
+                tex_type, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST
+            )
+            GL.glTexParameteri(
+                tex_type, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST
+            )
         else:
-            GL.glTexParameteri(tex_type, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR)
-            GL.glTexParameteri(tex_type, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR)
+            GL.glTexParameteri(
+                tex_type, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR
+            )
+            GL.glTexParameteri(
+                tex_type, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR
+            )
 
     def _allocate_ocio_tex(self) -> None:
         """
@@ -1102,7 +1166,13 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
                 )
 
             self._ocio_tex_ids.append(
-                (tex, tex_info.textureName, tex_info.samplerName, tex_type, tex_index)
+                (
+                    tex,
+                    tex_info.textureName,
+                    tex_info.samplerName,
+                    tex_type,
+                    tex_index,
+                )
             )
             tex_index += 1
 
@@ -1110,7 +1180,15 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         """
         Delete all OCIO textures from the GPU.
         """
-        for tex, tex_name, sampler_name, tex_type, tex_index in self._ocio_tex_ids:
+        self.makeCurrent()
+
+        for (
+            tex,
+            tex_name,
+            sampler_name,
+            tex_type,
+            tex_index,
+        ) in self._ocio_tex_ids:
             GL.glDeleteTextures([tex])
         del self._ocio_tex_ids[:]
 
@@ -1118,11 +1196,20 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         """
         Bind all OCIO textures to the shader program.
         """
-        for tex, tex_name, sampler_name, tex_type, tex_index in self._ocio_tex_ids:
+        self.makeCurrent()
+
+        for (
+            tex,
+            tex_name,
+            sampler_name,
+            tex_type,
+            tex_index,
+        ) in self._ocio_tex_ids:
             GL.glActiveTexture(GL.GL_TEXTURE0 + tex_index)
             GL.glBindTexture(tex_type, tex)
             GL.glUniform1i(
-                GL.glGetUniformLocation(self._shader_program, sampler_name), tex_index
+                GL.glGetUniformLocation(self._shader_program, sampler_name),
+                tex_index,
             )
 
     def _del_ocio_uniforms(self) -> None:
@@ -1139,6 +1226,8 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         """
         if not self._ocio_shader_desc or not self._shader_program:
             return
+
+        self.makeCurrent()
 
         for name, uniform_data in self._ocio_shader_desc.getUniforms():
             if name not in self._ocio_uniform_ids:
@@ -1180,13 +1269,13 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         """
         # If index is in range, and we are viewing all channels, or a channel
         # other than index, isolate channel at index.
-        if channel < 4 and (
+        if channel < 3 and (
             all(self._ocio_channel_hot) or not self._ocio_channel_hot[channel]
         ):
-            for i in range(4):
+            for i in range(3):
                 self._ocio_channel_hot[i] = 1 if i == channel else 0
 
         # Otherwise show all channels
         else:
-            for i in range(4):
+            for i in range(3):
                 self._ocio_channel_hot[i] = 1

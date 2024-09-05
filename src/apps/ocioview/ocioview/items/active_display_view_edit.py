@@ -5,6 +5,7 @@ from typing import Optional
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
+from ..constants import ICON_SIZE_ITEM
 from ..widgets import ItemModelListWidget
 from ..utils import get_glyph_icon
 from .active_display_view_model import ActiveDisplayModel, ActiveViewModel
@@ -60,7 +61,9 @@ class ActiveDisplayViewEdit(QtWidgets.QWidget):
 
     @classmethod
     def item_type_icon(cls) -> QtGui.QIcon:
-        return get_glyph_icon("mdi6.sort-bool-ascending-variant")
+        return get_glyph_icon(
+            "mdi6.sort-bool-ascending-variant", size=ICON_SIZE_ITEM
+        )
 
     @classmethod
     def item_type_label(cls, plural: bool = False) -> str:

@@ -8,6 +8,7 @@ import PyOpenColorIO as ocio
 from PySide6 import QtCore, QtGui
 
 from ..config_cache import ConfigCache
+from ..constants import ICON_SIZE_ITEM
 from ..ref_space_manager import ReferenceSpaceManager
 from ..utils import get_enum_member, get_glyph_icon
 from .config_item_model import ColumnDesc, BaseConfigItemModel
@@ -50,8 +51,12 @@ class ColorSpaceModel(BaseConfigItemModel):
         self._items = ocio.ColorSpaceSet()
 
         self._ref_space_icons = {
-            ocio.REFERENCE_SPACE_SCENE: get_glyph_icon("ph.sun"),
-            ocio.REFERENCE_SPACE_DISPLAY: get_glyph_icon("ph.monitor"),
+            ocio.REFERENCE_SPACE_SCENE: get_glyph_icon(
+                "ph.sun", size=ICON_SIZE_ITEM
+            ),
+            ocio.REFERENCE_SPACE_DISPLAY: get_glyph_icon(
+                "ph.monitor", size=ICON_SIZE_ITEM
+            ),
         }
 
         # Update on external config changes, in this case when a required reference
@@ -62,12 +67,14 @@ class ColorSpaceModel(BaseConfigItemModel):
         return [item.getName() for item in self._get_items()]
 
     def get_item_transforms(
-        self, item_name: str
+        self, item_label: str
     ) -> tuple[Optional[ocio.Transform], Optional[ocio.Transform]]:
-        # Get view name from subscription item name
-        item_name = self.extract_subscription_item_name(item_name)
+        # Get color space name from subscription item label
+        item_name = self.extract_subscription_item_name(item_label)
 
-        ref_space_name = ReferenceSpaceManager.scene_reference_space().getName()
+        ref_space_name = (
+            ReferenceSpaceManager.scene_reference_space().getName()
+        )
         return (
             ocio.ColorSpaceTransform(src=ref_space_name, dst=item_name),
             ocio.ColorSpaceTransform(src=item_name, dst=ref_space_name),
@@ -121,10 +128,14 @@ class ColorSpaceModel(BaseConfigItemModel):
 
     def _new_item(self, name: str) -> None:
         ocio.GetCurrentConfig().addColorSpace(
-            ocio.ColorSpace(referenceSpace=ocio.REFERENCE_SPACE_SCENE, name=name)
+            ocio.ColorSpace(
+                referenceSpace=ocio.REFERENCE_SPACE_SCENE, name=name
+            )
         )
 
-    def _get_value(self, item: ocio.ColorSpace, column_desc: ColumnDesc) -> Any:
+    def _get_value(
+        self, item: ocio.ColorSpace, column_desc: ColumnDesc
+    ) -> Any:
         # Get parameters
         if column_desc == self.REFERENCE_SPACE_TYPE:
             return int(item.getReferenceSpaceType().value)
@@ -157,7 +168,9 @@ class ColorSpaceModel(BaseConfigItemModel):
             num_alloc_vars = len(alloc_vars)
             if num_alloc_vars < 3:
                 default_alloc_vars = [0.0, 1.0, 0.0]
-                alloc_vars += [default_alloc_vars[i] for i in range(num_alloc_vars, 3)]
+                alloc_vars += [
+                    default_alloc_vars[i] for i in range(num_alloc_vars, 3)
+                ]
             elif num_alloc_vars > 3:
                 alloc_vars = alloc_vars[:3]
             return alloc_vars
@@ -200,8 +213,12 @@ class ColorSpaceModel(BaseConfigItemModel):
                     isData=item.isData(),
                     allocation=item.getAllocation(),
                     allocationVars=item.getAllocationVars(),
-                    toReference=item.getTransform(ocio.COLORSPACE_DIR_TO_REFERENCE),
-                    fromReference=item.getTransform(ocio.COLORSPACE_DIR_FROM_REFERENCE),
+                    toReference=item.getTransform(
+                        ocio.COLORSPACE_DIR_TO_REFERENCE
+                    ),
+                    fromReference=item.getTransform(
+                        ocio.COLORSPACE_DIR_FROM_REFERENCE
+                    ),
                     categories=list(item.getCategories()),
                 )
 
@@ -211,7 +228,8 @@ class ColorSpaceModel(BaseConfigItemModel):
 
         # Update parameters
         if column_desc == self.NAME:
-            new_item.setName(value)
+            if value:
+                new_item.setName(value)
         elif column_desc == self.ALIASES:
             new_item.clearAliases()
             for alias in value:
@@ -272,5 +290,6 @@ class ColorSpaceModel(BaseConfigItemModel):
         if column_desc in (self.NAME, self.TO_REFERENCE, self.FROM_REFERENCE):
             item_name = new_item.getName()
             self._update_tf_subscribers(
-                item_name, prev_item_name if prev_item_name != item_name else None
+                item_name,
+                prev_item_name if prev_item_name != item_name else None,
             )

@@ -6,6 +6,7 @@ from typing import Optional
 import PyOpenColorIO as ocio
 from PySide6 import QtCore, QtGui, QtWidgets
 
+from ..constants import ICON_SIZE_TAB
 from ..log_handlers import set_logging_level
 from ..message_router import MessageRouter
 from ..utils import get_glyph_icon
@@ -23,15 +24,19 @@ class LogInspector(QtWidgets.QWidget):
 
     @classmethod
     def icon(cls) -> QtGui.QIcon:
-        return get_glyph_icon("ph.terminal-window")
+        return get_glyph_icon("ph.terminal-window", size=ICON_SIZE_TAB)
 
     def __init__(self, parent: Optional[QtCore.QObject] = None):
         super().__init__(parent=parent)
 
         # Widgets
         self.log_level_box = ComboBox()
-        self.log_level_box.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
-        self.log_level_box.addItem("Warning", userData=ocio.LOGGING_LEVEL_WARNING)
+        self.log_level_box.setSizeAdjustPolicy(
+            QtWidgets.QComboBox.AdjustToContents
+        )
+        self.log_level_box.addItem(
+            "Warning", userData=ocio.LOGGING_LEVEL_WARNING
+        )
         self.log_level_box.addItem("Info", userData=ocio.LOGGING_LEVEL_INFO)
         self.log_level_box.addItem("Debug", userData=ocio.LOGGING_LEVEL_DEBUG)
         self.log_level_box.setCurrentText(
@@ -54,7 +59,9 @@ class LogInspector(QtWidgets.QWidget):
         self.setLayout(layout)
 
         # Initialize
-        self.log_level_box.currentIndexChanged[int].connect(self._on_log_level_changed)
+        self.log_level_box.currentIndexChanged[int].connect(
+            self._on_log_level_changed
+        )
         self.clear_button.released.connect(self.reset)
 
         log_router = MessageRouter.get_instance()

@@ -14,8 +14,8 @@ supported_apps:
     - name : Adobe After Effects
       image : images/supported_apps/ae.png
       categories : ["2D", "Compositing", "Animation"]
-      content : Plugin required.
-      link : "http://fnordware.blogspot.com/2012/05/opencolorio-for-after-effects.html"
+      content : Native support.
+      link : "https://helpx.adobe.com/after-effects/using/opencolorio-aces-color-management.html"
     
     # portfolio item loop
     - name : Anchorpoint
@@ -161,8 +161,8 @@ supported_apps:
     - name : Adobe Photoshop
       image : images/supported_apps/ps.png
       categories : ["2D", "Photography", "Paint"]
-      content : Plugin required.
-      link : "http://fnordware.blogspot.com/2017/02/opencolorio-for-photoshop.html"
+      content : Beta support.
+      link : "https://community.adobe.com/t5/photoshop-beta-discussions/new-feature-opencolorio-and-32-bit-editing-now-available-in-photoshop-beta/m-p/14787280"
 
       # portfolio item loop
     - name : PhotoFlow

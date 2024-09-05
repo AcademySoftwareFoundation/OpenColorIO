@@ -49,34 +49,40 @@ int main(int argc, const char **argv)
     std::vector<std::string> intAttrs;
     std::vector<std::string> stringAttrs;
 
-    bool usegpu         = false;
-    bool usegpuLegacy   = false;
-    bool outputgpuInfo  = false;
-    bool verbose        = false;
-    bool help           = false;
-    bool useLut         = false;
-    bool useDisplayView = false;
-    bool useInvertView  = false;
+    bool usegpu                 = false;
+    bool usegpuLegacy           = false;
+    bool outputgpuInfo          = false;
+    bool verbose                = false;
+    bool help                   = false;
+    bool useLut                 = false;
+    bool useDisplayView         = false;
+    bool useInvertView          = false;
+    bool useNamedTransform      = false;
+    bool useInvNamedTransform   = false;
 
     ap.options("ocioconvert -- apply colorspace transform to an image \n\n"
                "usage: ocioconvert [options] inputimage inputcolorspace outputimage outputcolorspace\n"
                "   or: ocioconvert [options] --lut lutfile inputimage outputimage\n"
                "   or: ocioconvert [options] --view inputimage inputcolorspace outputimage displayname viewname\n"
-               "   or: ocioconvert [options] --invertview inputimage displayname viewname outputimage outputcolorspace\n\n",
+               "   or: ocioconvert [options] --invertview inputimage displayname viewname outputimage outputcolorspace\n"
+               "   or: ocioconvert [options] --namedtransform transformname inputimage outputimage\n"
+               "   or: ocioconvert [options] --invnamedtransform transformname inputimage outputimage\n\n",
                "%*", parse_end_args, "",
                "<SEPARATOR>", "Options:",
-               "--lut",         &useLut,            "Convert using a LUT rather than a config file",
-               "--view",        &useDisplayView,    "Convert to a (display,view) pair rather than to "
-                                                    "an output color space",
-               "--invertview",  &useInvertView,     "Convert from a (display,view) pair rather than "
-                                                    "from a color space",
-               "--gpu",         &usegpu,            "Use GPU color processing instead of CPU (CPU is the default)",
-               "--gpulegacy",   &usegpuLegacy,      "Use the legacy (i.e. baked) GPU color processing "
-                                                    "instead of the CPU one (--gpu is ignored)",
-               "--gpuinfo",     &outputgpuInfo,     "Output the OCIO shader program",
-               "--h",           &help,              "Display the help and exit",
-               "--help",        &help,              "Display the help and exit",
-               "-v" ,           &verbose,           "Display general information",
+               "--lut",                 &useLut,                "Convert using a LUT rather than a config file",
+               "--view",                &useDisplayView,        "Convert to a (display,view) pair rather than to "
+                                                                "an output color space",
+               "--invertview",          &useInvertView,         "Convert from a (display,view) pair rather than "
+                                                                "from a color space",
+               "--namedtransform",      &useNamedTransform,     "Convert using a named transform in the forward direction",
+               "--invnamedtransform",   &useInvNamedTransform,  "Convert using a named transform in the inverse direction",
+               "--gpu",                 &usegpu,                "Use GPU color processing instead of CPU (CPU is the default)",
+               "--gpulegacy",           &usegpuLegacy,          "Use the legacy (i.e. baked) GPU color processing "
+                                                                "instead of the CPU one (--gpu is ignored)",
+               "--gpuinfo",             &outputgpuInfo,         "Output the OCIO shader program",
+               "--h",                   &help,                  "Display the help and exit",
+               "--help",                &help,                  "Display the help and exit",
+               "-v" ,                   &verbose,               "Display general information",
                "<SEPARATOR>", "\nOpenImageIO or OpenEXR options:",
                "--float-attribute %L",  &floatAttrs,   "\"name=float\" pair defining OIIO float attribute "
                                                        "for outputimage",
@@ -109,15 +115,16 @@ int main(int argc, const char **argv)
     }
 #endif // OCIO_GPU_ENABLED
 
-    const char * inputimage       = nullptr;
-    const char * inputcolorspace  = nullptr;
-    const char * outputimage      = nullptr;
-    const char * outputcolorspace = nullptr;
-    const char * lutFile          = nullptr;
-    const char * display          = nullptr;
-    const char * view             = nullptr;
-
-    if (!useLut && !useDisplayView && !useInvertView)
+    const char * inputimage         = nullptr;
+    const char * inputcolorspace    = nullptr;
+    const char * outputimage        = nullptr;
+    const char * outputcolorspace   = nullptr;
+    const char * lutFile            = nullptr;
+    const char * display            = nullptr;
+    const char * view               = nullptr;
+    const char * namedtransform     = nullptr;
+ 
+    if (!useLut && !useDisplayView && !useInvertView && !useNamedTransform && !useInvNamedTransform)
     {
         if (args.size() != 4)
         {
@@ -185,6 +192,50 @@ int main(int argc, const char **argv)
         view                = args[2].c_str();
         outputimage         = args[3].c_str();
         outputcolorspace    = args[4].c_str();
+    }
+    else if (useNamedTransform)
+    {
+        if (useLut || useDisplayView || useInvertView || useInvNamedTransform)
+        {
+            std::cerr << "ERROR: Option namedtransform can't be used with lut, view, invertview, \
+                or invnamedtransform at the same time." << std::endl;
+            ap.usage();
+            exit(1);
+        }
+        
+        if (args.size() != 3)
+        {
+            std::cerr << "ERROR: Expecting 3 arguments for --namedtransform option, found "
+                << args.size() << "." << std::endl;
+            ap.usage();
+            exit(1);
+        }
+        
+        namedtransform  = args[0].c_str();
+        inputimage      = args[1].c_str();
+        outputimage     = args[2].c_str();
+    }
+    else if (useInvNamedTransform)
+    {
+        if (useLut || useDisplayView || useInvertView || useNamedTransform)
+        {
+            std::cerr << "ERROR: Option invnamedtransform can't be used with lut, view, invertview, \
+                or namedtransform at the same time." << std::endl;
+            ap.usage();
+            exit(1);
+        }
+
+        if (args.size() != 3)
+        {
+            std::cerr << "ERROR: Expecting 3 arguments for --invnamedtransform option, found "
+                << args.size() << "." << std::endl;
+            ap.usage();
+            exit(1);
+        }
+
+        namedtransform  = args[0].c_str();
+        inputimage      = args[1].c_str();
+        outputimage     = args[2].c_str();
     }
 
     if (verbose)
@@ -342,6 +393,34 @@ int main(int argc, const char **argv)
                 t->setDisplay(display);
                 t->setView(view);
                 processor = config->getProcessor(t, OCIO::TRANSFORM_DIR_INVERSE);
+            }
+            else if (useNamedTransform)
+            {
+                auto nt = config->getNamedTransform(namedtransform);
+
+                if (nt)
+                {
+                    processor = config->getProcessor(nt, OCIO::TRANSFORM_DIR_FORWARD);
+                }
+                else
+                {
+                   std::cout << "ERROR: Could not get NamedTransform " << namedtransform << std::endl;
+                   exit(1);
+                }                
+            }
+            else if (useInvNamedTransform)
+            {
+                auto nt = config->getNamedTransform(namedtransform);
+
+                if (nt)
+                {
+                    processor = config->getProcessor(nt, OCIO::TRANSFORM_DIR_INVERSE);
+                }
+                else
+                {
+                    std::cout << "ERROR: Could not get NamedTransform " << namedtransform << std::endl;
+                    exit(1);
+                }
             }
             else
             {

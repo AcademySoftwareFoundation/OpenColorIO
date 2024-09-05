@@ -1,10 +1,16 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+from __future__ import annotations
+
 import enum
+import logging
 from typing import Optional
 
 import PyOpenColorIO as ocio
+
+
+logger = logging.getLogger(__name__)
 
 
 class ViewType(str, enum.Enum):
@@ -34,17 +40,27 @@ def get_view_type(display: str, view: str) -> ViewType:
 
     color_space = config.getColorSpace(color_space_name)
     if color_space is not None:
-        if color_space.getReferenceSpaceType() == ocio.REFERENCE_SPACE_DISPLAY:
-            return ViewType.VIEW_DISPLAY
-        else:
+        if color_space.getReferenceSpaceType() == ocio.REFERENCE_SPACE_SCENE:
+            if view_transform_name:
+                logger.warning(
+                    f"Invalid view '{display}/{view}' references a view transform "
+                    f"('{view_transform_name}') and a non-display color space "
+                    f"('{color_space_name}'). The view transform will be dropped to "
+                    f"preserve the color space selection."
+                )
             return ViewType.VIEW_SCENE
+        else:
+            return ViewType.VIEW_DISPLAY
+
     elif view_transform_name:
         return ViewType.VIEW_DISPLAY
     else:
         return ViewType.VIEW_SCENE
 
 
-def adapt_splitter_sizes(from_sizes: list[int], to_sizes: list[int]) -> list[int]:
+def adapt_splitter_sizes(
+    from_sizes: list[int], to_sizes: list[int]
+) -> list[int]:
     """
     Given source and destination splitter size lists, adapt the
     destination sizes to match the source sizes. Supports between two
