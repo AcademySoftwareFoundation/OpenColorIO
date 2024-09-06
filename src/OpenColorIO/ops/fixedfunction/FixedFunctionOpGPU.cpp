@@ -526,6 +526,9 @@ void Add_LUV_TO_XYZ(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
 
 namespace 
 {
+    // TODO these constants are duplicated in multiple places;
+    // Displays.cpp, FixedFunctionOp.cpp and here. Would be great
+    // if de-duplicated.
     namespace ST_2084
     {
         static constexpr double m1 = 0.25 * 2610. / 4096.;
@@ -534,6 +537,21 @@ namespace
         static constexpr double c3 = 32. * 2392. / 4096.;
         static constexpr double c1 = c3 - c2 + 1.;
     }
+
+    namespace HLG
+    {
+        static constexpr double Lw = 1000.;
+        static constexpr double E_MAX = 3.;
+
+        static constexpr double a = 0.17883277;
+        static constexpr double b = (1. - 4. * a) * E_MAX / 12.;
+        static const     double c0 = 0.5 - a * std::log(4. * a);
+        static const     double c = std::log(12. / E_MAX) * a + c0;
+        static constexpr double E_scale = 3. / E_MAX;
+        static constexpr double E_break = E_MAX / 12.;
+        static const     double Eprime_break = std::sqrt(E_break * E_scale);
+    }
+
 } // anonymous
 
 void Add_PQ_TO_LINEAR(GpuShaderCreatorRcPtr& shaderCreator, GpuShaderText& ss)
@@ -558,6 +576,52 @@ void Add_LINEAR_TO_PQ(GpuShaderCreatorRcPtr& shaderCreator, GpuShaderText& ss)
     ss.newLine() << ss.float3Decl("ratpoly") << " = (" << ss.float3Const(c1) << " + " << c2 << " * y) / (" 
         << ss.float3Const(1.0) << " + " << c3 << " * y);";
     ss.newLine() << pxl << ".rgb = sign3 * pow(ratpoly, " << ss.float3Const(m2) << ");"; 
+}
+
+void Add_HLG_TO_LINEAR(GpuShaderCreatorRcPtr& shaderCreator, GpuShaderText& ss)
+{
+    using namespace HLG;
+    const std::string pxl(shaderCreator->getPixelName());
+
+    // float Eprime = std::abs(in);
+    // float E;
+    // if (Eprime < Eprime_break)
+    //     E = Eprime * Eprime / E_scale;
+    // else
+    //     E = std::exp((Eprime - c) / a) + b;
+    // out = std::copysign(E, in);
+
+    ss.newLine() << ss.float3Decl("sign3") << " = sign(" << pxl << ".rgb);";
+    ss.newLine() << ss.float3Decl("Eprime") << " = abs(" << pxl << ".rgb);";
+    ss.newLine() << ss.float3Decl("isAboveBreak") << " = " << ss.float3GreaterThan("Eprime", ss.float3Const(Eprime_break)) << ";";
+    ss.newLine() << ss.float3Decl("E_gamma") << " = Eprime * Eprime * " << ss.float3Const(1/E_scale) << ";";
+    ss.newLine() << ss.float3Decl("E_log") << " = exp((Eprime - " << ss.float3Const(c) << ") * " << ss.float3Const(1.0/a) << ") + " << ss.float3Const(b) << ";";
+    
+    // combine log and gamma parts
+    ss.newLine() << pxl << ".rgb = sign3 * (isAboveBreak * E_log + ( " << ss.float3Const(1.0f) << " - isAboveBreak ) * E_gamma);";
+}
+
+void Add_LINEAR_TO_HLG(GpuShaderCreatorRcPtr& shaderCreator, GpuShaderText& ss)
+{
+    using namespace HLG;
+    const std::string pxl(shaderCreator->getPixelName());
+
+    // float E = std::abs(in);
+    // float Eprime;
+    // if (E < E_break)
+    //     Eprime = std::sqrt(E * E_scale);
+    // else
+    //     Eprime = a * std::log(E - b) + c;
+    // out = std::copysign(Eprime, in);
+
+    ss.newLine() << ss.float3Decl("sign3") << " = sign(" << pxl << ".rgb);";
+    ss.newLine() << ss.float3Decl("E") << " = abs(" << pxl << ".rgb);";
+    ss.newLine() << ss.float3Decl("isAboveBreak") << " = " << ss.float3GreaterThan("E", ss.float3Const(E_break)) << ";";
+    ss.newLine() << ss.float3Decl("Ep_gamma") << " = sqrt( E * " << ss.float3Const(E_scale) << ");";
+    ss.newLine() << ss.float3Decl("Ep_log") << " = " << ss.float3Const(a) << " * log( E - " << ss.float3Const(b) << ") + " << ss.float3Const(c) << ";";
+
+    // combine log and gamma parts
+    ss.newLine() << pxl << ".rgb = sign3 * (isAboveBreak * Ep_log + ( " << ss.float3Const(1.0f) << " - isAboveBreak ) * Ep_gamma);";
 }
 
 void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
@@ -719,6 +783,17 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
             Add_LINEAR_TO_PQ(shaderCreator, ss);
             break;
         }
+        case FixedFunctionOpData::HLG_TO_LINEAR:
+        {
+            Add_HLG_TO_LINEAR(shaderCreator, ss);
+            break;
+        }
+        case FixedFunctionOpData::LINEAR_TO_HLG:
+        {
+            Add_LINEAR_TO_HLG(shaderCreator, ss);
+            break;
+        }
+
     }
 
     ss.dedent();

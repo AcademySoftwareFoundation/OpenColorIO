@@ -506,11 +506,11 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_LUV_inv)
     test.setErrorThreshold(1e-5f);
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_PQ_TO_LINEAR_fwd)
+OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_PQ_inv)
 {
     OCIO::FixedFunctionTransformRcPtr func =
-        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_PQ_TO_LINEAR);
-    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_PQ);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     // Picking a tight epsilon is tricky with this function due to nested power
     // operations and [0,100] output range for [0,1] input range.
@@ -526,11 +526,11 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_PQ_TO_LINEAR_fwd)
     test.setErrorThreshold(OCIO_USE_SSE2 ? 0.0023f : 1.5e-4f);
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_PQ_TO_LINEAR_inv)
+OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_PQ_fwd)
 {
     OCIO::FixedFunctionTransformRcPtr func =
-        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_PQ_TO_LINEAR);
-    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_PQ);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
     test.setWideRangeInterval(-0.1f, 100.1f);
     test.setProcessor(func);
@@ -538,4 +538,34 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_PQ_TO_LINEAR_inv)
     // using large threshold for SSE2 as that will enable usage of fast but
     // approximate power function ssePower.
     test.setErrorThreshold(OCIO_USE_SSE2 ? 0.0008f : 2e-5f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_HLG_fwd)
+{
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_HLG);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    // TODO: adjust the ranges and the threshold
+
+    test.setWideRangeInterval(-0.1f, 100.1f);
+    test.setProcessor(func);
+
+    // using large threshold for SSE2 as that will enable usage of fast but
+    // approximate power function ssePower.
+    test.setErrorThreshold(OCIO_USE_SSE2 ? 0.0008f : 2e-5f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_HLG_inv)
+{
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_HLG);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    // TODO: adjust the ranges and the threshold
+
+    test.setWideRangeInterval(-0.1f, 1.1f);
+    test.setProcessor(func);
+    test.setRelativeComparison(true); // Since the output range will be 0..100, we set the relative epsilon.
+    test.setErrorThreshold(OCIO_USE_SSE2 ? 0.0023f : 1.5e-4f);
 }

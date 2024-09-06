@@ -50,6 +50,8 @@ public:
         LUV_TO_XYZ,               // Inverse of above
         PQ_TO_LINEAR,             // Perceptual Quantizer curve to linear
         LINEAR_TO_PQ,             // Inverse of above
+        HLG_TO_LINEAR,            // Hybrid Log Gamma curve to linear
+        LINEAR_TO_HLG,            // Inverse of above
     };
 
     static const char * ConvertStyleToString(Style style, bool detailed);

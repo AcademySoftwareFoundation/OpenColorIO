@@ -230,6 +230,25 @@ class Renderer_LINEAR_TO_PQ : public OpCPU {
   void apply(const void *inImg, void *outImg, long numPixels) const override;
 };
 
+template <typename T>
+class Renderer_HLG_TO_LINEAR : public OpCPU {
+public:
+    Renderer_HLG_TO_LINEAR() = delete;
+    explicit Renderer_HLG_TO_LINEAR(ConstFixedFunctionOpDataRcPtr& data);
+
+    void apply(const void* inImg, void* outImg, long numPixels) const override;
+};
+
+template <typename T>
+class Renderer_LINEAR_TO_HLG : public OpCPU {
+public:
+    Renderer_LINEAR_TO_HLG() = delete;
+    explicit Renderer_LINEAR_TO_HLG(ConstFixedFunctionOpDataRcPtr& data);
+
+    void apply(const void* inImg, void* outImg, long numPixels) const override;
+};
+
+
 #if OCIO_USE_SSE2
 template<bool FAST_POWER>
 class Renderer_PQ_TO_LINEAR_SSE : public OpCPU {
@@ -1419,6 +1438,102 @@ void Renderer_LINEAR_TO_PQ_SSE<FAST_POWER>::apply(const void* inImg, void* outIm
 #endif //OCIO_USE_SSE2
 
 
+// HLG
+namespace
+{
+namespace HLG
+{
+static constexpr double Lw = 1000.;
+static constexpr double E_MAX = 3.;
+
+static constexpr double a = 0.17883277;
+static constexpr double b = (1. - 4. * a) * E_MAX / 12.;
+static const     double c0 = 0.5 - a * std::log(4. * a);
+static const     double c = std::log(12. / E_MAX) * a + c0;
+static constexpr double E_scale = 3. / E_MAX;
+static constexpr double E_break = E_MAX / 12.;
+static const     double Eprime_break = std::sqrt(E_break * E_scale);
+
+} // HLG
+} // anonymous
+
+template<typename T>
+Renderer_HLG_TO_LINEAR<T>::Renderer_HLG_TO_LINEAR(ConstFixedFunctionOpDataRcPtr& /*data*/)
+    : OpCPU()
+{
+}
+
+template<typename T>
+void Renderer_HLG_TO_LINEAR<T>::apply(const void* inImg, void* outImg, long numPixels) const
+{
+    using namespace HLG;
+    const float* in = (const float*)inImg;
+    float* out = (float*)outImg;
+
+    for (long idx = 0; idx < numPixels; ++idx)
+    {
+        // RGB
+        for (int ch = 0; ch < 3; ++ch)
+        {
+            float Eprimein = *(in++);;
+
+            const T Eprime = std::abs(T(Eprimein));
+            T E;
+            if (Eprime < T(Eprime_break))
+            {
+                E = Eprime * Eprime / T(E_scale);
+            }
+            else
+            {
+                E = std::exp((Eprime - T(c)) / T(a) ) + T(b);
+            }
+            *(out++) = std::copysign(float(E), Eprimein);
+        }
+
+        // Alpha
+        *(out++) = *(in++);
+    }
+}
+
+template <typename T>
+Renderer_LINEAR_TO_HLG<T>::Renderer_LINEAR_TO_HLG(ConstFixedFunctionOpDataRcPtr& /*data*/)
+    : OpCPU()
+{
+}
+
+template <typename T>
+void Renderer_LINEAR_TO_HLG<T>::apply(const void* inImg, void* outImg, long numPixels) const
+{
+    using namespace HLG;
+    const float* in = (const float*)inImg;
+    float* out = (float*)outImg;
+
+    for (long idx = 0; idx < numPixels; ++idx)
+    {
+        // RGB
+        for (int ch = 0; ch < 3; ++ch)
+        {
+            float Ein = *(in++);;
+            
+            const T E = std::abs(T(Ein));
+            T Eprime;
+            if (E < T(E_break))
+            {
+                Eprime = std::sqrt(E * T(E_scale));
+            }
+            else
+            {
+                Eprime = T(a) * std::log(E - T(b)) + T(c);
+            }
+            *(out++) = std::copysign(float(Eprime), Ein);
+        }
+
+        // Alpha
+        *(out++) = *(in++);
+    };
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 
 
@@ -1536,7 +1651,7 @@ ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func
             return std::make_shared<Renderer_PQ_TO_LINEAR_SSE<false>>(func);
 #endif  
 #endif // OCIO_USE_SSE2
-            return std::make_shared<Renderer_PQ_TO_LINEAR<double>>(func);
+            return std::make_shared<Renderer_PQ_TO_LINEAR<float>>(func);
         }
         case FixedFunctionOpData::LINEAR_TO_PQ:
         {
@@ -1553,7 +1668,19 @@ ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func
             return std::make_shared<Renderer_LINEAR_TO_PQ_SSE<false>>(func);
 #endif
 #endif // OCIO_USE_SSE2
-            return std::make_shared<Renderer_LINEAR_TO_PQ<double>>(func);
+            return std::make_shared<Renderer_LINEAR_TO_PQ<float>>(func);
+        }
+
+        case FixedFunctionOpData::HLG_TO_LINEAR:
+        {
+            /// TODO: SIMD implementation
+            return std::make_shared<Renderer_HLG_TO_LINEAR<float>>(func);
+        }
+
+        case FixedFunctionOpData::LINEAR_TO_HLG:
+        {
+            /// TODO: SIMD implementation
+            return std::make_shared<Renderer_LINEAR_TO_HLG<float>>(func);
         }
     }
 

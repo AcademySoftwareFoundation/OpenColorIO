@@ -583,8 +583,10 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_ACES_GAMUTMAP_07))
         .value("FIXED_FUNCTION_ACES_GAMUT_COMP_13", FIXED_FUNCTION_ACES_GAMUT_COMP_13,
                DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_ACES_GAMUT_COMP_13))
-        .value("FIXED_FUNCTION_PQ_TO_LINEAR", FIXED_FUNCTION_PQ_TO_LINEAR,
-            DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_PQ_TO_LINEAR))
+        .value("FIXED_FUNCTION_LINEAR_TO_PQ", FIXED_FUNCTION_LINEAR_TO_PQ,
+            DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_LINEAR_TO_PQ))
+        .value("FIXED_FUNCTION_LINEAR_TO_HLG", FIXED_FUNCTION_LINEAR_TO_HLG,
+            DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_LINEAR_TO_HLG))
 
         .export_values();
 

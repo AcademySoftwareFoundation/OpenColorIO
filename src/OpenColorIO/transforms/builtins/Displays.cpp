@@ -85,12 +85,13 @@ static constexpr double E_MAX = 3.;
 static constexpr double a = 0.17883277;
 static constexpr double b = (1. - 4. * a) * E_MAX / 12.;
 static const     double c0 = 0.5 - a * std::log(4. * a);
-static const     double c = std::log(12. / E_MAX) * 0.17883277 + c0;
+static const     double c = std::log(12. / E_MAX) * a + c0;
 static constexpr double E_scale = 3. / E_MAX;
 static constexpr double E_break = E_MAX / 12.;
 
 void GenerateLinearToHLGOps(OpRcPtrVec& ops)
 {
+#if OCIO_LUT_SUPPORT
     auto GenerateLutValues = [](double in) -> float
         {
             double out = 0.0;
@@ -107,6 +108,9 @@ void GenerateLinearToHLGOps(OpRcPtrVec& ops)
         };
 
     CreateHalfLut(ops, GenerateLutValues);
+#else
+    CreateFixedFunctionOp(ops, FixedFunctionOpData::LINEAR_TO_HLG, {});
+#endif
 }
 } // HLG
 

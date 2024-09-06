@@ -560,7 +560,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, XYZ_TO_LUV)
     ApplyFixedFunction(&img[0], &inputFrame[0], 2, dataFInv, 1e-5f, __LINE__);
 }
 
-OCIO_ADD_TEST(FixedFunctionOpCPU, PQ_TO_LINEAR)
+OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_PQ)
 {
     constexpr unsigned int NumPixels = 9;
     const std::array<float, NumPixels*4> inputFrame
@@ -620,5 +620,68 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, PQ_TO_LINEAR)
         img = outputFrame;
         ApplyFixedFunction(&img[0], &inputFrame[0], NumPixels, dataFInv, 1e-5f, __LINE__, false);
     }
+}
+
+OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_HLG)
+{
+    constexpr unsigned int NumPixels = 9;
+    const std::array<float, NumPixels * 4> inputFrame
+    {
+      -0.10f,-0.05f, 0.00f, 1.0f, // Negative Input
+       0.05f, 0.10f, 0.15f, 1.0f,
+       0.20f, 0.25f, 0.30f, 1.0f,
+       0.35f, 0.40f, 0.45f, 0.5f,
+       0.50f, 0.55f, 0.60f, 0.0f,
+       0.65f, 0.70f, 0.75f, 1.0f,
+       0.80f, 0.85f, 0.90f, 1.0f,
+       0.95f, 1.00f, 1.05f, 1.0f,
+       1.10f, 1.15f, 1.20f, 1.0f, // Over Range
+    };
+
+    const std::array<float, NumPixels * 4> outputFrame
+    {
+        -0.01000000f, -0.00250000018f,     0.00000000f,    1.0f,
+        0.002500000f,  0.010000000f,       0.02250000f,    1.0f,
+        0.040000000f,  0.0625000000f,      0.09000000f,    1.0f,
+        0.122500000f,  0.160000000f,       0.202499986f,   0.5f,
+        0.250000000f,  0.307689428f,       0.383988768f,   0.0f,
+        0.484901309f,  0.618367195f,       0.794887662f,   1.0f,
+        1.02835166f,   1.33712840f,        1.74551260f,    1.0f,
+        2.28563738f,   3.00000000f,        3.94480681f,    1.0f,
+        5.19440079f,   6.84709501f,        9.03293514f,    1.0f 
+    };
+
+    // Fast power enabled
+    {
+        auto img = inputFrame;
+
+        OCIO::ConstFixedFunctionOpDataRcPtr dataFwd
+            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::HLG_TO_LINEAR);
+
+        ApplyFixedFunction(img.data(), outputFrame.data(), NumPixels, dataFwd, 1.0e-6f, __LINE__, true); //TODO: tune the threshold
+
+        OCIO::ConstFixedFunctionOpDataRcPtr dataFInv
+            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::LINEAR_TO_HLG);
+
+        img = outputFrame;
+        ApplyFixedFunction(&img[0], &inputFrame[0], NumPixels, dataFInv, 1.0e-6f, __LINE__, true); //TODO: tune the threshold
+    }
+
+    // Fast power disabled
+    {
+        auto img = inputFrame;
+
+        OCIO::ConstFixedFunctionOpDataRcPtr dataFwd
+            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::HLG_TO_LINEAR);
+
+        ApplyFixedFunction(img.data(), outputFrame.data(), NumPixels, dataFwd, 5e-5f, __LINE__, false); //TODO: tune the threshold
+
+        OCIO::ConstFixedFunctionOpDataRcPtr dataFInv
+            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::LINEAR_TO_HLG);
+
+        img = outputFrame;
+        ApplyFixedFunction(&img[0], &inputFrame[0], NumPixels, dataFInv, 1e-5f, __LINE__, false); //TODO: tune the threshold
+    }
 
 }
+

@@ -4956,7 +4956,7 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
         const std::string strEnd =
             "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
-            "        - !<FixedFunctionTransform> {style: PQ_TO_LINEAR}\n";
+            "        - !<FixedFunctionTransform> {style: LINEAR_TO_PQ}\n";
 
         {
             const std::string str = PROFILE_START_V<2, 3>() + strEnd;
@@ -4965,7 +4965,7 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
             is.str(str);
 
             OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
-                "Only config version 2.4 (or higher) can have FixedFunctionTransform style 'PQ_TO_LINEAR'.");
+                "Only config version 2.4 (or higher) can have FixedFunctionTransform style 'LINEAR_TO_PQ'.");
         }
 
         {
