@@ -1443,7 +1443,6 @@ namespace
 {
 namespace HLG
 {
-static constexpr double Lw = 1000.;
 static constexpr double E_MAX = 3.;
 
 static constexpr double a = 0.17883277;
