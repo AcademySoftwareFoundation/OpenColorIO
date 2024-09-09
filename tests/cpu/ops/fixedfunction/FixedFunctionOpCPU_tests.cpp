@@ -563,9 +563,9 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, XYZ_TO_LUV)
 OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_PQ)
 {
     constexpr unsigned int NumPixels = 9;
-    const std::array<float, NumPixels*4> inputFrame
+    const std::array<float, NumPixels*4> pqFrame
     {
-      -0.10f,-0.05f, 0.00f, 1.0f, // Negative Input
+      -0.10f,-0.05f, 0.00f,-1.0f, // Negative Input
        0.05f, 0.10f, 0.15f, 1.0f,
        0.20f, 0.25f, 0.30f, 1.0f,
        0.35f, 0.40f, 0.45f, 0.5f,
@@ -576,9 +576,9 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_PQ)
        1.10f, 1.15f, 1.20f, 1.0f, // Over Range
     }; 
 
-    const std::array<float, NumPixels*4> outputFrame
+    const std::array<float, NumPixels*4> linearFrame
     {
-       -3.2456559e-03f,-6.0001636e-04f,           0.0f, 1.0f,
+       -3.2456559e-03f,-6.0001636e-04f,           0.0f,-1.0f,
         6.0001636e-04f, 3.2456559e-03f, 1.0010649e-02f, 1.0f,
         2.4292633e-02f, 5.1541760e-02f, 1.0038226e-01f, 1.0f,
         1.8433567e-01f, 3.2447918e-01f, 5.5356688e-01f, 0.5f,
@@ -591,43 +591,34 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_PQ)
 
     // Fast power enabled
     {
-        auto img = inputFrame;
+        auto img = pqFrame;
+        auto dataFwd = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::PQ_TO_LINEAR);
+        ApplyFixedFunction(img.data(), linearFrame.data(), NumPixels, dataFwd, 2.5e-3f, __LINE__, true);
 
-        OCIO::ConstFixedFunctionOpDataRcPtr dataFwd
-            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::PQ_TO_LINEAR);
-
-        ApplyFixedFunction(img.data(), outputFrame.data(), NumPixels, dataFwd, 2.5e-3f, __LINE__, true);
-
-        OCIO::ConstFixedFunctionOpDataRcPtr dataFInv
-            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::LINEAR_TO_PQ);
-
-        img = outputFrame;
-        ApplyFixedFunction(&img[0], &inputFrame[0], NumPixels, dataFInv, 1e-3f, __LINE__, true);
+        auto dataFInv = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::LINEAR_TO_PQ);
+        img = linearFrame;
+        ApplyFixedFunction(img.data(), pqFrame.data(), NumPixels, dataFInv, 1e-3f, __LINE__, true);
     }
 
     // Fast power disabled
     {
-        auto img = inputFrame;
+        auto dataFwd = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::PQ_TO_LINEAR);
+        auto img = pqFrame;
+        ApplyFixedFunction(img.data(), linearFrame.data(), NumPixels, dataFwd, 5e-5f, __LINE__, false);
 
-        OCIO::ConstFixedFunctionOpDataRcPtr dataFwd
-            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::PQ_TO_LINEAR);
-
-        ApplyFixedFunction(img.data(), outputFrame.data(), NumPixels, dataFwd, 5e-5f, __LINE__, false);
-
-        OCIO::ConstFixedFunctionOpDataRcPtr dataFInv
-            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::LINEAR_TO_PQ);
-
-        img = outputFrame;
-        ApplyFixedFunction(&img[0], &inputFrame[0], NumPixels, dataFInv, 1e-5f, __LINE__, false);
+        auto dataFInv = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::LINEAR_TO_PQ);
+        img = linearFrame;
+        ApplyFixedFunction(img.data(), pqFrame.data(), NumPixels, dataFInv, 1e-5f, __LINE__, false);
     }
 }
 
 OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_HLG)
 {
-    constexpr unsigned int NumPixels = 9;
-    const std::array<float, NumPixels * 4> inputFrame
+    constexpr unsigned int NumPixels = 10;
+    const std::array<float, NumPixels * 4> hlgFrame
     {
-      -0.10f,-0.05f, 0.00f, 1.0f, // Negative Input
+      -0.60f,-0.55f,-0.50f,-1.0f, // Negative Log segment
+      -0.10f,-0.05f, 0.00f, 1.0f, // Negative Gamma Segment
        0.05f, 0.10f, 0.15f, 1.0f,
        0.20f, 0.25f, 0.30f, 1.0f,
        0.35f, 0.40f, 0.45f, 0.5f,
@@ -638,50 +629,29 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_HLG)
        1.10f, 1.15f, 1.20f, 1.0f, // Over Range
     };
 
-    const std::array<float, NumPixels * 4> outputFrame
+    // FIXME: Double check if the target values are computed with double precision.
+    const std::array<float, NumPixels * 4> linearFrame
     {
-        -0.01000000f, -0.00250000018f,     0.00000000f,    1.0f,
-        0.002500000f,  0.010000000f,       0.02250000f,    1.0f,
-        0.040000000f,  0.0625000000f,      0.09000000f,    1.0f,
-        0.122500000f,  0.160000000f,       0.202499986f,   0.5f,
-        0.250000000f,  0.307689428f,       0.383988768f,   0.0f,
-        0.484901309f,  0.618367195f,       0.794887662f,   1.0f,
-        1.02835166f,   1.33712840f,        1.74551260f,    1.0f,
-        2.28563738f,   3.00000000f,        3.94480681f,    1.0f,
-        5.19440079f,   6.84709501f,        9.03293514f,    1.0f 
+       -0.383988768f, -0.307689428f, -0.250000000f,-1.0f,
+       -0.01000000f,  -0.002500000f,  0.00000000f,  1.0f,
+        0.002500000f,  0.010000000f,  0.02250000f,  1.0f,
+        0.040000000f,  0.062500000f,  0.09000000f,  1.0f,
+        0.122500000f,  0.160000000f,  0.202499986f, 0.5f,
+        0.250000000f,  0.307689428f,  0.383988768f, 0.0f,
+        0.484901309f,  0.618367195f,  0.794887662f, 1.0f,
+        1.02835166f,   1.33712840f,   1.74551260f,  1.0f,
+        2.28563738f,   3.00000000f,   3.94480681f,  1.0f,
+        5.19440079f,   6.84709501f,   9.03293514f,  1.0f 
     };
 
-    // Fast power enabled
     {
-        auto img = inputFrame;
+        auto dataFwd = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::HLG_TO_LINEAR);
+        auto img = hlgFrame;
+        ApplyFixedFunction(img.data(), linearFrame.data(), NumPixels, dataFwd, 5e-5f, __LINE__, false);
 
-        OCIO::ConstFixedFunctionOpDataRcPtr dataFwd
-            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::HLG_TO_LINEAR);
-
-        ApplyFixedFunction(img.data(), outputFrame.data(), NumPixels, dataFwd, 1.0e-6f, __LINE__, true); //TODO: tune the threshold
-
-        OCIO::ConstFixedFunctionOpDataRcPtr dataFInv
-            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::LINEAR_TO_HLG);
-
-        img = outputFrame;
-        ApplyFixedFunction(&img[0], &inputFrame[0], NumPixels, dataFInv, 1.0e-6f, __LINE__, true); //TODO: tune the threshold
+        auto dataFInv = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::LINEAR_TO_HLG);
+        img = linearFrame;
+        ApplyFixedFunction(img.data(), hlgFrame.data(), NumPixels, dataFInv, 1e-5f, __LINE__, false);
     }
-
-    // Fast power disabled
-    {
-        auto img = inputFrame;
-
-        OCIO::ConstFixedFunctionOpDataRcPtr dataFwd
-            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::HLG_TO_LINEAR);
-
-        ApplyFixedFunction(img.data(), outputFrame.data(), NumPixels, dataFwd, 5e-5f, __LINE__, false); //TODO: tune the threshold
-
-        OCIO::ConstFixedFunctionOpDataRcPtr dataFInv
-            = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::LINEAR_TO_HLG);
-
-        img = outputFrame;
-        ApplyFixedFunction(&img[0], &inputFrame[0], NumPixels, dataFInv, 1e-5f, __LINE__, false); //TODO: tune the threshold
-    }
-
 }
 

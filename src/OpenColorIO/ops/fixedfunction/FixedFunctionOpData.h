@@ -48,10 +48,10 @@ public:
         uvY_TO_XYZ,               // Inverse of above
         XYZ_TO_LUV,               // CIE XYZ to 1976 CIELUV colour space (D65 white)
         LUV_TO_XYZ,               // Inverse of above
-        PQ_TO_LINEAR,             // Perceptual Quantizer curve to linear
-        LINEAR_TO_PQ,             // Inverse of above
-        HLG_TO_LINEAR,            // Hybrid Log Gamma curve to linear
-        LINEAR_TO_HLG,            // Inverse of above
+        LINEAR_TO_PQ,             // Linear to Perceptual Quantizer curve 
+        PQ_TO_LINEAR,             // Inverse of above
+        LINEAR_TO_HLG,            // Linear to Hybrid Log Gamma curve
+        HLG_TO_LINEAR,            // Inverse of above
     };
 
     static const char * ConvertStyleToString(Style style, bool detailed);

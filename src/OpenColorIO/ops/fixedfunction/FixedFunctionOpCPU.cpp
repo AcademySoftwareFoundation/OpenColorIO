@@ -213,30 +213,21 @@ public:
 };
 
 template <typename T>
+class Renderer_LINEAR_TO_PQ : public OpCPU {
+public:
+    Renderer_LINEAR_TO_PQ() = delete;
+    explicit Renderer_LINEAR_TO_PQ(ConstFixedFunctionOpDataRcPtr& data);
+
+    void apply(const void* inImg, void* outImg, long numPixels) const override;
+};
+
+template <typename T>
 class Renderer_PQ_TO_LINEAR : public OpCPU {
  public:
   Renderer_PQ_TO_LINEAR() = delete;
   explicit Renderer_PQ_TO_LINEAR(ConstFixedFunctionOpDataRcPtr &data);
 
   void apply(const void *inImg, void *outImg, long numPixels) const override;
-};
-
-template <typename T>
-class Renderer_LINEAR_TO_PQ : public OpCPU {
- public:
-  Renderer_LINEAR_TO_PQ() = delete;
-  explicit Renderer_LINEAR_TO_PQ(ConstFixedFunctionOpDataRcPtr &data);
-
-  void apply(const void *inImg, void *outImg, long numPixels) const override;
-};
-
-template <typename T>
-class Renderer_HLG_TO_LINEAR : public OpCPU {
-public:
-    Renderer_HLG_TO_LINEAR() = delete;
-    explicit Renderer_HLG_TO_LINEAR(ConstFixedFunctionOpDataRcPtr& data);
-
-    void apply(const void* inImg, void* outImg, long numPixels) const override;
 };
 
 template <typename T>
@@ -248,19 +239,16 @@ public:
     void apply(const void* inImg, void* outImg, long numPixels) const override;
 };
 
-
-#if OCIO_USE_SSE2
-template<bool FAST_POWER>
-class Renderer_PQ_TO_LINEAR_SSE : public OpCPU {
+template <typename T>
+class Renderer_HLG_TO_LINEAR : public OpCPU {
 public:
-    Renderer_PQ_TO_LINEAR_SSE() = delete;
-    explicit Renderer_PQ_TO_LINEAR_SSE(ConstFixedFunctionOpDataRcPtr& data);
+    Renderer_HLG_TO_LINEAR() = delete;
+    explicit Renderer_HLG_TO_LINEAR(ConstFixedFunctionOpDataRcPtr& data);
 
-    static inline __m128 myPower(__m128 x, __m128 exp);
     void apply(const void* inImg, void* outImg, long numPixels) const override;
 };
 
-
+#if OCIO_USE_SSE2
 template<bool FAST_POWER>
 class Renderer_LINEAR_TO_PQ_SSE : public OpCPU {
 public:
@@ -270,7 +258,18 @@ public:
     static inline __m128 myPower(__m128 x, __m128 exp);
     void apply(const void* inImg, void* outImg, long numPixels) const override;
 };
+
+template<bool FAST_POWER>
+class Renderer_PQ_TO_LINEAR_SSE : public OpCPU {
+public:
+    Renderer_PQ_TO_LINEAR_SSE() = delete;
+    explicit Renderer_PQ_TO_LINEAR_SSE(ConstFixedFunctionOpDataRcPtr& data);
+
+    static inline __m128 myPower(__m128 x, __m128 exp);
+    void apply(const void* inImg, void* outImg, long numPixels) const override;
+};
 #endif
+
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1283,7 +1282,7 @@ void Renderer_PQ_TO_LINEAR<T>::apply(const void *inImg, void *outImg, long numPi
             const T vabs = std::abs(T(v));
             const T x = std::pow(vabs, T(1.) / T(m2));
             const T nits = std::pow(std::max(T(0), x - T(c1)) / (T(c2) - T(c3) * x), T(1.) / T(m1));
-            // output scale is 1.0 = 10000 nits, we map it to make 1.0 = 100 nits.
+            // Output scale is 1.0 = 10000 nits, we map it to make 1.0 = 100 nits.
             *(out++) = std::copysign(float(T(100.0) * nits), v);
         }
 
@@ -1358,16 +1357,16 @@ void Renderer_PQ_TO_LINEAR_SSE<FAST_POWER>::apply(const void* inImg, void* outIm
 
     for (long idx = 0; idx < numPixels; ++idx, in+=4, out+=4)
     {
-        // load
+        // Load.
         __m128 v = _mm_loadu_ps(in);
 
-        // compute R, G and B channels
+        // Compute R, G and B channels.
         __m128 vabs = _mm_and_ps(abs_rgb_mask, v); // Clear sign bits of RGB and all bits of Alpha
         __m128 x = myPower(vabs, vm2_inv);
         __m128 nom = _mm_max_ps(_mm_setzero_ps(), _mm_sub_ps(x, vc1));
         __m128 denom = _mm_sub_ps(vc2, _mm_mul_ps(vc3, x));
          
-        // output scale is 1.0 = 10000 nits, we map it to make 1.0 = 100 nits.
+        // Output scale is 1.0 = 10000 nits, we map it to make 1.0 = 100 nits.
         __m128 nits100;
         nits100 = _mm_mul_ps(_mm_set1_ps(100.0f), myPower(_mm_div_ps(nom, denom), vm1_inv));
             
@@ -1375,7 +1374,7 @@ void Renderer_PQ_TO_LINEAR_SSE<FAST_POWER>::apply(const void* inImg, void* outIm
         // TODO: this can be further optimized by using separate SSE constants for alpha channel
         __m128 nits100_signed = _mm_or_ps(_mm_and_ps(abs_rgb_mask, nits100), _mm_andnot_ps(abs_rgb_mask, v)); 
             
-        // store
+        // Store.
         _mm_storeu_ps(out, nits100_signed);
     }
 }
@@ -1386,7 +1385,7 @@ Renderer_LINEAR_TO_PQ_SSE<FAST_POWER>::Renderer_LINEAR_TO_PQ_SSE(ConstFixedFunct
 {
 }
 
-// all platforms support ssePower()
+// All platforms support ssePower().
 template<>
 __m128 Renderer_LINEAR_TO_PQ_SSE<true>::myPower(__m128 x, __m128 exp)
 {
@@ -1417,7 +1416,7 @@ void Renderer_LINEAR_TO_PQ_SSE<FAST_POWER>::apply(const void* inImg, void* outIm
         // load
         __m128 v = _mm_loadu_ps(in);
 
-        // Clear sign bits of RGB and all bits of Alpha
+        // Clear sign bits of RGB and all bits of Alpha.
         __m128 vabs = _mm_and_ps(abs_rgb_mask, v); 
         // Input is in nits/100, convert to [0,1], where 1 is 10000 nits. 
         __m128 L = _mm_mul_ps(_mm_set1_ps(0.01f), vabs);
@@ -1427,8 +1426,8 @@ void Renderer_LINEAR_TO_PQ_SSE<FAST_POWER>::apply(const void* inImg, void* outIm
             _mm_add_ps(_mm_set1_ps(1.0f), _mm_mul_ps(vc3, y)));
         __m128 N = myPower(ratpoly, vm2);
 
-        // restore sign bits and the alpha channel
-        // TODO: this can be further optimized by using separate SSE constants for alpha channel
+        // Restore sign bits and the alpha channel.
+        // TODO: this can be further optimized by using separate SSE constants for alpha channel.
         __m128 N_signed = _mm_or_ps(_mm_and_ps(abs_rgb_mask, N), _mm_andnot_ps(abs_rgb_mask, v));
 
         // store
@@ -1455,6 +1454,44 @@ static const     double Eprime_break = std::sqrt(E_break * E_scale);
 
 } // HLG
 } // anonymous
+
+template <typename T>
+Renderer_LINEAR_TO_HLG<T>::Renderer_LINEAR_TO_HLG(ConstFixedFunctionOpDataRcPtr& /*data*/)
+    : OpCPU()
+{
+}
+
+template <typename T>
+void Renderer_LINEAR_TO_HLG<T>::apply(const void* inImg, void* outImg, long numPixels) const
+{
+    using namespace HLG;
+    const float* in = (const float*)inImg;
+    float* out = (float*)outImg;
+
+    for (long idx = 0; idx < numPixels; ++idx)
+    {
+        // RGB
+        for (int ch = 0; ch < 3; ++ch)
+        {
+            float Ein = *(in++);;
+
+            const T E = std::abs(T(Ein));
+            T Eprime;
+            if (E < T(E_break))
+            {
+                Eprime = std::sqrt(E * T(E_scale));
+            }
+            else
+            {
+                Eprime = T(a) * std::log(E - T(b)) + T(c);
+            }
+            *(out++) = std::copysign(float(Eprime), Ein);
+        }
+
+        // Alpha
+        *(out++) = *(in++);
+    };
+}
 
 template<typename T>
 Renderer_HLG_TO_LINEAR<T>::Renderer_HLG_TO_LINEAR(ConstFixedFunctionOpDataRcPtr& /*data*/)
@@ -1494,44 +1531,6 @@ void Renderer_HLG_TO_LINEAR<T>::apply(const void* inImg, void* outImg, long numP
     }
 }
 
-template <typename T>
-Renderer_LINEAR_TO_HLG<T>::Renderer_LINEAR_TO_HLG(ConstFixedFunctionOpDataRcPtr& /*data*/)
-    : OpCPU()
-{
-}
-
-template <typename T>
-void Renderer_LINEAR_TO_HLG<T>::apply(const void* inImg, void* outImg, long numPixels) const
-{
-    using namespace HLG;
-    const float* in = (const float*)inImg;
-    float* out = (float*)outImg;
-
-    for (long idx = 0; idx < numPixels; ++idx)
-    {
-        // RGB
-        for (int ch = 0; ch < 3; ++ch)
-        {
-            float Ein = *(in++);;
-            
-            const T E = std::abs(T(Ein));
-            T Eprime;
-            if (E < T(E_break))
-            {
-                Eprime = std::sqrt(E * T(E_scale));
-            }
-            else
-            {
-                Eprime = T(a) * std::log(E - T(b)) + T(c);
-            }
-            *(out++) = std::copysign(float(Eprime), Ein);
-        }
-
-        // Alpha
-        *(out++) = *(in++);
-    };
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1539,7 +1538,7 @@ void Renderer_LINEAR_TO_HLG<T>::apply(const void* inImg, void* outImg, long numP
 
 ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func, bool fastLogExpPow)
 {
-    // prevent "unused-parameter" warning/error in case the using code is
+    // Prevent "unused-parameter" warning/error in case the using code is
     // ifdef'ed out.
     (void)fastLogExpPow; 
 
@@ -1635,23 +1634,7 @@ ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func
         {
             return std::make_shared<Renderer_LUV_TO_XYZ>(func);
         }
-        case FixedFunctionOpData::PQ_TO_LINEAR:
-        {
-#if OCIO_USE_SSE2
-            if (fastLogExpPow)
-            {
-                return std::make_shared<Renderer_PQ_TO_LINEAR_SSE<true>>(func);
-            }
-#if (_MSC_VER >= 1920) && (OCIO_USE_AVX)
-            // MSVC 2019+ has built-in _mm_pow_ps() SVML intrinsic
-            // implementation accessible through immintrin.h. Therefore precise
-            // SIMD version is available only when compiled with MSVC and AVX
-            // support.
-            return std::make_shared<Renderer_PQ_TO_LINEAR_SSE<false>>(func);
-#endif  
-#endif // OCIO_USE_SSE2
-            return std::make_shared<Renderer_PQ_TO_LINEAR<float>>(func);
-        }
+        
         case FixedFunctionOpData::LINEAR_TO_PQ:
         {
 #if OCIO_USE_SSE2
@@ -1669,17 +1652,33 @@ ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func
 #endif // OCIO_USE_SSE2
             return std::make_shared<Renderer_LINEAR_TO_PQ<float>>(func);
         }
-
-        case FixedFunctionOpData::HLG_TO_LINEAR:
+        case FixedFunctionOpData::PQ_TO_LINEAR:
         {
-            /// TODO: SIMD implementation
-            return std::make_shared<Renderer_HLG_TO_LINEAR<float>>(func);
+#if OCIO_USE_SSE2
+            if (fastLogExpPow)
+            {
+                return std::make_shared<Renderer_PQ_TO_LINEAR_SSE<true>>(func);
+            }
+#if (_MSC_VER >= 1920) && (OCIO_USE_AVX)
+            // MSVC 2019+ has built-in _mm_pow_ps() SVML intrinsic
+            // implementation accessible through immintrin.h. Therefore precise
+            // SIMD version is available only when compiled with MSVC and AVX
+            // support.
+            return std::make_shared<Renderer_PQ_TO_LINEAR_SSE<false>>(func);
+#endif  
+#endif // OCIO_USE_SSE2
+            return std::make_shared<Renderer_PQ_TO_LINEAR<float>>(func);
         }
 
         case FixedFunctionOpData::LINEAR_TO_HLG:
         {
             /// TODO: SIMD implementation
             return std::make_shared<Renderer_LINEAR_TO_HLG<float>>(func);
+        }
+        case FixedFunctionOpData::HLG_TO_LINEAR:
+        {
+            /// TODO: SIMD implementation
+            return std::make_shared<Renderer_HLG_TO_LINEAR<float>>(func);
         }
     }
 

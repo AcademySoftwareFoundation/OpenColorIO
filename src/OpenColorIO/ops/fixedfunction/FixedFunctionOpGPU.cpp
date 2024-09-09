@@ -526,9 +526,6 @@ void Add_LUV_TO_XYZ(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
 
 namespace 
 {
-    // TODO these constants are duplicated in multiple places;
-    // Displays.cpp, FixedFunctionOp.cpp and here. Would be great
-    // if de-duplicated.
     namespace ST_2084
     {
         static constexpr double m1 = 0.25 * 2610. / 4096.;
@@ -596,7 +593,7 @@ void Add_HLG_TO_LINEAR(GpuShaderCreatorRcPtr& shaderCreator, GpuShaderText& ss)
     ss.newLine() << ss.float3Decl("E_gamma") << " = Eprime * Eprime * " << ss.float3Const(1/E_scale) << ";";
     ss.newLine() << ss.float3Decl("E_log") << " = exp((Eprime - " << ss.float3Const(c) << ") * " << ss.float3Const(1.0/a) << ") + " << ss.float3Const(b) << ";";
     
-    // combine log and gamma parts
+    // Combine log and gamma parts.
     ss.newLine() << pxl << ".rgb = sign3 * (isAboveBreak * E_log + ( " << ss.float3Const(1.0f) << " - isAboveBreak ) * E_gamma);";
 }
 
@@ -619,7 +616,7 @@ void Add_LINEAR_TO_HLG(GpuShaderCreatorRcPtr& shaderCreator, GpuShaderText& ss)
     ss.newLine() << ss.float3Decl("Ep_gamma") << " = sqrt( E * " << ss.float3Const(E_scale) << ");";
     ss.newLine() << ss.float3Decl("Ep_log") << " = " << ss.float3Const(a) << " * log( E - " << ss.float3Const(b) << ") + " << ss.float3Const(c) << ";";
 
-    // combine log and gamma parts
+    // Combine log and gamma parts.
     ss.newLine() << pxl << ".rgb = sign3 * (isAboveBreak * Ep_log + ( " << ss.float3Const(1.0f) << " - isAboveBreak ) * Ep_gamma);";
 }
 

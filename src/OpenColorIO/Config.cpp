@@ -5318,7 +5318,8 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
                 if(ffstyle == FIXED_FUNCTION_LINEAR_TO_PQ || ffstyle == FIXED_FUNCTION_LINEAR_TO_HLG)
                 {
                     std::ostringstream ss;
-                    ss << "Only config version 2.4 (or higher) can have FixedFunctionTransform style '" << FixedFunctionStyleToString(ffstyle) << "'.";
+                    ss << "Only config version 2.4 (or higher) can have FixedFunctionTransform style '" 
+                       << FixedFunctionStyleToString(ffstyle) << "'.";
                     throw Exception(ss.str().c_str());
                 }
             }

@@ -39,10 +39,10 @@ constexpr char XYZ_TO_uvY_STR[]            = "XYZ_TO_uvY";
 constexpr char uvY_TO_XYZ_STR[]            = "uvY_TO_XYZ";
 constexpr char XYZ_TO_LUV_STR[]            = "XYZ_TO_LUV";
 constexpr char LUV_TO_XYZ_STR[]            = "LUV_TO_XYZ";
-constexpr char PQ_TO_LINEAR_STR[]          = "PQ_TO_LINEAR";
 constexpr char LINEAR_TO_PQ_STR[]          = "LINEAR_TO_PQ";
-constexpr char HLG_TO_LINEAR_STR[]         = "HLG_TO_LINEAR";
+constexpr char PQ_TO_LINEAR_STR[]          = "PQ_TO_LINEAR";
 constexpr char LINEAR_TO_HLG_STR[]         = "LINEAR_TO_HLG";
+constexpr char HLG_TO_LINEAR_STR[]         = "HLG_TO_LINEAR";
 
 
 // NOTE: Converts the enumeration value to its string representation (i.e. CLF reader).
@@ -98,14 +98,14 @@ const char * FixedFunctionOpData::ConvertStyleToString(Style style, bool detaile
             return XYZ_TO_LUV_STR;
         case LUV_TO_XYZ:
             return LUV_TO_XYZ_STR;
+        case LINEAR_TO_PQ:
+            return LINEAR_TO_PQ_STR;
         case PQ_TO_LINEAR:
           return PQ_TO_LINEAR_STR;
-        case LINEAR_TO_PQ:
-          return LINEAR_TO_PQ_STR;
-        case HLG_TO_LINEAR:
-            return HLG_TO_LINEAR_STR;
         case LINEAR_TO_HLG:
             return LINEAR_TO_HLG_STR;
+        case HLG_TO_LINEAR:
+            return HLG_TO_LINEAR_STR;
     }
 
     std::stringstream ss("Unknown FixedFunction style: ");
@@ -208,21 +208,21 @@ FixedFunctionOpData::Style FixedFunctionOpData::GetStyle(const char * name)
         {
             return LUV_TO_XYZ;
         }
-        else if (0 == Platform::Strcasecmp(name, PQ_TO_LINEAR_STR))
-        {
-            return PQ_TO_LINEAR;
-        }
         else if (0 == Platform::Strcasecmp(name, LINEAR_TO_PQ_STR))
         {
             return LINEAR_TO_PQ;
         }
-        else if (0 == Platform::Strcasecmp(name, HLG_TO_LINEAR_STR))
+        else if (0 == Platform::Strcasecmp(name, PQ_TO_LINEAR_STR))
         {
-            return HLG_TO_LINEAR;
+            return PQ_TO_LINEAR;
         }
         else if (0 == Platform::Strcasecmp(name, LINEAR_TO_HLG_STR))
         {
             return LINEAR_TO_HLG;
+        }
+        else if (0 == Platform::Strcasecmp(name, HLG_TO_LINEAR_STR))
+        {
+            return HLG_TO_LINEAR;
         }
     }
 
@@ -365,12 +365,12 @@ FixedFunctionStyle FixedFunctionOpData::ConvertStyle(FixedFunctionOpData::Style 
     case FixedFunctionOpData::LUV_TO_XYZ:
         return FIXED_FUNCTION_XYZ_TO_LUV;
 
-    case FixedFunctionOpData::PQ_TO_LINEAR:
     case FixedFunctionOpData::LINEAR_TO_PQ:
+    case FixedFunctionOpData::PQ_TO_LINEAR:
         return FIXED_FUNCTION_LINEAR_TO_PQ;
     
-    case FixedFunctionOpData::HLG_TO_LINEAR:
     case FixedFunctionOpData::LINEAR_TO_HLG:
+    case FixedFunctionOpData::HLG_TO_LINEAR:
         return FIXED_FUNCTION_LINEAR_TO_HLG;
     }
 
@@ -631,24 +631,25 @@ void FixedFunctionOpData::invert() noexcept
             break;
         }
 
-        case PQ_TO_LINEAR:
-        {
-            setStyle(LINEAR_TO_PQ);
-            break;
-        }
         case LINEAR_TO_PQ:
         {
             setStyle(PQ_TO_LINEAR);
             break;
         }
-        case HLG_TO_LINEAR:
+        case PQ_TO_LINEAR:
         {
-            setStyle(LINEAR_TO_HLG);
+            setStyle(LINEAR_TO_PQ);
             break;
         }
+
         case LINEAR_TO_HLG:
         {
             setStyle(HLG_TO_LINEAR);
+            break;
+        }
+        case HLG_TO_LINEAR:
+        {
+            setStyle(LINEAR_TO_HLG);
             break;
         }
     }
