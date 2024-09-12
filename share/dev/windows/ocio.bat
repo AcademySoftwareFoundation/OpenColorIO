@@ -22,8 +22,8 @@ set INSTALL_PATH_OK=n
 rem Python location
 set PYTHON_PATH=
 
-rem Microsoft Visual Studio path
-set MSVS_PATH=%programfiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build
+rem Microsoft Visual Studio path (will auto-find if not passed in cmd args)
+set MSVS_PATH=
 
 set DO_CONFIGURE=0
 
@@ -75,6 +75,22 @@ if NOT "%~1"=="" (
     goto :args_loop
 )
 
+rem If not overridden by the cmd line args, find and use the latest Visual Studio
+if NOT DEFINED MSVS_PATH (
+    for /f %%i in ('"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -format value -property installationPath -latest') do (
+        echo Found Visual Studio installation at '%%i'
+        set MSVS_PATH=%%i
+    )
+)
+
+IF NOT EXIST "!MSVS_PATH!" ( 
+    echo Could not find MS Visual Studio. Please provide the location for Microsoft Visual Studio vcvars64.bat or modify MSVS_PATH in the script.
+    rem The double dash are in quote here because otherwise the echo command thow an error.
+    echo "--msvs <path>"
+    echo E.g. C:\Program Files\Microsoft Visual Studio\2022\Enterprise\
+    exit /b
+)
+
 rem Testing the path before cmake
 IF NOT EXIST "!VCPKG_PATH!" ( 
     echo Could not find Vcpkg. Please provide the location for vcpkg or modify VCPKG_PATH in this script.
@@ -101,14 +117,6 @@ if NOT EXIST "!PYTHON_PATH!\python.exe" (
         echo "--python <path>"
         exit /b
     )
-)
-
-IF NOT EXIST "!MSVS_PATH!" ( 
-    echo Could not find MS Visual Studio. Please provide the location for Microsoft Visual Studio vcvars64.bat or modify MSVS_PATH in the script.
-    rem The double dash are in quote here because otherwise the echo command thow an error.
-    echo "--msvs <path>"
-    echo E.g. C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build
-    exit /b
 )
 
 if !CUSTOM_BUILD_PATH!==0 (
@@ -139,7 +147,7 @@ set INSTALL_PATH=!INSTALL_PATH!\!CMAKE_BUILD_TYPE!
 
 rem ****************************************************************************************************************
 rem Setting up the environment using MS Visual Studio batch script
-set VCVARS64_PATH="!MSVS_PATH!\vcvars64.bat"
+set VCVARS64_PATH="!MSVS_PATH!\VC\Auxiliary\Build\vcvars64.bat"
 IF NOT EXIST !VCVARS64_PATH! (
     rem Checking for vcvars64.bat script.
     rem !MSVS_PATH! is checked earlier in the script
@@ -295,8 +303,8 @@ echo.
 echo Optional options depending on the environment:
 echo --python       Python installation location
 echo.
-echo --msvs         path where to find vcvars64.bat from Microsoft Visual Studio
-echo                Default: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build
+echo --msvs         Root folder of the Microsoft Visual Studio. (E.g. C:\Program Files\Microsoft Visual Studio\2022)
+echo                Default: installation path of the latest Visual Studio found in the system by the vswhere.exe tool.
 echo.
 echo --b            build location
 echo                Default: %TEMP%\OCIO\build
