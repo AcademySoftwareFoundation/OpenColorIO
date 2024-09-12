@@ -620,12 +620,12 @@ void Add_HLG_TO_LINEAR(GpuShaderCreatorRcPtr& shaderCreator, GpuShaderText& ss)
     ss.newLine() << pxl << ".rgb = sign3 * (isAboveBreak * E_log + ( " << ss.float3Const(1.0f) << " - isAboveBreak ) * E_gamma);";
 }
 
-void Add_LINEAR_TO_DBL_LOG_AFFINE(GpuShaderCreatorRcPtr& shaderCreator, GpuShaderText& ss)
+void Add_LINEAR_TO_DBL_LOG_AFFINE(GpuShaderCreatorRcPtr& /*shaderCreator*/, GpuShaderText& /*ss*/)
 {
     // FIXME: Implement. /coz
 }
 
-void Add_DBL_LOG_AFFINE_TO_LINEAR(GpuShaderCreatorRcPtr& shaderCreator, GpuShaderText& ss)
+void Add_DBL_LOG_AFFINE_TO_LINEAR(GpuShaderCreatorRcPtr& /*shaderCreator*/, GpuShaderText& /*ss*/)
 {
     // FIXME: Implement. /coz
 }

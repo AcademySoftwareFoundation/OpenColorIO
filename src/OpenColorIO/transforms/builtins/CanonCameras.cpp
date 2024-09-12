@@ -61,7 +61,7 @@ void GenerateOpsToLinear(OpRcPtrVec& ops)
     {
         10.0f,              // log base
         0.092864125f,       // break point 1
-        0.092864125f,       // break point 2 ( no linear segment)
+        0.092864125f,       // break point 2 ( no linear segment )
 
         -0.24136077f,       // log segment 1 log-side slope
         0.092864125f,       // log segment 1 log-side offset
