@@ -587,6 +587,8 @@ void bindPyTypes(py::module & m)
             DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_LINEAR_TO_PQ))
         .value("FIXED_FUNCTION_LINEAR_TO_HLG", FIXED_FUNCTION_LINEAR_TO_HLG,
             DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_LINEAR_TO_HLG))
+        .value("FIXED_FUNCTION_LINEAR_TO_DOUBLE_LOG_AFFINE", FIXED_FUNCTION_LINEAR_TO_DOUBLE_LOG_AFFINE,
+            DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_LINEAR_TO_DOUBLE_LOG_AFFINE))
 
         .export_values();
 

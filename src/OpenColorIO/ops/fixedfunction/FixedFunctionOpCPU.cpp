@@ -230,23 +230,6 @@ class Renderer_PQ_TO_LINEAR : public OpCPU {
   void apply(const void *inImg, void *outImg, long numPixels) const override;
 };
 
-template <typename T>
-class Renderer_LINEAR_TO_HLG : public OpCPU {
-public:
-    Renderer_LINEAR_TO_HLG() = delete;
-    explicit Renderer_LINEAR_TO_HLG(ConstFixedFunctionOpDataRcPtr& data);
-
-    void apply(const void* inImg, void* outImg, long numPixels) const override;
-};
-
-template <typename T>
-class Renderer_HLG_TO_LINEAR : public OpCPU {
-public:
-    Renderer_HLG_TO_LINEAR() = delete;
-    explicit Renderer_HLG_TO_LINEAR(ConstFixedFunctionOpDataRcPtr& data);
-
-    void apply(const void* inImg, void* outImg, long numPixels) const override;
-};
 
 #if OCIO_USE_SSE2
 template<bool FAST_POWER>
@@ -269,6 +252,68 @@ public:
     void apply(const void* inImg, void* outImg, long numPixels) const override;
 };
 #endif
+
+template <typename T>
+class Renderer_LINEAR_TO_HLG : public OpCPU {
+public:
+    Renderer_LINEAR_TO_HLG() = delete;
+    explicit Renderer_LINEAR_TO_HLG(ConstFixedFunctionOpDataRcPtr& data);
+
+    void apply(const void* inImg, void* outImg, long numPixels) const override;
+};
+
+template <typename T>
+class Renderer_HLG_TO_LINEAR : public OpCPU {
+public:
+    Renderer_HLG_TO_LINEAR() = delete;
+    explicit Renderer_HLG_TO_LINEAR(ConstFixedFunctionOpDataRcPtr& data);
+
+    void apply(const void* inImg, void* outImg, long numPixels) const override;
+};
+
+class Renderer_LINEAR_TO_DBL_LOG_AFFINE: public OpCPU {
+public:
+    Renderer_LINEAR_TO_DBL_LOG_AFFINE() = delete;
+    explicit Renderer_LINEAR_TO_DBL_LOG_AFFINE(ConstFixedFunctionOpDataRcPtr& data);
+
+    void apply(const void* inImg, void* outImg, long numPixels) const override;
+
+protected:
+    struct LogSegment
+    {
+        // Ylog = logSlope * log( linSlope * Xlin + linOff, base) + logOff;
+        float logSlope  = 1.0f; // Log side slope.
+        float logOff    = 0.0f; // Log side offset.
+        float linSlope  = 1.0f; // Linear side slope.
+        float linOff    = 0.0f; // Linear side offset.
+    };
+
+    struct LinSegment
+    {
+        // Ylin = slope * Xlin + off;
+        float slope     = 1.0f;
+        float off       = 0.0f;
+    };
+
+    float m_base     = 2.0f; // Logarithm base;
+    float m_break1   = 1.0f; // Break point between the first log segment and the linear segment.
+    float m_break2   = 1.0f; // Break point between the linear segment and the second log segment.
+    LogSegment m_logSeg1;
+    LogSegment m_logSeg2;
+    LinSegment m_linSeg;
+};
+
+class Renderer_DBL_LOG_AFFINE_TO_LINEAR : public Renderer_LINEAR_TO_DBL_LOG_AFFINE {
+public:
+    Renderer_DBL_LOG_AFFINE_TO_LINEAR() = delete;
+    explicit Renderer_DBL_LOG_AFFINE_TO_LINEAR(ConstFixedFunctionOpDataRcPtr& data);
+
+    void apply(const void* inImg, void* outImg, long numPixels) const override;
+
+protected:
+    float m_break1Log = 1.0f; // Computed break point 1 in the log space
+    float m_break2Log = 1.0f; // Computed break point 2 in the log space
+};
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1531,6 +1576,107 @@ void Renderer_HLG_TO_LINEAR<T>::apply(const void* inImg, void* outImg, long numP
     }
 }
 
+Renderer_LINEAR_TO_DBL_LOG_AFFINE::Renderer_LINEAR_TO_DBL_LOG_AFFINE(ConstFixedFunctionOpDataRcPtr& data)
+    : OpCPU()
+{
+    auto params = data->getParams();
+
+    // store the parameters, baking the log base conversion into 'logSlope'.
+    m_base              = (float)params[0];
+    m_break1            = (float)params[1]; 
+    m_break2            = (float)params[2];
+    
+    m_logSeg1.logSlope  = (float)params[3] / std::log(m_base);
+    m_logSeg1.logOff    = (float)params[4];
+    m_logSeg1.linSlope  = (float)params[5];
+    m_logSeg1.linOff    = (float)params[6];
+    
+    m_logSeg2.logSlope  = (float)params[7] / std::log(m_base);;
+    m_logSeg2.logOff    = (float)params[8];
+    m_logSeg2.linSlope  = (float)params[9];
+    m_logSeg2.linOff    = (float)params[10];
+    
+    m_linSeg.slope      = (float)params[11];
+    m_linSeg.off        = (float)params[12];
+}
+
+void Renderer_LINEAR_TO_DBL_LOG_AFFINE::apply(const void* inImg, void* outImg, long numPixels) const
+{
+    using namespace HLG;
+    const float* in = (const float*)inImg;
+    float* out = (float*)outImg;
+
+    for (long idx = 0; idx < numPixels; ++idx)
+    {
+        // RGB
+        for (int ch = 0; ch < 3; ++ch)
+        {
+            float x = *(in++);
+
+            // Linear segment may not exist or be valid. Thus we include the break points in the log segments.
+            if(x <= m_break1)  
+            {
+                x = m_logSeg1.logSlope * std::log( m_logSeg1.linSlope * x + m_logSeg1.linOff) + m_logSeg1.logOff;
+            }
+            else if (x < m_break2 )
+            {
+                x = m_linSeg.slope * x + m_linSeg.off;
+            }
+            else
+            {
+                x = m_logSeg2.logSlope * std::log(m_logSeg2.linSlope * x + m_logSeg2.linOff) + m_logSeg2.logOff;
+            }
+
+            *(out++) = x;
+        }
+
+        // Alpha
+        *(out++) = *(in++);
+    };
+}
+
+Renderer_DBL_LOG_AFFINE_TO_LINEAR::Renderer_DBL_LOG_AFFINE_TO_LINEAR(ConstFixedFunctionOpDataRcPtr& data)
+    : Renderer_LINEAR_TO_DBL_LOG_AFFINE(data)
+{
+    // FIXME: Cache more derived params and optimize divisions.
+    m_break1Log = m_logSeg1.logSlope * std::log(m_logSeg1.linSlope * m_break1 + m_logSeg1.linOff) + m_logSeg1.logOff;
+    m_break2Log = m_logSeg2.logSlope * std::log(m_logSeg2.linSlope * m_break2 + m_logSeg2.linOff) + m_logSeg2.logOff;
+}
+
+void Renderer_DBL_LOG_AFFINE_TO_LINEAR::apply(const void* inImg, void* outImg, long numPixels) const
+{
+    using namespace HLG;
+    const float* in = (const float*)inImg;
+    float* out = (float*)outImg;
+
+    for (long idx = 0; idx < numPixels; ++idx)
+    {
+        // RGB
+        for (int ch = 0; ch < 3; ++ch)
+        {
+            float y = *(in++);
+
+            if (y <= m_break1Log)
+            {
+                y = (std::exp((y - m_logSeg1.logOff) / m_logSeg1.logSlope) - m_logSeg1.linOff) / m_logSeg1.linSlope;
+            }
+            else if (y < m_break1Log)
+            {
+                y = (y - m_linSeg.off) / m_linSeg.slope;
+            }
+            else
+            {
+                y = (std::exp((y - m_logSeg2.logOff) / m_logSeg2.logSlope) - m_logSeg2.linOff) / m_logSeg2.linSlope;
+            }
+
+            *(out++) = y;
+        }
+
+        // Alpha
+        *(out++) = *(in++);
+    }
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1680,6 +1826,18 @@ ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func
             /// TODO: SIMD implementation
             return std::make_shared<Renderer_HLG_TO_LINEAR<float>>(func);
         }
+
+        case FixedFunctionOpData::LINEAR_TO_DBL_LOG_AFFINE:
+        {
+            /// TODO: SIMD implementation
+            return std::make_shared<Renderer_LINEAR_TO_DBL_LOG_AFFINE>(func);
+        }
+        case FixedFunctionOpData::DBL_LOG_AFFINE_TO_LINEAR:
+        {
+            /// TODO: SIMD implementation
+            return std::make_shared<Renderer_DBL_LOG_AFFINE_TO_LINEAR>(func);
+        }
+
     }
 
     throw Exception("Unsupported FixedFunction style");

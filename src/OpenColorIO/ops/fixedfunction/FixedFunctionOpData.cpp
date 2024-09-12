@@ -16,33 +16,35 @@ namespace DefaultValues
 const int FLOAT_DECIMALS = 7;
 }
 
-constexpr char ACES_RED_MOD_03_FWD_STR[]   = "RedMod03Fwd";
-constexpr char ACES_RED_MOD_03_REV_STR[]   = "RedMod03Rev";
-constexpr char ACES_RED_MOD_10_FWD_STR[]   = "RedMod10Fwd";
-constexpr char ACES_RED_MOD_10_REV_STR[]   = "RedMod10Rev";
-constexpr char ACES_GLOW_03_FWD_STR[]      = "Glow03Fwd";
-constexpr char ACES_GLOW_03_REV_STR[]      = "Glow03Rev";
-constexpr char ACES_GLOW_10_FWD_STR[]      = "Glow10Fwd";
-constexpr char ACES_GLOW_10_REV_STR[]      = "Glow10Rev";
-constexpr char ACES_DARK_TO_DIM_10_STR[]   = "DarkToDim10";
-constexpr char ACES_DIM_TO_DARK_10_STR[]   = "DimToDark10";
-constexpr char ACES_GAMUT_COMP_13_FWD_STR[]= "GamutComp13Fwd";
-constexpr char ACES_GAMUT_COMP_13_REV_STR[]= "GamutComp13Rev";
-constexpr char SURROUND_STR[]              = "Surround"; // Old name for Rec2100SurroundFwd
-constexpr char REC_2100_SURROUND_FWD_STR[] = "Rec2100SurroundFwd";
-constexpr char REC_2100_SURROUND_REV_STR[] = "Rec2100SurroundRev";
-constexpr char RGB_TO_HSV_STR[]            = "RGB_TO_HSV";
-constexpr char HSV_TO_RGB_STR[]            = "HSV_TO_RGB";
-constexpr char XYZ_TO_xyY_STR[]            = "XYZ_TO_xyY";
-constexpr char xyY_TO_XYZ_STR[]            = "xyY_TO_XYZ";
-constexpr char XYZ_TO_uvY_STR[]            = "XYZ_TO_uvY";
-constexpr char uvY_TO_XYZ_STR[]            = "uvY_TO_XYZ";
-constexpr char XYZ_TO_LUV_STR[]            = "XYZ_TO_LUV";
-constexpr char LUV_TO_XYZ_STR[]            = "LUV_TO_XYZ";
-constexpr char LINEAR_TO_PQ_STR[]          = "LINEAR_TO_PQ";
-constexpr char PQ_TO_LINEAR_STR[]          = "PQ_TO_LINEAR";
-constexpr char LINEAR_TO_HLG_STR[]         = "LINEAR_TO_HLG";
-constexpr char HLG_TO_LINEAR_STR[]         = "HLG_TO_LINEAR";
+constexpr char ACES_RED_MOD_03_FWD_STR[]      = "RedMod03Fwd";
+constexpr char ACES_RED_MOD_03_REV_STR[]      = "RedMod03Rev";
+constexpr char ACES_RED_MOD_10_FWD_STR[]      = "RedMod10Fwd";
+constexpr char ACES_RED_MOD_10_REV_STR[]      = "RedMod10Rev";
+constexpr char ACES_GLOW_03_FWD_STR[]         = "Glow03Fwd";
+constexpr char ACES_GLOW_03_REV_STR[]         = "Glow03Rev";
+constexpr char ACES_GLOW_10_FWD_STR[]         = "Glow10Fwd";
+constexpr char ACES_GLOW_10_REV_STR[]         = "Glow10Rev";
+constexpr char ACES_DARK_TO_DIM_10_STR[]      = "DarkToDim10";
+constexpr char ACES_DIM_TO_DARK_10_STR[]      = "DimToDark10";
+constexpr char ACES_GAMUT_COMP_13_FWD_STR[]   = "GamutComp13Fwd";
+constexpr char ACES_GAMUT_COMP_13_REV_STR[]   = "GamutComp13Rev";
+constexpr char SURROUND_STR[]                 = "Surround"; // Old name for Rec2100SurroundFwd
+constexpr char REC_2100_SURROUND_FWD_STR[]    = "Rec2100SurroundFwd";
+constexpr char REC_2100_SURROUND_REV_STR[]    = "Rec2100SurroundRev";
+constexpr char RGB_TO_HSV_STR[]               = "RGB_TO_HSV";
+constexpr char HSV_TO_RGB_STR[]               = "HSV_TO_RGB";
+constexpr char XYZ_TO_xyY_STR[]               = "XYZ_TO_xyY";
+constexpr char xyY_TO_XYZ_STR[]               = "xyY_TO_XYZ";
+constexpr char XYZ_TO_uvY_STR[]               = "XYZ_TO_uvY";
+constexpr char uvY_TO_XYZ_STR[]               = "uvY_TO_XYZ";
+constexpr char XYZ_TO_LUV_STR[]               = "XYZ_TO_LUV";
+constexpr char LUV_TO_XYZ_STR[]               = "LUV_TO_XYZ";
+constexpr char LINEAR_TO_PQ_STR[]             = "LINEAR_TO_PQ";
+constexpr char PQ_TO_LINEAR_STR[]             = "PQ_TO_LINEAR";
+constexpr char LINEAR_TO_HLG_STR[]            = "LINEAR_TO_HLG";
+constexpr char HLG_TO_LINEAR_STR[]            = "HLG_TO_LINEAR";
+constexpr char LINEAR_TO_DBL_LOG_AFFINE_STR[] = "LINEAR_TO_DBL_LOG_AFFINE";
+constexpr char DBL_LOG_AFFINE_TO_LINEAR_STR[] = "DBL_LOG_AFFINE_TO_LINEAR";
 
 
 // NOTE: Converts the enumeration value to its string representation (i.e. CLF reader).
@@ -106,6 +108,10 @@ const char * FixedFunctionOpData::ConvertStyleToString(Style style, bool detaile
             return LINEAR_TO_HLG_STR;
         case HLG_TO_LINEAR:
             return HLG_TO_LINEAR_STR;
+        case LINEAR_TO_DBL_LOG_AFFINE:
+            return LINEAR_TO_DBL_LOG_AFFINE_STR;
+        case DBL_LOG_AFFINE_TO_LINEAR:
+            return DBL_LOG_AFFINE_TO_LINEAR_STR;
     }
 
     std::stringstream ss("Unknown FixedFunction style: ");
@@ -224,6 +230,14 @@ FixedFunctionOpData::Style FixedFunctionOpData::GetStyle(const char * name)
         {
             return HLG_TO_LINEAR;
         }
+        else if (0 == Platform::Strcasecmp(name, LINEAR_TO_DBL_LOG_AFFINE_STR))
+        {
+            return LINEAR_TO_DBL_LOG_AFFINE;
+        }
+        else if (0 == Platform::Strcasecmp(name, DBL_LOG_AFFINE_TO_LINEAR_STR))
+        {
+            return DBL_LOG_AFFINE_TO_LINEAR;
+        }
     }
 
     std::string st("Unknown FixedFunction style: ");
@@ -308,6 +322,11 @@ FixedFunctionOpData::Style FixedFunctionOpData::ConvertStyle(FixedFunctionStyle 
             return isForward ? FixedFunctionOpData::LINEAR_TO_HLG:
                                FixedFunctionOpData::HLG_TO_LINEAR;
         }
+        case FIXED_FUNCTION_LINEAR_TO_DOUBLE_LOG_AFFINE:
+        {
+            return isForward ? FixedFunctionOpData::LINEAR_TO_DBL_LOG_AFFINE:
+                               FixedFunctionOpData::DBL_LOG_AFFINE_TO_LINEAR;
+        }
     }
 
     std::stringstream ss("Unknown FixedFunction transform style: ");
@@ -372,6 +391,10 @@ FixedFunctionStyle FixedFunctionOpData::ConvertStyle(FixedFunctionOpData::Style 
     case FixedFunctionOpData::LINEAR_TO_HLG:
     case FixedFunctionOpData::HLG_TO_LINEAR:
         return FIXED_FUNCTION_LINEAR_TO_HLG;
+
+    case FixedFunctionOpData::LINEAR_TO_DBL_LOG_AFFINE:
+    case FixedFunctionOpData::DBL_LOG_AFFINE_TO_LINEAR:
+        return FIXED_FUNCTION_LINEAR_TO_DOUBLE_LOG_AFFINE;
     }
 
     std::stringstream ss("Unknown FixedFunction style: ");
@@ -482,6 +505,19 @@ void FixedFunctionOpData::validate() const
             ss << "Parameter " << p << " is greater than upper bound " << hi_bound;
             throw Exception(ss.str().c_str());
         }
+    }
+    else if (m_style == DBL_LOG_AFFINE_TO_LINEAR || m_style == LINEAR_TO_DBL_LOG_AFFINE)
+    {
+        if (m_params.size() != 13)
+        {
+            std::stringstream ss;
+            ss << "The style '" << ConvertStyleToString(m_style, true)
+                << "' must have 13 parameters but "
+                << m_params.size() << " found.";
+            throw Exception(ss.str().c_str());
+        }
+
+        // FIXME: validate the parameters /coz
     }
     else
     {
@@ -652,6 +688,17 @@ void FixedFunctionOpData::invert() noexcept
             setStyle(LINEAR_TO_HLG);
             break;
         }
+
+        case LINEAR_TO_DBL_LOG_AFFINE:
+        {
+            setStyle(DBL_LOG_AFFINE_TO_LINEAR);
+            break;
+        }
+        case DBL_LOG_AFFINE_TO_LINEAR:
+        {
+            setStyle(LINEAR_TO_DBL_LOG_AFFINE);
+            break;
+        }
     }
 
     // Note that any existing metadata could become stale at this point but
@@ -684,6 +731,7 @@ TransformDirection FixedFunctionOpData::getDirection() const noexcept
     case FixedFunctionOpData::XYZ_TO_LUV:
     case FixedFunctionOpData::LINEAR_TO_PQ:
     case FixedFunctionOpData::LINEAR_TO_HLG:
+    case FixedFunctionOpData::LINEAR_TO_DBL_LOG_AFFINE:
         return TRANSFORM_DIR_FORWARD;
 
     case FixedFunctionOpData::ACES_RED_MOD_03_INV:
@@ -699,6 +747,7 @@ TransformDirection FixedFunctionOpData::getDirection() const noexcept
     case FixedFunctionOpData::LUV_TO_XYZ:
     case FixedFunctionOpData::PQ_TO_LINEAR:
     case FixedFunctionOpData::HLG_TO_LINEAR:
+    case FixedFunctionOpData::DBL_LOG_AFFINE_TO_LINEAR:
         return TRANSFORM_DIR_INVERSE;
     }
     return TRANSFORM_DIR_FORWARD;

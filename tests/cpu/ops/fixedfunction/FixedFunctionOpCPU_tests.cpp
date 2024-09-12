@@ -629,7 +629,6 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_HLG)
        1.10f, 1.15f, 1.20f, 1.0f, // Over Range
     };
 
-    // FIXME: Double check if the target values are computed with double precision.
     const std::array<float, NumPixels * 4> linearFrame
     {
        -0.383988768f, -0.307689428f, -0.250000000f,-1.0f,
@@ -655,3 +654,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_HLG)
     }
 }
 
+OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_DBL_LOG_AFFINE)
+{
+    // FIXME: Implement. /coz
+}

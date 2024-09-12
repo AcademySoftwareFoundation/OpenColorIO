@@ -557,3 +557,27 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_HLG_inv)
     test.setProcessor(func);
     test.setErrorThreshold(1e-6f);
 }
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_DOUBLE_LOG_AFFINE_fwd)
+{
+    // FIXME: Feed data. /coz
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_DOUBLE_LOG_AFFINE);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    // FIXME : Determine the ranges and threshold. /coz
+    test.setWideRangeInterval(-0.1f, 3.35f); // Output ~[-0.3, 1.02]
+    test.setProcessor(func);
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_DOUBLE_LOG_AFFINE_inv)
+{
+    // FIXME: Feed data. /coz
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_DOUBLE_LOG_AFFINE);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    // FIXME : Determine the ranges and threshold. /coz
+    test.setWideRangeInterval(-0.3f, 1.02f); // Output ~[-0.1, 3.35]
+    test.setProcessor(func);
+    test.setErrorThreshold(1e-6f);
+}

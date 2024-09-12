@@ -52,6 +52,8 @@ public:
         PQ_TO_LINEAR,             // Inverse of above
         LINEAR_TO_HLG,            // Linear to Hybrid Log Gamma curve
         HLG_TO_LINEAR,            // Inverse of above
+        LINEAR_TO_DBL_LOG_AFFINE, // Linear to Double Log-Affine with a Linear Segment (takes 13 doubles as params).
+        DBL_LOG_AFFINE_TO_LINEAR  // Inverse of above
     };
 
     static const char * ConvertStyleToString(Style style, bool detailed);

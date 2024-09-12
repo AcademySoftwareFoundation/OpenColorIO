@@ -4977,6 +4977,59 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
             OCIO_CHECK_NO_THROW(OCIO::Config::CreateFromStream(is));
         }
     }
+
+    {
+        const std::string strEnd =
+            "    from_scene_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<FixedFunctionTransform> {style: LINEAR_TO_HLG}\n";
+
+        {
+            const std::string str = PROFILE_START_V<2, 3>() + strEnd;
+
+            std::istringstream is;
+            is.str(str);
+
+            OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                "Only config version 2.4 (or higher) can have FixedFunctionTransform style 'LINEAR_TO_HLG'.");
+        }
+
+        {
+            const std::string str = PROFILE_START_V<2, 4>() + strEnd;
+
+            std::istringstream is;
+            is.str(str);
+
+            OCIO_CHECK_NO_THROW(OCIO::Config::CreateFromStream(is));
+        }
+    }
+
+    {
+        const std::string strEnd =
+            "    from_scene_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<FixedFunctionTransform> {style: LINEAR_TO_DOUBLE_LOG_AFFINE}\n";
+
+        {
+            const std::string str = PROFILE_START_V<2, 3>() + strEnd;
+
+            std::istringstream is;
+            is.str(str);
+
+            OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                "Only config version 2.4 (or higher) can have FixedFunctionTransform style 'LINEAR_TO_DOUBLE_LOG_AFFINE'.");
+        }
+
+        {
+            const std::string str = PROFILE_START_V<2, 4>() + strEnd;
+
+            std::istringstream is;
+            is.str(str);
+
+            OCIO_CHECK_NO_THROW(OCIO::Config::CreateFromStream(is));
+        }
+    }
+
 }
 
 OCIO_ADD_TEST(Config, exposure_contrast_serialization)
