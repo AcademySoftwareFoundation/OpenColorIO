@@ -1163,7 +1163,7 @@ std::string _Add_Compression_func(
 
     if (invert)
     {
-        ss.newLine() << "if (v < thr || lim < 1.0001 || v > thr + s)";
+        ss.newLine() << "if (v < thr || lim <= 1.0001 || v > thr + s)";
         ss.newLine() << "{";
         ss.indent();
         ss.newLine() << "vCompressed = v;";
@@ -1178,7 +1178,7 @@ std::string _Add_Compression_func(
     }
     else
     {
-        ss.newLine() << "if (v < thr || lim < 1.0001)";
+        ss.newLine() << "if (v < thr || lim <= 1.0001)";
         ss.newLine() << "{";
         ss.indent();
         ss.newLine() << "vCompressed = v;";
@@ -1256,6 +1256,13 @@ std::string _Add_Compress_Gamut_func(
     ss.newLine() << ss.float3Decl("boundaryReturn") << " = " << findGamutBoundaryIntersectionName << "(" << ss.float3Const("J", "M", "h") << ", JMcusp, focusJ, slope_gain, gamma_top, gamma_bottom);";
     ss.newLine() << ss.float2Decl("JMboundary") << " = " << ss.float2Const("boundaryReturn.r", "boundaryReturn.g") << ";";
     ss.newLine() << ss.float2Decl("project_to") << " = " << ss.float2Const("boundaryReturn.b", "0.f") << ";";
+
+    ss.newLine() << "if (JMboundary.g <= 0.f)";
+    ss.newLine() << "{";
+    ss.indent();
+    ss.newLine() << "return " << ss.float3Const("J", "0.f", "h") << ";";
+    ss.dedent();
+    ss.newLine() << "}";
 
     ss.newLine() << ss.float3Decl("reachBoundary") << " = " << getReachBoundaryName << "(JMboundary.r, JMboundary.g, h, JMcusp, focusJ);";
 

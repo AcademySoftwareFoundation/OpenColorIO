@@ -41,11 +41,16 @@ int next_position_in_table(int entry, int table_size)
     return (entry + 1) % table_size;
 }
 
+int clamp_to_table_bounds(int entry, int table_size)
+{
+    return std::min(table_size - 1, std::max(0, entry));
+}
+
 f2 cusp_from_table(float h, const Table3D &gt)
 {
     int i_lo = 0;
     int i_hi = gt.base_index + gt.size; // allowed as we have an extra entry in the table
-    int i = hue_position_in_uniform_table(h, gt.size) + gt.base_index;
+    int i = clamp_to_table_bounds(hue_position_in_uniform_table(h, gt.size) + gt.base_index, gt.total_size);
 
     while (i_lo + 1 < i_hi)
     {
@@ -57,32 +62,34 @@ f2 cusp_from_table(float h, const Table3D &gt)
         {
             i_hi = i;
         }
-        i = (i_lo + i_hi) / 2;
+        i = clamp_to_table_bounds((i_lo + i_hi) / 2, gt.total_size);
     }
 
-    f3 lo {
+    i_hi = std::max(1, i_hi);
+
+    const f3 lo {
         gt.table[i_hi-1][0],
         gt.table[i_hi-1][1],
         gt.table[i_hi-1][2]
     };
 
-    f3 hi {
+    const f3 hi {
         gt.table[i_hi][0],
         gt.table[i_hi][1],
         gt.table[i_hi][2]
     };
 
-    float t = (h - lo[2]) / (hi[2] - lo[2]);
-    float cuspJ = lerpf(lo[0], hi[0], t);
-    float cuspM = lerpf(lo[1], hi[1], t);
+    const float t = (h - lo[2]) / (hi[2] - lo[2]);
+    const float cuspJ = lerpf(lo[0], hi[0], t);
+    const float cuspM = lerpf(lo[1], hi[1], t);
 
     return { cuspJ, cuspM };
 }
 
 float reach_m_from_table(float h, const ACES2::Table1D &gt)
 {
-    int i_lo = hue_position_in_uniform_table(h, gt.size);
-    int i_hi = next_position_in_table(i_lo, gt.size);
+    const int i_lo = clamp_to_table_bounds(hue_position_in_uniform_table(h, gt.size), gt.total_size);
+    const int i_hi = clamp_to_table_bounds(next_position_in_table(i_lo, gt.size), gt.total_size);
 
     const float t = (h - i_lo) / (i_hi - i_lo);
     return lerpf(gt.table[i_lo], gt.table[i_hi], t);
@@ -90,8 +97,8 @@ float reach_m_from_table(float h, const ACES2::Table1D &gt)
 
 float hue_dependent_upper_hull_gamma(float h, const ACES2::Table1D &gt)
 {
-    const int i_lo = hue_position_in_uniform_table(h, gt.size) + gt.base_index;
-    const int i_hi = next_position_in_table(i_lo, gt.size);
+    const int i_lo = clamp_to_table_bounds(hue_position_in_uniform_table(h, gt.size) + gt.base_index, gt.total_size);
+    const int i_hi = clamp_to_table_bounds(next_position_in_table(i_lo, gt.size), gt.total_size);
 
     const float base_hue = (float) (i_lo - gt.base_index);
 
@@ -611,13 +618,13 @@ float compression_function(
     float vCompressed;
 
     if (invert) {
-        if (v < thr || lim < 1.0001f || v > thr + s) {
+        if (v < thr || lim <= 1.0001f || v > thr + s) {
             vCompressed = v;
         } else {
             vCompressed = thr + s * (-nd / (nd - 1.f));
         }
     } else {
-        if (v < thr || lim < 1.0001f) {
+        if (v < thr || lim <= 1.0001f) {
             vCompressed = v;
         } else {
             vCompressed = thr + s * nd / (1.f + nd);
@@ -650,6 +657,11 @@ f3 compressGamut(const f3 &JMh, float Jx, const ACES2::GamutCompressParams& p, b
         const f3 boundaryReturn = find_gamut_boundary_intersection({J, M, h}, JMcusp, focusJ, p.limit_J_max, slope_gain, gamma_top, gamma_bottom);
         const f2 JMboundary = {boundaryReturn[0], boundaryReturn[1]};
         const f2 project_to = {boundaryReturn[2], 0.f};
+
+        if (JMboundary[1] <= 0.0f)
+        {
+            return {J, 0.f, h};
+        }
 
         const f3 reachBoundary = get_reach_boundary(JMboundary[0], JMboundary[1], h, JMcusp, focusJ, p.limit_J_max, p.model_gamma, p.focus_dist, p.reach_m_table);
 
