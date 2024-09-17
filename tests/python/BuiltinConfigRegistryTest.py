@@ -134,10 +134,10 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
             "[OCIO v2.3]"))
         # isRecommended
         self.assertEqual(values[1][2], False)
-		# isDefault
+        # isDefault
         self.assertEqual(values[1][3], False)
 
-		# Name
+        # Name
         self.assertEqual(values[2][0], "cg-config-v2.2.0_aces-v1.3_ocio-v2.4")
         # UI name
         self.assertEqual(
@@ -174,7 +174,7 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
         # isDefault
         self.assertEqual(values[4][3], False)
 
-		# Name
+        # Name
         self.assertEqual(values[5][0], "studio-config-v2.2.0_aces-v1.3_ocio-v2.4")
         # UI name
         self.assertEqual(

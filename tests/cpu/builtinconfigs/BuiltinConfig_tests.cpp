@@ -103,7 +103,6 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
         OCIO_CHECK_EQUAL(registry.isBuiltinConfigRecommended(2), true);
     }
 
-
     // Test builtin config studio-config-v1.0.0_aces-v1.3_ocio-v2.1.
     {
         const std::string studioConfigName = "studio-config-v1.0.0_aces-v1.3_ocio-v2.1";
