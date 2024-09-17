@@ -1638,7 +1638,10 @@ void Renderer_LINEAR_TO_DBL_LOG_AFFINE::apply(const void* inImg, void* outImg, l
 Renderer_DBL_LOG_AFFINE_TO_LINEAR::Renderer_DBL_LOG_AFFINE_TO_LINEAR(ConstFixedFunctionOpDataRcPtr& data)
     : Renderer_LINEAR_TO_DBL_LOG_AFFINE(data)
 {
-    // FIXME: Cache more derived params and optimize divisions.
+    // TODO: Cache more derived params and optimize divisions.  
+    
+    // Calculate the break locations in log space (note that the break points
+    // belong to the log segments, not the linear segment which may be missing).
     m_break1Log = m_logSeg1.logSlope * std::log(m_logSeg1.linSlope * m_break1 + m_logSeg1.linOff) + m_logSeg1.logOff;
     m_break2Log = m_logSeg2.logSlope * std::log(m_logSeg2.linSlope * m_break2 + m_logSeg2.linOff) + m_logSeg2.logOff;
 }
@@ -1660,7 +1663,7 @@ void Renderer_DBL_LOG_AFFINE_TO_LINEAR::apply(const void* inImg, void* outImg, l
             {
                 y = (std::exp((y - m_logSeg1.logOff) / m_logSeg1.logSlope) - m_logSeg1.linOff) / m_logSeg1.linSlope;
             }
-            else if (y < m_break1Log)
+            else if (y < m_break2Log)
             {
                 y = (y - m_linSeg.off) / m_linSeg.slope;
             }

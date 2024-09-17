@@ -1072,6 +1072,85 @@ std::string GpuShaderText::float4GreaterThan(const std::string & a,
     return kw.str();
 }
 
+std::string GpuShaderText::float3GreaterThanEqual(const std::string& a,
+    const std::string& b) const
+{
+    std::ostringstream kw;
+    switch (m_lang)
+    {
+    case GPU_LANGUAGE_GLSL_1_2:
+    case GPU_LANGUAGE_GLSL_1_3:
+    case GPU_LANGUAGE_GLSL_4_0:
+    case GPU_LANGUAGE_GLSL_ES_1_0:
+    case GPU_LANGUAGE_GLSL_ES_3_0:
+    case GPU_LANGUAGE_CG:
+    {
+        kw << float3Keyword() << "(greaterThanEqual( " << a << ", " << b << "))";
+        break;
+    }
+    case LANGUAGE_OSL_1:
+    case GPU_LANGUAGE_MSL_2_0:
+    case GPU_LANGUAGE_HLSL_DX11:
+    {
+        kw << float3Keyword() << "("
+            << "(" << a << "[0] >= " << b << "[0]) ? 1.0 : 0.0, "
+            << "(" << a << "[1] >= " << b << "[1]) ? 1.0 : 0.0, "
+            << "(" << a << "[2] >= " << b << "[2]) ? 1.0 : 0.0)";
+        break;
+    }
+
+    default:
+    {
+        throw Exception("Unknown GPU shader language.");
+    }
+    }
+    return kw.str();
+}
+
+std::string GpuShaderText::float4GreaterThanEqual(const std::string& a,
+    const std::string& b) const
+{
+    std::ostringstream kw;
+    switch (m_lang)
+    {
+    case GPU_LANGUAGE_GLSL_1_2:
+    case GPU_LANGUAGE_GLSL_1_3:
+    case GPU_LANGUAGE_GLSL_4_0:
+    case GPU_LANGUAGE_GLSL_ES_1_0:
+    case GPU_LANGUAGE_GLSL_ES_3_0:
+    case GPU_LANGUAGE_CG:
+    {
+        kw << float4Keyword() << "(greaterThanEqual( " << a << ", " << b << "))";
+        break;
+    }
+    case GPU_LANGUAGE_MSL_2_0:
+    case GPU_LANGUAGE_HLSL_DX11:
+    {
+        kw << float4Keyword() << "("
+            << "(" << a << "[0] >= " << b << "[0]) ? 1.0 : 0.0, "
+            << "(" << a << "[1] >= " << b << "[1]) ? 1.0 : 0.0, "
+            << "(" << a << "[2] >= " << b << "[2]) ? 1.0 : 0.0, "
+            << "(" << a << "[3] >= " << b << "[3]) ? 1.0 : 0.0)";
+        break;
+    }
+    case LANGUAGE_OSL_1:
+    {
+        kw << float4Keyword() << "("
+            << "(" << a << ".rgb.r >= " << b << ".x) ? 1.0 : 0.0, "
+            << "(" << a << ".rgb.g >= " << b << ".y) ? 1.0 : 0.0, "
+            << "(" << a << ".rgb.b >= " << b << ".z) ? 1.0 : 0.0, "
+            << "(" << a << ".a >= " << b << ".w) ? 1.0 : 0.0)";
+        break;
+    }
+
+    default:
+    {
+        throw Exception("Unknown GPU shader language.");
+    }
+    }
+    return kw.str();
+}
+
 std::string GpuShaderText::atan2(const std::string & y,
                                  const std::string & x) const
 {

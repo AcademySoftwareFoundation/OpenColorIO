@@ -656,5 +656,54 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_HLG)
 
 OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_DBL_LOG_AFFINE)
 {
-    // FIXME: Implement. /coz
+    // Note: break points are chosen to be exact values in IEEE-754
+    constexpr unsigned int NumPixels = 10;
+
+    OCIO::FixedFunctionOpData::Params params
+    {
+        10.0,                  // Base for the log
+        0.25,                  // Break point between Log1 and Linear segments
+        0.5,                   // Break point between Linear and Log2 segments
+        -1.0, 0.0, -1.0, 1.25, // Log curve 1: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
+        1.0, 1.0, 1.0, 0.5,    // Log curve 2: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
+        1.0, 0.0,              // Linear segment slope and offset
+    };
+
+    const std::array<float, NumPixels * 4> linearFrame
+    {
+       -0.25f, -0.20f, -0.15f, -1.00f, // negative input
+       -0.10f, -0.05f,  0.00f,  0.00f, 
+        0.05f,  0.10f,  0.15f,  1.00f, 
+        0.20f,  0.25f,  0.30f,  1.00f, // 0.250 breakpoint belongs to log1  
+        0.35f,  0.40f,  0.45f,  1.00f, // linear segment (y=x)
+        0.50f,  0.55f,  0.60f,  1.00f, // 0.50 breakpoint belongs to log2
+        0.65f,  0.70f,  0.75f,  1.00f, 
+        0.80f,  0.85f,  0.90f,  1.00f,   
+        0.95f,  1.00f,  1.05f,  1.00f, 
+        1.10f,  1.15f,  1.20f,  1.25f // over-range
+    };
+
+    const std::array<float, NumPixels * 4> logFrame
+    {
+        -0.17609126f, -0.161368f  , -0.14612804f, -1.00f, // negative input
+        -0.13033377f, -0.11394335f, -0.09691001f,  0.00f, 
+        -0.07918125f, -0.06069784f, -0.04139269f,  1.00f, 
+        -0.0211893f ,  0.0f       ,  0.3f       ,  1.00f, // 0.25 breakpoint belongs to log1
+         0.35f      ,  0.4f       ,  0.45f      ,  1.00f, // linear segment (y=x) 
+         1.0f       ,  1.0211893f ,  1.04139269f,  1.00f, // 0.50 breakpoint belongs to log2
+         1.06069784f,  1.07918125f,  1.09691001f,  1.00f,  
+         1.11394335f,  1.13033377f,  1.14612804f,  1.00f,   
+         1.161368f  ,  1.17609126f,  1.1903317f ,  1.00f,  
+         1.20411998f,  1.21748394f,  1.23044892f,  1.25f // over-range
+    };
+
+    {
+        auto dataFwd = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::LINEAR_TO_DBL_LOG_AFFINE, params);
+        auto img = linearFrame;
+        ApplyFixedFunction(img.data(), logFrame.data(), NumPixels, dataFwd, 1e-6f, __LINE__, false);
+
+        auto dataFInv = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::DBL_LOG_AFFINE_TO_LINEAR, params);
+        img = logFrame;
+        ApplyFixedFunction(img.data(), linearFrame.data(), NumPixels, dataFInv, 1e-6f, __LINE__, false);
+    }
 }

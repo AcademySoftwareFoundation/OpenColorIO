@@ -517,7 +517,35 @@ void FixedFunctionOpData::validate() const
             throw Exception(ss.str().c_str());
         }
 
-        // FIXME: validate the parameters /coz
+        double base              = m_params[0];
+        double break1            = m_params[1];
+        double break2            = m_params[2];
+        // double logSeg1_logSlope  = m_params[3];
+        // double logSeg1_logOff    = m_params[4];
+        // double logSeg1_linSlope  = m_params[5];
+        // double logSeg1_linOff    = m_params[6];
+        // double logSeg2_logSlope  = m_params[7];
+        // double logSeg2_logOff    = m_params[8];
+        // double logSeg2_linSlope  = m_params[9];
+        // double logSeg2_linOff    = m_params[10];
+        // double linSeg_slope      = m_params[11];
+        // double linSeg_off        = m_params[12];
+
+        // check log base
+        if(base <= 0.0)
+        {
+            std::stringstream ss;
+            ss << "Log base " << base << " is not greater than zero.";
+            throw Exception(ss.str().c_str());
+        }
+
+        // check break point order
+        if(break1 > break2)
+        {
+            std::stringstream ss;
+            ss << "First break point " << break1 << " is larger than the second break point " << break2;
+            throw Exception(ss.str().c_str());
+        }
     }
     else
     {

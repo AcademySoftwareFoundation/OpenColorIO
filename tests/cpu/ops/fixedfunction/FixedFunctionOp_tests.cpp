@@ -436,7 +436,6 @@ OCIO_ADD_TEST(FixedFunctionOps, LINEAR_TO_DOUBLE_LOG_AFFINE)
 {
     OCIO::OpRcPtrVec ops;
 
-    // FIXME: feed data /coz
     OCIO::FixedFunctionOpData::Params params = {
         10.0,               // Base for the log
         0.5,                // Break point between Log1 and Linear segments

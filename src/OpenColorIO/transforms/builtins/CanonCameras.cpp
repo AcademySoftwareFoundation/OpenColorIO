@@ -59,23 +59,24 @@ void GenerateOpsToLinear(OpRcPtrVec& ops)
 #else
     FixedFunctionOpData::Params params
     {
-        10.0f,              // log base
-        0.092864125f,       // break point 1
-        0.092864125f,       // break point 2 ( no linear segment )
+        10.0,               // log base
+        0.0,                // break point 1
+        0.0,                // break point 2 ( no linear segment )
 
-        -0.24136077f,       // log segment 1 log-side slope
-        0.092864125f,       // log segment 1 log-side offset
-        -87.099375f / 0.9f, // log segment 1 lin-side slope
-        1.0f,               // log segment 1 lin-side offset
+        -0.24136077,        // log segment 1 log-side slope
+        0.092864125,        // log segment 1 log-side offset
+        -87.099375 / 0.9,   // log segment 1 lin-side slope
+        1.0,                // log segment 1 lin-side offset
 
-        0.24136077f,        // log segment 2 log-side slope
-        0.092864125f,       // log segment 2 log-side offset
-        87.099375f / 0.9f,  // log segment 2 lin-side slope
-        1.0f,               // log segment 2 lin-side offset
+        0.24136077,         // log segment 2 log-side slope
+        0.092864125,        // log segment 2 log-side offset
+        87.099375 / 0.9,    // log segment 2 lin-side slope
+        1.0,                // log segment 2 lin-side offset
 
-        1.0f,               // linear segment slope (not used)
-        0.0f,               // linear segment slope (not used)
+        1.0,                // linear segment slope (not used)
+        0.0,                // linear segment slope (not used)
     };
+
     CreateFixedFunctionOp(ops, FixedFunctionOpData::DBL_LOG_AFFINE_TO_LINEAR, params);
 #endif
 }
@@ -112,22 +113,22 @@ void GenerateOpsToLinear(OpRcPtrVec& ops)
 #else
     FixedFunctionOpData::Params params
     {
-        10.0f,              // log base
-        -0.014f,            // break point 1
-        0.014f,             // break point 2
+        10.0,           // log base
+        -0.014 * 0.9,   // break point 1
+        0.014 * 0.9,    // break point 2
 
-        -0.36726845f,       // log segment 1 log-side slope
-        0.12783901f,        // log segment 1 log-side offset
-        -14.98325 / 0.9f,   // log segment 1 lin-side slope
-        1.0f,               // log segment 1 lin-side offset
+        -0.36726845,    // log segment 1 log-side slope
+        0.12783901,     // log segment 1 log-side offset
+        -14.98325 / 0.9,// log segment 1 lin-side slope
+        1.0,            // log segment 1 lin-side offset
 
-        0.36726845f,        // log segment 2 log-side slope
-        0.12240537f,        // log segment 2 log-side offset
-        14.98325f / 0.9f,   // log segment 2 lin-side slope
-        1.0f,               // log segment 2 lin-side offset
+        0.36726845,     // log segment 2 log-side slope
+        0.12240537,     // log segment 2 log-side offset
+        14.98325 / 0.9, // log segment 2 lin-side slope
+        1.0,            // log segment 2 lin-side offset
 
-        1.9754798f,         // linear segment slope 
-        0.12512219f,        // linear segment slope
+        1.9754798,      // linear segment slope 
+        0.12512219,     // linear segment slope
     };
 
     CreateFixedFunctionOp(ops, FixedFunctionOpData::DBL_LOG_AFFINE_TO_LINEAR, params);

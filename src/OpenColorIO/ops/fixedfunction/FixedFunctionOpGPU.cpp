@@ -620,14 +620,135 @@ void Add_HLG_TO_LINEAR(GpuShaderCreatorRcPtr& shaderCreator, GpuShaderText& ss)
     ss.newLine() << pxl << ".rgb = sign3 * (isAboveBreak * E_log + ( " << ss.float3Const(1.0f) << " - isAboveBreak ) * E_gamma);";
 }
 
-void Add_LINEAR_TO_DBL_LOG_AFFINE(GpuShaderCreatorRcPtr& /*shaderCreator*/, GpuShaderText& /*ss*/)
+void Add_LINEAR_TO_DBL_LOG_AFFINE(
+    GpuShaderCreatorRcPtr& shaderCreator, 
+    GpuShaderText& ss, 
+    const FixedFunctionOpData::Params& params)
 {
-    // FIXME: Implement. /coz
+    // Baking the log base conversion into 'logSlope'.
+    double base             = params[0];
+    double break1           = params[1];
+    double break2           = params[2];
+    double logSeg1_logSlope = params[3] / std::log(base);
+    double logSeg1_logOff   = params[4];
+    double logSeg1_linSlope = params[5];
+    double logSeg1_linOff   = params[6];
+    double logSeg2_logSlope = params[7] / std::log(base);
+    double logSeg2_logOff   = params[8];
+    double logSeg2_linSlope = params[9];
+    double logSeg2_linOff   = params[10];
+    double linSeg_slope     = params[11];
+    double linSeg_off       = params[12];
+
+    // Linear segment may not exist or be valid, thus we include the break
+    // points in the log segments. Also passing zero or negative value to the
+    // log functions are not guarded for, it should be guaranteed by the
+    // parameters for the expedted working range.
+    
+    //if (in <= m_break1)
+    //    out = m_logSeg1.logSlope * std::log(m_logSeg1.linSlope * x + m_logSeg1.linOff) + m_logSeg1.logOff;
+    //else if (in < m_break2)
+    //    out = m_linSeg.slope * x + m_linSeg.off;
+    //else
+    //    out = m_logSeg2.logSlope * std::log(m_logSeg2.linSlope * x + m_logSeg2.linOff) + m_logSeg2.logOff;
+    
+    const std::string pix(shaderCreator->getPixelName());
+    const std::string pix3 = pix + ".rgb";
+
+    ss.newLine() << ss.float3Decl("isSegment1") << " = " << ss.float3GreaterThanEqual(ss.float3Const(break1), pix3) << ";";
+    ss.newLine() << ss.float3Decl("isSegment3") << " = " << ss.float3GreaterThanEqual(pix3, ss.float3Const(break2)) << ";";
+    ss.newLine() << ss.float3Decl("isSegment2") << " = " << ss.float3Const(1.0f) << " - isSegment1 - isSegment3;";
+
+    // Log Segment 1  
+    // TODO: This segment usually handles very dark (even negative) values, thus
+    // is rarely hit. As an optimization we can use "any()" to skip this in a
+    // branch (needs benchmarking to see if it's worth the effort).
+    ss.newLine();
+    ss.newLine() << ss.float3Decl("logSeg1") << " = " << 
+        pix3 << " * " << ss.float3Const(logSeg1_linSlope) << " + " << ss.float3Const(logSeg1_linOff) << ";";
+    ss.newLine() << "logSeg1 = " << 
+        ss.float3Const(logSeg1_logSlope) << " * log( logSeg1 ) + " << ss.float3Const(logSeg1_logOff) << ";";
+
+    // Log Segment 2
+    ss.newLine();
+    ss.newLine() << ss.float3Decl("logSeg2") << " = " <<
+        pix3 << " * " << ss.float3Const(logSeg2_linSlope) << " + " << ss.float3Const(logSeg2_linOff) << ";";
+    ss.newLine() << "logSeg2 = " <<
+        ss.float3Const(logSeg2_logSlope) << " * log( logSeg2 ) + " << ss.float3Const(logSeg2_logOff) << ";";
+
+    // Linear Segment
+    ss.newLine();
+    ss.newLine() << ss.float3Decl("linSeg") << "= " << 
+        ss.float3Const(linSeg_slope) << " * " << pix3 << " + " << ss.float3Const(linSeg_off) << ";";
+
+    // Combine segments
+    ss.newLine();
+    ss.newLine() << pix3 << " = isSegment1 * logSeg1 + isSegment2 * linSeg + isSegment3 * logSeg2;"; 
 }
 
-void Add_DBL_LOG_AFFINE_TO_LINEAR(GpuShaderCreatorRcPtr& /*shaderCreator*/, GpuShaderText& /*ss*/)
+void Add_DBL_LOG_AFFINE_TO_LINEAR(
+    GpuShaderCreatorRcPtr& shaderCreator, 
+    GpuShaderText& ss, 
+    const FixedFunctionOpData::Params& params)
 {
-    // FIXME: Implement. /coz
+    // Baking the log base conversion into 'logSlope'.
+    double base             = params[0];
+    double break1           = params[1];
+    double break2           = params[2];
+    double logSeg1_logSlope = params[3] / std::log(base);
+    double logSeg1_logOff   = params[4];
+    double logSeg1_linSlope = params[5];
+    double logSeg1_linOff   = params[6];
+    double logSeg2_logSlope = params[7] / std::log(base);
+    double logSeg2_logOff   = params[8];
+    double logSeg2_linSlope = params[9];
+    double logSeg2_linOff   = params[10];
+    double linSeg_slope     = params[11];
+    double linSeg_off       = params[12];
+
+    double break1Log = logSeg1_logSlope * std::log(logSeg1_linSlope * break1 + logSeg1_linOff) + logSeg1_logOff;
+    double break2Log = logSeg2_logSlope * std::log(logSeg2_linSlope * break2 + logSeg2_linOff) + logSeg2_logOff;
+
+    // if (y <= m_break1Log)
+    //     x = (std::exp((y - m_logSeg1.logOff) / m_logSeg1.logSlope) - m_logSeg1.linOff) / m_logSeg1.linSlope;
+    // else if (y < m_break2Log)
+    //     x = (y - m_linSeg.off) / m_linSeg.slope;
+    // else
+    //     x = (std::exp((y - m_logSeg2.logOff) / m_logSeg2.logSlope) - m_logSeg2.linOff) / m_logSeg2.linSlope;
+
+    const std::string pix(shaderCreator->getPixelName());
+    const std::string pix3 = pix + ".rgb";
+
+    // This assumes the forward function is monotonically increasing.
+    ss.newLine() << ss.float3Decl("isSegment1") << " = " << ss.float3GreaterThanEqual(ss.float3Const(break1Log), pix3) << ";";
+    ss.newLine() << ss.float3Decl("isSegment3") << " = " << ss.float3GreaterThanEqual(pix3, ss.float3Const(break2Log)) << ";";
+    ss.newLine() << ss.float3Decl("isSegment2") << " = " << ss.float3Const(1.0f) << " - isSegment1 - isSegment3;";
+
+    // Log Segment 1  
+    // TODO: This segment usually handles very dark (even negative) values, thus
+    // is rarely hit. As an optimization we can use "any()" to skip this in a
+    // branch (needs benchmarking to see if it's worth the effort).
+    ss.newLine();
+    ss.newLine() << ss.float3Decl("logSeg1") << " = (" <<
+        pix3 << " - " << ss.float3Const(logSeg1_logOff) << ") * " << ss.float3Const(1.0 / logSeg1_logSlope) << ";";
+    ss.newLine() << "logSeg1 = (" <<
+        "exp(logSeg1) - " << ss.float3Const(logSeg1_linOff) << ") * " << ss.float3Const(1.0 / logSeg1_linSlope) << ";";
+
+    // Log Segment 2 
+    ss.newLine();
+    ss.newLine() << ss.float3Decl("logSeg2") << " = (" <<
+        pix3 << " - " << ss.float3Const(logSeg2_logOff) << ") * " << ss.float3Const(1.0 / logSeg2_logSlope) << ";";
+    ss.newLine() << "logSeg2 = (" <<
+        "exp(logSeg2) - " << ss.float3Const(logSeg2_linOff) << ") * " << ss.float3Const(1.0 / logSeg2_linSlope) << ";";
+
+    // Linear Segment
+    ss.newLine();
+    ss.newLine() << ss.float3Decl("linSeg") << " = (" <<
+        pix3 << " - " << ss.float3Const(linSeg_off) << ") * " << ss.float3Const(1.0 / linSeg_slope) << ";";
+
+    // Combine segments
+    ss.newLine();
+    ss.newLine() << pix3 << " = isSegment1 * logSeg1 + isSegment2 * linSeg + isSegment3 * logSeg2;";
 }
 
 void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
@@ -801,12 +922,12 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         }
         case FixedFunctionOpData::LINEAR_TO_DBL_LOG_AFFINE:
         {
-            Add_LINEAR_TO_DBL_LOG_AFFINE(shaderCreator, ss);
+            Add_LINEAR_TO_DBL_LOG_AFFINE(shaderCreator, ss, func->getParams());
             break;
         }
         case FixedFunctionOpData::DBL_LOG_AFFINE_TO_LINEAR:
         {
-            Add_DBL_LOG_AFFINE_TO_LINEAR(shaderCreator, ss);
+            Add_DBL_LOG_AFFINE_TO_LINEAR(shaderCreator, ss, func->getParams());
             break;
         }
 

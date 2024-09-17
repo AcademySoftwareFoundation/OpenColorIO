@@ -560,24 +560,40 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_HLG_inv)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_DOUBLE_LOG_AFFINE_fwd)
 {
-    // FIXME: Feed data. /coz
-    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_DOUBLE_LOG_AFFINE);
+    double params[13]
+    {
+        10.0,                  // Base for the log
+        0.1,                   // Break point between Log1 and Linear segments
+        0.5,                   // Break point between Linear and Log2 segments
+        -1.0, -1.0, -1.0, 0.2, // Log curve 1: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
+        1.0, 1.0, 1.0, 0.5,    // Log curve 2: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
+        1.0, 0.0,              // Linear segment slope and offset
+    };
+
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_DOUBLE_LOG_AFFINE, params, 13);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
-    // FIXME : Determine the ranges and threshold. /coz
-    test.setWideRangeInterval(-0.1f, 3.35f); // Output ~[-0.3, 1.02]
+    test.setWideRangeInterval(-1.0f, 2.0f); // Output ~[-1.08, 1.4]
     test.setProcessor(func);
     test.setErrorThreshold(1e-6f);
 }
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_DOUBLE_LOG_AFFINE_inv)
 {
-    // FIXME: Feed data. /coz
-    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_DOUBLE_LOG_AFFINE);
+    double params[13]
+    {
+        10.0,                  // Base for the log
+        0.1,                   // Break point between Log1 and Linear segments
+        0.5,                   // Break point between Linear and Log2 segments
+        -1.0, -1.0, -1.0, 0.2, // Log curve 1: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
+        1.0, 1.0, 1.0, 0.5,    // Log curve 2: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
+        1.0, 0.0,              // Linear segment slope and offset
+    };
+
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_DOUBLE_LOG_AFFINE, params, 13);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
-    // FIXME : Determine the ranges and threshold. /coz
-    test.setWideRangeInterval(-0.3f, 1.02f); // Output ~[-0.1, 3.35]
+    test.setWideRangeInterval(-1.1f, 1.4f); // Output ~[-1.0, 2.0]
     test.setProcessor(func);
     test.setErrorThreshold(1e-6f);
 }
