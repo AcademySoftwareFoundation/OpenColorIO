@@ -75,9 +75,8 @@ id<MTLTexture> AllocateTexture3D(id<MTLDevice> device,
         throw Exception("Missing texture data");
     }
     
-    // MTLPixelFormatRGB32Float not supported on metal. Adapt to MTLPixelFormatRGBA32Float
     std::vector<float> float4AdaptedLutValues;
-    RGB_to_RGBA(lutValues, 3*edgelen*edgelen*edgelen, float4AdaptedLutValues);
+    memcpy(float4AdaptedLutValues.data(), lutValues, 4 * edgelen*edgelen*edgelen * sizeof(float));
     
     MTLTextureDescriptor* texDescriptor = [MTLTextureDescriptor new];
     
@@ -123,7 +122,8 @@ id<MTLTexture> AllocateTexture2D(id<MTLDevice> device,
     }
     else
     {
-        RGB_to_RGBA(values, 3*width*height, adaptedLutValues);
+        adaptedLutValues.resize(4 * width * height);
+        memcpy(adaptedLutValues.data(), values, 4 * width * height * sizeof(float));
     }
     
     MTLTextureDescriptor* texDescriptor = [MTLTextureDescriptor new];
