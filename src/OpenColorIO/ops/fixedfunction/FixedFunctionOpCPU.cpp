@@ -260,15 +260,40 @@ public:
     explicit Renderer_LINEAR_TO_HLG(ConstFixedFunctionOpDataRcPtr& data);
 
     void apply(const void* inImg, void* outImg, long numPixels) const override;
+
+protected:
+    struct LogSegment
+    {
+        // Ylog = logSlope * log( linSlope * Xlin + linOff, base) + logOff;
+        float base      = 10.0f;    // Log base
+        float logSlope  = 1.0f;     // Log side slope.
+        float logOff    = 0.0f;     // Log side offset.
+        float linSlope  = 1.0f;     // Linear side slope.
+        float linOff    = 0.0f;     // Linear side offset.
+    };
+
+    struct GammaSegment
+    {
+        // Ygamma = slope * (Xlin + off)^power;
+        float power     = 1.0f; // power
+        float slope     = 1.0f; // post-power scale
+        float off       = 0.0f; // pre-power offset
+    };
+
+    float           m_break = 1.0f; 
+    LogSegment      m_logSeg;
+    GammaSegment    m_gammaSeg;
 };
 
 template <typename T>
-class Renderer_HLG_TO_LINEAR : public OpCPU {
+class Renderer_HLG_TO_LINEAR : public Renderer_LINEAR_TO_HLG<T> {
 public:
     Renderer_HLG_TO_LINEAR() = delete;
     explicit Renderer_HLG_TO_LINEAR(ConstFixedFunctionOpDataRcPtr& data);
 
     void apply(const void* inImg, void* outImg, long numPixels) const override;
+protected:
+    float m_primeBreak = 0.0f; // break-point in the non-linear axis.
 };
 
 class Renderer_LINEAR_TO_DBL_LOG_AFFINE: public OpCPU {
@@ -1481,35 +1506,29 @@ void Renderer_LINEAR_TO_PQ_SSE<FAST_POWER>::apply(const void* inImg, void* outIm
 }
 #endif //OCIO_USE_SSE2
 
-
-// HLG
-namespace
-{
-namespace HLG
-{
-static constexpr double E_MAX = 3.;
-
-static constexpr double a = 0.17883277;
-static constexpr double b = (1. - 4. * a) * E_MAX / 12.;
-static const     double c0 = 0.5 - a * std::log(4. * a);
-static const     double c = std::log(12. / E_MAX) * a + c0;
-static constexpr double E_scale = 3. / E_MAX;
-static constexpr double E_break = E_MAX / 12.;
-static const     double Eprime_break = std::sqrt(E_break * E_scale);
-
-} // HLG
-} // anonymous
-
 template <typename T>
-Renderer_LINEAR_TO_HLG<T>::Renderer_LINEAR_TO_HLG(ConstFixedFunctionOpDataRcPtr& /*data*/)
+Renderer_LINEAR_TO_HLG<T>::Renderer_LINEAR_TO_HLG(ConstFixedFunctionOpDataRcPtr& data)
     : OpCPU()
 {
+    auto params = data->getParams();
+
+    // store the parameters, baking the log base conversion into 'logSlope'.
+    m_break             = (float)params[0];
+    
+    m_logSeg.base       = (float)params[1];
+    m_logSeg.logSlope   = (float)params[2] / std::log(m_logSeg.base);
+    m_logSeg.logOff     = (float)params[3];
+    m_logSeg.linSlope   = (float)params[4];
+    m_logSeg.linOff     = (float)params[5];
+    
+    m_gammaSeg.power    = (float)params[6];
+    m_gammaSeg.slope    = (float)params[7];
+    m_gammaSeg.off      = (float)params[8];
 }
 
 template <typename T>
 void Renderer_LINEAR_TO_HLG<T>::apply(const void* inImg, void* outImg, long numPixels) const
 {
-    using namespace HLG;
     const float* in = (const float*)inImg;
     float* out = (float*)outImg;
 
@@ -1522,13 +1541,13 @@ void Renderer_LINEAR_TO_HLG<T>::apply(const void* inImg, void* outImg, long numP
 
             const T E = std::abs(T(Ein));
             T Eprime;
-            if (E < T(E_break))
+            if (E < T(m_break))
             {
-                Eprime = std::sqrt(E * T(E_scale));
+                Eprime = T(m_gammaSeg.slope) * std::pow(E + T(m_gammaSeg.off), T(m_gammaSeg.power));
             }
             else
             {
-                Eprime = T(a) * std::log(E - T(b)) + T(c);
+                Eprime = T(m_logSeg.logSlope) * std::log(T(m_logSeg.linSlope) * E + T(m_logSeg.linOff)) + T(m_logSeg.logOff);
             }
             *(out++) = std::copysign(float(Eprime), Ein);
         }
@@ -1539,15 +1558,19 @@ void Renderer_LINEAR_TO_HLG<T>::apply(const void* inImg, void* outImg, long numP
 }
 
 template<typename T>
-Renderer_HLG_TO_LINEAR<T>::Renderer_HLG_TO_LINEAR(ConstFixedFunctionOpDataRcPtr& /*data*/)
-    : OpCPU()
+Renderer_HLG_TO_LINEAR<T>::Renderer_HLG_TO_LINEAR(ConstFixedFunctionOpDataRcPtr& data)
+    : Renderer_LINEAR_TO_HLG(data)
 {
+    // Assuming that the function is continuous, use the gamma segment to compute
+    // the break point in the non-linear domain
+    m_primeBreak = T(m_gammaSeg.slope) * std::pow(m_break + T(m_gammaSeg.off), m_gammaSeg.power);
+
+    // TODO: cache more derived values to optimize the math.
 }
 
 template<typename T>
 void Renderer_HLG_TO_LINEAR<T>::apply(const void* inImg, void* outImg, long numPixels) const
 {
-    using namespace HLG;
     const float* in = (const float*)inImg;
     float* out = (float*)outImg;
 
@@ -1560,13 +1583,13 @@ void Renderer_HLG_TO_LINEAR<T>::apply(const void* inImg, void* outImg, long numP
 
             const T Eprime = std::abs(T(Eprimein));
             T E;
-            if (Eprime < T(Eprime_break))
+            if (Eprime < T(m_primeBreak))
             {
-                E = Eprime * Eprime / T(E_scale);
+                E = std::pow(Eprime / T(m_gammaSeg.slope), T(1.0f / T(m_gammaSeg.power))) - T(m_gammaSeg.off); 
             }
             else
             {
-                E = std::exp((Eprime - T(c)) / T(a) ) + T(b);
+                E = (std::exp((Eprime - T(m_logSeg.logOff)) / T(m_logSeg.logSlope) ) - T(m_logSeg.linOff)) / T(m_logSeg.linSlope);
             }
             *(out++) = std::copysign(float(E), Eprimein);
         }
@@ -1602,7 +1625,6 @@ Renderer_LINEAR_TO_DBL_LOG_AFFINE::Renderer_LINEAR_TO_DBL_LOG_AFFINE(ConstFixedF
 
 void Renderer_LINEAR_TO_DBL_LOG_AFFINE::apply(const void* inImg, void* outImg, long numPixels) const
 {
-    using namespace HLG;
     const float* in = (const float*)inImg;
     float* out = (float*)outImg;
 
@@ -1638,7 +1660,7 @@ void Renderer_LINEAR_TO_DBL_LOG_AFFINE::apply(const void* inImg, void* outImg, l
 Renderer_DBL_LOG_AFFINE_TO_LINEAR::Renderer_DBL_LOG_AFFINE_TO_LINEAR(ConstFixedFunctionOpDataRcPtr& data)
     : Renderer_LINEAR_TO_DBL_LOG_AFFINE(data)
 {
-    // TODO: Cache more derived params and optimize divisions.  
+    // TODO: Cache more derived params and optimize the math.  
     
     // Calculate the break locations in log space (note that the break points
     // belong to the log segments, not the linear segment which may be missing).
@@ -1648,7 +1670,6 @@ Renderer_DBL_LOG_AFFINE_TO_LINEAR::Renderer_DBL_LOG_AFFINE_TO_LINEAR(ConstFixedF
 
 void Renderer_DBL_LOG_AFFINE_TO_LINEAR::apply(const void* inImg, void* outImg, long numPixels) const
 {
-    using namespace HLG;
     const float* in = (const float*)inImg;
     float* out = (float*)outImg;
 

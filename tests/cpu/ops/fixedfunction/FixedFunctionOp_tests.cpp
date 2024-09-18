@@ -410,8 +410,26 @@ OCIO_ADD_TEST(FixedFunctionOps, LINEAR_TO_HLG)
 {
     OCIO::OpRcPtrVec ops;
 
-    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::HLG_TO_LINEAR, {}));
-    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::LINEAR_TO_HLG, {}));
+    // Parameters for the Rec.2100 HLG curve.
+    OCIO::FixedFunctionOpData::Params params
+    {
+        0.25,           // break point
+
+        // log segment
+        std::exp(1.0),  // log base (e)
+        0.17883277,     // log-side slope
+        0.807825590164, // log-side offset
+        1.0,            // lin-side slope
+        -0.07116723,    // lin-side offset
+
+        // gamma segment
+        0.5,            // gamma power
+        1.0,            // post-power scale
+        0.0,            // pre-power offset
+    };
+
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::HLG_TO_LINEAR, params));
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::LINEAR_TO_HLG, params));
 
     OCIO_CHECK_NO_THROW(ops.finalize());
     OCIO_REQUIRE_EQUAL(ops.size(), 2);

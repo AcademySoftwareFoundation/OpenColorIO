@@ -5,6 +5,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "GPUUnitTest.h"
+#include <cmath>
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -538,9 +539,33 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_PQ_inv)
     test.setErrorThreshold(OCIO_USE_SSE2 ? 0.0023f : 1.5e-4f);
 }
 
+namespace
+{
+namespace HLG
+{
+    // Parameters for the Rec.2100 HLG curve.
+    double params[9]
+    {
+        0.25,           // break point
+
+        // Log segment.
+        std::exp(1.0),  // log base (e)
+        0.17883277,     // log-side slope
+        0.807825590164, // log-side offset
+        1.0,            // lin-side slope
+        -0.07116723,    // lin-side offset
+
+        // Gamma segment.
+        0.5,            // gamma power
+        1.0,            // post-power scale
+        0.0,            // pre-power offset
+    };
+}
+}
+
 OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_HLG_fwd)
 {
-    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_HLG);
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_HLG, HLG::params, 9);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
     test.setWideRangeInterval(-0.1f, 3.35f); // Output ~[-0.3, 1.02]
@@ -550,7 +575,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_HLG_fwd)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_HLG_inv)
 {
-    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_HLG);
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_HLG, HLG::params, 9);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     test.setWideRangeInterval(-0.3f, 1.02f); // Output ~[-0.1, 3.35]

@@ -534,20 +534,6 @@ namespace
         static constexpr double c3 = 32. * 2392. / 4096.;
         static constexpr double c1 = c3 - c2 + 1.;
     }
-
-    namespace HLG
-    {
-        static constexpr double E_MAX = 3.;
-
-        static constexpr double a = 0.17883277;
-        static constexpr double b = (1. - 4. * a) * E_MAX / 12.;
-        static const     double c0 = 0.5 - a * std::log(4. * a);
-        static const     double c = std::log(12. / E_MAX) * a + c0;
-        static constexpr double E_scale = 3. / E_MAX;
-        static constexpr double E_break = E_MAX / 12.;
-        static const     double Eprime_break = std::sqrt(E_break * E_scale);
-    }
-
 } // anonymous
 
 void Add_LINEAR_TO_PQ(GpuShaderCreatorRcPtr& shaderCreator, GpuShaderText& ss)
@@ -574,47 +560,85 @@ void Add_PQ_TO_LINEAR(GpuShaderCreatorRcPtr& shaderCreator, GpuShaderText& ss)
         << ss.float3Const(c2) << " - " << c3 << " * x), " << ss.float3Const(1.0 / m1) << ");";
 }
 
-void Add_LINEAR_TO_HLG(GpuShaderCreatorRcPtr& shaderCreator, GpuShaderText& ss)
+void Add_LINEAR_TO_HLG(
+    GpuShaderCreatorRcPtr& shaderCreator, 
+    GpuShaderText& ss,
+    const FixedFunctionOpData::Params& params)
 {
-    using namespace HLG;
-    const std::string pxl(shaderCreator->getPixelName());
+    // Get parameters, baking the log base conversion into 'logSlope'.
+    double breakPt           = params[0];
+    double logSeg_base       = params[1];
+    double logSeg_logSlope   = params[2] / std::log(logSeg_base);
+    double logSeg_logOff     = params[3];
+    double logSeg_linSlope   = params[4];
+    double logSeg_linOff     = params[5];
+    double gammaSeg_power    = params[6];
+    double gammaSeg_slope    = params[7];
+    double gammaSeg_off      = params[8];
 
     // float E = std::abs(in);
     // float Eprime;
-    // if (E < E_break)
-    //     Eprime = std::sqrt(E * E_scale);
+    // if (E < m_break)
+    //     Eprime = m_gammaSeg.slope * std::pow(E + m_gammaSeg.off, m_gammaSeg.power);
     // else
-    //     Eprime = a * std::log(E - b) + c;
+    //     Eprime = m_logSeg.logSlope * std::log(m_logSeg.linSlope * E + m_logSeg.linOff) + m_logSeg.logOff;
     // out = std::copysign(Eprime, in);
+
+    const std::string pxl(shaderCreator->getPixelName());
 
     ss.newLine() << ss.float3Decl("sign3") << " = sign(" << pxl << ".rgb);";
     ss.newLine() << ss.float3Decl("E") << " = abs(" << pxl << ".rgb);";
-    ss.newLine() << ss.float3Decl("isAboveBreak") << " = " << ss.float3GreaterThan("E", ss.float3Const(E_break)) << ";";
-    ss.newLine() << ss.float3Decl("Ep_gamma") << " = sqrt( E * " << ss.float3Const(E_scale) << ");";
-    ss.newLine() << ss.float3Decl("Ep_log") << " = " << ss.float3Const(a) << " * log( E - " << ss.float3Const(b) << ") + " << ss.float3Const(c) << ";";
+    ss.newLine() << ss.float3Decl("isAboveBreak") << " = " << ss.float3GreaterThan("E", ss.float3Const(breakPt)) << ";";
+    ss.newLine() << ss.float3Decl("Ep_gamma") << " = " << ss.float3Const(gammaSeg_slope)
+        << " * pow( E - " << ss.float3Const(gammaSeg_off) << ", " << ss.float3Const(gammaSeg_power) << ");";
+    ss.newLine() << ss.float3Decl("Ep_log") << " = " << ss.float3Const(logSeg_logSlope) << " * log( E * "
+        << ss.float3Const(logSeg_linSlope) <<  " +" << ss.float3Const(logSeg_linOff) << ") + " 
+        << ss.float3Const(logSeg_logOff) << ";";
 
     // Combine log and gamma parts.
     ss.newLine() << pxl << ".rgb = sign3 * (isAboveBreak * Ep_log + ( " << ss.float3Const(1.0f) << " - isAboveBreak ) * Ep_gamma);";
 }
 
-void Add_HLG_TO_LINEAR(GpuShaderCreatorRcPtr& shaderCreator, GpuShaderText& ss)
+void Add_HLG_TO_LINEAR(
+    GpuShaderCreatorRcPtr& shaderCreator, 
+    GpuShaderText& ss,
+    const FixedFunctionOpData::Params& params)
 {
-    using namespace HLG;
-    const std::string pxl(shaderCreator->getPixelName());
+    // Get parameters, baking the log base conversion into 'logSlope'.
+    double breakPt           = params[0];
+    double logSeg_base       = params[1];
+    double logSeg_logSlope   = params[2] / std::log(logSeg_base);
+    double logSeg_logOff     = params[3];
+    double logSeg_linSlope   = params[4];
+    double logSeg_linOff     = params[5];
+    double gammaSeg_power    = params[6];
+    double gammaSeg_slope    = params[7];
+    double gammaSeg_off      = params[8];
+
+    double primeBreak = gammaSeg_slope * std::pow(breakPt + gammaSeg_off, gammaSeg_power);
 
     // float Eprime = std::abs(in);
     // float E;
-    // if (Eprime < Eprime_break)
-    //     E = Eprime * Eprime / E_scale;
+    // if (Eprime < m_primeBreak)
+    //     E = std::pow(Eprime / m_gammaSeg.slope, 1.0f / m_gammaSeg.power) - m_gammaSeg.off;
     // else
-    //     E = std::exp((Eprime - c) / a) + b;
-    // out = std::copysign(E, in);
+    //     E = (std::exp((Eprime - m_logSeg.logOff) / m_logSeg.logSlope) - m_logSeg.linOff) / m_logSeg.linSlope;
+    // out = std::copysign(E, Eprimein);
+
+    const std::string pxl(shaderCreator->getPixelName());
 
     ss.newLine() << ss.float3Decl("sign3") << " = sign(" << pxl << ".rgb);";
     ss.newLine() << ss.float3Decl("Eprime") << " = abs(" << pxl << ".rgb);";
-    ss.newLine() << ss.float3Decl("isAboveBreak") << " = " << ss.float3GreaterThan("Eprime", ss.float3Const(Eprime_break)) << ";";
-    ss.newLine() << ss.float3Decl("E_gamma") << " = Eprime * Eprime * " << ss.float3Const(1/E_scale) << ";";
-    ss.newLine() << ss.float3Decl("E_log") << " = exp((Eprime - " << ss.float3Const(c) << ") * " << ss.float3Const(1.0/a) << ") + " << ss.float3Const(b) << ";";
+    ss.newLine() << ss.float3Decl("isAboveBreak") << " = " << ss.float3GreaterThan("Eprime", ss.float3Const(primeBreak)) << ";";
+   
+    // Gamma Segment.
+    ss.newLine() << ss.float3Decl("E_gamma") << " = pow( Eprime * " << ss.float3Const(1.0/gammaSeg_slope) << ","
+        << ss.float3Const(1.0/gammaSeg_power) << ") - " << ss.float3Const(gammaSeg_off) << ";";
+    
+    // Log Segment.
+    ss.newLine() << ss.float3Decl("E_log") << " = (exp((Eprime - " << ss.float3Const(logSeg_logOff) << ") * " 
+        << ss.float3Const(1.0/logSeg_logSlope) << ") - " << ss.float3Const(logSeg_linOff) << ") * "
+        << ss.float3Const(1.0/logSeg_linSlope) << ";";
     
     // Combine log and gamma parts.
     ss.newLine() << pxl << ".rgb = sign3 * (isAboveBreak * E_log + ( " << ss.float3Const(1.0f) << " - isAboveBreak ) * E_gamma);";
@@ -625,7 +649,7 @@ void Add_LINEAR_TO_DBL_LOG_AFFINE(
     GpuShaderText& ss, 
     const FixedFunctionOpData::Params& params)
 {
-    // Baking the log base conversion into 'logSlope'.
+    // Get parameters, baking the log base conversion into 'logSlope'.
     double base             = params[0];
     double break1           = params[1];
     double break2           = params[2];
@@ -643,7 +667,7 @@ void Add_LINEAR_TO_DBL_LOG_AFFINE(
     // Linear segment may not exist or be valid, thus we include the break
     // points in the log segments. Also passing zero or negative value to the
     // log functions are not guarded for, it should be guaranteed by the
-    // parameters for the expedted working range.
+    // parameters for the expected working range.
     
     //if (in <= m_break1)
     //    out = m_logSeg1.logSlope * std::log(m_logSeg1.linSlope * x + m_logSeg1.linOff) + m_logSeg1.logOff;
@@ -912,12 +936,12 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         }
         case FixedFunctionOpData::LINEAR_TO_HLG:
         {
-            Add_LINEAR_TO_HLG(shaderCreator, ss);
+            Add_LINEAR_TO_HLG(shaderCreator, ss, func->getParams());
             break;
         }
         case FixedFunctionOpData::HLG_TO_LINEAR:
         {
-            Add_HLG_TO_LINEAR(shaderCreator, ss);
+            Add_HLG_TO_LINEAR(shaderCreator, ss, func->getParams());
             break;
         }
         case FixedFunctionOpData::LINEAR_TO_DBL_LOG_AFFINE:

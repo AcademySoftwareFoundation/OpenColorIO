@@ -614,6 +614,24 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_PQ)
 
 OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_HLG)
 {
+    // Parameters for the Rec.2100 HLG curve
+    OCIO::FixedFunctionOpData::Params params 
+    {
+        0.25,           // break point
+
+        // log segment
+        std::exp(1.0),  // log base (e)
+        0.17883277,     // log-side slope
+        0.807825590164, // log-side offset
+        1.0,            // lin-side slope
+        -0.07116723,    // lin-side offset
+
+        // gamma segment
+        0.5,            // gamma power
+        1.0,            // post-power scale
+        0.0,            // pre-power offset
+    };
+
     constexpr unsigned int NumPixels = 10;
     const std::array<float, NumPixels * 4> hlgFrame
     {
@@ -644,11 +662,11 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_HLG)
     };
 
     {
-        auto dataFwd = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::HLG_TO_LINEAR);
+        auto dataFwd = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::HLG_TO_LINEAR, params);
         auto img = hlgFrame;
         ApplyFixedFunction(img.data(), linearFrame.data(), NumPixels, dataFwd, 5e-5f, __LINE__, false);
 
-        auto dataFInv = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::LINEAR_TO_HLG);
+        auto dataFInv = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::LINEAR_TO_HLG, params);
         img = linearFrame;
         ApplyFixedFunction(img.data(), hlgFrame.data(), NumPixels, dataFInv, 1e-5f, __LINE__, false);
     }
@@ -656,9 +674,9 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_HLG)
 
 OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_DBL_LOG_AFFINE)
 {
-    // Note: break points are chosen to be exact values in IEEE-754
-    constexpr unsigned int NumPixels = 10;
-
+    // Note: Parameters are designed to result in a monotonously increasing but
+    // discontinuous function. Also the break points are chosen to be exact
+    // values in IEEE-754 to verify that they belong to the log segments.
     OCIO::FixedFunctionOpData::Params params
     {
         10.0,                  // Base for the log
@@ -669,12 +687,13 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_DBL_LOG_AFFINE)
         1.0, 0.0,              // Linear segment slope and offset
     };
 
+    constexpr unsigned int NumPixels = 10;
     const std::array<float, NumPixels * 4> linearFrame
     {
        -0.25f, -0.20f, -0.15f, -1.00f, // negative input
        -0.10f, -0.05f,  0.00f,  0.00f, 
         0.05f,  0.10f,  0.15f,  1.00f, 
-        0.20f,  0.25f,  0.30f,  1.00f, // 0.250 breakpoint belongs to log1  
+        0.20f,  0.25f,  0.30f,  1.00f, // 0.25 breakpoint belongs to log1  
         0.35f,  0.40f,  0.45f,  1.00f, // linear segment (y=x)
         0.50f,  0.55f,  0.60f,  1.00f, // 0.50 breakpoint belongs to log2
         0.65f,  0.70f,  0.75f,  1.00f, 

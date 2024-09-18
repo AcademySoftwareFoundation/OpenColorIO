@@ -339,10 +339,12 @@ void ValidateBuiltinTransform(const char * style, const Values & in, const Value
 
     OCIO::ConstProcessorRcPtr proc;
     OCIO_CHECK_NO_THROW_FROM(proc = config->getProcessor(builtin), lineNo);
+    OCIO_REQUIRE_ASSERT(proc);
 
     OCIO::ConstCPUProcessorRcPtr cpu;
     // Use lossless mode for these tests (e.g. FAST_LOG_EXP_POW limits to about 4 sig. digits).
     OCIO_CHECK_NO_THROW_FROM(cpu = proc->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_LOSSLESS), lineNo);
+    OCIO_REQUIRE_ASSERT(cpu);
 
     OCIO::PackedImageDesc inDesc((void *)&in[0], long(in.size() / 3), 1, 3);
 

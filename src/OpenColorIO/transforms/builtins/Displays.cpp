@@ -17,7 +17,7 @@
 
 // This is a preparation for OCIO-lite where LUT support may be turned off.
 #ifndef OCIO_LUT_SUPPORT
-#   define OCIO_LUT_SUPPORT 1
+#   define OCIO_LUT_SUPPORT 0 // FIXME: revert to 1
 #endif 
 
 namespace OCIO_NAMESPACE
@@ -109,7 +109,24 @@ void GenerateLinearToHLGOps(OpRcPtrVec& ops)
 
     CreateHalfLut(ops, GenerateLutValues);
 #else
-    CreateFixedFunctionOp(ops, FixedFunctionOpData::LINEAR_TO_HLG, {});
+    FixedFunctionOpData::Params params
+    {
+        E_break,        // break point
+
+        // log segment
+        std::exp(1.0),  // log base
+        a,              // log-side slope
+        c,              // log-side offset
+        1.0,            // lin-side slope
+        -b,             // lin-side offset
+
+        // gamma segment
+        0.5,            // gamma power
+        1.0,            // post-power scale
+        0.0,            // pre-power offset
+    };
+
+    CreateFixedFunctionOp(ops, FixedFunctionOpData::LINEAR_TO_HLG, params);
 #endif
 }
 } // HLG

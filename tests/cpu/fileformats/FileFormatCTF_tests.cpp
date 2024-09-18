@@ -3840,8 +3840,9 @@ OCIO_ADD_TEST(FileFormatCTF, ff_load_save_ctf)
     ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::LUV_TO_XYZ         , __LINE__);
     ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::PQ_TO_LINEAR       , __LINE__);
     ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::LINEAR_TO_PQ       , __LINE__);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::HLG_TO_LINEAR      , __LINE__);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::LINEAR_TO_HLG      , __LINE__);
+    // FIXME: Add parameters for HLG /coz
+    // ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::HLG_TO_LINEAR      , __LINE__);
+    // ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::LINEAR_TO_HLG      , __LINE__);
     // FIXME: Add test for LINEAR_TO_DBL_LOG_AFFINE which will need parameters. /coz
 }
 
