@@ -437,7 +437,7 @@ colorspaces:
 
   - !<ColorSpace>
     name: sRGB Encoded P3-D65
-    aliases: [srgb_encoded_p3d65, srgb_p3d65, srgb_displayp3, srgb_displayp3_scene, sRGB Encoded P3-D65 - Texture, srgb_encoded_p3d65_tx]
+    aliases: [srgb_encoded_p3d65, srgb_p3d65, srgb_displayp3, srgb_p3d65_scene, sRGB Encoded P3-D65 - Texture, srgb_encoded_p3d65_tx]
     family: Utility
     equalitygroup: ""
     bitdepth: 32f
@@ -536,7 +536,7 @@ colorspaces:
 
   - !<ColorSpace>
     name: Linear P3-D65
-    aliases: [lin_p3d65, Utility - Linear - P3-D65, lin_displayp3, lin_displayp3_scene, Linear Display P3]
+    aliases: [lin_p3d65, Utility - Linear - P3-D65, lin_displayp3, lin_p3d65_scene, Linear Display P3]
     family: Utility
     equalitygroup: ""
     bitdepth: 32f
