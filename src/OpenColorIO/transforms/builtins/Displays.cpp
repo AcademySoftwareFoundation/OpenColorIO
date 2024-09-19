@@ -17,7 +17,7 @@
 
 // This is a preparation for OCIO-lite where LUT support may be turned off.
 #ifndef OCIO_LUT_SUPPORT
-#   define OCIO_LUT_SUPPORT 0 // FIXME: revert to 1
+#   define OCIO_LUT_SUPPORT 1
 #endif 
 
 namespace OCIO_NAMESPACE

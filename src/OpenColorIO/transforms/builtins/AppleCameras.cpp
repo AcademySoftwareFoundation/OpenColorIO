@@ -17,7 +17,7 @@
 
 // This is a preparation for OCIO-lite where LUT support may be turned off.
 #ifndef OCIO_LUT_SUPPORT
-#   define OCIO_LUT_SUPPORT 0 // FIXME: Revert to 1.
+#   define OCIO_LUT_SUPPORT 1
 #endif 
 
 
@@ -29,15 +29,15 @@ namespace APPLE_LOG
 
 void GenerateAppleLogToLinearOps(OpRcPtrVec & ops)
 {
-    constexpr double R_0   = -0.05641088;
-    constexpr double R_t   = 0.01;
-    constexpr double c     = 47.28711236;
-    constexpr double beta  = 0.00964052;
-    constexpr double gamma = 0.08550479;
-    constexpr double delta = 0.69336945;
+    static constexpr double R_0   = -0.05641088;
+    static constexpr double R_t   = 0.01;
+    static constexpr double c     = 47.28711236;
+    static constexpr double beta  = 0.00964052;
+    static constexpr double gamma = 0.08550479;
+    static constexpr double delta = 0.69336945;
 
 #if OCIO_LUT_SUPPORT
-    const double P_t = c * std::pow((R_t - R_0), 2.0);
+    static const double P_t = c * std::pow((R_t - R_0), 2.0);
     auto GenerateLutValues = [](double in) -> float
     {
         if (in >= P_t)
