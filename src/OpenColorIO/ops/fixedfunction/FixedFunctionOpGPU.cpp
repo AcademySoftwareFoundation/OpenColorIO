@@ -547,6 +547,10 @@ void Add_LINEAR_TO_PQ(GpuShaderCreatorRcPtr& shaderCreator, GpuShaderText& ss)
     ss.newLine() << ss.float3Decl("ratpoly") << " = (" << ss.float3Const(c1) << " + " << c2 << " * y) / ("
         << ss.float3Const(1.0) << " + " << c3 << " * y);";
     ss.newLine() << pxl << ".rgb = sign3 * pow(ratpoly, " << ss.float3Const(m2) << ");";
+
+    // The sign transfer here is very slightly different than in the CPU path,
+    // resulting in a PQ value of 0 at 0 rather than the true value of
+    // 0.836^78.84 = 7.36e-07, however, this is well below visual threshold.
 }
 
 void Add_PQ_TO_LINEAR(GpuShaderCreatorRcPtr& shaderCreator, GpuShaderText& ss)

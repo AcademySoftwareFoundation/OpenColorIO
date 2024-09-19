@@ -253,7 +253,6 @@ public:
 };
 #endif
 
-template <typename T>
 class Renderer_LINEAR_TO_HLG : public OpCPU {
 public:
     Renderer_LINEAR_TO_HLG() = delete;
@@ -265,37 +264,36 @@ protected:
     struct LogSegment
     {
         // Ylog = logSlope * log( linSlope * Xlin + linOff, base) + logOff;
-        T base      = 10.0f;    // Log base
-        T logSlope  = 1.0f;     // Log side slope.
-        T logOff    = 0.0f;     // Log side offset.
-        T linSlope  = 1.0f;     // Linear side slope.
-        T linOff    = 0.0f;     // Linear side offset.
+        float base      = 10.0f;    // Log base
+        float logSlope  = 1.0f;     // Log side slope.
+        float logOff    = 0.0f;     // Log side offset.
+        float linSlope  = 1.0f;     // Linear side slope.
+        float linOff    = 0.0f;     // Linear side offset.
     };
 
     struct GammaSegment
     {
         // Ygamma = slope * (Xlin + off)^power;
-        T power     = 1.0f; // power
-        T slope     = 1.0f; // post-power scale
-        T off       = 0.0f; // pre-power offset
+        float power     = 1.0f; // power
+        float slope     = 1.0f; // post-power scale
+        float off       = 0.0f; // pre-power offset
     };
 
-    T               m_mirror = T(0.0);
-    T               m_break = T(1.0); 
+    float           m_mirror = 0.0f;
+    float           m_break = 1.0f; 
     LogSegment      m_logSeg;
     GammaSegment    m_gammaSeg;
 };
 
-template <typename T>
-class Renderer_HLG_TO_LINEAR : public Renderer_LINEAR_TO_HLG<T> {
+class Renderer_HLG_TO_LINEAR : public Renderer_LINEAR_TO_HLG {
 public:
     Renderer_HLG_TO_LINEAR() = delete;
     explicit Renderer_HLG_TO_LINEAR(ConstFixedFunctionOpDataRcPtr& data);
 
     void apply(const void* inImg, void* outImg, long numPixels) const override;
 protected:
-    T m_primeBreak = T(0.0); // break-point in the non-linear axis.
-    T m_primeMirror= T(0.0); // mirror point in the non-linear axis.
+    float m_primeBreak = 0.0f; // break-point in the non-linear axis.
+    float m_primeMirror= 0.0f; // mirror point in the non-linear axis.
 };
 
 class Renderer_LINEAR_TO_DBL_LOG_AFFINE: public OpCPU {
@@ -1388,6 +1386,10 @@ void Renderer_LINEAR_TO_PQ<T>::apply(const void* inImg, void* outImg, long numPi
             const T ratpoly = (T(c1) + T(c2) * y) / (T(1.) + T(c3) * y);
             const T N = std::pow(ratpoly, T(m2));
             *(out++) = std::copysign(float(N), v);
+            // Note: the PQ value for zero is 0.836^78.84 = 7.36e-07 so there is
+            // a very small jump in the mirroring at zero. However, this is 20x
+            // smaller than a single 16-bit code value, so it is not visually
+            // significant.
         }
 
         // Alpha
@@ -1508,27 +1510,25 @@ void Renderer_LINEAR_TO_PQ_SSE<FAST_POWER>::apply(const void* inImg, void* outIm
 }
 #endif //OCIO_USE_SSE2
 
-template <typename T>
-Renderer_LINEAR_TO_HLG<T>::Renderer_LINEAR_TO_HLG(ConstFixedFunctionOpDataRcPtr& data)
+Renderer_LINEAR_TO_HLG::Renderer_LINEAR_TO_HLG(ConstFixedFunctionOpDataRcPtr& data)
     : OpCPU()
 {
     auto params = data->getParams();
 
     // store the parameters, baking the log base conversion into 'logSlope'.
-    m_mirror            = (T)params[0];
-    m_break             = (T)params[1];
-    m_logSeg.base       = (T)params[2]; 
-    m_logSeg.logSlope   = (T)params[3] / std::log(m_logSeg.base);
-    m_logSeg.logOff     = (T)params[4];
-    m_logSeg.linSlope   = (T)params[5];
-    m_logSeg.linOff     = (T)params[6];
-    m_gammaSeg.power    = (T)params[7];
-    m_gammaSeg.slope    = (T)params[8];
-    m_gammaSeg.off      = (T)params[9];
+    m_mirror            = (float)params[0];
+    m_break             = (float)params[1];
+    m_logSeg.base       = (float)params[2]; 
+    m_logSeg.logSlope   = (float)(params[3] / std::log(params[2]));
+    m_logSeg.logOff     = (float)params[4];
+    m_logSeg.linSlope   = (float)params[5];
+    m_logSeg.linOff     = (float)params[6];
+    m_gammaSeg.power    = (float)params[7];
+    m_gammaSeg.slope    = (float)params[8];
+    m_gammaSeg.off      = (float)params[9];
 }
 
-template <typename T>
-void Renderer_LINEAR_TO_HLG<T>::apply(const void* inImg, void* outImg, long numPixels) const
+void Renderer_LINEAR_TO_HLG::apply(const void* inImg, void* outImg, long numPixels) const
 {
     const float* in = (const float*)inImg;
     float* out = (float*)outImg;
@@ -1540,18 +1540,18 @@ void Renderer_LINEAR_TO_HLG<T>::apply(const void* inImg, void* outImg, long numP
         {
             float Ein = *(in++);;
             
-            float mirrorin = Ein - float(m_mirror);
-            const T E = std::abs(T(mirrorin)) + m_mirror;
-            T Eprime;
-            if (E < T(m_break))
+            const float mirrorin = Ein - m_mirror;
+            const float E = std::abs(mirrorin) + m_mirror;
+            float Eprime;
+            if (E < m_break)
             {
-                Eprime = T(m_gammaSeg.slope) * std::pow(E + T(m_gammaSeg.off), T(m_gammaSeg.power));
+                Eprime = m_gammaSeg.slope * std::pow(E + m_gammaSeg.off, m_gammaSeg.power);
             }
             else
             {
-                Eprime = T(m_logSeg.logSlope) * std::log(T(m_logSeg.linSlope) * E + T(m_logSeg.linOff)) + T(m_logSeg.logOff);
+                Eprime = m_logSeg.logSlope * std::log(m_logSeg.linSlope * E + m_logSeg.linOff) + m_logSeg.logOff;
             }
-            *(out++) = float(Eprime) * std::copysign(1.0f, mirrorin);
+            *(out++) = Eprime * std::copysign(1.0f, mirrorin);
         }
 
         // Alpha
@@ -1559,9 +1559,8 @@ void Renderer_LINEAR_TO_HLG<T>::apply(const void* inImg, void* outImg, long numP
     };
 }
 
-template<typename T>
-Renderer_HLG_TO_LINEAR<T>::Renderer_HLG_TO_LINEAR(ConstFixedFunctionOpDataRcPtr& data)
-    : Renderer_LINEAR_TO_HLG<T>(data)
+Renderer_HLG_TO_LINEAR::Renderer_HLG_TO_LINEAR(ConstFixedFunctionOpDataRcPtr& data)
+    : Renderer_LINEAR_TO_HLG(data)
 {
     // Assuming that the function is continuous, use the gamma segment to compute
     // the break point in the non-linear domain
@@ -1571,8 +1570,7 @@ Renderer_HLG_TO_LINEAR<T>::Renderer_HLG_TO_LINEAR(ConstFixedFunctionOpDataRcPtr&
     // TODO: cache more derived values to optimize the math.
 }
 
-template<typename T>
-void Renderer_HLG_TO_LINEAR<T>::apply(const void* inImg, void* outImg, long numPixels) const
+void Renderer_HLG_TO_LINEAR::apply(const void* inImg, void* outImg, long numPixels) const
 {
     const float* in = (const float*)inImg;
     float* out = (float*)outImg;
@@ -1582,20 +1580,21 @@ void Renderer_HLG_TO_LINEAR<T>::apply(const void* inImg, void* outImg, long numP
         // RGB
         for (int ch = 0; ch < 3; ++ch)
         {
-            float Eprimein = *(in++);
-            float mirrorin = Eprimein - float(m_primeMirror);
-            const T Eprime = std::abs(T(mirrorin)) + m_primeMirror;
-            T E;
-            if (Eprime < T(m_primeBreak))
+            const float Eprimein = *(in++);
+            
+            const float mirrorin = Eprimein - float(m_primeMirror);
+            const float Eprime = std::abs(mirrorin) + m_primeMirror;
+            float E;
+            if (Eprime < m_primeBreak)
             {
-                E = std::pow(Eprime / T(m_gammaSeg.slope), T(1.0f / T(m_gammaSeg.power))) - T(m_gammaSeg.off); 
+                E = std::pow(Eprime / m_gammaSeg.slope, 1.0f / m_gammaSeg.power) - m_gammaSeg.off; 
             }
             else
             {
-                E = (std::exp((Eprime - T(m_logSeg.logOff)) / T(m_logSeg.logSlope) ) - T(m_logSeg.linOff)) / T(m_logSeg.linSlope);
+                E = (std::exp((Eprime - m_logSeg.logOff) / m_logSeg.logSlope ) - m_logSeg.linOff) / m_logSeg.linSlope;
             }
             // flip the sign below the mirror point
-            *(out++) = float(E) * std::copysign(1.0f, mirrorin);
+            *(out++) = E * std::copysign(1.0f, mirrorin);
         }
 
         // Alpha
@@ -1847,12 +1846,12 @@ ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func
         case FixedFunctionOpData::LINEAR_TO_HLG:
         {
             /// TODO: SIMD implementation
-            return std::make_shared<Renderer_LINEAR_TO_HLG<float>>(func);
+            return std::make_shared<Renderer_LINEAR_TO_HLG>(func);
         }
         case FixedFunctionOpData::HLG_TO_LINEAR:
         {
             /// TODO: SIMD implementation
-            return std::make_shared<Renderer_HLG_TO_LINEAR<float>>(func);
+            return std::make_shared<Renderer_HLG_TO_LINEAR>(func);
         }
 
         case FixedFunctionOpData::LINEAR_TO_DBL_LOG_AFFINE:
@@ -1865,7 +1864,6 @@ ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func
             /// TODO: SIMD implementation
             return std::make_shared<Renderer_DBL_LOG_AFFINE_TO_LINEAR>(func);
         }
-
     }
 
     throw Exception("Unsupported FixedFunction style");
