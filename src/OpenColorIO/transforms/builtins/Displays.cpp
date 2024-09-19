@@ -124,9 +124,9 @@ void GenerateLinearToHLGOps(OpRcPtrVec& ops)
         -b,             // lin-side offset
 
         // gamma segment
-        0.5,            // gamma power
-        1.0,            // post-power scale
-        0.0,            // pre-power offset
+        0.5,                // gamma power
+        std::sqrt(E_scale), // post-power scale
+        0.0,                // pre-power offset
     };
 
     CreateFixedFunctionOp(ops, FixedFunctionOpData::LINEAR_TO_HLG, params);
