@@ -413,6 +413,7 @@ OCIO_ADD_TEST(FixedFunctionOps, LINEAR_TO_HLG)
     // Parameters for the Rec.2100 HLG curve.
     OCIO::FixedFunctionOpData::Params params
     {
+        0.0,            // mirror point
         0.25,           // break point
 
         // log segment

@@ -566,28 +566,31 @@ void Add_LINEAR_TO_HLG(
     const FixedFunctionOpData::Params& params)
 {
     // Get parameters, baking the log base conversion into 'logSlope'.
-    double breakPt           = params[0];
-    double logSeg_base       = params[1];
-    double logSeg_logSlope   = params[2] / std::log(logSeg_base);
-    double logSeg_logOff     = params[3];
-    double logSeg_linSlope   = params[4];
-    double logSeg_linOff     = params[5];
-    double gammaSeg_power    = params[6];
-    double gammaSeg_slope    = params[7];
-    double gammaSeg_off      = params[8];
+    double mirrorPt          = params[0];
+    double breakPt           = params[1];
+    double logSeg_base       = params[2];
+    double logSeg_logSlope   = params[3] / std::log(logSeg_base);
+    double logSeg_logOff     = params[4];
+    double logSeg_linSlope   = params[5];
+    double logSeg_linOff     = params[6];
+    double gammaSeg_power    = params[7];
+    double gammaSeg_slope    = params[8];
+    double gammaSeg_off      = params[9];
 
-    // float E = std::abs(in);
+    // float mirrorin = in - m_mirror;
+    // float E = std::abs(mirrorin) + m_mirror;
     // float Eprime;
     // if (E < m_break)
     //     Eprime = m_gammaSeg.slope * std::pow(E + m_gammaSeg.off, m_gammaSeg.power);
     // else
     //     Eprime = m_logSeg.logSlope * std::log(m_logSeg.linSlope * E + m_logSeg.linOff) + m_logSeg.logOff;
-    // out = std::copysign(Eprime, in);
+    // out = Eprime * std::copysign(1.0, in);
 
     const std::string pxl(shaderCreator->getPixelName());
 
-    ss.newLine() << ss.float3Decl("sign3") << " = sign(" << pxl << ".rgb);";
-    ss.newLine() << ss.float3Decl("E") << " = abs(" << pxl << ".rgb);";
+    ss.newLine() << ss.float3Decl("mirrorin") << " = " << pxl << ".rgb - " << ss.float3Const(mirrorPt) << ";";
+    ss.newLine() << ss.float3Decl("sign3") << " = sign(mirrorin);";
+    ss.newLine() << ss.float3Decl("E") << " = abs(mirrorin) + " << ss.float3Const(mirrorPt) << ";";
     ss.newLine() << ss.float3Decl("isAboveBreak") << " = " << ss.float3GreaterThan("E", ss.float3Const(breakPt)) << ";";
     ss.newLine() << ss.float3Decl("Ep_gamma") << " = " << ss.float3Const(gammaSeg_slope)
         << " * pow( E - " << ss.float3Const(gammaSeg_off) << ", " << ss.float3Const(gammaSeg_power) << ");";
@@ -605,20 +608,22 @@ void Add_HLG_TO_LINEAR(
     const FixedFunctionOpData::Params& params)
 {
     // Get parameters, baking the log base conversion into 'logSlope'.
-    double breakPt           = params[0];
-    double logSeg_base       = params[1];
-    double logSeg_logSlope   = params[2] / std::log(logSeg_base);
-    double logSeg_logOff     = params[3];
-    double logSeg_linSlope   = params[4];
-    double logSeg_linOff     = params[5];
-    double gammaSeg_power    = params[6];
-    double gammaSeg_slope    = params[7];
-    double gammaSeg_off      = params[8];
+    double mirrorPt          = params[0];
+    double breakPt           = params[1];
+    double logSeg_base       = params[2];
+    double logSeg_logSlope   = params[3] / std::log(logSeg_base);
+    double logSeg_logOff     = params[4];
+    double logSeg_linSlope   = params[5];
+    double logSeg_linOff     = params[6];
+    double gammaSeg_power    = params[7];
+    double gammaSeg_slope    = params[8];
+    double gammaSeg_off      = params[9];
 
-    double primeBreak = gammaSeg_slope * std::pow(breakPt + gammaSeg_off, gammaSeg_power);
+    double primeBreak  = gammaSeg_slope * std::pow(breakPt  + gammaSeg_off, gammaSeg_power);
+    double primeMirror = gammaSeg_slope * std::pow(mirrorPt + gammaSeg_off, gammaSeg_power);
 
-    // float Eprime = std::abs(in);
-    // float E;
+    // float mirrorin = in - primeMirror;
+    // float Eprime = std::abs(mirrorin) + primeMirror;
     // if (Eprime < m_primeBreak)
     //     E = std::pow(Eprime / m_gammaSeg.slope, 1.0f / m_gammaSeg.power) - m_gammaSeg.off;
     // else
@@ -627,8 +632,9 @@ void Add_HLG_TO_LINEAR(
 
     const std::string pxl(shaderCreator->getPixelName());
 
-    ss.newLine() << ss.float3Decl("sign3") << " = sign(" << pxl << ".rgb);";
-    ss.newLine() << ss.float3Decl("Eprime") << " = abs(" << pxl << ".rgb);";
+    ss.newLine() << ss.float3Decl("mirrorin") << " = " << pxl << ".rgb - " << ss.float3Const(primeMirror) << ";";
+    ss.newLine() << ss.float3Decl("sign3") << " = sign(mirrorin);";
+    ss.newLine() << ss.float3Decl("Eprime") << " = abs(mirrorin) + " << ss.float3Const(primeMirror) << ";";
     ss.newLine() << ss.float3Decl("isAboveBreak") << " = " << ss.float3GreaterThan("Eprime", ss.float3Const(primeBreak)) << ";";
    
     // Gamma Segment.

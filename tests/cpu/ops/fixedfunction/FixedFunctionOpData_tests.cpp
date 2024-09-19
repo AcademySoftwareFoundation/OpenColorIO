@@ -272,4 +272,4 @@ OCIO_ADD_TEST(FixedFunctionOpData, is_inverse)
     OCIO_CHECK_ASSERT(!f_gm->isInverse(f_gm_inv));
 }
 
-// FIXME: Test for double log-affine? /coz
+// TODO: Test for double log-affine

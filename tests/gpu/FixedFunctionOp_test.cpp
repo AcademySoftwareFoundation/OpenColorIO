@@ -544,8 +544,9 @@ namespace
 namespace HLG
 {
     // Parameters for the Rec.2100 HLG curve.
-    double params[9]
+    double params[10]
     {
+        0.0,            // mirror point
         0.25,           // break point
 
         // Log segment.
@@ -565,7 +566,7 @@ namespace HLG
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_HLG_fwd)
 {
-    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_HLG, HLG::params, 9);
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_HLG, HLG::params, 10);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
     test.setWideRangeInterval(-0.1f, 3.35f); // Output ~[-0.3, 1.02]
@@ -575,7 +576,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_HLG_fwd)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_HLG_inv)
 {
-    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_HLG, HLG::params, 9);
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_HLG, HLG::params, 10);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     test.setWideRangeInterval(-0.3f, 1.02f); // Output ~[-0.1, 3.35]

@@ -265,22 +265,23 @@ protected:
     struct LogSegment
     {
         // Ylog = logSlope * log( linSlope * Xlin + linOff, base) + logOff;
-        float base      = 10.0f;    // Log base
-        float logSlope  = 1.0f;     // Log side slope.
-        float logOff    = 0.0f;     // Log side offset.
-        float linSlope  = 1.0f;     // Linear side slope.
-        float linOff    = 0.0f;     // Linear side offset.
+        T base      = 10.0f;    // Log base
+        T logSlope  = 1.0f;     // Log side slope.
+        T logOff    = 0.0f;     // Log side offset.
+        T linSlope  = 1.0f;     // Linear side slope.
+        T linOff    = 0.0f;     // Linear side offset.
     };
 
     struct GammaSegment
     {
         // Ygamma = slope * (Xlin + off)^power;
-        float power     = 1.0f; // power
-        float slope     = 1.0f; // post-power scale
-        float off       = 0.0f; // pre-power offset
+        T power     = 1.0f; // power
+        T slope     = 1.0f; // post-power scale
+        T off       = 0.0f; // pre-power offset
     };
 
-    float           m_break = 1.0f; 
+    T               m_mirror = T(0.0);
+    T               m_break = T(1.0); 
     LogSegment      m_logSeg;
     GammaSegment    m_gammaSeg;
 };
@@ -293,7 +294,8 @@ public:
 
     void apply(const void* inImg, void* outImg, long numPixels) const override;
 protected:
-    float m_primeBreak = 0.0f; // break-point in the non-linear axis.
+    T m_primeBreak = T(0.0); // break-point in the non-linear axis.
+    T m_primeMirror= T(0.0); // mirror point in the non-linear axis.
 };
 
 class Renderer_LINEAR_TO_DBL_LOG_AFFINE: public OpCPU {
@@ -1513,17 +1515,16 @@ Renderer_LINEAR_TO_HLG<T>::Renderer_LINEAR_TO_HLG(ConstFixedFunctionOpDataRcPtr&
     auto params = data->getParams();
 
     // store the parameters, baking the log base conversion into 'logSlope'.
-    m_break             = (float)params[0];
-    
-    m_logSeg.base       = (float)params[1];
-    m_logSeg.logSlope   = (float)params[2] / std::log(m_logSeg.base);
-    m_logSeg.logOff     = (float)params[3];
-    m_logSeg.linSlope   = (float)params[4];
-    m_logSeg.linOff     = (float)params[5];
-    
-    m_gammaSeg.power    = (float)params[6];
-    m_gammaSeg.slope    = (float)params[7];
-    m_gammaSeg.off      = (float)params[8];
+    m_mirror            = (T)params[0];
+    m_break             = (T)params[1];
+    m_logSeg.base       = (T)params[2]; 
+    m_logSeg.logSlope   = (T)params[3] / std::log(m_logSeg.base);
+    m_logSeg.logOff     = (T)params[4];
+    m_logSeg.linSlope   = (T)params[5];
+    m_logSeg.linOff     = (T)params[6];
+    m_gammaSeg.power    = (T)params[7];
+    m_gammaSeg.slope    = (T)params[8];
+    m_gammaSeg.off      = (T)params[9];
 }
 
 template <typename T>
@@ -1538,8 +1539,9 @@ void Renderer_LINEAR_TO_HLG<T>::apply(const void* inImg, void* outImg, long numP
         for (int ch = 0; ch < 3; ++ch)
         {
             float Ein = *(in++);;
-
-            const T E = std::abs(T(Ein));
+            
+            float mirrorin = Ein - float(m_mirror);
+            const T E = std::abs(T(mirrorin)) + m_mirror;
             T Eprime;
             if (E < T(m_break))
             {
@@ -1549,7 +1551,7 @@ void Renderer_LINEAR_TO_HLG<T>::apply(const void* inImg, void* outImg, long numP
             {
                 Eprime = T(m_logSeg.logSlope) * std::log(T(m_logSeg.linSlope) * E + T(m_logSeg.linOff)) + T(m_logSeg.logOff);
             }
-            *(out++) = std::copysign(float(Eprime), Ein);
+            *(out++) = float(Eprime) * std::copysign(1.0f, mirrorin);
         }
 
         // Alpha
@@ -1563,7 +1565,8 @@ Renderer_HLG_TO_LINEAR<T>::Renderer_HLG_TO_LINEAR(ConstFixedFunctionOpDataRcPtr&
 {
     // Assuming that the function is continuous, use the gamma segment to compute
     // the break point in the non-linear domain
-    m_primeBreak = T(m_gammaSeg.slope) * std::pow(m_break + T(m_gammaSeg.off), m_gammaSeg.power);
+    m_primeBreak = m_gammaSeg.slope * std::pow(m_break + m_gammaSeg.off, m_gammaSeg.power);
+    m_primeMirror= m_gammaSeg.slope * std::pow(m_mirror + m_gammaSeg.off, m_gammaSeg.power);
 
     // TODO: cache more derived values to optimize the math.
 }
@@ -1579,9 +1582,9 @@ void Renderer_HLG_TO_LINEAR<T>::apply(const void* inImg, void* outImg, long numP
         // RGB
         for (int ch = 0; ch < 3; ++ch)
         {
-            float Eprimein = *(in++);;
-
-            const T Eprime = std::abs(T(Eprimein));
+            float Eprimein = *(in++);
+            float mirrorin = Eprimein - float(m_primeMirror);
+            const T Eprime = std::abs(T(mirrorin)) + m_primeMirror;
             T E;
             if (Eprime < T(m_primeBreak))
             {
@@ -1591,7 +1594,8 @@ void Renderer_HLG_TO_LINEAR<T>::apply(const void* inImg, void* outImg, long numP
             {
                 E = (std::exp((Eprime - T(m_logSeg.logOff)) / T(m_logSeg.logSlope) ) - T(m_logSeg.linOff)) / T(m_logSeg.linSlope);
             }
-            *(out++) = std::copysign(float(E), Eprimein);
+            // flip the sign below the mirror point
+            *(out++) = float(E) * std::copysign(1.0f, mirrorin);
         }
 
         // Alpha

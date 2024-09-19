@@ -111,6 +111,7 @@ void GenerateLinearToHLGOps(OpRcPtrVec& ops)
 #else
     FixedFunctionOpData::Params params
     {
+        0.0,            // mirror point
         E_break,        // break point
 
         // log segment

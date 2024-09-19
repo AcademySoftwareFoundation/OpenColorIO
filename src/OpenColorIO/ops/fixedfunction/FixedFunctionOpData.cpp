@@ -549,11 +549,11 @@ void FixedFunctionOpData::validate() const
     }
     else if (m_style == LINEAR_TO_HLG || m_style == HLG_TO_LINEAR)
     {
-        if (m_params.size() != 9)
+        if (m_params.size() != 10)
         {
             std::stringstream ss;
             ss << "The style '" << ConvertStyleToString(m_style, true)
-                << "' must have 9 parameters but "
+                << "' must have 10 parameters but "
                 << m_params.size() << " found.";
             throw Exception(ss.str().c_str());
         }
