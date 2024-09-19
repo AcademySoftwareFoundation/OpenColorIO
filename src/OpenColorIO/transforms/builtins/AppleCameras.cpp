@@ -35,8 +35,9 @@ void GenerateAppleLogToLinearOps(OpRcPtrVec & ops)
     constexpr double beta  = 0.00964052;
     constexpr double gamma = 0.08550479;
     constexpr double delta = 0.69336945;
-    const double P_t       = c * std::pow((R_t - R_0), 2.0);
+
 #if OCIO_LUT_SUPPORT
+    const double P_t = c * std::pow((R_t - R_0), 2.0);
     auto GenerateLutValues = [](double in) -> float
     {
         if (in >= P_t)
