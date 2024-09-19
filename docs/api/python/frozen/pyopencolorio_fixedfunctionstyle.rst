@@ -38,9 +38,9 @@
 
      FIXED_FUNCTION_LINEAR_TO_PQ : SMPTE ST-2084 OETF, input scaled with 100 nits at 1.0 (negative values are mirrored)
 
-     FIXED_FUNCTION_LINEAR_TO_HLG : ITU-R BT.2100 Hybrid Log Gamma OETF
+     FIXED_FUNCTION_LINEAR_TO_HLG : Parametrized gamma and log segments with affine transforms and adjustable mirroring point.
 
-     FIXED_FUNCTION_LINEAR_TO_DOUBLE_LOG_AFFINE : Two separate LogAffineTransform segments with an optional linear segment in the middle
+     FIXED_FUNCTION_LINEAR_TO_DOUBLE_LOG_AFFINE : Two separate log segments with affine transform and optional linear segment in the middle.
 
    .. py:method:: name() -> str
       :property:

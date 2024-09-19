@@ -557,6 +557,41 @@ void FixedFunctionOpData::validate() const
                 << m_params.size() << " found.";
             throw Exception(ss.str().c_str());
         }
+
+        double mirrorPt          = m_params[0];
+        double breakPt           = m_params[1];
+        double logSeg_base       = m_params[2];
+        // double logSeg_logSlope   = m_params[3];
+        // double logSeg_logOff     = m_params[4];
+        // double logSeg_linSlope   = m_params[5];
+        // double logSeg_linOff     = m_params[6];
+        double gammaSeg_power    = m_params[7];
+        // double gammaSeg_slope    = m_params[8];
+        // double gammaSeg_off      = m_params[9];
+
+        // check log base
+        if (logSeg_base <= 0.0)
+        {
+            std::stringstream ss;
+            ss << "Log base " << logSeg_base << " is not greater than zero.";
+            throw Exception(ss.str().c_str());
+        }
+
+        // check mirror and break point order
+        if (mirrorPt >= breakPt)
+        {
+            std::stringstream ss;
+            ss << "Mirror point " << mirrorPt << " is not smaller than the break point " << breakPt << ".";
+            throw Exception(ss.str().c_str());
+        }
+
+        // check gamma
+        if (gammaSeg_power == 0.0)
+        {
+            std::stringstream ss;
+            ss << "Gamma power is zero.";
+            throw Exception(ss.str().c_str());
+        }
     }
     else
     {

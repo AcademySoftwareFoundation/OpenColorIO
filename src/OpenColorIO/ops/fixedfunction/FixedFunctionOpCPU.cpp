@@ -265,22 +265,22 @@ protected:
     {
         // Ylog = logSlope * log( linSlope * Xlin + linOff, base) + logOff;
         float base      = 10.0f;    // Log base
-        float logSlope  = 1.0f;     // Log side slope.
-        float logOff    = 0.0f;     // Log side offset.
-        float linSlope  = 1.0f;     // Linear side slope.
-        float linOff    = 0.0f;     // Linear side offset.
+        float logSlope  = 1.0f;     // Log side slope
+        float logOff    = 0.0f;     // Log side offset
+        float linSlope  = 1.0f;     // Linear side slope
+        float linOff    = 0.0f;     // Linear side offset
     };
 
     struct GammaSegment
     {
         // Ygamma = slope * (Xlin + off)^power;
-        float power     = 1.0f; // power
-        float slope     = 1.0f; // post-power scale
-        float off       = 0.0f; // pre-power offset
+        float power     = 1.0f; // Power
+        float slope     = 1.0f; // Post-power scale
+        float off       = 0.0f; // Pre-power offset
     };
 
-    float           m_mirror = 0.0f;
-    float           m_break = 1.0f; 
+    float           m_mirror = 0.0f; // Mirroring point in lin space
+    float           m_break  = 1.0f; // Break point between gamma and log in lin space
     LogSegment      m_logSeg;
     GammaSegment    m_gammaSeg;
 };
@@ -307,10 +307,10 @@ protected:
     struct LogSegment
     {
         // Ylog = logSlope * log( linSlope * Xlin + linOff, base) + logOff;
-        float logSlope  = 1.0f; // Log side slope.
-        float logOff    = 0.0f; // Log side offset.
-        float linSlope  = 1.0f; // Linear side slope.
-        float linOff    = 0.0f; // Linear side offset.
+        float logSlope  = 1.0f; // Log side slope
+        float logOff    = 0.0f; // Log side offset
+        float linSlope  = 1.0f; // Linear side slope
+        float linOff    = 0.0f; // Linear side offset
     };
 
     struct LinSegment

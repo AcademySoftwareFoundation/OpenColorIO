@@ -74,7 +74,7 @@ void GenerateOpsToLinear(OpRcPtrVec& ops)
         1.0,                // log segment 2 lin-side offset
 
         1.0,                // linear segment slope (not used)
-        0.0,                // linear segment slope (not used)
+        0.0,                // linear segment offset (not used)
     };
 
     CreateFixedFunctionOp(ops, FixedFunctionOpData::DBL_LOG_AFFINE_TO_LINEAR, params);
@@ -128,7 +128,7 @@ void GenerateOpsToLinear(OpRcPtrVec& ops)
         1.0,            // log segment 2 lin-side offset
 
         1.9754798,      // linear segment slope 
-        0.12512219,     // linear segment slope
+        0.12512219,     // linear segment offset
     };
 
     CreateFixedFunctionOp(ops, FixedFunctionOpData::DBL_LOG_AFFINE_TO_LINEAR, params);

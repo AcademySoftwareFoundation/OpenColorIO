@@ -526,14 +526,14 @@ void Add_LUV_TO_XYZ(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
 
 namespace 
 {
-    namespace ST_2084
-    {
-        static constexpr double m1 = 0.25 * 2610. / 4096.;
-        static constexpr double m2 = 128. * 2523. / 4096.;
-        static constexpr double c2 = 32. * 2413. / 4096.;
-        static constexpr double c3 = 32. * 2392. / 4096.;
-        static constexpr double c1 = c3 - c2 + 1.;
-    }
+namespace ST_2084
+{
+    static constexpr double m1 = 0.25 * 2610. / 4096.;
+    static constexpr double m2 = 128. * 2523. / 4096.;
+    static constexpr double c2 = 32. * 2413. / 4096.;
+    static constexpr double c3 = 32. * 2392. / 4096.;
+    static constexpr double c1 = c3 - c2 + 1.;
+}
 } // anonymous
 
 void Add_LINEAR_TO_PQ(GpuShaderCreatorRcPtr& shaderCreator, GpuShaderText& ss)
