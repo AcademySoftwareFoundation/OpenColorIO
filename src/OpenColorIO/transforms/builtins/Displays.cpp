@@ -202,6 +202,50 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
     }
 
     {
+        auto CIE_XYZ_D65_to_DCDM_D65_Functor = [](OpRcPtrVec & ops)
+        {
+            const double scale     = 48.0 / 52.37;
+            const double scale4[4] = { scale, scale, scale, 1. };
+            CreateScaleOp(ops, scale4, TRANSFORM_DIR_FORWARD);
+
+            const GammaOpData::Params rgbParams   = { 2.6 };
+            const GammaOpData::Params alphaParams = { 1.0 };
+            auto gammaData = std::make_shared<GammaOpData>(GammaOpData::BASIC_REV,
+                                                           rgbParams, rgbParams, rgbParams, alphaParams);
+            CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
+        };
+
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_DCDM-D65", 
+                            "Convert CIE XYZ (D65 white) to Gamma 2.6, XYZ-E with D65 white",
+                            CIE_XYZ_D65_to_DCDM_D65_Functor);
+    }
+
+    {
+        auto CIE_XYZ_D65_to_DCDM_D60_BFD_Functor = [](OpRcPtrVec & ops)
+        {
+            const MatrixOpData::Offsets d65_wht_XYZ(0.95045592705167, 1., 1.08905775075988, 0.);
+            const MatrixOpData::Offsets d60_wht_XYZ(0.95264607456985, 1., 1.00882518435159, 0.);
+            MatrixOpData::MatrixArrayPtr matrix
+                = build_vonkries_adapt(d65_wht_XYZ, d60_wht_XYZ, ADAPTATION_BRADFORD);
+            CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
+
+            const double scale     = 48.0 / 52.37;
+            const double scale4[4] = { scale, scale, scale, 1. };
+            CreateScaleOp(ops, scale4, TRANSFORM_DIR_FORWARD);
+
+            const GammaOpData::Params rgbParams   = { 2.6 };
+            const GammaOpData::Params alphaParams = { 1.0 };
+            auto gammaData = std::make_shared<GammaOpData>(GammaOpData::BASIC_REV,
+                                                           rgbParams, rgbParams, rgbParams, alphaParams);
+            CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
+        };
+
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_DCDM-D60-BFD", 
+                            "Convert CIE XYZ (D65 white) to Gamma 2.6, XYZ-E with D60 white (Bradford adaptation)",
+                            CIE_XYZ_D65_to_DCDM_D60_BFD_Functor);
+    }
+
+    {
         auto CIE_XYZ_D65_to_DisplayP3_Functor = [](OpRcPtrVec & ops)
         {
             MatrixOpData::MatrixArrayPtr matrix
@@ -283,6 +327,46 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
         registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65", 
                             "Convert CIE XYZ (D65 white) to ST-2084 (PQ), P3-D65 primaries",
                             CIE_XYZ_D65_to_ST2084_P3_D65_Functor);
+    }
+
+    {
+        auto CIE_XYZ_D65_to_ST2084_DCDM_D65_Functor = [](OpRcPtrVec & ops)
+        {
+            // Scale 1.0 in the reference space to 0.48. The PQ function will interpret 
+            // this as 48 nits.
+            const double scale     = 0.48;
+            const double scale4[4] = { scale, scale, scale, 1. };
+            CreateScaleOp(ops, scale4, TRANSFORM_DIR_FORWARD);
+
+            ST_2084::GenerateLinearToPQOps(ops);
+        };
+
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_ST2084-DCDM-D65", 
+                            "Convert CIE XYZ (D65 white) to ST-2084 (PQ), XYZ-E with D65 white",
+                            CIE_XYZ_D65_to_ST2084_DCDM_D65_Functor);
+    }
+
+    {
+        auto CIE_XYZ_D65_to_ST2084_DCDM_D60_BFD_Functor = [](OpRcPtrVec & ops)
+        {
+            const MatrixOpData::Offsets d65_wht_XYZ(0.95045592705167, 1., 1.08905775075988, 0.);
+            const MatrixOpData::Offsets d60_wht_XYZ(0.95264607456985, 1., 1.00882518435159, 0.);
+            MatrixOpData::MatrixArrayPtr matrix
+                = build_vonkries_adapt(d65_wht_XYZ, d60_wht_XYZ, ADAPTATION_BRADFORD);
+            CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
+
+            // Scale 1.0 in the reference space to 0.48. The PQ function will interpret 
+            // this as 48 nits.
+            const double scale     = 0.48;
+            const double scale4[4] = { scale, scale, scale, 1. };
+            CreateScaleOp(ops, scale4, TRANSFORM_DIR_FORWARD);
+
+            ST_2084::GenerateLinearToPQOps(ops);
+        };
+
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_ST2084-DCDM-D60-BFD", 
+                            "Convert CIE XYZ (D65 white) to ST-2084 (PQ), XYZ-E with D60 white (Bradford adaptation)",
+                            CIE_XYZ_D65_to_ST2084_DCDM_D60_BFD_Functor);
     }
 
     {
