@@ -1561,7 +1561,7 @@ void Renderer_LINEAR_TO_HLG<T>::apply(const void* inImg, void* outImg, long numP
 
 template<typename T>
 Renderer_HLG_TO_LINEAR<T>::Renderer_HLG_TO_LINEAR(ConstFixedFunctionOpDataRcPtr& data)
-    : Renderer_LINEAR_TO_HLG(data)
+    : Renderer_LINEAR_TO_HLG<T>(data)
 {
     // Assuming that the function is continuous, use the gamma segment to compute
     // the break point in the non-linear domain

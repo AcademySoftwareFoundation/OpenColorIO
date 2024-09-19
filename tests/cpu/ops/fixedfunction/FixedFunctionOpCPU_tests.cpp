@@ -675,7 +675,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_HLG)
 
 OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_DBL_LOG_AFFINE)
 {
-    // Note: Parameters are designed to result in a monotonously increasing but
+    // Note: Parameters are designed to result in a monotonically increasing but
     // discontinuous function. Also the break points are chosen to be exact
     // values in IEEE-754 to verify that they belong to the log segments.
     OCIO::FixedFunctionOpData::Params params
