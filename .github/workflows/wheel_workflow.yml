@@ -353,7 +353,7 @@ jobs:
 
 
   upload_pypi:
-    needs: [sdist, linux, macos, windows]
+    needs: [sdist, linux, macos, macos-arm, windows]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     steps:
