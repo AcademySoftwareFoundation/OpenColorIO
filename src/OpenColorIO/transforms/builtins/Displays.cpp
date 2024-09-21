@@ -98,47 +98,79 @@ static const     double c = std::log(12. / E_MAX) * a + c0;
 static constexpr double E_scale = 3. / E_MAX;
 static constexpr double E_break = E_MAX / 12.;
 
-void GenerateLinearToHLGOps(OpRcPtrVec& ops)
-{
 #if OCIO_LUT_SUPPORT
+
+void GenerateHLGToLinearOps(OpRcPtrVec& ops)
+{
     auto GenerateLutValues = [](double in) -> float
         {
             double out = 0.0;
-            const double E = std::abs(in);   // mirror about 0
-            if (in < E_break)
+            const double Eprime = std::abs(in);   // mirror about 0
+            if (Eprime < 0.5)
             {
-                out = std::sqrt(E * E_scale);
+                out = Eprime * Eprime / E_scale;
             }
             else
             {
-                out = a * std::log(E - b) + c; 
+                out = b + std::exp( (Eprime - c) / a );
             }
             return float(std::copysign(out, in));
         };
 
     CreateHalfLut(ops, GenerateLutValues);
-#else
-    FixedFunctionOpData::Params params
-    {
-        0.0,                // mirror point
-        E_break,            // break point
-
-        // Gamma segment.
-        0.5,                // gamma power
-        std::sqrt(E_scale), // post-power scale
-        0.0,                // pre-power offset
-
-        // Log segment.
-        std::exp(1.0),      // log base
-        a,                  // log-side slope
-        c,                  // log-side offset
-        1.0,                // lin-side slope
-        -b,                 // lin-side offset
-    };
-
-    CreateFixedFunctionOp(ops, FixedFunctionOpData::LIN_TO_GAMMA_LOG, params);
-#endif // OCIO_LUT_SUPPORT
 }
+
+void GenerateLinearToHLGOps(OpRcPtrVec& ops)
+{
+    auto GenerateLutValues = [](double in) -> float
+        {
+            double out = 0.0;
+            const double E = std::abs(in);   // mirror about 0
+            if (E < E_break)
+            {
+                out = std::sqrt(E * E_scale);
+            }
+            else
+            {
+                out = a * std::log(E - b) + c;
+            }
+            return float(std::copysign(out, in));
+        };
+
+    CreateHalfLut(ops, GenerateLutValues);
+}
+
+#else
+
+static const FixedFunctionOpData::Params params
+{
+    0.0,                // mirror point
+    E_break,            // break point
+
+    // Gamma segment.
+    0.5,                // gamma power
+    std::sqrt(E_scale), // post-power scale
+    0.0,                // pre-power offset
+
+    // Log segment.
+    std::exp(1.0),      // log base
+    a,                  // log-side slope
+    c,                  // log-side offset
+    1.0,                // lin-side slope
+    -b,                 // lin-side offset
+};
+
+void GenerateHLGToLinearOps(OpRcPtrVec& ops)
+{
+    CreateFixedFunctionOp(ops, FixedFunctionOpData::GAMMA_LOG_TO_LIN, params);
+}
+
+void GenerateLinearToHLGOps(OpRcPtrVec& ops)
+{
+    CreateFixedFunctionOp(ops, FixedFunctionOpData::LIN_TO_GAMMA_LOG, params);
+}
+
+#endif // OCIO_LUT_SUPPORT
 
 } // namespace HLG
 
@@ -359,6 +391,28 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
         registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65", 
                             "Convert CIE XYZ (D65 white) to ST-2084 (PQ), P3-D65 primaries",
                             CIE_XYZ_D65_to_ST2084_P3_D65_Functor);
+    }
+
+    {
+        auto HLG_to_Linear_Functor = [](OpRcPtrVec & ops)
+        {
+            HLG::GenerateHLGToLinearOps(ops);
+        };
+
+        registry.addBuiltin("CURVE - HLG-OETF-INVERSE",
+                            "Apply ITU-R BT.2100 (HLG) OETF inverse, scaled with HLG 0.42 at 18% grey",
+                            HLG_to_Linear_Functor);
+    }
+
+    {
+        auto Linear_to_HLG_Functor = [](OpRcPtrVec & ops)
+        {
+            HLG::GenerateLinearToHLGOps(ops);
+        };
+
+        registry.addBuiltin("CURVE - HLG-OETF",
+                            "Apply ITU-R BT.2100 (HLG) OETF, scaled with 18% grey at HLG 0.42",
+                            Linear_to_HLG_Functor);
     }
 
     {
