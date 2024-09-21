@@ -335,7 +335,7 @@ Website : `<https://github.com/aferrero2707/PhotoFlow>`__
 
 
 Photoshop (beta)
-*********
+****************
 OCIO can be enabled via a technology preview checkbox in preferences. For more details see `OpenColorIO and 32-bit Editing now available in Photoshop Beta <https://community.adobe.com/t5/photoshop-beta-discussions/new-feature-opencolorio-and-32-bit-editing-now-available-in-photoshop-beta/td-p/14767506>`__.
 
 Photoshop

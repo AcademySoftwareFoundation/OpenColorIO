@@ -26,14 +26,14 @@ Python
 
 If you only need the Python binding and command-line tools, the simplest solution is to 
 take advantage of the pre-built wheels in the Python Package Index (PyPI) 
-`here <https://pypi.org/project/opencolorio>`_. It can be installed as follows, once you 
+`here <https://pypi.org/project/opencolorio>`__. It can be installed as follows, once you 
 have Python installed.
 
 **PyPI**::
 
     pip install opencolorio
 
-The pre-built wheels are listed `here <https://pypi.org/project/opencolorio/#files>`_.  Note that
+The pre-built wheels are listed `here <https://pypi.org/project/opencolorio/#files>`__.  Note that
 source code is provided, so it may be possible for ``pip`` to compile the binding on your machine if
 the matrix of Python version and platform version does not have the combination you need.  More
 detailed instructions are available for how to use 
@@ -529,7 +529,7 @@ Note: For other user facing environment variables, see :ref:`using_env_vars`.
     It is recommended to build OFX plugins in static mode 
     (``BUILD_SHARED_LIBS=OFF``) to avoid any issue loading the OpenColorIO
     library from the plugin once it has been moved. Otherwise, please make sure
-    the shared OpenColorIO lib (*.so, *.dll, *.dylib) is visible from the
+    the shared OpenColorIO lib (\*.so, \*.dll, \*.dylib) is visible from the
     plugin by mean of ``PATH``, ``LD_LIBRARY_PATH`` or ``DYLD_LIBRARY_PATH``
     for Windows, Linux and macOS respectively. For systems that supports it,
     it is also possible to edit the RPATH of the plugin to add the location of

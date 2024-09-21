@@ -43,7 +43,7 @@ Accessing Other Versions
 ************************
 
 You are reading the documentation for OCIO v2.  The documentation for the earlier
-1.x series of releases is available `here <https://opencolorio.org/old/index.html>`_.
+1.x series of releases is available `here <https://opencolorio.org/old/index.html>`__.
 
 
 Community
@@ -70,7 +70,7 @@ Slack
 
 There is an OpenColorIO Slack workspace at: `<https://opencolorio.slack.com>`_.  
 
-New users may join the workspace from `here <http://slack.opencolorio.org/>`_.
+New users may join the workspace from `here <http://slack.opencolorio.org/>`__.
 
 
 Search
