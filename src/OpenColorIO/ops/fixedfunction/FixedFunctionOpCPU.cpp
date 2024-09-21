@@ -230,7 +230,6 @@ class Renderer_PQ_TO_LIN : public OpCPU {
   void apply(const void *inImg, void *outImg, long numPixels) const override;
 };
 
-
 #if OCIO_USE_SSE2
 template<bool FAST_POWER>
 class Renderer_LIN_TO_PQ_SSE : public OpCPU {
@@ -1477,7 +1476,6 @@ __m128 Renderer_LIN_TO_PQ_SSE<false>::myPower(__m128 x, __m128 exp)
 }
 #endif // _WIN32
 
-
 template<bool FAST_POWER>
 void Renderer_LIN_TO_PQ_SSE<FAST_POWER>::apply(const void* inImg, void* outImg, long numPixels) const
 {
@@ -1515,7 +1513,7 @@ Renderer_LIN_TO_GAMMA_LOG::Renderer_LIN_TO_GAMMA_LOG(ConstFixedFunctionOpDataRcP
 {
     auto params = data->getParams();
 
-    // store the parameters, baking the log base conversion into 'logSlope'.
+    // Store the parameters, baking the log base conversion into 'logSlope'.
     m_mirror            = (float)params[0];
     m_break             = (float)params[1];
     m_gammaSeg.power    = (float)params[2];

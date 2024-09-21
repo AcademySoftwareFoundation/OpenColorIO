@@ -544,7 +544,7 @@ void FixedFunctionOpData::validate() const
         if(break1 > break2)
         {
             std::stringstream ss;
-            ss << "First break point " << break1 << " is larger than the second break point " << break2;
+            ss << "First break point " << break1 << " is larger than the second break point " << break2 << ".";
             throw Exception(ss.str().c_str());
         }
     }

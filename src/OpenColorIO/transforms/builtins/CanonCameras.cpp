@@ -78,10 +78,10 @@ void GenerateOpsToLinear(OpRcPtrVec& ops)
     };
 
     CreateFixedFunctionOp(ops, FixedFunctionOpData::DOUBLE_LOG_TO_LIN, params);
-#endif
+#endif // OCIO_LUT_SUPPORT
 }
 
-}
+} // namespace CANON_CLOG2
 
 namespace CANON_CLOG3
 {
@@ -132,10 +132,10 @@ void GenerateOpsToLinear(OpRcPtrVec& ops)
     };
 
     CreateFixedFunctionOp(ops, FixedFunctionOpData::DBL_LOG_AFFINE_TO_LINEAR, params);
-#endif 
+#endif // OCIO_LUT_SUPPORT
 }
 
-}
+} // namespace CANON_CLOG3
 
 namespace CAMERA
 {

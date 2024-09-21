@@ -28,7 +28,9 @@ namespace DISPLAY
 
 namespace ST_2084
 {
+
 #if OCIO_LUT_SUPPORT
+
 static constexpr double m1 = 0.25 * 2610. / 4096.;
 static constexpr double m2 = 128. * 2523. / 4096.;
 static constexpr double c2 = 32. * 2413. / 4096.;
@@ -39,9 +41,9 @@ void GeneratePQToLinearOps(OpRcPtrVec& ops)
 {
     auto GenerateLutValues = [](double input) -> float
     {
-        const double N = std::abs(input);
+        const double N = std::abs(input);   // mirror about 0
         const double x = std::pow(N, 1. / m2);
-        double L = std::pow(std::max(0., x - c1) / (c2 - c3 * x), 1. / m1);
+        double L = std::pow( std::max(0., x - c1) / (c2 - c3 * x), 1. / m1 );
         // L is in nits/10000, convert to nits/100.
         L *= 100.;
 
@@ -59,14 +61,16 @@ void GenerateLinearToPQOps(OpRcPtrVec& ops)
         const double L = std::abs(input * 0.01);
         const double y = std::pow(L, m1);
         const double ratpoly = (c1 + c2 * y) / (1. + c3 * y);
-        const double N = std::pow(std::max(0., ratpoly), m2);
+        const double N = std::pow( std::max(0., ratpoly), m2 );
 
         return float(std::copysign(N, input));
     };
 
     CreateHalfLut(ops, GenerateLutValues);
 }
+
 #else
+
 void GeneratePQToLinearOps(OpRcPtrVec& ops)
 {
     CreateFixedFunctionOp(ops, FixedFunctionOpData::PQ_TO_LIN, {});
@@ -76,11 +80,14 @@ void GenerateLinearToPQOps(OpRcPtrVec& ops)
 {
     CreateFixedFunctionOp(ops, FixedFunctionOpData::LIN_TO_PQ, {});
 }
+
 #endif // OCIO_LUT_SUPPORT
-} // ST_2084
+
+} // namespace ST_2084
 
 namespace HLG
 {
+
 static constexpr double Lw = 1000.;
 static constexpr double E_MAX = 3.;
 
@@ -97,7 +104,7 @@ void GenerateLinearToHLGOps(OpRcPtrVec& ops)
     auto GenerateLutValues = [](double in) -> float
         {
             double out = 0.0;
-            const double E = std::abs(in);
+            const double E = std::abs(in);   // mirror about 0
             if (in < E_break)
             {
                 out = std::sqrt(E * E_scale);
@@ -130,9 +137,10 @@ void GenerateLinearToHLGOps(OpRcPtrVec& ops)
     };
 
     CreateFixedFunctionOp(ops, FixedFunctionOpData::LIN_TO_GAMMA_LOG, params);
-#endif
+#endif // OCIO_LUT_SUPPORT
 }
-} // HLG
+
+} // namespace HLG
 
 void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
 {

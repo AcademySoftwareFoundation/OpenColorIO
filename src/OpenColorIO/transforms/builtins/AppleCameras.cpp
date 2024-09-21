@@ -76,13 +76,13 @@ void GenerateAppleLogToLinearOps(OpRcPtrVec & ops)
 
     auto range_data = std::make_shared<RangeOpData>(
         0.,
-        RangeOpData::EmptyValue(), // Don't clamp high end.
+        RangeOpData::EmptyValue(), // don't clamp high end
         0.,
         RangeOpData::EmptyValue());
 
     CreateRangeOp(ops, range_data, TransformDirection::TRANSFORM_DIR_FORWARD);
     CreateFixedFunctionOp(ops, FixedFunctionOpData::GAMMA_LOG_TO_LIN, gamma_log_params);
-#endif
+#endif // OCIO_LUT_SUPPORT
 }
 
 } // namespace APPLE_LOG
