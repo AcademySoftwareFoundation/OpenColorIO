@@ -88,7 +88,7 @@ If you need the extra command-line tools, you'll need to install :ref:`from sour
 However, the Python binding can be installed as described in the :ref:`Python` section.
 
 MacOS using Homebrew
-*******************
+********************
 
 You can use the Homebrew package manager to install OpenColorIO on macOS.
 
@@ -264,9 +264,7 @@ Enabling optional components
 CMake Options
 +++++++++++++
 
-There are many options available in `CMake. 
-
-<https://cmake.org/cmake/help/latest/guide/user-interaction/index.html#guide:User%20Interaction%20Guide>`_
+There are many options available in `CMake. <https://cmake.org/cmake/help/latest/guide/user-interaction/index.html#guide:User%20Interaction%20Guide>`_
 
 Several of the most common ones are:
 
