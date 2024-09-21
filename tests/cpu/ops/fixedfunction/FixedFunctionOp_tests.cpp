@@ -380,12 +380,12 @@ OCIO_ADD_TEST(FixedFunctionOps, XYZ_TO_LUV)
     OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_XYZ_TO_LUV"));
 }
 
-OCIO_ADD_TEST(FixedFunctionOps, LINEAR_TO_PQ)
+OCIO_ADD_TEST(FixedFunctionOps, LIN_TO_PQ)
 {
     OCIO::OpRcPtrVec ops;
 
-    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::PQ_TO_LINEAR, {}));
-    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::LINEAR_TO_PQ, {}));
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::PQ_TO_LIN, {}));
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::LIN_TO_PQ, {}));
 
     OCIO_CHECK_NO_THROW(ops.finalize());
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
@@ -403,10 +403,10 @@ OCIO_ADD_TEST(FixedFunctionOps, LINEAR_TO_PQ)
     OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp(false);
     const OCIO::OpCPU& c = *cpuOp;
     const std::string typeName(typeid(c).name());
-    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_PQ_TO_LINEAR"));
+    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_PQ_TO_LIN"));
 }
 
-OCIO_ADD_TEST(FixedFunctionOps, LINEAR_TO_HLG)
+OCIO_ADD_TEST(FixedFunctionOps, LIN_TO_GAMMA_LOG)
 {
     OCIO::OpRcPtrVec ops;
 
@@ -416,21 +416,21 @@ OCIO_ADD_TEST(FixedFunctionOps, LINEAR_TO_HLG)
         0.0,            // mirror point
         0.25,           // break point
 
-        // log segment
+        // Gamma segment.
+        0.5,            // gamma power
+        1.0,            // post-power scale
+        0.0,            // pre-power offset
+
+        // Log segment.
         std::exp(1.0),  // log base (e)
         0.17883277,     // log-side slope
         0.807825590164, // log-side offset
         1.0,            // lin-side slope
         -0.07116723,    // lin-side offset
-
-        // gamma segment
-        0.5,            // gamma power
-        1.0,            // post-power scale
-        0.0,            // pre-power offset
     };
 
-    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::HLG_TO_LINEAR, params));
-    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::LINEAR_TO_HLG, params));
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::GAMMA_LOG_TO_LIN, params));
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::LIN_TO_GAMMA_LOG, params));
 
     OCIO_CHECK_NO_THROW(ops.finalize());
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
@@ -448,24 +448,24 @@ OCIO_ADD_TEST(FixedFunctionOps, LINEAR_TO_HLG)
     OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp(false);
     const OCIO::OpCPU& c = *cpuOp;
     const std::string typeName(typeid(c).name());
-    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_HLG_TO_LINEAR"));
+    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_GAMMA_LOG_TO_LIN"));
 }
 
-OCIO_ADD_TEST(FixedFunctionOps, LINEAR_TO_DOUBLE_LOG_AFFINE)
+OCIO_ADD_TEST(FixedFunctionOps, LIN_TO_DOUBLE_LOG)
 {
     OCIO::OpRcPtrVec ops;
 
     OCIO::FixedFunctionOpData::Params params = {
-        10.0,               // Base for the log
-        0.5,                // Break point between Log1 and Linear segments
-        0.5,                // Break point between Linear and Log2 segments
-        1.0, 0.0, 1.0, 0.0, // Log curve 1: LinSideSlope, LinSideOffset, LogSideSlope, LogSideOffset,
-        1.0, 0.0, 1.0, 0.0, // Log curve 2: LinSideSlope, LinSideOffset, LogSideSlope, LogSideOffset,
-        1.0, 0.0,           // Linear segment slope and offset
+        10.0,               // base for the log
+        0.5,                // break point between log1 and linear segments
+        0.5,                // break point between linear and log2 segments
+        1.0, 0.0, 1.0, 0.0, // log curve 1: LinSideSlope, LinSideOffset, LogSideSlope, LogSideOffset,
+        1.0, 0.0, 1.0, 0.0, // log curve 2: LinSideSlope, LinSideOffset, LogSideSlope, LogSideOffset,
+        1.0, 0.0,           // linear segment slope and offset
     };
 
-    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::LINEAR_TO_DBL_LOG_AFFINE, params));
-    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::DBL_LOG_AFFINE_TO_LINEAR, params));
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::LIN_TO_DOUBLE_LOG, params));
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::DOUBLE_LOG_TO_LIN, params));
 
     OCIO_CHECK_NO_THROW(ops.finalize());
     OCIO_REQUIRE_EQUAL(ops.size(), 2);
@@ -483,5 +483,5 @@ OCIO_ADD_TEST(FixedFunctionOps, LINEAR_TO_DOUBLE_LOG_AFFINE)
     OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp(false);
     const OCIO::OpCPU& c = *cpuOp;
     const std::string typeName(typeid(c).name());
-    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_LINEAR_TO_DBL_LOG_AFFINE"));
+    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_LIN_TO_DOUBLE_LOG"));
 }

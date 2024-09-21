@@ -77,7 +77,7 @@ void GenerateOpsToLinear(OpRcPtrVec& ops)
         0.0,                // linear segment offset (not used)
     };
 
-    CreateFixedFunctionOp(ops, FixedFunctionOpData::DBL_LOG_AFFINE_TO_LINEAR, params);
+    CreateFixedFunctionOp(ops, FixedFunctionOpData::DOUBLE_LOG_TO_LIN, params);
 #endif
 }
 

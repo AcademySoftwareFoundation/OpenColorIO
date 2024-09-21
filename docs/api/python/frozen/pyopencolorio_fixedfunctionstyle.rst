@@ -110,17 +110,17 @@
       :value: <FixedFunctionStyle.FIXED_FUNCTION_XYZ_TO_xyY: 7>
 
 
-   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_LINEAR_TO_PQ
+   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_LIN_TO_PQ
       :module: PyOpenColorIO
-      :value: <FixedFunctionStyle.FIXED_FUNCTION_PQ_TO_LINEAR: 13>
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_PQ_TO_LIN: 13>
 
-   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_LINEAR_TO_HLG
+   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_LIN_TO_GAMMA_LOG
       :module: PyOpenColorIO
-      :value: <FixedFunctionStyle.FIXED_FUNCTION_LINEAR_TO_HLG: 14>
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_LIN_TO_GAMMA_LOG: 14>
 
-   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_LINEAR_TO_DOUBLE_LOG_AFFINE
+   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_LIN_TO_DOUBLE_LOG
       :module: PyOpenColorIO
-      :value: <FixedFunctionStyle.FIXED_FUNCTION_LINEAR_TO_DOUBLE_LOG_AFFINE: 15>
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_LIN_TO_DOUBLE_LOG: 15>
 
    .. py:property:: FixedFunctionStyle.value
       :module: PyOpenColorIO

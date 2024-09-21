@@ -560,12 +560,12 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, XYZ_TO_LUV)
     ApplyFixedFunction(&img[0], &inputFrame[0], 2, dataFInv, 1e-5f, __LINE__);
 }
 
-OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_PQ)
+OCIO_ADD_TEST(FixedFunctionOpCPU, LIN_TO_PQ)
 {
     constexpr unsigned int NumPixels = 9;
     const std::array<float, NumPixels*4> pqFrame
     {
-      -0.10f,-0.05f, 0.00f,-1.0f, // Negative Input
+      -0.10f,-0.05f, 0.00f,-1.0f, // negative input
        0.05f, 0.10f, 0.15f, 1.0f,
        0.20f, 0.25f, 0.30f, 1.0f,
        0.35f, 0.40f, 0.45f, 0.5f,
@@ -573,7 +573,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_PQ)
        0.65f, 0.70f, 0.75f, 1.0f,
        0.80f, 0.85f, 0.90f, 1.0f,
        0.95f, 1.00f, 1.05f, 1.0f,
-       1.10f, 1.15f, 1.20f, 1.0f, // Over Range
+       1.10f, 1.15f, 1.20f, 1.0f, // over range
     }; 
 
     const std::array<float, NumPixels*4> linearFrame
@@ -589,55 +589,55 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_PQ)
         2.6556253e+02f, 4.4137110e+02f, 7.4603927e+02f, 1.0f,
     };
 
-    // Fast power enabled
+    // Fast power enabled.
     {
         auto img = pqFrame;
-        auto dataFwd = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::PQ_TO_LINEAR);
+        auto dataFwd = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::PQ_TO_LIN);
         ApplyFixedFunction(img.data(), linearFrame.data(), NumPixels, dataFwd, 2.5e-3f, __LINE__, true);
 
-        auto dataFInv = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::LINEAR_TO_PQ);
+        auto dataFInv = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::LIN_TO_PQ);
         img = linearFrame;
         ApplyFixedFunction(img.data(), pqFrame.data(), NumPixels, dataFInv, 1e-3f, __LINE__, true);
     }
 
-    // Fast power disabled
+    // Fast power disabled.
     {
-        auto dataFwd = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::PQ_TO_LINEAR);
+        auto dataFwd = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::PQ_TO_LIN);
         auto img = pqFrame;
         ApplyFixedFunction(img.data(), linearFrame.data(), NumPixels, dataFwd, 5e-5f, __LINE__, false);
 
-        auto dataFInv = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::LINEAR_TO_PQ);
+        auto dataFInv = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::LIN_TO_PQ);
         img = linearFrame;
         ApplyFixedFunction(img.data(), pqFrame.data(), NumPixels, dataFInv, 1e-5f, __LINE__, false);
     }
 }
 
-OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_HLG)
+OCIO_ADD_TEST(FixedFunctionOpCPU, LIN_TO_GAMMA_LOG)
 {
-    // Parameters for the Rec.2100 HLG curve
+    // Parameters for the Rec.2100 HLG curve.
     OCIO::FixedFunctionOpData::Params params 
     {
         0.0,            // mirror point
         0.25,           // break point
 
-        // log segment
+        // Gamma segment.
+        0.5,            // gamma power
+        1.0,            // post-power scale
+        0.0,            // pre-power offset
+
+        // Log segment.
         std::exp(1.0),  // log base (e)
         0.17883277,     // log-side slope
         0.807825590164, // log-side offset
         1.0,            // lin-side slope
         -0.07116723,    // lin-side offset
-
-        // gamma segment
-        0.5,            // gamma power
-        1.0,            // post-power scale
-        0.0,            // pre-power offset
     };
 
     constexpr unsigned int NumPixels = 10;
     const std::array<float, NumPixels * 4> hlgFrame
     {
-      -0.60f,-0.55f,-0.50f,-1.0f, // Negative Log segment
-      -0.10f,-0.05f, 0.00f, 1.0f, // Negative Gamma Segment
+      -0.60f,-0.55f,-0.50f,-1.0f, // negative log segment
+      -0.10f,-0.05f, 0.00f, 1.0f, // negative gamma Segment
        0.05f, 0.10f, 0.15f, 1.0f,
        0.20f, 0.25f, 0.30f, 1.0f,
        0.35f, 0.40f, 0.45f, 0.5f,
@@ -645,7 +645,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_HLG)
        0.65f, 0.70f, 0.75f, 1.0f,
        0.80f, 0.85f, 0.90f, 1.0f,
        0.95f, 1.00f, 1.05f, 1.0f,
-       1.10f, 1.15f, 1.20f, 1.0f, // Over Range
+       1.10f, 1.15f, 1.20f, 1.0f, // over range
     };
 
     const std::array<float, NumPixels * 4> linearFrame
@@ -663,29 +663,29 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_HLG)
     };
 
     {
-        auto dataFwd = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::HLG_TO_LINEAR, params);
+        auto dataFwd = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::GAMMA_LOG_TO_LIN, params);
         auto img = hlgFrame;
         ApplyFixedFunction(img.data(), linearFrame.data(), NumPixels, dataFwd, 5e-5f, __LINE__, false);
 
-        auto dataFInv = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::LINEAR_TO_HLG, params);
+        auto dataFInv = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::LIN_TO_GAMMA_LOG, params);
         img = linearFrame;
         ApplyFixedFunction(img.data(), hlgFrame.data(), NumPixels, dataFInv, 1e-5f, __LINE__, false);
     }
 }
 
-OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_DBL_LOG_AFFINE)
+OCIO_ADD_TEST(FixedFunctionOpCPU, LIN_TO_DOUBLE_LOG)
 {
     // Note: Parameters are designed to result in a monotonically increasing but
     // discontinuous function. Also the break points are chosen to be exact
     // values in IEEE-754 to verify that they belong to the log segments.
     OCIO::FixedFunctionOpData::Params params
     {
-        10.0,                  // Base for the log
-        0.25,                  // Break point between Log1 and Linear segments
-        0.5,                   // Break point between Linear and Log2 segments
-        -1.0, 0.0, -1.0, 1.25, // Log curve 1: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
-        1.0, 1.0, 1.0, 0.5,    // Log curve 2: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
-        1.0, 0.0,              // Linear segment slope and offset
+        10.0,                  // base for the log
+        0.25,                  // break point between log1 and linear segments
+        0.5,                   // break point between linear and log2 segments
+       -1.0, 0.0, -1.0, 1.25,  // log curve 1: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
+        1.0, 1.0, 1.0, 0.5,    // log curve 2: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
+        1.0, 0.0,              // linear segment slope and offset
     };
 
     constexpr unsigned int NumPixels = 10;
@@ -700,7 +700,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_DBL_LOG_AFFINE)
         0.65f,  0.70f,  0.75f,  1.00f, 
         0.80f,  0.85f,  0.90f,  1.00f,   
         0.95f,  1.00f,  1.05f,  1.00f, 
-        1.10f,  1.15f,  1.20f,  1.25f // over-range
+        1.10f,  1.15f,  1.20f,  1.25f  // over-range
     };
 
     const std::array<float, NumPixels * 4> logFrame
@@ -714,15 +714,15 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, LINEAR_TO_DBL_LOG_AFFINE)
          1.06069784f,  1.07918125f,  1.09691001f,  1.00f,  
          1.11394335f,  1.13033377f,  1.14612804f,  1.00f,   
          1.161368f  ,  1.17609126f,  1.1903317f ,  1.00f,  
-         1.20411998f,  1.21748394f,  1.23044892f,  1.25f // over-range
+         1.20411998f,  1.21748394f,  1.23044892f,  1.25f  // over-range
     };
 
     {
-        auto dataFwd = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::LINEAR_TO_DBL_LOG_AFFINE, params);
+        auto dataFwd = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::LIN_TO_DOUBLE_LOG, params);
         auto img = linearFrame;
         ApplyFixedFunction(img.data(), logFrame.data(), NumPixels, dataFwd, 1e-6f, __LINE__, false);
 
-        auto dataFInv = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::DBL_LOG_AFFINE_TO_LINEAR, params);
+        auto dataFInv = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::DOUBLE_LOG_TO_LIN, params);
         img = logFrame;
         ApplyFixedFunction(img.data(), linearFrame.data(), NumPixels, dataFInv, 1e-6f, __LINE__, false);
     }

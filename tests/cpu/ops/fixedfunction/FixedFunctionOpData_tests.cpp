@@ -214,6 +214,8 @@ OCIO_ADD_TEST(FixedFunctionOpData, rec2100_surround_style)
                           "one parameter but 0 found.");
 }
 
+// TODO: Add test for LIN_TO_GAMMA_LOG and LIN_TO_DOUBLE_LOG.
+
 OCIO_ADD_TEST(FixedFunctionOpData, is_inverse)
 {
     OCIO::FixedFunctionOpData::Params params = { 2.0 };
@@ -271,5 +273,3 @@ OCIO_ADD_TEST(FixedFunctionOpData, is_inverse)
     OCIO_CHECK_ASSERT(!f_gm_inv->isInverse(f_gm));
     OCIO_CHECK_ASSERT(!f_gm->isInverse(f_gm_inv));
 }
-
-// TODO: Test for double log-affine

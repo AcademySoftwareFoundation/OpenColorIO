@@ -69,12 +69,12 @@ void GenerateLinearToPQOps(OpRcPtrVec& ops)
 #else
 void GeneratePQToLinearOps(OpRcPtrVec& ops)
 {
-    CreateFixedFunctionOp(ops, FixedFunctionOpData::PQ_TO_LINEAR, {});
+    CreateFixedFunctionOp(ops, FixedFunctionOpData::PQ_TO_LIN, {});
 }
 
 void GenerateLinearToPQOps(OpRcPtrVec& ops)
 {
-    CreateFixedFunctionOp(ops, FixedFunctionOpData::LINEAR_TO_PQ, {});
+    CreateFixedFunctionOp(ops, FixedFunctionOpData::LIN_TO_PQ, {});
 }
 #endif // OCIO_LUT_SUPPORT
 } // ST_2084
@@ -113,23 +113,23 @@ void GenerateLinearToHLGOps(OpRcPtrVec& ops)
 #else
     FixedFunctionOpData::Params params
     {
-        0.0,            // mirror point
-        E_break,        // break point
+        0.0,                // mirror point
+        E_break,            // break point
 
-        // log segment
-        std::exp(1.0),  // log base
-        a,              // log-side slope
-        c,              // log-side offset
-        1.0,            // lin-side slope
-        -b,             // lin-side offset
-
-        // gamma segment
+        // Gamma segment.
         0.5,                // gamma power
         std::sqrt(E_scale), // post-power scale
         0.0,                // pre-power offset
+
+        // Log segment.
+        std::exp(1.0),      // log base
+        a,                  // log-side slope
+        c,                  // log-side offset
+        1.0,                // lin-side slope
+        -b,                 // lin-side offset
     };
 
-    CreateFixedFunctionOp(ops, FixedFunctionOpData::LINEAR_TO_HLG, params);
+    CreateFixedFunctionOp(ops, FixedFunctionOpData::LIN_TO_GAMMA_LOG, params);
 #endif
 }
 } // HLG

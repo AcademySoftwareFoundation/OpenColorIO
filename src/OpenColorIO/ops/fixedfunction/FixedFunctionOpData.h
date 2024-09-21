@@ -48,12 +48,12 @@ public:
         uvY_TO_XYZ,               // Inverse of above
         XYZ_TO_LUV,               // CIE XYZ to 1976 CIELUV colour space (D65 white)
         LUV_TO_XYZ,               // Inverse of above
-        LINEAR_TO_PQ,             // Linear to Perceptual Quantizer curve 
-        PQ_TO_LINEAR,             // Inverse of above
-        LINEAR_TO_HLG,            // Linear to Hybrid Log Gamma curve
-        HLG_TO_LINEAR,            // Inverse of above
-        LINEAR_TO_DBL_LOG_AFFINE, // Linear to Double Log-Affine with a Linear Segment (takes 13 doubles as params).
-        DBL_LOG_AFFINE_TO_LINEAR  // Inverse of above
+        LIN_TO_PQ,                // Linear to Perceptual Quantizer curve 
+        PQ_TO_LIN,                // Inverse of above
+        LIN_TO_GAMMA_LOG,         // Curve with gamma and log segments (takes 10 doubles as params)
+        GAMMA_LOG_TO_LIN,         // Inverse of above
+        LIN_TO_DOUBLE_LOG,        // Curve with two log affine and one linear segment (takes 13 doubles as params)
+        DOUBLE_LOG_TO_LIN         // Inverse of above
     };
 
     static const char * ConvertStyleToString(Style style, bool detailed);

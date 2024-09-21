@@ -583,12 +583,12 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_ACES_GAMUTMAP_07))
         .value("FIXED_FUNCTION_ACES_GAMUT_COMP_13", FIXED_FUNCTION_ACES_GAMUT_COMP_13,
                DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_ACES_GAMUT_COMP_13))
-        .value("FIXED_FUNCTION_LINEAR_TO_PQ", FIXED_FUNCTION_LINEAR_TO_PQ,
-            DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_LINEAR_TO_PQ))
-        .value("FIXED_FUNCTION_LINEAR_TO_HLG", FIXED_FUNCTION_LINEAR_TO_HLG,
-            DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_LINEAR_TO_HLG))
-        .value("FIXED_FUNCTION_LINEAR_TO_DOUBLE_LOG_AFFINE", FIXED_FUNCTION_LINEAR_TO_DOUBLE_LOG_AFFINE,
-            DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_LINEAR_TO_DOUBLE_LOG_AFFINE))
+        .value("FIXED_FUNCTION_LIN_TO_PQ", FIXED_FUNCTION_LIN_TO_PQ,
+            DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_LIN_TO_PQ))
+        .value("FIXED_FUNCTION_LIN_TO_GAMMA_LOG", FIXED_FUNCTION_LIN_TO_GAMMA_LOG,
+            DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_LIN_TO_GAMMA_LOG))
+        .value("FIXED_FUNCTION_LIN_TO_DOUBLE_LOG", FIXED_FUNCTION_LIN_TO_DOUBLE_LOG,
+            DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_LIN_TO_DOUBLE_LOG))
 
         .export_values();
 

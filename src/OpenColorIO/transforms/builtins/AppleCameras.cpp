@@ -56,22 +56,22 @@ void GenerateAppleLogToLinearOps(OpRcPtrVec & ops)
 
     CreateHalfLut(ops, GenerateLutValues);
 #else
-    FixedFunctionOpData::Params hlg_params
+    FixedFunctionOpData::Params gamma_log_params
     {
         R_0,           // mirror point
         R_t,           // break point
 
-        // log segment
+        // Gamma segment.
+        2.0,            // gamma power
+        c,              // post-power scale
+        -R_0,           // pre-power offset
+
+        // Log segment.
         2.0,            // log base
         gamma,          // log-side slope
         delta,          // log-side offset
         1.0,            // lin-side slope
         beta,           // lin-side offset
-
-        // gamma segment
-        2.0,            // gamma power
-        c,              // post-power scale
-        -R_0,           // pre-power offset
     };
 
     auto range_data = std::make_shared<RangeOpData>(
@@ -81,7 +81,7 @@ void GenerateAppleLogToLinearOps(OpRcPtrVec & ops)
         RangeOpData::EmptyValue());
 
     CreateRangeOp(ops, range_data, TransformDirection::TRANSFORM_DIR_FORWARD);
-    CreateFixedFunctionOp(ops, FixedFunctionOpData::HLG_TO_LINEAR, hlg_params);
+    CreateFixedFunctionOp(ops, FixedFunctionOpData::GAMMA_LOG_TO_LIN, gamma_log_params);
 #endif
 }
 

@@ -487,9 +487,9 @@ enum FixedFunctionStyle
     FIXED_FUNCTION_ACES_GAMUTMAP_02,    ///< ACES 0.2 Gamut clamping algorithm -- NOT IMPLEMENTED YET
     FIXED_FUNCTION_ACES_GAMUTMAP_07,    ///< ACES 0.7 Gamut clamping algorithm -- NOT IMPLEMENTED YET
     FIXED_FUNCTION_ACES_GAMUT_COMP_13,  ///< ACES 1.3 Parametric Gamut Compression (expects ACEScg values)
-    FIXED_FUNCTION_LINEAR_TO_PQ,        ///< SMPTE ST-2084 OETF, input scaled with 100 nits at 1.0 (negative values are mirrored)
-    FIXED_FUNCTION_LINEAR_TO_HLG,       ///< Parametrized gamma and log segments with affine transforms and adjustable mirroring point.
-    FIXED_FUNCTION_LINEAR_TO_DOUBLE_LOG_AFFINE  ///< Two separate LogAffineTransform segments with an optional linear segment in the middle
+    FIXED_FUNCTION_LIN_TO_PQ,           ///< SMPTE ST-2084 OETF, scaled with 100 nits at 1.0 (neg vals mirrored)
+    FIXED_FUNCTION_LIN_TO_GAMMA_LOG,    ///< Parametrized gamma and log segments with mirroring
+    FIXED_FUNCTION_LIN_TO_DOUBLE_LOG    ///< Two parameterized LogAffineTransforms with a middle linear segment
 };
 
 /// Enumeration of the :cpp:class:`ExposureContrastTransform` transform algorithms.

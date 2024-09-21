@@ -507,9 +507,9 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_LUV_inv)
     test.setErrorThreshold(1e-5f);
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_PQ_fwd)
+OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_PQ_fwd)
 {
-    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_PQ);
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LIN_TO_PQ);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
     
     test.setWideRangeInterval(-0.1f, 100.1f);
@@ -520,9 +520,9 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_PQ_fwd)
     test.setErrorThreshold(OCIO_USE_SSE2 ? 0.0008f : 2e-5f);
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_PQ_inv)
+OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_PQ_inv)
 {
-    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_PQ);
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LIN_TO_PQ);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     // Picking a tight epsilon is tricky with this function due to nested power
@@ -549,24 +549,24 @@ namespace HLG
         0.0,            // mirror point
         0.25,           // break point
 
+        // Gamma segment.
+        0.5,            // gamma power
+        1.0,            // post-power scale
+        0.0,            // pre-power offset
+
         // Log segment.
         std::exp(1.0),  // log base (e)
         0.17883277,     // log-side slope
         0.807825590164, // log-side offset
         1.0,            // lin-side slope
         -0.07116723,    // lin-side offset
-
-        // Gamma segment.
-        0.5,            // gamma power
-        1.0,            // post-power scale
-        0.0,            // pre-power offset
     };
 }
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_HLG_fwd)
+OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_GAMMA_LOG_fwd)
 {
-    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_HLG, HLG::params, 10);
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LIN_TO_GAMMA_LOG, HLG::params, 10);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
     test.setWideRangeInterval(-0.1f, 3.35f); // Output ~[-0.3, 1.02]
@@ -574,9 +574,9 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_HLG_fwd)
     test.setErrorThreshold(1e-6f);
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_HLG_inv)
+OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_GAMMA_LOG_inv)
 {
-    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_HLG, HLG::params, 10);
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LIN_TO_GAMMA_LOG, HLG::params, 10);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     test.setWideRangeInterval(-0.3f, 1.02f); // Output ~[-0.1, 3.35]
@@ -584,7 +584,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_HLG_inv)
     test.setErrorThreshold(1e-6f);
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_DOUBLE_LOG_AFFINE_fwd)
+OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_DOUBLE_LOG_fwd)
 {
     double params[13]
     {
@@ -596,7 +596,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_DOUBLE_LOG_AFFINE_fwd)
         1.0, 0.0,              // Linear segment slope and offset
     };
 
-    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_DOUBLE_LOG_AFFINE, params, 13);
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LIN_TO_DOUBLE_LOG, params, 13);
     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
     test.setWideRangeInterval(-1.0f, 2.0f); // Output ~[-1.08, 1.4]
@@ -604,7 +604,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_DOUBLE_LOG_AFFINE_fwd)
     test.setErrorThreshold(1e-6f);
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_DOUBLE_LOG_AFFINE_inv)
+OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_DOUBLE_LOG_inv)
 {
     double params[13]
     {
@@ -616,7 +616,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_LINEAR_TO_DOUBLE_LOG_AFFINE_inv)
         1.0, 0.0,              // Linear segment slope and offset
     };
 
-    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LINEAR_TO_DOUBLE_LOG_AFFINE, params, 13);
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LIN_TO_DOUBLE_LOG, params, 13);
     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     test.setWideRangeInterval(-1.1f, 1.4f); // Output ~[-1.0, 2.0]

@@ -4956,7 +4956,7 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
         const std::string strEnd =
             "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
-            "        - !<FixedFunctionTransform> {style: LINEAR_TO_PQ}\n";
+            "        - !<FixedFunctionTransform> {style: Lin_TO_PQ}\n";
 
         {
             const std::string str = PROFILE_START_V<2, 3>() + strEnd;
@@ -4965,7 +4965,7 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
             is.str(str);
 
             OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
-                "Only config version 2.4 (or higher) can have FixedFunctionTransform style 'LINEAR_TO_PQ'.");
+                "Only config version 2.4 (or higher) can have FixedFunctionTransform style 'Lin_TO_PQ'.");
         }
 
         {
@@ -4982,7 +4982,7 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
         const std::string strEnd =
             "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
-            "        - !<FixedFunctionTransform> {style: LINEAR_TO_HLG}\n";
+            "        - !<FixedFunctionTransform> {style: Lin_TO_GammaLog}\n";
 
         {
             const std::string str = PROFILE_START_V<2, 3>() + strEnd;
@@ -4991,7 +4991,7 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
             is.str(str);
 
             OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
-                "Only config version 2.4 (or higher) can have FixedFunctionTransform style 'LINEAR_TO_HLG'.");
+                "Only config version 2.4 (or higher) can have FixedFunctionTransform style 'Lin_TO_GammaLog'.");
         }
 
         {
@@ -5008,7 +5008,7 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
         const std::string strEnd =
             "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
-            "        - !<FixedFunctionTransform> {style: LINEAR_TO_DOUBLE_LOG_AFFINE}\n";
+            "        - !<FixedFunctionTransform> {style: Lin_TO_DoubleLog}\n";
 
         {
             const std::string str = PROFILE_START_V<2, 3>() + strEnd;
@@ -5017,7 +5017,7 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
             is.str(str);
 
             OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
-                "Only config version 2.4 (or higher) can have FixedFunctionTransform style 'LINEAR_TO_DOUBLE_LOG_AFFINE'.");
+                "Only config version 2.4 (or higher) can have FixedFunctionTransform style 'Lin_TO_DoubleLog'.");
         }
 
         {

@@ -536,7 +536,7 @@ namespace ST_2084
 }
 } // anonymous
 
-void Add_LINEAR_TO_PQ(GpuShaderCreatorRcPtr& shaderCreator, GpuShaderText& ss)
+void Add_LIN_TO_PQ(GpuShaderCreatorRcPtr& shaderCreator, GpuShaderText& ss)
 {
     using namespace ST_2084;
     const std::string pxl(shaderCreator->getPixelName());
@@ -553,7 +553,7 @@ void Add_LINEAR_TO_PQ(GpuShaderCreatorRcPtr& shaderCreator, GpuShaderText& ss)
     // 0.836^78.84 = 7.36e-07, however, this is well below visual threshold.
 }
 
-void Add_PQ_TO_LINEAR(GpuShaderCreatorRcPtr& shaderCreator, GpuShaderText& ss)
+void Add_PQ_TO_LIN(GpuShaderCreatorRcPtr& shaderCreator, GpuShaderText& ss)
 {
     using namespace ST_2084;
     const std::string pxl(shaderCreator->getPixelName());
@@ -564,7 +564,7 @@ void Add_PQ_TO_LINEAR(GpuShaderCreatorRcPtr& shaderCreator, GpuShaderText& ss)
         << ss.float3Const(c2) << " - " << c3 << " * x), " << ss.float3Const(1.0 / m1) << ");";
 }
 
-void Add_LINEAR_TO_HLG(
+void Add_LIN_TO_GAMMA_LOG(
     GpuShaderCreatorRcPtr& shaderCreator, 
     GpuShaderText& ss,
     const FixedFunctionOpData::Params& params)
@@ -572,14 +572,14 @@ void Add_LINEAR_TO_HLG(
     // Get parameters, baking the log base conversion into 'logSlope'.
     double mirrorPt          = params[0];
     double breakPt           = params[1];
-    double logSeg_base       = params[2];
-    double logSeg_logSlope   = params[3] / std::log(logSeg_base);
-    double logSeg_logOff     = params[4];
-    double logSeg_linSlope   = params[5];
-    double logSeg_linOff     = params[6];
-    double gammaSeg_power    = params[7];
-    double gammaSeg_slope    = params[8];
-    double gammaSeg_off      = params[9];
+    double gammaSeg_power    = params[2];
+    double gammaSeg_slope    = params[3];
+    double gammaSeg_off      = params[4];
+    double logSeg_base       = params[5];
+    double logSeg_logSlope   = params[6] / std::log(logSeg_base);
+    double logSeg_logOff     = params[7];
+    double logSeg_linSlope   = params[8];
+    double logSeg_linOff     = params[9];
 
     // float mirrorin = in - m_mirror;
     // float E = std::abs(mirrorin) + m_mirror;
@@ -606,7 +606,7 @@ void Add_LINEAR_TO_HLG(
     ss.newLine() << pxl << ".rgb = sign3 * (isAboveBreak * Ep_log + ( " << ss.float3Const(1.0f) << " - isAboveBreak ) * Ep_gamma);";
 }
 
-void Add_HLG_TO_LINEAR(
+void Add_GAMMA_LOG_TO_LIN(
     GpuShaderCreatorRcPtr& shaderCreator, 
     GpuShaderText& ss,
     const FixedFunctionOpData::Params& params)
@@ -614,14 +614,14 @@ void Add_HLG_TO_LINEAR(
     // Get parameters, baking the log base conversion into 'logSlope'.
     double mirrorPt          = params[0];
     double breakPt           = params[1];
-    double logSeg_base       = params[2];
-    double logSeg_logSlope   = params[3] / std::log(logSeg_base);
-    double logSeg_logOff     = params[4];
-    double logSeg_linSlope   = params[5];
-    double logSeg_linOff     = params[6];
-    double gammaSeg_power    = params[7];
-    double gammaSeg_slope    = params[8];
-    double gammaSeg_off      = params[9];
+    double gammaSeg_power    = params[2];
+    double gammaSeg_slope    = params[3];
+    double gammaSeg_off      = params[4];
+    double logSeg_base       = params[5];
+    double logSeg_logSlope   = params[6] / std::log(logSeg_base);
+    double logSeg_logOff     = params[7];
+    double logSeg_linSlope   = params[8];
+    double logSeg_linOff     = params[9];
 
     double primeBreak  = gammaSeg_slope * std::pow(breakPt  + gammaSeg_off, gammaSeg_power);
     double primeMirror = gammaSeg_slope * std::pow(mirrorPt + gammaSeg_off, gammaSeg_power);
@@ -654,7 +654,7 @@ void Add_HLG_TO_LINEAR(
     ss.newLine() << pxl << ".rgb = sign3 * (isAboveBreak * E_log + ( " << ss.float3Const(1.0f) << " - isAboveBreak ) * E_gamma);";
 }
 
-void Add_LINEAR_TO_DBL_LOG_AFFINE(
+void Add_LIN_TO_DOUBLE_LOG(
     GpuShaderCreatorRcPtr& shaderCreator, 
     GpuShaderText& ss, 
     const FixedFunctionOpData::Params& params)
@@ -693,7 +693,7 @@ void Add_LINEAR_TO_DBL_LOG_AFFINE(
     ss.newLine() << ss.float3Decl("isSegment3") << " = " << ss.float3GreaterThanEqual(pix3, ss.float3Const(break2)) << ";";
     ss.newLine() << ss.float3Decl("isSegment2") << " = " << ss.float3Const(1.0f) << " - isSegment1 - isSegment3;";
 
-    // Log Segment 1  
+    // Log Segment 1.
     // TODO: This segment usually handles very dark (even negative) values, thus
     // is rarely hit. As an optimization we can use "any()" to skip this in a
     // branch (needs benchmarking to see if it's worth the effort).
@@ -703,24 +703,24 @@ void Add_LINEAR_TO_DBL_LOG_AFFINE(
     ss.newLine() << "logSeg1 = " << 
         ss.float3Const(logSeg1_logSlope) << " * log( logSeg1 ) + " << ss.float3Const(logSeg1_logOff) << ";";
 
-    // Log Segment 2
+    // Log Segment 2.
     ss.newLine();
     ss.newLine() << ss.float3Decl("logSeg2") << " = " <<
         pix3 << " * " << ss.float3Const(logSeg2_linSlope) << " + " << ss.float3Const(logSeg2_linOff) << ";";
     ss.newLine() << "logSeg2 = " <<
         ss.float3Const(logSeg2_logSlope) << " * log( logSeg2 ) + " << ss.float3Const(logSeg2_logOff) << ";";
 
-    // Linear Segment
+    // Linear Segment.
     ss.newLine();
     ss.newLine() << ss.float3Decl("linSeg") << "= " << 
         ss.float3Const(linSeg_slope) << " * " << pix3 << " + " << ss.float3Const(linSeg_off) << ";";
 
-    // Combine segments
+    // Combine segments.
     ss.newLine();
     ss.newLine() << pix3 << " = isSegment1 * logSeg1 + isSegment2 * linSeg + isSegment3 * logSeg2;"; 
 }
 
-void Add_DBL_LOG_AFFINE_TO_LINEAR(
+void Add_DOUBLE_LOG_TO_LIN(
     GpuShaderCreatorRcPtr& shaderCreator, 
     GpuShaderText& ss, 
     const FixedFunctionOpData::Params& params)
@@ -758,7 +758,7 @@ void Add_DBL_LOG_AFFINE_TO_LINEAR(
     ss.newLine() << ss.float3Decl("isSegment3") << " = " << ss.float3GreaterThanEqual(pix3, ss.float3Const(break2Log)) << ";";
     ss.newLine() << ss.float3Decl("isSegment2") << " = " << ss.float3Const(1.0f) << " - isSegment1 - isSegment3;";
 
-    // Log Segment 1  
+    // Log Segment 1.
     // TODO: This segment usually handles very dark (even negative) values, thus
     // is rarely hit. As an optimization we can use "any()" to skip this in a
     // branch (needs benchmarking to see if it's worth the effort).
@@ -768,19 +768,19 @@ void Add_DBL_LOG_AFFINE_TO_LINEAR(
     ss.newLine() << "logSeg1 = (" <<
         "exp(logSeg1) - " << ss.float3Const(logSeg1_linOff) << ") * " << ss.float3Const(1.0 / logSeg1_linSlope) << ";";
 
-    // Log Segment 2 
+    // Log Segment 2.
     ss.newLine();
     ss.newLine() << ss.float3Decl("logSeg2") << " = (" <<
         pix3 << " - " << ss.float3Const(logSeg2_logOff) << ") * " << ss.float3Const(1.0 / logSeg2_logSlope) << ";";
     ss.newLine() << "logSeg2 = (" <<
         "exp(logSeg2) - " << ss.float3Const(logSeg2_linOff) << ") * " << ss.float3Const(1.0 / logSeg2_linSlope) << ";";
 
-    // Linear Segment
+    // Linear Segment.
     ss.newLine();
     ss.newLine() << ss.float3Decl("linSeg") << " = (" <<
         pix3 << " - " << ss.float3Const(linSeg_off) << ") * " << ss.float3Const(1.0 / linSeg_slope) << ";";
 
-    // Combine segments
+    // Combine segments.
     ss.newLine();
     ss.newLine() << pix3 << " = isSegment1 * logSeg1 + isSegment2 * linSeg + isSegment3 * logSeg2;";
 }
@@ -934,34 +934,34 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
             Add_LUV_TO_XYZ(shaderCreator, ss);
             break;
         }
-        case FixedFunctionOpData::LINEAR_TO_PQ:
+        case FixedFunctionOpData::LIN_TO_PQ:
         {
-            Add_LINEAR_TO_PQ(shaderCreator, ss);
+            Add_LIN_TO_PQ(shaderCreator, ss);
             break;
         }
-        case FixedFunctionOpData::PQ_TO_LINEAR:
+        case FixedFunctionOpData::PQ_TO_LIN:
         {
-            Add_PQ_TO_LINEAR(shaderCreator, ss);
+            Add_PQ_TO_LIN(shaderCreator, ss);
             break;
         }
-        case FixedFunctionOpData::LINEAR_TO_HLG:
+        case FixedFunctionOpData::LIN_TO_GAMMA_LOG:
         {
-            Add_LINEAR_TO_HLG(shaderCreator, ss, func->getParams());
+            Add_LIN_TO_GAMMA_LOG(shaderCreator, ss, func->getParams());
             break;
         }
-        case FixedFunctionOpData::HLG_TO_LINEAR:
+        case FixedFunctionOpData::GAMMA_LOG_TO_LIN:
         {
-            Add_HLG_TO_LINEAR(shaderCreator, ss, func->getParams());
+            Add_GAMMA_LOG_TO_LIN(shaderCreator, ss, func->getParams());
             break;
         }
-        case FixedFunctionOpData::LINEAR_TO_DBL_LOG_AFFINE:
+        case FixedFunctionOpData::LIN_TO_DOUBLE_LOG:
         {
-            Add_LINEAR_TO_DBL_LOG_AFFINE(shaderCreator, ss, func->getParams());
+            Add_LIN_TO_DOUBLE_LOG(shaderCreator, ss, func->getParams());
             break;
         }
-        case FixedFunctionOpData::DBL_LOG_AFFINE_TO_LINEAR:
+        case FixedFunctionOpData::DOUBLE_LOG_TO_LIN:
         {
-            Add_DBL_LOG_AFFINE_TO_LINEAR(shaderCreator, ss, func->getParams());
+            Add_DOUBLE_LOG_TO_LIN(shaderCreator, ss, func->getParams());
             break;
         }
 

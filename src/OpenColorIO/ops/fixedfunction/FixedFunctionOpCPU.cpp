@@ -213,19 +213,19 @@ public:
 };
 
 template <typename T>
-class Renderer_LINEAR_TO_PQ : public OpCPU {
+class Renderer_LIN_TO_PQ : public OpCPU {
 public:
-    Renderer_LINEAR_TO_PQ() = delete;
-    explicit Renderer_LINEAR_TO_PQ(ConstFixedFunctionOpDataRcPtr& data);
+    Renderer_LIN_TO_PQ() = delete;
+    explicit Renderer_LIN_TO_PQ(ConstFixedFunctionOpDataRcPtr& data);
 
     void apply(const void* inImg, void* outImg, long numPixels) const override;
 };
 
 template <typename T>
-class Renderer_PQ_TO_LINEAR : public OpCPU {
+class Renderer_PQ_TO_LIN : public OpCPU {
  public:
-  Renderer_PQ_TO_LINEAR() = delete;
-  explicit Renderer_PQ_TO_LINEAR(ConstFixedFunctionOpDataRcPtr &data);
+  Renderer_PQ_TO_LIN() = delete;
+  explicit Renderer_PQ_TO_LIN(ConstFixedFunctionOpDataRcPtr &data);
 
   void apply(const void *inImg, void *outImg, long numPixels) const override;
 };
@@ -233,62 +233,62 @@ class Renderer_PQ_TO_LINEAR : public OpCPU {
 
 #if OCIO_USE_SSE2
 template<bool FAST_POWER>
-class Renderer_LINEAR_TO_PQ_SSE : public OpCPU {
+class Renderer_LIN_TO_PQ_SSE : public OpCPU {
 public:
-    Renderer_LINEAR_TO_PQ_SSE() = delete;
-    explicit Renderer_LINEAR_TO_PQ_SSE(ConstFixedFunctionOpDataRcPtr& data);
+    Renderer_LIN_TO_PQ_SSE() = delete;
+    explicit Renderer_LIN_TO_PQ_SSE(ConstFixedFunctionOpDataRcPtr& data);
 
     static inline __m128 myPower(__m128 x, __m128 exp);
     void apply(const void* inImg, void* outImg, long numPixels) const override;
 };
 
 template<bool FAST_POWER>
-class Renderer_PQ_TO_LINEAR_SSE : public OpCPU {
+class Renderer_PQ_TO_LIN_SSE : public OpCPU {
 public:
-    Renderer_PQ_TO_LINEAR_SSE() = delete;
-    explicit Renderer_PQ_TO_LINEAR_SSE(ConstFixedFunctionOpDataRcPtr& data);
+    Renderer_PQ_TO_LIN_SSE() = delete;
+    explicit Renderer_PQ_TO_LIN_SSE(ConstFixedFunctionOpDataRcPtr& data);
 
     static inline __m128 myPower(__m128 x, __m128 exp);
     void apply(const void* inImg, void* outImg, long numPixels) const override;
 };
 #endif
 
-class Renderer_LINEAR_TO_HLG : public OpCPU {
+class Renderer_LIN_TO_GAMMA_LOG : public OpCPU {
 public:
-    Renderer_LINEAR_TO_HLG() = delete;
-    explicit Renderer_LINEAR_TO_HLG(ConstFixedFunctionOpDataRcPtr& data);
+    Renderer_LIN_TO_GAMMA_LOG() = delete;
+    explicit Renderer_LIN_TO_GAMMA_LOG(ConstFixedFunctionOpDataRcPtr& data);
 
     void apply(const void* inImg, void* outImg, long numPixels) const override;
 
 protected:
-    struct LogSegment
-    {
-        // Ylog = logSlope * log( linSlope * Xlin + linOff, base) + logOff;
-        float base      = 10.0f;    // Log base
-        float logSlope  = 1.0f;     // Log side slope
-        float logOff    = 0.0f;     // Log side offset
-        float linSlope  = 1.0f;     // Linear side slope
-        float linOff    = 0.0f;     // Linear side offset
-    };
-
     struct GammaSegment
     {
         // Ygamma = slope * (Xlin + off)^power;
-        float power     = 1.0f; // Power
-        float slope     = 1.0f; // Post-power scale
-        float off       = 0.0f; // Pre-power offset
+        float power     = 1.0f;      // power
+        float slope     = 1.0f;      // post-power scale
+        float off       = 0.0f;      // pre-power offset
     };
 
-    float           m_mirror = 0.0f; // Mirroring point in lin space
-    float           m_break  = 1.0f; // Break point between gamma and log in lin space
-    LogSegment      m_logSeg;
+    struct LogSegment
+    {
+        // Ylog = logSlope * log( linSlope * Xlin + linOff, base) + logOff;
+        float base      = 10.0f;     // log base
+        float logSlope  = 1.0f;      // log side slope
+        float logOff    = 0.0f;      // log side offset
+        float linSlope  = 1.0f;      // linear side slope
+        float linOff    = 0.0f;      // linear side offset
+    };
+
+    float           m_mirror = 0.0f; // mirroring point in lin space
+    float           m_break  = 1.0f; // break point between gamma and log in lin space
     GammaSegment    m_gammaSeg;
+    LogSegment      m_logSeg;
 };
 
-class Renderer_HLG_TO_LINEAR : public Renderer_LINEAR_TO_HLG {
+class Renderer_GAMMA_LOG_TO_LIN : public Renderer_LIN_TO_GAMMA_LOG {
 public:
-    Renderer_HLG_TO_LINEAR() = delete;
-    explicit Renderer_HLG_TO_LINEAR(ConstFixedFunctionOpDataRcPtr& data);
+    Renderer_GAMMA_LOG_TO_LIN() = delete;
+    explicit Renderer_GAMMA_LOG_TO_LIN(ConstFixedFunctionOpDataRcPtr& data);
 
     void apply(const void* inImg, void* outImg, long numPixels) const override;
 protected:
@@ -296,10 +296,10 @@ protected:
     float m_primeMirror= 0.0f; // mirror point in the non-linear axis.
 };
 
-class Renderer_LINEAR_TO_DBL_LOG_AFFINE: public OpCPU {
+class Renderer_LIN_TO_DOUBLE_LOG: public OpCPU {
 public:
-    Renderer_LINEAR_TO_DBL_LOG_AFFINE() = delete;
-    explicit Renderer_LINEAR_TO_DBL_LOG_AFFINE(ConstFixedFunctionOpDataRcPtr& data);
+    Renderer_LIN_TO_DOUBLE_LOG() = delete;
+    explicit Renderer_LIN_TO_DOUBLE_LOG(ConstFixedFunctionOpDataRcPtr& data);
 
     void apply(const void* inImg, void* outImg, long numPixels) const override;
 
@@ -307,10 +307,10 @@ protected:
     struct LogSegment
     {
         // Ylog = logSlope * log( linSlope * Xlin + linOff, base) + logOff;
-        float logSlope  = 1.0f; // Log side slope
-        float logOff    = 0.0f; // Log side offset
-        float linSlope  = 1.0f; // Linear side slope
-        float linOff    = 0.0f; // Linear side offset
+        float logSlope  = 1.0f;  // log side slope
+        float logOff    = 0.0f;  // log side offset
+        float linSlope  = 1.0f;  // linear side slope
+        float linOff    = 0.0f;  // linear side offset
     };
 
     struct LinSegment
@@ -320,24 +320,24 @@ protected:
         float off       = 0.0f;
     };
 
-    float m_base     = 2.0f; // Logarithm base;
-    float m_break1   = 1.0f; // Break point between the first log segment and the linear segment.
-    float m_break2   = 1.0f; // Break point between the linear segment and the second log segment.
+    float m_base     = 2.0f;     // logarithm base
+    float m_break1   = 1.0f;     // break point between the first log segment and the linear segment
+    float m_break2   = 1.0f;     // break point between the linear segment and the second log segment
     LogSegment m_logSeg1;
     LogSegment m_logSeg2;
     LinSegment m_linSeg;
 };
 
-class Renderer_DBL_LOG_AFFINE_TO_LINEAR : public Renderer_LINEAR_TO_DBL_LOG_AFFINE {
+class Renderer_DOUBLE_LOG_TO_LIN : public Renderer_LIN_TO_DOUBLE_LOG {
 public:
-    Renderer_DBL_LOG_AFFINE_TO_LINEAR() = delete;
-    explicit Renderer_DBL_LOG_AFFINE_TO_LINEAR(ConstFixedFunctionOpDataRcPtr& data);
+    Renderer_DOUBLE_LOG_TO_LIN() = delete;
+    explicit Renderer_DOUBLE_LOG_TO_LIN(ConstFixedFunctionOpDataRcPtr& data);
 
     void apply(const void* inImg, void* outImg, long numPixels) const override;
 
 protected:
-    float m_break1Log = 1.0f; // Computed break point 1 in the log space
-    float m_break2Log = 1.0f; // Computed break point 2 in the log space
+    float m_break1Log = 1.0f;    // computed break point 1 in the log space
+    float m_break2Log = 1.0f;    // computed break point 2 in the log space
 };
 
 
@@ -1331,13 +1331,13 @@ namespace ST_2084
 } // anonymous
 
 template<typename T>
-Renderer_PQ_TO_LINEAR<T>::Renderer_PQ_TO_LINEAR(ConstFixedFunctionOpDataRcPtr & /*data*/)
+Renderer_PQ_TO_LIN<T>::Renderer_PQ_TO_LIN(ConstFixedFunctionOpDataRcPtr & /*data*/)
     : OpCPU() 
 {
 }
 
 template<typename T>
-void Renderer_PQ_TO_LINEAR<T>::apply(const void *inImg, void *outImg, long numPixels) const 
+void Renderer_PQ_TO_LIN<T>::apply(const void *inImg, void *outImg, long numPixels) const 
 {
     using namespace ST_2084;
     const float *in = (const float *)inImg;
@@ -1362,13 +1362,13 @@ void Renderer_PQ_TO_LINEAR<T>::apply(const void *inImg, void *outImg, long numPi
 }
 
 template <typename T>
-Renderer_LINEAR_TO_PQ<T>::Renderer_LINEAR_TO_PQ(ConstFixedFunctionOpDataRcPtr& /*data*/)
+Renderer_LIN_TO_PQ<T>::Renderer_LIN_TO_PQ(ConstFixedFunctionOpDataRcPtr& /*data*/)
     : OpCPU()
 {
 }
 
 template <typename T>
-void Renderer_LINEAR_TO_PQ<T>::apply(const void* inImg, void* outImg, long numPixels) const
+void Renderer_LIN_TO_PQ<T>::apply(const void* inImg, void* outImg, long numPixels) const
 {
     using namespace ST_2084;
     const float* in = (const float*)inImg;
@@ -1399,14 +1399,14 @@ void Renderer_LINEAR_TO_PQ<T>::apply(const void* inImg, void* outImg, long numPi
 
 #if OCIO_USE_SSE2
 template<bool FAST_POWER>
-Renderer_PQ_TO_LINEAR_SSE<FAST_POWER>::Renderer_PQ_TO_LINEAR_SSE(ConstFixedFunctionOpDataRcPtr& /*data*/)
+Renderer_PQ_TO_LIN_SSE<FAST_POWER>::Renderer_PQ_TO_LIN_SSE(ConstFixedFunctionOpDataRcPtr& /*data*/)
     : OpCPU()
 {
 }
 
-// all platforms support ssePower()
+// All platforms support ssePower().
 template<>
-__m128 Renderer_PQ_TO_LINEAR_SSE<true>::myPower(__m128 x, __m128 exp)
+__m128 Renderer_PQ_TO_LIN_SSE<true>::myPower(__m128 x, __m128 exp)
 {
     return ssePower(x, exp);
 }
@@ -1416,14 +1416,14 @@ __m128 Renderer_PQ_TO_LINEAR_SSE<true>::myPower(__m128 x, __m128 exp)
 // accessible through immintrin.h. Therefore precise SIMD version is available
 // only when compiled with MSVC and AVX support.
 template<>
-__m128 Renderer_PQ_TO_LINEAR_SSE<false>::myPower(__m128 x, __m128 exp)
+__m128 Renderer_PQ_TO_LIN_SSE<false>::myPower(__m128 x, __m128 exp)
 {
     return _mm_pow_ps(x, exp);
 }
 #endif 
 
 template<bool FAST_POWER>
-void Renderer_PQ_TO_LINEAR_SSE<FAST_POWER>::apply(const void* inImg, void* outImg, long numPixels) const
+void Renderer_PQ_TO_LIN_SSE<FAST_POWER>::apply(const void* inImg, void* outImg, long numPixels) const
 {
     using namespace ST_2084;
     const float* in = (const float*)inImg;
@@ -1435,7 +1435,7 @@ void Renderer_PQ_TO_LINEAR_SSE<FAST_POWER>::apply(const void* inImg, void* outIm
         __m128 v = _mm_loadu_ps(in);
 
         // Compute R, G and B channels.
-        __m128 vabs = _mm_and_ps(abs_rgb_mask, v); // Clear sign bits of RGB and all bits of Alpha
+        __m128 vabs = _mm_and_ps(abs_rgb_mask, v);  // clear sign bits of RGB and all bits of alpha
         __m128 x = myPower(vabs, vm2_inv);
         __m128 nom = _mm_max_ps(_mm_setzero_ps(), _mm_sub_ps(x, vc1));
         __m128 denom = _mm_sub_ps(vc2, _mm_mul_ps(vc3, x));
@@ -1444,8 +1444,8 @@ void Renderer_PQ_TO_LINEAR_SSE<FAST_POWER>::apply(const void* inImg, void* outIm
         __m128 nits100;
         nits100 = _mm_mul_ps(_mm_set1_ps(100.0f), myPower(_mm_div_ps(nom, denom), vm1_inv));
             
-        // Restore the sign bits and Alpha channel.
-        // TODO: this can be further optimized by using separate SSE constants for alpha channel
+        // Restore the sign bits and alpha channel.
+        // TODO: this can be further optimized by using separate SSE constants for alpha channel.
         __m128 nits100_signed = _mm_or_ps(_mm_and_ps(abs_rgb_mask, nits100), _mm_andnot_ps(abs_rgb_mask, v)); 
             
         // Store.
@@ -1454,14 +1454,14 @@ void Renderer_PQ_TO_LINEAR_SSE<FAST_POWER>::apply(const void* inImg, void* outIm
 }
 
 template<bool FAST_POWER>
-Renderer_LINEAR_TO_PQ_SSE<FAST_POWER>::Renderer_LINEAR_TO_PQ_SSE(ConstFixedFunctionOpDataRcPtr& /*data*/)
+Renderer_LIN_TO_PQ_SSE<FAST_POWER>::Renderer_LIN_TO_PQ_SSE(ConstFixedFunctionOpDataRcPtr& /*data*/)
     : OpCPU()
 {
 }
 
 // All platforms support ssePower().
 template<>
-__m128 Renderer_LINEAR_TO_PQ_SSE<true>::myPower(__m128 x, __m128 exp)
+__m128 Renderer_LIN_TO_PQ_SSE<true>::myPower(__m128 x, __m128 exp)
 {
     return ssePower(x, exp);
 }
@@ -1471,7 +1471,7 @@ __m128 Renderer_LINEAR_TO_PQ_SSE<true>::myPower(__m128 x, __m128 exp)
 // implementation, so non-fast SIMD version is available only on Windows for
 // now.
 template<>
-__m128 Renderer_LINEAR_TO_PQ_SSE<false>::myPower(__m128 x, __m128 exp)
+__m128 Renderer_LIN_TO_PQ_SSE<false>::myPower(__m128 x, __m128 exp)
 {
     return _mm_pow_ps(x, exp);
 }
@@ -1479,7 +1479,7 @@ __m128 Renderer_LINEAR_TO_PQ_SSE<false>::myPower(__m128 x, __m128 exp)
 
 
 template<bool FAST_POWER>
-void Renderer_LINEAR_TO_PQ_SSE<FAST_POWER>::apply(const void* inImg, void* outImg, long numPixels) const
+void Renderer_LIN_TO_PQ_SSE<FAST_POWER>::apply(const void* inImg, void* outImg, long numPixels) const
 {
     using namespace ST_2084;
     const float* in = (const float*)inImg;
@@ -1487,10 +1487,10 @@ void Renderer_LINEAR_TO_PQ_SSE<FAST_POWER>::apply(const void* inImg, void* outIm
 
     for (long idx = 0; idx < numPixels; ++idx, in += 4, out += 4)
     {
-        // load
+        // Load
         __m128 v = _mm_loadu_ps(in);
 
-        // Clear sign bits of RGB and all bits of Alpha.
+        // Clear sign bits of RGB and all bits of alpha.
         __m128 vabs = _mm_and_ps(abs_rgb_mask, v); 
         // Input is in nits/100, convert to [0,1], where 1 is 10000 nits. 
         __m128 L = _mm_mul_ps(_mm_set1_ps(0.01f), vabs);
@@ -1504,13 +1504,13 @@ void Renderer_LINEAR_TO_PQ_SSE<FAST_POWER>::apply(const void* inImg, void* outIm
         // TODO: this can be further optimized by using separate SSE constants for alpha channel.
         __m128 N_signed = _mm_or_ps(_mm_and_ps(abs_rgb_mask, N), _mm_andnot_ps(abs_rgb_mask, v));
 
-        // store
+        // Store
         _mm_storeu_ps(out, N_signed);
     }
 }
 #endif //OCIO_USE_SSE2
 
-Renderer_LINEAR_TO_HLG::Renderer_LINEAR_TO_HLG(ConstFixedFunctionOpDataRcPtr& data)
+Renderer_LIN_TO_GAMMA_LOG::Renderer_LIN_TO_GAMMA_LOG(ConstFixedFunctionOpDataRcPtr& data)
     : OpCPU()
 {
     auto params = data->getParams();
@@ -1518,17 +1518,17 @@ Renderer_LINEAR_TO_HLG::Renderer_LINEAR_TO_HLG(ConstFixedFunctionOpDataRcPtr& da
     // store the parameters, baking the log base conversion into 'logSlope'.
     m_mirror            = (float)params[0];
     m_break             = (float)params[1];
-    m_logSeg.base       = (float)params[2]; 
-    m_logSeg.logSlope   = (float)(params[3] / std::log(params[2]));
-    m_logSeg.logOff     = (float)params[4];
-    m_logSeg.linSlope   = (float)params[5];
-    m_logSeg.linOff     = (float)params[6];
-    m_gammaSeg.power    = (float)params[7];
-    m_gammaSeg.slope    = (float)params[8];
-    m_gammaSeg.off      = (float)params[9];
+    m_gammaSeg.power    = (float)params[2];
+    m_gammaSeg.slope    = (float)params[3];
+    m_gammaSeg.off      = (float)params[4];
+    m_logSeg.base       = (float)params[5]; 
+    m_logSeg.logSlope   = (float)(params[6] / std::log(params[5]));
+    m_logSeg.logOff     = (float)params[7];
+    m_logSeg.linSlope   = (float)params[8];
+    m_logSeg.linOff     = (float)params[9];
 }
 
-void Renderer_LINEAR_TO_HLG::apply(const void* inImg, void* outImg, long numPixels) const
+void Renderer_LIN_TO_GAMMA_LOG::apply(const void* inImg, void* outImg, long numPixels) const
 {
     const float* in = (const float*)inImg;
     float* out = (float*)outImg;
@@ -1559,18 +1559,18 @@ void Renderer_LINEAR_TO_HLG::apply(const void* inImg, void* outImg, long numPixe
     };
 }
 
-Renderer_HLG_TO_LINEAR::Renderer_HLG_TO_LINEAR(ConstFixedFunctionOpDataRcPtr& data)
-    : Renderer_LINEAR_TO_HLG(data)
+Renderer_GAMMA_LOG_TO_LIN::Renderer_GAMMA_LOG_TO_LIN(ConstFixedFunctionOpDataRcPtr& data)
+    : Renderer_LIN_TO_GAMMA_LOG(data)
 {
     // Assuming that the function is continuous, use the gamma segment to compute
-    // the break point in the non-linear domain
+    // the break point in the non-linear domain.
     m_primeBreak = m_gammaSeg.slope * std::pow(m_break + m_gammaSeg.off, m_gammaSeg.power);
     m_primeMirror= m_gammaSeg.slope * std::pow(m_mirror + m_gammaSeg.off, m_gammaSeg.power);
 
     // TODO: cache more derived values to optimize the math.
 }
 
-void Renderer_HLG_TO_LINEAR::apply(const void* inImg, void* outImg, long numPixels) const
+void Renderer_GAMMA_LOG_TO_LIN::apply(const void* inImg, void* outImg, long numPixels) const
 {
     const float* in = (const float*)inImg;
     float* out = (float*)outImg;
@@ -1593,7 +1593,7 @@ void Renderer_HLG_TO_LINEAR::apply(const void* inImg, void* outImg, long numPixe
             {
                 E = (std::exp((Eprime - m_logSeg.logOff) / m_logSeg.logSlope ) - m_logSeg.linOff) / m_logSeg.linSlope;
             }
-            // flip the sign below the mirror point
+            // Flip the sign below the mirror point.
             *(out++) = E * std::copysign(1.0f, mirrorin);
         }
 
@@ -1602,12 +1602,12 @@ void Renderer_HLG_TO_LINEAR::apply(const void* inImg, void* outImg, long numPixe
     }
 }
 
-Renderer_LINEAR_TO_DBL_LOG_AFFINE::Renderer_LINEAR_TO_DBL_LOG_AFFINE(ConstFixedFunctionOpDataRcPtr& data)
+Renderer_LIN_TO_DOUBLE_LOG::Renderer_LIN_TO_DOUBLE_LOG(ConstFixedFunctionOpDataRcPtr& data)
     : OpCPU()
 {
     auto params = data->getParams();
 
-    // store the parameters, baking the log base conversion into 'logSlope'.
+    // Store the parameters, baking the log base conversion into 'logSlope'.
     m_base              = (float)params[0];
     m_break1            = (float)params[1]; 
     m_break2            = (float)params[2];
@@ -1626,7 +1626,7 @@ Renderer_LINEAR_TO_DBL_LOG_AFFINE::Renderer_LINEAR_TO_DBL_LOG_AFFINE(ConstFixedF
     m_linSeg.off        = (float)params[12];
 }
 
-void Renderer_LINEAR_TO_DBL_LOG_AFFINE::apply(const void* inImg, void* outImg, long numPixels) const
+void Renderer_LIN_TO_DOUBLE_LOG::apply(const void* inImg, void* outImg, long numPixels) const
 {
     const float* in = (const float*)inImg;
     float* out = (float*)outImg;
@@ -1660,8 +1660,8 @@ void Renderer_LINEAR_TO_DBL_LOG_AFFINE::apply(const void* inImg, void* outImg, l
     };
 }
 
-Renderer_DBL_LOG_AFFINE_TO_LINEAR::Renderer_DBL_LOG_AFFINE_TO_LINEAR(ConstFixedFunctionOpDataRcPtr& data)
-    : Renderer_LINEAR_TO_DBL_LOG_AFFINE(data)
+Renderer_DOUBLE_LOG_TO_LIN::Renderer_DOUBLE_LOG_TO_LIN(ConstFixedFunctionOpDataRcPtr& data)
+    : Renderer_LIN_TO_DOUBLE_LOG(data)
 {
     // TODO: Cache more derived params and optimize the math.  
     
@@ -1671,7 +1671,7 @@ Renderer_DBL_LOG_AFFINE_TO_LINEAR::Renderer_DBL_LOG_AFFINE_TO_LINEAR(ConstFixedF
     m_break2Log = m_logSeg2.logSlope * std::log(m_logSeg2.linSlope * m_break2 + m_logSeg2.linOff) + m_logSeg2.logOff;
 }
 
-void Renderer_DBL_LOG_AFFINE_TO_LINEAR::apply(const void* inImg, void* outImg, long numPixels) const
+void Renderer_DOUBLE_LOG_TO_LIN::apply(const void* inImg, void* outImg, long numPixels) const
 {
     const float* in = (const float*)inImg;
     float* out = (float*)outImg;
@@ -1808,61 +1808,61 @@ ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func
             return std::make_shared<Renderer_LUV_TO_XYZ>(func);
         }
         
-        case FixedFunctionOpData::LINEAR_TO_PQ:
+        case FixedFunctionOpData::LIN_TO_PQ:
         {
 #if OCIO_USE_SSE2
             if (fastLogExpPow)
             {
-                return std::make_shared<Renderer_LINEAR_TO_PQ_SSE<true>>(func);
+                return std::make_shared<Renderer_LIN_TO_PQ_SSE<true>>(func);
             }
 #if (_MSC_VER >= 1920) && (OCIO_USE_AVX)
             // MSVC 2019+ has built-in _mm_pow_ps() SVML intrinsic
             // implementation accessible through immintrin.h. Therefore precise
             // SIMD version is available only when compiled with MSVC and AVX
             // support.
-            return std::make_shared<Renderer_LINEAR_TO_PQ_SSE<false>>(func);
+            return std::make_shared<Renderer_LIN_TO_PQ_SSE<false>>(func);
 #endif
 #endif // OCIO_USE_SSE2
-            return std::make_shared<Renderer_LINEAR_TO_PQ<float>>(func);
+            return std::make_shared<Renderer_LIN_TO_PQ<float>>(func);
         }
-        case FixedFunctionOpData::PQ_TO_LINEAR:
+        case FixedFunctionOpData::PQ_TO_LIN:
         {
 #if OCIO_USE_SSE2
             if (fastLogExpPow)
             {
-                return std::make_shared<Renderer_PQ_TO_LINEAR_SSE<true>>(func);
+                return std::make_shared<Renderer_PQ_TO_LIN_SSE<true>>(func);
             }
 #if (_MSC_VER >= 1920) && (OCIO_USE_AVX)
             // MSVC 2019+ has built-in _mm_pow_ps() SVML intrinsic
             // implementation accessible through immintrin.h. Therefore precise
             // SIMD version is available only when compiled with MSVC and AVX
             // support.
-            return std::make_shared<Renderer_PQ_TO_LINEAR_SSE<false>>(func);
+            return std::make_shared<Renderer_PQ_TO_LIN_SSE<false>>(func);
 #endif  
 #endif // OCIO_USE_SSE2
-            return std::make_shared<Renderer_PQ_TO_LINEAR<float>>(func);
+            return std::make_shared<Renderer_PQ_TO_LIN<float>>(func);
         }
 
-        case FixedFunctionOpData::LINEAR_TO_HLG:
+        case FixedFunctionOpData::LIN_TO_GAMMA_LOG:
         {
             /// TODO: SIMD implementation
-            return std::make_shared<Renderer_LINEAR_TO_HLG>(func);
+            return std::make_shared<Renderer_LIN_TO_GAMMA_LOG>(func);
         }
-        case FixedFunctionOpData::HLG_TO_LINEAR:
+        case FixedFunctionOpData::GAMMA_LOG_TO_LIN:
         {
             /// TODO: SIMD implementation
-            return std::make_shared<Renderer_HLG_TO_LINEAR>(func);
+            return std::make_shared<Renderer_GAMMA_LOG_TO_LIN>(func);
         }
 
-        case FixedFunctionOpData::LINEAR_TO_DBL_LOG_AFFINE:
+        case FixedFunctionOpData::LIN_TO_DOUBLE_LOG:
         {
             /// TODO: SIMD implementation
-            return std::make_shared<Renderer_LINEAR_TO_DBL_LOG_AFFINE>(func);
+            return std::make_shared<Renderer_LIN_TO_DOUBLE_LOG>(func);
         }
-        case FixedFunctionOpData::DBL_LOG_AFFINE_TO_LINEAR:
+        case FixedFunctionOpData::DOUBLE_LOG_TO_LIN:
         {
             /// TODO: SIMD implementation
-            return std::make_shared<Renderer_DBL_LOG_AFFINE_TO_LINEAR>(func);
+            return std::make_shared<Renderer_DOUBLE_LOG_TO_LIN>(func);
         }
     }
 

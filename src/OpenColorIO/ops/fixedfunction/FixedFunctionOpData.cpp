@@ -39,12 +39,12 @@ constexpr char XYZ_TO_uvY_STR[]               = "XYZ_TO_uvY";
 constexpr char uvY_TO_XYZ_STR[]               = "uvY_TO_XYZ";
 constexpr char XYZ_TO_LUV_STR[]               = "XYZ_TO_LUV";
 constexpr char LUV_TO_XYZ_STR[]               = "LUV_TO_XYZ";
-constexpr char LINEAR_TO_PQ_STR[]             = "LINEAR_TO_PQ";
-constexpr char PQ_TO_LINEAR_STR[]             = "PQ_TO_LINEAR";
-constexpr char LINEAR_TO_HLG_STR[]            = "LINEAR_TO_HLG";
-constexpr char HLG_TO_LINEAR_STR[]            = "HLG_TO_LINEAR";
-constexpr char LINEAR_TO_DBL_LOG_AFFINE_STR[] = "LINEAR_TO_DBL_LOG_AFFINE";
-constexpr char DBL_LOG_AFFINE_TO_LINEAR_STR[] = "DBL_LOG_AFFINE_TO_LINEAR";
+constexpr char LIN_TO_PQ_STR[]                = "Lin_TO_PQ";
+constexpr char PQ_TO_LIN_STR[]                = "PQ_TO_Lin";
+constexpr char LIN_TO_GAMMA_LOG_STR[]         = "Lin_TO_GammaLog";
+constexpr char GAMMA_LOG_TO_LIN_STR[]         = "GammaLog_TO_Lin";
+constexpr char LIN_TO_DOUBLE_LOG_STR[]        = "Lin_TO_DoubleLog";
+constexpr char DOUBLE_LOG_TO_LIN_STR[]        = "DoubleLog_TO_Lin";
 
 
 // NOTE: Converts the enumeration value to its string representation (i.e. CLF reader).
@@ -100,18 +100,18 @@ const char * FixedFunctionOpData::ConvertStyleToString(Style style, bool detaile
             return XYZ_TO_LUV_STR;
         case LUV_TO_XYZ:
             return LUV_TO_XYZ_STR;
-        case LINEAR_TO_PQ:
-            return LINEAR_TO_PQ_STR;
-        case PQ_TO_LINEAR:
-          return PQ_TO_LINEAR_STR;
-        case LINEAR_TO_HLG:
-            return LINEAR_TO_HLG_STR;
-        case HLG_TO_LINEAR:
-            return HLG_TO_LINEAR_STR;
-        case LINEAR_TO_DBL_LOG_AFFINE:
-            return LINEAR_TO_DBL_LOG_AFFINE_STR;
-        case DBL_LOG_AFFINE_TO_LINEAR:
-            return DBL_LOG_AFFINE_TO_LINEAR_STR;
+        case LIN_TO_PQ:
+            return LIN_TO_PQ_STR;
+        case PQ_TO_LIN:
+          return PQ_TO_LIN_STR;
+        case LIN_TO_GAMMA_LOG:
+            return LIN_TO_GAMMA_LOG_STR;
+        case GAMMA_LOG_TO_LIN:
+            return GAMMA_LOG_TO_LIN_STR;
+        case LIN_TO_DOUBLE_LOG:
+            return LIN_TO_DOUBLE_LOG_STR;
+        case DOUBLE_LOG_TO_LIN:
+            return DOUBLE_LOG_TO_LIN_STR;
     }
 
     std::stringstream ss("Unknown FixedFunction style: ");
@@ -214,29 +214,29 @@ FixedFunctionOpData::Style FixedFunctionOpData::GetStyle(const char * name)
         {
             return LUV_TO_XYZ;
         }
-        else if (0 == Platform::Strcasecmp(name, LINEAR_TO_PQ_STR))
+        else if (0 == Platform::Strcasecmp(name, LIN_TO_PQ_STR))
         {
-            return LINEAR_TO_PQ;
+            return LIN_TO_PQ;
         }
-        else if (0 == Platform::Strcasecmp(name, PQ_TO_LINEAR_STR))
+        else if (0 == Platform::Strcasecmp(name, PQ_TO_LIN_STR))
         {
-            return PQ_TO_LINEAR;
+            return PQ_TO_LIN;
         }
-        else if (0 == Platform::Strcasecmp(name, LINEAR_TO_HLG_STR))
+        else if (0 == Platform::Strcasecmp(name, LIN_TO_GAMMA_LOG_STR))
         {
-            return LINEAR_TO_HLG;
+            return LIN_TO_GAMMA_LOG;
         }
-        else if (0 == Platform::Strcasecmp(name, HLG_TO_LINEAR_STR))
+        else if (0 == Platform::Strcasecmp(name, GAMMA_LOG_TO_LIN_STR))
         {
-            return HLG_TO_LINEAR;
+            return GAMMA_LOG_TO_LIN;
         }
-        else if (0 == Platform::Strcasecmp(name, LINEAR_TO_DBL_LOG_AFFINE_STR))
+        else if (0 == Platform::Strcasecmp(name, LIN_TO_DOUBLE_LOG_STR))
         {
-            return LINEAR_TO_DBL_LOG_AFFINE;
+            return LIN_TO_DOUBLE_LOG;
         }
-        else if (0 == Platform::Strcasecmp(name, DBL_LOG_AFFINE_TO_LINEAR_STR))
+        else if (0 == Platform::Strcasecmp(name, DOUBLE_LOG_TO_LIN_STR))
         {
-            return DBL_LOG_AFFINE_TO_LINEAR;
+            return DOUBLE_LOG_TO_LIN;
         }
     }
 
@@ -312,20 +312,20 @@ FixedFunctionOpData::Style FixedFunctionOpData::ConvertStyle(FixedFunctionStyle 
                             "FIXED_FUNCTION_ACES_GAMUTMAP_02, "
                             "FIXED_FUNCTION_ACES_GAMUTMAP_07.");
         }
-        case FIXED_FUNCTION_LINEAR_TO_PQ: 
+        case FIXED_FUNCTION_LIN_TO_PQ: 
         {
-            return isForward ? FixedFunctionOpData::LINEAR_TO_PQ:
-                               FixedFunctionOpData::PQ_TO_LINEAR;
+            return isForward ? FixedFunctionOpData::LIN_TO_PQ:
+                               FixedFunctionOpData::PQ_TO_LIN;
         }
-        case FIXED_FUNCTION_LINEAR_TO_HLG:
+        case FIXED_FUNCTION_LIN_TO_GAMMA_LOG:
         {
-            return isForward ? FixedFunctionOpData::LINEAR_TO_HLG:
-                               FixedFunctionOpData::HLG_TO_LINEAR;
+            return isForward ? FixedFunctionOpData::LIN_TO_GAMMA_LOG:
+                               FixedFunctionOpData::GAMMA_LOG_TO_LIN;
         }
-        case FIXED_FUNCTION_LINEAR_TO_DOUBLE_LOG_AFFINE:
+        case FIXED_FUNCTION_LIN_TO_DOUBLE_LOG:
         {
-            return isForward ? FixedFunctionOpData::LINEAR_TO_DBL_LOG_AFFINE:
-                               FixedFunctionOpData::DBL_LOG_AFFINE_TO_LINEAR;
+            return isForward ? FixedFunctionOpData::LIN_TO_DOUBLE_LOG:
+                               FixedFunctionOpData::DOUBLE_LOG_TO_LIN;
         }
     }
 
@@ -384,17 +384,17 @@ FixedFunctionStyle FixedFunctionOpData::ConvertStyle(FixedFunctionOpData::Style 
     case FixedFunctionOpData::LUV_TO_XYZ:
         return FIXED_FUNCTION_XYZ_TO_LUV;
 
-    case FixedFunctionOpData::LINEAR_TO_PQ:
-    case FixedFunctionOpData::PQ_TO_LINEAR:
-        return FIXED_FUNCTION_LINEAR_TO_PQ;
+    case FixedFunctionOpData::LIN_TO_PQ:
+    case FixedFunctionOpData::PQ_TO_LIN:
+        return FIXED_FUNCTION_LIN_TO_PQ;
     
-    case FixedFunctionOpData::LINEAR_TO_HLG:
-    case FixedFunctionOpData::HLG_TO_LINEAR:
-        return FIXED_FUNCTION_LINEAR_TO_HLG;
+    case FixedFunctionOpData::LIN_TO_GAMMA_LOG:
+    case FixedFunctionOpData::GAMMA_LOG_TO_LIN:
+        return FIXED_FUNCTION_LIN_TO_GAMMA_LOG;
 
-    case FixedFunctionOpData::LINEAR_TO_DBL_LOG_AFFINE:
-    case FixedFunctionOpData::DBL_LOG_AFFINE_TO_LINEAR:
-        return FIXED_FUNCTION_LINEAR_TO_DOUBLE_LOG_AFFINE;
+    case FixedFunctionOpData::LIN_TO_DOUBLE_LOG:
+    case FixedFunctionOpData::DOUBLE_LOG_TO_LIN:
+        return FIXED_FUNCTION_LIN_TO_DOUBLE_LOG;
     }
 
     std::stringstream ss("Unknown FixedFunction style: ");
@@ -506,7 +506,7 @@ void FixedFunctionOpData::validate() const
             throw Exception(ss.str().c_str());
         }
     }
-    else if (m_style == DBL_LOG_AFFINE_TO_LINEAR || m_style == LINEAR_TO_DBL_LOG_AFFINE)
+    else if (m_style == DOUBLE_LOG_TO_LIN || m_style == LIN_TO_DOUBLE_LOG)
     {
         if (m_params.size() != 13)
         {
@@ -520,6 +520,7 @@ void FixedFunctionOpData::validate() const
         double base              = m_params[0];
         double break1            = m_params[1];
         double break2            = m_params[2];
+        // TODO: Add additional checks on the remaining params.
         // double logSeg1_logSlope  = m_params[3];
         // double logSeg1_logOff    = m_params[4];
         // double logSeg1_linSlope  = m_params[5];
@@ -531,7 +532,7 @@ void FixedFunctionOpData::validate() const
         // double linSeg_slope      = m_params[11];
         // double linSeg_off        = m_params[12];
 
-        // check log base
+        // Check log base.
         if(base <= 0.0)
         {
             std::stringstream ss;
@@ -539,7 +540,7 @@ void FixedFunctionOpData::validate() const
             throw Exception(ss.str().c_str());
         }
 
-        // check break point order
+        // Check break point order.
         if(break1 > break2)
         {
             std::stringstream ss;
@@ -547,7 +548,7 @@ void FixedFunctionOpData::validate() const
             throw Exception(ss.str().c_str());
         }
     }
-    else if (m_style == LINEAR_TO_HLG || m_style == HLG_TO_LINEAR)
+    else if (m_style == LIN_TO_GAMMA_LOG || m_style == GAMMA_LOG_TO_LIN)
     {
         if (m_params.size() != 10)
         {
@@ -560,16 +561,17 @@ void FixedFunctionOpData::validate() const
 
         double mirrorPt          = m_params[0];
         double breakPt           = m_params[1];
-        double logSeg_base       = m_params[2];
-        // double logSeg_logSlope   = m_params[3];
-        // double logSeg_logOff     = m_params[4];
-        // double logSeg_linSlope   = m_params[5];
-        // double logSeg_linOff     = m_params[6];
-        double gammaSeg_power    = m_params[7];
-        // double gammaSeg_slope    = m_params[8];
-        // double gammaSeg_off      = m_params[9];
+        double gammaSeg_power    = m_params[2];
+        // TODO: Add additional checks on the remaining params.
+        // double gammaSeg_slope    = m_params[3];
+        // double gammaSeg_off      = m_params[4];
+        double logSeg_base       = m_params[5];
+        // double logSeg_logSlope   = m_params[6];
+        // double logSeg_logOff     = m_params[7];
+        // double logSeg_linSlope   = m_params[8];
+        // double logSeg_linOff     = m_params[9];
 
-        // check log base
+        // Check log base.
         if (logSeg_base <= 0.0)
         {
             std::stringstream ss;
@@ -577,7 +579,7 @@ void FixedFunctionOpData::validate() const
             throw Exception(ss.str().c_str());
         }
 
-        // check mirror and break point order
+        // Check mirror and break point order.
         if (mirrorPt >= breakPt)
         {
             std::stringstream ss;
@@ -585,7 +587,7 @@ void FixedFunctionOpData::validate() const
             throw Exception(ss.str().c_str());
         }
 
-        // check gamma
+        // Check gamma.
         if (gammaSeg_power == 0.0)
         {
             std::stringstream ss;
@@ -741,36 +743,36 @@ void FixedFunctionOpData::invert() noexcept
             break;
         }
 
-        case LINEAR_TO_PQ:
+        case LIN_TO_PQ:
         {
-            setStyle(PQ_TO_LINEAR);
+            setStyle(PQ_TO_LIN);
             break;
         }
-        case PQ_TO_LINEAR:
+        case PQ_TO_LIN:
         {
-            setStyle(LINEAR_TO_PQ);
-            break;
-        }
-
-        case LINEAR_TO_HLG:
-        {
-            setStyle(HLG_TO_LINEAR);
-            break;
-        }
-        case HLG_TO_LINEAR:
-        {
-            setStyle(LINEAR_TO_HLG);
+            setStyle(LIN_TO_PQ);
             break;
         }
 
-        case LINEAR_TO_DBL_LOG_AFFINE:
+        case LIN_TO_GAMMA_LOG:
         {
-            setStyle(DBL_LOG_AFFINE_TO_LINEAR);
+            setStyle(GAMMA_LOG_TO_LIN);
             break;
         }
-        case DBL_LOG_AFFINE_TO_LINEAR:
+        case GAMMA_LOG_TO_LIN:
         {
-            setStyle(LINEAR_TO_DBL_LOG_AFFINE);
+            setStyle(LIN_TO_GAMMA_LOG);
+            break;
+        }
+
+        case LIN_TO_DOUBLE_LOG:
+        {
+            setStyle(DOUBLE_LOG_TO_LIN);
+            break;
+        }
+        case DOUBLE_LOG_TO_LIN:
+        {
+            setStyle(LIN_TO_DOUBLE_LOG);
             break;
         }
     }
@@ -803,9 +805,9 @@ TransformDirection FixedFunctionOpData::getDirection() const noexcept
     case FixedFunctionOpData::XYZ_TO_xyY:
     case FixedFunctionOpData::XYZ_TO_uvY:
     case FixedFunctionOpData::XYZ_TO_LUV:
-    case FixedFunctionOpData::LINEAR_TO_PQ:
-    case FixedFunctionOpData::LINEAR_TO_HLG:
-    case FixedFunctionOpData::LINEAR_TO_DBL_LOG_AFFINE:
+    case FixedFunctionOpData::LIN_TO_PQ:
+    case FixedFunctionOpData::LIN_TO_GAMMA_LOG:
+    case FixedFunctionOpData::LIN_TO_DOUBLE_LOG:
         return TRANSFORM_DIR_FORWARD;
 
     case FixedFunctionOpData::ACES_RED_MOD_03_INV:
@@ -819,9 +821,9 @@ TransformDirection FixedFunctionOpData::getDirection() const noexcept
     case FixedFunctionOpData::xyY_TO_XYZ:
     case FixedFunctionOpData::uvY_TO_XYZ:
     case FixedFunctionOpData::LUV_TO_XYZ:
-    case FixedFunctionOpData::PQ_TO_LINEAR:
-    case FixedFunctionOpData::HLG_TO_LINEAR:
-    case FixedFunctionOpData::DBL_LOG_AFFINE_TO_LINEAR:
+    case FixedFunctionOpData::PQ_TO_LIN:
+    case FixedFunctionOpData::GAMMA_LOG_TO_LIN:
+    case FixedFunctionOpData::DOUBLE_LOG_TO_LIN:
         return TRANSFORM_DIR_INVERSE;
     }
     return TRANSFORM_DIR_FORWARD;
