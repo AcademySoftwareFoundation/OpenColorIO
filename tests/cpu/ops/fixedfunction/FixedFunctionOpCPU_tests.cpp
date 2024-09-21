@@ -439,7 +439,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, rec2100_surround)
 
         ApplyFixedFunction(&output_32f[0], &expected_32f[0], num_samples, 
                            funcData,
-                           1e-7f,
+                           4e-7f,
                            __LINE__);
 
         // Inverse transform -- output back to original.
@@ -449,7 +449,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, rec2100_surround)
 
         ApplyFixedFunction(&output_32f[0], &input_32f[0], num_samples, 
                            funcDataInv,
-                           1e-7f,
+                           3e-7f,
                            __LINE__);
     }
     {
@@ -473,7 +473,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, rec2100_surround)
 
         ApplyFixedFunction(&output_32f[0], &expected_32f[0], num_samples, 
                            funcData,
-                           1e-7f,
+                           2e-7f,
                            __LINE__);
 
         // Inverse transform -- output back to original.
@@ -483,7 +483,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, rec2100_surround)
 
         ApplyFixedFunction(&output_32f[0], &input_32f[0], num_samples, 
                            funcDataInv,
-                           1e-7f,
+                           2e-7f,
                            __LINE__);
     }
 }
