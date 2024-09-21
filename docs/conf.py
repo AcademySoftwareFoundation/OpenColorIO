@@ -86,7 +86,16 @@ source_suffix = {
 }
 
 master_doc = "index"
-exclude_patterns = ["build", "*-prefix", "api/python", "site"]
+exclude_patterns = [
+  "INSTALL.md",
+  "*.txt",
+  "README*",
+  "CHANGELOG.md",
+  "build",
+  "*-prefix",
+  "api/python",
+  "site"
+]
 
 rst_prolog = """
 .. |OCIO| replace:: *OCIO*
