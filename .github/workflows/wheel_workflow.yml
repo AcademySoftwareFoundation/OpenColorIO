@@ -166,7 +166,7 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.8'
+          python-version: '3.9'
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -221,6 +221,40 @@ jobs:
           - build: CPython 3.13 64 bits
             python: cp313-macosx_x86_64
             arch: x86_64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: '3.9'
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.21.1
+        env:
+          CIBW_BUILD: ${{ matrix.python }}
+          CIBW_ARCHS: ${{ matrix.arch }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.python }}
+          path: ./wheelhouse/*.whl
+
+  # ---------------------------------------------------------------------------
+  # macOS ARM Wheels
+  # ---------------------------------------------------------------------------
+
+  macos-arm:
+    name: Build wheels on macOS ARM
+    runs-on: macos-14
+    # Don't run on OCIO forks
+    if: |
+      github.event_name != 'schedule' ||
+      github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    strategy:
+      matrix:
+        include:
           # -------------------------------------------------------------------
           # CPython ARM 64 bits
           # -------------------------------------------------------------------
@@ -249,7 +283,7 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.8'
+          python-version: '3.9'
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.21.1
@@ -304,7 +338,7 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.8'
+          python-version: '3.9'
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.21.1
