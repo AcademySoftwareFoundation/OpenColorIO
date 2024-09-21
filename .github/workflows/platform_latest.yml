@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        build: [1, 2]
+        build: [1, 2, 3, 4]
         include:
           # -------------------------------------------------------------------
           # GCC
@@ -63,26 +63,24 @@ jobs:
           # -------------------------------------------------------------------
           # Clang
           # -------------------------------------------------------------------
-          # TODO: Re-enable clang when the following issue get fixed:
-          # https://github.com/actions/runner-images/issues/8659
-          # - build: 3
-          #   build-python: ON
-          #   build-type: Release
-          #   build-shared: ON
-          #   cxx-standard: 23
-          #   cxx-compiler: clang++
-          #   cc-compiler: clang
-          #   compiler-desc: Clang
-          #   enable-sanitizer: OFF
-          # - build: 4
-          #   build-python: OFF
-          #   build-type: Debug
-          #   build-shared: ON
-          #   cxx-standard: 23
-          #   cxx-compiler: clang++
-          #   cc-compiler: clang
-          #   compiler-desc: Clang
-          #   enable-sanitizer: ON
+          - build: 3
+            build-python: ON
+            build-type: Release
+            build-shared: ON
+            cxx-standard: 23
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang
+            enable-sanitizer: OFF
+          - build: 4
+            build-python: OFF
+            build-type: Debug
+            build-shared: ON
+            cxx-standard: 23
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang
+            enable-sanitizer: ON
     env:
       CXX: ${{ matrix.cxx-compiler }}
       CC: ${{ matrix.cc-compiler }}
@@ -103,7 +101,7 @@ jobs:
                 -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=OFF \
-                -DOCIO_BUILD_OPENFX=ON \
+                -DOCIO_BUILD_OPENFX=OFF \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_BUILD_PYTHON=${{ matrix.build-python}} \
                 -DOCIO_USE_SIMD=ON \
@@ -218,7 +216,7 @@ jobs:
                 -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=OFF \
-                -DOCIO_BUILD_OPENFX=ON \
+                -DOCIO_BUILD_OPENFX=OFF \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_BUILD_PYTHON=${{ matrix.build-python}} \
                 -DOCIO_USE_SIMD=ON \
@@ -332,7 +330,7 @@ jobs:
                 -DCMAKE_GENERATOR_PLATFORM=x64 \
                 -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
                 -DOCIO_BUILD_DOCS=OFF \
-                -DOCIO_BUILD_OPENFX=ON \
+                -DOCIO_BUILD_OPENFX=OFF \
                 -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_BUILD_PYTHON=${{ matrix.build-python}} \
                 -DOCIO_USE_SIMD=ON \
@@ -353,6 +351,10 @@ jobs:
       - name: Test
         run: ctest -V -C ${{ matrix.build-type }}
         shell: bash
+        # See below issue for context:
+        # https://github.com/AcademySoftwareFoundation/OpenColorIO/issues/2040
+        env:
+          OCIO_PYTHON_LOAD_DLLS_FROM_PATH: "0"
         working-directory: _build
       - name: Test CMake Consumer with shared OCIO
         if: matrix.build-shared == 'ON'
