@@ -755,7 +755,7 @@ public:
                     std::ostringstream os;
                     os << "Config failed view validation. The display '" << display << "' ";
                     os << "contains a shared view '" << (*sharedViewIt).m_name;
-                    os << "that refers to a color space, '" << display << "', ";
+                    os << "' that refers to a color space, '" << display << "', ";
                     os << "that is not a display-referred color space.";
                     m_validationtext = os.str();
                     throw Exception(m_validationtext.c_str());
