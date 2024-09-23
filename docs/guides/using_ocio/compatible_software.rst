@@ -398,6 +398,16 @@ Documentation:
 - `Color Management <https://docs.substance3d.com/sddoc/color-management-188973971.html>`__
 
 
+TouchDesigner (Derivative)
+**************************
+
+Website: `<https://derivative.ca/>`__
+
+Documentation:
+
+- `OpenColorIO TOP <https://derivative.ca/UserGuide/OpenColorIO_TOP/>`__
+
+
 Unreal Engine (Epic Games)
 **************************
 
