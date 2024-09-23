@@ -223,10 +223,8 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
     {
         auto CIE_XYZ_D65_to_DCDM_D60_BFD_Functor = [](OpRcPtrVec & ops)
         {
-            const MatrixOpData::Offsets d65_wht_XYZ(0.95045592705167, 1., 1.08905775075988, 0.);
-            const MatrixOpData::Offsets d60_wht_XYZ(0.95264607456985, 1., 1.00882518435159, 0.);
             MatrixOpData::MatrixArrayPtr matrix
-                = build_vonkries_adapt(d65_wht_XYZ, d60_wht_XYZ, ADAPTATION_BRADFORD);
+                = build_vonkries_adapt(WHITEPOINT::D65_XYZ, WHITEPOINT::D60_XYZ, ADAPTATION_BRADFORD);
             CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
 
             const double scale     = 48.0 / 52.37;
@@ -332,12 +330,6 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
     {
         auto CIE_XYZ_D65_to_ST2084_DCDM_D65_Functor = [](OpRcPtrVec & ops)
         {
-            // Scale 1.0 in the reference space to 0.48. The PQ function will interpret 
-            // this as 48 nits.
-            const double scale     = 0.48;
-            const double scale4[4] = { scale, scale, scale, 1. };
-            CreateScaleOp(ops, scale4, TRANSFORM_DIR_FORWARD);
-
             ST_2084::GenerateLinearToPQOps(ops);
         };
 
@@ -349,17 +341,9 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
     {
         auto CIE_XYZ_D65_to_ST2084_DCDM_D60_BFD_Functor = [](OpRcPtrVec & ops)
         {
-            const MatrixOpData::Offsets d65_wht_XYZ(0.95045592705167, 1., 1.08905775075988, 0.);
-            const MatrixOpData::Offsets d60_wht_XYZ(0.95264607456985, 1., 1.00882518435159, 0.);
             MatrixOpData::MatrixArrayPtr matrix
-                = build_vonkries_adapt(d65_wht_XYZ, d60_wht_XYZ, ADAPTATION_BRADFORD);
+                = build_vonkries_adapt(WHITEPOINT::D65_XYZ, WHITEPOINT::D60_XYZ, ADAPTATION_BRADFORD);
             CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
-
-            // Scale 1.0 in the reference space to 0.48. The PQ function will interpret 
-            // this as 48 nits.
-            const double scale     = 0.48;
-            const double scale4[4] = { scale, scale, scale, 1. };
-            CreateScaleOp(ops, scale4, TRANSFORM_DIR_FORWARD);
 
             ST_2084::GenerateLinearToPQOps(ops);
         };
