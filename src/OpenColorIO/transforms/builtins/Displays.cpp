@@ -215,32 +215,9 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
             CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
         };
 
-        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_DCDM-D65", 
-                            "Convert CIE XYZ (D65 white) to Gamma 2.6, XYZ-E with D65 white",
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_DCDM-D65",
+                            "Convert CIE XYZ (D65 white) to Gamma 2.6 (D65 white in XYZ-E encoding)",
                             CIE_XYZ_D65_to_DCDM_D65_Functor);
-    }
-
-    {
-        auto CIE_XYZ_D65_to_DCDM_D60_BFD_Functor = [](OpRcPtrVec & ops)
-        {
-            MatrixOpData::MatrixArrayPtr matrix
-                = build_vonkries_adapt(WHITEPOINT::D65_XYZ, WHITEPOINT::D60_XYZ, ADAPTATION_BRADFORD);
-            CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
-
-            const double scale     = 48.0 / 52.37;
-            const double scale4[4] = { scale, scale, scale, 1. };
-            CreateScaleOp(ops, scale4, TRANSFORM_DIR_FORWARD);
-
-            const GammaOpData::Params rgbParams   = { 2.6 };
-            const GammaOpData::Params alphaParams = { 1.0 };
-            auto gammaData = std::make_shared<GammaOpData>(GammaOpData::BASIC_REV,
-                                                           rgbParams, rgbParams, rgbParams, alphaParams);
-            CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
-        };
-
-        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_DCDM-D60-BFD", 
-                            "Convert CIE XYZ (D65 white) to Gamma 2.6, XYZ-E with D60 white (Bradford adaptation)",
-                            CIE_XYZ_D65_to_DCDM_D60_BFD_Functor);
     }
 
     {
@@ -334,23 +311,8 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
         };
 
         registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_ST2084-DCDM-D65", 
-                            "Convert CIE XYZ (D65 white) to ST-2084 (PQ), XYZ-E with D65 white",
+                            "Convert CIE XYZ (D65 white) to ST-2084 (PQ) (D65 white in XYZ-E encoding)",
                             CIE_XYZ_D65_to_ST2084_DCDM_D65_Functor);
-    }
-
-    {
-        auto CIE_XYZ_D65_to_ST2084_DCDM_D60_BFD_Functor = [](OpRcPtrVec & ops)
-        {
-            MatrixOpData::MatrixArrayPtr matrix
-                = build_vonkries_adapt(WHITEPOINT::D65_XYZ, WHITEPOINT::D60_XYZ, ADAPTATION_BRADFORD);
-            CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
-
-            ST_2084::GenerateLinearToPQOps(ops);
-        };
-
-        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_ST2084-DCDM-D60-BFD", 
-                            "Convert CIE XYZ (D65 white) to ST-2084 (PQ), XYZ-E with D60 white (Bradford adaptation)",
-                            CIE_XYZ_D65_to_ST2084_DCDM_D60_BFD_Functor);
     }
 
     {
