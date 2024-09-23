@@ -5,7 +5,7 @@
 ###############################################################################
 # CMake definition.
 
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.15)
 
 set(CMAKE_MODULE_PATH
     ${CMAKE_MODULE_PATH}
@@ -341,7 +341,17 @@ endif()
 ###############################################################################
 # Define compilation and link flags
 
+option(OCIO_BUILD_POSITION_INDEPENDENT_EXECUTABLES "Set to ON to build executables as PIE" OFF)
+
 include(CompilerFlags)
+
+if(OCIO_BUILD_POSITION_INDEPENDENT_EXECUTABLES)
+    if(NOT CMAKE_C_LINK_PIE_SUPPORTED)
+        message(FATAL_ERROR "PIE is not supported at link time.\n")
+    endif()
+    message(STATUS "Enabling PIE generation.\n")
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
 
 ###############################################################################
 # External linking options

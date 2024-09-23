@@ -123,7 +123,7 @@ items manually:
 Required components:
 
 - C++ 11-17 compiler (gcc, clang, msvc)
-- CMake >= 3.13
+- CMake >= 3.15
 - \*Expat >= 2.4.1 (XML parser for CDL/CLF/CTF)
 - \*yaml-cpp >= 0.7.0 (YAML parser for Configs)
 - \*Imath >= 3.0 (for half domain LUTs)
@@ -316,6 +316,10 @@ build chains.)
 The CMake output prints information regarding which image library will be used for the
 command-line tools (as well as a lot of other info about the build configuration).
 
+Some OS distributions may require executables to be able to be executed using address space
+layout randomisation (ASLR). To achieve this code generated needs to be position independent.
+To support this please add ``-DOCIO_BUILD_POSITION_INDEPENDENT_EXECUTABLES=ON`` to your CMake
+configuration step.
 
 Documentation
 +++++++++++++
