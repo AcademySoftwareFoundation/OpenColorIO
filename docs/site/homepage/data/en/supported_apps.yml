@@ -193,6 +193,13 @@ supported_apps:
       link : "https://www.substance3d.com/products/substance-designer/"
 
     # portfolio item loop
+    - name : TouchDesigner
+      image : images/supported_apps/touchdesigner.png
+      categories : ["2D", "3D", "Animation", "Compositing", "Editing", "Lighting", "Playback", "Render", "Simulation", "Texture", "Tracking"]
+      content : Native support.
+      link : "http://www.derivative.ca/"
+
+    # portfolio item loop
     - name : Unreal Engine
       image : images/supported_apps/unreal.png
       categories : ["Game Engine", "3D"]
