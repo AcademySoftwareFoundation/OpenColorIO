@@ -55,7 +55,7 @@ displays:
 
 active_displays: [sRGB - Display, Display P3 - Display, Rec.1886 Rec.709 - Display, Rec.2100-PQ - Display, ST2084-P3-D65 - Display, P3-D65 - Display]
 active_views: [ACES 1.0 - SDR Video, ACES 1.1 - HDR Video (1000 nits & Rec.2020 lim), ACES 1.1 - HDR Video (1000 nits & P3 lim), ACES 1.0 - SDR Cinema, Un-tone-mapped, Raw]
-inactive_colorspaces: [CIE XYZ-D65 - Display-referred]
+inactive_colorspaces: [CIE XYZ-D65 - Display-referred, CIE XYZ-D65 - Scene-referred]
 
 looks:
   - !<Look>

@@ -951,8 +951,8 @@ colorspaces:
         latestCGName = "cg-config-latest"
         latestStudioName = "studio-config-latest"
 
-        nbOfColorspacesForCGConfig = 24
-        nbOfColorspacesForStudioConfig = 55
+        nbOfColorspacesForCGConfig = 23
+        nbOfColorspacesForStudioConfig = 54
 
         # Test that CreateFromFile does not work without ocio:// prefix for built-in config.
         with self.assertRaises(OCIO.Exception) as cm:

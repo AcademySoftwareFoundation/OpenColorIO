@@ -417,8 +417,8 @@ OCIO_ADD_TEST(BuiltinConfigs, create_builtin_config)
 
     {
         // Test default config.
-        int nbOfColorspacesForDefaultCGConfig = 24;
-        int nbOfColorspacesForDefaultStudioConfig = 55;
+        int nbOfColorspacesForDefaultCGConfig = 23;
+        int nbOfColorspacesForDefaultStudioConfig = 54;
         std::string expectedCGName = "cg-config-v2.2.0_aces-v1.3_ocio-v2.4";
         std::string expectedStudioName = "studio-config-v2.2.0_aces-v1.3_ocio-v2.4";
 
