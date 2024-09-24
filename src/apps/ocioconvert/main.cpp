@@ -49,6 +49,8 @@ int main(int argc, const char **argv)
     std::vector<std::string> intAttrs;
     std::vector<std::string> stringAttrs;
 
+    std::string outputDepth;
+
     bool usegpu                 = false;
     bool usegpuLegacy           = false;
     bool outputgpuInfo          = false;
@@ -84,6 +86,7 @@ int main(int argc, const char **argv)
                "--help",                &help,                  "Display the help and exit",
                "-v" ,                   &verbose,               "Display general information",
                "<SEPARATOR>", "\nOpenImageIO or OpenEXR options:",
+               "--bitdepth %s",         &outputDepth,  "Output image bitdepth",
                "--float-attribute %L",  &floatAttrs,   "\"name=float\" pair defining OIIO float attribute "
                                                        "for outputimage",
                "--int-attribute %L",    &intAttrs,     "\"name=int\" pair defining an int attribute "
@@ -114,6 +117,31 @@ int main(int argc, const char **argv)
         exit(1);
     }
 #endif // OCIO_GPU_ENABLED
+
+    OCIO::BitDepth userOutputBitDepth = OCIO::BIT_DEPTH_UNKNOWN;
+    if (!outputDepth.empty())
+    {
+        if (outputDepth == "uint8")
+        {
+            userOutputBitDepth = OCIO::BIT_DEPTH_UINT8;
+        }
+        else if (outputDepth == "uint16")
+        {
+            userOutputBitDepth = OCIO::BIT_DEPTH_UINT16;
+        }
+        else if (outputDepth == "half")
+        {
+            userOutputBitDepth = OCIO::BIT_DEPTH_F16;
+        }
+        else if (outputDepth == "float")
+        {
+            userOutputBitDepth = OCIO::BIT_DEPTH_F32;
+        }
+        else
+        {
+            throw OCIO::Exception("Unsupported output bitdepth, must be uint8, uint16, half or float.");
+        }
+    }
 
     const char * inputimage         = nullptr;
     const char * inputcolorspace    = nullptr;
@@ -477,17 +505,24 @@ int main(int argc, const char **argv)
             const OCIO::BitDepth inputBitDepth = imgInput.getBitDepth();
             OCIO::BitDepth outputBitDepth;
 
-            if (inputBitDepth == OCIO::BIT_DEPTH_UINT16 || inputBitDepth == OCIO::BIT_DEPTH_F32)
+            if (userOutputBitDepth != OCIO::BIT_DEPTH_UNKNOWN)
             {
-                outputBitDepth = OCIO::BIT_DEPTH_F32;
-            }
-            else if (inputBitDepth == OCIO::BIT_DEPTH_UINT8 || inputBitDepth == OCIO::BIT_DEPTH_F16)
-            {
-                outputBitDepth = OCIO::BIT_DEPTH_F16;
+                outputBitDepth = userOutputBitDepth;
             }
             else
             {
-                throw OCIO::Exception("Unsupported input bitdepth, must be uint8, uint16, half or float.");
+                if (inputBitDepth == OCIO::BIT_DEPTH_UINT16 || inputBitDepth == OCIO::BIT_DEPTH_F32)
+                {
+                    outputBitDepth = OCIO::BIT_DEPTH_F32;
+                }
+                else if (inputBitDepth == OCIO::BIT_DEPTH_UINT8 || inputBitDepth == OCIO::BIT_DEPTH_F16)
+                {
+                    outputBitDepth = OCIO::BIT_DEPTH_F16;
+                }
+                else
+                {
+                    throw OCIO::Exception("Unsupported input bitdepth, must be uint8, uint16, half or float.");
+                }
             }
 
             OCIO::ConstCPUProcessorRcPtr cpuProcessor
@@ -611,7 +646,7 @@ int main(int argc, const char **argv)
             imgOutput->attribute("oiio:ColorSpace", outputcolorspace);
         }
 
-        imgOutput->write(outputimage);
+        imgOutput->write(outputimage, userOutputBitDepth);
     }
     catch (...)
     {

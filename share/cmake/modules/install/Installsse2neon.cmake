@@ -24,7 +24,7 @@ FetchContent_Declare(sse2neon
 FetchContent_GetProperties(sse2neon)
 
 if(NOT sse2neon_POPULATED)
-  FetchContent_Populate(sse2neon)
+  FetchContent_MakeAvailable(sse2neon)
 
   set(_EXT_DIST_INCLUDE "${CMAKE_BINARY_DIR}/ext/dist/${CMAKE_INSTALL_INCLUDEDIR}")
   file(COPY "${sse2neon_SOURCE_DIR}/sse2neon.h" DESTINATION "${_EXT_DIST_INCLUDE}/sse2neon")
