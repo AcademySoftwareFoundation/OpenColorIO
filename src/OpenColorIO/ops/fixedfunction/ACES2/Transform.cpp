@@ -126,8 +126,8 @@ float panlrc_inverse(float v, float F_L)
 // Optimization used during initialization
 float Y_to_J(float Y, const JMhParams &params)
 {
-    float F_L_Y = pow(params.F_L * std::abs(Y) / reference_luminance, 0.42f);
-    return std::copysign(1.f, Y) * reference_luminance * pow(((400.f * F_L_Y) / (27.13f + F_L_Y)) / params.A_w_J, surround[1] * params.z);
+    float F_L_Y = powf(params.F_L * std::abs(Y) / reference_luminance, 0.42f);
+    return std::copysign(1.f, Y) * reference_luminance * powf(((400.f * F_L_Y) / (27.13f + F_L_Y)) / params.A_w_J, surround[1] * params.z);
 }
 
 f3 RGB_to_JMh(const f3 &RGB, const JMhParams &p)
@@ -251,14 +251,14 @@ f3 tonescale_chroma_compress_fwd(const f3 &JMh, const JMhParams &p, const ToneSc
     const float h = JMh[2];
 
     // Tonescale applied in Y (convert to and from J)
-    const float A = p.A_w_J * pow(std::abs(J) / 100.f, 1.f / (surround[1] * p.z));
-    const float Y = std::copysign(1.f, J) * 100.f / p.F_L * pow((27.13f * A) / (400.f - A), 1.f / 0.42f) / 100.f;
+    const float A = p.A_w_J * powf(std::abs(J) / 100.f, 1.f / (surround[1] * p.z));
+    const float Y = std::copysign(1.f, J) * 100.f / p.F_L * powf((27.13f * A) / (400.f - A), 1.f / 0.42f) / 100.f;
 
-    const float f = pt.m_2 * pow(std::max(0.f, Y) / (Y + pt.s_2), pt.g);
+    const float f = pt.m_2 * powf(std::max(0.f, Y) / (Y + pt.s_2), pt.g);
     const float Y_ts = std::max(0.f, f * f / (f + pt.t_1)) * pt.n_r;
 
-    const float F_L_Y = pow(p.F_L * std::abs(Y_ts) / 100.f, 0.42f);
-    const float J_ts = std::copysign(1.f, Y_ts) * 100.f * pow(((400.f * F_L_Y) / (27.13f + F_L_Y)) / p.A_w_J, surround[1] * p.z);
+    const float F_L_Y = powf(p.F_L * std::abs(Y_ts) / 100.f, 0.42f);
+    const float J_ts = std::copysign(1.f, Y_ts) * 100.f * powf(((400.f * F_L_Y) / (27.13f + F_L_Y)) / p.A_w_J, surround[1] * p.z);
 
     // ChromaCompress
     float M_cp = M;
@@ -268,9 +268,9 @@ f3 tonescale_chroma_compress_fwd(const f3 &JMh, const JMhParams &p, const ToneSc
         const float nJ = J_ts / pc.limit_J_max;
         const float snJ = std::max(0.f, 1.f - nJ);
         const float Mnorm = chroma_compress_norm(h, pc.chroma_compress_scale);
-        const float limit = pow(nJ, pc.model_gamma) * reach_m_from_table(h, pc.reach_m_table) / Mnorm;
+        const float limit = powf(nJ, pc.model_gamma) * reach_m_from_table(h, pc.reach_m_table) / Mnorm;
 
-        M_cp = M * pow(J_ts / J, pc.model_gamma);
+        M_cp = M * powf(J_ts / J, pc.model_gamma);
         M_cp = M_cp / Mnorm;
         M_cp = limit - toe_fwd(limit - M_cp, limit - 0.001f, snJ * pc.sat, sqrt(nJ * nJ + pc.sat_thr));
         M_cp = toe_fwd(M_cp, limit, nJ * pc.compr, snJ);
@@ -287,15 +287,15 @@ f3 tonescale_chroma_compress_inv(const f3 &JMh, const JMhParams &p, const ToneSc
     const float h    = JMh[2];
 
     // Inverse Tonescale applied in Y (convert to and from J)
-    const float A = p.A_w_J * pow(std::abs(J_ts) / 100.f, 1.f / (surround[1] * p.z));
-    const float Y_ts = std::copysign(1.f, J_ts) * 100.f / p.F_L * pow((27.13f * A) / (400.f - A), 1.f / 0.42f) / 100.f;
+    const float A = p.A_w_J * powf(std::abs(J_ts) / 100.f, 1.f / (surround[1] * p.z));
+    const float Y_ts = std::copysign(1.f, J_ts) * 100.f / p.F_L * powf((27.13f * A) / (400.f - A), 1.f / 0.42f) / 100.f;
 
     const float Z = std::max(0.f, std::min(pt.n / (pt.u_2 * pt.n_r), Y_ts));
     const float ht = (Z + sqrt(Z * (4.f * pt.t_1 + Z))) / 2.f;
-    const float Y = pt.s_2 / (pow((pt.m_2 / ht), (1.f / pt.g)) - 1.f) * pt.n_r;
+    const float Y = pt.s_2 / (powf((pt.m_2 / ht), (1.f / pt.g)) - 1.f) * pt.n_r;
 
-    const float F_L_Y = pow(p.F_L * std::abs(Y) / 100.f, 0.42f);
-    const float J = std::copysign(1.f, Y) * 100.f * pow(((400.f * F_L_Y) / (27.13f + F_L_Y)) / p.A_w_J, surround[1] * p.z);
+    const float F_L_Y = powf(p.F_L * std::abs(Y) / 100.f, 0.42f);
+    const float J = std::copysign(1.f, Y) * 100.f * powf(((400.f * F_L_Y) / (27.13f + F_L_Y)) / p.A_w_J, surround[1] * p.z);
 
     // Inverse ChromaCompress
     float M = M_cp;
@@ -305,13 +305,13 @@ f3 tonescale_chroma_compress_inv(const f3 &JMh, const JMhParams &p, const ToneSc
         const float nJ = J_ts / pc.limit_J_max;
         const float snJ = std::max(0.f, 1.f - nJ);
         const float Mnorm = chroma_compress_norm(h, pc.chroma_compress_scale);
-        const float limit = pow(nJ, pc.model_gamma) * reach_m_from_table(h, pc.reach_m_table) / Mnorm;
+        const float limit = powf(nJ, pc.model_gamma) * reach_m_from_table(h, pc.reach_m_table) / Mnorm;
 
         M = M_cp / Mnorm;
         M = toe_inv(M, limit, nJ * pc.compr, snJ);
         M = limit - toe_inv(limit - M, limit - 0.001f, snJ * pc.sat, sqrt(nJ * nJ + pc.sat_thr));
         M = M * Mnorm;
-        M = M * pow(J_ts / J, -pc.model_gamma);
+        M = M * powf(J_ts / J, -pc.model_gamma);
     }
 
     return {J, M, h};
@@ -331,9 +331,9 @@ JMhParams init_JMhParams(const Primaries &P)
 
     // Viewing condition dependent parameters
     const float K = 1.f / (5.f * L_A + 1.f);
-    const float K4 = pow(K, 4.f);
+    const float K4 = powf(K, 4.f);
     const float N = Y_b / Y_W;
-    const float F_L = 0.2f * K4 * (5.f * L_A) + 0.1f * pow((1.f - K4), 2.f) * pow(5.f * L_A, 1.f/3.f);
+    const float F_L = 0.2f * K4 * (5.f * L_A) + 0.1f * powf((1.f - K4), 2.f) * powf(5.f * L_A, 1.f/3.f);
     const float z = 1.48f + sqrt(N);
 
     const f3 D_RGB = {
@@ -356,7 +356,7 @@ JMhParams init_JMhParams(const Primaries &P)
 
     const float A_w = ra * RGB_AW[0] + RGB_AW[1] + ba * RGB_AW[2];
 
-    const float F_L_W = pow(F_L, 0.42f);
+    const float F_L_W = powf(F_L, 0.42f);
     const float A_w_J   = (400.f * F_L_W) / (27.13f + F_L_W);
 
     p.XYZ_w = XYZ_w;
@@ -491,7 +491,7 @@ float get_focus_gain(float J, float cuspJ, float limit_J_max)
     {
         // Approximate inverse required above threshold
         float gain = (limit_J_max - thr) / std::max(0.0001f, (limit_J_max - std::min(limit_J_max, J)));
-        return pow(log10(gain), 1.f / focus_adjust_gain) + 1.f;
+        return powf(log10(gain), 1.f / focus_adjust_gain) + 1.f;
     }
     else
     {
@@ -566,8 +566,8 @@ f3 find_gamut_boundary_intersection(const f3 &JMh_s, const f2 &JM_cusp_in, float
         slope = (J_max - J_intersect_source) * (J_intersect_source - J_focus) / (J_focus * slope_gain);
     }
 
-    const float M_boundary_lower = J_intersect_cusp * pow(J_intersect_source / J_intersect_cusp, 1.f / gamma_bottom) / (JM_cusp[0] / JM_cusp[1] - slope);
-    const float M_boundary_upper = JM_cusp[1] * (J_max - J_intersect_cusp) * pow((J_max - J_intersect_source) / (J_max - J_intersect_cusp), 1.f / gamma_top) / (slope * JM_cusp[1] + J_max - JM_cusp[0]);
+    const float M_boundary_lower = J_intersect_cusp * powf(J_intersect_source / J_intersect_cusp, 1.f / gamma_bottom) / (JM_cusp[0] / JM_cusp[1] - slope);
+    const float M_boundary_upper = JM_cusp[1] * (J_max - J_intersect_cusp) * powf((J_max - J_intersect_source) / (J_max - J_intersect_cusp), 1.f / gamma_top) / (slope * JM_cusp[1] + J_max - JM_cusp[0]);
     const float M_boundary = JM_cusp[1] * smin(M_boundary_lower / JM_cusp[1], M_boundary_upper / JM_cusp[1], s);
     const float J_boundary = J_intersect_source + slope * M_boundary;
 
@@ -602,7 +602,7 @@ f3 get_reach_boundary(
         slope = (limit_J_max - intersectJ) * (intersectJ - focusJ) / (focusJ * slope_gain);
     }
 
-    const float boundary = limit_J_max * pow(intersectJ / limit_J_max, model_gamma) * reachMaxM / (limit_J_max - slope * reachMaxM);
+    const float boundary = limit_J_max * powf(intersectJ / limit_J_max, model_gamma) * reachMaxM / (limit_J_max - slope * reachMaxM);
     return {J, boundary, h};
 }
 
@@ -837,15 +837,15 @@ ToneScaleParams init_ToneScaleParams(float peakLuminance)
     const float r_hit = r_hit_min + (r_hit_max - r_hit_min) * (log(n/n_r)/log(10000.f/100.f));
     const float m_0 = (n / n_r);
     const float m_1 = 0.5f * (m_0 + sqrt(m_0 * (m_0 + 4.f * t_1)));
-    const float u = pow((r_hit/m_1)/((r_hit/m_1)+1.f),g);
+    const float u = powf((r_hit/m_1)/((r_hit/m_1)+1.f),g);
     const float m = m_1 / u;
     const float w_i = log(n/100.f)/log(2.f);
     const float c_t = c_d/n_r * (1.f + w_i * w_g);
     const float g_ip = 0.5f * (c_t + sqrt(c_t * (c_t + 4.f * t_1)));
-    const float g_ipp2 = -(m_1 * pow((g_ip/m),(1.f/g))) / (pow(g_ip/m , 1.f/g)-1.f);
+    const float g_ipp2 = -(m_1 * powf((g_ip/m),(1.f/g))) / (powf(g_ip/m , 1.f/g)-1.f);
     const float w_2 = c / g_ipp2;
     const float s_2 = w_2 * m_1;
-    const float u_2 = pow((r_hit/m_1)/((r_hit/m_1) + w_2), g);
+    const float u_2 = powf((r_hit/m_1)/((r_hit/m_1) + w_2), g);
     const float m_2 = m_1 / u_2;
 
     ToneScaleParams TonescaleParams = {
@@ -882,7 +882,7 @@ ChromaCompressParams init_ChromaCompressParams(float peakLuminance)
     params.sat = sat;
     params.sat_thr = sat_thr;
     params.compr = compr;
-    params.chroma_compress_scale = pow(0.03379f * peakLuminance, 0.30596f) - 0.45135f;
+    params.chroma_compress_scale = powf(0.03379f * peakLuminance, 0.30596f) - 0.45135f;
     params.reach_m_table = make_reach_m_table(ACES_AP1::primaries, peakLuminance);
     return params;
 }
