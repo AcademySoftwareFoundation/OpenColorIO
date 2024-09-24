@@ -359,20 +359,20 @@ void _Add_RGB_to_JMh_Shader(
     ss.newLine() << ss.float3Decl("lms") << " = " << ss.mat3fMul(&p.MATRIX_RGB_to_CAM16[0], pxl + ".rgb") << ";";
     ss.newLine() << "lms = " << "lms * " << ss.float3Const(p.D_RGB[0], p.D_RGB[1], p.D_RGB[2]) << ";";
 
-    ss.newLine() << ss.float3Decl("F_L_v") << " = pow(" << p.F_L << " * abs(lms) / 100.f, " << ss.float3Const(0.42f) << ");";
-    ss.newLine() << ss.float3Decl("rgb_a") << " = (400.f * sign(lms) * F_L_v) / (27.13f + F_L_v);";
+    ss.newLine() << ss.float3Decl("F_L_v") << " = pow(" << p.F_L << " * abs(lms) / 100.0, " << ss.float3Const(0.42f) << ");";
+    ss.newLine() << ss.float3Decl("rgb_a") << " = (400.0 * sign(lms) * F_L_v) / (27.13 + F_L_v);";
 
-    ss.newLine() << ss.floatDecl("A") << " = 2.f * rgb_a.r + rgb_a.g + 0.05f * rgb_a.b;";
-    ss.newLine() << ss.floatDecl("a") << " = rgb_a.r - 12.f * rgb_a.g / 11.f + rgb_a.b / 11.f;";
-    ss.newLine() << ss.floatDecl("b") << " = (rgb_a.r + rgb_a.g - 2.f * rgb_a.b) / 9.f;";
+    ss.newLine() << ss.floatDecl("A") << " = 2.0 * rgb_a.r + rgb_a.g + 0.05 * rgb_a.b;";
+    ss.newLine() << ss.floatDecl("a") << " = rgb_a.r - 12.0 * rgb_a.g / 11.0 + rgb_a.b / 11.0;";
+    ss.newLine() << ss.floatDecl("b") << " = (rgb_a.r + rgb_a.g - 2.0 * rgb_a.b) / 9.0;";
 
-    ss.newLine() << ss.floatDecl("J") << " = 100.f * pow(A / " << p.A_w << ", " << ACES2::surround[1] << " * " << p.z << ");";
+    ss.newLine() << ss.floatDecl("J") << " = 100.0 * pow(A / " << p.A_w << ", " << ACES2::surround[1] << " * " << p.z << ");";
 
-    ss.newLine() << ss.floatDecl("M") << " = (J == 0.f) ? 0.f : 43.f * " << ACES2::surround[2] << " * sqrt(a * a + b * b);";
+    ss.newLine() << ss.floatDecl("M") << " = (J == 0.0) ? 0.0 : 43.0 * " << ACES2::surround[2] << " * sqrt(a * a + b * b);";
 
-    ss.newLine() << ss.floatDecl("h") << " = (a == 0.f) ? 0.f : " << ss.atan2("b", "a") << " * 180.f / 3.14159265358979f;";
-    ss.newLine() << "h = h - floor(h / 360.f) * 360.f;";
-    ss.newLine() << "h = (h < 0.0f) ? h + 360.f : h;";
+    ss.newLine() << ss.floatDecl("h") << " = (a == 0.0) ? 0.0 : " << ss.atan2("b", "a") << " * 180.0 / 3.14159265358979;";
+    ss.newLine() << "h = h - floor(h / 360.0) * 360.0;";
+    ss.newLine() << "h = (h < 0.0) ? h + 360.0 : h;";
 
     ss.newLine() << pxl << ".rgb = " << ss.float3Const("J", "M", "h") << ";";
 }
@@ -384,19 +384,19 @@ void _Add_JMh_to_RGB_Shader(
 {
     const std::string pxl(shaderCreator->getPixelName());
 
-    ss.newLine() << ss.floatDecl("h") << " = " << pxl << ".b * 3.14159265358979f / 180.f;";
+    ss.newLine() << ss.floatDecl("h") << " = " << pxl << ".b * 3.14159265358979 / 180.0;";
 
-    ss.newLine() << ss.floatDecl("scale") << " = " << pxl << ".g / (43.f * " << ACES2::surround[2] << ");";
-    ss.newLine() << ss.floatDecl("A") << " = " << p.A_w << " * pow(" << pxl << ".r / 100.f, 1.f / (" << ACES2::surround[1] << " * " << p.z << "));";
+    ss.newLine() << ss.floatDecl("scale") << " = " << pxl << ".g / (43.0 * " << ACES2::surround[2] << ");";
+    ss.newLine() << ss.floatDecl("A") << " = " << p.A_w << " * pow(" << pxl << ".r / 100.0, 1.0 / (" << ACES2::surround[1] << " * " << p.z << "));";
     ss.newLine() << ss.floatDecl("a") << " = scale * cos(h);";
     ss.newLine() << ss.floatDecl("b") << " = scale * sin(h);";
 
     ss.newLine() << ss.float3Decl("rgb_a") << ";";
-    ss.newLine() << "rgb_a.r = (460.f * A + 451.f * a + 288.f *b) / 1403.f;";
-    ss.newLine() << "rgb_a.g = (460.f * A - 891.f * a - 261.f *b) / 1403.f;";
-    ss.newLine() << "rgb_a.b = (460.f * A - 220.f * a - 6300.f *b) / 1403.f;";
+    ss.newLine() << "rgb_a.r = (460.0 * A + 451.0 * a + 288.0 *b) / 1403.0;";
+    ss.newLine() << "rgb_a.g = (460.0 * A - 891.0 * a - 261.0 *b) / 1403.0;";
+    ss.newLine() << "rgb_a.b = (460.0 * A - 220.0 * a - 6300.0 *b) / 1403.0;";
 
-    ss.newLine() << ss.float3Decl("lms") << " = sign(rgb_a) * 100.f / " << p.F_L << " * pow(27.13f * abs(rgb_a) / (400.f - abs(rgb_a)), " << ss.float3Const(1.f / 0.42f) << ");";
+    ss.newLine() << ss.float3Decl("lms") << " = sign(rgb_a) * 100.0 / " << p.F_L << " * pow(27.13 * abs(rgb_a) / (400.0 - abs(rgb_a)), " << ss.float3Const(1.f / 0.42f) << ");";
     ss.newLine() << "lms = " << "lms / " << ss.float3Const(p.D_RGB[0], p.D_RGB[1], p.D_RGB[2]) << ";";
 
     ss.newLine() << pxl << ".rgb = " << ss.mat3fMul(&p.MATRIX_CAM16_to_RGB[0], "lms") << ";";
@@ -459,22 +459,22 @@ std::string _Add_Reach_table(
     ss.indent();
 
     ss.newLine() << ss.floatDecl("hwrap") << " = h;";
-    ss.newLine() << "hwrap = hwrap - floor(hwrap / 360.f) * 360.f;";
-    ss.newLine() << "hwrap = (hwrap < 0.0f) ? hwrap + 360.f : hwrap;";
+    ss.newLine() << "hwrap = hwrap - floor(hwrap / 360.0) * 360.0;";
+    ss.newLine() << "hwrap = (hwrap < 0.0) ? hwrap + 360.0 : hwrap;";
 
     ss.newLine() << ss.floatDecl("i_lo") << " = floor(hwrap);";
     ss.newLine() << ss.floatDecl("i_hi") << " = (i_lo + 1);";
-    ss.newLine() << "i_hi = i_hi - floor(i_hi / 360.f) * 360.f;";
+    ss.newLine() << "i_hi = i_hi - floor(i_hi / 360.0) * 360.0;";
 
     if (dimensions == GpuShaderDesc::TEXTURE_1D)
     {
-        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex1D(name, "(i_lo + 0.5f) / 360.f") << ".r;";
-        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex1D(name, "(i_hi + 0.5f) / 360.f") << ".r;";
+        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex1D(name, "(i_lo + 0.5) / 360.0") << ".r;";
+        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex1D(name, "(i_hi + 0.5) / 360.0") << ".r;";
     }
     else
     {
-        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex2D(name, ss.float2Const("(i_lo + 0.5f) / 360.f", "0.5f")) << ".r;";
-        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex2D(name, ss.float2Const("(i_hi + 0.5f) / 360.f", "0.5f")) << ".r;";
+        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex2D(name, ss.float2Const("(i_lo + 0.5) / 360.0", "0.0")) << ".r;";
+        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex2D(name, ss.float2Const("(i_hi + 0.5) / 360.0", "0.5")) << ".r;";
     }
 
     ss.newLine() << ss.floatDecl("t") << " = (h - i_lo) / (i_hi - i_lo);";
@@ -511,7 +511,7 @@ std::string _Add_Toe_func(
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.floatDecl("k2") << " = max(k2_in, 0.001f);";
+    ss.newLine() << ss.floatDecl("k2") << " = max(k2_in, 0.001);";
     ss.newLine() << ss.floatDecl("k1") << " = sqrt(k1_in * k1_in + k2 * k2);";
     ss.newLine() << ss.floatDecl("k3") << " = (limit + k1) / (limit + k2);";
 
@@ -521,7 +521,7 @@ std::string _Add_Toe_func(
     }
     else
     {
-        ss.newLine() << "return (x > limit) ? x : 0.5f * (k3 * x - k1 + sqrt((k3 * x - k1) * (k3 * x - k1) + 4.f * k2 * k3 * x));";
+        ss.newLine() << "return (x > limit) ? x : 0.5 * (k3 * x - k1 + sqrt((k3 * x - k1) * (k3 * x - k1) + 4.0 * k2 * k3 * x));";
     }
 
     ss.dedent();
@@ -550,39 +550,39 @@ void _Add_Tonescale_Compress_Fwd_Shader(
     ss.newLine() << ss.floatDecl("h") << " = " << pxl << ".b;";
 
     // Tonescale applied in Y (convert to and from J)
-    ss.newLine() << ss.floatDecl("A") << " = " << p.A_w_J << " * pow(abs(J) / 100.f, 1.f / (" << ACES2::surround[1] << " * " << p.z << "));";
-    ss.newLine() << ss.floatDecl("Y") << " = sign(J) * 100.f / " << p.F_L << " * pow((27.13f * A) / (400.f - A), 1.f / 0.42f) / 100.f;";
+    ss.newLine() << ss.floatDecl("A") << " = " << p.A_w_J << " * pow(abs(J) / 100.0, 1.0 / (" << ACES2::surround[1] << " * " << p.z << "));";
+    ss.newLine() << ss.floatDecl("Y") << " = sign(J) * 100.0 / " << p.F_L << " * pow((27.13 * A) / (400.0 - A), 1.0 / 0.42) / 100.0;";
 
-    ss.newLine() << ss.floatDecl("f") << " = " << t.m_2  << " * pow(max(0.f, Y) / (Y + " << t.s_2 << "), " << t.g << ");";
-    ss.newLine() << ss.floatDecl("Y_ts") << " = max(0.f, f * f / (f + " << t.t_1 << ")) * " << t.n_r << ";";
+    ss.newLine() << ss.floatDecl("f") << " = " << t.m_2  << " * pow(max(0.0, Y) / (Y + " << t.s_2 << "), " << t.g << ");";
+    ss.newLine() << ss.floatDecl("Y_ts") << " = max(0.0, f * f / (f + " << t.t_1 << ")) * " << t.n_r << ";";
 
-    ss.newLine() << ss.floatDecl("F_L_Y") << " = pow(" << p.F_L << " * abs(Y_ts) / 100.f, 0.42f);";
-    ss.newLine() << ss.floatDecl("J_ts") << " = sign(Y_ts) * 100.f * pow(((400.f * F_L_Y) / (27.13f + F_L_Y)) / " << p.A_w_J << ", " << ACES2::surround[1] << " * " << p.z << ");";
+    ss.newLine() << ss.floatDecl("F_L_Y") << " = pow(" << p.F_L << " * abs(Y_ts) / 100.0, 0.42);";
+    ss.newLine() << ss.floatDecl("J_ts") << " = sign(Y_ts) * 100.0 * pow(((400.0 * F_L_Y) / (27.13 + F_L_Y)) / " << p.A_w_J << ", " << ACES2::surround[1] << " * " << p.z << ");";
 
     // ChromaCompress
     ss.newLine() << ss.floatDecl("M_cp") << " = M;";
 
-    ss.newLine() << "if (M != 0.0f)";
+    ss.newLine() << "if (M != 0.0)";
     ss.newLine() << "{";
     ss.indent();
 
     ss.newLine() << ss.floatDecl("nJ") << " = J_ts / " << c.limit_J_max << ";";
-    ss.newLine() << ss.floatDecl("snJ") << " = max(0.f, 1.f - nJ);";
+    ss.newLine() << ss.floatDecl("snJ") << " = max(0.0, 1.0 - nJ);";
 
     // Mnorm
     ss.newLine() << ss.floatDecl("Mnorm") << ";";
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.floatDecl("PI") << " = 3.14159265358979f;";
-    ss.newLine() << ss.floatDecl("h_rad") << " = h / 180.f * PI;";
+    ss.newLine() << ss.floatDecl("PI") << " = 3.14159265358979;";
+    ss.newLine() << ss.floatDecl("h_rad") << " = h / 180.0 * PI;";
     ss.newLine() << ss.floatDecl("a") << " = cos(h_rad);";
     ss.newLine() << ss.floatDecl("b") << " = sin(h_rad);";
     ss.newLine() << ss.floatDecl("cos_hr2") << " = a * a - b * b;";
-    ss.newLine() << ss.floatDecl("sin_hr2") << " = 2.0f * a * b;";
-    ss.newLine() << ss.floatDecl("cos_hr3") << " = 4.0f * a * a * a - 3.0f * a;";
-    ss.newLine() << ss.floatDecl("sin_hr3") << " = 3.0f * b - 4.0f * b * b * b;";
-    ss.newLine() << ss.floatDecl("M") << " = 11.34072f * a + 16.46899f * cos_hr2 + 7.88380f * cos_hr3 + 14.66441f * b + -6.37224f * sin_hr2 + 9.19364f * sin_hr3 + 77.12896f;";
+    ss.newLine() << ss.floatDecl("sin_hr2") << " = 2.0 * a * b;";
+    ss.newLine() << ss.floatDecl("cos_hr3") << " = 4.0 * a * a * a - 3.0 * a;";
+    ss.newLine() << ss.floatDecl("sin_hr3") << " = 3.0 * b - 4.0 * b * b * b;";
+    ss.newLine() << ss.floatDecl("M") << " = 11.34072 * a + 16.46899 * cos_hr2 + 7.88380 * cos_hr3 + 14.66441 * b + -6.37224 * sin_hr2 + 9.19364 * sin_hr3 + 77.12896;";
     ss.newLine() << "Mnorm = M * " << c.chroma_compress_scale << ";";
 
     ss.dedent();
@@ -593,7 +593,7 @@ void _Add_Tonescale_Compress_Fwd_Shader(
     ss.newLine() << "M_cp = M * pow(J_ts / J, " << c.model_gamma << ");";
     ss.newLine() << "M_cp = M_cp / Mnorm;";
 
-    ss.newLine() << "M_cp = limit - " << toeName << "(limit - M_cp, limit - 0.001f, snJ * " << c.sat << ", sqrt(nJ * nJ + " << c.sat_thr << "));";
+    ss.newLine() << "M_cp = limit - " << toeName << "(limit - M_cp, limit - 0.001, snJ * " << c.sat << ", sqrt(nJ * nJ + " << c.sat_thr << "));";
     ss.newLine() << "M_cp = " << toeName << "(M_cp, limit, nJ * " << c.compr << ", snJ);";
     ss.newLine() << "M_cp = M_cp * Mnorm;";
 
@@ -621,40 +621,40 @@ void _Add_Tonescale_Compress_Inv_Shader(
     ss.newLine() << ss.floatDecl("h") << " = " << pxl << ".b;";
 
     // Inverse Tonescale applied in Y (convert to and from J)
-    ss.newLine() << ss.floatDecl("A") << " = " << p.A_w_J << " * pow(abs(J_ts) / 100.f, 1.f / (" << ACES2::surround[1] << " * " << p.z << "));";
-    ss.newLine() << ss.floatDecl("Y_ts") << " = sign(J_ts) * 100.f / " << p.F_L << " * pow((27.13f * A) / (400.f - A), 1.f / 0.42f) / 100.f;";
+    ss.newLine() << ss.floatDecl("A") << " = " << p.A_w_J << " * pow(abs(J_ts) / 100.0, 1.0 / (" << ACES2::surround[1] << " * " << p.z << "));";
+    ss.newLine() << ss.floatDecl("Y_ts") << " = sign(J_ts) * 100.0 / " << p.F_L << " * pow((27.13 * A) / (400.0 - A), 1.0 / 0.42) / 100.0;";
 
-    ss.newLine() << ss.floatDecl("Z") << " = max(0.f, min(" << t.n << " / (" << t.u_2 * t.n_r << "), Y_ts));";
-    ss.newLine() << ss.floatDecl("ht") << " = (Z + sqrt(Z * (4.f * " << t.t_1 << " + Z))) / 2.f;";
-    ss.newLine() << ss.floatDecl("Y") << " = " << t.s_2 << " / (pow((" << t.m_2 << " / ht), (1.f / " << t.g << ")) - 1.f);";
+    ss.newLine() << ss.floatDecl("Z") << " = max(0.0, min(" << t.n << " / (" << t.u_2 * t.n_r << "), Y_ts));";
+    ss.newLine() << ss.floatDecl("ht") << " = (Z + sqrt(Z * (4.0 * " << t.t_1 << " + Z))) / 2.0;";
+    ss.newLine() << ss.floatDecl("Y") << " = " << t.s_2 << " / (pow((" << t.m_2 << " / ht), (1.0 / " << t.g << ")) - 1.0);";
 
-    ss.newLine() << ss.floatDecl("F_L_Y") << " = pow(" << p.F_L << " * abs(Y * 100.f) / 100.f, 0.42f);";
-    ss.newLine() << ss.floatDecl("J") << " = sign(Y) * 100.f * pow(((400.f * F_L_Y) / (27.13f + F_L_Y)) / " << p.A_w_J << ", " << ACES2::surround[1] << " * " << p.z << ");";
+    ss.newLine() << ss.floatDecl("F_L_Y") << " = pow(" << p.F_L << " * abs(Y * 100.0) / 100.0, 0.42);";
+    ss.newLine() << ss.floatDecl("J") << " = sign(Y) * 100.0 * pow(((400.0 * F_L_Y) / (27.13 + F_L_Y)) / " << p.A_w_J << ", " << ACES2::surround[1] << " * " << p.z << ");";
 
     // ChromaCompress
     ss.newLine() << ss.floatDecl("M") << " = M_cp;";
 
-    ss.newLine() << "if (M_cp != 0.0f)";
+    ss.newLine() << "if (M_cp != 0.0)";
     ss.newLine() << "{";
     ss.indent();
 
     ss.newLine() << ss.floatDecl("nJ") << " = J_ts / " << c.limit_J_max << ";";
-    ss.newLine() << ss.floatDecl("snJ") << " = max(0.f, 1.f - nJ);";
+    ss.newLine() << ss.floatDecl("snJ") << " = max(0.0, 1.0 - nJ);";
 
     // Mnorm
     ss.newLine() << ss.floatDecl("Mnorm") << ";";
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.floatDecl("PI") << " = 3.14159265358979f;";
-    ss.newLine() << ss.floatDecl("h_rad") << " = h / 180.f * PI;";
+    ss.newLine() << ss.floatDecl("PI") << " = 3.14159265358979;";
+    ss.newLine() << ss.floatDecl("h_rad") << " = h / 180.0 * PI;";
     ss.newLine() << ss.floatDecl("a") << " = cos(h_rad);";
     ss.newLine() << ss.floatDecl("b") << " = sin(h_rad);";
     ss.newLine() << ss.floatDecl("cos_hr2") << " = a * a - b * b;";
-    ss.newLine() << ss.floatDecl("sin_hr2") << " = 2.0f * a * b;";
-    ss.newLine() << ss.floatDecl("cos_hr3") << " = 4.0f * a * a * a - 3.0f * a;";
-    ss.newLine() << ss.floatDecl("sin_hr3") << " = 3.0f * b - 4.0f * b * b * b;";
-    ss.newLine() << ss.floatDecl("M") << " = 11.34072f * a + 16.46899f * cos_hr2 + 7.88380f * cos_hr3 + 14.66441f * b + -6.37224f * sin_hr2 + 9.19364f * sin_hr3 + 77.12896f;";
+    ss.newLine() << ss.floatDecl("sin_hr2") << " = 2.0 * a * b;";
+    ss.newLine() << ss.floatDecl("cos_hr3") << " = 4.0 * a * a * a - 3.0 * a;";
+    ss.newLine() << ss.floatDecl("sin_hr3") << " = 3.0 * b - 4.0 * b * b * b;";
+    ss.newLine() << ss.floatDecl("M") << " = 11.34072 * a + 16.46899 * cos_hr2 + 7.88380 * cos_hr3 + 14.66441 * b + -6.37224 * sin_hr2 + 9.19364 * sin_hr3 + 77.12896;";
     ss.newLine() << "Mnorm = M * " << c.chroma_compress_scale << ";";
 
     ss.dedent();
@@ -665,7 +665,7 @@ void _Add_Tonescale_Compress_Inv_Shader(
 
     ss.newLine() << "M = M_cp / Mnorm;";
     ss.newLine() << "M = " << toeName << "(M, limit, nJ * " << c.compr << ", snJ);";
-    ss.newLine() << "M = limit - " << toeName << "(limit - M, limit - 0.001f, snJ * " << c.sat << ", sqrt(nJ * nJ + " << c.sat_thr << "));";
+    ss.newLine() << "M = limit - " << toeName << "(limit - M, limit - 0.001, snJ * " << c.sat << ", sqrt(nJ * nJ + " << c.sat_thr << "));";
     ss.newLine() << "M = M * Mnorm;";
     ss.newLine() << "M = M * pow(J_ts / J, " << -c.model_gamma << ");";
 
@@ -742,8 +742,8 @@ std::string _Add_Cusp_table(
     ss.newLine() << ss.floatDecl("i_hi") << " = " << g.gamut_cusp_table.base_index + g.gamut_cusp_table.size << ";";
 
     ss.newLine() << ss.floatDecl("hwrap") << " = h;";
-    ss.newLine() << "hwrap = hwrap - floor(hwrap / 360.f) * 360.f;";
-    ss.newLine() << "hwrap = (hwrap < 0.0f) ? hwrap + 360.f : hwrap;";
+    ss.newLine() << "hwrap = hwrap - floor(hwrap / 360.0) * 360.0;";
+    ss.newLine() << "hwrap = (hwrap < 0.0) ? hwrap + 360.0 : hwrap;";
     ss.newLine() << ss.intDecl("i") << " = " << ss.intKeyword() << "(hwrap + " << g.gamut_cusp_table.base_index << ");";
 
     ss.newLine() << "while (i_lo + 1 < i_hi)";
@@ -764,20 +764,20 @@ std::string _Add_Cusp_table(
     ss.newLine() << "i_hi = i;";
     ss.dedent();
     ss.newLine() << "}";
-    ss.newLine() << "i = " << ss.intKeyword() << "((i_lo + i_hi) / 2.f);";
+    ss.newLine() << "i = " << ss.intKeyword() << "((i_lo + i_hi) / 2.0);";
 
     ss.dedent();
     ss.newLine() << "}";
 
     if (dimensions == GpuShaderDesc::TEXTURE_1D)
     {
-        ss.newLine() << ss.float3Decl("lo") << " = " << ss.sampleTex1D(name, std::string("(i_hi - 1 + 0.5f) / ") + std::to_string(g.gamut_cusp_table.total_size)) << ".rgb;";
-        ss.newLine() << ss.float3Decl("hi") << " = " << ss.sampleTex1D(name, std::string("(i_hi + 0.5f) / ") + std::to_string(g.gamut_cusp_table.total_size)) << ".rgb;";
+        ss.newLine() << ss.float3Decl("lo") << " = " << ss.sampleTex1D(name, std::string("(i_hi - 1 + 0.5) / ") + std::to_string(g.gamut_cusp_table.total_size)) << ".rgb;";
+        ss.newLine() << ss.float3Decl("hi") << " = " << ss.sampleTex1D(name, std::string("(i_hi + 0.5) / ") + std::to_string(g.gamut_cusp_table.total_size)) << ".rgb;";
     }
     else
     {
-        ss.newLine() << ss.float3Decl("lo") << " = " << ss.sampleTex2D(name, ss.float2Const(std::string("(i_hi - 1 + 0.5f) / ") + std::to_string(g.gamut_cusp_table.total_size), "0.5f")) << ".rgb;";
-        ss.newLine() << ss.float3Decl("hi") << " = " << ss.sampleTex2D(name, ss.float2Const(std::string("(i_hi + 0.5f) / ") + std::to_string(g.gamut_cusp_table.total_size), "0.5f")) << ".rgb;";
+        ss.newLine() << ss.float3Decl("lo") << " = " << ss.sampleTex2D(name, ss.float2Const(std::string("(i_hi - 1 + 0.5) / ") + std::to_string(g.gamut_cusp_table.total_size), "0.5")) << ".rgb;";
+        ss.newLine() << ss.float3Decl("hi") << " = " << ss.sampleTex2D(name, ss.float2Const(std::string("(i_hi + 0.5) / ") + std::to_string(g.gamut_cusp_table.total_size), "0.5")) << ".rgb;";
     }
 
     ss.newLine() << ss.floatDecl("t") << " = (h - lo.b) / (hi.b - lo.b);";
@@ -851,24 +851,24 @@ std::string _Add_Gamma_table(
     ss.indent();
 
     ss.newLine() << ss.floatDecl("hwrap") << " = h;";
-    ss.newLine() << "hwrap = hwrap - floor(hwrap / 360.f) * 360.f;";
-    ss.newLine() << "hwrap = (hwrap < 0.0f) ? hwrap + 360.f : hwrap;";
+    ss.newLine() << "hwrap = hwrap - floor(hwrap / 360.0) * 360.0;";
+    ss.newLine() << "hwrap = (hwrap < 0.0) ? hwrap + 360.0 : hwrap;";
 
     ss.newLine() << ss.floatDecl("i_lo") << " = floor(hwrap) + " << g.upper_hull_gamma_table.base_index << ";";
     ss.newLine() << ss.floatDecl("i_hi") << " = (i_lo + 1);";
-    ss.newLine() << "i_hi = i_hi - floor(i_hi / 360.f) * 360.f;";
+    ss.newLine() << "i_hi = i_hi - floor(i_hi / 360.0) * 360.0;";
 
     ss.newLine() << ss.floatDecl("base_hue") << " = i_lo - " << g.upper_hull_gamma_table.base_index << ";";
 
     if (dimensions == GpuShaderDesc::TEXTURE_1D)
     {
-        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex1D(name, std::string("(i_lo + 0.5f) / ") + std::to_string(g.upper_hull_gamma_table.total_size)) << ".r;";
-        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex1D(name, std::string("(i_hi + 0.5f) / ") + std::to_string(g.upper_hull_gamma_table.total_size)) << ".r;";
+        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex1D(name, std::string("(i_lo + 0.5) / ") + std::to_string(g.upper_hull_gamma_table.total_size)) << ".r;";
+        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex1D(name, std::string("(i_hi + 0.5) / ") + std::to_string(g.upper_hull_gamma_table.total_size)) << ".r;";
     }
     else
     {
-        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex2D(name, ss.float2Const(std::string("(i_lo + 0.5f) / ") + std::to_string(g.upper_hull_gamma_table.total_size), "0.5f")) << ".r;";
-        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex2D(name, ss.float2Const(std::string("(i_hi + 0.5f) / ") + std::to_string(g.upper_hull_gamma_table.total_size), "0.5f")) << ".r;";
+        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex2D(name, ss.float2Const(std::string("(i_lo + 0.5) / ") + std::to_string(g.upper_hull_gamma_table.total_size), "0.5")) << ".r;";
+        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex2D(name, ss.float2Const(std::string("(i_hi + 0.5) / ") + std::to_string(g.upper_hull_gamma_table.total_size), "0.5")) << ".r;";
     }
 
     ss.newLine() << ss.floatDecl("t") << " = hwrap - base_hue;";
@@ -909,14 +909,14 @@ std::string _Add_Focus_Gain_func(
     ss.newLine() << "if (J > thr)";
     ss.newLine() << "{";
     ss.indent();
-    ss.newLine() << ss.floatDecl("gain") << " = ( " << g.limit_J_max << " - thr) / max(0.0001f, (" << g.limit_J_max << " - min(" << g.limit_J_max << ", J)));";
-    ss.newLine() << "return pow(log(gain)/log(10.f), 1.f / " << ACES2::focus_adjust_gain << ") + 1.f;";
+    ss.newLine() << ss.floatDecl("gain") << " = ( " << g.limit_J_max << " - thr) / max(0.0001, (" << g.limit_J_max << " - min(" << g.limit_J_max << ", J)));";
+    ss.newLine() << "return pow(log(gain)/log(10.0), 1.0 / " << ACES2::focus_adjust_gain << ") + 1.0;";
     ss.dedent();
     ss.newLine() << "}";
     ss.newLine() << "else";
     ss.newLine() << "{";
     ss.indent();
-    ss.newLine() << "return 1.f;";
+    ss.newLine() << "return 1.0;";
     ss.dedent();
     ss.newLine() << "}";
 
@@ -951,20 +951,20 @@ std::string _Add_Solve_J_Intersect_func(
     ss.indent();
 
     ss.newLine() << ss.floatDecl("a") << " = " << "M / (focusJ * slope_gain);";
-    ss.newLine() << ss.floatDecl("b") << " = 0.f;";
-    ss.newLine() << ss.floatDecl("c") << " = 0.f;";
-    ss.newLine() << ss.floatDecl("intersectJ") << " = 0.f;";
+    ss.newLine() << ss.floatDecl("b") << " = 0.0;";
+    ss.newLine() << ss.floatDecl("c") << " = 0.0;";
+    ss.newLine() << ss.floatDecl("intersectJ") << " = 0.0;";
 
     ss.newLine() << "if (J < focusJ)";
     ss.newLine() << "{";
     ss.indent();
-    ss.newLine() << "b = 1.f - M / slope_gain;";
+    ss.newLine() << "b = 1.0 - M / slope_gain;";
     ss.dedent();
     ss.newLine() << "}";
     ss.newLine() << "else";
     ss.newLine() << "{";
     ss.indent();
-    ss.newLine() << "b = - (1.f + M / slope_gain + " << g.limit_J_max << " * M / (focusJ * slope_gain));";
+    ss.newLine() << "b = - (1.0 + M / slope_gain + " << g.limit_J_max << " * M / (focusJ * slope_gain));";
     ss.dedent();
     ss.newLine() << "}";
 
@@ -981,18 +981,18 @@ std::string _Add_Solve_J_Intersect_func(
     ss.dedent();
     ss.newLine() << "}";
 
-    ss.newLine() << ss.floatDecl("root") << " = sqrt(b * b - 4.f * a * c);";
+    ss.newLine() << ss.floatDecl("root") << " = sqrt(b * b - 4.0 * a * c);";
 
     ss.newLine() << "if (J < focusJ)";
     ss.newLine() << "{";
     ss.indent();
-    ss.newLine() << "intersectJ = 2.f * c / (-b - root);";
+    ss.newLine() << "intersectJ = 2.0 * c / (-b - root);";
     ss.dedent();
     ss.newLine() << "}";
     ss.newLine() << "else";
     ss.newLine() << "{";
     ss.indent();
-    ss.newLine() << "intersectJ = 2.f * c / (-b + root);";
+    ss.newLine() << "intersectJ = 2.0 * c / (-b + root);";
     ss.dedent();
     ss.newLine() << "}";
 
@@ -1029,12 +1029,12 @@ std::string _Add_Find_Gamut_Boundary_Intersection_func(
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.float2Decl("JM_cusp") << " = " << ss.float2Const("JM_cusp_in.r", std::string("JM_cusp_in.g * (1.f + ") + std::to_string(ACES2::smooth_m) + " * " + std::to_string(ACES2::smooth_cusps) + ")") << ";";
+    ss.newLine() << ss.float2Decl("JM_cusp") << " = " << ss.float2Const("JM_cusp_in.r", std::string("JM_cusp_in.g * (1.0 + ") + std::to_string(ACES2::smooth_m) + " * " + std::to_string(ACES2::smooth_cusps) + ")") << ";";
 
     ss.newLine() << ss.floatDecl("J_intersect_source") << " = " << solveJIntersectName << "(JMh_s.r, JMh_s.g, J_focus, slope_gain);";
     ss.newLine() << ss.floatDecl("J_intersect_cusp") << " = " << solveJIntersectName << "(JM_cusp.r, JM_cusp.g, J_focus, slope_gain);";
 
-    ss.newLine() << ss.floatDecl("slope") << " = 0.f;";
+    ss.newLine() << ss.floatDecl("slope") << " = 0.0;";
     ss.newLine() << "if (J_intersect_source < J_focus)";
     ss.newLine() << "{";
     ss.indent();
@@ -1048,18 +1048,18 @@ std::string _Add_Find_Gamut_Boundary_Intersection_func(
     ss.dedent();
     ss.newLine() << "}";
 
-    ss.newLine() << ss.floatDecl("M_boundary_lower ") << " = J_intersect_cusp * pow(J_intersect_source / J_intersect_cusp, 1. / gamma_bottom) / (JM_cusp.r / JM_cusp.g - slope);";
-    ss.newLine() << ss.floatDecl("M_boundary_upper") << " = JM_cusp.g * (" << g.limit_J_max << " - J_intersect_cusp) * pow((" << g.limit_J_max << " - J_intersect_source) / (" << g.limit_J_max << " - J_intersect_cusp), 1. / gamma_top) / (slope * JM_cusp.g + " << g.limit_J_max << " - JM_cusp.r);";
+    ss.newLine() << ss.floatDecl("M_boundary_lower ") << " = J_intersect_cusp * pow(J_intersect_source / J_intersect_cusp, 1.0 / gamma_bottom) / (JM_cusp.r / JM_cusp.g - slope);";
+    ss.newLine() << ss.floatDecl("M_boundary_upper") << " = JM_cusp.g * (" << g.limit_J_max << " - J_intersect_cusp) * pow((" << g.limit_J_max << " - J_intersect_source) / (" << g.limit_J_max << " - J_intersect_cusp), 1.0 / gamma_top) / (slope * JM_cusp.g + " << g.limit_J_max << " - JM_cusp.r);";
 
-    ss.newLine() << ss.floatDecl("smin") << " = 0.f;";
+    ss.newLine() << ss.floatDecl("smin") << " = 0.0;";
     ss.newLine() << "{";
     ss.indent();
     ss.newLine() << ss.floatDecl("a") << " = M_boundary_lower / JM_cusp.g;";
     ss.newLine() << ss.floatDecl("b") << " = M_boundary_upper / JM_cusp.g;";
     ss.newLine() << ss.floatDecl("s") << " = " << ACES2::smooth_cusps << ";";
 
-    ss.newLine() << ss.floatDecl("h") << " = max(s - abs(a - b), 0.f) / s;";
-    ss.newLine() << "smin = min(a, b) - h * h * h * s * (1.f / 6.f);";
+    ss.newLine() << ss.floatDecl("h") << " = max(s - abs(a - b), 0.0) / s;";
+    ss.newLine() << "smin = min(a, b) - h * h * h * s * (1.0 / 6.0);";
 
     ss.dedent();
     ss.newLine() << "}";
@@ -1106,7 +1106,7 @@ std::string _Add_Reach_Boundary_func(
     ss.newLine() << ss.floatDecl("slope_gain") << " = " << g.limit_J_max << " * " << g.focus_dist << " * " << getFocusGainName << "(J, JMcusp.r);";
     ss.newLine() << ss.floatDecl("intersectJ") << " = " << solveJIntersectName << "(J, M, focusJ, slope_gain);";
 
-    ss.newLine() << ss.floatDecl("slope") << " = 0.f;";
+    ss.newLine() << ss.floatDecl("slope") << " = 0.0;";
     ss.newLine() << "if (intersectJ < focusJ)";
     ss.newLine() << "{";
     ss.indent();
@@ -1159,7 +1159,7 @@ std::string _Add_Compression_func(
     ss.newLine() << ss.floatDecl("nd") << " = (v - thr) / s;";
 
 
-    ss.newLine() << ss.floatDecl("vCompressed") << " = 0.f;";
+    ss.newLine() << ss.floatDecl("vCompressed") << " = 0.0;";
 
     if (invert)
     {
@@ -1234,10 +1234,10 @@ std::string _Add_Compress_Gamut_func(
     ss.newLine() << ss.floatDecl("M") << " = JMh.g;";
     ss.newLine() << ss.floatDecl("h") << " = JMh.b;";
 
-    ss.newLine() << "if (M < 0.0001f || J > " << g.limit_J_max << ")";
+    ss.newLine() << "if (M < 0.0001 || J > " << g.limit_J_max << ")";
     ss.newLine() << "{";
     ss.indent();
-    ss.newLine() << "return " << ss.float3Const("J", "0.f", "h") << ";";
+    ss.newLine() << "return " << ss.float3Const("J", "0.0", "h") << ";";
     ss.dedent();
     ss.newLine() << "}";
     ss.newLine() << "else";
@@ -1247,7 +1247,7 @@ std::string _Add_Compress_Gamut_func(
     ss.newLine() << ss.float2Decl("project_from") << " = " << ss.float2Const("J", "M") << ";";
     ss.newLine() << ss.float2Decl("JMcusp") << " = " << cuspName << "_sample(h);";
 
-    ss.newLine() << ss.floatDecl("focusJ") << " = " << ss.lerp("JMcusp.r", std::to_string(g.mid_J), std::string("min(1.f, ") + std::to_string(ACES2::cusp_mid_blend) + " - (JMcusp.r / " + std::to_string(g.limit_J_max)) << "));";
+    ss.newLine() << ss.floatDecl("focusJ") << " = " << ss.lerp("JMcusp.r", std::to_string(g.mid_J), std::string("min(1.0, ") + std::to_string(ACES2::cusp_mid_blend) + " - (JMcusp.r / " + std::to_string(g.limit_J_max)) << "));";
     ss.newLine() << ss.floatDecl("slope_gain") << " = " << g.limit_J_max << " * " << g.focus_dist << " * " << getFocusGainName << "(Jx, JMcusp.r);";
 
     ss.newLine() << ss.floatDecl("gamma_top") << " = " << gammaName << "_sample(h);";
@@ -1255,19 +1255,19 @@ std::string _Add_Compress_Gamut_func(
 
     ss.newLine() << ss.float3Decl("boundaryReturn") << " = " << findGamutBoundaryIntersectionName << "(" << ss.float3Const("J", "M", "h") << ", JMcusp, focusJ, slope_gain, gamma_top, gamma_bottom);";
     ss.newLine() << ss.float2Decl("JMboundary") << " = " << ss.float2Const("boundaryReturn.r", "boundaryReturn.g") << ";";
-    ss.newLine() << ss.float2Decl("project_to") << " = " << ss.float2Const("boundaryReturn.b", "0.f") << ";";
+    ss.newLine() << ss.float2Decl("project_to") << " = " << ss.float2Const("boundaryReturn.b", "0.0") << ";";
 
-    ss.newLine() << "if (JMboundary.g <= 0.f)";
+    ss.newLine() << "if (JMboundary.g <= 0.0)";
     ss.newLine() << "{";
     ss.indent();
-    ss.newLine() << "return " << ss.float3Const("J", "0.f", "h") << ";";
+    ss.newLine() << "return " << ss.float3Const("J", "0.0", "h") << ";";
     ss.dedent();
     ss.newLine() << "}";
 
     ss.newLine() << ss.float3Decl("reachBoundary") << " = " << getReachBoundaryName << "(JMboundary.r, JMboundary.g, h, JMcusp, focusJ);";
 
-    ss.newLine() << ss.floatDecl("difference") << " = max(1.0001f, reachBoundary.g / JMboundary.g);";
-    ss.newLine() << ss.floatDecl("threshold") << " = max(" << ACES2::compression_threshold << ", 1.f / difference);";
+    ss.newLine() << ss.floatDecl("difference") << " = max(1.0001, reachBoundary.g / JMboundary.g);";
+    ss.newLine() << ss.floatDecl("threshold") << " = max(" << ACES2::compression_threshold << ", 1.0 / difference);";
 
     ss.newLine() << ss.floatDecl("v") << " = project_from.g / JMboundary.g;";
     ss.newLine() << "v = " << compressionName << "(v, threshold, difference);";
