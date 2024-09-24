@@ -115,6 +115,8 @@ float hue_dependent_upper_hull_gamma(float h, const ACES2::Table1D &gt)
 float panlrc_forward(float v, float F_L)
 {
     const float F_L_v = powf(F_L * std::abs(v) / reference_luminance, 0.42f);
+    // Note that std::copysign(1.f, 0.f) returns 1 but the CTL copysign(1.,0.) returns 0.
+    // TODO: Should we change the behaviour?
     return (400.f * std::copysign(1.f, v) * F_L_v) / (27.13f + F_L_v);
 }
 

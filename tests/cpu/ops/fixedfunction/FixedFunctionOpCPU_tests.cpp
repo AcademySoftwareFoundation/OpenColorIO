@@ -606,6 +606,12 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_ot_20_p3d65_1000n_rt)
 
     GenerateIdentityLut3D(input_32f.data(), lut_size, num_channels, OCIO::LUT3DORDER_FAST_RED);
 
+    const float normPeakLuminance = 10.f;
+    for (unsigned int i = 0; i < input_32f.size(); ++i)
+    {
+        input_32f[i] *= normPeakLuminance;
+    }
+
     OCIO::FixedFunctionOpData::Params params = {
         // Peak luminance
         1000.f,

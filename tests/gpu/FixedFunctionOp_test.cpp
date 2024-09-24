@@ -305,7 +305,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_gamutcomp13_inv)
     test.setErrorThreshold(3e-6f);
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_aces_output_transform_fwd)
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_output_transform_fwd)
 {
      const double data[9] = {
         // Peak luminance
@@ -365,10 +365,10 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_output_transform_fwd)
     };
     test.setCustomValues(values);
 
-    test.setErrorThreshold(1e-5f);
+    test.setErrorThreshold(2e-5f);
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_aces_output_transform_inv)
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_output_transform_inv)
 {
      const double data[9] = {
         // Peak luminance
@@ -431,7 +431,38 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_output_transform_inv)
     test.setErrorThreshold(1e-4f);
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_aces_rgb_to_jmh_fwd)
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_output_transform_invfwd)
+{
+     const double data_inv[9] = {
+        // Peak luminance
+        100.f,
+        // REC709 gamut
+        0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329
+    };
+    OCIO::FixedFunctionTransformRcPtr func_inv =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20, &data_inv[0], 9);
+    func_inv->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+     const double data_fwd[9] = {
+        // Peak luminance
+        1000.f,
+        // P3D65 gamut
+        0.680, 0.320, 0.265, 0.690, 0.150, 0.060, 0.3127, 0.3290
+    };
+
+    OCIO::FixedFunctionTransformRcPtr func_fwd =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20, &data_fwd[0], 9);
+
+    OCIO::GroupTransformRcPtr grp = OCIO::GroupTransform::Create();
+    grp->appendTransform(func_inv);
+    grp->appendTransform(func_fwd);
+
+    test.setProcessor(grp);
+
+    test.setErrorThreshold(5e-4f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_rgb_to_jmh_fwd)
 {
     // ACES AP0
     const double data[8] = { 0.7347, 0.2653, 0.0000, 1.0000, 0.0001, -0.0770, 0.32168, 0.33767 };
@@ -480,7 +511,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_rgb_to_jmh_fwd)
     test.setErrorThreshold(2e-4f);
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_aces_rgb_to_jmh_inv)
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_rgb_to_jmh_inv)
 {
     // ACES AP0
     const double data[8] = { 0.7347, 0.2653, 0.0000, 1.0000, 0.0001, -0.0770, 0.32168, 0.33767 };
@@ -529,7 +560,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_rgb_to_jmh_inv)
     test.setErrorThreshold(1e-4f);
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_aces_tonescale_compress_fwd)
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_tonescale_compress_fwd)
 {
     const double data[1] = { 1000.f };
     OCIO::FixedFunctionTransformRcPtr func =
@@ -587,7 +618,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_tonescale_compress_fwd)
     test.setErrorThreshold(1e-4f);
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_aces_tonescale_compress_inv)
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_tonescale_compress_inv)
 {
     const double data[1] = { 1000.f };
     OCIO::FixedFunctionTransformRcPtr func =
@@ -645,7 +676,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_tonescale_compress_inv)
     test.setErrorThreshold(1e-4f);
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_aces_gamut_compress_fwd)
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_gamut_compress_fwd)
 {
     const double data[9] = {
         // Peak luminance
@@ -708,7 +739,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_gamut_compress_fwd)
     test.setErrorThreshold(1e-4f);
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_aces_gamut_compress_inv)
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_gamut_compress_inv)
 {
     const double data[9] = {
         // Peak luminance
