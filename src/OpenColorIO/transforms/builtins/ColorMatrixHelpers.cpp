@@ -51,12 +51,32 @@ static const Chromaticities wht_xy(0.3127, 0.3290);
 const Primaries primaries(red_xy, grn_xy, blu_xy, wht_xy);
 }
 
+namespace REC709_D60
+{
+static const Chromaticities red_xy(0.64,    0.33   );
+static const Chromaticities grn_xy(0.30,    0.60   );
+static const Chromaticities blu_xy(0.15,    0.06   );
+static const Chromaticities wht_xy(0.32168, 0.33767);
+
+const Primaries primaries(red_xy, grn_xy, blu_xy, wht_xy);
+}
+
 namespace REC2020
 {
 static const Chromaticities red_xy(0.708,  0.292 );
 static const Chromaticities grn_xy(0.170,  0.797 );
 static const Chromaticities blu_xy(0.131,  0.046 );
 static const Chromaticities wht_xy(0.3127, 0.3290);
+
+const Primaries primaries(red_xy, grn_xy, blu_xy, wht_xy);
+}
+
+namespace REC2020_D60
+{
+static const Chromaticities red_xy(0.708,  0.292 );
+static const Chromaticities grn_xy(0.170,  0.797 );
+static const Chromaticities blu_xy(0.131,  0.046 );
+static const Chromaticities wht_xy(0.32168, 0.33767);
 
 const Primaries primaries(red_xy, grn_xy, blu_xy, wht_xy);
 }

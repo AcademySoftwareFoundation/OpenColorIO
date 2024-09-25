@@ -1351,7 +1351,10 @@ inline void load(const YAML::Node& node, FixedFunctionTransformRcPtr& t)
         {
             std::vector<double> params;
             load(iter->second, params);
-            t->setParams(&params[0], params.size());
+            if (!params.empty())
+            {
+                t->setParams(&params[0], params.size());
+            }
         }
         else if(key == "style")
         {
@@ -1359,6 +1362,17 @@ inline void load(const YAML::Node& node, FixedFunctionTransformRcPtr& t)
             load(iter->second, style);
             t->setStyle( FixedFunctionStyleFromString(style.c_str()) );
             styleFound = true;
+
+            const FixedFunctionStyle styleID = t->getStyle();
+            if (styleID == FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20
+                || styleID == FIXED_FUNCTION_ACES_RGB_TO_JMH_20
+                || styleID == FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20
+                || styleID == FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20)
+            {
+                std::ostringstream os;
+                os << "FixedFunction style is experimental and may be removed in a future release: '" << style << "'.";
+                LogWarning(os.str());
+            }
         }
         else if(key == "direction")
         {
@@ -1392,6 +1406,17 @@ inline void save(YAML::Emitter& out, ConstFixedFunctionTransformRcPtr t)
 
     out << YAML::Key << "style";
     out << YAML::Value << YAML::Flow << FixedFunctionStyleToString(t->getStyle());
+
+    const FixedFunctionStyle styleID = t->getStyle();
+    if (styleID == FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20
+        || styleID == FIXED_FUNCTION_ACES_RGB_TO_JMH_20
+        || styleID == FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20
+        || styleID == FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20)
+    {
+        std::ostringstream os;
+        os << "FixedFunction style is experimental and may be removed in a future release: '" << FixedFunctionStyleToString(t->getStyle()) << "'.";
+        LogWarning(os.str());
+    }
 
     const size_t numParams = t->getNumParams();
     if(numParams>0)
