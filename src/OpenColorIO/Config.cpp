@@ -5233,7 +5233,38 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
             }
             if (m_majorVersion == 2 && m_minorVersion < 4 
                     && (   0 == Platform::Strcasecmp(blt->getStyle(), "APPLE_LOG_to_ACES2065-1")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - APPLE_LOG_to_LINEAR") )
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - APPLE_LOG_to_LINEAR")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D65_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-108nit-P3-D65_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-300nit-P3-D65_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D65_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D65_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D65_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D65_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-REC2020_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-REC2020_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-REC709-D65_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-P3-D65_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-REC2020-D65_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D60-in-P3-D65_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D60-in-XYZ-E_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-108nit-P3-D60-in-P3-D65_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-300nit-P3-D60-in-XYZ-E_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D60-in-P3-D65_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D60-in-P3-D65_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D60-in-P3-D65_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D60-in-P3-D65_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D60-in-REC2020-D65_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D60-in-REC2020-D65_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D60-in-REC2020-D65_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D60-in-REC2020-D65_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-REC2020-D60-in-REC2020-D65_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020-D60-in-REC2020-D65_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-REC2020-D60-in-REC2020-D65_2.0")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020-D60-in-REC2020-D65_2.0") )
                 )
             {
                 std::ostringstream os;
@@ -5310,6 +5341,30 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
             {
                 throw Exception("Only config version 2.1 (or higher) can have "
                                 "FixedFunctionTransform style 'ACES_GAMUT_COMP_13'.");
+            }
+
+            if (m_majorVersion == 2 && m_minorVersion < 4 && ff->getStyle() == FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20)
+            {
+                throw Exception("Only config version 2.4 (or higher) can have "
+                                "FixedFunctionTransform style 'ACES_OUTPUT_TRANSFORM_20'.");
+            }
+
+            if (m_majorVersion == 2 && m_minorVersion < 4 && ff->getStyle() == FIXED_FUNCTION_ACES_RGB_TO_JMH_20)
+            {
+                throw Exception("Only config version 2.4 (or higher) can have "
+                                "FixedFunctionTransform style 'ACES_RGB_TO_JMH_20'.");
+            }
+
+            if (m_majorVersion == 2 && m_minorVersion < 4 && ff->getStyle() == FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20)
+            {
+                throw Exception("Only config version 2.4 (or higher) can have "
+                                "FixedFunctionTransform style 'ACES_TONESCALE_COMPRESS_20'.");
+            }
+
+            if (m_majorVersion == 2 && m_minorVersion < 4 && ff->getStyle() == FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20)
+            {
+                throw Exception("Only config version 2.4 (or higher) can have "
+                                "FixedFunctionTransform style 'ACES_GAMUT_COMPRESS_20'.");
             }
         }
         else if (DynamicPtrCast<const GradingPrimaryTransform>(transform))

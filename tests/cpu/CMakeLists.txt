@@ -148,6 +148,7 @@ set(SOURCES
     ops/cdl/CDLOpCPU.cpp
     ops/cdl/CDLOpGPU.cpp
     ops/exposurecontrast/ExposureContrastOpGPU.cpp
+    ops/fixedfunction/ACES2/Transform.cpp
     ops/fixedfunction/FixedFunctionOpGPU.cpp
     ops/gamma/GammaOpGPU.cpp
     ops/gradingprimary/GradingPrimaryOpGPU.cpp

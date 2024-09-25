@@ -474,19 +474,23 @@ enum RangeStyle
 /// Enumeration of the :cpp:class:`FixedFunctionTransform` transform algorithms.
 enum FixedFunctionStyle
 {
-    FIXED_FUNCTION_ACES_RED_MOD_03 = 0, ///< Red modifier (ACES 0.3/0.7)
-    FIXED_FUNCTION_ACES_RED_MOD_10,     ///< Red modifier (ACES 1.0)
-    FIXED_FUNCTION_ACES_GLOW_03,        ///< Glow function (ACES 0.3/0.7)
-    FIXED_FUNCTION_ACES_GLOW_10,        ///< Glow function (ACES 1.0)
-    FIXED_FUNCTION_ACES_DARK_TO_DIM_10, ///< Dark to dim surround correction (ACES 1.0)
-    FIXED_FUNCTION_REC2100_SURROUND,    ///< Rec.2100 surround correction (takes one double for the gamma param)
-    FIXED_FUNCTION_RGB_TO_HSV,          ///< Classic RGB to HSV function
-    FIXED_FUNCTION_XYZ_TO_xyY,          ///< CIE XYZ to 1931 xy chromaticity coordinates
-    FIXED_FUNCTION_XYZ_TO_uvY,          ///< CIE XYZ to 1976 u'v' chromaticity coordinates
-    FIXED_FUNCTION_XYZ_TO_LUV,          ///< CIE XYZ to 1976 CIELUV colour space (D65 white)
-    FIXED_FUNCTION_ACES_GAMUTMAP_02,    ///< ACES 0.2 Gamut clamping algorithm -- NOT IMPLEMENTED YET
-    FIXED_FUNCTION_ACES_GAMUTMAP_07,    ///< ACES 0.7 Gamut clamping algorithm -- NOT IMPLEMENTED YET
-    FIXED_FUNCTION_ACES_GAMUT_COMP_13   ///< ACES 1.3 Parametric Gamut Compression (expects ACEScg values)
+    FIXED_FUNCTION_ACES_RED_MOD_03 = 0,         ///< Red modifier (ACES 0.3/0.7)
+    FIXED_FUNCTION_ACES_RED_MOD_10,             ///< Red modifier (ACES 1.0)
+    FIXED_FUNCTION_ACES_GLOW_03,                ///< Glow function (ACES 0.3/0.7)
+    FIXED_FUNCTION_ACES_GLOW_10,                ///< Glow function (ACES 1.0)
+    FIXED_FUNCTION_ACES_DARK_TO_DIM_10,         ///< Dark to dim surround correction (ACES 1.0)
+    FIXED_FUNCTION_REC2100_SURROUND,            ///< Rec.2100 surround correction (takes one double for the gamma param)
+    FIXED_FUNCTION_RGB_TO_HSV,                  ///< Classic RGB to HSV function
+    FIXED_FUNCTION_XYZ_TO_xyY,                  ///< CIE XYZ to 1931 xy chromaticity coordinates
+    FIXED_FUNCTION_XYZ_TO_uvY,                  ///< CIE XYZ to 1976 u'v' chromaticity coordinates
+    FIXED_FUNCTION_XYZ_TO_LUV,                  ///< CIE XYZ to 1976 CIELUV colour space (D65 white)
+    FIXED_FUNCTION_ACES_GAMUTMAP_02,            ///< ACES 0.2 Gamut clamping algorithm -- NOT IMPLEMENTED YET
+    FIXED_FUNCTION_ACES_GAMUTMAP_07,            ///< ACES 0.7 Gamut clamping algorithm -- NOT IMPLEMENTED YET
+    FIXED_FUNCTION_ACES_GAMUT_COMP_13,          ///< ACES 1.3 Parametric Gamut Compression (expects ACEScg values)
+    FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20,    ///< ACES 2.0 Display Rendering -- EXPERIMENTAL
+    FIXED_FUNCTION_ACES_RGB_TO_JMH_20,          ///< ACES 2.0 RGB to JMh -- EXPERIMENTAL
+    FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20,  ///< ACES 2.0 Tonescale and chroma compression -- EXPERIMENTAL
+    FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20,      ///< ACES 2.0 Gamut compression -- EXPERIMENTAL
 };
 
 /// Enumeration of the :cpp:class:`ExposureContrastTransform` transform algorithms.
