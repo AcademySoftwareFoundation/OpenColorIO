@@ -84,6 +84,7 @@ set(SOURCES
     ops/exposurecontrast/ExposureContrastOpData.cpp
     ops/exposurecontrast/ExposureContrastOpGPU.cpp
     ops/exposurecontrast/ExposureContrastOp.cpp
+    ops/fixedfunction/ACES2/Transform.cpp
     ops/fixedfunction/FixedFunctionOpCPU.cpp
     ops/fixedfunction/FixedFunctionOpData.cpp
     ops/fixedfunction/FixedFunctionOpGPU.cpp

@@ -3,9 +3,11 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iomanip>
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "ACES2/Transform.h"
 #include "BitDepthUtils.h"
 #include "MathUtils.h"
 #include "ops/fixedfunction/FixedFunctionOpCPU.h"
@@ -124,6 +126,80 @@ public:
     explicit Renderer_ACES_GamutComp13_Inv(ConstFixedFunctionOpDataRcPtr & data);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
+};
+
+class Renderer_ACES_OutputTransform20 : public OpCPU
+{
+public:
+    Renderer_ACES_OutputTransform20() = delete;
+    explicit Renderer_ACES_OutputTransform20(ConstFixedFunctionOpDataRcPtr & data);
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+
+private:
+    void fwd(const void * inImg, void * outImg, long numPixels) const;
+    void inv(const void * inImg, void * outImg, long numPixels) const;
+
+protected:
+    bool m_fwd;
+    ACES2::JMhParams m_pIn;
+    ACES2::JMhParams m_pOut;
+    ACES2::ToneScaleParams m_t;
+    ACES2::ChromaCompressParams m_c;
+    ACES2::GamutCompressParams m_g;
+};
+
+class Renderer_ACES_RGB_TO_JMh_20 : public OpCPU
+{
+public:
+    Renderer_ACES_RGB_TO_JMh_20() = delete;
+    explicit Renderer_ACES_RGB_TO_JMh_20(ConstFixedFunctionOpDataRcPtr & data);
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+
+private:
+    void fwd(const void * inImg, void * outImg, long numPixels) const;
+    void inv(const void * inImg, void * outImg, long numPixels) const;
+
+protected:
+    bool m_fwd;
+    ACES2::JMhParams m_p;
+};
+
+class Renderer_ACES_TONESCALE_COMPRESS_20 : public OpCPU
+{
+public:
+    Renderer_ACES_TONESCALE_COMPRESS_20() = delete;
+    explicit Renderer_ACES_TONESCALE_COMPRESS_20(ConstFixedFunctionOpDataRcPtr & data);
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+
+private:
+    void fwd(const void * inImg, void * outImg, long numPixels) const;
+    void inv(const void * inImg, void * outImg, long numPixels) const;
+
+protected:
+    bool m_fwd;
+    ACES2::JMhParams m_p;
+    ACES2::ToneScaleParams m_t;
+    ACES2::ChromaCompressParams m_c;
+};
+
+class Renderer_ACES_GAMUT_COMPRESS_20 : public OpCPU
+{
+public:
+    Renderer_ACES_GAMUT_COMPRESS_20() = delete;
+    explicit Renderer_ACES_GAMUT_COMPRESS_20(ConstFixedFunctionOpDataRcPtr & data);
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+
+private:
+    void fwd(const void * inImg, void * outImg, long numPixels) const;
+    void inv(const void * inImg, void * outImg, long numPixels) const;
+
+protected:
+    bool m_fwd;
+    ACES2::GamutCompressParams m_g;
 };
 
 class Renderer_REC2100_Surround : public OpCPU
@@ -792,6 +868,306 @@ void Renderer_ACES_GamutComp13_Inv::apply(const void * inImg, void * outImg, lon
     }
 }
 
+Renderer_ACES_OutputTransform20::Renderer_ACES_OutputTransform20(ConstFixedFunctionOpDataRcPtr & data)
+    :   OpCPU()
+{
+    m_fwd = FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_FWD == data->getStyle();
+
+    const float peak_luminance = (float) data->getParams()[0];
+
+    const float lim_red_x   = (float) data->getParams()[1];
+    const float lim_red_y   = (float) data->getParams()[2];
+    const float lim_green_x = (float) data->getParams()[3];
+    const float lim_green_y = (float) data->getParams()[4];
+    const float lim_blue_x  = (float) data->getParams()[5];
+    const float lim_blue_y  = (float) data->getParams()[6];
+    const float lim_white_x = (float) data->getParams()[7];
+    const float lim_white_y = (float) data->getParams()[8];
+
+    const Primaries lim_primaries = {
+        {lim_red_x  , lim_red_y  },
+        {lim_green_x, lim_green_y},
+        {lim_blue_x , lim_blue_y },
+        {lim_white_x, lim_white_y}
+    };
+
+    m_pIn = ACES2::init_JMhParams(ACES_AP0::primaries);
+    m_pOut = ACES2::init_JMhParams(lim_primaries);
+    m_t = ACES2::init_ToneScaleParams(peak_luminance);
+    m_c = ACES2::init_ChromaCompressParams(peak_luminance);
+    m_g = ACES2::init_GamutCompressParams(peak_luminance, lim_primaries);
+}
+
+void Renderer_ACES_OutputTransform20::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    if (m_fwd)
+    {
+        fwd(inImg, outImg, numPixels);
+    }
+    else
+    {
+        inv(inImg, outImg, numPixels);
+    }
+}
+
+void Renderer_ACES_OutputTransform20::fwd(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for(long idx=0; idx<numPixels; ++idx)
+    {
+        const ACES2::f3 RGBIn {in[0], in[1], in[2]};
+        const ACES2::f3 JMh           = ACES2::RGB_to_JMh(RGBIn, m_pIn);
+        const ACES2::f3 tonemappedJMh = ACES2::tonescale_chroma_compress_fwd(JMh, m_pIn, m_t, m_c);
+        const ACES2::f3 compressedJMh = ACES2::gamut_compress_fwd(tonemappedJMh, m_g);
+        const ACES2::f3 RGBOut        = ACES2::JMh_to_RGB(compressedJMh, m_pOut);
+
+        out[0] = RGBOut[0];
+        out[1] = RGBOut[1];
+        out[2] = RGBOut[2];
+        out[3] = in[3];
+
+        in  += 4;
+        out += 4;
+    }
+}
+
+void Renderer_ACES_OutputTransform20::inv(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for(long idx=0; idx<numPixels; ++idx)
+    {
+        const ACES2::f3 RGBout {in[0], in[1], in[2]};
+        const ACES2::f3 compressedJMh = ACES2::RGB_to_JMh(RGBout, m_pOut);
+        const ACES2::f3 tonemappedJMh = ACES2::gamut_compress_inv(compressedJMh, m_g);
+        const ACES2::f3 JMh           = ACES2::tonescale_chroma_compress_inv(tonemappedJMh, m_pIn, m_t, m_c);
+        const ACES2::f3 RGBin         = ACES2::JMh_to_RGB(JMh, m_pIn);
+
+        out[0] = RGBin[0];
+        out[1] = RGBin[1];
+        out[2] = RGBin[2];
+        out[3] = in[3];
+
+        in  += 4;
+        out += 4;
+    }
+}
+
+Renderer_ACES_RGB_TO_JMh_20::Renderer_ACES_RGB_TO_JMh_20(ConstFixedFunctionOpDataRcPtr & data)
+    :   OpCPU()
+{
+    m_fwd = FixedFunctionOpData::ACES_RGB_TO_JMh_20 == data->getStyle();
+
+    const float red_x   = (float) data->getParams()[0];
+    const float red_y   = (float) data->getParams()[1];
+    const float green_x = (float) data->getParams()[2];
+    const float green_y = (float) data->getParams()[3];
+    const float blue_x  = (float) data->getParams()[4];
+    const float blue_y  = (float) data->getParams()[5];
+    const float white_x = (float) data->getParams()[6];
+    const float white_y = (float) data->getParams()[7];
+
+    const Primaries primaries = {
+        {red_x  , red_y  },
+        {green_x, green_y},
+        {blue_x , blue_y },
+        {white_x, white_y}
+    };
+
+    m_p = ACES2::init_JMhParams(primaries);
+}
+
+void Renderer_ACES_RGB_TO_JMh_20::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    if (m_fwd)
+    {
+        fwd(inImg, outImg, numPixels);
+    }
+    else
+    {
+        inv(inImg, outImg, numPixels);
+    }
+}
+
+void Renderer_ACES_RGB_TO_JMh_20::fwd(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for(long idx=0; idx<numPixels; ++idx)
+    {
+        const ACES2::f3 JMh = ACES2::RGB_to_JMh({in[0], in[1], in[2]}, m_p);
+
+        out[0] = JMh[0];
+        out[1] = JMh[1];
+        out[2] = JMh[2];
+        out[3] = in[3];
+
+        in  += 4;
+        out += 4;
+    }
+}
+
+void Renderer_ACES_RGB_TO_JMh_20::inv(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for(long idx=0; idx<numPixels; ++idx)
+    {
+        const ACES2::f3 RGB = ACES2::JMh_to_RGB({in[0], in[1], in[2]}, m_p);
+
+        out[0] = RGB[0];
+        out[1] = RGB[1];
+        out[2] = RGB[2];
+        out[3] = in[3];
+
+        in  += 4;
+        out += 4;
+    }
+}
+
+Renderer_ACES_TONESCALE_COMPRESS_20::Renderer_ACES_TONESCALE_COMPRESS_20(ConstFixedFunctionOpDataRcPtr & data)
+    :   OpCPU()
+{
+    m_fwd = FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_FWD == data->getStyle();
+
+    const float peak_luminance = (float) data->getParams()[0];
+
+    m_p = ACES2::init_JMhParams(ACES_AP0::primaries);
+    m_t = ACES2::init_ToneScaleParams(peak_luminance);
+    m_c = ACES2::init_ChromaCompressParams(peak_luminance);
+}
+
+void Renderer_ACES_TONESCALE_COMPRESS_20::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    if (m_fwd)
+    {
+        fwd(inImg, outImg, numPixels);
+    }
+    else
+    {
+        inv(inImg, outImg, numPixels);
+    }
+}
+
+void Renderer_ACES_TONESCALE_COMPRESS_20::fwd(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for(long idx=0; idx<numPixels; ++idx)
+    {
+        const ACES2::f3 JMh = ACES2::tonescale_chroma_compress_fwd({in[0], in[1], in[2]}, m_p, m_t, m_c);
+
+        out[0] = JMh[0];
+        out[1] = JMh[1];
+        out[2] = JMh[2];
+        out[3] = in[3];
+
+        in  += 4;
+        out += 4;
+    }
+}
+
+void Renderer_ACES_TONESCALE_COMPRESS_20::inv(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for(long idx=0; idx<numPixels; ++idx)
+    {
+        const ACES2::f3 JMh = ACES2::tonescale_chroma_compress_inv({in[0], in[1], in[2]}, m_p, m_t, m_c);
+
+        out[0] = JMh[0];
+        out[1] = JMh[1];
+        out[2] = JMh[2];
+        out[3] = in[3];
+
+        in  += 4;
+        out += 4;
+    }
+}
+
+Renderer_ACES_GAMUT_COMPRESS_20::Renderer_ACES_GAMUT_COMPRESS_20(ConstFixedFunctionOpDataRcPtr & data)
+    :   OpCPU()
+{
+    m_fwd = FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_FWD == data->getStyle();
+
+    const float peakLuminance = (float) data->getParams()[0];
+
+    const float red_x   = (float) data->getParams()[1];
+    const float red_y   = (float) data->getParams()[2];
+    const float green_x = (float) data->getParams()[3];
+    const float green_y = (float) data->getParams()[4];
+    const float blue_x  = (float) data->getParams()[5];
+    const float blue_y  = (float) data->getParams()[6];
+    const float white_x = (float) data->getParams()[7];
+    const float white_y = (float) data->getParams()[8];
+
+    const Primaries limitingPrimaries = {
+        {red_x  , red_y  },
+        {green_x, green_y},
+        {blue_x , blue_y },
+        {white_x, white_y}
+    };
+
+    m_g = ACES2::init_GamutCompressParams(peakLuminance, limitingPrimaries);
+}
+
+void Renderer_ACES_GAMUT_COMPRESS_20::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    if (m_fwd)
+    {
+        fwd(inImg, outImg, numPixels);
+    }
+    else
+    {
+        inv(inImg, outImg, numPixels);
+    }
+}
+
+void Renderer_ACES_GAMUT_COMPRESS_20::fwd(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for(long idx=0; idx<numPixels; ++idx)
+    {
+        const ACES2::f3 JMh = ACES2::gamut_compress_fwd({in[0], in[1], in[2]}, m_g);
+
+        out[0] = JMh[0];
+        out[1] = JMh[1];
+        out[2] = JMh[2];
+        out[3] = in[3];
+
+        in  += 4;
+        out += 4;
+    }
+}
+
+void Renderer_ACES_GAMUT_COMPRESS_20::inv(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for(long idx=0; idx<numPixels; ++idx)
+    {
+        const ACES2::f3 JMh = ACES2::gamut_compress_inv({in[0], in[1], in[2]}, m_g);
+
+        out[0] = JMh[0];
+        out[1] = JMh[1];
+        out[2] = JMh[2];
+        out[3] = in[3];
+
+        in  += 4;
+        out += 4;
+    }
+}
+
 Renderer_REC2100_Surround::Renderer_REC2100_Surround(ConstFixedFunctionOpDataRcPtr & data)
     :   OpCPU()
 {
@@ -1239,6 +1615,35 @@ ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func
         {
             return std::make_shared<Renderer_ACES_GamutComp13_Inv>(func);
         }
+
+        case FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_FWD:
+        case FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_INV:
+        {
+            // Sharing same renderer (param will be inverted to handle direction).
+            return std::make_shared<Renderer_ACES_OutputTransform20>(func);
+        }
+
+        case FixedFunctionOpData::ACES_RGB_TO_JMh_20:
+        case FixedFunctionOpData::ACES_JMh_TO_RGB_20:
+        {
+            // Sharing same renderer (param will be inverted to handle direction).
+            return std::make_shared<Renderer_ACES_RGB_TO_JMh_20>(func);
+        }
+
+        case FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_FWD:
+        case FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_INV:
+        {
+            // Sharing same renderer (param will be inverted to handle direction).
+            return std::make_shared<Renderer_ACES_TONESCALE_COMPRESS_20>(func);
+        }
+
+        case FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_FWD:
+        case FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_INV:
+        {
+            // Sharing same renderer (param will be inverted to handle direction).
+            return std::make_shared<Renderer_ACES_GAMUT_COMPRESS_20>(func);
+        }
+
         case FixedFunctionOpData::REC2100_SURROUND_FWD:
         case FixedFunctionOpData::REC2100_SURROUND_INV:
         {

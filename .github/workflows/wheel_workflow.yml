@@ -81,10 +81,6 @@ jobs:
           # -------------------------------------------------------------------
           # CPython 64 bits manylinux_2_28
           # -------------------------------------------------------------------
-          - build: CPython 3.7 64 bits manylinux_2_28
-            manylinux: manylinux_2_28
-            python: cp37-manylinux_x86_64
-            arch: x86_64
           - build: CPython 3.8 64 bits manylinux_2_28
             manylinux: manylinux_2_28
             python: cp38-manylinux_x86_64
@@ -105,13 +101,13 @@ jobs:
             manylinux: manylinux_2_28
             python: cp312-manylinux_x86_64
             arch: x86_64
+          - build: CPython 3.13 64 bits manylinux_2_28
+            manylinux: manylinux_2_28
+            python: cp313-manylinux_x86_64
+            arch: x86_64
           # -------------------------------------------------------------------
           # CPython 64 bits manylinux2014
           # -------------------------------------------------------------------
-          - build: CPython 3.7 64 bits manylinux2014
-            manylinux: manylinux2014
-            python: cp37-manylinux_x86_64
-            arch: x86_64
           - build: CPython 3.8 64 bits manylinux2014
             manylinux: manylinux2014
             python: cp38-manylinux_x86_64
@@ -132,13 +128,13 @@ jobs:
             manylinux: manylinux2014
             python: cp312-manylinux_x86_64
             arch: x86_64
+          - build: CPython 3.13 64 bits manylinux2014
+            manylinux: manylinux2014
+            python: cp313-manylinux_x86_64
+            arch: x86_64
           # -------------------------------------------------------------------
           # CPython ARM 64 bits manylinux2014
           # -------------------------------------------------------------------
-          - build: CPython 3.7 ARM 64 bits manylinux2014
-            manylinux: manylinux2014
-            python: cp37-manylinux_aarch64
-            arch: aarch64
           - build: CPython 3.8 ARM 64 bits manylinux2014
             manylinux: manylinux2014
             python: cp38-manylinux_aarch64
@@ -159,6 +155,10 @@ jobs:
             manylinux: manylinux2014
             python: cp312-manylinux_aarch64
             arch: aarch64
+          - build: CPython 3.13 ARM 64 bits manylinux2014
+            manylinux: manylinux2014
+            python: cp313-manylinux_aarch64
+            arch: aarch64
 
     steps:
       - uses: actions/checkout@v4
@@ -166,7 +166,7 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.8'
+          python-version: '3.9'
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -174,7 +174,7 @@ jobs:
           platforms: all
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.5
+        uses: pypa/cibuildwheel@v2.21.1
         env:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
@@ -203,9 +203,6 @@ jobs:
           # -------------------------------------------------------------------
           # CPython 64 bits
           # -------------------------------------------------------------------
-          - build: CPython 3.7 64 bits
-            python: cp37-macosx_x86_64
-            arch: x86_64
           - build: CPython 3.8 64 bits
             python: cp38-macosx_x86_64
             arch: x86_64
@@ -221,6 +218,43 @@ jobs:
           - build: CPython 3.12 64 bits
             python: cp312-macosx_x86_64
             arch: x86_64
+          - build: CPython 3.13 64 bits
+            python: cp313-macosx_x86_64
+            arch: x86_64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: '3.9'
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.21.1
+        env:
+          CIBW_BUILD: ${{ matrix.python }}
+          CIBW_ARCHS: ${{ matrix.arch }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.python }}
+          path: ./wheelhouse/*.whl
+
+  # ---------------------------------------------------------------------------
+  # macOS ARM Wheels
+  # ---------------------------------------------------------------------------
+
+  macos-arm:
+    name: Build wheels on macOS ARM
+    runs-on: macos-14
+    # Don't run on OCIO forks
+    if: |
+      github.event_name != 'schedule' ||
+      github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    strategy:
+      matrix:
+        include:
           # -------------------------------------------------------------------
           # CPython ARM 64 bits
           # -------------------------------------------------------------------
@@ -239,6 +273,9 @@ jobs:
           - build: CPython 3.12 ARM 64 bits
             python: cp312-macosx_arm64
             arch: arm64
+          - build: CPython 3.13 ARM 64 bits
+            python: cp313-macosx_arm64
+            arch: arm64
 
     steps:
       - uses: actions/checkout@v4
@@ -246,10 +283,10 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.8'
+          python-version: '3.9'
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.5
+        uses: pypa/cibuildwheel@v2.21.1
         env:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
@@ -276,9 +313,6 @@ jobs:
           # -------------------------------------------------------------------
           # CPython 64 bits
           # -------------------------------------------------------------------
-          - build: CPython 3.7 64 bits
-            python: cp37-win_amd64
-            arch: AMD64
           - build: CPython 3.8 64 bits
             python: cp38-win_amd64
             arch: AMD64
@@ -294,6 +328,9 @@ jobs:
           - build: CPython 3.12 64 bits
             python: cp312-win_amd64
             arch: AMD64
+          - build: CPython 3.13 64 bits
+            python: cp313-win_amd64
+            arch: AMD64
 
     steps:
       - uses: actions/checkout@v4
@@ -301,10 +338,10 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.8'
+          python-version: '3.9'
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.5
+        uses: pypa/cibuildwheel@v2.21.1
         env:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
@@ -316,7 +353,7 @@ jobs:
 
 
   upload_pypi:
-    needs: [sdist, linux, macos, windows]
+    needs: [sdist, linux, macos, macos-arm, windows]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     steps:
