@@ -28,7 +28,8 @@ if len(sys.argv) > 1:
         os.environ['PATH'] = '{0};{1}'.format(opencolorio_dir, os.getenv('PATH', ''))
         # But add it here unconditionally to allow test to work when OCIO_PYTHON_LOAD_DLLS_FROM_PATH
         # is disabled.
-        os.add_dll_directory(opencolorio_dir)
+        if sys.version_info >= (3, 8):
+            os.add_dll_directory(opencolorio_dir)
     elif sys.platform == 'darwin':
         # On OSX we must add the main library location to DYLD_LIBRARY_PATH
         os.environ['DYLD_LIBRARY_PATH'] = '{0}:{1}'.format(
