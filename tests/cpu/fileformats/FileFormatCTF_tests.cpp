@@ -6437,7 +6437,7 @@ OCIO_ADD_TEST(CTFTransform, fixed_function_lin_to_gammalog_ctf)
         OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
         const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList version="2" id="UIDFF42">
+<ProcessList version="2.4" id="UIDFF42">
     <FixedFunction inBitDepth="32f" outBitDepth="32f" style="Lin_TO_GammaLog" params="0 0.25 0.5 1 0 2.718 0.17883277 0.807825590164 1 -0.07116723">
     </FixedFunction>
 </ProcessList>
@@ -6456,7 +6456,7 @@ OCIO_ADD_TEST(CTFTransform, fixed_function_lin_to_gammalog_ctf)
         OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
         const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList version="2" id="UIDFF42">
+<ProcessList version="2.4" id="UIDFF42">
     <FixedFunction inBitDepth="32f" outBitDepth="32f" style="GammaLog_TO_Lin" params="0 0.25 0.5 1 0 2.718 0.17883277 0.807825590164 1 -0.07116723">
     </FixedFunction>
 </ProcessList>
@@ -6482,7 +6482,7 @@ OCIO_ADD_TEST(CTFTransform, fixed_function_lin_to_doublelog_ctf)
         OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
         const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList version="2" id="UIDFF42">
+<ProcessList version="2.4" id="UIDFF42">
     <FixedFunction inBitDepth="32f" outBitDepth="32f" style="Lin_TO_DoubleLog" params="10 0.25 0.5 -1 0 -1 1.25 1 1 1 0.5 1 0">
     </FixedFunction>
 </ProcessList>
@@ -6501,7 +6501,7 @@ OCIO_ADD_TEST(CTFTransform, fixed_function_lin_to_doublelog_ctf)
         OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
         const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList version="2" id="UIDFF42">
+<ProcessList version="2.4" id="UIDFF42">
     <FixedFunction inBitDepth="32f" outBitDepth="32f" style="DoubleLog_TO_Lin" params="10 0.25 0.5 -1 0 -1 1.25 1 1 1 0.5 1 0">
     </FixedFunction>
 </ProcessList>
