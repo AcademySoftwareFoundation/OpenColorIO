@@ -2,8 +2,8 @@
   SPDX-License-Identifier: CC-BY-4.0
   Copyright Contributors to the OpenColorIO Project.
 
-Internal Architecture Overview
-==============================
+Internal Architecture
+=====================
 
 .. warning::
     This section is from OCIO v1 and has not been updated yet.

@@ -9,6 +9,8 @@ Overview
 
 .. include:: introduction.rst
 
+.. include:: configuration_files.rst
+
 .. include:: internal_architecture.rst
 
 .. include:: glossary.rst
