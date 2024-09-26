@@ -368,6 +368,9 @@ const char * FixedFunctionStyleToString(FixedFunctionStyle style)
         case FIXED_FUNCTION_XYZ_TO_xyY:                 return "XYZ_TO_xyY";
         case FIXED_FUNCTION_XYZ_TO_uvY:                 return "XYZ_TO_uvY";
         case FIXED_FUNCTION_XYZ_TO_LUV:                 return "XYZ_TO_LUV";
+        case FIXED_FUNCTION_LIN_TO_PQ:                  return "Lin_TO_PQ";
+        case FIXED_FUNCTION_LIN_TO_GAMMA_LOG:           return "Lin_TO_GammaLog";
+        case FIXED_FUNCTION_LIN_TO_DOUBLE_LOG:          return "Lin_TO_DoubleLog";
         case FIXED_FUNCTION_ACES_GAMUTMAP_02:
         case FIXED_FUNCTION_ACES_GAMUTMAP_07:
             throw Exception("Unimplemented fixed function types: "
@@ -399,6 +402,9 @@ FixedFunctionStyle FixedFunctionStyleFromString(const char * style)
     else if(str == "xyz_to_xyy")              return FIXED_FUNCTION_XYZ_TO_xyY;
     else if(str == "xyz_to_uvy")              return FIXED_FUNCTION_XYZ_TO_uvY;
     else if(str == "xyz_to_luv")              return FIXED_FUNCTION_XYZ_TO_LUV;
+    else if(str == "lin_to_pq")               return FIXED_FUNCTION_LIN_TO_PQ;
+    else if(str == "lin_to_gammalog")         return FIXED_FUNCTION_LIN_TO_GAMMA_LOG;
+    else if(str == "lin_to_doublelog")        return FIXED_FUNCTION_LIN_TO_DOUBLE_LOG;
 
     // Default style is meaningless.
     std::stringstream ss;

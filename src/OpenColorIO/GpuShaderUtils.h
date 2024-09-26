@@ -219,6 +219,11 @@ public:
     std::string float3GreaterThan(const std::string& a, const std::string& b) const;
     std::string float4GreaterThan(const std::string& a, const std::string& b) const;
 
+    // Get the string for creating a three or four-elements 'greater than or equal' comparison
+    //    Each element i in the resulting vector is 1 if a>=b, or 0 otherwise.
+    std::string float3GreaterThanEqual(const std::string& a, const std::string& b) const;
+    std::string float4GreaterThanEqual(const std::string& a, const std::string& b) const;
+
     // Get the string for taking the four-quadrant arctangent 
     // (similar to atan(y/x) but takes into account the signs of the arguments).
     std::string atan2(const std::string& y, const std::string& x) const;

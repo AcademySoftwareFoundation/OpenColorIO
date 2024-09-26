@@ -71,6 +71,12 @@ constexpr char XYZ_TO_uvY_STR[]                     = "XYZ_TO_uvY";
 constexpr char uvY_TO_XYZ_STR[]                     = "uvY_TO_XYZ";
 constexpr char XYZ_TO_LUV_STR[]                     = "XYZ_TO_LUV";
 constexpr char LUV_TO_XYZ_STR[]                     = "LUV_TO_XYZ";
+constexpr char LIN_TO_PQ_STR[]                      = "Lin_TO_PQ";
+constexpr char PQ_TO_LIN_STR[]                      = "PQ_TO_Lin";
+constexpr char LIN_TO_GAMMA_LOG_STR[]               = "Lin_TO_GammaLog";
+constexpr char GAMMA_LOG_TO_LIN_STR[]               = "GammaLog_TO_Lin";
+constexpr char LIN_TO_DOUBLE_LOG_STR[]              = "Lin_TO_DoubleLog";
+constexpr char DOUBLE_LOG_TO_LIN_STR[]              = "DoubleLog_TO_Lin";
 
 
 // NOTE: Converts the enumeration value to its string representation (i.e. CLF reader).
@@ -142,6 +148,18 @@ const char * FixedFunctionOpData::ConvertStyleToString(Style style, bool detaile
             return XYZ_TO_LUV_STR;
         case LUV_TO_XYZ:
             return LUV_TO_XYZ_STR;
+        case LIN_TO_PQ:
+            return LIN_TO_PQ_STR;
+        case PQ_TO_LIN:
+          return PQ_TO_LIN_STR;
+        case LIN_TO_GAMMA_LOG:
+            return LIN_TO_GAMMA_LOG_STR;
+        case GAMMA_LOG_TO_LIN:
+            return GAMMA_LOG_TO_LIN_STR;
+        case LIN_TO_DOUBLE_LOG:
+            return LIN_TO_DOUBLE_LOG_STR;
+        case DOUBLE_LOG_TO_LIN:
+            return DOUBLE_LOG_TO_LIN_STR;
     }
 
     std::stringstream ss("Unknown FixedFunction style: ");
@@ -276,6 +294,30 @@ FixedFunctionOpData::Style FixedFunctionOpData::GetStyle(const char * name)
         {
             return LUV_TO_XYZ;
         }
+        else if (0 == Platform::Strcasecmp(name, LIN_TO_PQ_STR))
+        {
+            return LIN_TO_PQ;
+        }
+        else if (0 == Platform::Strcasecmp(name, PQ_TO_LIN_STR))
+        {
+            return PQ_TO_LIN;
+        }
+        else if (0 == Platform::Strcasecmp(name, LIN_TO_GAMMA_LOG_STR))
+        {
+            return LIN_TO_GAMMA_LOG;
+        }
+        else if (0 == Platform::Strcasecmp(name, GAMMA_LOG_TO_LIN_STR))
+        {
+            return GAMMA_LOG_TO_LIN;
+        }
+        else if (0 == Platform::Strcasecmp(name, LIN_TO_DOUBLE_LOG_STR))
+        {
+            return LIN_TO_DOUBLE_LOG;
+        }
+        else if (0 == Platform::Strcasecmp(name, DOUBLE_LOG_TO_LIN_STR))
+        {
+            return DOUBLE_LOG_TO_LIN;
+        }
     }
 
     std::string st("Unknown FixedFunction style: ");
@@ -370,6 +412,21 @@ FixedFunctionOpData::Style FixedFunctionOpData::ConvertStyle(FixedFunctionStyle 
                             "FIXED_FUNCTION_ACES_GAMUTMAP_02, "
                             "FIXED_FUNCTION_ACES_GAMUTMAP_07.");
         }
+        case FIXED_FUNCTION_LIN_TO_PQ: 
+        {
+            return isForward ? FixedFunctionOpData::LIN_TO_PQ:
+                               FixedFunctionOpData::PQ_TO_LIN;
+        }
+        case FIXED_FUNCTION_LIN_TO_GAMMA_LOG:
+        {
+            return isForward ? FixedFunctionOpData::LIN_TO_GAMMA_LOG:
+                               FixedFunctionOpData::GAMMA_LOG_TO_LIN;
+        }
+        case FIXED_FUNCTION_LIN_TO_DOUBLE_LOG:
+        {
+            return isForward ? FixedFunctionOpData::LIN_TO_DOUBLE_LOG:
+                               FixedFunctionOpData::DOUBLE_LOG_TO_LIN;
+        }
     }
 
     std::stringstream ss("Unknown FixedFunction transform style: ");
@@ -442,6 +499,18 @@ FixedFunctionStyle FixedFunctionOpData::ConvertStyle(FixedFunctionOpData::Style 
     case FixedFunctionOpData::XYZ_TO_LUV:
     case FixedFunctionOpData::LUV_TO_XYZ:
         return FIXED_FUNCTION_XYZ_TO_LUV;
+
+    case FixedFunctionOpData::LIN_TO_PQ:
+    case FixedFunctionOpData::PQ_TO_LIN:
+        return FIXED_FUNCTION_LIN_TO_PQ;
+    
+    case FixedFunctionOpData::LIN_TO_GAMMA_LOG:
+    case FixedFunctionOpData::GAMMA_LOG_TO_LIN:
+        return FIXED_FUNCTION_LIN_TO_GAMMA_LOG;
+
+    case FixedFunctionOpData::LIN_TO_DOUBLE_LOG:
+    case FixedFunctionOpData::DOUBLE_LOG_TO_LIN:
+        return FIXED_FUNCTION_LIN_TO_DOUBLE_LOG;
     }
 
     std::stringstream ss("Unknown FixedFunction style: ");
@@ -596,6 +665,95 @@ void FixedFunctionOpData::validate() const
         {
             std::stringstream ss;
             ss << "Parameter " << p << " is greater than upper bound " << hi_bound;
+            throw Exception(ss.str().c_str());
+        }
+    }
+    else if (m_style == DOUBLE_LOG_TO_LIN || m_style == LIN_TO_DOUBLE_LOG)
+    {
+        if (m_params.size() != 13)
+        {
+            std::stringstream ss;
+            ss << "The style '" << ConvertStyleToString(m_style, true)
+                << "' must have 13 parameters but "
+                << m_params.size() << " found.";
+            throw Exception(ss.str().c_str());
+        }
+
+        double base              = m_params[0];
+        double break1            = m_params[1];
+        double break2            = m_params[2];
+        // TODO: Add additional checks on the remaining params.
+        // double logSeg1_logSlope  = m_params[3];
+        // double logSeg1_logOff    = m_params[4];
+        // double logSeg1_linSlope  = m_params[5];
+        // double logSeg1_linOff    = m_params[6];
+        // double logSeg2_logSlope  = m_params[7];
+        // double logSeg2_logOff    = m_params[8];
+        // double logSeg2_linSlope  = m_params[9];
+        // double logSeg2_linOff    = m_params[10];
+        // double linSeg_slope      = m_params[11];
+        // double linSeg_off        = m_params[12];
+
+        // Check log base.
+        if(base <= 0.0)
+        {
+            std::stringstream ss;
+            ss << "Log base " << base << " is not greater than zero.";
+            throw Exception(ss.str().c_str());
+        }
+
+        // Check break point order.
+        if(break1 > break2)
+        {
+            std::stringstream ss;
+            ss << "First break point " << break1 << " is larger than the second break point " << break2 << ".";
+            throw Exception(ss.str().c_str());
+        }
+    }
+    else if (m_style == LIN_TO_GAMMA_LOG || m_style == GAMMA_LOG_TO_LIN)
+    {
+        if (m_params.size() != 10)
+        {
+            std::stringstream ss;
+            ss << "The style '" << ConvertStyleToString(m_style, true)
+                << "' must have 10 parameters but "
+                << m_params.size() << " found.";
+            throw Exception(ss.str().c_str());
+        }
+
+        double mirrorPt          = m_params[0];
+        double breakPt           = m_params[1];
+        double gammaSeg_power    = m_params[2];
+        // TODO: Add additional checks on the remaining params.
+        // double gammaSeg_slope    = m_params[3];
+        // double gammaSeg_off      = m_params[4];
+        double logSeg_base       = m_params[5];
+        // double logSeg_logSlope   = m_params[6];
+        // double logSeg_logOff     = m_params[7];
+        // double logSeg_linSlope   = m_params[8];
+        // double logSeg_linOff     = m_params[9];
+
+        // Check log base.
+        if (logSeg_base <= 0.0)
+        {
+            std::stringstream ss;
+            ss << "Log base " << logSeg_base << " is not greater than zero.";
+            throw Exception(ss.str().c_str());
+        }
+
+        // Check mirror and break point order.
+        if (mirrorPt >= breakPt)
+        {
+            std::stringstream ss;
+            ss << "Mirror point " << mirrorPt << " is not smaller than the break point " << breakPt << ".";
+            throw Exception(ss.str().c_str());
+        }
+
+        // Check gamma.
+        if (gammaSeg_power == 0.0)
+        {
+            std::stringstream ss;
+            ss << "Gamma power is zero.";
             throw Exception(ss.str().c_str());
         }
     }
@@ -787,6 +945,39 @@ void FixedFunctionOpData::invert() noexcept
             setStyle(XYZ_TO_LUV);
             break;
         }
+
+        case LIN_TO_PQ:
+        {
+            setStyle(PQ_TO_LIN);
+            break;
+        }
+        case PQ_TO_LIN:
+        {
+            setStyle(LIN_TO_PQ);
+            break;
+        }
+
+        case LIN_TO_GAMMA_LOG:
+        {
+            setStyle(GAMMA_LOG_TO_LIN);
+            break;
+        }
+        case GAMMA_LOG_TO_LIN:
+        {
+            setStyle(LIN_TO_GAMMA_LOG);
+            break;
+        }
+
+        case LIN_TO_DOUBLE_LOG:
+        {
+            setStyle(DOUBLE_LOG_TO_LIN);
+            break;
+        }
+        case DOUBLE_LOG_TO_LIN:
+        {
+            setStyle(LIN_TO_DOUBLE_LOG);
+            break;
+        }
     }
 
     // Note that any existing metadata could become stale at this point but
@@ -821,6 +1012,9 @@ TransformDirection FixedFunctionOpData::getDirection() const noexcept
     case FixedFunctionOpData::XYZ_TO_xyY:
     case FixedFunctionOpData::XYZ_TO_uvY:
     case FixedFunctionOpData::XYZ_TO_LUV:
+    case FixedFunctionOpData::LIN_TO_PQ:
+    case FixedFunctionOpData::LIN_TO_GAMMA_LOG:
+    case FixedFunctionOpData::LIN_TO_DOUBLE_LOG:
         return TRANSFORM_DIR_FORWARD;
 
     case FixedFunctionOpData::ACES_RED_MOD_03_INV:
@@ -838,6 +1032,9 @@ TransformDirection FixedFunctionOpData::getDirection() const noexcept
     case FixedFunctionOpData::xyY_TO_XYZ:
     case FixedFunctionOpData::uvY_TO_XYZ:
     case FixedFunctionOpData::LUV_TO_XYZ:
+    case FixedFunctionOpData::PQ_TO_LIN:
+    case FixedFunctionOpData::GAMMA_LOG_TO_LIN:
+    case FixedFunctionOpData::DOUBLE_LOG_TO_LIN:
         return TRANSFORM_DIR_INVERSE;
     }
     return TRANSFORM_DIR_FORWARD;

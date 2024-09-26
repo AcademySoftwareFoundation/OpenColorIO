@@ -20,10 +20,12 @@ void ApplyFixedFunction(float * input_32f,
                         unsigned numSamples,
                         OCIO::ConstFixedFunctionOpDataRcPtr & fnData, 
                         float errorThreshold,
-                        int lineNo)
+                        int lineNo,
+                        bool fastLogExpPow = false
+)
 {
     OCIO::ConstOpCPURcPtr op;
-    OCIO_CHECK_NO_THROW_FROM(op = OCIO::GetFixedFunctionCPURenderer(fnData), lineNo);
+    OCIO_CHECK_NO_THROW_FROM(op = OCIO::GetFixedFunctionCPURenderer(fnData, fastLogExpPow), lineNo);
     OCIO_CHECK_NO_THROW_FROM(op->apply(input_32f, input_32f, numSamples), lineNo);
 
     for(unsigned idx=0; idx<(numSamples*4); ++idx)
@@ -548,7 +550,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_ot_20_rec709_100n_rt)
                                                       params);
 
     OCIO::ConstOpCPURcPtr op;
-    OCIO_CHECK_NO_THROW(op = OCIO::GetFixedFunctionCPURenderer(funcData));
+    OCIO_CHECK_NO_THROW(op = OCIO::GetFixedFunctionCPURenderer(funcData, false));
     OCIO_CHECK_NO_THROW(op->apply(&input_32f[0], &output_32f[0], num_samples));
 
     OCIO::ConstFixedFunctionOpDataRcPtr funcData2
@@ -583,7 +585,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_ot_20_p3d65_100n_rt)
                                                       params);
 
     OCIO::ConstOpCPURcPtr op;
-    OCIO_CHECK_NO_THROW(op = OCIO::GetFixedFunctionCPURenderer(funcData));
+    OCIO_CHECK_NO_THROW(op = OCIO::GetFixedFunctionCPURenderer(funcData, false));
     OCIO_CHECK_NO_THROW(op->apply(&input_32f[0], &output_32f[0], num_samples));
 
     OCIO::ConstFixedFunctionOpDataRcPtr funcData2
@@ -624,7 +626,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_ot_20_p3d65_1000n_rt)
                                                       params);
 
     OCIO::ConstOpCPURcPtr op;
-    OCIO_CHECK_NO_THROW(op = OCIO::GetFixedFunctionCPURenderer(funcData));
+    OCIO_CHECK_NO_THROW(op = OCIO::GetFixedFunctionCPURenderer(funcData, false));
     OCIO_CHECK_NO_THROW(op->apply(&input_32f[0], &output_32f[0], num_samples));
 
     OCIO::ConstFixedFunctionOpDataRcPtr funcData2
@@ -1113,4 +1115,172 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, XYZ_TO_LUV)
 
     img = outputFrame;
     ApplyFixedFunction(&img[0], &inputFrame[0], 2, dataFInv, 1e-5f, __LINE__);
+}
+
+OCIO_ADD_TEST(FixedFunctionOpCPU, LIN_TO_PQ)
+{
+    constexpr unsigned int NumPixels = 9;
+    const std::array<float, NumPixels*4> pqFrame
+    {
+      -0.10f,-0.05f, 0.00f,-1.0f, // negative input
+       0.05f, 0.10f, 0.15f, 1.0f,
+       0.20f, 0.25f, 0.30f, 1.0f,
+       0.35f, 0.40f, 0.45f, 0.5f,
+       0.50f, 0.55f, 0.60f, 0.0f,
+       0.65f, 0.70f, 0.75f, 1.0f,
+       0.80f, 0.85f, 0.90f, 1.0f,
+       0.95f, 1.00f, 1.05f, 1.0f,
+       1.10f, 1.15f, 1.20f, 1.0f, // over range
+    }; 
+
+    const std::array<float, NumPixels*4> linearFrame
+    {
+       -3.2456559e-03f,-6.0001636e-04f,           0.0f,-1.0f,
+        6.0001636e-04f, 3.2456559e-03f, 1.0010649e-02f, 1.0f,
+        2.4292633e-02f, 5.1541760e-02f, 1.0038226e-01f, 1.0f,
+        1.8433567e-01f, 3.2447918e-01f, 5.5356688e-01f, 0.5f,
+        9.2245709e-01f, 1.5102065e+00f, 2.4400519e+00f, 0.0f,
+        3.9049474e+00f, 6.2087938e+00f, 9.8337786e+00f, 1.0f,
+        1.5551784e+01f, 2.4611351e+01f, 3.9056447e+01f, 1.0f,
+        6.2279535e+01f, 1.0000000e+02f, 1.6203272e+02f, 1.0f,
+        2.6556253e+02f, 4.4137110e+02f, 7.4603927e+02f, 1.0f,
+    };
+
+    // Fast power enabled.
+    {
+        auto img = pqFrame;
+        auto dataFwd = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::PQ_TO_LIN);
+        ApplyFixedFunction(img.data(), linearFrame.data(), NumPixels, dataFwd, 2.5e-3f, __LINE__, true);
+
+        auto dataFInv = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::LIN_TO_PQ);
+        img = linearFrame;
+        ApplyFixedFunction(img.data(), pqFrame.data(), NumPixels, dataFInv, 1e-3f, __LINE__, true);
+    }
+
+    // Fast power disabled.
+    {
+        auto dataFwd = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::PQ_TO_LIN);
+        auto img = pqFrame;
+        ApplyFixedFunction(img.data(), linearFrame.data(), NumPixels, dataFwd, 5e-5f, __LINE__, false);
+
+        auto dataFInv = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::LIN_TO_PQ);
+        img = linearFrame;
+        ApplyFixedFunction(img.data(), pqFrame.data(), NumPixels, dataFInv, 1e-5f, __LINE__, false);
+    }
+}
+
+OCIO_ADD_TEST(FixedFunctionOpCPU, LIN_TO_GAMMA_LOG)
+{
+    // Parameters for the Rec.2100 HLG curve.
+    OCIO::FixedFunctionOpData::Params params 
+    {
+        0.0,            // mirror point
+        0.25,           // break point
+
+        // Gamma segment.
+        0.5,            // gamma power
+        1.0,            // post-power scale
+        0.0,            // pre-power offset
+
+        // Log segment.
+        std::exp(1.0),  // log base (e)
+        0.17883277,     // log-side slope
+        0.807825590164, // log-side offset
+        1.0,            // lin-side slope
+        -0.07116723,    // lin-side offset
+    };
+
+    constexpr unsigned int NumPixels = 10;
+    const std::array<float, NumPixels * 4> hlgFrame
+    {
+      -0.60f,-0.55f,-0.50f,-1.0f, // negative log segment
+      -0.10f,-0.05f, 0.00f, 1.0f, // negative gamma Segment
+       0.05f, 0.10f, 0.15f, 1.0f,
+       0.20f, 0.25f, 0.30f, 1.0f,
+       0.35f, 0.40f, 0.45f, 0.5f,
+       0.50f, 0.55f, 0.60f, 0.0f,
+       0.65f, 0.70f, 0.75f, 1.0f,
+       0.80f, 0.85f, 0.90f, 1.0f,
+       0.95f, 1.00f, 1.05f, 1.0f,
+       1.10f, 1.15f, 1.20f, 1.0f, // over range
+    };
+
+    const std::array<float, NumPixels * 4> linearFrame
+    {
+       -0.383988768f, -0.307689428f, -0.250000000f,-1.0f,
+       -0.01000000f,  -0.002500000f,  0.00000000f,  1.0f,
+        0.002500000f,  0.010000000f,  0.02250000f,  1.0f,
+        0.040000000f,  0.062500000f,  0.09000000f,  1.0f,
+        0.122500000f,  0.160000000f,  0.202499986f, 0.5f,
+        0.250000000f,  0.307689428f,  0.383988768f, 0.0f,
+        0.484901309f,  0.618367195f,  0.794887662f, 1.0f,
+        1.02835166f,   1.33712840f,   1.74551260f,  1.0f,
+        2.28563738f,   3.00000000f,   3.94480681f,  1.0f,
+        5.19440079f,   6.84709501f,   9.03293514f,  1.0f 
+    };
+
+    {
+        auto dataFwd = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::GAMMA_LOG_TO_LIN, params);
+        auto img = hlgFrame;
+        ApplyFixedFunction(img.data(), linearFrame.data(), NumPixels, dataFwd, 5e-5f, __LINE__, false);
+
+        auto dataFInv = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::LIN_TO_GAMMA_LOG, params);
+        img = linearFrame;
+        ApplyFixedFunction(img.data(), hlgFrame.data(), NumPixels, dataFInv, 1e-5f, __LINE__, false);
+    }
+}
+
+OCIO_ADD_TEST(FixedFunctionOpCPU, LIN_TO_DOUBLE_LOG)
+{
+    // Note: Parameters are designed to result in a monotonically increasing but
+    // discontinuous function. Also the break points are chosen to be exact
+    // values in IEEE-754 to verify that they belong to the log segments.
+    OCIO::FixedFunctionOpData::Params params
+    {
+        10.0,                  // base for the log
+        0.25,                  // break point between log1 and linear segments
+        0.5,                   // break point between linear and log2 segments
+       -1.0, 0.0, -1.0, 1.25,  // log curve 1: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
+        1.0, 1.0, 1.0, 0.5,    // log curve 2: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
+        1.0, 0.0,              // linear segment slope and offset
+    };
+
+    constexpr unsigned int NumPixels = 10;
+    const std::array<float, NumPixels * 4> linearFrame
+    {
+       -0.25f, -0.20f, -0.15f, -1.00f, // negative input
+       -0.10f, -0.05f,  0.00f,  0.00f, 
+        0.05f,  0.10f,  0.15f,  1.00f, 
+        0.20f,  0.25f,  0.30f,  1.00f, // 0.25 breakpoint belongs to log1  
+        0.35f,  0.40f,  0.45f,  1.00f, // linear segment (y=x)
+        0.50f,  0.55f,  0.60f,  1.00f, // 0.50 breakpoint belongs to log2
+        0.65f,  0.70f,  0.75f,  1.00f, 
+        0.80f,  0.85f,  0.90f,  1.00f,   
+        0.95f,  1.00f,  1.05f,  1.00f, 
+        1.10f,  1.15f,  1.20f,  1.25f  // over-range
+    };
+
+    const std::array<float, NumPixels * 4> logFrame
+    {
+        -0.17609126f, -0.161368f  , -0.14612804f, -1.00f, // negative input
+        -0.13033377f, -0.11394335f, -0.09691001f,  0.00f, 
+        -0.07918125f, -0.06069784f, -0.04139269f,  1.00f, 
+        -0.0211893f ,  0.0f       ,  0.3f       ,  1.00f, // 0.25 breakpoint belongs to log1
+         0.35f      ,  0.4f       ,  0.45f      ,  1.00f, // linear segment (y=x) 
+         1.0f       ,  1.0211893f ,  1.04139269f,  1.00f, // 0.50 breakpoint belongs to log2
+         1.06069784f,  1.07918125f,  1.09691001f,  1.00f,  
+         1.11394335f,  1.13033377f,  1.14612804f,  1.00f,   
+         1.161368f  ,  1.17609126f,  1.1903317f ,  1.00f,  
+         1.20411998f,  1.21748394f,  1.23044892f,  1.25f  // over-range
+    };
+
+    {
+        auto dataFwd = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::LIN_TO_DOUBLE_LOG, params);
+        auto img = linearFrame;
+        ApplyFixedFunction(img.data(), logFrame.data(), NumPixels, dataFwd, 1e-6f, __LINE__, false);
+
+        auto dataFInv = std::make_shared<OCIO::FixedFunctionOpData const>(OCIO::FixedFunctionOpData::DOUBLE_LOG_TO_LIN, params);
+        img = logFrame;
+        ApplyFixedFunction(img.data(), linearFrame.data(), NumPixels, dataFInv, 1e-6f, __LINE__, false);
+    }
 }
