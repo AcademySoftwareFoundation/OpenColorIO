@@ -244,16 +244,16 @@ std::ostream & operator<< (std::ostream & os, const NamedTransform & t)
     const auto numAliases = t.getNumAliases();
     if (numAliases == 1)
     {
-        os << "alias= " << t.getAlias(0) << ", ";
+        os << ", alias= " << t.getAlias(0);
     }
     else if (numAliases > 1)
     {
-        os << "aliases=[" << t.getAlias(0);
+        os << ", aliases=[" << t.getAlias(0);
         for (size_t aidx = 1; aidx < numAliases; ++aidx)
         {
             os << ", " << t.getAlias(aidx);
         }
-        os << "], ";
+        os << "]";
     }
     const std::string strFamily{ t.getFamily() };
     if (!strFamily.empty())

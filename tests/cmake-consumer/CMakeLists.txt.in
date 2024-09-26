@@ -3,7 +3,7 @@
 
 # Check the OCIO CMake config find module
 
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.14)
 project(consumer LANGUAGES CXX)
 
 if(NOT CMAKE_BUILD_TYPE)

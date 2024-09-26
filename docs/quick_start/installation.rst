@@ -123,7 +123,7 @@ items manually:
 Required components:
 
 - C++ 11-17 compiler (gcc, clang, msvc)
-- CMake >= 3.13
+- CMake >= 3.14
 - \*Expat >= 2.4.1 (XML parser for CDL/CLF/CTF)
 - \*yaml-cpp >= 0.7.0 (YAML parser for Configs)
 - \*Imath >= 3.0 (for half domain LUTs)
