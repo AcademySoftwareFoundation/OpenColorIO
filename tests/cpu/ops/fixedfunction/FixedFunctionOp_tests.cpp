@@ -379,3 +379,109 @@ OCIO_ADD_TEST(FixedFunctionOps, XYZ_TO_LUV)
     const std::string typeName(typeid(c).name());
     OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_XYZ_TO_LUV"));
 }
+
+OCIO_ADD_TEST(FixedFunctionOps, LIN_TO_PQ)
+{
+    OCIO::OpRcPtrVec ops;
+
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::PQ_TO_LIN, {}));
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::LIN_TO_PQ, {}));
+
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OCIO::ConstOpRcPtr op1 = ops[1];
+
+    OCIO_CHECK_ASSERT(!op0->isIdentity());
+    OCIO_CHECK_ASSERT(!op1->isIdentity());
+
+    OCIO_CHECK_ASSERT(op0->isSameType(op1));
+    OCIO_CHECK_ASSERT(op0->isInverse(op1));
+    OCIO_CHECK_ASSERT(op1->isInverse(op0));
+
+    OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp(false);
+    const OCIO::OpCPU& c = *cpuOp;
+    const std::string typeName(typeid(c).name());
+    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_PQ_TO_LIN"));
+}
+
+OCIO_ADD_TEST(FixedFunctionOps, LIN_TO_GAMMA_LOG)
+{
+    OCIO::OpRcPtrVec ops;
+
+    // Parameters for the Rec.2100 HLG curve.
+    OCIO::FixedFunctionOpData::Params params
+    {
+        0.0,            // mirror point
+        0.25,           // break point
+
+        // Gamma segment.
+        0.5,            // gamma power
+        1.0,            // post-power scale
+        0.0,            // pre-power offset
+
+        // Log segment.
+        std::exp(1.0),  // log base (e)
+        0.17883277,     // log-side slope
+        0.807825590164, // log-side offset
+        1.0,            // lin-side slope
+        -0.07116723,    // lin-side offset
+    };
+
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::GAMMA_LOG_TO_LIN, params));
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::LIN_TO_GAMMA_LOG, params));
+
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OCIO::ConstOpRcPtr op1 = ops[1];
+
+    OCIO_CHECK_ASSERT(!op0->isIdentity());
+    OCIO_CHECK_ASSERT(!op1->isIdentity());
+
+    OCIO_CHECK_ASSERT(op0->isSameType(op1));
+    OCIO_CHECK_ASSERT(op0->isInverse(op1));
+    OCIO_CHECK_ASSERT(op1->isInverse(op0));
+
+    OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp(false);
+    const OCIO::OpCPU& c = *cpuOp;
+    const std::string typeName(typeid(c).name());
+    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_GAMMA_LOG_TO_LIN"));
+}
+
+OCIO_ADD_TEST(FixedFunctionOps, LIN_TO_DOUBLE_LOG)
+{
+    OCIO::OpRcPtrVec ops;
+
+    OCIO::FixedFunctionOpData::Params params = {
+        10.0,               // base for the log
+        0.5,                // break point between log1 and linear segments
+        0.5,                // break point between linear and log2 segments
+        1.0, 0.0, 1.0, 0.0, // log curve 1: LinSideSlope, LinSideOffset, LogSideSlope, LogSideOffset,
+        1.0, 0.0, 1.0, 0.0, // log curve 2: LinSideSlope, LinSideOffset, LogSideSlope, LogSideOffset,
+        1.0, 0.0,           // linear segment slope and offset
+    };
+
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::LIN_TO_DOUBLE_LOG, params));
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::DOUBLE_LOG_TO_LIN, params));
+
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OCIO::ConstOpRcPtr op1 = ops[1];
+
+    OCIO_CHECK_ASSERT(!op0->isIdentity());
+    OCIO_CHECK_ASSERT(!op1->isIdentity());
+
+    OCIO_CHECK_ASSERT(op0->isSameType(op1));
+    OCIO_CHECK_ASSERT(op0->isInverse(op1));
+    OCIO_CHECK_ASSERT(op1->isInverse(op0));
+
+    OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp(false);
+    const OCIO::OpCPU& c = *cpuOp;
+    const std::string typeName(typeid(c).name());
+    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_LIN_TO_DOUBLE_LOG"));
+}

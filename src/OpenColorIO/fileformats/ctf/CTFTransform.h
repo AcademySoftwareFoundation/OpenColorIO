@@ -115,9 +115,13 @@ static const CTFVersion CTF_PROCESS_LIST_VERSION_2_0 = CTFVersion(2, 0);
 // Version 2.1 2021-08 adds the 'FIXED_FUNCTION_ACES_GAMUT_COMP_13' style to FixedFunctionOp.
 static const CTFVersion CTF_PROCESS_LIST_VERSION_2_1 = CTFVersion(2, 1);
 
+// Version 2.4 2024-08 adds the ACES 2 related FixedFunctionOps and
+// the LIN_TO_PQ, LIN_TO_GAMMA_LOG, AND LIN_TO_DOUBLE_LOG FixedFunctionOps.
+static const CTFVersion CTF_PROCESS_LIST_VERSION_2_4 = CTFVersion(2, 4);
+
 // Add new version before this line
 // and do not forget to update the following line.
-static const CTFVersion CTF_PROCESS_LIST_VERSION = CTF_PROCESS_LIST_VERSION_2_1;
+static const CTFVersion CTF_PROCESS_LIST_VERSION = CTF_PROCESS_LIST_VERSION_2_4;
 
 
 // Version 1.0 initial Autodesk version for InfoElt.

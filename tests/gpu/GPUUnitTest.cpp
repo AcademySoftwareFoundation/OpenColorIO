@@ -224,7 +224,6 @@ namespace
         {
             // It means to generate the input values.
 
-            const bool testWideRange = test->getTestWideRange();
 
 #if __APPLE__ && __aarch64__
             // The Apple M1 chip handles differently the Nan and Inf processing introducing
@@ -236,8 +235,12 @@ namespace
             const bool testInfinity = test->getTestInfinity();
 #endif
 
-            const float min = testWideRange ? -1.0f : 0.0f;
-            const float max = testWideRange ? +2.0f : 1.0f;
+            float min = 0.0f;
+            float max = 1.0f;
+            if(test->getTestWideRange())
+            {
+                test->getWideRangeInterval(min, max);
+            }
             const float range = max - min;
 
             OCIOGPUTest::CustomValues tmp;
@@ -271,9 +274,9 @@ namespace
             // Compute the value step based on the remaining number of values.
             const float step = range / float(numEntries);
 
-            for (; idx < predefinedNumEntries; ++idx)
+            for (unsigned int i=0; i < numEntries; ++i, ++idx)
             {
-                tmp.m_inputValues[idx] = min + step * float(idx);
+                tmp.m_inputValues[idx] = min + step * float(i);
             }
 
             test->setCustomValues(tmp);

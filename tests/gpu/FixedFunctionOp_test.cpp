@@ -5,6 +5,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "GPUUnitTest.h"
+#include <cmath>
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -305,6 +306,494 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_gamutcomp13_inv)
     test.setErrorThreshold(3e-6f);
 }
 
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_output_transform_fwd)
+{
+     const double data[9] = {
+        // Peak luminance
+        1000.f,
+        // P3D65 gamut
+        0.680, 0.320, 0.265, 0.690, 0.150, 0.060, 0.3127, 0.3290
+    };
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20, &data[0], 9);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    test.setProcessor(func);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues =
+    {
+        // ACEScg primaries and secondaries scaled by 4
+        2.781808965f, 0.179178253f, -0.022103530f, 1.0f,
+        3.344523751f, 3.617862727f, -0.006002689f, 1.0f,
+        0.562714786f, 3.438684474f, 0.016100841f, 1.0f,
+        1.218191035f, 3.820821747f, 4.022103530f, 1.0f,
+        0.655476249f, 0.382137273f, 4.006002689f, 1.0f,
+        3.437285214f, 0.561315526f, 3.983899159f, 1.0f,
+        // OCIO test values
+        0.110000000f, 0.020000000f, 0.040000000f, 0.5f,
+        0.710000000f, 0.510000000f, 0.810000000f, 1.0f,
+        0.430000000f, 0.820000000f, 0.710000000f, 0.0f,
+        // ColorChecker24 (SMPTE 2065-1 2021)
+        0.118770000f, 0.087090000f, 0.058950000f, 1.0f,
+        0.400020000f, 0.319160000f, 0.237360000f, 1.0f,
+        0.184760000f, 0.203980000f, 0.313110000f, 1.0f,
+        0.109010000f, 0.135110000f, 0.064930000f, 1.0f,
+        0.266840000f, 0.246040000f, 0.409320000f, 1.0f,
+        0.322830000f, 0.462080000f, 0.406060000f, 1.0f,
+        0.386050000f, 0.227430000f, 0.057770000f, 1.0f,
+        0.138220000f, 0.130370000f, 0.337030000f, 1.0f,
+        0.302020000f, 0.137520000f, 0.127580000f, 1.0f,
+        0.093100000f, 0.063470000f, 0.135250000f, 1.0f,
+        0.348760000f, 0.436540000f, 0.106130000f, 1.0f,
+        0.486550000f, 0.366850000f, 0.080610000f, 1.0f,
+        0.087320000f, 0.074430000f, 0.272740000f, 1.0f,
+        0.153660000f, 0.256920000f, 0.090710000f, 1.0f,
+        0.217420000f, 0.070700000f, 0.051300000f, 1.0f,
+        0.589190000f, 0.539430000f, 0.091570000f, 1.0f,
+        0.309040000f, 0.148180000f, 0.274260000f, 1.0f,
+        0.149010000f, 0.233780000f, 0.359390000f, 1.0f,
+        0.866530000f, 0.867920000f, 0.858180000f, 1.0f,
+        0.573560000f, 0.572560000f, 0.571690000f, 1.0f,
+        0.353460000f, 0.353370000f, 0.353910000f, 1.0f,
+        0.202530000f, 0.202430000f, 0.202870000f, 1.0f,
+        0.094670000f, 0.095200000f, 0.096370000f, 1.0f,
+        0.037450000f, 0.037660000f, 0.038950000f, 1.0f,
+        // Spectrally non-selective 18 % reflecting diffuser
+        0.180000000f, 0.180000000f, 0.180000000f, 1.0f,
+        // Perfect reflecting diffuser
+        0.977840000f, 0.977840000f, 0.977840000f, 1.0f,
+    };
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(2e-5f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_output_transform_inv)
+{
+     const double data[9] = {
+        // Peak luminance
+        1000.f,
+        // P3D65 gamut
+        0.680, 0.320, 0.265, 0.690, 0.150, 0.060, 0.3127, 0.3290
+    };
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20, &data[0], 9);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    test.setProcessor(func);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues =
+    {
+        // ACEScg primaries and secondaries scaled by 4
+        4.965774059f, -0.032864563f, 0.041625995f, 1.0f,
+        3.969441891f, 3.825784922f, -0.056133576f, 1.0f,
+        -0.075329021f, 3.688980103f, 0.270296901f, 1.0f,
+        -0.095423937f, 3.650517225f, 3.459972620f, 1.0f,
+        -0.028930068f, 0.196428135f, 2.796343565f, 1.0f,
+        4.900805950f, -0.064376131f, 3.838256121f, 1.0f,
+        // OCIO test values
+        0.096890204f, -0.001135312f, 0.018971510f, 0.5f,
+        0.809614301f, 0.479856580f, 0.814239502f, 1.0f,
+        0.107420206f, 0.920529068f, 0.726378500f, 0.0f,
+        // ColorChecker24 (SMPTE 2065-1 2021)
+        0.115475260f, 0.050812904f, 0.030212952f, 1.0f,
+        0.484879673f, 0.301042974f, 0.226768956f, 1.0f,
+        0.098463766f, 0.160814658f, 0.277010560f, 1.0f,
+        0.071130365f, 0.107334383f, 0.035097566f, 1.0f,
+        0.207111493f, 0.198474824f, 0.375326216f, 1.0f,
+        0.195447892f, 0.481111974f, 0.393299013f, 1.0f,
+        0.571913838f, 0.196872935f, 0.041634772f, 1.0f,
+        0.045791931f, 0.069875360f, 0.291233480f, 1.0f,
+        0.424848706f, 0.083199009f, 0.102153838f, 1.0f,
+        0.059589427f, 0.022219172f, 0.091246888f, 1.0f,
+        0.360365510f, 0.478741467f, 0.086726837f, 1.0f,
+        0.695662081f, 0.371994525f, 0.068298168f, 1.0f,
+        0.011806309f, 0.021665439f, 0.199594811f, 1.0f,
+        0.076526314f, 0.256237417f, 0.060564656f, 1.0f,
+        0.300064564f, 0.023416257f, 0.030360471f, 1.0f,
+        0.805484772f, 0.596903503f, 0.082996152f, 1.0f,
+        0.388385952f, 0.079899102f, 0.245819211f, 1.0f,
+        0.010952532f, 0.196105912f, 0.307181358f, 1.0f,
+        0.921019495f, 0.921707213f, 0.912856042f, 1.0f,
+        0.590192318f, 0.588423848f, 0.587825358f, 1.0f,
+        0.337743521f, 0.337685764f, 0.338155121f, 1.0f,
+        0.169265985f, 0.169178501f, 0.169557109f, 1.0f,
+        0.058346048f, 0.059387825f, 0.060296260f, 1.0f,
+        0.012581184f, 0.012947139f, 0.013654195f, 1.0f,
+        // Spectrally non-selective 18 % reflecting diffuser
+        0.145115465f, 0.145115525f, 0.145115510f, 1.0f,
+        // Perfect reflecting diffuser
+        1.041565657f, 1.041566014f, 1.041565657f, 1.0f,
+    };
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(1e-4f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_output_transform_invfwd)
+{
+     const double data_inv[9] = {
+        // Peak luminance
+        100.f,
+        // REC709 gamut
+        0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329
+    };
+    OCIO::FixedFunctionTransformRcPtr func_inv =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20, &data_inv[0], 9);
+    func_inv->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+     const double data_fwd[9] = {
+        // Peak luminance
+        1000.f,
+        // P3D65 gamut
+        0.680, 0.320, 0.265, 0.690, 0.150, 0.060, 0.3127, 0.3290
+    };
+
+    OCIO::FixedFunctionTransformRcPtr func_fwd =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20, &data_fwd[0], 9);
+
+    OCIO::GroupTransformRcPtr grp = OCIO::GroupTransform::Create();
+    grp->appendTransform(func_inv);
+    grp->appendTransform(func_fwd);
+
+    test.setProcessor(grp);
+
+    test.setErrorThreshold(7e-4f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_rgb_to_jmh_fwd)
+{
+    // ACES AP0
+    const double data[8] = { 0.7347, 0.2653, 0.0000, 1.0000, 0.0001, -0.0770, 0.32168, 0.33767 };
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_RGB_TO_JMH_20, &data[0], 8);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    test.setProcessor(func);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues =
+    {
+        // ACEScg primaries and secondaries scaled by 4
+        2.781808965f, 0.179178253f, -0.022103530f, 1.0f,
+        3.344523751f, 3.617862727f, -0.006002689f, 1.0f,
+        0.562714786f, 3.438684474f, 0.016100841f, 1.0f,
+        1.218191035f, 3.820821747f, 4.022103530f, 1.0f,
+        0.655476249f, 0.382137273f, 4.006002689f, 1.0f,
+        3.437285214f, 0.561315526f, 3.983899159f, 1.0f,
+        // OCIO test values
+        0.110000000f, 0.020000000f, 0.040000000f, 0.5f,
+        0.710000000f, 0.510000000f, 0.810000000f, 1.0f,
+        0.430000000f, 0.820000000f, 0.710000000f, 0.0f,
+        // ColorChecker24 (SMPTE 2065-1 2021)
+        0.118770000f, 0.087090000f, 0.058950000f, 1.0f,
+        0.400020000f, 0.319160000f, 0.237360000f, 1.0f,
+        0.184760000f, 0.203980000f, 0.313110000f, 1.0f,
+        0.109010000f, 0.135110000f, 0.064930000f, 1.0f,
+        0.266840000f, 0.246040000f, 0.409320000f, 1.0f,
+        0.322830000f, 0.462080000f, 0.406060000f, 1.0f,
+        0.386050000f, 0.227430000f, 0.057770000f, 1.0f,
+        0.138220000f, 0.130370000f, 0.337030000f, 1.0f,
+        0.302020000f, 0.137520000f, 0.127580000f, 1.0f,
+        0.093100000f, 0.063470000f, 0.135250000f, 1.0f,
+        0.348760000f, 0.436540000f, 0.106130000f, 1.0f,
+        0.486550000f, 0.366850000f, 0.080610000f, 1.0f,
+        0.087320000f, 0.074430000f, 0.272740000f, 1.0f,
+        0.153660000f, 0.256920000f, 0.090710000f, 1.0f,
+        0.217420000f, 0.070700000f, 0.051300000f, 1.0f,
+        0.589190000f, 0.539430000f, 0.091570000f, 1.0f,
+        0.309040000f, 0.148180000f, 0.274260000f, 1.0f,
+        0.149010000f, 0.233780000f, 0.359390000f, 1.0f,
+    };
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(2e-4f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_rgb_to_jmh_inv)
+{
+    // ACES AP0
+    const double data[8] = { 0.7347, 0.2653, 0.0000, 1.0000, 0.0001, -0.0770, 0.32168, 0.33767 };
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_RGB_TO_JMH_20, &data[0], 8);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    test.setProcessor(func);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues =
+    {
+        // ACEScg primaries and secondaries scaled by 4
+        107.480636597f, 206.827301025f, 25.025110245f, 1.0f,
+        173.194076538f, 133.330886841f, 106.183448792f, 1.0f,
+        139.210220337f, 191.922363281f, 147.056488037f, 1.0f,
+        157.905166626f, 111.975311279f, 192.204727173f, 1.0f,
+        79.229278564f, 100.424659729f, 268.442108154f, 1.0f,
+        132.888137817f, 173.358779907f, 341.715240479f, 1.0f,
+        // OCIO test values
+        26.112514496f, 42.523605347f, 4.173158169f, 0.5f,
+        79.190460205f, 25.002300262f, 332.159759521f, 1.0f,
+        81.912559509f, 39.754810333f, 182.925750732f, 0.0f,
+        // ColorChecker24 (SMPTE 2065-1 2021)
+        33.924663544f, 12.254567146f, 38.146659851f, 1.0f,
+        61.332393646f, 15.169423103f, 39.841842651f, 1.0f,
+        47.191543579f, 11.839941978f, 249.107116699f, 1.0f,
+        37.328300476f, 13.224150658f, 128.878036499f, 1.0f,
+        53.465549469f, 13.121579170f, 285.658966064f, 1.0f,
+        65.414512634f, 19.172147751f, 179.324264526f, 1.0f,
+        55.711513519f, 37.182041168f, 50.924011230f, 1.0f,
+        40.020961761f, 20.762512207f, 271.008331299f, 1.0f,
+        47.704769135f, 35.791145325f, 13.975610733f, 1.0f,
+        30.385913849f, 14.544739723f, 317.544281006f, 1.0f,
+        64.222846985f, 33.487697601f, 119.145133972f, 1.0f,
+        65.570358276f, 35.864013672f, 70.842193604f, 1.0f,
+        31.800464630f, 23.920211792f, 273.228973389f, 1.0f,
+        47.950405121f, 28.027387619f, 144.154159546f, 1.0f,
+        38.440967560f, 42.604164124f, 17.892261505f, 1.0f,
+        75.117736816f, 40.952045441f, 90.752044678f, 1.0f,
+        49.311210632f, 33.812240601f, 348.832092285f, 1.0f,
+        47.441757202f, 22.915655136f, 218.454376221f, 1.0f,
+    };
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(1e-4f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_tonescale_compress_fwd)
+{
+    const double data[1] = { 1000.f };
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20, &data[0], 1);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    test.setProcessor(func);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues =
+    {
+        // ACEScg primaries and secondaries scaled by 4
+        107.480636597f, 206.827301025f, 25.025110245f, 1.0f,
+        173.194076538f, 133.330886841f, 106.183448792f, 1.0f,
+        139.210220337f, 191.922363281f, 147.056488037f, 1.0f,
+        157.905166626f, 111.975311279f, 192.204727173f, 1.0f,
+        79.229278564f, 100.424659729f, 268.442108154f, 1.0f,
+        132.888137817f, 173.358779907f, 341.715240479f, 1.0f,
+        // OCIO test values
+        26.112514496f, 42.523605347f, 4.173158169f, 0.5f,
+        79.190460205f, 25.002300262f, 332.159759521f, 1.0f,
+        81.912559509f, 39.754810333f, 182.925750732f, 0.0f,
+        // ColorChecker24 (SMPTE 2065-1 2021)
+        33.924663544f, 12.254567146f, 38.146659851f, 1.0f,
+        61.332393646f, 15.169423103f, 39.841842651f, 1.0f,
+        47.191543579f, 11.839941978f, 249.107116699f, 1.0f,
+        37.328300476f, 13.224150658f, 128.878036499f, 1.0f,
+        53.465549469f, 13.121579170f, 285.658966064f, 1.0f,
+        65.414512634f, 19.172147751f, 179.324264526f, 1.0f,
+        55.711513519f, 37.182041168f, 50.924011230f, 1.0f,
+        40.020961761f, 20.762512207f, 271.008331299f, 1.0f,
+        47.704769135f, 35.791145325f, 13.975610733f, 1.0f,
+        30.385913849f, 14.544739723f, 317.544281006f, 1.0f,
+        64.222846985f, 33.487697601f, 119.145133972f, 1.0f,
+        65.570358276f, 35.864013672f, 70.842193604f, 1.0f,
+        31.800464630f, 23.920211792f, 273.228973389f, 1.0f,
+        47.950405121f, 28.027387619f, 144.154159546f, 1.0f,
+        38.440967560f, 42.604164124f, 17.892261505f, 1.0f,
+        75.117736816f, 40.952045441f, 90.752044678f, 1.0f,
+        49.311210632f, 33.812240601f, 348.832092285f, 1.0f,
+        47.441757202f, 22.915655136f, 218.454376221f, 1.0f,
+        93.610260010f, 0.439610571f, 108.271926880f, 1.0f,
+        77.237663269f, 0.131636351f, 33.296318054f, 1.0f,
+        61.655914307f, 0.041985143f, 291.004058838f, 1.0f,
+        47.493667603f, 0.048908804f, 297.386047363f, 1.0f,
+        33.264842987f, 0.283808023f, 234.276382446f, 1.0f,
+        21.467216492f, 0.409062684f, 255.025634766f, 1.0f,
+        // Spectrally non-selective 18 % reflecting diffuser
+        44.938602448f, 0.000004705f, 299.357757568f, 1.0f,
+        // Perfect reflecting diffuser
+        98.969635010f, 0.000083445f, 5.640549183f, 1.0f,
+    };
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(1e-4f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_tonescale_compress_inv)
+{
+    const double data[1] = { 1000.f };
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20, &data[0], 1);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    test.setProcessor(func);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues =
+    {
+        // ACEScg primaries and secondaries scaled by 4
+        110.702453613f, 211.251770020f, 25.025110245f, 1.0f,
+        168.016815186f, 129.796249390f, 106.183448792f, 1.0f,
+        140.814849854f, 193.459213257f, 147.056488037f, 1.0f,
+        156.429519653f, 110.938514709f, 192.204727173f, 1.0f,
+        80.456542969f, 98.490524292f, 268.442108154f, 1.0f,
+        135.172195435f, 175.559280396f, 341.715240479f, 1.0f,
+        // OCIO test values
+        18.187314987f, 33.819175720f, 4.173158169f, 0.5f,
+        80.413116455f, 21.309329987f, 332.159759521f, 1.0f,
+        83.447891235f, 37.852291107f, 182.925750732f, 0.0f,
+        // ColorChecker24 (SMPTE 2065-1 2021)
+        27.411964417f, 13.382769585f, 38.146659851f, 1.0f,
+        59.987670898f, 14.391894341f, 39.841842651f, 1.0f,
+        43.298923492f, 12.199877739f, 249.107116699f, 1.0f,
+        31.489658356f, 14.075142860f, 128.878036499f, 1.0f,
+        50.749198914f, 12.731814384f, 285.658966064f, 1.0f,
+        64.728637695f, 18.593795776f, 179.324264526f, 1.0f,
+        53.399448395f, 37.394428253f, 50.924011230f, 1.0f,
+        34.719596863f, 21.616765976f, 271.008331299f, 1.0f,
+        43.910713196f, 36.788166046f, 13.975610733f, 1.0f,
+        23.196525574f, 15.118354797f, 317.544281006f, 1.0f,
+        63.348674774f, 33.283493042f, 119.145133972f, 1.0f,
+        64.908889771f, 35.371044159f, 70.842193604f, 1.0f,
+        24.876911163f, 23.143159866f, 273.228973389f, 1.0f,
+        44.203376770f, 28.918329239f, 144.154159546f, 1.0f,
+        32.824356079f, 43.447875977f, 17.892261505f, 1.0f,
+        75.830871582f, 39.872474670f, 90.752044678f, 1.0f,
+        45.823116302f, 34.652069092f, 348.832092285f, 1.0f,
+        43.597240448f, 23.079078674f, 218.454376221f, 1.0f,
+        96.212783813f, 0.322624743f, 108.271926880f, 1.0f,
+        78.222122192f, 0.094044082f, 33.296318054f, 1.0f,
+        60.364795685f, 0.031291425f, 291.004058838f, 1.0f,
+        43.659111023f, 0.038717352f, 297.386047363f, 1.0f,
+        26.623359680f, 0.269155562f, 234.276382446f, 1.0f,
+        12.961384773f, 0.366550505f, 255.025634766f, 1.0f,
+        // Spectrally non-selective 18 % reflecting diffuser
+        40.609165192f, 0.000000000f, 299.357757568f, 1.0f,
+        // Perfect reflecting diffuser
+        101.899215698f, 0.000068110f, 5.640549183f, 1.0f,
+    };
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(1e-4f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_gamut_compress_fwd)
+{
+    const double data[9] = {
+        // Peak luminance
+        1000.f,
+        // P3D65 gamut
+        0.680, 0.320, 0.265, 0.690, 0.150, 0.060, 0.3127, 0.3290
+    };
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20, &data[0], 9);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    test.setProcessor(func);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues =
+    {
+        // ACEScg primaries and secondaries scaled by 4
+        110.702453613f, 211.251770020f, 25.025110245f, 1.0f,
+        168.016815186f, 129.796249390f, 106.183448792f, 1.0f,
+        140.814849854f, 193.459213257f, 147.056488037f, 1.0f,
+        156.429519653f, 110.938514709f, 192.204727173f, 1.0f,
+        80.456542969f, 98.490524292f, 268.442108154f, 1.0f,
+        135.172195435f, 175.559280396f, 341.715240479f, 1.0f,
+        // OCIO test values
+        18.187314987f, 33.819175720f, 4.173158169f, 0.5f,
+        80.413116455f, 21.309329987f, 332.159759521f, 1.0f,
+        83.447891235f, 37.852291107f, 182.925750732f, 0.0f,
+        // ColorChecker24 (SMPTE 2065-1 2021)
+        27.411964417f, 13.382769585f, 38.146659851f, 1.0f,
+        59.987670898f, 14.391894341f, 39.841842651f, 1.0f,
+        43.298923492f, 12.199877739f, 249.107116699f, 1.0f,
+        31.489658356f, 14.075142860f, 128.878036499f, 1.0f,
+        50.749198914f, 12.731814384f, 285.658966064f, 1.0f,
+        64.728637695f, 18.593795776f, 179.324264526f, 1.0f,
+        53.399448395f, 37.394428253f, 50.924011230f, 1.0f,
+        34.719596863f, 21.616765976f, 271.008331299f, 1.0f,
+        43.910713196f, 36.788166046f, 13.975610733f, 1.0f,
+        23.196525574f, 15.118354797f, 317.544281006f, 1.0f,
+        63.348674774f, 33.283493042f, 119.145133972f, 1.0f,
+        64.908889771f, 35.371044159f, 70.842193604f, 1.0f,
+        24.876911163f, 23.143159866f, 273.228973389f, 1.0f,
+        44.203376770f, 28.918329239f, 144.154159546f, 1.0f,
+        32.824356079f, 43.447875977f, 17.892261505f, 1.0f,
+        75.830871582f, 39.872474670f, 90.752044678f, 1.0f,
+        45.823116302f, 34.652069092f, 348.832092285f, 1.0f,
+        43.597240448f, 23.079078674f, 218.454376221f, 1.0f,
+        96.212783813f, 0.322624743f, 108.271926880f, 1.0f,
+        78.222122192f, 0.094044082f, 33.296318054f, 1.0f,
+        60.364795685f, 0.031291425f, 291.004058838f, 1.0f,
+        43.659111023f, 0.038717352f, 297.386047363f, 1.0f,
+        26.623359680f, 0.269155562f, 234.276382446f, 1.0f,
+        12.961384773f, 0.366550505f, 255.025634766f, 1.0f,
+        // Spectrally non-selective 18 % reflecting diffuser
+        40.609165192f, 0.000000000f, 299.357757568f, 1.0f,
+        // Perfect reflecting diffuser
+        101.899215698f, 0.000068110f, 5.640549183f, 1.0f,
+    };
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(1e-4f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_gamut_compress_inv)
+{
+    const double data[9] = {
+        // Peak luminance
+        1000.f,
+        // P3D65 gamut
+        0.680, 0.320, 0.265, 0.690, 0.150, 0.060, 0.3127, 0.3290
+    };
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20, &data[0], 9);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    test.setProcessor(func);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues =
+    {
+        // ACEScg primaries and secondaries scaled by 4
+        107.831291199f, 174.252944946f, 25.025119781f, 1.0f,
+        168.028198242f, 118.224960327f, 106.183464050f, 1.0f,
+        140.030105591f, 127.177192688f, 147.056488037f, 1.0f,
+        156.512435913f, 73.218856812f, 192.204727173f, 1.0f,
+        79.378631592f, 72.613555908f, 268.442108154f, 1.0f,
+        133.827835083f, 149.929809570f, 341.715240479f, 1.0f,
+        // OCIO test values
+        18.194000244f, 33.312938690f, 4.173166752f, 0.5f,
+        80.413116455f, 21.309329987f, 332.159759521f, 1.0f,
+        83.467437744f, 37.305160522f, 182.925750732f, 0.0f,
+        // ColorChecker24 (SMPTE 2065-1 2021)
+        27.411962509f, 13.382793427f, 38.146591187f, 1.0f,
+        59.987670898f, 14.391893387f, 39.841842651f, 1.0f,
+        43.298923492f, 12.199877739f, 249.107116699f, 1.0f,
+        31.489658356f, 14.075142860f, 128.878036499f, 1.0f,
+        50.749198914f, 12.731814384f, 285.658966064f, 1.0f,
+        64.728637695f, 18.593795776f, 179.324264526f, 1.0f,
+        53.399448395f, 37.394428253f, 50.924011230f, 1.0f,
+        34.719596863f, 21.616765976f, 271.008331299f, 1.0f,
+        43.910709381f, 36.788166046f, 13.975610733f, 1.0f,
+        23.196525574f, 15.118361473f, 317.544250488f, 1.0f,
+        63.348674774f, 33.283493042f, 119.145133972f, 1.0f,
+        64.908889771f, 35.371044159f, 70.842193604f, 1.0f,
+        24.876916885f, 23.143167496f, 273.229034424f, 1.0f,
+        44.203376770f, 28.918329239f, 144.154159546f, 1.0f,
+        32.824352264f, 43.447864532f, 17.892255783f, 1.0f,
+        75.830871582f, 39.872474670f, 90.752044678f, 1.0f,
+        45.823104858f, 34.652038574f, 348.832092285f, 1.0f,
+        43.635551453f, 21.629474640f, 218.454376221f, 1.0f,
+    };
+    test.setCustomValues(values);
+
+    // TODO: Improve inversion match?
+    test.setErrorThreshold(4e-4f);
+}
+
 // The next four tests run into a problem on some graphics cards where 0.0 * Inf = 0.0,
 // rather than the correct value of NaN.  Therefore turning off TestInfinity for these tests.
 
@@ -504,4 +993,121 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_LUV_inv)
     test.setProcessor(func);
 
     test.setErrorThreshold(1e-5f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_PQ_fwd)
+{
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LIN_TO_PQ);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    
+    test.setWideRangeInterval(-0.1f, 100.1f);
+    test.setProcessor(func);
+
+    // Using large threshold for SSE2 as that will enable usage of fast but
+    // approximate power function ssePower.
+    test.setErrorThreshold(OCIO_USE_SSE2 ? 0.0008f : 2e-5f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_PQ_inv)
+{
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LIN_TO_PQ);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    // Picking a tight epsilon is tricky with this function due to nested power
+    // operations and [0,100] output range for [0,1] input range.
+ 
+    // MaxDiff in range [-0.1, 1.1] against...
+    //      scalar double precision         : 0.000094506
+    //      scalar single precision         : 0.000144501
+    //      SSE2 (intrinsic pow)            : 0.000144441
+    //      SSE2 (fastPower)                : 0.002207260
+    test.setWideRangeInterval(-0.1f, 1.1f);
+    test.setProcessor(func);
+    test.setRelativeComparison(true); // Since the output range will be 0..100, we set the relative epsilon.
+    test.setErrorThreshold(OCIO_USE_SSE2 ? 0.0023f : 1.5e-4f);
+}
+
+namespace
+{
+namespace HLG
+{
+    // Parameters for the Rec.2100 HLG curve.
+    double params[10]
+    {
+        0.0,            // mirror point
+        0.25,           // break point
+
+        // Gamma segment.
+        0.5,            // gamma power
+        1.0,            // post-power scale
+        0.0,            // pre-power offset
+
+        // Log segment.
+        std::exp(1.0),  // log base (e)
+        0.17883277,     // log-side slope
+        0.807825590164, // log-side offset
+        1.0,            // lin-side slope
+        -0.07116723,    // lin-side offset
+    };
+}
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_GAMMA_LOG_fwd)
+{
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LIN_TO_GAMMA_LOG, HLG::params, 10);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    test.setWideRangeInterval(-0.1f, 3.35f); // Output ~[-0.3, 1.02]
+    test.setProcessor(func);
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_GAMMA_LOG_inv)
+{
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LIN_TO_GAMMA_LOG, HLG::params, 10);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    test.setWideRangeInterval(-0.3f, 1.02f); // Output ~[-0.1, 3.35]
+    test.setProcessor(func);
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_DOUBLE_LOG_fwd)
+{
+    double params[13]
+    {
+        10.0,                  // Base for the log
+        0.1,                   // Break point between Log1 and Linear segments
+        0.5,                   // Break point between Linear and Log2 segments
+        -1.0, -1.0, -1.0, 0.2, // Log curve 1: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
+        1.0, 1.0, 1.0, 0.5,    // Log curve 2: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
+        1.0, 0.0,              // Linear segment slope and offset
+    };
+
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LIN_TO_DOUBLE_LOG, params, 13);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    test.setWideRangeInterval(-1.0f, 2.0f); // Output ~[-1.08, 1.4]
+    test.setProcessor(func);
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_DOUBLE_LOG_inv)
+{
+    double params[13]
+    {
+        10.0,                  // Base for the log
+        0.1,                   // Break point between Log1 and Linear segments
+        0.5,                   // Break point between Linear and Log2 segments
+        -1.0, -1.0, -1.0, 0.2, // Log curve 1: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
+        1.0, 1.0, 1.0, 0.5,    // Log curve 2: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
+        1.0, 0.0,              // Linear segment slope and offset
+    };
+
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LIN_TO_DOUBLE_LOG, params, 13);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    test.setWideRangeInterval(-1.1f, 1.4f); // Output ~[-1.0, 2.0]
+    test.setProcessor(func);
+    test.setErrorThreshold(1e-6f);
 }

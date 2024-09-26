@@ -119,10 +119,10 @@ std::string FixedFunctionOp::getCacheID() const
     return cacheIDStream.str();
 }
 
-ConstOpCPURcPtr FixedFunctionOp::getCPUOp(bool /*fastLogExpPow*/) const
+ConstOpCPURcPtr FixedFunctionOp::getCPUOp(bool fastLogExpPow) const
 {
     ConstFixedFunctionOpDataRcPtr data = fnData();
-    return GetFixedFunctionCPURenderer(data);
+    return GetFixedFunctionCPURenderer(data, fastLogExpPow);
 }
 
 void FixedFunctionOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const

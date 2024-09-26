@@ -36,6 +36,12 @@
 
      FIXED_FUNCTION_ACES_GAMUT_COMP_13 : ACES 1.3 Parametric Gamut Compression (expects ACEScg values)
 
+     FIXED_FUNCTION_LIN_TO_PQ : SMPTE ST-2084 OETF, scaled with 100 nits at 1.0 (neg vals mirrored)
+
+     FIXED_FUNCTION_LIN_TO_GAMMA_LOG : Parametrized gamma and log segments with mirroring
+
+     FIXED_FUNCTION_LIN_TO_DOUBLE_LOG : Two parameterized LogAffineTransforms with a middle linear segment
+
    .. py:method:: name() -> str
       :property:
 
@@ -103,6 +109,18 @@
       :module: PyOpenColorIO
       :value: <FixedFunctionStyle.FIXED_FUNCTION_XYZ_TO_xyY: 7>
 
+
+   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_LIN_TO_PQ
+      :module: PyOpenColorIO
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_PQ_TO_LIN: 13>
+
+   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_LIN_TO_GAMMA_LOG
+      :module: PyOpenColorIO
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_LIN_TO_GAMMA_LOG: 14>
+
+   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_LIN_TO_DOUBLE_LOG
+      :module: PyOpenColorIO
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_LIN_TO_DOUBLE_LOG: 15>
 
    .. py:property:: FixedFunctionStyle.value
       :module: PyOpenColorIO

@@ -26,28 +26,42 @@ public:
 
     enum Style
     {
-        ACES_RED_MOD_03_FWD = 0,  // Red modifier (ACES 0.3/0.7)
-        ACES_RED_MOD_03_INV,      // Red modifier inverse (ACES 0.3/0.7)
-        ACES_RED_MOD_10_FWD,      // Red modifier (ACES 1.0)
-        ACES_RED_MOD_10_INV,      // Red modifier inverse (ACES v1.0)
-        ACES_GLOW_03_FWD,         // Glow function (ACES 0.3/0.7)
-        ACES_GLOW_03_INV,         // Glow function inverse (ACES 0.3/0.7)
-        ACES_GLOW_10_FWD,         // Glow function (ACES 1.0)
-        ACES_GLOW_10_INV,         // Glow function inverse (ACES 1.0)
-        ACES_DARK_TO_DIM_10_FWD,  // Dark to dim surround correction (ACES 1.0)
-        ACES_DARK_TO_DIM_10_INV,  // Dim to dark surround correction (ACES 1.0)
-        ACES_GAMUT_COMP_13_FWD,   // Parametric Gamut Compression (ACES 1.3)
-        ACES_GAMUT_COMP_13_INV,   // Parametric Gamut Compression inverse (ACES 1.3)
-        REC2100_SURROUND_FWD,     // Rec.2100 surround correction (takes one double for the gamma param)
-        REC2100_SURROUND_INV,     // Rec.2100 surround correction inverse (takes one gamma param)
-        RGB_TO_HSV,               // Classic RGB to HSV function
-        HSV_TO_RGB,               // Classic HSV to RGB function
-        XYZ_TO_xyY,               // CIE XYZ to 1931 xy chromaticity coordinates
-        xyY_TO_XYZ,               // Inverse of above
-        XYZ_TO_uvY,               // CIE XYZ to 1976 u'v' chromaticity coordinates
-        uvY_TO_XYZ,               // Inverse of above
-        XYZ_TO_LUV,               // CIE XYZ to 1976 CIELUV colour space (D65 white)
-        LUV_TO_XYZ                // Inverse of above
+        ACES_RED_MOD_03_FWD = 0,        // Red modifier (ACES 0.3/0.7)
+        ACES_RED_MOD_03_INV,            // Red modifier inverse (ACES 0.3/0.7)
+        ACES_RED_MOD_10_FWD,            // Red modifier (ACES 1.0)
+        ACES_RED_MOD_10_INV,            // Red modifier inverse (ACES v1.0)
+        ACES_GLOW_03_FWD,               // Glow function (ACES 0.3/0.7)
+        ACES_GLOW_03_INV,               // Glow function inverse (ACES 0.3/0.7)
+        ACES_GLOW_10_FWD,               // Glow function (ACES 1.0)
+        ACES_GLOW_10_INV,               // Glow function inverse (ACES 1.0)
+        ACES_DARK_TO_DIM_10_FWD,        // Dark to dim surround correction (ACES 1.0)
+        ACES_DARK_TO_DIM_10_INV,        // Dim to dark surround correction (ACES 1.0)
+        ACES_GAMUT_COMP_13_FWD,         // Parametric Gamut Compression (ACES 1.3)
+        ACES_GAMUT_COMP_13_INV,         // Parametric Gamut Compression inverse (ACES 1.3)
+        REC2100_SURROUND_FWD,           // Rec.2100 surround correction (takes one double for the gamma param)
+        REC2100_SURROUND_INV,           // Rec.2100 surround correction inverse (takes one gamma param)
+        RGB_TO_HSV,                     // Classic RGB to HSV function
+        HSV_TO_RGB,                     // Classic HSV to RGB function
+        XYZ_TO_xyY,                     // CIE XYZ to 1931 xy chromaticity coordinates
+        xyY_TO_XYZ,                     // Inverse of above
+        XYZ_TO_uvY,                     // CIE XYZ to 1976 u'v' chromaticity coordinates
+        uvY_TO_XYZ,                     // Inverse of above
+        XYZ_TO_LUV,                     // CIE XYZ to 1976 CIELUV colour space (D65 white)
+        LUV_TO_XYZ,                     // Inverse of above
+        LIN_TO_PQ,                      // Linear to Perceptual Quantizer curve 
+        PQ_TO_LIN,                      // Inverse of above
+        LIN_TO_GAMMA_LOG,               // Curve with gamma and log segments (takes 10 doubles as params)
+        GAMMA_LOG_TO_LIN,               // Inverse of above
+        LIN_TO_DOUBLE_LOG,              // Curve with two log affine and one linear segment (takes 13 doubles as params)
+        DOUBLE_LOG_TO_LIN,              // Inverse of above
+        ACES_OUTPUT_TRANSFORM_20_FWD,   // ACES2 Output transform
+        ACES_OUTPUT_TRANSFORM_20_INV,   // ACES2 Output transform (inverse)
+        ACES_RGB_TO_JMh_20,             // ACES2 RGB to JMh
+        ACES_JMh_TO_RGB_20,             // ACES2 JMh to RGB
+        ACES_TONESCALE_COMPRESS_20_FWD, // ACES2 Tonescale and chroma compression
+        ACES_TONESCALE_COMPRESS_20_INV, // ACES2 Tonescale and chroma compression (inv)
+        ACES_GAMUT_COMPRESS_20_FWD,     // ACES2 Gamut compression
+        ACES_GAMUT_COMPRESS_20_INV      // ACES2 Gamut compression (inv)
     };
 
     static const char * ConvertStyleToString(Style style, bool detailed);

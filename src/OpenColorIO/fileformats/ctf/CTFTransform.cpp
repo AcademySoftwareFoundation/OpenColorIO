@@ -250,12 +250,28 @@ CTFVersion GetOpMinimumVersion(const ConstOpDataRcPtr & op)
 
         auto ff = OCIO_DYNAMIC_POINTER_CAST<const FixedFunctionOpData>(op);
         
-        if (ff->getStyle() == FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD 
-                || ff->getStyle() == FixedFunctionOpData::ACES_GAMUT_COMP_13_INV)
+        if (  ff->getStyle() == FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD 
+           || ff->getStyle() == FixedFunctionOpData::ACES_GAMUT_COMP_13_INV  )
         {
             minVersion = CTF_PROCESS_LIST_VERSION_2_1;
         }
-
+        else if (  ff->getStyle() == FixedFunctionOpData::LIN_TO_PQ
+                || ff->getStyle() == FixedFunctionOpData::PQ_TO_LIN
+                || ff->getStyle() == FixedFunctionOpData::LIN_TO_GAMMA_LOG
+                || ff->getStyle() == FixedFunctionOpData::GAMMA_LOG_TO_LIN
+                || ff->getStyle() == FixedFunctionOpData::LIN_TO_DOUBLE_LOG
+                || ff->getStyle() == FixedFunctionOpData::DOUBLE_LOG_TO_LIN
+                || ff->getStyle() == FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_FWD
+                || ff->getStyle() == FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_INV
+                || ff->getStyle() == FixedFunctionOpData::ACES_RGB_TO_JMh_20
+                || ff->getStyle() == FixedFunctionOpData::ACES_JMh_TO_RGB_20
+                || ff->getStyle() == FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_FWD
+                || ff->getStyle() == FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_INV
+                || ff->getStyle() == FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_FWD
+                || ff->getStyle() == FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_INV  )
+        {
+            minVersion = CTF_PROCESS_LIST_VERSION_2_4;
+        }
         break;
     }
     case OpData::GradingPrimaryType:
