@@ -3765,7 +3765,8 @@ void WriteGroupCLF(OCIO::ConstGroupTransformRcPtr group, std::ostringstream & ou
     group->write(cfg, OCIO::FILEFORMAT_CLF, outputTransform);
 }
 
-void ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::Style style, std::string vers, int lineNo)
+void ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::Style style,
+                                       const std::string & vers, int lineNo)
 {
     // Validate the load & save for any FixedFunction style without parameters.
 

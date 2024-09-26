@@ -312,7 +312,7 @@ colorspaces:
 namespace
 {
 
-void TestStyle(std::string style)
+void TestStyle(const std::string & style)
 {
     static constexpr char BASE[] {
 R"(ocio_profile_version: 2.3
@@ -364,7 +364,7 @@ colorspaces:
 OCIO_ADD_TEST(Builtins, version_2_3_validation)
 {
     // The unit test validates that the config reader checkVersionConsistency check throws for
-    // version 2.3 configs containing a Builtin Transform with the 2.2 style for ARRI LogC4.
+    // version 2.3 configs containing a Builtin Transform with the new 2.4 styles.
 
     TestStyle("APPLE_LOG_to_ACES2065-1");
     TestStyle("CURVE - APPLE_LOG_to_LINEAR");
