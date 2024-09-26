@@ -370,6 +370,8 @@ OCIO_ADD_TEST(Builtins, version_2_3_validation)
     TestStyle("CURVE - APPLE_LOG_to_LINEAR");
     TestStyle("CURVE - HLG-OETF");
     TestStyle("CURVE - HLG-OETF-INVERSE");
+    TestStyle("DISPLAY - CIE-XYZ-D65_to_DCDM-D65");
+    TestStyle("DISPLAY - CIE-XYZ-D65_to_ST2084-DCDM-D65");
     TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709_2.0");
     TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D65_2.0");
     TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-108nit-P3-D65_2.0");

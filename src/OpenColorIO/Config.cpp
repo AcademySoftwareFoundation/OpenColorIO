@@ -5236,6 +5236,8 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
                         || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - APPLE_LOG_to_LINEAR")
                         || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - HLG-OETF")
                         || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - HLG-OETF-INVERSE")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "DISPLAY - CIE-XYZ-D65_to_DCDM-D65")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "DISPLAY - CIE-XYZ-D65_to_ST2084-DCDM-D65")
                         || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709_2.0")
                         || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D65_2.0")
                         || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-108nit-P3-D65_2.0")

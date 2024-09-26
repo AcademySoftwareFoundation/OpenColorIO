@@ -620,6 +620,9 @@ AllValues UnitTestValues
     { "DISPLAY - CIE-XYZ-D65_to_G2.6-P3-D60-BFD",
         { 1.0e-6f,
         { 0.5f, 0.4f, 0.3f }, { 0.892433142142f, 0.627011653770f,  0.608093643982f } } },
+    { "DISPLAY - CIE-XYZ-D65_to_DCDM-D65",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.740738422348f, 0.679816639411f,  0.608609083713f } } },
     { "DISPLAY - CIE-XYZ-D65_to_DisplayP3",
         { 1.0e-6f,
         { 0.5f, 0.4f, 0.3f }, { 0.882580907776f, 0.581526360743f,  0.5606367050000f } } },
@@ -640,6 +643,9 @@ AllValues UnitTestValues
         { 1.0e-5f,
         { 0.5f,            0.4f,            0.3f,            -0.1f,         1.01f,        0.2f }, 
         { 0.479939091128f, 0.392091860770f, 0.384886051856f, -0.532302439f, 0.572011411f, 0.307887018f } } },
+    { "DISPLAY - CIE-XYZ-D65_to_ST2084-DCDM-D65",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.440281573420f, 0.419284117712f,  0.392876186489f } } },
     { "CURVE - HLG-OETF-INVERSE", 
         { 1.0e-5f,
         { 0.5f,            0.4f,            0.3f,            -0.7f,            1.2f,            0.9f }, 
@@ -690,4 +696,8 @@ OCIO_ADD_TEST(Builtins, validate)
             ValidateBuiltinTransform(name, std::get<1>(values), std::get<2>(values), std::get<0>(values), __LINE__);
         }
     }
+
+    // The above checks if a test values is missing, but not if there are test values
+    // that don't have an associated built-in.
+    OCIO_CHECK_EQUAL(UnitTestValues.size(), reg->getNumBuiltins());
 }
