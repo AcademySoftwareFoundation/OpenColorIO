@@ -62,6 +62,8 @@ class OCIOGPUTest
         // Set TestWideRange to true to use test values on [-1,2] rather than [0,1].
         inline bool getTestWideRange() const { return m_testWideRange; }
         inline void setTestWideRange(bool use) { m_testWideRange = use; }
+        inline void getWideRangeInterval(float& rangeMin, float& rangeMax) const { rangeMin = m_rangeMin; rangeMax = m_rangeMax; };
+        inline void setWideRangeInterval(float rangeMin, float rangeMax) { m_rangeMin = rangeMin; m_rangeMax = rangeMax; }
 
         // Set TestNaN to true to include NaNs in each channel of the test values.
         inline bool getTestNaN() const { return m_testNaN; }
@@ -151,6 +153,8 @@ class OCIOGPUTest
         float m_maxDiff{ 0.f };
         size_t m_idxDiff{ 0 };
         bool m_testWideRange{ true };
+        float m_rangeMin{ -1.0f };
+        float m_rangeMax{ 2.0f };
         bool m_testNaN{ true };
         bool m_testInfinity{ true };
         bool m_performRelativeComparison{ false };

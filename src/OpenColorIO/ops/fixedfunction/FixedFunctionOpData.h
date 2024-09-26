@@ -48,6 +48,12 @@ public:
         uvY_TO_XYZ,                     // Inverse of above
         XYZ_TO_LUV,                     // CIE XYZ to 1976 CIELUV colour space (D65 white)
         LUV_TO_XYZ,                     // Inverse of above
+        LIN_TO_PQ,                      // Linear to Perceptual Quantizer curve 
+        PQ_TO_LIN,                      // Inverse of above
+        LIN_TO_GAMMA_LOG,               // Curve with gamma and log segments (takes 10 doubles as params)
+        GAMMA_LOG_TO_LIN,               // Inverse of above
+        LIN_TO_DOUBLE_LOG,              // Curve with two log affine and one linear segment (takes 13 doubles as params)
+        DOUBLE_LOG_TO_LIN,              // Inverse of above
         ACES_OUTPUT_TRANSFORM_20_FWD,   // ACES2 Output transform
         ACES_OUTPUT_TRANSFORM_20_INV,   // ACES2 Output transform (inverse)
         ACES_RGB_TO_JMh_20,             // ACES2 RGB to JMh

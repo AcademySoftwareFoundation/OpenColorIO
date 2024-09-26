@@ -5234,6 +5234,8 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
             if (m_majorVersion == 2 && m_minorVersion < 4 
                     && (   0 == Platform::Strcasecmp(blt->getStyle(), "APPLE_LOG_to_ACES2065-1")
                         || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - APPLE_LOG_to_LINEAR")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - HLG-OETF")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - HLG-OETF-INVERSE")
                         || 0 == Platform::Strcasecmp(blt->getStyle(), "DISPLAY - CIE-XYZ-D65_to_DCDM-D65")
                         || 0 == Platform::Strcasecmp(blt->getStyle(), "DISPLAY - CIE-XYZ-D65_to_ST2084-DCDM-D65")
                         || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709_2.0")
@@ -5333,40 +5335,34 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
         }
         else if (ConstFixedFunctionTransformRcPtr ff = DynamicPtrCast<const FixedFunctionTransform>(transform))
         {
+            auto ffstyle = ff->getStyle();
             if (m_majorVersion < 2)
             {
                 throw Exception("Only config version 2 (or higher) can have "
                                 "FixedFunctionTransform.");
             }
 
-            if (m_majorVersion == 2 && m_minorVersion < 1 && ff->getStyle() == FIXED_FUNCTION_ACES_GAMUT_COMP_13)
+            if (m_majorVersion == 2 && m_minorVersion < 1 && ffstyle == FIXED_FUNCTION_ACES_GAMUT_COMP_13)
             {
                 throw Exception("Only config version 2.1 (or higher) can have "
                                 "FixedFunctionTransform style 'ACES_GAMUT_COMP_13'.");
             }
 
-            if (m_majorVersion == 2 && m_minorVersion < 4 && ff->getStyle() == FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20)
+            if (m_majorVersion == 2 && m_minorVersion < 4 )
             {
-                throw Exception("Only config version 2.4 (or higher) can have "
-                                "FixedFunctionTransform style 'ACES_OUTPUT_TRANSFORM_20'.");
-            }
-
-            if (m_majorVersion == 2 && m_minorVersion < 4 && ff->getStyle() == FIXED_FUNCTION_ACES_RGB_TO_JMH_20)
-            {
-                throw Exception("Only config version 2.4 (or higher) can have "
-                                "FixedFunctionTransform style 'ACES_RGB_TO_JMH_20'.");
-            }
-
-            if (m_majorVersion == 2 && m_minorVersion < 4 && ff->getStyle() == FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20)
-            {
-                throw Exception("Only config version 2.4 (or higher) can have "
-                                "FixedFunctionTransform style 'ACES_TONESCALE_COMPRESS_20'.");
-            }
-
-            if (m_majorVersion == 2 && m_minorVersion < 4 && ff->getStyle() == FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20)
-            {
-                throw Exception("Only config version 2.4 (or higher) can have "
-                                "FixedFunctionTransform style 'ACES_GAMUT_COMPRESS_20'.");
+                if( ffstyle == FIXED_FUNCTION_LIN_TO_PQ  || 
+                    ffstyle == FIXED_FUNCTION_LIN_TO_GAMMA_LOG || 
+                    ffstyle == FIXED_FUNCTION_LIN_TO_DOUBLE_LOG ||
+                    ffstyle == FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20 ||
+                    ffstyle == FIXED_FUNCTION_ACES_RGB_TO_JMH_20 ||
+                    ffstyle == FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20 ||
+                    ffstyle == FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20 )
+                {
+                    std::ostringstream ss;
+                    ss << "Only config version 2.4 (or higher) can have FixedFunctionTransform style '" 
+                       << FixedFunctionStyleToString(ffstyle) << "'.";
+                    throw Exception(ss.str().c_str());
+                }
             }
         }
         else if (DynamicPtrCast<const GradingPrimaryTransform>(transform))

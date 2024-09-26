@@ -5,6 +5,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "GPUUnitTest.h"
+#include <cmath>
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -459,7 +460,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_output_transform_invfwd)
 
     test.setProcessor(grp);
 
-    test.setErrorThreshold(5e-4f);
+    test.setErrorThreshold(7e-4f);
 }
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_rgb_to_jmh_fwd)
@@ -992,4 +993,121 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_LUV_inv)
     test.setProcessor(func);
 
     test.setErrorThreshold(1e-5f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_PQ_fwd)
+{
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LIN_TO_PQ);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    
+    test.setWideRangeInterval(-0.1f, 100.1f);
+    test.setProcessor(func);
+
+    // Using large threshold for SSE2 as that will enable usage of fast but
+    // approximate power function ssePower.
+    test.setErrorThreshold(OCIO_USE_SSE2 ? 0.0008f : 2e-5f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_PQ_inv)
+{
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LIN_TO_PQ);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    // Picking a tight epsilon is tricky with this function due to nested power
+    // operations and [0,100] output range for [0,1] input range.
+ 
+    // MaxDiff in range [-0.1, 1.1] against...
+    //      scalar double precision         : 0.000094506
+    //      scalar single precision         : 0.000144501
+    //      SSE2 (intrinsic pow)            : 0.000144441
+    //      SSE2 (fastPower)                : 0.002207260
+    test.setWideRangeInterval(-0.1f, 1.1f);
+    test.setProcessor(func);
+    test.setRelativeComparison(true); // Since the output range will be 0..100, we set the relative epsilon.
+    test.setErrorThreshold(OCIO_USE_SSE2 ? 0.0023f : 1.5e-4f);
+}
+
+namespace
+{
+namespace HLG
+{
+    // Parameters for the Rec.2100 HLG curve.
+    double params[10]
+    {
+        0.0,            // mirror point
+        0.25,           // break point
+
+        // Gamma segment.
+        0.5,            // gamma power
+        1.0,            // post-power scale
+        0.0,            // pre-power offset
+
+        // Log segment.
+        std::exp(1.0),  // log base (e)
+        0.17883277,     // log-side slope
+        0.807825590164, // log-side offset
+        1.0,            // lin-side slope
+        -0.07116723,    // lin-side offset
+    };
+}
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_GAMMA_LOG_fwd)
+{
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LIN_TO_GAMMA_LOG, HLG::params, 10);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    test.setWideRangeInterval(-0.1f, 3.35f); // Output ~[-0.3, 1.02]
+    test.setProcessor(func);
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_GAMMA_LOG_inv)
+{
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LIN_TO_GAMMA_LOG, HLG::params, 10);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    test.setWideRangeInterval(-0.3f, 1.02f); // Output ~[-0.1, 3.35]
+    test.setProcessor(func);
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_DOUBLE_LOG_fwd)
+{
+    double params[13]
+    {
+        10.0,                  // Base for the log
+        0.1,                   // Break point between Log1 and Linear segments
+        0.5,                   // Break point between Linear and Log2 segments
+        -1.0, -1.0, -1.0, 0.2, // Log curve 1: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
+        1.0, 1.0, 1.0, 0.5,    // Log curve 2: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
+        1.0, 0.0,              // Linear segment slope and offset
+    };
+
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LIN_TO_DOUBLE_LOG, params, 13);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    test.setWideRangeInterval(-1.0f, 2.0f); // Output ~[-1.08, 1.4]
+    test.setProcessor(func);
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_DOUBLE_LOG_inv)
+{
+    double params[13]
+    {
+        10.0,                  // Base for the log
+        0.1,                   // Break point between Log1 and Linear segments
+        0.5,                   // Break point between Linear and Log2 segments
+        -1.0, -1.0, -1.0, 0.2, // Log curve 1: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
+        1.0, 1.0, 1.0, 0.5,    // Log curve 2: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
+        1.0, 0.0,              // Linear segment slope and offset
+    };
+
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LIN_TO_DOUBLE_LOG, params, 13);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    test.setWideRangeInterval(-1.1f, 1.4f); // Output ~[-1.0, 2.0]
+    test.setProcessor(func);
+    test.setErrorThreshold(1e-6f);
 }

@@ -2172,6 +2172,22 @@ OCIO_ADD_TEST(Config, version_validation)
 
 namespace
 {
+// Generic profile header generator for given version
+template<int Major, int Minor>
+const std::string PROFILE_V()
+{
+    std::string s = std::string("ocio_profile_version: ")
+        + std::to_string(Major) + std::string(".") + std::to_string(Minor) + "\n";
+
+    if(Major>=2)
+    {
+        s = s + "\n"
+            "environment:\n"
+            "  {}\n";
+    }
+
+    return s;
+}
 
 const std::string PROFILE_V1 = 
     "ocio_profile_version: 1\n"
@@ -2185,12 +2201,6 @@ const std::string PROFILE_V2 =
 
 const std::string PROFILE_V21 =
     "ocio_profile_version: 2.1\n"
-    "\n"
-    "environment:\n"
-    "  {}\n";
-
-const std::string PROFILE_V24 =
-    "ocio_profile_version: 2.4\n"
     "\n"
     "environment:\n"
     "  {}\n";
@@ -2304,8 +2314,18 @@ const std::string PROFILE_V2_START = PROFILE_V2 + SIMPLE_PROFILE_A +
 const std::string PROFILE_V21_START = PROFILE_V21 + SIMPLE_PROFILE_A +
                                       DEFAULT_RULES + SIMPLE_PROFILE_B_V2;
 
-const std::string PROFILE_V24_START = PROFILE_V24 + SIMPLE_PROFILE_B +
-                                      DEFAULT_RULES + SIMPLE_PROFILE_B_V2;
+// Generic simple profile prolog for given major,minor version.
+template<int Major, int Minor>
+const std::string PROFILE_START_V()
+{
+    if(Major<=1)
+    {
+        return PROFILE_V<Major, Minor>() + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B_V1;
+    }
+
+    return PROFILE_V<Major,Minor>() + SIMPLE_PROFILE_B + DEFAULT_RULES + SIMPLE_PROFILE_B_V2;
+}
+
 }
 
 OCIO_ADD_TEST(Config, serialize_colorspace_displayview_transforms)
@@ -4949,6 +4969,118 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
         const std::string strEnd =
             "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
+            "        - !<FixedFunctionTransform> {style: Lin_TO_PQ}\n";
+
+        {
+            const std::string str = PROFILE_START_V<2, 3>() + strEnd;
+
+            std::istringstream is;
+            is.str(str);
+
+            OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                "Only config version 2.4 (or higher) can have FixedFunctionTransform style 'Lin_TO_PQ'.");
+        }
+
+        {
+            const std::string str = PROFILE_START_V<2, 4>() + strEnd;
+
+            std::istringstream is;
+            is.str(str);
+
+            OCIO_CHECK_NO_THROW(OCIO::Config::CreateFromStream(is));
+        }
+    }
+
+    {
+        const std::string strEnd =
+            "    from_scene_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<FixedFunctionTransform> {style: Lin_TO_GammaLog, params: [0.0, 0.25, 0.5, 1.0, 0.0, 2.718, 0.17883277, 0.807825590164, 1.0, -0.07116723]}\n";
+
+        {
+            const std::string str = PROFILE_START_V<2, 3>() + strEnd;
+
+            std::istringstream is;
+            is.str(str);
+
+            OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                "Only config version 2.4 (or higher) can have FixedFunctionTransform style 'Lin_TO_GammaLog'.");
+        }
+
+        {
+            const std::string str = PROFILE_START_V<2, 4>() + strEnd;
+
+            std::istringstream is;
+            is.str(str);
+
+            OCIO_CHECK_NO_THROW(OCIO::Config::CreateFromStream(is));
+        }
+
+        {
+            const std::string str2End =
+                "    from_scene_reference: !<GroupTransform>\n"
+                "      children:\n"
+            "        - !<FixedFunctionTransform> {style: Lin_TO_GammaLog, params: [0.0, 0.25, 0.5, 1.0, 0.0, 2.718, 0.17, 0.80, 1.0]}\n";
+
+            const std::string str = PROFILE_START_V<2, 4>() + str2End;
+
+            std::istringstream is;
+            is.str(str);
+
+            OCIO::ConstConfigRcPtr config;
+            OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+            OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
+                "The style 'Lin_TO_GammaLog' must have 10 parameters but 9 found.");
+        }
+    }
+
+    {
+        const std::string strEnd =
+            "    from_scene_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<FixedFunctionTransform> {style: Lin_TO_DoubleLog, params: [10.0, 0.25, 0.5, -1.0, 0.0, -1.0, 1.25, 1.0, 1.0, 1.0, 0.5, 1.0, 0.0]}\n";
+
+        {
+            const std::string str = PROFILE_START_V<2, 3>() + strEnd;
+
+            std::istringstream is;
+            is.str(str);
+
+            OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                "Only config version 2.4 (or higher) can have FixedFunctionTransform style 'Lin_TO_DoubleLog'.");
+        }
+
+        {
+            const std::string str = PROFILE_START_V<2, 4>() + strEnd;
+
+            std::istringstream is;
+            is.str(str);
+
+            OCIO_CHECK_NO_THROW(OCIO::Config::CreateFromStream(is));
+        }
+
+        {
+            const std::string str2End =
+                "    from_scene_reference: !<GroupTransform>\n"
+                "      children:\n"
+            "        - !<FixedFunctionTransform> {style: Lin_TO_DoubleLog, params: [10.0, 0.25, 0.5, -1.0, 0.0, -1.0, 1.25, 1.0, 1.0, 1.0, 0.5, 1.0]}\n";
+
+            const std::string str = PROFILE_START_V<2, 4>() + str2End;
+
+            std::istringstream is;
+            is.str(str);
+
+            OCIO::ConstConfigRcPtr config;
+            OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+            OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
+                "The style 'Lin_TO_DoubleLog' must have 13 parameters but 12 found.");
+        }
+    }
+
+    {
+        const std::string strEnd =
+            "    from_scene_reference: !<GroupTransform>\n"
+            "      children:\n"
             "        - !<FixedFunctionTransform> {style: ACES2_OutputTransform, params: [100, 0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329]}\n"
             "        - !<FixedFunctionTransform> {style: ACES2_OutputTransform, params: [100, 0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329], direction: inverse}\n"
             "        - !<FixedFunctionTransform> {style: ACES2_RGB_TO_JMh, params: [0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329]}\n"
@@ -4958,7 +5090,7 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
             "        - !<FixedFunctionTransform> {style: ACES2_GamutCompress, params: [100, 0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329]}\n"
             "        - !<FixedFunctionTransform> {style: ACES2_GamutCompress, params: [100, 0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329], direction: inverse}\n";
 
-        const std::string str = PROFILE_V24_START + strEnd;
+        const std::string str = PROFILE_START_V<2, 4>() + strEnd;
 
         std::istringstream is;
         is.str(str);
@@ -5002,7 +5134,7 @@ R"([OpenColorIO Warning]: FixedFunction style is experimental and may be removed
             "        - !<FixedFunctionTransform> {style: ACES2_OutputTransform, params: [100, 0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329]}\n"
             "        - !<FixedFunctionTransform> {style: ACES2_OutputTransform, params: [100, 0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329], direction: inverse}\n";
 
-        const std::string str = PROFILE_V21_START + strEnd;
+        const std::string str = PROFILE_START_V<2, 3>() + strEnd;
 
         OCIO::LogGuard log; // Mute the experimental warnings.
 
@@ -5011,7 +5143,7 @@ R"([OpenColorIO Warning]: FixedFunction style is experimental and may be removed
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is), OCIO::Exception,
-            "Only config version 2.4 (or higher) can have FixedFunctionTransform style 'ACES_OUTPUT_TRANSFORM_20'.");
+            "Only config version 2.4 (or higher) can have FixedFunctionTransform style 'ACES2_OutputTransform'.");
     }
 
     {
@@ -5021,7 +5153,7 @@ R"([OpenColorIO Warning]: FixedFunction style is experimental and may be removed
             "        - !<FixedFunctionTransform> {style: ACES2_RGB_TO_JMh, params: [100, 0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329]}\n"
             "        - !<FixedFunctionTransform> {style: ACES2_RGB_TO_JMh, params: [100, 0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329], direction: inverse}\n";
 
-        const std::string str = PROFILE_V21_START + strEnd;
+        const std::string str = PROFILE_START_V<2, 3>() + strEnd;
 
         OCIO::LogGuard log; // Mute the experimental warnings.
 
@@ -5030,7 +5162,7 @@ R"([OpenColorIO Warning]: FixedFunction style is experimental and may be removed
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is), OCIO::Exception,
-            "Only config version 2.4 (or higher) can have FixedFunctionTransform style 'ACES_RGB_TO_JMH_20'.");
+            "Only config version 2.4 (or higher) can have FixedFunctionTransform style 'ACES2_RGB_TO_JMh'.");
     }
 
     {
@@ -5040,7 +5172,7 @@ R"([OpenColorIO Warning]: FixedFunction style is experimental and may be removed
             "        - !<FixedFunctionTransform> {style: ACES2_TonescaleCompress, params: [100, 0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329]}\n"
             "        - !<FixedFunctionTransform> {style: ACES2_TonescaleCompress, params: [100, 0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329], direction: inverse}\n";
 
-        const std::string str = PROFILE_V21_START + strEnd;
+        const std::string str = PROFILE_START_V<2, 3>() + strEnd;
 
         OCIO::LogGuard log; // Mute the experimental warnings.
 
@@ -5049,7 +5181,7 @@ R"([OpenColorIO Warning]: FixedFunction style is experimental and may be removed
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is), OCIO::Exception,
-            "Only config version 2.4 (or higher) can have FixedFunctionTransform style 'ACES_TONESCALE_COMPRESS_20'.");
+            "Only config version 2.4 (or higher) can have FixedFunctionTransform style 'ACES2_TonescaleCompress'.");
     }
 
     {
@@ -5059,7 +5191,7 @@ R"([OpenColorIO Warning]: FixedFunction style is experimental and may be removed
             "        - !<FixedFunctionTransform> {style: ACES2_GamutCompress, params: [100, 0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329]}\n"
             "        - !<FixedFunctionTransform> {style: ACES2_GamutCompress, params: [100, 0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329], direction: inverse}\n";
 
-        const std::string str = PROFILE_V21_START + strEnd;
+        const std::string str = PROFILE_START_V<2, 3>() + strEnd;
 
         OCIO::LogGuard log; // Mute the experimental warnings.
 
@@ -5068,7 +5200,7 @@ R"([OpenColorIO Warning]: FixedFunction style is experimental and may be removed
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_THROW_WHAT(config = OCIO::Config::CreateFromStream(is), OCIO::Exception,
-            "Only config version 2.4 (or higher) can have FixedFunctionTransform style 'ACES_GAMUT_COMPRESS_20'.");
+            "Only config version 2.4 (or higher) can have FixedFunctionTransform style 'ACES2_GamutCompress'.");
     }
 
     {
@@ -5077,7 +5209,7 @@ R"([OpenColorIO Warning]: FixedFunction style is experimental and may be removed
             "      children:\n"
             "        - !<FixedFunctionTransform> {style: ACES2_OutputTransform, params: []}\n";
 
-        const std::string str = PROFILE_V24_START + strEnd;
+        const std::string str = PROFILE_START_V<2, 4>() + strEnd;
 
         OCIO::LogGuard log; // Mute the experimental warnings.
 
@@ -5096,7 +5228,7 @@ R"([OpenColorIO Warning]: FixedFunction style is experimental and may be removed
             "      children:\n"
             "        - !<FixedFunctionTransform> {style: ACES2_OutputTransform, params: [-1, 0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329]}\n";
 
-        const std::string str = PROFILE_V24_START + strEnd;
+        const std::string str = PROFILE_START_V<2, 4>() + strEnd;
 
         OCIO::LogGuard log; // Mute the experimental warnings.
 
@@ -5115,7 +5247,7 @@ R"([OpenColorIO Warning]: FixedFunction style is experimental and may be removed
             "      children:\n"
             "        - !<FixedFunctionTransform> {style: ACES2_OutputTransform, params: [100.5, 0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329]}\n";
 
-        const std::string str = PROFILE_V24_START + strEnd;
+        const std::string str = PROFILE_START_V<2, 4>() + strEnd;
 
         OCIO::LogGuard log; // Mute the experimental warnings.
 
