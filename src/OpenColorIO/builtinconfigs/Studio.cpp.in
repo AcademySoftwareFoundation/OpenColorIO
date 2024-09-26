@@ -12,3 +12,6 @@ constexpr char STUDIO_CONFIG_V210_ACES_V13_OCIO_V23[] = {
      @studio-config-v2.1.0_aces-v1.3_ocio-v2.3@ 
 };
 
+constexpr char STUDIO_CONFIG_V220_ACES_V13_OCIO_V24[] = {
+     @studio-config-v2.2.0_aces-v1.3_ocio-v2.4@ 
+};
