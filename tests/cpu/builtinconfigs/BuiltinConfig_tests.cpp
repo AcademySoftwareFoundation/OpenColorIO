@@ -17,7 +17,7 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
 {
     const OCIO::BuiltinConfigRegistry & registry = OCIO::BuiltinConfigRegistry::Get();
     
-    OCIO_CHECK_EQUAL(registry.getNumBuiltinConfigs(), 4);
+    OCIO_CHECK_EQUAL(registry.getNumBuiltinConfigs(), 6);
 
     // Test builtin config cg-config-v1.0.0_aces-v1.3_ocio-v2.1.
     {
@@ -72,40 +72,40 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
             std::string(CG_CONFIG_V210_ACES_V13_OCIO_V23)
         );
 
-        OCIO_CHECK_EQUAL(registry.isBuiltinConfigRecommended(1), true);
+        OCIO_CHECK_EQUAL(registry.isBuiltinConfigRecommended(1), false);
+    }
+
+    // Test builtin config cg-config-v2.2.0_aces-v1.3_ocio-v2.4.
+    {
+        const std::string cgConfigName = "cg-config-v2.2.0_aces-v1.3_ocio-v2.4";
+
+        OCIO_CHECK_EQUAL(
+            std::string(registry.getBuiltinConfigName(2)),
+            cgConfigName
+        );
+
+        OCIO_CHECK_EQUAL(
+            std::string(registry.getBuiltinConfigUIName(2)),
+            std::string("Academy Color Encoding System - CG Config [COLORSPACES v2.2.0] "\
+                "[ACES v1.3] [OCIO v2.4]")
+        );
+
+        OCIO_CHECK_EQUAL(
+            std::string(registry.getBuiltinConfig(2)),
+            std::string(CG_CONFIG_V220_ACES_V13_OCIO_V24)
+        );
+
+        OCIO_CHECK_EQUAL(
+            std::string(registry.getBuiltinConfigByName(cgConfigName.c_str())),
+            std::string(CG_CONFIG_V220_ACES_V13_OCIO_V24)
+        );
+
+        OCIO_CHECK_EQUAL(registry.isBuiltinConfigRecommended(2), true);
     }
 
     // Test builtin config studio-config-v1.0.0_aces-v1.3_ocio-v2.1.
     {
         const std::string studioConfigName = "studio-config-v1.0.0_aces-v1.3_ocio-v2.1";
-        
-        OCIO_CHECK_EQUAL(
-            std::string(registry.getBuiltinConfigName(2)), 
-            studioConfigName
-        );
-
-        OCIO_CHECK_EQUAL(
-            std::string(registry.getBuiltinConfigUIName(2)), 
-            std::string("Academy Color Encoding System - Studio Config [COLORSPACES v1.0.0] "\
-            "[ACES v1.3] [OCIO v2.1]")
-        );
-
-        OCIO_CHECK_EQUAL(
-            std::string(registry.getBuiltinConfig(2)), 
-            std::string(STUDIO_CONFIG_V100_ACES_V13_OCIO_V21)
-        );
-
-        OCIO_CHECK_EQUAL(
-            std::string(registry.getBuiltinConfigByName(studioConfigName.c_str())), 
-            std::string(STUDIO_CONFIG_V100_ACES_V13_OCIO_V21)
-        );
-
-        OCIO_CHECK_EQUAL(registry.isBuiltinConfigRecommended(2), false);
-    }
-
-    // Test builtin config studio-config-v2.1.0_aces-v1.3_ocio-v2.3.
-    {
-        const std::string studioConfigName = "studio-config-v2.1.0_aces-v1.3_ocio-v2.3";
         
         OCIO_CHECK_EQUAL(
             std::string(registry.getBuiltinConfigName(3)), 
@@ -114,12 +114,40 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
 
         OCIO_CHECK_EQUAL(
             std::string(registry.getBuiltinConfigUIName(3)), 
+            std::string("Academy Color Encoding System - Studio Config [COLORSPACES v1.0.0] "\
+            "[ACES v1.3] [OCIO v2.1]")
+        );
+
+        OCIO_CHECK_EQUAL(
+            std::string(registry.getBuiltinConfig(3)), 
+            std::string(STUDIO_CONFIG_V100_ACES_V13_OCIO_V21)
+        );
+
+        OCIO_CHECK_EQUAL(
+            std::string(registry.getBuiltinConfigByName(studioConfigName.c_str())), 
+            std::string(STUDIO_CONFIG_V100_ACES_V13_OCIO_V21)
+        );
+
+        OCIO_CHECK_EQUAL(registry.isBuiltinConfigRecommended(3), false);
+    }
+
+    // Test builtin config studio-config-v2.1.0_aces-v1.3_ocio-v2.3.
+    {
+        const std::string studioConfigName = "studio-config-v2.1.0_aces-v1.3_ocio-v2.3";
+        
+        OCIO_CHECK_EQUAL(
+            std::string(registry.getBuiltinConfigName(4)), 
+            studioConfigName
+        );
+
+        OCIO_CHECK_EQUAL(
+            std::string(registry.getBuiltinConfigUIName(4)), 
             std::string("Academy Color Encoding System - Studio Config [COLORSPACES v2.0.0] "\
             "[ACES v1.3] [OCIO v2.3]")
         );
 
         OCIO_CHECK_EQUAL(
-            std::string(registry.getBuiltinConfig(3)), 
+            std::string(registry.getBuiltinConfig(4)), 
             std::string(STUDIO_CONFIG_V210_ACES_V13_OCIO_V23)
         );
 
@@ -128,7 +156,35 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
             std::string(STUDIO_CONFIG_V210_ACES_V13_OCIO_V23)
         );
 
-        OCIO_CHECK_EQUAL(registry.isBuiltinConfigRecommended(3), true);
+        OCIO_CHECK_EQUAL(registry.isBuiltinConfigRecommended(4), false);
+    }
+
+    // Test builtin config studio-config-v2.2.0_aces-v1.3_ocio-v2.4.
+    {
+        const std::string studioConfigName = "studio-config-v2.2.0_aces-v1.3_ocio-v2.4";
+        
+        OCIO_CHECK_EQUAL(
+            std::string(registry.getBuiltinConfigName(5)), 
+            studioConfigName
+        );
+
+        OCIO_CHECK_EQUAL(
+            std::string(registry.getBuiltinConfigUIName(5)), 
+            std::string("Academy Color Encoding System - Studio Config [COLORSPACES v2.2.0] "\
+            "[ACES v1.3] [OCIO v2.4]")
+        );
+
+        OCIO_CHECK_EQUAL(
+            std::string(registry.getBuiltinConfig(5)), 
+            std::string(STUDIO_CONFIG_V220_ACES_V13_OCIO_V24)
+        );
+
+        OCIO_CHECK_EQUAL(
+            std::string(registry.getBuiltinConfigByName(studioConfigName.c_str())), 
+            std::string(STUDIO_CONFIG_V220_ACES_V13_OCIO_V24)
+        );
+
+        OCIO_CHECK_EQUAL(registry.isBuiltinConfigRecommended(5), true);
     }
 
     // ********************************
@@ -346,11 +402,25 @@ OCIO_ADD_TEST(BuiltinConfigs, create_builtin_config)
     }
 
     {
+        const std::string cgConfigName = "cg-config-v2.1.0_aces-v1.3_ocio-v2.3";
+        const std::string studioConfigName = "studio-config-v2.1.0_aces-v1.3_ocio-v2.3";
+        // Test CG builtin config #2
+        int nbOfColorspacesForCGConfig1 = 15;
+        testFromBuiltinConfig(cgConfigName, nbOfColorspacesForCGConfig1, "", __LINE__);
+        testFromEnvAndFromFile(uriPrefix + cgConfigName, nbOfColorspacesForCGConfig1, cgConfigName, __LINE__);
+
+        // Test STUDIO builtin config #2
+        int nbOfColorspacesForStudioConfig1 = 41;
+        testFromBuiltinConfig(studioConfigName, nbOfColorspacesForStudioConfig1, "", __LINE__);
+        testFromEnvAndFromFile(uriPrefix + studioConfigName, nbOfColorspacesForStudioConfig1, studioConfigName, __LINE__);
+    }
+
+    {
         // Test default config.
-        int nbOfColorspacesForDefaultCGConfig = 15;
-        int nbOfColorspacesForDefaultStudioConfig = 41;
-        std::string expectedCGName = "cg-config-v2.1.0_aces-v1.3_ocio-v2.3";
-        std::string expectedStudioName = "studio-config-v2.1.0_aces-v1.3_ocio-v2.3";
+        int nbOfColorspacesForDefaultCGConfig = 23;
+        int nbOfColorspacesForDefaultStudioConfig = 54;
+        std::string expectedCGName = "cg-config-v2.2.0_aces-v1.3_ocio-v2.4";
+        std::string expectedStudioName = "studio-config-v2.2.0_aces-v1.3_ocio-v2.4";
 
         testFromBuiltinConfig(defaultName, nbOfColorspacesForDefaultCGConfig, expectedCGName, __LINE__);
         testFromBuiltinConfig(uriPrefix + defaultName, nbOfColorspacesForDefaultCGConfig, expectedCGName, __LINE__);

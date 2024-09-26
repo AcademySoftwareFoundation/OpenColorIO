@@ -59,7 +59,7 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
         # tuple iterator (like dict.items())
         for item in self.REGISTRY.getBuiltinConfigs():
             self.assertIsInstance(item, tuple)
-            # check if there are three items per tuple.
+            # check if there are four items per tuple.
             self.assertEqual(len(item), 4)
             # name
             self.assertIsInstance(item[0], STRING_TYPES)
@@ -104,12 +104,12 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
         # Config specific tests
 
         # Test number of configs.
-        self.assertEqual(len(self.REGISTRY), 4)
+        self.assertEqual(len(self.REGISTRY), 6)
 
         # Test for the default built-in config.
         self.assertEqual(
             self.REGISTRY.getDefaultBuiltinConfigName(),
-            "cg-config-v2.1.0_aces-v1.3_ocio-v2.3"
+            "cg-config-v2.2.0_aces-v1.3_ocio-v2.4"
         )
 
         # Test the CG configs.
@@ -122,6 +122,8 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
             "[OCIO v2.1]"))
         # isRecommended
         self.assertEqual(values[0][2], False)
+		# isDefault
+        self.assertEqual(values[0][3], False)
 
         # Name
         self.assertEqual(values[1][0], "cg-config-v2.1.0_aces-v1.3_ocio-v2.3")
@@ -131,28 +133,58 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
             ("Academy Color Encoding System - CG Config [COLORSPACES v2.0.0] [ACES v1.3] "
             "[OCIO v2.3]"))
         # isRecommended
-        self.assertEqual(values[1][2], True)
+        self.assertEqual(values[1][2], False)
+        # isDefault
+        self.assertEqual(values[1][3], False)
 
-        # Test the Studio configs
         # Name
-        self.assertEqual(values[2][0], "studio-config-v1.0.0_aces-v1.3_ocio-v2.1")
+        self.assertEqual(values[2][0], "cg-config-v2.2.0_aces-v1.3_ocio-v2.4")
         # UI name
         self.assertEqual(
             values[2][1], 
-            ("Academy Color Encoding System - Studio Config [COLORSPACES v1.0.0] [ACES v1.3] "
-            "[OCIO v2.1]"))
+            ("Academy Color Encoding System - CG Config [COLORSPACES v2.2.0] [ACES v1.3] "
+            "[OCIO v2.4]"))
         # isRecommended
-        self.assertEqual(values[2][2], False)
+        self.assertEqual(values[2][2], True)
+		# isDefault
+        self.assertEqual(values[2][3], True)
 
+        # Test the Studio configs
         # Name
-        self.assertEqual(values[3][0], "studio-config-v2.1.0_aces-v1.3_ocio-v2.3")
+        self.assertEqual(values[3][0], "studio-config-v1.0.0_aces-v1.3_ocio-v2.1")
         # UI name
         self.assertEqual(
             values[3][1], 
+            ("Academy Color Encoding System - Studio Config [COLORSPACES v1.0.0] [ACES v1.3] "
+            "[OCIO v2.1]"))
+        # isRecommended
+        self.assertEqual(values[3][2], False)
+		# isDefault
+        self.assertEqual(values[3][3], False)
+
+        # Name
+        self.assertEqual(values[4][0], "studio-config-v2.1.0_aces-v1.3_ocio-v2.3")
+        # UI name
+        self.assertEqual(
+            values[4][1], 
             ("Academy Color Encoding System - Studio Config [COLORSPACES v2.0.0] [ACES v1.3] "
             "[OCIO v2.3]"))
         # isRecommended
-        self.assertEqual(values[1][2], True)
+        self.assertEqual(values[4][2], False)
+        # isDefault
+        self.assertEqual(values[4][3], False)
+
+        # Name
+        self.assertEqual(values[5][0], "studio-config-v2.2.0_aces-v1.3_ocio-v2.4")
+        # UI name
+        self.assertEqual(
+            values[5][1], 
+            ("Academy Color Encoding System - Studio Config [COLORSPACES v2.2.0] [ACES v1.3] "
+            "[OCIO v2.4]"))
+        # isRecommended
+        self.assertEqual(values[5][2], True)
+        # isDefault
+        self.assertEqual(values[5][3], False)
 
 
     def test_multi_reference(self):
