@@ -148,11 +148,12 @@ std::ostream & operator<< (std::ostream & os, const FixedFunctionTransform & t)
         FixedFunctionOpData::Params params(numParams, 0.);
         t.getParams(&params[0]);
 
-        os << ", params=" << params[0];
+        os << ", params=[" << params[0];
         for (size_t i = 1; i < numParams; ++i)
         {
-          os << " " << params[i];
+          os << ", " << params[i];
         }
+        os << "]";
     }
 
     os << ">";
