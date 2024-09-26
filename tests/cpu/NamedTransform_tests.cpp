@@ -71,10 +71,14 @@ OCIO_ADD_TEST(NamedTransform, alias)
     constexpr char AliasB[]{ "aliasB" };
     nt->addAlias(AliasA);
     OCIO_CHECK_EQUAL(nt->getNumAliases(), 1);
+    OCIO_CHECK_ASSERT(nt->hasAlias(AliasA));
+    OCIO_CHECK_ASSERT(nt->hasAlias(AliasAAlt));
+    OCIO_CHECK_ASSERT(!nt->hasAlias(AliasB));
     nt->addAlias(AliasB);
     OCIO_CHECK_EQUAL(nt->getNumAliases(), 2);
     OCIO_CHECK_EQUAL(std::string(nt->getAlias(0)), AliasA);
     OCIO_CHECK_EQUAL(std::string(nt->getAlias(1)), AliasB);
+    OCIO_CHECK_ASSERT(nt->hasAlias(AliasB));
 
     // Alias with same name (different case) already exists, do nothing.
     {
@@ -89,6 +93,8 @@ OCIO_ADD_TEST(NamedTransform, alias)
         nt->removeAlias(AliasAAlt);
         OCIO_CHECK_EQUAL(nt->getNumAliases(), 1);
         OCIO_CHECK_EQUAL(std::string(nt->getAlias(0)), AliasB);
+        OCIO_CHECK_ASSERT(!nt->hasAlias(AliasA));
+        OCIO_CHECK_ASSERT(!nt->hasAlias(AliasAAlt));
     }
 
     // Add with new case.
@@ -97,6 +103,8 @@ OCIO_ADD_TEST(NamedTransform, alias)
         OCIO_CHECK_EQUAL(nt->getNumAliases(), 2);
         OCIO_CHECK_EQUAL(std::string(nt->getAlias(0)), AliasB);
         OCIO_CHECK_EQUAL(std::string(nt->getAlias(1)), AliasAAlt);
+        OCIO_CHECK_ASSERT(nt->hasAlias(AliasA));
+        OCIO_CHECK_ASSERT(nt->hasAlias(AliasAAlt));
     }
 
     // Setting the name of the named transform to one of its aliases removes the alias.
@@ -105,6 +113,8 @@ OCIO_ADD_TEST(NamedTransform, alias)
         OCIO_CHECK_EQUAL(std::string(nt->getName()), AliasA);
         OCIO_CHECK_EQUAL(nt->getNumAliases(), 1);
         OCIO_CHECK_EQUAL(std::string(nt->getAlias(0)), AliasB);
+        OCIO_CHECK_ASSERT(!nt->hasAlias(AliasA));
+        OCIO_CHECK_ASSERT(!nt->hasAlias(AliasAAlt));
     }
 
     // Alias is not added if it is already the named transform name.
@@ -113,14 +123,18 @@ OCIO_ADD_TEST(NamedTransform, alias)
         OCIO_CHECK_EQUAL(std::string(nt->getName()), AliasA);
         OCIO_CHECK_EQUAL(nt->getNumAliases(), 1);
         OCIO_CHECK_EQUAL(std::string(nt->getAlias(0)), AliasB);
+        OCIO_CHECK_ASSERT(!nt->hasAlias(AliasAAlt));
     }
 
     // Remove all aliases.
     {
         nt->addAlias("other");
         OCIO_CHECK_EQUAL(nt->getNumAliases(), 2);
+        OCIO_CHECK_ASSERT(nt->hasAlias("other"));
         nt->clearAliases();
         OCIO_CHECK_EQUAL(nt->getNumAliases(), 0);
+        OCIO_CHECK_ASSERT(!nt->hasAlias(AliasB));
+        OCIO_CHECK_ASSERT(!nt->hasAlias("other"));
     }
 
     //

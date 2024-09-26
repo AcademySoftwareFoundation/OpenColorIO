@@ -10,6 +10,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "TokensManager.h"
+#include "Platform.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -27,6 +28,7 @@ public:
 
     size_t getNumAliases() const noexcept override;
     const char * getAlias(size_t idx) const noexcept override;
+    bool hasAlias(const char * alias) const noexcept override;
     void addAlias(const char * alias) noexcept override;
     void removeAlias(const char * alias) noexcept override;
     void clearAliases() noexcept override;
