@@ -212,6 +212,7 @@ public:
 
 protected:
     float m_gamma;
+    float m_minLum;
 };
 
 class Renderer_RGB_TO_HSV : public OpCPU
@@ -1171,7 +1172,11 @@ Renderer_REC2100_Surround::Renderer_REC2100_Surround(ConstFixedFunctionOpDataRcP
     :   OpCPU()
 {
     const auto fwd = FixedFunctionOpData::REC2100_SURROUND_FWD == data->getStyle();
-    const float gamma = fwd ? (float)data->getParams()[0] : (float)(1. / data->getParams()[0]);
+    float gamma = (float)data->getParams()[0];
+
+    m_minLum = fwd ? 1e-4f : powf(1e-4f, gamma);
+
+    gamma = fwd ? gamma : 1.f / gamma;
 
     m_gamma = gamma - 1.f;  // compute Y^gamma / Y
 }
@@ -1187,22 +1192,20 @@ void Renderer_REC2100_Surround::apply(const void * inImg, void * outImg, long nu
         const float grn = in[1];
         const float blu = in[2];
 
+        // Calculate luminance assuming input is Rec.2100 RGB.
+        float Y = 0.2627f * red + 0.6780f * grn + 0.0593f * blu;
+
+        // Mirror the function around the origin.
+        Y = std::abs(Y);
+
+        // Since the slope may approach infinity as Y approaches 0, limit the min value
+        // to avoid gaining up the RGB values (which may not be as close to 0).
+        //
         // This threshold needs to be bigger than 1e-10 (used above) to prevent extreme
         // gain in dark colors, yet smaller than 1e-2 to prevent distorting the shape of
         // the HLG EOTF curve.  Max gain = 1e-4 ** (0.78-1) = 7.6 for HLG min gamma of 0.78.
-        // 
-        // TODO: Should have forward & reverse versions of this so the threshold can be
-        //       adjusted correctly for the reverse direction.
-        constexpr float minLum = 1e-4f;
+        Y = std::max(m_minLum, Y);
 
-        // Calculate luminance assuming input is Rec.2100 RGB.
-        // TODO: Add another parameter to allow using other primaries.
-        const float Y = std::max( minLum, ( 0.2627f * red + 
-                                            0.6780f * grn + 
-                                            0.0593f * blu ) );
-
-        // TODO: Currently our fast approx. requires SSE registers.
-        //       Either make this whole routine SSE or make fast scalar pow.
         const float Ypow_over_Y = powf(Y, m_gamma);
 
         out[0] = red * Ypow_over_Y;

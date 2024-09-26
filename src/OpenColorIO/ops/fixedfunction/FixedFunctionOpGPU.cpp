@@ -1663,15 +1663,24 @@ void Add_Surround_10_Fwd_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShader
     ss.newLine() << pxl << ".rgb = " << pxl << ".rgb * Ypow_over_Y;";
 }
 
-void Add_Surround_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, float gamma)
+void Add_Rec2100_Surround_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, 
+                                 float gamma, bool isForward)
 {
     const std::string pxl(shaderCreator->getPixelName());
 
-    // TODO: -- add vector inner product to GPUShaderUtils
+    float minLum = 1e-4f;
+    if (!isForward)
+    {
+        minLum = powf(minLum, gamma);
+        gamma = 1.f / gamma;
+    }
+
     ss.newLine() << ss.floatDecl("Y") 
-                 << " = max( 1e-4, 0.2627 * " << pxl << ".rgb.r + "
-                 <<               "0.6780 * " << pxl << ".rgb.g + "
-                 <<               "0.0593 * " << pxl << ".rgb.b );";
+                 << " = 0.2627 * " << pxl << ".rgb.r + "
+                 <<    "0.6780 * " << pxl << ".rgb.g + "
+                 <<    "0.0593 * " << pxl << ".rgb.b;";
+
+    ss.newLine() << "Y = max( " << minLum << ", abs(Y) );";
 
     ss.newLine() << ss.floatDecl("Ypow_over_Y") << " = pow( Y, " << (gamma - 1.f) << ");";
 
@@ -1965,12 +1974,14 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         }
         case FixedFunctionOpData::REC2100_SURROUND_FWD:
         {
-            Add_Surround_Shader(shaderCreator, ss, (float) func->getParams()[0]);
+            Add_Rec2100_Surround_Shader(shaderCreator, ss, 
+                                        (float) func->getParams()[0], true);
             break;
         }
         case FixedFunctionOpData::REC2100_SURROUND_INV:
         {
-            Add_Surround_Shader(shaderCreator, ss, (float)(1. / func->getParams()[0]));
+            Add_Rec2100_Surround_Shader(shaderCreator, ss, 
+                                        (float) func->getParams()[0], false);
             break;
         }
         case FixedFunctionOpData::RGB_TO_HSV:

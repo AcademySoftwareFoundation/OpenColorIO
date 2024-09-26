@@ -202,6 +202,25 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
     }
 
     {
+        auto CIE_XYZ_D65_to_DCDM_D65_Functor = [](OpRcPtrVec & ops)
+        {
+            const double scale     = 48.0 / 52.37;
+            const double scale4[4] = { scale, scale, scale, 1. };
+            CreateScaleOp(ops, scale4, TRANSFORM_DIR_FORWARD);
+
+            const GammaOpData::Params rgbParams   = { 2.6 };
+            const GammaOpData::Params alphaParams = { 1.0 };
+            auto gammaData = std::make_shared<GammaOpData>(GammaOpData::BASIC_REV,
+                                                           rgbParams, rgbParams, rgbParams, alphaParams);
+            CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
+        };
+
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_DCDM-D65",
+                            "Convert CIE XYZ (D65 white) to Gamma 2.6 (D65 white in XYZ-E encoding)",
+                            CIE_XYZ_D65_to_DCDM_D65_Functor);
+    }
+
+    {
         auto CIE_XYZ_D65_to_DisplayP3_Functor = [](OpRcPtrVec & ops)
         {
             MatrixOpData::MatrixArrayPtr matrix
@@ -283,6 +302,17 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
         registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65", 
                             "Convert CIE XYZ (D65 white) to ST-2084 (PQ), P3-D65 primaries",
                             CIE_XYZ_D65_to_ST2084_P3_D65_Functor);
+    }
+
+    {
+        auto CIE_XYZ_D65_to_ST2084_DCDM_D65_Functor = [](OpRcPtrVec & ops)
+        {
+            ST_2084::GenerateLinearToPQOps(ops);
+        };
+
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_ST2084-DCDM-D65", 
+                            "Convert CIE XYZ (D65 white) to ST-2084 (PQ) (D65 white in XYZ-E encoding)",
+                            CIE_XYZ_D65_to_ST2084_DCDM_D65_Functor);
     }
 
     {

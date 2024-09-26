@@ -538,6 +538,8 @@ AllValues UnitTestValues
         { { 0.5f, 0.4f, 0.3f }, { 0.896805202281f, 0.627254277624f,  0.608228132100f } } },
     { "DISPLAY - CIE-XYZ-D65_to_G2.6-P3-D60-BFD",
         { { 0.5f, 0.4f, 0.3f }, { 0.892433142142f, 0.627011653770f,  0.608093643982f } } },
+    { "DISPLAY - CIE-XYZ-D65_to_DCDM-D65",
+        { { 0.5f, 0.4f, 0.3f }, { 0.740738422348f, 0.679816639411f,  0.608609083713f } } },
     { "DISPLAY - CIE-XYZ-D65_to_DisplayP3",
         { { 0.5f, 0.4f, 0.3f }, { 0.882580907776f, 0.581526360743f,  0.5606367050000f } } },
 
@@ -549,6 +551,8 @@ AllValues UnitTestValues
         { { 0.5f, 0.4f, 0.3f }, { 0.464008302136f, 0.398157119110f,  0.384828370950f } } },
     { "DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65",
         { { 0.5f, 0.4f, 0.3f }, { 0.479939091128f, 0.392091860770f,  0.384886051856f } } },
+    { "DISPLAY - CIE-XYZ-D65_to_ST2084-DCDM-D65",
+        { { 0.5f, 0.4f, 0.3f }, { 0.440281573420f, 0.419284117712f,  0.392876186489f } } },
     { "DISPLAY - CIE-XYZ-D65_to_REC.2100-HLG-1000nit",
         { { 0.5f, 0.4f, 0.3f }, { 0.5649694f,      0.4038837f,       0.3751478f } } }
 };
@@ -589,4 +593,8 @@ OCIO_ADD_TEST(Builtins, validate)
             ValidateBuiltinTransform(name, values.first, values.second, __LINE__);
         }
     }
+
+    // The above checks if a test values is missing, but not if there are test values
+    // that don't have an associated built-in.
+    OCIO_CHECK_EQUAL(UnitTestValues.size(), reg->getNumBuiltins());
 }
