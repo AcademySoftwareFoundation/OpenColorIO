@@ -10,7 +10,6 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "TokensManager.h"
-#include "Platform.h"
 
 namespace OCIO_NAMESPACE
 {
