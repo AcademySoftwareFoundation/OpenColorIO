@@ -1526,7 +1526,7 @@ colorspaces:
     // affect the tests below, it simply confirms that inactive spaces are working as
     // expected.)
     builtinConfig->setInactiveColorSpaces(
-        "ACES2065-1, ACEScg, Linear Rec.709 (sRGB), Linear P3-D65, Linear Rec.2020, CIE-XYZ-D65, sRGB - Display"
+        "ACES2065-1, ACEScg, Linear Rec.709 (sRGB), Linear P3-D65, Linear Rec.2020, CIE XYZ-D65 - Display-referred, sRGB - Display"
     );
 
     //
@@ -1609,7 +1609,7 @@ colorspaces:
     {
         // Note that it still works even if the built-in color space is inactive (though not for the source).
         const std::string inactives{builtinConfig->getInactiveColorSpaces()};
-        OCIO_CHECK_EQUAL(StringUtils::Find(inactives, "sRGB - Display"), 88);
+        OCIO_CHECK_EQUAL(StringUtils::Find(inactives, "sRGB - Display"), 107);
         const char * csname = OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "sRGB - Display");
         OCIO_CHECK_EQUAL(std::string(csname), std::string("sRGB"));
     }
@@ -1682,7 +1682,7 @@ colorspaces:
         OCIO_CHECK_THROW_WHAT(
             OCIO::Config::IdentifyInterchangeSpace(&srcInterchange, &builtinInterchange,
                                                    editableCfg, "CIE-XYZ D65", 
-                                                   builtinConfig, "CIE-XYZ-D65"),
+                                                   builtinConfig, "CIE XYZ-D65 - Display-referred"),
             OCIO::Exception,
             "The heuristics currently only support scene-referred color spaces. Please set the interchange roles."
         );
