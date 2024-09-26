@@ -7,7 +7,7 @@ set -ex
 DOXYGEN_VERSION="$1"
 
 if [ "$DOXYGEN_VERSION" == "latest" ]; then
-    brew install doxygen
+    brew install --quiet --formula doxygen
 else
-    brew install doxygen@${DOXYGEN_VERSION}
+    brew install --quiet --formula doxygen@${DOXYGEN_VERSION}
 fi

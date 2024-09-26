@@ -353,17 +353,24 @@ const char * FixedFunctionStyleToString(FixedFunctionStyle style)
 {
     switch(style)
     {
-        case FIXED_FUNCTION_ACES_RED_MOD_03:     return "ACES_RedMod03";
-        case FIXED_FUNCTION_ACES_RED_MOD_10:     return "ACES_RedMod10";
-        case FIXED_FUNCTION_ACES_GLOW_03:        return "ACES_Glow03";
-        case FIXED_FUNCTION_ACES_GLOW_10:        return "ACES_Glow10";
-        case FIXED_FUNCTION_ACES_DARK_TO_DIM_10: return "ACES_DarkToDim10";
-        case FIXED_FUNCTION_ACES_GAMUT_COMP_13:  return "ACES_GamutComp13";
-        case FIXED_FUNCTION_REC2100_SURROUND:    return "REC2100_Surround";
-        case FIXED_FUNCTION_RGB_TO_HSV:          return "RGB_TO_HSV";
-        case FIXED_FUNCTION_XYZ_TO_xyY:          return "XYZ_TO_xyY";
-        case FIXED_FUNCTION_XYZ_TO_uvY:          return "XYZ_TO_uvY";
-        case FIXED_FUNCTION_XYZ_TO_LUV:          return "XYZ_TO_LUV";
+        case FIXED_FUNCTION_ACES_RED_MOD_03:            return "ACES_RedMod03";
+        case FIXED_FUNCTION_ACES_RED_MOD_10:            return "ACES_RedMod10";
+        case FIXED_FUNCTION_ACES_GLOW_03:               return "ACES_Glow03";
+        case FIXED_FUNCTION_ACES_GLOW_10:               return "ACES_Glow10";
+        case FIXED_FUNCTION_ACES_DARK_TO_DIM_10:        return "ACES_DarkToDim10";
+        case FIXED_FUNCTION_ACES_GAMUT_COMP_13:         return "ACES_GamutComp13";
+        case FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20:   return "ACES2_OutputTransform";
+        case FIXED_FUNCTION_ACES_RGB_TO_JMH_20:         return "ACES2_RGB_TO_JMh";
+        case FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20: return "ACES2_TonescaleCompress";
+        case FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20:     return "ACES2_GamutCompress";
+        case FIXED_FUNCTION_REC2100_SURROUND:           return "REC2100_Surround";
+        case FIXED_FUNCTION_RGB_TO_HSV:                 return "RGB_TO_HSV";
+        case FIXED_FUNCTION_XYZ_TO_xyY:                 return "XYZ_TO_xyY";
+        case FIXED_FUNCTION_XYZ_TO_uvY:                 return "XYZ_TO_uvY";
+        case FIXED_FUNCTION_XYZ_TO_LUV:                 return "XYZ_TO_LUV";
+        case FIXED_FUNCTION_LIN_TO_PQ:                  return "Lin_TO_PQ";
+        case FIXED_FUNCTION_LIN_TO_GAMMA_LOG:           return "Lin_TO_GammaLog";
+        case FIXED_FUNCTION_LIN_TO_DOUBLE_LOG:          return "Lin_TO_DoubleLog";
         case FIXED_FUNCTION_ACES_GAMUTMAP_02:
         case FIXED_FUNCTION_ACES_GAMUTMAP_07:
             throw Exception("Unimplemented fixed function types: "
@@ -380,17 +387,24 @@ FixedFunctionStyle FixedFunctionStyleFromString(const char * style)
     const char * p = (style ? style : "");
     const std::string str = StringUtils::Lower(p);
 
-    if(str == "aces_redmod03")           return FIXED_FUNCTION_ACES_RED_MOD_03;
-    else if(str == "aces_redmod10")      return FIXED_FUNCTION_ACES_RED_MOD_10;
-    else if(str == "aces_glow03")        return FIXED_FUNCTION_ACES_GLOW_03;
-    else if(str == "aces_glow10")        return FIXED_FUNCTION_ACES_GLOW_10;
-    else if(str == "aces_darktodim10")   return FIXED_FUNCTION_ACES_DARK_TO_DIM_10;
-    else if(str == "aces_gamutcomp13")   return FIXED_FUNCTION_ACES_GAMUT_COMP_13;
-    else if(str == "rec2100_surround")   return FIXED_FUNCTION_REC2100_SURROUND;
-    else if(str == "rgb_to_hsv")         return FIXED_FUNCTION_RGB_TO_HSV;
-    else if(str == "xyz_to_xyy")         return FIXED_FUNCTION_XYZ_TO_xyY;
-    else if(str == "xyz_to_uvy")         return FIXED_FUNCTION_XYZ_TO_uvY;
-    else if(str == "xyz_to_luv")         return FIXED_FUNCTION_XYZ_TO_LUV;
+    if(str == "aces_redmod03")                return FIXED_FUNCTION_ACES_RED_MOD_03;
+    else if(str == "aces_redmod10")           return FIXED_FUNCTION_ACES_RED_MOD_10;
+    else if(str == "aces_glow03")             return FIXED_FUNCTION_ACES_GLOW_03;
+    else if(str == "aces_glow10")             return FIXED_FUNCTION_ACES_GLOW_10;
+    else if(str == "aces_darktodim10")        return FIXED_FUNCTION_ACES_DARK_TO_DIM_10;
+    else if(str == "aces_gamutcomp13")        return FIXED_FUNCTION_ACES_GAMUT_COMP_13;
+    else if(str == "aces2_outputtransform")   return FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20;
+    else if(str == "aces2_rgb_to_jmh")        return FIXED_FUNCTION_ACES_RGB_TO_JMH_20;
+    else if(str == "aces2_tonescalecompress") return FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20;
+    else if(str == "aces2_gamutcompress")     return FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20;
+    else if(str == "rec2100_surround")        return FIXED_FUNCTION_REC2100_SURROUND;
+    else if(str == "rgb_to_hsv")              return FIXED_FUNCTION_RGB_TO_HSV;
+    else if(str == "xyz_to_xyy")              return FIXED_FUNCTION_XYZ_TO_xyY;
+    else if(str == "xyz_to_uvy")              return FIXED_FUNCTION_XYZ_TO_uvY;
+    else if(str == "xyz_to_luv")              return FIXED_FUNCTION_XYZ_TO_LUV;
+    else if(str == "lin_to_pq")               return FIXED_FUNCTION_LIN_TO_PQ;
+    else if(str == "lin_to_gammalog")         return FIXED_FUNCTION_LIN_TO_GAMMA_LOG;
+    else if(str == "lin_to_doublelog")        return FIXED_FUNCTION_LIN_TO_DOUBLE_LOG;
 
     // Default style is meaningless.
     std::stringstream ss;

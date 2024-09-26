@@ -3,12 +3,16 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iomanip>
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "ACES2/Transform.h"
 #include "BitDepthUtils.h"
 #include "MathUtils.h"
 #include "ops/fixedfunction/FixedFunctionOpCPU.h"
+#include "SSE.h"
+#include "CPUInfo.h"
 
 
 namespace OCIO_NAMESPACE
@@ -126,6 +130,80 @@ public:
     void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
+class Renderer_ACES_OutputTransform20 : public OpCPU
+{
+public:
+    Renderer_ACES_OutputTransform20() = delete;
+    explicit Renderer_ACES_OutputTransform20(ConstFixedFunctionOpDataRcPtr & data);
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+
+private:
+    void fwd(const void * inImg, void * outImg, long numPixels) const;
+    void inv(const void * inImg, void * outImg, long numPixels) const;
+
+protected:
+    bool m_fwd;
+    ACES2::JMhParams m_pIn;
+    ACES2::JMhParams m_pOut;
+    ACES2::ToneScaleParams m_t;
+    ACES2::ChromaCompressParams m_c;
+    ACES2::GamutCompressParams m_g;
+};
+
+class Renderer_ACES_RGB_TO_JMh_20 : public OpCPU
+{
+public:
+    Renderer_ACES_RGB_TO_JMh_20() = delete;
+    explicit Renderer_ACES_RGB_TO_JMh_20(ConstFixedFunctionOpDataRcPtr & data);
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+
+private:
+    void fwd(const void * inImg, void * outImg, long numPixels) const;
+    void inv(const void * inImg, void * outImg, long numPixels) const;
+
+protected:
+    bool m_fwd;
+    ACES2::JMhParams m_p;
+};
+
+class Renderer_ACES_TONESCALE_COMPRESS_20 : public OpCPU
+{
+public:
+    Renderer_ACES_TONESCALE_COMPRESS_20() = delete;
+    explicit Renderer_ACES_TONESCALE_COMPRESS_20(ConstFixedFunctionOpDataRcPtr & data);
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+
+private:
+    void fwd(const void * inImg, void * outImg, long numPixels) const;
+    void inv(const void * inImg, void * outImg, long numPixels) const;
+
+protected:
+    bool m_fwd;
+    ACES2::JMhParams m_p;
+    ACES2::ToneScaleParams m_t;
+    ACES2::ChromaCompressParams m_c;
+};
+
+class Renderer_ACES_GAMUT_COMPRESS_20 : public OpCPU
+{
+public:
+    Renderer_ACES_GAMUT_COMPRESS_20() = delete;
+    explicit Renderer_ACES_GAMUT_COMPRESS_20(ConstFixedFunctionOpDataRcPtr & data);
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+
+private:
+    void fwd(const void * inImg, void * outImg, long numPixels) const;
+    void inv(const void * inImg, void * outImg, long numPixels) const;
+
+protected:
+    bool m_fwd;
+    ACES2::GamutCompressParams m_g;
+};
+
 class Renderer_REC2100_Surround : public OpCPU
 {
 public:
@@ -136,6 +214,7 @@ public:
 
 protected:
     float m_gamma;
+    float m_minLum;
 };
 
 class Renderer_RGB_TO_HSV : public OpCPU
@@ -208,6 +287,133 @@ public:
     explicit Renderer_LUV_TO_XYZ(ConstFixedFunctionOpDataRcPtr & data);
 
     void apply(const void * inImg, void * outImg, long numPixels) const override;
+};
+
+template <typename T>
+class Renderer_LIN_TO_PQ : public OpCPU {
+public:
+    Renderer_LIN_TO_PQ() = delete;
+    explicit Renderer_LIN_TO_PQ(ConstFixedFunctionOpDataRcPtr& data);
+
+    void apply(const void* inImg, void* outImg, long numPixels) const override;
+};
+
+template <typename T>
+class Renderer_PQ_TO_LIN : public OpCPU {
+ public:
+  Renderer_PQ_TO_LIN() = delete;
+  explicit Renderer_PQ_TO_LIN(ConstFixedFunctionOpDataRcPtr &data);
+
+  void apply(const void *inImg, void *outImg, long numPixels) const override;
+};
+
+#if OCIO_USE_SSE2
+template<bool FAST_POWER>
+class Renderer_LIN_TO_PQ_SSE : public OpCPU {
+public:
+    Renderer_LIN_TO_PQ_SSE() = delete;
+    explicit Renderer_LIN_TO_PQ_SSE(ConstFixedFunctionOpDataRcPtr& data);
+
+    static inline __m128 myPower(__m128 x, __m128 exp);
+    void apply(const void* inImg, void* outImg, long numPixels) const override;
+};
+
+template<bool FAST_POWER>
+class Renderer_PQ_TO_LIN_SSE : public OpCPU {
+public:
+    Renderer_PQ_TO_LIN_SSE() = delete;
+    explicit Renderer_PQ_TO_LIN_SSE(ConstFixedFunctionOpDataRcPtr& data);
+
+    static inline __m128 myPower(__m128 x, __m128 exp);
+    void apply(const void* inImg, void* outImg, long numPixels) const override;
+};
+#endif
+
+class Renderer_LIN_TO_GAMMA_LOG : public OpCPU {
+public:
+    Renderer_LIN_TO_GAMMA_LOG() = delete;
+    explicit Renderer_LIN_TO_GAMMA_LOG(ConstFixedFunctionOpDataRcPtr& data);
+
+    void apply(const void* inImg, void* outImg, long numPixels) const override;
+
+protected:
+    struct GammaSegment
+    {
+        // Ygamma = slope * (Xlin + off)^power;
+        float power     = 1.0f;      // power
+        float slope     = 1.0f;      // post-power scale
+        float off       = 0.0f;      // pre-power offset
+    };
+
+    struct LogSegment
+    {
+        // Ylog = logSlope * log( linSlope * Xlin + linOff, base) + logOff;
+        float base      = 10.0f;     // log base
+        float logSlope  = 1.0f;      // log side slope
+        float logOff    = 0.0f;      // log side offset
+        float linSlope  = 1.0f;      // linear side slope
+        float linOff    = 0.0f;      // linear side offset
+    };
+
+    float           m_mirror = 0.0f; // mirroring point in lin space
+    float           m_break  = 1.0f; // break point between gamma and log in lin space
+    GammaSegment    m_gammaSeg;
+    LogSegment      m_logSeg;
+};
+
+class Renderer_GAMMA_LOG_TO_LIN : public Renderer_LIN_TO_GAMMA_LOG {
+public:
+    Renderer_GAMMA_LOG_TO_LIN() = delete;
+    explicit Renderer_GAMMA_LOG_TO_LIN(ConstFixedFunctionOpDataRcPtr& data);
+
+    void apply(const void* inImg, void* outImg, long numPixels) const override;
+protected:
+    float m_primeBreak = 0.0f; // break-point in the non-linear axis.
+    float m_primeMirror= 0.0f; // mirror point in the non-linear axis.
+};
+
+class Renderer_LIN_TO_DOUBLE_LOG: public OpCPU {
+public:
+    Renderer_LIN_TO_DOUBLE_LOG() = delete;
+    explicit Renderer_LIN_TO_DOUBLE_LOG(ConstFixedFunctionOpDataRcPtr& data);
+
+    void apply(const void* inImg, void* outImg, long numPixels) const override;
+
+protected:
+    struct LogSegment
+    {
+        // Ylog = logSlope * log( linSlope * Xlin + linOff, base) + logOff;
+        float logSlope  = 1.0f;  // log side slope
+        float logOff    = 0.0f;  // log side offset
+        float linSlope  = 1.0f;  // linear side slope
+        float linOff    = 0.0f;  // linear side offset
+    };
+
+    struct LinSegment
+    {
+        // Ylin = slope * Xlin + off;
+        float slope     = 1.0f;
+        float off       = 0.0f;
+    };
+
+    float m_base     = 2.0f;     // logarithm base
+    float m_break1   = 1.0f;     // break point between the first log segment and the linear segment
+    float m_break2   = 1.0f;     // break point between the linear segment and the second log segment
+    LogSegment m_logSeg1;
+    LogSegment m_logSeg2;
+    LinSegment m_linSeg;
+};
+
+class Renderer_DOUBLE_LOG_TO_LIN : public Renderer_LIN_TO_DOUBLE_LOG {
+public:
+    Renderer_DOUBLE_LOG_TO_LIN() = delete;
+    explicit Renderer_DOUBLE_LOG_TO_LIN(ConstFixedFunctionOpDataRcPtr& data);
+
+    void apply(const void* inImg, void* outImg, long numPixels) const override;
+
+protected:
+    float m_break1Log = 1.0f;    // computed break point 1 in the log space
+    float m_break2Log = 1.0f;    // computed break point 2 in the log space
 };
 
 
@@ -791,11 +997,315 @@ void Renderer_ACES_GamutComp13_Inv::apply(const void * inImg, void * outImg, lon
     }
 }
 
+Renderer_ACES_OutputTransform20::Renderer_ACES_OutputTransform20(ConstFixedFunctionOpDataRcPtr & data)
+    :   OpCPU()
+{
+    m_fwd = FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_FWD == data->getStyle();
+
+    const float peak_luminance = (float) data->getParams()[0];
+
+    const float lim_red_x   = (float) data->getParams()[1];
+    const float lim_red_y   = (float) data->getParams()[2];
+    const float lim_green_x = (float) data->getParams()[3];
+    const float lim_green_y = (float) data->getParams()[4];
+    const float lim_blue_x  = (float) data->getParams()[5];
+    const float lim_blue_y  = (float) data->getParams()[6];
+    const float lim_white_x = (float) data->getParams()[7];
+    const float lim_white_y = (float) data->getParams()[8];
+
+    const Primaries lim_primaries = {
+        {lim_red_x  , lim_red_y  },
+        {lim_green_x, lim_green_y},
+        {lim_blue_x , lim_blue_y },
+        {lim_white_x, lim_white_y}
+    };
+
+    m_pIn = ACES2::init_JMhParams(ACES_AP0::primaries);
+    m_pOut = ACES2::init_JMhParams(lim_primaries);
+    m_t = ACES2::init_ToneScaleParams(peak_luminance);
+    m_c = ACES2::init_ChromaCompressParams(peak_luminance);
+    m_g = ACES2::init_GamutCompressParams(peak_luminance, lim_primaries);
+}
+
+void Renderer_ACES_OutputTransform20::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    if (m_fwd)
+    {
+        fwd(inImg, outImg, numPixels);
+    }
+    else
+    {
+        inv(inImg, outImg, numPixels);
+    }
+}
+
+void Renderer_ACES_OutputTransform20::fwd(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for(long idx=0; idx<numPixels; ++idx)
+    {
+        const ACES2::f3 RGBIn {in[0], in[1], in[2]};
+        const ACES2::f3 JMh           = ACES2::RGB_to_JMh(RGBIn, m_pIn);
+        const ACES2::f3 tonemappedJMh = ACES2::tonescale_chroma_compress_fwd(JMh, m_pIn, m_t, m_c);
+        const ACES2::f3 compressedJMh = ACES2::gamut_compress_fwd(tonemappedJMh, m_g);
+        const ACES2::f3 RGBOut        = ACES2::JMh_to_RGB(compressedJMh, m_pOut);
+
+        out[0] = RGBOut[0];
+        out[1] = RGBOut[1];
+        out[2] = RGBOut[2];
+        out[3] = in[3];
+
+        in  += 4;
+        out += 4;
+    }
+}
+
+void Renderer_ACES_OutputTransform20::inv(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for(long idx=0; idx<numPixels; ++idx)
+    {
+        const ACES2::f3 RGBout {in[0], in[1], in[2]};
+        const ACES2::f3 compressedJMh = ACES2::RGB_to_JMh(RGBout, m_pOut);
+        const ACES2::f3 tonemappedJMh = ACES2::gamut_compress_inv(compressedJMh, m_g);
+        const ACES2::f3 JMh           = ACES2::tonescale_chroma_compress_inv(tonemappedJMh, m_pIn, m_t, m_c);
+        const ACES2::f3 RGBin         = ACES2::JMh_to_RGB(JMh, m_pIn);
+
+        out[0] = RGBin[0];
+        out[1] = RGBin[1];
+        out[2] = RGBin[2];
+        out[3] = in[3];
+
+        in  += 4;
+        out += 4;
+    }
+}
+
+Renderer_ACES_RGB_TO_JMh_20::Renderer_ACES_RGB_TO_JMh_20(ConstFixedFunctionOpDataRcPtr & data)
+    :   OpCPU()
+{
+    m_fwd = FixedFunctionOpData::ACES_RGB_TO_JMh_20 == data->getStyle();
+
+    const float red_x   = (float) data->getParams()[0];
+    const float red_y   = (float) data->getParams()[1];
+    const float green_x = (float) data->getParams()[2];
+    const float green_y = (float) data->getParams()[3];
+    const float blue_x  = (float) data->getParams()[4];
+    const float blue_y  = (float) data->getParams()[5];
+    const float white_x = (float) data->getParams()[6];
+    const float white_y = (float) data->getParams()[7];
+
+    const Primaries primaries = {
+        {red_x  , red_y  },
+        {green_x, green_y},
+        {blue_x , blue_y },
+        {white_x, white_y}
+    };
+
+    m_p = ACES2::init_JMhParams(primaries);
+}
+
+void Renderer_ACES_RGB_TO_JMh_20::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    if (m_fwd)
+    {
+        fwd(inImg, outImg, numPixels);
+    }
+    else
+    {
+        inv(inImg, outImg, numPixels);
+    }
+}
+
+void Renderer_ACES_RGB_TO_JMh_20::fwd(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for(long idx=0; idx<numPixels; ++idx)
+    {
+        const ACES2::f3 JMh = ACES2::RGB_to_JMh({in[0], in[1], in[2]}, m_p);
+
+        out[0] = JMh[0];
+        out[1] = JMh[1];
+        out[2] = JMh[2];
+        out[3] = in[3];
+
+        in  += 4;
+        out += 4;
+    }
+}
+
+void Renderer_ACES_RGB_TO_JMh_20::inv(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for(long idx=0; idx<numPixels; ++idx)
+    {
+        const ACES2::f3 RGB = ACES2::JMh_to_RGB({in[0], in[1], in[2]}, m_p);
+
+        out[0] = RGB[0];
+        out[1] = RGB[1];
+        out[2] = RGB[2];
+        out[3] = in[3];
+
+        in  += 4;
+        out += 4;
+    }
+}
+
+Renderer_ACES_TONESCALE_COMPRESS_20::Renderer_ACES_TONESCALE_COMPRESS_20(ConstFixedFunctionOpDataRcPtr & data)
+    :   OpCPU()
+{
+    m_fwd = FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_FWD == data->getStyle();
+
+    const float peak_luminance = (float) data->getParams()[0];
+
+    m_p = ACES2::init_JMhParams(ACES_AP0::primaries);
+    m_t = ACES2::init_ToneScaleParams(peak_luminance);
+    m_c = ACES2::init_ChromaCompressParams(peak_luminance);
+}
+
+void Renderer_ACES_TONESCALE_COMPRESS_20::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    if (m_fwd)
+    {
+        fwd(inImg, outImg, numPixels);
+    }
+    else
+    {
+        inv(inImg, outImg, numPixels);
+    }
+}
+
+void Renderer_ACES_TONESCALE_COMPRESS_20::fwd(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for(long idx=0; idx<numPixels; ++idx)
+    {
+        const ACES2::f3 JMh = ACES2::tonescale_chroma_compress_fwd({in[0], in[1], in[2]}, m_p, m_t, m_c);
+
+        out[0] = JMh[0];
+        out[1] = JMh[1];
+        out[2] = JMh[2];
+        out[3] = in[3];
+
+        in  += 4;
+        out += 4;
+    }
+}
+
+void Renderer_ACES_TONESCALE_COMPRESS_20::inv(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for(long idx=0; idx<numPixels; ++idx)
+    {
+        const ACES2::f3 JMh = ACES2::tonescale_chroma_compress_inv({in[0], in[1], in[2]}, m_p, m_t, m_c);
+
+        out[0] = JMh[0];
+        out[1] = JMh[1];
+        out[2] = JMh[2];
+        out[3] = in[3];
+
+        in  += 4;
+        out += 4;
+    }
+}
+
+Renderer_ACES_GAMUT_COMPRESS_20::Renderer_ACES_GAMUT_COMPRESS_20(ConstFixedFunctionOpDataRcPtr & data)
+    :   OpCPU()
+{
+    m_fwd = FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_FWD == data->getStyle();
+
+    const float peakLuminance = (float) data->getParams()[0];
+
+    const float red_x   = (float) data->getParams()[1];
+    const float red_y   = (float) data->getParams()[2];
+    const float green_x = (float) data->getParams()[3];
+    const float green_y = (float) data->getParams()[4];
+    const float blue_x  = (float) data->getParams()[5];
+    const float blue_y  = (float) data->getParams()[6];
+    const float white_x = (float) data->getParams()[7];
+    const float white_y = (float) data->getParams()[8];
+
+    const Primaries limitingPrimaries = {
+        {red_x  , red_y  },
+        {green_x, green_y},
+        {blue_x , blue_y },
+        {white_x, white_y}
+    };
+
+    m_g = ACES2::init_GamutCompressParams(peakLuminance, limitingPrimaries);
+}
+
+void Renderer_ACES_GAMUT_COMPRESS_20::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    if (m_fwd)
+    {
+        fwd(inImg, outImg, numPixels);
+    }
+    else
+    {
+        inv(inImg, outImg, numPixels);
+    }
+}
+
+void Renderer_ACES_GAMUT_COMPRESS_20::fwd(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for(long idx=0; idx<numPixels; ++idx)
+    {
+        const ACES2::f3 JMh = ACES2::gamut_compress_fwd({in[0], in[1], in[2]}, m_g);
+
+        out[0] = JMh[0];
+        out[1] = JMh[1];
+        out[2] = JMh[2];
+        out[3] = in[3];
+
+        in  += 4;
+        out += 4;
+    }
+}
+
+void Renderer_ACES_GAMUT_COMPRESS_20::inv(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for(long idx=0; idx<numPixels; ++idx)
+    {
+        const ACES2::f3 JMh = ACES2::gamut_compress_inv({in[0], in[1], in[2]}, m_g);
+
+        out[0] = JMh[0];
+        out[1] = JMh[1];
+        out[2] = JMh[2];
+        out[3] = in[3];
+
+        in  += 4;
+        out += 4;
+    }
+}
+
 Renderer_REC2100_Surround::Renderer_REC2100_Surround(ConstFixedFunctionOpDataRcPtr & data)
     :   OpCPU()
 {
     const auto fwd = FixedFunctionOpData::REC2100_SURROUND_FWD == data->getStyle();
-    const float gamma = fwd ? (float)data->getParams()[0] : (float)(1. / data->getParams()[0]);
+    float gamma = (float)data->getParams()[0];
+
+    m_minLum = fwd ? 1e-4f : powf(1e-4f, gamma);
+
+    gamma = fwd ? gamma : 1.f / gamma;
 
     m_gamma = gamma - 1.f;  // compute Y^gamma / Y
 }
@@ -811,22 +1321,20 @@ void Renderer_REC2100_Surround::apply(const void * inImg, void * outImg, long nu
         const float grn = in[1];
         const float blu = in[2];
 
+        // Calculate luminance assuming input is Rec.2100 RGB.
+        float Y = 0.2627f * red + 0.6780f * grn + 0.0593f * blu;
+
+        // Mirror the function around the origin.
+        Y = std::abs(Y);
+
+        // Since the slope may approach infinity as Y approaches 0, limit the min value
+        // to avoid gaining up the RGB values (which may not be as close to 0).
+        //
         // This threshold needs to be bigger than 1e-10 (used above) to prevent extreme
         // gain in dark colors, yet smaller than 1e-2 to prevent distorting the shape of
         // the HLG EOTF curve.  Max gain = 1e-4 ** (0.78-1) = 7.6 for HLG min gamma of 0.78.
-        // 
-        // TODO: Should have forward & reverse versions of this so the threshold can be
-        //       adjusted correctly for the reverse direction.
-        constexpr float minLum = 1e-4f;
+        Y = std::max(m_minLum, Y);
 
-        // Calculate luminance assuming input is Rec.2100 RGB.
-        // TODO: Add another parameter to allow using other primaries.
-        const float Y = std::max( minLum, ( 0.2627f * red + 
-                                            0.6780f * grn + 
-                                            0.0593f * blu ) );
-
-        // TODO: Currently our fast approx. requires SSE registers.
-        //       Either make this whole routine SSE or make fast scalar pow.
         const float Ypow_over_Y = powf(Y, m_gamma);
 
         out[0] = red * Ypow_over_Y;
@@ -1177,15 +1685,413 @@ void Renderer_LUV_TO_XYZ::apply(const void * inImg, void * outImg, long numPixel
     }
 }
 
+namespace 
+{
+namespace ST_2084
+{
+    static constexpr double m1 = 0.25 * 2610. / 4096.;
+    static constexpr double m2 = 128. * 2523. / 4096.;
+    static constexpr double c2 = 32. * 2413. / 4096.;
+    static constexpr double c3 = 32. * 2392. / 4096.;
+    static constexpr double c1 = c3 - c2 + 1.;
 
+#if OCIO_USE_SSE2
+    const __m128 abs_rgb_mask = _mm_castsi128_ps(_mm_setr_epi32(0x7fffffff, 0x7fffffff, 0x7fffffff, 0));
+    const __m128 vm1 = _mm_set1_ps(m1);
+    const __m128 vm2 = _mm_set1_ps(m2);
+    const __m128 vm1_inv = _mm_set1_ps(1.0f / float(m1));
+    const __m128 vm2_inv = _mm_set1_ps(1.0f / float(m2));
+    const __m128 vc1 = _mm_set1_ps(c1);
+    const __m128 vc2 = _mm_set1_ps(c2);
+    const __m128 vc3 = _mm_set1_ps(c3);
+#endif
+} // ST_2084
+} // anonymous
+
+template<typename T>
+Renderer_PQ_TO_LIN<T>::Renderer_PQ_TO_LIN(ConstFixedFunctionOpDataRcPtr & /*data*/)
+    : OpCPU() 
+{
+}
+
+template<typename T>
+void Renderer_PQ_TO_LIN<T>::apply(const void *inImg, void *outImg, long numPixels) const 
+{
+    using namespace ST_2084;
+    const float *in = (const float *)inImg;
+    float *out = (float *)outImg;
+
+    for (long idx = 0; idx < numPixels; ++idx) 
+    {
+        // RGB
+        for (int ch = 0; ch < 3; ++ch)
+        {
+            float v = *(in++);
+            const T vabs = std::abs(T(v));
+            const T x = std::pow(vabs, T(1.) / T(m2));
+            const T nits = std::pow(std::max(T(0), x - T(c1)) / (T(c2) - T(c3) * x), T(1.) / T(m1));
+            // Output scale is 1.0 = 10000 nits, we map it to make 1.0 = 100 nits.
+            *(out++) = std::copysign(float(T(100.0) * nits), v);
+        }
+
+        // Alpha
+        *(out++) = *(in++);
+    }
+}
+
+template <typename T>
+Renderer_LIN_TO_PQ<T>::Renderer_LIN_TO_PQ(ConstFixedFunctionOpDataRcPtr& /*data*/)
+    : OpCPU()
+{
+}
+
+template <typename T>
+void Renderer_LIN_TO_PQ<T>::apply(const void* inImg, void* outImg, long numPixels) const
+{
+    using namespace ST_2084;
+    const float* in = (const float*)inImg;
+    float* out = (float*)outImg;
+
+    for (long idx = 0; idx < numPixels; ++idx)
+    {
+        // RGB
+        for (int ch = 0; ch < 3; ++ch)
+        {
+            float v = *(in++);
+            // Input is in nits/100, convert to [0,1], where 1 is 10000 nits. 
+            const T L = std::abs(v * T(0.01));    
+            const T y = std::pow(L, T(m1));
+            const T ratpoly = (T(c1) + T(c2) * y) / (T(1.) + T(c3) * y);
+            const T N = std::pow(ratpoly, T(m2));
+            *(out++) = std::copysign(float(N), v);
+            // Note: the PQ value for zero is 0.836^78.84 = 7.36e-07 so there is
+            // a very small jump in the mirroring at zero. However, this is 20x
+            // smaller than a single 16-bit code value, so it is not visually
+            // significant.
+        }
+
+        // Alpha
+        *(out++) = *(in++);
+    };
+}
+
+#if OCIO_USE_SSE2
+template<bool FAST_POWER>
+Renderer_PQ_TO_LIN_SSE<FAST_POWER>::Renderer_PQ_TO_LIN_SSE(ConstFixedFunctionOpDataRcPtr& /*data*/)
+    : OpCPU()
+{
+}
+
+// All platforms support ssePower().
+template<>
+__m128 Renderer_PQ_TO_LIN_SSE<true>::myPower(__m128 x, __m128 exp)
+{
+    return ssePower(x, exp);
+}
+
+#if (_MSC_VER >= 1920) && (OCIO_USE_AVX)
+// MSVC 2019+ has built-in _mm_pow_ps() SVML intrinsic implementation
+// accessible through immintrin.h. Therefore precise SIMD version is available
+// only when compiled with MSVC and AVX support.
+template<>
+__m128 Renderer_PQ_TO_LIN_SSE<false>::myPower(__m128 x, __m128 exp)
+{
+    return _mm_pow_ps(x, exp);
+}
+#endif 
+
+template<bool FAST_POWER>
+void Renderer_PQ_TO_LIN_SSE<FAST_POWER>::apply(const void* inImg, void* outImg, long numPixels) const
+{
+    using namespace ST_2084;
+    const float* in = (const float*)inImg;
+    float* out = (float*)outImg;
+
+    for (long idx = 0; idx < numPixels; ++idx, in+=4, out+=4)
+    {
+        // Load.
+        __m128 v = _mm_loadu_ps(in);
+
+        // Compute R, G and B channels.
+        __m128 vabs = _mm_and_ps(abs_rgb_mask, v);  // clear sign bits of RGB and all bits of alpha
+        __m128 x = myPower(vabs, vm2_inv);
+        __m128 nom = _mm_max_ps(_mm_setzero_ps(), _mm_sub_ps(x, vc1));
+        __m128 denom = _mm_sub_ps(vc2, _mm_mul_ps(vc3, x));
+         
+        // Output scale is 1.0 = 10000 nits, we map it to make 1.0 = 100 nits.
+        __m128 nits100;
+        nits100 = _mm_mul_ps(_mm_set1_ps(100.0f), myPower(_mm_div_ps(nom, denom), vm1_inv));
+            
+        // Restore the sign bits and alpha channel.
+        // TODO: this can be further optimized by using separate SSE constants for alpha channel.
+        __m128 nits100_signed = _mm_or_ps(_mm_and_ps(abs_rgb_mask, nits100), _mm_andnot_ps(abs_rgb_mask, v)); 
+            
+        // Store.
+        _mm_storeu_ps(out, nits100_signed);
+    }
+}
+
+template<bool FAST_POWER>
+Renderer_LIN_TO_PQ_SSE<FAST_POWER>::Renderer_LIN_TO_PQ_SSE(ConstFixedFunctionOpDataRcPtr& /*data*/)
+    : OpCPU()
+{
+}
+
+// All platforms support ssePower().
+template<>
+__m128 Renderer_LIN_TO_PQ_SSE<true>::myPower(__m128 x, __m128 exp)
+{
+    return ssePower(x, exp);
+}
+
+#ifdef _WIN32
+// Only Windows compilers have built-in _mm_pow_ps() SVML intrinsic
+// implementation, so non-fast SIMD version is available only on Windows for
+// now.
+template<>
+__m128 Renderer_LIN_TO_PQ_SSE<false>::myPower(__m128 x, __m128 exp)
+{
+    return _mm_pow_ps(x, exp);
+}
+#endif // _WIN32
+
+template<bool FAST_POWER>
+void Renderer_LIN_TO_PQ_SSE<FAST_POWER>::apply(const void* inImg, void* outImg, long numPixels) const
+{
+    using namespace ST_2084;
+    const float* in = (const float*)inImg;
+    float* out = (float*)outImg;
+
+    for (long idx = 0; idx < numPixels; ++idx, in += 4, out += 4)
+    {
+        // Load
+        __m128 v = _mm_loadu_ps(in);
+
+        // Clear sign bits of RGB and all bits of alpha.
+        __m128 vabs = _mm_and_ps(abs_rgb_mask, v); 
+        // Input is in nits/100, convert to [0,1], where 1 is 10000 nits. 
+        __m128 L = _mm_mul_ps(_mm_set1_ps(0.01f), vabs);
+        __m128 y = myPower(L, vm1);
+        __m128 ratpoly = _mm_div_ps(
+            _mm_add_ps(vc1, _mm_mul_ps (vc2, y)),
+            _mm_add_ps(_mm_set1_ps(1.0f), _mm_mul_ps(vc3, y)));
+        __m128 N = myPower(ratpoly, vm2);
+
+        // Restore sign bits and the alpha channel.
+        // TODO: this can be further optimized by using separate SSE constants for alpha channel.
+        __m128 N_signed = _mm_or_ps(_mm_and_ps(abs_rgb_mask, N), _mm_andnot_ps(abs_rgb_mask, v));
+
+        // Store
+        _mm_storeu_ps(out, N_signed);
+    }
+}
+#endif //OCIO_USE_SSE2
+
+Renderer_LIN_TO_GAMMA_LOG::Renderer_LIN_TO_GAMMA_LOG(ConstFixedFunctionOpDataRcPtr& data)
+    : OpCPU()
+{
+    auto params = data->getParams();
+
+    // Store the parameters, baking the log base conversion into 'logSlope'.
+    m_mirror            = (float)params[0];
+    m_break             = (float)params[1];
+    m_gammaSeg.power    = (float)params[2];
+    m_gammaSeg.slope    = (float)params[3];
+    m_gammaSeg.off      = (float)params[4];
+    m_logSeg.base       = (float)params[5]; 
+    m_logSeg.logSlope   = (float)(params[6] / std::log(params[5]));
+    m_logSeg.logOff     = (float)params[7];
+    m_logSeg.linSlope   = (float)params[8];
+    m_logSeg.linOff     = (float)params[9];
+}
+
+void Renderer_LIN_TO_GAMMA_LOG::apply(const void* inImg, void* outImg, long numPixels) const
+{
+    const float* in = (const float*)inImg;
+    float* out = (float*)outImg;
+
+    for (long idx = 0; idx < numPixels; ++idx)
+    {
+        // RGB
+        for (int ch = 0; ch < 3; ++ch)
+        {
+            float Ein = *(in++);;
+            
+            const float mirrorin = Ein - m_mirror;
+            const float E = std::abs(mirrorin) + m_mirror;
+            float Eprime;
+            if (E < m_break)
+            {
+                Eprime = m_gammaSeg.slope * std::pow(E + m_gammaSeg.off, m_gammaSeg.power);
+            }
+            else
+            {
+                Eprime = m_logSeg.logSlope * std::log(m_logSeg.linSlope * E + m_logSeg.linOff) + m_logSeg.logOff;
+            }
+            *(out++) = Eprime * std::copysign(1.0f, mirrorin);
+        }
+
+        // Alpha
+        *(out++) = *(in++);
+    };
+}
+
+Renderer_GAMMA_LOG_TO_LIN::Renderer_GAMMA_LOG_TO_LIN(ConstFixedFunctionOpDataRcPtr& data)
+    : Renderer_LIN_TO_GAMMA_LOG(data)
+{
+    // Assuming that the function is continuous, use the gamma segment to compute
+    // the break point in the non-linear domain.
+    m_primeBreak = m_gammaSeg.slope * std::pow(m_break + m_gammaSeg.off, m_gammaSeg.power);
+    m_primeMirror= m_gammaSeg.slope * std::pow(m_mirror + m_gammaSeg.off, m_gammaSeg.power);
+
+    // TODO: cache more derived values to optimize the math.
+}
+
+void Renderer_GAMMA_LOG_TO_LIN::apply(const void* inImg, void* outImg, long numPixels) const
+{
+    const float* in = (const float*)inImg;
+    float* out = (float*)outImg;
+
+    for (long idx = 0; idx < numPixels; ++idx)
+    {
+        // RGB
+        for (int ch = 0; ch < 3; ++ch)
+        {
+            const float Eprimein = *(in++);
+            
+            const float mirrorin = Eprimein - float(m_primeMirror);
+            const float Eprime = std::abs(mirrorin) + m_primeMirror;
+            float E;
+            if (Eprime < m_primeBreak)
+            {
+                E = std::pow(Eprime / m_gammaSeg.slope, 1.0f / m_gammaSeg.power) - m_gammaSeg.off; 
+            }
+            else
+            {
+                E = (std::exp((Eprime - m_logSeg.logOff) / m_logSeg.logSlope ) - m_logSeg.linOff) / m_logSeg.linSlope;
+            }
+            // Flip the sign below the mirror point.
+            *(out++) = E * std::copysign(1.0f, mirrorin);
+        }
+
+        // Alpha
+        *(out++) = *(in++);
+    }
+}
+
+Renderer_LIN_TO_DOUBLE_LOG::Renderer_LIN_TO_DOUBLE_LOG(ConstFixedFunctionOpDataRcPtr& data)
+    : OpCPU()
+{
+    auto params = data->getParams();
+
+    // Store the parameters, baking the log base conversion into 'logSlope'.
+    m_base              = (float)params[0];
+    m_break1            = (float)params[1]; 
+    m_break2            = (float)params[2];
+    
+    m_logSeg1.logSlope  = (float)params[3] / std::log(m_base);
+    m_logSeg1.logOff    = (float)params[4];
+    m_logSeg1.linSlope  = (float)params[5];
+    m_logSeg1.linOff    = (float)params[6];
+    
+    m_logSeg2.logSlope  = (float)params[7] / std::log(m_base);;
+    m_logSeg2.logOff    = (float)params[8];
+    m_logSeg2.linSlope  = (float)params[9];
+    m_logSeg2.linOff    = (float)params[10];
+    
+    m_linSeg.slope      = (float)params[11];
+    m_linSeg.off        = (float)params[12];
+}
+
+void Renderer_LIN_TO_DOUBLE_LOG::apply(const void* inImg, void* outImg, long numPixels) const
+{
+    const float* in = (const float*)inImg;
+    float* out = (float*)outImg;
+
+    for (long idx = 0; idx < numPixels; ++idx)
+    {
+        // RGB
+        for (int ch = 0; ch < 3; ++ch)
+        {
+            float x = *(in++);
+
+            // Linear segment may not exist or be valid. Thus we include the break points in the log segments.
+            if(x <= m_break1)  
+            {
+                x = m_logSeg1.logSlope * std::log( m_logSeg1.linSlope * x + m_logSeg1.linOff) + m_logSeg1.logOff;
+            }
+            else if (x < m_break2 )
+            {
+                x = m_linSeg.slope * x + m_linSeg.off;
+            }
+            else
+            {
+                x = m_logSeg2.logSlope * std::log(m_logSeg2.linSlope * x + m_logSeg2.linOff) + m_logSeg2.logOff;
+            }
+
+            *(out++) = x;
+        }
+
+        // Alpha
+        *(out++) = *(in++);
+    };
+}
+
+Renderer_DOUBLE_LOG_TO_LIN::Renderer_DOUBLE_LOG_TO_LIN(ConstFixedFunctionOpDataRcPtr& data)
+    : Renderer_LIN_TO_DOUBLE_LOG(data)
+{
+    // TODO: Cache more derived params and optimize the math.  
+    
+    // Calculate the break locations in log space (note that the break points
+    // belong to the log segments, not the linear segment which may be missing).
+    m_break1Log = m_logSeg1.logSlope * std::log(m_logSeg1.linSlope * m_break1 + m_logSeg1.linOff) + m_logSeg1.logOff;
+    m_break2Log = m_logSeg2.logSlope * std::log(m_logSeg2.linSlope * m_break2 + m_logSeg2.linOff) + m_logSeg2.logOff;
+}
+
+void Renderer_DOUBLE_LOG_TO_LIN::apply(const void* inImg, void* outImg, long numPixels) const
+{
+    const float* in = (const float*)inImg;
+    float* out = (float*)outImg;
+
+    for (long idx = 0; idx < numPixels; ++idx)
+    {
+        // RGB
+        for (int ch = 0; ch < 3; ++ch)
+        {
+            float y = *(in++);
+
+            if (y <= m_break1Log)
+            {
+                y = (std::exp((y - m_logSeg1.logOff) / m_logSeg1.logSlope) - m_logSeg1.linOff) / m_logSeg1.linSlope;
+            }
+            else if (y < m_break2Log)
+            {
+                y = (y - m_linSeg.off) / m_linSeg.slope;
+            }
+            else
+            {
+                y = (std::exp((y - m_logSeg2.logOff) / m_logSeg2.logSlope) - m_logSeg2.linOff) / m_logSeg2.linSlope;
+            }
+
+            *(out++) = y;
+        }
+
+        // Alpha
+        *(out++) = *(in++);
+    }
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
 
 
 
-ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func)
+ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func, bool fastLogExpPow)
 {
+    // Prevent "unused-parameter" warning/error in case the using code is
+    // ifdef'ed out.
+    (void)fastLogExpPow; 
+
     switch(func->getStyle())
     {
         case FixedFunctionOpData::ACES_RED_MOD_03_FWD:
@@ -1236,6 +2142,35 @@ ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func
         {
             return std::make_shared<Renderer_ACES_GamutComp13_Inv>(func);
         }
+
+        case FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_FWD:
+        case FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_INV:
+        {
+            // Sharing same renderer (param will be inverted to handle direction).
+            return std::make_shared<Renderer_ACES_OutputTransform20>(func);
+        }
+
+        case FixedFunctionOpData::ACES_RGB_TO_JMh_20:
+        case FixedFunctionOpData::ACES_JMh_TO_RGB_20:
+        {
+            // Sharing same renderer (param will be inverted to handle direction).
+            return std::make_shared<Renderer_ACES_RGB_TO_JMh_20>(func);
+        }
+
+        case FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_FWD:
+        case FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_INV:
+        {
+            // Sharing same renderer (param will be inverted to handle direction).
+            return std::make_shared<Renderer_ACES_TONESCALE_COMPRESS_20>(func);
+        }
+
+        case FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_FWD:
+        case FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_INV:
+        {
+            // Sharing same renderer (param will be inverted to handle direction).
+            return std::make_shared<Renderer_ACES_GAMUT_COMPRESS_20>(func);
+        }
+
         case FixedFunctionOpData::REC2100_SURROUND_FWD:
         case FixedFunctionOpData::REC2100_SURROUND_INV:
         {
@@ -1277,6 +2212,63 @@ ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func
         case FixedFunctionOpData::LUV_TO_XYZ:
         {
             return std::make_shared<Renderer_LUV_TO_XYZ>(func);
+        }
+        
+        case FixedFunctionOpData::LIN_TO_PQ:
+        {
+#if OCIO_USE_SSE2
+            if (fastLogExpPow)
+            {
+                return std::make_shared<Renderer_LIN_TO_PQ_SSE<true>>(func);
+            }
+#if (_MSC_VER >= 1920) && (OCIO_USE_AVX)
+            // MSVC 2019+ has built-in _mm_pow_ps() SVML intrinsic
+            // implementation accessible through immintrin.h. Therefore precise
+            // SIMD version is available only when compiled with MSVC and AVX
+            // support.
+            return std::make_shared<Renderer_LIN_TO_PQ_SSE<false>>(func);
+#endif
+#endif // OCIO_USE_SSE2
+            return std::make_shared<Renderer_LIN_TO_PQ<float>>(func);
+        }
+        case FixedFunctionOpData::PQ_TO_LIN:
+        {
+#if OCIO_USE_SSE2
+            if (fastLogExpPow)
+            {
+                return std::make_shared<Renderer_PQ_TO_LIN_SSE<true>>(func);
+            }
+#if (_MSC_VER >= 1920) && (OCIO_USE_AVX)
+            // MSVC 2019+ has built-in _mm_pow_ps() SVML intrinsic
+            // implementation accessible through immintrin.h. Therefore precise
+            // SIMD version is available only when compiled with MSVC and AVX
+            // support.
+            return std::make_shared<Renderer_PQ_TO_LIN_SSE<false>>(func);
+#endif  
+#endif // OCIO_USE_SSE2
+            return std::make_shared<Renderer_PQ_TO_LIN<float>>(func);
+        }
+
+        case FixedFunctionOpData::LIN_TO_GAMMA_LOG:
+        {
+            /// TODO: SIMD implementation
+            return std::make_shared<Renderer_LIN_TO_GAMMA_LOG>(func);
+        }
+        case FixedFunctionOpData::GAMMA_LOG_TO_LIN:
+        {
+            /// TODO: SIMD implementation
+            return std::make_shared<Renderer_GAMMA_LOG_TO_LIN>(func);
+        }
+
+        case FixedFunctionOpData::LIN_TO_DOUBLE_LOG:
+        {
+            /// TODO: SIMD implementation
+            return std::make_shared<Renderer_LIN_TO_DOUBLE_LOG>(func);
+        }
+        case FixedFunctionOpData::DOUBLE_LOG_TO_LIN:
+        {
+            /// TODO: SIMD implementation
+            return std::make_shared<Renderer_DOUBLE_LOG_TO_LIN>(func);
         }
     }
 

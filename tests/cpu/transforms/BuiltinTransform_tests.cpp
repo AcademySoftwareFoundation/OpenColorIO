@@ -326,9 +326,9 @@ namespace
 {
 
 using Values = std::vector<float>;
-using AllValues = std::map<std::string, std::pair<Values, Values>>;
+using AllValues = std::map<std::string, std::tuple<float, Values, Values>>;
 
-void ValidateBuiltinTransform(const char * style, const Values & in, const Values & out, int lineNo)
+void ValidateBuiltinTransform(const char * style, const Values & in, const Values & out, float errorThreshold, int lineNo)
 {
     OCIO::BuiltinTransformRcPtr builtin = OCIO::BuiltinTransform::Create();
     OCIO_CHECK_NO_THROW_FROM(builtin->setStyle(style), lineNo);
@@ -339,10 +339,12 @@ void ValidateBuiltinTransform(const char * style, const Values & in, const Value
 
     OCIO::ConstProcessorRcPtr proc;
     OCIO_CHECK_NO_THROW_FROM(proc = config->getProcessor(builtin), lineNo);
+    OCIO_REQUIRE_ASSERT(proc);
 
     OCIO::ConstCPUProcessorRcPtr cpu;
     // Use lossless mode for these tests (e.g. FAST_LOG_EXP_POW limits to about 4 sig. digits).
     OCIO_CHECK_NO_THROW_FROM(cpu = proc->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_LOSSLESS), lineNo);
+    OCIO_REQUIRE_ASSERT(cpu);
 
     OCIO::PackedImageDesc inDesc((void *)&in[0], long(in.size() / 3), 1, 3);
 
@@ -350,8 +352,6 @@ void ValidateBuiltinTransform(const char * style, const Values & in, const Value
     OCIO::PackedImageDesc outDesc((void *)&vals[0], long(vals.size() / 3), 1, 3);
 
     OCIO_CHECK_NO_THROW_FROM(cpu->apply(inDesc, outDesc), lineNo);
-
-    static constexpr float errorThreshold = 1e-6f; 
 
     for (size_t idx = 0; idx < out.size(); ++idx)
     {
@@ -365,128 +365,299 @@ AllValues UnitTestValues
 {
     // Contains the name, the input values and the expected output values.
 
-    { "IDENTITY",
-        { { 0.5f, 0.4f, 0.3f }, { 0.5f,            0.4f,            0.3f } } },
+    { "IDENTITY", 
+        { 1.0e-6f, 
+        { 0.5f, 0.4f, 0.3f }, { 0.5f,            0.4f,            0.3f } } },
 
-    { "UTILITY - ACES-AP0_to_CIE-XYZ-D65_BFD",
-        { { 0.5f, 0.4f, 0.3f }, { 0.472347603390f, 0.440425934827f, 0.326581044758f } } },
+    { "UTILITY - ACES-AP0_to_CIE-XYZ-D65_BFD", 
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.472347603390f, 0.440425934827f, 0.326581044758f } } },
     { "UTILITY - ACES-AP1_to_CIE-XYZ-D65_BFD",
-        { { 0.5f, 0.4f, 0.3f }, { 0.428407900093f, 0.420968434905f, 0.325777868096f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.428407900093f, 0.420968434905f, 0.325777868096f } } },
     { "UTILITY - ACES-AP1_to_LINEAR-REC709_BFD",
-        { { 0.5f, 0.4f, 0.3f }, { 0.578830986466f, 0.388029190156f, 0.282302431033f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.578830986466f, 0.388029190156f, 0.282302431033f } } },
     { "CURVE - ACEScct-LOG_to_LINEAR",
-        { { 0.5f, 0.4f, 0.3f }, { 0.514056913328f, 0.152618314084f, 0.045310838527f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.514056913328f, 0.152618314084f, 0.045310838527f } } },
     { "ACEScct_to_ACES2065-1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.386397222658f, 0.158557251811f, 0.043152537925f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.386397222658f, 0.158557251811f, 0.043152537925f } } },
     { "ACEScc_to_ACES2065-1",
         //{ { 0.5f, 0.4f, 0.3f }, { 0.386397222658f, 0.158557251811f, 0.043152537925f } } },
         // TODO: Hacked the red value as it is not quite within tolerance.
-        { { 0.5f, 0.4f, 0.3f }, { 0.386398554f, 0.158557251811f, 0.043152537925f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.386398554f, 0.158557251811f, 0.043152537925f } } },
     { "ACEScg_to_ACES2065-1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.453158317919f, 0.394926024520f, 0.299297344519f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.453158317919f, 0.394926024520f, 0.299297344519f } } },
     { "ACESproxy10i_to_ACES2065-1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.433437174444f, 0.151629880817f, 0.031769555400f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.433437174444f, 0.151629880817f, 0.031769555400f } } },
     { "ADX10_to_ACES2065-1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.210518101020f, 0.148655364394f, 0.085189053481f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.210518101020f, 0.148655364394f, 0.085189053481f } } },
     { "ADX16_to_ACES2065-1",
-        { { 0.125f, 0.1f, 0.075f }, { 0.211320835792f, 0.149169650771f, 0.085452970479f } } },
+        { 1.0e-6f,
+        { 0.125f, 0.1f, 0.075f }, { 0.211320835792f, 0.149169650771f, 0.085452970479f } } },
     { "ACES-LMT - BLUE_LIGHT_ARTIFACT_FIX",
-        { { 0.5f, 0.4f, 0.3f }, { 0.48625676579f,  0.38454173877f,  0.30002108779f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.48625676579f,  0.38454173877f,  0.30002108779f } } },
     { "ACES-LMT - ACES 1.3 Reference Gamut Compression",
-        { { 0.5f, 0.4f, -0.3f }, { 0.54812347889f, 0.42805567384f, -0.00588858686f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, -0.3f }, { 0.54812347889f, 0.42805567384f, -0.00588858686f } } },
 
     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-CINEMA_1.0",
-        { { 0.5f, 0.4f, 0.3f }, { 0.33629957f,     0.31832799f,     0.22867827f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.33629957f,     0.31832799f,     0.22867827f } } },
     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO_1.0",
-        { { 0.5f, 0.4f, 0.3f }, { 0.34128153f,     0.32533440f,     0.24217427f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.34128153f,     0.32533440f,     0.24217427f } } },
     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-CINEMA-REC709lim_1.1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.33629954f,     0.31832793f,     0.22867827f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.33629954f,     0.31832793f,     0.22867827f } } },
     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-REC709lim_1.1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.34128147f,     0.32533434f,     0.24217427f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.34128147f,     0.32533434f,     0.24217427f } } },
     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-P3lim_1.1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.34128150f,     0.32533440f,     0.24217424f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.34128150f,     0.32533440f,     0.24217424f } } },
     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-CINEMA-D60sim-D65_1.1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.32699189f,     0.30769098f,     0.20432013f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.32699189f,     0.30769098f,     0.20432013f } } },
     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-D60sim-D65_1.0",
-        { { 0.5f, 0.4f, 0.3f }, { 0.32889283f,     0.31174013f,     0.21453267f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.32889283f,     0.31174013f,     0.21453267f } } },
     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-CINEMA-D60sim-DCI_1.0",
-        { { 0.5f, 0.4f, 0.3f }, { 0.34226444f,     0.30731421f,     0.23189434f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.34226444f,     0.30731421f,     0.23189434f } } },
     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-CINEMA-D65sim-DCI_1.1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.33882778f,     0.30572337f,     0.24966924f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.33882778f,     0.30572337f,     0.24966924f } } },
 
     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-VIDEO-1000nit-15nit-REC2020lim_1.1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.48334542f,     0.45336276f,     0.32364485f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.48334542f,     0.45336276f,     0.32364485f } } },
     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-VIDEO-1000nit-15nit-P3lim_1.1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.48334542f,     0.45336276f,     0.32364485f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.48334542f,     0.45336276f,     0.32364485f } } },
     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-VIDEO-2000nit-15nit-REC2020lim_1.1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.50538367f,     0.47084737f,     0.32972121f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.50538367f,     0.47084737f,     0.32972121f } } },
     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-VIDEO-2000nit-15nit-P3lim_1.1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.50538367f,     0.47084737f,     0.32972121f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.50538367f,     0.47084737f,     0.32972121f } } },
     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-VIDEO-4000nit-15nit-REC2020lim_1.1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.52311981f,     0.48482567f,     0.33447576f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.52311981f,     0.48482567f,     0.33447576f } } },
     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-VIDEO-4000nit-15nit-P3lim_1.1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.52311981f,     0.48482567f,     0.33447576f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.52311981f,     0.48482567f,     0.33447576f } } },
     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-CINEMA-108nit-7.2nit-P3lim_1.1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.22214814f,     0.21179835f,     0.15639816f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.22214814f,     0.21179835f,     0.15639816f } } },
+
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.26260212f, 0.25207470f, 0.20617338f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.26260212f, 0.25207472f, 0.20617332f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-108nit-P3-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.16253406f, 0.15513624f, 0.12449740f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-300nit-P3-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.20592399f, 0.19440515f, 0.15028581f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.41039306f, 0.38813826f, 0.30191866f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.46536570f, 0.43852836f, 0.33688113f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.51225936f, 0.48264506f, 0.37060050f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.55653524f, 0.51967940f, 0.38678724f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-REC2020_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.41039258f, 0.38813800f, 0.30191845f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.46536540f, 0.43852820f, 0.33688095f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-REC2020_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.51225930f, 0.48264477f, 0.37060022f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.55653550f, 0.51967950f, 0.38678730f } } },
+
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-REC709-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.25147703f, 0.24029444f, 0.18221131f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-P3-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.25373828f, 0.24245512f, 0.18384966f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-REC2020-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.25712878f, 0.24569483f, 0.18630630f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D60-in-P3-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.25373834f, 0.24245517f, 0.18384990f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D60-in-XYZ-E_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.26332240f, 0.25161302f, 0.19079340f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-108nit-P3-D60-in-P3-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.15705064f, 0.14920068f, 0.11100890f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-300nit-P3-D60-in-XYZ-E_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.20469205f, 0.19229384f, 0.13782679f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D60-in-P3-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.39655724f, 0.37322620f, 0.26917280f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D60-in-P3-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.44968104f, 0.42165324f, 0.30032730f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D60-in-P3-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.49499428f, 0.46407104f, 0.33038715f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D60-in-P3-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.53778990f, 0.49960223f, 0.34477120f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D60-in-REC2020-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.40185606f, 0.37821326f, 0.27276948f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D60-in-REC2020-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.45568960f, 0.42728746f, 0.30434040f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D60-in-REC2020-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.50160843f, 0.47027197f, 0.33480182f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D60-in-REC2020-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.54497580f, 0.50627790f, 0.34937808f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-REC2020-D60-in-REC2020-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.40185624f, 0.37821335f, 0.27276933f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020-D60-in-REC2020-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.45568994f, 0.42728750f, 0.30434027f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-REC2020-D60-in-REC2020-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.50160870f, 0.47027220f, 0.33480210f } } },
+    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020-D60-in-REC2020-D65_2.0",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.54497580f, 0.50627780f, 0.34937814f } } },
 
     { "APPLE_LOG_to_ACES2065-1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.153334766f,    0.083515430f,     0.032948254f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.153334766f,    0.083515430f,     0.032948254f } } },
     { "CURVE - APPLE_LOG_to_LINEAR",
-        { { 0.5f, 0.4f, 0.3f }, { 0.198913991f,    0.083076466024f,  0.0315782763f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.198913991f,    0.083076466024f,  0.0315782763f } } },
     { "ARRI_ALEXA-LOGC-EI800-AWG_to_ACES2065-1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.401621427766f, 0.236455447604f,  0.064830001192f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.401621427766f, 0.236455447604f,  0.064830001192f } } },
     { "ARRI_LOGC4_to_ACES2065-1",
-        { { 0.5f, 0.4f, 0.3f }, { 1.786878082249f, 0.743018593362f,  0.232840037656f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 1.786878082249f, 0.743018593362f,  0.232840037656f } } },
     { "CANON_CLOG2-CGAMUT_to_ACES2065-1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.408435767126f, 0.197486903378f,  0.034204558318f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.408435767126f, 0.197486903378f,  0.034204558318f } } },
     { "CURVE - CANON_CLOG2_to_LINEAR",
-        { { 0.5f, 0.4f, 0.3f }, { 0.492082215086f, 0.183195624930f,  0.064213555991f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.492082215086f, 0.183195624930f,  0.064213555991f } } },
     { "CANON_CLOG3-CGAMUT_to_ACES2065-1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.496034919950f, 0.301015360499f,  0.083691829261f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.496034919950f, 0.301015360499f,  0.083691829261f } } },
     { "CURVE - CANON_CLOG3_to_LINEAR",
-        { { 0.5f, 0.4f, 0.3f }, { 0.580777404788f, 0.282284436009f,  0.122823721131f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.580777404788f, 0.282284436009f,  0.122823721131f } } },
     { "PANASONIC_VLOG-VGAMUT_to_ACES2065-1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.306918773245f, 0.148128050597f,  0.046334439047f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.306918773245f, 0.148128050597f,  0.046334439047f } } },
     { "RED_REDLOGFILM-RWG_to_ACES2065-1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.216116808829f, 0.121529105934f,  0.008171766322f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.216116808829f, 0.121529105934f,  0.008171766322f } } },
     { "RED_LOG3G10-RWG_to_ACES2065-1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.887988237100f, 0.416932247547f, -0.025442210717f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.887988237100f, 0.416932247547f, -0.025442210717f } } },
     { "SONY_SLOG3-SGAMUT3_to_ACES2065-1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.342259707137f, 0.172043362337f,  0.057188031769f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.342259707137f, 0.172043362337f,  0.057188031769f } } },
     { "SONY_SLOG3-SGAMUT3.CINE_to_ACES2065-1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.314942672433f, 0.170408017753f,  0.046854940520f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.314942672433f, 0.170408017753f,  0.046854940520f } } },
     { "SONY_SLOG3-SGAMUT3-VENICE_to_ACES2065-1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.35101694f,     0.17165215f,      0.05479717f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.35101694f,     0.17165215f,      0.05479717f } } },
     { "SONY_SLOG3-SGAMUT3.CINE-VENICE_to_ACES2065-1",
-        { { 0.5f, 0.4f, 0.3f }, { 0.32222527f,     0.17032611f,      0.04477848f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.32222527f,     0.17032611f,      0.04477848f } } },
 
     { "DISPLAY - CIE-XYZ-D65_to_REC.1886-REC.709",
-        { { 0.5f, 0.4f, 0.3f }, { 0.937245093108f, 0.586817090358f,  0.573498106368f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.937245093108f, 0.586817090358f,  0.573498106368f } } },
     { "DISPLAY - CIE-XYZ-D65_to_REC.1886-REC.2020",
-        { { 0.5f, 0.4f, 0.3f }, { 0.830338272693f, 0.620393283803f,  0.583385370254f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.830338272693f, 0.620393283803f,  0.583385370254f } } },
     { "DISPLAY - CIE-XYZ-D65_to_G2.2-REC.709",
-        { { 0.5f, 0.4f, 0.3f }, { 0.931739212204f, 0.559058879141f,  0.545230761999f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.931739212204f, 0.559058879141f,  0.545230761999f } } },
     { "DISPLAY - CIE-XYZ-D65_to_sRGB",
-        { { 0.5f, 0.4f, 0.3f }, { 0.933793573229f, 0.564092030327f,  0.550040502218f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.933793573229f, 0.564092030327f,  0.550040502218f } } },
     { "DISPLAY - CIE-XYZ-D65_to_G2.6-P3-DCI-BFD",
-        { { 0.5f, 0.4f, 0.3f }, { 0.908856342287f, 0.627840575107f,  0.608053675805f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.908856342287f, 0.627840575107f,  0.608053675805f } } },
     { "DISPLAY - CIE-XYZ-D65_to_G2.6-P3-D65",
-        { { 0.5f, 0.4f, 0.3f }, { 0.896805202281f, 0.627254277624f,  0.608228132100f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.896805202281f, 0.627254277624f,  0.608228132100f } } },
     { "DISPLAY - CIE-XYZ-D65_to_G2.6-P3-D60-BFD",
-        { { 0.5f, 0.4f, 0.3f }, { 0.892433142142f, 0.627011653770f,  0.608093643982f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.892433142142f, 0.627011653770f,  0.608093643982f } } },
+    { "DISPLAY - CIE-XYZ-D65_to_DCDM-D65",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.740738422348f, 0.679816639411f,  0.608609083713f } } },
     { "DISPLAY - CIE-XYZ-D65_to_DisplayP3",
-        { { 0.5f, 0.4f, 0.3f }, { 0.882580907776f, 0.581526360743f,  0.5606367050000f } } },
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.882580907776f, 0.581526360743f,  0.5606367050000f } } },
 
-    { "CURVE - ST-2084_to_LINEAR",
-        { { 0.5f, 0.4f, 0.3f }, { 0.922457089941f, 0.324479178538f,  0.100382263105f } } },
+    { "CURVE - ST-2084_to_LINEAR", 
+        { 4.0e-5f,
+        { 0.5f,            0.4f,            0.3f,            -0.1f,          -0.3f,        1.01f }, 
+        { 0.922457089941f, 0.324479178538f, 0.100382263105f, -0.0032456566f, -0.10038226f, 110.045776f } } },
     { "CURVE - LINEAR_to_ST-2084",
-        { { 0.5f, 0.4f, 0.3f }, { 0.440281573420f, 0.419284117712f,  0.392876186489f } } },
+        { 1.0e-5f,
+        { 0.5f,            0.4f,            0.3f,            -0.1f,         101.0f,      0.2f }, 
+        { 0.440281573420f, 0.419284117712f, 0.392876186489f, -0.299699098f, 1.00104129f, 0.357012421f } } },
     { "DISPLAY - CIE-XYZ-D65_to_REC.2100-PQ",
-        { { 0.5f, 0.4f, 0.3f }, { 0.464008302136f, 0.398157119110f,  0.384828370950f } } },
+        { 1.0e-5f,
+        { 0.5f,            0.4f,            0.3f,            -0.1f,         1.01f,        0.2f }, 
+        { 0.464008302136f, 0.398157119110f, 0.384828370950f, -0.454744577f, 0.562376201f, 0.328883916f } } },
     { "DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65",
-        { { 0.5f, 0.4f, 0.3f }, { 0.479939091128f, 0.392091860770f,  0.384886051856f } } },
+        { 1.0e-5f,
+        { 0.5f,            0.4f,            0.3f,            -0.1f,         1.01f,        0.2f }, 
+        { 0.479939091128f, 0.392091860770f, 0.384886051856f, -0.532302439f, 0.572011411f, 0.307887018f } } },
+    { "DISPLAY - CIE-XYZ-D65_to_ST2084-DCDM-D65",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.440281573420f, 0.419284117712f,  0.392876186489f } } },
+    { "CURVE - HLG-OETF-INVERSE", 
+        { 1.0e-5f,
+        { 0.5f,            0.4f,            0.3f,            -0.7f,            1.2f,            0.9f }, 
+        { 0.25f,           0.16f,           0.09f,           -0.618367240391f, 9.032932830300f, 1.745512772886f } } },
+    { "CURVE - HLG-OETF",
+        { 1.0e-5f,
+        { 0.5f,            0.4f,            0.3f,            -0.1f,            10.0f,           0.2f }, 
+        { 0.656409985167f, 0.608926718364f, 0.544089493962f, -0.316227766017f, 1.218326006877f, 0.4472135955f } } },
     { "DISPLAY - CIE-XYZ-D65_to_REC.2100-HLG-1000nit",
-        { { 0.5f, 0.4f, 0.3f }, { 0.5649694f,      0.4038837f,       0.3751478f } } }
+        { 6.0e-5f,
+        { 0.5f,            0.4f,            0.3f,            -0.1f,         1.01f,        0.2f }, 
+        { 0.5649694f,      0.4038837f,      0.3751478f,      -0.505630434f, 0.738133013f, 0.251128823f } } }
 };
 
 } // anon.
@@ -500,20 +671,20 @@ OCIO_ADD_TEST(Builtins, validate)
         const char * name = reg->getBuiltinStyle(index);
         const auto values = UnitTestValues[name];
 
-        if (values.first.empty() || values.second.empty())
+        if (std::get<1>(values).empty() || std::get<2>(values).empty())
         {
             std::ostringstream errorMsg;
             errorMsg << "For the built-in transform '" << name << "' the values are missing.";
             OCIO_CHECK_ASSERT_MESSAGE(0, errorMsg.str());
         }
-        else if (values.first.size() != values.second.size())
+        else if (std::get<1>(values).size() != std::get<2>(values).size())
         {
             std::ostringstream errorMsg;
             errorMsg << "For the built-in transform '" << name 
                      << "' the input and output values do not match.";
             OCIO_CHECK_ASSERT_MESSAGE(0, errorMsg.str());
         }
-        else if ((values.first.size() % 3) != 0)
+        else if ((std::get<1>(values).size() % 3) != 0)
         {
             std::ostringstream errorMsg;
             errorMsg << "For the built-in transform '" << name 
@@ -522,7 +693,11 @@ OCIO_ADD_TEST(Builtins, validate)
         }
         else
         {
-            ValidateBuiltinTransform(name, values.first, values.second, __LINE__);
+            ValidateBuiltinTransform(name, std::get<1>(values), std::get<2>(values), std::get<0>(values), __LINE__);
         }
     }
+
+    // The above checks if a test values is missing, but not if there are test values
+    // that don't have an associated built-in.
+    OCIO_CHECK_EQUAL(UnitTestValues.size(), reg->getNumBuiltins());
 }
