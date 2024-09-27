@@ -189,6 +189,17 @@ Use the --help argument for more information on to the available options.
 .. TODO: Examples
 
 
+.. _overview-ociocpuinfo:
+
+ociocpuinfo
+***********
+
+This tool simply prints information about the CPU in your computer. OCIO will
+switch in different versions of the apply functions based on which SIMD
+instruction sets are supported by a given CPU, so this is provided as a
+potential trouble-shooting tool.
+
+
 .. _overview-ociodisplay:
 
 ociodisplay
