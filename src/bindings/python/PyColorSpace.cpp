@@ -164,6 +164,8 @@ void bindPyColorSpace(py::module & m)
              DOC(ColorSpace, setName))
 
         // Aliases.
+        .def("hasAlias", &ColorSpace::hasAlias, "alias"_a,
+             DOC(ColorSpace, hasAlias))
         .def("addAlias", &ColorSpace::addAlias, "alias"_a.none(false), 
              DOC(ColorSpace, addAlias))
         .def("removeAlias", &ColorSpace::removeAlias, "alias"_a.none(false), 
