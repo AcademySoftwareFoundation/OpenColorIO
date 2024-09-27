@@ -5,6 +5,7 @@
 
 .. py:class:: ColorSpaceMenuHelper
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuHelper
 
    Helper class to create menus for the content of a config.
 
@@ -15,57 +16,57 @@
    The overall ordering of items is: color spaces, named transforms, roles, and additional color spaces. The display color spaces will either come before or after the other color spaces based on where that block of spaces appears in the config. The order of items returned by the menu helper preserves the order of items in the config itself for each type of elements, thus preserving the intent of the config author. For example, if you call getName at idx and idx+1, the name returned at idx+1 will be from farther down in the config than the one at idx as long as both are of the same type. (An application may ask for only the items in one of those blocks if it wants to handle them separately.) If the application makes use of hierarchical menus, that will obviously impose a different order on what the user sees in the menu. Though even with hierarchical menus, applications should try to preserve config ordering (which is equivalent to index ordering) for items within the same sub-menu.
 
 
-   .. py:method:: ColorSpaceMenuHelper.__init__(self: PyOpenColorIO.ColorSpaceMenuHelper, parameters: PyOpenColorIO.ColorSpaceMenuParameters) -> None
+   .. py:method:: ColorSpaceMenuHelper.__init__(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuHelper, parameters: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters) -> None
       :module: PyOpenColorIO
 
 
-   .. py:method:: ColorSpaceMenuHelper.getDescription(self: PyOpenColorIO.ColorSpaceMenuHelper, index: int) -> str
+   .. py:method:: ColorSpaceMenuHelper.getDescription(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuHelper, index: int) -> str
       :module: PyOpenColorIO
 
 
-   .. py:method:: ColorSpaceMenuHelper.getFamily(self: PyOpenColorIO.ColorSpaceMenuHelper, index: int) -> str
+   .. py:method:: ColorSpaceMenuHelper.getFamily(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuHelper, index: int) -> str
       :module: PyOpenColorIO
 
 
-   .. py:method:: ColorSpaceMenuHelper.getHierarchyLevels(self: PyOpenColorIO.ColorSpaceMenuHelper, index: int) -> PyOpenColorIO.ColorSpaceMenuHelper.ColorSpaceLevelIterator
+   .. py:method:: ColorSpaceMenuHelper.getHierarchyLevels(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuHelper, index: int) -> PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuHelper.ColorSpaceLevelIterator
       :module: PyOpenColorIO
 
 
-   .. py:method:: ColorSpaceMenuHelper.getIndexFromName(self: PyOpenColorIO.ColorSpaceMenuHelper, name: str) -> int
+   .. py:method:: ColorSpaceMenuHelper.getIndexFromName(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuHelper, name: str) -> int
       :module: PyOpenColorIO
 
       Get the index of the element of a given name. Return (size_t)-1 name if NULL or empty, or if no element with that name is found.
 
 
-   .. py:method:: ColorSpaceMenuHelper.getIndexFromUIName(self: PyOpenColorIO.ColorSpaceMenuHelper, name: str) -> int
+   .. py:method:: ColorSpaceMenuHelper.getIndexFromUIName(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuHelper, name: str) -> int
       :module: PyOpenColorIO
 
 
-   .. py:method:: ColorSpaceMenuHelper.getName(self: PyOpenColorIO.ColorSpaceMenuHelper, index: int) -> str
+   .. py:method:: ColorSpaceMenuHelper.getName(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuHelper, index: int) -> str
       :module: PyOpenColorIO
 
       Get the color space (or role) name used in the config for this menu item. Will be empty if the index is out of range.
 
 
-   .. py:method:: ColorSpaceMenuHelper.getNameFromUIName(self: PyOpenColorIO.ColorSpaceMenuHelper, name: str) -> str
+   .. py:method:: ColorSpaceMenuHelper.getNameFromUIName(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuHelper, name: str) -> str
       :module: PyOpenColorIO
 
       Get the color space name from the UI name.
 
 
-   .. py:method:: ColorSpaceMenuHelper.getNumColorSpaces(self: PyOpenColorIO.ColorSpaceMenuHelper) -> int
+   .. py:method:: ColorSpaceMenuHelper.getNumColorSpaces(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuHelper) -> int
       :module: PyOpenColorIO
 
       Access to the color spaces (or roles).
 
 
-   .. py:method:: ColorSpaceMenuHelper.getUIName(self: PyOpenColorIO.ColorSpaceMenuHelper, index: int) -> str
+   .. py:method:: ColorSpaceMenuHelper.getUIName(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuHelper, index: int) -> str
       :module: PyOpenColorIO
 
       Get the name to use in the menu UI. This might be different from the config name, for example in the case of roles. Will be empty if the index is out of range.
 
 
-   .. py:method:: ColorSpaceMenuHelper.getUINameFromName(self: PyOpenColorIO.ColorSpaceMenuHelper, name: str) -> str
+   .. py:method:: ColorSpaceMenuHelper.getUINameFromName(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuHelper, name: str) -> str
       :module: PyOpenColorIO
 
       Get the color space UI name from the name.
@@ -73,20 +74,21 @@
 
 .. py:class:: ColorSpaceLevelIterator
    :module: PyOpenColorIO.ColorSpaceMenuHelper
+   :canonical: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuHelper.ColorSpaceLevelIterator
 
 
-   .. py:method:: ColorSpaceLevelIterator.__getitem__(self: PyOpenColorIO.ColorSpaceMenuHelper.ColorSpaceLevelIterator, arg0: int) -> str
+   .. py:method:: ColorSpaceLevelIterator.__getitem__(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuHelper.ColorSpaceLevelIterator, arg0: int) -> str
       :module: PyOpenColorIO.ColorSpaceMenuHelper
 
 
-   .. py:method:: ColorSpaceLevelIterator.__iter__(self: PyOpenColorIO.ColorSpaceMenuHelper.ColorSpaceLevelIterator) -> PyOpenColorIO.ColorSpaceMenuHelper.ColorSpaceLevelIterator
+   .. py:method:: ColorSpaceLevelIterator.__iter__(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuHelper.ColorSpaceLevelIterator) -> PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuHelper.ColorSpaceLevelIterator
       :module: PyOpenColorIO.ColorSpaceMenuHelper
 
 
-   .. py:method:: ColorSpaceLevelIterator.__len__(self: PyOpenColorIO.ColorSpaceMenuHelper.ColorSpaceLevelIterator) -> int
+   .. py:method:: ColorSpaceLevelIterator.__len__(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuHelper.ColorSpaceLevelIterator) -> int
       :module: PyOpenColorIO.ColorSpaceMenuHelper
 
 
-   .. py:method:: ColorSpaceLevelIterator.__next__(self: PyOpenColorIO.ColorSpaceMenuHelper.ColorSpaceLevelIterator) -> str
+   .. py:method:: ColorSpaceLevelIterator.__next__(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuHelper.ColorSpaceLevelIterator) -> str
       :module: PyOpenColorIO.ColorSpaceMenuHelper
 

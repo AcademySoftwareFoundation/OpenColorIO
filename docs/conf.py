@@ -88,7 +88,6 @@ source_suffix = {
 master_doc = "index"
 exclude_patterns = [
   "INSTALL.md",
-  "*.txt",
   "README*",
   "CHANGELOG.md",
   "build",
@@ -131,6 +130,7 @@ napoleon_include_init_with_doc = True
 # expandvars
 expandvars_define = {
     "PYDIR": "frozen" if RTD_BUILD else "src",
+    #"PYDIR": "frozen",
     "OCIO_NAMESPACE": ocio_namespace,
 }
 

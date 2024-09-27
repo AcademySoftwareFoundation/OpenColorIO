@@ -5,6 +5,7 @@
 
 .. py:class:: CPUProcessor
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.PyOpenColorIO.CPUProcessor
 
 
    .. py:method:: CPUProcessor.__init__(*args, **kwargs)
@@ -16,7 +17,7 @@
 
       Overloaded function.
 
-      1. apply(self: PyOpenColorIO.CPUProcessor, imgDesc: PyOpenColorIO.ImageDesc) -> None
+      1. apply(self: PyOpenColorIO.PyOpenColorIO.CPUProcessor, imgDesc: PyOpenColorIO.PyOpenColorIO.ImageDesc) -> None
 
 
       Apply to an image with any kind of channel ordering while respecting
@@ -35,7 +36,7 @@
 
 
 
-      2. apply(self: PyOpenColorIO.CPUProcessor, srcImgDesc: PyOpenColorIO.ImageDesc, dstImgDesc: PyOpenColorIO.ImageDesc) -> None
+      2. apply(self: PyOpenColorIO.PyOpenColorIO.CPUProcessor, srcImgDesc: PyOpenColorIO.PyOpenColorIO.ImageDesc, dstImgDesc: PyOpenColorIO.PyOpenColorIO.ImageDesc) -> None
 
 
       Apply to an image with any kind of channel ordering while respecting
@@ -59,7 +60,7 @@
 
       Overloaded function.
 
-      1. applyRGB(self: PyOpenColorIO.CPUProcessor, data: buffer) -> None
+      1. applyRGB(self: PyOpenColorIO.PyOpenColorIO.CPUProcessor, data: buffer) -> None
 
 
       Apply to a packed RGB array adhering to the Python buffer protocol.
@@ -77,7 +78,7 @@
 
 
 
-      2. applyRGB(self: PyOpenColorIO.CPUProcessor, data: List[float]) -> List[float]
+      2. applyRGB(self: PyOpenColorIO.PyOpenColorIO.CPUProcessor, data: List[float]) -> List[float]
 
 
       Apply to a packed RGB list of float values. Any size is supported as
@@ -102,7 +103,7 @@
 
       Overloaded function.
 
-      1. applyRGBA(self: PyOpenColorIO.CPUProcessor, data: buffer) -> None
+      1. applyRGBA(self: PyOpenColorIO.PyOpenColorIO.CPUProcessor, data: buffer) -> None
 
 
       Apply to a packed RGBA array adhering to the Python buffer protocol.
@@ -120,7 +121,7 @@
 
 
 
-      2. applyRGBA(self: PyOpenColorIO.CPUProcessor, data: List[float]) -> List[float]
+      2. applyRGBA(self: PyOpenColorIO.PyOpenColorIO.CPUProcessor, data: List[float]) -> List[float]
 
 
       Apply to a packed RGBA list of float values. Any size is supported as
@@ -140,11 +141,11 @@
           modified in place.
 
 
-   .. py:method:: CPUProcessor.getCacheID(self: PyOpenColorIO.CPUProcessor) -> str
+   .. py:method:: CPUProcessor.getCacheID(self: PyOpenColorIO.PyOpenColorIO.CPUProcessor) -> str
       :module: PyOpenColorIO
 
 
-   .. py:method:: CPUProcessor.getDynamicProperty(self: PyOpenColorIO.CPUProcessor, type: PyOpenColorIO.DynamicPropertyType) -> PyOpenColorIO.DynamicProperty
+   .. py:method:: CPUProcessor.getDynamicProperty(self: PyOpenColorIO.PyOpenColorIO.CPUProcessor, type: PyOpenColorIO.PyOpenColorIO.DynamicPropertyType) -> PyOpenColorIO.PyOpenColorIO.DynamicProperty
       :module: PyOpenColorIO
 
       The returned pointer may be used to set the value of any dynamic properties of the requested type. Throws if the requested property is not found. Note that if the processor contains several ops that support the requested property, only one can be dynamic.
@@ -153,29 +154,41 @@
          The dynamic properties in this object are decoupled from the ones in the :ref:`Processor` it was generated from. For each dynamic property in the :ref:`Processor`, there is one in the CPU processor.
 
 
-   .. py:method:: CPUProcessor.getInputBitDepth(self: PyOpenColorIO.CPUProcessor) -> PyOpenColorIO.BitDepth
+   .. py:method:: CPUProcessor.getInputBitDepth(self: PyOpenColorIO.PyOpenColorIO.CPUProcessor) -> PyOpenColorIO.PyOpenColorIO.BitDepth
       :module: PyOpenColorIO
 
       Bit-depth of the input pixel buffer.
 
 
-   .. py:method:: CPUProcessor.getOutputBitDepth(self: PyOpenColorIO.CPUProcessor) -> PyOpenColorIO.BitDepth
+   .. py:method:: CPUProcessor.getOutputBitDepth(self: PyOpenColorIO.PyOpenColorIO.CPUProcessor) -> PyOpenColorIO.PyOpenColorIO.BitDepth
       :module: PyOpenColorIO
 
       Bit-depth of the output pixel buffer.
 
 
-   .. py:method:: CPUProcessor.hasChannelCrosstalk(self: PyOpenColorIO.CPUProcessor) -> bool
+   .. py:method:: CPUProcessor.hasChannelCrosstalk(self: PyOpenColorIO.PyOpenColorIO.CPUProcessor) -> bool
       :module: PyOpenColorIO
 
 
-   .. py:method:: CPUProcessor.isIdentity(self: PyOpenColorIO.CPUProcessor) -> bool
+   .. py:method:: CPUProcessor.hasDynamicProperty(self: PyOpenColorIO.PyOpenColorIO.CPUProcessor, type: PyOpenColorIO.PyOpenColorIO.DynamicPropertyType) -> bool
+      :module: PyOpenColorIO
+
+      True if at least one dynamic property of that type exists.
+
+
+   .. py:method:: CPUProcessor.isDynamic(self: PyOpenColorIO.PyOpenColorIO.CPUProcessor) -> bool
+      :module: PyOpenColorIO
+
+      True if at least one dynamic property of any type exists and is dynamic.
+
+
+   .. py:method:: CPUProcessor.isIdentity(self: PyOpenColorIO.PyOpenColorIO.CPUProcessor) -> bool
       :module: PyOpenColorIO
 
       Equivalent to isNoOp from the underlying :ref:`Processor`, i.e., it ignores in/out bit-depth differences.
 
 
-   .. py:method:: CPUProcessor.isNoOp(self: PyOpenColorIO.CPUProcessor) -> bool
+   .. py:method:: CPUProcessor.isNoOp(self: PyOpenColorIO.PyOpenColorIO.CPUProcessor) -> bool
       :module: PyOpenColorIO
 
       The in and out bit-depths must be equal for isNoOp to be true.
