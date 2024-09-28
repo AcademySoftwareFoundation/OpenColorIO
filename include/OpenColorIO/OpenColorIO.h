@@ -852,12 +852,17 @@ public:
      * \ref Config::validate will throw if the config does not contain
      * the matching display color space.
      */
+
+    bool viewIsShared(const char * dispName, const char * viewName) const;
+
     /// Will throw if view or colorSpaceName are null or empty.
     void addSharedView(const char * view, const char * viewTransformName,
                        const char * colorSpaceName, const char * looks,
                        const char * ruleName, const char * description);
     /// Remove a shared view.  Will throw if the view does not exist.
     void removeSharedView(const char * view);
+
+    void clearSharedViews();
 
     const char * getDefaultDisplay() const;
     int getNumDisplays() const;
@@ -883,6 +888,11 @@ public:
     int getNumViews(const char * display, const char * colorspaceName) const;
     const char * getView(const char * display, const char * colorspaceName, int index) const;
 
+    static bool viewsAreEqual(const ConstConfigRcPtr & first,
+                              const ConstConfigRcPtr & second,
+                              const char * dispName,
+                              const char * viewName);
+
     /**
      * Returns the view_transform attribute of the (display, view) pair. View can
      * be a shared view of the display. If display is null or empty, config shared views are used.
@@ -899,6 +909,8 @@ public:
     const char * getDisplayViewRule(const char * display, const char * view) const noexcept;
     /// Returns the description attribute of a (display, view) pair.
     const char * getDisplayViewDescription(const char * display, const char * view) const noexcept;
+
+    bool displayHasView(const char * dispName, const char * viewName) const;
 
     /**
      * For the (display, view) pair, specify which color space and look to use.
@@ -963,6 +975,9 @@ public:
      *
      */
 
+    bool hasVirtualView(const char * viewName) const;
+    bool virtualViewIsShared(const char * viewName) const;
+
     void addVirtualDisplayView(const char * view,
                                const char * viewTransformName,
                                const char * colorSpaceName,
@@ -976,6 +991,10 @@ public:
     int getVirtualDisplayNumViews(ViewType type) const noexcept;
     /// Get the view name at a specific index.
     const char * getVirtualDisplayView(ViewType type, int index) const noexcept;
+
+    static bool virtualViewsAreEqual(const ConstConfigRcPtr & first,
+                                     const ConstConfigRcPtr & second,
+                                     const char * viewName);
 
     const char * getVirtualDisplayViewTransformName(const char * view) const noexcept;
     const char * getVirtualDisplayViewColorSpaceName(const char * view) const noexcept;

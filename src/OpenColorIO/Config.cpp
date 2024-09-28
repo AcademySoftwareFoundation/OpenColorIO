@@ -3305,6 +3305,23 @@ void Config::setViewingRules(ConstViewingRulesRcPtr viewingRules)
     getImpl()->resetCacheIDs();
 }
 
+bool Config::viewIsShared(const char * dispName, const char * viewName) const
+{
+    // Check if a view within a given display is a display-defined view or is referencing
+    // one of the config's shared views.
+
+    for (int v = 0; v < getNumViews(VIEW_SHARED, dispName); v++)
+    {
+        const char * sharedViewName = getView(VIEW_SHARED, dispName, v);
+        if (sharedViewName && *sharedViewName && Platform::Strcasecmp(sharedViewName, viewName) == 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void Config::addSharedView(const char * view, const char * viewTransform,
                            const char * colorSpace, const char * looks,
                            const char * rule, const char * description)
@@ -3355,6 +3372,19 @@ void Config::removeSharedView(const char * view)
         os << "Shared view could not be removed from config. A shared view named '"
            << view << "' could be be found.";
         throw Exception(os.str().c_str());
+    }
+}
+
+void Config::clearSharedViews()
+{
+    int numViews = getNumViews(VIEW_SHARED, nullptr);
+    for (int v = numViews - 1; v >= 0; v--)
+    {
+        const char * sharedViewName = getView(VIEW_SHARED, nullptr, v);
+        if (sharedViewName && *sharedViewName)
+        {
+            removeSharedView(sharedViewName);
+        }
     }
 }
 
@@ -3487,6 +3517,43 @@ const char * Config::getView(const char * display, const char * colorspace, int 
     return "";
 }
 
+
+bool Config::viewsAreEqual(const ConstConfigRcPtr & first,
+                           const ConstConfigRcPtr & second,
+                           const char * dispName,               // may be empty or nullptr for shared views
+                           const char * viewName)
+{
+    // It's ok to call this even for displays/views that don't exist, it will simply return false.
+
+    // Note that this will return true even if the view is display-defined in one config and a reference
+    // to a shared view in the other config (both within the same display), as long as the contents match.
+
+    // These calls return null if either the display or view doesn't exist (regardless if it's active).
+    const char * cs1 = first->getDisplayViewColorSpaceName(dispName, viewName);
+    const char * cs2 = second->getDisplayViewColorSpaceName(dispName, viewName);
+
+    // If the color space is not null, the display and view exist.
+    if (cs1 && *cs1 && cs2 && *cs2)
+    {
+        // Both configs have a display and view by this name, now check the contents.
+        if (Platform::Strcasecmp(cs1, cs2) == 0)
+        {
+            // Note the remaining strings may be empty in a valid view.
+            // Intentionally not checking the description since it is not a functional difference.
+            if ( (Platform::Strcasecmp(first->getDisplayViewLooks(dispName, viewName),
+                                       second->getDisplayViewLooks(dispName, viewName)) == 0) &&
+                 (Platform::Strcasecmp(first->getDisplayViewTransformName(dispName, viewName),
+                                       second->getDisplayViewTransformName(dispName, viewName)) == 0) &&
+                 (Platform::Strcasecmp(first->getDisplayViewRule(dispName, viewName),
+                                       second->getDisplayViewRule(dispName, viewName)) == 0) )
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 const char * Config::getDisplayViewTransformName(const char * display, const char * view) const
 {
     const View * viewPtr = getImpl()->getView(display, view);
@@ -3523,6 +3590,21 @@ const char * Config::getDisplayViewDescription(const char * display, const char 
     const View * viewPtr = getImpl()->getView(display, view);
 
     return viewPtr ? viewPtr->m_description.c_str() : "";
+}
+
+bool Config::displayHasView(const char * dispName, const char * viewName) const
+{
+    // This returns null if either the display or view doesn't exist.
+    // It works regardless of whether the display or view are active,
+    // and it works regardless of whether the view is display-defined
+    // or if the display has this as a shared view.
+    //
+    // It will only check config level shared views if dispName is null.
+    // It will not check config level shared views if dispName is not null.
+    const char * cs = getDisplayViewColorSpaceName(dispName, viewName);
+
+    // All views must have a color space, so if it's not empty, the view exists.
+    return (cs && *cs);
 }
 
 void Config::addDisplaySharedView(const char * display, const char * sharedView)
@@ -3695,6 +3777,28 @@ void Config::clearDisplays()
     getImpl()->resetCacheIDs();
 }
 
+bool Config::hasVirtualView(const char * viewName) const
+{
+    const char * cs = getVirtualDisplayViewColorSpaceName(viewName);
+
+    // All views must have a color space, so if it's not empty, the view exists.
+    return (cs && *cs);
+}
+
+bool Config::virtualViewIsShared(const char * viewName) const
+{
+    for (int v = 0; v < getVirtualDisplayNumViews(VIEW_SHARED); v++)
+    {
+        const char * sharedViewName = getVirtualDisplayView(VIEW_SHARED, v);
+        if (sharedViewName && *sharedViewName && Platform::Strcasecmp(sharedViewName, viewName) == 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void Config::addVirtualDisplayView(const char * view,
                                    const char * viewTransform,
                                    const char * colorSpace,
@@ -3793,6 +3897,34 @@ const char * Config::getVirtualDisplayView(ViewType type, int index) const noexc
     }
 
     return "";
+}
+
+bool Config::virtualViewsAreEqual(const ConstConfigRcPtr & first,
+                                  const ConstConfigRcPtr & second,
+                                  const char * viewName)
+{
+    const char * cs1 = first->getVirtualDisplayViewColorSpaceName(viewName);
+    const char * cs2 = second->getVirtualDisplayViewColorSpaceName(viewName);
+
+    // If the color space is not null, the display and view exist.
+    if (cs1 && *cs1 && cs2 && *cs2)
+    {
+        if (Platform::Strcasecmp(cs1, cs2) == 0)
+        {
+            // Note the remaining strings may be empty in a valid view.
+            // Intentionally not checking the description since it is not a functional difference.
+            if ( (Platform::Strcasecmp(first->getVirtualDisplayViewLooks(viewName),
+                                       second->getVirtualDisplayViewLooks(viewName)) == 0) &&
+                 (Platform::Strcasecmp(first->getVirtualDisplayViewTransformName(viewName),
+                                       second->getVirtualDisplayViewTransformName(viewName)) == 0) &&
+                 (Platform::Strcasecmp(first->getVirtualDisplayViewRule(viewName),
+                                       second->getVirtualDisplayViewRule(viewName)) == 0) )
+            {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 const char * Config::getVirtualDisplayViewTransformName(const char * view) const noexcept
