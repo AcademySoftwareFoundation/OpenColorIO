@@ -332,8 +332,6 @@ Python
 
 .. code-block:: python
 
-   def main():
-
     import PyOpenColorIO as ocio
 
     # Set up some example input variables to simulate a diagnostic
@@ -404,8 +402,6 @@ Python
     rgb = cpu_proc.applyRGB(image_pixel)
     print(rgb)
 
-
-main()
 
 
 Displaying an image, using the GPU
