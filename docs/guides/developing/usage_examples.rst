@@ -274,59 +274,6 @@ optional diagnostic adjustments (such as an exposure offset in scene linear).
 
 #.  **Convert your image, using the CPUProcessor.**
 
-C++
-+++
-
-.. code-block:: cpp
-
-   // Step 1: Get the config
-   OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-
-   // Step 2: Lookup the display ColorSpace
-   const char * device = config->getDefaultDisplayDeviceName();
-   const char * transformName = config->getDefaultDisplayTransformName(device);
-   const char * displayColorSpace = config->getDisplayColorSpaceName(device, transformName);
-
-   // Step 3: Create a DisplayTransform, and set the input and display ColorSpaces
-   // (This example assumes the input is scene linear. Adapt as needed.)
-
-   OCIO::DisplayTransformRcPtr transform = OCIO::DisplayTransform::Create();
-   transform->setInputColorSpaceName( OCIO::ROLE_SCENE_LINEAR );
-   transform->setDisplayColorSpaceName( displayColorSpace );
-
-   // Step 4: Add custom transforms for a 'canonical' Display Pipeline
-
-   // Add an fstop exposure control (in SCENE_LINEAR)
-   float gain = powf(2.0f, exposure_in_stops);
-   const float slope3f[] = { gain, gain, gain };
-   OCIO::CDLTransformRcPtr cc =  OCIO::CDLTransform::Create();
-   cc->setSlope(slope3f);
-   transform->setLinearCC(cc);
-
-   // Add a Channel view 'swizzle'
-
-   // 'channelHot' controls which channels are viewed.
-   int channelHot[4] = { 1, 1, 1, 1 };  // show rgb
-   //int channelHot[4] = { 1, 0, 0, 0 };  // show red
-   //int channelHot[4] = { 0, 0, 0, 1 };  // show alpha
-   //int channelHot[4] = { 1, 1, 1, 0 };  // show luma
-
-   float lumacoef[3];
-   config.getDefaultLumaCoefs(lumacoef);
-
-   float m44[16];
-   float offset[4];
-   OCIO::MatrixTransform::View(m44, offset, channelHot, lumacoef);
-   OCIO::MatrixTransformRcPtr swizzle = OCIO::MatrixTransform::Create();
-   swizzle->setValue(m44, offset);
-   transform->setChannelView(swizzle);
-
-   // And then process the image normally.
-   OCIO::ConstProcessorRcPtr processor = config->getProcessor(transform);
-
-   OCIO::PackedImageDesc img(imageData, w, h, 4);
-   processor->apply(img);
-
 Python
 ++++++
 
@@ -401,7 +348,6 @@ Python
     image_pixel = [0.5, 0.4, 0.3]   # a test value to process
     rgb = cpu_proc.applyRGB(image_pixel)
     print(rgb)
-
 
 
 Displaying an image, using the GPU
