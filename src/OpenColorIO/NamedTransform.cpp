@@ -5,6 +5,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "NamedTransform.h"
+#include "Platform.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -62,6 +63,18 @@ const char * NamedTransformImpl::getAlias(size_t idx) const noexcept
         return m_aliases[idx].c_str();
     }
     return "";
+}
+
+bool NamedTransformImpl::hasAlias(const char * alias) const noexcept
+{
+    for (size_t idx = 0; idx < m_aliases.size(); ++idx)
+    {
+        if (0 == Platform::Strcasecmp(m_aliases[idx].c_str(), alias))
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 void NamedTransformImpl::addAlias(const char * alias) noexcept

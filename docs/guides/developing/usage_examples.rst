@@ -236,45 +236,122 @@ Python
    print(cpu.applyRGB(imageData))
 
 
-Displaying an image, using the GPU (Full Display Pipeline)
-**********************************************************
+Displaying an image, using the CPU (Full Viewport Pipeline)
+***********************************************************
+ 
+This alternative version allows for a more complex viewing pipeline,
+allowing for all of the controls typically added to real-world viewport
+interfaces. For example, options are allowed to control which channels
+(red, green, blue, alpha, luma) are visible, as well as allowing for
+optional diagnostic adjustments (such as an exposure offset in scene linear).
 
-This alternative version allows for a more complex viewing pipeline, allowing
-for all of the controls typically added to real-world viewer interfaces. For
-example, options are allowed to control which channels (red, green, blue,
-alpha, luma) are visible, as well as allowing for optional color corrections
-(such as an exposure offset in scene linear). 
+#.  **Get the Config**. In this example, use one of the built-in configs.
 
-#. **Get the Config.**
-   See :ref:`usage_applybasic` for details.
-#. **Lookup the display ColorSpace.**
-   See :ref:`usage_displayimage` for details
-#. **Create a new DisplayViewTransform.**
-   This transform has the basic conversion from the reference space to the 
-   display but without the extras such as the channel swizzling and exposure
-   control.
-   The user is required to call
-   :cpp:func:`DisplayViewTransform::setSrc` to set the input
-   ColorSpace, as well as
-   :cpp:func:`DisplayViewTransform::setDisplay` and.
-   :cpp:func:`DisplayViewTransform::setView`
-#. **Create a new LegacyViewingPipeline.**
-   This transform will embody the full 'display' pipeline you wish to control.
-   The user is required to call
-   :cpp:func:`LegacyViewingPipeline::setDisplayViewTransform` to set the
-   DisplayViewTransform.
-#. **Set any additional LegacyViewingPipeline options.**
-   If the user wants to specify a channel swizzle, a scene-linear exposure
-   offset, an artistic look, this is the place to add it. See ociodisplay for an
-   example. Note that although we provide recommendations for display, any
-   transforms are allowed to be added into any of the slots. So if for your app
-   you want to add 3 transforms into a particular slot (chained together), you
-   are free to wrap them in a :cpp:class:`GroupTransform` and set it
-   accordingly!
-#. **Get the processor from the LegacyViewingPipeline.**
-   The processor is then queried from the LegacyViewingPipeline.
-#. **Convert your image, using the processor.**
-   See :ref:`usage_applybasic` for details for using the CPU.
+#.  **Get the default display for this config and the display's default view.**
+
+#.  **Create a new DisplayViewTransform.** This transform has the basic
+    conversion from the reference space to the display but without the
+    extras such as the channel swizzling and exposure control. 
+
+#.  **Set up any diagnostic or creative look adjustments.** If the user wants
+    to specify a channel swizzle, a scene-linear exposure offset, an
+    artistic look, this is the place to add it. See ociodisplay for an
+    example. Note that although we provide recommendations for display,
+    any transforms are allowed to be added into any of the slots. So if
+    for your app you want to add 3 transforms into a particular slot
+    (chained together), you are free to wrap them in a GroupTransform
+    and set it accordingly!
+
+#.  **Create a new LegacyViewingPipeline.** This transform will embody the
+    full viewing pipeline you wish to control and will add all of the
+    specified adjustments in the appropriate place in the pipeline,
+    including performing any necessary color space conversions. For 
+    example, the LinearCC happens in the scene_linear role of the config
+    and the colorTimingCC happens in the color_timing role color space.
+
+#.  **Get the Processor from the LegacyViewingPipeline.** A CPUProcessor is
+    then created from that to process pixels on the CPU.
+
+#.  **Convert your image, using the CPUProcessor.**
+
+Python
+++++++
+
+.. code-block:: python
+
+    import PyOpenColorIO as ocio
+
+    # Set up some example input variables to simulate a diagnostic
+    # adjustment a user might make using viewport controls to analyze
+    # different parts of the image tone scale.
+    exposure_val = 1.2              # +1.2 stops exposure adjustment
+    gamma_val = 0.8                 # adjust diagnostic gamma to 0.8
+
+    # Step 1: Use one of the built-in configs.
+    config = ocio.Config.CreateFromBuiltinConfig("studio-config-latest")
+
+    # Step 2: Get the default display and view.
+    display = config.getDefaultDisplay()
+    view = config.getDefaultView(display)
+
+    # Step 3: Create a DisplayViewTransform to convert from the scene-linear
+    # role to the selected display & view.
+    display_view_tr = ocio.DisplayViewTransform(
+        src=ocio.ROLE_SCENE_LINEAR,
+        display=display,
+        view=view
+    )
+
+    # Step 4: Set up any diagnostic or creative look adjustments.
+
+    # Create an ExposureContrastTransform to apply an exposure adjustment
+    # in the scene-linear input space. By setting the dynamic property to true,
+    # that allows for interactive adjustment without rebuilding the processor.
+    exposure_tr = ocio.ExposureContrastTransform(
+        exposure=exposure_val,
+        dynamicExposure=True
+    )
+
+    # Add a Channel view 'swizzle'.
+    channelHot = (1, 1, 1, 1)   # show rgb
+    # channelHot = (1, 0, 0, 0) # show red
+    # channelHot = (0, 0, 0, 1) # show alpha
+    # channelHot = (1, 1, 1, 0) # show luma
+    channel_view_tr = ocio.MatrixTransform.View(
+        channelHot=channelHot,
+        lumaCoef=config.getDefaultLumaCoefs()
+    )
+
+    # Add a second ExposureContrastTransform, this one applying an gamma
+    # adjustment in the output display space (useful for checking shadow
+    # detail).
+    gamma_tr = ocio.ExposureContrastTransform(
+        gamma=gamma_val,
+        pivot=1.0,
+        dynamicGamma=True
+    )
+
+    # Step 5: Create a LegacyViewingPipeline which builds a processing pipeline
+    # by adding the various diagnostic controls around the DisplayViewTransform.
+    viewing_pipeline = ocio.LegacyViewingPipeline()
+    viewing_pipeline.setLinearCC(exposure_tr)
+    viewing_pipeline.setChannelView(channel_view_tr)
+    viewing_pipeline.setDisplayViewTransform(display_view_tr)
+    viewing_pipeline.setDisplayCC(gamma_tr)
+
+    # Step 6: Create a Processor and CPUProcessor from the pipeline.
+    proc = viewing_pipeline.getProcessor(config)
+    # Use the default optimization level to create a CPU Processor.
+    cpu_proc = proc.getDefaultCPUProcessor()
+
+    # Step 7: Evaluate an image pixel value.
+    image_pixel = [0.5, 0.4, 0.3]   # a test value to process
+    rgb = cpu_proc.applyRGB(image_pixel)
+    print(rgb)
+
+
+Displaying an image, using the GPU
+**********************************
 
 Applying OpenColorIO's color processing using the GPU is very customizable
 and an example helper class is provided for use with OpenGL.

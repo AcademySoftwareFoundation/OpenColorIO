@@ -485,12 +485,16 @@ class NamedTransformTest(unittest.TestCase):
         aliases = named_tr.getAliases()
         self.assertEqual(len(aliases), 1)
         self.assertEqual(aliases[0], 'alias1')
+        self.assertTrue(named_tr.hasAlias('alias1'))
+        self.assertTrue(named_tr.hasAlias('aLiAs1'))
+        self.assertFalse(named_tr.hasAlias('alias2'))
 
         named_tr.addAlias('alias2')
         aliases = named_tr.getAliases()
         self.assertEqual(len(aliases), 2)
         self.assertEqual(aliases[0], 'alias1')
         self.assertEqual(aliases[1], 'alias2')
+        self.assertTrue(named_tr.hasAlias('alias2'))
 
         # Alias is already there, not added.
 
@@ -510,12 +514,15 @@ class NamedTransformTest(unittest.TestCase):
         aliases = named_tr.getAliases()
         self.assertEqual(len(aliases), 1)
         self.assertEqual(aliases[0], 'alias1')
+        self.assertFalse(named_tr.hasAlias('alias2'))
 
         # Removing an alias.
 
         named_tr.addAlias('to remove')
         aliases = named_tr.getAliases()
         self.assertEqual(len(aliases), 2)
+        self.assertTrue(named_tr.hasAlias('to remove'))
+        self.assertTrue(named_tr.hasAlias('to REMOVE'))
 
         named_tr.removeAlias('not found')
         aliases = named_tr.getAliases()
@@ -524,7 +531,9 @@ class NamedTransformTest(unittest.TestCase):
         named_tr.removeAlias('to REMOVE')
         aliases = named_tr.getAliases()
         self.assertEqual(len(aliases), 1)
+        self.assertFalse(named_tr.hasAlias('to remove'))
 
         named_tr.clearAliases()
         aliases = named_tr.getAliases()
         self.assertEqual(len(aliases), 0)
+        self.assertFalse(named_tr.hasAlias('alias1'))

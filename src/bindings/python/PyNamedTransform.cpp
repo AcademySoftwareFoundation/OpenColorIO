@@ -130,6 +130,8 @@ void bindPyNamedTransform(py::module & m)
              DOC(NamedTransform, setName))
 
         // Aliases.
+        .def("hasAlias", &NamedTransform::hasAlias, "alias"_a,
+             DOC(NamedTransform, hasAlias))
         .def("addAlias", &NamedTransform::addAlias, "alias"_a.none(false),
              DOC(NamedTransform, addAlias))
         .def("removeAlias", &NamedTransform::removeAlias, "alias"_a.none(false),
