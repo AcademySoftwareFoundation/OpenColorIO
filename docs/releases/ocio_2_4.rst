@@ -29,8 +29,9 @@ modeling. The invertibility of the transforms is also improved.
 work-in-progress that is not yet ready for production use. Both the processing results and
 the API for it will likely change in OCIO 2.4.1 and future releases.**
 
-A preliminary OCIO config for ACES 2 will be available shortly which will simplify your
-ability to test this exciting new functionality.
+The OCIO config files for ACES 2 are still under development, but prototype configs for
+testing may be downloaded from `this PR on the OpenColorIO-Config-ACES repo. 
+<https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES/pull/130>`_
 
 A preliminary technical description of the ACES 2 Output Transform algorithm may be found 
 `at this link. <https://draftdocs.acescentral.com/output-transforms/technical-details/>`_
