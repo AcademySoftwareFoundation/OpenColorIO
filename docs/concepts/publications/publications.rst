@@ -7,16 +7,22 @@
 Presentations & Publications
 ============================
 
+* ASWF Open Source Days 2024 -- NanoColor `video <https://youtu.be/ym1kfYmGz-M?feature=shared>`_
+
+* ASWF Open Source Days 2024 -- Project Update `video <https://youtu.be/zizC0ORvwnc?feature=shared>`_
+
+* OCIO honored with the SMPTE Workflow Systems Medal! `article <https://www.aswf.io/blog/opencolorio-receives-smpte-workflow-systems-medal/>`_
+
 * ASWF Open Source Days 2023 `video <https://www.youtube.com/watch?v=y-oq693Wl8g>`_
 
-* OCIO wins the Pipeline Tool award at DigiPro 2022! `video <https://vimeo.com/742052701>`_
+* OCIO receives the Pipeline Tool award at DigiPro 2022! `video <https://vimeo.com/742052701>`_
 
 * ASWF Open Source Days 2022 `video <https://www.youtube.com/watch?v=WzFlz1HeNdI>`_
 
 * HPA Tech Retreat 2022 "Color Processing with OCIO v2 and the Academy/ASC Common LUT Format"
   `Slides & Tutorial <https://drive.google.com/drive/folders/1ZRTIYE6kFb-7sTUtYIYFNJndhY6tmJee?usp=share_link>`_
 
-* OCIO v2 wins an Engineering Excellence award from the Hollywood Post Alliance! 
+* OCIO v2 receives an Engineering Excellence award from the Hollywood Post Alliance! 
   `article <https://www.hollywoodreporter.com/movies/movie-news/hpa-engineering-excellence-award-recipients-announced-1234995410/>`_
 
 * SIGGRAPH 2021 course "Color management with OpenColorIO V2" 
