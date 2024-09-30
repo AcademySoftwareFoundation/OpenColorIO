@@ -7,7 +7,6 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "GPUHelpers.h"
 #include "GPUUnitTest.h"
 
 namespace OCIO = OCIO_NAMESPACE;

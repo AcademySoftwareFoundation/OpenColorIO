@@ -12,7 +12,6 @@ set(SOURCES
 	ECOp_test.cpp
 	FixedFunctionOp_test.cpp
 	GammaOp_test.cpp
-	GPUHelpers.cpp
 	GPUUnitTest.cpp
 	GradingPrimaryOp_test.cpp
 	GradingRGBCurveOp_test.cpp
@@ -26,7 +25,7 @@ set(SOURCES
 
 add_executable(test_gpu_exec ${SOURCES})
 
-set_target_properties(test_gpu_exec PROPERTIES 
+set_target_properties(test_gpu_exec PROPERTIES
 	COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS}"
 	LINK_OPTIONS "${PLATFORM_LINK_OPTIONS}"
 )

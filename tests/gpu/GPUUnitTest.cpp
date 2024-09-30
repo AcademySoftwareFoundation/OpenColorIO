@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
-#include <iomanip>
 #include <iostream>
 #include <sstream>
 
@@ -333,11 +332,11 @@ namespace
 
         OCIO::ConstProcessorRcPtr & processor = test->getProcessor();
         OCIO::GpuShaderDescRcPtr & shaderDesc = test->getShaderDesc();
-        
+
         OCIO::ConstGPUProcessorRcPtr gpu;
         if (test->isLegacyShader())
         {
-            gpu = processor->getOptimizedLegacyGPUProcessor(OCIO::OPTIMIZATION_DEFAULT, 
+            gpu = processor->getOptimizedLegacyGPUProcessor(OCIO::OPTIMIZATION_DEFAULT,
                                                             test->getLegacyShaderLutEdge());
         }
         else
@@ -575,7 +574,7 @@ int main(int argc, const char ** argv)
 
     // Step 1: Initialize the graphic library engines.
     OCIO::OglAppRcPtr app;
-    
+
     try
     {
         if(useMetalRenderer)
