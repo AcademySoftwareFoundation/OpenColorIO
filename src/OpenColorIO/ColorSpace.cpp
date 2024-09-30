@@ -8,6 +8,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "TokensManager.h"
+#include "Platform.h"
 #include "PrivateTypes.h"
 #include "utils/StringUtils.h"
 
@@ -145,6 +146,18 @@ const char * ColorSpace::getAlias(size_t idx) const noexcept
         return getImpl()->m_aliases[idx].c_str();
     }
     return "";
+}
+
+bool ColorSpace::hasAlias(const char * alias) const noexcept
+{
+    for (size_t idx = 0; idx < getImpl()->m_aliases.size(); ++idx)
+    {
+        if (0 == Platform::Strcasecmp(getImpl()->m_aliases[idx].c_str(), alias))
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 void ColorSpace::addAlias(const char * alias) noexcept

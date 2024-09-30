@@ -1879,6 +1879,8 @@ public:
     size_t getNumAliases() const noexcept;
     /// Return empty string if idx is out of range.
     const char * getAlias(size_t idx) const noexcept;
+    /// Return true if alias exists.
+    bool hasAlias(const char * alias) const noexcept;
     /**
      * Add an alias for the color space name (the aliases may be used as a synonym for the
      * name).  Nothing will be added if the alias is already the color space name, one of its
@@ -2301,6 +2303,8 @@ public:
     virtual size_t getNumAliases() const noexcept = 0;
     /// Return empty string if idx is  out of range.
     virtual const char * getAlias(size_t idx) const noexcept = 0;
+    /// Return true if alias exists.
+    virtual bool hasAlias(const char* alias) const noexcept = 0;
     /**
     * Nothing is done if alias is NULL or empty, if it is already there, or if it is already
     * the named transform name.

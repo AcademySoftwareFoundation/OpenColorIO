@@ -356,7 +356,7 @@ class ColorSpaceTest(unittest.TestCase):
 
     def test_aliases(self):
         """
-        Test NamedTransform aliases.
+        Test ColorSpace aliases.
         """
 
         cs = OCIO.ColorSpace()
@@ -368,12 +368,16 @@ class ColorSpaceTest(unittest.TestCase):
         aliases = cs.getAliases()
         self.assertEqual(len(aliases), 1)
         self.assertEqual(aliases[0], 'alias1')
+        self.assertTrue(cs.hasAlias('alias1'))
+        self.assertTrue(cs.hasAlias('aLiaS1'))
+        self.assertFalse(cs.hasAlias('alias2'))
 
         cs.addAlias('alias2')
         aliases = cs.getAliases()
         self.assertEqual(len(aliases), 2)
         self.assertEqual(aliases[0], 'alias1')
         self.assertEqual(aliases[1], 'alias2')
+        self.assertTrue(cs.hasAlias('alias2'))
 
         # Alias is already there, not added.
 
@@ -393,12 +397,15 @@ class ColorSpaceTest(unittest.TestCase):
         aliases = cs.getAliases()
         self.assertEqual(len(aliases), 1)
         self.assertEqual(aliases[0], 'alias1')
+        self.assertFalse(cs.hasAlias('alias2'))
 
         # Removing an alias.
 
         cs.addAlias('to remove')
         aliases = cs.getAliases()
         self.assertEqual(len(aliases), 2)
+        self.assertTrue(cs.hasAlias('to remove'))
+        self.assertTrue(cs.hasAlias('to REMOVE'))
 
         cs.removeAlias('not found')
         aliases = cs.getAliases()
@@ -407,10 +414,12 @@ class ColorSpaceTest(unittest.TestCase):
         cs.removeAlias('to REMOVE')
         aliases = cs.getAliases()
         self.assertEqual(len(aliases), 1)
+        self.assertFalse(cs.hasAlias('to remove'))
 
         cs.clearAliases()
         aliases = cs.getAliases()
         self.assertEqual(len(aliases), 0)
+        self.assertFalse(cs.hasAlias('alias1'))
 
     def test_is_colorspace_linear(self):
         """
