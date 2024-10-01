@@ -52,7 +52,7 @@ public:
 
     ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
-    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator, OptimizationFlags /*oFlags*/) const override;
 
 protected:
     ConstGradingRGBCurveOpDataRcPtr rgbCurveData() const
@@ -190,7 +190,7 @@ ConstOpCPURcPtr GradingRGBCurveOp::getCPUOp(bool /*fastLogExpPow*/) const
     return GetGradingRGBCurveCPURenderer(data);
 }
 
-void GradingRGBCurveOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
+void GradingRGBCurveOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator, OptimizationFlags /*oFlags*/) const
 {
     ConstGradingRGBCurveOpDataRcPtr data = rgbCurveData();
     GetGradingRGBCurveGPUShaderProgram(shaderCreator, data);
