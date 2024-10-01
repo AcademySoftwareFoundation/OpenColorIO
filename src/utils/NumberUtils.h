@@ -4,6 +4,18 @@
 #ifndef INCLUDED_NUMBERUTILS_H
 #define INCLUDED_NUMBERUTILS_H
 
+// With C++17, we can use <charconv> from_chars.
+//
+// That has advantage of not dealing with locale / errno,
+// which might involve locks or thread local storage accesses.
+//
+// Except on Apple platforms, where (as of Xcode 15 / Apple Clang 15)
+// these are not implemented for float/double types.
+#if __cpp_lib_to_chars >= 201611L && !defined(__APPLE__)
+#define USE_CHARCONV_FROM_CHARS
+#include <charconv>
+#endif
+
 #if defined(_MSC_VER)
 #define really_inline __forceinline
 #else
@@ -56,12 +68,21 @@ static const Locale loc;
 
 really_inline from_chars_result from_chars(const char *first, const char *last, double &value) noexcept
 {
-    errno = 0;
     if (!first || !last || first == last)
     {
         return {first, std::errc::invalid_argument};
     }
 
+#ifdef USE_CHARCONV_FROM_CHARS
+    if (first < last && first[0] == '+')
+    {
+        ++first;
+    }
+    std::from_chars_result res = std::from_chars(first, last, value);
+    return from_chars_result{ res.ptr, res.ec };
+#else
+
+    errno = 0;
     char * endptr = nullptr;
 
     double
@@ -88,16 +109,26 @@ really_inline from_chars_result from_chars(const char *first, const char *last, 
     {
         return {first, std::errc::argument_out_of_domain};
     }
+#endif
 }
 
 really_inline from_chars_result from_chars(const char *first, const char *last, float &value) noexcept
 {
-    errno = 0;
     if (!first || !last || first == last)
     {
         return {first, std::errc::invalid_argument};
     }
 
+#ifdef USE_CHARCONV_FROM_CHARS
+    if (first < last && first[0] == '+')
+    {
+        ++first;
+    }
+    std::from_chars_result res = std::from_chars(first, last, value);
+    return from_chars_result{ res.ptr, res.ec };
+#else
+
+    errno = 0;
     char *endptr = nullptr;
 
     float
@@ -132,16 +163,26 @@ really_inline from_chars_result from_chars(const char *first, const char *last, 
     {
         return {first, std::errc::argument_out_of_domain};
     }
+#endif
 }
 
 really_inline from_chars_result from_chars(const char *first, const char *last, long int &value) noexcept
 {
-    errno = 0;
     if (!first || !last || first == last)
     {
         return {first, std::errc::invalid_argument};
     }
 
+#ifdef USE_CHARCONV_FROM_CHARS
+    if (first < last && first[0] == '+')
+    {
+        ++first;
+    }
+    std::from_chars_result res = std::from_chars(first, last, value);
+    return from_chars_result{ res.ptr, res.ec };
+#else
+
+    errno = 0;
     char *endptr = nullptr;
 
     long int
@@ -170,6 +211,7 @@ really_inline from_chars_result from_chars(const char *first, const char *last, 
     {
         return {first, std::errc::argument_out_of_domain};
     }
+#endif
 }
 } // namespace NumberUtils
 } // namespace OCIO_NAMESPACE

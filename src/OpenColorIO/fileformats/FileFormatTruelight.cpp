@@ -124,7 +124,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
             if(parts.empty()) continue;
 
             // Parse header metadata (which starts with #)
-            if(StringUtils::StartsWith(parts[0],"#"))
+            if(StringUtils::StartsWith(parts[0],'#'))
             {
                 if(parts.size() < 2) continue;
 
