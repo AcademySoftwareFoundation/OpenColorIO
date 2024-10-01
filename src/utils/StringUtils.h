@@ -46,7 +46,7 @@ inline unsigned char Upper(unsigned char c)
 
 // Checks if character is whitespace (space, tab, newline or other
 // non-printable char). Does not take locale into account.
-inline bool IsSpace(char c)
+inline bool IsSpace(unsigned char c)
 {
     return c <= ' ';
 }
