@@ -5,7 +5,6 @@
 
 .. py:class:: ColorSpaceMenuParameters
    :module: PyOpenColorIO
-   :canonical: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters
 
    Parameters controlling which color spaces appear in menus.
 
@@ -52,12 +51,12 @@
 
       Overloaded function.
 
-      1. __init__(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters, config: PyOpenColorIO.PyOpenColorIO.Config) -> None
+      1. __init__(self: PyOpenColorIO.ColorSpaceMenuParameters, config: PyOpenColorIO.Config) -> None
 
-      2. __init__(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters, config: PyOpenColorIO.PyOpenColorIO.Config, role: str = '', includeColorSpaces: bool = True, searchReferenceSpaceType: PyOpenColorIO.PyOpenColorIO.SearchReferenceSpaceType = <SearchReferenceSpaceType.SEARCH_REFERENCE_SPACE_ALL: 2>, includeNamedTransforms: bool = False, appCategories: str = '', encodings: str = '', userCategories: str = '', includeRoles: bool = False) -> None
+      2. __init__(self: PyOpenColorIO.ColorSpaceMenuParameters, config: PyOpenColorIO.Config, role: str = '', includeColorSpaces: bool = True, searchReferenceSpaceType: PyOpenColorIO.SearchReferenceSpaceType = <SearchReferenceSpaceType.SEARCH_REFERENCE_SPACE_ALL: 2>, includeNamedTransforms: bool = False, appCategories: str = '', encodings: str = '', userCategories: str = '', includeRoles: bool = False) -> None
 
 
-   .. py:method:: ColorSpaceMenuParameters.addColorSpace(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters, colorSpace: str) -> None
+   .. py:method:: ColorSpaceMenuParameters.addColorSpace(self: PyOpenColorIO.ColorSpaceMenuParameters, colorSpace: str) -> None
       :module: PyOpenColorIO
 
       Add an additional color space (or named transform) to the menu.
@@ -68,99 +67,99 @@
       - a newly created color space. Will throw when creating the menu if color space is not part of the config. Nothing is done if it is already part of the menu. It's ok to call this multiple times with the same color space, it will only be added to the menu once. If a role name is passed in, the name in the menu will be the color space name the role points to.
 
 
-   .. py:method:: ColorSpaceMenuParameters.clearAddedColorSpaces(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters) -> None
+   .. py:method:: ColorSpaceMenuParameters.clearAddedColorSpaces(self: PyOpenColorIO.ColorSpaceMenuParameters) -> None
       :module: PyOpenColorIO
 
 
-   .. py:method:: ColorSpaceMenuParameters.getAddedColorSpaces(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters) -> PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters.AddedColorSpaceIterator
+   .. py:method:: ColorSpaceMenuParameters.getAddedColorSpaces(self: PyOpenColorIO.ColorSpaceMenuParameters) -> PyOpenColorIO.ColorSpaceMenuParameters.AddedColorSpaceIterator
       :module: PyOpenColorIO
 
 
-   .. py:method:: ColorSpaceMenuParameters.getAppCategories(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters) -> str
+   .. py:method:: ColorSpaceMenuParameters.getAppCategories(self: PyOpenColorIO.ColorSpaceMenuParameters) -> str
       :module: PyOpenColorIO
 
 
-   .. py:method:: ColorSpaceMenuParameters.getConfig(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters) -> PyOpenColorIO.PyOpenColorIO.Config
+   .. py:method:: ColorSpaceMenuParameters.getConfig(self: PyOpenColorIO.ColorSpaceMenuParameters) -> PyOpenColorIO.Config
       :module: PyOpenColorIO
 
 
-   .. py:method:: ColorSpaceMenuParameters.getEncodings(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters) -> str
+   .. py:method:: ColorSpaceMenuParameters.getEncodings(self: PyOpenColorIO.ColorSpaceMenuParameters) -> str
       :module: PyOpenColorIO
 
 
-   .. py:method:: ColorSpaceMenuParameters.getIncludeColorSpaces(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters) -> bool
+   .. py:method:: ColorSpaceMenuParameters.getIncludeColorSpaces(self: PyOpenColorIO.ColorSpaceMenuParameters) -> bool
       :module: PyOpenColorIO
 
 
-   .. py:method:: ColorSpaceMenuParameters.getIncludeNamedTransforms(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters) -> bool
+   .. py:method:: ColorSpaceMenuParameters.getIncludeNamedTransforms(self: PyOpenColorIO.ColorSpaceMenuParameters) -> bool
       :module: PyOpenColorIO
 
 
-   .. py:method:: ColorSpaceMenuParameters.getIncludeRoles(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters) -> bool
+   .. py:method:: ColorSpaceMenuParameters.getIncludeRoles(self: PyOpenColorIO.ColorSpaceMenuParameters) -> bool
       :module: PyOpenColorIO
 
 
-   .. py:method:: ColorSpaceMenuParameters.getRole(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters) -> str
+   .. py:method:: ColorSpaceMenuParameters.getRole(self: PyOpenColorIO.ColorSpaceMenuParameters) -> str
       :module: PyOpenColorIO
 
 
-   .. py:method:: ColorSpaceMenuParameters.getSearchReferenceSpaceType(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters) -> PyOpenColorIO.PyOpenColorIO.SearchReferenceSpaceType
+   .. py:method:: ColorSpaceMenuParameters.getSearchReferenceSpaceType(self: PyOpenColorIO.ColorSpaceMenuParameters) -> PyOpenColorIO.SearchReferenceSpaceType
       :module: PyOpenColorIO
 
       Can be used to restrict the search using the ReferenceSpaceType of the color spaces. It has no effect on roles and named transforms.
 
 
-   .. py:method:: ColorSpaceMenuParameters.getUserCategories(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters) -> str
+   .. py:method:: ColorSpaceMenuParameters.getUserCategories(self: PyOpenColorIO.ColorSpaceMenuParameters) -> str
       :module: PyOpenColorIO
 
 
-   .. py:method:: ColorSpaceMenuParameters.setAppCategories(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters, appCategories: str) -> None
+   .. py:method:: ColorSpaceMenuParameters.setAppCategories(self: PyOpenColorIO.ColorSpaceMenuParameters, appCategories: str) -> None
       :module: PyOpenColorIO
 
       App categories is a comma separated list of categories. If appCategories is not NULL and not empty, all color spaces that have one of the categories will be part of the menu.
 
 
-   .. py:method:: ColorSpaceMenuParameters.setConfig(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters, config: PyOpenColorIO.PyOpenColorIO.Config) -> None
+   .. py:method:: ColorSpaceMenuParameters.setConfig(self: PyOpenColorIO.ColorSpaceMenuParameters, config: PyOpenColorIO.Config) -> None
       :module: PyOpenColorIO
 
       :ref:`Config` is required to be able to create a :ref:`ColorSpaceMenuHelper`.
 
 
-   .. py:method:: ColorSpaceMenuParameters.setEncodings(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters, encodings: str) -> None
+   .. py:method:: ColorSpaceMenuParameters.setEncodings(self: PyOpenColorIO.ColorSpaceMenuParameters, encodings: str) -> None
       :module: PyOpenColorIO
 
       Encodings is a comma separated list of encodings. When not empty, is retricting the search to color spaces that are using one of the encodings.
 
 
-   .. py:method:: ColorSpaceMenuParameters.setIncludeColorSpaces(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters, includeColorSpaces: bool = True) -> None
+   .. py:method:: ColorSpaceMenuParameters.setIncludeColorSpaces(self: PyOpenColorIO.ColorSpaceMenuParameters, includeColorSpaces: bool = True) -> None
       :module: PyOpenColorIO
 
       Include all color spaces (or not) to :ref:`ColorSpaceMenuHelper`. Default is to include color spaces.
 
 
-   .. py:method:: ColorSpaceMenuParameters.setIncludeNamedTransforms(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters, includeNamedTransforms: bool = True) -> None
+   .. py:method:: ColorSpaceMenuParameters.setIncludeNamedTransforms(self: PyOpenColorIO.ColorSpaceMenuParameters, includeNamedTransforms: bool = True) -> None
       :module: PyOpenColorIO
 
       Include all named transforms (or not) to :ref:`ColorSpaceMenuHelper`. Default is not to include named transforms.
 
 
-   .. py:method:: ColorSpaceMenuParameters.setIncludeRoles(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters, includeRoles: bool = True) -> None
+   .. py:method:: ColorSpaceMenuParameters.setIncludeRoles(self: PyOpenColorIO.ColorSpaceMenuParameters, includeRoles: bool = True) -> None
       :module: PyOpenColorIO
 
       Include all roles (or not) to :ref:`ColorSpaceMenuHelper`. Default is not to include roles. Roles are added after color spaces with an single hierarchy level named "Roles".
 
 
-   .. py:method:: ColorSpaceMenuParameters.setRole(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters, role: str) -> None
+   .. py:method:: ColorSpaceMenuParameters.setRole(self: PyOpenColorIO.ColorSpaceMenuParameters, role: str) -> None
       :module: PyOpenColorIO
 
       If role is a valid role, other parameters are ignored and menu will contain only that role.
 
 
-   .. py:method:: ColorSpaceMenuParameters.setSearchReferenceSpaceType(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters, searchReferenceSpaceType: PyOpenColorIO.PyOpenColorIO.SearchReferenceSpaceType) -> None
+   .. py:method:: ColorSpaceMenuParameters.setSearchReferenceSpaceType(self: PyOpenColorIO.ColorSpaceMenuParameters, searchReferenceSpaceType: PyOpenColorIO.SearchReferenceSpaceType) -> None
       :module: PyOpenColorIO
 
 
-   .. py:method:: ColorSpaceMenuParameters.setUserCategories(self: PyOpenColorIO.PyOpenColorIO.ColorSpaceMenuParameters, categories: str) -> None
+   .. py:method:: ColorSpaceMenuParameters.setUserCategories(self: PyOpenColorIO.ColorSpaceMenuParameters, categories: str) -> None
       :module: PyOpenColorIO
 
       User categories is a comma separated list of categories. If OCIO_USER_CATEGORIES_ENVVAR env. variable is defined and not empty, this parameter is ignored and the value of the env. variable is used for user categories.

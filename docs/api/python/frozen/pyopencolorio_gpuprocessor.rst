@@ -5,27 +5,26 @@
 
 .. py:class:: GPUProcessor
    :module: PyOpenColorIO
-   :canonical: PyOpenColorIO.PyOpenColorIO.GPUProcessor
 
 
    .. py:method:: GPUProcessor.__init__(*args, **kwargs)
       :module: PyOpenColorIO
 
 
-   .. py:method:: GPUProcessor.extractGpuShaderInfo(self: PyOpenColorIO.PyOpenColorIO.GPUProcessor, shaderDesc: PyOpenColorIO.PyOpenColorIO.GpuShaderDesc) -> None
+   .. py:method:: GPUProcessor.extractGpuShaderInfo(self: PyOpenColorIO.GPUProcessor, shaderDesc: PyOpenColorIO.GpuShaderDesc) -> None
       :module: PyOpenColorIO
 
       Extract & Store the shader information to implement the color processing.
 
 
-   .. py:method:: GPUProcessor.getCacheID(self: PyOpenColorIO.PyOpenColorIO.GPUProcessor) -> str
+   .. py:method:: GPUProcessor.getCacheID(self: PyOpenColorIO.GPUProcessor) -> str
       :module: PyOpenColorIO
 
 
-   .. py:method:: GPUProcessor.hasChannelCrosstalk(self: PyOpenColorIO.PyOpenColorIO.GPUProcessor) -> bool
+   .. py:method:: GPUProcessor.hasChannelCrosstalk(self: PyOpenColorIO.GPUProcessor) -> bool
       :module: PyOpenColorIO
 
 
-   .. py:method:: GPUProcessor.isNoOp(self: PyOpenColorIO.PyOpenColorIO.GPUProcessor) -> bool
+   .. py:method:: GPUProcessor.isNoOp(self: PyOpenColorIO.GPUProcessor) -> bool
       :module: PyOpenColorIO
 

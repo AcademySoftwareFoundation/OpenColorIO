@@ -5,7 +5,6 @@
 
 .. py:class:: MixingSlider
    :module: PyOpenColorIO
-   :canonical: PyOpenColorIO.PyOpenColorIO.MixingSlider
 
    The :ref:`MixingSlider` and :ref:`MixingColorSpaceManager` classes are to help applications implement correct color pickers. The term "color mixing" is used here to describe what is done in a typical application "color picker" user interface.
 
@@ -22,37 +21,37 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: MixingSlider.getSliderMaxEdge(self: PyOpenColorIO.PyOpenColorIO.MixingSlider) -> float
+   .. py:method:: MixingSlider.getSliderMaxEdge(self: PyOpenColorIO.MixingSlider) -> float
       :module: PyOpenColorIO
 
       Maximum edge of a UI slider for conversion to mixing space.
 
 
-   .. py:method:: MixingSlider.getSliderMinEdge(self: PyOpenColorIO.PyOpenColorIO.MixingSlider) -> float
+   .. py:method:: MixingSlider.getSliderMinEdge(self: PyOpenColorIO.MixingSlider) -> float
       :module: PyOpenColorIO
 
       Minimum edge of a UI slider for conversion to mixing space.
 
 
-   .. py:method:: MixingSlider.mixingToSlider(self: PyOpenColorIO.PyOpenColorIO.MixingSlider, mixingUnits: float) -> float
+   .. py:method:: MixingSlider.mixingToSlider(self: PyOpenColorIO.MixingSlider, mixingUnits: float) -> float
       :module: PyOpenColorIO
 
       Convert from mixing space units to distance along the slider.
 
 
-   .. py:method:: MixingSlider.setSliderMaxEdge(self: PyOpenColorIO.PyOpenColorIO.MixingSlider, arg0: float) -> None
+   .. py:method:: MixingSlider.setSliderMaxEdge(self: PyOpenColorIO.MixingSlider, arg0: float) -> None
       :module: PyOpenColorIO
 
       Set the maximum edge of a UI slider for conversion to mixing space.
 
 
-   .. py:method:: MixingSlider.setSliderMinEdge(self: PyOpenColorIO.PyOpenColorIO.MixingSlider, arg0: float) -> None
+   .. py:method:: MixingSlider.setSliderMinEdge(self: PyOpenColorIO.MixingSlider, arg0: float) -> None
       :module: PyOpenColorIO
 
       Set the minimum edge of a UI slider for conversion to mixing space.
 
 
-   .. py:method:: MixingSlider.sliderToMixing(self: PyOpenColorIO.PyOpenColorIO.MixingSlider, sliderUnits: float) -> float
+   .. py:method:: MixingSlider.sliderToMixing(self: PyOpenColorIO.MixingSlider, sliderUnits: float) -> float
       :module: PyOpenColorIO
 
       Convert from units in distance along the slider to mixing space units.

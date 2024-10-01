@@ -5,32 +5,31 @@
 
 .. py:class:: MixingColorSpaceManager
    :module: PyOpenColorIO
-   :canonical: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager
 
    Used to mix (or pick/choose) colors.
 
 
-   .. py:method:: MixingColorSpaceManager.__init__(self: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager, config: PyOpenColorIO.PyOpenColorIO.Config) -> None
+   .. py:method:: MixingColorSpaceManager.__init__(self: PyOpenColorIO.MixingColorSpaceManager, config: PyOpenColorIO.Config) -> None
       :module: PyOpenColorIO
 
 
-   .. py:method:: MixingColorSpaceManager.getMixingEncodings(self: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager) -> PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager.MixingEncodingIterator
+   .. py:method:: MixingColorSpaceManager.getMixingEncodings(self: PyOpenColorIO.MixingColorSpaceManager) -> PyOpenColorIO.MixingColorSpaceManager.MixingEncodingIterator
       :module: PyOpenColorIO
 
 
-   .. py:method:: MixingColorSpaceManager.getMixingSpaces(self: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager) -> PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager.MixingSpaceIterator
+   .. py:method:: MixingColorSpaceManager.getMixingSpaces(self: PyOpenColorIO.MixingColorSpaceManager) -> PyOpenColorIO.MixingColorSpaceManager.MixingSpaceIterator
       :module: PyOpenColorIO
 
 
-   .. py:method:: MixingColorSpaceManager.getProcessor(self: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager, workingSpaceName: str, displayName: str, viewName: str, direction: PyOpenColorIO.PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> PyOpenColorIO.PyOpenColorIO.Processor
+   .. py:method:: MixingColorSpaceManager.getProcessor(self: PyOpenColorIO.MixingColorSpaceManager, workingSpaceName: str, displayName: str, viewName: str, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> PyOpenColorIO.Processor
       :module: PyOpenColorIO
 
 
-   .. py:method:: MixingColorSpaceManager.getSelectedMixingEncodingIdx(self: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager) -> int
+   .. py:method:: MixingColorSpaceManager.getSelectedMixingEncodingIdx(self: PyOpenColorIO.MixingColorSpaceManager) -> int
       :module: PyOpenColorIO
 
 
-   .. py:method:: MixingColorSpaceManager.getSelectedMixingSpaceIdx(self: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager) -> int
+   .. py:method:: MixingColorSpaceManager.getSelectedMixingSpaceIdx(self: PyOpenColorIO.MixingColorSpaceManager) -> int
       :module: PyOpenColorIO
 
 
@@ -39,75 +38,73 @@
 
       Overloaded function.
 
-      1. getSlider(self: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager) -> PyOpenColorIO.PyOpenColorIO.MixingSlider
+      1. getSlider(self: PyOpenColorIO.MixingColorSpaceManager) -> PyOpenColorIO.MixingSlider
 
-      2. getSlider(self: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager, sliderMixingMinEdge: float, sliderMixingMaxEdge: float) -> PyOpenColorIO.PyOpenColorIO.MixingSlider
+      2. getSlider(self: PyOpenColorIO.MixingColorSpaceManager, sliderMixingMinEdge: float, sliderMixingMaxEdge: float) -> PyOpenColorIO.MixingSlider
 
 
-   .. py:method:: MixingColorSpaceManager.isPerceptuallyUniform(self: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager) -> bool
+   .. py:method:: MixingColorSpaceManager.isPerceptuallyUniform(self: PyOpenColorIO.MixingColorSpaceManager) -> bool
       :module: PyOpenColorIO
 
 
-   .. py:method:: MixingColorSpaceManager.refresh(self: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager, config: PyOpenColorIO.PyOpenColorIO.Config) -> None
+   .. py:method:: MixingColorSpaceManager.refresh(self: PyOpenColorIO.MixingColorSpaceManager, config: PyOpenColorIO.Config) -> None
       :module: PyOpenColorIO
 
       Refresh the instance (i.e. needed following a configuration change for example).
 
 
-   .. py:method:: MixingColorSpaceManager.setSelectedMixingEncoding(self: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager, mixingEncoding: str) -> None
+   .. py:method:: MixingColorSpaceManager.setSelectedMixingEncoding(self: PyOpenColorIO.MixingColorSpaceManager, mixingEncoding: str) -> None
       :module: PyOpenColorIO
 
 
-   .. py:method:: MixingColorSpaceManager.setSelectedMixingEncodingIdx(self: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager, arg0: int) -> None
+   .. py:method:: MixingColorSpaceManager.setSelectedMixingEncodingIdx(self: PyOpenColorIO.MixingColorSpaceManager, arg0: int) -> None
       :module: PyOpenColorIO
 
 
-   .. py:method:: MixingColorSpaceManager.setSelectedMixingSpace(self: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager, mixingSpace: str) -> None
+   .. py:method:: MixingColorSpaceManager.setSelectedMixingSpace(self: PyOpenColorIO.MixingColorSpaceManager, mixingSpace: str) -> None
       :module: PyOpenColorIO
 
 
-   .. py:method:: MixingColorSpaceManager.setSelectedMixingSpaceIdx(self: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager, arg0: int) -> None
+   .. py:method:: MixingColorSpaceManager.setSelectedMixingSpaceIdx(self: PyOpenColorIO.MixingColorSpaceManager, arg0: int) -> None
       :module: PyOpenColorIO
 
 
 .. py:class:: MixingSpaceIterator
    :module: PyOpenColorIO.MixingColorSpaceManager
-   :canonical: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager.MixingSpaceIterator
 
 
-   .. py:method:: MixingSpaceIterator.__getitem__(self: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager.MixingSpaceIterator, arg0: int) -> str
+   .. py:method:: MixingSpaceIterator.__getitem__(self: PyOpenColorIO.MixingColorSpaceManager.MixingSpaceIterator, arg0: int) -> str
       :module: PyOpenColorIO.MixingColorSpaceManager
 
 
-   .. py:method:: MixingSpaceIterator.__iter__(self: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager.MixingSpaceIterator) -> PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager.MixingSpaceIterator
+   .. py:method:: MixingSpaceIterator.__iter__(self: PyOpenColorIO.MixingColorSpaceManager.MixingSpaceIterator) -> PyOpenColorIO.MixingColorSpaceManager.MixingSpaceIterator
       :module: PyOpenColorIO.MixingColorSpaceManager
 
 
-   .. py:method:: MixingSpaceIterator.__len__(self: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager.MixingSpaceIterator) -> int
+   .. py:method:: MixingSpaceIterator.__len__(self: PyOpenColorIO.MixingColorSpaceManager.MixingSpaceIterator) -> int
       :module: PyOpenColorIO.MixingColorSpaceManager
 
 
-   .. py:method:: MixingSpaceIterator.__next__(self: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager.MixingSpaceIterator) -> str
+   .. py:method:: MixingSpaceIterator.__next__(self: PyOpenColorIO.MixingColorSpaceManager.MixingSpaceIterator) -> str
       :module: PyOpenColorIO.MixingColorSpaceManager
 
 
 .. py:class:: MixingEncodingIterator
    :module: PyOpenColorIO.MixingColorSpaceManager
-   :canonical: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager.MixingEncodingIterator
 
 
-   .. py:method:: MixingEncodingIterator.__getitem__(self: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager.MixingEncodingIterator, arg0: int) -> str
+   .. py:method:: MixingEncodingIterator.__getitem__(self: PyOpenColorIO.MixingColorSpaceManager.MixingEncodingIterator, arg0: int) -> str
       :module: PyOpenColorIO.MixingColorSpaceManager
 
 
-   .. py:method:: MixingEncodingIterator.__iter__(self: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager.MixingEncodingIterator) -> PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager.MixingEncodingIterator
+   .. py:method:: MixingEncodingIterator.__iter__(self: PyOpenColorIO.MixingColorSpaceManager.MixingEncodingIterator) -> PyOpenColorIO.MixingColorSpaceManager.MixingEncodingIterator
       :module: PyOpenColorIO.MixingColorSpaceManager
 
 
-   .. py:method:: MixingEncodingIterator.__len__(self: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager.MixingEncodingIterator) -> int
+   .. py:method:: MixingEncodingIterator.__len__(self: PyOpenColorIO.MixingColorSpaceManager.MixingEncodingIterator) -> int
       :module: PyOpenColorIO.MixingColorSpaceManager
 
 
-   .. py:method:: MixingEncodingIterator.__next__(self: PyOpenColorIO.PyOpenColorIO.MixingColorSpaceManager.MixingSpaceIterator) -> str
+   .. py:method:: MixingEncodingIterator.__next__(self: PyOpenColorIO.MixingColorSpaceManager.MixingSpaceIterator) -> str
       :module: PyOpenColorIO.MixingColorSpaceManager
 

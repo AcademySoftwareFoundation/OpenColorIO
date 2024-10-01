@@ -5,69 +5,66 @@
 
 .. py:class:: ProcessorMetadata
    :module: PyOpenColorIO
-   :canonical: PyOpenColorIO.PyOpenColorIO.ProcessorMetadata
 
    This class contains meta information about the process that generated this processor. The results of these functions do not impact the pixel processing.
 
 
-   .. py:method:: ProcessorMetadata.__init__(self: PyOpenColorIO.PyOpenColorIO.ProcessorMetadata) -> None
+   .. py:method:: ProcessorMetadata.__init__(self: PyOpenColorIO.ProcessorMetadata) -> None
       :module: PyOpenColorIO
 
 
-   .. py:method:: ProcessorMetadata.addFile(self: PyOpenColorIO.PyOpenColorIO.ProcessorMetadata, fileName: str) -> None
+   .. py:method:: ProcessorMetadata.addFile(self: PyOpenColorIO.ProcessorMetadata, fileName: str) -> None
       :module: PyOpenColorIO
 
 
-   .. py:method:: ProcessorMetadata.addLook(self: PyOpenColorIO.PyOpenColorIO.ProcessorMetadata, look: str) -> None
+   .. py:method:: ProcessorMetadata.addLook(self: PyOpenColorIO.ProcessorMetadata, look: str) -> None
       :module: PyOpenColorIO
 
 
-   .. py:method:: ProcessorMetadata.getFiles(self: PyOpenColorIO.PyOpenColorIO.ProcessorMetadata) -> PyOpenColorIO.PyOpenColorIO.ProcessorMetadata.FileIterator
+   .. py:method:: ProcessorMetadata.getFiles(self: PyOpenColorIO.ProcessorMetadata) -> PyOpenColorIO.ProcessorMetadata.FileIterator
       :module: PyOpenColorIO
 
 
-   .. py:method:: ProcessorMetadata.getLooks(self: PyOpenColorIO.PyOpenColorIO.ProcessorMetadata) -> PyOpenColorIO.PyOpenColorIO.ProcessorMetadata.LookIterator
+   .. py:method:: ProcessorMetadata.getLooks(self: PyOpenColorIO.ProcessorMetadata) -> PyOpenColorIO.ProcessorMetadata.LookIterator
       :module: PyOpenColorIO
 
 
 .. py:class:: FileIterator
    :module: PyOpenColorIO.ProcessorMetadata
-   :canonical: PyOpenColorIO.PyOpenColorIO.ProcessorMetadata.FileIterator
 
 
-   .. py:method:: FileIterator.__getitem__(self: PyOpenColorIO.PyOpenColorIO.ProcessorMetadata.FileIterator, arg0: int) -> str
+   .. py:method:: FileIterator.__getitem__(self: PyOpenColorIO.ProcessorMetadata.FileIterator, arg0: int) -> str
       :module: PyOpenColorIO.ProcessorMetadata
 
 
-   .. py:method:: FileIterator.__iter__(self: PyOpenColorIO.PyOpenColorIO.ProcessorMetadata.FileIterator) -> PyOpenColorIO.PyOpenColorIO.ProcessorMetadata.FileIterator
+   .. py:method:: FileIterator.__iter__(self: PyOpenColorIO.ProcessorMetadata.FileIterator) -> PyOpenColorIO.ProcessorMetadata.FileIterator
       :module: PyOpenColorIO.ProcessorMetadata
 
 
-   .. py:method:: FileIterator.__len__(self: PyOpenColorIO.PyOpenColorIO.ProcessorMetadata.FileIterator) -> int
+   .. py:method:: FileIterator.__len__(self: PyOpenColorIO.ProcessorMetadata.FileIterator) -> int
       :module: PyOpenColorIO.ProcessorMetadata
 
 
-   .. py:method:: FileIterator.__next__(self: PyOpenColorIO.PyOpenColorIO.ProcessorMetadata.FileIterator) -> str
+   .. py:method:: FileIterator.__next__(self: PyOpenColorIO.ProcessorMetadata.FileIterator) -> str
       :module: PyOpenColorIO.ProcessorMetadata
 
 
 .. py:class:: LookIterator
    :module: PyOpenColorIO.ProcessorMetadata
-   :canonical: PyOpenColorIO.PyOpenColorIO.ProcessorMetadata.LookIterator
 
 
-   .. py:method:: LookIterator.__getitem__(self: PyOpenColorIO.PyOpenColorIO.ProcessorMetadata.LookIterator, arg0: int) -> str
+   .. py:method:: LookIterator.__getitem__(self: PyOpenColorIO.ProcessorMetadata.LookIterator, arg0: int) -> str
       :module: PyOpenColorIO.ProcessorMetadata
 
 
-   .. py:method:: LookIterator.__iter__(self: PyOpenColorIO.PyOpenColorIO.ProcessorMetadata.LookIterator) -> PyOpenColorIO.PyOpenColorIO.ProcessorMetadata.LookIterator
+   .. py:method:: LookIterator.__iter__(self: PyOpenColorIO.ProcessorMetadata.LookIterator) -> PyOpenColorIO.ProcessorMetadata.LookIterator
       :module: PyOpenColorIO.ProcessorMetadata
 
 
-   .. py:method:: LookIterator.__len__(self: PyOpenColorIO.PyOpenColorIO.ProcessorMetadata.LookIterator) -> int
+   .. py:method:: LookIterator.__len__(self: PyOpenColorIO.ProcessorMetadata.LookIterator) -> int
       :module: PyOpenColorIO.ProcessorMetadata
 
 
-   .. py:method:: LookIterator.__next__(self: PyOpenColorIO.PyOpenColorIO.ProcessorMetadata.LookIterator) -> str
+   .. py:method:: LookIterator.__next__(self: PyOpenColorIO.ProcessorMetadata.LookIterator) -> str
       :module: PyOpenColorIO.ProcessorMetadata
 
