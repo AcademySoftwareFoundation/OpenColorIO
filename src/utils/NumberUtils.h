@@ -9,9 +9,13 @@
 // That has advantage of not dealing with locale / errno,
 // which might involve locks or thread local storage accesses.
 //
-// Except on Apple platforms, where (as of Xcode 15 / Apple Clang 15)
-// these are not implemented for float/double types.
-#if __cplusplus >= 201703L && !defined(__APPLE__)
+// Note that it is not enough to check __cplusplus version,
+// since even if compiler reports C++17 it might not implement
+// from_chars for floats. Checking __cpp_lib_to_chars works
+// correctly and the check starts passing with gcc 11, clang 12,
+// msvc 2019 (16.4). It correctly does not pass on apple clang 15,
+// since it does not implement from_chars for floats.
+#if __cpp_lib_to_chars >= 201611L
 #define USE_CHARCONV_FROM_CHARS
 #include <charconv>
 #endif
