@@ -672,13 +672,13 @@ bool nextline(std::istream &istream, std::string &line)
         {
             line.resize(line.size() - 1);
         }
-        if(!StringUtils::Trim(line).empty())
+        if(!StringUtils::IsEmptyOrWhiteSpace(line))
         {
             return true;
         }
     }
 
-    line = "";
+    line.clear();
     return false;
 }
 

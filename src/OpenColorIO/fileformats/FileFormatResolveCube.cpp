@@ -296,7 +296,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
             ++lineNumber;
 
             // All lines starting with '#' are comments
-            if(StringUtils::StartsWith(line,"#"))
+            if(StringUtils::StartsWith(line,'#'))
             {
                 if(headerComplete)
                 {
