@@ -18,7 +18,7 @@ OCIO_ADD_TEST(NumberUtils, from_chars_float)
     OCIO_CHECK_ASSERT(res.ptr == str.data() + str.size())
 
     std::string str;
-    float val;
+    float val = 0.0f;
     OCIO::NumberUtils::from_chars_result res;
 
     // regular numbers
