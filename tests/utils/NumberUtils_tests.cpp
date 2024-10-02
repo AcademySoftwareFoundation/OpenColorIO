@@ -5,6 +5,8 @@
 #include "testutils/UnitTest.h"
 #include "utils/NumberUtils.h"
 
+#include <limits>
+
 namespace OCIO = OCIO_NAMESPACE;
 
 OCIO_ADD_TEST(NumberUtils, from_chars_float)
