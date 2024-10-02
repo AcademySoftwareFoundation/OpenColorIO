@@ -11,7 +11,7 @@
 //
 // Except on Apple platforms, where (as of Xcode 15 / Apple Clang 15)
 // these are not implemented for float/double types.
-#if __cpp_lib_to_chars >= 201611L && !defined(__APPLE__)
+#if __cplusplus >= 201703L && !defined(__APPLE__)
 #define USE_CHARCONV_FROM_CHARS
 #include <charconv>
 #endif
@@ -66,6 +66,37 @@ struct from_chars_result
 
 static const Locale loc;
 
+#ifdef USE_CHARCONV_FROM_CHARS
+really_inline bool from_chars_is_space(char c) noexcept
+{
+    return c == ' ' || c == '\n' || c == '\t' || c == '\r' || c == '\v' || c == '\f';
+}
+
+// skip prefix whitespace and "+"
+really_inline const char* from_chars_skip_prefix(const char* first, const char* last) noexcept
+{
+    while (first < last && from_chars_is_space(first[0]))
+    {
+        ++first;
+    }
+    if (first < last && first[0] == '+')
+    {
+        ++first;
+    }
+    return first;
+}
+
+really_inline bool from_chars_hex_prefix(const char*& first, const char* last) noexcept
+{
+    if (first + 2 < last && first[0] == '0' && (first[1] == 'x' || first[1] == 'X'))
+    {
+        first += 2;
+        return true;
+    }
+    return false;
+}
+#endif
+
 really_inline from_chars_result from_chars(const char *first, const char *last, double &value) noexcept
 {
     if (!first || !last || first == last)
@@ -74,11 +105,13 @@ really_inline from_chars_result from_chars(const char *first, const char *last, 
     }
 
 #ifdef USE_CHARCONV_FROM_CHARS
-    if (first < last && first[0] == '+')
+    first = from_chars_skip_prefix(first, last);
+    std::chars_format fmt = std::chars_format::general;
+    if (from_chars_hex_prefix(first, last))
     {
-        ++first;
+        fmt = std::chars_format::hex;
     }
-    std::from_chars_result res = std::from_chars(first, last, value);
+    std::from_chars_result res = std::from_chars(first, last, value, fmt);
     return from_chars_result{ res.ptr, res.ec };
 #else
 
@@ -120,11 +153,13 @@ really_inline from_chars_result from_chars(const char *first, const char *last, 
     }
 
 #ifdef USE_CHARCONV_FROM_CHARS
-    if (first < last && first[0] == '+')
+    first = from_chars_skip_prefix(first, last);
+    std::chars_format fmt = std::chars_format::general;
+    if (from_chars_hex_prefix(first, last))
     {
-        ++first;
+        fmt = std::chars_format::hex;
     }
-    std::from_chars_result res = std::from_chars(first, last, value);
+    std::from_chars_result res = std::from_chars(first, last, value, fmt);
     return from_chars_result{ res.ptr, res.ec };
 #else
 
@@ -174,11 +209,13 @@ really_inline from_chars_result from_chars(const char *first, const char *last, 
     }
 
 #ifdef USE_CHARCONV_FROM_CHARS
-    if (first < last && first[0] == '+')
+    first = from_chars_skip_prefix(first, last);
+    int base = 10;
+    if (from_chars_hex_prefix(first, last))
     {
-        ++first;
+        base = 16;
     }
-    std::from_chars_result res = std::from_chars(first, last, value);
+    std::from_chars_result res = std::from_chars(first, last, value, base);
     return from_chars_result{ res.ptr, res.ec };
 #else
 
