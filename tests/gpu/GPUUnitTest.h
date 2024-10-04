@@ -20,7 +20,7 @@ using OCIOTestFuncCallback = std::function<void(OCIOGPUTest & test)>;
 //
 // By default, the framework compares the GPU results to the CPU results
 // using an automatically generated neutral ramp for the standard range [0, 1].
-// 
+//
 class OCIOGPUTest
 {
     public:
@@ -30,7 +30,7 @@ class OCIOGPUTest
             typedef std::vector<float> Values;
             Values m_inputValues;
 
-            // Keeping the original input value size allows 
+            // Keeping the original input value size allows
             // to avoid manipulating padded values added to fit
             // the predefined GPU texture size.
             size_t m_originalInputValueSize{ 0 };
@@ -50,7 +50,7 @@ class OCIOGPUTest
         void setProcessor(OCIO_NAMESPACE::TransformRcPtr transform);
 
         void setProcessor(OCIO_NAMESPACE::ConstProcessorRcPtr processor);
-    
+
         void setShadingLanguage(OCIO_NAMESPACE::GpuLanguage gpuShadingLanguage)
         {
             m_gpuShadingLanguage = gpuShadingLanguage;
@@ -75,7 +75,7 @@ class OCIOGPUTest
         inline void setTestInfinity(bool use) { m_testInfinity = use; }
 
         // Provide a set of RGBA values to test (otherwise a neutral ramp will be used).
-        // TestWideRange, TestNaN & TestInfinity are used when m_inputValues is empty. 
+        // TestWideRange, TestNaN & TestInfinity are used when m_inputValues is empty.
         inline void setCustomValues(CustomValues & values) { m_values = values; }
         inline CustomValues & getCustomValues() { return m_values; }
 
@@ -85,7 +85,7 @@ class OCIOGPUTest
         inline bool getRelativeComparison() const { return m_performRelativeComparison; }
         inline void setRelativeComparison(bool relCompare) { m_performRelativeComparison = relCompare; }
 
-        // This is the lower bound for the value that is divided into the absolute error 
+        // This is the lower bound for the value that is divided into the absolute error
         // to obtain the relative error.
         inline float getExpectedMinimalValue() const { return m_expectedMinimalValue; }
         inline void setExpectedMinimalValue(float minValue) { m_expectedMinimalValue = minValue; }
