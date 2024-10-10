@@ -265,7 +265,7 @@ const char * GpuLanguageToString(GpuLanguage language)
         case GPU_LANGUAGE_GLSL_4_0:     return "glsl_4.0";
         case GPU_LANGUAGE_GLSL_ES_1_0:  return "glsl_es_1.0";
         case GPU_LANGUAGE_GLSL_ES_3_0:  return "glsl_es_3.0";
-        case GPU_LANGUAGE_HLSL_DX11:    return "hlsl_dx11";
+        case GPU_LANGUAGE_HLSL_SM_5_0:  return "hlsl_sm_5.0";
         case GPU_LANGUAGE_MSL_2_0:      return "msl_2";
         case LANGUAGE_OSL_1:            return "osl_1";
     }
@@ -284,7 +284,7 @@ GpuLanguage GpuLanguageFromString(const char * s)
     else if(str == "glsl_4.0")    return GPU_LANGUAGE_GLSL_4_0;
     else if(str == "glsl_es_1.0") return GPU_LANGUAGE_GLSL_ES_1_0;
     else if(str == "glsl_es_3.0") return GPU_LANGUAGE_GLSL_ES_3_0;
-    else if(str == "hlsl_dx11")   return GPU_LANGUAGE_HLSL_DX11;
+    else if(str == "hlsl_sm_5.0") return GPU_LANGUAGE_HLSL_SM_5_0;
     else if(str == "osl_1")       return LANGUAGE_OSL_1;
     else if(str == "msl_2")       return GPU_LANGUAGE_MSL_2_0;
 

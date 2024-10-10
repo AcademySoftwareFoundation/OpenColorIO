@@ -56,7 +56,7 @@ std::string getVecKeyword(GpuLanguage lang)
         }
 
         case GPU_LANGUAGE_MSL_2_0:
-        case GPU_LANGUAGE_HLSL_DX11:
+        case GPU_LANGUAGE_HLSL_SM_5_0:
         {
             kw << "float" << N;
             break;
@@ -98,7 +98,7 @@ void getTexDecl(GpuLanguage lang,
             samplerDecl = kw.str();
             break;
         }
-        case GPU_LANGUAGE_HLSL_DX11:
+        case GPU_LANGUAGE_HLSL_SM_5_0:
         {
             std::ostringstream t;
             t << "Texture" << N << "D " << textureName << ";";
@@ -166,7 +166,7 @@ std::string getTexSample(GpuLanguage lang,
             kw << "tex" << N << "D(" << samplerName << ", " << coords << ")";
             break;
         }
-        case GPU_LANGUAGE_HLSL_DX11:
+        case GPU_LANGUAGE_HLSL_SM_5_0:
         {
             kw << textureName << ".Sample(" << samplerName << ", " << coords << ")";
             break;
@@ -345,7 +345,7 @@ std::string GpuShaderText::constKeyword() const
             str += " ";
             break;
         }
-        case GPU_LANGUAGE_HLSL_DX11:
+        case GPU_LANGUAGE_HLSL_SM_5_0:
         {
             str += "static const";
             str += " ";
@@ -537,7 +537,7 @@ void GpuShaderText::declareFloatArrayConst(const std::string & name, int size, c
         }
         case LANGUAGE_OSL_1:
         case GPU_LANGUAGE_CG:
-        case GPU_LANGUAGE_HLSL_DX11:
+        case GPU_LANGUAGE_HLSL_SM_5_0:
         case GPU_LANGUAGE_MSL_2_0:
         {
             nl << floatKeywordConst() << " " << name << "[" << size << "] = {";
@@ -589,7 +589,7 @@ void GpuShaderText::declareIntArrayConst(const std::string & name, int size, con
             nl << ");";
             break;
         }
-        case GPU_LANGUAGE_HLSL_DX11:
+        case GPU_LANGUAGE_HLSL_SM_5_0:
         case GPU_LANGUAGE_MSL_2_0:
         {
             nl << intKeywordConst() << " " << name << "[" << size << "] = {";
@@ -940,7 +940,7 @@ std::string matrix3Mul(const T * m3x3, const std::string & vecName, GpuLanguage 
                 << getMatrixValues<T, 3>(m3x3, lang, false) << "), " << vecName << ")";
             break;
         }
-        case GPU_LANGUAGE_HLSL_DX11:
+        case GPU_LANGUAGE_HLSL_SM_5_0:
         {
             kw << "mul(" << vecName
                 << ", float3x3(" << getMatrixValues<T, 3>(m3x3, lang, true) << "))";
@@ -1006,7 +1006,7 @@ std::string matrix4Mul(const T * m4x4, const std::string & vecName, GpuLanguage 
                 << getMatrixValues<T, 4>(m4x4, lang, false) << "), " << vecName << ")";
             break;
         }
-        case GPU_LANGUAGE_HLSL_DX11:
+        case GPU_LANGUAGE_HLSL_SM_5_0:
         {
             kw << "mul(" << vecName 
                 << ", float4x4(" << getMatrixValues<T, 4>(m4x4, lang, true) << "))";
@@ -1062,7 +1062,7 @@ std::string GpuShaderText::lerp(const std::string & x,
             break;
         }
         case GPU_LANGUAGE_CG:
-        case GPU_LANGUAGE_HLSL_DX11:
+        case GPU_LANGUAGE_HLSL_SM_5_0:
         {
             kw << "lerp(" << x << ", " << y << ", " << a << ")";
             break;
@@ -1094,7 +1094,7 @@ std::string GpuShaderText::float3GreaterThan(const std::string & a,
         }
         case LANGUAGE_OSL_1:
         case GPU_LANGUAGE_MSL_2_0:
-        case GPU_LANGUAGE_HLSL_DX11:
+        case GPU_LANGUAGE_HLSL_SM_5_0:
         {
             kw << float3Keyword() << "(" 
                << "(" << a << "[0] > " << b << "[0]) ? 1.0 : 0.0, "
@@ -1128,7 +1128,7 @@ std::string GpuShaderText::float4GreaterThan(const std::string & a,
             break;
         }
         case GPU_LANGUAGE_MSL_2_0:
-        case GPU_LANGUAGE_HLSL_DX11:
+        case GPU_LANGUAGE_HLSL_SM_5_0:
         {
             kw << float4Keyword() << "(" 
                << "(" << a << "[0] > " << b << "[0]) ? 1.0 : 0.0, "
@@ -1173,7 +1173,7 @@ std::string GpuShaderText::float3GreaterThanEqual(const std::string& a,
     }
     case LANGUAGE_OSL_1:
     case GPU_LANGUAGE_MSL_2_0:
-    case GPU_LANGUAGE_HLSL_DX11:
+    case GPU_LANGUAGE_HLSL_SM_5_0:
     {
         kw << float3Keyword() << "("
             << "(" << a << "[0] >= " << b << "[0]) ? 1.0 : 0.0, "
@@ -1207,7 +1207,7 @@ std::string GpuShaderText::float4GreaterThanEqual(const std::string& a,
         break;
     }
     case GPU_LANGUAGE_MSL_2_0:
-    case GPU_LANGUAGE_HLSL_DX11:
+    case GPU_LANGUAGE_HLSL_SM_5_0:
     {
         kw << float4Keyword() << "("
             << "(" << a << "[0] >= " << b << "[0]) ? 1.0 : 0.0, "
@@ -1251,7 +1251,7 @@ std::string GpuShaderText::atan2(const std::string & y,
             kw << "atan(" << y << ", " << x << ")";
             break;
         }
-        case GPU_LANGUAGE_HLSL_DX11:
+        case GPU_LANGUAGE_HLSL_SM_5_0:
         {
             // note: Various internet sources claim that the x & y arguments need to be
             // swapped for HLSL (relative to GLSL).  However, recent testing on Windows
@@ -1285,7 +1285,7 @@ std::string GpuShaderText::sign(const std::string & v) const
         case GPU_LANGUAGE_GLSL_4_0:
         case GPU_LANGUAGE_GLSL_ES_1_0:
         case GPU_LANGUAGE_GLSL_ES_3_0:
-        case GPU_LANGUAGE_HLSL_DX11:
+        case GPU_LANGUAGE_HLSL_SM_5_0:
         case GPU_LANGUAGE_MSL_2_0:
         {
             kw << "sign(" << v << ");";

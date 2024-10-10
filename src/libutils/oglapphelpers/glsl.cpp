@@ -468,7 +468,7 @@ std::string OpenGLBuilder::getGLSLVersionString()
     case GPU_LANGUAGE_GLSL_ES_3_0:
         return "#version 300 es";
     case GPU_LANGUAGE_CG:
-    case GPU_LANGUAGE_HLSL_DX11:
+    case GPU_LANGUAGE_HLSL_SM_5_0:
     case LANGUAGE_OSL_1:
     default:
         // These are all impossible in OpenGL contexts.
