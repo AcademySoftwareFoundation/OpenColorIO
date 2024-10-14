@@ -25,6 +25,8 @@ and so requires no external LUT files.  In fact, even the config file is built i
 and users may access it from any application that uses OCIO 2.2 or higher by using one of the
 following strings in place of the config path:
 
+``ocio://studio-config-v2.2.0_aces-v1.3_ocio-v2.4``   (for OCIO 2.4 or higher)
+
 ``ocio://studio-config-v2.1.0_aces-v1.3_ocio-v2.3``   (for OCIO 2.3 or higher)
 
 ``ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1``   (for OCIO 2.2 or higher)

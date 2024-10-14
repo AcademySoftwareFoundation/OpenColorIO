@@ -10,6 +10,7 @@ Releases
 .. toctree::
    :caption: Upgrading to v2
 
+   ocio_2_4
    ocio_2_3
    ocio_2_2
    ocio_2_1
