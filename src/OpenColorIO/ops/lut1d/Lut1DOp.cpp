@@ -16,6 +16,7 @@
 #include "ops/lut1d/Lut1DOpCPU.h"
 #include "ops/lut1d/Lut1DOpGPU.h"
 #include "ops/matrix/MatrixOp.h"
+#include "ops/range/RangeOp.h"
 #include "ops/OpTools.h"
 #include "SSE.h"
 #include "transforms/Lut1DTransform.h"
@@ -119,12 +120,35 @@ void Lut1DOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
     ConstLut1DOpRcPtr typedRcPtr = DynamicPtrCast<const Lut1DOp>(secondOp);
     auto secondLut = typedRcPtr->lut1DData();
 
-    // We want compose to upsample the LUTs to minimize precision loss.
-    const auto compFlag = Lut1DOpData::COMPOSE_RESAMPLE_BIG;
-    auto thisLut = lut1DData();
-    Lut1DOpDataRcPtr result =  Lut1DOpData::Compose(thisLut, secondLut, compFlag);
-    auto composedOp = std::make_shared<Lut1DOp>(result);
-    ops.push_back(composedOp);
+    // We are trying to combine a pair of forward/inverse LUTs.
+    // Use similair logic than OpOptimizers::RemoveInverseOps to replace the
+    // pair by a clamp where appropriate.
+    if (isInverse(secondOp))
+    {
+        auto opData = lut1DData()->getPairIdentityReplacement(secondLut);
+
+        if (opData->getType() == OpData::MatrixType)
+        {
+            // No-op that will be optimized.
+            auto mat = OCIO_DYNAMIC_POINTER_CAST<MatrixOpData>(opData);
+            CreateMatrixOp(ops, mat, TRANSFORM_DIR_FORWARD);
+        }
+        else if (opData->getType() == OpData::RangeType)
+        {
+            // Clamping op.
+            auto range = OCIO_DYNAMIC_POINTER_CAST<RangeOpData>(opData);
+            CreateRangeOp(ops, range, TRANSFORM_DIR_FORWARD);
+        }
+    }
+    else
+    {
+        // We want compose to upsample the LUTs to minimize precision loss.
+        const auto compFlag = Lut1DOpData::COMPOSE_RESAMPLE_BIG;
+        auto thisLut = lut1DData();
+        Lut1DOpDataRcPtr result =  Lut1DOpData::Compose(thisLut, secondLut, compFlag);
+        auto composedOp = std::make_shared<Lut1DOp>(result);
+        ops.push_back(composedOp);
+    }
 }
 
 bool Lut1DOp::hasChannelCrosstalk() const
