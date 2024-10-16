@@ -368,6 +368,32 @@ OCIO_ADD_TEST(OpOptimizers, combine_ops)
         OCIO::CombineOps(ops, OCIO::OPTIMIZATION_ALL);
         OCIO_CHECK_EQUAL(ops.size(), 0);
     }
+
+    {
+        // When a pair of forward / inverse LUTs with non 0 to 1 domain are used
+        // as process space for a Look (eg. CDL), the Optimizer tries to combine
+        // them when the Look results in a no-op. Here we make sure this result
+        // in an appropriate clamp instead of a new half-domain LUT resulting
+        // from the naive composition of the two LUTs.
+
+        OCIO::OpRcPtrVec ops;
+        const std::string fileName("lut1d_4.spi1d");
+        OCIO::ContextRcPtr context = OCIO::Context::Create();
+        OCIO_CHECK_NO_THROW(OCIO::BuildOpsTest(ops, fileName, context,
+                                            OCIO::TRANSFORM_DIR_INVERSE));
+        const double exp_null[4] = {1.0, 1.0, 1.0, 1.0};
+        OCIO::CreateExponentOp(ops, exp_null, OCIO::TRANSFORM_DIR_FORWARD);
+        OCIO_CHECK_NO_THROW(OCIO::BuildOpsTest(ops, fileName, context,
+                                            OCIO::TRANSFORM_DIR_FORWARD));
+
+        OCIO_CHECK_NO_THROW(ops.finalize());
+        OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_ALL));
+        OCIO_CHECK_EQUAL(ops.size(), 1);
+        OCIO::ConstOpRcPtr op = ops[0];
+        OCIO_REQUIRE_ASSERT(op);
+        auto range = OCIO_DYNAMIC_POINTER_CAST<const OCIO::RangeOpData>(op->data());
+        OCIO_REQUIRE_ASSERT(range);
+    }
 }
 
 OCIO_ADD_TEST(OpOptimizers, non_optimizable)
