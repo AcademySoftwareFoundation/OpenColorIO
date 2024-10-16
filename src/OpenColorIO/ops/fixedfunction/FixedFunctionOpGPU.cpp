@@ -411,7 +411,7 @@ std::string _Add_Reach_table(
     std::ostringstream resName;
     resName << shaderCreator->getResourcePrefix()
             << std::string("_")
-            << std::string("reach_m_table")
+            << std::string("reach_m_table_")
             << resourceIndex;
 
     // Note: Remove potentially problematic double underscores from GLSL resource names.
@@ -684,7 +684,7 @@ std::string _Add_Cusp_table(
     std::ostringstream resName;
     resName << shaderCreator->getResourcePrefix()
             << std::string("_")
-            << std::string("gamut_cusp_table")
+            << std::string("gamut_cusp_table_")
             << resourceIndex;
 
     // Note: Remove potentially problematic double underscores from GLSL resource names.
@@ -803,7 +803,7 @@ std::string _Add_Gamma_table(
     std::ostringstream resName;
     resName << shaderCreator->getResourcePrefix()
             << std::string("_")
-            << std::string("upper_hull_gamma_table")
+            << std::string("upper_hull_gamma_table_")
             << resourceIndex;
 
     // Note: Remove potentially problematic double underscores from GLSL resource names.
