@@ -263,11 +263,11 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
             if(lineParts.empty()) continue;
             if (lineParts.size() > 0)
             {
-                if (StringUtils::StartsWith(lineParts[0], "#"))
+                if (StringUtils::StartsWith(lineParts[0], '#'))
                 {
                     continue;
                 }
-                if (StringUtils::StartsWith(lineParts[0], "<"))
+                if (StringUtils::StartsWith(lineParts[0], '<'))
                 {
                     // Format error: reject files that could be
                     // formatted as xml.

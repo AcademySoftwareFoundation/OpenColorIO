@@ -129,7 +129,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 
             if(parts.empty()) continue;
 
-            if(StringUtils::StartsWith(parts[0],"#")) continue;
+            if(StringUtils::StartsWith(parts[0],'#')) continue;
 
             if(!in3d)
             {
