@@ -12,7 +12,6 @@ set(SOURCES
 	ECOp_test.cpp
 	FixedFunctionOp_test.cpp
 	GammaOp_test.cpp
-	GPUHelpers.cpp
 	GPUUnitTest.cpp
 	GradingPrimaryOp_test.cpp
 	GradingRGBCurveOp_test.cpp
