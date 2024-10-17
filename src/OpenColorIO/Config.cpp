@@ -3944,6 +3944,13 @@ const char * Config::getVirtualDisplayViewColorSpaceName(const char * view) cons
 {
     if (!view) return "";
 
+    // TODO: Remove the following work-around once bug for shared views is fixed.
+    // Get the colorspace name for the case where a virtual view is shared.
+    if (virtualViewIsShared(view))
+    {
+        return getDisplayViewColorSpaceName(nullptr, view);
+    }
+
     ViewVec::const_iterator iter = FindView(getImpl()->m_virtualDisplay.m_views, view);
     if (iter != getImpl()->m_virtualDisplay.m_views.end())
     {
