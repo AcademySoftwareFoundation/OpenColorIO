@@ -155,27 +155,52 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     const unsigned long length      = lutData->getArray().getLength();
     const unsigned long width       = std::min(length, defaultMaxWidth);
     const unsigned long height      = (length / defaultMaxWidth) + 1;
-    const unsigned long numChannels = lutData->getArray().getNumColorComponents();
+    unsigned long numChannels = lutData->getArray().getNumColorComponents();
 
     // Note: The 1D LUT needs a GPU texture for the Look-up table implementation. 
     // However, the texture type & content may vary based on the number of channels
     // i.e. when all channels are identical a F32 Red GPU texture is enough.
- 
+
     const bool singleChannel = (numChannels == 1);
+
+    // When shader language is metal, we want to return a texture in
+    // RGBA format instead of RGB.
+    if (shaderCreator ->getLanguage() == GPU_LANGUAGE_MSL_2_0 && numChannels == 3)
+    {
+        numChannels = 4;
+    }
 
     // Adjust LUT texture to allow for correct 2d linear interpolation, if needed.
 
     std::vector<float> values;
     values.reserve(width * height * numChannels);
 
-    if (singleChannel) // i.e. numChannels == 1.
+    GpuShaderCreator::TextureType channel = GpuShaderCreator::TEXTURE_RED_CHANNEL; 
+    switch (numChannels)
     {
+    case 1:
         CreatePaddedRedChannel(width, height, lutData->getArray().getValues(), values);
-    }
-    else
-    {
+        channel = GpuShaderCreator::TEXTURE_RED_CHANNEL;
+        break;
+    case 3:
         CreatePaddedLutChannels(width, height, lutData->getArray().getValues(), values);
+        channel = GpuShaderCreator::TEXTURE_RGB_CHANNEL;
+        break;
+    case 4: 
+    {
+        std::vector<float> paddedChannels;
+        paddedChannels.reserve(width * height * 3);
+        CreatePaddedLutChannels(width, height, lutData->getArray().getValues(), paddedChannels);
+        // Insert a place holder alpha channel with value of 1. This is to support RGBA 
+        // texture format for Metal shading language.
+        RGBtoRGBATexture(paddedChannels.data(), width * height * 3, values);
+        channel = GpuShaderCreator::TEXTURE_RGBA_CHANNEL;
+        break;
     }
+    default:
+        throw Exception("Invalid number of texture channels.");
+        break;
+    } 
 
     // Register the RGB LUT.
 
@@ -203,8 +228,7 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
                               GpuShaderText::getSamplerName(name).c_str(),
                               width,
                               height,
-                              singleChannel ? GpuShaderCreator::TEXTURE_RED_CHANNEL
-                                            : GpuShaderCreator::TEXTURE_RGB_CHANNEL,
+                              channel,
                               dimensions,
                               lutData->getConcreteInterpolation(),
                               &values[0]);
