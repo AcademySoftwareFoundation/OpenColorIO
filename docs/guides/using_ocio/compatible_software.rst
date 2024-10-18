@@ -337,12 +337,12 @@ Website : `<https://github.com/aferrero2707/PhotoFlow>`__
 
 
 Photoshop
-****************
+*********
 
 OCIO can be enabled via OpenColorIO settings. For more details see `OpenColorIO and tools with 32-bit mode <https://helpx.adobe.com/photoshop/using/opencolorio-transform.html>`__.
 
-Photoshop 3'rd party plugin
-*********
+Photoshop Fnordware plugin
+**************************
 
 An OpenColorIO plugin is also available for use in Photoshop. The plug-in can perform color operations to an image as a filter and can also export LUTs and ICC profiles to be used by Photoshop.
 
