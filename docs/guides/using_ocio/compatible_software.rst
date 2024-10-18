@@ -336,17 +336,13 @@ PhotoFlow supports OCIO via a dedicated tool that can load a given configuration
 Website : `<https://github.com/aferrero2707/PhotoFlow>`__
 
 
-Photoshop (beta)
-****************
-
-OCIO can be enabled via a technology preview checkbox in preferences. For more details see `OpenColorIO and 32-bit Editing now available in Photoshop Beta <https://community.adobe.com/t5/photoshop-beta-discussions/new-feature-opencolorio-and-32-bit-editing-now-available-in-photoshop-beta/td-p/14767506>`__.
-
 Photoshop
 *********
 
-OpenColorIO display luts can be exported as ICC profiles for use in photoshop. The core idea is to create an .icc profile, with a valid description, and then to save it to the proper OS icc directory. (On OSX, ``~/Library/ColorSync/Profiles/``). Upon a Photoshop relaunch, Edit->Assign Profile, and then select your new OCIO lut.
+OCIO can be enabled via OpenColorIO settings. For more details see `OpenColorIO and tools with 32-bit mode <https://helpx.adobe.com/photoshop/using/opencolorio-transform.html>`__.
 
-Website : `<https://www.adobe.com/products/photoshop.html>`__
+Photoshop Fnordware plugin
+**************************
 
 An OpenColorIO plugin is also available for use in Photoshop. The plug-in can perform color operations to an image as a filter and can also export LUTs and ICC profiles to be used by Photoshop.
 

@@ -161,8 +161,8 @@ supported_apps:
     - name : Adobe Photoshop
       image : images/supported_apps/ps.png
       categories : ["2D", "Photography", "Paint"]
-      content : Beta support.
-      link : "https://community.adobe.com/t5/photoshop-beta-discussions/new-feature-opencolorio-and-32-bit-editing-now-available-in-photoshop-beta/m-p/14787280"
+      content : Native support.
+      link : "https://helpx.adobe.com/photoshop/using/opencolorio-transform.html"
 
       # portfolio item loop
     - name : PhotoFlow
