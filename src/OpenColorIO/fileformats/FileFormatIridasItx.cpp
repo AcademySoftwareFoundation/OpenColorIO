@@ -146,7 +146,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
         {
             ++lineNumber;
             // All lines starting with '#' are comments
-            if(StringUtils::StartsWith(line,"#")) continue;
+            if(StringUtils::StartsWith(line,'#')) continue;
 
             // Strip, lowercase, and split the line
             parts = StringUtils::SplitByWhiteSpaces(StringUtils::Lower(StringUtils::Trim(line)));

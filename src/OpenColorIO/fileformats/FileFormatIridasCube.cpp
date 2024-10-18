@@ -180,7 +180,7 @@ LocalFileFormat::read(std::istream & istream,
         {
             ++lineNumber;
             // All lines starting with '#' are comments
-            if (StringUtils::StartsWith(line,"#")) continue;
+            if (StringUtils::StartsWith(line,'#')) continue;
 
             line = StringUtils::Lower(StringUtils::Trim(line));
 
@@ -310,10 +310,10 @@ LocalFileFormat::read(std::istream & istream,
 
         do
         {
-            line = StringUtils::Trim(line);
+            line = StringUtils::LeftTrim(line);
 
             // All lines starting with '#' are comments
-            if (StringUtils::StartsWith(line,"#")) continue;
+            if (StringUtils::StartsWith(line,'#')) continue;
 
             if (line.empty()) continue;
 
