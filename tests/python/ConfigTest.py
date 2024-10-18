@@ -414,11 +414,6 @@ class ConfigTest(unittest.TestCase):
         views = cfg.getSharedViews()
         self.assertEqual(5, len(views))
         cfg.clearSharedViews()
-        # cfg.removeSharedView('view4')
-        # cfg.removeSharedView('view5')
-        # cfg.removeSharedView('view6')
-        # cfg.removeSharedView('view1')
-        # cfg.removeSharedView('view2')
         views = cfg.getSharedViews()
         self.assertEqual(0, len(views))
 
@@ -848,9 +843,9 @@ colorspaces:
 
         other = copy.deepcopy(cfg)
 
-        self.assertTrue(OCIO.Config.viewsAreEqual(cfg, other, "sRGB", "sview1"))
-        self.assertTrue(OCIO.Config.viewsAreEqual(cfg, other, "sRGB", "Raw"))
-        self.assertTrue(OCIO.Config.viewsAreEqual(cfg, other, "sRGB", "view"))
+        self.assertTrue(OCIO.Config.ViewsAreEqual(cfg, other, "sRGB", "sview1"))
+        self.assertTrue(OCIO.Config.ViewsAreEqual(cfg, other, "sRGB", "Raw"))
+        self.assertTrue(OCIO.Config.ViewsAreEqual(cfg, other, "sRGB", "view"))
 
         # Validate the virtual display information
         self.assertEqual(
@@ -867,7 +862,7 @@ colorspaces:
         self.assertEqual("", cfg.getVirtualDisplayViewRule(view_name))
         self.assertEqual("", cfg.getVirtualDisplayViewDescription(view_name))
 
-        self.assertTrue(OCIO.Config.virtualViewsAreEqual(cfg, other, view_name))
+        self.assertTrue(OCIO.Config.VirtualViewsAreEqual(cfg, other, view_name))
 
         view_name = cfg.getVirtualDisplayViews(OCIO.VIEW_DISPLAY_DEFINED)[1]
         self.assertTrue(cfg.hasVirtualView(view_name))
@@ -880,7 +875,7 @@ colorspaces:
         self.assertEqual("", cfg.getVirtualDisplayViewRule(view_name))
         self.assertEqual("", cfg.getVirtualDisplayViewDescription(view_name))
 
-        self.assertTrue(OCIO.Config.virtualViewsAreEqual(cfg, other, view_name))
+        self.assertTrue(OCIO.Config.VirtualViewsAreEqual(cfg, other, view_name))
 
         self.assertEqual(1, len(cfg.getVirtualDisplayViews(OCIO.VIEW_SHARED)))
         self.assertEqual("sview2",
@@ -888,12 +883,12 @@ colorspaces:
         
         self.assertTrue(cfg.hasVirtualView("sview2"))
         self.assertTrue(cfg.virtualViewIsShared("sview2"))
-        self.assertTrue(OCIO.Config.virtualViewsAreEqual(cfg, other, "sview2"))
+        self.assertTrue(OCIO.Config.VirtualViewsAreEqual(cfg, other, "sview2"))
 
         # Remove a view from the virtual display
         cfg.removeVirtualDisplayView("Raw")
 
-        self.assertFalse(OCIO.Config.virtualViewsAreEqual(cfg, other, "Raw"))
+        self.assertFalse(OCIO.Config.VirtualViewsAreEqual(cfg, other, "Raw"))
         self.assertFalse(cfg.hasVirtualView("Raw"))
 
         self.assertEqual(
@@ -916,7 +911,7 @@ colorspaces:
 
         self.assertFalse(cfg.hasVirtualView("sview2"))
         self.assertFalse(cfg.virtualViewIsShared("sview2"))
-        self.assertFalse(OCIO.Config.virtualViewsAreEqual(cfg, other, "sview2"))
+        self.assertFalse(OCIO.Config.VirtualViewsAreEqual(cfg, other, "sview2"))
 
         cfg.addVirtualDisplaySharedView("sview2")
         self.assertEqual(

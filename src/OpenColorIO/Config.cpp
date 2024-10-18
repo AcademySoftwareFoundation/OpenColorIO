@@ -3307,8 +3307,6 @@ void Config::setViewingRules(ConstViewingRulesRcPtr viewingRules)
 
 bool Config::viewIsShared(const char * dispName, const char * viewName) const
 {
-    // Check if a view within a given display is a display-defined view or is referencing
-    // one of the config's shared views.
 
     for (int v = 0; v < getNumViews(VIEW_SHARED, dispName); v++)
     {
@@ -3518,7 +3516,7 @@ const char * Config::getView(const char * display, const char * colorspace, int 
 }
 
 
-bool Config::viewsAreEqual(const ConstConfigRcPtr & first,
+bool Config::ViewsAreEqual(const ConstConfigRcPtr & first,
                            const ConstConfigRcPtr & second,
                            const char * dispName,               // may be empty or nullptr for shared views
                            const char * viewName)
@@ -3899,7 +3897,7 @@ const char * Config::getVirtualDisplayView(ViewType type, int index) const noexc
     return "";
 }
 
-bool Config::virtualViewsAreEqual(const ConstConfigRcPtr & first,
+bool Config::VirtualViewsAreEqual(const ConstConfigRcPtr & first,
                                   const ConstConfigRcPtr & second,
                                   const char * viewName)
 {
@@ -3944,7 +3942,6 @@ const char * Config::getVirtualDisplayViewColorSpaceName(const char * view) cons
 {
     if (!view) return "";
 
-    // TODO: Remove the following work-around once bug for shared views is fixed.
     // Get the colorspace name for the case where a virtual view is shared.
     if (virtualViewIsShared(view))
     {

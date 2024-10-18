@@ -7349,8 +7349,6 @@ OCIO_ADD_TEST(Config, add_remove_display)
 
     // Add a (display, view) pair.
 
-    // todo (annie): just a note here that this config will have two (display, view) pairs): sRGB and disp1
-
     OCIO_CHECK_NO_THROW(config->addDisplayView("disp1", "view1", "raw", nullptr));
     OCIO_CHECK_ASSERT(config->displayHasView("disp1", "view1"));
     OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 2);
@@ -8516,9 +8514,9 @@ colorspaces:
     {
         OCIO::ConfigRcPtr cfg = config->createEditableCopy();
 
-        OCIO_CHECK_ASSERT(OCIO::Config::viewsAreEqual(config, cfg, "sRGB", "sview1"));
-        OCIO_CHECK_ASSERT(OCIO::Config::viewsAreEqual(config, cfg, "sRGB", "Raw"));
-        OCIO_CHECK_ASSERT(OCIO::Config::viewsAreEqual(config, cfg, "sRGB", "view"));
+        OCIO_CHECK_ASSERT(OCIO::Config::ViewsAreEqual(config, cfg, "sRGB", "sview1"));
+        OCIO_CHECK_ASSERT(OCIO::Config::ViewsAreEqual(config, cfg, "sRGB", "Raw"));
+        OCIO_CHECK_ASSERT(OCIO::Config::ViewsAreEqual(config, cfg, "sRGB", "view"));
 
         OCIO_REQUIRE_EQUAL(2, cfg->getVirtualDisplayNumViews(OCIO::VIEW_DISPLAY_DEFINED));
 
@@ -8533,7 +8531,7 @@ colorspaces:
         OCIO_CHECK_EQUAL(std::string(""), cfg->getVirtualDisplayViewRule(viewName));
         OCIO_CHECK_EQUAL(std::string(""), cfg->getVirtualDisplayViewDescription(viewName));
 
-        OCIO_CHECK_ASSERT(OCIO::Config::virtualViewsAreEqual(config, cfg, viewName));
+        OCIO_CHECK_ASSERT(OCIO::Config::VirtualViewsAreEqual(config, cfg, viewName));
 
         viewName = cfg->getVirtualDisplayView(OCIO::VIEW_DISPLAY_DEFINED, 1);
 
@@ -8546,7 +8544,7 @@ colorspaces:
         OCIO_CHECK_EQUAL(std::string(""), cfg->getVirtualDisplayViewRule(viewName));
         OCIO_CHECK_EQUAL(std::string(""), cfg->getVirtualDisplayViewDescription(viewName));
 
-        OCIO_CHECK_ASSERT(OCIO::Config::virtualViewsAreEqual(config, cfg, viewName));
+        OCIO_CHECK_ASSERT(OCIO::Config::VirtualViewsAreEqual(config, cfg, viewName));
 
         OCIO_REQUIRE_EQUAL(1, cfg->getVirtualDisplayNumViews(OCIO::VIEW_SHARED));
         OCIO_CHECK_EQUAL(std::string("sview2"), cfg->getVirtualDisplayView(OCIO::VIEW_SHARED, 0));
@@ -8554,13 +8552,13 @@ colorspaces:
 
         OCIO_CHECK_ASSERT(cfg->hasVirtualView("sview2"));
         OCIO_CHECK_ASSERT(cfg->virtualViewIsShared("sview2"));
-        OCIO_CHECK_ASSERT(OCIO::Config::virtualViewsAreEqual(config, cfg, "sview2"));
+        OCIO_CHECK_ASSERT(OCIO::Config::VirtualViewsAreEqual(config, cfg, "sview2"));
 
         // Remove a view from the Virtual Display.
 
         cfg->removeVirtualDisplayView("Raw");
 
-        OCIO_CHECK_ASSERT(!OCIO::Config::virtualViewsAreEqual(config, cfg, "Raw"));
+        OCIO_CHECK_ASSERT(!OCIO::Config::VirtualViewsAreEqual(config, cfg, "Raw"));
         OCIO_CHECK_ASSERT(!cfg->hasVirtualView("Raw"));
 
         OCIO_REQUIRE_EQUAL(1, cfg->getVirtualDisplayNumViews(OCIO::VIEW_DISPLAY_DEFINED));
@@ -8576,7 +8574,7 @@ colorspaces:
         OCIO_REQUIRE_EQUAL(0, cfg->getVirtualDisplayNumViews(OCIO::VIEW_SHARED));
         OCIO_CHECK_ASSERT(!cfg->hasVirtualView("sview2"));
         OCIO_CHECK_ASSERT(!cfg->virtualViewIsShared("sview2"));
-        OCIO_CHECK_ASSERT(!OCIO::Config::virtualViewsAreEqual(config, cfg, "sview2"));
+        OCIO_CHECK_ASSERT(!OCIO::Config::VirtualViewsAreEqual(config, cfg, "sview2"));
 
         {
             // Extra serialize & deserialize validation.
