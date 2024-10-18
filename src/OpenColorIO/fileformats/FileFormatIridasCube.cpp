@@ -336,9 +336,12 @@ LocalFileFormat::read(std::istream & istream,
             }
             else
             {
-                float r = NAN;
-                float g = NAN;
-                float b = NAN;
+		// Use doubles here as some iridas cube files may be written with double precision
+		// string values, and these will raise result_out_of_range errors in NumberUtils::from_chars
+		// instead of silently converting to float like they used to
+                double r = NAN;
+                double g = NAN;
+                double b = NAN;
 
                 const auto rAnswer = NumberUtils::from_chars(valR, valR + 64, r);
                 const auto gAnswer = NumberUtils::from_chars(valG, valG + 64, g);
