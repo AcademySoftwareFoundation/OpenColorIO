@@ -86,7 +86,15 @@ source_suffix = {
 }
 
 master_doc = "index"
-exclude_patterns = ["build", "*-prefix", "api/python", "site"]
+exclude_patterns = [
+  "INSTALL.md",
+  "README*",
+  "CHANGELOG.md",
+  "build",
+  "*-prefix",
+  "api/python",
+  "site"
+]
 
 rst_prolog = """
 .. |OCIO| replace:: *OCIO*
@@ -122,6 +130,7 @@ napoleon_include_init_with_doc = True
 # expandvars
 expandvars_define = {
     "PYDIR": "frozen" if RTD_BUILD else "src",
+    #"PYDIR": "frozen",
     "OCIO_NAMESPACE": ocio_namespace,
 }
 
