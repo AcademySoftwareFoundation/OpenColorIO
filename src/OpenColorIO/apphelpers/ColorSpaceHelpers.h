@@ -105,6 +105,9 @@ public:
     bool getIncludeRoles() const noexcept override;
     void setIncludeNamedTransforms(bool include) noexcept override;
     bool getIncludeNamedTransforms() const noexcept override;
+    void setTreatNoCategoryAsAny(bool value) noexcept override;
+    bool getTreatNoCategoryAsAny() const noexcept override;
+
     SearchReferenceSpaceType getSearchReferenceSpaceType() const noexcept override;
     void setSearchReferenceSpaceType(SearchReferenceSpaceType colorspaceType) noexcept override;
 
@@ -127,6 +130,7 @@ public:
     bool m_includeColorSpaces = true;
     bool m_includeRoles = false;
     bool m_includeNamedTransforms = false;
+    bool m_treatNoCategoryAsAny = false;
     SearchReferenceSpaceType m_colorSpaceType = SEARCH_REFERENCE_SPACE_ALL;
 
     StringUtils::StringVec m_additionalColorSpaces;

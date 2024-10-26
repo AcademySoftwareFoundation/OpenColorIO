@@ -130,6 +130,12 @@ public:
     virtual void setIncludeNamedTransforms(bool include) noexcept = 0;
     virtual bool getIncludeNamedTransforms() const noexcept = 0;
 
+    /**
+     * When searching for color spaces using app or user categories, treat color spaces that have
+     * no categories as if they had any categories. Default is not to treat them this way.
+     */
+    virtual void setTreatNoCategoryAsAny(bool value) noexcept = 0;
+    virtual bool getTreatNoCategoryAsAny() const noexcept = 0;
 
     /**
      * App categories is a comma separated list of categories. If appCategories is not NULL and

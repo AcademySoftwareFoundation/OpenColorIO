@@ -64,6 +64,7 @@ void bindPyColorSpaceMenuHelpers(py::module & m)
                          bool includeColorSpaces,
                          SearchReferenceSpaceType searchReferenceSpaceType,
                          bool includeNamedTransforms,
+                         bool treatNoCategoryAsAny,
                          const std::string & appCategories,
                          const std::string & encodings,
                          const std::string & userCategories,
@@ -90,6 +91,7 @@ void bindPyColorSpaceMenuHelpers(py::module & m)
                  p->setIncludeColorSpaces(includeColorSpaces);
                  p->setIncludeRoles(includeRoles);
                  p->setIncludeNamedTransforms(includeNamedTransforms);
+                 p->setTreatNoCategoryAsAny(treatNoCategoryAsAny);
                  return p;
             }),
              "config"_a.none(false),
@@ -97,6 +99,7 @@ void bindPyColorSpaceMenuHelpers(py::module & m)
              "includeColorSpaces"_a = true,
              "searchReferenceSpaceType"_a = SEARCH_REFERENCE_SPACE_ALL,
              "includeNamedTransforms"_a = false,
+             "treatNoCategoryAsAny"_a = false,
              "appCategories"_a.none(false) = "",
              "encodings"_a.none(false) = "",
              "userCategories"_a.none(false) = "",
@@ -126,6 +129,9 @@ void bindPyColorSpaceMenuHelpers(py::module & m)
         .def("setIncludeNamedTransforms", &ColorSpaceMenuParameters::setIncludeNamedTransforms,
              "includeNamedTransforms"_a = true,
              DOC(ColorSpaceMenuParameters, setIncludeNamedTransforms))
+        .def("setTreatNoCategoryAsAny", &ColorSpaceMenuParameters::setTreatNoCategoryAsAny,
+             "treatNoCategoryAsAny"_a = false,
+             DOC(ColorSpaceMenuParameters, setTreatNoCategoryAsAny))
         .def("getEncodings", &ColorSpaceMenuParameters::getEncodings,
              DOC(ColorSpaceMenuParameters, getEncodings))
         .def("setEncodings", &ColorSpaceMenuParameters::setEncodings, "encodings"_a.none(false),

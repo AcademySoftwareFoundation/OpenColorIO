@@ -60,7 +60,7 @@ OCIO_ADD_TEST(CategoryHelpers, basic)
     {
         OCIO::Categories categories{ "file-io", "working-space" };
         OCIO::Encodings encodings{ "sdr-video", "log" };
-        OCIO::ColorSpaceVec css = OCIO::GetColorSpaces(config, true,
+        OCIO::ColorSpaceVec css = OCIO::GetColorSpaces(config, true, false,
                                                        OCIO::SEARCH_REFERENCE_SPACE_SCENE,
                                                        categories, encodings);
         OCIO_REQUIRE_EQUAL(css.size(), 3);
@@ -71,7 +71,7 @@ OCIO_ADD_TEST(CategoryHelpers, basic)
     {
         OCIO::Categories categories{ "file-io", "working-space" };
         OCIO::Encodings encodings{ "sdr-video", "log" };
-        OCIO::ColorSpaceVec css = OCIO::GetColorSpaces(config, false,
+        OCIO::ColorSpaceVec css = OCIO::GetColorSpaces(config, false, false,
                                                        OCIO::SEARCH_REFERENCE_SPACE_SCENE,
                                                        categories, encodings);
         OCIO_REQUIRE_EQUAL(css.size(), 0);
@@ -79,7 +79,7 @@ OCIO_ADD_TEST(CategoryHelpers, basic)
     {
         OCIO::Categories categories{};
         OCIO::Encodings encodings{ "sdr-video", "log" };
-        OCIO::ColorSpaceVec css = OCIO::GetColorSpaces(config, true,
+        OCIO::ColorSpaceVec css = OCIO::GetColorSpaces(config, true, false,
                                                        OCIO::SEARCH_REFERENCE_SPACE_SCENE,
                                                        categories, encodings);
         OCIO_CHECK_EQUAL(css.size(), 0);
@@ -91,17 +91,17 @@ OCIO_ADD_TEST(CategoryHelpers, basic)
     {
         OCIO::Categories categories{ "file-io", "working-space" };
         OCIO::Encodings encodings{};
-        OCIO::ColorSpaceVec css = OCIO::GetColorSpaces(config, true,
+        OCIO::ColorSpaceVec css = OCIO::GetColorSpaces(config, true, false,
                                                        OCIO::SEARCH_REFERENCE_SPACE_SCENE,
                                                        categories, encodings);
         OCIO_CHECK_EQUAL(css.size(), 0);
-        css = OCIO::GetColorSpaces(config, true, OCIO::SEARCH_REFERENCE_SPACE_SCENE, categories);
+        css = OCIO::GetColorSpaces(config, true, false, OCIO::SEARCH_REFERENCE_SPACE_SCENE, categories);
         OCIO_CHECK_EQUAL(css.size(), 7);
     }
     {
         OCIO::Categories categories{ "file-io", "working-space" };
         OCIO::Encodings encodings{ "sdr-video", "log" };
-        OCIO::ColorSpaceVec css = OCIO::GetColorSpaces(config, true,
+        OCIO::ColorSpaceVec css = OCIO::GetColorSpaces(config, true, false,
                                                        OCIO::SEARCH_REFERENCE_SPACE_DISPLAY,
                                                        categories, encodings);
         OCIO_REQUIRE_EQUAL(css.size(), 2);
@@ -111,7 +111,7 @@ OCIO_ADD_TEST(CategoryHelpers, basic)
     {
         OCIO::Categories categories{ "file-io", "working-space" };
         OCIO::Encodings encodings{ "sdr-video", "log" };
-        OCIO::ColorSpaceVec css = OCIO::GetColorSpaces(config, true,
+        OCIO::ColorSpaceVec css = OCIO::GetColorSpaces(config, true, false,
                                                        OCIO::SEARCH_REFERENCE_SPACE_ALL,
                                                        categories, encodings);
         OCIO_REQUIRE_EQUAL(css.size(), 5);
@@ -123,7 +123,7 @@ OCIO_ADD_TEST(CategoryHelpers, basic)
     }
     {
         OCIO::Categories categories{ "file-io", "working-space" };
-        OCIO::ColorSpaceVec css = OCIO::GetColorSpaces(config, true,
+        OCIO::ColorSpaceVec css = OCIO::GetColorSpaces(config, true, false,
                                                        OCIO::SEARCH_REFERENCE_SPACE_ALL,
                                                        categories);
         OCIO_REQUIRE_EQUAL(css.size(), 10);

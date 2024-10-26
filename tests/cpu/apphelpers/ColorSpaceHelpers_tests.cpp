@@ -224,9 +224,14 @@ colorspaces:
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
     OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 0);
 
+    params->setIncludeColorSpaces(true);
     params->setAppCategories("basic-2d");
     params->setSearchReferenceSpaceType(OCIO::SEARCH_REFERENCE_SPACE_SCENE);
+    params->setTreatNoCategoryAsAny(true);
+    OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
+    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 2);
 
+    params->setTreatNoCategoryAsAny(false);
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
     OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 1);
 
