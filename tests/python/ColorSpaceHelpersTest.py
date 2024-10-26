@@ -41,7 +41,8 @@ class ColorSpaceHelpersTest(unittest.TestCase):
                                                encodings = 'video',
                                                searchReferenceSpaceType = OCIO.SEARCH_REFERENCE_SPACE_DISPLAY,
                                                includeRoles = True,
-                                               includeNamedTransforms = True)
+                                               includeNamedTransforms = True,
+                                               treatNoCategoryAsAny = True)
         self.assertTrue(params.getConfig())
         self.assertEqual(params.getConfig().getCacheID(), self.cfg.getCacheID())
         self.assertEqual(params.getRole(), 'role')
@@ -51,6 +52,7 @@ class ColorSpaceHelpersTest(unittest.TestCase):
         self.assertEqual(params.getSearchReferenceSpaceType(), OCIO.SEARCH_REFERENCE_SPACE_DISPLAY)
         self.assertTrue(params.getIncludeRoles())
         self.assertTrue(params.getIncludeNamedTransforms())
+        self.assertTrue(params.getTreatNoCategoryAsAny())
 
         params.setRole('')
         self.assertEqual(params.getRole(), '')
@@ -69,8 +71,10 @@ class ColorSpaceHelpersTest(unittest.TestCase):
         params.setIncludeRoles(False)
         params.setIncludeRoles()
         self.assertTrue(params.getIncludeRoles())
-        params.setIncludeNamedTransforms()
-        self.assertTrue(params.getIncludeNamedTransforms())
+        params.setIncludeNamedTransforms(False)
+        self.assertFalse(params.getIncludeNamedTransforms())
+        params.setTreatNoCategoryAsAny(False)
+        self.assertFalse(params.getTreatNoCategoryAsAny())
 
     def test_menu_creation_colorspaces(self):
         """
@@ -131,6 +135,7 @@ class ColorSpaceHelpersTest(unittest.TestCase):
         self.assertEqual(str(menu),
             'config: 667ca4dc5b3779e570229fb7fd9cffe1:6001c324468d497f99aa06d3014798d8, '
             'includeColorSpaces: true, includeRoles: false, includeNamedTransforms: false, '
+            'treatNoCategoryAsAny: false, '
             'color spaces = [raw, lin_1, lin_2, log_1, in_1, in_2, in_3, view_1, view_2, view_3, '
             'lut_input_1, lut_input_2, lut_input_3, display_lin_1, display_lin_2, display_log_1]')
 
@@ -214,6 +219,14 @@ class ColorSpaceHelpersTest(unittest.TestCase):
         params.setSearchReferenceSpaceType(OCIO.SEARCH_REFERENCE_SPACE_ALL)
         menu = OCIO.ColorSpaceMenuHelper(params)
         self.assertEqual(menu.getNumColorSpaces(), 3)
+
+        params.setEncodings('')
+        params.setTreatNoCategoryAsAny(True)
+        menu = OCIO.ColorSpaceMenuHelper(params)
+        self.assertEqual(menu.getNumColorSpaces(), 14)
+        self.assertEqual(menu.getName(0), 'raw')
+        self.assertEqual(menu.getName(1), 'lin_1')
+        self.assertEqual(menu.getName(7), 'view_1')
 
     def test_menu_creation_include_roles(self):
         """

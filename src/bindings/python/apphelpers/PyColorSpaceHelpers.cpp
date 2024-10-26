@@ -129,6 +129,8 @@ void bindPyColorSpaceMenuHelpers(py::module & m)
         .def("setIncludeNamedTransforms", &ColorSpaceMenuParameters::setIncludeNamedTransforms,
              "includeNamedTransforms"_a = true,
              DOC(ColorSpaceMenuParameters, setIncludeNamedTransforms))
+        .def("getTreatNoCategoryAsAny", &ColorSpaceMenuParameters::getTreatNoCategoryAsAny,
+             DOC(ColorSpaceMenuParameters, getTreatNoCategoryAsAny))
         .def("setTreatNoCategoryAsAny", &ColorSpaceMenuParameters::setTreatNoCategoryAsAny,
              "treatNoCategoryAsAny"_a = false,
              DOC(ColorSpaceMenuParameters, setTreatNoCategoryAsAny))
