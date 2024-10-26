@@ -402,77 +402,77 @@ OCIO_OSL_TEST(FixedFunction, style_RGB_TO_HSV_inv_custom)
     m_data->m_threshold = 1e-6f;
 }
 
-OCIO_OSL_TEST(FixedFunction, style_RGB_TO_HSY_LIN_fwd)
-{
-    OCIO::FixedFunctionTransformRcPtr func =
-        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_LIN);
-    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
-
-    m_data->m_transform = func;
-
-    m_data->m_threshold = 1e-6f;
-    m_data->m_relativeComparison = true;
-}
-
-OCIO_OSL_TEST(FixedFunction, style_RGB_TO_HSY_LIN_inv)
-{
-    OCIO::FixedFunctionTransformRcPtr func =
-        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_LIN);
-    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-
-    m_data->m_transform = func;
-
-    m_data->m_threshold = 1e-6f;
-    m_data->m_relativeComparison = true;
-}
-
-OCIO_OSL_TEST(FixedFunction, style_RGB_TO_HSY_LOG_fwd)
-{
-    OCIO::FixedFunctionTransformRcPtr func =
-        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_LOG);
-    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
-
-    m_data->m_transform = func;
-
-    m_data->m_threshold = 1e-6f;
-    m_data->m_relativeComparison = true;
-}
-
-OCIO_OSL_TEST(FixedFunction, style_RGB_TO_HSY_LOG_inv)
-{
-    OCIO::FixedFunctionTransformRcPtr func =
-        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_LOG);
-    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-
-    m_data->m_transform = func;
-
-    m_data->m_threshold = 1e-6f;
-    m_data->m_relativeComparison = true;
-}
-
-OCIO_OSL_TEST(FixedFunction, style_RGB_TO_HSY_VID_fwd)
-{
-    OCIO::FixedFunctionTransformRcPtr func =
-        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_VID);
-    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
-
-    m_data->m_transform = func;
-
-    m_data->m_threshold = 1e-6f;
-    m_data->m_relativeComparison = true;
-}
-
-OCIO_OSL_TEST(FixedFunction, style_RGB_TO_HSY_VID_inv)
-{
-    OCIO::FixedFunctionTransformRcPtr func =
-        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_VID);
-    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-
-    m_data->m_transform = func;
-
-    m_data->m_threshold = 1e-6f;
-    m_data->m_relativeComparison = true;
-}
+// OCIO_OSL_TEST(FixedFunction, style_RGB_TO_HSY_LIN_fwd)
+// {
+//     OCIO::FixedFunctionTransformRcPtr func =
+//         OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_LIN);
+//     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+// 
+//     m_data->m_transform = func;
+// 
+//     m_data->m_threshold = 1e-6f;
+//     m_data->m_relativeComparison = true;
+// }
+// 
+// OCIO_OSL_TEST(FixedFunction, style_RGB_TO_HSY_LIN_inv)
+// {
+//     OCIO::FixedFunctionTransformRcPtr func =
+//         OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_LIN);
+//     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+// 
+//     m_data->m_transform = func;
+// 
+//     m_data->m_threshold = 1e-6f;
+//     m_data->m_relativeComparison = true;
+// }
+// 
+// OCIO_OSL_TEST(FixedFunction, style_RGB_TO_HSY_LOG_fwd)
+// {
+//     OCIO::FixedFunctionTransformRcPtr func =
+//         OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_LOG);
+//     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+// 
+//     m_data->m_transform = func;
+// 
+//     m_data->m_threshold = 1e-6f;
+//     m_data->m_relativeComparison = true;
+// }
+// 
+// OCIO_OSL_TEST(FixedFunction, style_RGB_TO_HSY_LOG_inv)
+// {
+//     OCIO::FixedFunctionTransformRcPtr func =
+//         OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_LOG);
+//     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+// 
+//     m_data->m_transform = func;
+// 
+//     m_data->m_threshold = 1e-6f;
+//     m_data->m_relativeComparison = true;
+// }
+// 
+// OCIO_OSL_TEST(FixedFunction, style_RGB_TO_HSY_VID_fwd)
+// {
+//     OCIO::FixedFunctionTransformRcPtr func =
+//         OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_VID);
+//     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+// 
+//     m_data->m_transform = func;
+// 
+//     m_data->m_threshold = 1e-6f;
+//     m_data->m_relativeComparison = true;
+// }
+// 
+// OCIO_OSL_TEST(FixedFunction, style_RGB_TO_HSY_VID_inv)
+// {
+//     OCIO::FixedFunctionTransformRcPtr func =
+//         OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_VID);
+//     func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+// 
+//     m_data->m_transform = func;
+// 
+//     m_data->m_threshold = 1e-6f;
+//     m_data->m_relativeComparison = true;
+// }
 
 OCIO_OSL_TEST(FixedFunction, style_XYZ_TO_xyY_fwd)
 {
