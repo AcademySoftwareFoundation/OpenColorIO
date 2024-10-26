@@ -402,7 +402,7 @@ OCIO_OSL_TEST(FixedFunction, style_RGB_TO_HSV_inv_custom)
     m_data->m_threshold = 1e-6f;
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_LIN_fwd)
+OCIO_OSL_TEST(FixedFunction, style_RGB_TO_HSY_LIN_fwd)
 {
     OCIO::FixedFunctionTransformRcPtr func =
         OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_LIN);
@@ -414,7 +414,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_LIN_fwd)
     m_data->m_relativeComparison = true;
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_LIN_inv)
+OCIO_OSL_TEST(FixedFunction, style_RGB_TO_HSY_LIN_inv)
 {
     OCIO::FixedFunctionTransformRcPtr func =
         OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_LIN);
@@ -426,7 +426,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_LIN_inv)
     m_data->m_relativeComparison = true;
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_LOG_fwd)
+OCIO_OSL_TEST(FixedFunction, style_RGB_TO_HSY_LOG_fwd)
 {
     OCIO::FixedFunctionTransformRcPtr func =
         OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_LOG);
@@ -438,7 +438,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_LOG_fwd)
     m_data->m_relativeComparison = true;
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_LOG_inv)
+OCIO_OSL_TEST(FixedFunction, style_RGB_TO_HSY_LOG_inv)
 {
     OCIO::FixedFunctionTransformRcPtr func =
         OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_LOG);
@@ -450,7 +450,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_LOG_inv)
     m_data->m_relativeComparison = true;
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_VID_fwd)
+OCIO_OSL_TEST(FixedFunction, style_RGB_TO_HSY_VID_fwd)
 {
     OCIO::FixedFunctionTransformRcPtr func =
         OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_VID);
@@ -462,7 +462,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_VID_fwd)
     m_data->m_relativeComparison = true;
 }
 
-OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_VID_inv)
+OCIO_OSL_TEST(FixedFunction, style_RGB_TO_HSY_VID_inv)
 {
     OCIO::FixedFunctionTransformRcPtr func =
         OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_VID);

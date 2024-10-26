@@ -1599,7 +1599,7 @@ void applyHSYToRGB(const void * inImg, void * outImg, long numPixels, float min0
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
 
-    for(unsigned idx=0; idx<numPixels; ++idx)
+    for(long idx=0; idx<numPixels; ++idx)
     {
         float hue = in[0] - 1.f/6.f;
         float sat = in[1];
@@ -1710,7 +1710,7 @@ void applyRGBToHSY(const void * inImg, void * outImg, long numPixels, float min0
             const float loGain = 5.f;
             const float satLo = distRgb * loGain;
             const float maxLum = 0.01f;
-            const float minLum = maxLum * 0.1;
+            const float minLum = maxLum * 0.1f;
             const float alpha = CLAMP( (luma - minLum) / (maxLum - minLum), 0.f, 1.f );
             sat = satLo + alpha * (satHi - satLo);
             sat *= 1.4f;
