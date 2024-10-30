@@ -14,7 +14,7 @@
 namespace OCIO_NAMESPACE
 {
 
-ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func);
+ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func, bool fastLogExpPow);
 
 } // namespace OCIO_NAMESPACE
 

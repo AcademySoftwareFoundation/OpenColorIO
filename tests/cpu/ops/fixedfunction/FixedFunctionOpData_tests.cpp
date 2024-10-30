@@ -214,6 +214,108 @@ OCIO_ADD_TEST(FixedFunctionOpData, rec2100_surround_style)
                           "one parameter but 0 found.");
 }
 
+OCIO_ADD_TEST(FixedFunctionOpData, aces_lin_to_doublelog_style)
+{
+    OCIO::FixedFunctionOpData::Params params = { 10.0, 0.25, 0.5, -1.0, 0.0, -1.0, 1.25, 
+                                                 1.0, 1.0, 1.0, 0.5, 1.0, 0.0 };
+
+    OCIO::FixedFunctionOpData func(OCIO::FixedFunctionOpData::LIN_TO_DOUBLE_LOG, params);
+    OCIO_CHECK_NO_THROW(func.validate());
+    std::string cacheID;
+    OCIO_CHECK_NO_THROW(cacheID = func.getCacheID());
+    OCIO_CHECK_ASSERT(func.getParams() == params);
+
+    OCIO::FixedFunctionOpDataRcPtr inv = func.inverse();
+    OCIO_CHECK_EQUAL(inv->getParams()[0], func.getParams()[0]);
+    OCIO_CHECK_EQUAL(inv->getStyle(), OCIO::FixedFunctionOpData::DOUBLE_LOG_TO_LIN);
+    std::string cacheIDUpdated;
+    OCIO_CHECK_NO_THROW(cacheIDUpdated = inv->getCacheID());
+    OCIO_CHECK_ASSERT(cacheID != cacheIDUpdated);
+
+    OCIO_CHECK_ASSERT(func == func);
+    OCIO_CHECK_ASSERT(!(func == *inv));
+
+    auto test_params = params;
+    test_params.push_back(12);
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(),
+                          OCIO::Exception,
+                          "The style 'Lin_TO_DoubleLog' must have "
+                          "13 parameters but 14 found.");
+
+    test_params = params;
+    test_params.pop_back();
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(),
+                          OCIO::Exception,
+                          "The style 'Lin_TO_DoubleLog' must have "
+                          "13 parameters but 12 found.");
+
+    test_params = params;
+    test_params.clear();
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(),
+                          OCIO::Exception,
+                          "The style 'Lin_TO_DoubleLog' must have "
+                          "13 parameters but 0 found.");
+
+    test_params = params;
+    test_params[1] = 1.0;
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "First break point 1 is larger than the second break point 0.5.");
+}
+
+OCIO_ADD_TEST(FixedFunctionOpData, aces_lin_to_gammalog_style)
+{
+    OCIO::FixedFunctionOpData::Params params = { 0.0, 0.25, 0.5, 1.0, 0.0, 2.718, 0.17883277,
+                                                 0.807825590164, 1.0, -0.07116723 };
+
+    OCIO::FixedFunctionOpData func(OCIO::FixedFunctionOpData::LIN_TO_GAMMA_LOG, params);
+    OCIO_CHECK_NO_THROW(func.validate());
+    std::string cacheID;
+    OCIO_CHECK_NO_THROW(cacheID = func.getCacheID());
+    OCIO_CHECK_ASSERT(func.getParams() == params);
+
+    OCIO::FixedFunctionOpDataRcPtr inv = func.inverse();
+    OCIO_CHECK_EQUAL(inv->getParams()[0], func.getParams()[0]);
+    OCIO_CHECK_EQUAL(inv->getStyle(), OCIO::FixedFunctionOpData::GAMMA_LOG_TO_LIN);
+    std::string cacheIDUpdated;
+    OCIO_CHECK_NO_THROW(cacheIDUpdated = inv->getCacheID());
+    OCIO_CHECK_ASSERT(cacheID != cacheIDUpdated);
+
+    OCIO_CHECK_ASSERT(func == func);
+    OCIO_CHECK_ASSERT(!(func == *inv));
+
+    auto test_params = params;
+    test_params.push_back(12);
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(),
+                          OCIO::Exception,
+                          "The style 'Lin_TO_GammaLog' must have "
+                          "10 parameters but 11 found.");
+
+    test_params = params;
+    test_params.pop_back();
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(),
+                          OCIO::Exception,
+                          "The style 'Lin_TO_GammaLog' must have "
+                          "10 parameters but 9 found.");
+
+    test_params = params;
+    test_params.clear();
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(),
+                          OCIO::Exception,
+                          "The style 'Lin_TO_GammaLog' must have "
+                          "10 parameters but 0 found.");
+
+    test_params = params;
+    test_params[0] = 1.0;
+    OCIO_CHECK_NO_THROW(func.setParams(test_params));
+    OCIO_CHECK_THROW_WHAT(func.validate(), OCIO::Exception, "Mirror point 1 is not smaller than the break point 0.25.");
+}
+
 OCIO_ADD_TEST(FixedFunctionOpData, is_inverse)
 {
     OCIO::FixedFunctionOpData::Params params = { 2.0 };

@@ -168,8 +168,8 @@ supported_apps:
     - name : Adobe Photoshop
       image : images/supported_apps/ps.png
       categories : ["2D", "Photography", "Paint"]
-      content : Beta support.
-      link : "https://community.adobe.com/t5/photoshop-beta-discussions/new-feature-opencolorio-and-32-bit-editing-now-available-in-photoshop-beta/m-p/14787280"
+      content : Native support.
+      link : "https://helpx.adobe.com/photoshop/using/opencolorio-transform.html"
 
       # portfolio item loop
     - name : PhotoFlow
@@ -198,6 +198,13 @@ supported_apps:
       categories : ["2D", "Texture"]
       content : Version 2019.3 and up.
       link : "https://www.substance3d.com/products/substance-designer/"
+
+    # portfolio item loop
+    - name : TouchDesigner
+      image : images/supported_apps/touchdesigner.png
+      categories : ["2D", "3D", "Animation", "Compositing", "Editing", "Lighting", "Playback", "Render", "Simulation", "Texture", "Tracking"]
+      content : Native support.
+      link : "http://www.derivative.ca/"
 
     # portfolio item loop
     - name : Unreal Engine

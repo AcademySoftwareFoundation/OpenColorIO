@@ -27,6 +27,8 @@ Documentation :
 
 - `Color Management <https://help.autodesk.com/view/3DSMAX/2024/ENU/?guid=GUID-AF6FB34D-5453-4AE2-A987-388A4BB5AAFD>`__
 
+- `OCIO color management in Autodesk 3DS Max 2024.1 <https://youtu.be/dlwDiLsPWgI?feature=shared>`__
+
 
 After Effects
 *************
@@ -102,7 +104,7 @@ Documentation:
 
 
 cineSync (ftrack)
-*********************
+*****************
 
 Website : `<https://cospective.com/cinesync/>`__
 
@@ -351,19 +353,18 @@ PhotoFlow supports OCIO via a dedicated tool that can load a given configuration
 Website : `<https://github.com/aferrero2707/PhotoFlow>`__
 
 
-Photoshop (beta)
-*********
-OCIO can be enabled via a technology preview checkbox in preferences. For more details see `OpenColorIO and 32-bit Editing now available in Photoshop Beta <https://community.adobe.com/t5/photoshop-beta-discussions/new-feature-opencolorio-and-32-bit-editing-now-available-in-photoshop-beta/td-p/14767506>`__.
-
 Photoshop
 *********
-OpenColorIO display luts can be exported as ICC profiles for use in photoshop. The core idea is to create an .icc profile, with a valid description, and then to save it to the proper OS icc directory. (On OSX, ``~/Library/ColorSync/Profiles/``). Upon a Photoshop relaunch, Edit->Assign Profile, and then select your new OCIO lut.
 
-Website : `<https://www.adobe.com/products/photoshop.html>`__
+OCIO can be enabled via OpenColorIO settings. For more details see `OpenColorIO and tools with 32-bit mode <https://helpx.adobe.com/photoshop/using/opencolorio-transform.html>`__.
+
+Photoshop Fnordware plugin
+**************************
 
 An OpenColorIO plugin is also available for use in Photoshop. The plug-in can perform color operations to an image as a filter and can also export LUTs and ICC profiles to be used by Photoshop.
 
 Plugin binaries are available for `download <http://fnordware.blogspot.com/2017/02/opencolorio-for-photoshop.html>`__, courtesy of `fnordware <http://www.fnordware.com>`__.
+
 
 Python
 ******
@@ -374,21 +375,23 @@ Website: `<https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/sr
 
 Documentation:
 
-- `Developer Guide <https://opencolorio.org/developers/index.html>`__
+- :ref:`developing`
 
-- `Usage Examples <https://opencolorio.org/developers/usage_examples.html>`__
+- :ref:`developers-usageexamples`
 
 
 RV (Autodesk)
 *************
 
-Website : `<http://www.tweaksoftware.com>`__
+Website : `<https://www.autodesk.com/products/flow-production-tracking/rv>`__
+
+OpenRV : `<https://github.com/AcademySoftwareFoundation/OpenRV>`__
 
 Supported Version:  >= 4
 
 Documentation : 
 
-- For more details, see the OpenColorIO section of the `RV User Manual <http://www.tweaksoftware.com/static/documentation/rv/current/html/rv_manual.html#OpenColorIO>`__.
+- For more details, see the OpenColorIO section of the `RV User Manual <https://aswf-openrv.readthedocs.io/en/latest/rv-manuals/rv-user-manual/rv-user-manual-chapter-eleven.html>`__.
 
 
 Silhouette (Boris FX)
@@ -413,6 +416,16 @@ Documentation:
 - `Color Management with OpenColorIO <https://magazine.substance3d.com/substance-designer-winter-2019-color-management-with-opencolorio/>`__
 
 - `Color Management <https://docs.substance3d.com/sddoc/color-management-188973971.html>`__
+
+
+TouchDesigner (Derivative)
+**************************
+
+Website: `<https://derivative.ca/>`__
+
+Documentation:
+
+- `OpenColorIO TOP <https://derivative.ca/UserGuide/OpenColorIO_TOP/>`__
 
 
 Unreal Engine (Epic Games)
@@ -451,6 +464,7 @@ Documentation :
 
 Apps w/icc or luts
 ******************
+
 flame (.3dl), lustre (.3dl), cinespace (.csp), houdini (.lut), iridas_itx (.itx)
 photoshop (.icc)
 

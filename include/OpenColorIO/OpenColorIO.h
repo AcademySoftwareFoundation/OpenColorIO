@@ -218,8 +218,8 @@ extern OCIOEXPORT void SetCurrentConfig(const ConstConfigRcPtr & config);
  * "ocio://studio-config-latest" will point to newer versions of those configs. Therefore, it is 
  * recommended that application developers not save those strings and instead save the string that 
  * refers to the current version of that config. That way, it's guaranteed that there will be no 
- * change of behavior in the future. For example, as of OCIO 2.3, "ocio://default" should be saved
- * as "ocio://cg-config-v2.1.0_aces-v1.3_ocio-v2.3".
+ * change of behavior in the future. For example, as of OCIO 2.4, "ocio://default" should be saved
+ * as "ocio://cg-config-v2.2.0_aces-v1.3_ocio-v2.4".
  * 
  * Note that there is no validation done on the path. That is left to the application since 
  * typically the application will load the config before attempting to save its path
@@ -376,10 +376,12 @@ public:
      * ACES Studio config, contains a more complete collection of color spaces and displays:
      * "studio-config-v1.0.0_aces-v1.3_ocio-v2.1"
      * "studio-config-v2.1.0_aces-v1.3_ocio-v2.3"
+     * "studio-config-v2.2.0_aces-v1.3_ocio-v2.4"
      * 
      * ACES CG config, basic color spaces for computer graphics apps:
      * "cg-config-v1.0.0_aces-v1.3_ocio-v2.1"
      * "cg-config-v2.1.0_aces-v1.3_ocio-v2.3"
+     * "cg-config-v2.2.0_aces-v1.3_ocio-v2.4"
      * 
      * More information is available at: 
      * %https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES
@@ -1877,6 +1879,8 @@ public:
     size_t getNumAliases() const noexcept;
     /// Return empty string if idx is out of range.
     const char * getAlias(size_t idx) const noexcept;
+    /// Return true if alias exists.
+    bool hasAlias(const char * alias) const noexcept;
     /**
      * Add an alias for the color space name (the aliases may be used as a synonym for the
      * name).  Nothing will be added if the alias is already the color space name, one of its
@@ -2299,6 +2303,8 @@ public:
     virtual size_t getNumAliases() const noexcept = 0;
     /// Return empty string if idx is  out of range.
     virtual const char * getAlias(size_t idx) const noexcept = 0;
+    /// Return true if alias exists.
+    virtual bool hasAlias(const char* alias) const noexcept = 0;
     /**
     * Nothing is done if alias is NULL or empty, if it is already there, or if it is already
     * the named transform name.

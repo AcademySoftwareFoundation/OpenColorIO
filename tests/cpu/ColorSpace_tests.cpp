@@ -79,10 +79,14 @@ OCIO_ADD_TEST(ColorSpace, alias)
     constexpr char AliasB[]{ "aliasB" };
     cs->addAlias(AliasA);
     OCIO_CHECK_EQUAL(cs->getNumAliases(), 1);
+    OCIO_CHECK_ASSERT(cs->hasAlias(AliasA));
+    OCIO_CHECK_ASSERT(cs->hasAlias(AliasAAlt));
+    OCIO_CHECK_ASSERT(!cs->hasAlias(AliasB));
     cs->addAlias(AliasB);
     OCIO_CHECK_EQUAL(cs->getNumAliases(), 2);
     OCIO_CHECK_EQUAL(std::string(cs->getAlias(0)), AliasA);
     OCIO_CHECK_EQUAL(std::string(cs->getAlias(1)), AliasB);
+    OCIO_CHECK_ASSERT(cs->hasAlias(AliasB));
 
     // Alias with same name (different case) already exists, do nothing.
 
@@ -96,6 +100,8 @@ OCIO_ADD_TEST(ColorSpace, alias)
     cs->removeAlias(AliasAAlt);
     OCIO_CHECK_EQUAL(cs->getNumAliases(), 1);
     OCIO_CHECK_EQUAL(std::string(cs->getAlias(0)), AliasB);
+    OCIO_CHECK_ASSERT(!cs->hasAlias(AliasA));
+    OCIO_CHECK_ASSERT(!cs->hasAlias(AliasAAlt));
 
     // Add with new case.
 
@@ -103,6 +109,8 @@ OCIO_ADD_TEST(ColorSpace, alias)
     OCIO_CHECK_EQUAL(cs->getNumAliases(), 2);
     OCIO_CHECK_EQUAL(std::string(cs->getAlias(0)), AliasB);
     OCIO_CHECK_EQUAL(std::string(cs->getAlias(1)), AliasAAlt);
+    OCIO_CHECK_ASSERT(cs->hasAlias(AliasA));
+    OCIO_CHECK_ASSERT(cs->hasAlias(AliasAAlt));
 
     // Setting the name of the color space to one of its aliases removes the alias.
 
@@ -110,6 +118,8 @@ OCIO_ADD_TEST(ColorSpace, alias)
     OCIO_CHECK_EQUAL(std::string(cs->getName()), AliasA);
     OCIO_CHECK_EQUAL(cs->getNumAliases(), 1);
     OCIO_CHECK_EQUAL(std::string(cs->getAlias(0)), AliasB);
+    OCIO_CHECK_ASSERT(!cs->hasAlias(AliasA));
+    OCIO_CHECK_ASSERT(!cs->hasAlias(AliasAAlt));
 
     // Alias is not added if it is already the color space name.
 
@@ -117,13 +127,17 @@ OCIO_ADD_TEST(ColorSpace, alias)
     OCIO_CHECK_EQUAL(std::string(cs->getName()), AliasA);
     OCIO_CHECK_EQUAL(cs->getNumAliases(), 1);
     OCIO_CHECK_EQUAL(std::string(cs->getAlias(0)), AliasB);
+    OCIO_CHECK_ASSERT(!cs->hasAlias(AliasAAlt));
 
     // Remove all aliases.
 
     cs->addAlias("other");
     OCIO_CHECK_EQUAL(cs->getNumAliases(), 2);
+    OCIO_CHECK_ASSERT(cs->hasAlias("other"));
     cs->clearAliases();
     OCIO_CHECK_EQUAL(cs->getNumAliases(), 0);
+    OCIO_CHECK_ASSERT(!cs->hasAlias(AliasB));
+    OCIO_CHECK_ASSERT(!cs->hasAlias("other"));
 }
 
 OCIO_ADD_TEST(ColorSpace, category)
@@ -1526,7 +1540,7 @@ colorspaces:
     // affect the tests below, it simply confirms that inactive spaces are working as
     // expected.)
     builtinConfig->setInactiveColorSpaces(
-        "ACES2065-1, ACEScg, Linear Rec.709 (sRGB), Linear P3-D65, Linear Rec.2020, CIE-XYZ-D65, sRGB - Display"
+        "ACES2065-1, ACEScg, Linear Rec.709 (sRGB), Linear P3-D65, Linear Rec.2020, CIE XYZ-D65 - Display-referred, sRGB - Display"
     );
 
     //
@@ -1609,7 +1623,7 @@ colorspaces:
     {
         // Note that it still works even if the built-in color space is inactive (though not for the source).
         const std::string inactives{builtinConfig->getInactiveColorSpaces()};
-        OCIO_CHECK_EQUAL(StringUtils::Find(inactives, "sRGB - Display"), 88);
+        OCIO_CHECK_EQUAL(StringUtils::Find(inactives, "sRGB - Display"), 107);
         const char * csname = OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "sRGB - Display");
         OCIO_CHECK_EQUAL(std::string(csname), std::string("sRGB"));
     }
@@ -1682,7 +1696,7 @@ colorspaces:
         OCIO_CHECK_THROW_WHAT(
             OCIO::Config::IdentifyInterchangeSpace(&srcInterchange, &builtinInterchange,
                                                    editableCfg, "CIE-XYZ D65", 
-                                                   builtinConfig, "CIE-XYZ-D65"),
+                                                   builtinConfig, "CIE XYZ-D65 - Display-referred"),
             OCIO::Exception,
             "The heuristics currently only support scene-referred color spaces. Please set the interchange roles."
         );

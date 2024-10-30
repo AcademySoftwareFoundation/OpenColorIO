@@ -40,7 +40,7 @@ jobs:
   # ---------------------------------------------------------------------------
 
   linux:
-    name: 'Linux CentOS 7 VFX CY${{ matrix.vfx-cy }} 
+    name: 'Linux VFX CY${{ matrix.vfx-cy }} 
       <${{ matrix.compiler-desc }} 
        config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
@@ -52,7 +52,7 @@ jobs:
     if: |
       github.event_name == 'push' ||
       github.event.pull_request.head.repo.full_name != github.repository
-    # GH-hosted VM. The build runs in CentOS 7 'container' defined below.
+    # GH-hosted VM. The build runs in ASWF 'container' defined below.
     runs-on: ubuntu-latest
     container:
       # DockerHub: https://hub.docker.com/u/aswf
@@ -64,7 +64,7 @@ jobs:
         build: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
         include:
           # -------------------------------------------------------------------
-          # VFX CY2023 (Python 3.10)
+          # VFX CY2024 (Python 3.11)
           # -------------------------------------------------------------------
           - build: 12
             build-type: Debug
@@ -77,7 +77,7 @@ jobs:
             cxx-compiler: clang++
             cc-compiler: clang
             compiler-desc: Clang
-            vfx-cy: 2023
+            vfx-cy: 2024
             install-ext-packages: MISSING
           - build: 11
             build-type: Release
@@ -90,9 +90,51 @@ jobs:
             cxx-compiler: g++
             cc-compiler: gcc
             compiler-desc: GCC
-            vfx-cy: 2023
+            vfx-cy: 2024
             install-ext-packages: ALL
           - build: 10
+            build-type: Release
+            build-shared: 'OFF'
+            build-docs: 'OFF'
+            build-openfx: 'OFF'
+            use-simd: 'ON'
+            use-oiio: 'OFF'
+            cxx-standard: 11
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC
+            vfx-cy: 2024
+            install-ext-packages: ALL
+          # -------------------------------------------------------------------
+          # VFX CY2023 (Python 3.10)
+          # -------------------------------------------------------------------
+          - build: 9
+            build-type: Debug
+            build-shared: 'ON'
+            build-docs: 'OFF'
+            build-openfx: 'ON'
+            use-simd: 'ON'
+            use-oiio: 'ON'
+            cxx-standard: 17
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang
+            vfx-cy: 2023
+            install-ext-packages: MISSING
+          - build: 8
+            build-type: Release
+            build-shared: 'ON'
+            build-docs: 'ON'
+            build-openfx: 'ON'
+            use-simd: 'OFF'
+            use-oiio: 'OFF'
+            cxx-standard: 17
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC
+            vfx-cy: 2023
+            install-ext-packages: ALL
+          - build: 7
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
@@ -108,7 +150,7 @@ jobs:
           # -------------------------------------------------------------------
           # VFX CY2022 (Python 3.9)
           # -------------------------------------------------------------------
-          - build: 9
+          - build: 6
             build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
@@ -121,7 +163,7 @@ jobs:
             compiler-desc: Clang
             vfx-cy: 2022
             install-ext-packages: ALL
-          - build: 8
+          - build: 5
             build-type: Release
             build-shared: 'ON'
             build-docs: 'ON'
@@ -134,7 +176,7 @@ jobs:
             compiler-desc: GCC
             vfx-cy: 2022
             install-ext-packages: MISSING
-          - build: 7
+          - build: 4
             build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
@@ -150,7 +192,7 @@ jobs:
           # -------------------------------------------------------------------
           # VFX CY2021 (Python 3.7)
           # -------------------------------------------------------------------
-          - build: 6
+          - build: 3
             build-type: Release
             build-shared: 'ON'
             build-docs: 'OFF'
@@ -163,63 +205,21 @@ jobs:
             compiler-desc: Clang
             vfx-cy: 2021
             install-ext-packages: MISSING
-          - build: 5
-            build-type: Release
-            build-shared: 'OFF'
-            build-docs: 'OFF'
-            build-openfx: 'ON'
-            use-simd: 'OFF'
-            use-oiio: 'OFF'
-            cxx-standard: 14
-            cxx-compiler: clang++
-            cc-compiler: clang
-            compiler-desc: Clang
-            vfx-cy: 2021
-            install-ext-packages: ALL
-          - build: 4
-            build-type: Debug
-            build-shared: 'ON'
-            build-docs: 'OFF'
-            build-openfx: 'OFF'
-            use-simd: 'ON'
-            use-oiio: 'OFF'
-            cxx-standard: 11
-            cxx-compiler: g++
-            cc-compiler: gcc
-            compiler-desc: GCC
-            vfx-cy: 2021
-            install-ext-packages: ALL
-          # -------------------------------------------------------------------
-          # VFX CY2020 (Python 3.7)
-          # -------------------------------------------------------------------
-          - build: 3
-            build-type: Release
-            build-shared: 'ON'
-            build-docs: 'OFF'
-            build-openfx: 'ON'
-            use-simd: 'OFF'
-            use-oiio: 'OFF'
-            cxx-standard: 14
-            cxx-compiler: clang++
-            cc-compiler: clang
-            compiler-desc: Clang
-            vfx-cy: 2020
-            install-ext-packages: MISSING
           - build: 2
-            build-type: Debug
+            build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
             build-openfx: 'ON'
-            use-simd: 'ON'
-            use-oiio: 'ON'
+            use-simd: 'OFF'
+            use-oiio: 'OFF'
             cxx-standard: 14
-            cxx-compiler: g++
-            cc-compiler: gcc
-            compiler-desc: GCC
-            vfx-cy: 2020
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang
+            vfx-cy: 2021
             install-ext-packages: ALL
           - build: 1
-            build-type: Release
+            build-type: Debug
             build-shared: 'ON'
             build-docs: 'OFF'
             build-openfx: 'OFF'
@@ -229,7 +229,7 @@ jobs:
             cxx-compiler: g++
             cc-compiler: gcc
             compiler-desc: GCC
-            vfx-cy: 2020
+            vfx-cy: 2021
             install-ext-packages: ALL
     env:
       CXX: ${{ matrix.cxx-compiler }}
@@ -517,11 +517,11 @@ jobs:
             python-version: '3.11'
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install docs env
         run: share/ci/scripts/macos/install_docs_env.sh
         if: matrix.build-docs == 'ON'

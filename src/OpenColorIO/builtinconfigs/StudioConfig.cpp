@@ -31,6 +31,13 @@ void Register(BuiltinConfigRegistryImpl & registry) noexcept
         "studio-config-v2.1.0_aces-v1.3_ocio-v2.3",
         "Academy Color Encoding System - Studio Config [COLORSPACES v2.0.0] [ACES v1.3] [OCIO v2.3]",
         STUDIO_CONFIG_V210_ACES_V13_OCIO_V23,
+        false
+    );
+
+    registry.addBuiltin(
+        "studio-config-v2.2.0_aces-v1.3_ocio-v2.4",
+        "Academy Color Encoding System - Studio Config [COLORSPACES v2.2.0] [ACES v1.3] [OCIO v2.4]",
+        STUDIO_CONFIG_V220_ACES_V13_OCIO_V24,
         true
     );
 }

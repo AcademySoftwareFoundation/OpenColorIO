@@ -119,8 +119,8 @@ OCIO_ADD_TEST(Context, use_searchpaths)
     const std::string res1 = searchPath1 + "/Context.cpp";
     OCIO_CHECK_ASSERT(strcmp(SanitizePath(resolvedSource.c_str()).c_str(),
                              SanitizePath(res1.c_str()).c_str()) == 0);
-    OCIO_CHECK_NO_THROW(resolvedSource = context->resolveFileLocation("GPUHelpers.h"));
-    const std::string res2 = searchPath2 + "/GPUHelpers.h";
+    OCIO_CHECK_NO_THROW(resolvedSource = context->resolveFileLocation("GPUUnitTest.h"));
+    const std::string res2 = searchPath2 + "/GPUUnitTest.h";
     OCIO_CHECK_ASSERT(strcmp(SanitizePath(resolvedSource.c_str()).c_str(),
                              SanitizePath(res2.c_str()).c_str()) == 0);
 }
@@ -141,8 +141,8 @@ OCIO_ADD_TEST(Context, use_searchpaths_workingdir)
     const std::string res1 = ociodir + "/" + searchPath1 + "/Context.cpp";
     OCIO_CHECK_ASSERT(strcmp(SanitizePath(resolvedSource.c_str()).c_str(),
                              SanitizePath(res1.c_str()).c_str()) == 0);
-    OCIO_CHECK_NO_THROW(resolvedSource = context->resolveFileLocation("GPUHelpers.h"));
-    const std::string res2 = ociodir + "/" + searchPath2 + "/GPUHelpers.h";
+    OCIO_CHECK_NO_THROW(resolvedSource = context->resolveFileLocation("GPUUnitTest.h"));
+    const std::string res2 = ociodir + "/" + searchPath2 + "/GPUUnitTest.h";
     OCIO_CHECK_ASSERT(strcmp(SanitizePath(resolvedSource.c_str()).c_str(),
                              SanitizePath(res2.c_str()).c_str()) == 0);
 }

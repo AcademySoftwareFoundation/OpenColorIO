@@ -75,6 +75,7 @@ public:
 
     std::string intKeyword() const;
     std::string intKeywordConst() const;
+    std::string intDecl(const std::string& name) const;
 
     std::string colorDecl(const std::string& name) const;
     
@@ -105,6 +106,8 @@ public:
     //
 
     std::string float2Keyword() const;
+    // Get the string for creating constant vector with three elements
+    std::string float2Const(const std::string& x, const std::string& y) const;
     std::string float2Decl(const std::string& name) const;
 
     //
@@ -195,7 +198,11 @@ public:
     // Matrix multiplication helpers
     //
 
-    // Get the string for multiplying a 4x4 matrix and a four-element vector
+    // Get the string for multiplying a 3x3 matrix and a three-elements vector
+    std::string mat3fMul(const float * m3x3, const std::string & vecName) const;
+    std::string mat3fMul(const double * m3x3, const std::string & vecName) const;
+
+    // Get the string for multiplying a 4x4 matrix and a four-elements vector
     std::string mat4fMul(const float * m4x4, const std::string & vecName) const;
     std::string mat4fMul(const double * m4x4, const std::string & vecName) const;
 
@@ -211,6 +218,11 @@ public:
     //    Each element i in the resulting vector is 1 if a>b, or 0 otherwise.
     std::string float3GreaterThan(const std::string& a, const std::string& b) const;
     std::string float4GreaterThan(const std::string& a, const std::string& b) const;
+
+    // Get the string for creating a three or four-elements 'greater than or equal' comparison
+    //    Each element i in the resulting vector is 1 if a>=b, or 0 otherwise.
+    std::string float3GreaterThanEqual(const std::string& a, const std::string& b) const;
+    std::string float4GreaterThanEqual(const std::string& a, const std::string& b) const;
 
     // Get the string for taking the four-quadrant arctangent 
     // (similar to atan(y/x) but takes into account the signs of the arguments).

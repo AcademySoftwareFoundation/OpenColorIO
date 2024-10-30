@@ -5,7 +5,7 @@
 ###############################################################################
 # CMake definition.
 
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.14)
 
 set(CMAKE_MODULE_PATH
     ${CMAKE_MODULE_PATH}
@@ -29,7 +29,7 @@ endif()
 # Project definition.
 
 project(OpenColorIO 
-    VERSION 2.4.0
+    VERSION 2.5.0
     DESCRIPTION "OpenColorIO (OCIO) is a complete color management solution"
     HOMEPAGE_URL https://github.com/AcademySoftwareFoundation/OpenColorIO
     LANGUAGES CXX C)

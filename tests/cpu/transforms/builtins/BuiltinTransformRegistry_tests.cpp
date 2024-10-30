@@ -308,3 +308,99 @@ colorspaces:
                           "Only config version 2.2 (or higher) can have BuiltinTransform style "\
                           "'ARRI_LOGC4_to_ACES2065-1'.");
 }
+
+namespace
+{
+
+void TestStyle(const std::string & style)
+{
+    static constexpr char BASE[] {
+R"(ocio_profile_version: 2.3
+
+environment:
+  {}
+search_path: ""
+strictparsing: true
+luma: [0.2126, 0.7152, 0.0722]
+
+roles:
+  default: ref
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  Disp1:
+    - !<View> {name: View1, colorspace: test}
+
+active_displays: []
+active_views: []
+
+colorspaces:
+  - !<ColorSpace>
+    name: ref
+
+  - !<ColorSpace>
+    name: test
+    from_scene_reference: !<BuiltinTransform> {style: )" };
+
+    std::string CONFIG(BASE);
+    CONFIG += style;
+    CONFIG += "}";
+
+    std::istringstream iss;
+    iss.str(CONFIG);
+
+    const std::string errMsg = 
+        "Only config version 2.4 (or higher) can have BuiltinTransform style '" + style + "'.";
+
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(iss),
+                          OCIO::Exception,
+                          errMsg);
+}
+
+}  // end anon
+
+OCIO_ADD_TEST(Builtins, version_2_3_validation)
+{
+    // The unit test validates that the config reader checkVersionConsistency check throws for
+    // version 2.3 configs containing a Builtin Transform with the new 2.4 styles.
+
+    TestStyle("APPLE_LOG_to_ACES2065-1");
+    TestStyle("CURVE - APPLE_LOG_to_LINEAR");
+    TestStyle("CURVE - HLG-OETF");
+    TestStyle("CURVE - HLG-OETF-INVERSE");
+    TestStyle("DISPLAY - CIE-XYZ-D65_to_DCDM-D65");
+    TestStyle("DISPLAY - CIE-XYZ-D65_to_ST2084-DCDM-D65");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D65_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-108nit-P3-D65_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-300nit-P3-D65_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D65_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D65_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D65_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D65_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-REC2020_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-REC2020_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-REC709-D65_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-P3-D65_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-REC2020-D65_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D60-in-P3-D65_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D60-in-XYZ-E_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-108nit-P3-D60-in-P3-D65_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-300nit-P3-D60-in-XYZ-E_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D60-in-P3-D65_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D60-in-P3-D65_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D60-in-P3-D65_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D60-in-P3-D65_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D60-in-REC2020-D65_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D60-in-REC2020-D65_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D60-in-REC2020-D65_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D60-in-REC2020-D65_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-REC2020-D60-in-REC2020-D65_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020-D60-in-REC2020-D65_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-REC2020-D60-in-REC2020-D65_2.0");
+    TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020-D60-in-REC2020-D65_2.0");
+}

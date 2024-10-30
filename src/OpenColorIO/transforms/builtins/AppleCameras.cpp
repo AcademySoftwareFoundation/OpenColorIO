@@ -7,10 +7,18 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/matrix/MatrixOp.h"
+#include "ops/fixedfunction/FixedFunctionOp.h"
+#include "ops/range/RangeOp.h"
 #include "transforms/builtins/AppleCameras.h"
 #include "transforms/builtins/BuiltinTransformRegistry.h"
 #include "transforms/builtins/ColorMatrixHelpers.h"
 #include "transforms/builtins/OpHelpers.h"
+
+
+// This is a preparation for OCIO-lite where LUT support may be turned off.
+#ifndef OCIO_LUT_SUPPORT
+#   define OCIO_LUT_SUPPORT 1
+#endif 
 
 
 namespace OCIO_NAMESPACE
@@ -21,16 +29,17 @@ namespace APPLE_LOG
 
 void GenerateAppleLogToLinearOps(OpRcPtrVec & ops)
 {
+    static constexpr double R_0   = -0.05641088;
+    static constexpr double R_t   = 0.01;
+    static constexpr double c     = 47.28711236;
+    static constexpr double beta  = 0.00964052;
+    static constexpr double gamma = 0.08550479;
+    static constexpr double delta = 0.69336945;
+
+#if OCIO_LUT_SUPPORT
+    static const double P_t = c * std::pow((R_t - R_0), 2.0);
     auto GenerateLutValues = [](double in) -> float
     {
-        constexpr double R_0   = -0.05641088;
-        constexpr double R_t   = 0.01;
-        constexpr double c     = 47.28711236;
-        constexpr double beta  = 0.00964052;
-        constexpr double gamma = 0.08550479;
-        constexpr double delta = 0.69336945;
-        const double P_t       = c * std::pow((R_t - R_0), 2.0);
-        
         if (in >= P_t)
         {
             return float(std::pow(2.0, (in - delta) / gamma) - beta);
@@ -46,7 +55,34 @@ void GenerateAppleLogToLinearOps(OpRcPtrVec & ops)
     };
 
     CreateHalfLut(ops, GenerateLutValues);
+#else
+    FixedFunctionOpData::Params gamma_log_params
+    {
+        R_0,           // mirror point
+        R_t,           // break point
 
+        // Gamma segment.
+        2.0,            // gamma power
+        c,              // post-power scale
+        -R_0,           // pre-power offset
+
+        // Log segment.
+        2.0,            // log base
+        gamma,          // log-side slope
+        delta,          // log-side offset
+        1.0,            // lin-side slope
+        beta,           // lin-side offset
+    };
+
+    auto range_data = std::make_shared<RangeOpData>(
+        0.,
+        RangeOpData::EmptyValue(), // don't clamp high end
+        0.,
+        RangeOpData::EmptyValue());
+
+    CreateRangeOp(ops, range_data, TransformDirection::TRANSFORM_DIR_FORWARD);
+    CreateFixedFunctionOp(ops, FixedFunctionOpData::GAMMA_LOG_TO_LIN, gamma_log_params);
+#endif // OCIO_LUT_SUPPORT
 }
 
 } // namespace APPLE_LOG
