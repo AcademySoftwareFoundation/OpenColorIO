@@ -130,7 +130,6 @@ napoleon_include_init_with_doc = True
 # expandvars
 expandvars_define = {
     "PYDIR": "frozen" if RTD_BUILD else "src",
-    #"PYDIR": "frozen",
     "OCIO_NAMESPACE": ocio_namespace,
 }
 
