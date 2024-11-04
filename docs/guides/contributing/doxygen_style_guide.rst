@@ -67,8 +67,8 @@ Where possible please try to split the tag and names from the descriptive text.
      *
      * Compresses an input string using the foobar algorithm.
      *
-     * \param
-     *      Uncompressed The input string.
+     * \param uncompressed
+     *      The input string.
      * \return
      *      A compressed version of the input string.
      */
