@@ -131,6 +131,23 @@ CryEngine is a real-time game engine, targeting applications in the motion-pictu
 Website: `<https://www.cryengine.com/>`__
 
 
+Disguise
+********
+
+Disguise is an integrated hardware and software platform powering the world's biggest live events, immersive experiences and virtual production stages. OpenColorIO is integrated into the Designer software, allowing users to manage the color spaces of all content sources and physical output devices.
+
+Website: `<http://disguise.one/>`__
+
+Supported version: >= 29.1
+
+Documentation:
+
+
+- `OpenColorIO Support <http://help.disguise.one/designer/colour-management/ocio.html>`__
+
+- `Color Management <http://help.disguise.one/designer/colour-management/colour-management-overview.html>`__
+
+
 DJV
 ***
 

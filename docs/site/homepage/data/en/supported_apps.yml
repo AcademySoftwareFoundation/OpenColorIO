@@ -58,6 +58,13 @@ supported_apps:
       categories : ["Game Engine", "3D"]
       content : Version 3 and up.
       link : "https://www.cryengine.com/"
+      
+    # portfolio item loop
+    - name : Disguise
+      image : images/supported_apps/disguise.png
+      categories : ["2D", "3D", "Compositing", "Playback", "Simulation"]
+      content : Designer r29.1 and up.
+      link : "https://disguise.one/"
 
     # portfolio item loop
     - name : DJV
