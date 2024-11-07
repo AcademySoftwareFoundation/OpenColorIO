@@ -16,7 +16,7 @@ include(FetchContent)
 set(FETCHCONTENT_BASE_DIR "${CMAKE_BINARY_DIR}/ext/build/sse2neon")
 FetchContent_Declare(sse2neon
   GIT_REPOSITORY https://github.com/DLTcollab/sse2neon.git
-  GIT_TAG        v1.6.0
+  GIT_TAG        227cc413fb2d50b2a10073087be96b59d5364aea
 )
 
 # FetchContent_MakeAvailable is not available until CMake 3.14+.
@@ -38,6 +38,8 @@ if(NOT sse2neon_POPULATED)
   add_library(sse2neon INTERFACE)
   # Add the include directories to the target.
   target_include_directories(sse2neon INTERFACE "${sse2neon_INCLUDE_DIR}")
-  # Ignore the warnings coming from sse2neon.h as they are false positives.
-  target_compile_options(sse2neon INTERFACE -Wno-unused-parameter)
+  if(NOT MSVC)
+      # Ignore the warnings coming from sse2neon.h as they are false positives.
+      target_compile_options(sse2neon INTERFACE -Wno-unused-parameter)
+  endif()
 endif()

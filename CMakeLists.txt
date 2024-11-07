@@ -270,7 +270,7 @@ option(OCIO_USE_AVX2 "Specify whether to enable AVX2 CPU performance optimizatio
 option(OCIO_USE_AVX512 "Specify whether to enable AVX512 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX})
 option(OCIO_USE_F16C  "Specify whether to enable F16C CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C})
 
-if (APPLE)
+if (APPLE OR WIN32)
    # TODO: Revisit whether that option is necessary.
    option(OCIO_USE_SSE2NEON "Specify whether to enable SSE CPU performance optimizations using SSE2NEON for Apple ARM architecture" ON)
    mark_as_advanced(OCIO_USE_SSE2NEON)
@@ -332,8 +332,10 @@ if(OCIO_USE_SIMD AND OCIO_USE_SSE2NEON AND COMPILER_SUPPORTS_ARM_NEON)
         add_library(sse2neon INTERFACE)
         # Add the include directories to the target.
         target_include_directories(sse2neon INTERFACE "${sse2neon_INCLUDE_DIR}")
-        # Ignore the warnings coming from sse2neon.h as they are false positives.
-        target_compile_options(sse2neon INTERFACE -Wno-unused-parameter)
+        if(NOT MSVC)
+            # Ignore the warnings coming from sse2neon.h as they are false positives.
+            target_compile_options(sse2neon INTERFACE -Wno-unused-parameter)
+        endif()
     endif()
 endif()
 

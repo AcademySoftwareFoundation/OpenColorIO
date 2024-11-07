@@ -9,11 +9,11 @@
 #if OCIO_USE_SSE2
 
 // Include the appropriate SIMD intrinsics header based on the architecture (Intel vs. ARM).
-#if !defined(__aarch64__)
+#if !defined(__aarch64__) && !defined(_M_ARM64)
     #if OCIO_USE_SSE2
         #include <emmintrin.h>
     #endif
-#elif defined(__aarch64__)
+#elif defined(__aarch64__) || defined(_M_ARM64)
     // ARM architecture A64 (ARM64)
     #if OCIO_USE_SSE2NEON
         #include <sse2neon.h>
@@ -30,7 +30,7 @@ namespace OCIO_NAMESPACE
 // Note that it is important for the code below this ifdef stays in the OCIO_NAMESPACE since
 // it is redefining two of the functions from sse2neon.
 
-#if defined(__aarch64__)
+#if defined(__aarch64__) || defined(_M_ARM64)
     #if OCIO_USE_SSE2NEON
         // Using vmaxnmq_f32 and vminnmq_f32 rather than sse2neon's vmaxq_f32 and vminq_f32 due to 
         // NaN handling. This doesn't seem to be significantly slower than the default sse2neon behavior.
