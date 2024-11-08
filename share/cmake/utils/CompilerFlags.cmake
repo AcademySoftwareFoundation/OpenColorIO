@@ -18,9 +18,11 @@ if(OCIO_USE_SIMD)
 
     if (OCIO_USE_SSE2NEON AND COMPILER_SUPPORTS_ARM_NEON)
         include(CheckSupportSSEUsingSSE2NEON)
-        if(NOT COMPILER_SUPPORTS_SSE_WITH_SSE2NEON)
-            # Enable the "new" preprocessor, to more closely match Clang/GCC, required for sse2neon
-            set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};/Zc:preprocessor")
+        if(COMPILER_SUPPORTS_SSE_WITH_SSE2NEON)
+            if(WIN32)
+                # Enable the "new" preprocessor, to more closely match Clang/GCC, required for sse2neon
+                set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};/Zc:preprocessor")
+            endif()
         else()
             set(OCIO_USE_SSE2NEON OFF)
         endif()
