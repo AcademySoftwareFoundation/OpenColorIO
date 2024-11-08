@@ -14,7 +14,30 @@
 #elif defined(__aarch64__) || defined(_M_ARM64)
     // ARM architecture A64 (ARM64)
     #if OCIO_USE_SSE2NEON
+        // MSVC doesn't like the redefinitions below and requires the existing functions to be undef-ed
+        #if defined(_M_ARM64)
+            #define _mm_max_ps _mm_max_ps_orig
+            #define _mm_min_ps _mm_min_ps_orig
+        #endif
+
         #include <sse2neon.h>
+
+        #if defined(_M_ARM64)
+            #undef _mm_max_ps
+            #undef _mm_min_ps
+        #endif
+
+        // Current versions of MSVC do not define float16_t, so we do it ourselves using
+        // int16_t as an intermediate type
+        #if defined(_M_ARM64) && !defined(float16_t)
+            #define float16_t int16_t
+        #endif
+
+        // Current versions of MSVC do not define vst1q_f16, so we do it ourselves using
+        // internal methods from MSVC's arm_neon.h
+        #if defined(_M_ARM64) && !defined(vst1q_f16)
+            #define vst1q_f16(A, B) neon_st1m_q16((A), __float16x8_t_to_n128(B));
+        #endif
     #endif
 #endif
 
@@ -321,7 +344,7 @@ struct SSE2RGBAPack<BIT_DEPTH_F16>
         sse2RGBATranspose_4x4(r, g, b, a, rgba0, rgba1, rgba2, rgba3);
 
 #if OCIO_USE_SSE2NEON
-        // use neon hardware support for f32 to f16
+        // use neon hardware support for f32 to f16 (apart from in MSVC, which doesnt support it)
         float16x8_t rgba;
         float16x4_t rgba00_01 = vcvt_f16_f32(vreinterpretq_f32_m128(rgba0));
         float16x4_t rgba03_03 = vcvt_f16_f32(vreinterpretq_f32_m128(rgba1));
