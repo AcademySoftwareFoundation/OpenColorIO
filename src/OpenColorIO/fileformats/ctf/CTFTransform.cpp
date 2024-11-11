@@ -733,7 +733,7 @@ const char * BitDepthToCLFString(BitDepth bitDepth)
     else if (bitDepth == BIT_DEPTH_F16) return "16f";
     else if (bitDepth == BIT_DEPTH_F32) return "32f";
 
-    throw Exception("Bitdepth has been validated before calling this.");
+    throw Exception("Bitdepth has not been validated before calling this.");
 }
 
 BitDepth GetValidatedFileBitDepth(BitDepth bd, OpData::Type type)
@@ -1986,7 +1986,9 @@ void Lut1DWriter::writeContent() const
 
     // To avoid needing to duplicate the const objects,
     // we scale the values on-the-fly while writing.
-    const float scale = (float)GetBitDepthMaxValue(m_outBitDepth);
+    const BitDepth arrayBitDepth = m_lut->getDirection() == TRANSFORM_DIR_INVERSE ?
+                                   m_inBitDepth : m_outBitDepth;
+    const float scale = (float) GetBitDepthMaxValue(arrayBitDepth);
 
     if (m_lut->isOutputRawHalfs())
     {
@@ -2016,7 +2018,7 @@ void Lut1DWriter::writeContent() const
                     values.begin(),
                     values.end(),
                     array.getNumColorComponents(),
-                    m_outBitDepth,
+                    arrayBitDepth,
                     array.getNumColorComponents() == 1 ? 3 : 1,
                     scale);
     }
@@ -2110,12 +2112,15 @@ void Lut3DWriter::writeContent() const
 
     // To avoid needing to duplicate the const objects,
     // we scale the values on-the-fly while writing.
-    const float scale = (float)GetBitDepthMaxValue(m_outBitDepth);
+    const BitDepth arrayBitDepth = m_lut->getDirection() == TRANSFORM_DIR_INVERSE ?
+                                   m_inBitDepth : m_outBitDepth;
+    const float scale = (float) GetBitDepthMaxValue(arrayBitDepth);
+
     WriteValues(m_formatter,
                 array.getValues().begin(),
                 array.getValues().end(),
                 3,
-                m_outBitDepth,
+                arrayBitDepth,
                 1,
                 scale);
 
@@ -2508,6 +2513,28 @@ BitDepth GetInputFileBD(ConstOpDataRcPtr op)
         const auto bd = range->getFileInputBitDepth();
         return GetValidatedFileBitDepth(bd, type);
     }
+    else if (type == OpData::Lut1DType)
+    {
+        // For an InverseLut1D, the file "out" depth, which determines the array scaling,
+        // must actually be set as the in-depth.
+        auto lut = OCIO_DYNAMIC_POINTER_CAST<const Lut1DOpData>(op);
+        if (lut->getDirection() == TRANSFORM_DIR_INVERSE)
+        {
+            const auto bd = lut->getFileOutputBitDepth();
+            return GetValidatedFileBitDepth(bd, type);
+        }
+    }
+    else if (type == OpData::Lut3DType)
+    {
+        // For an InverseLut3D, the file "out" depth, which determines the array scaling,
+        // must actually be set as the in-depth.
+        auto lut = OCIO_DYNAMIC_POINTER_CAST<const Lut3DOpData>(op);
+        if (lut->getDirection() == TRANSFORM_DIR_INVERSE)
+        {
+            const auto bd = lut->getFileOutputBitDepth();
+            return GetValidatedFileBitDepth(bd, type);
+        }
+    }
     return BIT_DEPTH_F32;
 }
 
@@ -2515,6 +2542,9 @@ BitDepth GetInputFileBD(ConstOpDataRcPtr op)
 
 void TransformWriter::writeOps(const CTFVersion & version) const
 {
+    // If the ops have a specific file input/output bit-depth that was set (e.g., if the
+    // ops were originally read in from a CTF/CLF file), then we try to preserve those
+    // values on write. Otherwise, default to 32f.
     BitDepth inBD = BIT_DEPTH_F32;
     BitDepth outBD = BIT_DEPTH_F32;
 
@@ -2523,15 +2553,27 @@ void TransformWriter::writeOps(const CTFVersion & version) const
     size_t numSavedOps = 0;
     if (numOps)
     {
+        // Initialize the input bit-depth from the first op. Thereafter, the input depth
+        // will be determined from the output depth of the previous op that was written.
         inBD = GetInputFileBD(ops[0]);
+
         for (size_t i = 0; i < numOps; ++i)
         {
             auto & op = ops[i];
 
+            // Each op is allowed to set its preferred output depth, so that is always
+            // respected. However, we try to honour preferred input depth too, where possible.
+            // If the next op has a preferred file input bit-depth, use that as the default
+            // out-depth for the current op. However, if the current op has a preferred
+            // file out depth, that will take precedence below. If an op's preferred file
+            // depth cannot be honoured, it still results in a perfectly valid CTF file,
+            // it's only that the scaling of array values may be adjusted relative to the
+            // original CTF file it was created from (if any).
+            // See FileFormatCTF_tests.cpp test bitdepth_ctf.
             if (i + 1 < numOps)
             {
                 auto & nextOp = ops[i + 1];
-                // Return file input bit-depth for Matrix & Range, F32 for others.
+                // Return file input bit-depth for ops with a preference, F32 for others.
                 outBD = GetInputFileBD(nextOp);
             }
 
@@ -2688,7 +2730,11 @@ void TransformWriter::writeOps(const CTFVersion & version) const
                 // Avoid copying LUT, write will take bit-depth into account.
                 Lut1DWriter opWriter(m_formatter, lut);
 
-                outBD = GetValidatedFileBitDepth(lut->getFileOutputBitDepth(), type);
+                if (lut->getDirection() == TRANSFORM_DIR_FORWARD)
+                {
+                    // For an inverse Lut1D, the fileOutDepth is used for the inBitDepth above.
+                    outBD = GetValidatedFileBitDepth(lut->getFileOutputBitDepth(), type);
+                }
                 opWriter.setInputBitdepth(inBD);
                 opWriter.setOutputBitdepth(outBD);
 
@@ -2708,7 +2754,11 @@ void TransformWriter::writeOps(const CTFVersion & version) const
                 // Avoid copying LUT, write will take bit-depth into account.
                 Lut3DWriter opWriter(m_formatter, lut);
 
-                outBD = GetValidatedFileBitDepth(lut->getFileOutputBitDepth(), type);
+                if (lut->getDirection() == TRANSFORM_DIR_FORWARD)
+                {
+                    // For an inverse Lut3D, the fileOutDepth is used for the inBitDepth above.
+                    outBD = GetValidatedFileBitDepth(lut->getFileOutputBitDepth(), type);
+                }
                 opWriter.setInputBitdepth(inBD);
                 opWriter.setOutputBitdepth(outBD);
 
