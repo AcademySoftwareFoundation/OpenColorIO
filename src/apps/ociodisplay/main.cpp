@@ -62,7 +62,7 @@ static const std::array<std::pair<const char *, OCIO::OptimizationFlags>, 5> Opt
 float g_exposure_fstop{0.0f};
 float g_display_gamma{1.0f};
 int g_channelHot[4]{1, 1, 1, 1}; // show rgb
-int viewsMenuID;
+int g_viewsMenuID;
 
 OCIO::OglAppRcPtr g_oglApp;
 
@@ -290,7 +290,7 @@ void updateViewsMenu(const char * displayValue)
 {
 
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-    glutSetMenu(viewsMenuID);
+    glutSetMenu(g_viewsMenuID);
     int numViewsMenuItems = glutGet(GLUT_MENU_NUM_ITEMS);
     for (int i = numViewsMenuItems; i > 0; --i)
     {
@@ -551,7 +551,7 @@ static void PopulateOCIOMenus()
         glutAddMenuEntry(config->getDisplay(i), i);
     }
 
-    viewsMenuID = glutCreateMenu(transform_CB);
+    g_viewsMenuID = glutCreateMenu(transform_CB);
     const char * defaultDisplay = config->getDefaultDisplay();
     updateViewsMenu(defaultDisplay);
 
@@ -569,7 +569,7 @@ static void PopulateOCIOMenus()
 
     glutCreateMenu(menuCallback);
     glutAddSubMenu("Image ColorSpace", csMenuID);
-    glutAddSubMenu("Views", viewsMenuID);
+    glutAddSubMenu("Views", g_viewsMenuID);
     glutAddSubMenu("Display", displayMenuID);
     glutAddSubMenu("Looks Override", lookMenuID);
     glutAddSubMenu("Optimization", optimizationMenuID);
