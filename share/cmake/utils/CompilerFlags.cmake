@@ -74,6 +74,9 @@ if(USE_MSVC)
         set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};/WX")
     endif()
 
+    # Enable parallel compilation of source files
+    set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};/MP")
+
 elseif(USE_CLANG)
 
     set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};-DUSE_CLANG")

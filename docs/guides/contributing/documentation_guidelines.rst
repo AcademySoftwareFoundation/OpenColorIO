@@ -22,10 +22,13 @@ Installation of requirements
 Scripts are available, for each platform, to install the documentation 
 requirements.
 
-The ``install_docs_env.sh`` script in the share/ci/scripts/<Platform> directory
+The ``install_docs_env.sh`` script in the ``share/ci/scripts/<Platform>`` directory
 will install the Python-related requirements for building the documentation
 (Sphinx, six, testresources, recommonmark, sphinx-press-theme, sphinx-tabs,
 and breathe) and Doxygen.  
+
+**Note:** If you are on Linux using yum and don't already have Doxygen installed, you will have to
+uncomment the relevant line in ``share/ci/scripts/linux/yum/install_docs_env.sh``
 
 Use GitBash (`provided with Git for Windows <https://gitforwindows.org/>`_) to 
 execute the script on Windows.
@@ -33,12 +36,23 @@ execute the script on Windows.
 Python 3 is required to build the documentation. If you have multiple Python
 installs you'll need to make sure pip and CMake find the correct version. You 
 can manually inform CMake of which to use by adding this option to the below 
-`cmake` command, which configures the documentation build:
+`cmake` command, which configures the documentation build::
 
     -DPython_ROOT=<Path to Python 3 root directory>
 
-For the Python packages, ensure their locations are in your ``PYTHONPATH`` 
-environment variable prior to configuring the build.
+You need to make sure these Python package locations are in your ``PYTHONPATH``
+environment variable prior to configuring the build. A good way to accomplish this is
+with a virtual environment, which would look like::
+
+    $ python3 -m venv venv
+    $ source venv/bin/activate
+    $ share/ci/scripts/<platform>/install_docs_env.sh  # macos or windows
+    or
+    $ share/ci/scripts/linux/<tool>install_docs_env.sh  # for linux, tool is apt or yum
+    $ export PYTHONPATH=</path/to>/venv/lib/python<version>/site-packages
+    
+Obviously, adjust for specific paths and python versions. Also, the above assumes a ``bash``
+environment - the commands may be slightly different for other shells.
 
 Building the docs
 *****************
@@ -58,25 +72,32 @@ Initial run::
 
 Then after each change you wish to preview::
 
-    $ cmake -D OCIO_BUILD_DOCS=ON .. && make docs
+    $ cmake -D OCIO_BUILD_DOCS=ON ../ && make docs
+
+Tip: 
+    The ``-j`` option to ``make`` is your friend, eg, ``make -j 8`` will make things go much faster.
+    The exact number will depend on the resources of your particular machine. The ``nproc`` command (linux) will help you decide.
 
 Updating the Python docs
 ************************
 
 If a contributor makes changes to any part of OCIO which affects the Python API docs 
 (so, public headers, Python bindings, any documentation process code, etc.) they should 
-do a local build with the new CMake option -DOCIO_BUILD_FROZEN_DOCS=ON, and add the 
-modified rST files under docs/api/python/frozen to their PR.
+do a local build with the new CMake option -DOCIO_BUILD_FROZEN_DOCS=ON::
 
-Note: If you run the scripts on Linux, the freezing process should work well.  On other 
+    $ cmake -DOCIO_BUILD_FROZEN_DOCS=ON ../
+
+and add the modified rST files found under ``docs/api/python/frozen`` to their PR.
+
+**Note:** If you run the scripts on Linux, the freezing process should work well.  On other 
 platforms, the process may sometimes make spurious deltas to rST files unrelated to your 
 changes.  Please don't add these files to your PR.
 
 The OCIO conf.py module has a switch that detects when docs are being built on GH Actions 
-(CI env var == true) it will backup the frozen folder to a sibling backup folder on Sphinx 
-init, and following Sphinx build completion will do a file-by-file comparison of the new 
-frozen and the backup folders. If there are differences, the CI job may fail with an error 
-explaining where the differences were found and with instructions on how to fix them.
+(CI env var == true); in that case it will backup the "frozen" folder to a sibling backup
+folder on Sphinx init, and following Sphinx build completion will do a file-by-file comparison
+of the new "frozen" and backup folders. If there are differences, the CI job may fail with
+an error explaining where the differences were found and with instructions on how to fix them.
 
 The conf.py also has a switch that detects when it is being run on RTD, and in that case 
 will itself run Doxygen to generate the XML needed by breathe prior to building the docs, 
@@ -88,14 +109,14 @@ nothing more. Right now that only works when the READTHEDOCS env var == True, bu
 be easily exposed another way if needed.
 
 These features required several custom Sphinx extensions tuned for our project which are
-located under share/docs.
+located under ``share/docs``.
 
 Building the docs -- Excluding the API docs
 *******************************************
 
 If you don't need to build the API documentation, there is a quick and dirty way to 
 do a docs build.  This approach does not need to compile the C++ code but is not ideal
-since it modifies files in the source directory rather than the build directory:
+since it modifies files in the source directory rather than the build directory::
 
     export READTHEDOCS=True
     cd docs  (in the source directory)
