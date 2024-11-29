@@ -195,7 +195,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: GpuShaderDesc.add3DTexture(self: PyOpenColorIO.GpuShaderDesc, textureName: str, samplerName: str, edgeLen: int, interpolation: PyOpenColorIO.Interpolation, values: buffer) -> None
+   .. py:method:: GpuShaderDesc.add3DTexture(self: PyOpenColorIO.GpuShaderDesc, textureName: str, samplerName: str, edgeLen: int, channel: PyOpenColorIO.GpuShaderCreator.TextureType, interpolation: PyOpenColorIO.Interpolation, values: buffer) -> None
       :module: PyOpenColorIO
 
       Add a 3D texture with RGB channel type.
@@ -477,6 +477,8 @@
    .. py:property:: Texture3D.interpolation
       :module: PyOpenColorIO.GpuShaderDesc
 
+   .. py:property:: Texture3D.channel
+      :module: PyOpenColorIO.GpuShaderDesc
 
    .. py:property:: Texture3D.samplerName
       :module: PyOpenColorIO.GpuShaderDesc
