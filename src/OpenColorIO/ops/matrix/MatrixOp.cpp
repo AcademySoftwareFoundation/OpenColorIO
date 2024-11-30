@@ -62,7 +62,7 @@ public:
 
     ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
-    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator, OptimizationFlags /*oFlags*/) const override;
 
 protected:
     ConstMatrixOpDataRcPtr matrixData() const { return DynamicPtrCast<const MatrixOpData>(data()); }
@@ -187,7 +187,7 @@ ConstOpCPURcPtr MatrixOffsetOp::getCPUOp(bool /*fastLogExpPow*/) const
     return GetMatrixRenderer(data);
 }
 
-void MatrixOffsetOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
+void MatrixOffsetOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator, OptimizationFlags /*oFlags*/) const
 {
     ConstMatrixOpDataRcPtr data = matrixData();
     if (data->getDirection() == TRANSFORM_DIR_INVERSE)
