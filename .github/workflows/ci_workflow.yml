@@ -232,7 +232,7 @@ jobs:
   # Linux (unsupported Node.js)
   # ---------------------------------------------------------------------------
 
-  linux:
+  linux-old:
     name: 'Linux VFX CY${{ matrix.vfx-cy }} 
       <${{ matrix.compiler-desc }} 
        config=${{ matrix.build-type }}, 
