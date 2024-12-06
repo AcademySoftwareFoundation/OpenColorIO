@@ -61,7 +61,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        build: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        build: [7, 8, 9, 10, 11, 12]
         include:
           # -------------------------------------------------------------------
           # VFX CY2024 (Python 3.11)
@@ -147,6 +147,118 @@ jobs:
             compiler-desc: GCC
             vfx-cy: 2023
             install-ext-packages: ALL
+    env:
+      CXX: ${{ matrix.cxx-compiler }}
+      CC: ${{ matrix.cc-compiler }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install docs env
+        run: share/ci/scripts/linux/yum/install_docs_env.sh
+        if: matrix.build-docs == 'ON'
+      - name: Install tests env
+        run: share/ci/scripts/linux/yum/install_tests_env.sh
+      - name: Create build directories
+        run: |
+          mkdir _install
+          mkdir _build
+      - name: Configure
+        run: |
+          cmake ../. \
+                -DCMAKE_INSTALL_PREFIX=../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
+                -DCMAKE_CXX_STANDARD=${{ matrix.cxx-standard }} \
+                -DBUILD_SHARED_LIBS=${{ matrix.build-shared }} \
+                -DOCIO_BUILD_DOCS=${{ matrix.build-docs }} \
+                -DOCIO_BUILD_OPENFX=${{ matrix.build-openfx }} \
+                -DOCIO_BUILD_GPU_TESTS=OFF \
+                -DOCIO_USE_SIMD=${{ matrix.use-simd }} \
+                -DOCIO_USE_OIIO_FOR_APPS=${{ matrix.use-oiio }} \
+                -DOCIO_INSTALL_EXT_PACKAGES=${{ matrix.install-ext-packages }} \
+                -DOCIO_WARNING_AS_ERROR=ON \
+                -DPython_EXECUTABLE=$(which python)
+        working-directory: _build
+      - name: Build
+        run: |
+          cmake --build . \
+                --target install \
+                --config ${{ matrix.build-type }} \
+                -- -j$(nproc)
+          echo "ocio_build_path=$(pwd)" >> $GITHUB_ENV
+        working-directory: _build
+      - name: Test
+        run: ctest -V -C ${{ matrix.build-type }}
+        working-directory: _build
+      - name: Test CMake Consumer with shared OCIO
+        if: matrix.build-shared == 'ON'
+        run: |
+          cmake . \
+                -DCMAKE_PREFIX_PATH=../../../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }}
+          cmake --build . \
+                --config ${{ matrix.build-type }}
+          ./consumer
+        working-directory: _build/tests/cmake-consumer-dist
+      - name: Test CMake Consumer with static OCIO
+        if: matrix.build-shared == 'OFF'
+        # The yaml-cpp_VERSION is set below because Findyaml-cpp.cmake needs it but is unable to 
+        # extract it from the headers, like the other modules.
+        #
+        # Prefer the static version of each dependencies by using <pkg>_STATIC_LIBRARY. 
+        # Alternatively, this can be done by setting <pkg>_LIBRARY and <pkg>_INCLUDE_DIR to 
+        # the static version of the package.
+        run: |
+          cmake . \
+                -DCMAKE_PREFIX_PATH=../../../_install \
+                -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
+                -Dexpat_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dexpat_STATIC_LIBRARY=ON \
+                -DImath_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -DImath_STATIC_LIBRARY=ON \
+                -Dpystring_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dyaml-cpp_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dyaml-cpp_STATIC_LIBRARY=ON \
+                -Dyaml-cpp_VERSION=0.7.0 \
+                -DZLIB_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -DZLIB_STATIC_LIBRARY=ON \
+                -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist \
+                -Dminizip-ng_STATIC_LIBRARY=ON
+          cmake --build . \
+                --config ${{ matrix.build-type }}
+          ./consumer
+        working-directory: _build/tests/cmake-consumer-dist
+
+  # ---------------------------------------------------------------------------
+  # Linux (unsupported Node.js)
+  # ---------------------------------------------------------------------------
+
+  linux-old:
+    name: 'Linux VFX CY${{ matrix.vfx-cy }} 
+      <${{ matrix.compiler-desc }} 
+       config=${{ matrix.build-type }}, 
+       shared=${{ matrix.build-shared }}, 
+       simd=${{ matrix.use-simd }}, 
+       cxx=${{ matrix.cxx-standard }}, 
+       docs=${{ matrix.build-docs }}, 
+       oiio=${{ matrix.use-oiio }}>'
+    # Avoid duplicated checks when a pull_request is opened from a local branch.
+    if: |
+      github.event_name == 'push' ||
+      github.event.pull_request.head.repo.full_name != github.repository
+    # GH-hosted VM. The build runs in ASWF 'container' defined below.
+    runs-on: ubuntu-latest
+    container:
+      # DockerHub: https://hub.docker.com/u/aswf
+      # Source: https://github.com/AcademySoftwareFoundation/aswf-docker
+      image: aswf/ci-ocio:${{ matrix.vfx-cy }}
+      volumes:
+        - /node20217:/node20217:rw,rshared
+        - /node20217:/__e/node20:ro,rshared
+    strategy:
+      fail-fast: true
+      matrix:
+        build: [1, 2, 3, 4, 5, 6]
+        include:
           # -------------------------------------------------------------------
           # VFX CY2022 (Python 3.9)
           # -------------------------------------------------------------------
@@ -234,9 +346,23 @@ jobs:
     env:
       CXX: ${{ matrix.cxx-compiler }}
       CC: ${{ matrix.cc-compiler }}
-      ACTIONS_RUNNER_FORCE_ACTIONS_NODE_VERSION: node16
-      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
     steps:
+      # Install nodejs 20 with glibc 2.17, to work around the face that the
+      # GHA runners are insisting on a node version that is too new for the
+      # glibc in the ASWF containers prior to 2023.
+      - name: Install nodejs20glibc2.17
+        run: |
+          curl --silent https://unofficial-builds.nodejs.org/download/release/v20.18.1/node-v20.18.1-linux-x64-glibc-217.tar.xz | tar -xJ --strip-components 1 -C /node20217 -f -
+      # We would like to use harden-runner, but it flags too many false
+      # positives, every time we download a dependency. We should use it only
+      # on CI runs where we are producing artifacts that users might rely on.
+      # - name: Harden Runner
+      #   uses: step-security/harden-runner@248ae51c2e8cc9622ecf50685c8bf7150c6e8813 # v1.4.3
+      #   with:
+      #     egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+        # Note: can't upgrade to actions/checkout 4.0 because it needs newer
+        # glibc than these containers have.
       - name: Checkout
         uses: actions/checkout@v3
       - name: Install docs env
@@ -319,7 +445,7 @@ jobs:
   # ---------------------------------------------------------------------------
 
   macos:
-    name: 'macOS 12
+    name: 'macOS 13
       <AppleClang 
        arch=${{ matrix.arch-type }},
        config=${{ matrix.build-type }}, 
@@ -333,7 +459,7 @@ jobs:
     if: |
       github.event_name == 'push' ||
       github.event.pull_request.head.repo.full_name != github.repository
-    runs-on: macos-12
+    runs-on: macos-13
     strategy:
       matrix:
         build: [1, 2, 3, 4]
