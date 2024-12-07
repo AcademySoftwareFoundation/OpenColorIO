@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+#
+# GitHub Actions workflow file
+# https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions
+
+name: Deploy OCIO Homepage
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/site/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout the main branch
+    - name: Checkout main branch
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Fetch full history to access all branches
+
+    # Step 2: Install Hugo (Extended Version)
+    - name: Install Hugo
+      uses: peaceiris/actions-hugo@v2
+      with:
+        hugo-version: 'latest'
+        extended: true  # Use extended version for Sass/SCSS support
+
+    # Step 3: Build the Hugo site
+    - name: Build site
+      run: |
+        cd docs/site/homepage
+        hugo -D --minify --themesDir ../..
+        cd -
+
+    # Step 4: Fetch the old/ directory from gh-pages branch
+    - name: Fetch old/ directory from gh-pages
+      run: |
+        mkdir temp
+        cd temp
+        git init
+        git remote add origin https://github.com/${{ github.repository }}
+        git fetch origin gh-pages
+        git checkout gh-pages
+        cd ..
+        cp -r temp/old docs/site/homepage/public/old || echo "No old directory to copy"
+
+    # Step 5: Deploy to gh-pages branch
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: docs/site/homepage/public
+        publish_branch: gh-pages

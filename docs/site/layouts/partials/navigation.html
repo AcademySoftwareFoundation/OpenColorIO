@@ -36,7 +36,7 @@
 
 				</ul>
 				<!-- Language List -->
-				{{- if site.IsMultiLingual }}
+				{{- if hugo.IsMultilingual }}
 				<select id="select-language" onchange="location = this.value;">
 					{{ $siteLanguages := site.Languages}}
 					{{ $pageLang := .Page.Lang}}

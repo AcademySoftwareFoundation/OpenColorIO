@@ -44,6 +44,13 @@ inline unsigned char Upper(unsigned char c)
     }
 }
 
+// Checks if character is whitespace (space, tab, newline or other
+// non-printable char). Does not take locale into account.
+inline bool IsSpace(unsigned char c)
+{
+    return c <= ' ';
+}
+
 // Return the lower case string.
 inline std::string Lower(std::string str)
 {
@@ -95,6 +102,13 @@ inline bool StartsWith(const std::string & str, const std::string & prefix)
     return str.size() >= prefix.size() && 0 == str.compare(0, prefix.size(), prefix);
 }
 
+// Return true if the string starts with the prefix character.
+// Note: The comparison is case sensitive.
+inline bool StartsWith(const std::string& str, char prefix)
+{
+    return !str.empty() && str.front() == prefix;
+}
+
 // Starting from the left, trim the character.
 inline std::string LeftTrim(std::string str, char c)
 {
@@ -106,7 +120,7 @@ inline std::string LeftTrim(std::string str, char c)
 // Starting from the left, trim all the space characters i.e. space, tabulation, etc.
 inline std::string LeftTrim(std::string str)
 {
-    const auto it = std::find_if(str.begin(), str.end(), [](char ch) { return !std::isspace(static_cast<unsigned char>(ch)); });
+    const auto it = std::find_if(str.begin(), str.end(), [](char ch) { return !IsSpace(ch); });
     str.erase(str.begin(), it);
     return str;
 }
@@ -123,7 +137,7 @@ inline std::string RightTrim(std::string str, char c)
 inline std::string RightTrim(std::string str)
 {
     const auto it =
-        std::find_if(str.rbegin(), str.rend(), [](char ch) { return !std::isspace(static_cast<unsigned char>(ch)); });
+        std::find_if(str.rbegin(), str.rend(), [](char ch) { return !IsSpace(ch); });
     str.erase(it.base(), str.end());
     return str;
 }
@@ -146,6 +160,12 @@ inline void Trim(StringVec & list)
     {
         entry = Trim(entry);
     }
+}
+
+// Checks if string is empty or white-space only.
+inline bool IsEmptyOrWhiteSpace(const std::string& str)
+{
+    return std::find_if(str.begin(), str.end(), [](char ch) { return !IsSpace(ch); }) == str.end();
 }
 
 // Split a string content using an arbitrary separator.
