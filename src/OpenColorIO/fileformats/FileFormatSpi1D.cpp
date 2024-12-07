@@ -168,7 +168,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                 }
             }
         }
-        while (istream.good() && !StringUtils::StartsWith(headerLine,"{"));
+        while (istream.good() && !StringUtils::StartsWith(headerLine,'{'));
     }
 
     if (version == -1)
