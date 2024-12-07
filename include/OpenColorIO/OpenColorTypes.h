@@ -449,11 +449,14 @@ enum GpuLanguage
     GPU_LANGUAGE_GLSL_1_2,          ///< OpenGL Shading Language
     GPU_LANGUAGE_GLSL_1_3,          ///< OpenGL Shading Language
     GPU_LANGUAGE_GLSL_4_0,          ///< OpenGL Shading Language
-    GPU_LANGUAGE_HLSL_DX11,         ///< DirectX Shading Language
+    GPU_LANGUAGE_HLSL_SM_5_0,       ///< DirectX High Level Shading Language
     LANGUAGE_OSL_1,                 ///< Open Shading Language
     GPU_LANGUAGE_GLSL_ES_1_0,       ///< OpenGL ES Shading Language
     GPU_LANGUAGE_GLSL_ES_3_0,       ///< OpenGL ES Shading Language
-    GPU_LANGUAGE_MSL_2_0            ///< Metal Shading Language
+    GPU_LANGUAGE_MSL_2_0,           ///< Metal Shading Language
+
+    // Deprecated enum(s)
+    GPU_LANGUAGE_HLSL_DX11 = GPU_LANGUAGE_HLSL_SM_5_0
 };
 
 /// Controls which environment variables are loaded into a Context object.
