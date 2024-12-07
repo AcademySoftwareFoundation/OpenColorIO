@@ -3,7 +3,7 @@ baseURL = "https://opencolorio.org/"
 title = "OpenColorIO"
 theme = "site"
 # post pagination
-paginate = "6"
+pagination.pagerSize = "6"
 # post excerpt
 summaryLength = "15"
 # disqus short name

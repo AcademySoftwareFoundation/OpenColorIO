@@ -161,6 +161,43 @@ OCIO_ADD_TEST(FileFormatIridasCube, read_failure)
     }
 }
 
+OCIO_ADD_TEST(FileFormatIridasCube, whitespace_handling)
+{
+    const std::string SAMPLE =
+        "# comment\n"
+        "# comment with trailing space  \n"
+        "# next up various forms of empty lines\n"
+        "\n"
+        "   \n"
+        "   \t  \n"
+        "# whitespace before keywords or after data should be supported\n"
+        "  LUT_3D_SIZE \t 2  \t\n"
+        "\t \tDOMAIN_MIN    0.25    0.5    0.75\n"
+        "\n"
+        "DOMAIN_MAX\t1.5\t2.5\t3.5\n"
+
+        "0.0 0.0 0.0\n"
+        "# comments in between data should be ignored\n"
+        "   1.0    0.0 \t 0.0\n"
+        "0.0 1.0 0.0    \n"
+        "     1.0 1.0 0.0\n"
+        "    \n"
+        "0.0 0.0 1.0\n"
+        "1.0 0.0 1.0\n"
+        "0.0 1.0 1.0\n"
+        "1.0 1.0 1.0\n"
+        "   \n"
+        "\n";
+
+    OCIO::LocalCachedFileRcPtr file;
+    OCIO_CHECK_NO_THROW(file = ReadIridasCube(SAMPLE));
+    OCIO_CHECK_EQUAL(file->domain_min[0], 0.25f);
+    OCIO_CHECK_EQUAL(file->domain_min[2], 0.75f);
+    OCIO_CHECK_EQUAL(file->domain_max[0], 1.5f);
+    OCIO_CHECK_EQUAL(file->domain_max[2], 3.5f);
+    OCIO_CHECK_EQUAL(file->lut3D->getArray().getLength(), 2);
+}
+
 OCIO_ADD_TEST(FileFormatIridasCube, no_shaper)
 {
     // check baker output

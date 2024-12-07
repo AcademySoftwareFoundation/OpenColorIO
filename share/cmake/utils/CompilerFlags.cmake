@@ -62,6 +62,9 @@ if(USE_MSVC)
         )
     endif()
 
+    # Make MSVC compiler report correct __cplusplus version (otherwise reports 199711L)
+    set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};/Zc:__cplusplus")
+
     # Explicitely specify the default warning level i.e. /W3.
     # Note: Do not use /Wall (i.e. /W4) which adds 'informational' warnings.
     set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};/W3")
@@ -73,6 +76,9 @@ if(USE_MSVC)
     if(OCIO_WARNING_AS_ERROR)
         set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};/WX")
     endif()
+
+    # Enable parallel compilation of source files
+    set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};/MP")
 
 elseif(USE_CLANG)
 
