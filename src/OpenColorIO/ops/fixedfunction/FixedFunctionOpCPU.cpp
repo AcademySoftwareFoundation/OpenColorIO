@@ -1844,7 +1844,7 @@ __m128 Renderer_LIN_TO_PQ_SSE<true>::myPower(__m128 x, __m128 exp)
     return ssePower(x, exp);
 }
 
-#ifdef _WIN32
+#if (_MSC_VER >= 1920) && (OCIO_USE_AVX)
 // Only Windows compilers have built-in _mm_pow_ps() SVML intrinsic
 // implementation, so non-fast SIMD version is available only on Windows for
 // now.
