@@ -27,7 +27,7 @@ def Fit(value, fromMin, fromMax, toMin, toMax):
     return (value - fromMin) / (fromMax - fromMin) * (toMax - toMin) + toMin
 
 SIZE = 2**10
-for i in xrange(SIZE):
+for i in range(SIZE):
     x = i/(SIZE-1.0)
     
     x = Fit(x, 0.0, 1.0, -0.125, 1.5)
