@@ -288,7 +288,7 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(other.getFileRules().getNumEntries(), cfg.getFileRules().getNumEntries() - 1)
 
     def test_shared_views(self):
-        # Test these Config functions: addSharedView, getSharedViews, removeSharedView.
+        # Test these Config functions: addSharedView, getSharedViews, removeSharedView, clearSharedViews.
 
         cfg = OCIO.Config.CreateRaw()
         views = cfg.getSharedViews()
@@ -413,11 +413,12 @@ class ConfigTest(unittest.TestCase):
         cfg.removeSharedView('view3')
         views = cfg.getSharedViews()
         self.assertEqual(5, len(views))
-        cfg.removeSharedView('view4')
-        cfg.removeSharedView('view5')
-        cfg.removeSharedView('view6')
-        cfg.removeSharedView('view1')
-        cfg.removeSharedView('view2')
+        cfg.clearSharedViews()
+        # cfg.removeSharedView('view4')
+        # cfg.removeSharedView('view5')
+        # cfg.removeSharedView('view6')
+        # cfg.removeSharedView('view1')
+        # cfg.removeSharedView('view2')
         views = cfg.getSharedViews()
         self.assertEqual(0, len(views))
 
@@ -842,12 +843,22 @@ colorspaces:
                                              "sRGB")))
         self.assertEqual(1, len(cfg.getViews(OCIO.VIEW_SHARED, "sRGB")))
 
+        self.assertTrue(cfg.displayHasView("sRGB", "sview1"))
+        self.assertTrue(cfg.viewIsShared("sRGB", "sview1"))
+
+        other = copy.deepcopy(cfg)
+
+        self.assertTrue(OCIO.Config.viewsAreEqual(cfg, other, "sRGB", "sview1"))
+        self.assertTrue(OCIO.Config.viewsAreEqual(cfg, other, "sRGB", "Raw"))
+        self.assertTrue(OCIO.Config.viewsAreEqual(cfg, other, "sRGB", "view"))
+
         # Validate the virtual display information
         self.assertEqual(
             2,
             len(cfg.getVirtualDisplayViews(OCIO.VIEW_DISPLAY_DEFINED)))
 
         view_name = cfg.getVirtualDisplayViews(OCIO.VIEW_DISPLAY_DEFINED)[0]
+        self.assertTrue(cfg.hasVirtualView(view_name))
         self.assertEqual("Raw", view_name)
         self.assertEqual("", cfg.getVirtualDisplayViewTransformName(view_name))
         self.assertEqual("raw",
@@ -856,7 +867,10 @@ colorspaces:
         self.assertEqual("", cfg.getVirtualDisplayViewRule(view_name))
         self.assertEqual("", cfg.getVirtualDisplayViewDescription(view_name))
 
+        self.assertTrue(OCIO.Config.virtualViewsAreEqual(cfg, other, view_name))
+
         view_name = cfg.getVirtualDisplayViews(OCIO.VIEW_DISPLAY_DEFINED)[1]
+        self.assertTrue(cfg.hasVirtualView(view_name))
         self.assertEqual("Film", view_name)
         self.assertEqual("display_vt",
                          cfg.getVirtualDisplayViewTransformName(view_name))
@@ -866,12 +880,21 @@ colorspaces:
         self.assertEqual("", cfg.getVirtualDisplayViewRule(view_name))
         self.assertEqual("", cfg.getVirtualDisplayViewDescription(view_name))
 
+        self.assertTrue(OCIO.Config.virtualViewsAreEqual(cfg, other, view_name))
+
         self.assertEqual(1, len(cfg.getVirtualDisplayViews(OCIO.VIEW_SHARED)))
         self.assertEqual("sview2",
                          cfg.getVirtualDisplayViews(OCIO.VIEW_SHARED)[0])
+        
+        self.assertTrue(cfg.hasVirtualView("sview2"))
+        self.assertTrue(cfg.virtualViewIsShared("sview2"))
+        self.assertTrue(OCIO.Config.virtualViewsAreEqual(cfg, other, "sview2"))
 
         # Remove a view from the virtual display
         cfg.removeVirtualDisplayView("Raw")
+
+        self.assertFalse(OCIO.Config.virtualViewsAreEqual(cfg, other, "Raw"))
+        self.assertFalse(cfg.hasVirtualView("Raw"))
 
         self.assertEqual(
             1,
@@ -890,6 +913,10 @@ colorspaces:
             1,
             len(cfg.getVirtualDisplayViews(OCIO.VIEW_DISPLAY_DEFINED)))
         self.assertEqual(0, len(cfg.getVirtualDisplayViews(OCIO.VIEW_SHARED)))
+
+        self.assertFalse(cfg.hasVirtualView("sview2"))
+        self.assertFalse(cfg.virtualViewIsShared("sview2"))
+        self.assertFalse(OCIO.Config.virtualViewsAreEqual(cfg, other, "sview2"))
 
         cfg.addVirtualDisplaySharedView("sview2")
         self.assertEqual(
