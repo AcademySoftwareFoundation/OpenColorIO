@@ -5268,7 +5268,9 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
                         || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-REC2020-D60-in-REC2020-D65_2.0")
                         || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020-D60-in-REC2020-D65_2.0")
                         || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-REC2020-D60-in-REC2020-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020-D60-in-REC2020-D65_2.0") )
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020-D60-in-REC2020-D65_2.0")
+                        // NB: This one was added in OCIO 2.4.1.
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "DISPLAY - CIE-XYZ-D65_to_DisplayP3-HDR") )
                 )
             {
                 std::ostringstream os;
