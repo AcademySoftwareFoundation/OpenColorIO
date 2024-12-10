@@ -31,7 +31,7 @@ std::unique_ptr<GpuShaderClassWrapper> GpuShaderClassWrapper::CreateClassWrapper
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
-        case GPU_LANGUAGE_HLSL_DX11:
+        case GPU_LANGUAGE_HLSL_SM_5_0:
         case GPU_LANGUAGE_GLSL_ES_1_0:
         case GPU_LANGUAGE_GLSL_ES_3_0:
         default:
