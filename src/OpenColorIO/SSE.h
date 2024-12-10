@@ -9,14 +9,25 @@
 #if OCIO_USE_SSE2
 
 // Include the appropriate SIMD intrinsics header based on the architecture (Intel vs. ARM).
-#if !defined(__aarch64__)
+#if !defined(__aarch64__) && !defined(_M_ARM64)
     #if OCIO_USE_SSE2
         #include <emmintrin.h>
     #endif
-#elif defined(__aarch64__)
+#elif defined(__aarch64__) || defined(_M_ARM64)
     // ARM architecture A64 (ARM64)
     #if OCIO_USE_SSE2NEON
+        // MSVC doesn't like the redefinitions below and requires the existing functions to be undef-ed
+        #if defined(_M_ARM64)
+            #define _mm_max_ps _mm_max_ps_orig
+            #define _mm_min_ps _mm_min_ps_orig
+        #endif
+
         #include <sse2neon.h>
+
+        #if defined(_M_ARM64)
+            #undef _mm_max_ps
+            #undef _mm_min_ps
+        #endif
     #endif
 #endif
 
@@ -30,7 +41,7 @@ namespace OCIO_NAMESPACE
 // Note that it is important for the code below this ifdef stays in the OCIO_NAMESPACE since
 // it is redefining two of the functions from sse2neon.
 
-#if defined(__aarch64__)
+#if defined(__aarch64__) || defined(_M_ARM64)
     #if OCIO_USE_SSE2NEON
         // Using vmaxnmq_f32 and vminnmq_f32 rather than sse2neon's vmaxq_f32 and vminq_f32 due to 
         // NaN handling. This doesn't seem to be significantly slower than the default sse2neon behavior.
@@ -77,6 +88,9 @@ static const __m128 EPOS128 = _mm_set1_ps(128.0f);
 
 static const __m128 EPOSINF = _mm_set1_ps(std::numeric_limits<float>::infinity());
 
+// These funtions won't work when using MSVC + ARM64 unless you specify /Zc:arm64-aliased-neon-types-
+// This comes with it's own issues, so it is easier to just disable them when using MSVC + ARM64
+#if !defined(_M_ARM64)
 // Debug function to print out the contents of a floating-point SSE register
 inline void ssePrintRegister(const char* msg, __m128& reg)
 {
@@ -91,6 +105,7 @@ inline void ssePrintRegister(const char* msg, __m128i& reg)
     int *r = (int*) &reg;
     printf("%s : %d %d %d %d\n", msg, r[0], r[1], r[2], r[3]);
 }
+#endif
 
 // Determine whether a floating-point value is negative based on its sign bit.
 // This function will treat special values, like -0, -NaN, -Inf, as they were indeed
@@ -170,7 +185,7 @@ inline __m128 sseLog2(__m128 x)
 {
     // y = log2( x ) = log2( 2^exponent * mantissa ) 
     //               = exponent + log2( mantissa )
-
+  
     __m128 mantissa
         = _mm_or_ps(                                    // OR with EONE
             _mm_andnot_ps(                              // NOT(EMASK) AND x
