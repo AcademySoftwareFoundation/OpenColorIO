@@ -24,13 +24,15 @@ if platform.system() == "Windows":
 # 2 - Checking that the directories exist and are not "."
 # 3 - Add them to the DLL load path.
 #
-# The behavior described above is opt-out which means that it is activated by default. 
-# A user can opt-out and use the default behavior of Python 3.8+ by setting OCIO_PYTHON_LOAD_DLLS_FROM_PATH 
-# environment variable to 0.
+# The behavior described above is opt-in which means that it is deactivated by default.
+# A user can opt-in by setting OCIO_PYTHON_LOAD_DLLS_FROM_PATH environment variable to 1.
+# Please note that OCIO 2.4.0 and earlier had this behavior opt-out but it was changed
+# in 2.4.1 after it was found problematic in uncontrolled environment (causing segfault
+# on PyOpenColorIO import) as well as for security reasons.
 #
 
 if sys.version_info >= (3, 8) and platform.system() == "Windows":
-    if os.getenv("OCIO_PYTHON_LOAD_DLLS_FROM_PATH", "1") == "1":
+    if os.getenv("OCIO_PYTHON_LOAD_DLLS_FROM_PATH", "0") == "1":
         for path in os.getenv("PATH", "").split(os.pathsep):
             if os.path.exists(path) and path != ".":
                 os.add_dll_directory(path)
