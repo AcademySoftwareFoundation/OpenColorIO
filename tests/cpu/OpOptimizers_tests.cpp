@@ -311,6 +311,8 @@ OCIO_ADD_TEST(OpOptimizers, combine_ops)
         OCIO::CombineOps(ops, AllBut(OCIO::OPTIMIZATION_COMP_MATRIX));
         OCIO_CHECK_EQUAL(ops.size(), 3);
         OCIO::CombineOps(ops, OCIO::OPTIMIZATION_ALL);
+        // CombineOps removes at most one pair on each call, repeat to combine all pairs.
+        OCIO::CombineOps(ops, OCIO::OPTIMIZATION_ALL);
         OCIO_CHECK_EQUAL(ops.size(), 1);
     }
 
@@ -351,6 +353,10 @@ OCIO_ADD_TEST(OpOptimizers, combine_ops)
         OCIO::CombineOps(ops, AllBut(OCIO::OPTIMIZATION_COMP_MATRIX));
         OCIO_CHECK_EQUAL(ops.size(), 5);
         OCIO::CombineOps(ops, OCIO::OPTIMIZATION_ALL);
+        // CombineOps removes at most one pair on each call, repeat to combine all pairs.
+        OCIO::CombineOps(ops, OCIO::OPTIMIZATION_ALL);
+        OCIO::CombineOps(ops, OCIO::OPTIMIZATION_ALL);
+        OCIO::CombineOps(ops, OCIO::OPTIMIZATION_ALL);
         OCIO_CHECK_EQUAL(ops.size(), 1);
     }
 
@@ -366,8 +372,55 @@ OCIO_ADD_TEST(OpOptimizers, combine_ops)
         OCIO::CombineOps(ops, AllBut(OCIO::OPTIMIZATION_COMP_MATRIX));
         OCIO_CHECK_EQUAL(ops.size(), 4);
         OCIO::CombineOps(ops, OCIO::OPTIMIZATION_ALL);
+        // CombineOps removes at most one pair on each call, repeat to combine all pairs.
+        OCIO::CombineOps(ops, OCIO::OPTIMIZATION_ALL);
         OCIO_CHECK_EQUAL(ops.size(), 0);
     }
+}
+
+OCIO_ADD_TEST(OpOptimizers, prefer_pair_inverse_over_combine)
+{
+    // When a pair of forward / inverse LUTs with non 0 to 1 domain are used
+    // as process space for a Look (eg. CDL), the Optimizer tries to combine
+    // them when the Look results in a no-op. Here we make sure this result
+    // in an appropriate clamp instead of a new half-domain LUT resulting
+    // from the naive composition of the two LUTs.
+
+    OCIO::OpRcPtrVec ops;
+
+    // This spi1d uses "From -1.0 2.0", so the forward direction would become a 
+    // Matrix to do the scaling followed by a Lut1D, and the inverse is a Lut1D
+    // followed by a Matrix. Note that although the matrices compose into an identity,
+    // they are both forward direction and *not* pair inverses of each other.
+    const std::string fileName("lut1d_4.spi1d");
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
+    OCIO_CHECK_NO_THROW(OCIO::BuildOpsTest(ops, fileName, context,
+                                           OCIO::TRANSFORM_DIR_INVERSE));
+
+    // The default negativeStyle is basicPassThruFwd, hence this op will be 
+    // removed as a no-op on the first optimization pass.
+    const double exp_null[4] = {1.0, 1.0, 1.0, 1.0};
+    OCIO::CreateExponentOp(ops, exp_null, OCIO::TRANSFORM_DIR_FORWARD);
+
+    OCIO_CHECK_NO_THROW(OCIO::BuildOpsTest(ops, fileName, context,
+                                           OCIO::TRANSFORM_DIR_FORWARD));
+
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_ALL));
+    // The starting list of ops is this:
+    //     FileNoOp --> Lut1D --> Matrix --> Gamma --> FileNoOp --> Matrix --> Lut1D
+    // This becomes the following on the first pass after no-ops are removed:
+    //     Lut1D --> Matrix --> Matrix --> Lut1D
+    // The matrices are combined and removed on the first pass, leaving this:
+    //     Lut1D --> Lut1D
+    // Second pass: the LUTs are identified as a pair of inverses and replaced with a Range:
+    //     Range
+
+    OCIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO::ConstOpRcPtr op = ops[0];
+    OCIO_REQUIRE_ASSERT(op);
+    auto range = OCIO_DYNAMIC_POINTER_CAST<const OCIO::RangeOpData>(op->data());
+    OCIO_REQUIRE_ASSERT(range);
 }
 
 OCIO_ADD_TEST(OpOptimizers, non_optimizable)
@@ -993,7 +1046,6 @@ OCIO_ADD_TEST(OpOptimizers, gamma_comp)
 
     OCIO::OpRcPtrVec optOps            = ops.clone();
     OCIO::OpRcPtrVec optOps_noComp     = ops.clone();
-    OCIO::OpRcPtrVec optOps_noIdentity = ops.clone();
 
     OCIO_CHECK_EQUAL(optOps_noComp.size(), 4);
     OCIO_CHECK_NO_THROW(optOps_noComp.finalize());
@@ -1005,16 +1057,6 @@ OCIO_ADD_TEST(OpOptimizers, gamma_comp)
     OCIO_CHECK_EQUAL(optOps_noComp[2]->getInfo(), "<GammaOp>");
 
     CompareRender(ops, optOps_noComp, __LINE__, 1e-6f);
-
-    OCIO_CHECK_EQUAL(optOps_noIdentity.size(), 4);
-    OCIO_CHECK_NO_THROW(optOps_noIdentity.finalize());
-    OCIO_CHECK_NO_THROW(optOps_noIdentity.optimize(AllBut(OCIO::OPTIMIZATION_IDENTITY_GAMMA)));
-    // Identity matrix is removed and gammas are combined into an identity gamma
-    // but it is not removed.
-    OCIO_CHECK_EQUAL(optOps_noIdentity.size(), 1);
-    OCIO_CHECK_EQUAL(optOps_noIdentity[0]->getInfo(), "<GammaOp>");
-
-    CompareRender(ops, optOps_noIdentity, __LINE__, 5e-5f);
 
     OCIO_CHECK_NO_THROW(optOps.finalize());
     OCIO_CHECK_NO_THROW(optOps.optimize(OCIO::OPTIMIZATION_DEFAULT));
@@ -1038,6 +1080,10 @@ OCIO_ADD_TEST(OpOptimizers, gamma_comp_identity)
     auto gamma1 = std::make_shared<OCIO::GammaOpData>(OCIO::GammaOpData::BASIC_FWD,
                                                       params1, params1, params1, paramsA);
 
+    // Note that gamma2 is not a pair inverse of gamma1, it is another FWD gamma where the
+    // parameter is an inverse. Therefore it won't get replaced as a pair inverse, it must
+    // be composed into an identity, which may then be replaced. Since the BASIC_FWD style
+    // clamps negatives, it is replaced with a Range.
     OCIO::GammaOpData::Params params2 = { 1. / 0.45 };
 
     auto gamma2 = std::make_shared<OCIO::GammaOpData>(OCIO::GammaOpData::BASIC_FWD,
@@ -1049,17 +1095,29 @@ OCIO_ADD_TEST(OpOptimizers, gamma_comp_identity)
     OCIO_CHECK_NO_THROW(ops.finalize());
     OCIO_CHECK_EQUAL(ops.size(), 2);
 
-    OCIO::OpRcPtrVec optOps = ops.clone();
+    {
+        OCIO::OpRcPtrVec optOps = ops.clone();
 
-    // BASIC gamma are composed resulting into identity, that get optimized as a range.
-    OCIO_CHECK_NO_THROW(optOps.finalize());
-    OCIO_CHECK_NO_THROW(optOps.optimize(OCIO::OPTIMIZATION_DEFAULT));
+        OCIO_CHECK_NO_THROW(optOps.finalize());
+        OCIO_CHECK_NO_THROW(optOps.optimize(AllBut(OCIO::OPTIMIZATION_IDENTITY_GAMMA)));
 
-    OCIO_REQUIRE_EQUAL(optOps.size(), 1);
-    OCIO_CHECK_EQUAL(optOps[0]->getInfo(), "<RangeOp>");
+        OCIO_REQUIRE_EQUAL(optOps.size(), 1);
+        OCIO_CHECK_EQUAL(optOps[0]->getInfo(), "<GammaOp>");
+    }
+    {
+        OCIO::OpRcPtrVec optOps = ops.clone();
+
+        // BASIC gammas are composed resulting in an identity, that get optimized as a range.
+        OCIO_CHECK_NO_THROW(optOps.finalize());
+        OCIO_CHECK_NO_THROW(optOps.optimize(OCIO::OPTIMIZATION_DEFAULT));
+
+        OCIO_REQUIRE_EQUAL(optOps.size(), 1);
+        OCIO_CHECK_EQUAL(optOps[0]->getInfo(), "<RangeOp>");
+    }
+
+    // Now do the same test with MONCURVE rather than BASIC style.
 
     ops.clear();
-    optOps.clear();
 
     params1 = { 2., 0.5 };
     params2 = { 2., 0.6 };
@@ -1075,7 +1133,7 @@ OCIO_ADD_TEST(OpOptimizers, gamma_comp_identity)
     OCIO_CHECK_NO_THROW(ops.finalize());
     OCIO_CHECK_EQUAL(ops.size(), 2);
 
-    optOps = ops.clone();
+    OCIO::OpRcPtrVec optOps = ops.clone();
 
     // MONCURVE composition is not supported yet.
     OCIO_CHECK_NO_THROW(optOps.finalize());
