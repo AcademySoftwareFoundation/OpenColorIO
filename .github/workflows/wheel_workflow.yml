@@ -174,7 +174,7 @@ jobs:
           platforms: all
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.21.1
+        uses: pypa/cibuildwheel@v2.22.0
         env:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
@@ -192,7 +192,7 @@ jobs:
 
   macos:
     name: Build wheels on macOS
-    runs-on: macos-12
+    runs-on: macos-13
     # Don't run on OCIO forks
     if: |
       github.event_name != 'schedule' ||
@@ -231,7 +231,7 @@ jobs:
           python-version: '3.9'
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.21.1
+        uses: pypa/cibuildwheel@v2.22.0
         env:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
@@ -286,7 +286,7 @@ jobs:
           python-version: '3.9'
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.21.1
+        uses: pypa/cibuildwheel@v2.22.0
         env:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
@@ -341,7 +341,7 @@ jobs:
           python-version: '3.9'
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.21.1
+        uses: pypa/cibuildwheel@v2.22.0
         env:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
