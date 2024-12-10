@@ -955,6 +955,41 @@ OCIO_ADD_TEST(FileFormatCTF, lut1d_inv)
     OCIO_CHECK_CLOSE(a2.getValues()[50], 1.0f, error);
 }
 
+OCIO_ADD_TEST(FileFormatCTF, lut1d_inv_scaling)
+{
+    // Validate that the InverseLUT1D array values are scaled based on inBitDepth.
+    // (The previous example had inBitDepth=32f, so it does not validate that.)
+
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    const std::string ctfFile("lut1d_inverse_halfdom_slog_fclut.ctf");
+    OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
+    OCIO_REQUIRE_ASSERT((bool)cachedFile);
+
+    const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOps();
+    OCIO_REQUIRE_EQUAL(opList.size(), 1);
+
+    auto pLut = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opList[0]);
+    OCIO_REQUIRE_ASSERT(pLut);
+    // For an InverseLUT1D, the file "out" depth is actually taken from inBitDepth.
+    OCIO_CHECK_EQUAL(pLut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT16);
+    OCIO_CHECK_EQUAL(pLut->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+
+    const OCIO::Array & a2 = pLut->getArray();
+    OCIO_CHECK_EQUAL(a2.getNumColorComponents(), 1);
+
+    OCIO_CHECK_EQUAL(a2.getLength(), 65536);
+    OCIO_CHECK_EQUAL(a2.getNumValues(),
+                     a2.getLength()*a2.getMaxColorComponents());
+
+    const float error = 1e-6f;
+    OCIO_REQUIRE_EQUAL(a2.getValues().size(), a2.getNumValues());
+
+    // Input value 17830 scaled by 65535.
+    OCIO_CHECK_CLOSE(a2.getValues()[0], 0.27206836f, error);
+    // Input value 55070 scaled by 65535.
+    OCIO_CHECK_CLOSE(a2.getValues()[31743 * 3], 0.84031434f, error);
+}
+
 namespace
 {
 OCIO::LocalCachedFileRcPtr ParseString(const std::string & str)
@@ -1056,7 +1091,9 @@ OCIO_ADD_TEST(FileFormatCTF, lut3d_inv)
     auto pLut = std::dynamic_pointer_cast<const OCIO::Lut3DOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pLut);
 
+    // For an InverseLUT3D, the file "out" depth is set by the inBitDepth of the file.
     OCIO_CHECK_EQUAL(pLut->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+
     OCIO_CHECK_EQUAL(pLut->getInterpolation(), OCIO::INTERP_TETRAHEDRAL);
     OCIO_CHECK_EQUAL(pLut->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
 
@@ -1067,6 +1104,7 @@ OCIO_ADD_TEST(FileFormatCTF, lut3d_inv)
                      *array.getLength()*array.getMaxColorComponents());
     OCIO_REQUIRE_EQUAL(array.getValues().size(), array.getNumValues());
 
+    // Validate that the array was scaled by the inBitDepth of the file.
     OCIO_CHECK_EQUAL(array.getLength(), 17);
     OCIO_CHECK_CLOSE(array.getValues()[0], 25.0f / 4095.0f, 1e-8f);
     OCIO_CHECK_CLOSE(array.getValues()[1], 30.0f / 4095.0f, 1e-8f);
@@ -7644,9 +7682,12 @@ OCIO_ADD_TEST(CTFTransform, lut1d_inverse_ctf)
     OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     // Note the type of the node.
+    //
+    // For an InverseLUT1D, the scaling of array values is based on the inBitDepth.
+    //
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="1.3" id="UIDLUT42">
-    <InverseLUT1D id="lut01" name="test-lut" inBitDepth="32f" outBitDepth="10i">
+    <InverseLUT1D id="lut01" name="test-lut" inBitDepth="10i" outBitDepth="32f">
         <Array dim="16 3">
    0    1    2
    3    4    5
@@ -7812,9 +7853,12 @@ OCIO_ADD_TEST(CTFTransform, lut3d_inverse_ctf)
     OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
 
     // Note the type of the node.
+    //
+    // For an InverseLUT3D, the scaling of array values is based on the inBitDepth.
+    //
     const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="1.6" id="UIDLUT42">
-    <InverseLUT3D id="lut01" name="test-lut3d" inBitDepth="32f" outBitDepth="10i">
+    <InverseLUT3D id="lut01" name="test-lut3d" inBitDepth="10i" outBitDepth="32f">
         <Array dim="3 3 3 3">
    0    1    2
    3    4    5
@@ -7946,38 +7990,79 @@ OCIO_ADD_TEST(CTFTransform, bitdepth_ctf)
     auto range = OCIO::RangeTransform::Create();
     range->setFileInputBitDepth(OCIO::BIT_DEPTH_F16);
     range->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT12);
-    range->setMinInValue(0.);
-    range->setMinOutValue(0.);
+    range->setMinInValue(0.1);
+    range->setMinOutValue(-0.1);
+    range->setMaxInValue(0.9);
+    range->setMaxOutValue(1.1);
+
+    auto log = OCIO::LogTransform::Create();
+
+    auto invlut = OCIO::Lut1DTransform::Create();
+    invlut->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    invlut->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT16);
+    invlut->setLength(3);
 
     auto mat2 = OCIO::MatrixTransform::Create();
     mat2->setFileInputBitDepth(OCIO::BIT_DEPTH_UINT8);
     mat2->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT10);
-
-    auto log = OCIO::LogTransform::Create();
+    mat2->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
     group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UID42");
 
-    // First op keeps bit-depth
+    // Transforms are setup as follows:
+    //
+    // Matrix    fileIn =  8i, fileOut = 10i
+    // Lut1D                   fileOut = 10i
+    // Exponent
+    // Range     fileIn = 16f, fileOut = 12i
+    // Matrix    fileIn =  8i, fileOut = 10i
+    // Log
+    // InvLut1D                fileOut = 16i
+    // InvMatrix fileIn =  8i, fileOut = 10i
+    // InvLut1D                fileOut = 16i
+
+    // First op keeps its in & out bit-depth.
+    // <Matrix inBitDepth="8i" outBitDepth="10i">
     group->appendTransform(mat);
 
     // Previous op out bit-depth used for in bit-depth.
+    // <LUT1D inBitDepth="10i" outBitDepth="10i">
     group->appendTransform(lut);
 
     // Previous op out bit-depth used for in bit-depth.
     // And next op (range) in bit-depth used for out bit-depth.
+    // <Exponent inBitDepth="10i" outBitDepth="16f">
     group->appendTransform(exp);
 
     // In bit-depth preserved and has been used for out bit-depth of previous op.
     // Next op is a matrix, but current op is range, first op out bit-depth
-    // is preserved and used for next op in bit-depth.
+    // is preserved and overrides the next op's in in bit-depth.
+    // <Range inBitDepth="16f" outBitDepth="12i">
     group->appendTransform(range);
 
     // Previous op out bit-depth used for in bit-depth.
+    // <Matrix inBitDepth="12i" outBitDepth="10i">
+    group->appendTransform(mat);
+
+    // Previous op out bit-depth used for in bit-depth. Out depth is set by preference
+    // of the next op.
+    // <Log inBitDepth="10i" outBitDepth="16i">
+    group->appendTransform(log);
+
+    // Preferred in bit-depth is preserved. Out depth is set by the next op.
+    // <InverseLUT1D inBitDepth="16i" outBitDepth="32f">
+    group->appendTransform(invlut);
+
+    // Sets both its preferred in and out depth. Note that because the transform
+    // direction is inverse, the mapping of file depths is swapped.
+    // <Matrix inBitDepth="10i" outBitDepth="8i">
     group->appendTransform(mat2);
 
-    // Previous op out bit-depth used for in bit-depth.
-    group->appendTransform(log);
+    // This time it doesn't get its preferred in depth, since the previous op has priority.
+    // The array values are scaled accordingly.
+    // <InverseLUT1D inBitDepth="8i" outBitDepth="32f">
+    group->appendTransform(invlut);
 
     std::ostringstream outputTransform;
     OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
@@ -8002,8 +8087,10 @@ OCIO_ADD_TEST(CTFTransform, bitdepth_ctf)
         <ExponentParams exponent="1" />
     </Exponent>
     <Range inBitDepth="16f" outBitDepth="12i">
-        <minInValue> 0 </minInValue>
-        <minOutValue> 0 </minOutValue>
+        <minInValue> 0.1 </minInValue>
+        <maxInValue> 0.9 </maxInValue>
+        <minOutValue> -409.5 </minOutValue>
+        <maxOutValue> 4504.5 </maxOutValue>
     </Range>
     <Matrix inBitDepth="12i" outBitDepth="10i">
         <Array dim="3 3">
@@ -8012,10 +8099,32 @@ OCIO_ADD_TEST(CTFTransform, bitdepth_ctf)
                   0                   0    0.24981684981685
         </Array>
     </Matrix>
-    <Log inBitDepth="10i" outBitDepth="32f" style="log2">
+    <Log inBitDepth="10i" outBitDepth="16i" style="log2">
     </Log>
+    <InverseLUT1D inBitDepth="16i" outBitDepth="10i">
+        <Array dim="3 1">
+    0
+32767.5
+  65535
+        </Array>
+    </InverseLUT1D>
+    <Matrix inBitDepth="10i" outBitDepth="8i">
+        <Array dim="3 3">
+  0.249266862170088                   0                   0
+                  0   0.249266862170088                   0
+                  0                   0   0.249266862170088
+        </Array>
+    </Matrix>
+    <InverseLUT1D inBitDepth="8i" outBitDepth="32f">
+        <Array dim="3 1">
+  0
+127.5
+  255
+        </Array>
+    </InverseLUT1D>
 </ProcessList>
 )" };
+
     OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
     OCIO_CHECK_EQUAL(expected, outputTransform.str());
 }

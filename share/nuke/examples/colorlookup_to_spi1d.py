@@ -19,7 +19,7 @@ knob = nuke.selectedNode()['lut']
 SIZE = 2**10
 
 data = []
-for i in xrange(SIZE):
+for i in range(SIZE):
     x = i/(SIZE-1.0)
     data.append(knob.getValueAt(x))
 
