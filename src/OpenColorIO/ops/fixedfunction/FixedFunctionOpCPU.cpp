@@ -1853,7 +1853,7 @@ __m128 Renderer_LIN_TO_PQ_SSE<false>::myPower(__m128 x, __m128 exp)
 {
     return _mm_pow_ps(x, exp);
 }
-#endif // _WIN32
+#endif // (_MSC_VER >= 1920) && (OCIO_USE_AVX)
 
 template<bool FAST_POWER>
 void Renderer_LIN_TO_PQ_SSE<FAST_POWER>::apply(const void* inImg, void* outImg, long numPixels) const
