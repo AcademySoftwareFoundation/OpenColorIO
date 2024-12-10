@@ -68,7 +68,7 @@ bool IsCombineEnabled(OpData::Type type, OptimizationFlags flags)
             (type == OpData::RangeType    && HasFlag(flags, OPTIMIZATION_COMP_RANGE));
 }
 
-constexpr int MAX_OPTIMIZATION_PASSES = 8;
+constexpr int MAX_OPTIMIZATION_PASSES = 80;
 
 int RemoveNoOpTypes(OpRcPtrVec & opVec)
 {
@@ -317,8 +317,10 @@ int CombineOps(OpRcPtrVec & opVec, OptimizationFlags oFlags)
             op1->combineWith(tmpops, op2);
             FinalizeOps(tmpops);
 
-            // tmpops may have any number of ops in it. (0, 1, 2, ...)
-            // (size 0 would occur only if the combination results in a no-op).
+            // The tmpops may have any number of ops in it: (0, 1, 2, ...).
+            // (Size 0 would occur only if the combination results in a no-op,
+            //  for example, a pair of matrices that compose into a no-op are
+            //  returned as empty rather than as an identity matrix.)
             //
             // No matter the number, we need to swap them in for the original ops.
 
@@ -336,6 +338,15 @@ int CombineOps(OpRcPtrVec & opVec, OptimizationFlags oFlags)
 
             // We've done something so increment the count!
             ++count;
+
+            // Break, since combining ops is less desirable than other optimization options.
+            // For example, it is preferable to remove a pair of ops using RemoveInverseOps
+            // rather than combining them. Consider this example:
+            // Lut1D A --> Matrix B --> Matrix C --> Lut1D Ainv
+            // If Matrix B & C are not pair inverses but do combine into an identity, then
+            // CombineOps would compose Lut1D A & Ainv, into a new Lut1D rather than
+            // allowing another round of optimization which would remove them as inverses.
+            break;
         }
         else
         {
@@ -629,7 +640,7 @@ void OpRcPtrVec::optimize(OptimizationFlags oFlags)
             os << "**" << std::endl;
             os << "Optimized ";
             os << originalSize << "->" << finalSize << ", 1 pass, ";
-            os << total_nooptype << " noop types removed\n";
+            os << total_nooptype << " no-op types removed\n";
             os << SerializeOpVec(*this, 4);
             LogDebug(os.str());
         }
@@ -664,11 +675,21 @@ void OpRcPtrVec::optimize(OptimizationFlags oFlags)
 
     while (passes <= MAX_OPTIMIZATION_PASSES)
     {
+        // Remove all ops for which isNoOp is true, including identity matrices.
         int noops = optimizeIdentity ? RemoveNoOps(*this) : 0;
+
+        // Replace all complex ops with simpler ops (e.g., a CDL which only scales with a matrix).
         // Note this might increase the number of ops.
         int replacedOps = replaceOps ? ReplaceOps(*this) : 0;
+
+        // Replace all complex identities with simpler ops (e.g., an identity Lut1D with a range).
         int identityops = ReplaceIdentityOps(*this, oFlags);
+
+        // Remove all adjacent pairs of ops that are inverses of each other.
         int inverseops  = RemoveInverseOps(*this, oFlags);
+
+        // Combine a pair of ops, for example multiply two adjacent Matrix ops.
+        // (Combines at most one pair on each iteration.)
         int combines    = CombineOps(*this, oFlags);
 
         if (noops + identityops + inverseops + combines == 0)
@@ -721,12 +742,12 @@ void OpRcPtrVec::optimize(OptimizationFlags oFlags)
         os << "Optimized ";
         os << originalSize << "->" << finalSize << ", ";
         os << passes << " passes, ";
-        os << total_nooptype << " noop types removed, ";
-        os << total_noops << " noops removed, ";
+        os << total_nooptype << " no-op types removed, ";
+        os << total_noops << " no-ops removed, ";
         os << total_replacedops << " ops replaced, ";
         os << total_identityops << " identity ops replaced, ";
-        os << total_inverseops << " inverse ops removed, ";
-        os << total_combines << " ops combines, ";
+        os << total_inverseops << " inverse op pairs removed, ";
+        os << total_combines << " ops combined, ";
         os << total_inverses << " ops inverted\n";
         os << SerializeOpVec(*this, 4);
         LogDebug(os.str());
