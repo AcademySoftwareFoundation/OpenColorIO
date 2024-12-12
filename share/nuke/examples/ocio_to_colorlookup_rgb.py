@@ -21,7 +21,7 @@ knob.removeKeyAt(1.0, 3)
 
 
 SIZE = 11
-for i in xrange(SIZE):
+for i in range(SIZE):
     x = i/(SIZE-1.0)
     
     y = processor.applyRGB((x,x,x))

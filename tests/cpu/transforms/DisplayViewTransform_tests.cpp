@@ -1109,6 +1109,16 @@ colorspaces:
     dt->setDisplay("display");
     dt->setView("view");
 
+    // This results in the following conversion:
+    //   displayCSIn to scene_ref                                 offset= -0.15 0.15 0.15 0.05
+    //   scene_ref to display_ref                                 offset= -0.2 -0.2 -0.4 -0
+    //   display_ref to displayCSProcess (look process_space)     offset= -0.1 -0.1 -0.1 -0
+    //   apply look                                               offset=  0.1 0.2 0.3 0
+    //   displayCSProcess to display_ref                          offset=  0.1 0.1 0.1 0
+    //   apply display_vt                                         offset= -0.3 -0.1 -0.1 -0
+    //   display_ref to displayCSOut                              offset= -0.25 -0.15 -0.35 -0
+    // Total transformation:                                      offset= -0.8 -0.1 -0.4 0.05
+
     OCIO::ConstProcessorRcPtr proc;
     OCIO_CHECK_NO_THROW(proc = config->getProcessor(dt));
     // Remove the no-ops, since they are useless here.

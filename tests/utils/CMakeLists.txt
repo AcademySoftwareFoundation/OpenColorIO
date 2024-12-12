@@ -5,6 +5,7 @@ include(ExternalProject)
 
 set(SOURCES
     UnitTestMain.cpp
+    NumberUtils_tests.cpp
     StringUtils_tests.cpp
 )
 

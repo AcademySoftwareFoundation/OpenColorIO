@@ -358,6 +358,12 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
         registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_DisplayP3", 
                             "Convert CIE XYZ (D65 white) to Apple Display P3",
                             CIE_XYZ_D65_to_DisplayP3_Functor);
+
+        // NOTE: This builtin is defined to be able to partition SDR and HDR view transforms under two separate
+        // displays rather than a single one.
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_DisplayP3-HDR",
+                            "Convert CIE XYZ (D65 white) to Apple Display P3 (HDR)",
+                            CIE_XYZ_D65_to_DisplayP3_Functor);
     }
 
     {
