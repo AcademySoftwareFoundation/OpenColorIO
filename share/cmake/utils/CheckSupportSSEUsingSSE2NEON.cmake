@@ -6,8 +6,13 @@ include(CheckCXXSourceCompiles)
 set(_cmake_required_flags_orig "${CMAKE_REQUIRED_FLAGS}")
 set(_cmake_required_includes_orig "${CMAKE_REQUIRED_INCLUDES}")
 set(_cmake_osx_architectures_orig "${CMAKE_OSX_ARCHITECTURES}")
+set(_cmake_cxx_flags_orig "${CMAKE_CXX_FLAGS}")
 
-if(APPLE AND COMPILER_SUPPORTS_ARM_NEON)
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "/Zc:preprocessor")
+endif()
+
+if((APPLE OR WIN32) AND COMPILER_SUPPORTS_ARM_NEON)
 
     if("${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64;x86_64" OR
        "${CMAKE_OSX_ARCHITECTURES}" MATCHES "x86_64;arm64")
@@ -63,8 +68,9 @@ endif()
 set(CMAKE_REQUIRED_FLAGS "${_cmake_required_flags_orig}")
 set(CMAKE_REQUIRED_INCLUDES "${_cmake_required_includes_orig}")
 set(CMAKE_OSX_ARCHITECTURES "${_cmake_osx_architectures_orig}")
+set(CMAKE_CXX_FLAGS "${_cmake_cxx_flags_orig}")
 
 unset(_cmake_required_flags_orig)
 unset(_cmake_required_includes_orig)
 unset(_cmake_osx_architectures_orig)
-
+unset(_cmake_cxx_flags_orig)
