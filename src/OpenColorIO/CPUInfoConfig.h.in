@@ -6,7 +6,7 @@
 #cmakedefine01 OCIO_ARCH_X86_32
 
 // Relevant only for arm64 architecture.
-#if defined(__aarch64__)
+#if defined(__aarch64__) || defined(_M_ARM64)
     #cmakedefine01 OCIO_USE_SSE2NEON
 #else
     #define OCIO_USE_SSE2NEON 0
@@ -23,7 +23,7 @@
 
 // Building for x86_64 processor on a non-ARM host architecture
 // OR Building on/for an ARM architecture and using SSE2NEON.
-#if (OCIO_ARCH_X86 && !defined(__aarch64__)) || (defined(__aarch64__) && OCIO_USE_SSE2NEON)
+#if (OCIO_ARCH_X86 && !defined(__aarch64__)) || ((defined(__aarch64__) || defined(_M_ARM64)) && OCIO_USE_SSE2NEON)
     #cmakedefine01 OCIO_USE_SSE2
     #cmakedefine01 OCIO_USE_SSE3
     #cmakedefine01 OCIO_USE_SSSE3
