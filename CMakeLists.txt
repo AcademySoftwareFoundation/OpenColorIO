@@ -180,7 +180,12 @@ option(OCIO_USE_OIIO_FOR_APPS "Request OIIO to build apps (ociolutimage, ociocon
 
 
 if (NOT APPLE)
-    if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "(AMD64|IA64|EM64T|x86_64|X86|i386|i686)")
+    if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "(ARM64|arm64)" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "ARM64")
+        set(OCIO_ARCH_X86 0)
+        set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_SSE ON)
+        set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX OFF)
+        set(OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C OFF)
+    elseif ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "(AMD64|IA64|EM64T|x86_64|X86|i386|i686)")
         # Intel-based architecture (not APPLE)
         if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "(X86|i386|i686)")
             set(OCIO_ARCH_X86_32 1)
@@ -270,7 +275,7 @@ option(OCIO_USE_AVX2 "Specify whether to enable AVX2 CPU performance optimizatio
 option(OCIO_USE_AVX512 "Specify whether to enable AVX512 CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS_AVX})
 option(OCIO_USE_F16C  "Specify whether to enable F16C CPU performance optimizations" ${OCIO_BUILD_ENABLE_OPTIMIZATIONS_F16C})
 
-if (APPLE)
+if (APPLE OR WIN32)
    # TODO: Revisit whether that option is necessary.
    option(OCIO_USE_SSE2NEON "Specify whether to enable SSE CPU performance optimizations using SSE2NEON for Apple ARM architecture" ON)
    mark_as_advanced(OCIO_USE_SSE2NEON)
@@ -332,8 +337,10 @@ if(OCIO_USE_SIMD AND OCIO_USE_SSE2NEON AND COMPILER_SUPPORTS_ARM_NEON)
         add_library(sse2neon INTERFACE)
         # Add the include directories to the target.
         target_include_directories(sse2neon INTERFACE "${sse2neon_INCLUDE_DIR}")
-        # Ignore the warnings coming from sse2neon.h as they are false positives.
-        target_compile_options(sse2neon INTERFACE -Wno-unused-parameter)
+        if(NOT MSVC)
+            # Ignore the warnings coming from sse2neon.h as they are false positives.
+            target_compile_options(sse2neon INTERFACE -Wno-unused-parameter)
+        endif()
     endif()
 endif()
 
