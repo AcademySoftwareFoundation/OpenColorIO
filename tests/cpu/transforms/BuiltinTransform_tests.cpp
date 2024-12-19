@@ -626,6 +626,9 @@ AllValues UnitTestValues
     { "DISPLAY - CIE-XYZ-D65_to_DisplayP3",
         { 1.0e-6f,
         { 0.5f, 0.4f, 0.3f }, { 0.882580907776f, 0.581526360743f,  0.5606367050000f } } },
+    { "DISPLAY - CIE-XYZ-D65_to_DisplayP3-HDR",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.882580907776f, 0.581526360743f,  0.5606367050000f } } },
 
     { "CURVE - ST-2084_to_LINEAR", 
         { 4.0e-5f,

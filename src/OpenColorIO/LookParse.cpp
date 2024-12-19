@@ -17,13 +17,13 @@ void LookParseResult::Token::parse(const std::string & str)
 {
     // Assert no commas, colons, or | in str.
 
-    if(StringUtils::StartsWith(str, "+"))
+    if(StringUtils::StartsWith(str, '+'))
     {
         name = StringUtils::LeftTrim(str, '+');
         dir = TRANSFORM_DIR_FORWARD;
     }
     // TODO: Handle --
-    else if(StringUtils::StartsWith(str, "-"))
+    else if(StringUtils::StartsWith(str, '-'))
     {
         name = StringUtils::LeftTrim(str, '-');
         dir = TRANSFORM_DIR_INVERSE;
