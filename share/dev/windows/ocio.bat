@@ -77,7 +77,7 @@ if NOT "%~1"=="" (
 
 rem If not overridden by the cmd line args, find and use the latest Visual Studio
 if NOT DEFINED MSVS_PATH (
-    for /f %%i in ('"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -format value -property installationPath -latest') do (
+    for /f "delims=" %%i in ('"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -format value -property installationPath -latest') do (
         echo Found Visual Studio installation at '%%i'
         set MSVS_PATH=%%i
     )
