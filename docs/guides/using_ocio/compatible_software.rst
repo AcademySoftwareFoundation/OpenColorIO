@@ -123,6 +123,18 @@ Documentation:
 - `Managing Looks with OpenColorIO <https://www.isotropix.com/learn/tutorials/managing-looks-with-opencolorio-ocio>`__
 
 
+ColorBox (AJA)
+**************
+
+In-line HDR/SDR Algorithmic and LUT Color Transforms. Available as a standalone unit (ColorBox) and also as an openGear card (OG-ColorBox).
+
+Website : `<https://www.aja.com/products/colorbox>`__
+
+Website : `<https://www.aja.com/products/og-colorbox>`__
+
+Supported Version : >= 3.0
+
+
 CryEngine (CryTek)
 *******************
 
