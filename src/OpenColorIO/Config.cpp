@@ -6066,7 +6066,7 @@ bool Config::isArchivable(bool minimal) const
     return true;
 }
 
-void Config::archive(std::ostream & ostream, ArchiveFlags flags) const
+void Config::archive(std::ostream & ostream, const ArchiveFlags & flags) const
 {
     // Using utility functions in OCIOZArchive.cpp.
     archiveConfig(ostream, *this, getCurrentContext()->getWorkingDir(), flags);

@@ -1654,7 +1654,7 @@ public:
      * \param ostream The output stream to write to.
      * \param flags Flags top control archive creation
      */
-    void archive(std::ostream & ostream, ArchiveFlags flags) const;
+    void archive(std::ostream & ostream, const ArchiveFlags & flags) const;
 
     //TODO: document
     void GetAllFileReferences(std::set<std::string> & files) const;

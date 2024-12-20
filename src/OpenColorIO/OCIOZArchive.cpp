@@ -267,7 +267,7 @@ ArchiveFlags EnvironmentOverride(ArchiveFlags oFlags) // TODO: test override
     return oFlags;
 }
 
-void archiveConfig(std::ostream & ostream, const Config & config, const char * configWorkingDirectory, ArchiveFlags flags)
+void archiveConfig(std::ostream & ostream, const Config & config, const char * configWorkingDirectory, const ArchiveFlags & archiveFlags)
 {
     void * archiver = nullptr;
     void *write_mem_stream = NULL;
@@ -275,7 +275,7 @@ void archiveConfig(std::ostream & ostream, const Config & config, const char * c
     int32_t buffer_size = 0;
     mz_zip_file file_info;
 
-    flags = EnvironmentOverride(flags);
+    ArchiveFlags flags = EnvironmentOverride(archiveFlags);
     const bool minimal = HasFlag(flags, ARCHIVE_FLAGS_MINIMAL);
 
     if (!config.isArchivable(minimal)) // TODO: pass in flags?

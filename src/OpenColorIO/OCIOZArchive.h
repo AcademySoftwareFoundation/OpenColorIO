@@ -23,13 +23,13 @@ namespace OCIO_NAMESPACE
  * \param ostream Output stream to write the data into.
  * \param config Config object.
  * \param configWorkingDirectory Working directory of the current config.
- * \param flags Archive flags used to .
+ * \param archiveFlags Archive flags used to configure archive generation.
  */
 void archiveConfig(
     std::ostream & ostream, 
     const Config & config, 
     const char * configWorkingDirectory,
-    ArchiveFlags flags);
+    const ArchiveFlags & archiveFlags);
 
 /**
  * \brief Get the content of a file inside an OCIOZ archive as a buffer. 
