@@ -16,6 +16,7 @@
 #include "Platform.h"
 #include "utils/StringUtils.h"
 #include "transforms/FileTransform.h"
+#include "Logging.h"
 
 #include "OCIOZArchive.h"
 
@@ -183,6 +184,9 @@ void addSupportedFiles(void * archiver, const char * path, const char * configWo
                 if (!possibleFormats.empty())
                 {
                     // The extension is supported. Add the current file to the OCIOZ archive.
+                    std::ostringstream logMessage;
+                    logMessage << "Adding file: " << absPath;
+                    LogInfo(logMessage.str());
                     if (mz_zip_writer_add_path(
                         archiver, absPath.c_str(), 
                         configWorkingDirectory, 0, 1) != MZ_OK)
@@ -200,9 +204,70 @@ void addSupportedFiles(void * archiver, const char * path, const char * configWo
         mz_os_close_dir(dir);
     }
 }
+
+ContextRcPtr addReferencedFiles(void * archiver, const ConfigRcPtr & config)
+{
+    ConstContextRcPtr context = config->getCurrentContext();
+    ContextRcPtr ctxFilepath = Context::Create();
+    ctxFilepath->setSearchPath(context->getSearchPath());
+    ctxFilepath->setWorkingDir(context->getWorkingDir());
+    ctxFilepath->setConfigIOProxy(context->getConfigIOProxy());
+
+    auto prefixLength = std::string(context->getWorkingDir()).length() + 1; // +1 add trailing '/' TODO: improve this
+
+    std::set<std::string> files;
+    config->GetAllFileReferences(files);
+    std::set<std::string> added_files;
+    for (const auto &file : files)
+    {
+        const std::string resolvedPath = context->resolveFileLocation(file.c_str(), ctxFilepath);
+        const std::string relativePath = resolvedPath.substr(prefixLength);
+        std::ostringstream logMessage;
+
+        if (added_files.find(relativePath) == added_files.end())
+        {
+            logMessage << "Adding file: " << file << " -> " << relativePath;
+            LogInfo(logMessage.str());
+            auto returnCode = mz_zip_writer_add_file(archiver, resolvedPath.c_str(), relativePath.c_str());
+            if (returnCode != MZ_OK)
+            {
+                std::ostringstream os;
+                os << "Could not write file " << resolvedPath << " to in-memory archive.()" << returnCode << ")";
+                throw Exception(os.str().c_str());
+            }
+        }
+        else
+        {
+            logMessage << "Skipping already added file: " << file << " -> " << relativePath;
+            LogInfo(logMessage.str());
+        }
+        added_files.insert(relativePath);
+    }
+    
+    const auto variableCount = ctxFilepath->getNumStringVars();
+    for (auto i = 0; i != variableCount; ++i)
+    {
+        std::ostringstream logMessage;
+        logMessage << "Used Variable: " << ctxFilepath->getStringVarNameByIndex(i) << " -> " << ctxFilepath->getStringVarByIndex(i);
+        LogInfo(logMessage.str());
+    }
+    return ctxFilepath;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////
 
-void archiveConfig(std::ostream & ostream, const Config & config, const char * configWorkingDirectory)
+ArchiveFlags EnvironmentOverride(ArchiveFlags oFlags) // TODO: test override
+{
+    const std::string envFlag = GetEnvVariable(OCIO_ARCHIVE_FLAGS_ENVVAR);
+    if (!envFlag.empty())
+    {
+        // Use 0 to allow base to be determined by the format.
+        oFlags = static_cast<ArchiveFlags>(std::stoul(envFlag, nullptr, 0));
+    }
+    return oFlags;
+}
+
+void archiveConfig(std::ostream & ostream, const Config & config, const char * configWorkingDirectory, const ArchiveFlags & archiveFlags)
 {
     void * archiver = nullptr;
     void *write_mem_stream = NULL;
@@ -210,7 +275,10 @@ void archiveConfig(std::ostream & ostream, const Config & config, const char * c
     int32_t buffer_size = 0;
     mz_zip_file file_info;
 
-    if (!config.isArchivable())
+    ArchiveFlags flags = EnvironmentOverride(archiveFlags);
+    const bool minimal = HasFlag(flags, ARCHIVE_FLAGS_MINIMAL);
+
+    if (!config.isArchivable(minimal)) // TODO: pass in flags?
     {
         std::ostringstream os;
         os << "Config is not archivable.";
@@ -219,11 +287,6 @@ void archiveConfig(std::ostream & ostream, const Config & config, const char * c
 
     // Initialize.
     memset(&file_info, 0, sizeof(file_info));
-
-    // Retrieve and store the config as string.
-    std::stringstream ss;
-    config.serialize(ss);
-    std::string configStr = ss.str();
 
     // Write zip to memory stream.
 #if MZ_VERSION_BUILD >= 040000
@@ -238,8 +301,10 @@ void archiveConfig(std::ostream & ostream, const Config & config, const char * c
     ArchiveOptions options;
     // Make sure that the compression method is set to DEFLATE.
     options.compress_method = ArchiveCompressionMethods::DEFLATE;
-    // Make sure that the compression level is set to BEST.
-    options.compress_level  = ArchiveCompressionLevels::BEST;
+    // Default compression level is set to BEST.
+    options.compress_level  = flags & ARCHIVE_FLAGS_COMPRESSION_MASK
+                              ? ArchiveCompressionLevels(flags & ARCHIVE_FLAGS_COMPRESSION_MASK)
+                              : ArchiveCompressionLevels::BEST;
 
     // Create the writer handle.
 #if MZ_VERSION_BUILD >= 040000
@@ -260,10 +325,38 @@ void archiveConfig(std::ostream & ostream, const Config & config, const char * c
     // Open the in-memory zip.
     if (mz_zip_writer_open(archiver, write_mem_stream, 0) == MZ_OK)
     {
+        ConfigRcPtr editiableConfig = config.createEditableCopy(); // TODO: is this a little heavy handed just so we can modify the envronment?
+         ///////////////////////
+        // Adding LUT files //
+        ///////////////////////
+        if (minimal)
+        {
+            ContextRcPtr archivedContext = addReferencedFiles(archiver, editiableConfig);
+
+            // Need to make sure the used evironment context is in the config
+            const auto variableCount = archivedContext->getNumStringVars();
+            for (auto i = 0; i != variableCount; ++i)
+            {
+                editiableConfig->addEnvironmentVar(archivedContext->getStringVarNameByIndex(i),  archivedContext->getStringVarByIndex(i));
+            }
+        }
+        else
+        {
+            // Add all supported files to in-memory zip from any directories under working directory. 
+            // (recursive)
+            addSupportedFiles(archiver, configWorkingDirectory, configWorkingDirectory);
+        }
+
+        //////////////////////////////
+        // Adding config to archive //
+        //////////////////////////////
         // Use a hardcoded name for the config's filename inside the archive.
         std::string configFullname = std::string(OCIO_CONFIG_DEFAULT_NAME) + 
                                      std::string(OCIO_CONFIG_DEFAULT_FILE_EXT);
 
+        std::stringstream ss;
+        editiableConfig->serialize(ss);
+        std::string configStr = ss.str();
         // Get config string size.
         int32_t configSize = (int32_t) configStr.size();
 
@@ -273,11 +366,13 @@ void archiveConfig(std::ostream & ostream, const Config & config, const char * c
         file_info.version_madeby = MZ_VERSION_MADEBY;
         file_info.compression_method = MZ_COMPRESS_METHOD_DEFLATE;
         file_info.flag = MZ_ZIP_FLAG_UTF8;
-        file_info.uncompressed_size = configSize;
+        file_info.uncompressed_size = configSize;       // Retrieve and store the config as string.
 
-        //////////////////////////////
-        // Adding config to archive //
-        //////////////////////////////
+        constexpr uint32_t posix_attrib = 0100644; // File with -rw-r--r-- permissions
+        constexpr uint32_t msdos_attrib = 0200;    // MSDOS equivalent
+        file_info.external_fa = msdos_attrib;
+        file_info.external_fa |= (posix_attrib << 16);
+
         int32_t written = 0;
         // Opens an entry in the in-memory zip file for writing.
         if (mz_zip_writer_entry_open(archiver, &file_info) == MZ_OK)
@@ -300,12 +395,9 @@ void archiveConfig(std::ostream & ostream, const Config & config, const char * c
             throw Exception(os.str().c_str());
         }
 
-        ///////////////////////
-        // Adding LUT files //
-        ///////////////////////
-        // Add all supported files to in-memory zip from any directories under working directory. 
-        // (recursive)
-        addSupportedFiles(archiver, configWorkingDirectory, configWorkingDirectory);
+        std::ostringstream comment;
+        comment << "Configuration written by archiveConfig() OCIO: " << GetVersion();
+        mz_zip_writer_set_comment(archiver, comment.str().c_str());
 
         // Close in-memory zip.
         mz_zip_writer_close(archiver);
