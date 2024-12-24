@@ -111,6 +111,30 @@ float hue_dependent_upper_hull_gamma(float h, const ACES2::Table1D &gt)
 // CAM
 //
 
+inline float _post_adaptation_cone_response_compression_fwd(float Rc, const float F_L)
+{
+    const float F_L_Y = powf(Rc * F_L / reference_luminance, 0.42f);
+    const float Ra    = (400.f * F_L_Y) / (27.13f + F_L_Y);
+    return Ra;
+}
+
+inline float _post_adaptation_cone_response_compression_inv(float Ra, const float F_L)
+{
+    const float F_L_Y = (27.13f * Ra) / (400.f - Ra); // TODO: what happens when Ra >= 400.0f
+    const float Rc    = reference_luminance / F_L * powf(F_L_Y, 1.f / 0.42f);
+    return Rc;
+}
+
+inline float J_from_Achromatic(float A, const JMhParams &p)
+{
+    return 100.f * powf(A / p.A_w_J, surround[1] * p.z);
+}
+
+inline float Achromatic_from_J(float J, const JMhParams &p)
+{
+    return  p.A_w_J * powf(J / 100.f, 1.f / (surround[1] * p.z));  //TODO
+}
+
 // Post adaptation non linear response compression
 float panlrc_forward(float v, float F_L)
 {
@@ -230,7 +254,10 @@ float toe_fwd( float x, float limit, float k1_in, float k2_in)
     const float k2 = std::max(k2_in, 0.001f);
     const float k1 = sqrt(k1_in * k1_in + k2 * k2);
     const float k3 = (limit + k1) / (limit + k2);
-    return 0.5f * (k3 * x - k1 + sqrt((k3 * x - k1) * (k3 * x - k1) + 4.f * k2 * k3 * x));
+
+    const float minus_b = k3 * x - k1;
+    const float minus_ac = k2 * k3 * x; // a is 1.0
+    return 0.5f * (minus_b + sqrt(minus_b * minus_b + 4.f * minus_ac)); // a is 1.0, mins_b squared == b^2
 }
 
 float toe_inv( float x, float limit, float k1_in, float k2_in)
@@ -249,15 +276,34 @@ float toe_inv( float x, float limit, float k1_in, float k2_in)
 float tonescale_fwd(const float J, const JMhParams &p, const ToneScaleParams &pt)
 {
     // Tonescale applied in Y (convert to and from J)
-    const float A = p.A_w_J * powf(std::abs(J) / 100.f, 1.f / (surround[1] * p.z));
-    const float Y = std::copysign(1.f, J) * 100.f / p.F_L * powf((27.13f * A) / (400.f - A), 1.f / 0.42f) / 100.f;
+    const float J_abs = std::abs(J);
+    const float Ra    = Achromatic_from_J(J_abs, p);
+    const float Y     = _post_adaptation_cone_response_compression_inv(Ra, p.F_L);
+    
+    const float Y_norm = Y / 100.f; //TODO
+    const float f    = pt.m_2 * powf(Y_norm / (Y_norm + pt.s_2), pt.g);
+    const float Y_ts = std::max(0.f, f * f / (f + pt.t_1)) * pt.n_r;  // max prevents -ve values being output also handles division by zero possibility
 
-    const float f = pt.m_2 * powf(std::max(0.f, Y) / (Y + pt.s_2), pt.g);
-    const float Y_ts = std::max(0.f, f * f / (f + pt.t_1)) * pt.n_r;
-
-    const float F_L_Y = powf(p.F_L * std::abs(Y_ts) / 100.f, 0.42f);
-    const float J_ts = std::copysign(1.f, Y_ts) * 100.f * powf(((400.f * F_L_Y) / (27.13f + F_L_Y)) / p.A_w_J, surround[1] * p.z);
+    const float Ra_ts = _post_adaptation_cone_response_compression_fwd(Y_ts, p.F_L);
+    const float J_ts  = std::copysign(J_from_Achromatic(Ra_ts, p), Y_ts);
     return J_ts;
+}
+
+float tonescale_inv(const float J_ts, const JMhParams &p, const ToneScaleParams &pt)
+{
+    // Inverse Tonescale applied in Y (convert to and from J)
+    const float J_abs = std::abs(J_ts);
+    const float Ra = Achromatic_from_J(J_abs, p);
+    const float Y_ts = _post_adaptation_cone_response_compression_inv(Ra, p.F_L);
+
+    const float Y_ts_norm = Y_ts / 100.0f; // TODO
+    const float Z = std::max(0.f, std::min(pt.n / (pt.u_2 * pt.n_r), Y_ts_norm));  //TODO
+    const float f = (Z + sqrt(Z * (4.f * pt.t_1 + Z))) / 2.f;
+    const float Y = pt.s_2 / (powf((pt.m_2 / f), (1.f / pt.g)) - 1.f) * pt.n_r;
+
+    const float Ra_ts = _post_adaptation_cone_response_compression_fwd(Y, p.F_L);
+    const float J  = std::copysign(J_from_Achromatic(Ra_ts, p), Y_ts);
+    return J;
 }
 
 f3 tonescale_chroma_compress_fwd(const f3 &JMh, const JMhParams &p, const ToneScaleParams &pt, const ChromaCompressParams &pc)
@@ -294,16 +340,7 @@ f3 tonescale_chroma_compress_inv(const f3 &JMh, const JMhParams &p, const ToneSc
     const float M_cp = JMh[1];
     const float h    = JMh[2];
 
-    // Inverse Tonescale applied in Y (convert to and from J)
-    const float A = p.A_w_J * powf(std::abs(J_ts) / 100.f, 1.f / (surround[1] * p.z));
-    const float Y_ts = std::copysign(1.f, J_ts) * 100.f / p.F_L * powf((27.13f * A) / (400.f - A), 1.f / 0.42f) / 100.f;
-
-    const float Z = std::max(0.f, std::min(pt.n / (pt.u_2 * pt.n_r), Y_ts));
-    const float ht = (Z + sqrt(Z * (4.f * pt.t_1 + Z))) / 2.f;
-    const float Y = pt.s_2 / (powf((pt.m_2 / ht), (1.f / pt.g)) - 1.f) * pt.n_r;
-
-    const float F_L_Y = powf(p.F_L * std::abs(Y) / 100.f, 0.42f);
-    const float J = std::copysign(1.f, Y) * 100.f * powf(((400.f * F_L_Y) / (27.13f + F_L_Y)) / p.A_w_J, surround[1] * p.z);
+    const float J = tonescale_inv(J_ts, p, pt);
 
     // Inverse ChromaCompress
     float M = M_cp;
@@ -325,12 +362,12 @@ f3 tonescale_chroma_compress_inv(const f3 &JMh, const JMhParams &p, const ToneSc
     return {J, M, h};
 }
 
-JMhParams init_JMhParams(const Primaries &P)
+JMhParams init_JMhParams(const Primaries &prims)
 {
     JMhParams p;
 
     const m33f MATRIX_16 = XYZtoRGB_f33(CAM16::primaries);
-    const m33f RGB_to_XYZ = RGBtoXYZ_f33(P);
+    const m33f RGB_to_XYZ = RGBtoXYZ_f33(prims);
     const f3 XYZ_w = mult_f3_f33(f3_from_f(reference_luminance), RGB_to_XYZ);
 
     const float Y_W = XYZ_w[1];
@@ -374,7 +411,7 @@ JMhParams init_JMhParams(const Primaries &P)
     p.A_w = A_w;
     p.A_w_J = A_w_J;
 
-    p.MATRIX_RGB_to_CAM16 = mult_f33_f33(RGBtoRGB_f33(P, CAM16::primaries), scale_f33(Identity_M33, f3_from_f(100.f)));
+    p.MATRIX_RGB_to_CAM16 = mult_f33_f33(RGBtoRGB_f33(prims, CAM16::primaries), scale_f33(Identity_M33, f3_from_f(100.f)));
     p.MATRIX_CAM16_to_RGB = invert_f33(p.MATRIX_RGB_to_CAM16);
 
     return p;
