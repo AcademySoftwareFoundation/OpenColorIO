@@ -246,12 +246,8 @@ float toe_inv( float x, float limit, float k1_in, float k2_in)
     return (x * x + k1 * x) / (k3 * (x + k2));
 }
 
-f3 tonescale_chroma_compress_fwd(const f3 &JMh, const JMhParams &p, const ToneScaleParams &pt, const ChromaCompressParams &pc)
+float tonescale_fwd(const float J, const JMhParams &p, const ToneScaleParams &pt)
 {
-    const float J = JMh[0];
-    const float M = JMh[1];
-    const float h = JMh[2];
-
     // Tonescale applied in Y (convert to and from J)
     const float A = p.A_w_J * powf(std::abs(J) / 100.f, 1.f / (surround[1] * p.z));
     const float Y = std::copysign(1.f, J) * 100.f / p.F_L * powf((27.13f * A) / (400.f - A), 1.f / 0.42f) / 100.f;
@@ -261,6 +257,16 @@ f3 tonescale_chroma_compress_fwd(const f3 &JMh, const JMhParams &p, const ToneSc
 
     const float F_L_Y = powf(p.F_L * std::abs(Y_ts) / 100.f, 0.42f);
     const float J_ts = std::copysign(1.f, Y_ts) * 100.f * powf(((400.f * F_L_Y) / (27.13f + F_L_Y)) / p.A_w_J, surround[1] * p.z);
+    return J_ts;
+}
+
+f3 tonescale_chroma_compress_fwd(const f3 &JMh, const JMhParams &p, const ToneScaleParams &pt, const ChromaCompressParams &pc)
+{
+    const float J = JMh[0];
+    const float M = JMh[1];
+    const float h = JMh[2];
+
+    const float J_ts = tonescale_fwd(J, p, pt);
 
     // ChromaCompress
     float M_cp = M;
