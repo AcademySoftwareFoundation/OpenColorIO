@@ -41,7 +41,6 @@ struct JMhParams
     float cz;
     float A_w;
     float A_w_J;
-    f3 XYZ_w;
     f3 D_RGB;
     m33f MATRIX_RGB_to_CAM16;
     m33f MATRIX_CAM16_to_RGB;

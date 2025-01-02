@@ -426,7 +426,6 @@ JMhParams init_JMhParams(const Primaries &prims)
     const float F_L_W = powf(F_L, 0.42f);
     const float A_w_J   = (400.f * F_L_W) / (27.13f + F_L_W);
 
-    p.XYZ_w = XYZ_w;
     p.F_L = F_L;
     p.cz = surround[1] * z;
     p.D_RGB = D_RGB;
