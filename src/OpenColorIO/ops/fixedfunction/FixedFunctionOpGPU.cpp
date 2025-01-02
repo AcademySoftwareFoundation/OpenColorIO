@@ -361,15 +361,13 @@ void _Add_RGB_to_JMh_Shader(
     ss.newLine() << ss.float3Decl("F_L_v") << " = pow(" << p.F_L << " * abs(lms) / 100.0, " << ss.float3Const(0.42f) << ");";
     ss.newLine() << ss.float3Decl("rgb_a") << " = (400.0 * sign(lms) * F_L_v) / (27.13 + F_L_v);";
 
-    ss.newLine() << ss.floatDecl("A") << " = 2.0 * rgb_a.r + rgb_a.g + 0.05 * rgb_a.b;";
-    ss.newLine() << ss.floatDecl("a") << " = rgb_a.r - 12.0 * rgb_a.g / 11.0 + rgb_a.b / 11.0;";
-    ss.newLine() << ss.floatDecl("b") << " = (rgb_a.r + rgb_a.g - 2.0 * rgb_a.b) / 9.0;";
+    ss.newLine() << ss.float3Decl("Aab") << " = " << ss.mat3fMul(&p.MATRIX_cone_response_to_Aab[0], "rgb_a.rgb") << ";";
 
-    ss.newLine() << ss.floatDecl("J") << " = 100.0 * pow(A / " << p.A_w << ", " << p.cz << ");";
+    ss.newLine() << ss.floatDecl("J") << " = 100.0 * pow(Aab.r / " << p.A_w << ", " << p.cz << ");";
 
-    ss.newLine() << ss.floatDecl("M") << " = (J == 0.0) ? 0.0 : 43.0 * " << ACES2::surround[2] << " * sqrt(a * a + b * b);";
+    ss.newLine() << ss.floatDecl("M") << " = (J == 0.0) ? 0.0 : 43.0 * " << ACES2::surround[2] << " * sqrt(Aab.g * Aab.g + Aab.b * Aab.b);";
 
-    ss.newLine() << ss.floatDecl("h") << " = (a == 0.0) ? 0.0 : " << ss.atan2("b", "a") << " * 180.0 / 3.14159265358979;";
+    ss.newLine() << ss.floatDecl("h") << " = (Aab.g == 0.0) ? 0.0 : " << ss.atan2("Aab.b", "Aab.g") << " * 180.0 / 3.14159265358979;";
     ss.newLine() << "h = h - floor(h / 360.0) * 360.0;";
     ss.newLine() << "h = (h < 0.0) ? h + 360.0 : h;";
 
@@ -386,14 +384,12 @@ void _Add_JMh_to_RGB_Shader(
     ss.newLine() << ss.floatDecl("h") << " = " << pxl << ".b * 3.14159265358979 / 180.0;";
 
     ss.newLine() << ss.floatDecl("scale") << " = " << pxl << ".g / (43.0 * " << ACES2::surround[2] << ");";
-    ss.newLine() << ss.floatDecl("A") << " = " << p.A_w << " * pow(" << pxl << ".r / 100.0, 1.0 / (" << p.cz << "));";
-    ss.newLine() << ss.floatDecl("a") << " = scale * cos(h);";
-    ss.newLine() << ss.floatDecl("b") << " = scale * sin(h);";
+    ss.newLine() << ss.float3Decl("Aab") << ";";
+    ss.newLine() << "Aab.r = " << p.A_w << " * pow(" << pxl << ".r / 100.0, 1.0 / (" << p.cz << "));";
+    ss.newLine() << "Aab.g = scale * cos(h);";
+    ss.newLine() << "Aab.b = scale * sin(h);";
 
-    ss.newLine() << ss.float3Decl("rgb_a") << ";";
-    ss.newLine() << "rgb_a.r = (460.0 * A + 451.0 * a + 288.0 *b) / 1403.0;";
-    ss.newLine() << "rgb_a.g = (460.0 * A - 891.0 * a - 261.0 *b) / 1403.0;";
-    ss.newLine() << "rgb_a.b = (460.0 * A - 220.0 * a - 6300.0 *b) / 1403.0;";
+    ss.newLine() << ss.float3Decl("rgb_a") << " = " << ss.mat3fMul(&p.MATRIX_Aab_to_cone_response[0], "Aab.rgb") << ";";
 
     ss.newLine() << ss.float3Decl("lms") << " = sign(rgb_a) * 100.0 / " << p.F_L << " * pow(27.13 * abs(rgb_a) / (400.0 - abs(rgb_a)), " << ss.float3Const(1.f / 0.42f) << ");";
 

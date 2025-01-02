@@ -43,6 +43,8 @@ struct JMhParams
     float A_w_J;
     m33f MATRIX_RGB_to_CAM16_c;
     m33f MATRIX_CAM16_c_to_RGB;
+    m33f MATRIX_cone_response_to_Aab;
+    m33f MATRIX_Aab_to_cone_response;
 };
 
 struct ToneScaleParams

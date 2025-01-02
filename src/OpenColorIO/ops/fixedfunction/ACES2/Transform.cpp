@@ -171,10 +171,8 @@ inline f3 RGB_to_Aab(const f3 &RGB, const JMhParams &p)
         panlrc_forward(rgb_m[2], p.F_L)
     };
 
-    const float A = 2.f * rgb_a[0] + rgb_a[1] + 0.05f * rgb_a[2];
-    const float a = rgb_a[0] - 12.f * rgb_a[1] / 11.f + rgb_a[2] / 11.f;
-    const float b = (rgb_a[0] + rgb_a[1] - 2.f * rgb_a[2]) / 9.f;
-    return {A, a, b};
+    const f3 Aab = mult_f3_f33(rgb_a, p.MATRIX_cone_response_to_Aab);
+    return Aab;
 }
 
 inline f3 Aab_to_JMh(const f3 &Aab, const JMhParams &p)
@@ -219,14 +217,12 @@ inline f3 JMh_to_Aab(const f3 &JMh, const JMhParams &p)
 
 inline f3 Aab_to_RGB(const f3 &Aab, const JMhParams &p)
 {
-    const float red_a = (460.f * Aab[0] + 451.f * Aab[1] + 288.f * Aab[2]) / 1403.f;
-    const float grn_a = (460.f * Aab[0] - 891.f * Aab[1] - 261.f * Aab[2]) / 1403.f;
-    const float blu_a = (460.f * Aab[0] - 220.f * Aab[1] - 6300.f * Aab[2]) / 1403.f;
+    const f3 rgb_a = mult_f3_f33(Aab, p.MATRIX_Aab_to_cone_response);
 
     const f3 rgb_m = {
-        panlrc_inverse(red_a, p.F_L),
-        panlrc_inverse(grn_a, p.F_L),
-        panlrc_inverse(blu_a, p.F_L)
+        panlrc_inverse(rgb_a[0], p.F_L),
+        panlrc_inverse(rgb_a[1], p.F_L),
+        panlrc_inverse(rgb_a[2], p.F_L)
     };
 
     const f3 rgb = mult_f3_f33(rgb_m, p.MATRIX_CAM16_c_to_RGB);
@@ -436,6 +432,12 @@ JMhParams init_JMhParams(const Primaries &prims)
     p.MATRIX_RGB_to_CAM16_c = mult_f33_f33(scale_f33(Identity_M33, D_RGB), MATRIX_RGB_to_CAM16);
     p.MATRIX_CAM16_c_to_RGB = invert_f33(p.MATRIX_RGB_to_CAM16_c);
 
+    p.MATRIX_cone_response_to_Aab = {
+        2.0f, 1.0f, 1.0f / 20.0f,
+        1.0f, -12.0f / 11.0f, 1.0f / 11.0f,
+        1.0f / 9.0f, 1.0f / 9.0f, -2.0f / 9.0f
+    };
+    p.MATRIX_Aab_to_cone_response = invert_f33(p.MATRIX_cone_response_to_Aab);
     return p;
 }
 
