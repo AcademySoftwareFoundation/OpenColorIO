@@ -363,9 +363,9 @@ void _Add_RGB_to_JMh_Shader(
 
     ss.newLine() << ss.float3Decl("Aab") << " = " << ss.mat3fMul(&p.MATRIX_cone_response_to_Aab[0], "rgb_a.rgb") << ";";
 
-    ss.newLine() << ss.floatDecl("J") << " = 100.0 * pow(Aab.r / " << p.A_w << ", " << p.cz << ");";
+    ss.newLine() << ss.floatDecl("J") << " = 100.0 * pow(Aab.r, " << p.cz << ");";
 
-    ss.newLine() << ss.floatDecl("M") << " = (J == 0.0) ? 0.0 : 43.0 * " << ACES2::surround[2] << " * sqrt(Aab.g * Aab.g + Aab.b * Aab.b);";
+    ss.newLine() << ss.floatDecl("M") << " = (J == 0.0) ? 0.0 : sqrt(Aab.g * Aab.g + Aab.b * Aab.b);";
 
     ss.newLine() << ss.floatDecl("h") << " = (Aab.g == 0.0) ? 0.0 : " << ss.atan2("Aab.b", "Aab.g") << " * 180.0 / 3.14159265358979;";
     ss.newLine() << "h = h - floor(h / 360.0) * 360.0;";
@@ -383,11 +383,10 @@ void _Add_JMh_to_RGB_Shader(
 
     ss.newLine() << ss.floatDecl("h") << " = " << pxl << ".b * 3.14159265358979 / 180.0;";
 
-    ss.newLine() << ss.floatDecl("scale") << " = " << pxl << ".g / (43.0 * " << ACES2::surround[2] << ");";
     ss.newLine() << ss.float3Decl("Aab") << ";";
-    ss.newLine() << "Aab.r = " << p.A_w << " * pow(" << pxl << ".r / 100.0, 1.0 / (" << p.cz << "));";
-    ss.newLine() << "Aab.g = scale * cos(h);";
-    ss.newLine() << "Aab.b = scale * sin(h);";
+    ss.newLine() << "Aab.r = pow(" << pxl << ".r / 100.0, 1.0 / (" << p.cz << "));";
+    ss.newLine() << "Aab.g = " << pxl << ".g * cos(h);";
+    ss.newLine() << "Aab.b = " << pxl << ".g * sin(h);";
 
     ss.newLine() << ss.float3Decl("rgb_a") << " = " << ss.mat3fMul(&p.MATRIX_Aab_to_cone_response[0], "Aab.rgb") << ";";
 

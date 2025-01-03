@@ -142,28 +142,28 @@ float post_adaptation_cone_response_compression_inv(float v, float F_L)
     return std::copysign(Rc, v);
 }
 
-inline float J_from_Achromatic(float A, const float A_w, const float cz)
+inline float Achromatic_n_to_J(float A, const float cz)
 {
-    return J_scale * powf(A / A_w, cz);
+    return J_scale * powf(A, cz);
 }
 
-inline float Achromatic_from_J(float J, const float A_w, const float cz)
+inline float J_to_Achromatic_n(float J, const float cz)
 {
-    return  A_w * powf(J / J_scale, 1.f / cz);  //TODO
+    return powf(J / J_scale, 1.f / cz);
 }
 
 // Optimization for achromatic values
 
 inline float _J_to_Y(float abs_J, const JMhParams &p)
 {
-    const float Ra = Achromatic_from_J(abs_J, p.A_w_J, p.cz);
+    const float Ra = p.A_w_J * J_to_Achromatic_n(abs_J, p.cz);
     const float Y  = _post_adaptation_cone_response_compression_inv(Ra, p.F_L_n);
     return Y;
 }
 inline float _Y_to_J(float abs_Y, const JMhParams &p)
 {
     const float Ra    = _post_adaptation_cone_response_compression_fwd(abs_Y, p.F_L_n);
-    const float J     = J_from_Achromatic(Ra, p.A_w_J, p.cz);
+    const float J     = Achromatic_n_to_J(Ra / p.A_w_J, p.cz);
     return J;
 }
 
@@ -190,9 +190,9 @@ inline f3 RGB_to_Aab(const f3 &RGB, const JMhParams &p)
 
 inline f3 Aab_to_JMh(const f3 &Aab, const JMhParams &p)
 {
-    const float J = J_from_Achromatic(Aab[0], p.A_w, p.cz);
+    const float J = Achromatic_n_to_J(Aab[0], p.cz);
 
-    const float M = J == 0.f ? 0.f : 43.f * surround[2] * sqrt(Aab[1] * Aab[1] + Aab[2] * Aab[2]);
+    const float M = J == 0.f ? 0.f : sqrt(Aab[1] * Aab[1] + Aab[2] * Aab[2]);
 
     const float PI = 3.14159265358979f;
     const float h_rad = std::atan2(Aab[2], Aab[1]);
@@ -221,10 +221,9 @@ inline f3 JMh_to_Aab(const f3 &JMh, const JMhParams &p)
     const float PI = 3.14159265358979f;
     const float h_rad = h * PI / 180.f;
 
-    const float scale = M / (43.f * surround[2]);
-    const float A = Achromatic_from_J(J, p.A_w, p.cz);
-    const float a = scale * cos(h_rad);
-    const float b = scale * sin(h_rad);
+    const float A = J_to_Achromatic_n(J, p.cz);
+    const float a = M * cos(h_rad);
+    const float b = M * sin(h_rad);
     return {A, a, b};
 }
 
@@ -392,13 +391,11 @@ f3 tonescale_chroma_compress_inv(const f3 &JMh, const JMhParams &p, const ToneSc
 JMhParams init_JMhParams(const Primaries &prims)
 {
     JMhParams p;
-
-    p.MATRIX_cone_response_to_Aab = {
+    const m33f cone_response_to_Aab = {
         2.0f, 1.0f, 1.0f / 20.0f,
         1.0f, -12.0f / 11.0f, 1.0f / 11.0f,
         1.0f / 9.0f, 1.0f / 9.0f, -2.0f / 9.0f
     };
-    p.MATRIX_Aab_to_cone_response = invert_f33(p.MATRIX_cone_response_to_Aab);
 
     const m33f MATRIX_16 = XYZtoRGB_f33(CAM16::primaries);
     const m33f RGB_to_XYZ = RGBtoXYZ_f33(prims);
@@ -436,13 +433,20 @@ JMhParams init_JMhParams(const Primaries &prims)
         post_adaptation_cone_response_compression_fwd(RGB_WC[2], p.F_L_n)
     };
 
-    p.A_w   = p.MATRIX_cone_response_to_Aab[0] * RGB_AW[0] + p.MATRIX_cone_response_to_Aab[1] * RGB_AW[1] + p.MATRIX_cone_response_to_Aab[2] * RGB_AW[2];
+    p.A_w   = cone_response_to_Aab[0] * RGB_AW[0] + cone_response_to_Aab[1] * RGB_AW[1] + cone_response_to_Aab[2] * RGB_AW[2];
     p.A_w_J = _post_adaptation_cone_response_compression_fwd(reference_luminance, p.F_L_n);
 
     // Note we are prescaling the CAM16 LMS responses to directly provide for chromatic adaptation.
     const m33f MATRIX_RGB_to_CAM16 = mult_f33_f33(RGBtoRGB_f33(prims, CAM16::primaries), scale_f33(Identity_M33, f3_from_f(reference_luminance)));
     p.MATRIX_RGB_to_CAM16_c = mult_f33_f33(scale_f33(Identity_M33, D_RGB), MATRIX_RGB_to_CAM16);
     p.MATRIX_CAM16_c_to_RGB = invert_f33(p.MATRIX_RGB_to_CAM16_c);
+
+    p.MATRIX_cone_response_to_Aab = {
+        cone_response_to_Aab[0] / p.A_w,              cone_response_to_Aab[1] / p.A_w,              cone_response_to_Aab[2] / p.A_w,
+        cone_response_to_Aab[3] * 43.f * surround[2], cone_response_to_Aab[4] * 43.f * surround[2], cone_response_to_Aab[5] * 43.f * surround[2],
+        cone_response_to_Aab[6] * 43.f * surround[2], cone_response_to_Aab[7] * 43.f * surround[2], cone_response_to_Aab[8] * 43.f * surround[2],
+    };
+    p.MATRIX_Aab_to_cone_response = invert_f33(p.MATRIX_cone_response_to_Aab);
 
     return p;
 }
