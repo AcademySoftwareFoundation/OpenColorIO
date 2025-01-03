@@ -13,27 +13,36 @@ namespace ACES2
 //
 // Table lookups
 //
-
-float wrap_to_360(float hue)
+inline constexpr float degrees_to_radians(float d)
 {
-    float y = std::fmod(hue, 360.f);
+    return d / 180.0f * PI;
+}
+
+inline constexpr float radians_to_degrees(float r)
+{
+    return r / PI * 180.f;
+}
+
+inline float wrap_to_hue_limit(float hue) // TODO: track this and strip out unneeded calls
+{
+    float y = std::fmod(hue, hue_limit);
     if ( y < 0.f)
     {
-        y = y + 360.f;
+        y = y + hue_limit;
     }
     return y;
 }
 
 float base_hue_for_position(int i_lo, int table_size) 
 {
-    const float result = i_lo * 360.f / table_size;
+    const float result = i_lo * hue_limit / table_size;
     return result;
 }
 
 int hue_position_in_uniform_table(float hue, int table_size)
 {
-    const float wrapped_hue = wrap_to_360(hue);
-    return int(wrapped_hue / 360.f * (float) table_size);
+    const float wrapped_hue = wrap_to_hue_limit(hue);
+    return int(wrapped_hue / hue_limit * (float) table_size);
 }
 
 int next_position_in_table(int entry, int table_size)
@@ -62,7 +71,7 @@ f2 cusp_from_table(float h, const Table3D &gt)
         {
             i_hi = i;
         }
-        i = clamp_to_table_bounds((i_lo + i_hi) / 2, gt.total_size);
+        i = (i_lo + i_hi) / 2, gt.total_size;
     }
 
     i_hi = std::max(1, i_hi);
@@ -102,7 +111,7 @@ float hue_dependent_upper_hull_gamma(float h, const ACES2::Table1D &gt)
 
     const float base_hue = (float) (i_lo - gt.base_index);
 
-    const float t = wrap_to_360(h) - base_hue;
+    const float t = wrap_to_hue_limit(h) - base_hue;
 
     return lerpf(gt.table[i_lo], gt.table[i_hi], t);
 }
@@ -194,13 +203,8 @@ inline f3 Aab_to_JMh(const f3 &Aab, const JMhParams &p)
 
     const float M = J == 0.f ? 0.f : sqrt(Aab[1] * Aab[1] + Aab[2] * Aab[2]);
 
-    const float PI = 3.14159265358979f;
     const float h_rad = std::atan2(Aab[2], Aab[1]);
-    float h = std::fmod(h_rad * 180.f / PI, 360.f);
-    if (h < 0.f)
-    {
-        h += 360.f;
-    }
+    float h = wrap_to_hue_limit(radians_to_degrees(h_rad));
 
     return {J, M, h};
 }
@@ -218,8 +222,7 @@ inline f3 JMh_to_Aab(const f3 &JMh, const JMhParams &p)
     const float M = JMh[1];
     const float h = JMh[2];
 
-    const float PI = 3.14159265358979f;
-    const float h_rad = h * PI / 180.f;
+    const float h_rad = degrees_to_radians(h);
 
     const float A = J_to_Achromatic_n(J, p.cz);
     const float a = M * cos(h_rad);
@@ -254,8 +257,7 @@ f3 JMh_to_RGB(const f3 &JMh, const JMhParams &p)
 
 float chroma_compress_norm(float h, float chroma_compress_scale)
 {
-    const float PI = 3.14159265358979f;
-    const float h_rad = h / 180.f * PI;
+    const float h_rad = degrees_to_radians(h);
     const float a = cos(h_rad);
     const float b = sin(h_rad);
     const float cos_hr2 = a * a - b * b;
@@ -494,9 +496,9 @@ Table3D make_gamut_table(const Primaries &P, float peakLuminance)
     gamutCuspTable.table[gamutCuspTable.base_index + gamutCuspTable.size][1] = gamutCuspTable.table[gamutCuspTable.base_index][1];
     gamutCuspTable.table[gamutCuspTable.base_index + gamutCuspTable.size][2] = gamutCuspTable.table[gamutCuspTable.base_index][2];
 
-    // Wrap the hues, to maintain monotonicity. These entries will fall outside [0.0, 360.0]
-    gamutCuspTable.table[0][2] = gamutCuspTable.table[0][2] - 360.f;
-    gamutCuspTable.table[gamutCuspTable.size+1][2] = gamutCuspTable.table[gamutCuspTable.size+1][2] + 360.f;
+    // Wrap the hues, to maintain monotonicity. These entries will fall outside [0.0, 360.0)
+    gamutCuspTable.table[0][2] = gamutCuspTable.table[0][2] - hue_limit;
+    gamutCuspTable.table[gamutCuspTable.size+1][2] = gamutCuspTable.table[gamutCuspTable.size+1][2] + hue_limit;
 
     return gamutCuspTable;
 }
@@ -713,7 +715,7 @@ float compression_function(
     return vCompressed;
 }
 
-f3 compressGamut(const f3 &JMh, float Jx, const ACES2::GamutCompressParams& p, bool invert)
+f3 compressGamut(const f3 &JMh, float Jx, const ACES2::GamutCompressParams& p, const f2& JMcusp, bool invert)
 {
     const float J = JMh[0];
     const float M = JMh[1];
@@ -726,7 +728,6 @@ f3 compressGamut(const f3 &JMh, float Jx, const ACES2::GamutCompressParams& p, b
     else
     {
         const f2 project_from = {J, M};
-        const f2 JMcusp = cusp_from_table(h, p.gamut_cusp_table);
         const float focusJ = lerpf(JMcusp[0], p.mid_J, std::min(1.f, cusp_mid_blend - (JMcusp[0] / p.limit_J_max)));
         const float slope_gain = p.limit_J_max * p.focus_dist * get_focus_gain(Jx, JMcusp[0], p.limit_J_max);
 
@@ -761,7 +762,8 @@ f3 compressGamut(const f3 &JMh, float Jx, const ACES2::GamutCompressParams& p, b
 
 f3 gamut_compress_fwd(const f3 &JMh, const GamutCompressParams &p)
 {
-    return compressGamut(JMh, JMh[0], p, false);
+    const f2 JMcusp = cusp_from_table(JMh[2], p.gamut_cusp_table);
+    return compressGamut(JMh, JMh[0], p, JMcusp, false);
 }
 
 f3 gamut_compress_inv(const f3 &JMh, const GamutCompressParams &p)
@@ -769,21 +771,13 @@ f3 gamut_compress_inv(const f3 &JMh, const GamutCompressParams &p)
     const f2 JMcusp = cusp_from_table(JMh[2], p.gamut_cusp_table);
     float Jx = JMh[0];
 
-    f3 unCompressedJMh;
-
     // Analytic inverse below threshold
-    if (Jx <= lerpf(JMcusp[0], p.limit_J_max, focus_gain_blend))
+    if (Jx > lerpf(JMcusp[0], p.limit_J_max, focus_gain_blend))
     {
-        unCompressedJMh = compressGamut(JMh, Jx, p, true);
+        // Approximation above threshold
+        Jx = compressGamut(JMh, Jx, p, JMcusp, true)[0];
     }
-    // Approximation above threshold
-    else
-    {
-        Jx = compressGamut(JMh, Jx, p, true)[0];
-        unCompressedJMh = compressGamut(JMh, Jx, p, true);
-    }
-
-    return unCompressedJMh;
+    return compressGamut(JMh, Jx, p, JMcusp, true);
 }
 
 bool evaluate_gamma_fit(

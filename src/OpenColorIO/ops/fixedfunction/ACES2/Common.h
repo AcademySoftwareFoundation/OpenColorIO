@@ -89,6 +89,8 @@ constexpr float L_A = 100.f;
 constexpr float Y_b = 20.f;
 constexpr f3 surround = {0.9f, 0.59f, 0.9f}; // Dim surround
 constexpr float J_scale = 100.0f;
+constexpr float PI = 3.14159265358979f;
+constexpr float hue_limit = 360.0f; // 2.0f * PI;
 
 // Chroma compression
 constexpr float chroma_compress = 2.4f;
