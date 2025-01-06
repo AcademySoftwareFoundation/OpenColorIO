@@ -384,6 +384,13 @@ JMhParams init_JMhParams(const Primaries &prims)
 {
     JMhParams p;
 
+    p.MATRIX_cone_response_to_Aab = {
+        2.0f, 1.0f, 1.0f / 20.0f,
+        1.0f, -12.0f / 11.0f, 1.0f / 11.0f,
+        1.0f / 9.0f, 1.0f / 9.0f, -2.0f / 9.0f
+    };
+    p.MATRIX_Aab_to_cone_response = invert_f33(p.MATRIX_cone_response_to_Aab);
+
     const m33f MATRIX_16 = XYZtoRGB_f33(CAM16::primaries);
     const m33f RGB_to_XYZ = RGBtoXYZ_f33(prims);
     const f3 XYZ_w = mult_f3_f33(f3_from_f(reference_luminance), RGB_to_XYZ);
@@ -419,10 +426,8 @@ JMhParams init_JMhParams(const Primaries &prims)
         panlrc_forward(RGB_WC[2], p.F_L_n)
     };
 
-    const float A_w = ra * RGB_AW[0] + RGB_AW[1] + ba * RGB_AW[2];
-
-    const float F_L_W = powf(F_L, 0.42f);
-    const float A_w_J   = (400.f * F_L_W) / (27.13f + F_L_W);
+    const float A_w = p.MATRIX_cone_response_to_Aab[0] * RGB_AW[0] + p.MATRIX_cone_response_to_Aab[1] * RGB_AW[1] + p.MATRIX_cone_response_to_Aab[2] * RGB_AW[2];
+    const float A_w_J = _post_adaptation_cone_response_compression_fwd(reference_luminance, p.F_L_n);
 
     p.cz = surround[1] * z;
     p.A_w = A_w;
@@ -433,12 +438,6 @@ JMhParams init_JMhParams(const Primaries &prims)
     p.MATRIX_RGB_to_CAM16_c = mult_f33_f33(scale_f33(Identity_M33, D_RGB), MATRIX_RGB_to_CAM16);
     p.MATRIX_CAM16_c_to_RGB = invert_f33(p.MATRIX_RGB_to_CAM16_c);
 
-    p.MATRIX_cone_response_to_Aab = {
-        2.0f, 1.0f, 1.0f / 20.0f,
-        1.0f, -12.0f / 11.0f, 1.0f / 11.0f,
-        1.0f / 9.0f, 1.0f / 9.0f, -2.0f / 9.0f
-    };
-    p.MATRIX_Aab_to_cone_response = invert_f33(p.MATRIX_cone_response_to_Aab);
     return p;
 }
 
