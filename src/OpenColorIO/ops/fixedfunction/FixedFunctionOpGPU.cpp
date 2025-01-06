@@ -358,7 +358,7 @@ void _Add_RGB_to_JMh_Shader(
 
     ss.newLine() << ss.float3Decl("lms") << " = " << ss.mat3fMul(&p.MATRIX_RGB_to_CAM16_c[0], pxl + ".rgb") << ";";
 
-    ss.newLine() << ss.float3Decl("F_L_v") << " = pow(" << p.F_L << " * abs(lms) / 100.0, " << ss.float3Const(0.42f) << ");";
+    ss.newLine() << ss.float3Decl("F_L_v") << " = pow(" << p.F_L_n << " * abs(lms), " << ss.float3Const(0.42f) << ");";
     ss.newLine() << ss.float3Decl("rgb_a") << " = (400.0 * sign(lms) * F_L_v) / (27.13 + F_L_v);";
 
     ss.newLine() << ss.float3Decl("Aab") << " = " << ss.mat3fMul(&p.MATRIX_cone_response_to_Aab[0], "rgb_a.rgb") << ";";
@@ -391,7 +391,7 @@ void _Add_JMh_to_RGB_Shader(
 
     ss.newLine() << ss.float3Decl("rgb_a") << " = " << ss.mat3fMul(&p.MATRIX_Aab_to_cone_response[0], "Aab.rgb") << ";";
 
-    ss.newLine() << ss.float3Decl("lms") << " = sign(rgb_a) * 100.0 / " << p.F_L << " * pow(27.13 * abs(rgb_a) / (400.0 - abs(rgb_a)), " << ss.float3Const(1.f / 0.42f) << ");";
+    ss.newLine() << ss.float3Decl("lms") << " = sign(rgb_a) * pow(27.13 * abs(rgb_a) / (400.0 - abs(rgb_a)), " << ss.float3Const(1.f / 0.42f) << ")/ " << p.F_L_n << ";";
 
     ss.newLine() << pxl << ".rgb = " << ss.mat3fMul(&p.MATRIX_CAM16_c_to_RGB[0], "lms") << ";";
 }
@@ -545,12 +545,12 @@ void _Add_Tonescale_Compress_Fwd_Shader(
 
     // Tonescale applied in Y (convert to and from J)
     ss.newLine() << ss.floatDecl("A") << " = " << p.A_w_J << " * pow(abs(J) / 100.0, 1.0 / (" << p.cz << "));";
-    ss.newLine() << ss.floatDecl("Y") << " = sign(J) * 100.0 / " << p.F_L << " * pow((27.13 * A) / (400.0 - A), 1.0 / 0.42) / 100.0;";
+    ss.newLine() << ss.floatDecl("Y") << " = sign(J) * pow((27.13 * A) / (400.0 - A), 1.0 / 0.42) / " << p.F_L_n << " / 100.0;";
 
     ss.newLine() << ss.floatDecl("f") << " = " << t.m_2  << " * pow(max(0.0, Y) / (Y + " << t.s_2 << "), " << t.g << ");";
     ss.newLine() << ss.floatDecl("Y_ts") << " = max(0.0, f * f / (f + " << t.t_1 << ")) * " << t.n_r << ";";
 
-    ss.newLine() << ss.floatDecl("F_L_Y") << " = pow(" << p.F_L << " * abs(Y_ts) / 100.0, 0.42);";
+    ss.newLine() << ss.floatDecl("F_L_Y") << " = pow(" << p.F_L_n << " * abs(Y_ts), 0.42);";
     ss.newLine() << ss.floatDecl("J_ts") << " = sign(Y_ts) * 100.0 * pow(((400.0 * F_L_Y) / (27.13 + F_L_Y)) / " << p.A_w_J << ", " << p.cz << ");";
 
     // ChromaCompress
@@ -616,13 +616,13 @@ void _Add_Tonescale_Compress_Inv_Shader(
 
     // Inverse Tonescale applied in Y (convert to and from J)
     ss.newLine() << ss.floatDecl("A") << " = " << p.A_w_J << " * pow(abs(J_ts) / 100.0, 1.0 / (" << p.cz << "));";
-    ss.newLine() << ss.floatDecl("Y_ts") << " = sign(J_ts) * 100.0 / " << p.F_L << " * pow((27.13 * A) / (400.0 - A), 1.0 / 0.42) / 100.0;";
+    ss.newLine() << ss.floatDecl("Y_ts") << " = sign(J_ts) * pow((27.13 * A) / (400.0 - A), 1.0 / 0.42) / " << p.F_L_n << " / 100.0;";
 
     ss.newLine() << ss.floatDecl("Z") << " = max(0.0, min(" << t.n << " / (" << t.u_2 * t.n_r << "), Y_ts));";
     ss.newLine() << ss.floatDecl("ht") << " = (Z + sqrt(Z * (4.0 * " << t.t_1 << " + Z))) / 2.0;";
     ss.newLine() << ss.floatDecl("Y") << " = " << t.s_2 << " / (pow((" << t.m_2 << " / ht), (1.0 / " << t.g << ")) - 1.0);";
 
-    ss.newLine() << ss.floatDecl("F_L_Y") << " = pow(" << p.F_L << " * abs(Y * 100.0) / 100.0, 0.42);";
+    ss.newLine() << ss.floatDecl("F_L_Y") << " = pow(" << p.F_L_n << " * abs(Y * 100.0), 0.42);";
     ss.newLine() << ss.floatDecl("J") << " = sign(Y) * 100.0 * pow(((400.0 * F_L_Y) / (27.13 + F_L_Y)) / " << p.A_w_J << ", " << p.cz << ");";
 
     // ChromaCompress

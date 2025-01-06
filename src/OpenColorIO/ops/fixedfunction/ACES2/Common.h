@@ -37,7 +37,7 @@ struct Table1D
 
 struct JMhParams
 {
-    float F_L;
+    float F_L_n;    // F_L normalised
     float cz;
     float A_w;
     float A_w_J;
