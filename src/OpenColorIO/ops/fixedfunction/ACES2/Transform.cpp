@@ -626,9 +626,35 @@ float smin(float a, float b, float s)
     return std::min(a, b) - h * h * h * s * (1.f / 6.f);
 }
 
+inline float compute_compression_vector_slope(const float intersectJ, const float focusJ, const float limitJmax, const float slope_gain)
+{
+    const float direction_scaler = (intersectJ < focusJ) ? intersectJ : (limitJmax - intersectJ); // TODO < vs <=
+    return direction_scaler * (intersectJ - focusJ) / (focusJ * slope_gain);
+}
+
+inline float estimate_line_and_boundary_intersection_M(const float J_axis_intersect, const float slope, const float inv_gamma,
+                                                       const float J_max, const float M_max, const float J_intersection_reference)
+{
+    // Line defined by     J = slope * x + J_axis_intersect
+    // Boundary defined by J = J_max * (x / M_max) ^ (1/inv_gamma)
+    // Approximate as we do not want to iteratively solve intersection of a straight line and an exponential
+
+    // We calculate a shifted intersection from the original intersection using the inverse of the exponential
+    // and the provided reference
+    const float normalised_J         = J_axis_intersect / J_intersection_reference;
+    const float shifted_intersection = J_intersection_reference * powf(normalised_J, inv_gamma);
+
+    // Now we find the M intersection of two lines
+    // line from origin to J,M Max       l1(x) = J/M * x
+    // line from J Intersect' with slope l2(x) = slope * x + Intersect'
+
+    return shifted_intersection / ((J_max / M_max) - slope);
+    //return shifted_intersection * M_max / (J_max - slope * M_max);
+}
+
 f3 find_gamut_boundary_intersection(const f3 &JMh_s, const f2 &JM_cusp_in, float J_focus, float J_max, float slope_gain, float gamma_top, float gamma_bottom)
 {
-    const float s = std::max(0.000001f, smooth_cusps);
+    const float s = std::max(0.000001f, smooth_cusps); // TODO: pre smooth the cusp
     const f2 JM_cusp = {
         JM_cusp_in[0],
         JM_cusp_in[1] * (1.f + smooth_m * s)
@@ -650,7 +676,7 @@ f3 find_gamut_boundary_intersection(const f3 &JMh_s, const f2 &JM_cusp_in, float
     const float M_boundary_lower = J_intersect_cusp * powf(J_intersect_source / J_intersect_cusp, 1.f / gamma_bottom) / (JM_cusp[0] / JM_cusp[1] - slope);
     const float M_boundary_upper = JM_cusp[1] * (J_max - J_intersect_cusp) * powf((J_max - J_intersect_source) / (J_max - J_intersect_cusp), 1.f / gamma_top) / (slope * JM_cusp[1] + J_max - JM_cusp[0]);
     const float M_boundary = JM_cusp[1] * smin(M_boundary_lower / JM_cusp[1], M_boundary_upper / JM_cusp[1], s);
-    const float J_boundary = J_intersect_source + slope * M_boundary;
+    const float J_boundary = J_intersect_source + slope * M_boundary; // TODO don't recalculate this
 
     return {J_boundary, M_boundary, J_intersect_source};
 }
@@ -762,13 +788,13 @@ f3 compressGamut(const f3 &JMh, float Jx, const ACES2::GamutCompressParams& p, c
 
 f3 gamut_compress_fwd(const f3 &JMh, const GamutCompressParams &p)
 {
-    const f2 JMcusp = cusp_from_table(JMh[2], p.gamut_cusp_table);
+    const f2 JMcusp = cusp_from_table(JMh[2], p.gamut_cusp_table); // TODO: call once and pass this into compress functions ?
     return compressGamut(JMh, JMh[0], p, JMcusp, false);
 }
 
 f3 gamut_compress_inv(const f3 &JMh, const GamutCompressParams &p)
 {
-    const f2 JMcusp = cusp_from_table(JMh[2], p.gamut_cusp_table);
+    const f2 JMcusp = cusp_from_table(JMh[2], p.gamut_cusp_table); // TODO: call once and pass this into compress functions ?
     float Jx = JMh[0];
 
     // Analytic inverse below threshold
