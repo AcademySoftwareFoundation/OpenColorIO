@@ -356,8 +356,7 @@ void _Add_RGB_to_JMh_Shader(
 {
     const std::string pxl(shaderCreator->getPixelName());
 
-    ss.newLine() << ss.float3Decl("lms") << " = " << ss.mat3fMul(&p.MATRIX_RGB_to_CAM16[0], pxl + ".rgb") << ";";
-    ss.newLine() << "lms = " << "lms * " << ss.float3Const(p.D_RGB[0], p.D_RGB[1], p.D_RGB[2]) << ";";
+    ss.newLine() << ss.float3Decl("lms") << " = " << ss.mat3fMul(&p.MATRIX_RGB_to_CAM16_c[0], pxl + ".rgb") << ";";
 
     ss.newLine() << ss.float3Decl("F_L_v") << " = pow(" << p.F_L << " * abs(lms) / 100.0, " << ss.float3Const(0.42f) << ");";
     ss.newLine() << ss.float3Decl("rgb_a") << " = (400.0 * sign(lms) * F_L_v) / (27.13 + F_L_v);";
@@ -397,9 +396,8 @@ void _Add_JMh_to_RGB_Shader(
     ss.newLine() << "rgb_a.b = (460.0 * A - 220.0 * a - 6300.0 *b) / 1403.0;";
 
     ss.newLine() << ss.float3Decl("lms") << " = sign(rgb_a) * 100.0 / " << p.F_L << " * pow(27.13 * abs(rgb_a) / (400.0 - abs(rgb_a)), " << ss.float3Const(1.f / 0.42f) << ");";
-    ss.newLine() << "lms = " << "lms / " << ss.float3Const(p.D_RGB[0], p.D_RGB[1], p.D_RGB[2]) << ";";
 
-    ss.newLine() << pxl << ".rgb = " << ss.mat3fMul(&p.MATRIX_CAM16_to_RGB[0], "lms") << ";";
+    ss.newLine() << pxl << ".rgb = " << ss.mat3fMul(&p.MATRIX_CAM16_c_to_RGB[0], "lms") << ";";
 }
 
 std::string _Add_Reach_table(

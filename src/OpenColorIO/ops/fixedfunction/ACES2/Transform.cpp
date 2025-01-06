@@ -163,12 +163,12 @@ float Y_to_J(float Y, const JMhParams &params)
 
 inline f3 RGB_to_Aab(const f3 &RGB, const JMhParams &p)
 {
-    const f3 rgb_m = mult_f3_f33(RGB, p.MATRIX_RGB_to_CAM16);
+    const f3 rgb_m = mult_f3_f33(RGB, p.MATRIX_RGB_to_CAM16_c);
 
     const f3 rgb_a = {
-        panlrc_forward(rgb_m[0] * p.D_RGB[0], p.F_L),
-        panlrc_forward(rgb_m[1] * p.D_RGB[1], p.F_L),
-        panlrc_forward(rgb_m[2] * p.D_RGB[2], p.F_L)
+        panlrc_forward(rgb_m[0], p.F_L),
+        panlrc_forward(rgb_m[1], p.F_L),
+        panlrc_forward(rgb_m[2], p.F_L)
     };
 
     const float A = 2.f * rgb_a[0] + rgb_a[1] + 0.05f * rgb_a[2];
@@ -224,12 +224,12 @@ inline f3 Aab_to_RGB(const f3 &Aab, const JMhParams &p)
     const float blu_a = (460.f * Aab[0] - 220.f * Aab[1] - 6300.f * Aab[2]) / 1403.f;
 
     const f3 rgb_m = {
-        panlrc_inverse(red_a, p.F_L) / p.D_RGB[0],
-        panlrc_inverse(grn_a, p.F_L) / p.D_RGB[1],
-        panlrc_inverse(blu_a, p.F_L) / p.D_RGB[2]
+        panlrc_inverse(red_a, p.F_L),
+        panlrc_inverse(grn_a, p.F_L),
+        panlrc_inverse(blu_a, p.F_L)
     };
 
-    const f3 rgb = mult_f3_f33(rgb_m, p.MATRIX_CAM16_to_RGB);
+    const f3 rgb = mult_f3_f33(rgb_m, p.MATRIX_CAM16_c_to_RGB);
     return rgb;
 }
 
@@ -428,12 +428,13 @@ JMhParams init_JMhParams(const Primaries &prims)
 
     p.F_L = F_L;
     p.cz = surround[1] * z;
-    p.D_RGB = D_RGB;
     p.A_w = A_w;
     p.A_w_J = A_w_J;
 
-    p.MATRIX_RGB_to_CAM16 = mult_f33_f33(RGBtoRGB_f33(prims, CAM16::primaries), scale_f33(Identity_M33, f3_from_f(100.f)));
-    p.MATRIX_CAM16_to_RGB = invert_f33(p.MATRIX_RGB_to_CAM16);
+    // Note we are prescaling the CAM16 LMS responses to directly provide for chromatic adaptation.
+    const m33f MATRIX_RGB_to_CAM16 = mult_f33_f33(RGBtoRGB_f33(prims, CAM16::primaries), scale_f33(Identity_M33, f3_from_f(100.f)));
+    p.MATRIX_RGB_to_CAM16_c = mult_f33_f33(scale_f33(Identity_M33, D_RGB), MATRIX_RGB_to_CAM16);
+    p.MATRIX_CAM16_c_to_RGB = invert_f33(p.MATRIX_RGB_to_CAM16_c);
 
     return p;
 }
