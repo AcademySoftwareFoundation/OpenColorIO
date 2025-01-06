@@ -125,35 +125,40 @@ inline float _post_adaptation_cone_response_compression_inv(float Ra, const floa
     return Rc;
 }
 
-inline float J_from_Achromatic(float A, const JMhParams &p)
+inline float J_from_Achromatic(float A, const JMhParams &p, const float cz)
 {
-    return 100.f * powf(A / p.A_w_J, surround[1] * p.z);
+    return J_scale * powf(A / p.A_w_J, cz);
 }
 
-inline float Achromatic_from_J(float J, const JMhParams &p)
+inline float Achromatic_from_J(float J, const JMhParams &p, const float cz)
 {
-    return  p.A_w_J * powf(J / 100.f, 1.f / (surround[1] * p.z));  //TODO
+    return  p.A_w_J * powf(J / J_scale, 1.f / cz);  //TODO
 }
 
 // Post adaptation non linear response compression
 float panlrc_forward(float v, float F_L)
 {
-    const float F_L_v = powf(F_L * std::abs(v) / reference_luminance, 0.42f);
+    const float abs_v = std::abs(v);
+    const float Ra =  _post_adaptation_cone_response_compression_fwd(abs_v, F_L);
     // Note that std::copysign(1.f, 0.f) returns 1 but the CTL copysign(1.,0.) returns 0.
     // TODO: Should we change the behaviour?
-    return (400.f * std::copysign(1.f, v) * F_L_v) / (27.13f + F_L_v);
+    return std::copysign(Ra, v);
 }
 
 float panlrc_inverse(float v, float F_L)
 {
-    return std::copysign(1.f, v) * reference_luminance / F_L * powf((27.13f * std::abs(v) / (400.f - std::abs(v))), 1.f / 0.42f);
+    const float abs_v = std::abs(v);
+    const float Rc    = _post_adaptation_cone_response_compression_inv(abs_v, F_L);
+    return std::copysign(Rc, v);
 }
 
 // Optimization used during initialization
 float Y_to_J(float Y, const JMhParams &params)
 {
-    float F_L_Y = powf(params.F_L * std::abs(Y) / reference_luminance, 0.42f);
-    return std::copysign(1.f, Y) * reference_luminance * powf(((400.f * F_L_Y) / (27.13f + F_L_Y)) / params.A_w_J, surround[1] * params.z);
+    const float abs_Y = std::abs(Y);
+    const float Ra    = _post_adaptation_cone_response_compression_fwd(abs_Y, params.F_L);
+    const float J     = J_scale * powf(Ra / params.A_w_J, params.cz);
+    return std::copysign(J, Y);
 }
 
 f3 RGB_to_JMh(const f3 &RGB, const JMhParams &p)
@@ -174,7 +179,7 @@ f3 RGB_to_JMh(const f3 &RGB, const JMhParams &p)
     const float a = red_a - 12.f * grn_a / 11.f + blu_a / 11.f;
     const float b = (red_a + grn_a - 2.f * blu_a) / 9.f;
 
-    const float J = 100.f * powf(A / p.A_w, surround[1] * p.z);
+    const float J = J_scale * powf(A / p.A_w, p.cz);
 
     const float M = J == 0.f ? 0.f : 43.f * surround[2] * sqrt(a * a + b * b);
 
@@ -199,7 +204,7 @@ f3 JMh_to_RGB(const f3 &JMh, const JMhParams &p)
     const float h_rad = h * PI / 180.f;
 
     const float scale = M / (43.f * surround[2]);
-    const float A = p.A_w * powf(J / 100.f, 1.f / (surround[1] * p.z));
+    const float A = p.A_w * powf(J / J_scale, 1.f / p.cz); // TODO
     const float a = scale * cos(h_rad);
     const float b = scale * sin(h_rad);
 
@@ -277,7 +282,7 @@ float tonescale_fwd(const float J, const JMhParams &p, const ToneScaleParams &pt
 {
     // Tonescale applied in Y (convert to and from J)
     const float J_abs = std::abs(J);
-    const float Ra    = Achromatic_from_J(J_abs, p);
+    const float Ra    = Achromatic_from_J(J_abs, p, p.cz);
     const float Y     = _post_adaptation_cone_response_compression_inv(Ra, p.F_L);
     
     const float Y_norm = Y / 100.f; //TODO
@@ -285,16 +290,16 @@ float tonescale_fwd(const float J, const JMhParams &p, const ToneScaleParams &pt
     const float Y_ts = std::max(0.f, f * f / (f + pt.t_1)) * pt.n_r;  // max prevents -ve values being output also handles division by zero possibility
 
     const float Ra_ts = _post_adaptation_cone_response_compression_fwd(Y_ts, p.F_L);
-    const float J_ts  = std::copysign(J_from_Achromatic(Ra_ts, p), Y_ts);
-    return J_ts;
+    const float J_ts  = J_from_Achromatic(Ra_ts, p, p.cz);
+    return std::copysign(J_ts, Y_ts);
 }
 
 float tonescale_inv(const float J_ts, const JMhParams &p, const ToneScaleParams &pt)
 {
     // Inverse Tonescale applied in Y (convert to and from J)
     const float J_abs = std::abs(J_ts);
-    const float Ra = Achromatic_from_J(J_abs, p);
-    const float Y_ts = _post_adaptation_cone_response_compression_inv(Ra, p.F_L);
+    const float Ra    = Achromatic_from_J(J_abs, p, p.cz);
+    const float Y_ts  = _post_adaptation_cone_response_compression_inv(Ra, p.F_L);
 
     const float Y_ts_norm = Y_ts / 100.0f; // TODO
     const float Z = std::max(0.f, std::min(pt.n / (pt.u_2 * pt.n_r), Y_ts_norm));  //TODO
@@ -302,8 +307,8 @@ float tonescale_inv(const float J_ts, const JMhParams &p, const ToneScaleParams 
     const float Y = pt.s_2 / (powf((pt.m_2 / f), (1.f / pt.g)) - 1.f) * pt.n_r;
 
     const float Ra_ts = _post_adaptation_cone_response_compression_fwd(Y, p.F_L);
-    const float J  = std::copysign(J_from_Achromatic(Ra_ts, p), Y_ts);
-    return J;
+    const float J     = J_from_Achromatic(Ra_ts, p, p.cz);
+    return std::copysign(J, Y_ts);
 }
 
 f3 tonescale_chroma_compress_fwd(const f3 &JMh, const JMhParams &p, const ToneScaleParams &pt, const ChromaCompressParams &pc)
@@ -406,7 +411,7 @@ JMhParams init_JMhParams(const Primaries &prims)
 
     p.XYZ_w = XYZ_w;
     p.F_L = F_L;
-    p.z = z;
+    p.cz = surround[1] * z;
     p.D_RGB = D_RGB;
     p.A_w = A_w;
     p.A_w_J = A_w_J;

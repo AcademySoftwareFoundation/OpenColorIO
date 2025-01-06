@@ -38,7 +38,7 @@ struct Table1D
 struct JMhParams
 {
     float F_L;
-    float z;
+    float cz;
     float A_w;
     float A_w_J;
     f3 XYZ_w;
@@ -91,6 +91,7 @@ constexpr float ac_resp = 1.f;
 constexpr float ra = 2.f * ac_resp;
 constexpr float ba = 0.05f + (2.f - ra);
 constexpr f3 surround = {0.9f, 0.59f, 0.9f}; // Dim surround
+constexpr float J_scale = 100.0f;
 
 // Chroma compression
 constexpr float chroma_compress = 2.4f;
