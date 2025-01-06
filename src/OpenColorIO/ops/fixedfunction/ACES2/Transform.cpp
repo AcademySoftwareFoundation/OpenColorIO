@@ -161,7 +161,7 @@ float Y_to_J(float Y, const JMhParams &params)
     return std::copysign(J, Y);
 }
 
-f3 RGB_to_JMh(const f3 &RGB, const JMhParams &p)
+inline f3 RGB_to_Aab(const f3 &RGB, const JMhParams &p)
 {
     const float red = RGB[0];
     const float grn = RGB[1];
@@ -178,13 +178,17 @@ f3 RGB_to_JMh(const f3 &RGB, const JMhParams &p)
     const float A = 2.f * red_a + grn_a + 0.05f * blu_a;
     const float a = red_a - 12.f * grn_a / 11.f + blu_a / 11.f;
     const float b = (red_a + grn_a - 2.f * blu_a) / 9.f;
+    return {A, a, b};
+}
 
-    const float J = J_scale * powf(A / p.A_w, p.cz);
+inline f3 Aab_to_JMh(const f3 &Aab, const JMhParams &p)
+{
+    const float J = J_scale * powf(Aab[0] / p.A_w, p.cz); //TODO
 
-    const float M = J == 0.f ? 0.f : 43.f * surround[2] * sqrt(a * a + b * b);
+    const float M = J == 0.f ? 0.f : 43.f * surround[2] * sqrt(Aab[1] * Aab[1] + Aab[2] * Aab[2]);
 
     const float PI = 3.14159265358979f;
-    const float h_rad = std::atan2(b, a);
+    const float h_rad = std::atan2(Aab[2], Aab[1]);
     float h = std::fmod(h_rad * 180.f / PI, 360.f);
     if (h < 0.f)
     {
@@ -194,7 +198,14 @@ f3 RGB_to_JMh(const f3 &RGB, const JMhParams &p)
     return {J, M, h};
 }
 
-f3 JMh_to_RGB(const f3 &JMh, const JMhParams &p)
+f3 RGB_to_JMh(const f3 &RGB, const JMhParams &p)
+{
+    const f3 Aab = RGB_to_Aab(RGB, p);
+    const f3 JMh = Aab_to_JMh(Aab, p);
+    return JMh;
+}
+
+inline f3 JMh_to_Aab(const f3 &JMh, const JMhParams &p)
 {
     const float J = JMh[0];
     const float M = JMh[1];
@@ -207,10 +218,14 @@ f3 JMh_to_RGB(const f3 &JMh, const JMhParams &p)
     const float A = p.A_w * powf(J / J_scale, 1.f / p.cz); // TODO
     const float a = scale * cos(h_rad);
     const float b = scale * sin(h_rad);
+    return {A, a, b};
+}
 
-    const float red_a = (460.f * A + 451.f * a + 288.f * b) / 1403.f;
-    const float grn_a = (460.f * A - 891.f * a - 261.f * b) / 1403.f;
-    const float blu_a = (460.f * A - 220.f * a - 6300.f * b) / 1403.f;
+inline f3 Aab_to_RGB(const f3 &Aab, const JMhParams &p)
+{
+    const float red_a = (460.f * Aab[0] + 451.f * Aab[1] + 288.f * Aab[2]) / 1403.f;
+    const float grn_a = (460.f * Aab[0] - 891.f * Aab[1] - 261.f * Aab[2]) / 1403.f;
+    const float blu_a = (460.f * Aab[0] - 220.f * Aab[1] - 6300.f * Aab[2]) / 1403.f;
 
     float red_m = panlrc_inverse(red_a, p.F_L) / p.D_RGB[0];
     float grn_m = panlrc_inverse(grn_a, p.F_L) / p.D_RGB[1];
@@ -221,6 +236,13 @@ f3 JMh_to_RGB(const f3 &JMh, const JMhParams &p)
     const float blu = red_m * p.MATRIX_CAM16_to_RGB[6] + grn_m * p.MATRIX_CAM16_to_RGB[7] + blu_m * p.MATRIX_CAM16_to_RGB[8];
 
     return {red, grn, blu};
+}
+
+f3 JMh_to_RGB(const f3 &JMh, const JMhParams &p)
+{
+    const f3 Aab = JMh_to_Aab(JMh, p);
+    const f3 rgb = Aab_to_RGB(Aab, p);
+    return rgb;
 }
 
 //
