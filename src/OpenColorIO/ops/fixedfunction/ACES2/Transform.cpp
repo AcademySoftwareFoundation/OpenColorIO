@@ -163,21 +163,17 @@ float Y_to_J(float Y, const JMhParams &params)
 
 inline f3 RGB_to_Aab(const f3 &RGB, const JMhParams &p)
 {
-    const float red = RGB[0];
-    const float grn = RGB[1];
-    const float blu = RGB[2];
+    const f3 rgb_m = mult_f3_f33(RGB, p.MATRIX_RGB_to_CAM16);
 
-    const float red_m = red * p.MATRIX_RGB_to_CAM16[0] + grn * p.MATRIX_RGB_to_CAM16[1] + blu * p.MATRIX_RGB_to_CAM16[2];
-    const float grn_m = red * p.MATRIX_RGB_to_CAM16[3] + grn * p.MATRIX_RGB_to_CAM16[4] + blu * p.MATRIX_RGB_to_CAM16[5];
-    const float blu_m = red * p.MATRIX_RGB_to_CAM16[6] + grn * p.MATRIX_RGB_to_CAM16[7] + blu * p.MATRIX_RGB_to_CAM16[8];
+    const f3 rgb_a = {
+        panlrc_forward(rgb_m[0] * p.D_RGB[0], p.F_L),
+        panlrc_forward(rgb_m[1] * p.D_RGB[1], p.F_L),
+        panlrc_forward(rgb_m[2] * p.D_RGB[2], p.F_L)
+    };
 
-    const float red_a =  panlrc_forward(red_m * p.D_RGB[0], p.F_L);
-    const float grn_a =  panlrc_forward(grn_m * p.D_RGB[1], p.F_L);
-    const float blu_a =  panlrc_forward(blu_m * p.D_RGB[2], p.F_L);
-
-    const float A = 2.f * red_a + grn_a + 0.05f * blu_a;
-    const float a = red_a - 12.f * grn_a / 11.f + blu_a / 11.f;
-    const float b = (red_a + grn_a - 2.f * blu_a) / 9.f;
+    const float A = 2.f * rgb_a[0] + rgb_a[1] + 0.05f * rgb_a[2];
+    const float a = rgb_a[0] - 12.f * rgb_a[1] / 11.f + rgb_a[2] / 11.f;
+    const float b = (rgb_a[0] + rgb_a[1] - 2.f * rgb_a[2]) / 9.f;
     return {A, a, b};
 }
 
@@ -227,15 +223,14 @@ inline f3 Aab_to_RGB(const f3 &Aab, const JMhParams &p)
     const float grn_a = (460.f * Aab[0] - 891.f * Aab[1] - 261.f * Aab[2]) / 1403.f;
     const float blu_a = (460.f * Aab[0] - 220.f * Aab[1] - 6300.f * Aab[2]) / 1403.f;
 
-    float red_m = panlrc_inverse(red_a, p.F_L) / p.D_RGB[0];
-    float grn_m = panlrc_inverse(grn_a, p.F_L) / p.D_RGB[1];
-    float blu_m = panlrc_inverse(blu_a, p.F_L) / p.D_RGB[2];
+    const f3 rgb_m = {
+        panlrc_inverse(red_a, p.F_L) / p.D_RGB[0],
+        panlrc_inverse(grn_a, p.F_L) / p.D_RGB[1],
+        panlrc_inverse(blu_a, p.F_L) / p.D_RGB[2]
+    };
 
-    const float red = red_m * p.MATRIX_CAM16_to_RGB[0] + grn_m * p.MATRIX_CAM16_to_RGB[1] + blu_m * p.MATRIX_CAM16_to_RGB[2];
-    const float grn = red_m * p.MATRIX_CAM16_to_RGB[3] + grn_m * p.MATRIX_CAM16_to_RGB[4] + blu_m * p.MATRIX_CAM16_to_RGB[5];
-    const float blu = red_m * p.MATRIX_CAM16_to_RGB[6] + grn_m * p.MATRIX_CAM16_to_RGB[7] + blu_m * p.MATRIX_CAM16_to_RGB[8];
-
-    return {red, grn, blu};
+    const f3 rgb = mult_f3_f33(rgb_m, p.MATRIX_CAM16_to_RGB);
+    return rgb;
 }
 
 f3 JMh_to_RGB(const f3 &JMh, const JMhParams &p)
