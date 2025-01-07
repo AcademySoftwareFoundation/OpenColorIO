@@ -76,6 +76,13 @@ struct ChromaCompressParams
     static constexpr float cusp_mid_blend = 1.3f;
 };
 
+struct HueDependantGamutParams
+{
+    float gamma_top;
+    float gamma_bottom;
+    f2 JMcusp;
+    float focusJ;
+};
 struct GamutCompressParams
 {
     float mid_J;

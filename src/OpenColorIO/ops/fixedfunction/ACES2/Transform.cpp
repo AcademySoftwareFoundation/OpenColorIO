@@ -661,7 +661,7 @@ inline float estimate_line_and_boundary_intersection_M(const float J_axis_inters
     //return shifted_intersection * M_max / (J_max - slope * M_max);
 }
 
-f3 find_gamut_boundary_intersection(const f3 &JMh_s, const f2 &JM_cusp_in, float J_focus, float J_max, float slope_gain, float gamma_top, float gamma_bottom)
+f2 find_gamut_boundary_intersection(const f2 &JM_cusp_in, float J_focus, float J_max, float slope_gain, float gamma_top, float gamma_bottom, const float J_intersect_source)
 {
     const float s = std::max(0.000001f, smooth_cusps); // TODO: pre smooth the cusp
     const f2 JM_cusp = {
@@ -669,7 +669,6 @@ f3 find_gamut_boundary_intersection(const f3 &JMh_s, const f2 &JM_cusp_in, float
         JM_cusp_in[1] * (1.f + smooth_m * s)
     };
 
-    const float J_intersect_source = solve_J_intersect(JMh_s[0], JMh_s[1], J_focus, J_max, slope_gain);
     const float J_intersect_cusp = solve_J_intersect(JM_cusp[0], JM_cusp[1], J_focus, J_max, slope_gain);
 
     float slope = 0.f;
@@ -687,7 +686,7 @@ f3 find_gamut_boundary_intersection(const f3 &JMh_s, const f2 &JM_cusp_in, float
     const float M_boundary = JM_cusp[1] * smin(M_boundary_lower / JM_cusp[1], M_boundary_upper / JM_cusp[1], s);
     const float J_boundary = J_intersect_source + slope * M_boundary; // TODO don't recalculate this
 
-    return {J_boundary, M_boundary, J_intersect_source};
+    return {J_boundary, M_boundary};
 }
 
 f3 get_reach_boundary(
@@ -750,7 +749,7 @@ float compression_function(
     return vCompressed;
 }
 
-f3 compressGamut(const f3 &JMh, float Jx, const ACES2::SharedCompressionParameters& sp, const ACES2::GamutCompressParams& p, const f2& JMcusp, bool invert)
+f3 compressGamut(const f3 &JMh, float Jx, const ACES2::SharedCompressionParameters& sp, const ACES2::GamutCompressParams& p, const HueDependantGamutParams hdp, bool invert)
 {
     const float J = JMh[0];
     const float M = JMh[1];
@@ -763,22 +762,20 @@ f3 compressGamut(const f3 &JMh, float Jx, const ACES2::SharedCompressionParamete
     else
     {
         const f2 project_from = {J, M};
-        const float focusJ = lerpf(JMcusp[0], p.mid_J, std::min(1.f, cusp_mid_blend - (JMcusp[0] / sp.limit_J_max)));
-        const float slope_gain = sp.limit_J_max * p.focus_dist * get_focus_gain(Jx, JMcusp[0], sp.limit_J_max);
+        const float slope_gain = sp.limit_J_max * p.focus_dist * get_focus_gain(Jx, hdp.JMcusp[0], sp.limit_J_max);
 
-        const float gamma_top = hue_dependent_upper_hull_gamma(h, p.upper_hull_gamma_table);
-        const float gamma_bottom = p.lower_hull_gamma;
+        const float J_intersect_source = solve_J_intersect(J, M, hdp.focusJ, sp.limit_J_max, slope_gain);
 
-        const f3 boundaryReturn = find_gamut_boundary_intersection({J, M, h}, JMcusp, focusJ, sp.limit_J_max, slope_gain, gamma_top, gamma_bottom);
+        const f2 boundaryReturn = find_gamut_boundary_intersection(hdp.JMcusp, hdp.focusJ, sp.limit_J_max, slope_gain, hdp.gamma_top, hdp.gamma_bottom, J_intersect_source);
         const f2 JMboundary = {boundaryReturn[0], boundaryReturn[1]};
-        const f2 project_to = {boundaryReturn[2], 0.f};
+        const f2 project_to = {J_intersect_source, 0.f};
 
         if (JMboundary[1] <= 0.0f)
         {
             return {J, 0.f, h};
         }
 
-        const f3 reachBoundary = get_reach_boundary(JMboundary[0], JMboundary[1], h, JMcusp, focusJ, sp.limit_J_max, sp.model_gamma_inv, p.focus_dist, sp.reach_m_table); // TODO
+        const f3 reachBoundary = get_reach_boundary(JMboundary[0], JMboundary[1], h, hdp.JMcusp, hdp.focusJ, sp.limit_J_max, sp.model_gamma_inv, p.focus_dist, sp.reach_m_table); // TODO
 
         const float difference = std::max(1.0001f, reachBoundary[1] / JMboundary[1]);
         const float threshold = std::max(compression_threshold, 1.f / difference);
@@ -795,24 +792,39 @@ f3 compressGamut(const f3 &JMh, float Jx, const ACES2::SharedCompressionParamete
     }
 }
 
+inline float compute_focusJ(float cusp_J, float mid_J, float limit_J_max)
+{
+    return lerpf(cusp_J, mid_J, std::min(1.f, cusp_mid_blend - (cusp_J / limit_J_max)));
+}
+
 f3 gamut_compress_fwd(const f3 &JMh, const SharedCompressionParameters &sp, const GamutCompressParams &p)
 {
-    const f2 JMcusp = cusp_from_table(JMh[2], p.gamut_cusp_table); // TODO: call once and pass this into compress functions ?
-    return compressGamut(JMh, JMh[0], sp, p, JMcusp, false);
+    HueDependantGamutParams hdp;
+    hdp.gamma_top = hue_dependent_upper_hull_gamma(JMh[2], p.upper_hull_gamma_table);
+    hdp.gamma_bottom = p.lower_hull_gamma;
+    hdp.JMcusp = cusp_from_table(JMh[2], p.gamut_cusp_table);
+    hdp.focusJ = compute_focusJ(hdp.JMcusp[0], p.mid_J, sp.limit_J_max);
+    
+    return compressGamut(JMh, JMh[0], sp, p, hdp, false);
 }
 
 f3 gamut_compress_inv(const f3 &JMh, const SharedCompressionParameters &sp, const GamutCompressParams &p)
 {
-    const f2 JMcusp = cusp_from_table(JMh[2], p.gamut_cusp_table); // TODO: call once and pass this into compress functions ?
+    HueDependantGamutParams hdp;
+    hdp.gamma_top = hue_dependent_upper_hull_gamma(JMh[2], p.upper_hull_gamma_table);
+    hdp.gamma_bottom = p.lower_hull_gamma;
+    hdp.JMcusp = cusp_from_table(JMh[2], p.gamut_cusp_table);
+    hdp.focusJ = compute_focusJ(hdp.JMcusp[0], p.mid_J, sp.limit_J_max);
+
     float Jx = JMh[0];
 
     // Analytic inverse below threshold
-    if (Jx > lerpf(JMcusp[0], sp.limit_J_max, focus_gain_blend))
+    if (Jx > lerpf(hdp.JMcusp[0], sp.limit_J_max, focus_gain_blend))
     {
         // Approximation above threshold
-        Jx = compressGamut(JMh, Jx, sp, p, JMcusp, true)[0];
+        Jx = compressGamut(JMh, Jx, sp, p, hdp, true)[0];
     }
-    return compressGamut(JMh, Jx, sp, p, JMcusp, true);
+    return compressGamut(JMh, Jx, sp, p, hdp, true);
 }
 
 bool evaluate_gamma_fit(
@@ -826,12 +838,13 @@ bool evaluate_gamma_fit(
     float lower_hull_gamma,
     const JMhParams &limitJMhParams)
 {
-    const float focusJ = lerpf(JMcusp[0], mid_J, std::min(1.f, cusp_mid_blend - (JMcusp[0] / limit_J_max)));
+    const float focusJ = compute_focusJ(JMcusp[0], mid_J, limit_J_max);
 
     for (size_t testIndex = 0; testIndex < 3; testIndex++)
     {
         const float slope_gain = limit_J_max * focus_dist * get_focus_gain(testJMh[testIndex][0], JMcusp[0], limit_J_max);
-        const f3 approxLimit = find_gamut_boundary_intersection(testJMh[testIndex], JMcusp, focusJ, limit_J_max, slope_gain, topGamma, lower_hull_gamma);
+        const float J_intersect_source = solve_J_intersect(testJMh[testIndex][0], testJMh[testIndex][1], focusJ, limit_J_max, slope_gain);
+        const f2 approxLimit = find_gamut_boundary_intersection(JMcusp, focusJ, limit_J_max, slope_gain, topGamma, lower_hull_gamma, J_intersect_source);
         const f3 approximate_JMh = {approxLimit[0], approxLimit[1], testJMh[testIndex][2]};
         const f3 newLimitRGB = JMh_to_RGB(approximate_JMh, limitJMhParams);
         const f3 newLimitRGBScaled = mult_f_f3(reference_luminance / peakLuminance, newLimitRGB);
