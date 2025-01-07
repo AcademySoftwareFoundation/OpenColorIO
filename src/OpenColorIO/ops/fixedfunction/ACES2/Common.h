@@ -57,28 +57,30 @@ struct ToneScaleParams
     float s_2;
     float u_2;
     float m_2;
+    float log_peak;
+};
+
+struct SharedCompressionParameters
+{
+    float limit_J_max;
+    float model_gamma_inv;
+    Table1D reach_m_table;
 };
 
 struct ChromaCompressParams
 {
-    float limit_J_max;
-    float model_gamma_inv;
     float sat;
     float sat_thr;
     float compr;
-    Table1D reach_m_table;
     float chroma_compress_scale;
     static constexpr float cusp_mid_blend = 1.3f;
 };
 
 struct GamutCompressParams
 {
-    float limit_J_max;
     float mid_J;
-    float model_gamma_inv;
     float focus_dist;
     float lower_hull_gamma;
-    Table1D reach_m_table;
     Table3D gamut_cusp_table;
     Table1D upper_hull_gamma_table;
 };

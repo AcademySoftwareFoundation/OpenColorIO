@@ -147,6 +147,7 @@ protected:
     ACES2::JMhParams m_pIn;
     ACES2::JMhParams m_pOut;
     ACES2::ToneScaleParams m_t;
+    ACES2::SharedCompressionParameters m_s;
     ACES2::ChromaCompressParams m_c;
     ACES2::GamutCompressParams m_g;
 };
@@ -184,6 +185,7 @@ protected:
     bool m_fwd;
     ACES2::JMhParams m_p;
     ACES2::ToneScaleParams m_t;
+    ACES2::SharedCompressionParameters m_s;
     ACES2::ChromaCompressParams m_c;
 };
 
@@ -201,6 +203,7 @@ private:
 
 protected:
     bool m_fwd;
+    ACES2::SharedCompressionParameters m_s;
     ACES2::GamutCompressParams m_g;
 };
 
@@ -1023,8 +1026,9 @@ Renderer_ACES_OutputTransform20::Renderer_ACES_OutputTransform20(ConstFixedFunct
     m_pIn = ACES2::init_JMhParams(ACES_AP0::primaries);
     m_pOut = ACES2::init_JMhParams(lim_primaries);
     m_t = ACES2::init_ToneScaleParams(peak_luminance);
-    m_c = ACES2::init_ChromaCompressParams(peak_luminance);
-    m_g = ACES2::init_GamutCompressParams(peak_luminance, lim_primaries);
+    m_s = ACES2::init_SharedCompressionParams(peak_luminance, m_pIn);
+    m_c = ACES2::init_ChromaCompressParams(peak_luminance, m_t);
+    m_g = ACES2::init_GamutCompressParams(peak_luminance, m_pIn, m_pOut, m_t, m_s);
 }
 
 void Renderer_ACES_OutputTransform20::apply(const void * inImg, void * outImg, long numPixels) const
@@ -1048,8 +1052,8 @@ void Renderer_ACES_OutputTransform20::fwd(const void * inImg, void * outImg, lon
     {
         const ACES2::f3 RGBIn {in[0], in[1], in[2]};
         const ACES2::f3 JMh           = ACES2::RGB_to_JMh(RGBIn, m_pIn);
-        const ACES2::f3 tonemappedJMh = ACES2::tonescale_chroma_compress_fwd(JMh, m_pIn, m_t, m_c);
-        const ACES2::f3 compressedJMh = ACES2::gamut_compress_fwd(tonemappedJMh, m_g);
+        const ACES2::f3 tonemappedJMh = ACES2::tonescale_chroma_compress_fwd(JMh, m_pIn, m_t, m_s, m_c);
+        const ACES2::f3 compressedJMh = ACES2::gamut_compress_fwd(tonemappedJMh, m_s, m_g);
         const ACES2::f3 RGBOut        = ACES2::JMh_to_RGB(compressedJMh, m_pOut);
 
         out[0] = RGBOut[0];
@@ -1071,8 +1075,8 @@ void Renderer_ACES_OutputTransform20::inv(const void * inImg, void * outImg, lon
     {
         const ACES2::f3 RGBout {in[0], in[1], in[2]};
         const ACES2::f3 compressedJMh = ACES2::RGB_to_JMh(RGBout, m_pOut);
-        const ACES2::f3 tonemappedJMh = ACES2::gamut_compress_inv(compressedJMh, m_g);
-        const ACES2::f3 JMh           = ACES2::tonescale_chroma_compress_inv(tonemappedJMh, m_pIn, m_t, m_c);
+        const ACES2::f3 tonemappedJMh = ACES2::gamut_compress_inv(compressedJMh, m_s, m_g);
+        const ACES2::f3 JMh           = ACES2::tonescale_chroma_compress_inv(tonemappedJMh, m_pIn, m_t, m_s, m_c);
         const ACES2::f3 RGBin         = ACES2::JMh_to_RGB(JMh, m_pIn);
 
         out[0] = RGBin[0];
@@ -1168,7 +1172,8 @@ Renderer_ACES_TONESCALE_COMPRESS_20::Renderer_ACES_TONESCALE_COMPRESS_20(ConstFi
 
     m_p = ACES2::init_JMhParams(ACES_AP0::primaries);
     m_t = ACES2::init_ToneScaleParams(peak_luminance);
-    m_c = ACES2::init_ChromaCompressParams(peak_luminance);
+    m_s = ACES2::init_SharedCompressionParams(peak_luminance, m_p);
+    m_c = ACES2::init_ChromaCompressParams(peak_luminance, m_t);
 }
 
 void Renderer_ACES_TONESCALE_COMPRESS_20::apply(const void * inImg, void * outImg, long numPixels) const
@@ -1190,7 +1195,7 @@ void Renderer_ACES_TONESCALE_COMPRESS_20::fwd(const void * inImg, void * outImg,
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        const ACES2::f3 JMh = ACES2::tonescale_chroma_compress_fwd({in[0], in[1], in[2]}, m_p, m_t, m_c);
+        const ACES2::f3 JMh = ACES2::tonescale_chroma_compress_fwd({in[0], in[1], in[2]}, m_p, m_t, m_s, m_c);
 
         out[0] = JMh[0];
         out[1] = JMh[1];
@@ -1209,7 +1214,7 @@ void Renderer_ACES_TONESCALE_COMPRESS_20::inv(const void * inImg, void * outImg,
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        const ACES2::f3 JMh = ACES2::tonescale_chroma_compress_inv({in[0], in[1], in[2]}, m_p, m_t, m_c);
+        const ACES2::f3 JMh = ACES2::tonescale_chroma_compress_inv({in[0], in[1], in[2]}, m_p, m_t, m_s, m_c);
 
         out[0] = JMh[0];
         out[1] = JMh[1];
@@ -1244,7 +1249,11 @@ Renderer_ACES_GAMUT_COMPRESS_20::Renderer_ACES_GAMUT_COMPRESS_20(ConstFixedFunct
         {white_x, white_y}
     };
 
-    m_g = ACES2::init_GamutCompressParams(peakLuminance, limitingPrimaries);
+    const ACES2::JMhParams pIn = ACES2::init_JMhParams(ACES_AP0::primaries);
+    const ACES2::JMhParams pLim = ACES2::init_JMhParams(limitingPrimaries);
+    const ACES2::ToneScaleParams t = ACES2::init_ToneScaleParams(peakLuminance);
+    m_s = ACES2::init_SharedCompressionParams(peakLuminance, pIn);
+    m_g = ACES2::init_GamutCompressParams(peakLuminance, pIn, pLim, t, m_s);
 }
 
 void Renderer_ACES_GAMUT_COMPRESS_20::apply(const void * inImg, void * outImg, long numPixels) const
@@ -1266,7 +1275,7 @@ void Renderer_ACES_GAMUT_COMPRESS_20::fwd(const void * inImg, void * outImg, lon
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        const ACES2::f3 JMh = ACES2::gamut_compress_fwd({in[0], in[1], in[2]}, m_g);
+        const ACES2::f3 JMh = ACES2::gamut_compress_fwd({in[0], in[1], in[2]}, m_s, m_g);
 
         out[0] = JMh[0];
         out[1] = JMh[1];
@@ -1285,7 +1294,7 @@ void Renderer_ACES_GAMUT_COMPRESS_20::inv(const void * inImg, void * outImg, lon
 
     for(long idx=0; idx<numPixels; ++idx)
     {
-        const ACES2::f3 JMh = ACES2::gamut_compress_inv({in[0], in[1], in[2]}, m_g);
+        const ACES2::f3 JMh = ACES2::gamut_compress_inv({in[0], in[1], in[2]}, m_s, m_g);
 
         out[0] = JMh[0];
         out[1] = JMh[1];

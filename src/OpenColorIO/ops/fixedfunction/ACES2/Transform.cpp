@@ -333,7 +333,7 @@ float tonescale_inv(const float J_ts, const JMhParams &p, const ToneScaleParams 
     return std::copysign(J, Y_ts);
 }
 
-f3 tonescale_chroma_compress_fwd(const f3 &JMh, const JMhParams &p, const ToneScaleParams &pt, const ChromaCompressParams &pc)
+f3 tonescale_chroma_compress_fwd(const f3 &JMh, const JMhParams &p, const ToneScaleParams &pt, const SharedCompressionParameters &ps, const ChromaCompressParams &pc)
 {
     const float J = JMh[0];
     const float M = JMh[1];
@@ -346,12 +346,12 @@ f3 tonescale_chroma_compress_fwd(const f3 &JMh, const JMhParams &p, const ToneSc
 
     if (M != 0.0)
     {
-        const float nJ = J_ts / pc.limit_J_max;
+        const float nJ = J_ts / ps.limit_J_max;
         const float snJ = std::max(0.f, 1.f - nJ);
         const float Mnorm = chroma_compress_norm(h, pc.chroma_compress_scale);
-        const float limit = powf(nJ, pc.model_gamma_inv) * reach_m_from_table(h, pc.reach_m_table) / Mnorm;
+        const float limit = powf(nJ, ps.model_gamma_inv) * reach_m_from_table(h, ps.reach_m_table) / Mnorm;
 
-        M_cp = M * powf(J_ts / J, pc.model_gamma_inv);
+        M_cp = M * powf(J_ts / J, ps.model_gamma_inv);
         M_cp = M_cp / Mnorm;
         M_cp = limit - toe_fwd(limit - M_cp, limit - 0.001f, snJ * pc.sat, sqrt(nJ * nJ + pc.sat_thr));
         M_cp = toe_fwd(M_cp, limit, nJ * pc.compr, snJ);
@@ -361,7 +361,7 @@ f3 tonescale_chroma_compress_fwd(const f3 &JMh, const JMhParams &p, const ToneSc
     return {J_ts, M_cp, h};
 }
 
-f3 tonescale_chroma_compress_inv(const f3 &JMh, const JMhParams &p, const ToneScaleParams &pt, const ChromaCompressParams &pc)
+f3 tonescale_chroma_compress_inv(const f3 &JMh, const JMhParams &p, const ToneScaleParams &pt, const SharedCompressionParameters &ps, const ChromaCompressParams &pc)
 {
     const float J_ts = JMh[0];
     const float M_cp = JMh[1];
@@ -374,16 +374,16 @@ f3 tonescale_chroma_compress_inv(const f3 &JMh, const JMhParams &p, const ToneSc
 
     if (M_cp != 0.0)
     {
-        const float nJ = J_ts / pc.limit_J_max;
+        const float nJ = J_ts / ps.limit_J_max;
         const float snJ = std::max(0.f, 1.f - nJ);
         const float Mnorm = chroma_compress_norm(h, pc.chroma_compress_scale);
-        const float limit = powf(nJ, pc.model_gamma_inv) * reach_m_from_table(h, pc.reach_m_table) / Mnorm;
+        const float limit = powf(nJ, ps.model_gamma_inv) * reach_m_from_table(h, ps.reach_m_table) / Mnorm;
 
         M = M_cp / Mnorm;
         M = toe_inv(M, limit, nJ * pc.compr, snJ);
         M = limit - toe_inv(limit - M, limit - 0.001f, snJ * pc.sat, sqrt(nJ * nJ + pc.sat_thr));
         M = M * Mnorm;
-        M = M * powf(J_ts / J, -pc.model_gamma_inv);
+        M = M * powf(J_ts / J, -ps.model_gamma_inv);
     }
 
     return {J, M, h};
@@ -397,7 +397,6 @@ inline float model_gamma(void)
 
 JMhParams init_JMhParams(const Primaries &prims)
 {
-    JMhParams p;
     const m33f cone_response_to_Aab = {
         2.0f, 1.0f, 1.0f / 20.0f,
         1.0f, -12.0f / 11.0f, 1.0f / 11.0f,
@@ -417,8 +416,8 @@ JMhParams init_JMhParams(const Primaries &prims)
     constexpr float K4 = K * K * K * K;
     const float F_L = 0.2f * K4 * (5.f * L_A) + 0.1f * powf((1.f - K4), 2.f) * powf(5.f * L_A, 1.f/3.f);
 
-    p.F_L_n = F_L / reference_luminance;
-    p.cz    = model_gamma();
+    const float F_L_n = F_L / reference_luminance;
+    const float cz    = model_gamma();
 
     const f3 D_RGB = {
         Y_W / RGB_w[0],
@@ -433,33 +432,41 @@ JMhParams init_JMhParams(const Primaries &prims)
     };
 
     const f3 RGB_AW = {
-        post_adaptation_cone_response_compression_fwd(RGB_WC[0], p.F_L_n),
-        post_adaptation_cone_response_compression_fwd(RGB_WC[1], p.F_L_n),
-        post_adaptation_cone_response_compression_fwd(RGB_WC[2], p.F_L_n)
+        post_adaptation_cone_response_compression_fwd(RGB_WC[0], F_L_n),
+        post_adaptation_cone_response_compression_fwd(RGB_WC[1], F_L_n),
+        post_adaptation_cone_response_compression_fwd(RGB_WC[2], F_L_n)
     };
 
-    p.A_w   = cone_response_to_Aab[0] * RGB_AW[0] + cone_response_to_Aab[1] * RGB_AW[1] + cone_response_to_Aab[2] * RGB_AW[2];
-    p.A_w_J = _post_adaptation_cone_response_compression_fwd(reference_luminance, p.F_L_n);
+    const float A_w   = cone_response_to_Aab[0] * RGB_AW[0] + cone_response_to_Aab[1] * RGB_AW[1] + cone_response_to_Aab[2] * RGB_AW[2];
+    const float A_w_J = _post_adaptation_cone_response_compression_fwd(reference_luminance, F_L_n);
 
     // Note we are prescaling the CAM16 LMS responses to directly provide for chromatic adaptation.
     const m33f MATRIX_RGB_to_CAM16 = mult_f33_f33(RGBtoRGB_f33(prims, CAM16::primaries), scale_f33(Identity_M33, f3_from_f(reference_luminance)));
-    p.MATRIX_RGB_to_CAM16_c = mult_f33_f33(scale_f33(Identity_M33, D_RGB), MATRIX_RGB_to_CAM16);
-    p.MATRIX_CAM16_c_to_RGB = invert_f33(p.MATRIX_RGB_to_CAM16_c);
+    const m33f MATRIX_RGB_to_CAM16_c = mult_f33_f33(scale_f33(Identity_M33, D_RGB), MATRIX_RGB_to_CAM16);
+    const m33f MATRIX_CAM16_c_to_RGB = invert_f33(MATRIX_RGB_to_CAM16_c);
 
-    p.MATRIX_cone_response_to_Aab = {
-        cone_response_to_Aab[0] / p.A_w,              cone_response_to_Aab[1] / p.A_w,              cone_response_to_Aab[2] / p.A_w,
+    const m33f MATRIX_cone_response_to_Aab = {
+        cone_response_to_Aab[0] / A_w,                cone_response_to_Aab[1] / A_w,                cone_response_to_Aab[2] / A_w,
         cone_response_to_Aab[3] * 43.f * surround[2], cone_response_to_Aab[4] * 43.f * surround[2], cone_response_to_Aab[5] * 43.f * surround[2],
         cone_response_to_Aab[6] * 43.f * surround[2], cone_response_to_Aab[7] * 43.f * surround[2], cone_response_to_Aab[8] * 43.f * surround[2],
     };
-    p.MATRIX_Aab_to_cone_response = invert_f33(p.MATRIX_cone_response_to_Aab);
+    const m33f MATRIX_Aab_to_cone_response = invert_f33(MATRIX_cone_response_to_Aab);
 
+    JMhParams p = {
+        F_L_n,
+        cz,
+        A_w,
+        A_w_J,
+        MATRIX_RGB_to_CAM16_c,
+        MATRIX_CAM16_c_to_RGB,
+        MATRIX_cone_response_to_Aab,
+        MATRIX_Aab_to_cone_response
+    };
    return p;
 }
 
-Table3D make_gamut_table(const Primaries &P, float peakLuminance)
+Table3D make_gamut_table(const JMhParams &params, float peakLuminance)
 {
-    const JMhParams params = init_JMhParams(P);
-
     Table3D gamutCuspTableUnsorted{};
     for (int i = 0; i < gamutCuspTableUnsorted.size; i++)
     {
@@ -511,9 +518,8 @@ bool any_below_zero(const f3 &rgb)
     return (rgb[0] < 0. || rgb[1] < 0. || rgb[2] < 0.);
 }
 
-Table1D make_reach_m_table(const Primaries &P, float peakLuminance)
+Table1D make_reach_m_table(const JMhParams &params, float peakLuminance)
 {
-    const JMhParams params = init_JMhParams(P);
     const float limit_J_max = Y_to_J(peakLuminance, params);
 
     Table1D gamutReachTable{};
@@ -744,26 +750,26 @@ float compression_function(
     return vCompressed;
 }
 
-f3 compressGamut(const f3 &JMh, float Jx, const ACES2::GamutCompressParams& p, const f2& JMcusp, bool invert)
+f3 compressGamut(const f3 &JMh, float Jx, const ACES2::SharedCompressionParameters& sp, const ACES2::GamutCompressParams& p, const f2& JMcusp, bool invert)
 {
     const float J = JMh[0];
     const float M = JMh[1];
     const float h = JMh[2];
 
-    if (M < 0.0001f || J > p.limit_J_max)
+    if (M < 0.0001f || J > sp.limit_J_max)
     {
         return {J, 0.f, h};
     }
     else
     {
         const f2 project_from = {J, M};
-        const float focusJ = lerpf(JMcusp[0], p.mid_J, std::min(1.f, cusp_mid_blend - (JMcusp[0] / p.limit_J_max)));
-        const float slope_gain = p.limit_J_max * p.focus_dist * get_focus_gain(Jx, JMcusp[0], p.limit_J_max);
+        const float focusJ = lerpf(JMcusp[0], p.mid_J, std::min(1.f, cusp_mid_blend - (JMcusp[0] / sp.limit_J_max)));
+        const float slope_gain = sp.limit_J_max * p.focus_dist * get_focus_gain(Jx, JMcusp[0], sp.limit_J_max);
 
         const float gamma_top = hue_dependent_upper_hull_gamma(h, p.upper_hull_gamma_table);
         const float gamma_bottom = p.lower_hull_gamma;
 
-        const f3 boundaryReturn = find_gamut_boundary_intersection({J, M, h}, JMcusp, focusJ, p.limit_J_max, slope_gain, gamma_top, gamma_bottom);
+        const f3 boundaryReturn = find_gamut_boundary_intersection({J, M, h}, JMcusp, focusJ, sp.limit_J_max, slope_gain, gamma_top, gamma_bottom);
         const f2 JMboundary = {boundaryReturn[0], boundaryReturn[1]};
         const f2 project_to = {boundaryReturn[2], 0.f};
 
@@ -772,7 +778,7 @@ f3 compressGamut(const f3 &JMh, float Jx, const ACES2::GamutCompressParams& p, c
             return {J, 0.f, h};
         }
 
-        const f3 reachBoundary = get_reach_boundary(JMboundary[0], JMboundary[1], h, JMcusp, focusJ, p.limit_J_max, p.model_gamma_inv, p.focus_dist, p.reach_m_table);
+        const f3 reachBoundary = get_reach_boundary(JMboundary[0], JMboundary[1], h, JMcusp, focusJ, sp.limit_J_max, sp.model_gamma_inv, p.focus_dist, sp.reach_m_table); // TODO
 
         const float difference = std::max(1.0001f, reachBoundary[1] / JMboundary[1]);
         const float threshold = std::max(compression_threshold, 1.f / difference);
@@ -789,24 +795,24 @@ f3 compressGamut(const f3 &JMh, float Jx, const ACES2::GamutCompressParams& p, c
     }
 }
 
-f3 gamut_compress_fwd(const f3 &JMh, const GamutCompressParams &p)
+f3 gamut_compress_fwd(const f3 &JMh, const SharedCompressionParameters &sp, const GamutCompressParams &p)
 {
     const f2 JMcusp = cusp_from_table(JMh[2], p.gamut_cusp_table); // TODO: call once and pass this into compress functions ?
-    return compressGamut(JMh, JMh[0], p, JMcusp, false);
+    return compressGamut(JMh, JMh[0], sp, p, JMcusp, false);
 }
 
-f3 gamut_compress_inv(const f3 &JMh, const GamutCompressParams &p)
+f3 gamut_compress_inv(const f3 &JMh, const SharedCompressionParameters &sp, const GamutCompressParams &p)
 {
     const f2 JMcusp = cusp_from_table(JMh[2], p.gamut_cusp_table); // TODO: call once and pass this into compress functions ?
     float Jx = JMh[0];
 
     // Analytic inverse below threshold
-    if (Jx > lerpf(JMcusp[0], p.limit_J_max, focus_gain_blend))
+    if (Jx > lerpf(JMcusp[0], sp.limit_J_max, focus_gain_blend))
     {
         // Approximation above threshold
-        Jx = compressGamut(JMh, Jx, p, JMcusp, true)[0];
+        Jx = compressGamut(JMh, Jx, sp, p, JMcusp, true)[0];
     }
-    return compressGamut(JMh, Jx, p, JMcusp, true);
+    return compressGamut(JMh, Jx, sp, p, JMcusp, true);
 }
 
 bool evaluate_gamma_fit(
@@ -949,6 +955,7 @@ ToneScaleParams init_ToneScaleParams(float peakLuminance)
     const float s_2 = w_2 * m_1 * reference_luminance;
     const float u_2 = powf((r_hit/m_1)/((r_hit/m_1) + w_2), g);
     const float m_2 = m_1 / u_2;
+    const float log_peak = log10( n / n_r);
 
     ToneScaleParams TonescaleParams = {
         n,
@@ -958,70 +965,61 @@ ToneScaleParams init_ToneScaleParams(float peakLuminance)
         c_t,
         s_2,
         u_2,
-        m_2
+        m_2,
+        log_peak
     };
 
     return TonescaleParams;
 }
 
-ChromaCompressParams init_ChromaCompressParams(float peakLuminance)
+SharedCompressionParameters init_SharedCompressionParams(float peakLuminance, const JMhParams &inputJMhParams)
 {
-    const ToneScaleParams tsParams = init_ToneScaleParams(peakLuminance);
-    const JMhParams inputJMhParams = init_JMhParams(ACES_AP0::primaries);
-
-    float limit_J_max = Y_to_J(peakLuminance, inputJMhParams);
-
-    // Calculated chroma compress variables
-    const float log_peak = log10( tsParams.n / tsParams.n_r);
-    const float compr = chroma_compress + (chroma_compress * chroma_compress_fact) * log_peak;
-    const float sat = std::max(0.2f, chroma_expand - (chroma_expand * chroma_expand_fact) * log_peak);
-    const float sat_thr = chroma_expand_thr / tsParams.n;
+    const float limit_J_max = Y_to_J(peakLuminance, inputJMhParams);
     const float model_gamma_inv = 1.f / model_gamma();
+    const JMhParams compressionGamut = init_JMhParams(ACES_AP1::primaries);
 
-    ChromaCompressParams params{};
-    params.limit_J_max = limit_J_max;
-    params.model_gamma_inv = model_gamma_inv;
-    params.sat = sat;
-    params.sat_thr = sat_thr;
-    params.compr = compr;
-    params.chroma_compress_scale = powf(0.03379f * peakLuminance, 0.30596f) - 0.45135f;
-    params.reach_m_table = make_reach_m_table(ACES_AP1::primaries, peakLuminance);
+    SharedCompressionParameters params = {
+        limit_J_max,
+        model_gamma_inv,
+        make_reach_m_table(compressionGamut, peakLuminance)
+    };
     return params;
 }
 
-GamutCompressParams init_GamutCompressParams(float peakLuminance, const Primaries &limitingPrimaries)
+ChromaCompressParams init_ChromaCompressParams(float peakLuminance, const ToneScaleParams &tsParams)
 {
-    const ToneScaleParams tsParams = init_ToneScaleParams(peakLuminance);
-    const JMhParams inputJMhParams = init_JMhParams(ACES_AP0::primaries);
+    // Calculated chroma compress variables
+    const float compr = chroma_compress + (chroma_compress * chroma_compress_fact) * tsParams.log_peak;
+    const float sat = std::max(0.2f, chroma_expand - (chroma_expand * chroma_expand_fact) * tsParams.log_peak);
+    const float sat_thr = chroma_expand_thr / tsParams.n;
+    const float chroma_compress_scale =  powf(0.03379f * peakLuminance, 0.30596f) - 0.45135f;
 
-    float limit_J_max = Y_to_J(peakLuminance, inputJMhParams);
-    float mid_J = Y_to_J(tsParams.c_t * reference_luminance, inputJMhParams);
+    ChromaCompressParams params = {
+        sat,
+        sat_thr,
+        compr,
+        chroma_compress_scale
+    };
+    return params;
+}
+
+GamutCompressParams init_GamutCompressParams(float peakLuminance, const JMhParams &inputJMhParams, const JMhParams &limitJMhParams,
+                                             const ToneScaleParams &tsParams, const SharedCompressionParameters &shParams)
+{
+    float mid_J = Y_to_J(tsParams.c_t * reference_luminance, inputJMhParams); // TODO
 
     // Calculated chroma compress variables
-    const float log_peak = log10( tsParams.n / tsParams.n_r);
-    const float model_gamma_inv = 1.f / model_gamma();
-    const float focus_dist = focus_distance + focus_distance * focus_distance_scaling * log_peak;
-    const float lower_hull_gamma =  1.14f + 0.07f * log_peak;
+    const float focus_dist = focus_distance + focus_distance * focus_distance_scaling * tsParams.log_peak;
+    const float lower_hull_gamma =  1.14f + 0.07f * tsParams.log_peak;
 
-    const JMhParams limitJMhParams = init_JMhParams(limitingPrimaries);
-
-    GamutCompressParams params{};
-    params.limit_J_max = limit_J_max;
-    params.mid_J = mid_J;
-    params.model_gamma_inv = model_gamma_inv;
-    params.focus_dist = focus_dist;
-    params.lower_hull_gamma = lower_hull_gamma;
-    params.reach_m_table = make_reach_m_table(ACES_AP1::primaries, peakLuminance);
-    params.gamut_cusp_table = make_gamut_table(limitingPrimaries, peakLuminance);
-    params.upper_hull_gamma_table = make_upper_hull_gamma(
-        params.gamut_cusp_table,
-        peakLuminance,
-        limit_J_max,
+    GamutCompressParams params = {
         mid_J,
         focus_dist,
         lower_hull_gamma,
-        limitJMhParams);
-
+        make_gamut_table(limitJMhParams, peakLuminance),
+        make_upper_hull_gamma(params.gamut_cusp_table, peakLuminance, shParams.limit_J_max,
+                              mid_J, focus_dist, lower_hull_gamma, limitJMhParams)
+    };
     return params;
 }
 
