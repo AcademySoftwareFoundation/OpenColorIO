@@ -62,7 +62,7 @@ struct ToneScaleParams
 struct ChromaCompressParams
 {
     float limit_J_max;
-    float model_gamma;
+    float model_gamma_inv;
     float sat;
     float sat_thr;
     float compr;
@@ -75,7 +75,7 @@ struct GamutCompressParams
 {
     float limit_J_max;
     float mid_J;
-    float model_gamma;
+    float model_gamma_inv;
     float focus_dist;
     float lower_hull_gamma;
     Table1D reach_m_table;

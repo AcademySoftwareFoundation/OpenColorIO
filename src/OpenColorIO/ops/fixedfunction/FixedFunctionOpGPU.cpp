@@ -544,7 +544,7 @@ void _Add_Tonescale_Compress_Fwd_Shader(
 
     // Tonescale applied in Y (convert to and from J)
     ss.newLine() << ss.floatDecl("A") << " = " << p.A_w_J << " * pow(abs(J) / 100.0, 1.0 / (" << p.cz << "));";
-    ss.newLine() << ss.floatDecl("Y") << " = sign(J) * pow((27.13 * A) / (400.0 - A), 1.0 / 0.42) / " << p.F_L_n << " / 100.0;";
+    ss.newLine() << ss.floatDecl("Y") << " = sign(J) * pow((27.13 * A) / (400.0 - A), 1.0 / 0.42) / " << p.F_L_n << ";";
 
     ss.newLine() << ss.floatDecl("f") << " = " << t.m_2  << " * pow(max(0.0, Y) / (Y + " << t.s_2 << "), " << t.g << ");";
     ss.newLine() << ss.floatDecl("Y_ts") << " = max(0.0, f * f / (f + " << t.t_1 << ")) * " << t.n_r << ";";
@@ -582,8 +582,8 @@ void _Add_Tonescale_Compress_Fwd_Shader(
     ss.newLine() << "}";
 
     ss.newLine() << ss.floatDecl("reachM") << " = " << reachName << "_sample(h);";
-    ss.newLine() << ss.floatDecl("limit") << " = pow(nJ, " << c.model_gamma << ") * reachM / Mnorm;";
-    ss.newLine() << "M_cp = M * pow(J_ts / J, " << c.model_gamma << ");";
+    ss.newLine() << ss.floatDecl("limit") << " = pow(nJ, " << c.model_gamma_inv << ") * reachM / Mnorm;";
+    ss.newLine() << "M_cp = M * pow(J_ts / J, " << c.model_gamma_inv << ");";
     ss.newLine() << "M_cp = M_cp / Mnorm;";
 
     ss.newLine() << "M_cp = limit - " << toeName << "(limit - M_cp, limit - 0.001, snJ * " << c.sat << ", sqrt(nJ * nJ + " << c.sat_thr << "));";
@@ -621,7 +621,7 @@ void _Add_Tonescale_Compress_Inv_Shader(
     ss.newLine() << ss.floatDecl("ht") << " = (Z + sqrt(Z * (4.0 * " << t.t_1 << " + Z))) / 2.0;";
     ss.newLine() << ss.floatDecl("Y") << " = " << t.s_2 << " / (pow((" << t.m_2 << " / ht), (1.0 / " << t.g << ")) - 1.0);";
 
-    ss.newLine() << ss.floatDecl("F_L_Y") << " = pow(" << p.F_L_n << " * abs(Y * 100.0), 0.42);";
+    ss.newLine() << ss.floatDecl("F_L_Y") << " = pow(" << p.F_L_n << " * abs(Y), 0.42);";
     ss.newLine() << ss.floatDecl("J") << " = sign(Y) * 100.0 * pow(((400.0 * F_L_Y) / (27.13 + F_L_Y)) / " << p.A_w_J << ", " << p.cz << ");";
 
     // ChromaCompress
@@ -654,13 +654,13 @@ void _Add_Tonescale_Compress_Inv_Shader(
     ss.newLine() << "}";
 
     ss.newLine() << ss.floatDecl("reachM") << " = " << reachName << "_sample(h);";
-    ss.newLine() << ss.floatDecl("limit") << " = pow(nJ, " << c.model_gamma << ") * reachM / Mnorm;";
+    ss.newLine() << ss.floatDecl("limit") << " = pow(nJ, " << c.model_gamma_inv << ") * reachM / Mnorm;";
 
     ss.newLine() << "M = M_cp / Mnorm;";
     ss.newLine() << "M = " << toeName << "(M, limit, nJ * " << c.compr << ", snJ);";
     ss.newLine() << "M = limit - " << toeName << "(limit - M, limit - 0.001, snJ * " << c.sat << ", sqrt(nJ * nJ + " << c.sat_thr << "));";
     ss.newLine() << "M = M * Mnorm;";
-    ss.newLine() << "M = M * pow(J_ts / J, " << -c.model_gamma << ");";
+    ss.newLine() << "M = M * pow(J_ts / J, " << -c.model_gamma_inv << ");";
 
     ss.dedent();
     ss.newLine() << "}";
@@ -1113,7 +1113,7 @@ std::string _Add_Reach_Boundary_func(
     ss.dedent();
     ss.newLine() << "}";
 
-    ss.newLine() << ss.floatDecl("boundary") << " = " << g.limit_J_max << " * pow(intersectJ / " << g.limit_J_max << ", " << g.model_gamma << ") * reachMaxM / (" << g.limit_J_max << " - slope * reachMaxM);";
+    ss.newLine() << ss.floatDecl("boundary") << " = " << g.limit_J_max << " * pow(intersectJ / " << g.limit_J_max << ", " << g.model_gamma_inv << ") * reachMaxM / (" << g.limit_J_max << " - slope * reachMaxM);";
 
     ss.newLine() << "return " << ss.float3Const("J", "boundary", "h") << ";";
 
