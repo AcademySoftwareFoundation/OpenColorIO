@@ -190,7 +190,7 @@ std::unique_ptr<std::istream> getLutData(
     const std::string & filepath, 
     std::ios_base::openmode mode)
 {
-    if (config.getConfigIOProxy())
+    if (!pystring::os::path::isabs(filepath) && config.getConfigIOProxy())
     {
         std::vector<uint8_t> buffer = config.getConfigIOProxy()->getLutData(filepath.c_str());
         std::stringstream ss;

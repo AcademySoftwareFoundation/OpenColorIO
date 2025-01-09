@@ -88,20 +88,20 @@ std::string GetFastFileHash(const std::string & filename, const Context & contex
             fileHashResultPtr->ready = true;
 
             std::string h = "";
-            if (!context.getConfigIOProxy())
-            {
-                // Default case.
-                h = g_hashFunction(filename);
-            }
-            else
+            if (!pystring::os::path::isabs(filename) && context.getConfigIOProxy())
             {
                 // Case for when ConfigIOProxy is used (callbacks mechanism).
                 h = context.getConfigIOProxy()->getFastLutFileHash(filename.c_str());
             }
+            else
+            {
+                // Default case
+                h = g_hashFunction(filename);
+            }
 
             fileHashResultPtr->hash = h;
         }
-    
+
         hash = fileHashResultPtr->hash;
     }
 
