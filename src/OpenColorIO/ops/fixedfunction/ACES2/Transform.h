@@ -15,6 +15,7 @@ namespace ACES2
 JMhParams init_JMhParams(const Primaries &P);
 ToneScaleParams init_ToneScaleParams(float peakLuminance);
 SharedCompressionParameters init_SharedCompressionParams(float peakLuminance, const JMhParams &inputJMhParams);
+ResolvedSharedCompressionParameters resolve_CompressionParams(float hue, const SharedCompressionParameters &p);
 ChromaCompressParams init_ChromaCompressParams(float peakLuminance, const ToneScaleParams &tsParams);
 GamutCompressParams init_GamutCompressParams(float peakLuminance, const JMhParams &inputJMhParams, const JMhParams &limitJMhParams,
                                              const ToneScaleParams &tsParams, const SharedCompressionParameters &shParams);
@@ -22,11 +23,11 @@ GamutCompressParams init_GamutCompressParams(float peakLuminance, const JMhParam
 f3 RGB_to_JMh(const f3 &RGB, const JMhParams &p);
 f3 JMh_to_RGB(const f3 &JMh, const JMhParams &p);
 
-f3 tonescale_chroma_compress_fwd(const f3 &JMh, const JMhParams &p, const ToneScaleParams &pt, const SharedCompressionParameters &ps, const ChromaCompressParams &pc);
-f3 tonescale_chroma_compress_inv(const f3 &JMh, const JMhParams &p, const ToneScaleParams &pt, const SharedCompressionParameters &ps, const ChromaCompressParams &pc);
+f3 tonescale_chroma_compress_fwd(const f3 &JMh, const JMhParams &p, const ToneScaleParams &pt, const ResolvedSharedCompressionParameters &ps, const ChromaCompressParams &pc);
+f3 tonescale_chroma_compress_inv(const f3 &JMh, const JMhParams &p, const ToneScaleParams &pt, const ResolvedSharedCompressionParameters &ps, const ChromaCompressParams &pc);
 
-f3 gamut_compress_fwd(const f3 &JMh, const SharedCompressionParameters &ps, const GamutCompressParams &p);
-f3 gamut_compress_inv(const f3 &JMh, const SharedCompressionParameters &ps, const GamutCompressParams &p);
+f3 gamut_compress_fwd(const f3 &JMh, const ResolvedSharedCompressionParameters &ps, const GamutCompressParams &p);
+f3 gamut_compress_inv(const f3 &JMh, const ResolvedSharedCompressionParameters &ps, const GamutCompressParams &p);
 
 
 } // namespace ACES2

@@ -67,6 +67,13 @@ struct SharedCompressionParameters
     Table1D reach_m_table;
 };
 
+struct ResolvedSharedCompressionParameters
+{
+    float limit_J_max;
+    float model_gamma_inv;
+    float reachMaxM;
+};
+
 struct ChromaCompressParams
 {
     float sat;

@@ -255,7 +255,7 @@ f3 JMh_to_RGB(const f3 &JMh, const JMhParams &p)
 // Tonescale / Chroma compress
 //
 
-float chroma_compress_norm(float h, float chroma_compress_scale)
+inline float chroma_compress_norm(float h, float chroma_compress_scale)
 {
     const float h_rad = degrees_to_radians(h);
     const float a = cos(h_rad);
@@ -333,7 +333,7 @@ float tonescale_inv(const float J_ts, const JMhParams &p, const ToneScaleParams 
     return std::copysign(J, Y_ts);
 }
 
-f3 tonescale_chroma_compress_fwd(const f3 &JMh, const JMhParams &p, const ToneScaleParams &pt, const SharedCompressionParameters &ps, const ChromaCompressParams &pc)
+f3 tonescale_chroma_compress_fwd(const f3 &JMh, const JMhParams &p, const ToneScaleParams &pt, const ResolvedSharedCompressionParameters &pr, const ChromaCompressParams &pc)
 {
     const float J = JMh[0];
     const float M = JMh[1];
@@ -346,12 +346,12 @@ f3 tonescale_chroma_compress_fwd(const f3 &JMh, const JMhParams &p, const ToneSc
 
     if (M != 0.0)
     {
-        const float nJ = J_ts / ps.limit_J_max;
+        const float nJ = J_ts / pr.limit_J_max;
         const float snJ = std::max(0.f, 1.f - nJ);
         const float Mnorm = chroma_compress_norm(h, pc.chroma_compress_scale);
-        const float limit = powf(nJ, ps.model_gamma_inv) * reach_m_from_table(h, ps.reach_m_table) / Mnorm;
+        const float limit = powf(nJ, pr.model_gamma_inv) * pr.reachMaxM / Mnorm;
 
-        M_cp = M * powf(J_ts / J, ps.model_gamma_inv);
+        M_cp = M * powf(J_ts / J, pr.model_gamma_inv);
         M_cp = M_cp / Mnorm;
         M_cp = limit - toe_fwd(limit - M_cp, limit - 0.001f, snJ * pc.sat, sqrt(nJ * nJ + pc.sat_thr));
         M_cp = toe_fwd(M_cp, limit, nJ * pc.compr, snJ);
@@ -361,7 +361,7 @@ f3 tonescale_chroma_compress_fwd(const f3 &JMh, const JMhParams &p, const ToneSc
     return {J_ts, M_cp, h};
 }
 
-f3 tonescale_chroma_compress_inv(const f3 &JMh, const JMhParams &p, const ToneScaleParams &pt, const SharedCompressionParameters &ps, const ChromaCompressParams &pc)
+f3 tonescale_chroma_compress_inv(const f3 &JMh, const JMhParams &p, const ToneScaleParams &pt, const ResolvedSharedCompressionParameters &pr, const ChromaCompressParams &pc)
 {
     const float J_ts = JMh[0];
     const float M_cp = JMh[1];
@@ -374,16 +374,16 @@ f3 tonescale_chroma_compress_inv(const f3 &JMh, const JMhParams &p, const ToneSc
 
     if (M_cp != 0.0)
     {
-        const float nJ = J_ts / ps.limit_J_max;
+        const float nJ = J_ts / pr.limit_J_max;
         const float snJ = std::max(0.f, 1.f - nJ);
         const float Mnorm = chroma_compress_norm(h, pc.chroma_compress_scale);
-        const float limit = powf(nJ, ps.model_gamma_inv) * reach_m_from_table(h, ps.reach_m_table) / Mnorm;
+        const float limit = powf(nJ, pr.model_gamma_inv) * pr.reachMaxM / Mnorm;
 
         M = M_cp / Mnorm;
         M = toe_inv(M, limit, nJ * pc.compr, snJ);
         M = limit - toe_inv(limit - M, limit - 0.001f, snJ * pc.sat, sqrt(nJ * nJ + pc.sat_thr));
         M = M * Mnorm;
-        M = M * powf(J_ts / J, -ps.model_gamma_inv);
+        M = M * powf(J_ts / J, -pr.model_gamma_inv);
     }
 
     return {J, M, h};
@@ -695,17 +695,13 @@ f3 get_reach_boundary(
     float h,
     const f2 &JMcusp,
     float focusJ,
-    float limit_J_max,
-    float model_gamma_inv,
     float focus_dist,
-    const ACES2::Table1D & reach_m_table
+    const ACES2::ResolvedSharedCompressionParameters& sr
 )
 {
-    const float reachMaxM = reach_m_from_table(h, reach_m_table);
+    const float slope_gain = sr.limit_J_max * focus_dist * get_focus_gain(J, JMcusp[0], sr.limit_J_max);
 
-    const float slope_gain = limit_J_max * focus_dist * get_focus_gain(J, JMcusp[0], limit_J_max);
-
-    const float intersectJ = solve_J_intersect(J, M, focusJ, limit_J_max, slope_gain);
+    const float intersectJ = solve_J_intersect(J, M, focusJ, sr.limit_J_max, slope_gain);
 
     float slope;
     if (intersectJ < focusJ)
@@ -714,10 +710,10 @@ f3 get_reach_boundary(
     }
     else
     {
-        slope = (limit_J_max - intersectJ) * (intersectJ - focusJ) / (focusJ * slope_gain);
+        slope = (sr.limit_J_max - intersectJ) * (intersectJ - focusJ) / (focusJ * slope_gain);
     }
 
-    const float boundary = limit_J_max * powf(intersectJ / limit_J_max, model_gamma_inv) * reachMaxM / (limit_J_max - slope * reachMaxM);
+    const float boundary = sr.limit_J_max * powf(intersectJ / sr.limit_J_max, sr.model_gamma_inv) * sr.reachMaxM / (sr.limit_J_max - slope * sr.reachMaxM);
     return {J, boundary, h};
 }
 
@@ -749,24 +745,24 @@ float compression_function(
     return vCompressed;
 }
 
-f3 compressGamut(const f3 &JMh, float Jx, const ACES2::SharedCompressionParameters& sp, const ACES2::GamutCompressParams& p, const HueDependantGamutParams hdp, bool invert)
+f3 compressGamut(const f3 &JMh, float Jx, const ACES2::ResolvedSharedCompressionParameters& sr, const ACES2::GamutCompressParams& p, const HueDependantGamutParams hdp, bool invert)
 {
     const float J = JMh[0];
     const float M = JMh[1];
     const float h = JMh[2];
 
-    if (M < 0.0001f || J > sp.limit_J_max)
+    if (M < 0.0001f || J > sr.limit_J_max)
     {
         return {J, 0.f, h};
     }
     else
     {
         const f2 project_from = {J, M};
-        const float slope_gain = sp.limit_J_max * p.focus_dist * get_focus_gain(Jx, hdp.JMcusp[0], sp.limit_J_max);
+        const float slope_gain = sr.limit_J_max * p.focus_dist * get_focus_gain(Jx, hdp.JMcusp[0], sr.limit_J_max);
 
-        const float J_intersect_source = solve_J_intersect(J, M, hdp.focusJ, sp.limit_J_max, slope_gain);
+        const float J_intersect_source = solve_J_intersect(J, M, hdp.focusJ, sr.limit_J_max, slope_gain);
 
-        const f2 boundaryReturn = find_gamut_boundary_intersection(hdp.JMcusp, hdp.focusJ, sp.limit_J_max, slope_gain, hdp.gamma_top, hdp.gamma_bottom, J_intersect_source);
+        const f2 boundaryReturn = find_gamut_boundary_intersection(hdp.JMcusp, hdp.focusJ, sr.limit_J_max, slope_gain, hdp.gamma_top, hdp.gamma_bottom, J_intersect_source);
         const f2 JMboundary = {boundaryReturn[0], boundaryReturn[1]};
         const f2 project_to = {J_intersect_source, 0.f};
 
@@ -775,7 +771,7 @@ f3 compressGamut(const f3 &JMh, float Jx, const ACES2::SharedCompressionParamete
             return {J, 0.f, h};
         }
 
-        const f3 reachBoundary = get_reach_boundary(JMboundary[0], JMboundary[1], h, hdp.JMcusp, hdp.focusJ, sp.limit_J_max, sp.model_gamma_inv, p.focus_dist, sp.reach_m_table); // TODO
+        const f3 reachBoundary = get_reach_boundary(JMboundary[0], JMboundary[1], h, hdp.JMcusp, hdp.focusJ, p.focus_dist, sr); // TODO
 
         const float difference = std::max(1.0001f, reachBoundary[1] / JMboundary[1]);
         const float threshold = std::max(compression_threshold, 1.f / difference);
@@ -797,34 +793,34 @@ inline float compute_focusJ(float cusp_J, float mid_J, float limit_J_max)
     return lerpf(cusp_J, mid_J, std::min(1.f, cusp_mid_blend - (cusp_J / limit_J_max)));
 }
 
-f3 gamut_compress_fwd(const f3 &JMh, const SharedCompressionParameters &sp, const GamutCompressParams &p)
+f3 gamut_compress_fwd(const f3 &JMh, const ResolvedSharedCompressionParameters &sr, const GamutCompressParams &p)
 {
     HueDependantGamutParams hdp;
     hdp.gamma_top = hue_dependent_upper_hull_gamma(JMh[2], p.upper_hull_gamma_table);
     hdp.gamma_bottom = p.lower_hull_gamma;
     hdp.JMcusp = cusp_from_table(JMh[2], p.gamut_cusp_table);
-    hdp.focusJ = compute_focusJ(hdp.JMcusp[0], p.mid_J, sp.limit_J_max);
+    hdp.focusJ = compute_focusJ(hdp.JMcusp[0], p.mid_J, sr.limit_J_max);
     
-    return compressGamut(JMh, JMh[0], sp, p, hdp, false);
+    return compressGamut(JMh, JMh[0], sr, p, hdp, false);
 }
 
-f3 gamut_compress_inv(const f3 &JMh, const SharedCompressionParameters &sp, const GamutCompressParams &p)
+f3 gamut_compress_inv(const f3 &JMh, const ResolvedSharedCompressionParameters &sr, const GamutCompressParams &p)
 {
     HueDependantGamutParams hdp;
     hdp.gamma_top = hue_dependent_upper_hull_gamma(JMh[2], p.upper_hull_gamma_table);
     hdp.gamma_bottom = p.lower_hull_gamma;
     hdp.JMcusp = cusp_from_table(JMh[2], p.gamut_cusp_table);
-    hdp.focusJ = compute_focusJ(hdp.JMcusp[0], p.mid_J, sp.limit_J_max);
+    hdp.focusJ = compute_focusJ(hdp.JMcusp[0], p.mid_J, sr.limit_J_max);
 
     float Jx = JMh[0];
 
     // Analytic inverse below threshold
-    if (Jx > lerpf(hdp.JMcusp[0], sp.limit_J_max, focus_gain_blend))
+    if (Jx > lerpf(hdp.JMcusp[0], sr.limit_J_max, focus_gain_blend))
     {
         // Approximation above threshold
-        Jx = compressGamut(JMh, Jx, sp, p, hdp, true)[0];
+        Jx = compressGamut(JMh, Jx, sr, p, hdp, true)[0];
     }
-    return compressGamut(JMh, Jx, sp, p, hdp, true);
+    return compressGamut(JMh, Jx, sr, p, hdp, true);
 }
 
 bool evaluate_gamma_fit(
@@ -995,6 +991,16 @@ SharedCompressionParameters init_SharedCompressionParams(float peakLuminance, co
         limit_J_max,
         model_gamma_inv,
         make_reach_m_table(compressionGamut, peakLuminance)
+    };
+    return params;
+}
+
+ResolvedSharedCompressionParameters resolve_CompressionParams(float hue, const SharedCompressionParameters &p)
+{
+    ResolvedSharedCompressionParameters params = {
+        p.limit_J_max,
+        p.model_gamma_inv,
+        reach_m_from_table(hue, p.reach_m_table)
     };
     return params;
 }
