@@ -30,7 +30,7 @@ inline int next_position_in_table(int entry, int table_size)
     return (entry + 1) % table_size;
 }
 
-inline int clamp_to_table_bounds(int entry, int table_size)
+inline int clamp_to_table_bounds(int entry, int table_size) // TODO: this should be removed if we can constrain the hue range properly
 {
     return std::min(table_size - 1, std::max(0, entry));
 }
@@ -78,7 +78,7 @@ f2 cusp_from_table(float h, const Table3D &gt)
 
 float reach_m_from_table(float h, const ACES2::Table1D &gt)
 {
-    const int i_lo = clamp_to_table_bounds(hue_position_in_uniform_table(h, gt.size), gt.total_size);
+    const int i_lo = clamp_to_table_bounds(hue_position_in_uniform_table(h, gt.size), gt.total_size);  // TODO: this should be removed if we can constrain the hue range properly
     const int i_hi = next_position_in_table(i_lo, gt.size);
 
     const float t = (h - i_lo) / (i_hi - i_lo);
@@ -87,7 +87,7 @@ float reach_m_from_table(float h, const ACES2::Table1D &gt)
 
 float hue_dependent_upper_hull_gamma(float h, const ACES2::Table1D &gt)
 {
-    const int i_lo = clamp_to_table_bounds(hue_position_in_uniform_table(h, gt.size) + gt.base_index, gt.total_size);
+    const int i_lo = clamp_to_table_bounds(hue_position_in_uniform_table(h, gt.size) + gt.base_index, gt.total_size);  // TODO: this should be removed if we can constrain the hue range properly
     const int i_hi = next_position_in_table(i_lo, gt.size);
 
     const float base_hue = (float) (i_lo - gt.base_index);
@@ -104,13 +104,13 @@ float hue_dependent_upper_hull_gamma(float h, const ACES2::Table1D &gt)
 inline float _post_adaptation_cone_response_compression_fwd(float Rc, const float F_L_n)
 {
     const float F_L_Y = powf(Rc * F_L_n, 0.42f);
-    const float Ra    = (400.f * F_L_Y) / (27.13f + F_L_Y);
+    const float Ra    = (cam_nl_scale * F_L_Y) / (cam_nl_offset + F_L_Y);
     return Ra;
 }
 
 inline float _post_adaptation_cone_response_compression_inv(float Ra, const float F_L_n)
 {
-    const float F_L_Y = (27.13f * Ra) / (400.f - Ra); // TODO: what happens when Ra >= 400.0f
+    const float F_L_Y = (cam_nl_offset * Ra) / (cam_nl_scale - Ra); // TODO: what happens when Ra >= cam_nl_scale (400.0f)
     const float Rc    = powf(F_L_Y, 1.f / 0.42f) / F_L_n;
     return Rc;
 }
@@ -257,7 +257,7 @@ inline float chroma_compress_norm(float h, float chroma_compress_scale)
     return M * chroma_compress_scale;
 }
 
-float toe_fwd( float x, float limit, float k1_in, float k2_in)
+inline float toe_fwd( float x, float limit, float k1_in, float k2_in)
 {
     if (x > limit)
     {
@@ -273,7 +273,7 @@ float toe_fwd( float x, float limit, float k1_in, float k2_in)
     return 0.5f * (minus_b + sqrt(minus_b * minus_b + 4.f * minus_ac)); // a is 1.0, mins_b squared == b^2
 }
 
-float toe_inv( float x, float limit, float k1_in, float k2_in)
+inline float toe_inv( float x, float limit, float k1_in, float k2_in)
 {
     if (x > limit)
     {
@@ -643,7 +643,7 @@ inline float estimate_line_and_boundary_intersection_M(const float J_axis_inters
     //return shifted_intersection * M_max / (J_max - slope * M_max);
 }
 
-f2 find_gamut_boundary_intersection(const f2 &JM_cusp_in, float J_focus, float J_max, float slope_gain, float gamma_top, float gamma_bottom, const float J_intersect_source)
+f2 find_gamut_boundary_intersection(const f2 &JM_cusp_in, float J_focus, float J_max, float slope_gain, float gamma_top_inv, float gamma_bottom_inv, const float J_intersect_source)
 {
     const float s = std::max(0.000001f, smooth_cusps); // TODO: pre smooth the cusp
     const f2 JM_cusp = {
@@ -652,19 +652,19 @@ f2 find_gamut_boundary_intersection(const f2 &JM_cusp_in, float J_focus, float J
     };
 
     const float J_intersect_cusp = solve_J_intersect(JM_cusp[0], JM_cusp[1], J_focus, J_max, slope_gain);
+    const float slope = compute_compression_vector_slope(J_intersect_source, J_focus, J_max, slope_gain);
 
-    float slope = 0.f;
-    if (J_intersect_source < J_focus)
-    {
-        slope = J_intersect_source * (J_intersect_source - J_focus) / (J_focus * slope_gain);
-    }
-    else
-    {
-        slope = (J_max - J_intersect_source) * (J_intersect_source - J_focus) / (J_focus * slope_gain);
-    }
+    const float M_boundary_lower = estimate_line_and_boundary_intersection_M(J_intersect_source, slope, gamma_bottom_inv, JM_cusp[0], JM_cusp[1], J_intersect_cusp);
 
-    const float M_boundary_lower = J_intersect_cusp * powf(J_intersect_source / J_intersect_cusp, 1.f / gamma_bottom) / (JM_cusp[0] / JM_cusp[1] - slope);
-    const float M_boundary_upper = JM_cusp[1] * (J_max - J_intersect_cusp) * powf((J_max - J_intersect_source) / (J_max - J_intersect_cusp), 1.f / gamma_top) / (slope * JM_cusp[1] + J_max - JM_cusp[0]);
+    // The upper hull is flipped and thus 'zeroed' at J_max
+    // Also note we negate the slope
+    const float f_J_intersect_cusp   = J_max - J_intersect_cusp;
+    const float f_J_intersect_source = J_max - J_intersect_source;
+    const float f_JM_cusp_J          = J_max - JM_cusp[0];
+    const float M_boundary_upper =
+      estimate_line_and_boundary_intersection_M(f_J_intersect_source, -slope, gamma_top_inv, f_JM_cusp_J, JM_cusp[1], f_J_intersect_cusp);
+
+    // Smooth minimum between the two calculated values for the M component
     const float M_boundary = JM_cusp[1] * smin(M_boundary_lower / JM_cusp[1], M_boundary_upper / JM_cusp[1], s);
     const float J_boundary = J_intersect_source + slope * M_boundary; // TODO don't recalculate this
 
@@ -682,20 +682,9 @@ f3 get_reach_boundary(
 )
 {
     const float slope_gain = sr.limit_J_max * focus_dist * get_focus_gain(J, JMcusp[0], sr.limit_J_max);
-
     const float intersectJ = solve_J_intersect(J, M, focusJ, sr.limit_J_max, slope_gain);
-
-    float slope;
-    if (intersectJ < focusJ)
-    {
-        slope = intersectJ * (intersectJ - focusJ) / (focusJ * slope_gain);
-    }
-    else
-    {
-        slope = (sr.limit_J_max - intersectJ) * (intersectJ - focusJ) / (focusJ * slope_gain);
-    }
-
-    const float boundary = sr.limit_J_max * powf(intersectJ / sr.limit_J_max, sr.model_gamma_inv) * sr.reachMaxM / (sr.limit_J_max - slope * sr.reachMaxM);
+    const float slope = compute_compression_vector_slope(intersectJ, focusJ, sr.limit_J_max, slope_gain);
+    const float boundary = estimate_line_and_boundary_intersection_M(intersectJ, slope, sr.model_gamma_inv, sr.limit_J_max, sr.reachMaxM, sr.limit_J_max);
     return {J, boundary, h};
 }
 
@@ -744,7 +733,7 @@ f3 compressGamut(const f3 &JMh, float Jx, const ACES2::ResolvedSharedCompression
 
         const float J_intersect_source = solve_J_intersect(J, M, hdp.focusJ, sr.limit_J_max, slope_gain);
 
-        const f2 boundaryReturn = find_gamut_boundary_intersection(hdp.JMcusp, hdp.focusJ, sr.limit_J_max, slope_gain, hdp.gamma_top, hdp.gamma_bottom, J_intersect_source);
+        const f2 boundaryReturn = find_gamut_boundary_intersection(hdp.JMcusp, hdp.focusJ, sr.limit_J_max, slope_gain, hdp.gamma_top_inv, hdp.gamma_bottom_inv, J_intersect_source);
         const f2 JMboundary = {boundaryReturn[0], boundaryReturn[1]};
         const f2 project_to = {J_intersect_source, 0.f};
 
@@ -778,8 +767,8 @@ inline float compute_focusJ(float cusp_J, float mid_J, float limit_J_max)
 f3 gamut_compress_fwd(const f3 &JMh, const ResolvedSharedCompressionParameters &sr, const GamutCompressParams &p)
 {
     HueDependantGamutParams hdp;
-    hdp.gamma_top = hue_dependent_upper_hull_gamma(JMh[2], p.upper_hull_gamma_table);
-    hdp.gamma_bottom = p.lower_hull_gamma;
+    hdp.gamma_top_inv = hue_dependent_upper_hull_gamma(JMh[2], p.upper_hull_gamma_inv_table);
+    hdp.gamma_bottom_inv = p.lower_hull_gamma_inv;
     hdp.JMcusp = cusp_from_table(JMh[2], p.gamut_cusp_table);
     hdp.focusJ = compute_focusJ(hdp.JMcusp[0], p.mid_J, sr.limit_J_max);
     
@@ -789,8 +778,8 @@ f3 gamut_compress_fwd(const f3 &JMh, const ResolvedSharedCompressionParameters &
 f3 gamut_compress_inv(const f3 &JMh, const ResolvedSharedCompressionParameters &sr, const GamutCompressParams &p)
 {
     HueDependantGamutParams hdp;
-    hdp.gamma_top = hue_dependent_upper_hull_gamma(JMh[2], p.upper_hull_gamma_table);
-    hdp.gamma_bottom = p.lower_hull_gamma;
+    hdp.gamma_top_inv = hue_dependent_upper_hull_gamma(JMh[2], p.upper_hull_gamma_inv_table);
+    hdp.gamma_bottom_inv = p.lower_hull_gamma_inv;
     hdp.JMcusp = cusp_from_table(JMh[2], p.gamut_cusp_table);
     hdp.focusJ = compute_focusJ(hdp.JMcusp[0], p.mid_J, sr.limit_J_max);
 
@@ -808,12 +797,12 @@ f3 gamut_compress_inv(const f3 &JMh, const ResolvedSharedCompressionParameters &
 bool evaluate_gamma_fit(
     const f2 &JMcusp,
     const f3 testJMh[3],
-    float topGamma,
+    float topGamma_inv,
     float peakLuminance,
     float limit_J_max,
     float mid_J,
     float focus_dist,
-    float lower_hull_gamma,
+    float lower_hull_gamma_inv,
     const JMhParams &limitJMhParams)
 {
     const float focusJ = compute_focusJ(JMcusp[0], mid_J, limit_J_max);
@@ -822,7 +811,7 @@ bool evaluate_gamma_fit(
     {
         const float slope_gain = limit_J_max * focus_dist * get_focus_gain(testJMh[testIndex][0], JMcusp[0], limit_J_max);
         const float J_intersect_source = solve_J_intersect(testJMh[testIndex][0], testJMh[testIndex][1], focusJ, limit_J_max, slope_gain);
-        const f2 approxLimit = find_gamut_boundary_intersection(JMcusp, focusJ, limit_J_max, slope_gain, topGamma, lower_hull_gamma, J_intersect_source);
+        const f2 approxLimit = find_gamut_boundary_intersection(JMcusp, focusJ, limit_J_max, slope_gain, topGamma_inv, lower_hull_gamma_inv, J_intersect_source);
         const f3 approximate_JMh = {approxLimit[0], approxLimit[1], testJMh[testIndex][2]};
         const f3 newLimitRGB = JMh_to_RGB(approximate_JMh, limitJMhParams);
         const f3 newLimitRGBScaled = mult_f_f3(reference_luminance / peakLuminance, newLimitRGB);
@@ -842,7 +831,7 @@ Table1D make_upper_hull_gamma(
     float limit_J_max,
     float mid_J,
     float focus_dist,
-    float lower_hull_gamma,
+    float lower_hull_gamma_inv,
     const JMhParams &limitJMhParams)
 {
     const int test_count = 3;
@@ -876,7 +865,7 @@ Table1D make_upper_hull_gamma(
 
         while (!(outside) && (high < 5.f))
         {
-            const bool gammaFound = evaluate_gamma_fit(JMcusp, testJMh, high, peakLuminance, limit_J_max, mid_J, focus_dist, lower_hull_gamma, limitJMhParams);
+            const bool gammaFound = evaluate_gamma_fit(JMcusp, testJMh, 1.0f / high, peakLuminance, limit_J_max, mid_J, focus_dist, lower_hull_gamma_inv, limitJMhParams);
             if (!gammaFound)
             {
                 low = high;
@@ -892,11 +881,11 @@ Table1D make_upper_hull_gamma(
         while ( (high-low) > gammaAccuracy)
         {
             testGamma = (high + low) / 2.f;
-            const bool gammaFound = evaluate_gamma_fit(JMcusp, testJMh, testGamma, peakLuminance, limit_J_max, mid_J, focus_dist, lower_hull_gamma, limitJMhParams);
+            const bool gammaFound = evaluate_gamma_fit(JMcusp, testJMh, 1.0f / testGamma, peakLuminance, limit_J_max, mid_J, focus_dist, lower_hull_gamma_inv, limitJMhParams);
             if (gammaFound)
             {
                 high = testGamma;
-                gammaTable.table[i] = high;
+                gammaTable.table[i] = 1.0f / high;
             }
             else
             {
@@ -1011,15 +1000,15 @@ GamutCompressParams init_GamutCompressParams(float peakLuminance, const JMhParam
 
     // Calculated chroma compress variables
     const float focus_dist = focus_distance + focus_distance * focus_distance_scaling * tsParams.log_peak;
-    const float lower_hull_gamma =  1.14f + 0.07f * tsParams.log_peak;
+    const float lower_hull_gamma_inv =  1.0f / (1.14f + 0.07f * tsParams.log_peak);
 
     GamutCompressParams params = {
         mid_J,
         focus_dist,
-        lower_hull_gamma,
+        lower_hull_gamma_inv,
         make_gamut_table(limitJMhParams, peakLuminance),
         make_upper_hull_gamma(params.gamut_cusp_table, peakLuminance, shParams.limit_J_max,
-                              mid_J, focus_dist, lower_hull_gamma, limitJMhParams)
+                              mid_J, focus_dist, lower_hull_gamma_inv, limitJMhParams) //TODO
     };
     return params;
 }

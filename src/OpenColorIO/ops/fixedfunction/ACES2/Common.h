@@ -85,8 +85,8 @@ struct ChromaCompressParams
 
 struct HueDependantGamutParams
 {
-    float gamma_top;
-    float gamma_bottom;
+    float gamma_top_inv;
+    float gamma_bottom_inv;
     f2 JMcusp;
     float focusJ;
 };
@@ -94,9 +94,9 @@ struct GamutCompressParams
 {
     float mid_J;
     float focus_dist;
-    float lower_hull_gamma;
+    float lower_hull_gamma_inv;
     Table3D gamut_cusp_table;
-    Table1D upper_hull_gamma_table;
+    Table1D upper_hull_gamma_inv_table;
 };
 
 // CAM
@@ -104,7 +104,11 @@ constexpr float reference_luminance = 100.f;
 constexpr float L_A = 100.f;
 constexpr float Y_b = 20.f;
 constexpr f3 surround = {0.9f, 0.59f, 0.9f}; // Dim surround
+
 constexpr float J_scale = 100.0f;
+constexpr float cam_nl_Y_reference = 100.0f;
+constexpr float cam_nl_offset = 0.2713f * cam_nl_Y_reference;
+constexpr float cam_nl_scale = 4.0f * cam_nl_Y_reference;
 constexpr float PI = 3.14159265358979f;
 
 constexpr float hue_limit = 360.0f;

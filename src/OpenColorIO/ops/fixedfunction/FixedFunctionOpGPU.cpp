@@ -359,7 +359,7 @@ void _Add_RGB_to_JMh_Shader(
     ss.newLine() << ss.float3Decl("lms") << " = " << ss.mat3fMul(&p.MATRIX_RGB_to_CAM16_c[0], pxl + ".rgb") << ";";
 
     ss.newLine() << ss.float3Decl("F_L_v") << " = pow(" << p.F_L_n << " * abs(lms), " << ss.float3Const(0.42f) << ");";
-    ss.newLine() << ss.float3Decl("rgb_a") << " = (400.0 * sign(lms) * F_L_v) / (27.13 + F_L_v);";
+    ss.newLine() << ss.float3Decl("rgb_a") << " = ( " << ACES2::cam_nl_scale << " * sign(lms) * F_L_v) / ( " << ACES2::cam_nl_offset << " + F_L_v);";
 
     ss.newLine() << ss.float3Decl("Aab") << " = " << ss.mat3fMul(&p.MATRIX_cone_response_to_Aab[0], "rgb_a.rgb") << ";";
 
@@ -390,7 +390,7 @@ void _Add_JMh_to_RGB_Shader(
 
     ss.newLine() << ss.float3Decl("rgb_a") << " = " << ss.mat3fMul(&p.MATRIX_Aab_to_cone_response[0], "Aab.rgb") << ";";
 
-    ss.newLine() << ss.float3Decl("lms") << " = sign(rgb_a) * pow(27.13 * abs(rgb_a) / (400.0 - abs(rgb_a)), " << ss.float3Const(1.f / 0.42f) << ")/ " << p.F_L_n << ";";
+    ss.newLine() << ss.float3Decl("lms") << " = sign(rgb_a) * pow( " << ACES2::cam_nl_offset << " * abs(rgb_a) / ( " << ACES2::cam_nl_scale << " - abs(rgb_a)), " << ss.float3Const(1.f / 0.42f) << ")/ " << p.F_L_n << ";";
 
     ss.newLine() << pxl << ".rgb = " << ss.mat3fMul(&p.MATRIX_CAM16_c_to_RGB[0], "lms") << ";";
 }
@@ -545,13 +545,13 @@ void _Add_Tonescale_Compress_Fwd_Shader(
 
     // Tonescale applied in Y (convert to and from J)
     ss.newLine() << ss.floatDecl("A") << " = " << p.A_w_J << " * pow(abs(J) / 100.0, 1.0 / (" << p.cz << "));";
-    ss.newLine() << ss.floatDecl("Y") << " = sign(J) * pow((27.13 * A) / (400.0 - A), 1.0 / 0.42) / " << p.F_L_n << ";";
+    ss.newLine() << ss.floatDecl("Y") << " = sign(J) * pow(( " << ACES2::cam_nl_offset << " * A) / ( " << ACES2::cam_nl_scale << " - A), 1.0 / 0.42) / " << p.F_L_n << ";";
 
     ss.newLine() << ss.floatDecl("f") << " = " << t.m_2  << " * pow(max(0.0, Y) / (Y + " << t.s_2 << "), " << t.g << ");";
     ss.newLine() << ss.floatDecl("Y_ts") << " = max(0.0, f * f / (f + " << t.t_1 << ")) * " << t.n_r << ";";
 
     ss.newLine() << ss.floatDecl("F_L_Y") << " = pow(" << p.F_L_n << " * abs(Y_ts), 0.42);";
-    ss.newLine() << ss.floatDecl("J_ts") << " = sign(Y_ts) * 100.0 * pow(((400.0 * F_L_Y) / (27.13 + F_L_Y)) / " << p.A_w_J << ", " << p.cz << ");";
+    ss.newLine() << ss.floatDecl("J_ts") << " = sign(Y_ts) * 100.0 * pow((( " << ACES2::cam_nl_scale << " * F_L_Y) / ( " << ACES2::cam_nl_offset << " + F_L_Y)) / " << p.A_w_J << ", " << p.cz << ");";
 
     // ChromaCompress
     ss.newLine() << ss.floatDecl("M_cp") << " = M;";
@@ -617,14 +617,14 @@ void _Add_Tonescale_Compress_Inv_Shader(
 
     // Inverse Tonescale applied in Y (convert to and from J)
     ss.newLine() << ss.floatDecl("A") << " = " << p.A_w_J << " * pow(abs(J_ts) / 100.0, 1.0 / (" << p.cz << "));";
-    ss.newLine() << ss.floatDecl("Y_ts") << " = sign(J_ts) * pow((27.13 * A) / (400.0 - A), 1.0 / 0.42) / " << p.F_L_n << " / 100.0;";
+    ss.newLine() << ss.floatDecl("Y_ts") << " = sign(J_ts) * pow(( " << ACES2::cam_nl_offset << " * A) / ( " << ACES2::cam_nl_scale << " - A), 1.0 / 0.42) / " << p.F_L_n << " / 100.0;";
 
     ss.newLine() << ss.floatDecl("Z") << " = max(0.0, min(" << t.n << " / (" << t.u_2 * t.n_r << "), Y_ts));";
     ss.newLine() << ss.floatDecl("ht") << " = (Z + sqrt(Z * (4.0 * " << t.t_1 << " + Z))) / 2.0;";
     ss.newLine() << ss.floatDecl("Y") << " = " << t.s_2 << " / (pow((" << t.m_2 << " / ht), (1.0 / " << t.g << ")) - 1.0);";
 
     ss.newLine() << ss.floatDecl("F_L_Y") << " = pow(" << p.F_L_n << " * abs(Y), 0.42);";
-    ss.newLine() << ss.floatDecl("J") << " = sign(Y) * 100.0 * pow(((400.0 * F_L_Y) / (27.13 + F_L_Y)) / " << p.A_w_J << ", " << p.cz << ");";
+    ss.newLine() << ss.floatDecl("J") << " = sign(Y) * 100.0 * pow((( " << ACES2::cam_nl_scale << " * F_L_Y) / ( " << ACES2::cam_nl_offset << " + F_L_Y)) / " << p.A_w_J << ", " << p.cz << ");";
 
     // ChromaCompress
     ss.newLine() << ss.floatDecl("M") << " = M_cp;";
@@ -822,7 +822,7 @@ std::string _Add_Gamma_table(
         GpuShaderCreator::TEXTURE_RED_CHANNEL,
         dimensions,
         INTERP_NEAREST,
-        &(g.upper_hull_gamma_table.table[0]));
+        &(g.upper_hull_gamma_inv_table.table[0]));
 
 
     if (dimensions == GpuShaderDesc::TEXTURE_1D)
@@ -849,21 +849,21 @@ std::string _Add_Gamma_table(
     ss.newLine() << "hwrap = hwrap - floor(hwrap / 360.0) * 360.0;";
     ss.newLine() << "hwrap = (hwrap < 0.0) ? hwrap + 360.0 : hwrap;";
 
-    ss.newLine() << ss.floatDecl("i_lo") << " = floor(hwrap) + " << g.upper_hull_gamma_table.base_index << ";";
+    ss.newLine() << ss.floatDecl("i_lo") << " = floor(hwrap) + " << g.upper_hull_gamma_inv_table.base_index << ";";
     ss.newLine() << ss.floatDecl("i_hi") << " = (i_lo + 1);";
     ss.newLine() << "i_hi = i_hi - floor(i_hi / 360.0) * 360.0;";
 
-    ss.newLine() << ss.floatDecl("base_hue") << " = i_lo - " << g.upper_hull_gamma_table.base_index << ";";
+    ss.newLine() << ss.floatDecl("base_hue") << " = i_lo - " << g.upper_hull_gamma_inv_table.base_index << ";";
 
     if (dimensions == GpuShaderDesc::TEXTURE_1D)
     {
-        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex1D(name, std::string("(i_lo + 0.5) / ") + std::to_string(g.upper_hull_gamma_table.total_size)) << ".r;";
-        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex1D(name, std::string("(i_hi + 0.5) / ") + std::to_string(g.upper_hull_gamma_table.total_size)) << ".r;";
+        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex1D(name, std::string("(i_lo + 0.5) / ") + std::to_string(g.upper_hull_gamma_inv_table.total_size)) << ".r;";
+        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex1D(name, std::string("(i_hi + 0.5) / ") + std::to_string(g.upper_hull_gamma_inv_table.total_size)) << ".r;";
     }
     else
     {
-        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex2D(name, ss.float2Const(std::string("(i_lo + 0.5) / ") + std::to_string(g.upper_hull_gamma_table.total_size), "0.5")) << ".r;";
-        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex2D(name, ss.float2Const(std::string("(i_hi + 0.5) / ") + std::to_string(g.upper_hull_gamma_table.total_size), "0.5")) << ".r;";
+        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex2D(name, ss.float2Const(std::string("(i_lo + 0.5) / ") + std::to_string(g.upper_hull_gamma_inv_table.total_size), "0.5")) << ".r;";
+        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex2D(name, ss.float2Const(std::string("(i_hi + 0.5) / ") + std::to_string(g.upper_hull_gamma_inv_table.total_size), "0.5")) << ".r;";
     }
 
     ss.newLine() << ss.floatDecl("t") << " = hwrap - base_hue;";
@@ -1023,7 +1023,7 @@ std::string _Add_Find_Gamut_Boundary_Intersection_func(
 
     GpuShaderText ss(shaderCreator->getLanguage());
 
-    ss.newLine() << ss.float3Keyword() << " " << name << "(" << ss.float3Keyword() << " JMh_s, " << ss.float2Keyword() << " JM_cusp_in, float J_focus, float slope_gain, float gamma_top, float gamma_bottom)";
+    ss.newLine() << ss.float3Keyword() << " " << name << "(" << ss.float3Keyword() << " JMh_s, " << ss.float2Keyword() << " JM_cusp_in, float J_focus, float slope_gain, float gamma_top_inv, float gamma_bottom_inv)";
     ss.newLine() << "{";
     ss.indent();
 
@@ -1046,8 +1046,8 @@ std::string _Add_Find_Gamut_Boundary_Intersection_func(
     ss.dedent();
     ss.newLine() << "}";
 
-    ss.newLine() << ss.floatDecl("M_boundary_lower ") << " = J_intersect_cusp * pow(J_intersect_source / J_intersect_cusp, 1.0 / gamma_bottom) / (JM_cusp.r / JM_cusp.g - slope);";
-    ss.newLine() << ss.floatDecl("M_boundary_upper") << " = JM_cusp.g * (" << s.limit_J_max << " - J_intersect_cusp) * pow((" << s.limit_J_max << " - J_intersect_source) / (" << s.limit_J_max << " - J_intersect_cusp), 1.0 / gamma_top) / (slope * JM_cusp.g + " << s.limit_J_max << " - JM_cusp.r);";
+    ss.newLine() << ss.floatDecl("M_boundary_lower ") << " = J_intersect_cusp * pow(J_intersect_source / J_intersect_cusp, gamma_bottom_inv) / (JM_cusp.r / JM_cusp.g - slope);";
+    ss.newLine() << ss.floatDecl("M_boundary_upper") << " = JM_cusp.g * (" << s.limit_J_max << " - J_intersect_cusp) * pow((" << s.limit_J_max << " - J_intersect_source) / (" << s.limit_J_max << " - J_intersect_cusp), gamma_top_inv) / (slope * JM_cusp.g + " << s.limit_J_max << " - JM_cusp.r);";
 
     ss.newLine() << ss.floatDecl("smin") << " = 0.0;";
     ss.newLine() << "{";
@@ -1250,10 +1250,10 @@ std::string _Add_Compress_Gamut_func(
     ss.newLine() << ss.floatDecl("focusJ") << " = " << ss.lerp("JMcusp.r", std::to_string(g.mid_J), std::string("min(1.0, ") + std::to_string(ACES2::cusp_mid_blend) + " - (JMcusp.r / " + std::to_string(s.limit_J_max)) << "));";
     ss.newLine() << ss.floatDecl("slope_gain") << " = " << s.limit_J_max << " * " << g.focus_dist << " * " << getFocusGainName << "(Jx, JMcusp.r);";
 
-    ss.newLine() << ss.floatDecl("gamma_top") << " = " << gammaName << "_sample(h);";
-    ss.newLine() << ss.floatDecl("gamma_bottom") << " = " << g.lower_hull_gamma << ";";
+    ss.newLine() << ss.floatDecl("gamma_top_inv") << " = " << gammaName << "_sample(h);";
+    ss.newLine() << ss.floatDecl("gamma_bottom_inv") << " = " << g.lower_hull_gamma_inv << ";";
 
-    ss.newLine() << ss.float3Decl("boundaryReturn") << " = " << findGamutBoundaryIntersectionName << "(" << ss.float3Const("J", "M", "h") << ", JMcusp, focusJ, slope_gain, gamma_top, gamma_bottom);";
+    ss.newLine() << ss.float3Decl("boundaryReturn") << " = " << findGamutBoundaryIntersectionName << "(" << ss.float3Const("J", "M", "h") << ", JMcusp, focusJ, slope_gain, gamma_top_inv, gamma_bottom_inv);";
     ss.newLine() << ss.float2Decl("JMboundary") << " = " << ss.float2Const("boundaryReturn.r", "boundaryReturn.g") << ";";
     ss.newLine() << ss.float2Decl("project_to") << " = " << ss.float2Const("boundaryReturn.b", "0.0") << ";";
 
