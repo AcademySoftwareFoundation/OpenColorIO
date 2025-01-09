@@ -106,7 +106,28 @@ constexpr float Y_b = 20.f;
 constexpr f3 surround = {0.9f, 0.59f, 0.9f}; // Dim surround
 constexpr float J_scale = 100.0f;
 constexpr float PI = 3.14159265358979f;
-constexpr float hue_limit = 360.0f; // 2.0f * PI;
+
+constexpr float hue_limit = 360.0f;
+//constexpr float hue_limit = 2.0f * PI;
+inline float wrap_to_hue_limit(float hue)
+{
+    float y = std::fmod(hue, hue_limit);
+    if ( y < 0.f)
+    {
+        y = y + hue_limit;
+    }
+    return y;
+}
+inline constexpr float to_degrees(const float v) { return v; }
+inline float from_degrees(const float v) { return wrap_to_hue_limit(v); }
+inline constexpr float to_radians(const float v) { return PI * v / 180.0f; };
+inline float from_radians(const float v) { return wrap_to_hue_limit(180.0f * v / PI); };
+/*
+inline constexpr float to_degrees(const float v) { return 180.0f * v / PI; }
+inline float from_degrees(const float v) { return wrap_to_hue_limit(PI * v / 180.0f); }
+inline constexpr float to_radians(const float v) { return v; }
+inline float from_radians(const float v) { return wrap_to_hue_limit(v); };
+*/
 
 // Chroma compression
 constexpr float chroma_compress = 2.4f;

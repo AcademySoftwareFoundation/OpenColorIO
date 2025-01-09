@@ -13,53 +13,34 @@ namespace ACES2
 //
 // Table lookups
 //
-inline constexpr float degrees_to_radians(float d)
-{
-    return d / 180.0f * PI;
-}
 
-inline constexpr float radians_to_degrees(float r)
-{
-    return r / PI * 180.f;
-}
-
-inline float wrap_to_hue_limit(float hue) // TODO: track this and strip out unneeded calls
-{
-    float y = std::fmod(hue, hue_limit);
-    if ( y < 0.f)
-    {
-        y = y + hue_limit;
-    }
-    return y;
-}
-
-float base_hue_for_position(int i_lo, int table_size) 
+inline float base_hue_for_position(int i_lo, int table_size) 
 {
     const float result = i_lo * hue_limit / table_size;
     return result;
 }
 
-int hue_position_in_uniform_table(float hue, int table_size)
+inline int hue_position_in_uniform_table(float wrapped_hue, int table_size)
 {
-    const float wrapped_hue = wrap_to_hue_limit(hue);
     return int(wrapped_hue / hue_limit * (float) table_size);
 }
 
-int next_position_in_table(int entry, int table_size)
+inline int next_position_in_table(int entry, int table_size)
 {
     return (entry + 1) % table_size;
 }
 
-int clamp_to_table_bounds(int entry, int table_size)
+inline int clamp_to_table_bounds(int entry, int table_size)
 {
     return std::min(table_size - 1, std::max(0, entry));
 }
 
 f2 cusp_from_table(float h, const Table3D &gt)
 {
-    int i_lo = 0;
-    int i_hi = gt.base_index + gt.size; // allowed as we have an extra entry in the table
-    int i = clamp_to_table_bounds(hue_position_in_uniform_table(h, gt.size) + gt.base_index, gt.total_size);
+    constexpr int search_range = 64; // BUG: TODO: FIXME: This is arbitrary and should be calculated based on gamut parameters
+    int i = hue_position_in_uniform_table(h, gt.size) + gt.base_index;
+    int i_lo = std::max(0, i - search_range);
+    int i_hi = std::min(gt.total_size - 1, i + search_range); // allowed as we have an extra entry in the table
 
     while (i_lo + 1 < i_hi)
     {
@@ -71,7 +52,7 @@ f2 cusp_from_table(float h, const Table3D &gt)
         {
             i_hi = i;
         }
-        i = (i_lo + i_hi) / 2, gt.total_size;
+        i = (i_lo + i_hi) / 2;
     }
 
     i_hi = std::max(1, i_hi);
@@ -98,7 +79,7 @@ f2 cusp_from_table(float h, const Table3D &gt)
 float reach_m_from_table(float h, const ACES2::Table1D &gt)
 {
     const int i_lo = clamp_to_table_bounds(hue_position_in_uniform_table(h, gt.size), gt.total_size);
-    const int i_hi = clamp_to_table_bounds(next_position_in_table(i_lo, gt.size), gt.total_size);
+    const int i_hi = next_position_in_table(i_lo, gt.size);
 
     const float t = (h - i_lo) / (i_hi - i_lo);
     return lerpf(gt.table[i_lo], gt.table[i_hi], t);
@@ -107,11 +88,11 @@ float reach_m_from_table(float h, const ACES2::Table1D &gt)
 float hue_dependent_upper_hull_gamma(float h, const ACES2::Table1D &gt)
 {
     const int i_lo = clamp_to_table_bounds(hue_position_in_uniform_table(h, gt.size) + gt.base_index, gt.total_size);
-    const int i_hi = clamp_to_table_bounds(next_position_in_table(i_lo, gt.size), gt.total_size);
+    const int i_hi = next_position_in_table(i_lo, gt.size);
 
     const float base_hue = (float) (i_lo - gt.base_index);
 
-    const float t = wrap_to_hue_limit(h) - base_hue;
+    const float t = h - base_hue;
 
     return lerpf(gt.table[i_lo], gt.table[i_hi], t);
 }
@@ -204,7 +185,7 @@ inline f3 Aab_to_JMh(const f3 &Aab, const JMhParams &p)
     const float M = J == 0.f ? 0.f : sqrt(Aab[1] * Aab[1] + Aab[2] * Aab[2]);
 
     const float h_rad = std::atan2(Aab[2], Aab[1]);
-    float h = wrap_to_hue_limit(radians_to_degrees(h_rad));
+    float h = from_radians(h_rad);
 
     return {J, M, h};
 }
@@ -222,7 +203,7 @@ inline f3 JMh_to_Aab(const f3 &JMh, const JMhParams &p)
     const float M = JMh[1];
     const float h = JMh[2];
 
-    const float h_rad = degrees_to_radians(h);
+    const float h_rad = to_radians(h);
 
     const float A = J_to_Achromatic_n(J, p.cz);
     const float a = M * cos(h_rad);
@@ -257,7 +238,7 @@ f3 JMh_to_RGB(const f3 &JMh, const JMhParams &p)
 
 inline float chroma_compress_norm(float h, float chroma_compress_scale)
 {
-    const float h_rad = degrees_to_radians(h);
+    const float h_rad = to_radians(h);
     const float a = cos(h_rad);
     const float b = sin(h_rad);
     const float cos_hr2 = a * a - b * b;
@@ -509,7 +490,8 @@ Table3D make_gamut_table(const JMhParams &params, float peakLuminance)
     // Wrap the hues, to maintain monotonicity. These entries will fall outside [0.0, 360.0)
     gamutCuspTable.table[0][2] = gamutCuspTable.table[0][2] - hue_limit;
     gamutCuspTable.table[gamutCuspTable.size+1][2] = gamutCuspTable.table[gamutCuspTable.size+1][2] + hue_limit;
-
+    //for (int i = 0; i < gamutCuspTableUnsorted.total_size; i++)
+    //  std::cout << "i " << i << " " << hue_position_in_uniform_table(gamutCuspTable.table[i][2], gamutCuspTableUnsorted.size) << " " << gamutCuspTable.table[i][0]  << " " << gamutCuspTable.table[i][1]  << " " << gamutCuspTable.table[i][2]  << "\n";
     return gamutCuspTable;
 }
 
