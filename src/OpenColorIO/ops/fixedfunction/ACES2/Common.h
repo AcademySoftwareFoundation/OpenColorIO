@@ -142,7 +142,7 @@ constexpr float chroma_expand_fact = 0.69f;
 constexpr float chroma_expand_thr = 0.5f;
 
 // Gamut compression
-constexpr float smooth_cusps = 0.12f;
+constexpr float smooth_cusps = std::max(0.000001f, 0.12f);
 constexpr float smooth_m = 0.27f;
 constexpr float cusp_mid_blend = 1.3f;
 constexpr float focus_gain_blend = 0.3f;
