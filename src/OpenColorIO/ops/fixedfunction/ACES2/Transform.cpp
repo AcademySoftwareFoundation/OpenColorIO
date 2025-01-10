@@ -682,53 +682,38 @@ f2 find_gamut_boundary_intersection(const f2 &JM_cusp_in, float J_focus, float J
 }
 
 template <bool invert>
-inline float reinhard_compand(const float scale, const float factor)
+inline float reinhard_remap(const float scale, const float nd)
 {
     if (invert)
     {
-        if (factor >= 1.0f)
+        if (nd >= 1.0f)
             return scale;
         else
-            return scale * -(factor / (factor - 1.0f));
+            return scale * -(nd / (nd - 1.0f));
     }
-    return scale * factor / (1.0f + factor);
+    return scale * nd / (1.0f + nd);
 }
 
 template <bool invert>
-inline float compression_function(float v, float thr, float lim)
+inline float remap_M(const float M, const float gamut_boundary_M, const float reach_boundary_M)
 {
-    float s = (lim - thr) * (1.f - thr) / (lim - 1.f);
-    float nd = (v - thr) / s;
+    const float boundary_ratio = gamut_boundary_M / reach_boundary_M;
+    const float proportion = std::min(1.0f, std::max(boundary_ratio, compression_threshold));
+    const float threshold  = proportion * gamut_boundary_M;
 
-    if (invert)
-    {
-        if (v < thr || lim <= 1.0001f || v > thr + s)
-            return v;
-    }
-    else
-    {
-        if (v < thr || lim <= 1.0001f) 
-            return v;
-    }
+    if (M <= threshold || proportion == 1.0f) //boundary_ratio >= 1.0f) // Removed above asymptote v > threshold + s // TODO compare effects
+        return M;
 
-    return thr + reinhard_compand<invert>(s, nd);
-}
+    // Translate to place threshold at zero
+    const float m_offset     = M - threshold;
+    const float gamut_offset = gamut_boundary_M - threshold;
+    const float reach_offset = reach_boundary_M - threshold;
 
-template <bool invert>
-f3 compress_JMh(const float initial_M, const float hue, const float J_intersect_source, const f2 JMboundary, const float reachBoundaryM)
-{
-    const float difference = std::max(1.0001f, reachBoundaryM / JMboundary[1]);
-    const float threshold = std::max(compression_threshold, 1.f / difference);
-
-    float v = initial_M / JMboundary[1];
-    v = compression_function<invert>(v, threshold, difference);
-
-    const f3 JMcompressed {
-        J_intersect_source + v * (JMboundary[0] - J_intersect_source),
-        0.0f               + v * (JMboundary[1] - 0.0f),
-        hue
-    };
-    return JMcompressed;
+    const float scale = reach_offset / ((reach_offset / gamut_offset) - 1.0f);
+    const float nd = m_offset / scale;
+ 
+    // shift back to absolute
+    return threshold + reinhard_remap<invert>(scale, nd);
 }
 
 template <bool invert>
@@ -763,7 +748,14 @@ f3 compressGamut(const f3 &JMh, float Jx, const ACES2::ResolvedSharedCompression
     const float reach_slope      = compute_compression_vector_slope(reach_intersectJ, hdp.focusJ, sr.limit_J_max, reach_slope_gain);
     const float reachBoundaryM   = estimate_line_and_boundary_intersection_M(reach_intersectJ, reach_slope, sr.model_gamma_inv, sr.limit_J_max, sr.reachMaxM, sr.limit_J_max);
 
-    return compress_JMh<invert>(M, h, J_intersect_source, gamut_boundary, reachBoundaryM);
+    const float remapped_M = remap_M<invert>(M, gamut_boundary[1], reachBoundaryM);
+
+    const f3 JMcompressed {
+        J_intersect_source + remapped_M * gamut_slope,
+        remapped_M,
+        h
+    };
+    return JMcompressed;
 }
 
 inline float compute_focusJ(float cusp_J, float mid_J, float limit_J_max)
