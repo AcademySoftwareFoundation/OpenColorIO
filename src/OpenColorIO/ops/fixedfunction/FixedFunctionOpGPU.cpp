@@ -906,7 +906,7 @@ std::string _Add_Focus_Gain_func(
     ss.newLine() << "{";
     ss.indent();
     ss.newLine() << ss.floatDecl("gain") << " = ( " << s.limit_J_max << " - thr) / max(0.0001, (" << s.limit_J_max << " - min(" << s.limit_J_max << ", J)));";
-    ss.newLine() << "return pow(log(gain)/log(10.0), 1.0 / " << ACES2::focus_adjust_gain << ") + 1.0;";
+    ss.newLine() << "return pow(log(gain)/log(10.0)," << ACES2::focus_adjust_gain_inv << ") + 1.0;";
     ss.dedent();
     ss.newLine() << "}";
     ss.newLine() << "else";

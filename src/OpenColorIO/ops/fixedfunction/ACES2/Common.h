@@ -90,6 +90,7 @@ struct HueDependantGamutParams
     float gamma_bottom_inv;
     f2 JMcusp;
     float focusJ;
+    float analytical_threshold;
 };
 struct GamutCompressParams
 {
@@ -146,7 +147,7 @@ constexpr float smooth_cusps = std::max(0.000001f, 0.12f);
 constexpr float smooth_m = 0.27f;
 constexpr float cusp_mid_blend = 1.3f;
 constexpr float focus_gain_blend = 0.3f;
-constexpr float focus_adjust_gain = 0.55f;
+constexpr float focus_adjust_gain_inv = 1.0f / 0.55f;
 constexpr float focus_distance = 1.35f;
 constexpr float focus_distance_scaling = 1.75f;
 constexpr float compression_threshold = 0.75f;
