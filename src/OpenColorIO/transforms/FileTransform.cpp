@@ -209,7 +209,7 @@ std::unique_ptr<std::istream> getLutData(
         // if the buffer is empty, we'll try the file system for abs paths.
         if (!buffer.empty() || !pystring::os::path::isabs(filepath)) 
         {
-            auto pss = std::make_unique<std::stringstream>();
+            auto pss = std::unique_ptr<std::stringstream>(new std::stringstream);
             pss->write(reinterpret_cast<const char*>(buffer.data()), buffer.size());
 
             return pss;
@@ -217,8 +217,8 @@ std::unique_ptr<std::istream> getLutData(
     }
 
     // Default behavior. Return file stream.
-    return std::make_unique<std::ifstream>(
-        Platform::filenameToUTF(filepath), mode);
+    return std::unique_ptr<std::ifstream>(new std::ifstream(
+        Platform::filenameToUTF(filepath), mode));
 }
 
 bool CollectContextVariables(const Config &, 
