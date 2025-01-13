@@ -332,18 +332,6 @@ OCIO_ADD_TEST(OCIOZArchive, context_test_for_search_paths_and_filetransform_sour
     auto testPaths = [&mat](const OCIO::ConfigRcPtr & cfg, const OCIO::ContextRcPtr ctx) 
     {
         {
-            const std::string filePath = OCIO::GetTestFilesDir() + "/matrix_example4x4.ctf";
-            OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
-            transform->setSrc(filePath.c_str());
-            OCIO::ConstProcessorRcPtr processor = cfg->getProcessor(transform);
-            OCIO::ConstTransformRcPtr tr = processor->createGroupTransform()->getTransform(0);
-            auto mtx = OCIO::DynamicPtrCast<const OCIO::MatrixTransform>(tr);
-            OCIO_REQUIRE_ASSERT(mtx);
-            mtx->getMatrix(mat);
-            OCIO_CHECK_EQUAL(mat[0], 3.24);
-        }
-
-        {
             // This is independent of the context.
             OCIO::ConstProcessorRcPtr processor = cfg->getProcessor(ctx, "shot1_lut1_cs", "reference");
             OCIO::ConstTransformRcPtr tr = processor->createGroupTransform()->getTransform(0);
@@ -446,6 +434,29 @@ OCIO_ADD_TEST(OCIOZArchive, context_test_for_search_paths_and_filetransform_sour
             OCIO_REQUIRE_ASSERT(mtx);
             mtx->getMatrix(mat);
             OCIO_CHECK_EQUAL(mat[0], 4.);
+        }
+
+        {
+            // File transform source is an absolute path, not in the archive.
+            const std::string filePath =
+                OCIO::GetTestFilesDir() + "/matrix_example4x4.ctf";
+            OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
+            transform->setSrc(filePath.c_str());
+            OCIO::ConstProcessorRcPtr processor = cfg->getProcessor(transform);
+            OCIO::ConstTransformRcPtr tr =
+                processor->createGroupTransform()->getTransform(0);
+            auto mtx = OCIO::DynamicPtrCast<const OCIO::MatrixTransform>(tr);
+            OCIO_REQUIRE_ASSERT(mtx);
+            mtx->getMatrix(mat);
+            OCIO_CHECK_EQUAL(mat[0], 3.24);
+        }
+
+        {
+            // File transform source is an abs path but doesn't exist anywhere.
+            const std::string filePath = OCIO::GetTestFilesDir() + "/missing.ctf";
+            OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
+            transform->setSrc(filePath.c_str());
+            OCIO_CHECK_THROW(cfg->getProcessor(transform), OCIO::Exception);
         }
     };
 

@@ -200,13 +200,13 @@ std::unique_ptr<std::istream> getLutData(
         } 
         catch (const std::exception&) 
         {
-            // If the path is absolute, we'll try the file system. but otherwise
+            // If the path is absolute, we'll try the file system, but otherwise
             // nothing to do.
             if (!pystring::os::path::isabs(filepath)) 
               throw;
         }
 
-        // if the buffer is empty, we'll try the file system for abs paths.
+        // If the buffer is empty, we'll try the file system for abs paths.
         if (!buffer.empty() || !pystring::os::path::isabs(filepath)) 
         {
             auto pss = std::unique_ptr<std::stringstream>(new std::stringstream);
@@ -217,7 +217,7 @@ std::unique_ptr<std::istream> getLutData(
     }
 
     // Default behavior. Return file stream.
-    return std::unique_ptr<std::ifstream>(new std::ifstream(
+    return std::unique_ptr<std::istream>(new std::ifstream(
         Platform::filenameToUTF(filepath), mode));
 }
 
