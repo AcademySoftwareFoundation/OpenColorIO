@@ -7,6 +7,7 @@
 #include "transforms/builtins/ColorMatrixHelpers.h"
 #include "MatrixLib.h"
 
+#include <cmath>
 
 namespace OCIO_NAMESPACE
 {

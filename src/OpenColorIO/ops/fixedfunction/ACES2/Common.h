@@ -7,6 +7,7 @@
 #include "MatrixLib.h"
 #include "ColorLib.h"
 
+#include <cmath>
 
 namespace OCIO_NAMESPACE
 {
