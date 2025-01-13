@@ -97,6 +97,7 @@ struct GamutCompressParams
     float mid_J;
     float focus_dist;
     float lower_hull_gamma_inv;
+    std::array<int, 2> hue_linearity_search_range;
     Table3D gamut_cusp_table;
     Table1D upper_hull_gamma_inv_table;
 };
