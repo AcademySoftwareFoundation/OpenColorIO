@@ -3,6 +3,9 @@
 
 #include "Transform.h"
 
+#include <array>
+#include <algorithm>
+#include <cmath>
 
 namespace OCIO_NAMESPACE
 {
@@ -510,7 +513,7 @@ Table1D make_reach_m_table(const JMhParams &params, float peakLuminance)
         const float hue = (float) i;
 
         const float search_range = 50.f;
-        float low = 0.;
+        float low = 0.f;
         float high = low + search_range;
         bool outside = false;
 
@@ -796,7 +799,7 @@ f3 gamut_compress_inv(const f3 &JMh, const ResolvedSharedCompressionParameters &
 
 bool evaluate_gamma_fit(
     const f2 &JMcusp,
-    const f3 testJMh[3],
+    const std::array<f3, 3> JMh_values,
     float topGamma_inv,
     float peakLuminance,
     float limit_J_max,
@@ -807,12 +810,13 @@ bool evaluate_gamma_fit(
 {
     const float focusJ = compute_focusJ(JMcusp[0], mid_J, limit_J_max);
 
-    for (size_t testIndex = 0; testIndex < 3; testIndex++)
+    for (auto testJMh: JMh_values)
     {
-        const float slope_gain = limit_J_max * focus_dist * get_focus_gain(testJMh[testIndex][0], JMcusp[0], limit_J_max);
-        const float J_intersect_source = solve_J_intersect(testJMh[testIndex][0], testJMh[testIndex][1], focusJ, limit_J_max, slope_gain);
+        const float slope_gain = limit_J_max * focus_dist * get_focus_gain(testJMh[0], JMcusp[0], limit_J_max);
+        const float J_intersect_source = solve_J_intersect(testJMh[0], testJMh[1], focusJ, limit_J_max, slope_gain);
         const f2 approxLimit = find_gamut_boundary_intersection(JMcusp, focusJ, limit_J_max, slope_gain, topGamma_inv, lower_hull_gamma_inv, J_intersect_source);
-        const f3 approximate_JMh = {approxLimit[0], approxLimit[1], testJMh[testIndex][2]};
+        const f3 approximate_JMh = {approxLimit[0], approxLimit[1], testJMh[2]};
+
         const f3 newLimitRGB = JMh_to_RGB(approximate_JMh, limitJMhParams);
         const f3 newLimitRGBScaled = mult_f_f3(reference_luminance / peakLuminance, newLimitRGB);
 
@@ -834,8 +838,8 @@ Table1D make_upper_hull_gamma(
     float lower_hull_gamma_inv,
     const JMhParams &limitJMhParams)
 {
-    const int test_count = 3;
-    const float testPositions[test_count] = {0.01f, 0.5f, 0.99f};
+    constexpr int test_count = 3;
+    const std::array<float, test_count> testPositions = {0.01f, 0.5f, 0.99f};
 
     Table1D gammaTable{};
     Table1D gamutTopGamma{};
@@ -847,7 +851,7 @@ Table1D make_upper_hull_gamma(
         const float hue = (float) i;
         const f2 JMcusp = cusp_from_table(hue, gamutCuspTable);
 
-        f3 testJMh[test_count]{};
+        std::array<f3, test_count> testJMh;
         for (int testIndex = 0; testIndex < test_count; testIndex++)
         {
             const float testJ = JMcusp[0] + ((limit_J_max - JMcusp[0]) * testPositions[testIndex]);
