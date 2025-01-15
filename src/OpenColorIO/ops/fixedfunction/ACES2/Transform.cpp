@@ -17,15 +17,9 @@ namespace ACES2
 // Table lookups
 //
 
-inline float base_hue_for_position(int i_lo, int table_size) 
-{
-    const float result = i_lo * hue_limit / table_size;
-    return result;
-}
-
 inline int hue_position_in_uniform_table(float wrapped_hue, int table_size)
 {
-    return int(wrapped_hue / hue_limit * (float) table_size);
+    return int(wrapped_hue / hue_limit * float(table_size)); // TODO: can we use the 'lost' fraction for the lerps?
 }
 
 inline int next_position_in_table(int entry, int table_size)
@@ -42,7 +36,7 @@ f2 cusp_from_table(float h, const Table3D &gt, const std::array<int, 2> & hue_li
 {
     int i = hue_position_in_uniform_table(h, gt.size) + gt.base_index;
     int i_lo = std::max(0, i + hue_linearity_search_range[0]);
-    int i_hi = std::min(gt.total_size - 1, i + hue_linearity_search_range[1]); // allowed as we have an extra entry in the table
+    int i_hi = std::min(gt.total_size - 1, i + hue_linearity_search_range[1]);
 
     while (i_lo + 1 < i_hi)
     {
@@ -92,7 +86,7 @@ float hue_dependent_upper_hull_gamma(float h, const ACES2::Table1D &gt)
     const int i_lo = clamp_to_table_bounds(hue_position_in_uniform_table(h, gt.size) + gt.base_index, gt.total_size);  // TODO: this should be removed if we can constrain the hue range properly
     const int i_hi = next_position_in_table(i_lo, gt.size);
 
-    const float base_hue = (float) (i_lo - gt.base_index);
+    const float base_hue = float(i_lo - gt.base_index);
 
     const float t = h - base_hue;
 
@@ -256,7 +250,7 @@ inline float chroma_compress_norm(float h, float chroma_compress_scale)
                9.19364f * sin_hr3 +
               77.12896f;
 
-    return M * chroma_compress_scale;
+    return M * chroma_compress_scale; // TODO: is it worth prescaling the above M constants ?
 }
 
 inline float toe_fwd( float x, float limit, float k1_in, float k2_in)
@@ -288,7 +282,7 @@ inline float toe_inv( float x, float limit, float k1_in, float k2_in)
     return (x * x + k1 * x) / (k3 * (x + k2));
 }
 
-float tonescale_fwd(const float J, const JMhParams &p, const ToneScaleParams &pt)
+float tonescale_fwd(const float J, const JMhParams &p, const ToneScaleParams &pt) // TODO: consider computing tonescale from and to A rather than J to avoid extra pow() calls
 {
     // Tonescale applied in Y (convert to and from J)
     const float J_abs = std::abs(J);
@@ -423,6 +417,9 @@ JMhParams init_JMhParams(const Primaries &prims)
     const float A_w   = cone_response_to_Aab[0] * RGB_AW[0] + cone_response_to_Aab[1] * RGB_AW[1] + cone_response_to_Aab[2] * RGB_AW[2];
     const float A_w_J = _post_adaptation_cone_response_compression_fwd(reference_luminance, F_L_n);
 
+    // TODO: evaluate the condition number of the below matrices and consider extracting a power of 2 scale out of them may improve noise behaviour
+    //       power of 2 to make cost of extra scaling limited vs generalised multiply/divide ?
+
     // Note we are prescaling the CAM16 LMS responses to directly provide for chromatic adaptation.
     const m33f MATRIX_RGB_to_CAM16 = mult_f33_f33(RGBtoRGB_f33(prims, CAM16::primaries), scale_f33(Identity_M33, f3_from_f(reference_luminance)));
     const m33f MATRIX_RGB_to_CAM16_c = mult_f33_f33(scale_f33(Identity_M33, D_RGB), MATRIX_RGB_to_CAM16);
@@ -454,7 +451,7 @@ Table3D make_gamut_table(const JMhParams &params, float peakLuminance)
     int minhIndex = 0;
     for (int i = 0; i < gamutCuspTableUnsorted.size; i++)
     {
-        const float hNorm = (float) i / gamutCuspTableUnsorted.size;
+        const float hNorm = float(i) / float(gamutCuspTableUnsorted.size);
         const f3 HSV = {hNorm, 1., 1.};
         const f3 RGB = HSV_to_RGB(HSV);
         const f3 scaledRGB = mult_f_f3(peakLuminance / reference_luminance, RGB);
@@ -485,7 +482,7 @@ Table3D make_gamut_table(const JMhParams &params, float peakLuminance)
     gamutCuspTable.table[gamutCuspTable.base_index + gamutCuspTable.size][1] = gamutCuspTable.table[gamutCuspTable.base_index][1];
     gamutCuspTable.table[gamutCuspTable.base_index + gamutCuspTable.size][2] = gamutCuspTable.table[gamutCuspTable.base_index][2];
 
-    // Wrap the hues, to maintain monotonicity. These entries will fall outside [0.0, 360.0)
+    // Wrap the hues, to maintain monotonicity. These entries will fall outside [0.0, hue_limit)
     gamutCuspTable.table[0][2] = gamutCuspTable.table[0][2] - hue_limit;
     gamutCuspTable.table[gamutCuspTable.size+1][2] = gamutCuspTable.table[gamutCuspTable.size+1][2] + hue_limit;
     return gamutCuspTable;
@@ -496,14 +493,12 @@ bool any_below_zero(const f3 &rgb)
     return (rgb[0] < 0. || rgb[1] < 0. || rgb[2] < 0.);
 }
 
-Table1D make_reach_m_table(const JMhParams &params, float peakLuminance)
+Table1D make_reach_m_table(const JMhParams &params, const float limit_J_max)
 {
-    const float limit_J_max = Y_to_J(peakLuminance, params);
-
     Table1D gamutReachTable{};
 
     for (int i = 0; i < gamutReachTable.size; i++) {
-        const float hue = (float) i;
+        const float hue = float(i);
 
         const float search_range = 50.f;
         float low = 0.f;
@@ -661,6 +656,7 @@ float find_gamut_boundary_intersection(const f2 &JM_cusp, float J_max, float gam
       estimate_line_and_boundary_intersection_M(f_J_intersect_source, -slope, gamma_top_inv, f_JM_cusp_J, JM_cusp[1], f_J_intersect_cusp);
 
     // Smooth minimum between the two calculated values for the M component
+    // TODO: do we need to normalise based on JM_cusp[1]
     const float M_boundary = JM_cusp[1] * smin(M_boundary_lower / JM_cusp[1], M_boundary_upper / JM_cusp[1], smooth_cusps);
 
     return M_boundary;
@@ -671,7 +667,7 @@ inline float reinhard_remap(const float scale, const float nd)
 {
     if (invert)
     {
-        if (nd >= 1.0f)
+        if (nd >= 1.0f) // TODO: given remap_M already tests against proportion do we need this asymptote test
             return scale;
         else
             return scale * -(nd / (nd - 1.0f));
@@ -708,6 +704,7 @@ f3 compressGamut(const f3 &JMh, float Jx, const ACES2::ResolvedSharedCompression
     const float M = JMh[1];
     const float h = JMh[2];
     
+    // TODO: test migrating these to calling function so they are only tested once for the inverse?
     if (J <= 0.0f) // Limit to +ve J values // TODO test this is needed
     {
         return {0.0f, 0.f, h};
@@ -726,7 +723,7 @@ f3 compressGamut(const f3 &JMh, float Jx, const ACES2::ResolvedSharedCompression
     const float J_intersect_cusp = solve_J_intersect(hdp.JMcusp[0], hdp.JMcusp[1], hdp.focusJ, sr.limit_J_max, slope_gain);
     const float gamut_boundary_M = find_gamut_boundary_intersection(hdp.JMcusp, sr.limit_J_max, hdp.gamma_top_inv, hdp.gamma_bottom_inv, J_intersect_source, gamut_slope, J_intersect_cusp);
 
-    if (gamut_boundary_M <= 0.0f) // TODO: when does this happen?
+    if (gamut_boundary_M <= 0.0f) // TODO: when/why does this happen?
     {
         return {J, 0.f, h};
     }
@@ -804,12 +801,12 @@ bool evaluate_gamma_fit(
         const float slope = compute_compression_vector_slope(J_intersect_source, focusJ, limit_J_max, slope_gain);
         const float J_intersect_cusp = solve_J_intersect(JMcusp[0], JMcusp[1], focusJ, limit_J_max, slope_gain);
 
-        const float approxLimit_M = find_gamut_boundary_intersection(JM_cusp_s, limit_J_max, topGamma_inv, lower_hull_gamma_inv, J_intersect_source, slope, J_intersect_cusp);
+        const float approxLimit_M = find_gamut_boundary_intersection(JMcusp, limit_J_max, topGamma_inv, lower_hull_gamma_inv, J_intersect_source, slope, J_intersect_cusp);
         const float approxLimit_J = J_intersect_source + slope * approxLimit_M;
 
         const f3 approximate_JMh = {approxLimit_J, approxLimit_M, testJMh[2]};
         const f3 newLimitRGB = JMh_to_RGB(approximate_JMh, limitJMhParams);
-        const f3 newLimitRGBScaled = mult_f_f3(reference_luminance / peakLuminance, newLimitRGB);
+        const f3 newLimitRGBScaled = mult_f_f3(reference_luminance / peakLuminance, newLimitRGB); // TODO: can this be avoided by amending outside_hull to account for peak?
 
         if (!outside_hull(newLimitRGBScaled))
         {
@@ -833,14 +830,14 @@ Table1D make_upper_hull_gamma(
     constexpr int test_count = 3;
     const std::array<float, test_count> testPositions = {0.01f, 0.5f, 0.99f};
 
-    Table1D gammaTable{};
+    Table1D gammaTable{}; // TODO: do we need the 2nd table or can this be done "in place"
     Table1D gamutTopGamma{};
 
     for (int i = 0; i < gammaTable.size; i++)
     {
         gammaTable.table[i] = -1.f;
 
-        const float hue = (float) i;
+        const float hue = float(i);
         const f2 JMcusp = cusp_from_table(hue, gamutCuspTable, hue_linearity_search_range);
 
         std::array<f3, test_count> testJMh;
@@ -854,6 +851,9 @@ Table1D make_upper_hull_gamma(
             };
         }
 
+        // TODO: calculate best fitting inverse gamma directly rather than reciprocating it in the loop
+        // TODO: adjacent found gamma values typically fall close to each other could initialise the search range
+        //       with values near to speed up searching. Note that discrepancies do occur at/near corners of gamut
         const float search_range = gammaSearchStep;
         float low = gammaMinimum;
         float high = low + search_range;
@@ -918,6 +918,8 @@ ToneScaleParams init_ToneScaleParams(float peakLuminance)
     const float r_hit_max = 896.f;   // scene-referred value "hitting the roof"
 
     // Calculate output constants
+    // TODO: factor these calculations into well named functions
+    // TODO: ensure correct use of n_r vs n vs reference_luminance
     const float r_hit = r_hit_min + (r_hit_max - r_hit_min) * (log(n/n_r)/log(10000.f/100.f));
     const float m_0 = (n / n_r);
     const float m_1 = 0.5f * (m_0 + sqrt(m_0 * (m_0 + 4.f * t_1)));
@@ -957,7 +959,7 @@ SharedCompressionParameters init_SharedCompressionParams(float peakLuminance, co
     SharedCompressionParameters params = {
         limit_J_max,
         model_gamma_inv,
-        make_reach_m_table(compressionGamut, peakLuminance)
+        make_reach_m_table(compressionGamut, limit_J_max)
     };
     return params;
 }
@@ -975,6 +977,7 @@ ResolvedSharedCompressionParameters resolve_CompressionParams(float hue, const S
 ChromaCompressParams init_ChromaCompressParams(float peakLuminance, const ToneScaleParams &tsParams)
 {
     // Calculated chroma compress variables
+    // TODO: name these magic constants
     const float compr = chroma_compress + (chroma_compress * chroma_compress_fact) * tsParams.log_peak;
     const float sat = std::max(0.2f, chroma_expand - (chroma_expand * chroma_expand_fact) * tsParams.log_peak);
     const float sat_thr = chroma_expand_thr / tsParams.n;
@@ -991,27 +994,35 @@ ChromaCompressParams init_ChromaCompressParams(float peakLuminance, const ToneSc
 
 std::array<int, 2> determine_hue_linearity_search_range(const Table3D &gamutCuspTable)
 {
-    std::array<int, 2> hue_linearity_search_range = {0, 0};
+    // This function searches through the hues looking for the largest deviations from a linear distribution
+    // We can then use this to initialise the binary search range to something smaller than the full one to
+    // reduce the number of lookups per hue lookup from ~ceil(log2(table size)) to ~ceil(log2(range))
+    // during image rendering.
+
+    // TODO: Padding values are a quick hack to ensure the range encloses the needed range, left as an exersize
+    // for the reader to fully reason if these values could be smaller, probably best done the closer the hue
+    // distribution comes to linear as the overhead becomes a potentially greater issue
+    constexpr int lower_padding = -2;
+    constexpr int upper_padding = 1;
+    std::array<int, 2> hue_linearity_search_range = {lower_padding, upper_padding};
     for (int i = gamutCuspTable.base_index; i < gamutCuspTable.base_index + gamutCuspTable.size; i++)
     {
       const int pos = hue_position_in_uniform_table(gamutCuspTable.table[i][2], gamutCuspTable.size) + gamutCuspTable.base_index;
       const int delta = i - pos;
-      hue_linearity_search_range[0] = std::min(hue_linearity_search_range[0], delta-2);
-      hue_linearity_search_range[1] = std::max(hue_linearity_search_range[1], delta+1);
-      //std:: cout << "hue_linearity_search_range " << i << " " << pos << " " << hue_linearity_search_range[0] << " " << hue_linearity_search_range[1] << "\n";
+      hue_linearity_search_range[0] = std::min(hue_linearity_search_range[0], delta + lower_padding);
+      hue_linearity_search_range[1] = std::max(hue_linearity_search_range[1], delta + upper_padding);
     }
-    //std:: cout << "hue_linearity_search_range " << hue_linearity_search_range[0] << " " << hue_linearity_search_range[1] << "\n";
     return hue_linearity_search_range;
 }
 
 GamutCompressParams init_GamutCompressParams(float peakLuminance, const JMhParams &inputJMhParams, const JMhParams &limitJMhParams,
                                              const ToneScaleParams &tsParams, const SharedCompressionParameters &shParams)
 {
-    float mid_J = Y_to_J(tsParams.c_t * reference_luminance, inputJMhParams); // TODO
+    float mid_J = Y_to_J(tsParams.c_t * reference_luminance, inputJMhParams);
 
     // Calculated chroma compress variables
     const float focus_dist = focus_distance + focus_distance * focus_distance_scaling * tsParams.log_peak;
-    const float lower_hull_gamma_inv =  1.0f / (1.14f + 0.07f * tsParams.log_peak);
+    const float lower_hull_gamma_inv =  1.0f / (1.14f + 0.07f * tsParams.log_peak); // TODO: name these magic constants
 
     GamutCompressParams params;
     params.mid_J = mid_J;
@@ -1021,7 +1032,7 @@ GamutCompressParams init_GamutCompressParams(float peakLuminance, const JMhParam
     params.hue_linearity_search_range = determine_hue_linearity_search_range(params.gamut_cusp_table);
     params.upper_hull_gamma_inv_table = make_upper_hull_gamma(params.gamut_cusp_table, params.hue_linearity_search_range,
                                                               peakLuminance, shParams.limit_J_max, mid_J, focus_dist,
-                                                              lower_hull_gamma_inv, limitJMhParams) ;//TODO
+                                                              lower_hull_gamma_inv, limitJMhParams); //TODO: mess of parameters
     return params;
 }
 
