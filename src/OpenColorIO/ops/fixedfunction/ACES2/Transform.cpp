@@ -17,6 +17,12 @@ namespace ACES2
 // Table lookups
 //
 
+inline float base_hue_for_position(int i_lo, int table_size) 
+{
+    const float result = i_lo * hue_limit / table_size;
+    return result;
+}
+
 inline int hue_position_in_uniform_table(float wrapped_hue, int table_size)
 {
     return int(wrapped_hue / hue_limit * float(table_size)); // TODO: can we use the 'lost' fraction for the lerps?
@@ -86,7 +92,7 @@ float hue_dependent_upper_hull_gamma(float h, const ACES2::Table1D &gt)
     const int i_lo = clamp_to_table_bounds(hue_position_in_uniform_table(h, gt.size) + gt.base_index, gt.total_size);  // TODO: this should be removed if we can constrain the hue range properly
     const int i_hi = next_position_in_table(i_lo, gt.size);
 
-    const float base_hue = float(i_lo - gt.base_index);
+    const float base_hue = base_hue_for_position(i_lo - gt.base_index, gt.size);
 
     const float t = h - base_hue;
 
@@ -498,7 +504,7 @@ Table1D make_reach_m_table(const JMhParams &params, const float limit_J_max)
     Table1D gamutReachTable{};
 
     for (int i = 0; i < gamutReachTable.size; i++) {
-        const float hue = float(i);
+        const float hue = base_hue_for_position(i, gamutReachTable.size);
 
         const float search_range = 50.f;
         float low = 0.f;
@@ -837,7 +843,7 @@ Table1D make_upper_hull_gamma(
     {
         gammaTable.table[i] = -1.f;
 
-        const float hue = float(i);
+        const float hue = base_hue_for_position(i, gamutCuspTable.size);
         const f2 JMcusp = cusp_from_table(hue, gamutCuspTable, hue_linearity_search_range);
 
         std::array<f3, test_count> testJMh;
