@@ -296,12 +296,12 @@ inline float aces_tonescale(const float Y_in, const JMhParams &p, const ToneScal
         const float Y_ts_norm = Y_in / reference_luminance; // TODO
         const float Z = std::max(0.f, std::min(pt.inverse_limit, Y_ts_norm)); // TODO: could eliminate max in the context of the full tonescale
         const float f = (Z + sqrt(Z * (4.f * pt.t_1 + Z))) / 2.f;
-        const float Y = pt.s_2 / (powf((pt.m_2 / f), (1.f / pt.g)) - 1.f);
+        const float Y = pt.s_2 / (powf((pt.m_2 / f), (1.f / pt.g)) - 1.f); // TODO: investigate precomputing reciprocal m_2  and a negative power? may swap a division for a multiply? powf(pt.m_2_recip * f, (-1.f / pt.g))
         return Y;
     }
 
     const float f    = pt.m_2 * powf(Y_in / (Y_in + pt.s_2), pt.g);
-    const float Y_ts = std::max(0.f, f * f / (f + pt.t_1)) * pt.n_r;  // max prevents -ve values being output also handles division by zero possibility
+    const float Y_ts = std::max(0.f, f * f / (f + pt.t_1)) * pt.n_r;  // max prevents -ve values being output also handles division by zero possibility // TODO: can we eliminate the n_r scaling? should it be reference_luminance
     return Y_ts;
 }
 
@@ -838,14 +838,13 @@ Table1D make_upper_hull_gamma(
     constexpr int test_count = 3;
     const std::array<float, test_count> testPositions = {0.01f, 0.5f, 0.99f};
 
-    Table1D gammaTable{}; // TODO: do we need the 2nd table or can this be done "in place"
     Table1D gamutTopGamma{};
 
-    for (int i = 0; i < gammaTable.size; i++)
+    for (int i = 0; i < gamutTopGamma.size; i++)
     {
-        gammaTable.table[i] = -1.f;
+        gamutTopGamma.table[i + gamutTopGamma.base_index] = -1.f;
 
-        const float hue = base_hue_for_position(i, gamutCuspTable.size);
+        const float hue = base_hue_for_position(i, gamutTopGamma.size);
         const f2 JMcusp = cusp_from_table(hue, gamutCuspTable, hue_linearity_search_range);
 
         std::array<f3, test_count> testJMh;
@@ -889,23 +888,18 @@ Table1D make_upper_hull_gamma(
             if (gammaFound)
             {
                 high = testGamma;
-                gammaTable.table[i] = 1.0f / high;
+                gamutTopGamma.table[i + gamutTopGamma.base_index] = 1.0f / high;
             }
             else
             {
                 low = testGamma;
             }
         }
-
-        // Duplicate gamma value to array, leaving empty entries at first and last position
-        gamutTopGamma.table[i+gamutTopGamma.base_index] = gammaTable.table[i];
     }
 
-    // Copy last populated entry to first empty spot
-    gamutTopGamma.table[0] = gammaTable.table[gammaTable.size-1];
-
-    // Copy first populated entry to last empty spot
-    gamutTopGamma.table[gamutTopGamma.total_size-1] = gammaTable.table[0];
+    // Copy last populated entries to empty spot 'wrapping' entries
+    gamutTopGamma.table[0] = gamutTopGamma.table[gamutTopGamma.base_index + gamutTopGamma.size - 1];
+    gamutTopGamma.table[gamutTopGamma.base_index + gamutTopGamma.size] = gamutTopGamma.table[gamutCuspTable.base_index];
 
     return gamutTopGamma;
 }
