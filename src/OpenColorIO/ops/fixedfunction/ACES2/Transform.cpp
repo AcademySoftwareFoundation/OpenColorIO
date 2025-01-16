@@ -42,7 +42,7 @@ f2 cusp_from_table(float h, const Table3D &gt, const std::array<int, 2> & hue_li
 {
     int i = hue_position_in_uniform_table(h, gt.size) + gt.base_index;
     int i_lo = std::max(0, i + hue_linearity_search_range[0]);
-    int i_hi = std::min(gt.total_size - 1, i + hue_linearity_search_range[1]);
+    int i_hi = std::min(gt.base_index + gt.size, i + hue_linearity_search_range[1]);
 
     while (i_lo + 1 < i_hi)
     {
@@ -288,32 +288,32 @@ inline float toe_inv( float x, float limit, float k1_in, float k2_in)
     return (x * x + k1 * x) / (k3 * (x + k2));
 }
 
-float tonescale_fwd(const float J, const JMhParams &p, const ToneScaleParams &pt) // TODO: consider computing tonescale from and to A rather than J to avoid extra pow() calls
+template <bool inverse>
+inline float aces_tonescale(const float Y_in, const JMhParams &p, const ToneScaleParams &pt)
+{
+    if (inverse)
+    {
+        const float Y_ts_norm = Y_in / reference_luminance; // TODO
+        const float Z = std::max(0.f, std::min(pt.inverse_limit, Y_ts_norm)); // TODO: could eliminate max in the context of the full tonescale
+        const float f = (Z + sqrt(Z * (4.f * pt.t_1 + Z))) / 2.f;
+        const float Y = pt.s_2 / (powf((pt.m_2 / f), (1.f / pt.g)) - 1.f);
+        return Y;
+    }
+
+    const float f    = pt.m_2 * powf(Y_in / (Y_in + pt.s_2), pt.g);
+    const float Y_ts = std::max(0.f, f * f / (f + pt.t_1)) * pt.n_r;  // max prevents -ve values being output also handles division by zero possibility
+    return Y_ts;
+}
+
+template <bool inverse>
+float tonescale(const float J, const JMhParams &p, const ToneScaleParams &pt) // TODO: consider computing tonescale from and to A rather than J to avoid extra pow() calls
 {
     // Tonescale applied in Y (convert to and from J)
     const float J_abs = std::abs(J);
-    const float Y     = _J_to_Y(J_abs, p);
-    
-    const float f    = pt.m_2 * powf(Y / (Y + pt.s_2), pt.g);
-    const float Y_ts = std::max(0.f, f * f / (f + pt.t_1)) * pt.n_r;  // max prevents -ve values being output also handles division by zero possibility
-
-    const float J_ts  = _Y_to_J(Y_ts, p);
-    return std::copysign(J_ts, Y_ts);
-}
-
-float tonescale_inv(const float J_ts, const JMhParams &p, const ToneScaleParams &pt)
-{
-    // Inverse Tonescale applied in Y (convert to and from J)
-    const float J_abs = std::abs(J_ts);
-    const float Y_ts  = _J_to_Y(J_abs, p);
-
-    const float Y_ts_norm = Y_ts / reference_luminance; // TODO
-    const float Z = std::max(0.f, std::min(pt.n / (pt.u_2 * pt.n_r), Y_ts_norm));  //TODO
-    const float f = (Z + sqrt(Z * (4.f * pt.t_1 + Z))) / 2.f;
-    const float Y = pt.s_2 / (powf((pt.m_2 / f), (1.f / pt.g)) - 1.f);
-
-    const float J     = _Y_to_J(Y, p);
-    return std::copysign(J, Y_ts);
+    const float Y_in  = _J_to_Y(J_abs, p);
+    const float Y_out = aces_tonescale<inverse>(Y_in, p, pt);
+    const float J_out = _Y_to_J(Y_out, p);
+    return std::copysign(J_out, J);
 }
 
 f3 tonescale_chroma_compress_fwd(const f3 &JMh, const JMhParams &p, const ToneScaleParams &pt, const ResolvedSharedCompressionParameters &pr, const ChromaCompressParams &pc)
@@ -322,7 +322,8 @@ f3 tonescale_chroma_compress_fwd(const f3 &JMh, const JMhParams &p, const ToneSc
     const float M = JMh[1];
     const float h = JMh[2];
 
-    const float J_ts = tonescale_fwd(J, p, pt);
+    constexpr bool inverse = false;
+    const float J_ts = tonescale<inverse>(J, p, pt);
 
     // ChromaCompress
     float M_cp = M;
@@ -350,7 +351,8 @@ f3 tonescale_chroma_compress_inv(const f3 &JMh, const JMhParams &p, const ToneSc
     const float M_cp = JMh[1];
     const float h    = JMh[2];
 
-    const float J = tonescale_inv(J_ts, p, pt);
+    constexpr bool inverse = true;
+    const float J = tonescale<inverse>(J_ts, p, pt);
 
     // Inverse ChromaCompress
     float M = M_cp;
@@ -939,6 +941,7 @@ ToneScaleParams init_ToneScaleParams(float peakLuminance)
     const float s_2 = w_2 * m_1 * reference_luminance;
     const float u_2 = powf((r_hit/m_1)/((r_hit/m_1) + w_2), g);
     const float m_2 = m_1 / u_2;
+    const float inverse_limit = n / (u_2 * n_r);
     const float log_peak = log10( n / n_r);
 
     ToneScaleParams TonescaleParams = {
@@ -950,6 +953,7 @@ ToneScaleParams init_ToneScaleParams(float peakLuminance)
         s_2,
         u_2,
         m_2,
+        inverse_limit,
         log_peak
     };
 

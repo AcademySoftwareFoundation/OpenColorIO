@@ -58,6 +58,7 @@ struct ToneScaleParams
     float s_2;
     float u_2;
     float m_2;
+    float inverse_limit;
     float log_peak;
 };
 
