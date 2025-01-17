@@ -625,6 +625,13 @@ inline float smin(float a, float b, float s)
     return std::min(a, b) - h * h * h * s * (1.f / 6.f);
 }
 
+// Redefined smin function to handle scaling by adjusting k
+inline float smin_scaled(float a, float b, float s, float scale) {
+    float s_scaled = s * scale;
+    float h = std::max(s_scaled - std::abs(a - b), 0.0f) / s_scaled;
+    return std::min(a, b) - h * h * h * s_scaled * (1.f / 6.f);
+}
+
 inline float compute_compression_vector_slope(const float intersectJ, const float focusJ, const float limitJmax, const float slope_gain)
 {
     const float direction_scaler = (intersectJ < focusJ) ? intersectJ : (limitJmax - intersectJ); // TODO < vs <=
@@ -665,8 +672,8 @@ float find_gamut_boundary_intersection(const f2 &JM_cusp, float J_max, float gam
 
     // Smooth minimum between the two calculated values for the M component
     // TODO: do we need to normalise based on JM_cusp[1]
-    const float M_boundary = JM_cusp[1] * smin(M_boundary_lower / JM_cusp[1], M_boundary_upper / JM_cusp[1], smooth_cusps);
-
+    //const float M_boundary = JM_cusp[1] * smin(M_boundary_lower / JM_cusp[1], M_boundary_upper / JM_cusp[1], smooth_cusps);
+    const float M_boundary = smin_scaled(M_boundary_lower, M_boundary_upper, smooth_cusps, JM_cusp[1]);
     return M_boundary;
 }
 
