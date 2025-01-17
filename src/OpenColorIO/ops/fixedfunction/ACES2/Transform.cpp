@@ -788,9 +788,11 @@ f3 gamut_compress_inv(const f3 &JMh, const ResolvedSharedCompressionParameters &
     return compressGamut<true>(JMh, Jx, sr, p, hdp);
 }
 
+static constexpr int gamma_test_count = 5;
+
 bool evaluate_gamma_fit(
     const f2 &JMcusp,
-    const std::array<f3, 3> JMh_values,
+    const std::array<f3, gamma_test_count> JMh_values,
     float topGamma_inv,
     float peakLuminance,
     float limit_J_max,
@@ -835,8 +837,7 @@ Table1D make_upper_hull_gamma(
     float lower_hull_gamma_inv,
     const JMhParams &limitJMhParams)
 {
-    constexpr int test_count = 3;
-    const std::array<float, test_count> testPositions = {0.01f, 0.5f, 0.99f};
+    const std::array<float, gamma_test_count> testPositions = {0.01f, 0.1f, 0.5f, 0.8f, 0.99f};
 
     Table1D gamutTopGamma{};
 
@@ -847,8 +848,8 @@ Table1D make_upper_hull_gamma(
         const float hue = base_hue_for_position(i, gamutTopGamma.size);
         const f2 JMcusp = cusp_from_table(hue, gamutCuspTable, hue_linearity_search_range);
 
-        std::array<f3, test_count> testJMh;
-        for (int testIndex = 0; testIndex < test_count; testIndex++)
+        std::array<f3, gamma_test_count> testJMh;
+        for (int testIndex = 0; testIndex < testJMh.size(); testIndex++)
         {
             const float testJ = JMcusp[0] + ((limit_J_max - JMcusp[0]) * testPositions[testIndex]);
             testJMh[testIndex] = {
@@ -866,7 +867,7 @@ Table1D make_upper_hull_gamma(
         float high = low + search_range;
         bool outside = false;
 
-        while (!(outside) && (high < 5.f))
+        while (!(outside) && (high < gammaMaximum))
         {
             const bool gammaFound = evaluate_gamma_fit(JMcusp, testJMh, 1.0f / high, peakLuminance, limit_J_max, mid_J, focus_dist, lower_hull_gamma_inv, limitJMhParams);
             if (!gammaFound)
