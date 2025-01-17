@@ -849,15 +849,12 @@ Table1D make_upper_hull_gamma(
         const f2 JMcusp = cusp_from_table(hue, gamutCuspTable, hue_linearity_search_range);
 
         std::array<f3, gamma_test_count> testJMh;
-        for (int testIndex = 0; testIndex < testJMh.size(); testIndex++)
-        {
-            const float testJ = JMcusp[0] + ((limit_J_max - JMcusp[0]) * testPositions[testIndex]);
-            testJMh[testIndex] = {
-                testJ,
-                JMcusp[1],
-                hue
-            };
-        }
+        std::generate(testJMh.begin(), testJMh.end(), [JMcusp, limit_J_max, testPositions, hue, testIndex = 0]() mutable {
+            const float testJ = lerpf(JMcusp[0], limit_J_max, testPositions[testIndex]);
+            f3 result = { testJ, JMcusp[1], hue };
+            testIndex++;
+            return result;
+        });
 
         // TODO: calculate best fitting inverse gamma directly rather than reciprocating it in the loop
         // TODO: adjacent found gamma values typically fall close to each other could initialise the search range
@@ -867,9 +864,13 @@ Table1D make_upper_hull_gamma(
         float high = low + search_range;
         bool outside = false;
 
+        auto gamma_fit_predicate = [JMcusp, &testJMh, peakLuminance, limit_J_max, mid_J, focus_dist, lower_hull_gamma_inv, limitJMhParams](float gamma)
+        {
+            return evaluate_gamma_fit(JMcusp, testJMh, 1.0f / gamma, peakLuminance, limit_J_max, mid_J, focus_dist, lower_hull_gamma_inv, limitJMhParams);
+        };
         while (!(outside) && (high < gammaMaximum))
         {
-            const bool gammaFound = evaluate_gamma_fit(JMcusp, testJMh, 1.0f / high, peakLuminance, limit_J_max, mid_J, focus_dist, lower_hull_gamma_inv, limitJMhParams);
+            const bool gammaFound = gamma_fit_predicate(high);
             if (!gammaFound)
             {
                 low = high;
@@ -885,7 +886,7 @@ Table1D make_upper_hull_gamma(
         while ( (high-low) > gammaAccuracy)
         {
             testGamma = (high + low) / 2.f;
-            const bool gammaFound = evaluate_gamma_fit(JMcusp, testJMh, 1.0f / testGamma, peakLuminance, limit_J_max, mid_J, focus_dist, lower_hull_gamma_inv, limitJMhParams);
+            const bool gammaFound = gamma_fit_predicate(testGamma);
             if (gammaFound)
             {
                 high = testGamma;
