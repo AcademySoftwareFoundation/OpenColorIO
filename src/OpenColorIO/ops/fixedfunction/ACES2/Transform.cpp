@@ -38,8 +38,10 @@ inline int clamp_to_table_bounds(int entry, int table_size) // TODO: this should
     return std::min(table_size - 1, std::max(0, entry));
 }
 
-f2 cusp_from_table(float h, const Table3D &gt, const std::array<int, 2> & hue_linearity_search_range)
+int lookup_hue_interval(float h, const Table3D &gt, const std::array<int, 2> & hue_linearity_search_range)
 {
+    // Search the given Table for the interval containing the desired hue
+    // Retruns the upper index of the interval
     int i = hue_position_in_uniform_table(h, gt.size) + gt.base_index;
     int i_lo = std::max(0, i + hue_linearity_search_range[0]);
     int i_hi = std::min(gt.base_index + gt.size, i + hue_linearity_search_range[1]);
@@ -59,6 +61,19 @@ f2 cusp_from_table(float h, const Table3D &gt, const std::array<int, 2> & hue_li
 
     i_hi = std::max(1, i_hi);
 
+    return i_hi;
+}
+
+inline float interpolation_weight(float h, float h_lo, float h_hi)
+{
+    return (h - h_lo) / (h_hi - h_lo);
+}
+
+
+f2 cusp_from_table(float h, const Table3D &gt, const std::array<int, 2> & hue_linearity_search_range)
+{
+    const int i_hi = lookup_hue_interval(h, gt, hue_linearity_search_range);
+
     const f3 lo {
         gt.table[i_hi-1][0],
         gt.table[i_hi-1][1],
@@ -71,7 +86,7 @@ f2 cusp_from_table(float h, const Table3D &gt, const std::array<int, 2> & hue_li
         gt.table[i_hi][2]
     };
 
-    const float t = (h - lo[2]) / (hi[2] - lo[2]);
+    const float t = interpolation_weight(h, lo[2], hi[2]);
     const float cuspJ = lerpf(lo[0], hi[0], t);
     const float cuspM = lerpf(lo[1], hi[1], t);
 
@@ -83,7 +98,7 @@ float reach_m_from_table(float h, const ACES2::Table1D &gt)
     const int i_lo = clamp_to_table_bounds(hue_position_in_uniform_table(h, gt.size), gt.total_size);  // TODO: this should be removed if we can constrain the hue range properly
     const int i_hi = next_position_in_table(i_lo, gt.size);
 
-    const float t = (h - i_lo) / (i_hi - i_lo);
+    const float t = interpolation_weight(h, i_lo, i_hi);
     return lerpf(gt.table[i_lo], gt.table[i_hi], t);
 }
 
