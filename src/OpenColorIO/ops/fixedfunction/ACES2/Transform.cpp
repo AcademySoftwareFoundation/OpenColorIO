@@ -619,16 +619,11 @@ float solve_J_intersect(float J, float M, float focusJ, float maxJ, float slope_
     return intersectJ;
 }
 
-inline float smin(float a, float b, float s)
+// Smooth minimum about the scaled reference, based upon a cubic polynomial
+inline float smin_scaled(float a, float b, float scale_reference)
 {
-    const float h = std::max(s - std::abs(a - b), 0.f) / s;
-    return std::min(a, b) - h * h * h * s * (1.f / 6.f);
-}
-
-// Redefined smin function to handle scaling by adjusting k
-inline float smin_scaled(float a, float b, float s, float scale) {
-    float s_scaled = s * scale;
-    float h = std::max(s_scaled - std::abs(a - b), 0.0f) / s_scaled;
+    const float s_scaled = smooth_cusps * scale_reference;
+    const float h = std::max(s_scaled - std::abs(a - b), 0.0f) / s_scaled;
     return std::min(a, b) - h * h * h * s_scaled * (1.f / 6.f);
 }
 
@@ -671,9 +666,7 @@ float find_gamut_boundary_intersection(const f2 &JM_cusp, float J_max, float gam
       estimate_line_and_boundary_intersection_M(f_J_intersect_source, -slope, gamma_top_inv, f_JM_cusp_J, JM_cusp[1], f_J_intersect_cusp);
 
     // Smooth minimum between the two calculated values for the M component
-    // TODO: do we need to normalise based on JM_cusp[1]
-    //const float M_boundary = JM_cusp[1] * smin(M_boundary_lower / JM_cusp[1], M_boundary_upper / JM_cusp[1], smooth_cusps);
-    const float M_boundary = smin_scaled(M_boundary_lower, M_boundary_upper, smooth_cusps, JM_cusp[1]);
+    const float M_boundary = smin_scaled(M_boundary_lower, M_boundary_upper, JM_cusp[1]);
     return M_boundary;
 }
 
@@ -743,10 +736,6 @@ f3 compressGamut(const f3 &JMh, float Jx, const ACES2::ResolvedSharedCompression
         return {J, 0.f, h};
     }
 
-    //const float reach_slope_gain = get_focus_gain(gamut_boundary[0], hdp.JMcusp[0], sr.limit_J_max, p.focus_dist);
-    //const float reach_intersectJ = solve_J_intersect(gamut_boundary[0], gamut_boundary[1], hdp.focusJ, sr.limit_J_max, reach_slope_gain);
-    //const float reach_slope      = compute_compression_vector_slope(reach_intersectJ, hdp.focusJ, sr.limit_J_max, reach_slope_gain);
-    //const float reachBoundaryM   = estimate_line_and_boundary_intersection_M(reach_intersectJ, reach_slope, sr.model_gamma_inv, sr.limit_J_max, sr.reachMaxM, sr.limit_J_max);
     const float reachBoundaryM   = estimate_line_and_boundary_intersection_M(J_intersect_source, gamut_slope, sr.model_gamma_inv, sr.limit_J_max, sr.reachMaxM, sr.limit_J_max);
 
     const float remapped_M = remap_M<invert>(M, gamut_boundary_M, reachBoundaryM);
