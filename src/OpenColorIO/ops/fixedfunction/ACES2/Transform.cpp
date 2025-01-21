@@ -69,6 +69,11 @@ inline float interpolation_weight(float h, float h_lo, float h_hi)
     return (h - h_lo) / (h_hi - h_lo);
 }
 
+inline float interpolation_weight(float h, int h_lo, int h_hi)
+{
+    return (h - h_lo) / (h_hi - h_lo);
+}
+
 inline f3 cusp_from_table(int i_hi, float t, const Table3D &gt)
 {
     const float cuspJ = lerpf(gt.table[i_hi-1][0], gt.table[i_hi][0], t);
@@ -824,7 +829,6 @@ bool evaluate_gamma_fit(
 void make_upper_hull_gamma(
     const Table1D &hue_table,
     Table3D &gamutCuspTable,
-    const std::array<int, 2> & hue_linearity_search_range,
     float peakLuminance,
     float limit_J_max,
     float mid_J,
@@ -836,14 +840,8 @@ void make_upper_hull_gamma(
 
     for (int i = gamutCuspTable.base_index; i < gamutCuspTable.base_index + gamutCuspTable.size; i++)
     {
-        gamutCuspTable.table[i][2] = -1.f;
-
         const float hue = hue_table.table[i];
-        const int i_hi = lookup_hue_interval(hue, hue_table, hue_linearity_search_range);
-        const float t = interpolation_weight(hue, hue_table.table[i_hi-1], hue_table.table[i_hi]);
-
-        const f3 cusp = cusp_from_table(i_hi, t, gamutCuspTable);
-        const f2 JMcusp = { cusp[0], cusp[1] };
+        const f2 JMcusp = { gamutCuspTable.table[i][0], gamutCuspTable.table[i][1] };
 
         std::array<f3, gamma_test_count> testJMh;
         std::generate(testJMh.begin(), testJMh.end(), [JMcusp, limit_J_max, testPositions, hue, testIndex = 0]() mutable {
@@ -918,7 +916,7 @@ ToneScaleParams init_ToneScaleParams(float peakLuminance)
 
     // Calculate output constants
     // TODO: factor these calculations into well named functions
-    // TODO: ensure correct use of n_r vs n vs reference_luminance
+    // TODO: ensure correct use of n_r vs n vs reference_luminance vs 100.f etc
     const float r_hit = r_hit_min + (r_hit_max - r_hit_min) * (log(n/n_r)/log(10000.f/100.f));
     const float m_0 = (n / n_r);
     const float m_1 = 0.5f * (m_0 + sqrt(m_0 * (m_0 + 4.f * t_1)));
@@ -1031,8 +1029,7 @@ GamutCompressParams init_GamutCompressParams(float peakLuminance, const JMhParam
     params.lower_hull_gamma_inv = lower_hull_gamma_inv;
     params.gamut_cusp_table = make_gamut_table(limitJMhParams, peakLuminance, params.hue_table);
     params.hue_linearity_search_range = determine_hue_linearity_search_range(params.gamut_cusp_table);
-    make_upper_hull_gamma(params.hue_table, params.gamut_cusp_table, params.hue_linearity_search_range,
-                          peakLuminance, shParams.limit_J_max, mid_J, focus_dist,
+    make_upper_hull_gamma(params.hue_table, params.gamut_cusp_table, peakLuminance, shParams.limit_J_max, mid_J, focus_dist,
                           lower_hull_gamma_inv, limitJMhParams); //TODO: mess of parameters
     return params;
 }
