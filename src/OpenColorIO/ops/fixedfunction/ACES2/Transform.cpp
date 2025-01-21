@@ -174,12 +174,14 @@ inline f3 RGB_to_Aab(const f3 &RGB, const JMhParams &p)
 
 inline f3 Aab_to_JMh(const f3 &Aab, const JMhParams &p)
 {
+    if (Aab[0] <= 0.f)
+    {
+        return {0.f, 0.f, 0.f};
+    }
     const float J = Achromatic_n_to_J(Aab[0], p.cz);
-
-    const float M = J == 0.f ? 0.f : sqrt(Aab[1] * Aab[1] + Aab[2] * Aab[2]);
-
+    const float M = sqrt(Aab[1] * Aab[1] + Aab[2] * Aab[2]);
     const float h_rad = std::atan2(Aab[2], Aab[1]);
-    float h = from_radians(h_rad);
+    float h = _from_radians(h_rad); // Call to unwrapped hue version due to atan2 limits
 
     return {J, M, h};
 }
@@ -298,7 +300,7 @@ inline float aces_tonescale(const float Y_in, const JMhParams &p, const ToneScal
 }
 
 template <bool inverse>
-float tonescale(const float J, const JMhParams &p, const ToneScaleParams &pt) // TODO: consider computing tonescale from and to A rather than J to avoid extra pow() calls
+inline float tonescale(const float J, const JMhParams &p, const ToneScaleParams &pt) // TODO: consider computing tonescale from and to A rather than J to avoid extra pow() calls
 {
     // Tonescale applied in Y (convert to and from J)
     const float J_abs = std::abs(J);
@@ -308,16 +310,22 @@ float tonescale(const float J, const JMhParams &p, const ToneScaleParams &pt) //
     return std::copysign(J_out, J);
 }
 
-f3 tonescale_chroma_compress_fwd(const f3 &JMh, const JMhParams &p, const ToneScaleParams &pt, const ResolvedSharedCompressionParameters &pr, const ChromaCompressParams &pc)
+float tonescale_fwd(const float J, const JMhParams &p, const ToneScaleParams &pt)
+{
+    return tonescale<false>(J, p, pt);
+}
+
+float tonescale_inv(const float J, const JMhParams &p, const ToneScaleParams &pt)
+{
+    return tonescale<true>(J, p, pt);
+}
+
+f3 chroma_compress_fwd(const f3 &JMh, const float J_ts, const JMhParams &p, const ResolvedSharedCompressionParameters &pr, const ChromaCompressParams &pc)
 {
     const float J = JMh[0];
     const float M = JMh[1];
     const float h = JMh[2];
 
-    constexpr bool inverse = false;
-    const float J_ts = tonescale<inverse>(J, p, pt);
-
-    // ChromaCompress
     float M_cp = M;
 
     if (M != 0.0)
@@ -337,16 +345,11 @@ f3 tonescale_chroma_compress_fwd(const f3 &JMh, const JMhParams &p, const ToneSc
     return {J_ts, M_cp, h};
 }
 
-f3 tonescale_chroma_compress_inv(const f3 &JMh, const JMhParams &p, const ToneScaleParams &pt, const ResolvedSharedCompressionParameters &pr, const ChromaCompressParams &pc)
+f3 chroma_compress_inv(const f3 &JMh, const float J, const JMhParams &p, const ResolvedSharedCompressionParameters &pr, const ChromaCompressParams &pc)
 {
     const float J_ts = JMh[0];
     const float M_cp = JMh[1];
     const float h    = JMh[2];
-
-    constexpr bool inverse = true;
-    const float J = tonescale<inverse>(J_ts, p, pt);
-
-    // Inverse ChromaCompress
     float M = M_cp;
 
     if (M_cp != 0.0)

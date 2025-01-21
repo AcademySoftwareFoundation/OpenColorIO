@@ -18,11 +18,11 @@ namespace ACES2
 constexpr int TABLE_SIZE = 360;
 constexpr int TABLE_ADDITION_ENTRIES = 2;
 constexpr int TABLE_TOTAL_SIZE = TABLE_SIZE + TABLE_ADDITION_ENTRIES;
-constexpr int GAMUT_TABLE_BASE_INDEX = 1;
+constexpr int TABLE_BASE_INDEX = 1;
 
 struct Table3D
 {
-    static constexpr int base_index = GAMUT_TABLE_BASE_INDEX;
+    static constexpr int base_index = TABLE_BASE_INDEX;
     static constexpr int size = TABLE_SIZE;
     static constexpr int total_size = TABLE_TOTAL_SIZE;
     float table[TABLE_TOTAL_SIZE][3];
@@ -30,7 +30,7 @@ struct Table3D
 
 struct Table1D
 {
-    static constexpr int base_index = GAMUT_TABLE_BASE_INDEX;
+    static constexpr int base_index = TABLE_BASE_INDEX;
     static constexpr int size = TABLE_SIZE;
     static constexpr int total_size = TABLE_TOTAL_SIZE;
     float table[TABLE_TOTAL_SIZE];
@@ -117,23 +117,30 @@ constexpr float PI = 3.14159265358979f;
 
 constexpr float hue_limit = 360.0f;
 //constexpr float hue_limit = 2.0f * PI;
-inline float wrap_to_hue_limit(float hue)
+inline float _wrap_to_hue_limit(float y)
 {
-    float y = std::fmod(hue, hue_limit);
     if ( y < 0.f)
     {
         y = y + hue_limit;
     }
     return y;
 }
+
+inline float wrap_to_hue_limit(float hue)
+{
+    float y = std::fmod(hue, hue_limit);
+    return _wrap_to_hue_limit(y);
+}
 inline constexpr float to_degrees(const float v) { return v; }
 inline float from_degrees(const float v) { return wrap_to_hue_limit(v); }
 inline constexpr float to_radians(const float v) { return PI * v / 180.0f; };
+inline float _from_radians(const float v) { return _wrap_to_hue_limit(180.0f * v / PI); }; // v needs to be wrapped already
 inline float from_radians(const float v) { return wrap_to_hue_limit(180.0f * v / PI); };
 /*
 inline constexpr float to_degrees(const float v) { return 180.0f * v / PI; }
 inline float from_degrees(const float v) { return wrap_to_hue_limit(PI * v / 180.0f); }
 inline constexpr float to_radians(const float v) { return v; }
+inline float _from_radians(const float v) { return _wrap_to_hue_limit(v); };
 inline float from_radians(const float v) { return wrap_to_hue_limit(v); };
 */
 
@@ -169,7 +176,6 @@ constexpr float gammaMinimum = 0.0f;
 constexpr float gammaMaximum = 5.0f;
 constexpr float gammaSearchStep = 0.4f;
 constexpr float gammaAccuracy = 1e-5f;
-
 
 } // namespace ACES2
 

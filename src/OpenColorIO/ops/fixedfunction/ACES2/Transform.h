@@ -23,8 +23,11 @@ GamutCompressParams init_GamutCompressParams(float peakLuminance, const JMhParam
 f3 RGB_to_JMh(const f3 &RGB, const JMhParams &p);
 f3 JMh_to_RGB(const f3 &JMh, const JMhParams &p);
 
-f3 tonescale_chroma_compress_fwd(const f3 &JMh, const JMhParams &p, const ToneScaleParams &pt, const ResolvedSharedCompressionParameters &ps, const ChromaCompressParams &pc);
-f3 tonescale_chroma_compress_inv(const f3 &JMh, const JMhParams &p, const ToneScaleParams &pt, const ResolvedSharedCompressionParameters &ps, const ChromaCompressParams &pc);
+float tonescale_fwd(const float J, const JMhParams &p, const ToneScaleParams &pt);
+float tonescale_inv(const float J, const JMhParams &p, const ToneScaleParams &pt);
+
+f3 chroma_compress_fwd(const f3 &JMh, const float J_ts, const JMhParams &p, const ResolvedSharedCompressionParameters &ps, const ChromaCompressParams &pc);
+f3 chroma_compress_inv(const f3 &JMh, const float J, const JMhParams &p, const ResolvedSharedCompressionParameters &ps, const ChromaCompressParams &pc);
 
 f3 gamut_compress_fwd(const f3 &JMh, const ResolvedSharedCompressionParameters &ps, const GamutCompressParams &p);
 f3 gamut_compress_inv(const f3 &JMh, const ResolvedSharedCompressionParameters &ps, const GamutCompressParams &p);
