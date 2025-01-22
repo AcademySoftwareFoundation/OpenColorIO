@@ -1283,9 +1283,10 @@ void Add_ACES_OutputTransform_Fwd_Shader(
     const ACES2::JMhParams pIn = ACES2::init_JMhParams(ACES_AP0::primaries);
     const ACES2::JMhParams pLim = ACES2::init_JMhParams(lim_primaries);
     const ACES2::ToneScaleParams t = ACES2::init_ToneScaleParams(peak_luminance);
-    const ACES2::SharedCompressionParameters s = ACES2::init_SharedCompressionParams(peak_luminance, pIn);
+    const ACES2::JMhParams reachGamut = ACES2::init_JMhParams(ACES_AP1::primaries);
+    const ACES2::SharedCompressionParameters s = ACES2::init_SharedCompressionParams(peak_luminance, pIn, reachGamut);
     const ACES2::ChromaCompressParams c = ACES2::init_ChromaCompressParams(peak_luminance, t);
-    const ACES2::GamutCompressParams g = ACES2::init_GamutCompressParams(peak_luminance, pIn, pLim, t, s);
+    const ACES2::GamutCompressParams g = ACES2::init_GamutCompressParams(peak_luminance, pIn, pLim, t, s, reachGamut);
 
     unsigned resourceIndex = shaderCreator->getNextResourceIndex();
 
@@ -1355,9 +1356,10 @@ void Add_ACES_OutputTransform_Inv_Shader(
     const ACES2::JMhParams pIn = ACES2::init_JMhParams(ACES_AP0::primaries);
     const ACES2::JMhParams pLim = ACES2::init_JMhParams(lim_primaries);
     const ACES2::ToneScaleParams t = ACES2::init_ToneScaleParams(peak_luminance);
-    const ACES2::SharedCompressionParameters s = ACES2::init_SharedCompressionParams(peak_luminance, pIn);
+    const ACES2::JMhParams reachGamut = ACES2::init_JMhParams(ACES_AP1::primaries);
+    const ACES2::SharedCompressionParameters s = ACES2::init_SharedCompressionParams(peak_luminance, pIn, reachGamut);
     const ACES2::ChromaCompressParams c = ACES2::init_ChromaCompressParams(peak_luminance, t);
-    const ACES2::GamutCompressParams g = ACES2::init_GamutCompressParams(peak_luminance, pIn, pLim, t, s);
+    const ACES2::GamutCompressParams g = ACES2::init_GamutCompressParams(peak_luminance, pIn, pLim, t, s, reachGamut);
 
     unsigned resourceIndex = shaderCreator->getNextResourceIndex();
 
@@ -1460,7 +1462,8 @@ void Add_Tonescale_Compress_Fwd_Shader(
 
     const ACES2::JMhParams p = ACES2::init_JMhParams(ACES_AP0::primaries);
     const ACES2::ToneScaleParams t = ACES2::init_ToneScaleParams(peak_luminance);
-    const ACES2::SharedCompressionParameters s = ACES2::init_SharedCompressionParams(peak_luminance, p);
+    const ACES2::JMhParams reachGamut = ACES2::init_JMhParams(ACES_AP1::primaries);
+    const ACES2::SharedCompressionParameters s = ACES2::init_SharedCompressionParams(peak_luminance, p, reachGamut);
     const ACES2::ChromaCompressParams c = ACES2::init_ChromaCompressParams(peak_luminance, t);
 
     unsigned resourceIndex = shaderCreator->getNextResourceIndex();
@@ -1479,7 +1482,8 @@ void Add_Tonescale_Compress_Inv_Shader(
 
     const ACES2::JMhParams p = ACES2::init_JMhParams(ACES_AP0::primaries);
     const ACES2::ToneScaleParams t = ACES2::init_ToneScaleParams(peak_luminance);
-    const ACES2::SharedCompressionParameters s = ACES2::init_SharedCompressionParams(peak_luminance, p);
+    const ACES2::JMhParams reachGamut = ACES2::init_JMhParams(ACES_AP1::primaries);
+    const ACES2::SharedCompressionParameters s = ACES2::init_SharedCompressionParams(peak_luminance, p, reachGamut);
     const ACES2::ChromaCompressParams c = ACES2::init_ChromaCompressParams(peak_luminance, t);
 
     unsigned resourceIndex = shaderCreator->getNextResourceIndex();
@@ -1515,8 +1519,9 @@ void Add_Gamut_Compress_Fwd_Shader(
     const ACES2::JMhParams pIn = ACES2::init_JMhParams(ACES_AP0::primaries);
     const ACES2::JMhParams pLim = ACES2::init_JMhParams(primaries);
     const ACES2::ToneScaleParams t = ACES2::init_ToneScaleParams(peak_luminance);
-    const ACES2::SharedCompressionParameters s = ACES2::init_SharedCompressionParams(peak_luminance, pIn);
-    const ACES2::GamutCompressParams g = ACES2::init_GamutCompressParams(peak_luminance, pIn, pLim, t, s); 
+    const ACES2::JMhParams reachGamut = ACES2::init_JMhParams(ACES_AP1::primaries);
+    const ACES2::SharedCompressionParameters s = ACES2::init_SharedCompressionParams(peak_luminance, pIn, reachGamut);
+    const ACES2::GamutCompressParams g = ACES2::init_GamutCompressParams(peak_luminance, pIn, pLim, t, s, reachGamut); 
 
     unsigned resourceIndex = shaderCreator->getNextResourceIndex();
 
@@ -1551,8 +1556,9 @@ void Add_Gamut_Compress_Inv_Shader(
     const ACES2::JMhParams pIn = ACES2::init_JMhParams(ACES_AP0::primaries);
     const ACES2::JMhParams pLim = ACES2::init_JMhParams(primaries);
     const ACES2::ToneScaleParams t = ACES2::init_ToneScaleParams(peak_luminance);
-    const ACES2::SharedCompressionParameters s = ACES2::init_SharedCompressionParams(peak_luminance, pIn);
-    const ACES2::GamutCompressParams g = ACES2::init_GamutCompressParams(peak_luminance, pIn, pLim, t, s);
+    const ACES2::JMhParams reachGamut = ACES2::init_JMhParams(ACES_AP1::primaries);
+    const ACES2::SharedCompressionParameters s = ACES2::init_SharedCompressionParams(peak_luminance, pIn, reachGamut);
+    const ACES2::GamutCompressParams g = ACES2::init_GamutCompressParams(peak_luminance, pIn, pLim, t, s, reachGamut);
 
     unsigned resourceIndex = shaderCreator->getNextResourceIndex();
 

@@ -16,6 +16,33 @@ namespace ACES2
 //
 // Table lookups
 //
+inline f3 lerp(const f3& lower, const f3& upper, const float t)
+{
+    return {
+        lerpf(lower[0], upper[0], t),
+        lerpf(lower[1], upper[1], t),
+        lerpf(lower[2], upper[2], t)
+    };
+}
+
+inline f3 lerp(const float lower[3], const float upper[3], const float t)
+{
+    return {
+        lerpf(lower[0], upper[0], t),
+        lerpf(lower[1], upper[1], t),
+        lerpf(lower[2], upper[2], t)
+    };
+}
+
+inline int midpoint(int a, int b)
+{
+    return (a + b) / 2;
+}
+
+inline float midpoint(float a, float b)
+{
+    return (a + b) / 2.f;
+}
 
 inline float base_hue_for_position(int i_lo, int table_size) 
 {
@@ -56,7 +83,7 @@ int lookup_hue_interval(float h, const Table1D &hues, const std::array<int, 2> &
         {
             i_hi = i;
         }
-        i = (i_lo + i_hi) / 2;
+        i = midpoint(i_lo, i_hi);
     }
 
     i_hi = std::max(1, i_hi);
@@ -76,10 +103,7 @@ inline float interpolation_weight(float h, int h_lo, int h_hi)
 
 inline f3 cusp_from_table(int i_hi, float t, const Table3D &gt)
 {
-    const float cuspJ = lerpf(gt.table[i_hi-1][0], gt.table[i_hi][0], t);
-    const float cuspM = lerpf(gt.table[i_hi-1][1], gt.table[i_hi][1], t);
-    const float upperGamma = lerpf(gt.table[i_hi-1][2], gt.table[i_hi][2], t);
-    return { cuspJ, cuspM, upperGamma };
+    return lerp(gt.table[i_hi-1], gt.table[i_hi], t);
 }
 
 float reach_m_from_table(float h, const ACES2::Table1D &rt)
@@ -448,6 +472,310 @@ JMhParams init_JMhParams(const Primaries &prims)
    return p;
 }
 
+inline f3 generate_unit_cube_cusp_corners(const int corner)
+{
+    // Generation order R, Y, G, C, B, M to ensure hues rotate in correct order
+    return {float(int(((corner + 1) % cuspCornerCount) < 3)),
+            float(int(((corner + 5) % cuspCornerCount) < 3)),
+            float(int(((corner + 3) % cuspCornerCount) < 3))
+            };
+}
+
+void build_limiting_cusp_corners_tables(std::array<f3, totalCornerCount>& RGB_corners, std::array<f3, totalCornerCount>& JMh_corners,
+                               const JMhParams &params, const float peakLuminance)
+{
+    // We calculate the RGB and JMh values for the limiting gamut cusp corners
+    // They are then arranged into a cycle with the lowest JMh value at [1] to allow for hue wrapping
+    std::array<f3, cuspCornerCount> temp_RGB_corners;
+    std::array<f3, cuspCornerCount> temp_JMh_corners;
+    int min_index = 0;
+    for (int i = 0; i != cuspCornerCount; ++i)
+    {
+      temp_RGB_corners[i] = mult_f_f3(peakLuminance / reference_luminance, generate_unit_cube_cusp_corners(i));
+      temp_JMh_corners[i] = RGB_to_JMh(temp_RGB_corners[i], params);
+      if (temp_JMh_corners[i][2] < temp_JMh_corners[min_index][2])
+        min_index = i;
+    }
+
+    // Rotate entries placing lowest at [1] (not [0])
+    for (int i = 0; i != cuspCornerCount; ++i)
+    {
+      RGB_corners[i + 1] = temp_RGB_corners[(i + min_index) % cuspCornerCount];
+      JMh_corners[i + 1] = temp_JMh_corners[(i + min_index) % cuspCornerCount];
+    }
+
+    // Copy end elements to create a cycle
+    RGB_corners[0]                   = RGB_corners[cuspCornerCount];
+    RGB_corners[cuspCornerCount + 1] = RGB_corners[1];
+    JMh_corners[0]                   = JMh_corners[cuspCornerCount];
+    JMh_corners[cuspCornerCount + 1] = JMh_corners[1];
+
+    // Wrap the hues, to maintain monotonicity these entries will fall outside [0.0, hue_limit)
+    JMh_corners[0][2]                   = JMh_corners[0][2] - hue_limit;
+    JMh_corners[cuspCornerCount + 1][2] = JMh_corners[cuspCornerCount + 1][2] + hue_limit;
+}
+
+void find_reach_corners_table(std::array<f3, totalCornerCount>& JMh_corners, const JMhParams &params, const float limitJ, const float maximum_source)
+{
+    // We need to find the value of JMh that corresponds to limitJ for each corner
+    // This is done by scaling the unit corners converting to JMh until the J value is near the limitJ
+    // Strictly speaking we should only need to find the R, G and  B "corners" as the reach is unbounded and
+    // as such does not form a cube, but is formed by the transformed 3 lower planes of the cube and
+    // the plane at J = limitJ
+    std::array<f3, cuspCornerCount> temp_JMh_corners;
+
+    int min_index = 0;
+    for (int i = 0; i != cuspCornerCount; ++i)
+    {
+        const f3 rgb_vector = generate_unit_cube_cusp_corners(i);
+
+        float lower = 0.0f;
+        float upper = maximum_source;
+        while ((upper - lower) > reach_cusp_tolerance)  // TODO: find the equivalent Achromatic and search for that rather than J
+        {
+            float       test        = midpoint(lower, upper);
+            const f3    test_corner = mult_f_f3(test, rgb_vector);
+            const float J           = Achromatic_n_to_J(RGB_to_Aab(test_corner, params)[0], params.cz);
+            if (J < limitJ)
+            {
+                lower = test;
+            }
+            else
+            {
+                upper = test;
+            }
+            if (J == limitJ)
+                break;
+        }
+        temp_JMh_corners[i] = RGB_to_JMh(mult_f_f3(upper, rgb_vector), params);
+
+        if (temp_JMh_corners[i][2] < temp_JMh_corners[min_index][2])
+            min_index = i;
+    }
+
+    // Rotate entries placing lowest at [1] (not [0])
+    for (int i = 0; i != cuspCornerCount; ++i)
+    {
+      JMh_corners[i + 1] = temp_JMh_corners[(i + min_index) % cuspCornerCount];
+    }
+
+    // Copy end elements to create a cycle
+    JMh_corners[0]                   = JMh_corners[cuspCornerCount];
+    JMh_corners[cuspCornerCount + 1] = JMh_corners[1];
+
+    // Wrap the hues, to maintain monotonicity these entries will fall outside [0.0, hue_limit)
+    JMh_corners[0][2]                   = JMh_corners[0][2] - hue_limit;
+    JMh_corners[cuspCornerCount + 1][2] = JMh_corners[cuspCornerCount + 1][2] + hue_limit;
+}
+
+int extract_sorted_cube_hues(std::array<float, max_sorted_corners>& sorted_hues,
+                             const std::array<f3, totalCornerCount>& reach_JMh, const std::array<f3, totalCornerCount>& display_JMh)
+{
+    // Basic merge of 2 sorted arrays, extracting the unique hues.
+    // Return the count of the unique hues
+    //TODO: use STL for this and similar functions
+    int idx         = 0;
+    int reach_idx   = 1;
+    int display_idx = 1;
+    while ((reach_idx < (cuspCornerCount + 1)) || (display_idx < (cuspCornerCount + 1)))
+    {
+        const float reach_hue   = reach_JMh[reach_idx][2];
+        const float display_hue = display_JMh[display_idx][2];
+        if (reach_hue == display_hue)
+        {
+            sorted_hues[idx] = reach_hue;
+            ++reach_idx;
+            ++display_idx; // When equal consume both
+        }
+        else
+        {
+            if (reach_hue < display_hue)
+            {
+                sorted_hues[idx] = reach_hue;
+                ++reach_idx;
+            }
+            else
+            {
+                sorted_hues[idx] = display_hue;
+                ++display_idx;
+            }
+      }
+      ++idx;
+    }
+    return idx;
+}
+
+void build_hue_sample_interval(const int samples, const float lower, const float upper, Table1D &hue_table, const int base)
+{
+    const float delta = (upper - lower) / float(samples);
+    for (int i = 0; i != samples; ++i)
+    {
+        hue_table.table[base + i] = lower + float(i) * delta;
+    }
+}
+
+void build_hue_table(Table1D &hue_table, const std::array<float, max_sorted_corners>& sorted_hues, const int unique_hues)
+{
+    const float ideal_spacing = hue_table.size / hue_limit;
+    std::array<int, 2 * cuspCornerCount + 2> samples_count;
+    int         last_idx  = -1;
+    int         min_index = sorted_hues[0] == 0.0f ? 0 : 1; // Ensure we can always sample at 0.0 hue
+    for (int hue_idx = 0; hue_idx != unique_hues; ++hue_idx)
+    {
+        // BUG: "hue_table.size - 1" will fail if we have multiple hues mapping near the top of the table
+        int nominal_idx = std::min(std::max(int(std::round(sorted_hues[hue_idx] * ideal_spacing)), min_index), hue_table.size - 1);
+        if (last_idx == nominal_idx)
+        {
+            // Last two hues should sample at same index, need to adjust them
+            // Adjust previous sample down if we can
+            if (hue_idx > 1 && samples_count[hue_idx - 2] != (samples_count[hue_idx - 1] - 1))
+            {
+                samples_count[hue_idx - 1] = samples_count[hue_idx - 1] - 1;
+            }
+            else
+            {
+                nominal_idx = nominal_idx + 1;
+            }
+        }
+        samples_count[hue_idx] = std::min(nominal_idx, hue_table.size - 1);
+        last_idx = min_index = nominal_idx;
+    }
+
+    int total_samples = 0;
+    // Special cases for ends
+    int i = 0;
+    build_hue_sample_interval(samples_count[i], 0.0f, sorted_hues[i], hue_table, total_samples + 1);
+    total_samples += samples_count[i];
+    for (++i; i != unique_hues; ++i)
+    {
+        const int samples = samples_count[i] - samples_count[i - 1];
+        build_hue_sample_interval(samples, sorted_hues[i - 1], sorted_hues[i], hue_table, total_samples + 1);
+        total_samples += samples;
+    }
+    // BUG: could break if we are unlucky with samples all being used up by this point
+    build_hue_sample_interval(hue_table.size - total_samples, sorted_hues[i - 1], hue_limit, hue_table, total_samples + 1);
+
+    hue_table.table[0]                  = hue_table.table[hue_table.base_index + hue_table.size - 1] - hue_limit;
+    hue_table.table[hue_table.total_size - 1] = hue_table.table[hue_table.base_index] + hue_limit;
+}
+
+std::array<float, 2> find_display_cusp_for_hue(float hue, const std::array<f3, totalCornerCount>& RGB_corners, const std::array<f3, totalCornerCount>& JMh_corners,
+                                               const JMhParams &params, std::array<float, 2> & previous)
+{
+    // This works by finding the required line segment between two of the XYZ cusp corners, then binary searching
+    // along the line calculating the JMh of points along the line till we find the required value.
+    // All values on the line segments are valid cusp locations.
+
+    int upper_corner = 1;
+    for (int i = upper_corner; i != totalCornerCount; ++i) // TODO: binary search?
+    {
+        if (JMh_corners[i][2] > hue)
+        {
+            upper_corner = i;
+            break;
+        }
+    }
+    const int lower_corner = upper_corner - 1;
+
+    // hue should now be within [lower_corner, upper_corner), handle exact match
+    if (JMh_corners[lower_corner][2] == hue)
+    {
+        return {JMh_corners[lower_corner][0], JMh_corners[lower_corner][1]};
+    }
+
+    // search by lerping between RGB corners for the hue
+    const f3 cusp_lower = RGB_corners[lower_corner];
+    const f3 cusp_upper = RGB_corners[upper_corner];
+    f3       sample;
+
+    float sample_t;
+    float lower_t = (upper_corner == previous[0]) ? previous[1] : 0.0f; // If we are still on the same segment start from where we left off
+    float upper_t = 1.0f;
+
+    f3 JMh;
+
+    // There is an edge case where we need to search towards the range when across the [0.0f, hue_limit) boundary
+    // each edge needs the directions swapped. This is handled by comparing against the appropriate corner to make
+    // sure we are still in the expected range between the lower and upper corner hue limits
+    while ((upper_t - lower_t) > display_cusp_tolerance)
+    {
+        sample_t = midpoint(lower_t, upper_t);
+        sample   = lerp(cusp_lower, cusp_upper, sample_t);
+        JMh      = RGB_to_JMh(sample, params);
+        if (JMh[2] < JMh_corners[lower_corner][2])
+        {
+            upper_t = sample_t;
+        }
+        else if (JMh[2] >= JMh_corners[upper_corner][2])
+        {
+            lower_t = sample_t;
+        }
+        else if (JMh[2] > hue)
+        {
+            upper_t = sample_t;
+        }
+        else
+        {
+            lower_t = sample_t;
+        }
+    }
+
+    // Use the midpoint of the final interval for the actual samples
+    sample_t = midpoint(lower_t, upper_t);
+    sample   = lerp(cusp_lower, cusp_upper, sample_t);
+    JMh      = RGB_to_JMh(sample, params);
+
+    previous[0] = float(upper_corner);
+    previous[1] = sample_t;
+
+    return {JMh[0], JMh[1]};
+}
+
+Table3D build_cusp_table(const Table1D& hue_table, const std::array<f3, totalCornerCount>& RGB_corners, const std::array<f3, totalCornerCount>& JMh_corners, const JMhParams &params)
+{
+    std::array<float, 2> previous = {0.0f, 0.0f};
+    Table3D output_table;
+    for (int i = output_table.base_index; i != output_table.base_index + output_table.size; ++i)
+    {
+      const float hue = hue_table.table[i];
+      const std::array<float, 2> JM = find_display_cusp_for_hue(hue, RGB_corners, JMh_corners, params, previous);
+      output_table.table[i][0] = JM[0];
+      output_table.table[i][1] = JM[1] * (1.f + smooth_m * smooth_cusps);;
+      output_table.table[i][2] = hue;
+    }
+
+    // Copy extra entries to ease the code to handle hues wrapping around
+    // TODO: consider adding operator[] to Table3D to handle this table.table array access more cleanly - subclass std::array?
+    output_table.table[0][0]                                           = output_table.table[output_table.base_index + output_table.size - 1][0];
+    output_table.table[0][1]                                           = output_table.table[output_table.base_index + output_table.size - 1][1];
+    output_table.table[0][2]                                           = output_table.table[output_table.base_index + output_table.size - 1][2];
+    output_table.table[output_table.base_index + output_table.size][0] = output_table.table[output_table.base_index][0];
+    output_table.table[output_table.base_index + output_table.size][1] = output_table.table[output_table.base_index][1];
+    output_table.table[output_table.base_index + output_table.size][2] = output_table.table[output_table.base_index][2];
+    return output_table;
+}
+
+Table3D make_uniform_hue_gamut_table(const JMhParams &reach_params, const JMhParams &params, float peakLuminance, float forward_limit, const SharedCompressionParameters& sp, Table1D& hue_table)
+{
+    // The principal here is to sample the hues as uniformly as possible, whilst ensuring we sample the corners
+    // of the limiting gamut and the reach primaries at limit J Max
+    //
+    // The corners are calculated then the hues are extracted and merged to form a unique sorted hue list
+    // We then build the hue table from the list, those hues are then used to compute the JMh od the limiting
+    // gamut cusp.
+
+    std::array<f3, totalCornerCount> reach_JMh_corners;
+    std::array<f3, totalCornerCount> limiting_RGB_corners;
+    std::array<f3, totalCornerCount> limiting_JMh_corners;
+    std::array<float, max_sorted_corners> sorted_hues;
+
+    find_reach_corners_table(reach_JMh_corners, reach_params, sp.limit_J_max, forward_limit);
+    build_limiting_cusp_corners_tables(limiting_RGB_corners, limiting_JMh_corners, params, peakLuminance);
+    const int unique_hues = extract_sorted_cube_hues(sorted_hues, reach_JMh_corners, limiting_JMh_corners);
+    build_hue_table(hue_table, sorted_hues, unique_hues);
+    return build_cusp_table(hue_table, limiting_RGB_corners, limiting_JMh_corners, params);
+}
+
 Table3D make_gamut_table(const JMhParams &params, float peakLuminance, Table1D& hue_table)
 {
     Table3D gamutCuspTableUnsorted{};
@@ -487,7 +815,7 @@ Table3D make_gamut_table(const JMhParams &params, float peakLuminance, Table1D& 
 
     // Wrap the hues, to maintain monotonicity. These entries will fall outside [0.0, hue_limit)
     gamutCuspTable.table[0][2] = gamutCuspTable.table[0][2] - hue_limit;
-    gamutCuspTable.table[gamutCuspTable.size+1][2] = gamutCuspTable.table[gamutCuspTable.size+1][2] + hue_limit;
+    gamutCuspTable.table[gamutCuspTable.base_index + gamutCuspTable.size][2] = gamutCuspTable.table[gamutCuspTable.base_index + gamutCuspTable.size][2] + hue_limit;
 
     // Extract hue table
     for (int i = 0; i < gamutCuspTable.total_size; i++)
@@ -509,12 +837,13 @@ Table1D make_reach_m_table(const JMhParams &params, const float limit_J_max)
     for (int i = 0; i < gamutReachTable.size; i++) {
         const float hue = base_hue_for_position(i, gamutReachTable.size);
 
-        const float search_range = 50.f;
+        constexpr float search_range = 50.f;
+        constexpr float search_maximum = 1300.f; // TODO: magic limit
         float low = 0.f;
         float high = low + search_range;
         bool outside = false;
 
-        while ((outside != true) & (high < 1300.f))
+        while ((outside != true) & (high < search_maximum))
         {
             const f3 searchJMh = {limit_J_max, high, hue};
             const f3 newLimitRGB = JMh_to_RGB(searchJMh, params);
@@ -526,7 +855,7 @@ Table1D make_reach_m_table(const JMhParams &params, const float limit_J_max)
             }
         }
 
-        while (high-low > 1e-2)
+        while (high-low > 1e-2) // TODO:tolerance as constexpr
         {
             const float sampleM = (high + low) / 2.f;
             const f3 searchJMh = {limit_J_max, sampleM, hue};
@@ -551,7 +880,7 @@ Table1D make_reach_m_table(const JMhParams &params, const float limit_J_max)
 bool outside_hull(const f3 &rgb)
 {
     // limit value, once we cross this value, we are outside of the top gamut shell
-    const float maxRGBtestVal = 1.0;
+    constexpr float maxRGBtestVal = 1.0f;
     return rgb[0] > maxRGBtestVal || rgb[1] > maxRGBtestVal || rgb[2] > maxRGBtestVal;
 }
 
@@ -883,7 +1212,7 @@ void make_upper_hull_gamma(
         float testGamma = -1.f;
         while ( (high-low) > gammaAccuracy)
         {
-            testGamma = (high + low) / 2.f;
+            testGamma = midpoint(high, low);
             const bool gammaFound = gamma_fit_predicate(testGamma);
             if (gammaFound)
             {
@@ -934,6 +1263,7 @@ ToneScaleParams init_ToneScaleParams(float peakLuminance)
     const float u_2 = powf((r_hit/m_1)/((r_hit/m_1) + w_2), g);
     const float m_2 = m_1 / u_2;
     const float inverse_limit = n / (u_2 * n_r);
+    const float forward_limit = 8.0f * r_hit;
     const float log_peak = log10( n / n_r);
 
     ToneScaleParams TonescaleParams = {
@@ -945,6 +1275,7 @@ ToneScaleParams init_ToneScaleParams(float peakLuminance)
         s_2,
         u_2,
         m_2,
+        forward_limit,
         inverse_limit,
         log_peak
     };
@@ -952,16 +1283,15 @@ ToneScaleParams init_ToneScaleParams(float peakLuminance)
     return TonescaleParams;
 }
 
-SharedCompressionParameters init_SharedCompressionParams(float peakLuminance, const JMhParams &inputJMhParams)
+SharedCompressionParameters init_SharedCompressionParams(float peakLuminance, const JMhParams &inputJMhParams, const JMhParams &reachParams)
 {
     const float limit_J_max = Y_to_J(peakLuminance, inputJMhParams);
     const float model_gamma_inv = 1.f / model_gamma();
-    const JMhParams compressionGamut = init_JMhParams(ACES_AP1::primaries);
 
     SharedCompressionParameters params = {
         limit_J_max,
         model_gamma_inv,
-        make_reach_m_table(compressionGamut, limit_J_max)
+        make_reach_m_table(reachParams, limit_J_max)
     };
     return params;
 }
@@ -1004,21 +1334,24 @@ std::array<int, 2> determine_hue_linearity_search_range(const Table3D &gamutCusp
     // TODO: Padding values are a quick hack to ensure the range encloses the needed range, left as an exersize
     // for the reader to fully reason if these values could be smaller, probably best done the closer the hue
     // distribution comes to linear as the overhead becomes a potentially greater issue
-    constexpr int lower_padding = -2;
+    constexpr int lower_padding = 0;
     constexpr int upper_padding = 1;
     std::array<int, 2> hue_linearity_search_range = {lower_padding, upper_padding};
     for (int i = gamutCuspTable.base_index; i < gamutCuspTable.base_index + gamutCuspTable.size; i++)
     {
-      const int pos = hue_position_in_uniform_table(gamutCuspTable.table[i][2], gamutCuspTable.size) + gamutCuspTable.base_index;
-      const int delta = i - pos;
-      hue_linearity_search_range[0] = std::min(hue_linearity_search_range[0], delta + lower_padding);
-      hue_linearity_search_range[1] = std::max(hue_linearity_search_range[1], delta + upper_padding);
+        const int pos = hue_position_in_uniform_table(gamutCuspTable.table[i][2], gamutCuspTable.size) + gamutCuspTable.base_index;
+        const int delta = i - pos;
+        hue_linearity_search_range[0] = std::min(hue_linearity_search_range[0], delta + lower_padding);
+        hue_linearity_search_range[1] = std::max(hue_linearity_search_range[1], delta + upper_padding);
+
+        std::cout << i << " " << pos << " " << delta << " " << gamutCuspTable.table[i][0] << " " << gamutCuspTable.table[i][1] << " " << gamutCuspTable.table[i][2] << "\n";
     }
+    std::cout << "search range " << hue_linearity_search_range[0] << " " << hue_linearity_search_range[1] << "\n";
     return hue_linearity_search_range;
 }
 
 GamutCompressParams init_GamutCompressParams(float peakLuminance, const JMhParams &inputJMhParams, const JMhParams &limitJMhParams,
-                                             const ToneScaleParams &tsParams, const SharedCompressionParameters &shParams)
+                                             const ToneScaleParams &tsParams, const SharedCompressionParameters &shParams, const JMhParams &reachParams)
 {
     float mid_J = Y_to_J(tsParams.c_t * reference_luminance, inputJMhParams);
 
@@ -1030,7 +1363,8 @@ GamutCompressParams init_GamutCompressParams(float peakLuminance, const JMhParam
     params.mid_J = mid_J;
     params.focus_dist = focus_dist;
     params.lower_hull_gamma_inv = lower_hull_gamma_inv;
-    params.gamut_cusp_table = make_gamut_table(limitJMhParams, peakLuminance, params.hue_table);
+    params.gamut_cusp_table = make_uniform_hue_gamut_table(reachParams, limitJMhParams, peakLuminance, tsParams.forward_limit, shParams, params.hue_table);
+    //params.gamut_cusp_table = make_gamut_table(limitJMhParams, peakLuminance, params.hue_table);
     params.hue_linearity_search_range = determine_hue_linearity_search_range(params.gamut_cusp_table);
     make_upper_hull_gamma(params.hue_table, params.gamut_cusp_table, peakLuminance, shParams.limit_J_max, mid_J, focus_dist,
                           lower_hull_gamma_inv, limitJMhParams); //TODO: mess of parameters

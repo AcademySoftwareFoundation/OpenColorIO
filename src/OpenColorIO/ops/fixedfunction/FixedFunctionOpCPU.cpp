@@ -1026,9 +1026,10 @@ Renderer_ACES_OutputTransform20::Renderer_ACES_OutputTransform20(ConstFixedFunct
     m_pIn = ACES2::init_JMhParams(ACES_AP0::primaries);
     m_pOut = ACES2::init_JMhParams(lim_primaries);
     m_t = ACES2::init_ToneScaleParams(peak_luminance);
-    m_s = ACES2::init_SharedCompressionParams(peak_luminance, m_pIn);
+    const ACES2::JMhParams reachGamut = ACES2::init_JMhParams(ACES_AP1::primaries);
+    m_s = ACES2::init_SharedCompressionParams(peak_luminance, m_pIn, reachGamut);
     m_c = ACES2::init_ChromaCompressParams(peak_luminance, m_t);
-    m_g = ACES2::init_GamutCompressParams(peak_luminance, m_pIn, m_pOut, m_t, m_s);
+    m_g = ACES2::init_GamutCompressParams(peak_luminance, m_pIn, m_pOut, m_t, m_s, reachGamut);
 }
 
 void Renderer_ACES_OutputTransform20::apply(const void * inImg, void * outImg, long numPixels) const
@@ -1177,7 +1178,8 @@ Renderer_ACES_TONESCALE_COMPRESS_20::Renderer_ACES_TONESCALE_COMPRESS_20(ConstFi
 
     m_p = ACES2::init_JMhParams(ACES_AP0::primaries);
     m_t = ACES2::init_ToneScaleParams(peak_luminance);
-    m_s = ACES2::init_SharedCompressionParams(peak_luminance, m_p);
+    const ACES2::JMhParams reachGamut = ACES2::init_JMhParams(ACES_AP1::primaries);
+    m_s = ACES2::init_SharedCompressionParams(peak_luminance, m_p, reachGamut);
     m_c = ACES2::init_ChromaCompressParams(peak_luminance, m_t);
 }
 
@@ -1263,8 +1265,9 @@ Renderer_ACES_GAMUT_COMPRESS_20::Renderer_ACES_GAMUT_COMPRESS_20(ConstFixedFunct
     const ACES2::JMhParams pIn = ACES2::init_JMhParams(ACES_AP0::primaries);
     const ACES2::JMhParams pLim = ACES2::init_JMhParams(limitingPrimaries);
     const ACES2::ToneScaleParams t = ACES2::init_ToneScaleParams(peakLuminance);
-    m_s = ACES2::init_SharedCompressionParams(peakLuminance, pIn);
-    m_g = ACES2::init_GamutCompressParams(peakLuminance, pIn, pLim, t, m_s);
+    const ACES2::JMhParams reachGamut = ACES2::init_JMhParams(ACES_AP1::primaries);
+    m_s = ACES2::init_SharedCompressionParams(peakLuminance, pIn, reachGamut);
+    m_g = ACES2::init_GamutCompressParams(peakLuminance, pIn, pLim, t, m_s, reachGamut);
 }
 
 void Renderer_ACES_GAMUT_COMPRESS_20::apply(const void * inImg, void * outImg, long numPixels) const

@@ -14,11 +14,11 @@ namespace ACES2
 
 JMhParams init_JMhParams(const Primaries &P);
 ToneScaleParams init_ToneScaleParams(float peakLuminance);
-SharedCompressionParameters init_SharedCompressionParams(float peakLuminance, const JMhParams &inputJMhParams);
+SharedCompressionParameters init_SharedCompressionParams(float peakLuminance, const JMhParams &inputJMhParams, const JMhParams &reachParams);
 ResolvedSharedCompressionParameters resolve_CompressionParams(float hue, const SharedCompressionParameters &p);
 ChromaCompressParams init_ChromaCompressParams(float peakLuminance, const ToneScaleParams &tsParams);
 GamutCompressParams init_GamutCompressParams(float peakLuminance, const JMhParams &inputJMhParams, const JMhParams &limitJMhParams,
-                                             const ToneScaleParams &tsParams, const SharedCompressionParameters &shParams);
+                                             const ToneScaleParams &tsParams, const SharedCompressionParameters &shParams, const JMhParams &reachParams);
 
 f3 RGB_to_JMh(const f3 &RGB, const JMhParams &p);
 f3 JMh_to_RGB(const f3 &JMh, const JMhParams &p);

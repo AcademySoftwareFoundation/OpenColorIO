@@ -58,6 +58,7 @@ struct ToneScaleParams
     float s_2;
     float u_2;
     float m_2;
+    float forward_limit;
     float inverse_limit;
     float log_peak;
 };
@@ -176,6 +177,12 @@ constexpr float gammaMinimum = 0.0f;
 constexpr float gammaMaximum = 5.0f;
 constexpr float gammaSearchStep = 0.4f;
 constexpr float gammaAccuracy = 1e-5f;
+
+constexpr int cuspCornerCount = 6;
+constexpr int totalCornerCount = cuspCornerCount + 2;
+constexpr int max_sorted_corners = 2 * cuspCornerCount;
+constexpr float reach_cusp_tolerance = 1e-3f;
+constexpr float display_cusp_tolerance = 1e-7f;
 
 } // namespace ACES2
 
