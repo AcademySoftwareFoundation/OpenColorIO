@@ -880,10 +880,9 @@ Table1D make_reach_m_table(const JMhParams &params, const float limit_J_max)
     return gamutReachTable;
 }
 
-bool outside_hull(const f3 &rgb)
+inline bool outside_hull(const f3 &rgb, float maxRGBtestVal)
 {
     // limit value, once we cross this value, we are outside of the top gamut shell
-    constexpr float maxRGBtestVal = 1.0f;
     return rgb[0] > maxRGBtestVal || rgb[1] > maxRGBtestVal || rgb[2] > maxRGBtestVal;
 }
 
@@ -1123,36 +1122,55 @@ f3 gamut_compress_inv(const f3 &JMh, const ResolvedSharedCompressionParameters &
 }
 
 static constexpr int gamma_test_count = 5;
+struct testData {
+    f3 testJMh;
+    float J_intersect_source;
+    float slope;
+    float J_intersect_cusp;
+};
+
+std::array<testData, gamma_test_count> generate_gamma_test_data(const f2 &JMcusp, float hue, float limit_J_max, float mid_J, float focus_dist)
+{
+    const std::array<float, gamma_test_count> testPositions = {0.01f, 0.1f, 0.5f, 0.8f, 0.99f};
+    std::array<testData, gamma_test_count> data;
+
+    std::generate(data.begin(), data.end(), [JMcusp, limit_J_max, mid_J, focus_dist, testPositions, hue, testIndex = 0]() mutable {
+        const float testJ = lerpf(JMcusp[0], limit_J_max, testPositions[testIndex]);
+        const float focusJ = compute_focusJ(JMcusp[0], mid_J, limit_J_max);
+        const float slope_gain = get_focus_gain(testJ, JMcusp[0], limit_J_max, focus_dist);
+        const float J_intersect_source = solve_J_intersect(testJ, JMcusp[1], focusJ, limit_J_max, slope_gain);
+        testData result = {
+            { testJ, JMcusp[1], hue },
+            J_intersect_source,
+            compute_compression_vector_slope(J_intersect_source, focusJ, limit_J_max, slope_gain),
+            solve_J_intersect(JMcusp[0], JMcusp[1], focusJ, limit_J_max, slope_gain)
+        };
+        testIndex++;
+        return result;
+    });
+    return data;
+}
 
 bool evaluate_gamma_fit(
     const f2 &JMcusp,
-    const std::array<f3, gamma_test_count> JMh_values,
+    const std::array<testData, gamma_test_count> data,
     float topGamma_inv,
     float peakLuminance,
     float limit_J_max,
-    float mid_J,
-    float focus_dist,
     float lower_hull_gamma_inv,
     const JMhParams &limitJMhParams)
 {
-
-    const float focusJ = compute_focusJ(JMcusp[0], mid_J, limit_J_max);
-
-    for (auto testJMh: JMh_values)
+    const float luminance_limit = peakLuminance / reference_luminance;
+    for (auto test_data: data)
     {
-        const float slope_gain = get_focus_gain(testJMh[0], JMcusp[0], limit_J_max, focus_dist);
-        const float J_intersect_source = solve_J_intersect(testJMh[0], testJMh[1], focusJ, limit_J_max, slope_gain);
-        const float slope = compute_compression_vector_slope(J_intersect_source, focusJ, limit_J_max, slope_gain);
-        const float J_intersect_cusp = solve_J_intersect(JMcusp[0], JMcusp[1], focusJ, limit_J_max, slope_gain);
+        const float approxLimit_M = find_gamut_boundary_intersection(JMcusp, limit_J_max, topGamma_inv, lower_hull_gamma_inv,
+                                                    test_data.J_intersect_source, test_data.slope, test_data.J_intersect_cusp);
+        const float approxLimit_J = test_data.J_intersect_source + test_data.slope * approxLimit_M;
 
-        const float approxLimit_M = find_gamut_boundary_intersection(JMcusp, limit_J_max, topGamma_inv, lower_hull_gamma_inv, J_intersect_source, slope, J_intersect_cusp);
-        const float approxLimit_J = J_intersect_source + slope * approxLimit_M;
-
-        const f3 approximate_JMh = {approxLimit_J, approxLimit_M, testJMh[2]};
+        const f3 approximate_JMh = {approxLimit_J, approxLimit_M, test_data.testJMh[2]};
         const f3 newLimitRGB = JMh_to_RGB(approximate_JMh, limitJMhParams);
-        const f3 newLimitRGBScaled = mult_f_f3(reference_luminance / peakLuminance, newLimitRGB); // TODO: can this be avoided by amending outside_hull to account for peak?
 
-        if (!outside_hull(newLimitRGBScaled))
+        if (!outside_hull(newLimitRGB, luminance_limit))
         {
             return false;
         }
@@ -1171,20 +1189,12 @@ void make_upper_hull_gamma(
     float lower_hull_gamma_inv,
     const JMhParams &limitJMhParams)
 {
-    const std::array<float, gamma_test_count> testPositions = {0.01f, 0.1f, 0.5f, 0.8f, 0.99f};
-
     for (int i = gamutCuspTable.base_index; i < gamutCuspTable.base_index + gamutCuspTable.size; i++)
     {
         const float hue = hue_table.table[i];
         const f2 JMcusp = { gamutCuspTable.table[i][0], gamutCuspTable.table[i][1] };
 
-        std::array<f3, gamma_test_count> testJMh;
-        std::generate(testJMh.begin(), testJMh.end(), [JMcusp, limit_J_max, testPositions, hue, testIndex = 0]() mutable {
-            const float testJ = lerpf(JMcusp[0], limit_J_max, testPositions[testIndex]);
-            f3 result = { testJ, JMcusp[1], hue };
-            testIndex++;
-            return result;
-        });
+        std::array<testData, gamma_test_count> data = generate_gamma_test_data(JMcusp, hue, limit_J_max, mid_J, focus_dist);
 
         // TODO: calculate best fitting inverse gamma directly rather than reciprocating it in the loop
         // TODO: adjacent found gamma values typically fall close to each other could initialise the search range
@@ -1194,9 +1204,9 @@ void make_upper_hull_gamma(
         float high = low + search_range;
         bool outside = false;
 
-        auto gamma_fit_predicate = [JMcusp, &testJMh, peakLuminance, limit_J_max, mid_J, focus_dist, lower_hull_gamma_inv, limitJMhParams](float gamma)
+        auto gamma_fit_predicate = [JMcusp, data, peakLuminance, limit_J_max, lower_hull_gamma_inv, limitJMhParams](float gamma)
         {
-            return evaluate_gamma_fit(JMcusp, testJMh, 1.0f / gamma, peakLuminance, limit_J_max, mid_J, focus_dist, lower_hull_gamma_inv, limitJMhParams);
+            return evaluate_gamma_fit(JMcusp, data, 1.0f / gamma, peakLuminance, limit_J_max, lower_hull_gamma_inv, limitJMhParams);
         };
         while (!(outside) && (high < gammaMaximum))
         {
@@ -1220,13 +1230,13 @@ void make_upper_hull_gamma(
             if (gammaFound)
             {
                 high = testGamma;
-                gamutCuspTable.table[i][2] = 1.0f / high;
             }
             else
             {
                 low = testGamma;
             }
         }
+        gamutCuspTable.table[i][2] = 1.0f / high;
     }
 
     // Copy last populated entries to empty spot 'wrapping' entries
