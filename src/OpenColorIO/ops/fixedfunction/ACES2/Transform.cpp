@@ -519,10 +519,13 @@ void find_reach_corners_table(std::array<f3, totalCornerCount>& JMh_corners, con
 {
     // We need to find the value of JMh that corresponds to limitJ for each corner
     // This is done by scaling the unit corners converting to JMh until the J value is near the limitJ
+    // As an optimisation we use the equivalent Achromatic value to search for the J value and avoid the
+    // non-linear transform during the search
     // Strictly speaking we should only need to find the R, G and  B "corners" as the reach is unbounded and
     // as such does not form a cube, but is formed by the transformed 3 lower planes of the cube and
     // the plane at J = limitJ
     std::array<f3, cuspCornerCount> temp_JMh_corners;
+    const float limitA = J_to_Achromatic_n(limitJ, params.cz);
 
     int min_index = 0;
     for (int i = 0; i != cuspCornerCount; ++i)
@@ -531,12 +534,12 @@ void find_reach_corners_table(std::array<f3, totalCornerCount>& JMh_corners, con
 
         float lower = 0.0f;
         float upper = maximum_source;
-        while ((upper - lower) > reach_cusp_tolerance)  // TODO: find the equivalent Achromatic and search for that rather than J
+        while ((upper - lower) > reach_cusp_tolerance)
         {
             float       test        = midpoint(lower, upper);
             const f3    test_corner = mult_f_f3(test, rgb_vector);
-            const float J           = Achromatic_n_to_J(RGB_to_Aab(test_corner, params)[0], params.cz);
-            if (J < limitJ)
+            const float A           = RGB_to_Aab(test_corner, params)[0];
+            if (A < limitA)
             {
                 lower = test;
             }
@@ -544,7 +547,7 @@ void find_reach_corners_table(std::array<f3, totalCornerCount>& JMh_corners, con
             {
                 upper = test;
             }
-            if (J == limitJ)
+            if (A == limitA)
                 break;
         }
         temp_JMh_corners[i] = RGB_to_JMh(mult_f_f3(upper, rgb_vector), params);
@@ -1344,9 +1347,9 @@ std::array<int, 2> determine_hue_linearity_search_range(const Table3D &gamutCusp
         hue_linearity_search_range[0] = std::min(hue_linearity_search_range[0], delta + lower_padding);
         hue_linearity_search_range[1] = std::max(hue_linearity_search_range[1], delta + upper_padding);
 
-        std::cout << i << " " << pos << " " << delta << " " << gamutCuspTable.table[i][0] << " " << gamutCuspTable.table[i][1] << " " << gamutCuspTable.table[i][2] << "\n";
+        //std::cout << i << " " << pos << " " << delta << " " << gamutCuspTable.table[i][0] << " " << gamutCuspTable.table[i][1] << " " << gamutCuspTable.table[i][2] << "\n";
     }
-    std::cout << "search range " << hue_linearity_search_range[0] << " " << hue_linearity_search_range[1] << "\n";
+    //std::cout << "search range " << hue_linearity_search_range[0] << " " << hue_linearity_search_range[1] << "\n";
     return hue_linearity_search_range;
 }
 
