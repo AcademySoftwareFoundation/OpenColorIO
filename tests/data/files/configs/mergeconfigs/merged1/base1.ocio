@@ -11,11 +11,22 @@ search_path:
 family_separator: "-"
 
 roles:
-  aces_interchange: ap0
+#  aces_interchange: ap0
   cie_xyz_d65_interchange: CIE-XYZ-D65
 
 file_rules:
   - !<Rule> {name: Default, colorspace: ACEScg}
+
+view_transforms:
+  - !<ViewTransform>
+    name: SDR Video
+    description: from base
+    from_scene_reference: !<BuiltinTransform> {style: ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-P3lim_1.1}
+
+  - !<ViewTransform>
+    name: vt2
+    description: from base
+    to_display_reference: !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055}
 
 display_colorspaces:   # reference space = cie xyz d65
   - !<ColorSpace>

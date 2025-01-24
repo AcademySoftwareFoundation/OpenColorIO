@@ -6,6 +6,7 @@
 #include "ConfigUtils.h"
 #include "MathUtils.h"
 #include "utils/StringUtils.h"
+#include "Logging.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -934,6 +935,7 @@ ConstTransformRcPtr getRefSpaceConverter(const ConstConfigRcPtr & srcConfig,
                                      getColorspaceOfRefType(srcConfig, refSpaceType),
                                      builtinConfig,
                                      getColorspaceOfRefType(builtinConfig, refSpaceType));
+// std::cout << "srcInterchange: " << srcInterchange << "\n";
 
     // Identify an interchange space for the dst config.
     // Note that the interchange space will always be a linear color space.
@@ -945,6 +947,7 @@ ConstTransformRcPtr getRefSpaceConverter(const ConstConfigRcPtr & srcConfig,
                                      getColorspaceOfRefType(dstConfig, refSpaceType),
                                      builtinConfig,
                                      getColorspaceOfRefType(builtinConfig, refSpaceType));
+// std::cout << "dstInterchange: " << dstInterchange << "\n";
 
     // Get the from_ref transform from the srcInterchange space.
     ConstTransformRcPtr srcFromRef = getTransformForDir(srcConfig->getColorSpace(srcInterchange), 
@@ -975,6 +978,10 @@ ConstTransformRcPtr getRefSpaceConverter(const ConstConfigRcPtr & srcConfig,
     gt->appendTransform(srcFromRef->createEditableCopy());
     gt->appendTransform(srcBuiltinToDstBuiltin);
     gt->appendTransform(dstToRef->createEditableCopy());
+// std::cout << "srcFromRef: " << *srcFromRef << "\n";
+// std::cout << "srcToDstBuiltin: " << *srcBuiltinToDstBuiltin << "\n";
+// std::cout << "dstToRef: " << *dstToRef << "\n";
+// std::cout << "simplified: " << *simplifyTransform(gt) << "\n\n";
 
     // TODO: Need to ensure that gt would never contain a file transform.
     // for (size_t t = 0; t < gt->getNumTransforms(); t++)
@@ -985,6 +992,19 @@ ConstTransformRcPtr getRefSpaceConverter(const ConstConfigRcPtr & srcConfig,
     //     }
     // }
     return simplifyTransform(gt);
+}
+
+bool transformIsEmpty(const ConstTransformRcPtr & tr)
+{
+    if (tr->getTransformType() == TRANSFORM_TYPE_GROUP)
+    {
+        ConstGroupTransformRcPtr gt = DynamicPtrCast<const GroupTransform>(tr);
+        if (gt->getNumTransforms() == 0)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 // Update the reference space used by a color space's transforms.
@@ -998,6 +1018,11 @@ void updateReferenceColorspace(ColorSpaceRcPtr & cs,
         std::ostringstream os;
         os << "Could not update reference space, converter transform was not initialized.";
         throw Exception(os.str().c_str());
+    }
+
+    if (transformIsEmpty(toNewReferenceTransform))
+    {
+        return;
     }
 
     ConstTransformRcPtr transformTo = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
@@ -1042,100 +1067,168 @@ void updateReferenceView(ViewTransformRcPtr & vt,
                          const ConstTransformRcPtr & toNewSceneReferenceTransform,
                          const ConstTransformRcPtr & toNewDisplayReferenceTransform)
 {
+    if (!toNewSceneReferenceTransform || !toNewDisplayReferenceTransform || !vt)
+    {
+        std::ostringstream os;
+        os << "Could not update view transform reference spaces, converter transforms were not initialized.";
+        throw Exception(os.str().c_str());
+    }
+
+    // FIXME: Is any more error checking needed?
+
+    const bool emptySceneSide = transformIsEmpty(toNewSceneReferenceTransform);
+    const bool emptyDisplaySide = transformIsEmpty(toNewDisplayReferenceTransform);
+
+    if (emptySceneSide && emptyDisplaySide) return;
+
     ConstTransformRcPtr transformTo = vt->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE);
     if (transformTo)
     {
-        ConstTransformRcPtr inv = invertTransform(toNewSceneReferenceTransform);
         GroupTransformRcPtr gt = GroupTransform::Create();
-        gt->appendTransform(inv->createEditableCopy());
+        if (!emptyDisplaySide)
+        {
+            ConstTransformRcPtr inv = invertTransform(toNewDisplayReferenceTransform);
+            gt->appendTransform(inv->createEditableCopy());
+        }
+
         gt->appendTransform(transformTo->createEditableCopy());
-        gt->appendTransform(toNewDisplayReferenceTransform->createEditableCopy());
+
+        if (vt->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
+        {
+            // Use the converter to display reference on both sides.
+            if (!emptyDisplaySide)
+            {
+                gt->appendTransform(toNewDisplayReferenceTransform->createEditableCopy());
+            }
+        }
+        else
+        {
+            if (!emptySceneSide)
+            {
+                gt->appendTransform(toNewSceneReferenceTransform->createEditableCopy());
+            }
+        }
         vt->setTransform(gt, VIEWTRANSFORM_DIR_TO_REFERENCE);
     }
 
     ConstTransformRcPtr transformFrom = vt->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE);
     if (transformFrom)
     {
-        ConstTransformRcPtr inv = invertTransform(toNewDisplayReferenceTransform); 
         GroupTransformRcPtr gt = GroupTransform::Create();
-        gt->appendTransform(inv->createEditableCopy());
+
+        if (vt->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
+        {
+            // Use the converter to display reference on both sides.
+            if (!emptyDisplaySide)
+            {
+                ConstTransformRcPtr inv = invertTransform(toNewDisplayReferenceTransform);
+                gt->appendTransform(inv->createEditableCopy());
+            }
+        }
+        else
+        {
+            if (!emptySceneSide)
+            {
+                ConstTransformRcPtr inv = invertTransform(toNewSceneReferenceTransform); 
+                gt->appendTransform(inv->createEditableCopy());
+            }
+        }
+
         gt->appendTransform(transformFrom->createEditableCopy());
-        gt->appendTransform(toNewSceneReferenceTransform->createEditableCopy());
+
+        if (!emptyDisplaySide)
+        {
+            gt->appendTransform(toNewDisplayReferenceTransform->createEditableCopy());
+        }
         vt->setTransform(gt, VIEWTRANSFORM_DIR_FROM_REFERENCE);
     }
 
     // Note that Config::addViewTransform prevents creating a view transform that 
-    // has no transforms, so we may be sure at least one direction will be present.
+    // has no transforms, so at least one direction will be present.
 }
 
-// If config contains a color space equivalent to new_cs, return its name.
-// Return an empty string if no equivalent color space is found (within the tolerance).
-// The ref_space_type specifies the type of new_cs and determines which part of the
-// config is searched. Note: Normally the refType should be set by simply calling
-// newCS->getReferenceSpaceType(). Not sure the extra flexibility to search the
-// other ref space type is needed (perhaps drop the option if this gets added to
-// the public API).
-//    
-const char * findEquivalentColorspace(const ConstConfigRcPtr & config, 
-                                      const ConstColorSpaceRcPtr & newCS,
-                                      ReferenceSpaceType refType)
+// FIXME: Make this a functional.
+bool hasColorSpaceRefType(const ConstConfigRcPtr & config, ReferenceSpaceType refType)
 {
-    // NB: This assumes that new_cs uses the same reference space as config.
-    // In general, this means that update_color_reference_space must be called on new_cs
-    // before calling this function.
+    SearchReferenceSpaceType searchRefType = static_cast<SearchReferenceSpaceType>(refType);
+    int n = config->getNumColorSpaces(searchRefType, COLORSPACE_ALL);
+    return n > 0;
+}
 
-    if (newCS->isData())
+void initializeRefSpaceConverters(ConstTransformRcPtr & inputToBaseGtScene,
+                                  ConstTransformRcPtr & inputToBaseGtDisplay,
+                                  const ConstConfigRcPtr & baseConfig,
+                                  const ConstConfigRcPtr & inputConfig)
+{
+    // Note: The base config reference space is always used, regardless of strategy.
+//std::cout << "initializing ref converters\n";
+
+    if (hasColorSpaceRefType(baseConfig, REFERENCE_SPACE_SCENE) &&
+        hasColorSpaceRefType(inputConfig, REFERENCE_SPACE_SCENE))
     {
-        for (int i = 0; i < config->getNumColorSpaces(SEARCH_REFERENCE_SPACE_SCENE, COLORSPACE_ALL); ++i)
-        {
-            const char * name = config->getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_SCENE, COLORSPACE_ALL, i);
-            ConstColorSpaceRcPtr cs = config->getColorSpace(name);
-            if (cs->isData())
-            {
-                return cs->getName();
-            }
-            
-        }
-        return "";
+//         try
+//         {
+            // This may throw.
+            inputToBaseGtScene = getRefSpaceConverter(
+                inputConfig,
+                baseConfig,
+                REFERENCE_SPACE_SCENE
+            );
+//         }
+//         catch(const Exception & e)
+//         {
+//             LogError(e.what());
+//         }
+    }
+    else
+    {
+        // Always need to initialize both transforms, even if they're empty.
+        inputToBaseGtScene = GroupTransform::Create();
     }
 
-    // The heuristics need to create a lot of Processors and send RGB values through
-    // them to try and identify a known color space.  Turn off the Processor cache in
-    // the configs to avoid polluting the cache with transforms that won't be reused
-    // and avoid the overhead of maintaining the cache.
-    SuspendCacheGuard srcGuard(config);
-
-    ConstTransformRcPtr fromRef = getTransformForDir(newCS, COLORSPACE_DIR_FROM_REFERENCE);
-
-
-
-// FIXME:  Before looping over all color spaces, check to see if there's one with the same name.
-
-    SearchReferenceSpaceType searchRefType = static_cast<SearchReferenceSpaceType>(refType);
-    for (int i = 0; i < config->getNumColorSpaces(searchRefType, COLORSPACE_ALL); ++i)
+    // Only attempt to build the converter if the input config has this type of
+    // reference space. Using the input config for this determination since it is
+    // only input config color spaces whose reference space is converted.
+    if (hasColorSpaceRefType(baseConfig, REFERENCE_SPACE_DISPLAY) &&
+        hasColorSpaceRefType(inputConfig, REFERENCE_SPACE_DISPLAY))
     {
-        const char * name = config->getColorSpaceNameByIndex(searchRefType, COLORSPACE_ALL, i);
-        ConstColorSpaceRcPtr cs = config->getColorSpace(name);
+//         try
+//         {
+            inputToBaseGtDisplay = getRefSpaceConverter(
+                inputConfig,
+                baseConfig,
+                REFERENCE_SPACE_DISPLAY
+            );
+//         }
+//         catch(const Exception & e)
+//         {
+//             LogError(e.what());
+//         }
+    }
+    else
+    {
+        // Always need to initialize both transforms, even if they're empty.
+        inputToBaseGtDisplay = GroupTransform::Create();
+    }
+}
 
-// TODO: Need to add isdata check to other heuristics too.
-
-        if (!cs->isData())
-        {
-            ConstTransformRcPtr toRef = getTransformForDir(cs, COLORSPACE_DIR_TO_REFERENCE);
-            GroupTransformRcPtr gt = GroupTransform::Create();
-            gt->appendTransform(toRef->createEditableCopy());
-            gt->appendTransform(fromRef->createEditableCopy());
-
-            auto p = config->getProcessor(gt);
-
-            // Define a set of (somewhat arbitrary) RGB values to test whether the combined transform is 
-            // enough of an identity.
-            // TODO: Should we check values outside [0,1]?
-            std::vector<float> vals = { 0.7f,  0.4f,  0.02f, 0.f,
-                                        0.02f, 0.6f,  0.2f,  0.f,
-                                        0.3f,  0.02f, 0.5f,  0.f,
-                                        0.f,   0.f,   0.f,   0.f,
-                                        1.f,   1.f,   1.f,   0.f };
+bool calcColorSpaceFingerprint(std::vector<float> & fingerprint, const ConstConfigRcPtr & config, const ConstColorSpaceRcPtr & cs)
+{
+    bool skipColorSpace = false;
+    // Define a set of (somewhat arbitrary) RGB values to test whether the combined transform is 
+    // enough of an identity.
+    // TODO: Should we check values outside [0,1]?
+    std::vector<float> RGBAvals = { 0.4f,  0.23f,  0.07f, 0.f,
+                                    0.35f, 0.66f,  0.16f,  0.f,
+                                    0.2f,  0.11f, 0.86f,  0.f,
+                                    0.f,   0.f,   0.f,   0.f,
+                                    0.04f,   0.03f,   0.02f,   0.f,
+                                    1.f,   1.f,   1.f,   0.f };
+//     std::vector<float> RGBAvals = { 0.7f,  0.4f,  0.02f, 0.f,
+//                                     0.02f, 0.6f,  0.2f,  0.f,
+//                                     0.3f,  0.02f, 0.5f,  0.f,
+//                                     0.f,   0.f,   0.f,   0.f,
+//                                     1.f,   1.f,   1.f,   0.f };
 
 // FIXME: THIS BREAKS THE TESTS
 
@@ -1145,15 +1238,250 @@ const char * findEquivalentColorspace(const ConstConfigRcPtr & config,
 //                                         0.f,   0.f,   0.f,   0.f,
 //                                         1.f,   1.f,   1.f,   0.f };
 
-            if (isIdentityTransform(p, vals, 1e-3f))
-            {
-                return cs->getName();
-            }
+        ConstTransformRcPtr fromRef = getTransformForDir(cs, COLORSPACE_DIR_FROM_REFERENCE);
+
+        ConstProcessorRcPtr p;
+        try
+        {
+            p = config->getProcessor(fromRef);
+        }
+        catch (...) 
+        { 
+            // If the transform doesn't validate (singular matrix, etc.), don't consider it.
+            return true;
+        }
+
+        // TODO: Get a group transform and don't bother if it contains a 3d-lut.
+        // With optimization-none, it should not invert a 3d-lut, regardless of direction?
+
+        std::vector<float> out(RGBAvals.size(), 0.f);
+
+        PackedImageDesc descSrc( &RGBAvals[0], (long) RGBAvals.size() / 4, 1, CHANNEL_ORDERING_RGBA );
+        PackedImageDesc descDst( &out[0], (long) RGBAvals.size() / 4, 1, CHANNEL_ORDERING_RGBA );
+
+        ConstCPUProcessorRcPtr cpu  = p->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
+        cpu->apply(descSrc, descDst);
+
+    fingerprint = out;
+
+    // TODO: add a cacheID to GroupTransform using the opData IDs, use that to do an easier comparison.
+    // TODO: compare to_refs to to_refs.
+    return skipColorSpace;
+}
+
+void initializeColorSpacesFingerprints(ColorSpaceFingerprints & fingerprints, const ConstConfigRcPtr & config)
+{
+    SuspendCacheGuard srcGuard(config);
+
+//     ConstConfigRcPtr builtinConfig = Config::CreateFromFile("ocio://cg-config-latest");
+//     // TODO: verify this will convert to the same ref space type.
+//     const char * srgbName = OCIO::Config::IdentifyBuiltinColorSpace(config, builtinConfig, "srgb_texture");
+
+    int n = config->getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL);
+    fingerprints.vec.clear();
+    fingerprints.vec.reserve(n);
+    for (int i = 0; i < n; ++i)
+    {
+        const char * name = config->getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL,
+                                                             COLORSPACE_ALL,
+                                                             i);
+        ConstColorSpaceRcPtr cs = config->getColorSpace(name);
+        if (!cs || cs->isData())
+        {
+            // Don't put data color spaces in the map.
+            continue;
+        }
+
+        ConstTransformRcPtr tFrom = cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+        ConstTransformRcPtr tTo = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+        if (tFrom && tTo)
+        {
+            // Don't bother with color spaces that have both directions defined,
+            // these are more complicated and less likely to be duplicates.
+            continue;
+        }
+
+        std::vector<float> fp;
+        const bool skipColorSpace = calcColorSpaceFingerprint(fp, config, cs);
+        if (!skipColorSpace)
+        {
+            Fingerprint fprint;
+            fprint.csName = cs->getName();
+            fprint.type = cs->getReferenceSpaceType();
+            fprint.vals = fp;
+            fingerprints.vec.push_back(fprint);
         }
     }
+}
+
+// If the base config contains a color space equivalent to inputCS, return its name.
+// Return an empty string if no equivalent color space is found (within the tolerance).
+// The ref_space_type specifies the type of inputCS and determines which part of the
+// config is searched. Note: Normally the refType should be set by simply calling
+// inputCS->getReferenceSpaceType(). Not sure the extra flexibility to search the
+// other ref space type is needed (perhaps drop the option if this gets added to
+// the public API).
+//    
+const char * findEquivalentColorspace(const ColorSpaceFingerprints & fingerprints,
+                                      const ConstConfigRcPtr & inputConfig, 
+                                      const ConstColorSpaceRcPtr & inputCS,
+                                      ReferenceSpaceType refType)
+{
+    // The fingerprints must first be initialized from the base config.
+    // NB: The inputConfig/inputCS must use the same reference space as the base config.
+    // In general, this means that updateReferenceColorspace must be called on inputCS
+    // before calling this function.
+
+    // TODO: Should data spaces ever be replaced? There is no need for flame?
+    if (inputCS->isData())
+    {
+        return "";
+    }
+
+        std::vector<float> inputVals;
+        const bool skipColorSpace = calcColorSpaceFingerprint(inputVals, inputConfig, inputCS);
+        if (skipColorSpace)
+    {
+        return "";
+    }
+
+// FIXME:  Before looping over all color spaces, check to see if there's one with the same name.
+
+    const float absTolerance = 1e-3f;
+    for (const auto & fp : fingerprints.vec)
+    {
+        if (fp.type != refType)
+            continue;
+
+        std::vector<float> vals = fp.vals;
+
+        bool matchFound = true;
+        for (size_t i = 0; i < vals.size(); i++)
+        {
+            if (!EqualWithAbsError(inputVals[i], vals[i], absTolerance))
+            {
+                matchFound = false;
+                continue;
+            }
+        }
+        if (matchFound)
+            return fp.csName;
+    }
+
+
+// TODO: Need to add isdata check to other heuristics too.
+
+//         if (!cs->isData())
+//         {
+// //             ConstTransformRcPtr toRef = getTransformForDir(cs, COLORSPACE_DIR_TO_REFERENCE);
+// //             GroupTransformRcPtr gt = GroupTransform::Create();
+// //             gt->appendTransform(toRef->createEditableCopy());
+// //             gt->appendTransform(fromRef->createEditableCopy());
+// // 
+// //             auto p = baseConfig->getProcessor(gt);
+// 
+// 
+// 
+//             if (isIdentityTransform(p, vals, 1e-3f))
+//             {
+//                 return cs->getName();
+//             }
+//         }
+//     }
 
     return "";
 }
+
+// const char * findEquivalentColorspace(const ConstConfigRcPtr & baseConfig,
+//                                       const ConstConfigRcPtr & inputConfig, 
+//                                       const ConstColorSpaceRcPtr & inputCS,
+//                                       ReferenceSpaceType refType)
+// {
+//     // NB: This assumes that new_cs uses the same reference space as config.
+//     // In general, this means that update_color_reference_space must be called on new_cs
+//     // before calling this function.
+// 
+//     if (inputCS->isData())
+//     {
+//         for (int i = 0; i < baseConfig->getNumColorSpaces(SEARCH_REFERENCE_SPACE_SCENE, COLORSPACE_ALL); ++i)
+//         {
+//             const char * name = baseConfig->getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_SCENE, COLORSPACE_ALL, i);
+//             ConstColorSpaceRcPtr cs = baseConfig->getColorSpace(name);
+//             if (cs->isData())
+//             {
+//                 return cs->getName();
+//             }
+//             
+//         }
+//         return "";
+//     }
+// 
+//     // The heuristics need to create a lot of Processors and send RGB values through
+//     // them to try and identify a known color space.  Turn off the Processor cache in
+//     // the configs to avoid polluting the cache with transforms that won't be reused
+//     // and avoid the overhead of maintaining the cache.
+//     SuspendCacheGuard srcGuard(baseConfig);
+// 
+//     ConstTransformRcPtr fromRef = getTransformForDir(inputCS, COLORSPACE_DIR_FROM_REFERENCE);
+// 
+// 
+// //             auto p = baseConfig->getProcessor(gt);
+//     // Define a set of (somewhat arbitrary) RGB values to test whether the combined transform is 
+//     // enough of an identity.
+//     // TODO: Should we check values outside [0,1]?
+//     std::vector<float> vals = { 0.7f,  0.4f,  0.02f, 0.f,
+//                                 0.02f, 0.6f,  0.2f,  0.f,
+//                                 0.3f,  0.02f, 0.5f,  0.f,
+//                                 0.f,   0.f,   0.f,   0.f,
+//                                 1.f,   1.f,   1.f,   0.f };
+// 
+// // FIXME: THIS BREAKS THE TESTS
+// 
+// //             std::vector<float> vals = { 0.7f,  0.4f,  0.02f, 0.f,
+// //                                         0.02f, 0.6f, -0.2f,  0.f,
+// //                                         0.3f,  0.02f, 1.5f,  0.f,
+// //                                         0.f,   0.f,   0.f,   0.f,
+// //                                         1.f,   1.f,   1.f,   0.f };
+// 
+//     std::vector<float> out(RGBAvals.size(), 0.f);
+// 
+//     PackedImageDesc desc( &RGBAvals[0], (long) RGBAvals.size() / 4, 1, CHANNEL_ORDERING_RGBA );
+//     PackedImageDesc descDst( &out[0], (long) RGBAvals.size() / 4, 1, CHANNEL_ORDERING_RGBA );
+// 
+//     ConstCPUProcessorRcPtr cpu  = proc->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
+//     cpu->apply(desc, descDst);
+// 
+// 
+// // FIXME:  Before looping over all color spaces, check to see if there's one with the same name.
+// 
+//     SearchReferenceSpaceType searchRefType = static_cast<SearchReferenceSpaceType>(refType);
+//     for (int i = 0; i < baseConfig->getNumColorSpaces(searchRefType, COLORSPACE_ALL); ++i)
+//     {
+//         const char * name = baseConfig->getColorSpaceNameByIndex(searchRefType, COLORSPACE_ALL, i);
+//         ConstColorSpaceRcPtr cs = baseConfig->getColorSpace(name);
+// 
+// // TODO: Need to add isdata check to other heuristics too.
+// 
+//         if (!cs->isData())
+//         {
+// //             ConstTransformRcPtr toRef = getTransformForDir(cs, COLORSPACE_DIR_TO_REFERENCE);
+// //             GroupTransformRcPtr gt = GroupTransform::Create();
+// //             gt->appendTransform(toRef->createEditableCopy());
+// //             gt->appendTransform(fromRef->createEditableCopy());
+// // 
+// //             auto p = baseConfig->getProcessor(gt);
+// 
+// 
+// 
+//             if (isIdentityTransform(p, vals, 1e-3f))
+//             {
+//                 return cs->getName();
+//             }
+//         }
+//     }
+// 
+//     return "";
+// }
 
 }  // namespace ConfigUtils
 

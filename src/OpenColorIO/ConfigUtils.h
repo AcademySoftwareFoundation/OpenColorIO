@@ -4,6 +4,8 @@
 #ifndef INCLUDED_OCIO_CONFIG_UTILS_H
 #define INCLUDED_OCIO_CONFIG_UTILS_H
 
+#include <map>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 namespace OCIO_NAMESPACE
@@ -39,15 +41,39 @@ ConstTransformRcPtr getRefSpaceConverter(const ConstConfigRcPtr & srcConfig,
                                          const ConstConfigRcPtr & dstConfig, 
                                          ReferenceSpaceType refSpaceType);
 
+void initializeRefSpaceConverters(ConstTransformRcPtr & inputToBaseGtScene,
+                                  ConstTransformRcPtr & inputToBaseGtDisplay,
+                                  const ConstConfigRcPtr & baseConfig,
+                                  const ConstConfigRcPtr & inputConfig);
+
 void updateReferenceColorspace(ColorSpaceRcPtr & cs, 
                                const ConstTransformRcPtr & toNewReferenceTransform);
 void updateReferenceView(ViewTransformRcPtr & vt, 
                          const ConstTransformRcPtr & toNewSceneReferenceTransform,
                          const ConstTransformRcPtr & toNewDisplayReferenceTransform);
 
-const char * findEquivalentColorspace(const ConstConfigRcPtr & config, 
-                                      const ConstColorSpaceRcPtr & newCs,
+struct Fingerprint
+{
+    const char * csName;
+    ReferenceSpaceType type;
+    std::vector<float> vals;
+};
+//typedef std::map< std::string, Fingerprint > ColorSpaceFingerprintMap;
+struct ColorSpaceFingerprints
+{
+    std::vector<Fingerprint> vec;
+};
+void initializeColorSpacesFingerprints(ColorSpaceFingerprints & fingerprints,
+                                         const ConstConfigRcPtr & config);
+
+const char * findEquivalentColorspace(const ColorSpaceFingerprints & fingerprints,
+                                      const ConstConfigRcPtr & inputConfig, 
+                                      const ConstColorSpaceRcPtr & inputCS,
                                       ReferenceSpaceType refType);
+
+// const char * findEquivalentColorspace(const ConstConfigRcPtr & config, 
+//                                       const ConstColorSpaceRcPtr & newCs,
+//                                       ReferenceSpaceType refType);
 
 // Temporarily deactivate the Processor cache on a Config object.
 // Currently, this also clears the cache.

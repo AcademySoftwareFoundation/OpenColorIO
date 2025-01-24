@@ -1509,7 +1509,27 @@ void DisplayViewMerger::processActiveLists()
     }
 }
 
-void DisplayViewMerger::addUniqueViewTransforms(const ConstConfigRcPtr & cfg)
+void DisplayViewMerger::addViewTransform(const ConstConfigRcPtr & cfg,
+                                         const char * name, 
+                                         bool isInput)
+{
+    ConstViewTransformRcPtr vt = cfg->getViewTransform(name);
+    if (!vt) return;
+
+    if (!isInput || m_params->isAssumeCommonReferenceSpace())
+    {
+        m_mergedConfig->addViewTransform(vt);
+    }
+    else
+    {
+        // Add the reference space adapter transforms.
+        ViewTransformRcPtr eVT = vt->createEditableCopy();
+        ConfigUtils::updateReferenceView(eVT, m_inputToBaseGtScene, m_inputToBaseGtDisplay);
+        m_mergedConfig->addViewTransform(eVT);
+    }
+}
+
+void DisplayViewMerger::addUniqueViewTransforms(const ConstConfigRcPtr & cfg, bool isInput)
 {
     for (int i = 0; i < cfg->getNumViewTransforms(); i++)
     {
@@ -1517,15 +1537,20 @@ void DisplayViewMerger::addUniqueViewTransforms(const ConstConfigRcPtr & cfg)
         // Take the view from the config if it does not exist in merged config.
         if (m_mergedConfig->getViewTransform(name) == nullptr)
         {
-            m_mergedConfig->addViewTransform(cfg->getViewTransform(name));
+            addViewTransform(cfg, name, isInput);
         }
     }
 }
 
 void DisplayViewMerger::processViewTransforms(const ConstConfigRcPtr & first,
                                               const ConstConfigRcPtr & second,
-                                              bool preferSecond)
+                                              bool preferSecond,
+                                              bool secondIsInput)
 {
+    // FIXME: Should do this once for color spaces & view transforms.
+//     ConstTransformRcPtr inputToBaseGtScene, inputToBaseGtDisplay;
+//     initializeRefSpaceConverters(inputToBaseGtScene, inputToBaseGtDisplay);
+
     for (int i = 0; i < first->getNumViewTransforms(); i++)
     {
         const char * name = first->getViewTransformNameByIndex(i);
@@ -1542,18 +1567,18 @@ void DisplayViewMerger::processViewTransforms(const ConstConfigRcPtr & first,
 
             if (vt2 && preferSecond)
             {
-                m_mergedConfig->addViewTransform(second->getViewTransform(name));
+                addViewTransform(second, name, secondIsInput);
             }
             else
             {
-                m_mergedConfig->addViewTransform(first->getViewTransform(name));
+                addViewTransform(first, name, !secondIsInput);
             }
         }
     }
 
     // Add the remaining unique views transform.
 
-    addUniqueViewTransforms(second);
+    addUniqueViewTransforms(second, secondIsInput);
 }
 
 void DisplayViewMerger::processViewingRules(const ConstConfigRcPtr & first,
@@ -1657,11 +1682,11 @@ void DisplayViewMerger::handlePreferInput()
     m_mergedConfig->clearViewTransforms();
     if (m_params->isInputFirst())
     {
-        processViewTransforms(m_inputConfig, m_baseConfig, false);
+        processViewTransforms(m_inputConfig, m_baseConfig, false, false);
     }
     else
     {
-        processViewTransforms(m_baseConfig, m_inputConfig, true);
+        processViewTransforms(m_baseConfig, m_inputConfig, true, true);
     }
 
     // Merge default_view_transform.
@@ -1726,11 +1751,11 @@ void DisplayViewMerger::handlePreferBase()
     m_mergedConfig->clearViewTransforms();
     if (m_params->isInputFirst())
     {
-        processViewTransforms(m_inputConfig, m_baseConfig, true);
+        processViewTransforms(m_inputConfig, m_baseConfig, true, false);
     }
     else
     {
-        processViewTransforms(m_baseConfig, m_inputConfig, false);
+        processViewTransforms(m_baseConfig, m_inputConfig, false, true);
     }
 
     // Merge default_view_transform.
@@ -1800,7 +1825,7 @@ void DisplayViewMerger::handleInputOnly()
 
     // Merge view_transforms.
     m_mergedConfig->clearViewTransforms();
-    addUniqueViewTransforms(m_inputConfig);
+    addUniqueViewTransforms(m_inputConfig, true);
 
     // Merge default_view_transform.
     m_mergedConfig->setDefaultViewTransformName(m_inputConfig->getDefaultViewTransformName());
@@ -2389,56 +2414,56 @@ void ColorspacesMerger::updateFamily(std::string & family, bool fromBase) const
     family = updatedPrefix + family;
 }
 
-bool hasColorSpaceRefType(const ConstConfigRcPtr & config, ReferenceSpaceType refType)
-{
-    SearchReferenceSpaceType searchRefType = static_cast<SearchReferenceSpaceType>(refType);
-    int n = config->getNumColorSpaces(searchRefType, COLORSPACE_ALL);
-    return n > 0;
-}
-
-void ColorspacesMerger::initializeRefSpaceConverters(ConstTransformRcPtr & inputToBaseGtScene,
-                                                     ConstTransformRcPtr & inputToBaseGtDisplay)
-{
-    // Note: The base config reference space is always used, regardless of strategy.
-
-    if (!m_params->isAssumeCommonReferenceSpace())
-    {
-        if (hasColorSpaceRefType(m_inputConfig, REFERENCE_SPACE_SCENE))
-        {
-            try
-            {
-                inputToBaseGtScene = ConfigUtils::getRefSpaceConverter(
-                    m_inputConfig,
-                    m_baseConfig,
-                    REFERENCE_SPACE_SCENE
-                );
-            }
-            catch(const Exception & e)
-            {
-                LogError(e.what());
-            }
-        }
-
-        // Only attempt to build the converter if the input config has this type of
-        // reference space. Using the input config for this determination since it is
-        // only input config color spaces whose reference space is converted.
-        if (hasColorSpaceRefType(m_inputConfig, REFERENCE_SPACE_DISPLAY))
-        {
-            try
-            {
-                inputToBaseGtDisplay = ConfigUtils::getRefSpaceConverter(
-                    m_inputConfig,
-                    m_baseConfig,
-                    REFERENCE_SPACE_DISPLAY
-                );
-            }
-            catch(const Exception & e)
-            {
-                LogError(e.what());
-            }
-        }
-    }
-}
+// bool hasColorSpaceRefType(const ConstConfigRcPtr & config, ReferenceSpaceType refType)
+// {
+//     SearchReferenceSpaceType searchRefType = static_cast<SearchReferenceSpaceType>(refType);
+//     int n = config->getNumColorSpaces(searchRefType, COLORSPACE_ALL);
+//     return n > 0;
+// }
+// 
+// void ColorspacesMerger::initializeRefSpaceConverters(ConstTransformRcPtr & inputToBaseGtScene,
+//                                                      ConstTransformRcPtr & inputToBaseGtDisplay)
+// {
+//     // Note: The base config reference space is always used, regardless of strategy.
+// 
+//     if (!m_params->isAssumeCommonReferenceSpace())
+//     {
+//         if (hasColorSpaceRefType(m_inputConfig, REFERENCE_SPACE_SCENE))
+//         {
+//             try
+//             {
+//                 inputToBaseGtScene = ConfigUtils::getRefSpaceConverter(
+//                     m_inputConfig,
+//                     m_baseConfig,
+//                     REFERENCE_SPACE_SCENE
+//                 );
+//             }
+//             catch(const Exception & e)
+//             {
+//                 LogError(e.what());
+//             }
+//         }
+// 
+//         // Only attempt to build the converter if the input config has this type of
+//         // reference space. Using the input config for this determination since it is
+//         // only input config color spaces whose reference space is converted.
+//         if (hasColorSpaceRefType(m_inputConfig, REFERENCE_SPACE_DISPLAY))
+//         {
+//             try
+//             {
+//                 inputToBaseGtDisplay = ConfigUtils::getRefSpaceConverter(
+//                     m_inputConfig,
+//                     m_baseConfig,
+//                     REFERENCE_SPACE_DISPLAY
+//                 );
+//             }
+//             catch(const Exception & e)
+//             {
+//                 LogError(e.what());
+//             }
+//         }
+//     }
+// }
 
 // TODO: Make this a functional inside where it's called from.
 void ColorspacesMerger::attemptToAddAlias(const ConstConfigRcPtr & mergeConfig,
@@ -2452,7 +2477,7 @@ void ColorspacesMerger::attemptToAddAlias(const ConstConfigRcPtr & mergeConfig,
 
     // It is assumed that the strategy is prefer_base when this function is called.
 
-    // It's OK if aliasName used in the duplicate color space itself.
+    // It's OK if aliasName is used in the duplicate color space itself.
     if ((Platform::Strcasecmp(dupeCS->getName(), aliasName) == 0)
         || hasAlias(dupeCS, aliasName))
     {
@@ -2485,11 +2510,19 @@ void ColorspacesMerger::attemptToAddAlias(const ConstConfigRcPtr & mergeConfig,
     dupeCS->addAlias(aliasName);
 }
 
-bool ColorspacesMerger::handleAvoidDuplicatesOption(ConfigRcPtr & eBase, ColorSpaceRcPtr & inputCS)
+bool ColorspacesMerger::handleAvoidDuplicatesOption(ConfigUtils::ColorSpaceFingerprints & fingerprints,
+                                                    ConfigRcPtr & eBase,
+                                                    const ConstConfigRcPtr & inputConfig,
+                                                    ColorSpaceRcPtr & inputCS)
 {
     bool notDuplicate = true;
 
     if (!m_params->isAvoidDuplicates())
+    {
+        return notDuplicate;
+    }
+    // If a color space has the allow-dupes category, don't check if it's a duplicate.
+    if (inputCS->hasCategory("allow-duplicate"))
     {
         return notDuplicate;
     }
@@ -2503,15 +2536,31 @@ bool ColorspacesMerger::handleAvoidDuplicatesOption(ConfigRcPtr & eBase, ColorSp
     // those duplicates in the base won't be removed. But if the input config contains
     // duplicates, those will be condensed into one space containing aliases for all of
     // names of the duplicates.
+    //
+    // Note: By design, inactive color spaces are included in the search for equivalents
+    // (e.g., consider the CIE-XYZ-D65 space, which is typically inactive). However, 
+    // when the inactive list is regenerated to avoid listing removed color spaces,
+    // some color spaces that were inactive may become active.
+//     const char * duplicateInBase = ConfigUtils::findEquivalentColorspace(
+//         eBase,
+//         inputConfig, inputCS,
+//         inputCS->getReferenceSpaceType()
+//     );
     const char * duplicateInBase = ConfigUtils::findEquivalentColorspace(
-        eBase,
-        inputCS,
+        fingerprints,
+        inputConfig, inputCS,
         inputCS->getReferenceSpaceType()
     );
+
+// TODO: Could this be refactored to go through the usual merge process?
+
+// FIXME: Should copy categories too.  Maybe encoding.
 
     const ConfigMergingParameters::MergeStrategies strategy = m_params->getColorspaces();
     if (duplicateInBase && *duplicateInBase)
     {
+//std::cout << "dupe base: " << duplicateInBase << " input: " << inputCS->getName() << "\n";
+
         if (strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_INPUT)
         {
 //                 m_colorspaceMarkedToBeDeleted.push_back(duplicateInBase);
@@ -2523,6 +2572,9 @@ bool ColorspacesMerger::handleAvoidDuplicatesOption(ConfigRcPtr & eBase, ColorSp
             // (since that's where they originated), but may cause conflicts with other color
             // spaces in the input config, but these will be handled as the spaces get added
             // to the merged config by the calling function.
+            //
+            // If the base config has more than one color space equivalent to inputCS, only 
+            // the first is replaced.
 
             ConstColorSpaceRcPtr dupeCS = eBase->getColorSpace(duplicateInBase);
             if (dupeCS)
@@ -2536,7 +2588,36 @@ bool ColorspacesMerger::handleAvoidDuplicatesOption(ConfigRcPtr & eBase, ColorSp
                     inputCS->addAlias(dupeCS->getAlias(i));
                 }
 
-                eBase->removeColorSpace(duplicateInBase);
+                // FIXME: This should be controlled by an merge option.
+                // There are currently no unit tests for this.
+                for (int i = 0; i < dupeCS->getNumCategories(); i++)
+                {
+                    inputCS->addCategory(dupeCS->getCategory(i));
+                }
+
+                // Trying to merge inputCS would now give misleading notifications about
+                // conflicts from the newly added aliases, so remove the duplicate.
+                // If there is more than one input CS that duplicates a given base CS,
+                // duplicateInBase will have been removed and is now an alias. Since removeCS
+                // does not work on aliases, get the name of the color space with that alias.
+                const char * duplicateCurrentName = eBase->getCanonicalName(duplicateInBase);
+                eBase->removeColorSpace(duplicateCurrentName);
+
+                // If the name is different, notify that it is replacing a color space in base.
+//                 if (Platform::Strcasecmp(inputCS->getName(), duplicateInBase) != 0)
+//                 {
+                    std::ostringstream os;
+//                     os << "Color space '" << inputCS->getName() << "' replaces its equivalent '"
+//                        << duplicateCurrentName << "' in the base config (aliases copied).";
+//                     os << "Equivalent color space '" << inputCS->getName() << "' from the input config replaces '"
+//                        << duplicateCurrentName << "' in the base config, preserving aliases.";
+                    os << "Equivalent input color space '" << inputCS->getName() << "' replaces '"
+                       << duplicateCurrentName << "' in the base config, preserving aliases.";
+                    notify(os.str(), m_params->isErrorOnConflict());
+//                 }
+
+                // Still want the caller to proceed merging inputCS into the merge config.
+                notDuplicate = true;
             }
         }
         else if (strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_BASE)
@@ -2545,6 +2626,9 @@ bool ColorspacesMerger::handleAvoidDuplicatesOption(ConfigRcPtr & eBase, ColorSp
             // Need to be more careful of conflicts, since the modified color space is
             // receiving aliases from the input config and yet is not going through the
             // mergeColorSpace checking below.
+            //
+            // If the input config has more than one CS that is equivalent to a base CS,
+            // they are all condensed into that first equivalent base CS.
 
             ConstColorSpaceRcPtr cs = eBase->getColorSpace(duplicateInBase);
             if (cs)
@@ -2558,10 +2642,32 @@ bool ColorspacesMerger::handleAvoidDuplicatesOption(ConfigRcPtr & eBase, ColorSp
                     attemptToAddAlias(eBase, eCS, inputCS, inputCS->getAlias(i));
                 }
 
+                for (int i = 0; i < inputCS->getNumCategories(); i++)
+                {
+                    eCS->addCategory(inputCS->getCategory(i));
+                }
+
                 // Replace the color space in the merge config. (This preserves its
                 // order in the color space list.)
                 eBase->addColorSpace(eCS);
 
+                // If the name is different, notify that it won't replace a color space in base.
+//                 if (Platform::Strcasecmp(inputCS->getName(), duplicateInBase) != 0)
+//                 {
+                    std::ostringstream os;
+//                     os << "The name/aliases of color space '" << inputCS->getName() << 
+//                           "' will be transferred its equivalent '"
+//                        << duplicateInBase << "' in the base config.";
+//                     os << "Color space '" << inputCS->getName() << "' won't replace its equivalent '"
+//                        << duplicateCurrentName << "' in the base config (aliases are copied).";
+//                     os << "Equivalent color space '" << duplicateInBase << "' from the base config overrides '"
+//                        << inputCS->getName() << "' in the input config, preserving aliases.";
+                    os << "Equivalent base color space '" << duplicateInBase << "' overrides '"
+                       << inputCS->getName() << "' in the input config, preserving aliases.";
+                    notify(os.str(), m_params->isErrorOnConflict());
+//                 }
+
+                // The base color space is edited here, don't want to add inputCS.
                 notDuplicate = false;
             }
         }
@@ -2740,11 +2846,20 @@ void ColorspacesMerger::mergeColorSpace(ConfigRcPtr & mergeConfig,
 
     const ConfigMergingParameters::MergeStrategies strategy = m_params->getColorspaces();
 
+    //
     // Handle conflicts of the eInputCS aliases with other color spaces or aliases.
+    //
 
+    // First initialize the list of names, since eInputCS is being edited within the loop.
+    std::vector<std::string> aliasNames;
     for (size_t i = 0; i < eInputCS->getNumAliases(); i++)
     {
-        const char * aliasName = eInputCS->getAlias(i);
+        aliasNames.push_back(eInputCS->getAlias(i));
+    }
+
+    for (size_t i = 0; i < aliasNames.size(); i++)
+    {
+        const char * aliasName = aliasNames[i].c_str();
 
         std::ostringstream os;
 
@@ -2845,12 +2960,18 @@ void ColorspacesMerger::addColorSpaces()
 
     mergeConfig->clearNamedTransforms();
 
-    ConstTransformRcPtr inputToBaseGtScene, inputToBaseGtDisplay;
-    initializeRefSpaceConverters(inputToBaseGtScene, inputToBaseGtDisplay);
+//     ConstTransformRcPtr inputToBaseGtScene, inputToBaseGtDisplay;
+//     initializeRefSpaceConverters(inputToBaseGtScene, inputToBaseGtDisplay);
 
     // Loop over all active and inactive color spaces of all reference types in the input config.
     // Merge them into the temp config (which already contains the base color spaces).
     std::vector<std::string> addedInputColorSpaces;
+
+    ConfigUtils::ColorSpaceFingerprints fingerprints;
+    if (m_params->isAvoidDuplicates())
+    {
+        ConfigUtils::initializeColorSpacesFingerprints(fingerprints, m_baseConfig);
+    }
 
     for (int i = 0; i < m_inputConfig->getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL); ++i)
     {
@@ -2858,22 +2979,23 @@ void ColorspacesMerger::addColorSpaces()
                                                                     COLORSPACE_ALL,
                                                                     i);
         ConstColorSpaceRcPtr cs = m_inputConfig->getColorSpace(name);
-        if (!cs)
-            continue;
+        if (!cs) continue;
+
         ColorSpaceRcPtr eCS = cs->createEditableCopy();
 
             if (!m_params->isAssumeCommonReferenceSpace())
             {
                 if (eCS->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
-                    ConfigUtils::updateReferenceColorspace(eCS, inputToBaseGtDisplay);
+                    ConfigUtils::updateReferenceColorspace(eCS, m_inputToBaseGtDisplay);
                 else
-                    ConfigUtils::updateReferenceColorspace(eCS, inputToBaseGtScene);
+                    ConfigUtils::updateReferenceColorspace(eCS, m_inputToBaseGtScene);
             }
 
         // Doing this against the mergedConfig rather than the base config so that the most
         // recent state of any aliases that get added or color spaces that are removed are
         // considered by the duplicate consolidation process.
-        const bool notDuplicate = handleAvoidDuplicatesOption(mergeConfig, eCS);
+        const bool notDuplicate = handleAvoidDuplicatesOption(fingerprints, mergeConfig, m_inputConfig, eCS);
+//        const bool notDuplicate = true;
 
         if (notDuplicate && colorSpaceMayBeMerged(mergeConfig, eCS))
         {
@@ -3538,11 +3660,20 @@ void NamedTransformsMerger::mergeNamedTransform(ConfigRcPtr & mergeConfig,
         strategy = ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_BASE;
     }
 
+    //
     // Handle conflicts of the eNT aliases with other color spaces, named transforms, and etc.
+    //
 
+    // First initialize the list of names, since eNT is being edited within the loop.
+    std::vector<std::string> aliasNames;
     for (size_t i = 0; i < eNT->getNumAliases(); i++)
     {
-        const char * aliasName = eNT->getAlias(i);
+        aliasNames.push_back(eNT->getAlias(i));
+    }
+
+    for (size_t i = 0; i < aliasNames.size(); i++)
+    {
+        const char * aliasName = aliasNames[i].c_str();
 
         // Conflicts with color spaces or roles.  (Always remove this alias.)
 

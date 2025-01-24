@@ -11,6 +11,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "ConfigUtils.h"
 #include "utils/StringUtils.h"
 #include "Logging.h"
 
@@ -33,6 +34,7 @@ public:
     SectionMerger(MergeHandlerOptions options)
         : m_baseConfig(options.baseConfig), m_inputConfig(options.inputConfig), 
           m_mergedConfig(options.mergedConfig), m_params(options.params)
+//          m_inputToBaseGtScene(nullptr), m_inputToBaseGtDisplay(nullptr)
     {
         if (!options.baseConfig || !options.inputConfig || !options.mergedConfig || !options.params)
         {
@@ -40,6 +42,12 @@ public:
         }
 //         m_strategy = options.params->getDefaultStrategy();
 //         m_params->setDefaultStrategy(options.params->getDefaultStrategy());
+
+//         ConstTransformRcPtr tmp;
+//         m_inputToBaseGtScene = tmp;
+//         m_inputToBaseGtDisplay = tmp;
+
+//         initializeRefSpaceConverters();
     }
     
     void merge()
@@ -70,6 +78,68 @@ public:
     }
 
     void notify(std::string s, bool mustThrow) const;
+
+//     // FIXME: Make this a functional.
+//     bool hasColorSpaceRefType(const ConstConfigRcPtr & config, ReferenceSpaceType refType)
+//     {
+//         SearchReferenceSpaceType searchRefType = static_cast<SearchReferenceSpaceType>(refType);
+//         int n = config->getNumColorSpaces(searchRefType, COLORSPACE_ALL);
+//         return n > 0;
+//     }
+// 
+//     void initializeRefSpaceConverters()
+//     {
+//         // Note: The base config reference space is always used, regardless of strategy.
+// //std::cout << "initializing ref converters\n";
+// 
+//         if (!m_params->isAssumeCommonReferenceSpace())
+//         {
+//             if (hasColorSpaceRefType(m_inputConfig, REFERENCE_SPACE_SCENE))
+//             {
+//                 try
+//                 {
+//                     m_inputToBaseGtScene = ConfigUtils::getRefSpaceConverter(
+//                         m_inputConfig,
+//                         m_baseConfig,
+//                         REFERENCE_SPACE_SCENE
+//                     );
+//                 }
+//                 catch(const Exception & e)
+//                 {
+//                     LogError(e.what());
+//                 }
+//             }
+//             else
+//             {
+//                 // Always need both transforms, even if they're empty.
+//                 m_inputToBaseGtScene = GroupTransform::Create();
+//             }
+// 
+//             // Only attempt to build the converter if the input config has this type of
+//             // reference space. Using the input config for this determination since it is
+//             // only input config color spaces whose reference space is converted.
+//             if (hasColorSpaceRefType(m_inputConfig, REFERENCE_SPACE_DISPLAY))
+//             {
+//                 try
+//                 {
+//                     m_inputToBaseGtDisplay = ConfigUtils::getRefSpaceConverter(
+//                         m_inputConfig,
+//                         m_baseConfig,
+//                         REFERENCE_SPACE_DISPLAY
+//                     );
+//                 }
+//                 catch(const Exception & e)
+//                 {
+//                     LogError(e.what());
+//                 }
+//             }
+//             else
+//             {
+//                 // Always need both transforms, even if they're empty.
+//                 m_inputToBaseGtDisplay = GroupTransform::Create();
+//             }
+//         }
+//     }
 
 private:
     virtual void handlePreferInput()
@@ -104,6 +174,11 @@ protected:
     
     const ConfigMergingParametersRcPtr & m_params;
     ConfigMergingParameters::MergeStrategies m_strategy;
+
+// FIXME: These are initialized separately for display-views and colorspaces, perhaps move
+// these up to the config merger level?
+    ConstTransformRcPtr m_inputToBaseGtScene;
+    ConstTransformRcPtr m_inputToBaseGtDisplay;
 
     void mergeStringVecWithoutDuplicate(StringUtils::StringVec & input, 
                                         StringUtils::StringVec & mergedVec) const;
@@ -205,6 +280,15 @@ public:
         {
             m_strategy = options.params->getDefaultStrategy();
         }
+
+//         initializeRefSpaceConverters();
+        if (!options.params->isAssumeCommonReferenceSpace())
+        {
+            ConfigUtils::initializeRefSpaceConverters(m_inputToBaseGtScene,
+                                                      m_inputToBaseGtDisplay,
+                                                      m_baseConfig,
+                                                      m_inputConfig);
+        }
     }
 
 private:
@@ -227,10 +311,12 @@ private:
 
     void processActiveLists();
 
-    void addUniqueViewTransforms(const ConstConfigRcPtr & cfg);
+    void addViewTransform(const ConstConfigRcPtr & cfg, const char * name, bool isInput);
+    void addUniqueViewTransforms(const ConstConfigRcPtr & cfg, bool isInput);
     void processViewTransforms(const ConstConfigRcPtr & first,
                                const ConstConfigRcPtr & second,
-                               bool preferSecond);
+                               bool preferSecond,
+                               bool secondIsInput);
 
     void processViewingRules(const ConstConfigRcPtr & first,
                              const ConstConfigRcPtr & second,
@@ -282,6 +368,15 @@ public:
         else
         {
             m_strategy = options.params->getDefaultStrategy();
+        }
+
+//         initializeRefSpaceConverters();
+        if (!options.params->isAssumeCommonReferenceSpace())
+        {
+            ConfigUtils::initializeRefSpaceConverters(m_inputToBaseGtScene,
+                                                      m_inputToBaseGtDisplay,
+                                                      m_baseConfig,
+                                                      m_inputConfig);
         }
     }
 
@@ -341,8 +436,8 @@ private:
     void mergeColorSpace(ConfigRcPtr & mergeConfig, 
                          ColorSpaceRcPtr & eInputCS,
                          std::vector<std::string> & addedInputColorSpaces);
-    void initializeRefSpaceConverters(ConstTransformRcPtr & inputToBaseGtScene,
-                                      ConstTransformRcPtr & inputToBaseGtDisplay);
+//     void initializeRefSpaceConverters(ConstTransformRcPtr & inputToBaseGtScene,
+//                                       ConstTransformRcPtr & inputToBaseGtDisplay);
     void addColorSpaces();
 
 
@@ -360,7 +455,11 @@ private:
     void handleErrorCodeWhenAddingInputFirst(ColorSpaceRcPtr & eColorspace);
     void handleErrorCodes(ColorSpaceRcPtr & eColorspace);
 
-    bool handleAvoidDuplicatesOption(ConfigRcPtr & eBase, ColorSpaceRcPtr & eColorspace);
+//     bool handleAvoidDuplicatesOption(ConfigRcPtr & eBase, ColorSpaceRcPtr & eColorspace);
+    bool handleAvoidDuplicatesOption(ConfigUtils::ColorSpaceFingerprints & fingerprints,
+                                                        ConfigRcPtr & eBase,
+                                                        const ConstConfigRcPtr & inputConfig,
+                                                        ColorSpaceRcPtr & inputCS);
     void handleAssumeCommonReferenceOption(ColorSpaceRcPtr & eColorspace);
 
     void handleMarkedToBeDeletedColorspaces();

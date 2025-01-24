@@ -132,6 +132,7 @@ void checkForLogOrException(LogType type, int line, std::function<void()> setup,
         {
             if (type == LOG_TYPE_ERROR)
             {
+// FIXME
 //                OCIO_CHECK_ASSERT_FROM(OCIO::checkAndMuteError(logGuard, s), line);
 
                 const bool errorFound = OCIO::checkAndMuteError(logGuard, s);
@@ -293,11 +294,9 @@ OCIO_ADD_TEST(MergeConfigs, overrides)
     OCIO::ConstConfigRcPtr inputConfig;
     OCIO_CHECK_NO_THROW(inputConfig = getInputConfig());
 
-    auto setup = [&baseConfig, &inputConfig]
-                 (OCIO::ConfigMergerRcPtr & merger,
-                 OCIO::ConfigRcPtr mergedConfig,
-                 MergeStrategy strategy,
-                 std::function<void(OCIO::ConfigMergerRcPtr &)> cb)
+    // Test that the overrides options are taken into account in the merging process.
+
+    auto setupBasics = [](OCIO::ConfigMergerRcPtr & merger, MergeStrategy strategy) -> OCIO::ConfigMergingParametersRcPtr
     {
         OCIO::ConfigMergingParametersRcPtr params = OCIO::ConfigMergingParameters::Create();
         merger->addParams(params);
@@ -305,35 +304,9 @@ OCIO_ADD_TEST(MergeConfigs, overrides)
         merger->getParams(0)->setColorspaces(strategy);
         // Not looking for duplicates as this test does not test that.
         merger->getParams(0)->setAvoidDuplicates(false);
+//        merger->getParams(0)->setAssumeCommonReferenceSpace(true);
 
-        if (cb)
-        {
-            cb(merger);
-        }
-
-        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
-        // Merge name and description.
-        OCIO::GeneralMerger(options).merge();
-        // Merge active_display, active_views.
-        OCIO::DisplayViewMerger(options).merge();
-        // Merge inactive_colorspaces, environment and search_path.
-        OCIO::ColorspacesMerger(options).merge();
-    };
-
-    // Test that the overrides options are taken into account in the merging process.
-
-    auto testAllStrategies = [&baseConfig, &setup]
-                             (MergeStrategy strategy,
-                              int line)
-    {
-        OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
-        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
-        setup(merger, 
-            mergedConfig, 
-            strategy,
-            [](OCIO::ConfigMergerRcPtr & merger)
-            {
-                // overrides
+                // Set the overrides.
                 merger->getParams(0)->setName("OVR Name");
                 merger->getParams(0)->setDescription("OVR Desc");
                 merger->getParams(0)->setSearchPath("OVR1,OVR2");
@@ -342,8 +315,12 @@ OCIO_ADD_TEST(MergeConfigs, overrides)
                 merger->getParams(0)->setActiveDisplays("OVR DISP 1,OVR DISP 2");
                 merger->getParams(0)->setActiveViews("OVR VIEW 1,OVR VIEW 2");
                 merger->getParams(0)->setInactiveColorspaces("view_1, ACES2065-1");
-            });
 
+        return params;
+    };
+
+    auto doTests = [](OCIO::ConfigRcPtr & mergedConfig, int line)
+    {
         OCIO_CHECK_EQUAL_FROM(std::string(mergedConfig->getName()), std::string("OVR Name"), line);
         OCIO_CHECK_EQUAL_FROM(std::string(mergedConfig->getDescription()), std::string("OVR Desc"), line);
 
@@ -362,16 +339,84 @@ OCIO_ADD_TEST(MergeConfigs, overrides)
     };
 
     // Test sections with strategy = PreferInput
-    testAllStrategies(MergeStrategy::STRATEGY_PREFER_INPUT, __LINE__);
+    {
+        OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_PREFER_INPUT);
+        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
+           [&options]() 
+            {
+                // Merge name and description.
+                OCIO::GeneralMerger(options).merge();
+                // Merge active_display, active_views.
+                OCIO::DisplayViewMerger(options).merge();
+                // Merge inactive_colorspaces, environment and search_path.
+                OCIO::ColorspacesMerger(options).merge();
+            },
+            "The Input config contains a value that would override the Base config: shared_views: SHARED_1",
+            "The Input config contains a value that would override the Base config: display: DISP_1, view: VIEW_1",
+            "The Input config contains a value that would override the Base config: default_view_transform: Un-tone-mapped-2",
+            "The Input config contains a value that would override the Base config: viewing_rules: RULE_1",
+            "Color space 'ACES2065-1' will replace a color space in the base config.",
+            "Color space 'view_1' will replace a color space in the base config.");
+        doTests(mergedConfig, __LINE__);
+    }
 
     // Test sections with strategy = PreferBase.
-    testAllStrategies(MergeStrategy::STRATEGY_PREFER_BASE, __LINE__);
+    {
+        OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_PREFER_BASE);
+        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
+           [&options]() 
+            {
+                // Merge name and description.
+                OCIO::GeneralMerger(options).merge();
+                // Merge active_display, active_views.
+                OCIO::DisplayViewMerger(options).merge();
+                // Merge inactive_colorspaces, environment and search_path.
+                OCIO::ColorspacesMerger(options).merge();
+            },
+            "The Input config contains a value that would override the Base config: shared_views: SHARED_1",
+            "The Input config contains a value that would override the Base config: display: DISP_1, view: VIEW_1",
+            "The Input config contains a value that would override the Base config: default_view_transform: Un-tone-mapped-2",
+            "The Input config contains a value that would override the Base config: viewing_rules: RULE_1",
+            "Color space 'ACES2065-1' was not merged as it's already present in the base config.",
+            "Color space 'view_1' was not merged as it's already present in the base config.");
+        doTests(mergedConfig, __LINE__);
+    }
 
     // Test sections with strategy = InputOnly.
-    testAllStrategies(MergeStrategy::STRATEGY_INPUT_ONLY, __LINE__);
+    {
+        OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_INPUT_ONLY);
+        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        // Merge name and description.
+        OCIO::GeneralMerger(options).merge();
+        // Merge active_display, active_views.
+        OCIO::DisplayViewMerger(options).merge();
+        // Merge inactive_colorspaces, environment and search_path.
+        OCIO::ColorspacesMerger(options).merge();
+        doTests(mergedConfig, __LINE__);
+    }
 
     // Test sections with strategy = BaseOnly.
-    testAllStrategies(MergeStrategy::STRATEGY_BASE_ONLY, __LINE__);
+    {
+        OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_BASE_ONLY);
+        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        // Merge name and description.
+        OCIO::GeneralMerger(options).merge();
+        // Merge active_display, active_views.
+        OCIO::DisplayViewMerger(options).merge();
+        // Merge inactive_colorspaces, environment and search_path.
+        OCIO::ColorspacesMerger(options).merge();
+        doTests(mergedConfig, __LINE__);
+    }
 
     // Strategy Remove is not tested as the overrides do not affect that strategy.
 }
@@ -609,23 +654,15 @@ OCIO_ADD_TEST(MergeConfigs, file_rules_section)
     OCIO::ConstConfigRcPtr inputConfig;
     OCIO_CHECK_NO_THROW(inputConfig = getInputConfig());
 
-    auto setupFileRules = [&baseConfig, &inputConfig]
-                          (OCIO::ConfigMergerRcPtr & merger,
-                          OCIO::ConfigRcPtr mergedConfig,
-                          MergeStrategy strategy,
-                          std::function<void(OCIO::ConfigMergerRcPtr &)> cb)
+    auto setupBasics = [](OCIO::ConfigMergerRcPtr & merger, MergeStrategy strategy) -> OCIO::ConfigMergingParametersRcPtr
     {
         OCIO::ConfigMergingParametersRcPtr params = OCIO::ConfigMergingParameters::Create();
         merger->addParams(params);
         merger->getParams(0)->setFileRules(strategy);
+        merger->getParams(0)->setAssumeCommonReferenceSpace(true);
+        merger->getParams(0)->setAvoidDuplicates(false);
 
-        if (cb)
-        {
-            cb(merger);
-        }
-
-        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
-        OCIO::FileRulesMerger(options).merge();
+        return params;
     };
 
     // Allowed strategies: All
@@ -634,17 +671,14 @@ OCIO_ADD_TEST(MergeConfigs, file_rules_section)
     // Test that the default strategy is used as a fallback if the section strategy was not defined.
     {
         OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+        // Using STRATEGY_UNSET as this simulates that the section is missing from the OCIOM file.
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_UNSET);
+        // Simulate settings from OCIOM file.
+        merger->getParams(0)->setDefaultStrategy(MergeStrategy::STRATEGY_INPUT_ONLY);
+
         OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
-        setupFileRules(merger, 
-                       mergedConfig,
-                       // Using STRATEGY_UNSET as this simulate that the section
-                       // is missing from the OCIOM file.
-                       MergeStrategy::STRATEGY_UNSET,
-                       [](OCIO::ConfigMergerRcPtr & merger)
-                       {
-                           // Simulate settings from OCIOM file.
-                           merger->getParams(0)->setDefaultStrategy(MergeStrategy::STRATEGY_INPUT_ONLY);
-                       });
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        OCIO::FileRulesMerger(options).merge();
 
         OCIO_CHECK_EQUAL(mergedConfig->isStrictParsingEnabled(), false);
 
@@ -671,12 +705,15 @@ OCIO_ADD_TEST(MergeConfigs, file_rules_section)
     // Test FileRules section with strategy = PreferInput.
     {
         OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
-        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_PREFER_INPUT);
+        merger->getParams(0)->setInputFirst(true);
 
-        setupFileRules(merger, 
-                       mergedConfig, 
-                       MergeStrategy::STRATEGY_PREFER_INPUT,
-                       nullptr);
+        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
+                                [&options]() { OCIO::FileRulesMerger(options).merge(); },
+                                "The Input config contains a value that would override the Base config: file_rules: TIFF",
+                                "The Input config contains a value that would override the Base config: file_rules: Default");
 
         OCIO::ConstFileRulesRcPtr fr = mergedConfig->getFileRules();
 
@@ -712,15 +749,16 @@ OCIO_ADD_TEST(MergeConfigs, file_rules_section)
     // Test FileRules section with strategy = PreferInput, options InputFirst = false.
     {
         OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_PREFER_INPUT);
+        merger->getParams(0)->setInputFirst(false);
+
         OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
-        setupFileRules(merger, 
-                       mergedConfig, 
-                       MergeStrategy::STRATEGY_PREFER_INPUT,
-                       [](OCIO::ConfigMergerRcPtr & merger)
-                       { 
-                           merger->getParams(0)->setInputFirst(false);
-                       });
-        
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
+                                [&options]() { OCIO::FileRulesMerger(options).merge(); },
+                                "The Input config contains a value that would override the Base config: file_rules: TIFF",
+                                "The Input config contains a value that would override the Base config: file_rules: Default");
+
         OCIO_CHECK_EQUAL(mergedConfig->isStrictParsingEnabled(), false);
 
         OCIO::ConstFileRulesRcPtr fr = mergedConfig->getFileRules();
@@ -756,15 +794,15 @@ OCIO_ADD_TEST(MergeConfigs, file_rules_section)
     // Test FileRules section with strategy = PreferBase.
     {
         OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
-        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_PREFER_BASE);
+        merger->getParams(0)->setInputFirst(true);
 
-        setupFileRules(merger, 
-                       mergedConfig, 
-                       MergeStrategy::STRATEGY_PREFER_BASE,
-                       [](OCIO::ConfigMergerRcPtr & merger)
-                       { 
-                           merger->getParams(0)->setInputFirst(true);
-                       });
+        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
+                                [&options]() { OCIO::FileRulesMerger(options).merge(); },
+                                "The Input config contains a value that would override the Base config: file_rules: TIFF",
+                                "The Input config contains a value that would override the Base config: file_rules: Default");
 
         OCIO_CHECK_EQUAL(mergedConfig->isStrictParsingEnabled(), true);
 
@@ -797,14 +835,16 @@ OCIO_ADD_TEST(MergeConfigs, file_rules_section)
     // Test FileRules section with strategy = PreferBase, options InputFirst = false.
     {
         OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_PREFER_BASE);
+        merger->getParams(0)->setInputFirst(false);
+
         OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
-        setupFileRules(merger, 
-                       mergedConfig, 
-                       MergeStrategy::STRATEGY_PREFER_BASE,
-                       [](OCIO::ConfigMergerRcPtr & merger)
-                       { 
-                           merger->getParams(0)->setInputFirst(false);
-                       });
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
+                                [&options]() { OCIO::FileRulesMerger(options).merge(); },
+                                "The Input config contains a value that would override the Base config: file_rules: TIFF",
+                                "The Input config contains a value that would override the Base config: file_rules: Default");
+
         OCIO_CHECK_EQUAL(mergedConfig->isStrictParsingEnabled(), true);
 
         OCIO::ConstFileRulesRcPtr fr = mergedConfig->getFileRules();
@@ -835,12 +875,11 @@ OCIO_ADD_TEST(MergeConfigs, file_rules_section)
     // Test FileRules section with strategy = InputOnly.
     {
         OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
-        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_INPUT_ONLY);
 
-        setupFileRules(merger, 
-                       mergedConfig, 
-                       MergeStrategy::STRATEGY_INPUT_ONLY,
-                       nullptr);
+        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        OCIO::FileRulesMerger(options).merge();
 
         OCIO_CHECK_EQUAL(mergedConfig->isStrictParsingEnabled(), false);
 
@@ -867,12 +906,12 @@ OCIO_ADD_TEST(MergeConfigs, file_rules_section)
     // Test FileRules section with strategy = BaseOnly.
     {
         OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
-        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_BASE_ONLY);
 
-        setupFileRules(merger, 
-                       mergedConfig, 
-                       MergeStrategy::STRATEGY_BASE_ONLY,
-                       nullptr);
+        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        OCIO::FileRulesMerger(options).merge();
+
         OCIO_CHECK_EQUAL(mergedConfig->isStrictParsingEnabled(), true);
 
         OCIO::ConstFileRulesRcPtr fr = mergedConfig->getFileRules();
@@ -897,12 +936,12 @@ OCIO_ADD_TEST(MergeConfigs, file_rules_section)
     // Test FileRules section with strategy = Remove.
     {
         OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
-        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_REMOVE);
 
-        setupFileRules(merger, 
-                       mergedConfig, 
-                       MergeStrategy::STRATEGY_REMOVE,
-                       nullptr);
+        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        OCIO::FileRulesMerger(options).merge();
+
         OCIO_CHECK_EQUAL(mergedConfig->isStrictParsingEnabled(), true);
 
         OCIO::ConstFileRulesRcPtr fr = mergedConfig->getFileRules();
@@ -936,7 +975,10 @@ OCIO_ADD_TEST(MergeConfigs, file_rules_section)
 
             OCIO::MergeHandlerOptions options = { baseConfig, editableInputConfig, 
                                                   params, mergedConfig };
-            OCIO_CHECK_NO_THROW(OCIO::FileRulesMerger(options).merge());
+            checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
+                [&options]() { OCIO::FileRulesMerger(options).merge(); },
+                "The Input config contains a value that would override the Base config: file_rules: TIFF",
+                "The Input config contains a value that would override the Base config: file_rules: Default");
 
             OCIO::ConstFileRulesRcPtr fr = mergedConfig->getFileRules();
 
@@ -1112,23 +1154,12 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
     OCIO::ConstConfigRcPtr inputConfig;
     OCIO_CHECK_NO_THROW(inputConfig = getInputConfig());
 
-    auto setupDisplaysViews = [&baseConfig, &inputConfig]
-                              (OCIO::ConfigMergerRcPtr & merger,
-                              OCIO::ConfigRcPtr mergedConfig,
-                              MergeStrategy strategy,
-                              std::function<void(OCIO::ConfigMergerRcPtr &)> cb)
+    auto setupBasics = [](OCIO::ConfigMergerRcPtr & merger, MergeStrategy strategy) -> OCIO::ConfigMergingParametersRcPtr
     {
         OCIO::ConfigMergingParametersRcPtr params = OCIO::ConfigMergingParameters::Create();
         merger->addParams(params);
         merger->getParams(0)->setDisplayViews(strategy);
-
-        if (cb)
-        {
-            cb(merger);
-        }
-
-        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
-        OCIO::DisplayViewMerger(options).merge();
+        return params;
     };
 
     // Allowed strategies: All
@@ -1137,18 +1168,17 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
     // Test that the default strategy is used as a fallback if the section strategy was not defined.
     {
         OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+
+        // Using STRATEGY_UNSET as this simulates that the section
+        // is missing from the OCIOM file.
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_UNSET);
+        // Simulate settings from OCIOM file.
+        merger->getParams(0)->setDefaultStrategy(MergeStrategy::STRATEGY_INPUT_ONLY);
+        merger->getParams(0)->setInputFirst(true);
+
         OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
-        setupDisplaysViews(merger, 
-                           mergedConfig,
-                           // Using STRATEGY_UNSET as this simulate that the section
-                           // is missing from the OCIOM file.
-                           MergeStrategy::STRATEGY_UNSET,
-                           [](OCIO::ConfigMergerRcPtr & merger)
-                           {
-                               // Simulate settings from OCIOM file.
-                               merger->getParams(0)->setDefaultStrategy(MergeStrategy::STRATEGY_INPUT_ONLY);
-                               merger->getParams(0)->setInputFirst(true);
-                           });
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        OCIO::DisplayViewMerger(options).merge();
 
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveDisplays()), "DISP_1, DISP_3");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveViews()), 
@@ -1216,15 +1246,16 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
     // Test display/views with strategy = PreferInput, options InputFirst = true.
     {
         OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_PREFER_INPUT);
+        merger->getParams(0)->setInputFirst(true);
         OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
-
-        setupDisplaysViews(merger, 
-                           mergedConfig, 
-                           MergeStrategy::STRATEGY_PREFER_INPUT,
-                           [](OCIO::ConfigMergerRcPtr & merger)
-                           { 
-                               merger->getParams(0)->setInputFirst(true);
-                           });
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
+           [&options]() { OCIO::DisplayViewMerger(options).merge(); },
+            "The Input config contains a value that would override the Base config: shared_views: SHARED_1",
+            "The Input config contains a value that would override the Base config: display: DISP_1, view: VIEW_1",
+            "The Input config contains a value that would override the Base config: default_view_transform: Un-tone-mapped-2",
+            "The Input config contains a value that would override the Base config: viewing_rules: RULE_1");
 
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveDisplays()), "DISP_1, DISP_3, DISP_2");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveViews()), 
@@ -1319,14 +1350,16 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
     // Test display/views with strategy=PreferInput, options InputFirst = false.
     {
         OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_PREFER_INPUT);
+        merger->getParams(0)->setInputFirst(false);
         OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
-        setupDisplaysViews(merger, 
-                           mergedConfig, 
-                           MergeStrategy::STRATEGY_PREFER_INPUT,
-                           [](OCIO::ConfigMergerRcPtr & merger)
-                           { 
-                               merger->getParams(0)->setInputFirst(false);
-                           });
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
+           [&options]() { OCIO::DisplayViewMerger(options).merge(); },
+            "The Input config contains a value that would override the Base config: shared_views: SHARED_1",
+            "The Input config contains a value that would override the Base config: display: DISP_1, view: VIEW_1",
+            "The Input config contains a value that would override the Base config: default_view_transform: Un-tone-mapped-2",
+            "The Input config contains a value that would override the Base config: viewing_rules: RULE_1");
 
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveDisplays()), "DISP_1, DISP_2, DISP_3");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveViews()), 
@@ -1421,14 +1454,16 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
     // Test display/views with strategy = PreferBase, options InputFirst = true.
     {
         OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_PREFER_BASE);
+        merger->getParams(0)->setInputFirst(true);
         OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
-        setupDisplaysViews(merger, 
-                           mergedConfig, 
-                           MergeStrategy::STRATEGY_PREFER_BASE,
-                           [](OCIO::ConfigMergerRcPtr & merger)
-                           { 
-                               merger->getParams(0)->setInputFirst(true);
-                           });
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
+           [&options]() { OCIO::DisplayViewMerger(options).merge(); },
+            "The Input config contains a value that would override the Base config: shared_views: SHARED_1",
+            "The Input config contains a value that would override the Base config: display: DISP_1, view: VIEW_1",
+            "The Input config contains a value that would override the Base config: default_view_transform: Un-tone-mapped-2",
+            "The Input config contains a value that would override the Base config: viewing_rules: RULE_1");
         
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveDisplays()), "DISP_1, DISP_3, DISP_2");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveViews()), 
@@ -1525,14 +1560,16 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
     // Test display/views with strategy = PreferBase, options InputFirst = false.
     {
         OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_PREFER_BASE);
+        merger->getParams(0)->setInputFirst(false);
         OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
-        setupDisplaysViews(merger, 
-                           mergedConfig, 
-                           MergeStrategy::STRATEGY_PREFER_BASE,
-                           [](OCIO::ConfigMergerRcPtr & merger)
-                           { 
-                               merger->getParams(0)->setInputFirst(false);
-                           });
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
+           [&options]() { OCIO::DisplayViewMerger(options).merge(); },
+            "The Input config contains a value that would override the Base config: shared_views: SHARED_1",
+            "The Input config contains a value that would override the Base config: display: DISP_1, view: VIEW_1",
+            "The Input config contains a value that would override the Base config: default_view_transform: Un-tone-mapped-2",
+            "The Input config contains a value that would override the Base config: viewing_rules: RULE_1");
 
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveDisplays()), "DISP_1, DISP_2, DISP_3");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveViews()), 
@@ -1629,11 +1666,10 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
     // Test display/views with strategy = BaseOnly.
     {
         OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_BASE_ONLY);
         OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
-        setupDisplaysViews(merger, 
-                           mergedConfig, 
-                           MergeStrategy::STRATEGY_BASE_ONLY,
-                           nullptr);
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        OCIO::DisplayViewMerger(options).merge();
 
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveDisplays()), "DISP_1, DISP_2");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveViews()), 
@@ -1704,11 +1740,10 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
     // Test display/views with strategy = InputOnly.
     {
         OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_INPUT_ONLY);
         OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
-        setupDisplaysViews(merger, 
-                           mergedConfig, 
-                           MergeStrategy::STRATEGY_INPUT_ONLY,
-                           nullptr);
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        OCIO::DisplayViewMerger(options).merge();
 
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveDisplays()), "DISP_1, DISP_3");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveViews()), 
@@ -1759,7 +1794,7 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
 
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), "Un-tone-mapped-2");
 
-       // Validate viewing_rules
+        // Validate viewing_rules
         OCIO::ConstViewingRulesRcPtr rules = mergedConfig->getViewingRules();
 
         OCIO_CHECK_EQUAL(rules->getNumEntries(), 2);
@@ -1786,11 +1821,10 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
     // Test display/views with strategy = Remove
     {
         OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_REMOVE);
         OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
-        setupDisplaysViews(merger, 
-                           mergedConfig, 
-                           MergeStrategy::STRATEGY_REMOVE,
-                           nullptr);
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        OCIO::DisplayViewMerger(options).merge();
 
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveDisplays()), "DISP_2");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveViews()), "SHARED_2, VIEW_2");
@@ -2264,6 +2298,7 @@ OCIO_ADD_TEST(MergeConfigs, colorspaces_section_common_reference_and_duplicates)
     //
     // The merged configs will contain color spaces from the input config where
     // the reference space has been converted to that of the base config.
+    // The base reference spaces are always used, regardless of strategy.
     //
     // Duplicates are removed, even though they use different reference spaces.
 
@@ -2313,8 +2348,21 @@ OCIO_ADD_TEST(MergeConfigs, colorspaces_section_common_reference_and_duplicates)
         OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
         OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
         checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
-                                [&options]() { OCIO::ColorspacesMerger(options).merge(); },
+                                [&options]() { OCIO::RolesMerger(options).merge();
+                                               OCIO::DisplayViewMerger(options).merge();
+                                               OCIO::ColorspacesMerger(options).merge(); },
+//                                "The Input config contains a role that would override Base config role 'aces_interchange'.",
+                                "Equivalent input color space 'sRGB - Display' replaces 'sRGB - Display' in the base config, preserving aliases.",
+                                "Equivalent input color space 'CIE-XYZ-D65' replaces 'CIE-XYZ-D65' in the base config, preserving aliases.",
+                                "Equivalent input color space 'ACES2065-1' replaces 'ap0' in the base config, preserving aliases.",
+                                "Equivalent input color space 'sRGB' replaces 'sRGB - Texture' in the base config, preserving aliases.",
                                 "Merged color space 'ACES2065-1' has a conflict with alias 'aces' in color space 'ACEScg'");
+
+        OCIO_CHECK_EQUAL(mergedConfig->getNumRoles(), 1);
+//         OCIO_CHECK_EQUAL(std::string(mergedConfig->getRoleColorSpace("aces_interchange")),
+//                          std::string("ACES2065-1"));
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getRoleColorSpace("cie_xyz_d65_interchange")),
+                         std::string("CIE-XYZ-D65"));
 
         OCIO_CHECK_EQUAL(mergedConfig->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL, 
                                                          OCIO::COLORSPACE_ALL), 7);
@@ -2327,320 +2375,131 @@ OCIO_ADD_TEST(MergeConfigs, colorspaces_section_common_reference_and_duplicates)
             OCIO_CHECK_EQUAL(cs->getAlias(0), std::string("srgb_display"));
             OCIO_CHECK_EQUAL(cs->getDescription(), std::string("from input"));
 
+            // Check that the input config reference space was converted to the base reference space.
+            // See ConfigUtils_tests.cpp for more detailed testing of the reference space conversion.
+            {
+                OCIO_REQUIRE_ASSERT(!cs->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE));
+                OCIO::ConstTransformRcPtr t = cs->getTransform(OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+                OCIO_REQUIRE_ASSERT(t);
+                OCIO_CHECK_EQUAL(t->getTransformType(), OCIO::TRANSFORM_TYPE_GROUP);
+                auto gtx = OCIO::DynamicPtrCast<const OCIO::GroupTransform>(t);
+                OCIO_REQUIRE_ASSERT(gtx);
+                OCIO_REQUIRE_EQUAL(gtx->getNumTransforms(), 2);
+                OCIO_CHECK_EQUAL(gtx->getTransform(0)->getTransformType(), OCIO::TRANSFORM_TYPE_MATRIX);
+                OCIO_CHECK_EQUAL(gtx->getTransform(1)->getTransformType(), OCIO::TRANSFORM_TYPE_EXPONENT_WITH_LINEAR);
+            }
+
             auto cs1 = checkColorSpace(mergedConfig, "CIE-XYZ-D65", 1, OCIO::SEARCH_REFERENCE_SPACE_DISPLAY, __LINE__);
             OCIO_CHECK_EQUAL(cs1->getNumAliases(), 1);
             OCIO_CHECK_EQUAL(cs1->getAlias(0), std::string("cie_xyz_d65"));
+            {
+                OCIO_REQUIRE_ASSERT(!cs1->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE));
+                OCIO::ConstTransformRcPtr t = cs1->getTransform(OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+                OCIO_REQUIRE_ASSERT(t);
+                OCIO_CHECK_EQUAL(t->getTransformType(), OCIO::TRANSFORM_TYPE_GROUP);
+                auto gtx = OCIO::DynamicPtrCast<const OCIO::GroupTransform>(t);
+                OCIO_REQUIRE_ASSERT(gtx);
+                OCIO_REQUIRE_EQUAL(gtx->getNumTransforms(), 2);
+                OCIO_CHECK_EQUAL(gtx->getTransform(0)->getTransformType(), OCIO::TRANSFORM_TYPE_MATRIX);
+                OCIO_CHECK_EQUAL(gtx->getTransform(1)->getTransformType(), OCIO::TRANSFORM_TYPE_MATRIX);
+            }
         }
 
         // Scene-referred spaces.
         {
+            // This is recognized as a duplicate, even though the name is different in the two configs.
             auto cs = checkColorSpace(mergedConfig, "ACES2065-1", 0, OCIO::SEARCH_REFERENCE_SPACE_SCENE, __LINE__);
             OCIO_CHECK_EQUAL(cs->getNumAliases(), 2);
             OCIO_CHECK_EQUAL(cs->getAlias(0), std::string("aces"));
             // Check for alias ap0 (added from base config).
             OCIO_CHECK_EQUAL(cs->getAlias(1), std::string("ap0"));
+            {
+                OCIO_REQUIRE_ASSERT(!cs->getTransform(OCIO::COLORSPACE_DIR_FROM_REFERENCE));
+                OCIO::ConstTransformRcPtr t = cs->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE);
+                OCIO_REQUIRE_ASSERT(t);
+                OCIO_CHECK_EQUAL(t->getTransformType(), OCIO::TRANSFORM_TYPE_GROUP);
+                auto gtx = OCIO::DynamicPtrCast<const OCIO::GroupTransform>(t);
+                OCIO_REQUIRE_ASSERT(gtx);
+                OCIO_REQUIRE_EQUAL(gtx->getNumTransforms(), 2);
+                OCIO_CHECK_EQUAL(gtx->getTransform(0)->getTransformType(), OCIO::TRANSFORM_TYPE_MATRIX);
+                OCIO_CHECK_EQUAL(gtx->getTransform(1)->getTransformType(), OCIO::TRANSFORM_TYPE_MATRIX);
+            }
 
+            // This is recognized as a duplicate, even though the name is different in the two configs.
             auto cs1 = checkColorSpace(mergedConfig, "sRGB", 1, OCIO::SEARCH_REFERENCE_SPACE_SCENE, __LINE__);
             OCIO_CHECK_EQUAL(cs1->getNumAliases(), 2);
             // Check for alias sRGB - Texture (added from base config colorspace name).
             OCIO_CHECK_EQUAL(cs1->getAlias(0), std::string("sRGB - Texture"));
             // Check for alias srgb_tx (added from base config).
             OCIO_CHECK_EQUAL(cs1->getAlias(1), std::string("srgb_tx"));
+            {
+                OCIO_REQUIRE_ASSERT(!cs1->getTransform(OCIO::COLORSPACE_DIR_FROM_REFERENCE));
+                OCIO::ConstTransformRcPtr t = cs1->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE);
+                OCIO_REQUIRE_ASSERT(t);
+                OCIO_CHECK_EQUAL(t->getTransformType(), OCIO::TRANSFORM_TYPE_GROUP);
+                auto gtx = OCIO::DynamicPtrCast<const OCIO::GroupTransform>(t);
+                OCIO_REQUIRE_ASSERT(gtx);
+                OCIO_REQUIRE_EQUAL(gtx->getNumTransforms(), 2);
+                OCIO_CHECK_EQUAL(gtx->getTransform(0)->getTransformType(), OCIO::TRANSFORM_TYPE_EXPONENT_WITH_LINEAR);
+                OCIO_CHECK_EQUAL(gtx->getTransform(1)->getTransformType(), OCIO::TRANSFORM_TYPE_MATRIX);
+            }
 
             auto cs2 = checkColorSpace(mergedConfig, "rec709", 2, OCIO::SEARCH_REFERENCE_SPACE_SCENE, __LINE__);
+            {
+                OCIO_REQUIRE_ASSERT(!cs2->getTransform(OCIO::COLORSPACE_DIR_FROM_REFERENCE));
+                OCIO::ConstTransformRcPtr t = cs2->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE);
+                OCIO_REQUIRE_ASSERT(t);
+                OCIO_CHECK_EQUAL(t->getTransformType(), OCIO::TRANSFORM_TYPE_GROUP);
+                auto gtx = OCIO::DynamicPtrCast<const OCIO::GroupTransform>(t);
+                OCIO_REQUIRE_ASSERT(gtx);
+                OCIO_REQUIRE_EQUAL(gtx->getNumTransforms(), 1);
+                OCIO_CHECK_EQUAL(gtx->getTransform(0)->getTransformType(), OCIO::TRANSFORM_TYPE_MATRIX);
+            }
 
             auto cs3 = checkColorSpace(mergedConfig, "Raw", 3, OCIO::SEARCH_REFERENCE_SPACE_SCENE, __LINE__);
             OCIO_CHECK_EQUAL(cs3->getNumAliases(), 1);
             OCIO_CHECK_EQUAL(cs3->getAlias(0), std::string("Utility - Raw"));
+            OCIO_CHECK_ASSERT(cs3->isData());
+            {
+                OCIO_REQUIRE_ASSERT(!cs3->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE));
+                OCIO_REQUIRE_ASSERT(!cs3->getTransform(OCIO::COLORSPACE_DIR_FROM_REFERENCE));
+            }
 
             auto cs4 = checkColorSpace(mergedConfig, "ACEScg", 4, OCIO::SEARCH_REFERENCE_SPACE_SCENE, __LINE__);
             OCIO_CHECK_EQUAL(cs4->getNumAliases(), 0);
+            {
+                OCIO_REQUIRE_ASSERT(!cs4->getTransform(OCIO::COLORSPACE_DIR_FROM_REFERENCE));
+                OCIO::ConstTransformRcPtr t = cs4->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE);
+                OCIO_REQUIRE_ASSERT(t);
+                OCIO_CHECK_EQUAL(t->getTransformType(), OCIO::TRANSFORM_TYPE_BUILTIN);
+            }
         }
 
-// FIXME:  Remove the below string and improve the tests above.
+        // View transforms.
+        {
+            OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 2);
+            OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), "SDR Video");
+            OCIO_CHECK_EQUAL(mergedConfig->getViewTransform("SDR Video")->getDescription(), std::string("from input"));
+            OCIO::ConstTransformRcPtr tf;
+            OCIO_CHECK_NO_THROW(tf = mergedConfig->getViewTransform("SDR Video")
+                                                 ->getTransform(OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
 
-        constexpr const char * RESULT {
-R"(ocio_profile_version: 2.1
+            // Validate the reference space conversion was added to the transform from the input config.
+            OCIO_CHECK_EQUAL(tf->getTransformType(), OCIO::TRANSFORM_TYPE_GROUP);
+            auto gtx = OCIO::DynamicPtrCast<const OCIO::GroupTransform>(tf);
+            OCIO_REQUIRE_ASSERT(gtx);
+            OCIO_REQUIRE_EQUAL(gtx->getNumTransforms(), 3);
+            OCIO_CHECK_EQUAL(gtx->getTransform(0)->getTransformType(), OCIO::TRANSFORM_TYPE_MATRIX);
+            OCIO_CHECK_EQUAL(gtx->getTransform(1)->getTransformType(), OCIO::TRANSFORM_TYPE_BUILTIN);
+            OCIO_CHECK_EQUAL(gtx->getTransform(2)->getTransformType(), OCIO::TRANSFORM_TYPE_MATRIX);
 
-environment:
-  SHOT: 001a
-  TEXTURE_SPACE: sRGB - Texture
-search_path:
-  - lut_dir
-  - luts
-  - .
-strictparsing: true
-family_separator: "~"
-luma: [0.2126, 0.7152, 0.0722]
-name: base
+            OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), "vt2");
+            OCIO_CHECK_NO_THROW(tf = mergedConfig->getViewTransform("vt2")
+                                                 ->getTransform(OCIO::VIEWTRANSFORM_DIR_TO_REFERENCE));
 
-roles:
-  cie_xyz_d65_interchange: CIE-XYZ-D65
-
-file_rules:
-  - !<Rule> {name: Default, colorspace: ACEScg}
-
-displays:
-  {}
-
-active_displays: []
-active_views: []
-inactive_colorspaces: [ACES2065-1]
-
-display_colorspaces:
-  - !<ColorSpace>
-    name: sRGB - Display
-    aliases: [srgb_display]
-    family: Input~Display~Standard
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from input
-    isdata: false
-    allocation: uniform
-    from_display_reference: !<GroupTransform>
-      children:
-        - !<MatrixTransform> {matrix: [0.412390799266, 0.357584339384, 0.180480788402, 0, 0.212639005872, 0.715168678768, 0.072192315361, 0, 0.019330818716, 0.119194779795, 0.95053215225, 0, 0, 0, 0, 1], direction: inverse}
-        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
-  
-  - !<ColorSpace>
-    name: CIE-XYZ-D65
-    aliases: [cie_xyz_d65]
-    family: "Input~"
-    equalitygroup: ""
-    bitdepth: unknown
-    description: The \"CIE XYZ (D65)\" display connection colorspace.
-    isdata: false
-    allocation: uniform
-    from_display_reference: !<GroupTransform>
-      children:
-        - !<MatrixTransform> {matrix: [0.412390799266, 0.357584339384, 0.180480788402, 0, 0.212639005872, 0.715168678768, 0.072192315361, 0, 0.019330818716, 0.119194779795, 0.95053215225, 0, 0, 0, 0, 1], direction: inverse}
-        - !<MatrixTransform> {matrix: [0.412390799266, 0.357584339384, 0.180480788402, 0, 0.212639005872, 0.715168678768, 0.072192315361, 0, 0.019330818716, 0.119194779795, 0.95053215225, 0, 0, 0, 0, 1]}
-
-colorspaces:
-  - !<ColorSpace>
-    name: ACES2065-1
-    aliases: [aces, ap0]
-    family: Input~ACES~Linear
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from input
-    isdata: false
-    allocation: uniform
-    to_scene_reference: !<GroupTransform>
-      children:
-        - !<MatrixTransform> {matrix: [2.521686186744, -1.13413098824, -0.387555198504, 0, -0.27647991423, 1.372719087668, -0.096239173438, 0, -0.015378064966, -0.152975335867, 1.168353400833, 0, 0, 0, 0, 1]}
-        - !<MatrixTransform> {matrix: [0.439632981919492, 0.382988698151554, 0.177378319928956, 0, 0.0897764429588422, 0.813439428748978, 0.0967841282921771, 0, 0.0175411703831728, 0.111546553302387, 0.870912276314442, 0, 0, 0, 0, 1]}
-  
-  - !<ColorSpace>
-    name: sRGB
-    aliases: [sRGB - Texture, srgb_tx]
-    family: Input~Texture~
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from input
-    isdata: false
-    allocation: uniform
-    to_scene_reference: !<GroupTransform>
-      children:
-        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055}
-        - !<MatrixTransform> {matrix: [0.439632981919492, 0.382988698151554, 0.177378319928956, 0, 0.0897764429588422, 0.813439428748978, 0.0967841282921771, 0, 0.0175411703831728, 0.111546553302387, 0.870912276314442, 0, 0, 0, 0, 1]}
-  
-  - !<ColorSpace>
-    name: rec709
-    family: "Input~"
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from input
-    isdata: false
-    allocation: uniform
-    to_scene_reference: !<GroupTransform>
-      children:
-        - !<MatrixTransform> {matrix: [0.439632981919492, 0.382988698151554, 0.177378319928956, 0, 0.0897764429588422, 0.813439428748978, 0.0967841282921771, 0, 0.0175411703831728, 0.111546553302387, 0.870912276314442, 0, 0, 0, 0, 1]}
-
-  - !<ColorSpace>
-    name: Raw
-    aliases: [Utility - Raw]
-    family: Input~Utility
-    equalitygroup: ""
-    bitdepth: 32f
-    description: The utility "Raw" colorspace.
-    isdata: true
-    categories: [file-io]
-    allocation: uniform
-
-  - !<ColorSpace>
-    name: ACEScg
-    family: Base~ACES~Linear
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from base
-    isdata: false
-    allocation: uniform
-    to_scene_reference: !<BuiltinTransform> {style: ACEScg_to_ACES2065-1}
-)" };
-
-        // Test the entire contents of each config.
-
-        std::ostringstream oss;
-        mergedConfig->serialize(oss);
-
-        std::istringstream resultIss;
-        resultIss.str(RESULT);
-        OCIO::ConstConfigRcPtr resultConfig = OCIO::Config::CreateFromStream(resultIss);
-        std::ostringstream ossResult;
-        resultConfig->serialize(ossResult);
-
-//         OCIO_CHECK_EQUAL(oss.str(), ossResult.str());
-    }
-
-    // PreferInput, Base first.
-    {
-        OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
-        auto params = setupBasics(merger, MergeStrategy::STRATEGY_PREFER_INPUT);
-        merger->getParams(0)->setInputFirst(false);
-
-        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
-        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
-        checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
-                                [&options]() { OCIO::ColorspacesMerger(options).merge(); },
-                                "Merged color space 'ACES2065-1' has a conflict with alias 'aces' in color space 'ACEScg'");
-
-// FIXME:  Remove the below string and improve the tests above.
-
-        constexpr const char * RESULT {
-R"(ocio_profile_version: 2.1
-
-environment:
-  SHOT: 001a
-  TEXTURE_SPACE: sRGB - Texture
-search_path:
-  - luts
-  - .
-  - lut_dir
-strictparsing: true
-family_separator: "~"
-luma: [0.2126, 0.7152, 0.0722]
-name: base
-roles:
-  cie_xyz_d65_interchange: CIE-XYZ-D65
-file_rules:
-  - !<Rule> {name: Default, colorspace: ACEScg}
-displays:
-  {}
-active_displays: []
-active_views: []
-inactive_colorspaces: [ACES2065-1]
-
-display_colorspaces:
-  - !<ColorSpace>
-    name: sRGB - Display
-    aliases: [srgb_display]
-    family: Input~Display~Standard
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from input
-    isdata: false
-    allocation: uniform
-    from_display_reference: !<GroupTransform>
-      children:
-        - !<MatrixTransform> {matrix: [0.412390799266, 0.357584339384, 0.180480788402, 0, 0.212639005872, 0.715168678768, 0.072192315361, 0, 0.019330818716, 0.119194779795, 0.95053215225, 0, 0, 0, 0, 1], direction: inverse}
-        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
-  
-  - !<ColorSpace>
-    name: CIE-XYZ-D65
-    aliases: [cie_xyz_d65]
-    family: "Input~"
-    equalitygroup: ""
-    bitdepth: unknown
-    description: The \"CIE XYZ (D65)\" display connection colorspace.
-    isdata: false
-    allocation: uniform
-    from_display_reference: !<GroupTransform>
-      children:
-        - !<MatrixTransform> {matrix: [0.412390799266, 0.357584339384, 0.180480788402, 0, 0.212639005872, 0.715168678768, 0.072192315361, 0, 0.019330818716, 0.119194779795, 0.95053215225, 0, 0, 0, 0, 1], direction: inverse}
-        - !<MatrixTransform> {matrix: [0.412390799266, 0.357584339384, 0.180480788402, 0, 0.212639005872, 0.715168678768, 0.072192315361, 0, 0.019330818716, 0.119194779795, 0.95053215225, 0, 0, 0, 0, 1]}
-
-colorspaces:
-  - !<ColorSpace>
-    name: ACEScg
-    family: Base~ACES~Linear
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from base
-    isdata: false
-    allocation: uniform
-    to_scene_reference: !<BuiltinTransform> {style: ACEScg_to_ACES2065-1}
-  
-  # The ap0 colorspace is added as an alias because it is equivalent to the ACES2065-1 colorspace
-  # in this config.
-  - !<ColorSpace>
-    name: ACES2065-1
-    aliases: [aces, ap0]
-    family: Input~ACES~Linear
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from input
-    isdata: false
-    allocation: uniform
-    to_scene_reference: !<GroupTransform>
-      children:
-        - !<MatrixTransform> {matrix: [2.521686186744, -1.13413098824, -0.387555198504, 0, -0.27647991423, 1.372719087668, -0.096239173438, 0, -0.015378064966, -0.152975335867, 1.168353400833, 0, 0, 0, 0, 1]}
-        - !<MatrixTransform> {matrix: [0.439632981919492, 0.382988698151554, 0.177378319928956, 0, 0.0897764429588422, 0.813439428748978, 0.0967841282921771, 0, 0.0175411703831728, 0.111546553302387, 0.870912276314442, 0, 0, 0, 0, 1]}
-  
-  # The sRGB - Texture colorspace is added as an alias because it is equivalent to the sRGB 
-  # colorspace in this config.
-  - !<ColorSpace>
-    name: sRGB
-    aliases: [sRGB - Texture, srgb_tx]
-    family: Input~Texture~
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from input
-    isdata: false
-    allocation: uniform
-    to_scene_reference: !<GroupTransform>
-      children:
-        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055}
-        - !<MatrixTransform> {matrix: [0.439632981919492, 0.382988698151554, 0.177378319928956, 0, 0.0897764429588422, 0.813439428748978, 0.0967841282921771, 0, 0.0175411703831728, 0.111546553302387, 0.870912276314442, 0, 0, 0, 0, 1]}
-  
-  - !<ColorSpace>
-    name: rec709
-    family: "Input~"
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from input
-    isdata: false
-    allocation: uniform
-    to_scene_reference: !<GroupTransform>
-      children:
-        - !<MatrixTransform> {matrix: [0.439632981919492, 0.382988698151554, 0.177378319928956, 0, 0.0897764429588422, 0.813439428748978, 0.0967841282921771, 0, 0.0175411703831728, 0.111546553302387, 0.870912276314442, 0, 0, 0, 0, 1]}
-
-  - !<ColorSpace>
-    name: Raw
-    aliases: [Utility - Raw]
-    family: Input~Utility
-    equalitygroup: ""
-    bitdepth: 32f
-    description: The utility "Raw" colorspace.
-    isdata: true
-    categories: [file-io]
-    allocation: uniform
-)" };
-
-        // Test the entire contents of each config.
-
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getInactiveColorSpaces()), "ACES2065-1");
-
-        std::ostringstream oss;
-        mergedConfig->serialize(oss);
-
-        std::istringstream resultIss;
-        resultIss.str(RESULT);
-        OCIO::ConstConfigRcPtr resultConfig = OCIO::Config::CreateFromStream(resultIss);
-        std::ostringstream ossResult;
-        resultConfig->serialize(ossResult);
-
-//         OCIO_CHECK_EQUAL(oss.str(), ossResult.str());
+            // Validate the reference space conversion was not added to the transform from the base config.
+            OCIO_CHECK_EQUAL(tf->getTransformType(), OCIO::TRANSFORM_TYPE_EXPONENT_WITH_LINEAR);
+        }
     }
 
     // PreferBase, Input first.
@@ -2652,265 +2511,126 @@ colorspaces:
         OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
         OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
         checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
-                                [&options]() { OCIO::ColorspacesMerger(options).merge(); },
-                                "Input color space 'ACES2065-1' is a duplicate of base color space 'ap0' but was unable to add alias 'aces' since it conflicts with base color space 'ACEScg'");
+                                [&options]() { OCIO::RolesMerger(options).merge();
+                                               OCIO::DisplayViewMerger(options).merge();
+                                               OCIO::ColorspacesMerger(options).merge(); },
+//                                "The Input config contains a role that would override Base config role 'aces_interchange'.",
+                                "Equivalent base color space 'sRGB - Display' overrides 'sRGB - Display' in the input config, preserving aliases.",
+                                "Equivalent base color space 'CIE-XYZ-D65' overrides 'CIE-XYZ-D65' in the input config, preserving aliases.",
+                                "Equivalent base color space 'ap0' overrides 'ACES2065-1' in the input config, preserving aliases.",
+                                "Equivalent base color space 'sRGB - Texture' overrides 'sRGB' in the input config, preserving aliases.",
+                                "Input color space 'ACES2065-1' is a duplicate of base color space 'ap0' but was "
+                                    "unable to add alias 'aces' since it conflicts with base color space 'ACEScg'.");
 
-// FIXME:  Remove the below string and improve the tests above.
+        OCIO_CHECK_EQUAL(mergedConfig->getNumRoles(), 1);
+//         OCIO_CHECK_EQUAL(std::string(mergedConfig->getRoleColorSpace("aces_interchange")),
+//                          std::string("ap0"));
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getRoleColorSpace("cie_xyz_d65_interchange")),
+                         std::string("CIE-XYZ-D65"));
 
-        constexpr const char * RESULT {
-R"(ocio_profile_version: 2.1
+        OCIO_CHECK_EQUAL(mergedConfig->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL, 
+                                                         OCIO::COLORSPACE_ALL), 7);
 
-environment:
-  SHOT: 001a
-  TEXTURE_SPACE: sRGB - Texture
-search_path:
-  - lut_dir
-  - luts
-  - .
-strictparsing: true
-family_separator: "-"
-luma: [0.2126, 0.7152, 0.0722]
-name: base
-roles:
-  cie_xyz_d65_interchange: CIE-XYZ-D65
-file_rules:
-  - !<Rule> {name: Default, colorspace: ACEScg}
-displays:
-  {}
-active_displays: []
-active_views: []
-inactive_colorspaces: [ACES2065-1]
+        // Display-referred spaces.
+        {
+            auto cs = checkColorSpace(mergedConfig, "sRGB - Display", 0, OCIO::SEARCH_REFERENCE_SPACE_DISPLAY, __LINE__);
+            OCIO_CHECK_EQUAL(cs->getNumAliases(), 1);
+            OCIO_CHECK_EQUAL(cs->getAlias(0), std::string("srgb_display"));
+            OCIO_CHECK_EQUAL(cs->getDescription(), std::string("from base"));
+            {
+                OCIO_REQUIRE_ASSERT(!cs->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE));
+                OCIO::ConstTransformRcPtr t = cs->getTransform(OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+                OCIO_REQUIRE_ASSERT(t);
+                OCIO_CHECK_EQUAL(t->getTransformType(), OCIO::TRANSFORM_TYPE_BUILTIN);
+            }
 
-display_colorspaces:
-  - !<ColorSpace>
-    name: sRGB - Display
-    aliases: [srgb_display]
-    family: Base-Display-Basic
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from base
-    isdata: false
-    allocation: uniform
-    from_display_reference: !<BuiltinTransform> {style: DISPLAY - CIE-XYZ-D65_to_sRGB}
-  
-  - !<ColorSpace>
-    name: CIE-XYZ-D65
-    aliases: [cie_xyz_d65]
-    family: "Base-"
-    equalitygroup: ""
-    bitdepth: unknown
-    description: The \"CIE XYZ (D65)\" display connection colorspace.
-    isdata: false
-    allocation: uniform
+            auto cs1 = checkColorSpace(mergedConfig, "CIE-XYZ-D65", 1, OCIO::SEARCH_REFERENCE_SPACE_DISPLAY, __LINE__);
+            OCIO_CHECK_EQUAL(cs1->getNumAliases(), 1);
+            OCIO_CHECK_EQUAL(cs1->getAlias(0), std::string("cie_xyz_d65"));
+            {
+                OCIO_REQUIRE_ASSERT(!cs1->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE));
+                OCIO_REQUIRE_ASSERT(!cs1->getTransform(OCIO::COLORSPACE_DIR_FROM_REFERENCE));
+            }
+        }
 
-colorspaces:
-  - !<ColorSpace>
-    name: rec709
-    family: "Input-"
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from input
-    isdata: false
-    allocation: uniform
-    to_scene_reference: !<GroupTransform>
-      children:
-        - !<MatrixTransform> {matrix: [0.439632981919492, 0.382988698151554, 0.177378319928956, 0, 0.0897764429588422, 0.813439428748978, 0.0967841282921771, 0, 0.0175411703831728, 0.111546553302387, 0.870912276314442, 0, 0, 0, 0, 1]}
+        // Scene-referred spaces.
+        {
+            auto cs = checkColorSpace(mergedConfig, "rec709", 0, OCIO::SEARCH_REFERENCE_SPACE_SCENE, __LINE__);
+            {
+                OCIO_REQUIRE_ASSERT(!cs->getTransform(OCIO::COLORSPACE_DIR_FROM_REFERENCE));
+                OCIO::ConstTransformRcPtr t = cs->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE);
+                OCIO_REQUIRE_ASSERT(t);
+                OCIO_CHECK_EQUAL(t->getTransformType(), OCIO::TRANSFORM_TYPE_GROUP);
+                auto gtx = OCIO::DynamicPtrCast<const OCIO::GroupTransform>(t);
+                OCIO_REQUIRE_ASSERT(gtx);
+                OCIO_REQUIRE_EQUAL(gtx->getNumTransforms(), 1);
+                OCIO_CHECK_EQUAL(gtx->getTransform(0)->getTransformType(), OCIO::TRANSFORM_TYPE_MATRIX);
+            }
 
-  - !<ColorSpace>
-    name: Raw
-    aliases: [Utility - Raw]
-    family: Input-Utility
-    equalitygroup: ""
-    bitdepth: 32f
-    description: The utility "Raw" colorspace.
-    isdata: true
-    categories: [file-io]
-    allocation: uniform
+            auto cs1 = checkColorSpace(mergedConfig, "Raw", 1, OCIO::SEARCH_REFERENCE_SPACE_SCENE, __LINE__);
+            OCIO_CHECK_EQUAL(cs1->getNumAliases(), 1);
+            OCIO_CHECK_EQUAL(cs1->getAlias(0), std::string("Utility - Raw"));
+            OCIO_CHECK_ASSERT(cs1->isData());
+            {
+                OCIO_REQUIRE_ASSERT(!cs1->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE));
+                OCIO_REQUIRE_ASSERT(!cs1->getTransform(OCIO::COLORSPACE_DIR_FROM_REFERENCE));
+            }
 
-  - !<ColorSpace>
-    name: ACEScg
-    aliases: [aces]
-    family: Base-ACES-Linear
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from base
-    isdata: false
-    allocation: uniform
-    to_scene_reference: !<BuiltinTransform> {style: ACEScg_to_ACES2065-1}
-  
-  - !<ColorSpace>
-    name: ap0
-    aliases: [ACES2065-1]
-    family: Base-ACES-Linear
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from base
-    isdata: false
-    allocation: uniform
-  
-  - !<ColorSpace>
-    name: sRGB - Texture
-    aliases: [srgb, srgb_tx]
-    family: Base-Texture
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from base
-    isdata: false
-    allocation: uniform
-    from_scene_reference: !<GroupTransform>
-      children:
-        - !<MatrixTransform> {matrix: [2.52168618674388, -1.13413098823972, -0.387555198504164, 0, -0.276479914229922, 1.37271908766826, -0.096239173438334, 0, -0.0153780649660342, -0.152975335867399, 1.16835340083343, 0, 0, 0, 0, 1]}
-        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
-)" };
+            auto cs2 = checkColorSpace(mergedConfig, "ACEScg", 2, OCIO::SEARCH_REFERENCE_SPACE_SCENE, __LINE__);
+            OCIO_CHECK_EQUAL(cs2->getNumAliases(), 1);
+            OCIO_CHECK_EQUAL(cs2->getAlias(0), std::string("aces"));
+            {
+                OCIO_REQUIRE_ASSERT(!cs2->getTransform(OCIO::COLORSPACE_DIR_FROM_REFERENCE));
+                OCIO::ConstTransformRcPtr t = cs2->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE);
+                OCIO_REQUIRE_ASSERT(t);
+                OCIO_CHECK_EQUAL(t->getTransformType(), OCIO::TRANSFORM_TYPE_BUILTIN);
+            }
 
-        // Test the entire contents of each config.
+            auto cs3 = checkColorSpace(mergedConfig, "ap0", 3, OCIO::SEARCH_REFERENCE_SPACE_SCENE, __LINE__);
+            OCIO_CHECK_EQUAL(cs3->getNumAliases(), 1);
+            OCIO_CHECK_EQUAL(cs3->getAlias(0), std::string("ACES2065-1"));
+            OCIO_CHECK_ASSERT(!(cs3->isData()));
+            {
+                OCIO_REQUIRE_ASSERT(!cs3->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE));
+                OCIO_REQUIRE_ASSERT(!cs3->getTransform(OCIO::COLORSPACE_DIR_FROM_REFERENCE));
+            }
 
-        std::ostringstream oss;
-        mergedConfig->serialize(oss);
+            auto cs4 = checkColorSpace(mergedConfig, "sRGB - Texture", 4, OCIO::SEARCH_REFERENCE_SPACE_SCENE, __LINE__);
+            OCIO_CHECK_EQUAL(cs4->getNumAliases(), 2);
+            OCIO_CHECK_EQUAL(cs4->getAlias(0), std::string("srgb"));
+            OCIO_CHECK_EQUAL(cs4->getAlias(1), std::string("srgb_tx"));
+            {
+                OCIO_REQUIRE_ASSERT(!cs4->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE));
+                OCIO::ConstTransformRcPtr t = cs4->getTransform(OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+                OCIO_REQUIRE_ASSERT(t);
+                OCIO_CHECK_EQUAL(t->getTransformType(), OCIO::TRANSFORM_TYPE_GROUP);
+                auto gtx = OCIO::DynamicPtrCast<const OCIO::GroupTransform>(t);
+                OCIO_REQUIRE_ASSERT(gtx);
+                OCIO_REQUIRE_EQUAL(gtx->getNumTransforms(), 2);
+                OCIO_CHECK_EQUAL(gtx->getTransform(0)->getTransformType(), OCIO::TRANSFORM_TYPE_MATRIX);
+                OCIO_CHECK_EQUAL(gtx->getTransform(1)->getTransformType(), OCIO::TRANSFORM_TYPE_EXPONENT_WITH_LINEAR);
+            }
+        }
 
-        std::istringstream resultIss;
-        resultIss.str(RESULT);
-        OCIO::ConstConfigRcPtr resultConfig = OCIO::Config::CreateFromStream(resultIss);
-        std::ostringstream ossResult;
-        resultConfig->serialize(ossResult);
+        // View transforms.
+        {
+            OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 2);
+            OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), "SDR Video");
+            OCIO_CHECK_EQUAL(mergedConfig->getViewTransform("SDR Video")->getDescription(), std::string("from base"));
+            OCIO::ConstTransformRcPtr tf;
+            OCIO_CHECK_NO_THROW(tf = mergedConfig->getViewTransform("SDR Video")
+                                                 ->getTransform(OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
 
-//         OCIO_CHECK_EQUAL(oss.str(), ossResult.str());
-    }
+            // Validate that no reference space conversion was added, since the base transform was used.
+            OCIO_CHECK_EQUAL(tf->getTransformType(), OCIO::TRANSFORM_TYPE_BUILTIN);
 
-    // PreferBase, Base first.
-    {
-        OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
-        auto params = setupBasics(merger, MergeStrategy::STRATEGY_PREFER_BASE);
-        merger->getParams(0)->setInputFirst(false);
+            OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), "vt2");
+            OCIO_CHECK_NO_THROW(tf = mergedConfig->getViewTransform("vt2")
+                                                 ->getTransform(OCIO::VIEWTRANSFORM_DIR_TO_REFERENCE));
 
-        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
-        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
-        checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
-                                [&options]() { OCIO::ColorspacesMerger(options).merge(); },
-                                "Input color space 'ACES2065-1' is a duplicate of base color space 'ap0' but was unable to add alias 'aces' since it conflicts with base color space 'ACEScg'");
-
-// FIXME:  Remove the below string and improve the tests above.
-
-        constexpr const char * RESULT {
-R"(ocio_profile_version: 2.1
-
-environment:
-  SHOT: 001a
-  TEXTURE_SPACE: sRGB - Texture
-search_path:
-  - luts
-  - .
-  - lut_dir
-strictparsing: true
-family_separator: "-"
-luma: [0.2126, 0.7152, 0.0722]
-name: base
-roles:
-  cie_xyz_d65_interchange: CIE-XYZ-D65
-file_rules:
-  - !<Rule> {name: Default, colorspace: ACEScg}
-displays:
-  {}
-active_displays: []
-active_views: []
-inactive_colorspaces: [ACES2065-1]
-
-display_colorspaces:
-  - !<ColorSpace>
-    name: sRGB - Display
-    aliases: [srgb_display]
-    family: Base-Display-Basic
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from base
-    isdata: false
-    allocation: uniform
-    from_display_reference: !<BuiltinTransform> {style: DISPLAY - CIE-XYZ-D65_to_sRGB}
-  
-  - !<ColorSpace>
-    name: CIE-XYZ-D65
-    aliases: [cie_xyz_d65]
-    family: "Base-"
-    equalitygroup: ""
-    bitdepth: unknown
-    description: The \"CIE XYZ (D65)\" display connection colorspace.
-    isdata: false
-    allocation: uniform
-
-colorspaces:
-  - !<ColorSpace>
-    name: ACEScg
-    aliases: [aces]
-    family: Base-ACES-Linear
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from base
-    isdata: false
-    allocation: uniform
-    to_scene_reference: !<BuiltinTransform> {style: ACEScg_to_ACES2065-1}
-  
-  - !<ColorSpace>
-    name: ap0
-    aliases: [ACES2065-1]
-    family: Base-ACES-Linear
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from base
-    isdata: false
-    allocation: uniform
-  
-  - !<ColorSpace>
-    name: sRGB - Texture
-    aliases: [srgb, srgb_tx]
-    family: Base-Texture
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from base
-    isdata: false
-    allocation: uniform
-    from_scene_reference: !<GroupTransform>
-      children:
-        - !<MatrixTransform> {matrix: [2.52168618674388, -1.13413098823972, -0.387555198504164, 0, -0.276479914229922, 1.37271908766826, -0.096239173438334, 0, -0.0153780649660342, -0.152975335867399, 1.16835340083343, 0, 0, 0, 0, 1]}
-        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
-  
-  - !<ColorSpace>
-    name: rec709
-    family: "Input-"
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from input
-    isdata: false
-    allocation: uniform
-    to_scene_reference: !<GroupTransform>
-      children:
-        - !<MatrixTransform> {matrix: [0.439632981919492, 0.382988698151554, 0.177378319928956, 0, 0.0897764429588422, 0.813439428748978, 0.0967841282921771, 0, 0.0175411703831728, 0.111546553302387, 0.870912276314442, 0, 0, 0, 0, 1]}
-
-  - !<ColorSpace>
-    name: Raw
-    aliases: [Utility - Raw]
-    family: Input-Utility
-    equalitygroup: ""
-    bitdepth: 32f
-    description: The utility "Raw" colorspace.
-    isdata: true
-    categories: [file-io]
-    allocation: uniform
-)" };
-
-        // Test the entire contents of each config.
-
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getInactiveColorSpaces()), "ACES2065-1");
-
-        std::ostringstream oss;
-        mergedConfig->serialize(oss);
-
-        std::istringstream resultIss;
-        resultIss.str(RESULT);
-        OCIO::ConstConfigRcPtr resultConfig = OCIO::Config::CreateFromStream(resultIss);
-        std::ostringstream ossResult;
-        resultConfig->serialize(ossResult);
-
-//         OCIO_CHECK_EQUAL(oss.str(), ossResult.str());
+            // Validate the reference space conversion was not added to the transform from the base config.
+            OCIO_CHECK_EQUAL(tf->getTransformType(), OCIO::TRANSFORM_TYPE_EXPONENT_WITH_LINEAR);
+        }
     }
 
     // Nothing special to test for Input only and Base only.
@@ -4279,17 +3999,25 @@ OCIO_ADD_TEST(MergeConfigs, named_transform_section)
         OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
         OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
         checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
-                                [&options]() { OCIO::ColorspacesMerger(options).merge(); },
-                                "Color space 'view_1' will replace a color space in the base config");
+            [&options]() { OCIO::ColorspacesMerger(options).merge(); },
+//                                "Color space 'view_1' will replace a color space in the base config");
+            "Equivalent input color space 'ACES2065-1' replaces 'ACES2065-1' in the base config, preserving aliases.",
+            "Equivalent input color space 'ACEScct - SomeOtherName' replaces 'ACEScct' in the base config, preserving aliases.",
+            "Equivalent input color space 'view_1' replaces 'view_1' in the base config, preserving aliases.",
+            "Equivalent input color space 'view_1B' replaces 'view_1' in the base config, preserving aliases.",
+            "Equivalent input color space 'view_3' replaces 'view_2' in the base config, preserving aliases.",
+            "Equivalent input color space 'log_3' replaces 'log_1' in the base config, preserving aliases.",
+            "Equivalent input color space 'lin_3' replaces 'ACES2065-1' in the base config, preserving aliases.");
         checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
-                                [&options]() { OCIO::NamedTransformsMerger(options).merge(); },
-                                "Named transform 'nt_both' will replace a named transform in the base config",
-                                "Merged Base named transform 'nt_both' has a conflict with alias 'srgb_tx' in color space 'sRGB - Texture'",
-                                "Merged Base named transform 'nt_base' has an alias 'view_3' that conflicts with color space 'view_3'",
-                                "Merged Input named transform 'nt_both' has a conflict with alias 'Utility - Raw' in color space 'Raw'",
-                                "The name of merged named transform 'nt_input' has a conflict with an alias in named transform 'nt_base'",
-                                "Merged Input named transform 'nt_input' has an alias 'Raw' that conflicts with color space 'Raw'",
-                                "Named transform 'view_2' was not merged as there's a color space with that name");
+            [&options]() { OCIO::NamedTransformsMerger(options).merge(); },
+            "Named transform 'nt_both' will replace a named transform in the base config",
+            "Merged Base named transform 'nt_both' has a conflict with alias 'srgb_tx' in color space 'sRGB - Texture'",
+            "Merged Base named transform 'nt_base' has an alias 'view_3' that conflicts with color space 'view_3'",
+            "Merged Input named transform 'nt_both' has a conflict with alias 'Utility - Raw' in color space 'Raw'",
+            "The name of merged named transform 'nt_input' has a conflict with an alias in named transform 'nt_base'",
+            "Merged Input named transform 'nt_input' has an alias 'Raw' that conflicts with color space 'Raw'",
+//            "Named transform 'view_2' was not merged as there's a color space with that name");
+            "Named transform 'view_2' was not merged as there's a color space alias with that name.");
 
         OCIO_CHECK_EQUAL(mergedConfig->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_ALL), 3);
 
@@ -4321,17 +4049,25 @@ OCIO_ADD_TEST(MergeConfigs, named_transform_section)
         OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
         OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
         checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
-                                [&options]() { OCIO::ColorspacesMerger(options).merge(); },
-                                "Color space 'view_1' will replace a color space in the base config");
+            [&options]() { OCIO::ColorspacesMerger(options).merge(); },
+//             "Color space 'view_1' will replace a color space in the base config");
+            "Equivalent input color space 'ACES2065-1' replaces 'ACES2065-1' in the base config, preserving aliases.",
+            "Equivalent input color space 'ACEScct - SomeOtherName' replaces 'ACEScct' in the base config, preserving aliases.",
+            "Equivalent input color space 'view_1' replaces 'view_1' in the base config, preserving aliases.",
+            "Equivalent input color space 'view_1B' replaces 'view_1' in the base config, preserving aliases.",
+            "Equivalent input color space 'view_3' replaces 'view_2' in the base config, preserving aliases.",
+            "Equivalent input color space 'log_3' replaces 'log_1' in the base config, preserving aliases.",
+            "Equivalent input color space 'lin_3' replaces 'ACES2065-1' in the base config, preserving aliases.");
         checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
-                                [&options]() { OCIO::NamedTransformsMerger(options).merge(); },
-                                "Named transform 'nt_both' will replace a named transform in the base config",
-                                "Merged Base named transform 'nt_both' has a conflict with alias 'srgb_tx' in color space 'sRGB - Texture'",
-                                "Merged Base named transform 'nt_base' has an alias 'view_3' that conflicts with color space 'view_3'",
-                                "Merged Input named transform 'nt_both' has a conflict with alias 'Utility - Raw' in color space 'Raw'",
-                                "The name of merged named transform 'nt_input' has a conflict with an alias in named transform 'nt_base'",
-                                "Merged Input named transform 'nt_input' has an alias 'Raw' that conflicts with color space 'Raw'",
-                                "Named transform 'view_2' was not merged as there's a color space with that name");
+            [&options]() { OCIO::NamedTransformsMerger(options).merge(); },
+            "Named transform 'nt_both' will replace a named transform in the base config",
+            "Merged Base named transform 'nt_both' has a conflict with alias 'srgb_tx' in color space 'sRGB - Texture'",
+            "Merged Base named transform 'nt_base' has an alias 'view_3' that conflicts with color space 'view_3'",
+            "Merged Input named transform 'nt_both' has a conflict with alias 'Utility - Raw' in color space 'Raw'",
+            "The name of merged named transform 'nt_input' has a conflict with an alias in named transform 'nt_base'",
+            "Merged Input named transform 'nt_input' has an alias 'Raw' that conflicts with color space 'Raw'",
+//            "Named transform 'view_2' was not merged as there's a color space with that name");
+            "Named transform 'view_2' was not merged as there's a color space alias with that name.");
 
         OCIO_CHECK_EQUAL(mergedConfig->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_ALL), 3);
 
@@ -4353,7 +4089,9 @@ OCIO_ADD_TEST(MergeConfigs, named_transform_section)
         OCIO_CHECK_EQUAL(nt->getFamily(), std::string("Input@Raw"));
         OCIO_CHECK_EQUAL(nt->getDescription(), std::string("from input"));
 
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getInactiveColorSpaces()), "Gamma 2.2 AP1 - Texture, Linear Rec.2020, nt_both, nt_input, view_2");
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getInactiveColorSpaces()), 
+///            "Gamma 2.2 AP1 - Texture, Linear Rec.2020, nt_both, nt_input, view_2");
+            "Gamma 2.2 AP1 - Texture, Linear Rec.2020, nt_both, nt_input");
     }
 
     // Test NamedTransform with strategy = PreferBase, options InputFirst = true.
@@ -4364,15 +4102,23 @@ OCIO_ADD_TEST(MergeConfigs, named_transform_section)
         OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
         OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
         checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
-                                [&options]() { OCIO::ColorspacesMerger(options).merge(); },
-                                "Color space 'view_1' was not merged as it's already present in the base config");
+            [&options]() { OCIO::ColorspacesMerger(options).merge(); },
+//             "Color space 'view_1' was not merged as it's already present in the base config");
+            "Equivalent base color space 'ACES2065-1' overrides 'ACES2065-1' in the input config, preserving aliases.",
+            "Equivalent base color space 'ACEScct' overrides 'ACEScct - SomeOtherName' in the input config, preserving aliases.",
+            "Equivalent base color space 'view_1' overrides 'view_1' in the input config, preserving aliases.",
+            "Equivalent base color space 'view_1' overrides 'view_1B' in the input config, preserving aliases.",
+            "Equivalent base color space 'view_2' overrides 'view_3' in the input config, preserving aliases.",
+            "Equivalent base color space 'log_1' overrides 'log_3' in the input config, preserving aliases.",
+            "Equivalent base color space 'ACES2065-1' overrides 'lin_3' in the input config, preserving aliases.");
         checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
-                                [&options]() { OCIO::NamedTransformsMerger(options).merge(); },
-                                "Merged Base named transform 'nt_both' has a conflict with alias 'srgb_tx' in color space 'sRGB - Texture'",
-                                "Merged Base named transform 'nt_base' has an alias 'view_3' that conflicts with color space 'view_3'",
-                                "Named transform 'nt_both' was not merged as it's already present in the base config",
-                                "Named transform 'nt_input' was not merged as it conflicts with an alias in named transform 'nt_base'",
-                                "Named transform 'view_2' was not merged as there's a color space with that name");
+            [&options]() { OCIO::NamedTransformsMerger(options).merge(); },
+            "Merged Base named transform 'nt_both' has a conflict with alias 'srgb_tx' in color space 'sRGB - Texture'",
+//            "Merged Base named transform 'nt_base' has an alias 'view_3' that conflicts with color space 'view_3'",
+            "Merged Base named transform 'nt_base' has a conflict with alias 'view_3' in color space 'view_2'.",
+            "Named transform 'nt_both' was not merged as it's already present in the base config",
+            "Named transform 'nt_input' was not merged as it conflicts with an alias in named transform 'nt_base'",
+            "Named transform 'view_2' was not merged as there's a color space with that name");
 
         OCIO_CHECK_EQUAL(mergedConfig->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_ALL), 2);
 
@@ -4402,15 +4148,23 @@ OCIO_ADD_TEST(MergeConfigs, named_transform_section)
         OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
         OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
         checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
-                                [&options]() { OCIO::ColorspacesMerger(options).merge(); },
-                                "Color space 'view_1' was not merged as it's already present in the base config");
+            [&options]() { OCIO::ColorspacesMerger(options).merge(); },
+//             "Color space 'view_1' was not merged as it's already present in the base config");
+            "Equivalent base color space 'ACES2065-1' overrides 'ACES2065-1' in the input config, preserving aliases.",
+            "Equivalent base color space 'ACEScct' overrides 'ACEScct - SomeOtherName' in the input config, preserving aliases.",
+            "Equivalent base color space 'view_1' overrides 'view_1' in the input config, preserving aliases.",
+            "Equivalent base color space 'view_1' overrides 'view_1B' in the input config, preserving aliases.",
+            "Equivalent base color space 'view_2' overrides 'view_3' in the input config, preserving aliases.",
+            "Equivalent base color space 'log_1' overrides 'log_3' in the input config, preserving aliases.",
+            "Equivalent base color space 'ACES2065-1' overrides 'lin_3' in the input config, preserving aliases.");
         checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
-                                [&options]() { OCIO::NamedTransformsMerger(options).merge(); },
-                                "Merged Base named transform 'nt_both' has a conflict with alias 'srgb_tx' in color space 'sRGB - Texture'",
-                                "Merged Base named transform 'nt_base' has an alias 'view_3' that conflicts with color space 'view_3'",
-                                "Named transform 'nt_both' was not merged as it's already present in the base config",
-                                "Named transform 'nt_input' was not merged as it conflicts with an alias in named transform 'nt_base'",
-                                "Named transform 'view_2' was not merged as there's a color space with that name");
+            [&options]() { OCIO::NamedTransformsMerger(options).merge(); },
+            "Merged Base named transform 'nt_both' has a conflict with alias 'srgb_tx' in color space 'sRGB - Texture'",
+//            "Merged Base named transform 'nt_base' has an alias 'view_3' that conflicts with color space 'view_3'",
+            "Merged Base named transform 'nt_base' has a conflict with alias 'view_3' in color space 'view_2'.",
+            "Named transform 'nt_both' was not merged as it's already present in the base config",
+            "Named transform 'nt_input' was not merged as it conflicts with an alias in named transform 'nt_base'",
+            "Named transform 'view_2' was not merged as there's a color space with that name");
 
         OCIO_CHECK_EQUAL(mergedConfig->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_ALL), 2);
 
@@ -5666,8 +5420,12 @@ OCIO_ADD_TEST(MergeConfigs, merges_with_ociom_file)
                                    [&newMerger, &merger]() { newMerger = OCIO::ConfigMergingHelpers::MergeConfigs(merger); },
                                    "The Input config contains a value that would override the Base config: file_rules: Default",
                                    "Merged color space 'ACES2065-1' has a conflict with alias 'aces' in color space 'ACEScg'",
+                "Equivalent input color space 'sRGB - Display' replaces 'sRGB - Display' in the base config, preserving aliases.",
+                "Equivalent input color space 'CIE-XYZ-D65' replaces 'CIE-XYZ-D65' in the base config, preserving aliases.",
+                "Equivalent input color space 'ACES2065-1' replaces 'ap0' in the base config, preserving aliases.",
+                "Equivalent input color space 'sRGB' replaces 'sRGB - Texture' in the base config, preserving aliases.");
 // TODO: Last one should not be necessary.
-                                   "The Input config contains a role that would override Base config role 'aces_interchange'");
+//                                   "The Input config contains a role that would override Base config role 'aces_interchange'");
             OCIO::ConstConfigRcPtr mergedConfig = newMerger->getMergedConfig();
             std::ostringstream oss;
             mergedConfig->serialize(oss);
@@ -5701,12 +5459,21 @@ displays:
 
 active_displays: []
 active_views: []
-inactive_colorspaces: [ACES2065-1]
 
 view_transforms:
   - !<ViewTransform>
     name: SDR Video
-    from_scene_reference: !<BuiltinTransform> {style: ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-P3lim_1.1}
+    description: from input
+    from_scene_reference: !<GroupTransform>
+      children:
+        - !<MatrixTransform> {matrix: [0.439632981919492, 0.382988698151554, 0.177378319928956, 0, 0.0897764429588422, 0.813439428748978, 0.0967841282921771, 0, 0.0175411703831728, 0.111546553302387, 0.870912276314442, 0, 0, 0, 0, 1], direction: inverse}
+        - !<BuiltinTransform> {style: ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-P3lim_1.1}
+        - !<MatrixTransform> {matrix: [0.412390799266, 0.357584339384, 0.180480788402, 0, 0.212639005872, 0.715168678768, 0.072192315361, 0, 0.019330818716, 0.119194779795, 0.95053215225, 0, 0, 0, 0, 1]}
+
+  - !<ViewTransform>
+    name: vt2
+    description: from base
+    to_display_reference: !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055}
 
 display_colorspaces:
   - !<ColorSpace>
@@ -5807,7 +5574,9 @@ colorspaces:
             resultConfig->serialize(ossResult);
 
             //Testing the string of each config
-//            OCIO_CHECK_EQUAL(oss.str(), ossResult.str());
+
+            OCIO_CHECK_EQUAL(oss.str(), ossResult.str());
+
         }
     }
 /*
@@ -5961,8 +5730,8 @@ colorspaces:
             merger->getParams(0)->setAssumeCommonReferenceSpace(true);
             OCIO::ConstConfigMergerRcPtr newMerger = OCIO::ConfigMergingHelpers::MergeConfigs(merger);
             OCIO::ConstConfigRcPtr mergedConfig = newMerger->getMergedConfig();
-            std::ostringstream oss;
-            mergedConfig->serialize(oss);
+//             std::ostringstream oss;
+//             mergedConfig->serialize(oss);
             OCIO_CHECK_NO_THROW(mergedConfig->validate());
 
           {
@@ -5996,12 +5765,13 @@ colorspaces:
 
         {
             OCIO::ConstConfigMergerRcPtr merger = OCIO::ConfigMerger::CreateFromFile(ociomPath.c_str());
+            merger->getParams(0)->setAssumeCommonReferenceSpace(true);
             // Changing the strategy for colorspace merger to BASE ONLY.
             // This will break the looks "shot_look" (from input) as it needs the search paths 
             // from the input config. (search_paths are managed by the colorspace merger).
             merger->getParams(0)->setColorspaces(OCIO::ConfigMergingParameters::STRATEGY_INPUT_ONLY);
             // The rest of the merges uses PreferInput strategy.
-            
+        
             OCIO::ConstConfigMergerRcPtr newMerger = OCIO::ConfigMergingHelpers::MergeConfigs(merger);
             OCIO::ConstConfigRcPtr mergedConfig = newMerger->getMergedConfig();
             auto look = mergedConfig->getLook("shot_look");
@@ -6012,8 +5782,8 @@ colorspaces:
             // Therefore, the look's FileTransform can not find "look.cdl" and throws an exception.
             OCIO_CHECK_THROW(mergedConfig->getProcessor(ltf), OCIO::Exception);
 
-            // It can happens with any section that uses the search_paths such as looks,
-            // named_transforms and colorspaces.
+            // It can happen with any section that uses the search_paths such as looks,
+            // named transforms, and colorspaces.
         }
     }
 
@@ -6033,8 +5803,8 @@ colorspaces:
             OCIO::ConstConfigMergerRcPtr merger = OCIO::ConfigMerger::CreateFromFile(ociomPath.c_str());
             OCIO::ConstConfigMergerRcPtr newMerger = OCIO::ConfigMergingHelpers::MergeConfigs(merger);
             OCIO::ConstConfigRcPtr mergedConfig = newMerger->getMergedConfig();
-            std::ostringstream oss;
-            mergedConfig->serialize(oss);
+//             std::ostringstream oss;
+//             mergedConfig->serialize(oss);
 
             // Test that the merged config is the same of the built-in config used as input.
             auto bConfig = OCIO::Config::CreateFromBuiltinConfig("cg-config-v1.0.0_aces-v1.3_ocio-v2.1");
@@ -6095,6 +5865,33 @@ colorspaces:
     name: B
     family: aces
 )" };
+
+            constexpr const char * RESULT {
+R"(ocio_profile_version: 2
+
+roles:
+  a: colorspace_a
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: B}
+
+colorspaces:
+  - !<ColorSpace>
+    name: colorspace_a
+    family: Base/utility
+    equalitygroup: ""
+    bitdepth: unknown
+    isdata: false
+    allocation: uniform
+
+  - !<ColorSpace>
+    name: B
+    family: Input/aces
+    equalitygroup: ""
+    bitdepth: unknown
+    isdata: false
+    allocation: uniform)" };
+
         std::istringstream bss(BASE);
         std::istringstream iss(INPUT);
         OCIO::ConstConfigRcPtr baseConfig = OCIO::Config::CreateFromStream(bss);
@@ -6112,11 +5909,34 @@ colorspaces:
         params->setAssumeCommonReferenceSpace(true);
         params->setAvoidDuplicates(false);
 
-        OCIO::ConfigRcPtr mergedConfig = OCIO::ConfigMergingHelpers::MergeConfigs(params, baseConfig, inputConfig);
+//        OCIO::ConfigRcPtr mergedConfig = OCIO::ConfigMergingHelpers::MergeConfigs(params, baseConfig, inputConfig);
+        OCIO::ConfigRcPtr mergedConfig;
 
-    std::ostringstream ossResult;
-    mergedConfig->serialize(ossResult);
-    std::cout << ossResult.str() << "\n";
+        checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
+//                               [&newMerger, &merger]() { newMerger = OCIO::ConfigMergingHelpers::MergeConfigs(merger); },
+                               [&mergedConfig, &params, &baseConfig, &inputConfig]() { mergedConfig = OCIO::ConfigMergingHelpers::MergeConfigs(params, baseConfig, inputConfig); },
+                               "The Input config contains a value that would override the Base config: file_rules: Default");
+//                               "Merged color space 'ACES2065-1' has a conflict with alias 'aces' in color space 'ACEScg'",
+// TODO: Last one should not be necessary.
+//                               "The Input config contains a role that would override Base config role 'aces_interchange'");
+
+
+// FIXME: Add a test to check this result.
+//     std::ostringstream ossResult;
+//     mergedConfig->serialize(ossResult);
+//     std::cout << ossResult.str() << "\n";
+
+            std::ostringstream oss;
+            mergedConfig->serialize(oss);
+
+            std::istringstream resultIss;
+            resultIss.str(RESULT);
+            OCIO::ConstConfigRcPtr resultConfig = OCIO::Config::CreateFromStream(resultIss);
+            std::ostringstream ossResult;
+            resultConfig->serialize(ossResult);
+
+            //Testing the string of each config
+           OCIO_CHECK_EQUAL(oss.str(), ossResult.str());
 }
 
 OCIO_ADD_TEST(MergeConfigs, merge_single_colorspace)
@@ -6167,7 +5987,40 @@ colorspaces:
 
         OCIO::ConfigRcPtr mergedConfig = OCIO::ConfigMergingHelpers::MergeColorSpace(params, baseConfig, colorspace);
 
-    std::ostringstream ossResult;
-    mergedConfig->serialize(ossResult);
-    std::cout << ossResult.str() << "\n";
+// FIXME: Add a test to check this result.
+//     std::ostringstream ossResult;
+//     mergedConfig->serialize(ossResult);
+//     std::cout << ossResult.str() << "\n";
+}
+
+OCIO_ADD_TEST(MergeConfigs, avoid_duplicate_color_spaces)
+{
+    {
+//         std::vector<std::string> paths = { 
+//             std::string(OCIO::GetTestFilesDir()),
+//             std::string("configs"),
+//             std::string("mergeconfigs"),
+//             std::string("merged1"),
+//             std::string("merged1.ociom")
+//         }; 
+//         const std::string ociomPath = pystring::os::path::normpath(pystring::os::path::join(paths));
+        const std::string ociomPath = "/Users/walkerdo/Documents/work/Autodesk/color/adsk_color_mgmt/OCIO/configs/merging/merge_flame_core.ociom";
+
+        // PreferInput, Input first
+        {
+            OCIO::ConstConfigMergerRcPtr merger = OCIO::ConfigMerger::CreateFromFile(ociomPath.c_str());
+            OCIO::ConstConfigMergerRcPtr newMerger;
+//             checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
+//                                    [&newMerger, &merger]() { newMerger = OCIO::ConfigMergingHelpers::MergeConfigs(merger); },
+//                                    "The Input config contains a value that would override the Base config: file_rules: Default",
+//                                    "Merged color space 'ACES2065-1' has a conflict with alias 'aces' in color space 'ACEScg'");
+// TODO: Last one should not be necessary.
+//                                   "The Input config contains a role that would override Base config role 'aces_interchange'");
+            newMerger = OCIO::ConfigMergingHelpers::MergeConfigs(merger);
+            OCIO::ConstConfigRcPtr mergedConfig = newMerger->getMergedConfig();
+            std::ostringstream oss;
+            mergedConfig->serialize(oss);
+//     std::cout << oss.str() << "\n";
+        }
+    }
 }
