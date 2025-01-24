@@ -5427,155 +5427,30 @@ OCIO_ADD_TEST(MergeConfigs, merges_with_ociom_file)
 // TODO: Last one should not be necessary.
 //                                   "The Input config contains a role that would override Base config role 'aces_interchange'");
             OCIO::ConstConfigRcPtr mergedConfig = newMerger->getMergedConfig();
-            std::ostringstream oss;
-            mergedConfig->serialize(oss);
 
-            constexpr const char * RESULT {
-R"(ocio_profile_version: 2.1
+            // This test is essentially the same as the first sub-test in the above test
+            // colorspaces_section_common_reference_and_duplicates.  So just do a quick
+            // sanity test here rather than redoing all the same checks.
 
-environment:
-  SHOT: 001a
-  TEXTURE_SPACE: sRGB - Texture
-search_path:
-  - lut_dir
-  - luts
-  - .
-strictparsing: true
-family_separator: "~"
-luma: [0.2126, 0.7152, 0.0722]
-name: Merged1
-description: Basic merge with default strategy
+            OCIO_CHECK_EQUAL(mergedConfig->getName(), std::string("Merged1"));
+            OCIO_CHECK_EQUAL(mergedConfig->getDescription(), std::string("Basic merge with default strategy"));
+            OCIO_CHECK_EQUAL(mergedConfig->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL, 
+                                                             OCIO::COLORSPACE_ALL), 7);
 
-roles:
-  cie_xyz_d65_interchange: CIE-XYZ-D65
 
-file_rules:
-  - !<Rule> {name: Default, colorspace: sRGB}
 
-displays:
-  sRGB - Display:
-    - !<View> {name: Raw, colorspace: raw}
-    - !<View> {name: ACES 1.0 - SDR Video, view_transform: SDR Video, display_colorspace: sRGB - Display}
-
-active_displays: []
-active_views: []
-
-view_transforms:
-  - !<ViewTransform>
-    name: SDR Video
-    description: from input
-    from_scene_reference: !<GroupTransform>
-      children:
-        - !<MatrixTransform> {matrix: [0.439632981919492, 0.382988698151554, 0.177378319928956, 0, 0.0897764429588422, 0.813439428748978, 0.0967841282921771, 0, 0.0175411703831728, 0.111546553302387, 0.870912276314442, 0, 0, 0, 0, 1], direction: inverse}
-        - !<BuiltinTransform> {style: ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-P3lim_1.1}
-        - !<MatrixTransform> {matrix: [0.412390799266, 0.357584339384, 0.180480788402, 0, 0.212639005872, 0.715168678768, 0.072192315361, 0, 0.019330818716, 0.119194779795, 0.95053215225, 0, 0, 0, 0, 1]}
-
-  - !<ViewTransform>
-    name: vt2
-    description: from base
-    to_display_reference: !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055}
-
-display_colorspaces:
-  - !<ColorSpace>
-    name: sRGB - Display
-    aliases: [srgb_display]
-    family: Display~Standard
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from input
-    isdata: false
-    allocation: uniform
-    from_display_reference: !<GroupTransform>
-      children:
-        - !<MatrixTransform> {matrix: [0.412390799266, 0.357584339384, 0.180480788402, 0, 0.212639005872, 0.715168678768, 0.072192315361, 0, 0.019330818716, 0.119194779795, 0.95053215225, 0, 0, 0, 0, 1], direction: inverse}
-        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
-
-  - !<ColorSpace>
-    name: CIE-XYZ-D65
-    aliases: [cie_xyz_d65]
-    family: ""
-    equalitygroup: ""
-    bitdepth: unknown
-    description: The \"CIE XYZ (D65)\" display connection colorspace.
-    isdata: false
-    allocation: uniform
-    from_display_reference: !<GroupTransform>
-      children:
-        - !<MatrixTransform> {matrix: [0.412390799266, 0.357584339384, 0.180480788402, 0, 0.212639005872, 0.715168678768, 0.072192315361, 0, 0.019330818716, 0.119194779795, 0.95053215225, 0, 0, 0, 0, 1], direction: inverse}
-        - !<MatrixTransform> {matrix: [0.412390799266, 0.357584339384, 0.180480788402, 0, 0.212639005872, 0.715168678768, 0.072192315361, 0, 0.019330818716, 0.119194779795, 0.95053215225, 0, 0, 0, 0, 1]}
-
-colorspaces:
-  - !<ColorSpace>
-    name: ACES2065-1
-    aliases: [aces, ap0]
-    family: ACES~Linear
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from input
-    isdata: false
-    allocation: uniform
-    to_scene_reference: !<GroupTransform>
-      children:
-        - !<MatrixTransform> {matrix: [2.521686186744, -1.13413098824, -0.387555198504, 0, -0.27647991423, 1.372719087668, -0.096239173438, 0, -0.015378064966, -0.152975335867, 1.168353400833, 0, 0, 0, 0, 1]}
-        - !<MatrixTransform> {matrix: [0.439632981919492, 0.382988698151554, 0.177378319928956, 0, 0.0897764429588422, 0.813439428748978, 0.0967841282921771, 0, 0.0175411703831728, 0.111546553302387, 0.870912276314442, 0, 0, 0, 0, 1]}
-
-  - !<ColorSpace>
-      name: sRGB
-      aliases: [sRGB - Texture, srgb_tx]
-      family: Texture~
-      equalitygroup: ""
-      bitdepth: unknown
-      description: from input
-      isdata: false
-      allocation: uniform
-      to_scene_reference: !<GroupTransform>
-        children:
-          - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055}
-          - !<MatrixTransform> {matrix: [0.439632981919492, 0.382988698151554, 0.177378319928956, 0, 0.0897764429588422, 0.813439428748978, 0.0967841282921771, 0, 0.0175411703831728, 0.111546553302387, 0.870912276314442, 0, 0, 0, 0, 1]}
-
-  - !<ColorSpace>
-    name: rec709
-    family: ""
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from input
-    isdata: false
-    allocation: uniform
-    to_scene_reference: !<GroupTransform>
-      children:
-        - !<MatrixTransform> {matrix: [0.439632981919492, 0.382988698151554, 0.177378319928956, 0, 0.0897764429588422, 0.813439428748978, 0.0967841282921771, 0, 0.0175411703831728, 0.111546553302387, 0.870912276314442, 0, 0, 0, 0, 1]}
-
-  - !<ColorSpace>
-    name: Raw
-    aliases: [Utility - Raw]
-    family: Utility
-    equalitygroup: ""
-    bitdepth: 32f
-    description: The utility "Raw" colorspace.
-    isdata: true
-    categories: [file-io]
-    allocation: uniform
-
-  - !<ColorSpace>
-    name: ACEScg
-    family: ACES~Linear
-    equalitygroup: ""
-    bitdepth: unknown
-    description: from base
-    isdata: false
-    allocation: uniform
-    to_scene_reference: !<BuiltinTransform> {style: ACEScg_to_ACES2065-1}
-    )" };
-
-            std::istringstream resultIss;
-            resultIss.str(RESULT);
-            OCIO::ConstConfigRcPtr resultConfig = OCIO::Config::CreateFromStream(resultIss);
-            std::ostringstream ossResult;
-            resultConfig->serialize(ossResult);
-
-            //Testing the string of each config
-
-            OCIO_CHECK_EQUAL(oss.str(), ossResult.str());
+//             std::ostringstream oss;
+//             mergedConfig->serialize(oss);
+// 
+//             std::istringstream resultIss;
+//             resultIss.str(RESULT);
+//             OCIO::ConstConfigRcPtr resultConfig = OCIO::Config::CreateFromStream(resultIss);
+//             std::ostringstream ossResult;
+//             resultConfig->serialize(ossResult);
+// 
+//             //Testing the string of each config
+// 
+//             OCIO_CHECK_EQUAL(oss.str(), ossResult.str());
 
         }
     }
@@ -5993,6 +5868,7 @@ colorspaces:
 //     std::cout << ossResult.str() << "\n";
 }
 
+/*
 OCIO_ADD_TEST(MergeConfigs, avoid_duplicate_color_spaces)
 {
     {
@@ -6004,6 +5880,7 @@ OCIO_ADD_TEST(MergeConfigs, avoid_duplicate_color_spaces)
 //             std::string("merged1.ociom")
 //         }; 
 //         const std::string ociomPath = pystring::os::path::normpath(pystring::os::path::join(paths));
+
         const std::string ociomPath = "/Users/walkerdo/Documents/work/Autodesk/color/adsk_color_mgmt/OCIO/configs/merging/merge_flame_core.ociom";
 
         // PreferInput, Input first
@@ -6024,3 +5901,4 @@ OCIO_ADD_TEST(MergeConfigs, avoid_duplicate_color_spaces)
         }
     }
 }
+*/
