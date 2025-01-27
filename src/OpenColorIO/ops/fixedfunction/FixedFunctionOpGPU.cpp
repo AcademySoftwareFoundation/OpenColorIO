@@ -728,13 +728,16 @@ std::string _Add_Cusp_table(
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.intDecl("i_lo") << " = 0;";
-    ss.newLine() << ss.intDecl("i_hi") << " = " << g.gamut_cusp_table.base_index + g.gamut_cusp_table.size << ";";
-
     ss.newLine() << ss.floatDecl("hwrap") << " = h;";
     ss.newLine() << "hwrap = hwrap - floor(hwrap / 360.0) * 360.0;";
     ss.newLine() << "hwrap = (hwrap < 0.0) ? hwrap + 360.0 : hwrap;";
     ss.newLine() << ss.intDecl("i") << " = " << ss.intKeyword() << "(hwrap + " << g.gamut_cusp_table.base_index << ");";
+
+    ss.newLine() << ss.intDecl("i_lo") << " = " << ss.intKeyword() << "(max(0, "
+                 << ss.floatKeyword() << "(i + " << g.hue_linearity_search_range[0] << ")));";
+    ss.newLine() << ss.intDecl("i_hi") << " = " << ss.intKeyword() << "(min("
+                 << ss.floatKeyword() << "(" << g.gamut_cusp_table.base_index + g.gamut_cusp_table.size << "), "
+                 << ss.floatKeyword() << "(i + " << g.hue_linearity_search_range[1] << ")));";
 
     ss.newLine() << "while (i_lo + 1 < i_hi)";
     ss.newLine() << "{";
