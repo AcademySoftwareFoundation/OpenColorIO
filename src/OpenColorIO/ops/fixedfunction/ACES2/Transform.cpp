@@ -307,7 +307,7 @@ inline float toe_inv( float x, float limit, float k1_in, float k2_in)
 }
 
 template <bool inverse>
-inline float aces_tonescale(const float Y_in, const JMhParams &p, const ToneScaleParams &pt)
+inline float aces_tonescale(const float Y_in, const ToneScaleParams &pt)
 {
     if (inverse)
     {
@@ -329,7 +329,7 @@ inline float tonescale(const float J, const JMhParams &p, const ToneScaleParams 
     // Tonescale applied in Y (convert to and from J)
     const float J_abs = std::abs(J);
     const float Y_in  = _J_to_Y(J_abs, p);
-    const float Y_out = aces_tonescale<inverse>(Y_in, p, pt);
+    const float Y_out = aces_tonescale<inverse>(Y_in, pt);
     const float J_out = _Y_to_J(Y_out, p);
     return std::copysign(J_out, J);
 }
@@ -344,7 +344,7 @@ float tonescale_inv(const float J, const JMhParams &p, const ToneScaleParams &pt
     return tonescale<true>(J, p, pt);
 }
 
-f3 chroma_compress_fwd(const f3 &JMh, const float J_ts, const JMhParams &p, const ResolvedSharedCompressionParameters &pr, const ChromaCompressParams &pc)
+f3 chroma_compress_fwd(const f3 &JMh, const float J_ts, const ResolvedSharedCompressionParameters &pr, const ChromaCompressParams &pc)
 {
     const float J = JMh[0];
     const float M = JMh[1];
@@ -369,7 +369,7 @@ f3 chroma_compress_fwd(const f3 &JMh, const float J_ts, const JMhParams &p, cons
     return {J_ts, M_cp, h};
 }
 
-f3 chroma_compress_inv(const f3 &JMh, const float J, const JMhParams &p, const ResolvedSharedCompressionParameters &pr, const ChromaCompressParams &pc)
+f3 chroma_compress_inv(const f3 &JMh, const float J, const ResolvedSharedCompressionParameters &pr, const ChromaCompressParams &pc)
 {
     const float J_ts = JMh[0];
     const float M_cp = JMh[1];

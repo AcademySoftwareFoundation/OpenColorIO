@@ -788,8 +788,7 @@ std::string _Add_Cusp_table(
 std::string _Add_Focus_Gain_func(
     GpuShaderCreatorRcPtr & shaderCreator,
     unsigned resourceIndex,
-    const ACES2::SharedCompressionParameters & s,
-    const ACES2::GamutCompressParams & g)
+    const ACES2::SharedCompressionParameters & s)
 {
     // Reserve name
     std::ostringstream resName;
@@ -835,8 +834,7 @@ std::string _Add_Focus_Gain_func(
 std::string _Add_Solve_J_Intersect_func(
     GpuShaderCreatorRcPtr & shaderCreator,
     unsigned resourceIndex,
-    const ACES2::SharedCompressionParameters & s,
-    const ACES2::GamutCompressParams & g)
+    const ACES2::SharedCompressionParameters & s)
 {
     // Reserve name
     std::ostringstream resName;
@@ -915,7 +913,6 @@ std::string _Add_Find_Gamut_Boundary_Intersection_func(
     GpuShaderCreatorRcPtr & shaderCreator,
     unsigned resourceIndex,
     const ACES2::SharedCompressionParameters & s,
-    const ACES2::GamutCompressParams & g,
     const std::string & solveJIntersectName)
 {
     // Reserve name
@@ -1114,7 +1111,6 @@ std::string _Add_Compress_Gamut_func(
     unsigned resourceIndex,
     const ACES2::SharedCompressionParameters & s,
     const ACES2::GamutCompressParams & g,
-    const std::string & cuspName,
     const std::string & getFocusGainName,
     const std::string & findGamutBoundaryIntersectionName,
     const std::string & getReachBoundaryName,
@@ -1206,12 +1202,12 @@ void _Add_Gamut_Compress_Fwd_Shader(
     const std::string & reachName)
 {
     std::string cuspName = _Add_Cusp_table(shaderCreator, resourceIndex, g);
-    std::string getFocusGainName = _Add_Focus_Gain_func(shaderCreator, resourceIndex, s, g);
-    std::string solveJIntersectName = _Add_Solve_J_Intersect_func(shaderCreator, resourceIndex, s, g);
-    std::string findGamutBoundaryIntersectionName = _Add_Find_Gamut_Boundary_Intersection_func(shaderCreator, resourceIndex, s, g, solveJIntersectName);
+    std::string getFocusGainName = _Add_Focus_Gain_func(shaderCreator, resourceIndex, s);
+    std::string solveJIntersectName = _Add_Solve_J_Intersect_func(shaderCreator, resourceIndex, s);
+    std::string findGamutBoundaryIntersectionName = _Add_Find_Gamut_Boundary_Intersection_func(shaderCreator, resourceIndex, s, solveJIntersectName);
     std::string getReachBoundaryName = _Add_Reach_Boundary_func(shaderCreator, resourceIndex, s, g, reachName, getFocusGainName, solveJIntersectName);
     std::string compressionName = _Add_Compression_func(shaderCreator, resourceIndex, false);
-    std::string gamutCompressName = _Add_Compress_Gamut_func(shaderCreator, resourceIndex, s, g, cuspName, getFocusGainName, findGamutBoundaryIntersectionName, getReachBoundaryName, compressionName);
+    std::string gamutCompressName = _Add_Compress_Gamut_func(shaderCreator, resourceIndex, s, g, getFocusGainName, findGamutBoundaryIntersectionName, getReachBoundaryName, compressionName);
 
     const std::string pxl(shaderCreator->getPixelName());
 
@@ -1228,12 +1224,12 @@ void _Add_Gamut_Compress_Inv_Shader(
     const std::string & reachName)
 {
     std::string cuspName = _Add_Cusp_table(shaderCreator, resourceIndex, g);
-    std::string getFocusGainName = _Add_Focus_Gain_func(shaderCreator, resourceIndex, s, g);
-    std::string solveJIntersectName = _Add_Solve_J_Intersect_func(shaderCreator, resourceIndex,s, g);
-    std::string findGamutBoundaryIntersectionName = _Add_Find_Gamut_Boundary_Intersection_func(shaderCreator, resourceIndex, s, g, solveJIntersectName);
+    std::string getFocusGainName = _Add_Focus_Gain_func(shaderCreator, resourceIndex, s);
+    std::string solveJIntersectName = _Add_Solve_J_Intersect_func(shaderCreator, resourceIndex, s);
+    std::string findGamutBoundaryIntersectionName = _Add_Find_Gamut_Boundary_Intersection_func(shaderCreator, resourceIndex, s, solveJIntersectName);
     std::string getReachBoundaryName = _Add_Reach_Boundary_func(shaderCreator, resourceIndex, s, g, reachName, getFocusGainName, solveJIntersectName);
     std::string compressionName = _Add_Compression_func(shaderCreator, resourceIndex, true);
-    std::string gamutCompressName = _Add_Compress_Gamut_func(shaderCreator, resourceIndex, s, g, cuspName, getFocusGainName, findGamutBoundaryIntersectionName, getReachBoundaryName, compressionName);
+    std::string gamutCompressName = _Add_Compress_Gamut_func(shaderCreator, resourceIndex, s, g, getFocusGainName, findGamutBoundaryIntersectionName, getReachBoundaryName, compressionName);
 
     const std::string pxl(shaderCreator->getPixelName());
 
