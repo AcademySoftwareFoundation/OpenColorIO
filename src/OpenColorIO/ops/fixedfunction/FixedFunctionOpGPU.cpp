@@ -423,7 +423,7 @@ std::string _Add_Reach_table(
     shaderCreator->addTexture(
         name.c_str(),
         GpuShaderText::getSamplerName(name).c_str(),
-        table.nominal_size, // TODO: be careful if reach ever has a base_offset added to it
+        table.total_size,
         1,
         GpuShaderCreator::TEXTURE_RED_CHANNEL,
         dimensions,
@@ -455,22 +455,21 @@ std::string _Add_Reach_table(
     ss.newLine() << "hwrap = hwrap - floor(hwrap / 360.0) * 360.0;";
     ss.newLine() << "hwrap = (hwrap < 0.0) ? hwrap + 360.0 : hwrap;";
 
-    ss.newLine() << ss.floatDecl("i_lo") << " = floor(hwrap);";
-    ss.newLine() << ss.floatDecl("i_hi") << " = (i_lo + 1);";
-    ss.newLine() << "i_hi = i_hi - floor(i_hi / 360.0) * 360.0;";
+    ss.newLine() << ss.floatDecl("i_lo") << " = floor(hwrap) + " << table.base_index << ";";
+    ss.newLine() << ss.floatDecl("i_hi") << " = i_lo + 1;";
 
     if (dimensions == GpuShaderDesc::TEXTURE_1D)
     {
-        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex1D(name, "(i_lo + 0.5) / 360.0") << ".r;";
-        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex1D(name, "(i_hi + 0.5) / 360.0") << ".r;";
+        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex1D(name, "(i_lo + 0.5) / " + std::to_string(table.total_size)) << ".r;";
+        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex1D(name, "(i_hi + 0.5) / " + std::to_string(table.total_size)) << ".r;";
     }
     else
     {
-        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex2D(name, ss.float2Const("(i_lo + 0.5) / 360.0", "0.0")) << ".r;";
-        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex2D(name, ss.float2Const("(i_hi + 0.5) / 360.0", "0.5")) << ".r;";
+        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex2D(name, ss.float2Const("(i_lo + 0.5) / " + std::to_string(table.total_size), "0.0")) << ".r;";
+        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex2D(name, ss.float2Const("(i_hi + 0.5) / " + std::to_string(table.total_size), "0.5")) << ".r;";
     }
 
-    ss.newLine() << ss.floatDecl("t") << " = (h - i_lo) / (i_hi - i_lo);";
+    ss.newLine() << ss.floatDecl("t") << " = h - i_lo;"; // Hardcoded single degree spacing
     ss.newLine() << "return " << ss.lerp("lo", "hi", "t") << ";";
 
     ss.dedent();

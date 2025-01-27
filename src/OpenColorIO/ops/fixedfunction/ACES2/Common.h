@@ -59,23 +59,24 @@ struct TableBase
 
     inline float base_hue_for_position(int i_lo) const
     {
+        if (hue_limit == float(nominal_size)) // TODO C++ 17 if constexpr
+            return float(i_lo);
+
         const float result = i_lo * hue_limit / nominal_size;
         return result;
     }
 
     inline int hue_position_in_uniform_table(float wrapped_hue) const 
     {
-        return int(wrapped_hue / hue_limit * float(nominal_size)); // TODO: can we use the 'lost' fraction for the lerps?
+        if (hue_limit == float(nominal_size)) // TODO C++ 17 if constexpr
+            return int(wrapped_hue);
+        else
+            return int(wrapped_hue / hue_limit * float(nominal_size)); // TODO: can we use the 'lost' fraction for the lerps?
     }
 
    inline int nominal_hue_position_in_uniform_table(float wrapped_hue) const 
     {
         return first_nominal_index + hue_position_in_uniform_table(wrapped_hue);
-    }
-
-    inline int next_position_in_table(int entry) const
-    {
-        return (entry + 1) % nominal_size;
     }
 
     inline int clamp_to_table_bounds(int entry) const // TODO: this should be removed if we can constrain the hue range properly

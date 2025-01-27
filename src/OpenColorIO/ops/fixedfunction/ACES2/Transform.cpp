@@ -89,10 +89,10 @@ inline f3 cusp_from_table(int i_hi, float t, const Table3D &gt)
 
 float reach_m_from_table(float h, const ACES2::Table1D &rt)
 {
-    const int i_lo = rt.clamp_to_table_bounds(rt.hue_position_in_uniform_table(h));  // TODO: this should be removed if we can constrain the hue range properly
-    const int i_hi = rt.next_position_in_table(i_lo);
+    const int i_lo = rt.nominal_hue_position_in_uniform_table(h); 
+    const int i_hi = i_lo + 1; // NOTE assumes uniform 1 degree 360 spacing 
 
-    const float t = interpolation_weight(h, i_lo, i_hi);
+    const float t = h - i_lo; // NOTE assumes uniform 1 degree 360 spacing // interpolation_weight(h, i_lo, i_hi);
     return lerpf(rt[i_lo], rt[i_hi], t);
 }
 
@@ -854,8 +854,10 @@ Table1D make_reach_m_table(const JMhParams &params, const float limit_J_max)
             }
         }
 
-        gamutReachTable[i] = high;
+        gamutReachTable[i + gamutReachTable.base_index] = high;
     }
+    gamutReachTable[gamutReachTable.lower_wrap_index] = gamutReachTable[gamutReachTable.last_nominal_index];
+    gamutReachTable[gamutReachTable.upper_wrap_index] = gamutReachTable[gamutReachTable.first_nominal_index];
 
     return gamutReachTable;
 }
