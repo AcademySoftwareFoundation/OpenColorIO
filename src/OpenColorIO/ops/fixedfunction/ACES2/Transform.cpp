@@ -38,17 +38,17 @@ inline int clamp_to_table_bounds(int entry, int table_size) // TODO: this should
     return std::min(table_size - 1, std::max(0, entry));
 }
 
-int lookup_hue_interval(float h, const Table3D &gt, const std::array<int, 2> & hue_linearity_search_range)
+int lookup_hue_interval(float h, const Table1D &hues, const std::array<int, 2> & hue_linearity_search_range)
 {
     // Search the given Table for the interval containing the desired hue
-    // Retruns the upper index of the interval
-    int i = hue_position_in_uniform_table(h, gt.size) + gt.base_index;
+    // Returns the upper index of the interval
+    int i = hue_position_in_uniform_table(h, hues.size) + hues.base_index;
     int i_lo = std::max(0, i + hue_linearity_search_range[0]);
-    int i_hi = std::min(gt.base_index + gt.size, i + hue_linearity_search_range[1]);
+    int i_hi = std::min(hues.base_index + hues.size, i + hue_linearity_search_range[1]);
 
     while (i_lo + 1 < i_hi)
     {
-        if (h > gt.table[i][2])
+        if (h > hues.table[i])
         {
             i_lo = i;
         }
@@ -69,49 +69,21 @@ inline float interpolation_weight(float h, float h_lo, float h_hi)
     return (h - h_lo) / (h_hi - h_lo);
 }
 
-
-f2 cusp_from_table(float h, const Table3D &gt, const std::array<int, 2> & hue_linearity_search_range)
+inline f3 cusp_from_table(int i_hi, float t, const Table3D &gt)
 {
-    const int i_hi = lookup_hue_interval(h, gt, hue_linearity_search_range);
-
-    const f3 lo {
-        gt.table[i_hi-1][0],
-        gt.table[i_hi-1][1],
-        gt.table[i_hi-1][2]
-    };
-
-    const f3 hi {
-        gt.table[i_hi][0],
-        gt.table[i_hi][1],
-        gt.table[i_hi][2]
-    };
-
-    const float t = interpolation_weight(h, lo[2], hi[2]);
-    const float cuspJ = lerpf(lo[0], hi[0], t);
-    const float cuspM = lerpf(lo[1], hi[1], t);
-
-    return { cuspJ, cuspM };
+    const float cuspJ = lerpf(gt.table[i_hi-1][0], gt.table[i_hi][0], t);
+    const float cuspM = lerpf(gt.table[i_hi-1][1], gt.table[i_hi][1], t);
+    const float upperGamma = lerpf(gt.table[i_hi-1][2], gt.table[i_hi][2], t);
+    return { cuspJ, cuspM, upperGamma };
 }
 
-float reach_m_from_table(float h, const ACES2::Table1D &gt)
+float reach_m_from_table(float h, const ACES2::Table1D &rt)
 {
-    const int i_lo = clamp_to_table_bounds(hue_position_in_uniform_table(h, gt.size), gt.total_size);  // TODO: this should be removed if we can constrain the hue range properly
-    const int i_hi = next_position_in_table(i_lo, gt.size);
+    const int i_lo = clamp_to_table_bounds(hue_position_in_uniform_table(h, rt.size), rt.total_size);  // TODO: this should be removed if we can constrain the hue range properly
+    const int i_hi = next_position_in_table(i_lo, rt.size);
 
     const float t = interpolation_weight(h, i_lo, i_hi);
-    return lerpf(gt.table[i_lo], gt.table[i_hi], t);
-}
-
-float hue_dependent_upper_hull_gamma(float h, const ACES2::Table1D &gt)
-{
-    const int i_lo = clamp_to_table_bounds(hue_position_in_uniform_table(h, gt.size) + gt.base_index, gt.total_size);  // TODO: this should be removed if we can constrain the hue range properly
-    const int i_hi = next_position_in_table(i_lo, gt.size);
-
-    const float base_hue = base_hue_for_position(i_lo - gt.base_index, gt.size);
-
-    const float t = h - base_hue;
-
-    return lerpf(gt.table[i_lo], gt.table[i_hi], t);
+    return lerpf(rt.table[i_lo], rt.table[i_hi], t);
 }
 
 //
@@ -468,7 +440,7 @@ JMhParams init_JMhParams(const Primaries &prims)
    return p;
 }
 
-Table3D make_gamut_table(const JMhParams &params, float peakLuminance)
+Table3D make_gamut_table(const JMhParams &params, float peakLuminance, Table1D& hue_table)
 {
     Table3D gamutCuspTableUnsorted{};
     int minhIndex = 0;
@@ -508,6 +480,12 @@ Table3D make_gamut_table(const JMhParams &params, float peakLuminance)
     // Wrap the hues, to maintain monotonicity. These entries will fall outside [0.0, hue_limit)
     gamutCuspTable.table[0][2] = gamutCuspTable.table[0][2] - hue_limit;
     gamutCuspTable.table[gamutCuspTable.size+1][2] = gamutCuspTable.table[gamutCuspTable.size+1][2] + hue_limit;
+
+    // Extract hue table
+    for (int i = 0; i < gamutCuspTable.total_size; i++)
+    {
+        hue_table.table[i] = gamutCuspTable.table[i][2];
+    }
     return gamutCuspTable;
 }
 
@@ -768,12 +746,17 @@ inline float compute_focusJ(float cusp_J, float mid_J, float limit_J_max)
     return lerpf(cusp_J, mid_J, std::min(1.f, cusp_mid_blend - (cusp_J / limit_J_max)));
 }
 
-HueDependantGamutParams init_HueDependantGamutParams(const f3 &JMh, const ResolvedSharedCompressionParameters &sr, const GamutCompressParams &p)
+HueDependantGamutParams init_HueDependantGamutParams(const float hue, const ResolvedSharedCompressionParameters &sr, const GamutCompressParams &p)
 {
     HueDependantGamutParams hdp;
-    hdp.gamma_top_inv = hue_dependent_upper_hull_gamma(JMh[2], p.upper_hull_gamma_inv_table);
     hdp.gamma_bottom_inv = p.lower_hull_gamma_inv;
-    hdp.JMcusp = cusp_from_table(JMh[2], p.gamut_cusp_table, p.hue_linearity_search_range);
+
+    const int i_hi = lookup_hue_interval(hue, p.hue_table, p.hue_linearity_search_range);
+    const float t = interpolation_weight(hue, p.hue_table.table[i_hi-1], p.hue_table.table[i_hi]);
+    const f3 cusp = cusp_from_table(i_hi, t, p.gamut_cusp_table);
+
+    hdp.JMcusp = { cusp[0], cusp[1] };
+    hdp.gamma_top_inv = { cusp[2] };
     hdp.focusJ = compute_focusJ(hdp.JMcusp[0], p.mid_J, sr.limit_J_max);
     hdp.analytical_threshold = lerpf(hdp.JMcusp[0], sr.limit_J_max, focus_gain_blend);
     return hdp;
@@ -781,14 +764,14 @@ HueDependantGamutParams init_HueDependantGamutParams(const f3 &JMh, const Resolv
 
 f3 gamut_compress_fwd(const f3 &JMh, const ResolvedSharedCompressionParameters &sr, const GamutCompressParams &p)
 {
-    const HueDependantGamutParams hdp = init_HueDependantGamutParams(JMh, sr, p);
+    const HueDependantGamutParams hdp = init_HueDependantGamutParams(JMh[2], sr, p);
     
     return compressGamut<false>(JMh, JMh[0], sr, p, hdp);
 }
 
 f3 gamut_compress_inv(const f3 &JMh, const ResolvedSharedCompressionParameters &sr, const GamutCompressParams &p)
 {
-    const HueDependantGamutParams hdp = init_HueDependantGamutParams(JMh, sr, p);
+    const HueDependantGamutParams hdp = init_HueDependantGamutParams(JMh[2], sr, p);
 
     float Jx = JMh[0];
     if (Jx > hdp.analytical_threshold)
@@ -838,8 +821,9 @@ bool evaluate_gamma_fit(
     return true;
 }
 
-Table1D make_upper_hull_gamma(
-    const Table3D &gamutCuspTable,
+void make_upper_hull_gamma(
+    const Table1D &hue_table,
+    Table3D &gamutCuspTable,
     const std::array<int, 2> & hue_linearity_search_range,
     float peakLuminance,
     float limit_J_max,
@@ -850,14 +834,16 @@ Table1D make_upper_hull_gamma(
 {
     const std::array<float, gamma_test_count> testPositions = {0.01f, 0.1f, 0.5f, 0.8f, 0.99f};
 
-    Table1D gamutTopGamma{};
-
-    for (int i = 0; i < gamutTopGamma.size; i++)
+    for (int i = gamutCuspTable.base_index; i < gamutCuspTable.base_index + gamutCuspTable.size; i++)
     {
-        gamutTopGamma.table[i + gamutTopGamma.base_index] = -1.f;
+        gamutCuspTable.table[i][2] = -1.f;
 
-        const float hue = base_hue_for_position(i, gamutTopGamma.size);
-        const f2 JMcusp = cusp_from_table(hue, gamutCuspTable, hue_linearity_search_range);
+        const float hue = hue_table.table[i];
+        const int i_hi = lookup_hue_interval(hue, hue_table, hue_linearity_search_range);
+        const float t = interpolation_weight(hue, hue_table.table[i_hi-1], hue_table.table[i_hi]);
+
+        const f3 cusp = cusp_from_table(i_hi, t, gamutCuspTable);
+        const f2 JMcusp = { cusp[0], cusp[1] };
 
         std::array<f3, gamma_test_count> testJMh;
         std::generate(testJMh.begin(), testJMh.end(), [JMcusp, limit_J_max, testPositions, hue, testIndex = 0]() mutable {
@@ -901,7 +887,7 @@ Table1D make_upper_hull_gamma(
             if (gammaFound)
             {
                 high = testGamma;
-                gamutTopGamma.table[i + gamutTopGamma.base_index] = 1.0f / high;
+                gamutCuspTable.table[i][2] = 1.0f / high;
             }
             else
             {
@@ -911,10 +897,8 @@ Table1D make_upper_hull_gamma(
     }
 
     // Copy last populated entries to empty spot 'wrapping' entries
-    gamutTopGamma.table[0] = gamutTopGamma.table[gamutTopGamma.base_index + gamutTopGamma.size - 1];
-    gamutTopGamma.table[gamutTopGamma.base_index + gamutTopGamma.size] = gamutTopGamma.table[gamutCuspTable.base_index];
-
-    return gamutTopGamma;
+    gamutCuspTable.table[0][2] = gamutCuspTable.table[gamutCuspTable.base_index + gamutCuspTable.size - 1][2];
+    gamutCuspTable.table[gamutCuspTable.base_index + gamutCuspTable.size][2] = gamutCuspTable.table[gamutCuspTable.base_index][2];
 }
 
 // Tonescale pre-calculations
@@ -1045,11 +1029,11 @@ GamutCompressParams init_GamutCompressParams(float peakLuminance, const JMhParam
     params.mid_J = mid_J;
     params.focus_dist = focus_dist;
     params.lower_hull_gamma_inv = lower_hull_gamma_inv;
-    params.gamut_cusp_table = make_gamut_table(limitJMhParams, peakLuminance);
+    params.gamut_cusp_table = make_gamut_table(limitJMhParams, peakLuminance, params.hue_table);
     params.hue_linearity_search_range = determine_hue_linearity_search_range(params.gamut_cusp_table);
-    params.upper_hull_gamma_inv_table = make_upper_hull_gamma(params.gamut_cusp_table, params.hue_linearity_search_range,
-                                                              peakLuminance, shParams.limit_J_max, mid_J, focus_dist,
-                                                              lower_hull_gamma_inv, limitJMhParams); //TODO: mess of parameters
+    make_upper_hull_gamma(params.hue_table, params.gamut_cusp_table, params.hue_linearity_search_range,
+                          peakLuminance, shParams.limit_J_max, mid_J, focus_dist,
+                          lower_hull_gamma_inv, limitJMhParams); //TODO: mess of parameters
     return params;
 }
 

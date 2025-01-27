@@ -87,9 +87,9 @@ struct ChromaCompressParams
 
 struct HueDependantGamutParams
 {
-    float gamma_top_inv;
     float gamma_bottom_inv;
     f2 JMcusp;
+    float gamma_top_inv;
     float focusJ;
     float analytical_threshold;
 };
@@ -99,8 +99,8 @@ struct GamutCompressParams
     float focus_dist;
     float lower_hull_gamma_inv;
     std::array<int, 2> hue_linearity_search_range;
+    Table1D hue_table;;
     Table3D gamut_cusp_table;
-    Table1D upper_hull_gamma_inv_table;
 };
 
 // CAM
