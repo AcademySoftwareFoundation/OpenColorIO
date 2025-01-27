@@ -14,26 +14,82 @@ namespace OCIO_NAMESPACE
 
 namespace ACES2
 {
+constexpr float PI = 3.14159265358979f;
 
-constexpr int TABLE_SIZE = 360;
-constexpr int TABLE_ADDITION_ENTRIES = 2;
-constexpr int TABLE_TOTAL_SIZE = TABLE_SIZE + TABLE_ADDITION_ENTRIES;
-constexpr int TABLE_BASE_INDEX = 1;
-
-struct Table3D
+constexpr float hue_limit = 360.0f;
+//constexpr float hue_limit = 2.0f * PI;
+inline float _wrap_to_hue_limit(float y)
 {
-    static constexpr int base_index = TABLE_BASE_INDEX;
-    static constexpr int size = TABLE_SIZE;
-    static constexpr int total_size = TABLE_TOTAL_SIZE;
-    float table[TABLE_TOTAL_SIZE][3];
+    if ( y < 0.f)
+    {
+        y = y + hue_limit;
+    }
+    return y;
+}
+
+inline float wrap_to_hue_limit(float hue)
+{
+    float y = std::fmod(hue, hue_limit);
+    return _wrap_to_hue_limit(y);
+}
+inline constexpr float to_degrees(const float v) { return v; }
+inline float from_degrees(const float v) { return wrap_to_hue_limit(v); }
+inline constexpr float to_radians(const float v) { return PI * v / 180.0f; };
+inline float _from_radians(const float v) { return _wrap_to_hue_limit(180.0f * v / PI); }; // v needs to be wrapped already
+inline float from_radians(const float v) { return wrap_to_hue_limit(180.0f * v / PI); };
+/*
+inline constexpr float to_degrees(const float v) { return 180.0f * v / PI; }
+inline float from_degrees(const float v) { return wrap_to_hue_limit(PI * v / 180.0f); }
+inline constexpr float to_radians(const float v) { return v; }
+inline float _from_radians(const float v) { return _wrap_to_hue_limit(v); };
+inline float from_radians(const float v) { return wrap_to_hue_limit(v); };
+*/
+
+struct TableBase
+{
+    static constexpr int _TABLE_ADDITION_ENTRIES = 2;
+    static constexpr int base_index = 1;
+    static constexpr int nominal_size = 360;
+    static constexpr int total_size = nominal_size + _TABLE_ADDITION_ENTRIES;
+
+    static constexpr int lower_wrap_index = 0;
+    static constexpr int upper_wrap_index = base_index + nominal_size;
+    static constexpr int first_nominal_index = base_index;
+    static constexpr int last_nominal_index = upper_wrap_index - 1;
+
+    inline float base_hue_for_position(int i_lo) const
+    {
+        const float result = i_lo * hue_limit / nominal_size;
+        return result;
+    }
+
+    inline int hue_position_in_uniform_table(float wrapped_hue) const 
+    {
+        return int(wrapped_hue / hue_limit * float(nominal_size)); // TODO: can we use the 'lost' fraction for the lerps?
+    }
+
+   inline int nominal_hue_position_in_uniform_table(float wrapped_hue) const 
+    {
+        return first_nominal_index + hue_position_in_uniform_table(wrapped_hue);
+    }
+
+    inline int next_position_in_table(int entry) const
+    {
+        return (entry + 1) % nominal_size;
+    }
+
+    inline int clamp_to_table_bounds(int entry) const // TODO: this should be removed if we can constrain the hue range properly
+    {
+        return std::min(nominal_size - 1, std::max(0, entry));
+    }
 };
 
-struct Table1D
+struct Table3D : public TableBase, std::array<float[3], TableBase::total_size>
 {
-    static constexpr int base_index = TABLE_BASE_INDEX;
-    static constexpr int size = TABLE_SIZE;
-    static constexpr int total_size = TABLE_TOTAL_SIZE;
-    float table[TABLE_TOTAL_SIZE];
+};
+
+struct Table1D : public TableBase, std::array<float, TableBase::total_size>
+{
 };
 
 struct JMhParams
@@ -114,36 +170,6 @@ constexpr float J_scale = 100.0f;
 constexpr float cam_nl_Y_reference = 100.0f;
 constexpr float cam_nl_offset = 0.2713f * cam_nl_Y_reference;
 constexpr float cam_nl_scale = 4.0f * cam_nl_Y_reference;
-constexpr float PI = 3.14159265358979f;
-
-constexpr float hue_limit = 360.0f;
-//constexpr float hue_limit = 2.0f * PI;
-inline float _wrap_to_hue_limit(float y)
-{
-    if ( y < 0.f)
-    {
-        y = y + hue_limit;
-    }
-    return y;
-}
-
-inline float wrap_to_hue_limit(float hue)
-{
-    float y = std::fmod(hue, hue_limit);
-    return _wrap_to_hue_limit(y);
-}
-inline constexpr float to_degrees(const float v) { return v; }
-inline float from_degrees(const float v) { return wrap_to_hue_limit(v); }
-inline constexpr float to_radians(const float v) { return PI * v / 180.0f; };
-inline float _from_radians(const float v) { return _wrap_to_hue_limit(180.0f * v / PI); }; // v needs to be wrapped already
-inline float from_radians(const float v) { return wrap_to_hue_limit(180.0f * v / PI); };
-/*
-inline constexpr float to_degrees(const float v) { return 180.0f * v / PI; }
-inline float from_degrees(const float v) { return wrap_to_hue_limit(PI * v / 180.0f); }
-inline constexpr float to_radians(const float v) { return v; }
-inline float _from_radians(const float v) { return _wrap_to_hue_limit(v); };
-inline float from_radians(const float v) { return wrap_to_hue_limit(v); };
-*/
 
 // Chroma compression
 constexpr float chroma_compress = 2.4f;

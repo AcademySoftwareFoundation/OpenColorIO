@@ -44,38 +44,19 @@ inline float midpoint(float a, float b)
     return (a + b) / 2.f;
 }
 
-inline float base_hue_for_position(int i_lo, int table_size) 
-{
-    const float result = i_lo * hue_limit / table_size;
-    return result;
-}
-
-inline int hue_position_in_uniform_table(float wrapped_hue, int table_size)
-{
-    return int(wrapped_hue / hue_limit * float(table_size)); // TODO: can we use the 'lost' fraction for the lerps?
-}
-
-inline int next_position_in_table(int entry, int table_size)
-{
-    return (entry + 1) % table_size;
-}
-
-inline int clamp_to_table_bounds(int entry, int table_size) // TODO: this should be removed if we can constrain the hue range properly
-{
-    return std::min(table_size - 1, std::max(0, entry));
-}
-
 int lookup_hue_interval(float h, const Table1D &hues, const std::array<int, 2> & hue_linearity_search_range)
 {
     // Search the given Table for the interval containing the desired hue
     // Returns the upper index of the interval
-    int i = hue_position_in_uniform_table(h, hues.size) + hues.base_index;
-    int i_lo = std::max(0, i + hue_linearity_search_range[0]);
-    int i_hi = std::min(hues.base_index + hues.size, i + hue_linearity_search_range[1]);
+
+    // We can narrow the search range based on the hues being almost uniform
+    int i = hues.nominal_hue_position_in_uniform_table(h);
+    int i_lo = std::max(hues.lower_wrap_index, i + hue_linearity_search_range[0]); // Should be nominal not lower_wrap?
+    int i_hi = std::min(hues.upper_wrap_index, i + hue_linearity_search_range[1]);
 
     while (i_lo + 1 < i_hi)
     {
-        if (h > hues.table[i])
+        if (h > hues[i])
         {
             i_lo = i;
         }
@@ -86,7 +67,7 @@ int lookup_hue_interval(float h, const Table1D &hues, const std::array<int, 2> &
         i = midpoint(i_lo, i_hi);
     }
 
-    i_hi = std::max(1, i_hi);
+    i_hi = std::max(1, i_hi); // TODO: should not be needed if we initialise with the correct lo and hi
 
     return i_hi;
 }
@@ -103,16 +84,16 @@ inline float interpolation_weight(float h, int h_lo, int h_hi)
 
 inline f3 cusp_from_table(int i_hi, float t, const Table3D &gt)
 {
-    return lerp(gt.table[i_hi-1], gt.table[i_hi], t);
+    return lerp(gt[i_hi-1], gt[i_hi], t);
 }
 
 float reach_m_from_table(float h, const ACES2::Table1D &rt)
 {
-    const int i_lo = clamp_to_table_bounds(hue_position_in_uniform_table(h, rt.size), rt.total_size);  // TODO: this should be removed if we can constrain the hue range properly
-    const int i_hi = next_position_in_table(i_lo, rt.size);
+    const int i_lo = rt.clamp_to_table_bounds(rt.hue_position_in_uniform_table(h));  // TODO: this should be removed if we can constrain the hue range properly
+    const int i_hi = rt.next_position_in_table(i_lo);
 
     const float t = interpolation_weight(h, i_lo, i_hi);
-    return lerpf(rt.table[i_lo], rt.table[i_hi], t);
+    return lerpf(rt[i_lo], rt[i_hi], t);
 }
 
 //
@@ -556,7 +537,7 @@ void find_reach_corners_table(std::array<f3, totalCornerCount>& JMh_corners, con
             min_index = i;
     }
 
-    // Rotate entries placing lowest at [1] (not [0])
+    // Rotate entries placing lowest at [1] (not [0]) // TODO: could use std::rotate_copy or even the ranges vs in C++20
     for (int i = 0; i != cuspCornerCount; ++i)
     {
       JMh_corners[i + 1] = temp_JMh_corners[(i + min_index) % cuspCornerCount];
@@ -613,20 +594,20 @@ void build_hue_sample_interval(const int samples, const float lower, const float
     const float delta = (upper - lower) / float(samples);
     for (int i = 0; i != samples; ++i)
     {
-        hue_table.table[base + i] = lower + float(i) * delta;
+        hue_table[base + i] = lower + float(i) * delta;
     }
 }
 
 void build_hue_table(Table1D &hue_table, const std::array<float, max_sorted_corners>& sorted_hues, const int unique_hues)
 {
-    const float ideal_spacing = hue_table.size / hue_limit;
-    std::array<int, 2 * cuspCornerCount + 2> samples_count;
+    const float ideal_spacing = hue_table.nominal_size / hue_limit;
+    std::array<int, 2 * cuspCornerCount + 2> samples_count = {};
     int         last_idx  = -1;
     int         min_index = sorted_hues[0] == 0.0f ? 0 : 1; // Ensure we can always sample at 0.0 hue
     for (int hue_idx = 0; hue_idx != unique_hues; ++hue_idx)
     {
         // BUG: "hue_table.size - 1" will fail if we have multiple hues mapping near the top of the table
-        int nominal_idx = std::min(std::max(int(std::round(sorted_hues[hue_idx] * ideal_spacing)), min_index), hue_table.size - 1);
+        int nominal_idx = std::min(std::max(int(std::round(sorted_hues[hue_idx] * ideal_spacing)), min_index), hue_table.nominal_size - 1);
         if (last_idx == nominal_idx)
         {
             // Last two hues should sample at same index, need to adjust them
@@ -640,7 +621,7 @@ void build_hue_table(Table1D &hue_table, const std::array<float, max_sorted_corn
                 nominal_idx = nominal_idx + 1;
             }
         }
-        samples_count[hue_idx] = std::min(nominal_idx, hue_table.size - 1);
+        samples_count[hue_idx] = std::min(nominal_idx, hue_table.nominal_size - 1);
         last_idx = min_index = nominal_idx;
     }
 
@@ -656,10 +637,10 @@ void build_hue_table(Table1D &hue_table, const std::array<float, max_sorted_corn
         total_samples += samples;
     }
     // BUG: could break if we are unlucky with samples all being used up by this point
-    build_hue_sample_interval(hue_table.size - total_samples, sorted_hues[i - 1], hue_limit, hue_table, total_samples + 1);
+    build_hue_sample_interval(hue_table.nominal_size - total_samples, sorted_hues[i - 1], hue_limit, hue_table, total_samples + 1);
 
-    hue_table.table[0]                  = hue_table.table[hue_table.base_index + hue_table.size - 1] - hue_limit;
-    hue_table.table[hue_table.total_size - 1] = hue_table.table[hue_table.base_index] + hue_limit;
+    hue_table[hue_table.lower_wrap_index] = hue_table[hue_table.last_nominal_index] - hue_limit;
+    hue_table[hue_table.upper_wrap_index] = hue_table[hue_table.first_nominal_index] + hue_limit;
 }
 
 std::array<float, 2> find_display_cusp_for_hue(float hue, const std::array<f3, totalCornerCount>& RGB_corners, const std::array<f3, totalCornerCount>& JMh_corners,
@@ -738,23 +719,22 @@ Table3D build_cusp_table(const Table1D& hue_table, const std::array<f3, totalCor
 {
     std::array<float, 2> previous = {0.0f, 0.0f};
     Table3D output_table;
-    for (int i = output_table.base_index; i != output_table.base_index + output_table.size; ++i)
+    for (int i = output_table.first_nominal_index; i != output_table.upper_wrap_index; ++i)
     {
-      const float hue = hue_table.table[i];
+      const float hue = hue_table[i];
       const std::array<float, 2> JM = find_display_cusp_for_hue(hue, RGB_corners, JMh_corners, params, previous);
-      output_table.table[i][0] = JM[0];
-      output_table.table[i][1] = JM[1] * (1.f + smooth_m * smooth_cusps);;
-      output_table.table[i][2] = hue;
+      output_table[i][0] = JM[0];
+      output_table[i][1] = JM[1] * (1.f + smooth_m * smooth_cusps);;
+      output_table[i][2] = hue;
     }
 
     // Copy extra entries to ease the code to handle hues wrapping around
-    // TODO: consider adding operator[] to Table3D to handle this table.table array access more cleanly - subclass std::array?
-    output_table.table[0][0]                                           = output_table.table[output_table.base_index + output_table.size - 1][0];
-    output_table.table[0][1]                                           = output_table.table[output_table.base_index + output_table.size - 1][1];
-    output_table.table[0][2]                                           = output_table.table[output_table.base_index + output_table.size - 1][2];
-    output_table.table[output_table.base_index + output_table.size][0] = output_table.table[output_table.base_index][0];
-    output_table.table[output_table.base_index + output_table.size][1] = output_table.table[output_table.base_index][1];
-    output_table.table[output_table.base_index + output_table.size][2] = output_table.table[output_table.base_index][2];
+    output_table[output_table.lower_wrap_index][0] = output_table[output_table.last_nominal_index][0];
+    output_table[output_table.lower_wrap_index][1] = output_table[output_table.last_nominal_index][1];
+    output_table[output_table.lower_wrap_index][2] = hue_table[hue_table.lower_wrap_index];
+    output_table[output_table.upper_wrap_index][0] = output_table[output_table.first_nominal_index][0];
+    output_table[output_table.upper_wrap_index][1] = output_table[output_table.first_nominal_index][1];
+    output_table[output_table.upper_wrap_index][2] = hue_table[hue_table.upper_wrap_index];
     return output_table;
 }
 
@@ -783,47 +763,47 @@ Table3D make_gamut_table(const JMhParams &params, float peakLuminance, Table1D& 
 {
     Table3D gamutCuspTableUnsorted{};
     int minhIndex = 0;
-    for (int i = 0; i < gamutCuspTableUnsorted.size; i++)
+    for (int i = 0; i < gamutCuspTableUnsorted.nominal_size; i++)
     {
-        const float hNorm = float(i) / float(gamutCuspTableUnsorted.size);
+        const float hNorm = float(i) / float(gamutCuspTableUnsorted.nominal_size);
         const f3 HSV = {hNorm, 1., 1.};
         const f3 RGB = HSV_to_RGB(HSV);
         const f3 scaledRGB = mult_f_f3(peakLuminance / reference_luminance, RGB);
         const f3 JMh = RGB_to_JMh(scaledRGB, params);
 
-        gamutCuspTableUnsorted.table[i][0] = JMh[0];
-        gamutCuspTableUnsorted.table[i][1] = JMh[1]  * (1.f + smooth_m * smooth_cusps);
-        gamutCuspTableUnsorted.table[i][2] = JMh[2];
-        if ( gamutCuspTableUnsorted.table[i][2] < gamutCuspTableUnsorted.table[minhIndex][2])
+        gamutCuspTableUnsorted[i][0] = JMh[0];
+        gamutCuspTableUnsorted[i][1] = JMh[1]  * (1.f + smooth_m * smooth_cusps);
+        gamutCuspTableUnsorted[i][2] = JMh[2];
+        if ( gamutCuspTableUnsorted[i][2] < gamutCuspTableUnsorted[minhIndex][2])
             minhIndex = i;
     }
 
     Table3D gamutCuspTable{};
-    for (int i = 0; i < gamutCuspTableUnsorted.size; i++)
+    for (int i = 0; i < gamutCuspTableUnsorted.nominal_size; i++)
     {
-        gamutCuspTable.table[i + gamutCuspTable.base_index][0] = gamutCuspTableUnsorted.table[(minhIndex+i) % gamutCuspTableUnsorted.size][0];
-        gamutCuspTable.table[i + gamutCuspTable.base_index][1] = gamutCuspTableUnsorted.table[(minhIndex+i) % gamutCuspTableUnsorted.size][1];
-        gamutCuspTable.table[i + gamutCuspTable.base_index][2] = gamutCuspTableUnsorted.table[(minhIndex+i) % gamutCuspTableUnsorted.size][2];
+        gamutCuspTable[i + gamutCuspTable.base_index][0] = gamutCuspTableUnsorted[(minhIndex+i) % gamutCuspTableUnsorted.nominal_size][0];
+        gamutCuspTable[i + gamutCuspTable.base_index][1] = gamutCuspTableUnsorted[(minhIndex+i) % gamutCuspTableUnsorted.nominal_size][1];
+        gamutCuspTable[i + gamutCuspTable.base_index][2] = gamutCuspTableUnsorted[(minhIndex+i) % gamutCuspTableUnsorted.nominal_size][2];
     }
 
     // Copy last populated entry to first empty spot
-    gamutCuspTable.table[0][0] = gamutCuspTable.table[gamutCuspTable.base_index + gamutCuspTable.size-1][0];
-    gamutCuspTable.table[0][1] = gamutCuspTable.table[gamutCuspTable.base_index + gamutCuspTable.size-1][1];
-    gamutCuspTable.table[0][2] = gamutCuspTable.table[gamutCuspTable.base_index + gamutCuspTable.size-1][2];
+    gamutCuspTable[gamutCuspTable.lower_wrap_index][0] = gamutCuspTable[gamutCuspTable.last_nominal_index][0];
+    gamutCuspTable[gamutCuspTable.lower_wrap_index][1] = gamutCuspTable[gamutCuspTable.last_nominal_index][1];
+    gamutCuspTable[gamutCuspTable.lower_wrap_index][2] = gamutCuspTable[gamutCuspTable.last_nominal_index][2];
 
     // Copy first populated entry to last empty spot
-    gamutCuspTable.table[gamutCuspTable.base_index + gamutCuspTable.size][0] = gamutCuspTable.table[gamutCuspTable.base_index][0];
-    gamutCuspTable.table[gamutCuspTable.base_index + gamutCuspTable.size][1] = gamutCuspTable.table[gamutCuspTable.base_index][1];
-    gamutCuspTable.table[gamutCuspTable.base_index + gamutCuspTable.size][2] = gamutCuspTable.table[gamutCuspTable.base_index][2];
+    gamutCuspTable[gamutCuspTable.upper_wrap_index][0] = gamutCuspTable[gamutCuspTable.first_nominal_index][0];
+    gamutCuspTable[gamutCuspTable.upper_wrap_index][1] = gamutCuspTable[gamutCuspTable.first_nominal_index][1];
+    gamutCuspTable[gamutCuspTable.upper_wrap_index][2] = gamutCuspTable[gamutCuspTable.first_nominal_index][2];
 
     // Wrap the hues, to maintain monotonicity. These entries will fall outside [0.0, hue_limit)
-    gamutCuspTable.table[0][2] = gamutCuspTable.table[0][2] - hue_limit;
-    gamutCuspTable.table[gamutCuspTable.base_index + gamutCuspTable.size][2] = gamutCuspTable.table[gamutCuspTable.base_index + gamutCuspTable.size][2] + hue_limit;
+    gamutCuspTable[gamutCuspTable.lower_wrap_index][2] -= hue_limit;
+    gamutCuspTable[gamutCuspTable.upper_wrap_index][2] += hue_limit;
 
     // Extract hue table
     for (int i = 0; i < gamutCuspTable.total_size; i++)
     {
-        hue_table.table[i] = gamutCuspTable.table[i][2];
+        hue_table[i] = gamutCuspTable[i][2];
     }
     return gamutCuspTable;
 }
@@ -837,8 +817,8 @@ Table1D make_reach_m_table(const JMhParams &params, const float limit_J_max)
 {
     Table1D gamutReachTable{};
 
-    for (int i = 0; i < gamutReachTable.size; i++) {
-        const float hue = base_hue_for_position(i, gamutReachTable.size);
+    for (int i = 0; i < gamutReachTable.nominal_size; i++) {
+        const float hue = gamutReachTable.base_hue_for_position(i);
 
         constexpr float search_range = 50.f;
         constexpr float search_maximum = 1300.f; // TODO: magic limit
@@ -874,7 +854,7 @@ Table1D make_reach_m_table(const JMhParams &params, const float limit_J_max)
             }
         }
 
-        gamutReachTable.table[i] = high;
+        gamutReachTable[i] = high;
     }
 
     return gamutReachTable;
@@ -1091,7 +1071,7 @@ HueDependantGamutParams init_HueDependantGamutParams(const float hue, const Reso
     hdp.gamma_bottom_inv = p.lower_hull_gamma_inv;
 
     const int i_hi = lookup_hue_interval(hue, p.hue_table, p.hue_linearity_search_range);
-    const float t = interpolation_weight(hue, p.hue_table.table[i_hi-1], p.hue_table.table[i_hi]);
+    const float t = interpolation_weight(hue, p.hue_table[i_hi-1], p.hue_table[i_hi]);
     const f3 cusp = cusp_from_table(i_hi, t, p.gamut_cusp_table);
 
     hdp.JMcusp = { cusp[0], cusp[1] };
@@ -1189,10 +1169,10 @@ void make_upper_hull_gamma(
     float lower_hull_gamma_inv,
     const JMhParams &limitJMhParams)
 {
-    for (int i = gamutCuspTable.base_index; i < gamutCuspTable.base_index + gamutCuspTable.size; i++)
+    for (int i = gamutCuspTable.first_nominal_index; i != gamutCuspTable.upper_wrap_index; ++i)
     {
-        const float hue = hue_table.table[i];
-        const f2 JMcusp = { gamutCuspTable.table[i][0], gamutCuspTable.table[i][1] };
+        const float hue = hue_table[i];
+        const f2 JMcusp = { gamutCuspTable[i][0], gamutCuspTable[i][1] };
 
         std::array<testData, gamma_test_count> data = generate_gamma_test_data(JMcusp, hue, limit_J_max, mid_J, focus_dist);
 
@@ -1236,12 +1216,12 @@ void make_upper_hull_gamma(
                 low = testGamma;
             }
         }
-        gamutCuspTable.table[i][2] = 1.0f / high;
+        gamutCuspTable[i][2] = 1.0f / high;
     }
 
     // Copy last populated entries to empty spot 'wrapping' entries
-    gamutCuspTable.table[0][2] = gamutCuspTable.table[gamutCuspTable.base_index + gamutCuspTable.size - 1][2];
-    gamutCuspTable.table[gamutCuspTable.base_index + gamutCuspTable.size][2] = gamutCuspTable.table[gamutCuspTable.base_index][2];
+    gamutCuspTable[gamutCuspTable.lower_wrap_index][2] = gamutCuspTable[gamutCuspTable.last_nominal_index][2];
+    gamutCuspTable[gamutCuspTable.upper_wrap_index][2] = gamutCuspTable[gamutCuspTable.first_nominal_index][2];
 }
 
 // Tonescale pre-calculations
@@ -1350,14 +1330,14 @@ std::array<int, 2> determine_hue_linearity_search_range(const Table3D &gamutCusp
     constexpr int lower_padding = 0;
     constexpr int upper_padding = 1;
     std::array<int, 2> hue_linearity_search_range = {lower_padding, upper_padding};
-    for (int i = gamutCuspTable.base_index; i < gamutCuspTable.base_index + gamutCuspTable.size; i++)
+    for (int i = gamutCuspTable.first_nominal_index; i != gamutCuspTable.upper_wrap_index; ++i)
     {
-        const int pos = hue_position_in_uniform_table(gamutCuspTable.table[i][2], gamutCuspTable.size) + gamutCuspTable.base_index;
+        const int pos = gamutCuspTable.nominal_hue_position_in_uniform_table(gamutCuspTable[i][2]); // TODO: compute from hue table less cache pressure?
         const int delta = i - pos;
         hue_linearity_search_range[0] = std::min(hue_linearity_search_range[0], delta + lower_padding);
         hue_linearity_search_range[1] = std::max(hue_linearity_search_range[1], delta + upper_padding);
 
-        //std::cout << i << " " << pos << " " << delta << " " << gamutCuspTable.table[i][0] << " " << gamutCuspTable.table[i][1] << " " << gamutCuspTable.table[i][2] << "\n";
+        //std::cout << i << " " << pos << " " << delta << " " << gamutCuspTable[i][0] << " " << gamutCuspTable[i][1] << " " << gamutCuspTable[i][2] << "\n";
     }
     //std::cout << "search range " << hue_linearity_search_range[0] << " " << hue_linearity_search_range[1] << "\n";
     return hue_linearity_search_range;

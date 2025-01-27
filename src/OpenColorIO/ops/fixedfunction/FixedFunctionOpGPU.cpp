@@ -423,12 +423,12 @@ std::string _Add_Reach_table(
     shaderCreator->addTexture(
         name.c_str(),
         GpuShaderText::getSamplerName(name).c_str(),
-        table.size,
+        table.nominal_size, // TODO: be careful if reach ever has a base_offset added to it
         1,
         GpuShaderCreator::TEXTURE_RED_CHANNEL,
         dimensions,
         INTERP_NEAREST,
-        &(table.table[0]));
+        &(table[0]));
 
 
     if (dimensions == GpuShaderDesc::TEXTURE_1D)
@@ -703,7 +703,7 @@ std::string _Add_Cusp_table(
         GpuShaderCreator::TEXTURE_RGB_CHANNEL,
         dimensions,
         INTERP_NEAREST,
-        &(g.gamut_cusp_table.table[0][0]));
+        &(g.gamut_cusp_table[0][0]));
 
     if (dimensions == GpuShaderDesc::TEXTURE_1D)
     {
@@ -722,7 +722,7 @@ std::string _Add_Cusp_table(
     GpuShaderText ss(shaderCreator->getLanguage());
 
     const std::string hues_array_name = name + "_hues_array";
-    ss.declareFloatArrayConst(hues_array_name, (int) g.hue_table.total_size, g.hue_table.table);
+    ss.declareFloatArrayConst(hues_array_name, (int) g.hue_table.total_size, g.hue_table.data());
 
     ss.newLine() << ss.float3Keyword() << " " << name << "_sample(float h)";
     ss.newLine() << "{";
@@ -733,10 +733,11 @@ std::string _Add_Cusp_table(
     ss.newLine() << "hwrap = (hwrap < 0.0) ? hwrap + 360.0 : hwrap;";
     ss.newLine() << ss.intDecl("i") << " = " << ss.intKeyword() << "(hwrap + " << g.gamut_cusp_table.base_index << ");";
 
-    ss.newLine() << ss.intDecl("i_lo") << " = " << ss.intKeyword() << "(max(0, "
+    ss.newLine() << ss.intDecl("i_lo") << " = " << ss.intKeyword() << "(max("
+                 << ss.floatKeyword() << "(" << g.gamut_cusp_table.lower_wrap_index << "), "
                  << ss.floatKeyword() << "(i + " << g.hue_linearity_search_range[0] << ")));";
     ss.newLine() << ss.intDecl("i_hi") << " = " << ss.intKeyword() << "(min("
-                 << ss.floatKeyword() << "(" << g.gamut_cusp_table.base_index + g.gamut_cusp_table.size << "), "
+                 << ss.floatKeyword() << "(" << g.gamut_cusp_table.upper_wrap_index << "), "
                  << ss.floatKeyword() << "(i + " << g.hue_linearity_search_range[1] << ")));";
 
     ss.newLine() << "while (i_lo + 1 < i_hi)";
