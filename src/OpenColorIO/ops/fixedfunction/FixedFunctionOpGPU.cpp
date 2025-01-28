@@ -924,11 +924,9 @@ std::string _Add_Find_Gamut_Boundary_Intersection_func(
 
     GpuShaderText ss(shaderCreator->getLanguage());
 
-    ss.newLine() << ss.float3Keyword() << " " << name << "(" << ss.float3Keyword() << " JMh_s, " << ss.float2Keyword() << " JM_cusp_in, float J_focus, float slope_gain, float gamma_top_inv, float gamma_bottom_inv)";
+    ss.newLine() << ss.float3Keyword() << " " << name << "(" << ss.float3Keyword() << " JMh_s, " << ss.float2Keyword() << " JM_cusp, float J_focus, float slope_gain, float gamma_top_inv, float gamma_bottom_inv)";
     ss.newLine() << "{";
     ss.indent();
-
-    ss.newLine() << ss.float2Decl("JM_cusp") << " = " << ss.float2Const("JM_cusp_in.r", std::string("JM_cusp_in.g * (1.0 + ") + std::to_string(ACES2::smooth_m) + " * " + std::to_string(ACES2::smooth_cusps) + ")") << ";";
 
     ss.newLine() << ss.floatDecl("J_intersect_source") << " = " << solveJIntersectName << "(JMh_s.r, JMh_s.g, J_focus, slope_gain);";
     ss.newLine() << ss.floatDecl("J_intersect_cusp") << " = " << solveJIntersectName << "(JM_cusp.r, JM_cusp.g, J_focus, slope_gain);";
