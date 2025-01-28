@@ -531,8 +531,7 @@ void _Add_Tonescale_Compress_Fwd_Shader(
     const ACES2::JMhParams & p,
     const ACES2::ToneScaleParams & t,
     const ACES2::SharedCompressionParameters & s,
-    const ACES2::ChromaCompressParams & c,
-    const std::string & reachName)
+    const ACES2::ChromaCompressParams & c)
 {
     std::string toeName = _Add_Toe_func(shaderCreator, resourceIndex, false);
 
@@ -581,8 +580,7 @@ void _Add_Tonescale_Compress_Fwd_Shader(
     ss.dedent();
     ss.newLine() << "}";
 
-    ss.newLine() << ss.floatDecl("reachM") << " = " << reachName << "_sample(h);";
-    ss.newLine() << ss.floatDecl("limit") << " = pow(nJ, " << s.model_gamma_inv << ") * reachM / Mnorm;";
+    ss.newLine() << ss.floatDecl("limit") << " = pow(nJ, " << s.model_gamma_inv << ") * reachMaxM / Mnorm;";
     ss.newLine() << "M_cp = M * pow(J_ts / J, " << s.model_gamma_inv << ");";
     ss.newLine() << "M_cp = M_cp / Mnorm;";
 
@@ -603,13 +601,12 @@ void _Add_Tonescale_Compress_Inv_Shader(
     const ACES2::JMhParams & p,
     const ACES2::ToneScaleParams & t,
     const ACES2::SharedCompressionParameters & s,
-    const ACES2::ChromaCompressParams & c,
-    const std::string & reachName)
+    const ACES2::ChromaCompressParams & c)
 {
     std::string toeName = _Add_Toe_func(shaderCreator, resourceIndex, true);
 
     const std::string pxl(shaderCreator->getPixelName());
-
+    
     ss.newLine() << ss.floatDecl("J_ts") << " = " << pxl << ".r;";
     ss.newLine() << ss.floatDecl("M_cp") << " = " << pxl << ".g;";
     ss.newLine() << ss.floatDecl("h") << " = " << pxl << ".b;";
@@ -654,8 +651,7 @@ void _Add_Tonescale_Compress_Inv_Shader(
     ss.dedent();
     ss.newLine() << "}";
 
-    ss.newLine() << ss.floatDecl("reachM") << " = " << reachName << "_sample(h);";
-    ss.newLine() << ss.floatDecl("limit") << " = pow(nJ, " << s.model_gamma_inv << ") * reachM / Mnorm;";
+    ss.newLine() << ss.floatDecl("limit") << " = pow(nJ, " << s.model_gamma_inv << ") * reachMaxM / Mnorm;";
 
     ss.newLine() << "M = M_cp / Mnorm;";
     ss.newLine() << "M = " << toeName << "(M, limit, nJ * " << c.compr << ", snJ);";
@@ -985,7 +981,6 @@ std::string _Add_Reach_Boundary_func(
     unsigned resourceIndex,
     const ACES2::SharedCompressionParameters & s,
     const ACES2::GamutCompressParams & g,
-    const std::string & reachName,
     const std::string & getFocusGainName,
     const std::string & solveJIntersectName)
 {
@@ -1002,11 +997,10 @@ std::string _Add_Reach_Boundary_func(
 
     GpuShaderText ss(shaderCreator->getLanguage());
 
-    ss.newLine() << ss.float3Keyword() << " " << name << "(float J, float M, float h, " << ss.float2Keyword() << " JMcusp, float focusJ)";
+    ss.newLine() << ss.float3Keyword() << " " << name << "(float J, float M, float h, " << ss.float2Keyword() << " JMcusp, float focusJ, float reachMaxM)";
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.floatDecl("reachMaxM") << " = " << reachName << "_sample(h);";
     ss.newLine() << ss.floatDecl("slope_gain") << " = " << s.limit_J_max << " * " << g.focus_dist << " * " << getFocusGainName << "(J, JMcusp.r);";
     ss.newLine() << ss.floatDecl("intersectJ") << " = " << solveJIntersectName << "(J, M, focusJ, slope_gain);";
 
@@ -1129,7 +1123,7 @@ std::string _Add_Compress_Gamut_func(
 
     GpuShaderText ss(shaderCreator->getLanguage());
 
-    ss.newLine() << ss.float3Keyword() << " " << name << "(" << ss.float3Keyword() << " JMh, float Jx, " << ss.float3Keyword() << " JMGcusp)";
+    ss.newLine() << ss.float3Keyword() << " " << name << "(" << ss.float3Keyword() << " JMh, float Jx, " << ss.float3Keyword() << " JMGcusp, float reachMaxM)";
     ss.newLine() << "{";
     ss.indent();
 
@@ -1167,7 +1161,7 @@ std::string _Add_Compress_Gamut_func(
     ss.dedent();
     ss.newLine() << "}";
 
-    ss.newLine() << ss.float3Decl("reachBoundary") << " = " << getReachBoundaryName << "(JMboundary.r, JMboundary.g, h, JMcusp, focusJ);";
+    ss.newLine() << ss.float3Decl("reachBoundary") << " = " << getReachBoundaryName << "(JMboundary.r, JMboundary.g, h, JMcusp, focusJ, reachMaxM);";
 
     ss.newLine() << ss.floatDecl("difference") << " = max(1.0001, reachBoundary.g / JMboundary.g);";
     ss.newLine() << ss.floatDecl("threshold") << " = max(" << ACES2::compression_threshold << ", 1.0 / difference);";
@@ -1198,21 +1192,20 @@ void _Add_Gamut_Compress_Fwd_Shader(
     GpuShaderText & ss,
     unsigned int resourceIndex,
     const ACES2::SharedCompressionParameters & s,
-    const ACES2::GamutCompressParams & g,
-    const std::string & reachName)
+    const ACES2::GamutCompressParams & g)
 {
     std::string cuspName = _Add_Cusp_table(shaderCreator, resourceIndex, g);
     std::string getFocusGainName = _Add_Focus_Gain_func(shaderCreator, resourceIndex, s);
     std::string solveJIntersectName = _Add_Solve_J_Intersect_func(shaderCreator, resourceIndex, s);
     std::string findGamutBoundaryIntersectionName = _Add_Find_Gamut_Boundary_Intersection_func(shaderCreator, resourceIndex, s, solveJIntersectName);
-    std::string getReachBoundaryName = _Add_Reach_Boundary_func(shaderCreator, resourceIndex, s, g, reachName, getFocusGainName, solveJIntersectName);
+    std::string getReachBoundaryName = _Add_Reach_Boundary_func(shaderCreator, resourceIndex, s, g, getFocusGainName, solveJIntersectName);
     std::string compressionName = _Add_Compression_func(shaderCreator, resourceIndex, false);
     std::string gamutCompressName = _Add_Compress_Gamut_func(shaderCreator, resourceIndex, s, g, getFocusGainName, findGamutBoundaryIntersectionName, getReachBoundaryName, compressionName);
 
     const std::string pxl(shaderCreator->getPixelName());
 
     ss.newLine() << ss.float3Decl("JMGcusp") << " = " << cuspName << "_sample(" << pxl << ".b);";
-    ss.newLine() << pxl << ".rgb = " << gamutCompressName << "(" << pxl << ".rgb, " << pxl << ".r, JMGcusp);";
+    ss.newLine() << pxl << ".rgb = " << gamutCompressName << "(" << pxl << ".rgb, " << pxl << ".r, JMGcusp, reachMaxM);";
 }
 
 void _Add_Gamut_Compress_Inv_Shader(
@@ -1220,20 +1213,20 @@ void _Add_Gamut_Compress_Inv_Shader(
     GpuShaderText & ss,
     unsigned int resourceIndex,
     const ACES2::SharedCompressionParameters & s,
-    const ACES2::GamutCompressParams & g,
-    const std::string & reachName)
+    const ACES2::GamutCompressParams & g)
 {
     std::string cuspName = _Add_Cusp_table(shaderCreator, resourceIndex, g);
     std::string getFocusGainName = _Add_Focus_Gain_func(shaderCreator, resourceIndex, s);
     std::string solveJIntersectName = _Add_Solve_J_Intersect_func(shaderCreator, resourceIndex, s);
     std::string findGamutBoundaryIntersectionName = _Add_Find_Gamut_Boundary_Intersection_func(shaderCreator, resourceIndex, s, solveJIntersectName);
-    std::string getReachBoundaryName = _Add_Reach_Boundary_func(shaderCreator, resourceIndex, s, g, reachName, getFocusGainName, solveJIntersectName);
+    std::string getReachBoundaryName = _Add_Reach_Boundary_func(shaderCreator, resourceIndex, s, g, getFocusGainName, solveJIntersectName);
     std::string compressionName = _Add_Compression_func(shaderCreator, resourceIndex, true);
     std::string gamutCompressName = _Add_Compress_Gamut_func(shaderCreator, resourceIndex, s, g, getFocusGainName, findGamutBoundaryIntersectionName, getReachBoundaryName, compressionName);
 
     const std::string pxl(shaderCreator->getPixelName());
 
     ss.newLine() << ss.float3Decl("JMGcusp") << " = " << cuspName << "_sample(" << pxl << ".b);";
+
     ss.newLine() << ss.floatDecl("Jx") << " = " << pxl << ".r;";
     ss.newLine() << ss.float3Decl("unCompressedJMh") << ";";
 
@@ -1241,15 +1234,15 @@ void _Add_Gamut_Compress_Inv_Shader(
     ss.newLine() << "if (Jx <= " << ss.lerp("JMGcusp.r", std::to_string(s.limit_J_max), std::to_string(ACES2::focus_gain_blend)) << ")";
     ss.newLine() << "{";
     ss.indent();
-    ss.newLine() << "unCompressedJMh = " << gamutCompressName << "(" << pxl << ".rgb, Jx, JMGcusp);";
+    ss.newLine() << "unCompressedJMh = " << gamutCompressName << "(" << pxl << ".rgb, Jx, JMGcusp, reachMaxM);";
     ss.dedent();
     ss.newLine() << "}";
     // Approximation above threshold
     ss.newLine() << "else";
     ss.newLine() << "{";
     ss.indent();
-    ss.newLine() << "Jx = " << gamutCompressName << "(" << pxl << ".rgb, Jx, JMGcusp).r;";
-    ss.newLine() << "unCompressedJMh = " << gamutCompressName << "(" << pxl << ".rgb, Jx, JMGcusp);";
+    ss.newLine() << "Jx = " << gamutCompressName << "(" << pxl << ".rgb, Jx, JMGcusp, reachMaxM).r;";
+    ss.newLine() << "unCompressedJMh = " << gamutCompressName << "(" << pxl << ".rgb, Jx, JMGcusp, reachMaxM);";
     ss.dedent();
     ss.newLine() << "}";
 
@@ -1289,7 +1282,8 @@ void Add_ACES_OutputTransform_Fwd_Shader(
 
     unsigned resourceIndex = shaderCreator->getNextResourceIndex();
 
-    std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, s.reach_m_table);
+    const std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, s.reach_m_table);
+    const std::string pxl(shaderCreator->getPixelName());
 
     ss.newLine() << "";
     ss.newLine() << "// Add RGB to JMh";
@@ -1303,9 +1297,14 @@ void Add_ACES_OutputTransform_Fwd_Shader(
     ss.newLine() << "";
     ss.newLine() << "// Add ToneScale and ChromaCompress (fwd)";
     ss.newLine() << "";
+
+    ss.newLine() << "// Sample tables (fwd)";
+    ss.newLine() << ss.floatDecl("reachMaxM") << " = " << reachName << "_sample(" << pxl << ".b);";
+    ss.newLine() << "";
+
     ss.newLine() << "{";
     ss.indent();
-        _Add_Tonescale_Compress_Fwd_Shader(shaderCreator, ss, resourceIndex, pIn, t, s, c, reachName);
+        _Add_Tonescale_Compress_Fwd_Shader(shaderCreator, ss, resourceIndex, pIn, t, s, c);
     ss.dedent();
     ss.newLine() << "}";
 
@@ -1314,7 +1313,7 @@ void Add_ACES_OutputTransform_Fwd_Shader(
     ss.newLine() << "";
     ss.newLine() << "{";
     ss.indent();
-        _Add_Gamut_Compress_Fwd_Shader(shaderCreator, ss, resourceIndex, s, g, reachName);
+        _Add_Gamut_Compress_Fwd_Shader(shaderCreator, ss, resourceIndex, s, g);
     ss.dedent();
     ss.newLine() << "}";
 
@@ -1361,7 +1360,8 @@ void Add_ACES_OutputTransform_Inv_Shader(
     const ACES2::GamutCompressParams g = ACES2::init_GamutCompressParams(peak_luminance, pIn, pLim, t, s, reachGamut);
 
     unsigned resourceIndex = shaderCreator->getNextResourceIndex();
-
+    const std::string pxl(shaderCreator->getPixelName());
+    
     std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, s.reach_m_table);
 
     ss.newLine() << "";
@@ -1373,12 +1373,13 @@ void Add_ACES_OutputTransform_Inv_Shader(
     ss.dedent();
     ss.newLine() << "}";
 
+    ss.newLine() << ss.floatDecl("reachMaxM") << " = " << reachName << "_sample(" << pxl << ".b);";
     ss.newLine() << "";
     ss.newLine() << "// Add GamutCompress (inv)";
     ss.newLine() << "";
     ss.newLine() << "{";
     ss.indent();
-        _Add_Gamut_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, s, g, reachName);
+        _Add_Gamut_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, s, g);
     ss.dedent();
     ss.newLine() << "}";
 
@@ -1387,7 +1388,7 @@ void Add_ACES_OutputTransform_Inv_Shader(
     ss.newLine() << "";
     ss.newLine() << "{";
     ss.indent();
-        _Add_Tonescale_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, pIn, t, s, c, reachName);
+        _Add_Tonescale_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, pIn, t, s, c);
     ss.dedent();
     ss.newLine() << "}";
 
@@ -1466,10 +1467,13 @@ void Add_Tonescale_Compress_Fwd_Shader(
     const ACES2::ChromaCompressParams c = ACES2::init_ChromaCompressParams(peak_luminance, t);
 
     unsigned resourceIndex = shaderCreator->getNextResourceIndex();
+    const std::string pxl(shaderCreator->getPixelName());
 
-    std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, s.reach_m_table);
+    const std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, s.reach_m_table);
 
-    _Add_Tonescale_Compress_Fwd_Shader(shaderCreator, ss, resourceIndex, p, t, s, c, reachName);
+    ss.newLine() << ss.floatDecl("reachMaxM") << " = " << reachName << "_sample(" << pxl << ".b);";
+
+    _Add_Tonescale_Compress_Fwd_Shader(shaderCreator, ss, resourceIndex, p, t, s, c);
 }
 
 void Add_Tonescale_Compress_Inv_Shader(
@@ -1486,10 +1490,13 @@ void Add_Tonescale_Compress_Inv_Shader(
     const ACES2::ChromaCompressParams c = ACES2::init_ChromaCompressParams(peak_luminance, t);
 
     unsigned resourceIndex = shaderCreator->getNextResourceIndex();
+    const std::string pxl(shaderCreator->getPixelName());
 
-    std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, s.reach_m_table);
+    const std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, s.reach_m_table);
 
-    _Add_Tonescale_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, p, t, s, c, reachName);
+    ss.newLine() << ss.floatDecl("reachMaxM") << " = " << reachName << "_sample(" << pxl << ".b);";
+
+    _Add_Tonescale_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, p, t, s, c);
 }
 
 void Add_Gamut_Compress_Fwd_Shader(
@@ -1523,10 +1530,13 @@ void Add_Gamut_Compress_Fwd_Shader(
     const ACES2::GamutCompressParams g = ACES2::init_GamutCompressParams(peak_luminance, pIn, pLim, t, s, reachGamut); 
 
     unsigned resourceIndex = shaderCreator->getNextResourceIndex();
+    const std::string pxl(shaderCreator->getPixelName());
 
-    std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, s.reach_m_table);
+    const std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, s.reach_m_table);
 
-    _Add_Gamut_Compress_Fwd_Shader(shaderCreator, ss, resourceIndex, s, g, reachName);
+    ss.newLine() << ss.floatDecl("reachMaxM") << " = " << reachName << "_sample(" << pxl << ".b);";
+
+    _Add_Gamut_Compress_Fwd_Shader(shaderCreator, ss, resourceIndex, s, g);
 }
 
 void Add_Gamut_Compress_Inv_Shader(
@@ -1560,10 +1570,13 @@ void Add_Gamut_Compress_Inv_Shader(
     const ACES2::GamutCompressParams g = ACES2::init_GamutCompressParams(peak_luminance, pIn, pLim, t, s, reachGamut);
 
     unsigned resourceIndex = shaderCreator->getNextResourceIndex();
+    const std::string pxl(shaderCreator->getPixelName());
 
-    std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, s.reach_m_table);
+    const std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, s.reach_m_table);
 
-    _Add_Gamut_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, s, g, reachName);
+    ss.newLine() << ss.floatDecl("reachMaxM") << " = " << reachName << "_sample(" << pxl << ".b);";
+
+    _Add_Gamut_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, s, g);
 }
 
 void Add_Surround_10_Fwd_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, float gamma)
