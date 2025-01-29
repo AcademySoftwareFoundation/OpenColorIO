@@ -349,6 +349,17 @@ void Add_GamutComp_13_Inv_Shader(GpuShaderText & ss,
     );
 }
 
+void _Add_WrapHueChannel_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & ss)
+{
+    const std::string pxl(shaderCreator->getPixelName());
+    ss.newLine() << ss.floatDecl("hwrap") << " = " << pxl << ".b;";
+    ss.newLine() << "hwrap = hwrap - floor(hwrap / 360.0) * 360.0;";
+    ss.newLine() << "hwrap = (hwrap < 0.0) ? hwrap + 360.0 : hwrap;";
+    ss.newLine() << pxl << ".b = hwrap;";
+}
+
 void _Add_RGB_to_JMh_Shader(
     GpuShaderCreatorRcPtr & shaderCreator,
     GpuShaderText & ss,
@@ -451,11 +462,7 @@ std::string _Add_Reach_table(
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.floatDecl("hwrap") << " = h;";
-    ss.newLine() << "hwrap = hwrap - floor(hwrap / 360.0) * 360.0;";
-    ss.newLine() << "hwrap = (hwrap < 0.0) ? hwrap + 360.0 : hwrap;";
-
-    ss.newLine() << ss.floatDecl("i_base") << " = floor(hwrap);";
+    ss.newLine() << ss.floatDecl("i_base") << " = floor(h);";
     ss.newLine() << ss.floatDecl("i_lo") << " = i_base + " << table.base_index << ";";
     ss.newLine() << ss.floatDecl("i_hi") << " = i_lo + 1;";
 
@@ -724,10 +731,7 @@ std::string _Add_Cusp_table(
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.floatDecl("hwrap") << " = h;";
-    ss.newLine() << "hwrap = hwrap - floor(hwrap / 360.0) * 360.0;";
-    ss.newLine() << "hwrap = (hwrap < 0.0) ? hwrap + 360.0 : hwrap;";
-    ss.newLine() << ss.intDecl("i") << " = " << ss.intKeyword() << "(hwrap + " << g.gamut_cusp_table.base_index << ");";
+    ss.newLine() << ss.intDecl("i") << " = " << ss.intKeyword() << "(h + " << g.gamut_cusp_table.base_index << ");";
 
     ss.newLine() << ss.intDecl("i_lo") << " = " << ss.intKeyword() << "(max("
                  << ss.floatKeyword() << "(" << g.gamut_cusp_table.lower_wrap_index << "), "
@@ -1448,7 +1452,7 @@ void Add_JMh_to_RGB_Shader(
     };
 
     ACES2::JMhParams p = ACES2::init_JMhParams(primaries);
-
+    _Add_WrapHueChannel_Shader(shaderCreator, ss);
     _Add_JMh_to_RGB_Shader(shaderCreator, ss, p);
 }
 
@@ -1470,6 +1474,7 @@ void Add_Tonescale_Compress_Fwd_Shader(
 
     const std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, s.reach_m_table);
 
+    _Add_WrapHueChannel_Shader(shaderCreator, ss);
     ss.newLine() << ss.floatDecl("reachMaxM") << " = " << reachName << "_sample(" << pxl << ".b);";
 
     _Add_Tonescale_Compress_Fwd_Shader(shaderCreator, ss, resourceIndex, p, t, s, c);
@@ -1493,6 +1498,7 @@ void Add_Tonescale_Compress_Inv_Shader(
 
     const std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, s.reach_m_table);
 
+    _Add_WrapHueChannel_Shader(shaderCreator, ss);
     ss.newLine() << ss.floatDecl("reachMaxM") << " = " << reachName << "_sample(" << pxl << ".b);";
 
     _Add_Tonescale_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, p, t, s, c);
@@ -1533,6 +1539,7 @@ void Add_Gamut_Compress_Fwd_Shader(
 
     const std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, s.reach_m_table);
 
+    _Add_WrapHueChannel_Shader(shaderCreator, ss);
     ss.newLine() << ss.floatDecl("reachMaxM") << " = " << reachName << "_sample(" << pxl << ".b);";
 
     _Add_Gamut_Compress_Fwd_Shader(shaderCreator, ss, resourceIndex, s, g);
@@ -1573,6 +1580,7 @@ void Add_Gamut_Compress_Inv_Shader(
 
     const std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, s.reach_m_table);
 
+    _Add_WrapHueChannel_Shader(shaderCreator, ss);
     ss.newLine() << ss.floatDecl("reachMaxM") << " = " << reachName << "_sample(" << pxl << ".b);";
 
     _Add_Gamut_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, s, g);
