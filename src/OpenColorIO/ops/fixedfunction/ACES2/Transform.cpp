@@ -89,10 +89,11 @@ inline f3 cusp_from_table(int i_hi, float t, const Table3D &gt)
 
 float reach_m_from_table(float h, const ACES2::Table1D &rt)
 {
-    const int i_lo = rt.nominal_hue_position_in_uniform_table(h); 
+    const int base = rt.hue_position_in_uniform_table(h);
+    const float t = h - base; // NOTE assumes uniform 1 degree 360 spacing
+    const int i_lo = base + rt.first_nominal_index; 
     const int i_hi = i_lo + 1; // NOTE assumes uniform 1 degree 360 spacing 
 
-    const float t = h - i_lo; // NOTE assumes uniform 1 degree 360 spacing // interpolation_weight(h, i_lo, i_hi);
     return lerpf(rt[i_lo], rt[i_hi], t);
 }
 

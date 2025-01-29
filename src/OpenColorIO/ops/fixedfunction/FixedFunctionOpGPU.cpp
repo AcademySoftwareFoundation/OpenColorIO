@@ -455,7 +455,8 @@ std::string _Add_Reach_table(
     ss.newLine() << "hwrap = hwrap - floor(hwrap / 360.0) * 360.0;";
     ss.newLine() << "hwrap = (hwrap < 0.0) ? hwrap + 360.0 : hwrap;";
 
-    ss.newLine() << ss.floatDecl("i_lo") << " = floor(hwrap) + " << table.base_index << ";";
+    ss.newLine() << ss.floatDecl("i_base") << " = floor(hwrap);";
+    ss.newLine() << ss.floatDecl("i_lo") << " = i_base + " << table.base_index << ";";
     ss.newLine() << ss.floatDecl("i_hi") << " = i_lo + 1;";
 
     if (dimensions == GpuShaderDesc::TEXTURE_1D)
@@ -469,7 +470,7 @@ std::string _Add_Reach_table(
         ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex2D(name, ss.float2Const("(i_hi + 0.5) / " + std::to_string(table.total_size), "0.5")) << ".r;";
     }
 
-    ss.newLine() << ss.floatDecl("t") << " = h - i_lo;"; // Hardcoded single degree spacing
+    ss.newLine() << ss.floatDecl("t") << " = h - i_base;"; // Hardcoded single degree spacing
     ss.newLine() << "return " << ss.lerp("lo", "hi", "t") << ";";
 
     ss.dedent();
