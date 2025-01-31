@@ -897,41 +897,25 @@ inline float get_focus_gain(float J, float cuspJ, float limit_J_max, float focus
 
 float solve_J_intersect(float J, float M, float focusJ, float maxJ, float slope_gain)
 {
-    const float a = M / (focusJ * slope_gain);
-    float b = 0.f;
-    float c = 0.f;
-    float intersectJ = 0.f;
+    const float M_scaled = M / slope_gain;
+    const float a = M_scaled / focusJ;
 
     if (J < focusJ)
     {
-        b = 1.f - M / slope_gain;
+        const float b = 1.f - M_scaled;
+        const float c = -J;
+        const float det = b * b - 4.f * a * c;
+        const float root = sqrt(det);
+        return -2.f * c / (b + root);
     }
     else
     {
-        b = - (1.f + M / slope_gain + maxJ * M / (focusJ * slope_gain));
+        const float b = -(1.f + M_scaled + maxJ * a);
+        const float c = maxJ * M_scaled + J;
+        const float det = b * b - 4.f * a * c;
+        const float root = sqrt(det);
+        return -2.f * c / (b - root);
     }
-
-    if (J < focusJ)
-    {
-        c = -J;
-    }
-    else
-    {
-        c = maxJ * M / slope_gain + J;
-    }
-
-    const float root = sqrt(b * b - 4.f * a * c);
-
-    if (J < focusJ)
-    {
-        intersectJ = 2.f * c / (-b - root);
-    }
-    else
-    {
-        intersectJ = 2.f * c / (-b + root);
-    }
-
-    return intersectJ;
 }
 
 // Smooth minimum about the scaled reference, based upon a cubic polynomial
