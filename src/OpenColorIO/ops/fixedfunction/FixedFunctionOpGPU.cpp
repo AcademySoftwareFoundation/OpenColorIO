@@ -378,7 +378,7 @@ void _Add_RGB_to_JMh_Shader(
 
     ss.newLine() << ss.floatDecl("M") << " = (J == 0.0) ? 0.0 : sqrt(Aab.g * Aab.g + Aab.b * Aab.b);";
 
-    ss.newLine() << ss.floatDecl("h") << " = (Aab.g == 0.0) ? 0.0 : " << ss.atan2("Aab.b", "Aab.g") << " * 180.0 / 3.14159265358979;";
+    ss.newLine() << ss.floatDecl("h") << " = (Aab.g == 0.0) ? 0.0 : " << ss.atan2("Aab.b", "Aab.g") << " * " << 180.0 / 3.14159265358979 << ";";
     ss.newLine() << "h = h - floor(h / 360.0) * 360.0;";
     ss.newLine() << "h = (h < 0.0) ? h + 360.0 : h;";
 
@@ -392,10 +392,10 @@ void _Add_JMh_to_RGB_Shader(
 {
     const std::string pxl(shaderCreator->getPixelName());
 
-    ss.newLine() << ss.floatDecl("h") << " = " << pxl << ".b * 3.14159265358979 / 180.0;";
+    ss.newLine() << ss.floatDecl("h") << " = " << pxl << ".b * " << 3.14159265358979 / 180.0 << ";";
 
     ss.newLine() << ss.float3Decl("Aab") << ";";
-    ss.newLine() << "Aab.r = pow(" << pxl << ".r / 100.0, 1.0 / (" << p.cz << "));";
+    ss.newLine() << "Aab.r = pow(" << pxl << ".r / 100.0, " << 1.0 / p.cz << ");";
     ss.newLine() << "Aab.g = " << pxl << ".g * cos(h);";
     ss.newLine() << "Aab.b = " << pxl << ".g * sin(h);";
 
@@ -550,8 +550,8 @@ void _Add_Tonescale_Compress_Fwd_Shader(
     ss.newLine() << ss.floatDecl("h") << " = " << pxl << ".b;";
 
     // Tonescale applied in Y (convert to and from J)
-    ss.newLine() << ss.floatDecl("A") << " = " << p.A_w_J << " * pow(abs(J) / 100.0, 1.0 / (" << p.cz << "));";
-    ss.newLine() << ss.floatDecl("Y") << " = sign(J) * pow(( " << ACES2::cam_nl_offset << " * A) / ( " << ACES2::cam_nl_scale << " - A), 1.0 / 0.42) / " << p.F_L_n << ";";
+    ss.newLine() << ss.floatDecl("A") << " = " << p.A_w_J << " * pow(abs(J) / 100.0, " << 1.0 / p.cz << ");";
+    ss.newLine() << ss.floatDecl("Y") << " = sign(J) * pow(( " << ACES2::cam_nl_offset << " * A) / ( " << ACES2::cam_nl_scale << " - A), " << 1.0 / 0.42 << ") / " << p.F_L_n << ";";
 
     ss.newLine() << ss.floatDecl("f") << " = " << t.m_2  << " * pow(max(0.0, Y) / (Y + " << t.s_2 << "), " << t.g << ");";
     ss.newLine() << ss.floatDecl("Y_ts") << " = max(0.0, f * f / (f + " << t.t_1 << ")) * " << t.n_r << ";";
@@ -574,8 +574,7 @@ void _Add_Tonescale_Compress_Fwd_Shader(
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.floatDecl("PI") << " = 3.14159265358979;";
-    ss.newLine() << ss.floatDecl("h_rad") << " = h / 180.0 * PI;";
+    ss.newLine() << ss.floatDecl("h_rad") << " = h * " << 3.14159265358979f / 180.0f << ";";
     ss.newLine() << ss.floatDecl("a") << " = cos(h_rad);";
     ss.newLine() << ss.floatDecl("b") << " = sin(h_rad);";
     ss.newLine() << ss.floatDecl("cos_hr2") << " = a * a - b * b;";
@@ -583,7 +582,7 @@ void _Add_Tonescale_Compress_Fwd_Shader(
     ss.newLine() << ss.floatDecl("cos_hr3") << " = 4.0 * a * a * a - 3.0 * a;";
     ss.newLine() << ss.floatDecl("sin_hr3") << " = 3.0 * b - 4.0 * b * b * b;";
     ss.newLine() << ss.floatDecl("M") << " = 11.34072 * a + 16.46899 * cos_hr2 + 7.88380 * cos_hr3 + 14.66441 * b + -6.37224 * sin_hr2 + 9.19364 * sin_hr3 + 77.12896;";
-    ss.newLine() << "Mnorm = M * " << c.chroma_compress_scale << ";";
+    ss.newLine() << "Mnorm = M * " << c.chroma_compress_scale << ";"; // TODO precompute
 
     ss.dedent();
     ss.newLine() << "}";
@@ -620,8 +619,8 @@ void _Add_Tonescale_Compress_Inv_Shader(
     ss.newLine() << ss.floatDecl("h") << " = " << pxl << ".b;";
 
     // Inverse Tonescale applied in Y (convert to and from J)
-    ss.newLine() << ss.floatDecl("A") << " = " << p.A_w_J << " * pow(abs(J_ts) / 100.0, 1.0 / (" << p.cz << "));";
-    ss.newLine() << ss.floatDecl("Y_ts") << " = sign(J_ts) * pow(( " << ACES2::cam_nl_offset << " * A) / ( " << ACES2::cam_nl_scale << " - A), 1.0 / 0.42) / " << p.F_L_n << " / 100.0;";
+    ss.newLine() << ss.floatDecl("A") << " = " << p.A_w_J << " * pow(abs(J_ts) / 100.0, " << 1.0f / p.cz << ");";
+    ss.newLine() << ss.floatDecl("Y_ts") << " = sign(J_ts) * pow(( " << ACES2::cam_nl_offset << " * A) / ( " << ACES2::cam_nl_scale << " - A), " << 1.0 / 0.42 << ") / " << p.F_L_n << " / 100.0;";
 
     ss.newLine() << ss.floatDecl("Z") << " = max(0.0, min(" << t.n << " / (" << t.u_2 * t.n_r << "), Y_ts));";
     ss.newLine() << ss.floatDecl("ht") << " = (Z + sqrt(Z * (4.0 * " << t.t_1 << " + Z))) / 2.0;";
@@ -645,8 +644,7 @@ void _Add_Tonescale_Compress_Inv_Shader(
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.floatDecl("PI") << " = 3.14159265358979;";
-    ss.newLine() << ss.floatDecl("h_rad") << " = h / 180.0 * PI;";
+    ss.newLine() << ss.floatDecl("h_rad") << " = h * " << 3.14159265358979 / 180.0 << ";";
     ss.newLine() << ss.floatDecl("a") << " = cos(h_rad);";
     ss.newLine() << ss.floatDecl("b") << " = sin(h_rad);";
     ss.newLine() << ss.floatDecl("cos_hr2") << " = a * a - b * b;";
@@ -814,7 +812,7 @@ std::string _Add_Focus_Gain_func(
     ss.newLine() << "{";
     ss.indent();
     ss.newLine() << ss.floatDecl("gain") << " = ( " << s.limit_J_max << " - thr) / max(0.0001, (" << s.limit_J_max << " - min(" << s.limit_J_max << ", J)));";
-    ss.newLine() << "return pow(log(gain)/log(10.0)," << ACES2::focus_adjust_gain_inv << ") + 1.0;";
+    ss.newLine() << "return pow(log(gain)/log(10.0), " << ACES2::focus_adjust_gain_inv << ") + 1.0;";
     ss.dedent();
     ss.newLine() << "}";
     ss.newLine() << "else";
@@ -854,53 +852,29 @@ std::string _Add_Solve_J_Intersect_func(
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.floatDecl("a") << " = " << "M / (focusJ * slope_gain);";
-    ss.newLine() << ss.floatDecl("b") << " = 0.0;";
-    ss.newLine() << ss.floatDecl("c") << " = 0.0;";
-    ss.newLine() << ss.floatDecl("intersectJ") << " = 0.0;";
+    ss.newLine() << ss.floatDecl("M_scaled") << " = M / slope_gain;";
+    ss.newLine() << ss.floatDecl("a") << " = M_scaled / focusJ;";
 
     ss.newLine() << "if (J < focusJ)";
     ss.newLine() << "{";
     ss.indent();
-    ss.newLine() << "b = 1.0 - M / slope_gain;";
+    ss.newLine() << ss.floatDecl("b") << " = 1.0 - M_scaled;";
+    ss.newLine() << ss.floatDecl("c") << " = -J;";
+    ss.newLine() << ss.floatDecl("det") << " =  b * b - 4.f * a * c;";
+    ss.newLine() << ss.floatDecl("root") << " =  sqrt(det);";
+    ss.newLine() << "return -2.0 * c / (b + root);";
     ss.dedent();
     ss.newLine() << "}";
     ss.newLine() << "else";
     ss.newLine() << "{";
     ss.indent();
-    ss.newLine() << "b = - (1.0 + M / slope_gain + " << s.limit_J_max << " * M / (focusJ * slope_gain));";
+    ss.newLine() << ss.floatDecl("b") << " = - (1.0 + M_scaled + " << s.limit_J_max << " * a);";
+    ss.newLine() << ss.floatDecl("c") << " = " << s.limit_J_max << " * M_scaled + J;";
+    ss.newLine() << ss.floatDecl("det") << " =  b * b - 4.f * a * c;";
+    ss.newLine() << ss.floatDecl("root") << " =  sqrt(det);";
+    ss.newLine() << "return -2.0 * c / (b - root);";
     ss.dedent();
     ss.newLine() << "}";
-
-    ss.newLine() << "if (J < focusJ)";
-    ss.newLine() << "{";
-    ss.indent();
-    ss.newLine() << "c = -J;";
-    ss.dedent();
-    ss.newLine() << "}";
-    ss.newLine() << "else";
-    ss.newLine() << "{";
-    ss.indent();
-    ss.newLine() << "c = " << s.limit_J_max << " * M / slope_gain + J;";
-    ss.dedent();
-    ss.newLine() << "}";
-
-    ss.newLine() << ss.floatDecl("root") << " = sqrt(b * b - 4.0 * a * c);";
-
-    ss.newLine() << "if (J < focusJ)";
-    ss.newLine() << "{";
-    ss.indent();
-    ss.newLine() << "intersectJ = 2.0 * c / (-b - root);";
-    ss.dedent();
-    ss.newLine() << "}";
-    ss.newLine() << "else";
-    ss.newLine() << "{";
-    ss.indent();
-    ss.newLine() << "intersectJ = 2.0 * c / (-b + root);";
-    ss.dedent();
-    ss.newLine() << "}";
-
-    ss.newLine() << "return intersectJ;";
 
     ss.dedent();
     ss.newLine() << "}";
@@ -928,24 +902,10 @@ std::string _Add_Find_Gamut_Boundary_Intersection_func(
 
     GpuShaderText ss(shaderCreator->getLanguage());
 
-    ss.newLine() << ss.floatKeyword() << " " << name << "(" << ss.float3Keyword() << " JMh_s, " << ss.float2Keyword()
-                 << " JM_cusp, float J_focus, float slope_gain, float gamma_top_inv, float gamma_bottom_inv, float J_intersect_source, float J_intersect_cusp)";
+    ss.newLine() << ss.floatKeyword() << " " << name << "(" << ss.float2Keyword()
+                 << " JM_cusp, float gamma_top_inv, float gamma_bottom_inv, float J_intersect_source, float J_intersect_cusp, float slope)";
     ss.newLine() << "{";
     ss.indent();
-
-    ss.newLine() << ss.floatDecl("slope") << " = 0.0;";
-    ss.newLine() << "if (J_intersect_source < J_focus)";
-    ss.newLine() << "{";
-    ss.indent();
-    ss.newLine() << "slope = J_intersect_source * (J_intersect_source - J_focus) / (J_focus * slope_gain);";
-    ss.dedent();
-    ss.newLine() << "}";
-    ss.newLine() << "else";
-    ss.newLine() << "{";
-    ss.indent();
-    ss.newLine() << "slope = (" << s.limit_J_max << " - J_intersect_source) * (J_intersect_source - J_focus) / (J_focus * slope_gain);";
-    ss.dedent();
-    ss.newLine() << "}";
 
     ss.newLine() << ss.floatDecl("M_boundary_lower") << " = J_intersect_cusp * pow(J_intersect_source / J_intersect_cusp, gamma_bottom_inv) / (JM_cusp.r / JM_cusp.g - slope);";
     ss.newLine() << ss.floatDecl("M_boundary_upper") << " = JM_cusp.g * (" << s.limit_J_max << " - J_intersect_cusp) * pow((" << s.limit_J_max << " - J_intersect_source) / (" << s.limit_J_max << " - J_intersect_cusp), gamma_top_inv) / (slope * JM_cusp.g + " << s.limit_J_max << " - JM_cusp.r);";
@@ -958,66 +918,12 @@ std::string _Add_Find_Gamut_Boundary_Intersection_func(
     ss.newLine() << ss.floatDecl("s") << " = " << ACES2::smooth_cusps << " * JM_cusp.g;";
 
     ss.newLine() << ss.floatDecl("h") << " = max(s - abs(a - b), 0.0) / s;";
-    ss.newLine() << "smin = min(a, b) - h * h * h * s * (1.0 / 6.0);";
+    ss.newLine() << "smin = min(a, b) - h * h * h * s * " << (1.0 / 6.0) << ";";
 
     ss.dedent();
     ss.newLine() << "}";
 
     ss.newLine() << "return smin;";
-
-    ss.dedent();
-    ss.newLine() << "}";
-
-    shaderCreator->addToHelperShaderCode(ss.string().c_str());
-
-    return name;
-}
-
-std::string _Add_Reach_Boundary_func(
-    GpuShaderCreatorRcPtr & shaderCreator,
-    unsigned resourceIndex,
-    const ACES2::SharedCompressionParameters & s,
-    const ACES2::GamutCompressParams & g,
-    const std::string & getFocusGainName,
-    const std::string & solveJIntersectName)
-{
-    // Reserve name
-    std::ostringstream resName;
-    resName << shaderCreator->getResourcePrefix()
-            << std::string("_")
-            << std::string("get_reach_boundary")
-            << resourceIndex;
-
-    // Note: Remove potentially problematic double underscores from GLSL resource names.
-    std::string name(resName.str());
-    StringUtils::ReplaceInPlace(name, "__", "_");
-
-    GpuShaderText ss(shaderCreator->getLanguage());
-
-    ss.newLine() << ss.float3Keyword() << " " << name << "(float J, float M, float h, " << ss.float2Keyword() << " JMcusp, float focusJ, float reachMaxM)";
-    ss.newLine() << "{";
-    ss.indent();
-
-    ss.newLine() << ss.floatDecl("slope_gain") << " = " << s.limit_J_max << " * " << g.focus_dist << " * " << getFocusGainName << "(J, JMcusp.r);";
-    ss.newLine() << ss.floatDecl("intersectJ") << " = " << solveJIntersectName << "(J, M, focusJ, slope_gain);";
-
-    ss.newLine() << ss.floatDecl("slope") << " = 0.0;";
-    ss.newLine() << "if (intersectJ < focusJ)";
-    ss.newLine() << "{";
-    ss.indent();
-    ss.newLine() << "slope = intersectJ * (intersectJ - focusJ) / (focusJ * slope_gain);";
-    ss.dedent();
-    ss.newLine() << "}";
-    ss.newLine() << "else";
-    ss.newLine() << "{";
-    ss.indent();
-    ss.newLine() << "slope = (" << s.limit_J_max << " - intersectJ) * (intersectJ - focusJ) / (focusJ * slope_gain);";
-    ss.dedent();
-    ss.newLine() << "}";
-
-    ss.newLine() << ss.floatDecl("boundary") << " = " << s.limit_J_max << " * pow(intersectJ / " << s.limit_J_max << ", " << s.model_gamma_inv << ") * reachMaxM / (" << s.limit_J_max << " - slope * reachMaxM);";
-
-    ss.newLine() << "return " << ss.float3Const("J", "boundary", "h") << ";";
 
     ss.dedent();
     ss.newLine() << "}";
@@ -1102,7 +1008,6 @@ std::string _Add_Compress_Gamut_func(
     const ACES2::GamutCompressParams & g,
     const std::string & getFocusGainName,
     const std::string & findGamutBoundaryIntersectionName,
-    const std::string & getReachBoundaryName,
     const std::string & compressionName,
     const std::string & solveJIntersectName)
 {
@@ -1140,27 +1045,17 @@ std::string _Add_Compress_Gamut_func(
     ss.newLine() << ss.float2Decl("JMcusp") << " = JMGcusp.rg;";
 
     ss.newLine() << ss.floatDecl("focusJ") << " = " << ss.lerp("JMcusp.r", std::to_string(g.mid_J), std::string("min(1.0, ") + std::to_string(ACES2::cusp_mid_blend) + " - (JMcusp.r / " + std::to_string(s.limit_J_max)) << "));";
-    ss.newLine() << ss.floatDecl("slope_gain") << " = " << s.limit_J_max << " * " << g.focus_dist << " * " << getFocusGainName << "(Jx, JMcusp.r);";
+    ss.newLine() << ss.floatDecl("slope_gain") << " = " << s.limit_J_max * g.focus_dist << " * " << getFocusGainName << "(Jx, JMcusp.r);";
     ss.newLine() << ss.floatDecl("J_intersect_source") << " = " << solveJIntersectName << "(JMh.r, JMh.g, focusJ, slope_gain);";
-    ss.newLine() << ss.floatDecl("gamut_slope") << " = 0.0;";
-    ss.newLine() << "if (J_intersect_source < focusJ)";
-    ss.newLine() << "{";
-    ss.indent();
-    ss.newLine() << "gamut_slope = J_intersect_source * (J_intersect_source - focusJ) / (focusJ * slope_gain);";
-    ss.dedent();
-    ss.newLine() << "}";
-    ss.newLine() << "else";
-    ss.newLine() << "{";
-    ss.indent();
-    ss.newLine() << "gamut_slope = (" << s.limit_J_max << " - J_intersect_source) * (J_intersect_source - focusJ) / (focusJ * slope_gain);";
-    ss.dedent();
-    ss.newLine() << "}";
+    ss.newLine() << ss.floatDecl("gamut_slope") << " = (J_intersect_source < focusJ) ? J_intersect_source : (" << s.limit_J_max << " - J_intersect_source);";
+    ss.newLine() << "gamut_slope = gamut_slope * (J_intersect_source - focusJ) / (focusJ * slope_gain);";
 
     ss.newLine() << ss.floatDecl("gamma_top_inv") << " = JMGcusp.b;";
-    ss.newLine() << ss.floatDecl("gamma_bottom_inv") << " = " << g.lower_hull_gamma_inv << ";";
+    ss.newLine() << ss.floatDecl("gamma_bottom_inv") << " = " << g.lower_hull_gamma_inv << ";"; // TODO move to where it is used
 
     ss.newLine() << ss.floatDecl("J_intersect_cusp") << " = " << solveJIntersectName << "(JMcusp.r, JMcusp.g, focusJ, slope_gain);";
-    ss.newLine() << ss.floatDecl("gamutBoundaryM") << " = " << findGamutBoundaryIntersectionName << "(JMh, JMcusp, focusJ, slope_gain, gamma_top_inv, gamma_bottom_inv, J_intersect_source, J_intersect_cusp);";
+    ss.newLine() << ss.floatDecl("gamutBoundaryM") << " = " << findGamutBoundaryIntersectionName
+                 << "(JMcusp, gamma_top_inv, gamma_bottom_inv, J_intersect_source, J_intersect_cusp, gamut_slope);";
 
     ss.newLine() << "if (gamutBoundaryM <= 0.0)";
     ss.newLine() << "{";
@@ -1200,9 +1095,8 @@ void _Add_Gamut_Compress_Fwd_Shader(
     std::string getFocusGainName = _Add_Focus_Gain_func(shaderCreator, resourceIndex, s);
     std::string solveJIntersectName = _Add_Solve_J_Intersect_func(shaderCreator, resourceIndex, s);
     std::string findGamutBoundaryIntersectionName = _Add_Find_Gamut_Boundary_Intersection_func(shaderCreator, resourceIndex, s);
-    std::string getReachBoundaryName = _Add_Reach_Boundary_func(shaderCreator, resourceIndex, s, g, getFocusGainName, solveJIntersectName);
     std::string compressionName = _Add_Compression_func(shaderCreator, resourceIndex, false);
-    std::string gamutCompressName = _Add_Compress_Gamut_func(shaderCreator, resourceIndex, s, g, getFocusGainName, findGamutBoundaryIntersectionName, getReachBoundaryName, compressionName, solveJIntersectName);
+    std::string gamutCompressName = _Add_Compress_Gamut_func(shaderCreator, resourceIndex, s, g, getFocusGainName, findGamutBoundaryIntersectionName, compressionName, solveJIntersectName);
 
     const std::string pxl(shaderCreator->getPixelName());
 
@@ -1221,9 +1115,8 @@ void _Add_Gamut_Compress_Inv_Shader(
     std::string getFocusGainName = _Add_Focus_Gain_func(shaderCreator, resourceIndex, s);
     std::string solveJIntersectName = _Add_Solve_J_Intersect_func(shaderCreator, resourceIndex, s);
     std::string findGamutBoundaryIntersectionName = _Add_Find_Gamut_Boundary_Intersection_func(shaderCreator, resourceIndex, s);
-    std::string getReachBoundaryName = _Add_Reach_Boundary_func(shaderCreator, resourceIndex, s, g, getFocusGainName, solveJIntersectName);
     std::string compressionName = _Add_Compression_func(shaderCreator, resourceIndex, true);
-    std::string gamutCompressName = _Add_Compress_Gamut_func(shaderCreator, resourceIndex, s, g, getFocusGainName, findGamutBoundaryIntersectionName, getReachBoundaryName, compressionName, solveJIntersectName);
+    std::string gamutCompressName = _Add_Compress_Gamut_func(shaderCreator, resourceIndex, s, g, getFocusGainName, findGamutBoundaryIntersectionName, compressionName, solveJIntersectName);
 
     const std::string pxl(shaderCreator->getPixelName());
 
