@@ -3749,6 +3749,342 @@ OCIO_ADD_TEST(Config, display_view_order)
     OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_B", 1)), "View_1");
 }
 
+OCIO_ADD_TEST(Config, compare_displays) {
+    static constexpr char CONFIG1[]{ R"(ocio_profile_version: 2
+
+roles:
+  default: raw
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+shared_views:
+  - !<View> {name: sview1, colorspace: raw}
+
+displays:
+  Raw:
+    - !<View> {name: Raw, colorspace: raw}
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+    - !<View> {name: view, view_transform: display_vt, display_colorspace: display_cs}
+    - !<Views> [sview1]
+
+active_displays: [sRGB]
+active_views: [view]
+
+view_transforms:
+  - !<ViewTransform>
+    name: default_vt
+    to_scene_reference: !<CDLTransform> {sat: 1.5}
+
+  - !<ViewTransform>
+    name: display_vt
+    to_display_reference: !<CDLTransform> {sat: 1.5}
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: display_cs
+    to_display_reference: !<CDLTransform> {sat: 1.5}
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+)" };
+
+    static constexpr char CONFIG2[]{ R"(ocio_profile_version: 2
+
+roles:
+  default: raw
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+shared_views:
+  - !<View> {name: view, view_transform: display_vt, display_colorspace: display_cs}
+  - !<View> {name: sview1, colorspace: raw}
+
+displays:
+  Raw:
+    - !<View> {name: Raw, colorspace: raw}
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+    - !<Views> [view, sview1]
+
+active_displays: [Raw]
+active_views: [Raw]
+
+view_transforms:
+  - !<ViewTransform>
+    name: default_vt
+    to_scene_reference: !<CDLTransform> {sat: 1.5}
+
+  - !<ViewTransform>
+    name: display_vt
+    to_display_reference: !<CDLTransform> {sat: 1.5}
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: display_cs
+    to_display_reference: !<CDLTransform> {sat: 1.5}
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+)" };
+
+    std::istringstream is;
+    is.str(CONFIG1);
+    OCIO::ConstConfigRcPtr config1, config2;
+    OCIO_CHECK_NO_THROW(config1 = OCIO::Config::CreateFromStream(is));
+    is.clear();
+    is.str(CONFIG2);
+    OCIO_CHECK_NO_THROW(config2 = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(config1->validate());
+    OCIO_CHECK_NO_THROW(config2->validate());
+
+    // Validate that two views belonging to the same display within a pair of configs are equal
+    // regardless of if a view is display-defined in one config and shared in the other.
+    // TODO: Shorten this by getting rid of unecessary checks.
+
+    {
+        // Config 1
+        // Only the 'sRGB' display is active.
+        OCIO_REQUIRE_EQUAL(1, config1->getNumDisplays());
+        OCIO_REQUIRE_EQUAL(std::string("sRGB"), config1->getDefaultDisplay());
+        OCIO_REQUIRE_EQUAL(std::string("sRGB"), config1->getDisplay(0));
+        OCIO_CHECK_EQUAL(std::string("sRGB"), config1->getActiveDisplays());
+
+        // There are two display-defined views: 'Raw' and 'view'.
+        OCIO_CHECK_EQUAL(2, config1->getNumViews(OCIO::VIEW_DISPLAY_DEFINED, "sRGB"));
+        OCIO_CHECK_EQUAL(std::string("Raw"), config1->getView(OCIO::VIEW_DISPLAY_DEFINED, "sRGB", 0));
+        OCIO_CHECK_EQUAL(std::string("view"), config1->getView(OCIO::VIEW_DISPLAY_DEFINED, "sRGB", 1));
+
+        // Only the 'view' view is active.
+        OCIO_CHECK_EQUAL(1, config1->getNumViews("sRGB"));
+        OCIO_CHECK_EQUAL(std::string("view"), config1->getActiveViews());
+
+        // Check for the (display, view) pair.
+        OCIO_CHECK_ASSERT(config1->displayHasView("sRGB", "view"));
+
+        // Config 2
+        // Only the 'Raw' display is active
+        OCIO_CHECK_EQUAL(std::string("Raw"), config2->getActiveDisplays());
+        // Only the 'Raw' view is active
+        OCIO_CHECK_EQUAL(std::string("Raw"), config2->getActiveViews());
+
+        // There are two shared views: view and sview1
+        OCIO_CHECK_EQUAL(2, config2->getNumViews(OCIO::VIEW_SHARED, "sRGB"));
+        OCIO_CHECK_EQUAL(std::string("view"), config2->getView(OCIO::VIEW_SHARED, "sRGB", 0));
+        OCIO_CHECK_EQUAL(std::string("sview1"), config2->getView(OCIO::VIEW_SHARED, "sRGB", 1));
+        OCIO_REQUIRE_EQUAL(config2->getNumDisplaysAll(), 2);
+
+        // Check for the (display, view) pair.
+        OCIO_CHECK_EQUAL(config2->getDisplayAll(1), std::string("sRGB"));
+        OCIO_CHECK_ASSERT(config2->displayHasView("sRGB", "view"));
+        OCIO_CHECK_ASSERT(config2->viewIsShared("sRGB", "view"));
+
+        // Verify the views are equal.
+        OCIO_CHECK_ASSERT(OCIO::Config::ViewsAreEqual(config1, config2, "sRGB", "view"));
+        
+    }
+
+    // TODO: Verify Config::ViewsAreEqual returns true if view is display-defined in both configs (Raw, Raw) for both
+    {
+        // Inactive in config 1 but active in config 2
+        // 1. Confirm that 'Raw' is a display in config 1 (even if inactive)
+        
+        // Config 1
+        // 'Raw' is an inactive display
+        OCIO_CHECK_EQUAL(config1->getDisplayAll(0), std::string("Raw"));
+        // 2. Confirm 'Raw' is display-defined view in config 1
+        OCIO_CHECK_EQUAL(1, config1->getNumViews(OCIO::VIEW_DISPLAY_DEFINED, "Raw"));
+        OCIO_CHECK_EQUAL(std::string("Raw"), config1->getView(OCIO::VIEW_DISPLAY_DEFINED, "Raw", 0));
+
+        // 3. Check or the (display, view) pair with displayHasView
+        OCIO_CHECK_ASSERT(config1->displayHasView("Raw", "Raw"));
+
+        // 4. Confirm 'Raw' display is active, 'Raw' view is active and display-defined
+
+        // Config 2
+        OCIO_CHECK_EQUAL(1, config2->getNumViews(OCIO::VIEW_DISPLAY_DEFINED, "Raw"));
+        OCIO_CHECK_EQUAL(std::string("Raw"), config2->getView(OCIO::VIEW_DISPLAY_DEFINED, "Raw", 0));
+        OCIO_CHECK_ASSERT(config2->displayHasView("Raw", "Raw"));
+
+        // Check for the (display, view) pair
+        // Verify the views are equal.
+        OCIO_CHECK_ASSERT(OCIO::Config::ViewsAreEqual(config1, config2, "Raw", "Raw"));
+    }
+
+    // TODO: Verify Config::ViewsAreEqual returns true if view is shared in both configs (add a shared view for both?) -- TBD.
+    {
+        // Config 1
+        // 'sRGB' has one shared view: 'sview1'
+        OCIO_CHECK_EQUAL(1, config1->getNumViews(OCIO::VIEW_SHARED, "sRGB"));
+        OCIO_CHECK_EQUAL(std::string("sview1"), config1->getView(OCIO::VIEW_SHARED, "sRGB", 0));
+        OCIO_CHECK_ASSERT(config1->displayHasView("sRGB", "sview1"));
+
+        // Config 2
+        // 'sRGB' has 'sview1' as shared view (Already checked this)
+        // displayHasView
+        OCIO_CHECK_ASSERT(config2->displayHasView("sRGB", "sview1"));
+
+
+        // Verify views are equal.
+        OCIO_CHECK_ASSERT(OCIO::Config::ViewsAreEqual(config1, config2, "sRGB", "sview1"));
+    }
+
+    // Verify that Config::displayHasView works regardless of whether the display or view are active
+    // and regardless of whether the view is display-defined or if the display has this as a shared view.
+
+    {
+        OCIO::ConfigRcPtr cfg1 = config1->createEditableCopy();
+        OCIO_CHECK_ASSERT(cfg1->displayHasView("sRGB", "Raw" )); // Active display has inactive view (display-defined).
+        OCIO_CHECK_ASSERT(cfg1->displayHasView("sRGB", "view")); // Active display has active view (display-defined).
+        OCIO_CHECK_ASSERT(cfg1->displayHasView("Raw" , "Raw" )); // Inactive display has inactive view (display-defined).
+        // OCIO_CHECK_ASSERT(cfg1->displayHasView("sRGB", "sview1")); // Active display has inactive view (shared).
+
+        OCIO::ConfigRcPtr cfg2 = config2->createEditableCopy();
+        OCIO_CHECK_ASSERT(cfg2->displayHasView("sRGB", "Raw" )); // Inactive display has active view (display-defined).
+        OCIO_CHECK_ASSERT(cfg2->displayHasView("sRGB", "view")); // Inactive display has inactive view (shared).
+
+        OCIO_CHECK_NO_THROW(cfg2->setActiveDisplays("Raw, sRGB"));
+        OCIO_CHECK_EQUAL(std::string("Raw, sRGB"), cfg2->getActiveDisplays());
+        OCIO_CHECK_ASSERT(cfg2->displayHasView("sRGB", "view")); // Active display has inactive view (shared).
+
+        OCIO_CHECK_NO_THROW(cfg2->setActiveViews("Raw, view"));
+        OCIO_CHECK_EQUAL(std::string("Raw, view"), cfg2->getActiveViews());
+        OCIO_CHECK_ASSERT(cfg2->displayHasView("sRGB", "view")); // Active display has active view (shared).
+
+        OCIO_CHECK_NO_THROW(cfg2->setActiveDisplays("Raw"));
+        OCIO_CHECK_EQUAL(std::string("Raw"), cfg2->getActiveDisplays());
+        OCIO_CHECK_ASSERT(cfg2->displayHasView("sRGB", "view")); // Inactive display has active view (shared). TOUPDATE!
+        
+    }
+
+    // TODO: Verify Config::ViewsAreEqual and displayHasView returns false if display exists, view doesn't.
+    {
+        /**
+         * Case: inactive display, nonexistent view. [Config 1 - sRGB, Raw]
+         * 1. Verify 'sRGB' is a display.
+         * 2. Verify that Raw is a view of sRGB
+         * 3. Delete Raw
+         * 4. Verify sRGB exists
+         * 5. Verify the views of sRGB
+         * 7. Verify no active views. Also: view doesnt exist (if additional check). getNumViews should go down to 2.
+         * 8. Verify that displayHasView is false.
+         * 9. Verify that viewsareequal is false.
+         */
+        OCIO::ConfigRcPtr cfg1 = config1->createEditableCopy();
+        OCIO_CHECK_EQUAL(std::string("sRGB"), cfg1->getActiveDisplays());
+
+        // There are two display-defined views: 'Raw' and 'view'.
+        OCIO_CHECK_EQUAL(2, cfg1->getNumViews(OCIO::VIEW_DISPLAY_DEFINED, "sRGB"));
+        OCIO_CHECK_EQUAL(std::string("Raw"), cfg1->getView(OCIO::VIEW_DISPLAY_DEFINED, "sRGB", 0));
+        OCIO_CHECK_EQUAL(std::string("view"), cfg1->getView(OCIO::VIEW_DISPLAY_DEFINED, "sRGB", 1));
+
+        // Delete 'Raw'.
+        OCIO_CHECK_NO_THROW(cfg1->removeDisplayView("sRGB", "Raw"));
+
+        OCIO_CHECK_EQUAL(1, cfg1->getNumViews(OCIO::VIEW_DISPLAY_DEFINED, "sRGB"));
+        OCIO_CHECK_EQUAL(std::string("view"), cfg1->getView(OCIO::VIEW_DISPLAY_DEFINED, "sRGB", 0));
+
+        // Verify displayHasView returns false
+        OCIO_CHECK_ASSERT(!cfg1->displayHasView("sRGB", "Raw"));
+        OCIO_CHECK_EQUAL(false, cfg1->displayHasView("sRGB", "Raw"));
+
+        // Verify ViewsAreEqual returns false
+        OCIO_CHECK_ASSERT(!OCIO::Config::ViewsAreEqual(config1, cfg1, "sRGB", "Raw"));
+        OCIO_CHECK_EQUAL(false, OCIO::Config::ViewsAreEqual(cfg1, cfg1, "sRGB", "Raw"));
+
+    }
+
+    // done: Verify Config::ViewsAreEqual and displayHasView returns false if view exists, display doesn't
+    {
+        /**
+         * Case: nonexistent display, active view. [Config 2 - Raw, Raw]
+         * 1. Verify 'Raw' is an active display. Should be the only active display.
+         * 1b. Get number of displays.
+         * 2. Verify 'Raw' has one view.
+         * 3. 'Raw' has one view, 'Raw'.
+         * 4. Verify 'Raw' is an active view.
+         * 
+         * 5. Delete the display 'Raw'.
+         * 6. Verify active display is empty.
+         * 7. Verify that 'Raw' has no views. [because it doesnt exist]
+         * 8. Get number of displays (should have gone down by one)
+         * 9. Check that 'Raw' is still an active view.
+         * displayHasView, viewsareequal is false.
+         */
+
+        OCIO::ConfigRcPtr cfg2 = config2->createEditableCopy();
+
+        // Get total number of displays.
+        OCIO_REQUIRE_EQUAL(2, cfg2->getNumDisplaysAll());
+
+        // 1. Verify 'Raw' is an active display. Should be the only active display.
+        OCIO_CHECK_EQUAL(std::string("Raw"), cfg2->getActiveDisplays());
+
+        // Verify 'Raw' has one view, 'Raw'.
+        OCIO_REQUIRE_EQUAL(1, cfg2->getNumViews("Raw"));
+        OCIO_REQUIRE_EQUAL(std::string("Raw"), cfg2->getView("Raw", 0));
+
+        // 'Raw' view is active.
+        OCIO_CHECK_EQUAL(std::string("Raw"), cfg2->getActiveViews());
+
+        // Delete the display 'Raw'.
+        OCIO_CHECK_NO_THROW(cfg2->removeDisplayView("Raw", "Raw"));
+        OCIO_CHECK_ASSERT(!cfg2->displayHasView("Raw", "Raw"));
+
+        // Get number of displays (should have gone down by one)
+        OCIO_REQUIRE_EQUAL(1, cfg2->getNumDisplaysAll());
+
+        // 'Raw' is still an active view
+        OCIO_REQUIRE_EQUAL(std::string("Raw"), cfg2->getActiveViews()); // plz work
+
+        // Verify displayHasView returns false
+        OCIO_CHECK_ASSERT(!cfg2->displayHasView("Raw", "Raw"));
+        OCIO_CHECK_ASSERT(!OCIO::Config::ViewsAreEqual(config2, cfg2, "Raw", "Raw"));
+
+    }
+
+    // TODO: displayHasView will only check config level shared views if dispName is null.
+    // TODO: displayHasView will not check config level shared views if dispName is not null. - idk what this means
+    {
+        /**
+         * With config 1:
+         * 1. show srgb has one shared views
+         * 2. do display has view for srgb and for nullptr. both should be true
+         * 3. remove display view
+         * 4. show that shared view remains in config
+         * 5. do display has view for srgb and for nullptr. should be false, then true.
+         */
+        OCIO::ConfigRcPtr cfg1 = config1->createEditableCopy();
+        // 'sRGB' has one shared view: 'sview1'
+        OCIO_CHECK_EQUAL(1, cfg1->getNumViews(OCIO::VIEW_SHARED, "sRGB"));
+        OCIO_CHECK_EQUAL(std::string("sview1"), cfg1->getView(OCIO::VIEW_SHARED, "sRGB", 0));
+        OCIO_CHECK_ASSERT(cfg1->displayHasView("sRGB", "sview1"));
+        OCIO_CHECK_ASSERT(cfg1->displayHasView(nullptr, "sview1"));
+
+        OCIO_CHECK_NO_THROW(cfg1->removeDisplayView("sRGB", "sview1"));
+
+        // 'sRGB' is still a display
+        OCIO_REQUIRE_EQUAL(std::string("sRGB"), config1->getDefaultDisplay());
+
+        // 'sRGB' has no shared views
+        OCIO_CHECK_EQUAL(0, cfg1->getNumViews(OCIO::VIEW_SHARED, "sRGB"));
+
+        // Show that sview1 still exists in the config
+        OCIO_CHECK_EQUAL(1, cfg1->getNumViews(OCIO::VIEW_SHARED, nullptr));
+        OCIO_CHECK_EQUAL(std::string("sview1"), cfg1->getView(OCIO::VIEW_SHARED, nullptr, 0));
+
+        OCIO_CHECK_ASSERT(!cfg1->displayHasView("sRGB", "sview1"));
+        OCIO_CHECK_ASSERT(cfg1->displayHasView(nullptr, "sview1"));
+
+    }
+
+    
+}
+
 OCIO_ADD_TEST(Config, log_serialization)
 {
     {
@@ -8976,6 +9312,15 @@ colorspaces:
                           OCIO::Exception,
                           "Display 'virtual_display' has a view 'Raw1' refers to a look, 'look',"
                           " which is not defined.");
+}
+
+OCIO_ADD_TEST(Config, compare_virtual_displays) {
+    /**
+     * TODO: Test hasVirtualView and VirtualViewsAreEqual
+     * Define a config file with a set of virtual views. Validate with hasVirtualView.
+     * Define a second file with a set of virtual views. Validate with hasVirtualView.
+     * Compare the two configs using Virtualviewsareequal testing all possible aspects.
+     */
 }
 
 OCIO_ADD_TEST(Config, description_and_name)
