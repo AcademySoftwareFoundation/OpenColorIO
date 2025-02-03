@@ -369,8 +369,8 @@ void _Add_RGB_to_JMh_Shader(
 
     ss.newLine() << ss.float3Decl("lms") << " = " << ss.mat3fMul(&p.MATRIX_RGB_to_CAM16_c[0], pxl + ".rgb") << ";";
 
-    ss.newLine() << ss.float3Decl("F_L_v") << " = pow(" << p.F_L_n << " * abs(lms), " << ss.float3Const(0.42f) << ");";
-    ss.newLine() << ss.float3Decl("rgb_a") << " = ( " << ACES2::cam_nl_scale << " * sign(lms) * F_L_v) / ( " << ACES2::cam_nl_offset << " + F_L_v);";
+    ss.newLine() << ss.float3Decl("F_L_v") << " = pow(abs(lms), " << ss.float3Const(0.42f) << ");";
+    ss.newLine() << ss.float3Decl("rgb_a") << " = (sign(lms) * F_L_v) / ( " << ACES2::cam_nl_offset << " + F_L_v);";
 
     ss.newLine() << ss.float3Decl("Aab") << " = " << ss.mat3fMul(&p.MATRIX_cone_response_to_Aab[0], "rgb_a.rgb") << ";";
 
@@ -401,7 +401,7 @@ void _Add_JMh_to_RGB_Shader(
 
     ss.newLine() << ss.float3Decl("rgb_a") << " = " << ss.mat3fMul(&p.MATRIX_Aab_to_cone_response[0], "Aab.rgb") << ";";
 
-    ss.newLine() << ss.float3Decl("lms") << " = sign(rgb_a) * pow( " << ACES2::cam_nl_offset << " * abs(rgb_a) / ( " << ACES2::cam_nl_scale << " - abs(rgb_a)), " << ss.float3Const(1.f / 0.42f) << ")/ " << p.F_L_n << ";";
+    ss.newLine() << ss.float3Decl("lms") << " = sign(rgb_a) * pow( " << ACES2::cam_nl_offset << " * abs(rgb_a) / (1.0f - abs(rgb_a)), " << ss.float3Const(1.f / 0.42f) << ");";
 
     ss.newLine() << pxl << ".rgb = " << ss.mat3fMul(&p.MATRIX_CAM16_c_to_RGB[0], "lms") << ";";
 }
@@ -532,6 +532,36 @@ std::string _Add_Toe_func(
     return name;
 }
 
+void _Add_ChromaCompressionNorm_Shader(
+    GpuShaderText & ss,
+    const ACES2::ChromaCompressParams & c)
+{
+    // Mnorm
+    ss.newLine() << ss.floatDecl("Mnorm") << ";";
+    ss.newLine() << "{";
+    ss.indent();
+
+    ss.newLine() << ss.floatDecl("h_rad") << " = h * " << 3.14159265358979f / 180.0f << ";";
+    ss.newLine() << ss.floatDecl("a") << " = cos(h_rad);";
+    ss.newLine() << ss.floatDecl("b") << " = sin(h_rad);";
+    ss.newLine() << ss.floatDecl("cos_hr2") << " = a * a - b * b;";
+    ss.newLine() << ss.floatDecl("sin_hr2") << " = 2.0 * a * b;";
+    ss.newLine() << ss.floatDecl("cos_hr3") << " = 4.0 * a * a * a - 3.0 * a;";
+    ss.newLine() << ss.floatDecl("sin_hr3") << " = 3.0 * b - 4.0 * b * b * b;";
+    ss.newLine() << ss.float3Decl("cosines") << " = " <<  ss.float3Const("a", "cos_hr2", "cos_hr3") <<";";
+    ss.newLine() << ss.float3Decl("cosine_weights") << " = " <<  ss.float3Const(11.34072 * c.chroma_compress_scale,
+                                                                                16.46899 * c.chroma_compress_scale,
+                                                                                7.88380 * c.chroma_compress_scale) <<";";
+    ss.newLine() << ss.float3Decl("sines") << " = " <<  ss.float3Const("b", "sin_hr2", "sin_hr3") <<";";
+    ss.newLine() << ss.float3Decl("sine_weights") << " = " <<  ss.float3Const(14.66441 * c.chroma_compress_scale,
+                                                                              -6.37224 * c.chroma_compress_scale,
+                                                                               9.19364 * c.chroma_compress_scale) <<";";
+    ss.newLine() << "Mnorm = dot(cosines, cosine_weights) + dot(sines, sine_weights) + " << 77.12896 * c.chroma_compress_scale<< ";";
+
+    ss.dedent();
+    ss.newLine() << "}";
+}
+
 void _Add_Tonescale_Compress_Fwd_Shader(
     GpuShaderCreatorRcPtr & shaderCreator,
     GpuShaderText & ss,
@@ -550,14 +580,14 @@ void _Add_Tonescale_Compress_Fwd_Shader(
     ss.newLine() << ss.floatDecl("h") << " = " << pxl << ".b;";
 
     // Tonescale applied in Y (convert to and from J)
-    ss.newLine() << ss.floatDecl("A") << " = " << p.A_w_J << " * pow(abs(J) / 100.0, " << 1.0 / p.cz << ");";
-    ss.newLine() << ss.floatDecl("Y") << " = sign(J) * pow(( " << ACES2::cam_nl_offset << " * A) / ( " << ACES2::cam_nl_scale << " - A), " << 1.0 / 0.42 << ") / " << p.F_L_n << ";";
+    ss.newLine() << ss.floatDecl("A") << " = " << p.A_w_J << " * pow(abs(J) * " << 1.0 / ACES2::J_scale << ", " << 1.0 / p.cz << ");";
+    ss.newLine() << ss.floatDecl("Y") << " = pow(( " << ACES2::cam_nl_offset << " * A) / (1.0f - A), " << 1.0 / 0.42 << ");";
 
-    ss.newLine() << ss.floatDecl("f") << " = " << t.m_2  << " * pow(max(0.0, Y) / (Y + " << t.s_2 << "), " << t.g << ");";
-    ss.newLine() << ss.floatDecl("Y_ts") << " = max(0.0, f * f / (f + " << t.t_1 << ")) * " << t.n_r << ";";
+    ss.newLine() << ss.floatDecl("f") << " = " << t.m_2  << " * pow(Y / (Y + " << t.s_2 * p.F_L_n << "), " << t.g << ");";
+    ss.newLine() << ss.floatDecl("Y_ts") << " = max(0.0, f * f / (f + " << t.t_1 << "));";
 
-    ss.newLine() << ss.floatDecl("F_L_Y") << " = pow(" << p.F_L_n << " * abs(Y_ts), 0.42);";
-    ss.newLine() << ss.floatDecl("J_ts") << " = sign(Y_ts) * 100.0 * pow((( " << ACES2::cam_nl_scale << " * F_L_Y) / ( " << ACES2::cam_nl_offset << " + F_L_Y)) / " << p.A_w_J << ", " << p.cz << ");";
+    ss.newLine() << ss.floatDecl("F_L_Y") << " = pow(" << p.F_L_n  *  t.n_r << " * Y_ts, 0.42);";
+    ss.newLine() << ss.floatDecl("J_ts") << " = " << ACES2::J_scale << " * pow((F_L_Y / ( " << ACES2::cam_nl_offset << " + F_L_Y)) * " << 1.0f / p.A_w_J << ", " << p.cz << ");";
 
     // ChromaCompress
     ss.newLine() << ss.floatDecl("M_cp") << " = M;";
@@ -569,23 +599,7 @@ void _Add_Tonescale_Compress_Fwd_Shader(
     ss.newLine() << ss.floatDecl("nJ") << " = J_ts / " << s.limit_J_max << ";";
     ss.newLine() << ss.floatDecl("snJ") << " = max(0.0, 1.0 - nJ);";
 
-    // Mnorm
-    ss.newLine() << ss.floatDecl("Mnorm") << ";";
-    ss.newLine() << "{";
-    ss.indent();
-
-    ss.newLine() << ss.floatDecl("h_rad") << " = h * " << 3.14159265358979f / 180.0f << ";";
-    ss.newLine() << ss.floatDecl("a") << " = cos(h_rad);";
-    ss.newLine() << ss.floatDecl("b") << " = sin(h_rad);";
-    ss.newLine() << ss.floatDecl("cos_hr2") << " = a * a - b * b;";
-    ss.newLine() << ss.floatDecl("sin_hr2") << " = 2.0 * a * b;";
-    ss.newLine() << ss.floatDecl("cos_hr3") << " = 4.0 * a * a * a - 3.0 * a;";
-    ss.newLine() << ss.floatDecl("sin_hr3") << " = 3.0 * b - 4.0 * b * b * b;";
-    ss.newLine() << ss.floatDecl("M") << " = 11.34072 * a + 16.46899 * cos_hr2 + 7.88380 * cos_hr3 + 14.66441 * b + -6.37224 * sin_hr2 + 9.19364 * sin_hr3 + 77.12896;";
-    ss.newLine() << "Mnorm = M * " << c.chroma_compress_scale << ";"; // TODO precompute
-
-    ss.dedent();
-    ss.newLine() << "}";
+    _Add_ChromaCompressionNorm_Shader(ss, c);
 
     ss.newLine() << ss.floatDecl("limit") << " = pow(nJ, " << s.model_gamma_inv << ") * reachMaxM / Mnorm;";
     ss.newLine() << "M_cp = M * pow(J_ts / J, " << s.model_gamma_inv << ");";
@@ -620,14 +634,14 @@ void _Add_Tonescale_Compress_Inv_Shader(
 
     // Inverse Tonescale applied in Y (convert to and from J)
     ss.newLine() << ss.floatDecl("A") << " = " << p.A_w_J << " * pow(abs(J_ts) / 100.0, " << 1.0f / p.cz << ");";
-    ss.newLine() << ss.floatDecl("Y_ts") << " = sign(J_ts) * pow(( " << ACES2::cam_nl_offset << " * A) / ( " << ACES2::cam_nl_scale << " - A), " << 1.0 / 0.42 << ") / " << p.F_L_n << " / 100.0;";
+    ss.newLine() << ss.floatDecl("Y_ts") << " = sign(J_ts) * pow(( " << ACES2::cam_nl_offset << " * A) / (1.0f - A), " << 1.0 / 0.42 << ") / " << p.F_L_n << " / 100.0;";
 
     ss.newLine() << ss.floatDecl("Z") << " = max(0.0, min(" << t.n << " / (" << t.u_2 * t.n_r << "), Y_ts));";
     ss.newLine() << ss.floatDecl("ht") << " = (Z + sqrt(Z * (4.0 * " << t.t_1 << " + Z))) / 2.0;";
     ss.newLine() << ss.floatDecl("Y") << " = " << t.s_2 << " / (pow((" << t.m_2 << " / ht), (1.0 / " << t.g << ")) - 1.0);";
 
     ss.newLine() << ss.floatDecl("F_L_Y") << " = pow(" << p.F_L_n << " * abs(Y), 0.42);";
-    ss.newLine() << ss.floatDecl("J") << " = sign(Y) * 100.0 * pow((( " << ACES2::cam_nl_scale << " * F_L_Y) / ( " << ACES2::cam_nl_offset << " + F_L_Y)) / " << p.A_w_J << ", " << p.cz << ");";
+    ss.newLine() << ss.floatDecl("J") << " = sign(Y) * 100.0 * pow((F_L_Y / ( " << ACES2::cam_nl_offset << " + F_L_Y)) / " << p.A_w_J << ", " << p.cz << ");";
 
     // ChromaCompress
     ss.newLine() << ss.floatDecl("M") << " = M_cp;";
@@ -639,23 +653,7 @@ void _Add_Tonescale_Compress_Inv_Shader(
     ss.newLine() << ss.floatDecl("nJ") << " = J_ts / " << s.limit_J_max << ";";
     ss.newLine() << ss.floatDecl("snJ") << " = max(0.0, 1.0 - nJ);";
 
-    // Mnorm
-    ss.newLine() << ss.floatDecl("Mnorm") << ";";
-    ss.newLine() << "{";
-    ss.indent();
-
-    ss.newLine() << ss.floatDecl("h_rad") << " = h * " << 3.14159265358979 / 180.0 << ";";
-    ss.newLine() << ss.floatDecl("a") << " = cos(h_rad);";
-    ss.newLine() << ss.floatDecl("b") << " = sin(h_rad);";
-    ss.newLine() << ss.floatDecl("cos_hr2") << " = a * a - b * b;";
-    ss.newLine() << ss.floatDecl("sin_hr2") << " = 2.0 * a * b;";
-    ss.newLine() << ss.floatDecl("cos_hr3") << " = 4.0 * a * a * a - 3.0 * a;";
-    ss.newLine() << ss.floatDecl("sin_hr3") << " = 3.0 * b - 4.0 * b * b * b;";
-    ss.newLine() << ss.floatDecl("M") << " = 11.34072 * a + 16.46899 * cos_hr2 + 7.88380 * cos_hr3 + 14.66441 * b + -6.37224 * sin_hr2 + 9.19364 * sin_hr3 + 77.12896;";
-    ss.newLine() << "Mnorm = M * " << c.chroma_compress_scale << ";";
-
-    ss.dedent();
-    ss.newLine() << "}";
+    _Add_ChromaCompressionNorm_Shader(ss, c);
 
     ss.newLine() << ss.floatDecl("limit") << " = pow(nJ, " << s.model_gamma_inv << ") * reachMaxM / Mnorm;";
 

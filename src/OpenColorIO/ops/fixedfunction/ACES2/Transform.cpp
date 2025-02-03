@@ -101,34 +101,34 @@ float reach_m_from_table(float h, const ACES2::Table1D &rt)
 // CAM
 //
 
-inline float _post_adaptation_cone_response_compression_fwd(float Rc, const float F_L_n)
+inline float _post_adaptation_cone_response_compression_fwd(float Rc)
 {
-    const float F_L_Y = powf(Rc * F_L_n, 0.42f);
-    const float Ra    = (cam_nl_scale * F_L_Y) / (cam_nl_offset + F_L_Y);
+    const float F_L_Y = powf(Rc, 0.42f);
+    const float Ra    = (F_L_Y) / (cam_nl_offset + F_L_Y);
     return Ra;
 }
 
-inline float _post_adaptation_cone_response_compression_inv(float Ra, const float F_L_n)
+inline float _post_adaptation_cone_response_compression_inv(float Ra)
 {
-    const float F_L_Y = (cam_nl_offset * Ra) / (cam_nl_scale - Ra); // TODO: what happens when Ra >= cam_nl_scale (400.0f)
-    const float Rc    = powf(F_L_Y, 1.f / 0.42f) / F_L_n;
+    const float F_L_Y = (cam_nl_offset * Ra) / (1.0f - Ra); // TODO: what happens when Ra >= 1.0
+    const float Rc    = powf(F_L_Y, 1.f / 0.42f);
     return Rc;
 }
 
 
-float post_adaptation_cone_response_compression_fwd(float v, float F_L)
+float post_adaptation_cone_response_compression_fwd(float v)
 {
     const float abs_v = std::abs(v);
-    const float Ra =  _post_adaptation_cone_response_compression_fwd(abs_v, F_L);
+    const float Ra =  _post_adaptation_cone_response_compression_fwd(abs_v);
     // Note that std::copysign(1.f, 0.f) returns 1 but the CTL copysign(1.,0.) returns 0.
     // TODO: Should we change the behaviour?
     return std::copysign(Ra, v);
 }
 
-float post_adaptation_cone_response_compression_inv(float v, float F_L)
+float post_adaptation_cone_response_compression_inv(float v)
 {
     const float abs_v = std::abs(v);
-    const float Rc    = _post_adaptation_cone_response_compression_inv(abs_v, F_L);
+    const float Rc    = _post_adaptation_cone_response_compression_inv(abs_v);
     return std::copysign(Rc, v);
 }
 
@@ -147,13 +147,13 @@ inline float J_to_Achromatic_n(float J, const float cz)
 inline float _J_to_Y(float abs_J, const JMhParams &p)
 {
     const float Ra = p.A_w_J * J_to_Achromatic_n(abs_J, p.cz);
-    const float Y  = _post_adaptation_cone_response_compression_inv(Ra, p.F_L_n);
+    const float Y  = _post_adaptation_cone_response_compression_inv(Ra) / p.F_L_n;
     return Y;
 }
 inline float _Y_to_J(float abs_Y, const JMhParams &p)
 {
-    const float Ra    = _post_adaptation_cone_response_compression_fwd(abs_Y, p.F_L_n);
-    const float J     = Achromatic_n_to_J(Ra / p.A_w_J, p.cz);
+    const float Ra = _post_adaptation_cone_response_compression_fwd(abs_Y * p.F_L_n);
+    const float J  = Achromatic_n_to_J(Ra / p.A_w_J, p.cz);
     return J;
 }
 
@@ -169,9 +169,9 @@ inline f3 RGB_to_Aab(const f3 &RGB, const JMhParams &p)
     const f3 rgb_m = mult_f3_f33(RGB, p.MATRIX_RGB_to_CAM16_c);
 
     const f3 rgb_a = {
-        post_adaptation_cone_response_compression_fwd(rgb_m[0], p.F_L_n),
-        post_adaptation_cone_response_compression_fwd(rgb_m[1], p.F_L_n),
-        post_adaptation_cone_response_compression_fwd(rgb_m[2], p.F_L_n)
+        post_adaptation_cone_response_compression_fwd(rgb_m[0]),
+        post_adaptation_cone_response_compression_fwd(rgb_m[1]),
+        post_adaptation_cone_response_compression_fwd(rgb_m[2])
     };
 
     const f3 Aab = mult_f3_f33(rgb_a, p.MATRIX_cone_response_to_Aab);
@@ -218,9 +218,9 @@ inline f3 Aab_to_RGB(const f3 &Aab, const JMhParams &p)
     const f3 rgb_a = mult_f3_f33(Aab, p.MATRIX_Aab_to_cone_response);
 
     const f3 rgb_m = {
-        post_adaptation_cone_response_compression_inv(rgb_a[0], p.F_L_n),
-        post_adaptation_cone_response_compression_inv(rgb_a[1], p.F_L_n),
-        post_adaptation_cone_response_compression_inv(rgb_a[2], p.F_L_n)
+        post_adaptation_cone_response_compression_inv(rgb_a[0]),
+        post_adaptation_cone_response_compression_inv(rgb_a[1]),
+        post_adaptation_cone_response_compression_inv(rgb_a[2])
     };
 
     const f3 rgb = mult_f3_f33(rgb_m, p.MATRIX_CAM16_c_to_RGB);
@@ -241,17 +241,17 @@ f3 JMh_to_RGB(const f3 &JMh, const JMhParams &p)
 inline float chroma_compress_norm(float h, float chroma_compress_scale)
 {
     const float h_rad = to_radians(h);
-    const float a = cos(h_rad);
-    const float b = sin(h_rad);
-    const float cos_hr2 = a * a - b * b;
-    const float sin_hr2 = 2.0f * a * b;
-    const float cos_hr3 = 4.0f * a * a * a - 3.0f * a;
-    const float sin_hr3 = 3.0f * b - 4.0f * b * b * b;
+    const float cos_hr1 = cos(h_rad);
+    const float sin_hr1 = sin(h_rad);
+    const float cos_hr2 = 2.0f * cos_hr1 * cos_hr1 - 1.0f;
+    const float sin_hr2 = 2.0f * cos_hr1 * sin_hr1;
+    const float cos_hr3 = 4.0f * cos_hr1 * cos_hr1 * cos_hr1 - 3.0f * cos_hr1;
+    const float sin_hr3 = 3.0f * sin_hr1 - 4.0f * sin_hr1 * sin_hr1 * sin_hr1;
 
-    const float M = 11.34072f * a +
+    const float M = 11.34072f * cos_hr1 +
               16.46899f * cos_hr2 +
                7.88380f * cos_hr3 +
-              14.66441f * b +
+              14.66441f * sin_hr1 +
               -6.37224f * sin_hr2 +
                9.19364f * sin_hr3 +
               77.12896f;
@@ -383,7 +383,7 @@ inline float model_gamma(void)
 
 JMhParams init_JMhParams(const Primaries &prims)
 {
-    const m33f cone_response_to_Aab = {
+    const m33f base_cone_response_to_Aab = {
         2.0f, 1.0f, 1.0f / 20.0f,
         1.0f, -12.0f / 11.0f, 1.0f / 11.0f,
         1.0f / 9.0f, 1.0f / 9.0f, -2.0f / 9.0f
@@ -406,9 +406,9 @@ JMhParams init_JMhParams(const Primaries &prims)
     const float cz    = model_gamma();
 
     const f3 D_RGB = {
-        Y_W / RGB_w[0],
-        Y_W / RGB_w[1],
-        Y_W / RGB_w[2]
+        F_L_n * Y_W / RGB_w[0],
+        F_L_n * Y_W / RGB_w[1],
+        F_L_n * Y_W / RGB_w[2]
     };
 
     const f3 RGB_WC {
@@ -418,13 +418,14 @@ JMhParams init_JMhParams(const Primaries &prims)
     };
 
     const f3 RGB_AW = {
-        post_adaptation_cone_response_compression_fwd(RGB_WC[0], F_L_n),
-        post_adaptation_cone_response_compression_fwd(RGB_WC[1], F_L_n),
-        post_adaptation_cone_response_compression_fwd(RGB_WC[2], F_L_n)
+        post_adaptation_cone_response_compression_fwd(RGB_WC[0]),
+        post_adaptation_cone_response_compression_fwd(RGB_WC[1]),
+        post_adaptation_cone_response_compression_fwd(RGB_WC[2])
     };
 
+    const m33f cone_response_to_Aab = mult_f33_f33(scale_f33(Identity_M33, f3_from_f(cam_nl_scale)), base_cone_response_to_Aab); // TODO: this scale maybe ill conditioning the matrix
     const float A_w   = cone_response_to_Aab[0] * RGB_AW[0] + cone_response_to_Aab[1] * RGB_AW[1] + cone_response_to_Aab[2] * RGB_AW[2];
-    const float A_w_J = _post_adaptation_cone_response_compression_fwd(reference_luminance, F_L_n);
+    const float A_w_J = _post_adaptation_cone_response_compression_fwd(F_L);
 
     // TODO: evaluate the condition number of the below matrices and consider extracting a power of 2 scale out of them may improve noise behaviour
     //       power of 2 to make cost of extra scaling limited vs generalised multiply/divide ?
