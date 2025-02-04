@@ -6,6 +6,7 @@
 #include <array>
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 namespace OCIO_NAMESPACE
 {
@@ -34,7 +35,7 @@ inline f3 lerp(const float lower[3], const float upper[3], const float t)
     };
 }
 
-inline int midpoint(int a, int b)
+inline unsigned int midpoint(unsigned int a, unsigned int b)
 {
     return (a + b) / 2;
 }
@@ -44,15 +45,15 @@ inline float midpoint(float a, float b)
     return (a + b) / 2.f;
 }
 
-int lookup_hue_interval(float h, const Table1D &hues, const std::array<int, 2> & hue_linearity_search_range)
+unsigned int lookup_hue_interval(float h, const Table1D &hues, const std::array<int, 2> & hue_linearity_search_range)
 {
     // Search the given Table for the interval containing the desired hue
     // Returns the upper index of the interval
 
     // We can narrow the search range based on the hues being almost uniform
-    int i = hues.nominal_hue_position_in_uniform_table(h);
-    int i_lo = std::max(hues.lower_wrap_index, i + hue_linearity_search_range[0]); // Should be nominal not lower_wrap?
-    int i_hi = std::min(hues.upper_wrap_index, i + hue_linearity_search_range[1]);
+    unsigned int i = hues.nominal_hue_position_in_uniform_table(h);
+    unsigned int i_lo = std::max(int(hues.lower_wrap_index), int(i) + hue_linearity_search_range[0]); // Should be nominal not lower_wrap?
+    unsigned int i_hi = std::min(int(hues.upper_wrap_index), int(i) + hue_linearity_search_range[1]);
 
     while (i_lo + 1 < i_hi)
     {
@@ -67,7 +68,7 @@ int lookup_hue_interval(float h, const Table1D &hues, const std::array<int, 2> &
         i = midpoint(i_lo, i_hi);
     }
 
-    i_hi = std::max(1, i_hi); // TODO: should not be needed if we initialise with the correct lo and hi
+    i_hi = std::max(1U, i_hi); // TODO: should not be needed if we initialise with the correct lo and hi
 
     return i_hi;
 }
@@ -77,22 +78,22 @@ inline float interpolation_weight(float h, float h_lo, float h_hi)
     return (h - h_lo) / (h_hi - h_lo);
 }
 
-inline float interpolation_weight(float h, int h_lo, int h_hi)
+inline float interpolation_weight(float h, unsigned int h_lo, unsigned int h_hi)
 {
     return (h - h_lo) / (h_hi - h_lo);
 }
 
-inline f3 cusp_from_table(int i_hi, float t, const Table3D &gt)
+inline f3 cusp_from_table(unsigned int i_hi, float t, const Table3D &gt)
 {
     return lerp(gt[i_hi-1], gt[i_hi], t);
 }
 
 float reach_m_from_table(float h, const ACES2::Table1D &rt)
 {
-    const int base = rt.hue_position_in_uniform_table(h);
+    const unsigned int base = rt.hue_position_in_uniform_table(h);
     const float t = h - base; // NOTE assumes uniform 1 degree 360 spacing
-    const int i_lo = base + rt.first_nominal_index; 
-    const int i_hi = i_lo + 1; // NOTE assumes uniform 1 degree 360 spacing 
+    const unsigned int i_lo = base + rt.first_nominal_index; 
+    const unsigned int i_hi = i_lo + 1; // NOTE assumes uniform 1 degree 360 spacing 
 
     return lerpf(rt[i_lo], rt[i_hi], t);
 }
@@ -455,12 +456,12 @@ JMhParams init_JMhParams(const Primaries &prims)
    return p;
 }
 
-inline f3 generate_unit_cube_cusp_corners(const int corner)
+inline f3 generate_unit_cube_cusp_corners(const unsigned int corner)
 {
     // Generation order R, Y, G, C, B, M to ensure hues rotate in correct order
-    return {float(int(((corner + 1) % cuspCornerCount) < 3)),
-            float(int(((corner + 5) % cuspCornerCount) < 3)),
-            float(int(((corner + 3) % cuspCornerCount) < 3))
+    return {float(static_cast<unsigned int>(((corner + 1) % cuspCornerCount) < 3)),
+            float(static_cast<unsigned int>(((corner + 5) % cuspCornerCount) < 3)),
+            float(static_cast<unsigned int>(((corner + 3) % cuspCornerCount) < 3))
             };
 }
 
@@ -471,8 +472,8 @@ void build_limiting_cusp_corners_tables(std::array<f3, totalCornerCount>& RGB_co
     // They are then arranged into a cycle with the lowest JMh value at [1] to allow for hue wrapping
     std::array<f3, cuspCornerCount> temp_RGB_corners;
     std::array<f3, cuspCornerCount> temp_JMh_corners;
-    int min_index = 0;
-    for (int i = 0; i != cuspCornerCount; ++i)
+    unsigned int min_index = 0;
+    for (unsigned int i = 0; i != cuspCornerCount; ++i)
     {
       temp_RGB_corners[i] = mult_f_f3(peakLuminance / reference_luminance, generate_unit_cube_cusp_corners(i));
       temp_JMh_corners[i] = RGB_to_JMh(temp_RGB_corners[i], params);
@@ -481,7 +482,7 @@ void build_limiting_cusp_corners_tables(std::array<f3, totalCornerCount>& RGB_co
     }
 
     // Rotate entries placing lowest at [1] (not [0])
-    for (int i = 0; i != cuspCornerCount; ++i)
+    for (unsigned int i = 0; i != cuspCornerCount; ++i)
     {
       RGB_corners[i + 1] = temp_RGB_corners[(i + min_index) % cuspCornerCount];
       JMh_corners[i + 1] = temp_JMh_corners[(i + min_index) % cuspCornerCount];
@@ -510,8 +511,8 @@ void find_reach_corners_table(std::array<f3, totalCornerCount>& JMh_corners, con
     std::array<f3, cuspCornerCount> temp_JMh_corners;
     const float limitA = J_to_Achromatic_n(limitJ, params.cz);
 
-    int min_index = 0;
-    for (int i = 0; i != cuspCornerCount; ++i)
+    unsigned int min_index = 0;
+    for (unsigned int i = 0; i != cuspCornerCount; ++i)
     {
         const f3 rgb_vector = generate_unit_cube_cusp_corners(i);
 
@@ -540,7 +541,7 @@ void find_reach_corners_table(std::array<f3, totalCornerCount>& JMh_corners, con
     }
 
     // Rotate entries placing lowest at [1] (not [0]) // TODO: could use std::rotate_copy or even the ranges vs in C++20
-    for (int i = 0; i != cuspCornerCount; ++i)
+    for (unsigned int i = 0; i != cuspCornerCount; ++i)
     {
       JMh_corners[i + 1] = temp_JMh_corners[(i + min_index) % cuspCornerCount];
     }
@@ -554,15 +555,15 @@ void find_reach_corners_table(std::array<f3, totalCornerCount>& JMh_corners, con
     JMh_corners[cuspCornerCount + 1][2] = JMh_corners[cuspCornerCount + 1][2] + hue_limit;
 }
 
-int extract_sorted_cube_hues(std::array<float, max_sorted_corners>& sorted_hues,
+unsigned int extract_sorted_cube_hues(std::array<float, max_sorted_corners>& sorted_hues,
                              const std::array<f3, totalCornerCount>& reach_JMh, const std::array<f3, totalCornerCount>& display_JMh)
 {
     // Basic merge of 2 sorted arrays, extracting the unique hues.
     // Return the count of the unique hues
     //TODO: use STL for this and similar functions
-    int idx         = 0;
-    int reach_idx   = 1;
-    int display_idx = 1;
+    unsigned int idx         = 0;
+    unsigned int reach_idx   = 1;
+    unsigned int display_idx = 1;
     while ((reach_idx < (cuspCornerCount + 1)) || (display_idx < (cuspCornerCount + 1)))
     {
         const float reach_hue   = reach_JMh[reach_idx][2];
@@ -591,25 +592,25 @@ int extract_sorted_cube_hues(std::array<float, max_sorted_corners>& sorted_hues,
     return idx;
 }
 
-void build_hue_sample_interval(const int samples, const float lower, const float upper, Table1D &hue_table, const int base)
+void build_hue_sample_interval(const unsigned int samples, const float lower, const float upper, Table1D &hue_table, const unsigned int base)
 {
     const float delta = (upper - lower) / float(samples);
-    for (int i = 0; i != samples; ++i)
+    for (unsigned int i = 0; i != samples; ++i)
     {
         hue_table[base + i] = lower + float(i) * delta;
     }
 }
 
-void build_hue_table(Table1D &hue_table, const std::array<float, max_sorted_corners>& sorted_hues, const int unique_hues)
+void build_hue_table(Table1D &hue_table, const std::array<float, max_sorted_corners>& sorted_hues, const unsigned int unique_hues)
 {
     const float ideal_spacing = hue_table.nominal_size / hue_limit;
-    std::array<int, 2 * cuspCornerCount + 2> samples_count = {};
-    int         last_idx  = -1;
-    int         min_index = sorted_hues[0] == 0.0f ? 0 : 1; // Ensure we can always sample at 0.0 hue
-    for (int hue_idx = 0; hue_idx != unique_hues; ++hue_idx)
+    std::array<unsigned int, 2 * cuspCornerCount + 2> samples_count = {};
+    unsigned int last_idx  = std::numeric_limits<unsigned int>::max();
+    unsigned int min_index = sorted_hues[0] == 0.0f ? 0 : 1; // Ensure we can always sample at 0.0 hue
+    for (unsigned int hue_idx = 0; hue_idx != unique_hues; ++hue_idx)
     {
         // BUG: "hue_table.size - 1" will fail if we have multiple hues mapping near the top of the table
-        int nominal_idx = std::min(std::max(int(std::round(sorted_hues[hue_idx] * ideal_spacing)), min_index), hue_table.nominal_size - 1);
+        unsigned int nominal_idx = std::min(std::max(static_cast<unsigned int>(std::round(sorted_hues[hue_idx] * ideal_spacing)), min_index), hue_table.nominal_size - 1);
         if (last_idx == nominal_idx)
         {
             // Last two hues should sample at same index, need to adjust them
@@ -623,18 +624,18 @@ void build_hue_table(Table1D &hue_table, const std::array<float, max_sorted_corn
                 nominal_idx = nominal_idx + 1;
             }
         }
-        samples_count[hue_idx] = std::min(nominal_idx, hue_table.nominal_size - 1);
+        samples_count[hue_idx] = std::min(nominal_idx, hue_table.nominal_size - 1U);
         last_idx = min_index = nominal_idx;
     }
 
-    int total_samples = 0;
+    unsigned int total_samples = 0;
     // Special cases for ends
-    int i = 0;
+    unsigned int i = 0;
     build_hue_sample_interval(samples_count[i], 0.0f, sorted_hues[i], hue_table, total_samples + 1);
     total_samples += samples_count[i];
     for (++i; i != unique_hues; ++i)
     {
-        const int samples = samples_count[i] - samples_count[i - 1];
+        const unsigned int samples = samples_count[i] - samples_count[i - 1];
         build_hue_sample_interval(samples, sorted_hues[i - 1], sorted_hues[i], hue_table, total_samples + 1);
         total_samples += samples;
     }
@@ -652,8 +653,8 @@ std::array<float, 2> find_display_cusp_for_hue(float hue, const std::array<f3, t
     // along the line calculating the JMh of points along the line till we find the required value.
     // All values on the line segments are valid cusp locations.
 
-    int upper_corner = 1;
-    for (int i = upper_corner; i != totalCornerCount; ++i) // TODO: binary search?
+    unsigned int upper_corner = 1;
+    for (unsigned int i = upper_corner; i != totalCornerCount; ++i) // TODO: binary search?
     {
         if (JMh_corners[i][2] > hue)
         {
@@ -661,7 +662,7 @@ std::array<float, 2> find_display_cusp_for_hue(float hue, const std::array<f3, t
             break;
         }
     }
-    const int lower_corner = upper_corner - 1;
+    const unsigned int lower_corner = upper_corner - 1;
 
     // hue should now be within [lower_corner, upper_corner), handle exact match
     if (JMh_corners[lower_corner][2] == hue)
@@ -721,7 +722,7 @@ Table3D build_cusp_table(const Table1D& hue_table, const std::array<f3, totalCor
 {
     std::array<float, 2> previous = {0.0f, 0.0f};
     Table3D output_table;
-    for (int i = output_table.first_nominal_index; i != output_table.upper_wrap_index; ++i)
+    for (unsigned int i = output_table.first_nominal_index; i != output_table.upper_wrap_index; ++i)
     {
       const float hue = hue_table[i];
       const std::array<float, 2> JM = find_display_cusp_for_hue(hue, RGB_corners, JMh_corners, params, previous);
@@ -756,7 +757,7 @@ Table3D make_uniform_hue_gamut_table(const JMhParams &reach_params, const JMhPar
 
     find_reach_corners_table(reach_JMh_corners, reach_params, sp.limit_J_max, forward_limit);
     build_limiting_cusp_corners_tables(limiting_RGB_corners, limiting_JMh_corners, params, peakLuminance);
-    const int unique_hues = extract_sorted_cube_hues(sorted_hues, reach_JMh_corners, limiting_JMh_corners);
+    const unsigned int unique_hues = extract_sorted_cube_hues(sorted_hues, reach_JMh_corners, limiting_JMh_corners);
     build_hue_table(hue_table, sorted_hues, unique_hues);
     return build_cusp_table(hue_table, limiting_RGB_corners, limiting_JMh_corners, params);
 }
@@ -764,8 +765,8 @@ Table3D make_uniform_hue_gamut_table(const JMhParams &reach_params, const JMhPar
 Table3D make_gamut_table(const JMhParams &params, float peakLuminance, Table1D& hue_table)
 {
     Table3D gamutCuspTableUnsorted{};
-    int minhIndex = 0;
-    for (int i = 0; i < gamutCuspTableUnsorted.nominal_size; i++)
+    unsigned int minhIndex = 0;
+    for (unsigned int i = 0; i < gamutCuspTableUnsorted.nominal_size; i++)
     {
         const float hNorm = float(i) / float(gamutCuspTableUnsorted.nominal_size);
         const f3 HSV = {hNorm, 1., 1.};
@@ -781,7 +782,7 @@ Table3D make_gamut_table(const JMhParams &params, float peakLuminance, Table1D& 
     }
 
     Table3D gamutCuspTable{};
-    for (int i = 0; i < gamutCuspTableUnsorted.nominal_size; i++)
+    for (unsigned int i = 0; i < gamutCuspTableUnsorted.nominal_size; i++)
     {
         gamutCuspTable[i + gamutCuspTable.base_index][0] = gamutCuspTableUnsorted[(minhIndex+i) % gamutCuspTableUnsorted.nominal_size][0];
         gamutCuspTable[i + gamutCuspTable.base_index][1] = gamutCuspTableUnsorted[(minhIndex+i) % gamutCuspTableUnsorted.nominal_size][1];
@@ -803,7 +804,7 @@ Table3D make_gamut_table(const JMhParams &params, float peakLuminance, Table1D& 
     gamutCuspTable[gamutCuspTable.upper_wrap_index][2] += hue_limit;
 
     // Extract hue table
-    for (int i = 0; i < gamutCuspTable.total_size; i++)
+    for (unsigned int i = 0; i < gamutCuspTable.total_size; i++)
     {
         hue_table[i] = gamutCuspTable[i][2];
     }
@@ -819,7 +820,7 @@ Table1D make_reach_m_table(const JMhParams &params, const float limit_J_max)
 {
     Table1D gamutReachTable{};
 
-    for (int i = 0; i < gamutReachTable.nominal_size; i++) {
+    for (unsigned int i = 0; i < gamutReachTable.nominal_size; i++) {
         const float hue = gamutReachTable.base_hue_for_position(i);
 
         constexpr float search_range = 50.f;
@@ -1058,7 +1059,7 @@ HueDependantGamutParams init_HueDependantGamutParams(const float hue, const Reso
     HueDependantGamutParams hdp;
     hdp.gamma_bottom_inv = p.lower_hull_gamma_inv;
 
-    const int i_hi = lookup_hue_interval(hue, p.hue_table, p.hue_linearity_search_range);
+    const unsigned int i_hi = lookup_hue_interval(hue, p.hue_table, p.hue_linearity_search_range);
     const float t = interpolation_weight(hue, p.hue_table[i_hi-1], p.hue_table[i_hi]);
     const f3 cusp = cusp_from_table(i_hi, t, p.gamut_cusp_table);
 
@@ -1089,7 +1090,7 @@ f3 gamut_compress_inv(const f3 &JMh, const ResolvedSharedCompressionParameters &
     return compressGamut<true>(JMh, Jx, sr, p, hdp);
 }
 
-static constexpr int gamma_test_count = 5;
+static constexpr unsigned int gamma_test_count = 5;
 struct testData {
     f3 testJMh;
     float J_intersect_source;
@@ -1157,7 +1158,7 @@ void make_upper_hull_gamma(
     float lower_hull_gamma_inv,
     const JMhParams &limitJMhParams)
 {
-    for (int i = gamutCuspTable.first_nominal_index; i != gamutCuspTable.upper_wrap_index; ++i)
+    for (unsigned int i = gamutCuspTable.first_nominal_index; i != gamutCuspTable.upper_wrap_index; ++i)
     {
         const float hue = hue_table[i];
         const f2 JMcusp = { gamutCuspTable[i][0], gamutCuspTable[i][1] };
@@ -1318,10 +1319,10 @@ std::array<int, 2> determine_hue_linearity_search_range(const Table3D &gamutCusp
     constexpr int lower_padding = 0;
     constexpr int upper_padding = 1;
     std::array<int, 2> hue_linearity_search_range = {lower_padding, upper_padding};
-    for (int i = gamutCuspTable.first_nominal_index; i != gamutCuspTable.upper_wrap_index; ++i)
+    for (unsigned int i = gamutCuspTable.first_nominal_index; i != gamutCuspTable.upper_wrap_index; ++i)
     {
-        const int pos = gamutCuspTable.nominal_hue_position_in_uniform_table(gamutCuspTable[i][2]); // TODO: compute from hue table less cache pressure?
-        const int delta = i - pos;
+        const unsigned int pos = gamutCuspTable.nominal_hue_position_in_uniform_table(gamutCuspTable[i][2]); // TODO: compute from hue table less cache pressure?
+        const int delta = int(i) - int(pos);
         hue_linearity_search_range[0] = std::min(hue_linearity_search_range[0], delta + lower_padding);
         hue_linearity_search_range[1] = std::max(hue_linearity_search_range[1], delta + upper_padding);
 

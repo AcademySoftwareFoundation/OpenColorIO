@@ -47,17 +47,17 @@ inline float from_radians(const float v) { return wrap_to_hue_limit(v); };
 
 struct TableBase
 {
-    static constexpr int _TABLE_ADDITION_ENTRIES = 2;
-    static constexpr int base_index = 1;
-    static constexpr int nominal_size = 360;
-    static constexpr int total_size = nominal_size + _TABLE_ADDITION_ENTRIES;
+    static constexpr unsigned int _TABLE_ADDITION_ENTRIES = 2;
+    static constexpr unsigned int base_index = 1;
+    static constexpr unsigned int nominal_size = 360;
+    static constexpr unsigned int total_size = nominal_size + _TABLE_ADDITION_ENTRIES;
 
-    static constexpr int lower_wrap_index = 0;
-    static constexpr int upper_wrap_index = base_index + nominal_size;
-    static constexpr int first_nominal_index = base_index;
-    static constexpr int last_nominal_index = upper_wrap_index - 1;
+    static constexpr unsigned int lower_wrap_index = 0;
+    static constexpr unsigned int upper_wrap_index = base_index + nominal_size;
+    static constexpr unsigned int first_nominal_index = base_index;
+    static constexpr unsigned int last_nominal_index = upper_wrap_index - 1;
 
-    inline float base_hue_for_position(int i_lo) const
+    inline float base_hue_for_position(unsigned int i_lo) const
     {
         if (hue_limit == float(nominal_size)) // TODO C++ 17 if constexpr
             return float(i_lo);
@@ -66,22 +66,22 @@ struct TableBase
         return result;
     }
 
-    inline int hue_position_in_uniform_table(float wrapped_hue) const 
+    inline unsigned int hue_position_in_uniform_table(float wrapped_hue) const 
     {
         if (hue_limit == float(nominal_size)) // TODO C++ 17 if constexpr
-            return int(wrapped_hue);
+            return static_cast<unsigned int>(wrapped_hue);
         else
-            return int(wrapped_hue / hue_limit * float(nominal_size)); // TODO: can we use the 'lost' fraction for the lerps?
+            return static_cast<unsigned int>(wrapped_hue / hue_limit * float(nominal_size)); // TODO: can we use the 'lost' fraction for the lerps?
     }
 
-   inline int nominal_hue_position_in_uniform_table(float wrapped_hue) const 
+   inline unsigned int nominal_hue_position_in_uniform_table(float wrapped_hue) const 
     {
         return first_nominal_index + hue_position_in_uniform_table(wrapped_hue);
     }
 
-    inline int clamp_to_table_bounds(int entry) const // TODO: this should be removed if we can constrain the hue range properly
+    inline unsigned int clamp_to_table_bounds(unsigned int entry) const // TODO: this should be removed if we can constrain the hue range properly
     {
-        return std::min(nominal_size - 1, std::max(0, entry));
+        return std::min(nominal_size - 1U, std::max(0U, entry));
     }
 };
 
