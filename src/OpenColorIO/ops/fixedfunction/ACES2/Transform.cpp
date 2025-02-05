@@ -145,12 +145,18 @@ inline float J_to_Achromatic_n(float J, const float cz)
 
 // Optimization for achromatic values
 
-inline float _J_to_Y(float abs_J, const JMhParams &p)
+inline float _A_to_Y(float A, const JMhParams &p)
 {
-    const float Ra = p.A_w_J * J_to_Achromatic_n(abs_J, p.cz);
+    const float Ra = p.A_w_J * A;
     const float Y  = _post_adaptation_cone_response_compression_inv(Ra) / p.F_L_n;
     return Y;
 }
+
+inline float _J_to_Y(float abs_J, const JMhParams &p)
+{
+    return _A_to_Y(J_to_Achromatic_n(abs_J, p.cz), p);
+}
+
 inline float _Y_to_J(float abs_Y, const JMhParams &p)
 {
     const float Ra = _post_adaptation_cone_response_compression_fwd(abs_Y * p.F_L_n);
@@ -165,7 +171,7 @@ float Y_to_J(float Y, const JMhParams &p)
     return std::copysign(J, Y);
 }
 
-inline f3 RGB_to_Aab(const f3 &RGB, const JMhParams &p)
+f3 RGB_to_Aab(const f3 &RGB, const JMhParams &p)
 {
     const f3 rgb_m = mult_f3_f33(RGB, p.MATRIX_RGB_to_CAM16_c);
 
@@ -179,7 +185,7 @@ inline f3 RGB_to_Aab(const f3 &RGB, const JMhParams &p)
     return Aab;
 }
 
-inline f3 Aab_to_JMh(const f3 &Aab, const JMhParams &p)
+f3 Aab_to_JMh(const f3 &Aab, const JMhParams &p)
 {
     if (Aab[0] <= 0.f)
     {
@@ -325,6 +331,21 @@ float tonescale_fwd(const float J, const JMhParams &p, const ToneScaleParams &pt
 float tonescale_inv(const float J, const JMhParams &p, const ToneScaleParams &pt)
 {
     return tonescale<true>(J, p, pt);
+}
+
+
+template <bool inverse>
+inline float tonescale_A_to_J(const float A, const JMhParams &p, const ToneScaleParams &pt) // TODO: consider computing tonescale from and to A rather than J to avoid extra pow() calls
+{
+    const float Y_in  = _A_to_Y(A, p);
+    const float Y_out = aces_tonescale<inverse>(Y_in, pt);
+    const float J_out = _Y_to_J(Y_out, p);
+    return std::copysign(J_out, A);
+}
+
+float tonescale_A_to_J_fwd(const float A, const JMhParams &p, const ToneScaleParams &pt)
+{
+    return tonescale_A_to_J<false>(A, p, pt);
 }
 
 f3 chroma_compress_fwd(const f3 &JMh, const float J_ts, const ResolvedSharedCompressionParameters &pr, const ChromaCompressParams &pc)

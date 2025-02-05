@@ -1052,9 +1052,10 @@ void Renderer_ACES_OutputTransform20::fwd(const void * inImg, void * outImg, lon
     for(long idx=0; idx<numPixels; ++idx)
     {
         const ACES2::f3 RGBIn {in[0], in[1], in[2]};
-        const ACES2::f3 JMh           = ACES2::RGB_to_JMh(RGBIn, m_pIn);
+        const ACES2::f3 Aab           = ACES2::RGB_to_Aab(RGBIn, m_pIn);
+        const ACES2::f3 JMh           = ACES2::Aab_to_JMh(Aab, m_pIn);
         const ACES2::ResolvedSharedCompressionParameters rp = resolve_CompressionParams(JMh[2], m_s);
-        const float J_ts = ACES2::tonescale_fwd(JMh[0], m_pIn, m_t);
+        const float J_ts = ACES2::tonescale_A_to_J_fwd(Aab[0], m_pIn, m_t);
         const ACES2::f3 tonemappedJMh = ACES2::chroma_compress_fwd(JMh, J_ts, rp, m_c);
         const ACES2::f3 compressedJMh = ACES2::gamut_compress_fwd(tonemappedJMh, rp, m_g);
         const ACES2::f3 RGBOut        = ACES2::JMh_to_RGB(compressedJMh, m_pOut);
