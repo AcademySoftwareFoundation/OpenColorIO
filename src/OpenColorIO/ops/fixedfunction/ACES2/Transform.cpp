@@ -8,6 +8,9 @@
 #include <cmath>
 #include <limits>
 
+#include "SSE2.h"
+#include "AVX.h"
+
 namespace OCIO_NAMESPACE
 {
 
@@ -245,6 +248,30 @@ f3 JMh_to_RGB(const f3 &JMh, const JMhParams &p)
 // Tonescale / Chroma compress
 //
 
+//TODO: move to header
+// https://stackoverflow.com/questions/6996764/fastest-way-to-do-horizontal-sse-vector-sum-or-other-reduction/35270026#35270026
+// https://gcc.godbolt.org/#compilers:!((compiler:g6,options:%27-xc+-O3+-Wall+-fverbose-asm+-march%3Dhaswell+-mno-avx%27,sourcez:MQSwdgxgNgrgJgUwAQB4QFt3gC4CdwB0AFgHwBQoksiqAztnDseWQPStLZEi1I9JQQAa2QBZAIa5x2AOS0ANEgBGMbJwDuCcSLicA9kgh70ABxBRk2A0oTZsCXIb2ICbDtHFgA5khhgAZnq42H7SCFAAnkiIECCIvFa%2BtMjoegBu4ia0rLREMP4muuD0Wrp6/kipaURQWWT%2BUHrSSES0MOgA%2BlkdtMkAjAAUHR3ofQBMABxIaQCUSADeSEvLK6tr62vs00gAvEgA2kgAIkgAwkgAPkgAQkgAgkgAumQrw6OTSLn5y3sjnV/%2BBoILq0AZpRTgpAdUSiDoAZQAEgBVABiKIAMgBRAZjRQAZkUAAZFH0ZjMANxLLaHc4nK63B7PV4jcZTNroXhLX6YDriOBwEFgxQAimbDjs3h7Q5HADU51OMrpNxlDzuMtuTOWAI2XKhPKqCBqgoBwvatFFqy2B2W5yWStl8sVTypHAsai4yCMpnMDiQ4jSejifsq6WUUVwCBgtHAPgBLy1Zp1uz1nT5At6Awlwry/gp8aWEZCuDArx5EDS2F6HX8eLGmbNeYAvmR6o1mq12iCesk8UMWR9Zgt81D%2B2yc8m/iN0oa4DATILZpT1lslLgmnAIOJ6Ehwgh0AgwJWkAS%2BvokLjCcO3qzPonuan%2BQvs/k8yttet71O0oaoMac6aOVFLZuC8IgWnEKAKgAWhIAQ9HUcDIOHCUNk/NNu3rDln1zclh0LGBiw2Sdy0rWhq1rTDzVw5sWy2Wh0AgixHCMGhowALwQRQVDUKMYEYqJaEaTRHD8CxeicRAoPY5B%2BHEJATDXJQLHQVsmjUDtOm6Ig0z7d4pkHeYr1HW8OQnHltMfLIhWmV8E1Mj8Uw6CyBSsrMJVsgtbAIkt1mIisqxrOt3OoltQH8RAKmGO4ADUAA1hlU9t2TGABWAA2Lt/QAD101K0psodmT06YhN1P48o6Td6CyCqslZMEPJHYrqhAUCzPQCqECyvBxAgbB/FZJ8kFJSlgNasDWSM5qb3a3lLNBNIhIhECiAtZYtjTTgiGQUrJpWfDCI0rtegQXs0lZNakw2sAijAQQwEsbbPh7aYHGjPQwEUdRuAgMD%2BD0ExsAwCCkECRwYti4ctgGMADHULd7Fu%2BhcBgPqQA%2BhQ/Ruv0oCgJByi2vc/QjQmkAAFluLAwAwdoZjIZtgAPRh/BbNx2HZrY4D0GAlIQMguZ5iwWnZLp02SOtr0mXQ0jgOZFiTBWtjSZNDluK5GSmm8/AisqeW1hB/HABAXNBS6FY2TmPpkNR1CCXAIi%2B5APsiJJkDTOEjkUB7v0cKxUe4bxSa8SQlHELxkCUEAj3UKOwM8JAUQABT9flNY%2BAFsFMT8DSNKz9f8RRiIRwoF1li0tg9En%2BFhkNqlqOA04mXR30/KrsG6QpMxzTOTEag6fL8ysBX8NKyaGHl0NoOAwTgbCyRC2iOY5vhD1rMgcGFzsEDMWtuwQCXRxAJAsrligQHCg2RwhhKitZI/uFH3XOj8ExeqEbgOm3kBR4GLLFBPpcOoth4iggDBwnhdCwzAFBeIeBUZA2/PcOKAhbC8CjJ8f0bswz2CQDHLg3M1APWNjGYMVQKDhGSI3e%2B38yZPx6DmIEn8d51j/lCGE8JkRoixAMPoRJ8SKDGPPchN1z5UJMo/NCj4v4UQfmTf%2BjVJYTGobWOhAIgSNCYSAPoaVMKj0LuwxEqIMTYl4UgYkx4BHzxWFsOE8MTCk1KtgW2O5lIHkrGI9kKjJECmkUFdoeiWggFrH3LyhFB7RkGtGCinjBGAOsRwOEcJMRjFrg3eJ/dHJdR6n1TRMioBEjNjYpJcidzfhLPgmAbUo5OG9GJM8VQkb2D5PjCoclBD2CkHjEwWTcC6FwLWeQWVMDyEvDRDeR1fHdh7D0ISPQGK4xYggXSd9j4zEMisLKs1nK5JYfI3CGytnoV8b/PZeFQklnCVoyYPQgksKbKzReKdMiI1BmudASAJBSFkLwCGLQ7AmAAFzsHoG/acuAGjwQIF6VgABHGACB6DozANkPotY%2BgAE4%2BhkzSqwIg8EoJWCku0KCHV0pQTxfgNiH1sD8VYKisYDKyZ9EJMAeljLmWJXUiLboDEvnLI%2BCfQqywjDIrUIokyABFPiug9hZX2cKjGYrjKNCOHxPGex2RSr5PKl0gTVUgz2AMJAUFFAmuPniJAMpj4AHZ/4pKtVlfKdMVgiu3OK7g%2Br1WORzr%2BVy7QtWz0ldKxqdF2ieuTEas1ZqsqngdRah1KVLU2v/oSJNWV7XH1oQ6p1w5XVKuKuycN3jBQqrVYoD1aqQ2ugMIa41pr63H1TQ6jNWUs3HxzS6xVTUbyNGTIWtVOqkBjQjXW0d0bY3mrTYmh11qkDOoVaK7tHxuCzTURYY0Yay0mU9USGNVaTIjqjQ2rKTbj4TvTWm%2BNmap1pvyjOuduau3ivZLNSeoJGjlpAOXDg6EsjRANlob5hgoCeC8HIT4DChYAyBlgDiuAzlFguWWfyZFAqYXuUAA%3D%3D)),filterAsm:(binary:!t,commentOnly:!t,directives:!t,intel:!t,labels:!t),version:3
+// Alternate https://github.com/vectorclass/version2/blob/master/vectorf128.h#L1048
+
+#if OCIO_USE_SSE2 || OCIO_USE_AVX
+inline float hsum_ps_sse1(__m128 v) {                              // v    = [   D   C |   B   A ]
+    __m128 shuf   = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2, 3, 0, 1)); // shuf = [   C   D |   A   B ]
+    __m128 sums   = _mm_add_ps(v, shuf);                           // sums = [ D+C C+D | B+A A+B ]
+    shuf          = _mm_movehl_ps(shuf, sums);                     // shuf = [   C   D | D+C C+D ]
+    sums          = _mm_add_ss(sums, shuf);                        // sums = [ D+C C+D | B+A A+B+C+D ]
+    return    _mm_cvtss_f32(sums);                                 // A+B+C+D
+}
+#endif
+#ifdef OCIO_USE_AVX
+inline float hsum256_ps_avx(__m256 v) {
+    __m128 vlow  = _mm256_castps256_ps128(v);
+    __m128 vhigh = _mm256_extractf128_ps(v, 1); // high 128
+    __m128 v128  = _mm_add_ps(vlow, vhigh);     // add the low 128
+    return hsum_ps_sse1(v128);
+}
+#endif
+
+
 inline float chroma_compress_norm(float h, float chroma_compress_scale)
 {
     const float h_rad = to_radians(h);
@@ -255,6 +282,30 @@ inline float chroma_compress_norm(float h, float chroma_compress_scale)
     const float cos_hr3 = 4.0f * cos_hr1 * cos_hr1 * cos_hr1 - 3.0f * cos_hr1;
     const float sin_hr3 = 3.0f * sin_hr1 - 4.0f * sin_hr1 * sin_hr1 * sin_hr1;
 
+// TODO: benchmark this across multiple platforms to justify the multiple code paths.
+#if OCIO_USE_SSE2
+#if OCIO_USE_AVX
+    alignas(AVX_SIMD_BYTES) float trig_angles_hr[8] = {cos_hr1, cos_hr2, cos_hr3, sin_hr1, sin_hr2, sin_hr3, 1.0f, 0.0f};
+    __m256 scaling = _mm256_broadcast_ss(&chroma_compress_scale);
+    __m256 trigs = _mm256_load_ps(trig_angles_hr);
+    __m256 trig_weights = _mm256_mul_ps(_mm256_set_ps(11.34072f, 16.46899f, 14.66441f, 4.66441f, -6.37224f, 9.19364f, 77.12896f, 0.0f), scaling);
+    __m256 t1 = _mm256_mul_ps(trigs, trig_weights);
+    return hsum256_ps_avx(t1);
+#else
+    alignas(SSE2_SIMD_BYTES) float cosine_hr[4] = {cos_hr1, cos_hr2, cos_hr3, 0.0f};
+    alignas(SSE2_SIMD_BYTES) float sine_hr[4] = {sin_hr1, sin_hr2, sin_hr3, 1.0f};
+    __m128 scaling = _mm_load1_ps(&chroma_compress_scale);
+    __m128 cosines = _mm_load_ps(cosine_hr);
+    __m128 cosine_weights = _mm_mul_ps(_mm_set_ps(11.34072f, 16.46899f, 14.66441f, 0.0f), scaling);
+    __m128 sines = _mm_load_ps(sine_hr);
+    __m128 sine_weights =  _mm_mul_ps(_mm_set_ps(4.66441f, -6.37224f, 9.19364f, 77.12896f), scaling);
+
+    __m128 t1 = _mm_mul_ps(cosines, cosine_weights);
+    __m128 t2 = _mm_mul_ps(sines, sine_weights);
+    __m128 t3 = _mm_add_ps(t1, t2); // TODO use fmadd_ps_sse2 from Lut1DOpCPU_SSE2.cpp ?
+    return hsum_ps_sse1(t3);
+#endif
+#else
     const float M = 11.34072f * cos_hr1 +
               16.46899f * cos_hr2 +
                7.88380f * cos_hr3 +
@@ -264,6 +315,7 @@ inline float chroma_compress_norm(float h, float chroma_compress_scale)
               77.12896f;
 
     return M * chroma_compress_scale; // TODO: is it worth prescaling the above M constants ?
+#endif
 }
 
 inline float toe_fwd( float x, float limit, float k1_in, float k2_in)
