@@ -540,7 +540,11 @@ void GpuShaderText::declareFloatArrayConst(const std::string & name, int size, c
         case GPU_LANGUAGE_HLSL_SM_5_0:
         case GPU_LANGUAGE_MSL_2_0:
         {
-            nl << floatKeywordConst() << " " << name << "[" << size << "] = {";
+            if(m_lang == GPU_LANGUAGE_MSL_2_0)
+                nl << "constant constexpr static float";
+            else
+                nl << floatKeywordConst();
+            nl << " " << name << "[" << size << "] = {";
             for (int i = 0; i < size; ++i)
             {
                 nl << getFloatString(v[i], m_lang);
@@ -592,7 +596,11 @@ void GpuShaderText::declareIntArrayConst(const std::string & name, int size, con
         case GPU_LANGUAGE_HLSL_SM_5_0:
         case GPU_LANGUAGE_MSL_2_0:
         {
-            nl << intKeywordConst() << " " << name << "[" << size << "] = {";
+            if(m_lang == GPU_LANGUAGE_MSL_2_0)
+                nl << "constant constexpr static int";
+            else
+                nl << intKeywordConst();
+            nl << " " << name << "[" << size << "] = {";
             for (int i = 0; i < size; ++i)
             {
                 nl << v[i];
