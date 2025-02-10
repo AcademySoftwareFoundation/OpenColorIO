@@ -644,7 +644,8 @@ colorspaces:
     description: sRGB - Texture with truncated matrix values
     from_scene_reference: !<GroupTransform>
       children:
-        - !<MatrixTransform> {matrix: [2.521686, -1.134131, -0.387555, 0, -0.2764799, 1.372719, -0.09623917, 0, -0.01537806, -0.152975, 1.168353, 0, 0, 0, 0, 1]}
+#        - !<MatrixTransform> {matrix: [2.521686, -1.134131, -0.387555, 0, -0.2764799, 1.372719, -0.09623917, 0, -0.01537806, -0.152975, 1.168353, 0, 0, 0, 0, 1]}
+        - !<MatrixTransform> {matrix: [2.522, -1.134, -0.388, 0, -0.276, 1.373, -0.0962, 0, -0.0154, -0.153, 1.168, 0, 0, 0, 0, 1]}
         - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
 
   - !<ColorSpace>
@@ -653,7 +654,11 @@ colorspaces:
     description: sRGB - Texture with truncated matrix values and different gamma
     from_scene_reference: !<GroupTransform>
       children:
-        - !<MatrixTransform> {matrix: [2.521686, -1.134131, -0.387555, 0, -0.2764799, 1.372719, -0.09623917, 0, -0.01537806, -0.152975, 1.168353, 0, 0, 0, 0, 1]}
+        - !<MatrixTransform> {matrix: [2.52, -1.13, -0.39, 0, -0.28, 1.37, -0.096, 0, -0.015, -0.15, 1.17, 0, 0, 0, 0, 1]}
+#        - !<MatrixTransform> {matrix: [2.522, -1.134, -0.388, 0, -0.276, 1.373, -0.0962, 0, -0.0154, -0.153, 1.168, 0, 0, 0, 0, 1]}
+#        - !<ExponentTransform> {value: [2.2, 2.2, 2.2, 1], direction: inverse}
+#        - !<ExponentTransform> {gamma: 2.2, direction: inverse}
+#        - !<ExponentWithLinearTransform> {gamma: 2.42, offset: 0.055, direction: inverse}
         - !<ExponentWithLinearTransform> {gamma: 2.42, offset: 0.055, direction: inverse}
 
   - !<ColorSpace>
@@ -669,11 +674,39 @@ colorspaces:
     to_reference: !<MatrixTransform> {matrix: [ 0.695452241357, 0.140678696470, 0.163869062172, 0, 0.044794563372, 0.859671118456, 0.095534318172, 0, -0.005525882558, 0.004025210306, 1.001500672252, 0, 0, 0, 0, 1 ]}
 
   - !<ColorSpace>
+    name: pq display scene
+    isdata: false
+    description: Rec.2100-PQ - incorrectly as a display
+    from_reference: !<GroupTransform>
+      children:
+#        - !<BuiltinTransform> {style: UTILITY - ACES-AP0_to_CIE-XYZ-D65_BFD}
+        - !<BuiltinTransform> {style: DISPLAY - CIE-XYZ-D65_to_REC.2100-PQ}
+
+display_colorspaces:
+  - !<ColorSpace>
     name: pq display
     isdata: false
     description: Rec.2100-PQ - Display
-    from_reference: !<BuiltinTransform> {style: DISPLAY - CIE-XYZ-D65_to_REC.2100-PQ}
+    from_display_reference: !<BuiltinTransform> {style: DISPLAY - CIE-XYZ-D65_to_REC.2100-PQ}
+
+  - !<ColorSpace>
+    name: ACES cg display
+    isdata: false
+    description: ACEScg - incorrectly as a display
+    to_display_reference: !<GroupTransform>
+      children:
+        - !<MatrixTransform> {matrix: [ 0.695452241357, 0.140678696470, 0.163869062172, 0, 0.044794563372, 0.859671118456, 0.095534318172, 0, -0.005525882558, 0.004025210306, 1.001500672252, 0, 0, 0, 0, 1 ]}
+#        - !<BuiltinTransform> {style: UTILITY - ACES-AP0_to_CIE-XYZ-D65_BFD}
 )" };
+
+// >>> cs.build_conversion_matrix('ap0','rec 709','cat02').T
+// array([[ 2.52193473, -1.1370239 , -0.38491083],
+//        [-0.27547943,  1.36982898, -0.09434955],
+//        [-0.01598287, -0.14778923,  1.1637721 ]])
+// >>> cs.build_conversion_matrix('ap0','rec 709','bfd').T
+// array([[ 2.52168619, -1.13413099, -0.3875552 ],
+//        [-0.27647991,  1.37271909, -0.09623917],
+//        [-0.01537806, -0.15297534,  1.1683534 ]])
 
     iss.str(INPUT);
 
@@ -681,7 +714,12 @@ colorspaces:
     OCIO::ConstConfigRcPtr inputConfig = OCIO::Config::CreateFromStream(iss);
 
     OCIO::ConfigUtils::ColorSpaceFingerprints fingerprints;
-    OCIO::ConfigUtils::initializeColorSpacesFingerprints(fingerprints, baseConfig);
+    OCIO::ConfigUtils::initializeColorSpaceFingerprints(fingerprints, baseConfig);
+
+// auto cs = inputConfig->getColorSpace("very approx. standard RGB");
+// auto gt = inputConfig->getProcessor(cs->getTransform(OCIO::COLORSPACE_DIR_FROM_REFERENCE))
+//         ->createGroupTransform();
+// std::cout << *gt << "\n";
 
 //     for (const auto & pair : fingerprints)
 //     {
@@ -696,10 +734,27 @@ colorspaces:
 //         std::cout << "\n";
 //     }
 
+//         std::vector<float> vals = fingerprints.sceneRefTestVals;
+//         for (size_t i = 0; i < vals.size(); i++)
+//         {
+//             std::cout << vals[i] << ", ";
+//         }
+//         std::cout << "scene\n";
+//         std::vector<float> vals1 = fingerprints.displayRefTestVals;
+//         for (size_t i = 0; i < vals1.size(); i++)
+//         {
+//             std::cout << vals1[i] << ", ";
+//         }
+//         std::cout << "display\n";
+
+// The above prints this:
+// 0.401273, 0.089901, 0.0256116, 0, 0.35086, 0.733961, 0.109276, 0, 0.171697, 0.104272, 0.786227, 0, 0, 0, 0, 0.5, 0.0370189, 0.0308277, 0.0216417, 0, 1, 1, 1, 1, scene
+// 0.376532, 0.199249, 0.028095, 0, 0.327755, 0.6465, 0.116974, 0, 0.173708, 0.0814028, 0.858056, 0, 0, 0, 0, 0.5, 0.0349567, 0.0335309, 0.023553, 0, 0.950456, 1, 1.08906, 1, display
+
+
     {
         OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("ref_space");
-        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs,
-                                                                        OCIO::REFERENCE_SPACE_SCENE);
+        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
         OCIO_CHECK_EQUAL(name, std::string("ACES2065-1"));
     }
 //     {
@@ -710,65 +765,92 @@ colorspaces:
 //     }
     {
         OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("standard RGB");
-        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs,
-                                                                        OCIO::REFERENCE_SPACE_SCENE);
+        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
         OCIO_CHECK_EQUAL(name, std::string("sRGB - Texture"));
     }
     {
         OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("approx. standard RGB");
-        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs,
-                                                                        OCIO::REFERENCE_SPACE_SCENE);
+        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
         OCIO_CHECK_EQUAL(name, std::string("sRGB - Texture"));
     }
     {
         OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("very approx. standard RGB");
-        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs,
-                                                                        OCIO::REFERENCE_SPACE_SCENE);
+        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
         OCIO_CHECK_EQUAL(name, std::string(""));
     }
     {
         OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("ACES cct");
-        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs,
-                                                                        OCIO::REFERENCE_SPACE_SCENE);
+        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
         OCIO_CHECK_EQUAL(name, std::string("ACEScct"));
     }
     {
         OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("requires ACES cct");
-        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs,
-                                                                        OCIO::REFERENCE_SPACE_SCENE);
+        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
         OCIO_CHECK_EQUAL(name, std::string("ACEScct"));
     }
     {
         OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("ACES cg");
-        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs,
-                                                                        OCIO::REFERENCE_SPACE_SCENE);
+        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
         OCIO_CHECK_EQUAL(name, std::string("ACEScg"));
     }
     {
-        OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("ACES cg");
-        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs,
-                                                                        OCIO::REFERENCE_SPACE_DISPLAY);
+        OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("ACES cg display");
+        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
         OCIO_CHECK_EQUAL(name, std::string(""));
     }
     {
         OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("pq display");
-        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs,
-                                                                        OCIO::REFERENCE_SPACE_DISPLAY);
+        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
         OCIO_CHECK_EQUAL(name, std::string("Rec.2100-PQ - Display"));
     }
     {
-        OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("pq display");
-        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs,
-                                                                        OCIO::REFERENCE_SPACE_SCENE);
+        OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("pq display scene");
+        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
         OCIO_CHECK_EQUAL(name, std::string(""));
     }
 }
 
-// OCIO_ADD_TEST(MergeConfigs, config_utils_find_equivalent_colorspace2)
-// {
-//     OCIO::ConstConfigRcPtr baseConfig = OCIO::Config::CreateFromFile("ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1");
-//     OCIO::ConstConfigRcPtr inputConfig = OCIO::Config::CreateFromFile("/Users/walkerdo/Documents/work/Autodesk/color/adsk_color_mgmt/OCIO/configs/flame/flame_core_config.ocio");
-// 
-//     OCIO::ConfigUtils::ColorSpaceFingerprintMap fingerprints;
-//     OCIO::ConfigUtils::initializeColorSpacesFingerprintMap(fingerprints, baseConfig);
-// }
+OCIO_ADD_TEST(MergeConfigs, config_utils_find_equivalent_colorspace2)
+{
+//    OCIO::ConstConfigRcPtr baseConfig = OCIO::Config::CreateFromFile("ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1");
+    OCIO::ConstConfigRcPtr baseConfig = OCIO::Config::CreateFromFile("/Users/walkerdo/Documents/work/Autodesk/color/adsk_color_mgmt/OCIO/customer configs/FilmLight/TCS_TCAMv3/TCS_TCAMv3.ocio");
+    OCIO::ConstConfigRcPtr inputConfig = OCIO::Config::CreateFromFile("/Users/walkerdo/Documents/work/Autodesk/color/adsk_color_mgmt/OCIO/configs/flame/flame_core_config.ocio");
+
+    OCIO::ConfigUtils::ColorSpaceFingerprints fingerprints;
+    OCIO::ConfigUtils::initializeColorSpaceFingerprints(fingerprints, baseConfig);
+
+//         std::vector<float> vals = fingerprints.sceneRefTestVals;
+//         for (size_t i = 0; i < vals.size(); i++)
+//         {
+//             std::cout << vals[i] << ", ";
+//         }
+//         std::cout << "scene\n";
+//         std::vector<float> vals1 = fingerprints.displayRefTestVals;
+//         for (size_t i = 0; i < vals1.size(); i++)
+//         {
+//             std::cout << vals1[i] << ", ";
+//         }
+//         std::cout << "display\n";
+//
+// 0.487301, 0.0881323, 0.0741543, 0, 0.300795, 0.700204, 0.167705, 0, 0.13517, 0.139418, 0.679913, 0, 0, 0, 0, 0.5, 0.0393561, 0.0303888, 0.0239345, 0, 0.999998, 1, 1, 1, scene
+
+    OCIO::ConstTransformRcPtr inputToBaseGtScene;
+    OCIO::ConstTransformRcPtr inputToBaseGtDisplay;
+    OCIO::ConfigUtils::initializeRefSpaceConverters(inputToBaseGtScene,
+                                              inputToBaseGtDisplay,
+                                              baseConfig,
+                                              inputConfig);
+
+    {
+        OCIO::ColorSpaceRcPtr cs = inputConfig->getColorSpace("ACEScct")->createEditableCopy();
+        OCIO::ConfigUtils::updateReferenceColorspace(cs, inputToBaseGtScene);
+        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
+        OCIO_CHECK_EQUAL(name, std::string("ACEScct: ACEScct : AP1"));
+    }
+    {
+        OCIO::ColorSpaceRcPtr cs = inputConfig->getColorSpace("Apple Log")->createEditableCopy();
+        OCIO::ConfigUtils::updateReferenceColorspace(cs, inputToBaseGtScene);
+        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
+        OCIO_CHECK_EQUAL(name, std::string("Apple: Apple Log : Rec.2020"));
+    }
+}

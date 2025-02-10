@@ -58,22 +58,20 @@ struct Fingerprint
     ReferenceSpaceType type;
     std::vector<float> vals;
 };
-//typedef std::map< std::string, Fingerprint > ColorSpaceFingerprintMap;
+
 struct ColorSpaceFingerprints
 {
     std::vector<Fingerprint> vec;
+    std::vector<float> sceneRefTestVals;
+    std::vector<float> displayRefTestVals;
 };
-void initializeColorSpacesFingerprints(ColorSpaceFingerprints & fingerprints,
-                                         const ConstConfigRcPtr & config);
+
+void initializeColorSpaceFingerprints(ColorSpaceFingerprints & fingerprints,
+                                      const ConstConfigRcPtr & config);
 
 const char * findEquivalentColorspace(const ColorSpaceFingerprints & fingerprints,
                                       const ConstConfigRcPtr & inputConfig, 
-                                      const ConstColorSpaceRcPtr & inputCS,
-                                      ReferenceSpaceType refType);
-
-// const char * findEquivalentColorspace(const ConstConfigRcPtr & config, 
-//                                       const ConstColorSpaceRcPtr & newCs,
-//                                       ReferenceSpaceType refType);
+                                      const ConstColorSpaceRcPtr & inputCS);
 
 // Temporarily deactivate the Processor cache on a Config object.
 // Currently, this also clears the cache.

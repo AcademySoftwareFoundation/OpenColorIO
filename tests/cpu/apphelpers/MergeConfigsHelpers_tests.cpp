@@ -5588,6 +5588,8 @@ colorspaces:
         }
     }
 */
+std::cout << "merge2\n";
+
     // Test with external LUT files.
     {
         std::vector<std::string> paths = { 
@@ -5626,6 +5628,8 @@ colorspaces:
         }
     }
 
+std::cout << "merge3\n";
+
     // Test that a merge could go wrong if the search_paths are merged with a different strategy
     // than the other sections.
     {
@@ -5637,6 +5641,9 @@ colorspaces:
             std::string("merged.ociom")
         }; 
         const std::string ociomPath = pystring::os::path::normpath(pystring::os::path::join(paths));
+
+// FIXME: The ociom file should not try to do avoid dupes. Is that also throwing?
+// The base config is not suitable for find dupes.
 
         {
             OCIO::ConstConfigMergerRcPtr merger = OCIO::ConfigMerger::CreateFromFile(ociomPath.c_str());
@@ -5661,6 +5668,8 @@ colorspaces:
             // named transforms, and colorspaces.
         }
     }
+
+std::cout << "merge4\n";
 
     // Test with a built-in config.
     {

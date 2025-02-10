@@ -2548,8 +2548,7 @@ bool ColorspacesMerger::handleAvoidDuplicatesOption(ConfigUtils::ColorSpaceFinge
 //     );
     const char * duplicateInBase = ConfigUtils::findEquivalentColorspace(
         fingerprints,
-        inputConfig, inputCS,
-        inputCS->getReferenceSpaceType()
+        inputConfig, inputCS
     );
 
 // TODO: Could this be refactored to go through the usual merge process?
@@ -2970,7 +2969,7 @@ void ColorspacesMerger::addColorSpaces()
     ConfigUtils::ColorSpaceFingerprints fingerprints;
     if (m_params->isAvoidDuplicates())
     {
-        ConfigUtils::initializeColorSpacesFingerprints(fingerprints, m_baseConfig);
+        ConfigUtils::initializeColorSpaceFingerprints(fingerprints, m_baseConfig);
     }
 
     for (int i = 0; i < m_inputConfig->getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL); ++i)
