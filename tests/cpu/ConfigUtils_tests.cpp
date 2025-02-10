@@ -810,47 +810,47 @@ display_colorspaces:
     }
 }
 
-OCIO_ADD_TEST(MergeConfigs, config_utils_find_equivalent_colorspace2)
-{
-//    OCIO::ConstConfigRcPtr baseConfig = OCIO::Config::CreateFromFile("ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1");
-    OCIO::ConstConfigRcPtr baseConfig = OCIO::Config::CreateFromFile("/Users/walkerdo/Documents/work/Autodesk/color/adsk_color_mgmt/OCIO/customer configs/FilmLight/TCS_TCAMv3/TCS_TCAMv3.ocio");
-    OCIO::ConstConfigRcPtr inputConfig = OCIO::Config::CreateFromFile("/Users/walkerdo/Documents/work/Autodesk/color/adsk_color_mgmt/OCIO/configs/flame/flame_core_config.ocio");
-
-    OCIO::ConfigUtils::ColorSpaceFingerprints fingerprints;
-    OCIO::ConfigUtils::initializeColorSpaceFingerprints(fingerprints, baseConfig);
-
-//         std::vector<float> vals = fingerprints.sceneRefTestVals;
-//         for (size_t i = 0; i < vals.size(); i++)
-//         {
-//             std::cout << vals[i] << ", ";
-//         }
-//         std::cout << "scene\n";
-//         std::vector<float> vals1 = fingerprints.displayRefTestVals;
-//         for (size_t i = 0; i < vals1.size(); i++)
-//         {
-//             std::cout << vals1[i] << ", ";
-//         }
-//         std::cout << "display\n";
-//
-// 0.487301, 0.0881323, 0.0741543, 0, 0.300795, 0.700204, 0.167705, 0, 0.13517, 0.139418, 0.679913, 0, 0, 0, 0, 0.5, 0.0393561, 0.0303888, 0.0239345, 0, 0.999998, 1, 1, 1, scene
-
-    OCIO::ConstTransformRcPtr inputToBaseGtScene;
-    OCIO::ConstTransformRcPtr inputToBaseGtDisplay;
-    OCIO::ConfigUtils::initializeRefSpaceConverters(inputToBaseGtScene,
-                                              inputToBaseGtDisplay,
-                                              baseConfig,
-                                              inputConfig);
-
-    {
-        OCIO::ColorSpaceRcPtr cs = inputConfig->getColorSpace("ACEScct")->createEditableCopy();
-        OCIO::ConfigUtils::updateReferenceColorspace(cs, inputToBaseGtScene);
-        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
-        OCIO_CHECK_EQUAL(name, std::string("ACEScct: ACEScct : AP1"));
-    }
-    {
-        OCIO::ColorSpaceRcPtr cs = inputConfig->getColorSpace("Apple Log")->createEditableCopy();
-        OCIO::ConfigUtils::updateReferenceColorspace(cs, inputToBaseGtScene);
-        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
-        OCIO_CHECK_EQUAL(name, std::string("Apple: Apple Log : Rec.2020"));
-    }
-}
+// OCIO_ADD_TEST(MergeConfigs, config_utils_find_equivalent_colorspace2)
+// {
+// //    OCIO::ConstConfigRcPtr baseConfig = OCIO::Config::CreateFromFile("ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1");
+//     OCIO::ConstConfigRcPtr baseConfig = OCIO::Config::CreateFromFile("/Users/walkerdo/Documents/work/Autodesk/color/adsk_color_mgmt/OCIO/customer configs/FilmLight/TCS_TCAMv3/TCS_TCAMv3.ocio");
+//     OCIO::ConstConfigRcPtr inputConfig = OCIO::Config::CreateFromFile("/Users/walkerdo/Documents/work/Autodesk/color/adsk_color_mgmt/OCIO/configs/flame/flame_core_config.ocio");
+// 
+//     OCIO::ConfigUtils::ColorSpaceFingerprints fingerprints;
+//     OCIO::ConfigUtils::initializeColorSpaceFingerprints(fingerprints, baseConfig);
+// 
+// //         std::vector<float> vals = fingerprints.sceneRefTestVals;
+// //         for (size_t i = 0; i < vals.size(); i++)
+// //         {
+// //             std::cout << vals[i] << ", ";
+// //         }
+// //         std::cout << "scene\n";
+// //         std::vector<float> vals1 = fingerprints.displayRefTestVals;
+// //         for (size_t i = 0; i < vals1.size(); i++)
+// //         {
+// //             std::cout << vals1[i] << ", ";
+// //         }
+// //         std::cout << "display\n";
+// //
+// // 0.487301, 0.0881323, 0.0741543, 0, 0.300795, 0.700204, 0.167705, 0, 0.13517, 0.139418, 0.679913, 0, 0, 0, 0, 0.5, 0.0393561, 0.0303888, 0.0239345, 0, 0.999998, 1, 1, 1, scene
+// 
+//     OCIO::ConstTransformRcPtr inputToBaseGtScene;
+//     OCIO::ConstTransformRcPtr inputToBaseGtDisplay;
+//     OCIO::ConfigUtils::initializeRefSpaceConverters(inputToBaseGtScene,
+//                                               inputToBaseGtDisplay,
+//                                               baseConfig,
+//                                               inputConfig);
+// 
+//     {
+//         OCIO::ColorSpaceRcPtr cs = inputConfig->getColorSpace("ACEScct")->createEditableCopy();
+//         OCIO::ConfigUtils::updateReferenceColorspace(cs, inputToBaseGtScene);
+//         const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
+//         OCIO_CHECK_EQUAL(name, std::string("ACEScct: ACEScct : AP1"));
+//     }
+//     {
+//         OCIO::ColorSpaceRcPtr cs = inputConfig->getColorSpace("Apple Log")->createEditableCopy();
+//         OCIO::ConfigUtils::updateReferenceColorspace(cs, inputToBaseGtScene);
+//         const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
+//         OCIO_CHECK_EQUAL(name, std::string("Apple: Apple Log : Rec.2020"));
+//     }
+// }
