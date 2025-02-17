@@ -9244,12 +9244,235 @@ colorspaces:
 }
 
 OCIO_ADD_TEST(Config, compare_virtual_displays) {
-    /**
-     * TODO: Test hasVirtualView and VirtualViewsAreEqual
-     * Define a config file with a set of virtual views. Validate with hasVirtualView.
-     * Define a second file with a set of virtual views. Validate with hasVirtualView.
-     * Compare the two configs using Virtualviewsareequal testing all possible aspects.
-     */
+    static constexpr char CONFIG1[]{ R"(ocio_profile_version: 2
+
+roles:
+  default: raw
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+shared_views:
+  - !<View> {name: Film, view_transform: display_vt, display_colorspace: <USE_DISPLAY_NAME>}
+  - !<View> {name: view, view_transform: display_vt, display_colorspace: display_cs}
+
+displays:
+  Raw:
+    - !<View> {name: Raw, colorspace: raw}
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+
+virtual_display:
+  - !<View> {name: Raw, colorspace: raw}
+  - !<Views> [Film, view]
+
+view_transforms:
+  - !<ViewTransform>
+    name: default_vt
+    to_scene_reference: !<CDLTransform> {sat: 1.5}
+
+  - !<ViewTransform>
+    name: display_vt
+    to_display_reference: !<CDLTransform> {sat: 1.5}
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: display_cs
+    to_display_reference: !<CDLTransform> {sat: 1.5}
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+)" };
+
+    static constexpr char CONFIG2[]{ R"(ocio_profile_version: 2
+
+roles:
+  default: raw
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+shared_views:
+  - !<View> {name: view, view_transform: display_vt, display_colorspace: display_cs}
+
+displays:
+  Raw:
+    - !<View> {name: Raw, colorspace: raw}
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+    - !<Views> [view]
+
+virtual_display:
+  - !<View> {name: Raw, colorspace: raw}
+  - !<View> {name: Film, view_transform: display_vt, display_colorspace: <USE_DISPLAY_NAME>}
+  - !<Views> [view]
+
+view_transforms:
+  - !<ViewTransform>
+    name: default_vt
+    to_scene_reference: !<CDLTransform> {sat: 1.5}
+
+  - !<ViewTransform>
+    name: display_vt
+    to_display_reference: !<CDLTransform> {sat: 1.5}
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: display_cs
+    to_display_reference: !<CDLTransform> {sat: 1.5}
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+)" };
+
+    std::istringstream is;
+    is.str(CONFIG1);
+    OCIO::ConstConfigRcPtr config1, config2;
+    OCIO_CHECK_NO_THROW(config1 = OCIO::Config::CreateFromStream(is));
+    is.clear();
+    is.str(CONFIG2);
+    OCIO_CHECK_NO_THROW(config2 = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(config1->validate());
+    OCIO_CHECK_NO_THROW(config2->validate());
+
+    {
+        // Test that Config::VirtualViewsAreEqual works for a matching virtual view pair across separate configs.
+        // Works regardless of if the virtual view is display-defined in one config and shared in the other.
+
+        // Virtual view is a reference to a shared view.
+        OCIO_REQUIRE_EQUAL(2, config1->getVirtualDisplayNumViews(OCIO::VIEW_SHARED));
+
+        const char * viewName1 = config1->getVirtualDisplayView(OCIO::VIEW_SHARED, 0);
+
+        OCIO_CHECK_EQUAL(std::string("Film"), viewName1);
+        OCIO_CHECK_EQUAL(std::string("display_vt"), config1->getVirtualDisplayViewTransformName(viewName1));
+        OCIO_CHECK_EQUAL(std::string("<USE_DISPLAY_NAME>"), config1->getVirtualDisplayViewColorSpaceName(viewName1));
+        OCIO_CHECK_EQUAL(std::string(""), config1->getVirtualDisplayViewLooks(viewName1));
+        OCIO_CHECK_EQUAL(std::string(""), config1->getVirtualDisplayViewRule(viewName1));
+        OCIO_CHECK_EQUAL(std::string(""), config1->getVirtualDisplayViewDescription(viewName1));
+
+        // Virtual view is a reference to a display-defined view.
+        OCIO_REQUIRE_EQUAL(2, config2->getVirtualDisplayNumViews(OCIO::VIEW_DISPLAY_DEFINED));
+
+        const char * viewName2 = config2->getVirtualDisplayView(OCIO::VIEW_DISPLAY_DEFINED, 1);
+
+        OCIO_CHECK_EQUAL(std::string("Film"), viewName2);
+        OCIO_CHECK_EQUAL(std::string("display_vt"), config2->getVirtualDisplayViewTransformName(viewName2));
+        OCIO_CHECK_EQUAL(std::string("<USE_DISPLAY_NAME>"), config2->getVirtualDisplayViewColorSpaceName(viewName2));
+        OCIO_CHECK_EQUAL(std::string(""), config2->getVirtualDisplayViewLooks(viewName2));
+        OCIO_CHECK_EQUAL(std::string(""), config2->getVirtualDisplayViewRule(viewName2));
+        OCIO_CHECK_EQUAL(std::string(""), config2->getVirtualDisplayViewDescription(viewName2));
+
+        OCIO_CHECK_EQUAL(std::string(viewName1), std::string(viewName2));
+        OCIO_CHECK_ASSERT(OCIO::Config::VirtualViewsAreEqual(config1, config2, viewName1));
+    }
+    {
+        // Virtual views are both display-defined.
+        OCIO_REQUIRE_EQUAL(1, config1->getVirtualDisplayNumViews(OCIO::VIEW_DISPLAY_DEFINED));
+
+        const char * viewName1 = config1->getVirtualDisplayView(OCIO::VIEW_DISPLAY_DEFINED, 0);
+
+        OCIO_CHECK_EQUAL(std::string("Raw"), viewName1);
+        OCIO_CHECK_EQUAL(std::string(""), config1->getVirtualDisplayViewTransformName(viewName1));
+        OCIO_CHECK_EQUAL(std::string("raw"), config1->getVirtualDisplayViewColorSpaceName(viewName1));
+        OCIO_CHECK_EQUAL(std::string(""), config1->getVirtualDisplayViewLooks(viewName1));
+        OCIO_CHECK_EQUAL(std::string(""), config1->getVirtualDisplayViewRule(viewName1));
+        OCIO_CHECK_EQUAL(std::string(""), config1->getVirtualDisplayViewDescription(viewName1));
+
+        const char * viewName2 = config2->getVirtualDisplayView(OCIO::VIEW_DISPLAY_DEFINED, 0);
+
+        OCIO_CHECK_EQUAL(std::string("Raw"), viewName2);
+        OCIO_CHECK_EQUAL(std::string(""), config2->getVirtualDisplayViewTransformName(viewName2));
+        OCIO_CHECK_EQUAL(std::string("raw"), config2->getVirtualDisplayViewColorSpaceName(viewName2));
+        OCIO_CHECK_EQUAL(std::string(""), config2->getVirtualDisplayViewLooks(viewName2));
+        OCIO_CHECK_EQUAL(std::string(""), config2->getVirtualDisplayViewRule(viewName2));
+        OCIO_CHECK_EQUAL(std::string(""), config2->getVirtualDisplayViewDescription(viewName2));
+
+        OCIO_CHECK_EQUAL(std::string(viewName1), std::string(viewName2));
+        OCIO_CHECK_ASSERT(OCIO::Config::VirtualViewsAreEqual(config1, config2, viewName1));
+    }
+    {
+        // Virtual views are both shared.
+        const char * viewName1 = config1->getVirtualDisplayView(OCIO::VIEW_SHARED, 1);
+
+        OCIO_CHECK_EQUAL(std::string("view"), viewName1);
+        OCIO_CHECK_EQUAL(std::string("display_vt"), config1->getVirtualDisplayViewTransformName(viewName1));
+        OCIO_CHECK_EQUAL(std::string("display_cs"), config1->getVirtualDisplayViewColorSpaceName(viewName1));
+        OCIO_CHECK_EQUAL(std::string(""), config1->getVirtualDisplayViewLooks(viewName1));
+        OCIO_CHECK_EQUAL(std::string(""), config1->getVirtualDisplayViewRule(viewName1));
+        OCIO_CHECK_EQUAL(std::string(""), config1->getVirtualDisplayViewDescription(viewName1));
+
+        OCIO_REQUIRE_EQUAL(1, config2->getVirtualDisplayNumViews(OCIO::VIEW_SHARED));
+
+        const char * viewName2 = config2->getVirtualDisplayView(OCIO::VIEW_SHARED, 0);
+
+        OCIO_CHECK_EQUAL(std::string("view"), viewName2);
+        OCIO_CHECK_EQUAL(std::string("display_vt"), config2->getVirtualDisplayViewTransformName(viewName2));
+        OCIO_CHECK_EQUAL(std::string("display_cs"), config2->getVirtualDisplayViewColorSpaceName(viewName2));
+        OCIO_CHECK_EQUAL(std::string(""), config2->getVirtualDisplayViewLooks(viewName2));
+        OCIO_CHECK_EQUAL(std::string(""), config2->getVirtualDisplayViewRule(viewName2));
+        OCIO_CHECK_EQUAL(std::string(""), config2->getVirtualDisplayViewDescription(viewName2));
+
+        OCIO_CHECK_EQUAL(std::string(viewName1), std::string(viewName2));
+        OCIO_CHECK_ASSERT(OCIO::Config::VirtualViewsAreEqual(config1, config2, viewName1));
+
+        OCIO_CHECK_EQUAL(std::string(viewName1), std::string(viewName2));
+        OCIO_CHECK_ASSERT(OCIO::Config::VirtualViewsAreEqual(config1, config2, viewName1));
+    }
+    {
+        // Test when a shared virtual view exists in one config but not the other.
+        OCIO::ConfigRcPtr cfg = config1->createEditableCopy();
+
+        OCIO_CHECK_ASSERT(config1->hasVirtualView("Film"));
+        OCIO_CHECK_ASSERT(config1->virtualViewIsShared("Film"));
+
+        OCIO_REQUIRE_EQUAL(2, cfg->getVirtualDisplayNumViews(OCIO::VIEW_SHARED));
+        OCIO_CHECK_ASSERT(cfg->hasVirtualView("Film"));
+        OCIO_CHECK_ASSERT(cfg->virtualViewIsShared("Film"));
+
+        OCIO_CHECK_ASSERT(OCIO::Config::VirtualViewsAreEqual(config1, cfg, "Film"));
+
+        // Check against another config where the virtual view is display-defined.
+        OCIO_CHECK_ASSERT(OCIO::Config::VirtualViewsAreEqual(config2, cfg, "Film"));
+
+        // Remove a shared view from the virtual display.
+        cfg->removeVirtualDisplayView("Film");
+
+        OCIO_REQUIRE_EQUAL(1, cfg->getVirtualDisplayNumViews(OCIO::VIEW_SHARED));
+        OCIO_CHECK_ASSERT(!cfg->hasVirtualView("Film"));
+        OCIO_CHECK_ASSERT(!cfg->virtualViewIsShared("Film"));
+
+        OCIO_CHECK_ASSERT(!OCIO::Config::VirtualViewsAreEqual(config1, cfg, "Film"));        
+        OCIO_CHECK_ASSERT(!OCIO::Config::VirtualViewsAreEqual(config2, cfg, "Film"));
+    }
+    {
+        // Test when a display-defined virtual view exists in one config but not the other.
+        OCIO::ConfigRcPtr cfg = config2->createEditableCopy();
+
+        // Remove a display-defined view from the virtual display.
+        OCIO_CHECK_ASSERT(config2->hasVirtualView("Film"));
+        OCIO_CHECK_ASSERT(!config2->virtualViewIsShared("Film"));   // Confirm display-defined
+
+        OCIO_REQUIRE_EQUAL(2, cfg->getVirtualDisplayNumViews(OCIO::VIEW_DISPLAY_DEFINED));
+        OCIO_CHECK_ASSERT(cfg->hasVirtualView("Film"));
+        OCIO_CHECK_ASSERT(!cfg->virtualViewIsShared("Film"));       // Confirm display-defined
+
+        OCIO_CHECK_ASSERT(OCIO::Config::VirtualViewsAreEqual(config2, cfg, "Film"));
+
+        // Check against another config where the virtual view is a reference to a shared view.
+        OCIO_CHECK_ASSERT(OCIO::Config::VirtualViewsAreEqual(config1, cfg, "Film"));
+
+        // Remove a display-defined view from the virtual display.
+        cfg->removeVirtualDisplayView("Film");
+
+        OCIO_REQUIRE_EQUAL(1, cfg->getVirtualDisplayNumViews(OCIO::VIEW_DISPLAY_DEFINED));
+        OCIO_CHECK_ASSERT(!cfg->hasVirtualView("Film"));
+        
+        OCIO_CHECK_ASSERT(!OCIO::Config::VirtualViewsAreEqual(config2, cfg, "Film"));        
+        OCIO_CHECK_ASSERT(!OCIO::Config::VirtualViewsAreEqual(config1, cfg, "Film"));
+    }
 }
 
 OCIO_ADD_TEST(Config, description_and_name)

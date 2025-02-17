@@ -1025,8 +1025,9 @@ public:
      *
      * Will return false if either of the virtual views does not exist. This will return true
      * even if the virtual view is display-defined in one config and a reference to a shared
-     * virtual view in the other config (both within the same display), as long as the contents
-     * match. The description text (if any) is ignored, since it is not a functional difference.
+     * virtual view in the other config, as long as the contents match.
+     * 
+     * The description text (if any) is ignored, since it is not a functional difference.
      */
     static bool VirtualViewsAreEqual(const ConstConfigRcPtr & first,
                                      const ConstConfigRcPtr & second,

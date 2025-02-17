@@ -3929,6 +3929,12 @@ const char * Config::getVirtualDisplayViewTransformName(const char * view) const
 {
     if (!view) return "";
 
+    // Get the view transform name for the case where a virtual view is shared.
+    if (virtualViewIsShared(view))
+    {
+        return getDisplayViewTransformName(nullptr, view);
+    }
+
     ViewVec::const_iterator iter = FindView(getImpl()->m_virtualDisplay.m_views, view);
     if (iter != getImpl()->m_virtualDisplay.m_views.end())
     {
