@@ -227,6 +227,9 @@ if(USE_GCC)
     set_property(SOURCE ops/fixedfunction/ACES2/Transform.cpp APPEND PROPERTY COMPILE_OPTIONS
                 -fno-math-errno -fno-signed-zeros -fno-trapping-math -fno-signaling-nans -ffinite-math-only -freciprocal-math -ftree-vectorize)
 endif()
+if(MSVC)
+    set_property(SOURCE ops/fixedfunction/ACES2/Transform.cpp APPEND PROPERTY COMPILE_OPTIONS /Qvec)
+endif()
 
 configure_file(CPUInfoConfig.h.in CPUInfoConfig.h)
 
