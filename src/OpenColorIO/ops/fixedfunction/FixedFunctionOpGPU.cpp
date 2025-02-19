@@ -459,7 +459,6 @@ void _Add_JMh_to_Aab_Shader(
 }
 
 void _Add_Aab_to_RGB_Shader(
-    GpuShaderCreatorRcPtr & shaderCreator,
     GpuShaderText & ss,
     const ACES2::JMhParams & p)
 {
@@ -484,7 +483,7 @@ void _Add_JMh_to_RGB_Shader(
     ss.newLine() << ss.float3Decl("JMh") << " = " << pxl << ".rgb;";
     ss.newLine() << ss.float3Decl("Aab") << ";";
     _Add_JMh_to_Aab_Shader(shaderCreator, ss, p);
-    _Add_Aab_to_RGB_Shader(shaderCreator, ss, p);
+    _Add_Aab_to_RGB_Shader(ss, p);
 
     ss.newLine() << pxl << ".rgb = JMh;";
 }
@@ -705,8 +704,6 @@ void _Add_Tonescale_Compress_Fwd_Shader(
     GpuShaderCreatorRcPtr & shaderCreator,
     GpuShaderText & ss,
     unsigned resourceIndex,
-    const ACES2::JMhParams & p,
-    const ACES2::ToneScaleParams & t,
     const ACES2::SharedCompressionParameters & s,
     const ACES2::ChromaCompressParams & c)
 {
@@ -749,8 +746,6 @@ void _Add_Tonescale_Compress_Inv_Shader(
     GpuShaderCreatorRcPtr & shaderCreator,
     GpuShaderText & ss,
     unsigned resourceIndex,
-    const ACES2::JMhParams & p,
-    const ACES2::ToneScaleParams & t,
     const ACES2::SharedCompressionParameters & s,
     const ACES2::ChromaCompressParams & c)
 {
@@ -1320,7 +1315,7 @@ void Add_ACES_OutputTransform_Fwd_Shader(
 
     ss.newLine() << "{";
     ss.indent();
-        _Add_Tonescale_Compress_Fwd_Shader(shaderCreator, ss, resourceIndex, pIn, t, s, c);
+        _Add_Tonescale_Compress_Fwd_Shader(shaderCreator, ss, resourceIndex, s, c);
     ss.dedent();
     ss.newLine() << "}";
 
@@ -1404,7 +1399,7 @@ void Add_ACES_OutputTransform_Inv_Shader(
     ss.newLine() << ss.floatDecl("J") << " = " << tonescaleName_Inv << "(" << pxl << ".b);";
     ss.newLine() << "{";
     ss.indent();
-        _Add_Tonescale_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, pIn, t, s, c);
+        _Add_Tonescale_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, s, c);
     ss.dedent();
     ss.newLine() << "}";
 
@@ -1495,7 +1490,7 @@ void Add_Tonescale_Compress_Fwd_Shader(
     ss.newLine() << ss.floatDecl("reachMaxM") << " = " << reachName << "_sample(" << pxl << ".b);";
     ss.newLine() << ss.floatDecl("J_ts") << " = " << tonescaleName_Fwd << "(" << pxl << ".r);";
 
-    _Add_Tonescale_Compress_Fwd_Shader(shaderCreator, ss, resourceIndex, p, t, s, c);
+    _Add_Tonescale_Compress_Fwd_Shader(shaderCreator, ss, resourceIndex, s, c);
 }
 
 void Add_Tonescale_Compress_Inv_Shader(
@@ -1523,7 +1518,7 @@ void Add_Tonescale_Compress_Inv_Shader(
     ss.newLine() << ss.floatDecl("reachMaxM") << " = " << reachName << "_sample(" << pxl << ".b);";
     ss.newLine() << ss.floatDecl("J") << " = " << tonescaleName_Inv << "(" << pxl << ".r);";
 
-    _Add_Tonescale_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, p, t, s, c);
+    _Add_Tonescale_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, s, c);
 }
 
 void Add_Gamut_Compress_Fwd_Shader(
