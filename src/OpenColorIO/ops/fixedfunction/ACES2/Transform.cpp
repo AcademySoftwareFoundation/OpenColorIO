@@ -141,9 +141,9 @@ inline float Achromatic_n_to_J(float A, const float cz)
     return J_scale * powf(A, cz);
 }
 
-inline float J_to_Achromatic_n(float J, const float cz)
+inline float J_to_Achromatic_n(float J, const float inv_cz)
 {
-    return powf(J / J_scale, 1.f / cz);
+    return powf(J * (1.0f / J_scale), inv_cz);
 }
 
 // Optimization for achromatic values
@@ -157,13 +157,13 @@ inline float _A_to_Y(float A, const JMhParams &p)
 
 inline float _J_to_Y(float abs_J, const JMhParams &p)
 {
-    return _A_to_Y(J_to_Achromatic_n(abs_J, p.cz), p);
+    return _A_to_Y(J_to_Achromatic_n(abs_J, p.inv_cz), p);
 }
 
 inline float _Y_to_J(float abs_Y, const JMhParams &p)
 {
     const float Ra = _post_adaptation_cone_response_compression_fwd(abs_Y * p.F_L_n);
-    const float J  = Achromatic_n_to_J(Ra / p.A_w_J, p.cz);
+    const float J  = Achromatic_n_to_J(Ra * p.inv_A_w_J, p.cz);
     return J;
 }
 
@@ -209,21 +209,28 @@ f3 RGB_to_JMh(const f3 &RGB, const JMhParams &p)
     return JMh;
 }
 
-inline f3 JMh_to_Aab(const f3 &JMh, const JMhParams &p)
+f3 JMh_to_Aab(const f3 &JMh, const float &cos_hr, const float &sin_hr, const JMhParams &p)
 {
     const float J = JMh[0];
     const float M = JMh[1];
-    const float h = JMh[2];
 
-    const float h_rad = to_radians(h);
-
-    const float A = J_to_Achromatic_n(J, p.cz);
-    const float a = M * cos(h_rad);
-    const float b = M * sin(h_rad);
+    const float A = J_to_Achromatic_n(J, p.inv_cz);
+    const float a = M * cos_hr;
+    const float b = M * sin_hr;
     return {A, a, b};
 }
 
-inline f3 Aab_to_RGB(const f3 &Aab, const JMhParams &p)
+f3 JMh_to_Aab(const f3 &JMh, const JMhParams &p)
+{
+    const float h = JMh[2];
+    const float h_rad = to_radians(h);
+    const float cos_hr = cos(h_rad);
+    const float sin_hr = sin(h_rad);
+
+    return JMh_to_Aab(JMh, cos_hr, sin_hr, p);
+}
+
+f3 Aab_to_RGB(const f3 &Aab, const JMhParams &p)
 {
     const f3 rgb_a = mult_f3_f33(Aab, p.MATRIX_Aab_to_cone_response);
 
@@ -263,59 +270,60 @@ inline float hsum_ps_sse1(__m128 v) {                              // v    = [  
 }
 #endif
 #ifdef OCIO_USE_AVX
-inline float hsum256_ps_avx(__m256 v) {
-    __m128 vlow  = _mm256_castps256_ps128(v);
-    __m128 vhigh = _mm256_extractf128_ps(v, 1); // high 128
-    __m128 v128  = _mm_add_ps(vlow, vhigh);     // add the low 128
+inline float hsum256_ps_avx(__m256 v) {         // v     = [   H   G |   F   E |   D   C |   B   A ]
+    __m128 vlow  = _mm256_castps256_ps128(v);   // vlow  = [   D   C |   B   A ]
+    __m128 vhigh = _mm256_extractf128_ps(v, 1); // vhigh = [   H   G |   F   E ]
+    __m128 v128  = _mm_add_ps(vlow, vhigh);     // v128  = [ H+D G+C | F+B E+A ]
     return hsum_ps_sse1(v128);
 }
 #endif
 
 
-inline float chroma_compress_norm(float h, float chroma_compress_scale)
+float chroma_compress_norm(float cos_hr1, float sin_hr1, float chroma_compress_scale)
 {
-    const float h_rad = to_radians(h);
-    const float cos_hr1 = cos(h_rad);
-    const float sin_hr1 = sin(h_rad);
     const float cos_hr2 = 2.0f * cos_hr1 * cos_hr1 - 1.0f;
     const float sin_hr2 = 2.0f * cos_hr1 * sin_hr1;
     const float cos_hr3 = 4.0f * cos_hr1 * cos_hr1 * cos_hr1 - 3.0f * cos_hr1;
     const float sin_hr3 = 3.0f * sin_hr1 - 4.0f * sin_hr1 * sin_hr1 * sin_hr1;
 
-// TODO: benchmark this across multiple platforms to justify the multiple code paths.
+    constexpr unsigned int AVX_ALIGNMENT = 32;
+    alignas(AVX_ALIGNMENT) const float trig_angles_hr[8] = {
+        cos_hr1, cos_hr2, cos_hr3, 0.0f,
+        sin_hr1, sin_hr2, sin_hr3, 1.0f
+    };
+    alignas(AVX_ALIGNMENT) static constexpr float weights[8] = { // TODO: investigate reordering of the entries so we are summing equal magnitude values first?
+        11.34072f, 16.46899f, 14.66441f,  0.0f,
+        4.66441f,  -6.37224f,  9.19364f, 77.12896f
+    };
+    // TODO: benchmark this across multiple platforms to justify the multiple code paths.
 #if OCIO_USE_SSE2
 #if OCIO_USE_AVX
-    alignas(AVX_SIMD_BYTES) float trig_angles_hr[8] = {cos_hr1, cos_hr2, cos_hr3, sin_hr1, sin_hr2, sin_hr3, 1.0f, 0.0f};
-    __m256 scaling = _mm256_broadcast_ss(&chroma_compress_scale);
-    __m256 trigs = _mm256_load_ps(trig_angles_hr);
-    __m256 trig_weights = _mm256_mul_ps(_mm256_set_ps(11.34072f, 16.46899f, 14.66441f, 4.66441f, -6.37224f, 9.19364f, 77.12896f, 0.0f), scaling);
-    __m256 t1 = _mm256_mul_ps(trigs, trig_weights);
-    return hsum256_ps_avx(t1);
+    __m256 trigs        = _mm256_load_ps(trig_angles_hr);
+    __m256 trig_weights = _mm256_load_ps(weights);
+    __m256 t1           = _mm256_mul_ps(trigs, trig_weights);
+    const float M       = hsum256_ps_avx(t1);
 #else
-    alignas(SSE2_SIMD_BYTES) float cosine_hr[4] = {cos_hr1, cos_hr2, cos_hr3, 0.0f};
-    alignas(SSE2_SIMD_BYTES) float sine_hr[4] = {sin_hr1, sin_hr2, sin_hr3, 1.0f};
-    __m128 scaling = _mm_load1_ps(&chroma_compress_scale);
-    __m128 cosines = _mm_load_ps(cosine_hr);
-    __m128 cosine_weights = _mm_mul_ps(_mm_set_ps(11.34072f, 16.46899f, 14.66441f, 0.0f), scaling);
-    __m128 sines = _mm_load_ps(sine_hr);
-    __m128 sine_weights =  _mm_mul_ps(_mm_set_ps(4.66441f, -6.37224f, 9.19364f, 77.12896f), scaling);
+    __m128 cosines        = _mm_load_ps(trig_angles_hr);
+    __m128 sines          = _mm_load_ps(&trig_angles_hr[4]);
+    __m128 cosine_weights = _mm_load_ps(weights);
+    __m128 sine_weights   = _mm_load_ps(&weights[4]);
 
-    __m128 t1 = _mm_mul_ps(cosines, cosine_weights);
-    __m128 t2 = _mm_mul_ps(sines, sine_weights);
-    __m128 t3 = _mm_add_ps(t1, t2); // TODO use fmadd_ps_sse2 from Lut1DOpCPU_SSE2.cpp ?
-    return hsum_ps_sse1(t3);
+    __m128 t1     = _mm_mul_ps(cosines, cosine_weights);
+    __m128 t2     = _mm_mul_ps(sines, sine_weights);
+    __m128 t3     = _mm_add_ps(t1, t2); // TODO use fmadd_ps_sse2 from Lut1DOpCPU_SSE2.cpp ?
+    const float M = hsum_ps_sse1(t3);
 #endif
 #else
-    const float M = 11.34072f * cos_hr1 +
-              16.46899f * cos_hr2 +
-               7.88380f * cos_hr3 +
-              14.66441f * sin_hr1 +
-              -6.37224f * sin_hr2 +
-               9.19364f * sin_hr3 +
-              77.12896f;
-
-    return M * chroma_compress_scale; // TODO: is it worth prescaling the above M constants ?
+    const float M = weights[0] * trig_angles_hr[0] +
+                    weights[1] * trig_angles_hr[1] +
+                    weights[2] * trig_angles_hr[2] +
+                    weights[4] * trig_angles_hr[4] +
+                    weights[5] * trig_angles_hr[5] +
+                    weights[6] * trig_angles_hr[6] +
+                    weights[7];
 #endif
+
+    return M * chroma_compress_scale; // TODO: is it worth prescaling the above weights?
 }
 
 inline float toe_fwd( float x, float limit, float k1_in, float k2_in)
@@ -400,7 +408,7 @@ float tonescale_A_to_J_fwd(const float A, const JMhParams &p, const ToneScalePar
     return tonescale_A_to_J<false>(A, p, pt);
 }
 
-f3 chroma_compress_fwd(const f3 &JMh, const float J_ts, const ResolvedSharedCompressionParameters &pr, const ChromaCompressParams &pc)
+f3 chroma_compress_fwd(const f3 &JMh, const float J_ts, const float Mnorm, const ResolvedSharedCompressionParameters &pr, const ChromaCompressParams &pc)
 {
     const float J = JMh[0];
     const float M = JMh[1];
@@ -412,7 +420,6 @@ f3 chroma_compress_fwd(const f3 &JMh, const float J_ts, const ResolvedSharedComp
     {
         const float nJ = J_ts / pr.limit_J_max;
         const float snJ = std::max(0.f, 1.f - nJ);
-        const float Mnorm = chroma_compress_norm(h, pc.chroma_compress_scale);
         const float limit = powf(nJ, pr.model_gamma_inv) * pr.reachMaxM / Mnorm;
 
         M_cp = M * powf(J_ts / J, pr.model_gamma_inv);
@@ -425,7 +432,7 @@ f3 chroma_compress_fwd(const f3 &JMh, const float J_ts, const ResolvedSharedComp
     return {J_ts, M_cp, h};
 }
 
-f3 chroma_compress_inv(const f3 &JMh, const float J, const ResolvedSharedCompressionParameters &pr, const ChromaCompressParams &pc)
+f3 chroma_compress_inv(const f3 &JMh, const float J, const float Mnorm, const ResolvedSharedCompressionParameters &pr, const ChromaCompressParams &pc)
 {
     const float J_ts = JMh[0];
     const float M_cp = JMh[1];
@@ -436,7 +443,6 @@ f3 chroma_compress_inv(const f3 &JMh, const float J, const ResolvedSharedCompres
     {
         const float nJ = J_ts / pr.limit_J_max;
         const float snJ = std::max(0.f, 1.f - nJ);
-        const float Mnorm = chroma_compress_norm(h, pc.chroma_compress_scale);
         const float limit = powf(nJ, pr.model_gamma_inv) * pr.reachMaxM / Mnorm;
 
         M = M_cp / Mnorm;
@@ -478,6 +484,7 @@ JMhParams init_JMhParams(const Primaries &prims)
 
     const float F_L_n = F_L / reference_luminance;
     const float cz    = model_gamma();
+    const float inv_cz = 1.0f / cz;
 
     const f3 D_RGB = {
         F_L_n * Y_W / RGB_w[0],
@@ -500,6 +507,7 @@ JMhParams init_JMhParams(const Primaries &prims)
     const m33f cone_response_to_Aab = mult_f33_f33(scale_f33(Identity_M33, f3_from_f(cam_nl_scale)), base_cone_response_to_Aab); // TODO: this scale maybe ill conditioning the matrix
     const float A_w   = cone_response_to_Aab[0] * RGB_AW[0] + cone_response_to_Aab[1] * RGB_AW[1] + cone_response_to_Aab[2] * RGB_AW[2];
     const float A_w_J = _post_adaptation_cone_response_compression_fwd(F_L);
+    const float inv_A_w_J = 1.0f / A_w_J;
 
     // TODO: evaluate the condition number of the below matrices and consider extracting a power of 2 scale out of them may improve noise behaviour
     //       power of 2 to make cost of extra scaling limited vs generalised multiply/divide ?
@@ -517,14 +525,15 @@ JMhParams init_JMhParams(const Primaries &prims)
     const m33f MATRIX_Aab_to_cone_response = invert_f33(MATRIX_cone_response_to_Aab);
 
     JMhParams p = {
-        F_L_n,
-        cz,
-        A_w,
-        A_w_J,
         MATRIX_RGB_to_CAM16_c,
         MATRIX_CAM16_c_to_RGB,
         MATRIX_cone_response_to_Aab,
-        MATRIX_Aab_to_cone_response
+        MATRIX_Aab_to_cone_response,
+        F_L_n,
+        cz,
+        inv_cz,
+        A_w_J,
+        inv_A_w_J
     };
    return p;
 }
@@ -582,7 +591,7 @@ void find_reach_corners_table(std::array<f3, totalCornerCount>& JMh_corners, con
     // as such does not form a cube, but is formed by the transformed 3 lower planes of the cube and
     // the plane at J = limitJ
     std::array<f3, cuspCornerCount> temp_JMh_corners;
-    const float limitA = J_to_Achromatic_n(limitJ, params.cz);
+    const float limitA = J_to_Achromatic_n(limitJ, params.inv_cz);
 
     unsigned int min_index = 0;
     for (unsigned int i = 0; i != cuspCornerCount; ++i)
@@ -944,33 +953,21 @@ inline bool outside_hull(const f3 &rgb, float maxRGBtestVal)
     return rgb[0] > maxRGBtestVal || rgb[1] > maxRGBtestVal || rgb[2] > maxRGBtestVal;
 }
 
-inline float get_focus_gain(float J, float cuspJ, float limit_J_max, float focus_dist)
+inline float get_focus_gain(float J, float analytical_threshold, float limit_J_max, float focus_dist)
 {
-    const float thr = lerpf(cuspJ, limit_J_max, focus_gain_blend);
-
-    /* Note from Pekka
-
-    If we’d be willing to make a tiny change in the pixel values, we can eliminate one pow() from getFocusGain() function by changing the focusAdjustGain value to 0.5 from the current 0.55. It then becomes:
-
-      float gain = log10((limitJmax - thr) / max(0.0001f, (limitJmax - min(limitJmax, J))));
-      return gain * gain + 1.0f;
-    from the current:
-
-      float gain = (limitJmax - thr) / max(0.0001f, (limitJmax - min(limitJmax, J)));
-      return pow(log10(gain), 1.0f / focusAdjustGain) + 1.0f;
-    
-    */
-    float gain = 1.0f;
-    if (J > thr)
+    float gain = limit_J_max * focus_dist;
+    if (J > analytical_threshold)
     {
-        // Approximate inverse required above threshold
-        gain = (limit_J_max - thr) / std::max(0.0001f, (limit_J_max - std::min(limit_J_max, J)));
-        gain = powf(log10(gain), focus_adjust_gain_inv) + 1.f;
+        // Approximate inverse required above threshold due to the introduction of J in the calculation
+        float gain_adjustment = log10((limit_J_max - analytical_threshold) / std::max(0.0001f, limit_J_max - J));
+        //gain = powf(gain, focus_adjust_gain_inv) + 1.f;
+        gain_adjustment = gain_adjustment * gain_adjustment + 1.f;
+        gain = gain * gain_adjustment;
     }
-    return limit_J_max * focus_dist * gain;
+    return gain;
 }
 
-float solve_J_intersect(float J, float M, float focusJ, float maxJ, float slope_gain)
+float solve_J_intersect(float J, float M, float focusJ, float maxJ, float slope_gain) // TODO: eval placing maxJ as last patrameter?
 {
     const float M_scaled = M / slope_gain;
     const float a = M_scaled / focusJ;
@@ -1023,8 +1020,8 @@ inline float estimate_line_and_boundary_intersection_M(const float J_axis_inters
     // line from origin to J,M Max       l1(x) = J/M * x
     // line from J Intersect' with slope l2(x) = slope * x + Intersect'
 
-    return shifted_intersection / ((J_max / M_max) - slope);
-    //return shifted_intersection * M_max / (J_max - slope * M_max);
+    //return shifted_intersection / ((J_max / M_max) - slope);
+    return shifted_intersection * M_max / (J_max - slope * M_max);
 }
 
 float find_gamut_boundary_intersection(const f2 &JM_cusp, float J_max, float gamma_top_inv, float gamma_bottom_inv, const float J_intersect_source, const float slope, const float J_intersect_cusp)
@@ -1064,7 +1061,7 @@ inline float remap_M(const float M, const float gamut_boundary_M, const float re
     const float proportion = std::max(boundary_ratio, compression_threshold);
     const float threshold  = proportion * gamut_boundary_M;
 
-    if (proportion >= 1.0f || M <= threshold)
+    if (M <= threshold || proportion >= 1.0f)
         return M;
 
     // Translate to place threshold at zero
@@ -1086,21 +1083,9 @@ f3 compressGamut(const f3 &JMh, float Jx, const ACES2::ResolvedSharedCompression
     const float M = JMh[1];
     const float h = JMh[2];
     
-    // TODO: test migrating these to calling function so they are only tested once for the inverse?
-    if (J <= 0.0f) // Limit to +ve J values // TODO test this is needed
-    {
-        return {0.0f, 0.f, h};
-    }
-    if (M <= 0.0f || J > sr.limit_J_max) // We compress M only so avoid mapping zero
-                                         // Above the expected maximum we explicitly map to 0 M
-    {
-        return {J, 0.f, h};
-    }
-
-    const float slope_gain = get_focus_gain(Jx, hdp.JMcusp[0], sr.limit_J_max, p.focus_dist);
+    const float slope_gain = get_focus_gain(Jx, hdp.analytical_threshold, sr.limit_J_max, p.focus_dist);
     const float J_intersect_source = solve_J_intersect(J, M, hdp.focusJ, sr.limit_J_max, slope_gain);
     const float gamut_slope = compute_compression_vector_slope(J_intersect_source, hdp.focusJ, sr.limit_J_max, slope_gain);
- 
 
     const float J_intersect_cusp = solve_J_intersect(hdp.JMcusp[0], hdp.JMcusp[1], hdp.focusJ, sr.limit_J_max, slope_gain);
     const float gamut_boundary_M = find_gamut_boundary_intersection(hdp.JMcusp, sr.limit_J_max, hdp.gamma_top_inv, hdp.gamma_bottom_inv, J_intersect_source, gamut_slope, J_intersect_cusp);
@@ -1145,16 +1130,42 @@ HueDependantGamutParams init_HueDependantGamutParams(const float hue, const Reso
 
 f3 gamut_compress_fwd(const f3 &JMh, const ResolvedSharedCompressionParameters &sr, const GamutCompressParams &p)
 {
-    const HueDependantGamutParams hdp = init_HueDependantGamutParams(JMh[2], sr, p);
+    const float J = JMh[0];
+    const float M = JMh[1];
+    const float h = JMh[2];
+
+    if (J <= 0.0f) // Limit to +ve J values // TODO test this is needed
+    {
+        return {0.0f, 0.f, h};
+    }
+    if (M <= 0.0f || J > sr.limit_J_max) // We compress M only so avoid mapping zero
+                                         // Above the expected maximum we explicitly map to 0 M
+    {
+        return {J, 0.f, h};
+    }
+    const HueDependantGamutParams hdp = init_HueDependantGamutParams(h, sr, p);
     
     return compressGamut<false>(JMh, JMh[0], sr, p, hdp);
 }
 
 f3 gamut_compress_inv(const f3 &JMh, const ResolvedSharedCompressionParameters &sr, const GamutCompressParams &p)
 {
-    const HueDependantGamutParams hdp = init_HueDependantGamutParams(JMh[2], sr, p);
+    const float J = JMh[0];
+    const float M = JMh[1];
+    const float h = JMh[2];
 
-    float Jx = JMh[0];
+    if (J <= 0.0f) // Limit to +ve J values // TODO test this is needed
+    {
+        return {0.0f, 0.f, h};
+    }
+    if (M <= 0.0f || J > sr.limit_J_max) // We compress M only so avoid mapping zero
+                                         // Above the expected maximum we explicitly map to 0 M
+    {
+        return {J, 0.f, h};
+    }
+    const HueDependantGamutParams hdp = init_HueDependantGamutParams(h, sr, p);
+
+    float Jx = J;
     if (Jx > hdp.analytical_threshold)
     {
         // Approximation above threshold
@@ -1175,11 +1186,12 @@ std::array<testData, gamma_test_count> generate_gamma_test_data(const f2 &JMcusp
 {
     const std::array<float, gamma_test_count> testPositions = {0.01f, 0.1f, 0.5f, 0.8f, 0.99f};
     std::array<testData, gamma_test_count> data;
+    const float analytical_threshold = lerpf(JMcusp[0], limit_J_max, focus_gain_blend);
+    const float focusJ = compute_focusJ(JMcusp[0], mid_J, limit_J_max);
 
-    std::generate(data.begin(), data.end(), [JMcusp, limit_J_max, mid_J, focus_dist, testPositions, hue, testIndex = 0]() mutable {
+    std::generate(data.begin(), data.end(), [JMcusp, limit_J_max, focus_dist, testPositions, hue, analytical_threshold, focusJ, testIndex = 0]() mutable {
         const float testJ = lerpf(JMcusp[0], limit_J_max, testPositions[testIndex]);
-        const float focusJ = compute_focusJ(JMcusp[0], mid_J, limit_J_max);
-        const float slope_gain = get_focus_gain(testJ, JMcusp[0], limit_J_max, focus_dist);
+        const float slope_gain = get_focus_gain(testJ, analytical_threshold, limit_J_max, focus_dist);
         const float J_intersect_source = solve_J_intersect(testJ, JMcusp[1], focusJ, limit_J_max, slope_gain);
         testData result = {
             { testJ, JMcusp[1], hue },

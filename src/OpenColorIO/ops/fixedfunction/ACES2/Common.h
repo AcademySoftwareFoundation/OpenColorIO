@@ -95,14 +95,15 @@ struct Table1D : public TableBase, std::array<float, TableBase::total_size>
 
 struct JMhParams
 {
-    float F_L_n;    // F_L normalised
-    float cz;
-    float A_w;
-    float A_w_J;
     m33f MATRIX_RGB_to_CAM16_c;
     m33f MATRIX_CAM16_c_to_RGB;
     m33f MATRIX_cone_response_to_Aab;
     m33f MATRIX_Aab_to_cone_response;
+    float F_L_n;    // F_L normalised
+    float cz;
+    float inv_cz;   // 1/cz
+    float A_w_J;
+    float inv_A_w_J; // 1/A_w_J
 };
 
 struct ToneScaleParams
