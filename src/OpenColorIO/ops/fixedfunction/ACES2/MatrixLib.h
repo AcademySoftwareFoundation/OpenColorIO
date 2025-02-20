@@ -6,6 +6,7 @@
 
 #include "ops/matrix/MatrixOpData.h"
 
+#include <array>
 
 namespace OCIO_NAMESPACE
 {
