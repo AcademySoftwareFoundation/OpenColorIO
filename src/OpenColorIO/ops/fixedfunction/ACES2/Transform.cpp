@@ -1189,7 +1189,8 @@ std::array<testData, gamma_test_count> generate_gamma_test_data(const f2 &JMcusp
     const float analytical_threshold = lerpf(JMcusp[0], limit_J_max, focus_gain_blend);
     const float focusJ = compute_focusJ(JMcusp[0], mid_J, limit_J_max);
 
-    std::generate(data.begin(), data.end(), [JMcusp, limit_J_max, focus_dist, testPositions, hue, analytical_threshold, focusJ, testIndex = 0]() mutable {
+    unsigned int testIndex = 0;
+    std::generate(data.begin(), data.end(), [JMcusp, limit_J_max, focus_dist, testPositions, hue, analytical_threshold, focusJ, testIndex]() mutable {
         const float testJ = lerpf(JMcusp[0], limit_J_max, testPositions[testIndex]);
         const float slope_gain = get_focus_gain(testJ, analytical_threshold, limit_J_max, focus_dist);
         const float J_intersect_source = solve_J_intersect(testJ, JMcusp[1], focusJ, limit_J_max, slope_gain);
