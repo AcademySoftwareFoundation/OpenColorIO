@@ -78,11 +78,6 @@ struct TableBase
     {
         return first_nominal_index + hue_position_in_uniform_table(wrapped_hue);
     }
-
-    inline unsigned int clamp_to_table_bounds(unsigned int entry) const // TODO: this should be removed if we can constrain the hue range properly
-    {
-        return std::min(nominal_size - 1U, std::max(0U, entry));
-    }
 };
 
 struct Table3D : public TableBase, std::array<float[3], TableBase::total_size>
