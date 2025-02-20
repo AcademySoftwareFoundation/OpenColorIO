@@ -224,7 +224,7 @@ if(OCIO_USE_SIMD AND (OCIO_ARCH_X86 OR OCIO_USE_SSE2NEON))
 endif()
 
 # TODO: What to do for other compilers?
-if(USE_GCC OR USE_CLANG)
+if(USE_GCC)
     set_property(SOURCE ops/fixedfunction/ACES2/Transform.cpp APPEND PROPERTY COMPILE_OPTIONS
                 -fno-math-errno -fno-signed-zeros -fno-trapping-math -fno-signaling-nans -ffinite-math-only -freciprocal-math -ftree-vectorize)
 endif()
