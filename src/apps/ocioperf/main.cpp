@@ -24,7 +24,6 @@ public:
 
     explicit CustomMeasure(const char * explanation)
         :   m_explanations(explanation)
-        ,   m_iterations(1)
     {
         resume();
     }
@@ -183,6 +182,10 @@ int main(int argc, const char **argv)
     bool useDisplayview = false;
     bool useInvertview  = false;
 
+    std::string inputconfig;
+    OCIO::ConstConfigRcPtr srcConfig;
+
+
     ArgParse ap;
     ap.options("ocioperf -- apply and measure a color transformation processing\n\n"
                "usage: ocioperf [options] --transform /path/to/file.clf\n\n",
@@ -206,6 +209,8 @@ int main(int argc, const char **argv)
                                             "(Deprecated) Provide the input and (display, view) pair to apply on the image",
                "--invertview %s %s %s",     &display, &view, &outColorSpace,
                                             "Provide the (display, view) pair and output color space to apply on the image",
+               "--iconfig %s",              &inputconfig,
+                                            "Input .ocio configuration file (default: $OCIO)",
                "--iter %d",                 &iterations, "Provide the number of iterations on the processing. Default is 50",
                "--bitdepths %s %s",         &inBitDepthStr, &outBitDepthStr,
                                             "Provide input and output bit-depths (i.e. ui16, f32). Default is f32",
@@ -232,25 +237,6 @@ int main(int argc, const char **argv)
     {
         std::cout << std::endl;
         std::cout << "OCIO Version: " << OCIO::GetVersion() << std::endl;
-        const char * env = OCIO::GetEnvVariable("OCIO");
-        if(env && *env)
-        {
-            try
-            {
-                std::cout << std::endl;
-                std::cout << "OCIO Config. file:    '" << env << "'" << std::endl;
-                OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-                std::cout << "OCIO Config. version: " << config->getMajorVersion() << "." 
-                                                      << config->getMinorVersion() << std::endl;
-                std::cout << "OCIO search_path:     " << config->getSearchPath() << std::endl;
-            }
-            catch(...)
-            {
-
-                std::cerr << "ERROR: Error loading the config file: '" << env << "'";
-                return 1;
-            }
-        }
     }
 
     if (!transformFile.empty())
@@ -258,7 +244,7 @@ int main(int argc, const char **argv)
         std::cout << std::endl;
         std::cout << "Processing using '" << transformFile << "'" << std::endl << std::endl;
     }
-
+    
     std::cout << std::endl << std::endl;
     std::cout << "Processing statistics:" << std::endl << std::endl;
 
@@ -296,25 +282,38 @@ int main(int argc, const char **argv)
         // Checking for an input colorspace or input (display, view) pair.
         else if (!inColorSpace.empty() || (!display.empty() && !view.empty()))
         {
-            if (verbose)
+            if(!inputconfig.empty())
             {
-                const char * env = OCIO::GetEnvVariable("OCIO");
-                if (env && *env)
-                {
-                    std::cout << std::endl;
-                    const std::string inputStr = !inColorSpace.empty() ?  inColorSpace : "(" + display + ", " + view + ")";
-                    const std::string outputStr = !outColorSpace.empty() ?  outColorSpace : "(" + display + ", " + view + ")";
-                    std::cout << "Processing from '" 
-                              << inputStr << "' to '"
-                              << outputStr << "'" << std::endl;
-                }
-                else
-                {
-                    throw OCIO::Exception("Missing the ${OCIO} env. variable.");
-                }
+                std::cout << std::endl;
+                std::cout << "Loading " << inputconfig << std::endl;
+                srcConfig = OCIO::Config::CreateFromFile(inputconfig.c_str());
+            }
+            else if(OCIO::GetEnvVariable("OCIO"))
+            {
+                std::cout << std::endl;
+                std::cout << "Loading $OCIO " << OCIO::GetEnvVariable("OCIO") << std::endl;
+                srcConfig = OCIO::Config::CreateFromEnv();
+            }
+            else
+            {
+                throw OCIO::Exception("You must specify an input OCIO configuration (either with --iconfig or $OCIO).\n");
             }
 
-            OCIO::ConfigRcPtr config  = OCIO::Config::CreateFromEnv()->createEditableCopy();
+            if (verbose)
+            {
+                std::cout << std::endl;
+                std::cout << "OCIO Config. version: " << srcConfig->getMajorVersion() << "." 
+                                                      << srcConfig->getMinorVersion() << std::endl;
+                std::cout << "OCIO search_path:     " << srcConfig->getSearchPath() << std::endl;
+                std::cout << std::endl;
+                const std::string inputStr = !inColorSpace.empty() ?  inColorSpace : "(" + display + ", " + view + ")";
+                const std::string outputStr = !outColorSpace.empty() ?  outColorSpace : "(" + display + ", " + view + ")";
+                std::cout << "Processing from '" 
+                          << inputStr << "' to '"
+                          << outputStr << "'" << std::endl;
+            }
+
+            OCIO::ConfigRcPtr config  = srcConfig->createEditableCopy();
             config->setProcessorCacheFlags(nocache ? OCIO::PROCESSOR_CACHE_OFF 
                                                    : OCIO::PROCESSOR_CACHE_DEFAULT);
 
