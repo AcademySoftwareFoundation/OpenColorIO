@@ -13,8 +13,13 @@
 #undef OCIO_USE_SSE2
 #undef OCIO_USE_AVX
 
+#if OCIO_USE_SSE2
 #include "SSE2.h"
+#endif
+
+#if OCIO_USE_AVX
 #include "AVX.h"
+#endif
 
 namespace OCIO_NAMESPACE
 {
