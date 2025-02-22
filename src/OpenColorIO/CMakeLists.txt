@@ -220,16 +220,6 @@ if(OCIO_USE_SIMD AND (OCIO_ARCH_X86 OR OCIO_USE_SSE2NEON))
     set_property(SOURCE ops/lut3d/Lut3DOpCPU_AVX.cpp APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX_ARGS})
     set_property(SOURCE ops/lut3d/Lut3DOpCPU_AVX2.cpp APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX2_ARGS})
     set_property(SOURCE ops/lut3d/Lut3DOpCPU_AVX512.cpp APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX512_ARGS})
-    set_property(SOURCE ops/fixedfunction/ACES2/Transform.cpp APPEND PROPERTY COMPILE_OPTIONS  ${OCIO_SSE2_ARGS} ${OCIO_AVX_ARGS})
-endif()
-
-# TODO: What to do for other compilers?
-if(USE_GCC)
-    set_property(SOURCE ops/fixedfunction/ACES2/Transform.cpp APPEND PROPERTY COMPILE_OPTIONS
-                -fno-math-errno -fno-signed-zeros -fno-trapping-math -fno-signaling-nans -ffinite-math-only -freciprocal-math -ftree-vectorize)
-endif()
-if(MSVC)
-    set_property(SOURCE ops/fixedfunction/ACES2/Transform.cpp APPEND PROPERTY COMPILE_OPTIONS /Qvec)
 endif()
 
 configure_file(CPUInfoConfig.h.in CPUInfoConfig.h)

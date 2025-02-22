@@ -11,6 +11,11 @@
 #include "SSE2.h"
 #include "AVX.h"
 
+// Disabling SIMD for now to do scalar math verification.
+// FIXME: Re-enable SIMD and verify SIMD math is correct.
+#undef OCIO_USE_SSE2
+#undef OCIO_USE_AVX
+
 namespace OCIO_NAMESPACE
 {
 
