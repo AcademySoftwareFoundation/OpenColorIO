@@ -729,7 +729,9 @@ OCIO_ADD_TEST(Builtins, validate)
         }
     }
 
+#if DUMP_RESULTS
     std::cout << ss.str() << std::endl;
+#endif
 
     // The above checks if a test values is missing, but not if there are test values
     // that don't have an associated built-in.
