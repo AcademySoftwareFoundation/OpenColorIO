@@ -79,7 +79,8 @@ template<typename T>
 inline bool EqualWithSafeRelError(T value,
                                   T expected,
                                   T eps,
-                                  T minExpected)
+                                  T minExpected,
+                                  T* computedError = nullptr)
 {
     // If value and expected are infinity, return true.
     if (value == expected) return true;
@@ -88,9 +89,14 @@ inline bool EqualWithSafeRelError(T value,
         ((expected < minExpected) ? minExpected : expected) :
         ((-expected < minExpected) ? minExpected : -expected);
 
-    return (
-        ((value > expected) ? value - expected : expected - value)
-        / div) <= eps;
+    T err = ((value > expected) ? value - expected : expected - value) / div;
+
+    if (computedError) 
+    {
+      *computedError = err;
+    }
+    
+    return (err <= eps);
 }
 
 // C++20 introduces new strongly typed, UTF-8 based, char8_t and u8string types
