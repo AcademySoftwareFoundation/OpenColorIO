@@ -302,8 +302,8 @@ float chroma_compress_norm(float cos_hr1, float sin_hr1, float chroma_compress_s
         sin_hr1, sin_hr2, sin_hr3, 1.0f
     };
     alignas(AVX_ALIGNMENT) static constexpr float weights[8] = { // TODO: investigate reordering of the entries so we are summing equal magnitude values first?
-        11.34072f, 16.46899f, 14.66441f,  0.0f,
-        4.66441f,  -6.37224f,  9.19364f, 77.12896f
+        11.34072f, 16.46899f, 7.88380f, 0.0f,
+        14.66441f, -6.37224f, 9.19364f, 77.12896f
     };
     // TODO: benchmark this across multiple platforms to justify the multiple code paths.
 #if OCIO_USE_SSE2

@@ -663,6 +663,7 @@ std::string _Add_Tonescale_func(
     }
 
     ss.newLine() << ss.floatDecl("J_ts") << " = " << ACES2::J_scale << " * pow((F_L_Y / ( " << ACES2::cam_nl_offset << " + F_L_Y)) * " << p.inv_A_w_J << ", " << p.cz << ");";
+    // TODO: copysign is missing here. /coz
     ss.newLine() << "return J_ts;";
 
     ss.dedent();
@@ -682,14 +683,15 @@ void _Add_ChromaCompressionNorm_Shader(
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.floatDecl("cos_hr2") << " = cos_hr * cos_hr - sin_hr * sin_hr;";
+    // TODO: optimization: can bake weights into terms and convert dotprods to addition. /coz
+    ss.newLine() << ss.floatDecl("cos_hr2") << " = 2.0 * cos_hr * cos_hr - 1.0;";
     ss.newLine() << ss.floatDecl("sin_hr2") << " = 2.0 * cos_hr * sin_hr;";
     ss.newLine() << ss.floatDecl("cos_hr3") << " = 4.0 * cos_hr * cos_hr * cos_hr - 3.0 * cos_hr;";
     ss.newLine() << ss.floatDecl("sin_hr3") << " = 3.0 * sin_hr - 4.0 * sin_hr * sin_hr * sin_hr;";
     ss.newLine() << ss.float3Decl("cosines") << " = " <<  ss.float3Const("cos_hr", "cos_hr2", "cos_hr3") <<";";
     ss.newLine() << ss.float3Decl("cosine_weights") << " = " <<  ss.float3Const(11.34072 * c.chroma_compress_scale,
                                                                                 16.46899 * c.chroma_compress_scale,
-                                                                                7.88380 * c.chroma_compress_scale) <<";";
+                                                                                 7.88380 * c.chroma_compress_scale) <<";";
     ss.newLine() << ss.float3Decl("sines") << " = " <<  ss.float3Const("sin_hr", "sin_hr2", "sin_hr3") <<";";
     ss.newLine() << ss.float3Decl("sine_weights") << " = " <<  ss.float3Const(14.66441 * c.chroma_compress_scale,
                                                                               -6.37224 * c.chroma_compress_scale,
