@@ -8,19 +8,6 @@
 #include <cmath>
 #include <limits>
 
-// Disabling SIMD for now to do scalar math verification.
-// FIXME: Re-enable SIMD and verify SIMD math is correct.
-#undef OCIO_USE_SSE2
-#undef OCIO_USE_AVX
-
-#if OCIO_USE_SSE2
-#include "SSE2.h"
-#endif
-
-#if OCIO_USE_AVX
-#include "AVX.h"
-#endif
-
 namespace OCIO_NAMESPACE
 {
 
@@ -265,6 +252,7 @@ f3 JMh_to_RGB(const f3 &JMh, const JMhParams &p)
 // Tonescale / Chroma compress
 //
 
+/*
 //TODO: move to header
 // https://stackoverflow.com/questions/6996764/fastest-way-to-do-horizontal-sse-vector-sum-or-other-reduction/35270026#35270026
 // https://gcc.godbolt.org/#compilers:!((compiler:g6,options:%27-xc+-O3+-Wall+-fverbose-asm+-march%3Dhaswell+-mno-avx%27,sourcez:MQSwdgxgNgrgJgUwAQB4QFt3gC4CdwB0AFgHwBQoksiqAztnDseWQPStLZEi1I9JQQAa2QBZAIa5x2AOS0ANEgBGMbJwDuCcSLicA9kgh70ABxBRk2A0oTZsCXIb2ICbDtHFgA5khhgAZnq42H7SCFAAnkiIECCIvFa%2BtMjoegBu4ia0rLREMP4muuD0Wrp6/kipaURQWWT%2BUHrSSES0MOgA%2BlkdtMkAjAAUHR3ofQBMABxIaQCUSADeSEvLK6tr62vs00gAvEgA2kgAIkgAwkgAPkgAQkgAgkgAumQrw6OTSLn5y3sjnV/%2BBoILq0AZpRTgpAdUSiDoAZQAEgBVABiKIAMgBRAZjRQAZkUAAZFH0ZjMANxLLaHc4nK63B7PV4jcZTNroXhLX6YDriOBwEFgxQAimbDjs3h7Q5HADU51OMrpNxlDzuMtuTOWAI2XKhPKqCBqgoBwvatFFqy2B2W5yWStl8sVTypHAsai4yCMpnMDiQ4jSejifsq6WUUVwCBgtHAPgBLy1Zp1uz1nT5At6Awlwry/gp8aWEZCuDArx5EDS2F6HX8eLGmbNeYAvmR6o1mq12iCesk8UMWR9Zgt81D%2B2yc8m/iN0oa4DATILZpT1lslLgmnAIOJ6Ehwgh0AgwJWkAS%2BvokLjCcO3qzPonuan%2BQvs/k8yttet71O0oaoMac6aOVFLZuC8IgWnEKAKgAWhIAQ9HUcDIOHCUNk/NNu3rDln1zclh0LGBiw2Sdy0rWhq1rTDzVw5sWy2Wh0AgixHCMGhowALwQRQVDUKMYEYqJaEaTRHD8CxeicRAoPY5B%2BHEJATDXJQLHQVsmjUDtOm6Ig0z7d4pkHeYr1HW8OQnHltMfLIhWmV8E1Mj8Uw6CyBSsrMJVsgtbAIkt1mIisqxrOt3OoltQH8RAKmGO4ADUAA1hlU9t2TGABWAA2Lt/QAD101K0psodmT06YhN1P48o6Td6CyCqslZMEPJHYrqhAUCzPQCqECyvBxAgbB/FZJ8kFJSlgNasDWSM5qb3a3lLNBNIhIhECiAtZYtjTTgiGQUrJpWfDCI0rtegQXs0lZNakw2sAijAQQwEsbbPh7aYHGjPQwEUdRuAgMD%2BD0ExsAwCCkECRwYti4ctgGMADHULd7Fu%2BhcBgPqQA%2BhQ/Ruv0oCgJByi2vc/QjQmkAAFluLAwAwdoZjIZtgAPRh/BbNx2HZrY4D0GAlIQMguZ5iwWnZLp02SOtr0mXQ0jgOZFiTBWtjSZNDluK5GSmm8/AisqeW1hB/HABAXNBS6FY2TmPpkNR1CCXAIi%2B5APsiJJkDTOEjkUB7v0cKxUe4bxSa8SQlHELxkCUEAj3UKOwM8JAUQABT9flNY%2BAFsFMT8DSNKz9f8RRiIRwoF1li0tg9En%2BFhkNqlqOA04mXR30/KrsG6QpMxzTOTEag6fL8ysBX8NKyaGHl0NoOAwTgbCyRC2iOY5vhD1rMgcGFzsEDMWtuwQCXRxAJAsrligQHCg2RwhhKitZI/uFH3XOj8ExeqEbgOm3kBR4GLLFBPpcOoth4iggDBwnhdCwzAFBeIeBUZA2/PcOKAhbC8CjJ8f0bswz2CQDHLg3M1APWNjGYMVQKDhGSI3e%2B38yZPx6DmIEn8d51j/lCGE8JkRoixAMPoRJ8SKDGPPchN1z5UJMo/NCj4v4UQfmTf%2BjVJYTGobWOhAIgSNCYSAPoaVMKj0LuwxEqIMTYl4UgYkx4BHzxWFsOE8MTCk1KtgW2O5lIHkrGI9kKjJECmkUFdoeiWggFrH3LyhFB7RkGtGCinjBGAOsRwOEcJMRjFrg3eJ/dHJdR6n1TRMioBEjNjYpJcidzfhLPgmAbUo5OG9GJM8VQkb2D5PjCoclBD2CkHjEwWTcC6FwLWeQWVMDyEvDRDeR1fHdh7D0ISPQGK4xYggXSd9j4zEMisLKs1nK5JYfI3CGytnoV8b/PZeFQklnCVoyYPQgksKbKzReKdMiI1BmudASAJBSFkLwCGLQ7AmAAFzsHoG/acuAGjwQIF6VgABHGACB6DozANkPotY%2BgAE4%2BhkzSqwIg8EoJWCku0KCHV0pQTxfgNiH1sD8VYKisYDKyZ9EJMAeljLmWJXUiLboDEvnLI%2BCfQqywjDIrUIokyABFPiug9hZX2cKjGYrjKNCOHxPGex2RSr5PKl0gTVUgz2AMJAUFFAmuPniJAMpj4AHZ/4pKtVlfKdMVgiu3OK7g%2Br1WORzr%2BVy7QtWz0ldKxqdF2ieuTEas1ZqsqngdRah1KVLU2v/oSJNWV7XH1oQ6p1w5XVKuKuycN3jBQqrVYoD1aqQ2ugMIa41pr63H1TQ6jNWUs3HxzS6xVTUbyNGTIWtVOqkBjQjXW0d0bY3mrTYmh11qkDOoVaK7tHxuCzTURYY0Yay0mU9USGNVaTIjqjQ2rKTbj4TvTWm%2BNmap1pvyjOuduau3ivZLNSeoJGjlpAOXDg6EsjRANlob5hgoCeC8HIT4DChYAyBlgDiuAzlFguWWfyZFAqYXuUAA%3D%3D)),filterAsm:(binary:!t,commentOnly:!t,directives:!t,intel:!t,labels:!t),version:3
@@ -279,6 +267,7 @@ inline float hsum_ps_sse1(__m128 v) {                              // v    = [  
     return    _mm_cvtss_f32(sums);                                 // A+B+C+D
 }
 #endif
+
 #ifdef OCIO_USE_AVX
 inline float hsum256_ps_avx(__m256 v) {         // v     = [   H   G |   F   E |   D   C |   B   A ]
     __m128 vlow  = _mm256_castps256_ps128(v);   // vlow  = [   D   C |   B   A ]
@@ -287,7 +276,8 @@ inline float hsum256_ps_avx(__m256 v) {         // v     = [   H   G |   F   E |
     return hsum_ps_sse1(v128);
 }
 #endif
-
+#endif
+*/
 
 float chroma_compress_norm(float cos_hr1, float sin_hr1, float chroma_compress_scale)
 {
@@ -302,9 +292,11 @@ float chroma_compress_norm(float cos_hr1, float sin_hr1, float chroma_compress_s
         sin_hr1, sin_hr2, sin_hr3, 1.0f
     };
     alignas(AVX_ALIGNMENT) static constexpr float weights[8] = { // TODO: investigate reordering of the entries so we are summing equal magnitude values first?
-        11.34072f, 16.46899f, 14.66441f,  0.0f,
-        4.66441f,  -6.37224f,  9.19364f, 77.12896f
+        11.34072f, 16.46899f, 7.88380f, 0.0f,
+        14.66441f, -6.37224f, 9.19364f, 77.12896f
     };
+
+    /*
     // TODO: benchmark this across multiple platforms to justify the multiple code paths.
 #if OCIO_USE_SSE2
 #if OCIO_USE_AVX
@@ -324,6 +316,7 @@ float chroma_compress_norm(float cos_hr1, float sin_hr1, float chroma_compress_s
     const float M = hsum_ps_sse1(t3);
 #endif
 #else
+    */
     const float M = weights[0] * trig_angles_hr[0] +
                     weights[1] * trig_angles_hr[1] +
                     weights[2] * trig_angles_hr[2] +
@@ -331,7 +324,9 @@ float chroma_compress_norm(float cos_hr1, float sin_hr1, float chroma_compress_s
                     weights[5] * trig_angles_hr[5] +
                     weights[6] * trig_angles_hr[6] +
                     weights[7];
+    /*
 #endif
+    */
 
     return M * chroma_compress_scale; // TODO: is it worth prescaling the above weights?
 }
