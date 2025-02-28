@@ -1398,7 +1398,7 @@ void Add_ACES_OutputTransform_Inv_Shader(
     ss.newLine() << "";
     ss.newLine() << "// Add ToneScale and ChromaCompress (inv)";
     ss.newLine() << "";
-    ss.newLine() << ss.floatDecl("J") << " = " << tonescaleName_Inv << "(" << pxl << ".b);";
+    ss.newLine() << ss.floatDecl("J") << " = " << tonescaleName_Inv << "(" << pxl << ".r);";
     ss.newLine() << "{";
     ss.indent();
         _Add_Tonescale_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, s, c);
