@@ -77,7 +77,7 @@ ocio_handle_dependency(  pystring REQUIRED ALLOW_INSTALL
 # https://github.com/AcademySoftwareFoundation/Imath
 ocio_handle_dependency(  Imath REQUIRED ALLOW_INSTALL
                          MIN_VERSION 3.1.1
-                         RECOMMENDED_VERSION 3.1.6
+                         RECOMMENDED_VERSION 3.1.12
                          RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
 
 ###############################################################################
