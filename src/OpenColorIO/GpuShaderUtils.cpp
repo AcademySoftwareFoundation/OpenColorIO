@@ -955,7 +955,7 @@ std::string matrix3Mul(const T * m3x3, const std::string & vecName, GpuLanguage 
         }
         case LANGUAGE_OSL_1:
         {
-            kw << "matrix(" << getMatrixValues<T, 3>(m3x3, lang, false) << ") * " << vecName;
+            kw << "matrix(" << getMatrixValues<T, 3>(m3x3, lang, true) << ") * " << vecName;
             break;
         }
         case GPU_LANGUAGE_MSL_2_0:
@@ -1021,7 +1021,7 @@ std::string matrix4Mul(const T * m4x4, const std::string & vecName, GpuLanguage 
         }
         case LANGUAGE_OSL_1:
         {
-            kw << "matrix(" << getMatrixValues<T, 4>(m4x4, lang, false) << ") * " << vecName;
+            kw << "matrix(" << getMatrixValues<T, 4>(m4x4, lang, true) << ") * " << vecName;
             break;
         }
         case GPU_LANGUAGE_MSL_2_0:
