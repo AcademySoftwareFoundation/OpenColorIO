@@ -513,6 +513,18 @@ void GpuShaderText::declareFloatArrayConst(const std::string & name, int size, c
     }
 
     auto nl = newLine();
+    
+    auto emitArrayValues = [&]()
+    {
+        for (int i = 0; i < size; ++i)
+        {
+            nl << getFloatString(v[i], m_lang);
+            if (i + 1 != size)
+            {
+                nl << ", ";
+            }
+        }
+    };
 
     switch (m_lang)
     {
@@ -524,34 +536,30 @@ void GpuShaderText::declareFloatArrayConst(const std::string & name, int size, c
         {
             nl << floatKeywordConst() << " " << name << "[" << size << "] = ";
             nl << floatKeyword() << "[" << size << "](";
-            for (int i = 0; i < size; ++i)
-            {
-                nl << getFloatString(v[i], m_lang);
-                if (i + 1 != size)
-                {
-                    nl << ", ";
-                }
-            }
+            emitArrayValues();
             nl << ");";
             break;
         }
         case LANGUAGE_OSL_1:
         case GPU_LANGUAGE_CG:
         case GPU_LANGUAGE_HLSL_SM_5_0:
-        case GPU_LANGUAGE_MSL_2_0:
         {
-            nl << floatKeywordConst() << " " << name << "[" << size << "] = {";
-            for (int i = 0; i < size; ++i)
-            {
-                nl << getFloatString(v[i], m_lang);
-                if (i + 1 != size)
-                {
-                    nl << ", ";
-                }
-            }
+            nl << floatKeywordConst();
+            nl << " " << name << "[" << size << "] = {";
+            emitArrayValues();
             nl << "};";
             break;
         }
+            
+        case GPU_LANGUAGE_MSL_2_0:
+        {
+            nl << "constant constexpr static float";
+            nl << " " << name << "[" << size << "] = {";
+            emitArrayValues();
+            nl << "};";
+            break;
+        }
+            
     }
 }
 
@@ -567,6 +575,18 @@ void GpuShaderText::declareIntArrayConst(const std::string & name, int size, con
     }
 
     auto nl = newLine();
+    
+    auto emitArrayValues = [&]()
+    {
+        for (int i = 0; i < size; ++i)
+        {
+            nl << v[i];
+            if (i + 1 != size)
+            {
+                nl << ", ";
+            }
+        }
+    };
 
     switch (m_lang)
     {
@@ -578,29 +598,23 @@ void GpuShaderText::declareIntArrayConst(const std::string & name, int size, con
         {
             nl << intKeywordConst() << " " << name << "[" << size << "] = "
                << intKeyword() << "[" << size << "](";
-            for (int i = 0; i < size; ++i)
-            {
-                nl << v[i];
-                if (i + 1 != size)
-                {
-                    nl << ", ";
-                }
-            }
+            emitArrayValues();
             nl << ");";
             break;
         }
         case GPU_LANGUAGE_HLSL_SM_5_0:
+        {
+            nl << intKeywordConst();
+            nl << " " << name << "[" << size << "] = {";
+            emitArrayValues();
+            nl << "};";
+            break;
+        }
         case GPU_LANGUAGE_MSL_2_0:
         {
-            nl << intKeywordConst() << " " << name << "[" << size << "] = {";
-            for (int i = 0; i < size; ++i)
-            {
-                nl << v[i];
-                if (i + 1 != size)
-                {
-                    nl << ", ";
-                }
-            }
+            nl << "constant constexpr static int";
+            nl << " " << name << "[" << size << "] = {";
+            emitArrayValues();
             nl << "};";
             break;
         }
@@ -608,14 +622,7 @@ void GpuShaderText::declareIntArrayConst(const std::string & name, int size, con
         case GPU_LANGUAGE_CG:
         {
             nl << intKeyword() << " " << name << "[" << size << "] = {";
-            for (int i = 0; i < size; ++i)
-            {
-                nl << v[i];
-                if (i + 1 != size)
-                {
-                    nl << ", ";
-                }
-            }
+            emitArrayValues();
             nl << "};";
             break;
         }
