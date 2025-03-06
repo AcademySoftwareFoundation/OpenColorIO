@@ -849,55 +849,6 @@ Table3D make_uniform_hue_gamut_table(const JMhParams &reach_params, const JMhPar
     return build_cusp_table(hue_table, limiting_RGB_corners, limiting_JMh_corners, params);
 }
 
-Table3D make_gamut_table(const JMhParams &params, float peakLuminance, Table1D& hue_table)
-{
-    Table3D gamutCuspTableUnsorted{};
-    unsigned int minhIndex = 0;
-    for (unsigned int i = 0; i < gamutCuspTableUnsorted.nominal_size; i++)
-    {
-        const float hNorm = float(i) / float(gamutCuspTableUnsorted.nominal_size);
-        const f3 HSV = {hNorm, 1., 1.};
-        const f3 RGB = HSV_to_RGB(HSV);
-        const f3 scaledRGB = mult_f_f3(peakLuminance / reference_luminance, RGB);
-        const f3 JMh = RGB_to_JMh(scaledRGB, params);
-
-        gamutCuspTableUnsorted[i][0] = JMh[0];
-        gamutCuspTableUnsorted[i][1] = JMh[1]  * (1.f + smooth_m * smooth_cusps);
-        gamutCuspTableUnsorted[i][2] = JMh[2];
-        if ( gamutCuspTableUnsorted[i][2] < gamutCuspTableUnsorted[minhIndex][2])
-            minhIndex = i;
-    }
-
-    Table3D gamutCuspTable{};
-    for (unsigned int i = 0; i < gamutCuspTableUnsorted.nominal_size; i++)
-    {
-        gamutCuspTable[i + gamutCuspTable.base_index][0] = gamutCuspTableUnsorted[(minhIndex+i) % gamutCuspTableUnsorted.nominal_size][0];
-        gamutCuspTable[i + gamutCuspTable.base_index][1] = gamutCuspTableUnsorted[(minhIndex+i) % gamutCuspTableUnsorted.nominal_size][1];
-        gamutCuspTable[i + gamutCuspTable.base_index][2] = gamutCuspTableUnsorted[(minhIndex+i) % gamutCuspTableUnsorted.nominal_size][2];
-    }
-
-    // Copy last populated entry to first empty spot
-    gamutCuspTable[gamutCuspTable.lower_wrap_index][0] = gamutCuspTable[gamutCuspTable.last_nominal_index][0];
-    gamutCuspTable[gamutCuspTable.lower_wrap_index][1] = gamutCuspTable[gamutCuspTable.last_nominal_index][1];
-    gamutCuspTable[gamutCuspTable.lower_wrap_index][2] = gamutCuspTable[gamutCuspTable.last_nominal_index][2];
-
-    // Copy first populated entry to last empty spot
-    gamutCuspTable[gamutCuspTable.upper_wrap_index][0] = gamutCuspTable[gamutCuspTable.first_nominal_index][0];
-    gamutCuspTable[gamutCuspTable.upper_wrap_index][1] = gamutCuspTable[gamutCuspTable.first_nominal_index][1];
-    gamutCuspTable[gamutCuspTable.upper_wrap_index][2] = gamutCuspTable[gamutCuspTable.first_nominal_index][2];
-
-    // Wrap the hues, to maintain monotonicity. These entries will fall outside [0.0, hue_limit)
-    gamutCuspTable[gamutCuspTable.lower_wrap_index][2] -= hue_limit;
-    gamutCuspTable[gamutCuspTable.upper_wrap_index][2] += hue_limit;
-
-    // Extract hue table
-    for (unsigned int i = 0; i < gamutCuspTable.total_size; i++)
-    {
-        hue_table[i] = gamutCuspTable[i][2];
-    }
-    return gamutCuspTable;
-}
-
 bool any_below_zero(const f3 &rgb)
 {
     return (rgb[0] < 0. || rgb[1] < 0. || rgb[2] < 0.);
@@ -1437,7 +1388,6 @@ GamutCompressParams init_GamutCompressParams(float peakLuminance, const JMhParam
     params.focus_dist = focus_dist;
     params.lower_hull_gamma_inv = lower_hull_gamma_inv;
     params.gamut_cusp_table = make_uniform_hue_gamut_table(reachParams, limitJMhParams, peakLuminance, tsParams.forward_limit, shParams, params.hue_table);
-    //params.gamut_cusp_table = make_gamut_table(limitJMhParams, peakLuminance, params.hue_table);
     params.hue_linearity_search_range = determine_hue_linearity_search_range(params.gamut_cusp_table);
     make_upper_hull_gamma(params.hue_table, params.gamut_cusp_table, peakLuminance, shParams.limit_J_max, mid_J, focus_dist,
                           lower_hull_gamma_inv, limitJMhParams); //TODO: mess of parameters
