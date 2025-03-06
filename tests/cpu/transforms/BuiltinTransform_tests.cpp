@@ -17,8 +17,6 @@
 #include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
-#define DUMP_RESULTS 0
-
 
 OCIO_ADD_TEST(BuiltinTransform, creation)
 {
@@ -705,10 +703,6 @@ OCIO_ADD_TEST(Builtins, validate)
 {
     OCIO::ConstBuiltinTransformRegistryRcPtr reg = OCIO::BuiltinTransformRegistry::Get();
 
-#if DUMP_RESULTS
-    std::ostringstream ss;
-#endif
-
     for (size_t index = 0; index < reg->getNumBuiltins(); ++index)
     {
         const char * name = reg->getBuiltinStyle(index);
@@ -738,32 +732,8 @@ OCIO_ADD_TEST(Builtins, validate)
         {
             Values results;
             ValidateBuiltinTransform(name, std::get<1>(values), std::get<2>(values), std::get<0>(values), __LINE__, results);
-
-#if DUMP_RESULTS
-            ss << std::defaultfloat;
-            ss << "    { \"" << name << "\",\n";
-            ss << "        { " << std::get<0>(values) << "f,\n        { ";
-            int comma = 0;
-            for (auto val : std::get<1>(values)) 
-            {
-                ss << (comma++ ? ", " : "") << val << "f";
-                comma = true;
-            }
-            ss << " },\n        { ";
-            ss << std::setprecision(8) << std::fixed;
-            comma = 0;
-            for (auto val : results) 
-            {
-                ss << (comma++ ? ", " : "") << val << "f";
-            }
-            ss << " } } },\n ";
-#endif
         }
     }
-
-#if DUMP_RESULTS
-    std::cout << ss.str() << std::endl;
-#endif
 
     // The above checks if a test values is missing, but not if there are test values
     // that don't have an associated built-in.
