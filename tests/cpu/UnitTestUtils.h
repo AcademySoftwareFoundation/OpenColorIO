@@ -93,7 +93,7 @@ inline bool EqualWithSafeRelError(T value,
 
     if (computedError) 
     {
-      *computedError = err;
+        *computedError = err;
     }
     
     return (err <= eps);

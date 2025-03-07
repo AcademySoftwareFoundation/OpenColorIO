@@ -663,7 +663,6 @@ std::string _Add_Tonescale_func(
     }
 
     ss.newLine() << ss.floatDecl("J_ts") << " = " << ACES2::J_scale << " * pow((F_L_Y / ( " << ACES2::cam_nl_offset << " + F_L_Y)) * " << p.inv_A_w_J << ", " << p.cz << ");";
-    // TODO: copysign is missing here. /coz
     ss.newLine() << "return J_ts;";
 
     ss.dedent();

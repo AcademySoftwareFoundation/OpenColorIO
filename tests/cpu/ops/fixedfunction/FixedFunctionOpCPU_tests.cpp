@@ -835,17 +835,6 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_tonescale_compress_20)
                        1e-5f,
                        __LINE__);
 
-#if DUMP_RESULTS
-    std::cout << "aces_tonescale_compress_20 results: \n" << std::setprecision(9) << std::fixed;
-    for (unsigned i = 0; i < num_samples; ++i)
-    {
-        std::cout   << input2_32f[i * 4 + 0] << "f, "
-                    << input2_32f[i * 4 + 1] << "f, "
-                    << input2_32f[i * 4 + 2] << "f, "
-                    << input2_32f[i * 4 + 3] << "f,\n";
-    }
-#endif
-
     OCIO::ConstFixedFunctionOpDataRcPtr funcData2
         = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_INV,
                                                       params);
@@ -943,16 +932,6 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_gamut_map_20)
                        funcData,
                        1e-5f,
                        __LINE__);
-#if DUMP_RESULTS
-    std::cout << "Results: \n" << std::setprecision(9) << std::fixed;
-    for (unsigned i = 0; i < num_samples; ++i)
-    {
-        std::cout   << input2_32f[i * 4 + 0] << "f, "
-                    << input2_32f[i * 4 + 1] << "f, "
-                    << input2_32f[i * 4 + 2] << "f, "
-                    << input2_32f[i * 4 + 3] << "f,\n";
-    }
-#endif
 
     OCIO::ConstFixedFunctionOpDataRcPtr funcData2
         = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_INV,
