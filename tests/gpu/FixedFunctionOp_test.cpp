@@ -458,6 +458,9 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_output_transform_invfwd)
     grp->appendTransform(func_inv);
     grp->appendTransform(func_fwd);
 
+    test.setTestNaN(false); // TODO: Partially running the output transform without the clamp so do not test Nan or Inf values
+    test.setTestInfinity(false);
+
     test.setProcessor(grp);
 
     test.setErrorThreshold(7e-4f);
