@@ -124,7 +124,8 @@ void ValidateValues(const char * prefixMsg, T in, T out, T errorThreshold, int l
     // Using rel error with a large minExpected value of 1 will transition
     // from absolute error for expected values < 1 and
     // relative error for values > 1.
-    if (!OCIO::EqualWithSafeRelError(in, out, errorThreshold, T(1.)))
+    T computedError{};
+    if (!OCIO::EqualWithSafeRelError(in, out, errorThreshold, T(1.), &computedError))
     {
         std::ostringstream errorMsg;
         errorMsg.precision(std::numeric_limits<T>::max_digits10);
@@ -132,7 +133,11 @@ void ValidateValues(const char * prefixMsg, T in, T out, T errorThreshold, int l
         {
             errorMsg << prefixMsg << ": ";
         }
-        errorMsg << "value = " << in << " but expected = " << out;
+        errorMsg << " - Values: " << in << " expected: " << out;
+        errorMsg << " - Error: " << computedError << " ("
+                 << std::setprecision(3) << computedError / errorThreshold;
+        errorMsg << "x of Threshold: " << std::setprecision(6) << errorThreshold
+                 << ")";
         OCIO_CHECK_ASSERT_MESSAGE_FROM(0, errorMsg.str(), lineNo);
     }
 }
@@ -328,7 +333,7 @@ namespace
 using Values = std::vector<float>;
 using AllValues = std::map<std::string, std::tuple<float, Values, Values>>;
 
-void ValidateBuiltinTransform(const char * style, const Values & in, const Values & out, float errorThreshold, int lineNo)
+void ValidateBuiltinTransform(const char * style, const Values & in, const Values & out, float errorThreshold, int lineNo, Values &results)
 {
     OCIO::BuiltinTransformRcPtr builtin = OCIO::BuiltinTransform::Create();
     OCIO_CHECK_NO_THROW_FROM(builtin->setStyle(style), lineNo);
@@ -348,16 +353,16 @@ void ValidateBuiltinTransform(const char * style, const Values & in, const Value
 
     OCIO::PackedImageDesc inDesc((void *)&in[0], long(in.size() / 3), 1, 3);
 
-    Values vals(in.size(), -1.0f);
-    OCIO::PackedImageDesc outDesc((void *)&vals[0], long(vals.size() / 3), 1, 3);
+    results = Values(in.size(), -1.0f);
+    OCIO::PackedImageDesc outDesc((void *)&results[0], long(results.size() / 3), 1, 3);
 
     OCIO_CHECK_NO_THROW_FROM(cpu->apply(inDesc, outDesc), lineNo);
 
     for (size_t idx = 0; idx < out.size(); ++idx)
     {
         std::ostringstream oss;
-        oss << style << ": for index = " << idx << " with threshold = " << errorThreshold;
-        ValidateValues(oss.str().c_str(), vals[idx], out[idx], errorThreshold, lineNo);
+        oss << style << ": for index = " << idx;
+        ValidateValues(oss.str().c_str(), results[idx], out[idx], errorThreshold, lineNo);
     }
 }
 
@@ -458,100 +463,99 @@ AllValues UnitTestValues
         { 1.0e-6f,
         { 0.5f, 0.4f, 0.3f }, { 0.22214814f,     0.21179835f,     0.15639816f } } },
 
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.26260212f, 0.25207470f, 0.20617338f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.26260212f, 0.25207472f, 0.20617332f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-108nit-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.16253406f, 0.15513624f, 0.12449740f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-300nit-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.20592399f, 0.19440515f, 0.15028581f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.41039306f, 0.38813826f, 0.30191866f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.46536570f, 0.43852836f, 0.33688113f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.51225936f, 0.48264506f, 0.37060050f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.55653524f, 0.51967940f, 0.38678724f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-REC2020_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.41039258f, 0.38813800f, 0.30191845f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.46536540f, 0.43852820f, 0.33688095f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-REC2020_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.51225930f, 0.48264477f, 0.37060022f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.55653550f, 0.51967950f, 0.38678730f } } },
-
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-REC709-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.25147703f, 0.24029444f, 0.18221131f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.25373828f, 0.24245512f, 0.18384966f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-REC2020-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.25712878f, 0.24569483f, 0.18630630f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D60-in-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.25373834f, 0.24245517f, 0.18384990f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D60-in-XYZ-E_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.26332240f, 0.25161302f, 0.19079340f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-108nit-P3-D60-in-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.15705064f, 0.14920068f, 0.11100890f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-300nit-P3-D60-in-XYZ-E_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.20469205f, 0.19229384f, 0.13782679f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D60-in-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.39655724f, 0.37322620f, 0.26917280f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D60-in-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.44968104f, 0.42165324f, 0.30032730f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D60-in-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.49499428f, 0.46407104f, 0.33038715f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D60-in-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.53778990f, 0.49960223f, 0.34477120f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D60-in-REC2020-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.40185606f, 0.37821326f, 0.27276948f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D60-in-REC2020-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.45568960f, 0.42728746f, 0.30434040f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D60-in-REC2020-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.50160843f, 0.47027197f, 0.33480182f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D60-in-REC2020-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.54497580f, 0.50627790f, 0.34937808f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-REC2020-D60-in-REC2020-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.40185624f, 0.37821335f, 0.27276933f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020-D60-in-REC2020-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.45568994f, 0.42728750f, 0.30434027f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-REC2020-D60-in-REC2020-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.50160870f, 0.47027220f, 0.33480210f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020-D60-in-REC2020-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.54497580f, 0.50627780f, 0.34937814f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.26216024f, 0.25204185f, 0.20722267f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.26216024f, 0.25204197f, 0.20722273f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-108nit-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.16215305f, 0.15510881f, 0.12539130f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-300nit-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.20546328f, 0.19437392f, 0.15134005f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.40945035f, 0.38807374f, 0.30408621f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.46440443f, 0.43846416f, 0.33907151f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.51138031f, 0.48258632f, 0.37260318f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.55570847f, 0.51962745f, 0.38863316f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-REC2020_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.40945050f, 0.38807371f, 0.30408630f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.46440458f, 0.43846416f, 0.33907148f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-REC2020_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.51138067f, 0.48258659f, 0.37260354f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.55570871f, 0.51962751f, 0.38863319f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-REC709-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.25105247f, 0.24027000f, 0.18314247f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.25330988f, 0.24243048f, 0.18478924f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-REC2020-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.25669453f, 0.24566977f, 0.18725836f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D60-in-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.25331008f, 0.24243063f, 0.18478930f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D60-in-XYZ-E_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.26287800f, 0.25158763f, 0.19176911f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-108nit-P3-D60-in-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.15668137f, 0.14918011f, 0.11180915f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-300nit-P3-D60-in-XYZ-E_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.20423311f, 0.19227016f, 0.13879779f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D60-in-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.39564425f, 0.37317851f, 0.27111340f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D60-in-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.44875023f, 0.42160600f, 0.30228844f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D60-in-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.49414319f, 0.46402797f, 0.33218032f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D60-in-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.53698927f, 0.49956405f, 0.34642375f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D60-in-REC2020-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.40093076f, 0.37816489f, 0.27473599f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D60-in-REC2020-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.45474637f, 0.42723945f, 0.30632755f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D60-in-REC2020-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.50074583f, 0.47022825f, 0.33661887f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D60-in-REC2020-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.54416442f, 0.50623918f, 0.35105261f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-REC2020-D60-in-REC2020-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.40093106f, 0.37816498f, 0.27473608f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020-D60-in-REC2020-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.45474690f, 0.42723969f, 0.30632779f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-REC2020-D60-in-REC2020-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.50074631f, 0.47022864f, 0.33661926f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020-D60-in-REC2020-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f }, { 0.54416472f, 0.50623930f, 0.35105285f } } },
 
     { "APPLE_LOG_to_ACES2065-1",
         { 1.0e-6f,
@@ -669,6 +673,10 @@ OCIO_ADD_TEST(Builtins, validate)
 {
     OCIO::ConstBuiltinTransformRegistryRcPtr reg = OCIO::BuiltinTransformRegistry::Get();
 
+#if DUMP_RESULTS
+    std::ostringstream ss;
+#endif
+
     for (size_t index = 0; index < reg->getNumBuiltins(); ++index)
     {
         const char * name = reg->getBuiltinStyle(index);
@@ -696,9 +704,34 @@ OCIO_ADD_TEST(Builtins, validate)
         }
         else
         {
-            ValidateBuiltinTransform(name, std::get<1>(values), std::get<2>(values), std::get<0>(values), __LINE__);
+            Values results;
+            ValidateBuiltinTransform(name, std::get<1>(values), std::get<2>(values), std::get<0>(values), __LINE__, results);
+
+#if DUMP_RESULTS
+            ss << std::defaultfloat;
+            ss << "    { \"" << name << "\",\n";
+            ss << "        { " << std::get<0>(values) << "f,\n        { ";
+            int comma = 0;
+            for (auto val : std::get<1>(values)) 
+            {
+                ss << (comma++ ? ", " : "") << val << "f";
+                comma = true;
+            }
+            ss << " },\n        { ";
+            ss << std::setprecision(8) << std::fixed;
+            comma = 0;
+            for (auto val : results) 
+            {
+                ss << (comma++ ? ", " : "") << val << "f";
+            }
+            ss << " } } },\n ";
+#endif
         }
     }
+
+#if DUMP_RESULTS
+    std::cout << ss.str() << std::endl;
+#endif
 
     // The above checks if a test values is missing, but not if there are test values
     // that don't have an associated built-in.
