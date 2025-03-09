@@ -402,6 +402,16 @@ void _Add_Aab_to_JMh_Shader(
     ss.newLine() << "{";
     ss.indent();
 
+    ss.newLine() << "if (Aab.r <= 0.0)";
+    ss.newLine() << "{";
+    ss.indent();
+    ss.newLine() << "JMh.rgb = " << ss.float3Const(0.0) << ";";
+    ss.dedent();
+    ss.newLine() << "}";
+
+    ss.newLine() << "else";
+    ss.newLine() << "{";
+    ss.indent();
     ss.newLine() << ss.floatDecl("J") << " = " << ACES2::J_scale << " * pow(Aab.r, " << p.cz << ");";
 
     ss.newLine() << ss.floatDecl("M") << " = (J == 0.0) ? 0.0 : sqrt(Aab.g * Aab.g + Aab.b * Aab.b);";
@@ -411,6 +421,8 @@ void _Add_Aab_to_JMh_Shader(
     ss.newLine() << "h = (h < 0.0) ? h + 360.0 : h;";
 
     ss.newLine() << "JMh.rgb = " << ss.float3Const("J", "M", "h") << ";";
+    ss.dedent();
+    ss.newLine() << "}";
 
     ss.dedent();
     ss.newLine() << "}";
