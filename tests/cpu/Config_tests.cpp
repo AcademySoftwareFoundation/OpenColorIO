@@ -9897,5 +9897,8 @@ OCIO_ADD_TEST(Config, set_config_io_proxy)
             OCIO_REQUIRE_EQUAL(group->getTransform(0)->getTransformType(), OCIO::TRANSFORM_TYPE_EXPONENT);
             OCIO_REQUIRE_EQUAL(group->getTransform(1)->getTransformType(), OCIO::TRANSFORM_TYPE_EXPONENT);
         }
+
+        // Clear cache for following unit tests.
+        OCIO::ClearAllCaches();
     }
 }

@@ -1216,6 +1216,9 @@ colorspaces:
         processor = config.getProcessor("c1", "c2")
         processor.getDefaultCPUProcessor()
 
+        # Clear cache for following unit tests.
+        OCIO.ClearAllCaches()
+
     def test_resolve_config(self):
         defaultBuiltinConfig = "ocio://cg-config-v2.2.0_aces-v1.3_ocio-v2.4"
         cgLatestBuiltinConfig = "ocio://cg-config-v2.2.0_aces-v1.3_ocio-v2.4"
