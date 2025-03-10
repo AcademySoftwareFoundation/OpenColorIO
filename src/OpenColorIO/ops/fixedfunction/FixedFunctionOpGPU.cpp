@@ -652,6 +652,8 @@ std::string _Add_Tonescale_func(
     ss.indent();
 
     // Tonescale applied in Y (convert to and from J)
+    // TODO: Investigate if we can receive negative J here at all. 
+    // If not, abs(J) here and the sign(J) at the return may not be needed at all.
     ss.newLine() << ss.floatDecl("A") << " = " << p.A_w_J << " * pow(abs(J) * " << 1.0f / ACES2::J_scale << ", " << p.inv_cz << ");";
     ss.newLine() << ss.floatDecl("Y") << " = pow(( " << ACES2::cam_nl_offset << " * A) / (1.0f - A), " << 1.0 / 0.42 << ");";
 
@@ -675,7 +677,7 @@ std::string _Add_Tonescale_func(
     }
 
     ss.newLine() << ss.floatDecl("J_ts") << " = " << ACES2::J_scale << " * pow((F_L_Y / ( " << ACES2::cam_nl_offset << " + F_L_Y)) * " << p.inv_A_w_J << ", " << p.cz << ");";
-    ss.newLine() << "return J_ts;";
+    ss.newLine() << "return sign(J) * J_ts;";
 
     ss.dedent();
     ss.newLine() << "}";
