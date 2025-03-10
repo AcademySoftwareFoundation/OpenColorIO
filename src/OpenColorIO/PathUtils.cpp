@@ -88,20 +88,26 @@ std::string GetFastFileHash(const std::string & filename, const Context & contex
             fileHashResultPtr->ready = true;
 
             std::string h = "";
-            if (!context.getConfigIOProxy())
-            {
-                // Default case.
-                h = g_hashFunction(filename);
-            }
-            else
+            if (context.getConfigIOProxy())
             {
                 // Case for when ConfigIOProxy is used (callbacks mechanism).
                 h = context.getConfigIOProxy()->getFastLutFileHash(filename.c_str());
+
+                // For absolute paths, if the proxy does not provide a hash, try the file system.
+                if (h.empty() && pystring::os::path::isabs(filename)) 
+                {
+                    h = g_hashFunction(filename);
+                }
+            }
+            else
+            {
+                // Default case
+                h = g_hashFunction(filename);
             }
 
             fileHashResultPtr->hash = h;
         }
-    
+
         hash = fileHashResultPtr->hash;
     }
 
