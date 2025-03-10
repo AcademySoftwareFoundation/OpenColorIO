@@ -528,7 +528,7 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const MixingColorSpa
  * 
  * Let's take the following OCIOM structure:
  * 
- *   ociom_version: 2.1
+ *   ociom_version: 1
  *   search_path:
  *   - .
  *   - subfolder

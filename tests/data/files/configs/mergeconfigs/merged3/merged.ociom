@@ -1,4 +1,4 @@
-ociom_version: 2.1
+ociom_version: 1.0
 search_path: "."
 
 # This OCIOM file is used to test that FileTransform's
@@ -13,8 +13,8 @@ merge:
       input_first: true
       error_on_conflict: false
       default_strategy: PreferInput
-      avoid_duplicates: true
-      assume_common_reference_space: false
+      avoid_duplicates: false
+      assume_common_reference_space: true
     overrides:
       name: Merged1
       description: Basic merge with default strategy

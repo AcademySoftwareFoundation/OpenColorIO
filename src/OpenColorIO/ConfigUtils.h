@@ -66,6 +66,11 @@ struct ColorSpaceFingerprints
     std::vector<float> displayRefTestVals;
 };
 
+bool calcColorSpaceFingerprint(std::vector<float> & fingerprintVals, 
+                               const ColorSpaceFingerprints & fingerprints, 
+                               const ConstConfigRcPtr & config, 
+                               const ConstColorSpaceRcPtr & cs);
+
 void initializeColorSpaceFingerprints(ColorSpaceFingerprints & fingerprints,
                                       const ConstConfigRcPtr & config);
 

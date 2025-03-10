@@ -141,8 +141,8 @@ public:
     std::string m_workingDir;
 
     // Version for the .ociom file format.
-    unsigned int m_majorVersion;
-    unsigned int m_minorVersion;
+    unsigned int m_majorVersion = 1u;
+    unsigned int m_minorVersion = 0u;
 
     // Vector of merge parameter objects, each one corresponding to one merge.
     std::vector<ConfigMergingParametersRcPtr> m_mergeParams;

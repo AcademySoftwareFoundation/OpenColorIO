@@ -1,4 +1,4 @@
-ociom_version: 2.1
+ociom_version: 1.0
 search_path: "."
 
 # This OCIOM file is used to test multiple merges.

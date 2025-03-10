@@ -2,9 +2,9 @@
 <ProcessList id="none" compCLFversion="3.0">
     <Matrix inBitDepth="32f" outBitDepth="32f">
         <Array dim="3 3">
-100 0 0
-0 100 0
-0 0 100
+42 0 0
+0 42 0
+0 0 42
         </Array>
     </Matrix>
 </ProcessList>

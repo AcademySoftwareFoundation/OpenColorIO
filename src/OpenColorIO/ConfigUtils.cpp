@@ -1223,7 +1223,10 @@ void initializeRefSpaceConverters(ConstTransformRcPtr & inputToBaseGtScene,
     }
 }
 
-bool calcColorSpaceFingerprint(std::vector<float> & fingerprint, const ColorSpaceFingerprints & fingerprints, const ConstConfigRcPtr & config, const ConstColorSpaceRcPtr & cs)
+bool calcColorSpaceFingerprint(std::vector<float> & fingerprintVals, 
+                               const ColorSpaceFingerprints & fingerprints, 
+                               const ConstConfigRcPtr & config, 
+                               const ConstColorSpaceRcPtr & cs)
 {
     bool skipColorSpace = false;
     // Define a set of (somewhat arbitrary) RGB values to test whether the combined transform is 
@@ -1269,14 +1272,14 @@ bool calcColorSpaceFingerprint(std::vector<float> & fingerprint, const ColorSpac
 
     if (cs->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
     {
-        fingerprint = fingerprints.displayRefTestVals;
+        fingerprintVals = fingerprints.displayRefTestVals;
     }
     else
     {
-        fingerprint = fingerprints.sceneRefTestVals;
+        fingerprintVals = fingerprints.sceneRefTestVals;
     }
-    const size_t n = fingerprint.size();
-    PackedImageDesc desc( &fingerprint[0], (long) n / 4, 1, CHANNEL_ORDERING_RGBA );
+    const size_t n = fingerprintVals.size();
+    PackedImageDesc desc( &fingerprintVals[0], (long) n / 4, 1, CHANNEL_ORDERING_RGBA );
 
     ConstCPUProcessorRcPtr cpu  = p->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
     cpu->apply(desc);
@@ -1292,17 +1295,20 @@ void initializeTestVals(ColorSpaceFingerprints & fingerprints, const ConstConfig
     // for the most common scene-referred and display-referred reference spaces.
 
     std::vector<float> ACESvals = { 
-        0.401273353908f, 0.089901034233f, 0.025611641641f, 0.f, // lin_rec709 {0.9, 0.01, 0.01}
-        0.350859941355f, 0.733961091587f, 0.109276432439f, 0.f, // lin_rec709 {0.1, 0.09, 0.01}
-        0.171696591718f, 0.104272268468f, 0.786227391453f, 0.f, // lin_rec709 {0.1, 0.02, 0.09}
+        0.408933127871f, 0.106169822808f, 0.027842572707f, 0.f, // lin_rec709 {0.9, 0.03, 0.01}
+        0.374615373650f, 0.739417755017f, 0.118862613721f, 0.f, // lin_rec709 {0.06, 0.9, 0.02}
+        0.171696591718f, 0.104272268468f, 0.786227391453f, 0.f, // lin_rec709 {0.01, 0.02, 0.9}
         0.f            , 0.f            , 0.f            , 0.5f,
         0.037018876439f, 0.030827687576f, 0.021641700645f, 0.f, // lin_rec709 {0.05, 0.03, 0.02}
         1.f            , 1.f            , 1.f            , 1.f };
 
     std::vector<float> XYZvals = { 
-        0.376532370617f, 0.199248715226f, 0.028095006164f, 0.f, // lin_rec709 {0.9, 0.01, 0.01}
-        0.327754621322f, 0.646500124103f, 0.116973931525f, 0.f, // lin_rec709 {0.1, 0.09, 0.01}
-        0.173708304342f, 0.081402847459f, 0.858056140808f, 0.f, // lin_rec709 {0.1, 0.02, 0.09}
+//         0.376532370617f, 0.199248715226f, 0.028095006164f, 0.f, // lin_rec709 {0.9, 0.01, 0.01}
+//         0.327754621322f, 0.646500124103f, 0.116973931525f, 0.f, // lin_rec709 {0.01, 0.9, 0.01}
+        // Adjusted to keep it inside both Rec.601 and Rec.601 PAL.
+        0.383684057405f, 0.213552088801f, 0.030478901760f, 0.f, // lin_rec709 {0.9, 0.03, 0.01}
+        0.350178969169f, 0.657853997550f, 0.127445793983f, 0.f, // lin_rec709 {0.06, 0.9, 0.02}
+        0.173708304342f, 0.081402847459f, 0.858056140808f, 0.f, // lin_rec709 {0.01, 0.02, 0.9}
         0.f            , 0.f            , 0.f            , 0.5f,
         0.034956685913f, 0.033530856964f, 0.023553027375f, 0.f, // lin_rec709 {0.05, 0.03, 0.02}
         0.950455927052f, 1.f            , 1.089057750760f, 1.f };
@@ -1434,6 +1440,13 @@ void initializeColorSpaceFingerprints(ColorSpaceFingerprints & fingerprints, con
         if (!cs || cs->isData())
         {
             // Don't put data color spaces in the collection.
+            continue;
+        }
+        if (cs->hasCategory("is-unique"))
+        {
+            // Don't fingerprint color spaces with this category.
+            // Never want to replace them.
+// TODO: May always want to fingerprint everything -- move this to the merge.
             continue;
         }
 

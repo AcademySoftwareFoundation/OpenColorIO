@@ -69,7 +69,7 @@ inline void OCIOMYaml::throwValueError(const std::string & nodeName,
 
     std::ostringstream os;
     os << "At line " << (key.Mark().line + 1)
-        << ", the value parsing of the property '" << keyName 
+        << ", the value of the property '" << keyName 
         << "' from '" << nodeName << "' failed: " << msg;
 
     throw Exception(os.str().c_str());
@@ -330,6 +330,11 @@ void OCIOMYaml::load(const YAML::Node& node, ConfigMergerRcPtr & merger, const c
                 merger->setMajorVersion(std::stoi(results[0].c_str()));
                 merger->setMinorVersion(std::stoi(results[1].c_str()));
             }
+            if (merger->getMajorVersion() > 1u || merger->getMinorVersion() > 0u)
+            {
+                throwValueError(it->second.Tag(), it->first,
+                                "The highest supported OCIOM file version is 1.0.");
+            }
         }
         else if (key == "search_path")
         {
@@ -485,10 +490,10 @@ inline void save(YAML::Emitter & out, const ConfigMerger & merger)
     std::stringstream ss;
     const unsigned parserMajorVersion = merger.getMajorVersion();
     ss << parserMajorVersion;
-    if (merger.getMinorVersion() != 0)
-    {
+//     if (merger.getMinorVersion() != 0)
+//     {
         ss << "." << merger.getMinorVersion();
-    }
+//     }
 
     out << YAML::Block;
     out << YAML::BeginMap;

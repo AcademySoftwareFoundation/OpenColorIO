@@ -34,5 +34,13 @@ colorspaces:
     isdata: true
 
   - !<ColorSpace>
+    name: shot1_lut2_cs
+    to_reference: !<FileTransform> {src: shot1/lut2.clf}
+
+  - !<ColorSpace>
+    name: plain_lut1_cs
+    to_scene_reference: !<FileTransform> {src: lut1.clf}
+
+  - !<ColorSpace>
     name: shot1_lut1_cs
-    to_reference: !<FileTransform> {src: lut1.clf}
+    to_scene_reference: !<FileTransform> {src: shot1/lut1.clf}

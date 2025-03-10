@@ -178,7 +178,16 @@ OCIO_ADD_TEST(MergeConfigs, ociom_parser)
     }; 
     const std::string ociomPath = pystring::os::path::normpath(pystring::os::path::join(paths));
 
-    OCIO::ConstConfigMergerRcPtr merger = OCIO::ConfigMerger::CreateFromFile(ociomPath.c_str());
+    // Ensure version is initialized correctly.
+    OCIO::ConstConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+    OCIO_CHECK_EQUAL(merger->getMajorVersion(), 1);
+    OCIO_CHECK_EQUAL(merger->getMinorVersion(), 0);
+
+    // Test parsing an OCIOM file.
+    merger = OCIO::ConfigMerger::CreateFromFile(ociomPath.c_str());
+
+    OCIO_CHECK_EQUAL(merger->getMajorVersion(), 1);
+    OCIO_CHECK_EQUAL(merger->getMinorVersion(), 0);
 
     // The parser_test.ociom contains only one merge.
     OCIO::ConstConfigMergingParametersRcPtr p = merger->getParams(0);
@@ -189,6 +198,7 @@ OCIO_ADD_TEST(MergeConfigs, ociom_parser)
 
     OCIO_CHECK_EQUAL(std::string(p->getBaseConfigName()), std::string("base0.ocio"));
     OCIO_CHECK_EQUAL(std::string(p->getInputConfigName()), std::string("input0.ocio"));
+    OCIO_CHECK_EQUAL(std::string(p->getOutputName()), std::string("Merge1"));
 
     OCIO_CHECK_EQUAL(std::string(p->getInputFamilyPrefix()), std::string("abc"));
     OCIO_CHECK_EQUAL(std::string(p->getBaseFamilyPrefix()), std::string("def"));
@@ -228,7 +238,63 @@ OCIO_ADD_TEST(MergeConfigs, ociom_parser)
     OCIO_CHECK_EQUAL(p->getNamedTransforms(), MergeStrategy::STRATEGY_PREFER_BASE);
 }
 
-//TODOCED Add test for OCIOM writer
+OCIO_ADD_TEST(MergeConfigs, ociom_serialization)
+{
+    std::vector<std::string> paths = { 
+        std::string(OCIO::GetTestFilesDir()),
+        std::string("configs"),
+        std::string("mergeconfigs"),
+        std::string("parser_test.ociom")
+    }; 
+    const std::string ociomPath = pystring::os::path::normpath(pystring::os::path::join(paths));
+    OCIO::ConstConfigMergerRcPtr merger = OCIO::ConfigMerger::CreateFromFile(ociomPath.c_str());
+
+    std::ostringstream oss;
+    merger->serialize(oss);
+
+            constexpr const char * REF {
+R"(ociom_version: 1.0
+search_path:
+  - .
+merge:
+  Merge1:
+    base: base0.ocio
+    input: input0.ocio
+    options:
+      input_family_prefix: abc
+      base_family_prefix: def
+      input_first: true
+      error_on_conflict: false
+      default_strategy: InputOnly
+      avoid_duplicates: true
+      assume_common_reference_space: false
+    overrides:
+      name: my merge
+      description: my desc
+      search_path: abc
+      environment:
+        test: valueOther
+        test1: value123
+      active_displays: [D1, D2]
+      active_views: [V1, V2]
+      inactive_colorspaces: [I1, I2]
+    params:
+      roles:
+        strategy: PreferInput
+      file_rules:
+        strategy: PreferBase
+      display-views:
+        strategy: InputOnly
+      looks:
+        strategy: BaseOnly
+      colorspaces:
+        strategy: Remove
+      named_transform:
+        strategy: PreferBase)" };
+ 
+    std::istringstream rss(REF);
+    OCIO_CHECK_EQUAL(oss.str(), rss.str());
+}
 
 OCIO_ADD_TEST(MergeConfigs, ociom_parser_no_overrides)
 {
@@ -2039,7 +2105,8 @@ OCIO_ADD_TEST(MergeConfigs, colorspaces_section)
         std::vector<std::string> expectedValues = { "differentValue", "value1", "value3" };
         compareEnvironmentVar(mergedConfig, expectedNames, expectedValues, __LINE__);
 
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getSearchPath()), std::string(".:abc:def"));
+        // Note that the search path ignores InputFirst, it works based on the strategy only.
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getSearchPath()), std::string(".:def:abc"));
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getInactiveColorSpaces()), "sRGB - Texture, sRGB - Display, ACEScg, ACES2065-1");
 
         OCIO_CHECK_EQUAL(mergedConfig->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL, OCIO::COLORSPACE_ALL), 6);
@@ -2097,7 +2164,8 @@ OCIO_ADD_TEST(MergeConfigs, colorspaces_section)
         std::vector<std::string> expectedValues = { "value", "value1", "value3" };
         compareEnvironmentVar(mergedConfig, expectedNames, expectedValues, __LINE__);
 
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getSearchPath()), std::string(".:def:abc"));
+        // Note that the search path ignores InputFirst, it works based on the strategy only.
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getSearchPath()), std::string(".:abc:def"));
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getInactiveColorSpaces()), "ACES2065-1, sRGB - Display, sRGB - Texture, ACEScg");
 
         OCIO_CHECK_EQUAL(mergedConfig->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL, OCIO::COLORSPACE_ALL), 5);
@@ -5588,7 +5656,7 @@ colorspaces:
         }
     }
 */
-std::cout << "merge2\n";
+//std::cout << "merge3\n";
 
     // Test with external LUT files.
     {
@@ -5604,8 +5672,11 @@ std::cout << "merge2\n";
         // PreferInput, Input first
         {
             OCIO::ConstConfigMergerRcPtr merger = OCIO::ConfigMerger::CreateFromFile(ociomPath.c_str());
-            merger->getParams(0)->setAssumeCommonReferenceSpace(true);
-            OCIO::ConstConfigMergerRcPtr newMerger = OCIO::ConfigMergingHelpers::MergeConfigs(merger);
+//            OCIO::ConstConfigMergerRcPtr newMerger = OCIO::ConfigMergingHelpers::MergeConfigs(merger);
+            OCIO::ConstConfigMergerRcPtr newMerger;
+            checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
+                                   [&newMerger, &merger]() { newMerger = OCIO::ConfigMergingHelpers::MergeConfigs(merger); },
+                "Color space 'raw' will replace a color space in the base config.");
             OCIO::ConstConfigRcPtr mergedConfig = newMerger->getMergedConfig();
 //             std::ostringstream oss;
 //             mergedConfig->serialize(oss);
@@ -5617,7 +5688,7 @@ std::cout << "merge2\n";
             auto tf = cs->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE);
             auto ftf = OCIO::DynamicPtrCast<const OCIO::FileTransform>(tf);
             OCIO_REQUIRE_ASSERT(ftf);
-            OCIO_CHECK_EQUAL(ftf->getSrc(), std::string("lut1.clf"));
+            OCIO_CHECK_EQUAL(ftf->getSrc(), std::string("shot1/lut1.clf"));
             OCIO_CHECK_NO_THROW(mergedConfig->getProcessor(ftf))
           }
           {
@@ -5628,7 +5699,7 @@ std::cout << "merge2\n";
         }
     }
 
-std::cout << "merge3\n";
+//std::cout << "merge3\n";
 
     // Test that a merge could go wrong if the search_paths are merged with a different strategy
     // than the other sections.
@@ -5647,7 +5718,7 @@ std::cout << "merge3\n";
 
         {
             OCIO::ConstConfigMergerRcPtr merger = OCIO::ConfigMerger::CreateFromFile(ociomPath.c_str());
-            merger->getParams(0)->setAssumeCommonReferenceSpace(true);
+//            merger->getParams(0)->setAssumeCommonReferenceSpace(true);
             // Changing the strategy for colorspace merger to BASE ONLY.
             // This will break the looks "shot_look" (from input) as it needs the search paths 
             // from the input config. (search_paths are managed by the colorspace merger).
@@ -5656,6 +5727,8 @@ std::cout << "merge3\n";
         
             OCIO::ConstConfigMergerRcPtr newMerger = OCIO::ConfigMergingHelpers::MergeConfigs(merger);
             OCIO::ConstConfigRcPtr mergedConfig = newMerger->getMergedConfig();
+    OCIO_CHECK_ASSERT(!mergedConfig->getConfigIOProxy());
+
             auto look = mergedConfig->getLook("shot_look");
             auto ltf = look->getTransform();
 
@@ -5669,7 +5742,7 @@ std::cout << "merge3\n";
         }
     }
 
-std::cout << "merge4\n";
+//std::cout << "merge4\n";
 
     // Test with a built-in config.
     {
@@ -5695,6 +5768,211 @@ std::cout << "merge4\n";
 //            OCIO_CHECK_EQUAL(std::string(mergedConfig->getCacheID()), std::string(bConfig->getCacheID()));
         }
     }
+}
+
+OCIO_ADD_TEST(MergeConfigs, merges_with_ocioz_file)
+{
+    std::vector<std::string> pathsLinux = { 
+        std::string(OCIO::GetTestFilesDir()),
+        std::string("configs"),
+        std::string("context_test1"),
+        std::string("context_test1_linux.ocioz")
+    };                                      
+    static const std::string archivePathLinux = pystring::os::path::normpath(
+        pystring::os::path::join(pathsLinux)
+    );
+    OCIO::ConstConfigRcPtr baseConfig;
+    OCIO_CHECK_NO_THROW(baseConfig = OCIO::Config::CreateFromFile(archivePathLinux.c_str()));
+
+    std::vector<std::string> pathsInput = { 
+        std::string(OCIO::GetTestFilesDir()),
+        std::string("configs"),
+        std::string("mergeconfigs"),
+        std::string("merged3"),
+        std::string("input.ocio")
+    }; 
+    static const std::string configPathInput = pystring::os::path::normpath(
+        pystring::os::path::join(pathsInput)
+    );
+    OCIO::ConstConfigRcPtr inputConfig;
+    OCIO_CHECK_NO_THROW(inputConfig = OCIO::Config::CreateFromFile(configPathInput.c_str()));
+
+        OCIO::ConfigMergingParametersRcPtr params = OCIO::ConfigMergingParameters::Create();
+        params->setInputFirst(false);
+        MergeStrategy strategy = MergeStrategy::STRATEGY_PREFER_INPUT;
+        params->setRoles(strategy);
+        params->setColorspaces(strategy);
+        params->setNamedTransforms(strategy);
+        params->setDefaultStrategy(strategy);
+        params->setInputFamilyPrefix("Input/");
+        params->setBaseFamilyPrefix("Base/");
+        params->setAssumeCommonReferenceSpace(true);
+        params->setAvoidDuplicates(false);
+
+//       OCIO::ConfigRcPtr mergedConfig = OCIO::ConfigMergingHelpers::MergeConfigs(params, baseConfig, inputConfig);
+       OCIO::ConfigRcPtr mergedConfig;
+    checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
+        [&mergedConfig, &params, &baseConfig, &inputConfig]() { mergedConfig = OCIO::ConfigMergingHelpers::MergeConfigs(params, baseConfig, inputConfig); },
+        "Color space 'reference' will replace a color space in the base config.",
+        "Color space 'raw' will replace a color space in the base config.",
+        "Color space 'plain_lut1_cs' will replace a color space in the base config.",
+        "Color space 'shot1_lut1_cs' will replace a color space in the base config.");
+
+//         OCIO::ConfigRcPtr mergedConfig;
+//         checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
+// //           [&newMerger, &merger]() { newMerger = OCIO::ConfigMergingHelpers::MergeConfigs(merger); },
+//            [&mergedConfig, &params, &baseConfig, &inputConfig]() 
+//                 { mergedConfig = OCIO::ConfigMergingHelpers::MergeConfigs(params, baseConfig, inputConfig); },
+//            "The Input config contains a value that would override the Base config: file_rules: Default");
+
+
+// FIXME: Add a test to check this result.
+//     std::ostringstream ossResult;
+//     mergedConfig->serialize(ossResult);
+//     std::cout << ossResult.str() << "\n";
+
+//             std::ostringstream oss;
+//             mergedConfig->serialize(oss);
+//     std::cout << oss.str() << "\n";
+
+    // The working dir is empty.
+    OCIO_CHECK_EQUAL(mergedConfig->getWorkingDir(), std::string(""));
+//std::cout << "Working dir: " << mergedConfig->getWorkingDir() << "\n";
+    // The configIOProxy is not NULL.
+    OCIO_CHECK_ASSERT(mergedConfig->getConfigIOProxy());
+//std::cout << "IOProxy: " << mergedConfig->getConfigIOProxy() << "\n";
+
+    OCIO::ContextRcPtr ctx = mergedConfig->getCurrentContext()->createEditableCopy();
+    double mat[16] = { 0., 0., 0., 0.,
+                       0., 0., 0., 0.,
+                       0., 0., 0., 0.,
+                       0., 0., 0., 0. };
+
+        // This is resolved in the OCIOZ base.
+        {
+            // Note: the $SHOT = shot4 search path takes precedence for this color space.
+            OCIO::ConstProcessorRcPtr processor = mergedConfig->getProcessor(ctx, "plain_lut1_cs", "reference");
+            OCIO::ConstTransformRcPtr tr = processor->createGroupTransform()->getTransform(0);
+            auto mtx = OCIO::DynamicPtrCast<const OCIO::MatrixTransform>(tr);
+            OCIO_REQUIRE_ASSERT(mtx);
+            mtx->getMatrix(mat);
+            OCIO_CHECK_EQUAL(mat[0], 40.);  // is 40 in the base config, 20 in input
+        }
+        {
+            OCIO::ConstProcessorRcPtr processor = mergedConfig->getProcessor(ctx, "shot1_lut1_cs", "reference");
+            OCIO::ConstTransformRcPtr tr = processor->createGroupTransform()->getTransform(0);
+            auto mtx = OCIO::DynamicPtrCast<const OCIO::MatrixTransform>(tr);
+            OCIO_REQUIRE_ASSERT(mtx);
+            mtx->getMatrix(mat);
+            OCIO_CHECK_EQUAL(mat[0], 10.);  // is 10 in the base config, 100 in input
+        }
+        {
+            // Will try to resolve it using relative paths and won't find it.
+            OCIO_CHECK_THROW(mergedConfig->getProcessor(ctx, "shot1_lut2_cs", "reference"), OCIO::Exception);
+        }
+
+    // Add an absolute search path for the input config.
+    std::vector<std::string> pathsInput1 = { 
+        std::string(OCIO::GetTestFilesDir()),
+        std::string("configs"),
+        std::string("mergeconfigs"),
+        std::string("merged3")
+    }; 
+    static const std::string searchPathInput = pystring::os::path::normpath(
+        pystring::os::path::join(pathsInput1)
+    );
+//    std::cout << "added absolute search path\n";
+        ctx->clearSearchPaths();
+        ctx->addSearchPath(searchPathInput.c_str());
+        for (int i = 0; i < mergedConfig->getNumSearchPaths(); i++)
+        {
+            ctx->addSearchPath(mergedConfig->getSearchPath(i));
+        }
+
+        {
+            OCIO::ConstProcessorRcPtr processor = mergedConfig->getProcessor(ctx, "shot1_lut2_cs", "reference");
+            OCIO::ConstTransformRcPtr tr = processor->createGroupTransform()->getTransform(0);
+            auto mtx = OCIO::DynamicPtrCast<const OCIO::MatrixTransform>(tr);
+            OCIO_REQUIRE_ASSERT(mtx);
+            mtx->getMatrix(mat);
+            OCIO_CHECK_EQUAL(mat[0], 42.);  // doesn't exist in the base config
+        }
+
+        // FIXME: The next test won't work without this.  Is that expected that you need to clear
+        // the cache after adding a search path, or is there a bug involving the cacheID of processors
+        // when OCIOZ is being used?
+        mergedConfig->clearProcessorCache();
+
+        {
+            OCIO::ConstProcessorRcPtr processor = mergedConfig->getProcessor(ctx, "shot1_lut1_cs", "reference");
+            OCIO::ConstTransformRcPtr tr = processor->createGroupTransform()->getTransform(0);
+            auto mtx = OCIO::DynamicPtrCast<const OCIO::MatrixTransform>(tr);
+            OCIO_REQUIRE_ASSERT(mtx);
+            mtx->getMatrix(mat);
+            OCIO_CHECK_EQUAL(mat[0], 100.);  // is 10 in the base config, 100 in input
+        }
+
+// 
+//             std::istringstream resultIss;
+//             resultIss.str(RESULT);
+//             OCIO::ConstConfigRcPtr resultConfig = OCIO::Config::CreateFromStream(resultIss);
+//             std::ostringstream ossResult;
+//             resultConfig->serialize(ossResult);
+// 
+//             //Testing the string of each config
+//            OCIO_CHECK_EQUAL(oss.str(), ossResult.str());
+
+
+
+
+
+
+
+//     auto setupBasics = [](OCIO::ConfigMergerRcPtr & merger, MergeStrategy strategy) -> OCIO::ConfigMergingParametersRcPtr
+//     {
+//         OCIO::ConfigMergingParametersRcPtr params = OCIO::ConfigMergingParameters::Create();
+//         merger->addParams(params);
+//         // Note that these tests run several of the mergers.
+//         // Need to run the color space merger too, since that affects how the named transform
+//         // merger will work (in terms of avoiding conflicts with color space names).
+//         merger->getParams(0)->setRoles(strategy);
+//         merger->getParams(0)->setColorspaces(strategy);
+//         merger->getParams(0)->setNamedTransforms(strategy);
+//         merger->getParams(0)->setDefaultStrategy(strategy);
+// 
+//         merger->getParams(0)->setInputFamilyPrefix("Input/");
+//         merger->getParams(0)->setBaseFamilyPrefix("Base/");
+// 
+//         merger->getParams(0)->setAssumeCommonReferenceSpace(true);
+//         merger->getParams(0)->setAvoidDuplicates(false);
+//         merger->getParams(0)->setInputFirst(true);
+// 
+//         return params;
+//     };
+// 
+//     {
+//         OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+//         auto params = setupBasics(merger, MergeStrategy::STRATEGY_PREFER_INPUT);
+// 
+//         OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+//         OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+//         checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
+//             [&options]() { OCIO::ColorspacesMerger(options).merge(); },
+//             "Equivalent input color space 'lin_3' replaces 'ACES2065-1' in the base config, preserving aliases.");
+//         checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
+//             [&options]() { OCIO::NamedTransformsMerger(options).merge(); },
+//             "Named transform 'view_2' was not merged as there's a color space alias with that name.");
+// 
+//         OCIO_CHECK_EQUAL(mergedConfig->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_ALL), 3);
+// 
+//         OCIO::ConstNamedTransformRcPtr nt = nullptr;
+//         nt = checkNamedTransform(mergedConfig, "nt_both", 0, __LINE__);
+//         OCIO_CHECK_EQUAL(nt->getNumAliases(), 1);
+//         OCIO_CHECK_EQUAL(nt->getAlias(0), std::string("nametr"));
+//         OCIO_CHECK_EQUAL(nt->getFamily(), std::string("Input@"));
+//         OCIO_CHECK_EQUAL(nt->getDescription(), std::string("from input"));
+//     }
+
 }
     // Test with an OCIOZ archive
     // {

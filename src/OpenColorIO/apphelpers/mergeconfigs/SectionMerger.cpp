@@ -38,6 +38,7 @@ void splitActiveList(const char * list, StringUtils::StringVec & result)
 {
     if (list && *list)
     {
+// FIXME: Need to handle quoted substrings.
         result = StringUtils::Split(list, ',');
     }
 }
@@ -226,11 +227,15 @@ void GeneralMerger::handleInputOnly()
         m_mergedConfig->setDescription(m_inputConfig->getDescription());
     }
 
+    // Use the higher value for ocio_profile_version.
+    // Note that the default strategy is used for the GeneralMerger but other strategies
+    // may be used for other sections of the config and so always use the higher of the
+    // two config versions.
     setMergedConfigVersion(m_mergedConfig,
                            m_inputConfig->getMajorVersion(),
                            m_inputConfig->getMinorVersion(),
-                           0u,  // ignore base
-                           0u);
+                           m_baseConfig->getMajorVersion(),
+                           m_baseConfig->getMinorVersion());
 
     double rgb[3];
     m_inputConfig->getDefaultLumaCoefs(rgb);
@@ -263,9 +268,13 @@ void GeneralMerger::handleBaseOnly()
         m_mergedConfig->setDescription(m_baseConfig->getDescription());
     }
 
+    // Use the higher value for ocio_profile_version.
+    // Note that the default strategy is used for the GeneralMerger but other strategies
+    // may be used for other sections of the config and so always use the higher of the
+    // two config versions.
     setMergedConfigVersion(m_mergedConfig,
-                           0u,  // ignore input
-                           0u,
+                           m_inputConfig->getMajorVersion(),
+                           m_inputConfig->getMinorVersion(),
                            m_baseConfig->getMajorVersion(),
                            m_baseConfig->getMinorVersion());
 
@@ -1178,6 +1187,8 @@ void DisplayViewMerger::processDisplays(const ConstConfigRcPtr & first,
                     // the second config.  Want to add it as the same type of view.
                     if (viewIsShared(second, dispName, displayDefinedView))
                     {
+                        // Note that this may change the order in a way that does not follow
+                        // the preference of input-first or base-first.
                         m_mergedConfig->addDisplaySharedView(dispName, displayDefinedView);
                     }
                     else
@@ -2300,7 +2311,48 @@ void ColorspacesMerger::processSearchPaths() const
         return;
     }
 
-    if (m_params->isInputFirst())
+// TODO: Should the strategy determine which path should go first?
+// E.g., if preferInput, give the input paths priority in the search.
+
+//     if (m_params->isInputFirst())
+//     {
+//         m_mergedConfig->clearSearchPaths();
+//         // Add all from input config.
+//         for (int i = 0; i < m_inputConfig->getNumSearchPaths(); i++)
+//         {
+//             m_mergedConfig->addSearchPath(m_inputConfig->getSearchPath(i));
+//         }
+// 
+//         // Only add the new ones from the base config.
+//         for (int i = 0; i < m_baseConfig->getNumSearchPaths(); i++)
+//         {
+//             if (!hasSearchPath(m_inputConfig, m_baseConfig->getSearchPath(i)))
+//             {
+//                 m_mergedConfig->addSearchPath(m_baseConfig->getSearchPath(i));
+//             }
+//         }
+//     }
+//     else
+//     {
+//         // NB: The m_mergedConfig is initialized with the contents of the m_baseConfig.
+// 
+//         for (int i = 0; i < m_inputConfig->getNumSearchPaths(); i++)
+//         {
+//             if (!hasSearchPath(m_baseConfig, m_inputConfig->getSearchPath(i)))
+//             {
+//                 m_mergedConfig->addSearchPath(m_inputConfig->getSearchPath(i));
+//             }
+//         }
+//     }
+
+    // Ignoring isInputFirst for the ordering of search paths because it seems that it
+    // really should be driven by the strategy. E.g., if both base and input have a "luts"
+    // directory, want to be looking in the right one.  
+
+    // But more work is needed here.  Absolute paths should be set up for input since
+    // the working dir is from the base config.
+
+    if (m_params->getColorspaces() == ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_INPUT)
     {
         m_mergedConfig->clearSearchPaths();
         // Add all from input config.
@@ -2320,7 +2372,7 @@ void ColorspacesMerger::processSearchPaths() const
     }
     else
     {
-        // NB: The m_mergecConfig is initialized with the contents of the m_baseConfig.
+        // NB: The m_mergedConfig is initialized with the contents of the m_baseConfig.
 
         for (int i = 0; i < m_inputConfig->getNumSearchPaths(); i++)
         {

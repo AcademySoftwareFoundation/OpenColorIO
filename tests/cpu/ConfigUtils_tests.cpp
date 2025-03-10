@@ -697,6 +697,22 @@ display_colorspaces:
       children:
         - !<MatrixTransform> {matrix: [ 0.695452241357, 0.140678696470, 0.163869062172, 0, 0.044794563372, 0.859671118456, 0.095534318172, 0, -0.005525882558, 0.004025210306, 1.001500672252, 0, 0, 0, 0, 1 ]}
 #        - !<BuiltinTransform> {style: UTILITY - ACES-AP0_to_CIE-XYZ-D65_BFD}
+
+  - !<ColorSpace>
+    name: Rec.601 - Display
+    isdata: false
+    from_display_reference: !<GroupTransform>
+      children:
+        - !<MatrixTransform> {matrix: [3.50600328272467, -1.73979072630283, -0.544058268362742, 0, -1.06904755985382, 1.97777888272879, 0.0351714193371952, 0, 0.0563065917341277, -0.196975654820772, 1.04995232821873, 0, 0, 0, 0, 1]}
+        - !<ExponentTransform> {value: 2.4, style: mirror, direction: inverse}
+
+  - !<ColorSpace>
+    name: Rec.601 (PAL) - Display
+    isdata: false
+    from_display_reference: !<GroupTransform>
+      children:
+        - !<MatrixTransform> {matrix: [3.06336109008327, -1.39339017490737, -0.47582373799753, 0, -0.96924363628088, 1.87596750150772, 0.0415550574071756, 0, 0.0678610475535669, -0.228799269620496, 1.06908961801603, 0, 0, 0, 0, 1]}
+        - !<ExponentTransform> {value: 2.4, style: mirror, direction: inverse}
 )" };
 
 // >>> cs.build_conversion_matrix('ap0','rec 709','cat02').T
@@ -808,6 +824,23 @@ display_colorspaces:
         const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
         OCIO_CHECK_EQUAL(name, std::string(""));
     }
+
+    // Validate that the fingerprints for the smallest likely gamuts are positive.
+    std::vector<float> fingerprintVals;
+    OCIO_CHECK_ASSERT(!OCIO::ConfigUtils::calcColorSpaceFingerprint(fingerprintVals, fingerprints, inputConfig, 
+        inputConfig->getColorSpace("Rec.601 - Display")));
+    for (size_t i = 0; i < fingerprintVals.size(); i++)
+    {
+        OCIO_CHECK_ASSERT(fingerprintVals[i] >= 0.);
+    }
+
+    OCIO_CHECK_ASSERT(!OCIO::ConfigUtils::calcColorSpaceFingerprint(fingerprintVals, fingerprints, inputConfig, 
+        inputConfig->getColorSpace("Rec.601 (PAL) - Display")));
+    for (size_t i = 0; i < fingerprintVals.size(); i++)
+    {
+        OCIO_CHECK_ASSERT(fingerprintVals[i] >= 0.);
+    }
+
 }
 
 // OCIO_ADD_TEST(MergeConfigs, config_utils_find_equivalent_colorspace2)
