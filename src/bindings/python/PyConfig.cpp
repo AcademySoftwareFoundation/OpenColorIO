@@ -284,6 +284,10 @@ void bindPyConfig(py::module & m)
              DOC(Config, getWorkingDir))
         .def("setWorkingDir", &Config::setWorkingDir, "dirName"_a, 
              DOC(Config, setWorkingDir))
+        .def("getConfigIOProxy", &Config::getConfigIOProxy, 
+            DOC(Config, getConfigIOProxy))
+        .def("setConfigIOProxy", &Config::setConfigIOProxy, "ciop"_a, 
+            DOC(Config, setConfigIOProxy))
 
         // ColorSpaces
         .def("getColorSpaces", &Config::getColorSpaces, "category"_a, 
