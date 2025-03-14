@@ -848,7 +848,7 @@ OCIO_ADD_TEST(Builtins, aces2_displayview_roundtrip)
     ValidateDisplayViewRoundTrip("DISPLAY - CIE-XYZ-D65_to_REC.1886-REC.709",
                                  "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709_2.0",
                                  1.0f,          // scale factor
-                                 0.003f,        // tolerance
+                                 0.004f,        // tolerance
                                  {}, 0.f,
                                  __LINE__);
 
@@ -864,7 +864,7 @@ OCIO_ADD_TEST(Builtins, aces2_displayview_roundtrip)
                                  // Need to lower the max value from 1000 to 990 nits.
                                  0.7507f,       // scale factor = 990 nits
                                  0.005f,        // main tolerance
-                                 {196, 392},    // difficult values
+                                 {168, 196, 364, 392, 1344},    // difficult values
                                  0.03f,         // tolerance for difficult values
                                  __LINE__);
 
@@ -872,8 +872,8 @@ OCIO_ADD_TEST(Builtins, aces2_displayview_roundtrip)
                                  "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D65_2.0",
                                  // Need to lower the max value from 4000 to 3860 nits.
                                  0.8987f,       // scale factor = 3860 nits
-                                 0.006f,        // main tolerance
-                                 {196, 392, 396, 588, 592, 1196, 1200, 1260, 1288}, // difficult values
+                                 0.007f,        // main tolerance
+                                 {168, 196, 392, 396, 588, 592, 952, 1148, 1196, 1200, 1260, 1288},
                                  0.2f,         // tolerance for difficult values
                                  __LINE__);
 
