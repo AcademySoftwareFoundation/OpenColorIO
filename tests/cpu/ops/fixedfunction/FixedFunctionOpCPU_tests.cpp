@@ -544,6 +544,13 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_output_transform_20)
                        __LINE__);
 }
 
+// NB: The ACES 2 FixedFunction takes linear ACES2065-1 values and produces linear RGB values
+// in the encoding gamut. The relatively large tolerance on the following round-trip tests doesn't
+// fully test accuracy of saturated values. See additional tests in BuiltinTransform_tests.cpp
+// that do a similar round-trip but using gamma-corrected code values and therefore does
+// a more thorough test of colors where one or more channels is near zero, which is an area
+// that is more challenging for the algorithm to invert.
+
 OCIO_ADD_TEST(FixedFunctionOpCPU, aces_ot_20_rec709_100n_rt)
 {
     const int lut_size = 8;

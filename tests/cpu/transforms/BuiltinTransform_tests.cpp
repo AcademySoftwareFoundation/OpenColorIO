@@ -8,6 +8,7 @@
 
 #include "transforms/BuiltinTransform.cpp"
 
+#include "ops/lut3d/Lut3DOp.h"
 #include "ops/matrix/MatrixOp.h"
 #include "Platform.h"
 #include "transforms/builtins/ACES.h"
@@ -738,4 +739,154 @@ OCIO_ADD_TEST(Builtins, validate)
     // The above checks if a test values is missing, but not if there are test values
     // that don't have an associated built-in.
     OCIO_CHECK_EQUAL(UnitTestValues.size(), reg->getNumBuiltins());
+}
+
+namespace
+{
+
+void ValidateDisplayViewRoundTrip(const char * display_style, const char * view_style,
+                                  float scale, float errorThreshold, 
+                                  std::vector<int> difficultItems, float difficultThreshold,
+                                  int lineNo)
+{
+    // Built-in transform for the display.
+    OCIO::BuiltinTransformRcPtr display_builtin = OCIO::BuiltinTransform::Create();
+    OCIO_CHECK_NO_THROW_FROM(display_builtin->setStyle(display_style), lineNo);
+    OCIO_CHECK_NO_THROW_FROM(display_builtin->validate(), lineNo);
+    auto display_builtin_inv = display_builtin->createEditableCopy();
+    display_builtin_inv->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    // Built-in transform for the view.
+    OCIO::BuiltinTransformRcPtr view_builtin = OCIO::BuiltinTransform::Create();
+    OCIO_CHECK_NO_THROW_FROM(view_builtin->setStyle(view_style), lineNo);
+    OCIO_CHECK_NO_THROW_FROM(view_builtin->validate(), lineNo);
+    auto view_builtin_inv = view_builtin->createEditableCopy();
+    view_builtin_inv->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    // Assemble inverse and forward transform into a group transform that goes from
+    // display code values to ACES and back to code values.
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+    group->appendTransform(display_builtin_inv);
+    group->appendTransform(view_builtin_inv);
+    group->appendTransform(view_builtin);
+    group->appendTransform(display_builtin);
+
+    // Create a Processor.
+    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateRaw();
+    OCIO::ConstProcessorRcPtr proc;
+    OCIO_CHECK_NO_THROW_FROM(proc = config->getProcessor(group), lineNo);
+    OCIO_REQUIRE_ASSERT(proc);
+
+    // Create a CPUProcessor.
+    // Use optimization none to avoid replacing inv/fwd pairs and avoid fast pow for the display.
+    OCIO::ConstCPUProcessorRcPtr cpu;
+    OCIO_CHECK_NO_THROW_FROM(cpu = proc->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_NONE), lineNo);
+    OCIO_REQUIRE_ASSERT(cpu);
+
+    // Create a 7 x 7 x 7 grid of RGBA values.
+    const unsigned lut_size = 7;
+    const unsigned num_channels = 4;
+    unsigned num_samples = lut_size * lut_size * lut_size;
+    std::vector<float> input_32f(num_samples * num_channels, 0.f);
+    std::vector<float> output_32f(num_samples * num_channels, 0.f);
+
+    GenerateIdentityLut3D(input_32f.data(), lut_size, num_channels, OCIO::LUT3DORDER_FAST_RED);
+
+    // Scale the grid of points, which is necessary when testing the ST-2084/PQ displays
+    // since the transforms are only designed to process up to a maximum luminance level.
+    for(unsigned idx=0; idx<(num_samples*4); ++idx)
+    {
+        input_32f[idx] *= scale;
+    }
+
+    // Process the values.
+    OCIO::PackedImageDesc inDesc((void *)&input_32f[0], num_samples, 1, 4);
+    OCIO::PackedImageDesc outDesc((void *)&output_32f[0], num_samples, 1, 4);
+    OCIO_CHECK_NO_THROW_FROM(cpu->apply(inDesc, outDesc), lineNo);
+
+    // Check if values are within tolerance.
+    for(unsigned idx=0; idx<(num_samples*4); idx+=4)
+    {
+        float computedErrorR, computedErrorG, computedErrorB = 0.0f;
+
+        const bool isDifficult = std::find(difficultItems.begin(), difficultItems.end(), idx)
+                                        != difficultItems.end();
+        const float tol = isDifficult ? difficultThreshold: errorThreshold;
+
+        const bool equalRelR = OCIO::EqualWithSafeRelError(output_32f[idx], input_32f[idx],
+                                                           tol, 1.0f,
+                                                           &computedErrorR);
+        const bool equalRelG = OCIO::EqualWithSafeRelError(output_32f[idx+1], input_32f[idx+1],
+                                                           tol, 1.0f,
+                                                           &computedErrorG);
+        const bool equalRelB = OCIO::EqualWithSafeRelError(output_32f[idx+2], input_32f[idx+2],
+                                                           tol, 1.0f,
+                                                           &computedErrorB);
+        if (!equalRelR || !equalRelG || !equalRelB)
+        {
+            std::ostringstream errorMsg;
+            errorMsg.precision(10);
+            errorMsg << "Index: " << idx << " - Tol.: " << tol << "\n - Expected: ";
+            errorMsg << std::fixed;
+            errorMsg << input_32f[idx] << ", " << input_32f[idx+1] << ", " << input_32f[idx+2];
+            errorMsg << "\n - Actual:   ";
+            errorMsg << output_32f[idx] << ", " << output_32f[idx+1] << ", " << output_32f[idx+2];
+            errorMsg << "\n - Error:    ";
+            errorMsg << computedErrorR << ", " << computedErrorG << ", " << computedErrorB;
+            OCIO_CHECK_ASSERT_MESSAGE_FROM(0, errorMsg.str(), lineNo);
+        }
+    }
+}
+
+} // anon.
+
+OCIO_ADD_TEST(Builtins, aces2_displayview_roundtrip)
+{
+    // Perform a round-trip test from display code-values to ACES and back to code values.
+    // This uses a 7 x 7 x 7 grid of RGB values.
+
+    ValidateDisplayViewRoundTrip("DISPLAY - CIE-XYZ-D65_to_REC.1886-REC.709",
+                                 "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709_2.0",
+                                 1.0f,          // scale factor
+                                 0.003f,        // tolerance
+                                 {}, 0.f,
+                                 __LINE__);
+
+    ValidateDisplayViewRoundTrip("DISPLAY - CIE-XYZ-D65_to_DisplayP3",
+                                 "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D65_2.0",
+                                 1.0f,          // scale factor
+                                 0.001f,        // tolerance
+                                 {}, 0.f,
+                                 __LINE__);
+
+    ValidateDisplayViewRoundTrip("DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65",
+                                 "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D65_2.0",
+                                 // Need to lower the max value from 1000 to 990 nits.
+                                 0.7507f,       // scale factor = 990 nits
+                                 0.005f,        // main tolerance
+                                 {196, 392},    // difficult values
+                                 0.03f,         // tolerance for difficult values
+                                 __LINE__);
+
+    ValidateDisplayViewRoundTrip("DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65",
+                                 "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D65_2.0",
+                                 // Need to lower the max value from 4000 to 3860 nits.
+                                 0.8987f,       // scale factor = 3860 nits
+                                 0.006f,        // main tolerance
+                                 {196, 392, 396, 588, 592, 1196, 1200, 1260, 1288}, // difficult values
+                                 0.2f,         // tolerance for difficult values
+                                 __LINE__);
+
+    // TODO: The Rec.2100 transforms have too many values that don't invert to easily validate.
+//     ValidateDisplayViewRoundTrip("DISPLAY - CIE-XYZ-D65_to_REC.2100-PQ",
+//                                  "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020_2.0",
+//                                  0.7507f,       // scale factor = 990 nits
+//                                  5e-3f,         // tolerance
+//                                  __LINE__);
+// 
+//     ValidateDisplayViewRoundTrip("DISPLAY - CIE-XYZ-D65_to_REC.2100-PQ",
+//                                  "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020_2.0",
+//                                  0.8987f,       // scale factor = 3860 nits
+//                                  5e-3f,         // tolerance
+//                                  __LINE__);
 }
