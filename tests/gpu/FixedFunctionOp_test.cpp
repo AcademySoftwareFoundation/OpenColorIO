@@ -434,7 +434,11 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_output_transform_inv)
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_output_transform_invfwd)
 {
-     const double data_inv[9] = {
+    // Test that there are no shader resource (textures, functions, etc) conflicts between
+    // the 2 different inverse and forward transforms.  This is not a round-trip test,
+    // it tests that the forward and inverse may exist in the same shader with no issue.
+
+    const double data_inv[9] = {
         // Peak luminance
         100.f,
         // REC709 gamut
@@ -463,7 +467,154 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_output_transform_invfwd)
 
     test.setProcessor(grp);
 
+    // This is not expected to be an identity, but it should be the same between CPU & GPU.
     test.setErrorThreshold(7e-4f);
+}
+
+namespace
+{
+
+OCIO::GroupTransformRcPtr BuildRoundTripTransform(const char * display_style, const char * view_style)
+{
+    // Built-in transform for the display.
+    OCIO::BuiltinTransformRcPtr display_builtin = OCIO::BuiltinTransform::Create();
+    display_builtin->setStyle(display_style);
+    display_builtin->validate();
+    auto display_builtin_inv = display_builtin->createEditableCopy();
+    display_builtin_inv->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    // Built-in transform for the view.
+    OCIO::BuiltinTransformRcPtr view_builtin = OCIO::BuiltinTransform::Create();
+    view_builtin->setStyle(view_style);
+    view_builtin->validate();
+    auto view_builtin_inv = view_builtin->createEditableCopy();
+    view_builtin_inv->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    // Assemble inverse and forward transform into a group transform that goes from
+    // display code values to ACES and back to code values.
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+    group->appendTransform(display_builtin_inv);
+    group->appendTransform(view_builtin_inv);
+    group->appendTransform(view_builtin);
+    group->appendTransform(display_builtin);
+
+    return group;
+}
+
+void GenerateIdentityLut3D(OCIOGPUTest::CustomValues & values, int edgeLen, int numChannels, float scale)
+{
+    int num_samples = edgeLen * edgeLen * edgeLen;
+    std::vector<float> img(num_samples * numChannels, 0.f);
+
+    float c = 1.0f / ((float)edgeLen - 1.0f);
+    for (int i = 0; i < edgeLen*edgeLen*edgeLen; i++)
+    {
+        img[numChannels*i + 0] = scale * (float)(i%edgeLen) * c;
+        img[numChannels*i + 1] = scale * (float)((i / edgeLen) % edgeLen) * c;
+        img[numChannels*i + 2] = scale * (float)((i / edgeLen / edgeLen) % edgeLen) * c;
+    }
+    values.m_inputValues = img;
+}
+
+} // anon.
+
+// The following group of tests compares the display code value to ACES and back to code value
+// round-trip. The round-trip is not perfect (see BuiltinTransform_tests.cpp) but the tests 
+// here simply check if the CPU and GPU are giving the same result.
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_rec709_rndtrip)
+{
+    const char * display_style = "DISPLAY - CIE-XYZ-D65_to_REC.1886-REC.709";
+    const char * view_style = "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709_2.0";
+    auto group = BuildRoundTripTransform(display_style, view_style);
+
+    // The test harness gets a processor from the transform with the default optimization
+    // level. However, the forward/inverse does not optimize out due to the clamp to AP1
+    // in-between the FixedFunctions.
+    test.setProcessor(group);
+
+    // Set up a grid of RGBA custom values.
+    const int lut_size = 17;
+    const int num_channels = 4;
+    OCIOGPUTest::CustomValues values;
+    GenerateIdentityLut3D(values, lut_size, num_channels, 1.0f);
+
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(0.004f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_displayp3_rndtrip)
+{
+    const char * display_style = "DISPLAY - CIE-XYZ-D65_to_DisplayP3";
+    const char * view_style = "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D65_2.0";
+    auto group = BuildRoundTripTransform(display_style, view_style);
+    test.setProcessor(group);
+
+    const int lut_size = 17;
+    const int num_channels = 4;
+    OCIOGPUTest::CustomValues values;
+    GenerateIdentityLut3D(values, lut_size, num_channels, 1.0f);
+
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(0.001f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_1000nit_p3_rndtrip)
+{
+    const char * display_style = "DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65";
+    const char * view_style = "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D65_2.0";
+    auto group = BuildRoundTripTransform(display_style, view_style);
+    test.setProcessor(group);
+
+    const int lut_size = 17;
+    const int num_channels = 4;
+    OCIOGPUTest::CustomValues values;
+    GenerateIdentityLut3D(values, lut_size, num_channels, 0.75183f);  // scale to 1000 nits
+
+    test.setCustomValues(values);
+
+    // TODO: Investigate why this is not closer.
+    // Setting the CPUProcessor to OPTIMIZATION_NONE helps slightly, but is not the main
+    // cause of the error.
+    test.setErrorThreshold(0.01f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_4000nit_p3_rndtrip)
+{
+    const char * display_style = "DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65";
+    const char * view_style = "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D65_2.0";
+    auto group = BuildRoundTripTransform(display_style, view_style);
+    test.setProcessor(group);
+
+    const int lut_size = 17;
+    const int num_channels = 4;
+    OCIOGPUTest::CustomValues values;
+    GenerateIdentityLut3D(values, lut_size, num_channels, 0.90257f);  // scale to 4000 nits
+
+    test.setCustomValues(values);
+
+    // TODO: Investigate why this is not closer.
+    test.setErrorThreshold(0.018f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_4000nit_rec2020_rndtrip)
+{
+    const char * display_style = "DISPLAY - CIE-XYZ-D65_to_REC.2100-PQ";
+    const char * view_style = "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020_2.0";
+    auto group = BuildRoundTripTransform(display_style, view_style);
+    test.setProcessor(group);
+
+    const int lut_size = 17;
+    const int num_channels = 4;
+    OCIOGPUTest::CustomValues values;
+    GenerateIdentityLut3D(values, lut_size, num_channels, 0.90257f);  // scale to 4000 nits
+
+    test.setCustomValues(values);
+
+    // TODO: Investigate why this is not closer.
+    test.setErrorThreshold(0.025f);
 }
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_rgb_to_jmh_fwd)
