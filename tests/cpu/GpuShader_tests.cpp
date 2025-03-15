@@ -1032,10 +1032,10 @@ ocioOCIOMain(
 // Declaration of all helper methods
 
 
-const int ocio_grading_rgbcurve_knotsOffsets_0[8] = {0, 5, -1, 0, -1, 0, -1, 0};
-const float ocio_grading_rgbcurve_knots_0[5] = {0., 0.333333343, 0.5, 0.666666508, 1.};
-const int ocio_grading_rgbcurve_coefsOffsets_0[8] = {0, 12, -1, 0, -1, 0, -1, 0};
-const float ocio_grading_rgbcurve_coefs_0[12] = {0.0982520878, 0.393008381, 0.347727984, 0.08693178, 0.934498608, 1., 1.13100278, 1.246912, 0., 0.322416425, 0.5, 0.698159397};
+constant constexpr static int ocio_grading_rgbcurve_knotsOffsets_0[8] = {0, 5, -1, 0, -1, 0, -1, 0};
+constant constexpr static float ocio_grading_rgbcurve_knots_0[5] = {0., 0.333333343, 0.5, 0.666666508, 1.};
+constant constexpr static int ocio_grading_rgbcurve_coefsOffsets_0[8] = {0, 12, -1, 0, -1, 0, -1, 0};
+constant constexpr static float ocio_grading_rgbcurve_coefs_0[12] = {0.0982520878, 0.393008381, 0.347727984, 0.08693178, 0.934498608, 1., 1.13100278, 1.246912, 0., 0.322416425, 0.5, 0.698159397};
 
 float ocio_grading_rgbcurve_evalBSplineCurve_0(int curveIdx, float x)
 {

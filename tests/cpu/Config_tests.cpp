@@ -9799,3 +9799,106 @@ OCIO_ADD_TEST(Config, create_from_config_io_proxy)
         OCIO_CHECK_NO_THROW(proc->getDefaultCPUProcessor());
     }
 }
+
+OCIO_ADD_TEST(Config, set_config_io_proxy)
+{
+    std::vector<std::string> paths = {
+        std::string(OCIO::GetTestFilesDir()),
+        std::string("configs"),
+        std::string("context_test1"),
+        std::string("config.ocio"),
+    };
+    static const std::string configPath = pystring::os::path::normpath(
+        pystring::os::path::join(paths)
+    );
+
+    {
+        // Dummy ConfigIOProxy test class. Replace all the LUTs by Exponent
+        // transform and raises an exception from getConfigData as it shouldn't
+        // be called in the context of this test.
+        class CIOPTest : public OCIO::ConfigIOProxy
+        {
+        public:
+            inline std::string getConfigData() const override
+            {
+                throw OCIO::Exception(
+                    "getConfigData() should not be called when using setConfigIOProxy()");
+            }
+
+            inline std::vector<uint8_t> getLutData(
+                const char * /* filepath */) const override
+            {
+                // For the purpose of this simple test, blindly replace any transform
+                // by an exponent which we can easily detect in the test below.
+                const std::string new_lut = R"(
+<ProcessList version="2" id="UIDEC42">
+    <Exponent inBitDepth="32f" outBitDepth="32f" style="basicRev">
+        <ExponentParams gamma="2.2" />
+    </Exponent>
+</ProcessList>)";
+
+                return std::vector<uint8_t>(new_lut.begin(), new_lut.end());
+            }
+
+            inline std::string getFastLutFileHash(const char * filename) const override
+            {
+                // We don't care about the original file existence for the purpose of this test,
+                // a typical implementation may check that the requested filename is expected and
+                // generate a proper hash not only based on the filename.
+                return filename;
+            }
+        };
+
+        std::shared_ptr<CIOPTest> ciop = std::shared_ptr<CIOPTest>(
+            new CIOPTest()
+        );
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromFile(configPath.c_str()));
+        OCIO_REQUIRE_ASSERT(config);
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Simple check on the number of color spaces in the test config.
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces(), 13);
+
+
+        // Check the config behaviour before patching with IOProxy.
+        {
+            OCIO::ConstProcessorRcPtr proc;
+            OCIO_CHECK_NO_THROW(proc = config->getProcessor("plain_lut1_cs", "shot1_lut1_cs"));
+            OCIO_REQUIRE_ASSERT(proc);
+            OCIO_CHECK_NO_THROW(proc->getDefaultCPUProcessor());
+            OCIO_CHECK_ASSERT(!proc->isNoOp());
+
+            auto group = proc->createGroupTransform();
+            OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 2);
+            OCIO_REQUIRE_EQUAL(group->getTransform(0)->getTransformType(), OCIO::TRANSFORM_TYPE_MATRIX);
+            OCIO_REQUIRE_EQUAL(group->getTransform(1)->getTransformType(), OCIO::TRANSFORM_TYPE_MATRIX);
+        }
+
+        // Required to clear the file cache and force OCIO to call the IOProxy methods.
+        OCIO::ClearAllCaches();
+
+        // Check the config behaviour after patching with IOProxy, any FileTransform
+        // gets replaced by an ExponentTransform.
+        {
+            OCIO::ConfigRcPtr configProxy;
+            OCIO_CHECK_NO_THROW(configProxy = config->createEditableCopy());
+            OCIO_CHECK_NO_THROW(configProxy->setConfigIOProxy(ciop));
+
+            OCIO::ConstProcessorRcPtr proc;
+            OCIO_CHECK_NO_THROW(proc = configProxy->getProcessor("plain_lut1_cs", "shot1_lut1_cs"));
+            OCIO_REQUIRE_ASSERT(proc);
+            OCIO_CHECK_NO_THROW(proc->getDefaultCPUProcessor());
+            OCIO_CHECK_ASSERT(!proc->isNoOp());
+
+            auto group = proc->createGroupTransform();
+            OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 2);
+            OCIO_REQUIRE_EQUAL(group->getTransform(0)->getTransformType(), OCIO::TRANSFORM_TYPE_EXPONENT);
+            OCIO_REQUIRE_EQUAL(group->getTransform(1)->getTransformType(), OCIO::TRANSFORM_TYPE_EXPONENT);
+        }
+
+        // Clear cache for following unit tests.
+        OCIO::ClearAllCaches();
+    }
+}

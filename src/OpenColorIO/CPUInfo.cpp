@@ -183,7 +183,7 @@ CPUInfo::CPUInfo()
     }
 }
 
-#elif defined(__aarch64__) // ARM Processor or Apple ARM.
+#elif defined(__aarch64__) || defined(_M_ARM64) // ARM 64-bit processor (multiple platforms)
 
 CPUInfo::CPUInfo()
 {
