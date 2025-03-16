@@ -119,13 +119,13 @@ namespace
 {
 
 template<typename T>
-void ValidateValues(const char * prefixMsg, T in, T out, T errorThreshold, int lineNo)
+void ValidateValues(const char * prefixMsg, T act, T aim, T errorThreshold, int lineNo)
 {
     // Using rel error with a large minExpected value of 1 will transition
     // from absolute error for expected values < 1 and
     // relative error for values > 1.
     T computedError{};
-    if (!OCIO::EqualWithSafeRelError(in, out, errorThreshold, T(1.), &computedError))
+    if (!OCIO::EqualWithSafeRelError(act, aim, errorThreshold, T(1.), &computedError))
     {
         std::ostringstream errorMsg;
         errorMsg.precision(std::numeric_limits<T>::max_digits10);
@@ -133,7 +133,7 @@ void ValidateValues(const char * prefixMsg, T in, T out, T errorThreshold, int l
         {
             errorMsg << prefixMsg << ": ";
         }
-        errorMsg << " - Values: " << in << " expected: " << out;
+        errorMsg << " - Values: " << act << " expected: " << aim;
         errorMsg << " - Error: " << computedError << " ("
                  << std::setprecision(3) << computedError / errorThreshold;
         errorMsg << "x of Threshold: " << std::setprecision(6) << errorThreshold
@@ -143,18 +143,18 @@ void ValidateValues(const char * prefixMsg, T in, T out, T errorThreshold, int l
 }
 
 template<typename T>
-void ValidateValues(unsigned idx, T in, T out, T errorThreshold, int lineNo)
+void ValidateValues(unsigned idx, T act, T aim, T errorThreshold, int lineNo)
 {
     std::ostringstream oss;
     oss << "Index = " << idx << " with threshold = " << errorThreshold;
 
-    ValidateValues<T>(oss.str().c_str(), in, out, errorThreshold, lineNo);
+    ValidateValues<T>(oss.str().c_str(), act, aim, errorThreshold, lineNo);
 }
 
 template<typename T>
-void ValidateValues(T in, T out, int lineNo)
+void ValidateValues(T act, T aim, int lineNo)
 {
-    ValidateValues<T>(nullptr, in, out, T(1e-7), lineNo);
+    ValidateValues<T>(nullptr, act, aim, T(1e-7), lineNo);
 }
 
 } // anon.
@@ -779,6 +779,7 @@ void ValidateDisplayViewRoundTrip(const char * display_style, const char * view_
 
     // Create a CPUProcessor.
     // Use optimization none to avoid replacing inv/fwd pairs and avoid fast pow for the display.
+    // (Though actually, the clamp to AP1 between the FixedFunctions avoids the optimization anyway.)
     OCIO::ConstCPUProcessorRcPtr cpu;
     OCIO_CHECK_NO_THROW_FROM(cpu = proc->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_NONE), lineNo);
     OCIO_REQUIRE_ASSERT(cpu);
@@ -807,7 +808,7 @@ void ValidateDisplayViewRoundTrip(const char * display_style, const char * view_
     // Check if values are within tolerance.
     for(unsigned idx=0; idx<(num_samples*4); idx+=4)
     {
-        float computedErrorR, computedErrorG, computedErrorB = 0.0f;
+        float computedErrorR = 0.f; float computedErrorG = 0.f; float computedErrorB = 0.f;
 
         const bool isDifficult = std::find(difficultItems.begin(), difficultItems.end(), idx)
                                         != difficultItems.end();
@@ -878,15 +879,51 @@ OCIO_ADD_TEST(Builtins, aces2_displayview_roundtrip)
                                  __LINE__);
 
     // TODO: The Rec.2100 transforms have too many values that don't invert to easily validate.
-//     ValidateDisplayViewRoundTrip("DISPLAY - CIE-XYZ-D65_to_REC.2100-PQ",
-//                                  "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020_2.0",
-//                                  0.7507f,       // scale factor = 990 nits
-//                                  5e-3f,         // tolerance
-//                                  __LINE__);
-// 
-//     ValidateDisplayViewRoundTrip("DISPLAY - CIE-XYZ-D65_to_REC.2100-PQ",
-//                                  "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020_2.0",
-//                                  0.8987f,       // scale factor = 3860 nits
-//                                  5e-3f,         // tolerance
-//                                  __LINE__);
+    // ValidateDisplayViewRoundTrip("DISPLAY - CIE-XYZ-D65_to_REC.2100-PQ",
+    //                              "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020_2.0",
+    //                              0.7507f,       // scale factor = 990 nits
+    //                              5e-3f,         // tolerance
+    //                              __LINE__);
+    // 
+    // ValidateDisplayViewRoundTrip("DISPLAY - CIE-XYZ-D65_to_REC.2100-PQ",
+    //                              "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020_2.0",
+    //                              0.8987f,       // scale factor = 3860 nits
+    //                              5e-3f,         // tolerance
+    //                              __LINE__);
+}
+
+OCIO_ADD_TEST(Builtins, aces2_nan_bug)
+{
+
+    const char* display_style = "DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65";
+    const char* view_style = "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D60-in-P3-D65_2.0";
+
+    // Built-in transform for the display.
+    OCIO::BuiltinTransformRcPtr display_builtin_inv = OCIO::BuiltinTransform::Create();
+    display_builtin_inv->setStyle(display_style);
+    display_builtin_inv->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    // Built-in transform for the view.
+    OCIO::BuiltinTransformRcPtr view_builtin_inv = OCIO::BuiltinTransform::Create();
+    view_builtin_inv->setStyle(view_style);
+    view_builtin_inv->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+    group->appendTransform(display_builtin_inv);
+    group->appendTransform(view_builtin_inv);
+
+    // Create a Processor.
+    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateRaw();
+    OCIO::ConstProcessorRcPtr proc = config->getProcessor(group);
+
+    // Create a CPUProcessor.
+    OCIO::ConstCPUProcessorRcPtr cpu = proc->getDefaultCPUProcessor();
+
+    float pixel[3]{ 0.89942779, 0.89942779, 0.89942779 };
+
+    OCIO_CHECK_NO_THROW(cpu->applyRGB(pixel));
+
+    ValidateValues(0U, pixel[0], 974.288f, 0.1f, __LINE__);
+    ValidateValues(1U, pixel[1], 568.002f, 0.1f, __LINE__);
+    ValidateValues(2U, pixel[2], 5954.45f, 0.1f, __LINE__);
 }

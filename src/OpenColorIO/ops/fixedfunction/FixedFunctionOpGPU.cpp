@@ -478,7 +478,9 @@ void _Add_Aab_to_RGB_Shader(
     ss.indent();
 
     ss.newLine() << ss.float3Decl("rgb_a") << " = " << ss.mat3fMul(&p.MATRIX_Aab_to_cone_response[0], "Aab.rgb") << ";";
-    ss.newLine() << ss.float3Decl("lms") << " = sign(rgb_a) * pow( " << ACES2::cam_nl_offset << " * abs(rgb_a) / (1.0f - abs(rgb_a)), " << ss.float3Const(1.f / 0.42f) << ");";
+    ss.newLine() << ss.float3Decl("rgb_a_lim") << " = min( abs(rgb_a), " << ss.float3Const(0.99f) << " );";
+    ss.newLine() << ss.float3Decl("lms") << " = sign(rgb_a) * pow( " << ACES2::cam_nl_offset 
+                 << " * rgb_a_lim / (1.0f - rgb_a_lim), " << ss.float3Const(1.f / 0.42f) << ");";
     ss.newLine() << "JMh.rgb = " << ss.mat3fMul(&p.MATRIX_CAM16_c_to_RGB[0], "lms") << ";";
 
     ss.dedent();
