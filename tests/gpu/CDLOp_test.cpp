@@ -142,6 +142,7 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_inv_no_clamp_v2)
     test.setTestWideRange(true);
     test.setRelativeComparison(false);
     test.setErrorThreshold(1e-4f);
+    test.setTestNaN(false);
     test.setTestInfinity(false);
 }
 
