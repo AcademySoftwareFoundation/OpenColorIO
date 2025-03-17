@@ -1882,14 +1882,19 @@ void Add_LIN_TO_GAMMA_LOG(
     ss.newLine() << ss.float3Decl("sign3") << " = sign(mirrorin);";
     ss.newLine() << ss.float3Decl("E") << " = abs(mirrorin) + " << ss.float3Const(mirrorPt) << ";";
     ss.newLine() << ss.float3Decl("isAboveBreak") << " = " << ss.float3GreaterThan("E", ss.float3Const(breakPt)) << ";";
+    ss.newLine() << ss.float3Decl("isAtOrBelowBreak") << " = " << ss.float3Const(1.0f) << " - isAboveBreak;";
     ss.newLine() << ss.float3Decl("Ep_gamma") << " = " << ss.float3Const(gammaSeg_slope)
-        << " * pow( E - " << ss.float3Const(gammaSeg_off) << ", " << ss.float3Const(gammaSeg_power) << ");";
-    ss.newLine() << ss.float3Decl("Ep_log") << " = " << ss.float3Const(logSeg_logSlope) << " * log( E * "
-        << ss.float3Const(logSeg_linSlope) <<  " +" << ss.float3Const(logSeg_linOff) << ") + " 
-        << ss.float3Const(logSeg_logOff) << ";";
+                 << " * pow( E - " << ss.float3Const(gammaSeg_off) << ", " << ss.float3Const(gammaSeg_power) << ");";
+    // Avoid NaNs by clamping log input at 1 if the branch is inactive. Active
+    // branch may still hit NaN for ill-defined parameters which we don't guard for in the shader gen level.
+    ss.newLine() << ss.float3Decl("Ep_clamped") << " = max( isAtOrBelowBreak, E * "
+                 << ss.float3Const(logSeg_linSlope) << " +"
+                 << ss.float3Const(logSeg_linOff) << ");";
+    ss.newLine() << ss.float3Decl("Ep_log") << " = " << ss.float3Const(logSeg_logSlope) << " * log( Ep_clamped ) + "  
+                 << ss.float3Const(logSeg_logOff) << ";";
 
     // Combine log and gamma parts.
-    ss.newLine() << pxl << ".rgb = sign3 * (isAboveBreak * Ep_log + ( " << ss.float3Const(1.0f) << " - isAboveBreak ) * Ep_gamma);";
+    ss.newLine() << pxl << ".rgb = sign3 * (isAboveBreak * Ep_log + isAtOrBelowBreak * Ep_gamma);";
 }
 
 void Add_GAMMA_LOG_TO_LIN(
@@ -1986,6 +1991,8 @@ void Add_LIN_TO_DOUBLE_LOG(
     ss.newLine();
     ss.newLine() << ss.float3Decl("logSeg1") << " = " << 
         pix3 << " * " << ss.float3Const(logSeg1_linSlope) << " + " << ss.float3Const(logSeg1_linOff) << ";";
+    // clamp at 1 to avoid NaNs if this is not the taken branch.
+    ss.newLine() << "logSeg1 = max( " << ss.float3Const(1.0) << " - isSegment1, logSeg1 );";
     ss.newLine() << "logSeg1 = " << 
         ss.float3Const(logSeg1_logSlope) << " * log( logSeg1 ) + " << ss.float3Const(logSeg1_logOff) << ";";
 
@@ -1993,6 +2000,8 @@ void Add_LIN_TO_DOUBLE_LOG(
     ss.newLine();
     ss.newLine() << ss.float3Decl("logSeg2") << " = " <<
         pix3 << " * " << ss.float3Const(logSeg2_linSlope) << " + " << ss.float3Const(logSeg2_linOff) << ";";
+    // clamp at 1 to avoid NaNs if this is not the taken branch.
+    ss.newLine() << "logSeg2 = max( " << ss.float3Const(1.0) << " - isSegment3, logSeg2 );";
     ss.newLine() << "logSeg2 = " <<
         ss.float3Const(logSeg2_logSlope) << " * log( logSeg2 ) + " << ss.float3Const(logSeg2_logOff) << ";";
 
