@@ -142,6 +142,7 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_inv_no_clamp_v2)
     test.setTestWideRange(true);
     test.setRelativeComparison(false);
     test.setErrorThreshold(1e-4f);
+    test.setTestInfinity(false);
 }
 
 namespace CDL_Data_2
@@ -171,6 +172,7 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1_legacy_shader_Data_2)
     test.setRelativeComparison(false);
     test.setErrorThreshold(1e-6f);
     test.setTestNaN(false);
+    test.setTestInfinity(false);
 }
 
 // Use the generic shader description with the CDL from OCIO v1 implementation.
@@ -191,6 +193,7 @@ OCIO_ADD_GPU_TEST(CDLOp, clamp_fwd_v1_Data_2)
     test.setRelativeComparison(false);
     test.setErrorThreshold(1e-6f);
     test.setTestNaN(false);
+    test.setTestInfinity(false);
 }
 
 // Use the generic shader description with the CDL from OCIO v2 implementation

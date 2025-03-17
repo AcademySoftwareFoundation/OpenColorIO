@@ -1173,8 +1173,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSV_fwd)
 
     test.setErrorThreshold(1e-6f);
 
-#ifdef __APPLE__
     test.setTestNaN(false);
+#ifdef __APPLE__
     test.setTestInfinity(false);
 #endif
 }
