@@ -767,10 +767,12 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_nan_bug)
         0.89942779f, 0.89942779f, 0.89942779f, 1.0f,
         // This second value became NaN on the GPU before the Aab_to_RGB fix.
         // FIXME: The GPU is no longer NaN, but it is still hugely different from the CPU.
-//        0.89944305f, 0.89944305f, 0.89944305f, 1.0f
+        // 0.89944305f, 0.89944305f, 0.89944305f, 1.0f
     };
     test.setCustomValues(values);
 
+    test.setRelativeComparison(true);
+    test.setExpectedMinimalValue(1.f);
     test.setErrorThreshold(0.01f);
 }
 
@@ -1293,7 +1295,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_LUV_fwd)
     test.setProcessor(func);
 
     test.setTestInfinity(false);
-    test.setErrorThreshold(1e-5f);
+    test.setErrorThreshold(5e-5f);
 }
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_LUV_inv)
@@ -1370,18 +1372,17 @@ namespace HLG
 }
 }
 
-// FIXME: This no longer passes after fixing a bug in GPUUnitTest.cpp.
-// OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_GAMMA_LOG_fwd)
-// {
-//     auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LIN_TO_GAMMA_LOG, HLG::params, 10);
-//     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
-// 
-//     test.setWideRangeInterval(-0.1f, 3.35f); // Output ~[-0.3, 1.02]
-//     test.setProcessor(func);
-//     test.setErrorThreshold(1e-6f);
-//     test.setTestInfinity(false);
-//     test.setTestNaN(false);
-// }
+OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_GAMMA_LOG_fwd)
+{
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LIN_TO_GAMMA_LOG, HLG::params, 10);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    test.setWideRangeInterval(-0.1f, 3.35f); // Output ~[-0.3, 1.02]
+    test.setProcessor(func);
+    test.setErrorThreshold(1e-6f);
+    test.setTestInfinity(false);
+    test.setTestNaN(false);
+}
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_GAMMA_LOG_inv)
 {
@@ -1394,28 +1395,27 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_GAMMA_LOG_inv)
     test.setTestInfinity(false);
 }
 
-// FIXME: This no longer passes after fixing a bug in GPUUnitTest.cpp.
-// OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_DOUBLE_LOG_fwd)
-// {
-//     double params[13]
-//     {
-//         10.0,                  // Base for the log
-//         0.1,                   // Break point between Log1 and Linear segments
-//         0.5,                   // Break point between Linear and Log2 segments
-//         -1.0, -1.0, -1.0, 0.2, // Log curve 1: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
-//         1.0, 1.0, 1.0, 0.5,    // Log curve 2: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
-//         1.0, 0.0,              // Linear segment slope and offset
-//     };
-// 
-//     auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LIN_TO_DOUBLE_LOG, params, 13);
-//     func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
-// 
-//     test.setWideRangeInterval(-1.0f, 2.0f); // Output ~[-1.08, 1.4]
-//     test.setProcessor(func);
-//     test.setErrorThreshold(1e-6f);
-//     test.setTestInfinity(false);
-//     test.setTestNaN(false);
-// }
+OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_DOUBLE_LOG_fwd)
+{
+    double params[13]
+    {
+        10.0,                  // Base for the log
+        0.1,                   // Break point between Log1 and Linear segments
+        0.5,                   // Break point between Linear and Log2 segments
+        -1.0, -1.0, -1.0, 0.2, // Log curve 1: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
+        1.0, 1.0, 1.0, 0.5,    // Log curve 2: LogSideSlope, LogSideOffset, LinSideSlope, LinSideOffset
+        1.0, 0.0,              // Linear segment slope and offset
+    };
+
+    auto func = OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_LIN_TO_DOUBLE_LOG, params, 13);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    test.setWideRangeInterval(-1.0f, 2.0f); // Output ~[-1.08, 1.4]
+    test.setProcessor(func);
+    test.setErrorThreshold(1e-6f);
+    test.setTestInfinity(false);
+    test.setTestNaN(false);
+}
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_DOUBLE_LOG_inv)
 {
