@@ -1083,7 +1083,7 @@ colorspaces:
         with self.assertRaises(OCIO.Exception):
             config.getProcessor("plain_lut1_cs", "shot1_lut1_cs")
 
-    def test_create_from_config_io_proxy(self):
+    def test_config_io_proxy(self):
         
         # Simulate that the config and LUT are in memory by initializing three variables
         # simple_config is the config
@@ -1179,6 +1179,7 @@ colorspaces:
                     hash = filepath
                 return hash
 
+        # First, create the config directly from IOProxy.
         ciop = CIOPTest()
         config = OCIO.Config.CreateFromConfigIOProxy(ciop)
         config.validate()
@@ -1189,6 +1190,34 @@ colorspaces:
         # Simple test to exercise ConfigIOProxy.
         processor = config.getProcessor("c1", "c2")
         processor.getDefaultCPUProcessor()
+
+        # Clear the file cache to force OCIO to look for LUTs.
+        OCIO.ClearAllCaches()
+
+        # Second, create the config the stream.
+        config = OCIO.Config.CreateFromStream(SIMPLE_CONFIG)
+        config.validate()
+
+        # We have not assigned the IOProxy yet, this should fail because
+        # there is no my_unique_luts folder with the required files.
+        with self.assertRaises(OCIO.ExceptionMissingFile):
+            processor = config.getProcessor("c1", "c2")
+            processor.getDefaultCPUProcessor()
+
+        # Clear the file cache again to force OCIO to look for LUTs. This is
+        # required because the above failed attempt will fill the cache.
+        OCIO.ClearAllCaches()
+
+        # The ConfigIOProxy object is now assigned.
+        config.setConfigIOProxy(ciop)
+        self.assertEqual(config.getConfigIOProxy(), ciop)
+
+        # Simple test to exercise ConfigIOProxy.
+        processor = config.getProcessor("c1", "c2")
+        processor.getDefaultCPUProcessor()
+
+        # Clear cache for following unit tests.
+        OCIO.ClearAllCaches()
 
     def test_resolve_config(self):
         defaultBuiltinConfig = "ocio://cg-config-v2.2.0_aces-v1.3_ocio-v2.4"

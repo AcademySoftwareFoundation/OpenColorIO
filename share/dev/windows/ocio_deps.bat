@@ -105,7 +105,7 @@ if ErrorLevel 1 (
 
 echo Checking for Microsoft Visual Studio...
 set MSVS_PATH=
-for /f %%i in ('"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -format value -property installationPath -latest') do (
+for /f "delims=" %%i in ('"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -format value -property installationPath -latest') do (
     echo Found Visual Studio installation at '%%i'
     set MSVS_PATH=%%i
 )

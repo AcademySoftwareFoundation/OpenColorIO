@@ -192,35 +192,33 @@ std::unique_ptr<std::istream> getLutData(
 {
     if (config.getConfigIOProxy())
     {
-        std::vector<uint8_t> buffer = config.getConfigIOProxy()->getLutData(filepath.c_str());
-        std::stringstream ss;
-        ss.write(reinterpret_cast<const char*>(buffer.data()), buffer.size());
+        std::vector<uint8_t> buffer;
+        // Try to open through proxy.
+        try 
+        {
+            buffer = config.getConfigIOProxy()->getLutData(filepath.c_str());
+        } 
+        catch (const std::exception&) 
+        {
+            // If the path is absolute, we'll try the file system, but otherwise
+            // nothing to do.
+            if (!pystring::os::path::isabs(filepath)) 
+              throw;
+        }
 
-        return std::unique_ptr<std::stringstream>(
-            new std::stringstream(std::move(ss))
-        );
+        // If the buffer is empty, we'll try the file system for abs paths.
+        if (!buffer.empty() || !pystring::os::path::isabs(filepath)) 
+        {
+            auto pss = std::unique_ptr<std::stringstream>(new std::stringstream);
+            pss->write(reinterpret_cast<const char*>(buffer.data()), buffer.size());
+
+            return pss;
+        }
     }
 
     // Default behavior. Return file stream.
-    return std::unique_ptr<std::ifstream>(
-        new std::ifstream(Platform::filenameToUTF(filepath).c_str(), mode)
-    );
-}
-
-// Close stream returned by getLutData
-void closeLutStream(const Config & config, const std::istream & istream)
-{
-    // No-op when it is using ConfigIOProxy since getLutData returns a vector<uint8_t>.
-    if (config.getConfigIOProxy() == nullptr)
-    {
-        // The std::istream is coming from a std::ifstream.
-        // Pointer cast to ifstream and then close it.
-        std::ifstream * pIfStream = (std::ifstream *) &istream;
-        if (pIfStream->is_open())
-        {
-            pIfStream->close();
-        }
-    }
+    return std::unique_ptr<std::istream>(new std::ifstream(
+        Platform::filenameToUTF(filepath), mode));
 }
 
 bool CollectContextVariables(const Config &, 
@@ -635,9 +633,8 @@ void LoadFileUncached(FileFormat * & returnFormat,
                 filepath, 
                 tryFormat->isBinary() ? std::ios_base::binary : std::ios_base::in 
             );
-            auto & filestream = *pStream;
             
-            if (!filestream.good())
+            if (!pStream || !pStream->good())
             {
                 std::ostringstream os;
                 os << "The specified FileTransform srcfile, '";
@@ -647,7 +644,7 @@ void LoadFileUncached(FileFormat * & returnFormat,
                 throw Exception(os.str().c_str());
             }
 
-            CachedFileRcPtr cachedFile = tryFormat->read(filestream, filepath, interp);
+            CachedFileRcPtr cachedFile = tryFormat->read(*pStream, filepath, interp);
 
             if(IsDebugLoggingEnabled())
             {
@@ -660,17 +657,10 @@ void LoadFileUncached(FileFormat * & returnFormat,
             returnFormat = tryFormat;
             returnCachedFile = cachedFile;
 
-            closeLutStream(config, filestream);
-
             return;
         }
         catch(std::exception & e)
         {
-            if (pStream)
-            {
-                closeLutStream(config, *pStream); 
-            }
-
             primaryErrorText += "    '";
             primaryErrorText += tryFormat->getName();
             primaryErrorText += "' failed with: ";
@@ -712,9 +702,8 @@ void LoadFileUncached(FileFormat * & returnFormat,
                 filepath, 
                 altFormat->isBinary() ? std::ios_base::binary : std::ios_base::in 
             );
-            auto& filestream = *pStream;
             
-            if (!filestream.good())
+            if (!pStream || !pStream->good())
             {
                 std::ostringstream os;
                 os << "The specified FileTransform srcfile, '";
@@ -725,7 +714,7 @@ void LoadFileUncached(FileFormat * & returnFormat,
                 throw Exception(os.str().c_str());
             }
 
-            cachedFile = altFormat->read(filestream, filepath, interp);
+            cachedFile = altFormat->read(*pStream, filepath, interp);
 
             if(IsDebugLoggingEnabled())
             {
@@ -738,17 +727,10 @@ void LoadFileUncached(FileFormat * & returnFormat,
             returnFormat = altFormat;
             returnCachedFile = cachedFile;
 
-            closeLutStream(config, filestream);
-
             return;
         }
         catch(std::exception & e)
         {
-            if (pStream)
-            {
-                closeLutStream(config, *pStream); 
-            }
-            
             if(IsDebugLoggingEnabled())
             {
                 std::ostringstream os;

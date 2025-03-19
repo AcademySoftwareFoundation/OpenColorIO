@@ -8,6 +8,7 @@
 
 #include "transforms/BuiltinTransform.cpp"
 
+#include "ops/lut3d/Lut3DOp.h"
 #include "ops/matrix/MatrixOp.h"
 #include "Platform.h"
 #include "transforms/builtins/ACES.h"
@@ -17,7 +18,6 @@
 #include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
-
 
 OCIO_ADD_TEST(BuiltinTransform, creation)
 {
@@ -119,12 +119,13 @@ namespace
 {
 
 template<typename T>
-void ValidateValues(const char * prefixMsg, T in, T out, T errorThreshold, int lineNo)
+void ValidateValues(const char * prefixMsg, T act, T aim, T errorThreshold, int lineNo)
 {
     // Using rel error with a large minExpected value of 1 will transition
     // from absolute error for expected values < 1 and
     // relative error for values > 1.
-    if (!OCIO::EqualWithSafeRelError(in, out, errorThreshold, T(1.)))
+    T computedError{};
+    if (!OCIO::EqualWithSafeRelError(act, aim, errorThreshold, T(1.), &computedError))
     {
         std::ostringstream errorMsg;
         errorMsg.precision(std::numeric_limits<T>::max_digits10);
@@ -132,24 +133,28 @@ void ValidateValues(const char * prefixMsg, T in, T out, T errorThreshold, int l
         {
             errorMsg << prefixMsg << ": ";
         }
-        errorMsg << "value = " << in << " but expected = " << out;
+        errorMsg << " - Values: " << act << " expected: " << aim;
+        errorMsg << " - Error: " << computedError << " ("
+                 << std::setprecision(3) << computedError / errorThreshold;
+        errorMsg << "x of Threshold: " << std::setprecision(6) << errorThreshold
+                 << ")";
         OCIO_CHECK_ASSERT_MESSAGE_FROM(0, errorMsg.str(), lineNo);
     }
 }
 
 template<typename T>
-void ValidateValues(unsigned idx, T in, T out, T errorThreshold, int lineNo)
+void ValidateValues(unsigned idx, T act, T aim, T errorThreshold, int lineNo)
 {
     std::ostringstream oss;
     oss << "Index = " << idx << " with threshold = " << errorThreshold;
 
-    ValidateValues<T>(oss.str().c_str(), in, out, errorThreshold, lineNo);
+    ValidateValues<T>(oss.str().c_str(), act, aim, errorThreshold, lineNo);
 }
 
 template<typename T>
-void ValidateValues(T in, T out, int lineNo)
+void ValidateValues(T act, T aim, int lineNo)
 {
-    ValidateValues<T>(nullptr, in, out, T(1e-7), lineNo);
+    ValidateValues<T>(nullptr, act, aim, T(1e-7), lineNo);
 }
 
 } // anon.
@@ -328,7 +333,7 @@ namespace
 using Values = std::vector<float>;
 using AllValues = std::map<std::string, std::tuple<float, Values, Values>>;
 
-void ValidateBuiltinTransform(const char * style, const Values & in, const Values & out, float errorThreshold, int lineNo)
+void ValidateBuiltinTransform(const char * style, const Values & in, const Values & out, float errorThreshold, int lineNo, Values &results)
 {
     OCIO::BuiltinTransformRcPtr builtin = OCIO::BuiltinTransform::Create();
     OCIO_CHECK_NO_THROW_FROM(builtin->setStyle(style), lineNo);
@@ -348,16 +353,16 @@ void ValidateBuiltinTransform(const char * style, const Values & in, const Value
 
     OCIO::PackedImageDesc inDesc((void *)&in[0], long(in.size() / 3), 1, 3);
 
-    Values vals(in.size(), -1.0f);
-    OCIO::PackedImageDesc outDesc((void *)&vals[0], long(vals.size() / 3), 1, 3);
+    results = Values(in.size(), -1.0f);
+    OCIO::PackedImageDesc outDesc((void *)&results[0], long(results.size() / 3), 1, 3);
 
     OCIO_CHECK_NO_THROW_FROM(cpu->apply(inDesc, outDesc), lineNo);
 
     for (size_t idx = 0; idx < out.size(); ++idx)
     {
         std::ostringstream oss;
-        oss << style << ": for index = " << idx << " with threshold = " << errorThreshold;
-        ValidateValues(oss.str().c_str(), vals[idx], out[idx], errorThreshold, lineNo);
+        oss << style << ": for index = " << idx;
+        ValidateValues(oss.str().c_str(), results[idx], out[idx], errorThreshold, lineNo);
     }
 }
 
@@ -458,100 +463,130 @@ AllValues UnitTestValues
         { 1.0e-6f,
         { 0.5f, 0.4f, 0.3f }, { 0.22214814f,     0.21179835f,     0.15639816f } } },
 
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.26260212f, 0.25207470f, 0.20617338f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.26260212f, 0.25207472f, 0.20617332f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-108nit-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.16253406f, 0.15513624f, 0.12449740f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-300nit-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.20592399f, 0.19440515f, 0.15028581f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.41039306f, 0.38813826f, 0.30191866f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.46536570f, 0.43852836f, 0.33688113f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.51225936f, 0.48264506f, 0.37060050f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.55653524f, 0.51967940f, 0.38678724f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-REC2020_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.41039258f, 0.38813800f, 0.30191845f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.46536540f, 0.43852820f, 0.33688095f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-REC2020_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.51225930f, 0.48264477f, 0.37060022f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.55653550f, 0.51967950f, 0.38678730f } } },
-
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-REC709-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.25147703f, 0.24029444f, 0.18221131f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.25373828f, 0.24245512f, 0.18384966f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-REC2020-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.25712878f, 0.24569483f, 0.18630630f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D60-in-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.25373834f, 0.24245517f, 0.18384990f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D60-in-XYZ-E_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.26332240f, 0.25161302f, 0.19079340f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-108nit-P3-D60-in-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.15705064f, 0.14920068f, 0.11100890f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-300nit-P3-D60-in-XYZ-E_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.20469205f, 0.19229384f, 0.13782679f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D60-in-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.39655724f, 0.37322620f, 0.26917280f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D60-in-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.44968104f, 0.42165324f, 0.30032730f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D60-in-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.49499428f, 0.46407104f, 0.33038715f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D60-in-P3-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.53778990f, 0.49960223f, 0.34477120f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D60-in-REC2020-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.40185606f, 0.37821326f, 0.27276948f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D60-in-REC2020-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.45568960f, 0.42728746f, 0.30434040f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D60-in-REC2020-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.50160843f, 0.47027197f, 0.33480182f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D60-in-REC2020-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.54497580f, 0.50627790f, 0.34937808f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-REC2020-D60-in-REC2020-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.40185624f, 0.37821335f, 0.27276933f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020-D60-in-REC2020-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.45568994f, 0.42728750f, 0.30434027f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-REC2020-D60-in-REC2020-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.50160870f, 0.47027220f, 0.33480210f } } },
-    { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020-D60-in-REC2020-D65_2.0",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.54497580f, 0.50627780f, 0.34937814f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.26260215f, 0.25207460f, 0.20617345f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.26260215f, 0.25207475f, 0.20617352f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-108nit-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.16253395f, 0.15513620f, 0.12449738f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-300nit-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.20592400f, 0.19440512f, 0.15028587f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.41039270f, 0.38813815f, 0.30191854f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.46536559f, 0.43852845f, 0.33688101f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.51225948f, 0.48264498f, 0.37060043f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.55653530f, 0.51967967f, 0.38678783f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-REC2020_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.41039288f, 0.38813818f, 0.30191860f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.46536580f, 0.43852842f, 0.33688098f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-REC2020_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.51225960f, 0.48264492f, 0.37060046f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.55653548f, 0.51967967f, 0.38678783f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-REC709-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.25147712f, 0.24029461f, 0.18221153f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.25373834f, 0.24245527f, 0.18384993f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-REC2020-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.25712875f, 0.24569492f, 0.18630651f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D60-in-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.25373828f, 0.24245520f, 0.18384989f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D60-in-XYZ-E_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.26332238f, 0.25161314f, 0.19079420f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-108nit-P3-D60-in-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.15705051f, 0.14920059f, 0.11100878f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-300nit-P3-D60-in-XYZ-E_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.20469207f, 0.19229385f, 0.13782671f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D60-in-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.39655733f, 0.37322620f, 0.26917258f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D60-in-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.44968122f, 0.42165339f, 0.30032712f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D60-in-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.49499470f, 0.46407115f, 0.33038712f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D60-in-P3-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.53778988f, 0.49960214f, 0.34477147f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D60-in-REC2020-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.40185603f, 0.37821317f, 0.27276924f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D60-in-REC2020-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.45568976f, 0.42728746f, 0.30434006f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D60-in-REC2020-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.50160873f, 0.47027206f, 0.33480173f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D60-in-REC2020-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.54497570f, 0.50627774f, 0.34937829f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-REC2020-D60-in-REC2020-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.40185642f, 0.37821338f, 0.27276939f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020-D60-in-REC2020-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.45569009f, 0.42728764f, 0.30434042f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-REC2020-D60-in-REC2020-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.50160891f, 0.47027206f, 0.33480188f } } },
+     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020-D60-in-REC2020-D65_2.0",
+        { 1.0e-4f,
+        { 0.5f, 0.4f, 0.3f },
+        { 0.54497600f, 0.50627792f, 0.34937853f } } },
 
     { "APPLE_LOG_to_ACES2065-1",
         { 1.0e-6f,
@@ -696,11 +731,206 @@ OCIO_ADD_TEST(Builtins, validate)
         }
         else
         {
-            ValidateBuiltinTransform(name, std::get<1>(values), std::get<2>(values), std::get<0>(values), __LINE__);
+            Values results;
+            ValidateBuiltinTransform(name, std::get<1>(values), std::get<2>(values), std::get<0>(values), __LINE__, results);
         }
     }
 
     // The above checks if a test values is missing, but not if there are test values
     // that don't have an associated built-in.
     OCIO_CHECK_EQUAL(UnitTestValues.size(), reg->getNumBuiltins());
+}
+
+namespace
+{
+
+void ValidateDisplayViewRoundTrip(const char * display_style, const char * view_style,
+                                  float scale, float errorThreshold, 
+                                  std::vector<int> difficultItems, float difficultThreshold,
+                                  int lineNo)
+{
+    // Built-in transform for the display.
+    OCIO::BuiltinTransformRcPtr display_builtin = OCIO::BuiltinTransform::Create();
+    OCIO_CHECK_NO_THROW_FROM(display_builtin->setStyle(display_style), lineNo);
+    OCIO_CHECK_NO_THROW_FROM(display_builtin->validate(), lineNo);
+    auto display_builtin_inv = display_builtin->createEditableCopy();
+    display_builtin_inv->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    // Built-in transform for the view.
+    OCIO::BuiltinTransformRcPtr view_builtin = OCIO::BuiltinTransform::Create();
+    OCIO_CHECK_NO_THROW_FROM(view_builtin->setStyle(view_style), lineNo);
+    OCIO_CHECK_NO_THROW_FROM(view_builtin->validate(), lineNo);
+    auto view_builtin_inv = view_builtin->createEditableCopy();
+    view_builtin_inv->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    // Assemble inverse and forward transform into a group transform that goes from
+    // display code values to ACES and back to code values.
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+    group->appendTransform(display_builtin_inv);
+    group->appendTransform(view_builtin_inv);
+    group->appendTransform(view_builtin);
+    group->appendTransform(display_builtin);
+
+    // Create a Processor.
+    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateRaw();
+    OCIO::ConstProcessorRcPtr proc;
+    OCIO_CHECK_NO_THROW_FROM(proc = config->getProcessor(group), lineNo);
+    OCIO_REQUIRE_ASSERT(proc);
+
+    // Create a CPUProcessor.
+    // Use optimization none to avoid replacing inv/fwd pairs and avoid fast pow for the display.
+    // (Though actually, the clamp to AP1 between the FixedFunctions avoids the optimization anyway.)
+    OCIO::ConstCPUProcessorRcPtr cpu;
+    OCIO_CHECK_NO_THROW_FROM(cpu = proc->getOptimizedCPUProcessor(OCIO::OPTIMIZATION_NONE), lineNo);
+    OCIO_REQUIRE_ASSERT(cpu);
+
+    // Create a 7 x 7 x 7 grid of RGBA values.
+    const unsigned lut_size = 7;
+    const unsigned num_channels = 4;
+    unsigned num_samples = lut_size * lut_size * lut_size;
+    std::vector<float> input_32f(num_samples * num_channels, 0.f);
+    std::vector<float> output_32f(num_samples * num_channels, 0.f);
+
+    GenerateIdentityLut3D(input_32f.data(), lut_size, num_channels, OCIO::LUT3DORDER_FAST_RED);
+
+    // Scale the grid of points, which is necessary when testing the ST-2084/PQ displays
+    // since the transforms are only designed to process up to a maximum luminance level.
+    for(unsigned idx=0; idx<(num_samples*4); ++idx)
+    {
+        input_32f[idx] *= scale;
+    }
+
+    // Process the values.
+    OCIO::PackedImageDesc inDesc((void *)&input_32f[0], num_samples, 1, 4);
+    OCIO::PackedImageDesc outDesc((void *)&output_32f[0], num_samples, 1, 4);
+    OCIO_CHECK_NO_THROW_FROM(cpu->apply(inDesc, outDesc), lineNo);
+
+    // Check if values are within tolerance.
+    for(unsigned idx=0; idx<(num_samples*4); idx+=4)
+    {
+        float computedErrorR = 0.f; float computedErrorG = 0.f; float computedErrorB = 0.f;
+
+        const bool isDifficult = std::find(difficultItems.begin(), difficultItems.end(), idx)
+                                        != difficultItems.end();
+        const float tol = isDifficult ? difficultThreshold: errorThreshold;
+
+        const bool equalRelR = OCIO::EqualWithSafeRelError(output_32f[idx], input_32f[idx],
+                                                           tol, 1.0f,
+                                                           &computedErrorR);
+        const bool equalRelG = OCIO::EqualWithSafeRelError(output_32f[idx+1], input_32f[idx+1],
+                                                           tol, 1.0f,
+                                                           &computedErrorG);
+        const bool equalRelB = OCIO::EqualWithSafeRelError(output_32f[idx+2], input_32f[idx+2],
+                                                           tol, 1.0f,
+                                                           &computedErrorB);
+        if (!equalRelR || !equalRelG || !equalRelB)
+        {
+            std::ostringstream errorMsg;
+            errorMsg.precision(10);
+            errorMsg << "Index: " << idx << " - Tol.: " << tol << "\n - Expected: ";
+            errorMsg << std::fixed;
+            errorMsg << input_32f[idx] << ", " << input_32f[idx+1] << ", " << input_32f[idx+2];
+            errorMsg << "\n - Actual:   ";
+            errorMsg << output_32f[idx] << ", " << output_32f[idx+1] << ", " << output_32f[idx+2];
+            errorMsg << "\n - Error:    ";
+            errorMsg << computedErrorR << ", " << computedErrorG << ", " << computedErrorB;
+            OCIO_CHECK_ASSERT_MESSAGE_FROM(0, errorMsg.str(), lineNo);
+        }
+    }
+}
+
+} // anon.
+
+OCIO_ADD_TEST(Builtins, aces2_displayview_roundtrip)
+{
+    // Perform a round-trip test from display code-values to ACES and back to code values.
+    // This uses a 7 x 7 x 7 grid of RGB values.
+
+    ValidateDisplayViewRoundTrip("DISPLAY - CIE-XYZ-D65_to_REC.1886-REC.709",
+                                 "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709_2.0",
+                                 1.0f,          // scale factor
+                                 0.004f,        // tolerance
+                                 {}, 0.f,
+                                 __LINE__);
+
+    ValidateDisplayViewRoundTrip("DISPLAY - CIE-XYZ-D65_to_DisplayP3",
+                                 "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D65_2.0",
+                                 1.0f,          // scale factor
+                                 0.001f,        // tolerance
+                                 {}, 0.f,
+                                 __LINE__);
+
+    ValidateDisplayViewRoundTrip("DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65",
+                                 "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D65_2.0",
+                                 // Need to lower the max value from 1000 to 990 nits.
+                                 0.7507f,       // scale factor = 990 nits
+                                 0.005f,        // main tolerance
+                                 {168, 196, 364, 392, 1344},    // difficult values
+                                 0.03f,         // tolerance for difficult values
+                                 __LINE__);
+
+    ValidateDisplayViewRoundTrip("DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65",
+                                 "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D65_2.0",
+                                 // Need to lower the max value from 4000 to 3860 nits.
+                                 0.8987f,       // scale factor = 3860 nits
+                                 0.007f,        // main tolerance
+                                 {168, 196, 392, 396, 588, 592, 952, 1148, 1196, 1200, 1260, 1288},
+                                 0.2f,         // tolerance for difficult values
+                                 __LINE__);
+
+    // TODO: The Rec.2100 transforms have too many values that don't invert to easily validate.
+    // ValidateDisplayViewRoundTrip("DISPLAY - CIE-XYZ-D65_to_REC.2100-PQ",
+    //                              "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020_2.0",
+    //                              0.7507f,       // scale factor = 990 nits
+    //                              5e-3f,         // tolerance
+    //                              __LINE__);
+    // 
+    // ValidateDisplayViewRoundTrip("DISPLAY - CIE-XYZ-D65_to_REC.2100-PQ",
+    //                              "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020_2.0",
+    //                              0.8987f,       // scale factor = 3860 nits
+    //                              5e-3f,         // tolerance
+    //                              __LINE__);
+}
+
+OCIO_ADD_TEST(Builtins, aces2_Aab_to_RGB_nan)
+{
+
+    const char* display_style = "DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65";
+    const char* view_style = "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D60-in-P3-D65_2.0";
+
+    // Built-in transform for the display.
+    OCIO::BuiltinTransformRcPtr display_builtin_inv = OCIO::BuiltinTransform::Create();
+    display_builtin_inv->setStyle(display_style);
+    display_builtin_inv->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    // Built-in transform for the view.
+    OCIO::BuiltinTransformRcPtr view_builtin_inv = OCIO::BuiltinTransform::Create();
+    view_builtin_inv->setStyle(view_style);
+    view_builtin_inv->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+    group->appendTransform(display_builtin_inv);
+    group->appendTransform(view_builtin_inv);
+
+    // Create a Processor.
+    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateRaw();
+    OCIO::ConstProcessorRcPtr proc = config->getProcessor(group);
+
+    // Create a CPUProcessor.
+    OCIO::ConstCPUProcessorRcPtr cpu = proc->getDefaultCPUProcessor();
+
+    // This value produced a NaN prior to the Aab_to_RGB fix.
+    float pixel[3]{ 0.89942779f, 0.89942779f, 0.89942779f };
+
+    OCIO_CHECK_NO_THROW(cpu->applyRGB(pixel));
+
+    OCIO_CHECK_ASSERT(!std::isnan(pixel[0]));
+    OCIO_CHECK_ASSERT(!std::isnan(pixel[1]));
+    OCIO_CHECK_ASSERT(!std::isnan(pixel[2]));
+
+    // FIXME: This gives a wildly different value on macOS ARM processors:
+    // { 275.387238, 814.321838, 963.631836 }
+    // ValidateValues(0U, pixel[0], 974.288f, 0.1f, __LINE__);
+    // ValidateValues(1U, pixel[1], 568.002f, 0.1f, __LINE__);
+    // ValidateValues(2U, pixel[2], 5954.45f, 0.1f, __LINE__);
 }

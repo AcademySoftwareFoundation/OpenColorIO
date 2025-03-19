@@ -349,6 +349,85 @@ void Add_GamutComp_13_Inv_Shader(GpuShaderText & ss,
     );
 }
 
+void _Add_WrapHueChannel_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & ss)
+{
+    const std::string pxl(shaderCreator->getPixelName());
+    ss.newLine() << ss.floatDecl("hwrap") << " = " << pxl << ".b;";
+    ss.newLine() << "hwrap = hwrap - floor(hwrap / 360.0) * 360.0;";
+    ss.newLine() << "hwrap = (hwrap < 0.0) ? hwrap + 360.0 : hwrap;";
+    ss.newLine() << pxl << ".b = hwrap;";
+}
+
+void _Add_SinCos_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & ss)
+{
+    const std::string pxl(shaderCreator->getPixelName());
+    ss.newLine() << ss.floatDecl("h_rad") << " = " << pxl << ".b * " << 3.14159265358979f / 180.0f << ";";
+    ss.newLine() << ss.floatDecl("cos_hr") << " = cos(h_rad);";
+    ss.newLine() << ss.floatDecl("sin_hr") << " = sin(h_rad);";
+}
+
+
+void _Add_RGB_to_Aab_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & ss,
+    const ACES2::JMhParams & p)
+{
+    const std::string pxl(shaderCreator->getPixelName());
+
+    ss.newLine() << "{";
+    ss.indent();
+
+    ss.newLine() << ss.float3Decl("lms") << " = " << ss.mat3fMul(&p.MATRIX_RGB_to_CAM16_c[0], pxl + ".rgb") << ";";
+
+    ss.newLine() << ss.float3Decl("F_L_v") << " = pow(abs(lms), " << ss.float3Const(0.42f) << ");";
+    ss.newLine() << ss.float3Decl("rgb_a") << " = (sign(lms) * F_L_v) / ( " << ACES2::cam_nl_offset << " + F_L_v);";
+
+    ss.newLine() << "Aab = " << ss.mat3fMul(&p.MATRIX_cone_response_to_Aab[0], "rgb_a.rgb") << ";";
+
+    ss.dedent();
+    ss.newLine() << "}";
+}
+
+void _Add_Aab_to_JMh_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & ss,
+    const ACES2::JMhParams & p)
+{
+    const std::string pxl(shaderCreator->getPixelName());
+
+    ss.newLine() << "{";
+    ss.indent();
+
+    ss.newLine() << "if (Aab.r <= 0.0)";
+    ss.newLine() << "{";
+    ss.indent();
+    ss.newLine() << "JMh.rgb = " << ss.float3Const(0.0) << ";";
+    ss.dedent();
+    ss.newLine() << "}";
+
+    ss.newLine() << "else";
+    ss.newLine() << "{";
+    ss.indent();
+    ss.newLine() << ss.floatDecl("J") << " = " << ACES2::J_scale << " * pow(Aab.r, " << p.cz << ");";
+
+    ss.newLine() << ss.floatDecl("M") << " = (J == 0.0) ? 0.0 : sqrt(Aab.g * Aab.g + Aab.b * Aab.b);";
+
+    ss.newLine() << ss.floatDecl("h") << " = (Aab.g == 0.0) ? 0.0 : " << ss.atan2("Aab.b", "Aab.g") << " * " << 180.0 / 3.14159265358979 << ";";
+    ss.newLine() << "h = h - floor(h / 360.0) * 360.0;";
+    ss.newLine() << "h = (h < 0.0) ? h + 360.0 : h;";
+
+    ss.newLine() << "JMh.rgb = " << ss.float3Const("J", "M", "h") << ";";
+    ss.dedent();
+    ss.newLine() << "}";
+
+    ss.dedent();
+    ss.newLine() << "}";
+}
+
 void _Add_RGB_to_JMh_Shader(
     GpuShaderCreatorRcPtr & shaderCreator,
     GpuShaderText & ss,
@@ -356,25 +435,56 @@ void _Add_RGB_to_JMh_Shader(
 {
     const std::string pxl(shaderCreator->getPixelName());
 
-    ss.newLine() << ss.float3Decl("lms") << " = " << ss.mat3fMul(&p.MATRIX_RGB_to_CAM16[0], pxl + ".rgb") << ";";
-    ss.newLine() << "lms = " << "lms * " << ss.float3Const(p.D_RGB[0], p.D_RGB[1], p.D_RGB[2]) << ";";
+    ss.newLine() << ss.float3Decl("JMh") << ";";    // TODO: leaky abstraction should really be explicit functions
+    ss.newLine() << ss.float3Decl("Aab") << ";";    // TODO: leaky abstraction should really be explicit functions
 
-    ss.newLine() << ss.float3Decl("F_L_v") << " = pow(" << p.F_L << " * abs(lms) / 100.0, " << ss.float3Const(0.42f) << ");";
-    ss.newLine() << ss.float3Decl("rgb_a") << " = (400.0 * sign(lms) * F_L_v) / (27.13 + F_L_v);";
+    ss.newLine() << "{";
+    ss.indent();
 
-    ss.newLine() << ss.floatDecl("A") << " = 2.0 * rgb_a.r + rgb_a.g + 0.05 * rgb_a.b;";
-    ss.newLine() << ss.floatDecl("a") << " = rgb_a.r - 12.0 * rgb_a.g / 11.0 + rgb_a.b / 11.0;";
-    ss.newLine() << ss.floatDecl("b") << " = (rgb_a.r + rgb_a.g - 2.0 * rgb_a.b) / 9.0;";
+    _Add_RGB_to_Aab_Shader(shaderCreator, ss, p);
+    _Add_Aab_to_JMh_Shader(shaderCreator, ss, p);
+    
+    ss.newLine() << pxl << ".rgb = JMh;";
 
-    ss.newLine() << ss.floatDecl("J") << " = 100.0 * pow(A / " << p.A_w << ", " << ACES2::surround[1] << " * " << p.z << ");";
+    ss.dedent();
+    ss.newLine() << "}";
+}
 
-    ss.newLine() << ss.floatDecl("M") << " = (J == 0.0) ? 0.0 : 43.0 * " << ACES2::surround[2] << " * sqrt(a * a + b * b);";
 
-    ss.newLine() << ss.floatDecl("h") << " = (a == 0.0) ? 0.0 : " << ss.atan2("b", "a") << " * 180.0 / 3.14159265358979;";
-    ss.newLine() << "h = h - floor(h / 360.0) * 360.0;";
-    ss.newLine() << "h = (h < 0.0) ? h + 360.0 : h;";
+void _Add_JMh_to_Aab_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & ss,
+    const ACES2::JMhParams & p)
+{
+    const std::string pxl(shaderCreator->getPixelName());
 
-    ss.newLine() << pxl << ".rgb = " << ss.float3Const("J", "M", "h") << ";";
+    ss.newLine() << "{";
+    ss.indent();
+
+
+    ss.newLine() << "Aab.r = pow(JMh.r * " << 1.0f / ACES2::J_scale << ", " << p.inv_cz << ");";
+    ss.newLine() << "Aab.g = JMh.g * cos_hr;";
+    ss.newLine() << "Aab.b = JMh.g * sin_hr;";
+    
+    ss.dedent();
+    ss.newLine() << "}";
+}
+
+void _Add_Aab_to_RGB_Shader(
+    GpuShaderText & ss,
+    const ACES2::JMhParams & p)
+{
+    ss.newLine() << "{";
+    ss.indent();
+
+    ss.newLine() << ss.float3Decl("rgb_a") << " = " << ss.mat3fMul(&p.MATRIX_Aab_to_cone_response[0], "Aab.rgb") << ";";
+    ss.newLine() << ss.float3Decl("rgb_a_lim") << " = min( abs(rgb_a), " << ss.float3Const(0.99f) << " );";
+    ss.newLine() << ss.float3Decl("lms") << " = sign(rgb_a) * pow( " << ACES2::cam_nl_offset 
+                 << " * rgb_a_lim / (1.0f - rgb_a_lim), " << ss.float3Const(1.f / 0.42f) << ");";
+    ss.newLine() << "JMh.rgb = " << ss.mat3fMul(&p.MATRIX_CAM16_c_to_RGB[0], "lms") << ";";
+
+    ss.dedent();
+    ss.newLine() << "}";
 }
 
 void _Add_JMh_to_RGB_Shader(
@@ -384,22 +494,12 @@ void _Add_JMh_to_RGB_Shader(
 {
     const std::string pxl(shaderCreator->getPixelName());
 
-    ss.newLine() << ss.floatDecl("h") << " = " << pxl << ".b * 3.14159265358979 / 180.0;";
+    ss.newLine() << ss.float3Decl("JMh") << " = " << pxl << ".rgb;";
+    ss.newLine() << ss.float3Decl("Aab") << ";";
+    _Add_JMh_to_Aab_Shader(shaderCreator, ss, p);
+    _Add_Aab_to_RGB_Shader(ss, p);
 
-    ss.newLine() << ss.floatDecl("scale") << " = " << pxl << ".g / (43.0 * " << ACES2::surround[2] << ");";
-    ss.newLine() << ss.floatDecl("A") << " = " << p.A_w << " * pow(" << pxl << ".r / 100.0, 1.0 / (" << ACES2::surround[1] << " * " << p.z << "));";
-    ss.newLine() << ss.floatDecl("a") << " = scale * cos(h);";
-    ss.newLine() << ss.floatDecl("b") << " = scale * sin(h);";
-
-    ss.newLine() << ss.float3Decl("rgb_a") << ";";
-    ss.newLine() << "rgb_a.r = (460.0 * A + 451.0 * a + 288.0 *b) / 1403.0;";
-    ss.newLine() << "rgb_a.g = (460.0 * A - 891.0 * a - 261.0 *b) / 1403.0;";
-    ss.newLine() << "rgb_a.b = (460.0 * A - 220.0 * a - 6300.0 *b) / 1403.0;";
-
-    ss.newLine() << ss.float3Decl("lms") << " = sign(rgb_a) * 100.0 / " << p.F_L << " * pow(27.13 * abs(rgb_a) / (400.0 - abs(rgb_a)), " << ss.float3Const(1.f / 0.42f) << ");";
-    ss.newLine() << "lms = " << "lms / " << ss.float3Const(p.D_RGB[0], p.D_RGB[1], p.D_RGB[2]) << ";";
-
-    ss.newLine() << pxl << ".rgb = " << ss.mat3fMul(&p.MATRIX_CAM16_to_RGB[0], "lms") << ";";
+    ss.newLine() << pxl << ".rgb = JMh;";
 }
 
 std::string _Add_Reach_table(
@@ -430,12 +530,12 @@ std::string _Add_Reach_table(
     shaderCreator->addTexture(
         name.c_str(),
         GpuShaderText::getSamplerName(name).c_str(),
-        table.size,
+        table.total_size,
         1,
         GpuShaderCreator::TEXTURE_RED_CHANNEL,
         dimensions,
         INTERP_NEAREST,
-        &(table.table[0]));
+        &(table[0]));
 
 
     if (dimensions == GpuShaderDesc::TEXTURE_1D)
@@ -458,26 +558,22 @@ std::string _Add_Reach_table(
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.floatDecl("hwrap") << " = h;";
-    ss.newLine() << "hwrap = hwrap - floor(hwrap / 360.0) * 360.0;";
-    ss.newLine() << "hwrap = (hwrap < 0.0) ? hwrap + 360.0 : hwrap;";
-
-    ss.newLine() << ss.floatDecl("i_lo") << " = floor(hwrap);";
-    ss.newLine() << ss.floatDecl("i_hi") << " = (i_lo + 1);";
-    ss.newLine() << "i_hi = i_hi - floor(i_hi / 360.0) * 360.0;";
+    ss.newLine() << ss.floatDecl("i_base") << " = floor(h);";
+    ss.newLine() << ss.floatDecl("i_lo") << " = i_base + " << table.base_index << ";";
+    ss.newLine() << ss.floatDecl("i_hi") << " = i_lo + 1;";
 
     if (dimensions == GpuShaderDesc::TEXTURE_1D)
     {
-        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex1D(name, "(i_lo + 0.5) / 360.0") << ".r;";
-        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex1D(name, "(i_hi + 0.5) / 360.0") << ".r;";
+        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex1D(name, "(i_lo + 0.5) / " + std::to_string(table.total_size)) << ".r;";
+        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex1D(name, "(i_hi + 0.5) / " + std::to_string(table.total_size)) << ".r;";
     }
     else
     {
-        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex2D(name, ss.float2Const("(i_lo + 0.5) / 360.0", "0.0")) << ".r;";
-        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex2D(name, ss.float2Const("(i_hi + 0.5) / 360.0", "0.5")) << ".r;";
+        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex2D(name, ss.float2Const("(i_lo + 0.5) / " + std::to_string(table.total_size), "0.0")) << ".r;";
+        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex2D(name, ss.float2Const("(i_hi + 0.5) / " + std::to_string(table.total_size), "0.5")) << ".r;";
     }
 
-    ss.newLine() << ss.floatDecl("t") << " = (h - i_lo) / (i_hi - i_lo);";
+    ss.newLine() << ss.floatDecl("t") << " = h - i_base;"; // Hardcoded single degree spacing
     ss.newLine() << "return " << ss.lerp("lo", "hi", "t") << ";";
 
     ss.dedent();
@@ -532,14 +628,101 @@ std::string _Add_Toe_func(
     return name;
 }
 
+std::string _Add_Tonescale_func(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    unsigned resourceIndex,
+    bool invert,
+    const ACES2::JMhParams & p,
+    const ACES2::ToneScaleParams & t)
+{
+    // Reserve name
+    std::ostringstream resName;
+    resName << shaderCreator->getResourcePrefix()
+            << std::string("_")
+            << std::string("tonescale")
+            << (invert ? std::string("_inv") : std::string("_fwd"))
+            << resourceIndex;
+
+    // Note: Remove potentially problematic double underscores from GLSL resource names.
+    std::string name(resName.str());
+    StringUtils::ReplaceInPlace(name, "__", "_");
+
+    GpuShaderText ss(shaderCreator->getLanguage());
+
+    ss.newLine() << ss.floatKeyword() << " " << name << "(float J)";
+    ss.newLine() << "{";
+    ss.indent();
+
+    // Tonescale applied in Y (convert to and from J)
+    // TODO: Investigate if we can receive negative J here at all. 
+    // If not, abs(J) here and the sign(J) at the return may not be needed at all.
+    ss.newLine() << ss.floatDecl("A") << " = " << p.A_w_J << " * pow(abs(J) * " << 1.0f / ACES2::J_scale << ", " << p.inv_cz << ");";
+    ss.newLine() << ss.floatDecl("Y") << " = pow(( " << ACES2::cam_nl_offset << " * A) / (1.0f - A), " << 1.0 / 0.42 << ");";
+
+    if (invert)
+    {
+        // Inverse Tonescale applied in Y (convert to and from J)
+        ss.newLine() << ss.floatDecl("Y_i") << " = Y / " << double(p.F_L_n) * ACES2::reference_luminance << ";";
+ 
+        ss.newLine() << ss.floatDecl("Z") << " = max(0.0, min(" << t.inverse_limit << ", Y_i));";
+        ss.newLine() << ss.floatDecl("ht") << " = 0.5 * (Z + sqrt(Z * (" << 4.0 * t.t_1 << " + Z)));";
+        ss.newLine() << ss.floatDecl("Yo") << " = " << double(p.F_L_n) * t.s_2 << " / (pow((" << t.m_2 << " / ht), (" << 1.0 / t.g << ")) - 1.0);";
+
+        ss.newLine() << ss.floatDecl("F_L_Y") << " = pow(abs(Yo), 0.42);";
+    }
+    else
+    {
+        // Tonescale applied in Y (convert to and from J)
+        ss.newLine() << ss.floatDecl("f") << " = " << t.m_2  << " * pow(Y / (Y + " << double(t.s_2) * p.F_L_n << "), " << t.g << ");";
+        ss.newLine() << ss.floatDecl("Y_ts") << " = max(0.0, f * f / (f + " << t.t_1 << "));";
+        ss.newLine() << ss.floatDecl("F_L_Y") << " = pow(" << double(p.F_L_n) * ACES2::reference_luminance << " * Y_ts, 0.42);";
+    }
+
+    ss.newLine() << ss.floatDecl("J_ts") << " = " << ACES2::J_scale << " * pow((F_L_Y / ( " << ACES2::cam_nl_offset << " + F_L_Y)) * " << p.inv_A_w_J << ", " << p.cz << ");";
+    ss.newLine() << "return sign(J) * J_ts;";
+
+    ss.dedent();
+    ss.newLine() << "}";
+
+    shaderCreator->addToHelperShaderCode(ss.string().c_str());
+
+    return name;
+}
+
+void _Add_ChromaCompressionNorm_Shader(
+    GpuShaderText & ss,
+    const ACES2::ChromaCompressParams & c)
+{
+    // Mnorm
+    ss.newLine() << ss.floatDecl("Mnorm") << ";";
+    ss.newLine() << "{";
+    ss.indent();
+
+    // TODO: optimization: can bake weights into terms and convert dotprods to addition. /coz
+    ss.newLine() << ss.floatDecl("cos_hr2") << " = 2.0 * cos_hr * cos_hr - 1.0;";
+    ss.newLine() << ss.floatDecl("sin_hr2") << " = 2.0 * cos_hr * sin_hr;";
+    ss.newLine() << ss.floatDecl("cos_hr3") << " = 4.0 * cos_hr * cos_hr * cos_hr - 3.0 * cos_hr;";
+    ss.newLine() << ss.floatDecl("sin_hr3") << " = 3.0 * sin_hr - 4.0 * sin_hr * sin_hr * sin_hr;";
+    ss.newLine() << ss.float3Decl("cosines") << " = " <<  ss.float3Const("cos_hr", "cos_hr2", "cos_hr3") <<";";
+    ss.newLine() << ss.float3Decl("cosine_weights") << " = " <<  ss.float3Const(11.34072 * c.chroma_compress_scale,
+                                                                                16.46899 * c.chroma_compress_scale,
+                                                                                 7.88380 * c.chroma_compress_scale) <<";";
+    ss.newLine() << ss.float3Decl("sines") << " = " <<  ss.float3Const("sin_hr", "sin_hr2", "sin_hr3") <<";";
+    ss.newLine() << ss.float3Decl("sine_weights") << " = " <<  ss.float3Const(14.66441 * c.chroma_compress_scale,
+                                                                              -6.37224 * c.chroma_compress_scale,
+                                                                               9.19364 * c.chroma_compress_scale) <<";";
+    ss.newLine() << "Mnorm = dot(cosines, cosine_weights) + dot(sines, sine_weights) + " << 77.12896 * c.chroma_compress_scale<< ";";
+
+    ss.dedent();
+    ss.newLine() << "}";
+}
+
 void _Add_Tonescale_Compress_Fwd_Shader(
     GpuShaderCreatorRcPtr & shaderCreator,
     GpuShaderText & ss,
     unsigned resourceIndex,
-    const ACES2::JMhParams & p,
-    const ACES2::ToneScaleParams & t,
-    const ACES2::ChromaCompressParams & c,
-    const std::string & reachName)
+    const ACES2::SharedCompressionParameters & s,
+    const ACES2::ChromaCompressParams & c)
 {
     std::string toeName = _Add_Toe_func(shaderCreator, resourceIndex, false);
 
@@ -549,15 +732,6 @@ void _Add_Tonescale_Compress_Fwd_Shader(
     ss.newLine() << ss.floatDecl("M") << " = " << pxl << ".g;";
     ss.newLine() << ss.floatDecl("h") << " = " << pxl << ".b;";
 
-    // Tonescale applied in Y (convert to and from J)
-    ss.newLine() << ss.floatDecl("A") << " = " << p.A_w_J << " * pow(abs(J) / 100.0, 1.0 / (" << ACES2::surround[1] << " * " << p.z << "));";
-    ss.newLine() << ss.floatDecl("Y") << " = sign(J) * 100.0 / " << p.F_L << " * pow((27.13 * A) / (400.0 - A), 1.0 / 0.42) / 100.0;";
-
-    ss.newLine() << ss.floatDecl("f") << " = " << t.m_2  << " * pow(max(0.0, Y) / (Y + " << t.s_2 << "), " << t.g << ");";
-    ss.newLine() << ss.floatDecl("Y_ts") << " = max(0.0, f * f / (f + " << t.t_1 << ")) * " << t.n_r << ";";
-
-    ss.newLine() << ss.floatDecl("F_L_Y") << " = pow(" << p.F_L << " * abs(Y_ts) / 100.0, 0.42);";
-    ss.newLine() << ss.floatDecl("J_ts") << " = sign(Y_ts) * 100.0 * pow(((400.0 * F_L_Y) / (27.13 + F_L_Y)) / " << p.A_w_J << ", " << ACES2::surround[1] << " * " << p.z << ");";
 
     // ChromaCompress
     ss.newLine() << ss.floatDecl("M_cp") << " = M;";
@@ -566,31 +740,13 @@ void _Add_Tonescale_Compress_Fwd_Shader(
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.floatDecl("nJ") << " = J_ts / " << c.limit_J_max << ";";
+    ss.newLine() << ss.floatDecl("nJ") << " = J_ts / " << s.limit_J_max << ";";
     ss.newLine() << ss.floatDecl("snJ") << " = max(0.0, 1.0 - nJ);";
 
-    // Mnorm
-    ss.newLine() << ss.floatDecl("Mnorm") << ";";
-    ss.newLine() << "{";
-    ss.indent();
+    _Add_ChromaCompressionNorm_Shader(ss, c);
 
-    ss.newLine() << ss.floatDecl("PI") << " = 3.14159265358979;";
-    ss.newLine() << ss.floatDecl("h_rad") << " = h / 180.0 * PI;";
-    ss.newLine() << ss.floatDecl("a") << " = cos(h_rad);";
-    ss.newLine() << ss.floatDecl("b") << " = sin(h_rad);";
-    ss.newLine() << ss.floatDecl("cos_hr2") << " = a * a - b * b;";
-    ss.newLine() << ss.floatDecl("sin_hr2") << " = 2.0 * a * b;";
-    ss.newLine() << ss.floatDecl("cos_hr3") << " = 4.0 * a * a * a - 3.0 * a;";
-    ss.newLine() << ss.floatDecl("sin_hr3") << " = 3.0 * b - 4.0 * b * b * b;";
-    ss.newLine() << ss.floatDecl("M") << " = 11.34072 * a + 16.46899 * cos_hr2 + 7.88380 * cos_hr3 + 14.66441 * b + -6.37224 * sin_hr2 + 9.19364 * sin_hr3 + 77.12896;";
-    ss.newLine() << "Mnorm = M * " << c.chroma_compress_scale << ";";
-
-    ss.dedent();
-    ss.newLine() << "}";
-
-    ss.newLine() << ss.floatDecl("reachM") << " = " << reachName << "_sample(h);";
-    ss.newLine() << ss.floatDecl("limit") << " = pow(nJ, " << c.model_gamma << ") * reachM / Mnorm;";
-    ss.newLine() << "M_cp = M * pow(J_ts / J, " << c.model_gamma << ");";
+    ss.newLine() << ss.floatDecl("limit") << " = pow(nJ, " << s.model_gamma_inv << ") * reachMaxM / Mnorm;";
+    ss.newLine() << "M_cp = M * pow(J_ts / J, " << s.model_gamma_inv << ");";
     ss.newLine() << "M_cp = M_cp / Mnorm;";
 
     ss.newLine() << "M_cp = limit - " << toeName << "(limit - M_cp, limit - 0.001, snJ * " << c.sat << ", sqrt(nJ * nJ + " << c.sat_thr << "));";
@@ -607,29 +763,16 @@ void _Add_Tonescale_Compress_Inv_Shader(
     GpuShaderCreatorRcPtr & shaderCreator,
     GpuShaderText & ss,
     unsigned resourceIndex,
-    const ACES2::JMhParams & p,
-    const ACES2::ToneScaleParams & t,
-    const ACES2::ChromaCompressParams & c,
-    const std::string & reachName)
+    const ACES2::SharedCompressionParameters & s,
+    const ACES2::ChromaCompressParams & c)
 {
     std::string toeName = _Add_Toe_func(shaderCreator, resourceIndex, true);
 
     const std::string pxl(shaderCreator->getPixelName());
-
+    
     ss.newLine() << ss.floatDecl("J_ts") << " = " << pxl << ".r;";
     ss.newLine() << ss.floatDecl("M_cp") << " = " << pxl << ".g;";
     ss.newLine() << ss.floatDecl("h") << " = " << pxl << ".b;";
-
-    // Inverse Tonescale applied in Y (convert to and from J)
-    ss.newLine() << ss.floatDecl("A") << " = " << p.A_w_J << " * pow(abs(J_ts) / 100.0, 1.0 / (" << ACES2::surround[1] << " * " << p.z << "));";
-    ss.newLine() << ss.floatDecl("Y_ts") << " = sign(J_ts) * 100.0 / " << p.F_L << " * pow((27.13 * A) / (400.0 - A), 1.0 / 0.42) / 100.0;";
-
-    ss.newLine() << ss.floatDecl("Z") << " = max(0.0, min(" << t.n << " / (" << t.u_2 * t.n_r << "), Y_ts));";
-    ss.newLine() << ss.floatDecl("ht") << " = (Z + sqrt(Z * (4.0 * " << t.t_1 << " + Z))) / 2.0;";
-    ss.newLine() << ss.floatDecl("Y") << " = " << t.s_2 << " / (pow((" << t.m_2 << " / ht), (1.0 / " << t.g << ")) - 1.0);";
-
-    ss.newLine() << ss.floatDecl("F_L_Y") << " = pow(" << p.F_L << " * abs(Y * 100.0) / 100.0, 0.42);";
-    ss.newLine() << ss.floatDecl("J") << " = sign(Y) * 100.0 * pow(((400.0 * F_L_Y) / (27.13 + F_L_Y)) / " << p.A_w_J << ", " << ACES2::surround[1] << " * " << p.z << ");";
 
     // ChromaCompress
     ss.newLine() << ss.floatDecl("M") << " = M_cp;";
@@ -638,36 +781,18 @@ void _Add_Tonescale_Compress_Inv_Shader(
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.floatDecl("nJ") << " = J_ts / " << c.limit_J_max << ";";
+    ss.newLine() << ss.floatDecl("nJ") << " = J_ts / " << s.limit_J_max << ";";
     ss.newLine() << ss.floatDecl("snJ") << " = max(0.0, 1.0 - nJ);";
 
-    // Mnorm
-    ss.newLine() << ss.floatDecl("Mnorm") << ";";
-    ss.newLine() << "{";
-    ss.indent();
+    _Add_ChromaCompressionNorm_Shader(ss, c);
 
-    ss.newLine() << ss.floatDecl("PI") << " = 3.14159265358979;";
-    ss.newLine() << ss.floatDecl("h_rad") << " = h / 180.0 * PI;";
-    ss.newLine() << ss.floatDecl("a") << " = cos(h_rad);";
-    ss.newLine() << ss.floatDecl("b") << " = sin(h_rad);";
-    ss.newLine() << ss.floatDecl("cos_hr2") << " = a * a - b * b;";
-    ss.newLine() << ss.floatDecl("sin_hr2") << " = 2.0 * a * b;";
-    ss.newLine() << ss.floatDecl("cos_hr3") << " = 4.0 * a * a * a - 3.0 * a;";
-    ss.newLine() << ss.floatDecl("sin_hr3") << " = 3.0 * b - 4.0 * b * b * b;";
-    ss.newLine() << ss.floatDecl("M") << " = 11.34072 * a + 16.46899 * cos_hr2 + 7.88380 * cos_hr3 + 14.66441 * b + -6.37224 * sin_hr2 + 9.19364 * sin_hr3 + 77.12896;";
-    ss.newLine() << "Mnorm = M * " << c.chroma_compress_scale << ";";
-
-    ss.dedent();
-    ss.newLine() << "}";
-
-    ss.newLine() << ss.floatDecl("reachM") << " = " << reachName << "_sample(h);";
-    ss.newLine() << ss.floatDecl("limit") << " = pow(nJ, " << c.model_gamma << ") * reachM / Mnorm;";
+    ss.newLine() << ss.floatDecl("limit") << " = pow(nJ, " << s.model_gamma_inv << ") * reachMaxM / Mnorm;";
 
     ss.newLine() << "M = M_cp / Mnorm;";
     ss.newLine() << "M = " << toeName << "(M, limit, nJ * " << c.compr << ", snJ);";
     ss.newLine() << "M = limit - " << toeName << "(limit - M, limit - 0.001, snJ * " << c.sat << ", sqrt(nJ * nJ + " << c.sat_thr << "));";
     ss.newLine() << "M = M * Mnorm;";
-    ss.newLine() << "M = M * pow(J_ts / J, " << -c.model_gamma << ");";
+    ss.newLine() << "M = M * pow(J_ts / J, " << -s.model_gamma_inv << ");";
 
     ss.dedent();
     ss.newLine() << "}";
@@ -708,7 +833,7 @@ std::string _Add_Cusp_table(
         GpuShaderCreator::TEXTURE_RGB_CHANNEL,
         dimensions,
         INTERP_NEAREST,
-        &(g.gamut_cusp_table.table[0][0]));
+        &(g.gamut_cusp_table[0][0]));
 
     if (dimensions == GpuShaderDesc::TEXTURE_1D)
     {
@@ -727,24 +852,20 @@ std::string _Add_Cusp_table(
     GpuShaderText ss(shaderCreator->getLanguage());
 
     const std::string hues_array_name = name + "_hues_array";
-    std::vector<float> hues_array(g.gamut_cusp_table.total_size);
-    for (int i = 0; i < g.gamut_cusp_table.total_size; ++i)
-    {
-        hues_array[i] = g.gamut_cusp_table.table[i][2];
-    }
-    ss.declareFloatArrayConst(hues_array_name, (int) hues_array.size(), hues_array.data());
+    ss.declareFloatArrayConst(hues_array_name, (int) g.hue_table.total_size, g.hue_table.data());
 
-    ss.newLine() << ss.float2Keyword() << " " << name << "_sample(float h)";
+    ss.newLine() << ss.float3Keyword() << " " << name << "_sample(float h)";
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.floatDecl("i_lo") << " = 0;";
-    ss.newLine() << ss.floatDecl("i_hi") << " = " << g.gamut_cusp_table.base_index + g.gamut_cusp_table.size << ";";
+    ss.newLine() << ss.intDecl("i") << " = " << ss.intKeyword() << "(h) + " << g.gamut_cusp_table.base_index << ";";
 
-    ss.newLine() << ss.floatDecl("hwrap") << " = h;";
-    ss.newLine() << "hwrap = hwrap - floor(hwrap / 360.0) * 360.0;";
-    ss.newLine() << "hwrap = (hwrap < 0.0) ? hwrap + 360.0 : hwrap;";
-    ss.newLine() << ss.intDecl("i") << " = " << ss.intKeyword() << "(hwrap + " << g.gamut_cusp_table.base_index << ");";
+    ss.newLine() << ss.intDecl("i_lo") << " = " << ss.intKeyword() << "(max("
+                 << ss.floatKeyword() << "(" << g.gamut_cusp_table.lower_wrap_index << "), "
+                 << ss.floatKeyword() << "(i + " << g.hue_linearity_search_range[0] << ")));";
+    ss.newLine() << ss.intDecl("i_hi") << " = " << ss.intKeyword() << "(min("
+                 << ss.floatKeyword() << "(" << g.gamut_cusp_table.upper_wrap_index << "), "
+                 << ss.floatKeyword() << "(i + " << g.hue_linearity_search_range[1] << ")));";
 
     ss.newLine() << "while (i_lo + 1 < i_hi)";
     ss.newLine() << "{";
@@ -764,7 +885,7 @@ std::string _Add_Cusp_table(
     ss.newLine() << "i_hi = i;";
     ss.dedent();
     ss.newLine() << "}";
-    ss.newLine() << "i = " << ss.intKeyword() << "((i_lo + i_hi) / 2.0);";
+    ss.newLine() << "i = (i_lo + i_hi) / 2;";
 
     ss.dedent();
     ss.newLine() << "}";
@@ -780,98 +901,8 @@ std::string _Add_Cusp_table(
         ss.newLine() << ss.float3Decl("hi") << " = " << ss.sampleTex2D(name, ss.float2Const(std::string("(i_hi + 0.5) / ") + std::to_string(g.gamut_cusp_table.total_size), "0.5")) << ".rgb;";
     }
 
-    ss.newLine() << ss.floatDecl("t") << " = (h - lo.b) / (hi.b - lo.b);";
-    ss.newLine() << ss.floatDecl("cuspJ") << " = " << ss.lerp("lo.r", "hi.r", "t") << ";";
-    ss.newLine() << ss.floatDecl("cuspM") << " = " << ss.lerp("lo.g", "hi.g", "t") << ";";
-
-    ss.newLine() << "return " << ss.float2Const("cuspJ", "cuspM") << ";";
-
-    ss.dedent();
-    ss.newLine() << "}";
-
-    shaderCreator->addToHelperShaderCode(ss.string().c_str());
-
-    return name;
-}
-
-std::string _Add_Gamma_table(
-    GpuShaderCreatorRcPtr & shaderCreator,
-    unsigned resourceIndex,
-    const ACES2::GamutCompressParams & g)
-{
-    // Reserve name
-    std::ostringstream resName;
-    resName << shaderCreator->getResourcePrefix()
-            << std::string("_")
-            << std::string("upper_hull_gamma_table_")
-            << resourceIndex;
-
-    // Note: Remove potentially problematic double underscores from GLSL resource names.
-    std::string name(resName.str());
-    StringUtils::ReplaceInPlace(name, "__", "_");
-
-    // Register texture
-    GpuShaderDesc::TextureDimensions dimensions = GpuShaderDesc::TEXTURE_1D;
-    if (shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_1_0
-        || shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_3_0
-        || !shaderCreator->getAllowTexture1D())
-    {
-        dimensions = GpuShaderDesc::TEXTURE_2D;
-    }
-
-    shaderCreator->addTexture(
-        name.c_str(),
-        GpuShaderText::getSamplerName(name).c_str(),
-        g.gamut_cusp_table.total_size,
-        1,
-        GpuShaderCreator::TEXTURE_RED_CHANNEL,
-        dimensions,
-        INTERP_NEAREST,
-        &(g.upper_hull_gamma_table.table[0]));
-
-
-    if (dimensions == GpuShaderDesc::TEXTURE_1D)
-    {
-        GpuShaderText ss(shaderCreator->getLanguage());
-        ss.declareTex1D(name);
-        shaderCreator->addToDeclareShaderCode(ss.string().c_str());
-    }
-    else
-    {
-        GpuShaderText ss(shaderCreator->getLanguage());
-        ss.declareTex2D(name);
-        shaderCreator->addToDeclareShaderCode(ss.string().c_str());
-    }
-
-    // Sampler function
-    GpuShaderText ss(shaderCreator->getLanguage());
-
-    ss.newLine() << ss.floatKeyword() << " " << name << "_sample(float h)";
-    ss.newLine() << "{";
-    ss.indent();
-
-    ss.newLine() << ss.floatDecl("hwrap") << " = h;";
-    ss.newLine() << "hwrap = hwrap - floor(hwrap / 360.0) * 360.0;";
-    ss.newLine() << "hwrap = (hwrap < 0.0) ? hwrap + 360.0 : hwrap;";
-
-    ss.newLine() << ss.floatDecl("i_lo") << " = floor(hwrap) + " << g.upper_hull_gamma_table.base_index << ";";
-    ss.newLine() << ss.floatDecl("i_hi") << " = (i_lo + 1);";
-    ss.newLine() << "i_hi = i_hi - floor(i_hi / 360.0) * 360.0;";
-
-    ss.newLine() << ss.floatDecl("base_hue") << " = i_lo - " << g.upper_hull_gamma_table.base_index << ";";
-
-    if (dimensions == GpuShaderDesc::TEXTURE_1D)
-    {
-        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex1D(name, std::string("(i_lo + 0.5) / ") + std::to_string(g.upper_hull_gamma_table.total_size)) << ".r;";
-        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex1D(name, std::string("(i_hi + 0.5) / ") + std::to_string(g.upper_hull_gamma_table.total_size)) << ".r;";
-    }
-    else
-    {
-        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex2D(name, ss.float2Const(std::string("(i_lo + 0.5) / ") + std::to_string(g.upper_hull_gamma_table.total_size), "0.5")) << ".r;";
-        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex2D(name, ss.float2Const(std::string("(i_hi + 0.5) / ") + std::to_string(g.upper_hull_gamma_table.total_size), "0.5")) << ".r;";
-    }
-
-    ss.newLine() << ss.floatDecl("t") << " = hwrap - base_hue;";
+    ss.newLine() << ss.floatDecl("t") << " = (h - " << hues_array_name << "[i_hi - 1]) / "
+                                                "(" << hues_array_name << "[i_hi]" << " - " << hues_array_name << "[i_hi - 1]);";
     ss.newLine() << "return " << ss.lerp("lo", "hi", "t") << ";";
 
     ss.dedent();
@@ -885,7 +916,7 @@ std::string _Add_Gamma_table(
 std::string _Add_Focus_Gain_func(
     GpuShaderCreatorRcPtr & shaderCreator,
     unsigned resourceIndex,
-    const ACES2::GamutCompressParams & g)
+    const ACES2::SharedCompressionParameters & s)
 {
     // Reserve name
     std::ostringstream resName;
@@ -904,13 +935,15 @@ std::string _Add_Focus_Gain_func(
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.floatDecl("thr") << " = " << ss.lerp("cuspJ", std::to_string(g.limit_J_max), std::to_string(ACES2::focus_gain_blend)) << ";";
+    ss.newLine() << ss.floatDecl("thr") << " = " << ss.lerp("cuspJ", std::to_string(s.limit_J_max), std::to_string(ACES2::focus_gain_blend)) << ";";
 
-    ss.newLine() << "if (J > thr)";
+    ss.newLine() << "if (J > thr)"; // TODO threshold
     ss.newLine() << "{";
     ss.indent();
-    ss.newLine() << ss.floatDecl("gain") << " = ( " << g.limit_J_max << " - thr) / max(0.0001, (" << g.limit_J_max << " - min(" << g.limit_J_max << ", J)));";
-    ss.newLine() << "return pow(log(gain)/log(10.0), 1.0 / " << ACES2::focus_adjust_gain << ") + 1.0;";
+    ss.newLine() << ss.floatDecl("gain") << " = ( " << s.limit_J_max << " - thr) / max(0.0001, " << s.limit_J_max << " - J);";
+    ss.newLine() << "gain = log(gain)/log(10.0);";  // TODO log10(gain) but not all shading languages have log10() would log2(gain)/log2(10) be better? perhaps delegate to GpuShaderText?
+    //ss.newLine() << "return pow(gain, " << ACES2::focus_adjust_gain_inv << ") + 1.0;"; // TODO; remove once agreed on change
+    ss.newLine() << "return gain * gain + 1.0;";
     ss.dedent();
     ss.newLine() << "}";
     ss.newLine() << "else";
@@ -931,7 +964,7 @@ std::string _Add_Focus_Gain_func(
 std::string _Add_Solve_J_Intersect_func(
     GpuShaderCreatorRcPtr & shaderCreator,
     unsigned resourceIndex,
-    const ACES2::GamutCompressParams & g)
+    const ACES2::SharedCompressionParameters & s)
 {
     // Reserve name
     std::ostringstream resName;
@@ -950,53 +983,29 @@ std::string _Add_Solve_J_Intersect_func(
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.floatDecl("a") << " = " << "M / (focusJ * slope_gain);";
-    ss.newLine() << ss.floatDecl("b") << " = 0.0;";
-    ss.newLine() << ss.floatDecl("c") << " = 0.0;";
-    ss.newLine() << ss.floatDecl("intersectJ") << " = 0.0;";
+    ss.newLine() << ss.floatDecl("M_scaled") << " = M / slope_gain;";
+    ss.newLine() << ss.floatDecl("a") << " = M_scaled / focusJ;";
 
     ss.newLine() << "if (J < focusJ)";
     ss.newLine() << "{";
     ss.indent();
-    ss.newLine() << "b = 1.0 - M / slope_gain;";
+    ss.newLine() << ss.floatDecl("b") << " = 1.0 - M_scaled;";
+    ss.newLine() << ss.floatDecl("c") << " = -J;";
+    ss.newLine() << ss.floatDecl("det") << " =  b * b - 4.f * a * c;";
+    ss.newLine() << ss.floatDecl("root") << " =  sqrt(det);";
+    ss.newLine() << "return -2.0 * c / (b + root);";
     ss.dedent();
     ss.newLine() << "}";
     ss.newLine() << "else";
     ss.newLine() << "{";
     ss.indent();
-    ss.newLine() << "b = - (1.0 + M / slope_gain + " << g.limit_J_max << " * M / (focusJ * slope_gain));";
+    ss.newLine() << ss.floatDecl("b") << " = - (1.0 + M_scaled + " << s.limit_J_max << " * a);";
+    ss.newLine() << ss.floatDecl("c") << " = " << s.limit_J_max << " * M_scaled + J;";
+    ss.newLine() << ss.floatDecl("det") << " =  b * b - 4.f * a * c;";
+    ss.newLine() << ss.floatDecl("root") << " =  sqrt(det);";
+    ss.newLine() << "return -2.0 * c / (b - root);";
     ss.dedent();
     ss.newLine() << "}";
-
-    ss.newLine() << "if (J < focusJ)";
-    ss.newLine() << "{";
-    ss.indent();
-    ss.newLine() << "c = -J;";
-    ss.dedent();
-    ss.newLine() << "}";
-    ss.newLine() << "else";
-    ss.newLine() << "{";
-    ss.indent();
-    ss.newLine() << "c = " << g.limit_J_max << " * M / slope_gain + J;";
-    ss.dedent();
-    ss.newLine() << "}";
-
-    ss.newLine() << ss.floatDecl("root") << " = sqrt(b * b - 4.0 * a * c);";
-
-    ss.newLine() << "if (J < focusJ)";
-    ss.newLine() << "{";
-    ss.indent();
-    ss.newLine() << "intersectJ = 2.0 * c / (-b - root);";
-    ss.dedent();
-    ss.newLine() << "}";
-    ss.newLine() << "else";
-    ss.newLine() << "{";
-    ss.indent();
-    ss.newLine() << "intersectJ = 2.0 * c / (-b + root);";
-    ss.dedent();
-    ss.newLine() << "}";
-
-    ss.newLine() << "return intersectJ;";
 
     ss.dedent();
     ss.newLine() << "}";
@@ -1009,8 +1018,7 @@ std::string _Add_Solve_J_Intersect_func(
 std::string _Add_Find_Gamut_Boundary_Intersection_func(
     GpuShaderCreatorRcPtr & shaderCreator,
     unsigned resourceIndex,
-    const ACES2::GamutCompressParams & g,
-    const std::string & solveJIntersectName)
+    const ACES2::SharedCompressionParameters & s)
 {
     // Reserve name
     std::ostringstream resName;
@@ -1025,104 +1033,28 @@ std::string _Add_Find_Gamut_Boundary_Intersection_func(
 
     GpuShaderText ss(shaderCreator->getLanguage());
 
-    ss.newLine() << ss.float3Keyword() << " " << name << "(" << ss.float3Keyword() << " JMh_s, " << ss.float2Keyword() << " JM_cusp_in, float J_focus, float slope_gain, float gamma_top, float gamma_bottom)";
+    ss.newLine() << ss.floatKeyword() << " " << name << "(" << ss.float2Keyword()
+                 << " JM_cusp, float gamma_top_inv, float gamma_bottom_inv, float J_intersect_source, float J_intersect_cusp, float slope)";
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.float2Decl("JM_cusp") << " = " << ss.float2Const("JM_cusp_in.r", std::string("JM_cusp_in.g * (1.0 + ") + std::to_string(ACES2::smooth_m) + " * " + std::to_string(ACES2::smooth_cusps) + ")") << ";";
-
-    ss.newLine() << ss.floatDecl("J_intersect_source") << " = " << solveJIntersectName << "(JMh_s.r, JMh_s.g, J_focus, slope_gain);";
-    ss.newLine() << ss.floatDecl("J_intersect_cusp") << " = " << solveJIntersectName << "(JM_cusp.r, JM_cusp.g, J_focus, slope_gain);";
-
-    ss.newLine() << ss.floatDecl("slope") << " = 0.0;";
-    ss.newLine() << "if (J_intersect_source < J_focus)";
-    ss.newLine() << "{";
-    ss.indent();
-    ss.newLine() << "slope = J_intersect_source * (J_intersect_source - J_focus) / (J_focus * slope_gain);";
-    ss.dedent();
-    ss.newLine() << "}";
-    ss.newLine() << "else";
-    ss.newLine() << "{";
-    ss.indent();
-    ss.newLine() << "slope = (" << g.limit_J_max << " - J_intersect_source) * (J_intersect_source - J_focus) / (J_focus * slope_gain);";
-    ss.dedent();
-    ss.newLine() << "}";
-
-    ss.newLine() << ss.floatDecl("M_boundary_lower ") << " = J_intersect_cusp * pow(J_intersect_source / J_intersect_cusp, 1.0 / gamma_bottom) / (JM_cusp.r / JM_cusp.g - slope);";
-    ss.newLine() << ss.floatDecl("M_boundary_upper") << " = JM_cusp.g * (" << g.limit_J_max << " - J_intersect_cusp) * pow((" << g.limit_J_max << " - J_intersect_source) / (" << g.limit_J_max << " - J_intersect_cusp), 1.0 / gamma_top) / (slope * JM_cusp.g + " << g.limit_J_max << " - JM_cusp.r);";
+    ss.newLine() << ss.floatDecl("M_boundary_lower") << " = J_intersect_cusp * pow(J_intersect_source / J_intersect_cusp, gamma_bottom_inv) / (JM_cusp.r / JM_cusp.g - slope);";
+    ss.newLine() << ss.floatDecl("M_boundary_upper") << " = JM_cusp.g * (" << s.limit_J_max << " - J_intersect_cusp) * pow((" << s.limit_J_max << " - J_intersect_source) / (" << s.limit_J_max << " - J_intersect_cusp), gamma_top_inv) / (slope * JM_cusp.g + " << s.limit_J_max << " - JM_cusp.r);";
 
     ss.newLine() << ss.floatDecl("smin") << " = 0.0;";
     ss.newLine() << "{";
     ss.indent();
-    ss.newLine() << ss.floatDecl("a") << " = M_boundary_lower / JM_cusp.g;";
-    ss.newLine() << ss.floatDecl("b") << " = M_boundary_upper / JM_cusp.g;";
-    ss.newLine() << ss.floatDecl("s") << " = " << ACES2::smooth_cusps << ";";
+    ss.newLine() << ss.floatDecl("a") << " = M_boundary_lower;";
+    ss.newLine() << ss.floatDecl("b") << " = M_boundary_upper;";
+    ss.newLine() << ss.floatDecl("s") << " = " << ACES2::smooth_cusps << " * JM_cusp.g;";
 
     ss.newLine() << ss.floatDecl("h") << " = max(s - abs(a - b), 0.0) / s;";
-    ss.newLine() << "smin = min(a, b) - h * h * h * s * (1.0 / 6.0);";
+    ss.newLine() << "smin = min(a, b) - h * h * h * s * " << (1.0 / 6.0) << ";";
 
     ss.dedent();
     ss.newLine() << "}";
 
-    ss.newLine() << ss.floatDecl("M_boundary") << " = JM_cusp.g * smin;";
-    ss.newLine() << ss.floatDecl("J_boundary") << "= J_intersect_source + slope * M_boundary;";
-
-    ss.newLine() << "return " << ss.float3Const("J_boundary", "M_boundary", "J_intersect_source") << ";";
-
-    ss.dedent();
-    ss.newLine() << "}";
-
-    shaderCreator->addToHelperShaderCode(ss.string().c_str());
-
-    return name;
-}
-
-std::string _Add_Reach_Boundary_func(
-    GpuShaderCreatorRcPtr & shaderCreator,
-    unsigned resourceIndex,
-    const ACES2::GamutCompressParams & g,
-    const std::string & reachName,
-    const std::string & getFocusGainName,
-    const std::string & solveJIntersectName)
-{
-    // Reserve name
-    std::ostringstream resName;
-    resName << shaderCreator->getResourcePrefix()
-            << std::string("_")
-            << std::string("get_reach_boundary")
-            << resourceIndex;
-
-    // Note: Remove potentially problematic double underscores from GLSL resource names.
-    std::string name(resName.str());
-    StringUtils::ReplaceInPlace(name, "__", "_");
-
-    GpuShaderText ss(shaderCreator->getLanguage());
-
-    ss.newLine() << ss.float3Keyword() << " " << name << "(float J, float M, float h, " << ss.float2Keyword() << " JMcusp, float focusJ)";
-    ss.newLine() << "{";
-    ss.indent();
-
-    ss.newLine() << ss.floatDecl("reachMaxM") << " = " << reachName << "_sample(h);";
-    ss.newLine() << ss.floatDecl("slope_gain") << " = " << g.limit_J_max << " * " << g.focus_dist << " * " << getFocusGainName << "(J, JMcusp.r);";
-    ss.newLine() << ss.floatDecl("intersectJ") << " = " << solveJIntersectName << "(J, M, focusJ, slope_gain);";
-
-    ss.newLine() << ss.floatDecl("slope") << " = 0.0;";
-    ss.newLine() << "if (intersectJ < focusJ)";
-    ss.newLine() << "{";
-    ss.indent();
-    ss.newLine() << "slope = intersectJ * (intersectJ - focusJ) / (focusJ * slope_gain);";
-    ss.dedent();
-    ss.newLine() << "}";
-    ss.newLine() << "else";
-    ss.newLine() << "{";
-    ss.indent();
-    ss.newLine() << "slope = (" << g.limit_J_max << " - intersectJ) * (intersectJ - focusJ) / (focusJ * slope_gain);";
-    ss.dedent();
-    ss.newLine() << "}";
-
-    ss.newLine() << ss.floatDecl("boundary") << " = " << g.limit_J_max << " * pow(intersectJ / " << g.limit_J_max << ", " << g.model_gamma << ") * reachMaxM / (" << g.limit_J_max << " - slope * reachMaxM);";
-
-    ss.newLine() << "return " << ss.float3Const("J", "boundary", "h") << ";";
+    ss.newLine() << "return smin;";
 
     ss.dedent();
     ss.newLine() << "}";
@@ -1141,7 +1073,7 @@ std::string _Add_Compression_func(
     std::ostringstream resName;
     resName << shaderCreator->getResourcePrefix()
             << std::string("_")
-            << std::string("compression")
+            << std::string("remap_M")
             << (invert ? std::string("_inv") : std::string("_fwd"))
             << resourceIndex;
 
@@ -1151,48 +1083,46 @@ std::string _Add_Compression_func(
 
     GpuShaderText ss(shaderCreator->getLanguage());
 
-    ss.newLine() << ss.floatKeyword() << " " << name << "(float v, float thr, float lim)";
+    ss.newLine() << ss.floatKeyword() << " " << name << "(float M, float gamut_boundary_M, float reach_boundary_M)";
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.floatDecl("s") << " = (lim - thr) * (1.0 - thr) / (lim - 1.0);";
-    ss.newLine() << ss.floatDecl("nd") << " = (v - thr) / s;";
+    ss.newLine() << ss.floatDecl("boundary_ratio") << " = gamut_boundary_M / reach_boundary_M;";
+    ss.newLine() << ss.floatDecl("proportion") << " = max(boundary_ratio, " << ACES2::compression_threshold << ");";
+    ss.newLine() << ss.floatDecl("threshold") << " = proportion * gamut_boundary_M;";
 
+    ss.newLine() << "if (proportion >= 1.0f || M <= threshold)";
+    ss.newLine() << "{";
+    ss.indent();
+    ss.newLine() << "return M;";
+    ss.dedent();
+    ss.newLine() << "}";
+    ss.newLine() << ss.floatDecl("m_offset") << " = M - threshold;";
+    ss.newLine() << ss.floatDecl("gamut_offset") << " = gamut_boundary_M - threshold;";
+    ss.newLine() << ss.floatDecl("reach_offset") << " = reach_boundary_M - threshold;";
 
-    ss.newLine() << ss.floatDecl("vCompressed") << " = 0.0;";
+    ss.newLine() << ss.floatDecl("scale") << " = reach_offset / ((reach_offset / gamut_offset) - 1.0f);";
+    ss.newLine() << ss.floatDecl("nd") << " = m_offset / scale;";
 
     if (invert)
     {
-        ss.newLine() << "if (v < thr || lim <= 1.0001 || v > thr + s)";
+        ss.newLine() << "if (nd >= 1.0f)"; // TODO: could be done branchless?
         ss.newLine() << "{";
         ss.indent();
-        ss.newLine() << "vCompressed = v;";
+        ss.newLine() << "return threshold + scale;";
         ss.dedent();
         ss.newLine() << "}";
         ss.newLine() << "else";
         ss.newLine() << "{";
         ss.indent();
-        ss.newLine() << "vCompressed = thr + s * (-nd / (nd - 1));";
+        ss.newLine() << "return threshold + scale * -(nd / (nd - 1.0f));";
         ss.dedent();
         ss.newLine() << "}";
     }
     else
     {
-        ss.newLine() << "if (v < thr || lim <= 1.0001)";
-        ss.newLine() << "{";
-        ss.indent();
-        ss.newLine() << "vCompressed = v;";
-        ss.dedent();
-        ss.newLine() << "}";
-        ss.newLine() << "else";
-        ss.newLine() << "{";
-        ss.indent();
-        ss.newLine() << "vCompressed = thr + s * nd / (1.0 + nd);";
-        ss.dedent();
-        ss.newLine() << "}";
+        ss.newLine() << "return threshold + scale * nd / (1.0f + nd);";
     }
-
-    ss.newLine() << "return vCompressed;";
 
     ss.dedent();
     ss.newLine() << "}";
@@ -1205,13 +1135,12 @@ std::string _Add_Compression_func(
 std::string _Add_Compress_Gamut_func(
     GpuShaderCreatorRcPtr & shaderCreator,
     unsigned resourceIndex,
+    const ACES2::SharedCompressionParameters & s,
     const ACES2::GamutCompressParams & g,
-    const std::string & cuspName,
     const std::string & getFocusGainName,
-    const std::string & gammaName,
     const std::string & findGamutBoundaryIntersectionName,
-    const std::string & getReachBoundaryName,
-    const std::string & compressionName)
+    const std::string & compressionName,
+    const std::string & solveJIntersectName)
 {
     // Reserve name
     std::ostringstream resName;
@@ -1226,7 +1155,7 @@ std::string _Add_Compress_Gamut_func(
 
     GpuShaderText ss(shaderCreator->getLanguage());
 
-    ss.newLine() << ss.float3Keyword() << " " << name << "(" << ss.float3Keyword() << " JMh, float Jx)";
+    ss.newLine() << ss.float3Keyword() << " " << name << "(" << ss.float3Keyword() << " JMh, float Jx, " << ss.float3Keyword() << " JMGcusp, float reachMaxM)";
     ss.newLine() << "{";
     ss.indent();
 
@@ -1234,7 +1163,7 @@ std::string _Add_Compress_Gamut_func(
     ss.newLine() << ss.floatDecl("M") << " = JMh.g;";
     ss.newLine() << ss.floatDecl("h") << " = JMh.b;";
 
-    ss.newLine() << "if (M < 0.0001 || J > " << g.limit_J_max << ")";
+    ss.newLine() << "if (M <= 0.0 || J > " << s.limit_J_max << ")";
     ss.newLine() << "{";
     ss.indent();
     ss.newLine() << "return " << ss.float3Const("J", "0.0", "h") << ";";
@@ -1244,40 +1173,36 @@ std::string _Add_Compress_Gamut_func(
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.float2Decl("project_from") << " = " << ss.float2Const("J", "M") << ";";
-    ss.newLine() << ss.float2Decl("JMcusp") << " = " << cuspName << "_sample(h);";
+    ss.newLine() << ss.float2Decl("JMcusp") << " = JMGcusp.rg;";
 
-    ss.newLine() << ss.floatDecl("focusJ") << " = " << ss.lerp("JMcusp.r", std::to_string(g.mid_J), std::string("min(1.0, ") + std::to_string(ACES2::cusp_mid_blend) + " - (JMcusp.r / " + std::to_string(g.limit_J_max)) << "));";
-    ss.newLine() << ss.floatDecl("slope_gain") << " = " << g.limit_J_max << " * " << g.focus_dist << " * " << getFocusGainName << "(Jx, JMcusp.r);";
+    ss.newLine() << ss.floatDecl("focusJ") << " = " << ss.lerp("JMcusp.r", std::to_string(g.mid_J), std::string("min(1.0, ") + std::to_string(ACES2::cusp_mid_blend) + " - (JMcusp.r / " + std::to_string(s.limit_J_max)) << "));";
+    ss.newLine() << ss.floatDecl("slope_gain") << " = " << s.limit_J_max * g.focus_dist << " * " << getFocusGainName << "(Jx, JMcusp.r);";
+    ss.newLine() << ss.floatDecl("J_intersect_source") << " = " << solveJIntersectName << "(JMh.r, JMh.g, focusJ, slope_gain);";
+    ss.newLine() << ss.floatDecl("gamut_slope") << " = (J_intersect_source < focusJ) ? J_intersect_source : (" << s.limit_J_max << " - J_intersect_source);";
+    ss.newLine() << "gamut_slope = gamut_slope * (J_intersect_source - focusJ) / (focusJ * slope_gain);";
 
-    ss.newLine() << ss.floatDecl("gamma_top") << " = " << gammaName << "_sample(h);";
-    ss.newLine() << ss.floatDecl("gamma_bottom") << " = " << g.lower_hull_gamma << ";";
+    ss.newLine() << ss.floatDecl("gamma_top_inv") << " = JMGcusp.b;";
+    ss.newLine() << ss.floatDecl("gamma_bottom_inv") << " = " << g.lower_hull_gamma_inv << ";"; // TODO move to where it is used
 
-    ss.newLine() << ss.float3Decl("boundaryReturn") << " = " << findGamutBoundaryIntersectionName << "(" << ss.float3Const("J", "M", "h") << ", JMcusp, focusJ, slope_gain, gamma_top, gamma_bottom);";
-    ss.newLine() << ss.float2Decl("JMboundary") << " = " << ss.float2Const("boundaryReturn.r", "boundaryReturn.g") << ";";
-    ss.newLine() << ss.float2Decl("project_to") << " = " << ss.float2Const("boundaryReturn.b", "0.0") << ";";
+    ss.newLine() << ss.floatDecl("J_intersect_cusp") << " = " << solveJIntersectName << "(JMcusp.r, JMcusp.g, focusJ, slope_gain);";
+    ss.newLine() << ss.floatDecl("gamutBoundaryM") << " = " << findGamutBoundaryIntersectionName
+                 << "(JMcusp, gamma_top_inv, gamma_bottom_inv, J_intersect_source, J_intersect_cusp, gamut_slope);";
 
-    ss.newLine() << "if (JMboundary.g <= 0.0)";
+    ss.newLine() << "if (gamutBoundaryM <= 0.0)";
     ss.newLine() << "{";
     ss.indent();
     ss.newLine() << "return " << ss.float3Const("J", "0.0", "h") << ";";
     ss.dedent();
     ss.newLine() << "}";
 
-    ss.newLine() << ss.float3Decl("reachBoundary") << " = " << getReachBoundaryName << "(JMboundary.r, JMboundary.g, h, JMcusp, focusJ);";
+    ss.newLine() << ss.floatDecl("reachBoundaryM") << " = " << s.limit_J_max << " * pow(J_intersect_source / " << s.limit_J_max << ",  " << s.model_gamma_inv << ");";
+    ss.newLine() << "reachBoundaryM = reachBoundaryM / ((" << s.limit_J_max << " / reachMaxM) - gamut_slope);";
 
-    ss.newLine() << ss.floatDecl("difference") << " = max(1.0001, reachBoundary.g / JMboundary.g);";
-    ss.newLine() << ss.floatDecl("threshold") << " = max(" << ACES2::compression_threshold << ", 1.0 / difference);";
+    ss.newLine() << ss.floatDecl("remapped_M") << " = " << compressionName << "(M, gamutBoundaryM, reachBoundaryM);";
+    ss.newLine() << ss.floatDecl("remapped_J") << " = J_intersect_source + remapped_M * gamut_slope;";
 
-    ss.newLine() << ss.floatDecl("v") << " = project_from.g / JMboundary.g;";
-    ss.newLine() << "v = " << compressionName << "(v, threshold, difference);";
 
-    ss.newLine() << ss.float2Decl("JMcompressed") << " = " << ss.float2Const(
-        "project_to.r + v * (JMboundary.r - project_to.r)",
-        "project_to.g + v * (JMboundary.g - project_to.g)"
-    ) << ";";
-
-    ss.newLine() << "return " << ss.float3Const("JMcompressed.r", "JMcompressed.g", "h") << ";";
+    ss.newLine() << "return " << ss.float3Const("remapped_J", "remapped_M", "h") << ";";
 
     ss.dedent();
     ss.newLine() << "}";
@@ -1294,58 +1219,56 @@ void _Add_Gamut_Compress_Fwd_Shader(
     GpuShaderCreatorRcPtr & shaderCreator,
     GpuShaderText & ss,
     unsigned int resourceIndex,
-    const ACES2::GamutCompressParams & g,
-    const std::string & reachName)
+    const ACES2::SharedCompressionParameters & s,
+    const ACES2::GamutCompressParams & g)
 {
     std::string cuspName = _Add_Cusp_table(shaderCreator, resourceIndex, g);
-    std::string gammaName = _Add_Gamma_table(shaderCreator, resourceIndex, g);
-    std::string getFocusGainName = _Add_Focus_Gain_func(shaderCreator, resourceIndex, g);
-    std::string solveJIntersectName = _Add_Solve_J_Intersect_func(shaderCreator, resourceIndex, g);
-    std::string findGamutBoundaryIntersectionName = _Add_Find_Gamut_Boundary_Intersection_func(shaderCreator, resourceIndex, g, solveJIntersectName);
-    std::string getReachBoundaryName = _Add_Reach_Boundary_func(shaderCreator, resourceIndex, g, reachName, getFocusGainName, solveJIntersectName);
+    std::string getFocusGainName = _Add_Focus_Gain_func(shaderCreator, resourceIndex, s);
+    std::string solveJIntersectName = _Add_Solve_J_Intersect_func(shaderCreator, resourceIndex, s);
+    std::string findGamutBoundaryIntersectionName = _Add_Find_Gamut_Boundary_Intersection_func(shaderCreator, resourceIndex, s);
     std::string compressionName = _Add_Compression_func(shaderCreator, resourceIndex, false);
-    std::string gamutCompressName = _Add_Compress_Gamut_func(shaderCreator, resourceIndex, g, cuspName, getFocusGainName, gammaName, findGamutBoundaryIntersectionName, getReachBoundaryName, compressionName);
+    std::string gamutCompressName = _Add_Compress_Gamut_func(shaderCreator, resourceIndex, s, g, getFocusGainName, findGamutBoundaryIntersectionName, compressionName, solveJIntersectName);
 
     const std::string pxl(shaderCreator->getPixelName());
 
-    ss.newLine() << pxl << ".rgb = " << gamutCompressName << "(" << pxl << ".rgb, " << pxl << ".r);";
+    ss.newLine() << ss.float3Decl("JMGcusp") << " = " << cuspName << "_sample(" << pxl << ".b);";
+    ss.newLine() << pxl << ".rgb = " << gamutCompressName << "(" << pxl << ".rgb, " << pxl << ".r, JMGcusp, reachMaxM);";
 }
 
 void _Add_Gamut_Compress_Inv_Shader(
     GpuShaderCreatorRcPtr & shaderCreator,
     GpuShaderText & ss,
     unsigned int resourceIndex,
-    const ACES2::GamutCompressParams & g,
-    const std::string & reachName)
+    const ACES2::SharedCompressionParameters & s,
+    const ACES2::GamutCompressParams & g)
 {
     std::string cuspName = _Add_Cusp_table(shaderCreator, resourceIndex, g);
-    std::string gammaName = _Add_Gamma_table(shaderCreator, resourceIndex, g);
-    std::string getFocusGainName = _Add_Focus_Gain_func(shaderCreator, resourceIndex, g);
-    std::string solveJIntersectName = _Add_Solve_J_Intersect_func(shaderCreator, resourceIndex, g);
-    std::string findGamutBoundaryIntersectionName = _Add_Find_Gamut_Boundary_Intersection_func(shaderCreator, resourceIndex, g, solveJIntersectName);
-    std::string getReachBoundaryName = _Add_Reach_Boundary_func(shaderCreator, resourceIndex, g, reachName, getFocusGainName, solveJIntersectName);
+    std::string getFocusGainName = _Add_Focus_Gain_func(shaderCreator, resourceIndex, s);
+    std::string solveJIntersectName = _Add_Solve_J_Intersect_func(shaderCreator, resourceIndex, s);
+    std::string findGamutBoundaryIntersectionName = _Add_Find_Gamut_Boundary_Intersection_func(shaderCreator, resourceIndex, s);
     std::string compressionName = _Add_Compression_func(shaderCreator, resourceIndex, true);
-    std::string gamutCompressName = _Add_Compress_Gamut_func(shaderCreator, resourceIndex, g, cuspName, getFocusGainName, gammaName, findGamutBoundaryIntersectionName, getReachBoundaryName, compressionName);
+    std::string gamutCompressName = _Add_Compress_Gamut_func(shaderCreator, resourceIndex, s, g, getFocusGainName, findGamutBoundaryIntersectionName, compressionName, solveJIntersectName);
 
     const std::string pxl(shaderCreator->getPixelName());
 
-    ss.newLine() << ss.float2Decl("JMcusp") << " = " << cuspName << "_sample(" << pxl << ".b);";
+    ss.newLine() << ss.float3Decl("JMGcusp") << " = " << cuspName << "_sample(" << pxl << ".b);";
+
     ss.newLine() << ss.floatDecl("Jx") << " = " << pxl << ".r;";
     ss.newLine() << ss.float3Decl("unCompressedJMh") << ";";
 
     // Analytic inverse below threshold
-    ss.newLine() << "if (Jx <= " << ss.lerp("JMcusp.r", std::to_string(g.limit_J_max), std::to_string(ACES2::focus_gain_blend)) << ")";
+    ss.newLine() << "if (Jx <= " << ss.lerp("JMGcusp.r", std::to_string(s.limit_J_max), std::to_string(ACES2::focus_gain_blend)) << ")";
     ss.newLine() << "{";
     ss.indent();
-    ss.newLine() << "unCompressedJMh = " << gamutCompressName << "(" << pxl << ".rgb, Jx);";
+    ss.newLine() << "unCompressedJMh = " << gamutCompressName << "(" << pxl << ".rgb, Jx, JMGcusp, reachMaxM);";
     ss.dedent();
     ss.newLine() << "}";
     // Approximation above threshold
     ss.newLine() << "else";
     ss.newLine() << "{";
     ss.indent();
-    ss.newLine() << "Jx = " << gamutCompressName << "(" << pxl << ".rgb, Jx).r;";
-    ss.newLine() << "unCompressedJMh = " << gamutCompressName << "(" << pxl << ".rgb, Jx);";
+    ss.newLine() << "Jx = " << gamutCompressName << "(" << pxl << ".rgb, Jx, JMGcusp, reachMaxM).r;";
+    ss.newLine() << "unCompressedJMh = " << gamutCompressName << "(" << pxl << ".rgb, Jx, JMGcusp, reachMaxM);";
     ss.dedent();
     ss.newLine() << "}";
 
@@ -1368,8 +1291,6 @@ void Add_ACES_OutputTransform_Fwd_Shader(
     const float white_x = (float) params[7];
     const float white_y = (float) params[8];
 
-    const Primaries in_primaries = ACES_AP0::primaries;
-
     const Primaries lim_primaries = {
         {red_x  , red_y  },
         {green_x, green_y},
@@ -1377,31 +1298,41 @@ void Add_ACES_OutputTransform_Fwd_Shader(
         {white_x, white_y}
     };
 
-    ACES2::JMhParams pIn = ACES2::init_JMhParams(in_primaries);
-    ACES2::JMhParams pLim = ACES2::init_JMhParams(lim_primaries);
-    ACES2::ToneScaleParams t = ACES2::init_ToneScaleParams(peak_luminance);
-    ACES2::ChromaCompressParams c = ACES2::init_ChromaCompressParams(peak_luminance);
-    const ACES2::GamutCompressParams g = ACES2::init_GamutCompressParams(peak_luminance, lim_primaries);
+    const ACES2::JMhParams pIn = ACES2::init_JMhParams(ACES_AP0::primaries);
+    const ACES2::JMhParams pLim = ACES2::init_JMhParams(lim_primaries);
+    const ACES2::ToneScaleParams t = ACES2::init_ToneScaleParams(peak_luminance);
+    const ACES2::JMhParams reachGamut = ACES2::init_JMhParams(ACES_AP1::primaries);
+    const ACES2::SharedCompressionParameters s = ACES2::init_SharedCompressionParams(peak_luminance, pIn, reachGamut);
+    const ACES2::ChromaCompressParams c = ACES2::init_ChromaCompressParams(peak_luminance, t);
+    const ACES2::GamutCompressParams g = ACES2::init_GamutCompressParams(peak_luminance, pIn, pLim, t, s, reachGamut);
 
     unsigned resourceIndex = shaderCreator->getNextResourceIndex();
 
-    std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, g.reach_m_table);
+    const std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, s.reach_m_table);
+    const std::string tonescaleName_Fwd = _Add_Tonescale_func(shaderCreator, resourceIndex, false, pIn, t);
+    const std::string pxl(shaderCreator->getPixelName());
 
     ss.newLine() << "";
     ss.newLine() << "// Add RGB to JMh";
     ss.newLine() << "";
-    ss.newLine() << "{";
-    ss.indent();
-        _Add_RGB_to_JMh_Shader(shaderCreator, ss, pIn);
-    ss.dedent();
-    ss.newLine() << "}";
+    _Add_RGB_to_JMh_Shader(shaderCreator, ss, pIn);
+    _Add_SinCos_Shader(shaderCreator, ss);
+
 
     ss.newLine() << "";
     ss.newLine() << "// Add ToneScale and ChromaCompress (fwd)";
     ss.newLine() << "";
+
+    ss.newLine() << ss.floatDecl("J_ts") << " = " << tonescaleName_Fwd << "(" << pxl << ".r);";
+
+    ss.newLine() << "// Sample tables (fwd)";
+    ss.newLine() << ss.floatDecl("reachMaxM") << " = " << reachName << "_sample(" << pxl << ".b);";
+
+    ss.newLine() << "";
+
     ss.newLine() << "{";
     ss.indent();
-        _Add_Tonescale_Compress_Fwd_Shader(shaderCreator, ss, resourceIndex, pIn, t, c, reachName);
+        _Add_Tonescale_Compress_Fwd_Shader(shaderCreator, ss, resourceIndex, s, c);
     ss.dedent();
     ss.newLine() << "}";
 
@@ -1410,7 +1341,7 @@ void Add_ACES_OutputTransform_Fwd_Shader(
     ss.newLine() << "";
     ss.newLine() << "{";
     ss.indent();
-        _Add_Gamut_Compress_Fwd_Shader(shaderCreator, ss, resourceIndex, g, reachName);
+        _Add_Gamut_Compress_Fwd_Shader(shaderCreator, ss, resourceIndex, s, g);
     ss.dedent();
     ss.newLine() << "}";
 
@@ -1441,8 +1372,6 @@ void Add_ACES_OutputTransform_Inv_Shader(
     const float white_x = (float) params[7];
     const float white_y = (float) params[8];
 
-    const Primaries in_primaries = ACES_AP0::primaries;
-
     const Primaries lim_primaries = {
         {red_x  , red_y  },
         {green_x, green_y},
@@ -1450,40 +1379,44 @@ void Add_ACES_OutputTransform_Inv_Shader(
         {white_x, white_y}
     };
 
-    ACES2::JMhParams pIn = ACES2::init_JMhParams(in_primaries);
-    ACES2::JMhParams pLim = ACES2::init_JMhParams(lim_primaries);
-    ACES2::ToneScaleParams t = ACES2::init_ToneScaleParams(peak_luminance);
-    ACES2::ChromaCompressParams c = ACES2::init_ChromaCompressParams(peak_luminance);
-    const ACES2::GamutCompressParams g = ACES2::init_GamutCompressParams(peak_luminance, lim_primaries);
+    const ACES2::JMhParams pIn = ACES2::init_JMhParams(ACES_AP0::primaries);
+    const ACES2::JMhParams pLim = ACES2::init_JMhParams(lim_primaries);
+    const ACES2::ToneScaleParams t = ACES2::init_ToneScaleParams(peak_luminance);
+    const ACES2::JMhParams reachGamut = ACES2::init_JMhParams(ACES_AP1::primaries);
+    const ACES2::SharedCompressionParameters s = ACES2::init_SharedCompressionParams(peak_luminance, pIn, reachGamut);
+    const ACES2::ChromaCompressParams c = ACES2::init_ChromaCompressParams(peak_luminance, t);
+    const ACES2::GamutCompressParams g = ACES2::init_GamutCompressParams(peak_luminance, pIn, pLim, t, s, reachGamut);
 
     unsigned resourceIndex = shaderCreator->getNextResourceIndex();
-
-    std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, c.reach_m_table);
+    const std::string pxl(shaderCreator->getPixelName());
+    
+    std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, s.reach_m_table);
+    std::string tonescaleName_Inv = _Add_Tonescale_func(shaderCreator, resourceIndex, true, pIn, t);
 
     ss.newLine() << "";
     ss.newLine() << "// Add RGB to JMh";
     ss.newLine() << "";
-    ss.newLine() << "{";
-    ss.indent();
-        _Add_RGB_to_JMh_Shader(shaderCreator, ss, pLim);
-    ss.dedent();
-    ss.newLine() << "}";
+    _Add_RGB_to_JMh_Shader(shaderCreator, ss, pLim);
+    _Add_SinCos_Shader(shaderCreator, ss);
 
+
+    ss.newLine() << ss.floatDecl("reachMaxM") << " = " << reachName << "_sample(" << pxl << ".b);";
     ss.newLine() << "";
     ss.newLine() << "// Add GamutCompress (inv)";
     ss.newLine() << "";
     ss.newLine() << "{";
     ss.indent();
-        _Add_Gamut_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, g, reachName);
+        _Add_Gamut_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, s, g);
     ss.dedent();
     ss.newLine() << "}";
 
     ss.newLine() << "";
     ss.newLine() << "// Add ToneScale and ChromaCompress (inv)";
     ss.newLine() << "";
+    ss.newLine() << ss.floatDecl("J") << " = " << tonescaleName_Inv << "(" << pxl << ".r);";
     ss.newLine() << "{";
     ss.indent();
-        _Add_Tonescale_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, pIn, t, c, reachName);
+        _Add_Tonescale_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, s, c);
     ss.dedent();
     ss.newLine() << "}";
 
@@ -1544,7 +1477,8 @@ void Add_JMh_to_RGB_Shader(
     };
 
     ACES2::JMhParams p = ACES2::init_JMhParams(primaries);
-
+    _Add_WrapHueChannel_Shader(shaderCreator, ss);
+    _Add_SinCos_Shader(shaderCreator, ss);
     _Add_JMh_to_RGB_Shader(shaderCreator, ss, p);
 }
 
@@ -1555,15 +1489,25 @@ void Add_Tonescale_Compress_Fwd_Shader(
 {
     const float peak_luminance = (float) params[0];
 
-    ACES2::JMhParams p = ACES2::init_JMhParams(ACES_AP0::primaries);
-    ACES2::ToneScaleParams t = ACES2::init_ToneScaleParams(peak_luminance);
-    ACES2::ChromaCompressParams c = ACES2::init_ChromaCompressParams(peak_luminance);
+    const ACES2::JMhParams p = ACES2::init_JMhParams(ACES_AP0::primaries);
+    const ACES2::ToneScaleParams t = ACES2::init_ToneScaleParams(peak_luminance);
+    const ACES2::JMhParams reachGamut = ACES2::init_JMhParams(ACES_AP1::primaries);
+    const ACES2::SharedCompressionParameters s = ACES2::init_SharedCompressionParams(peak_luminance, p, reachGamut);
+    const ACES2::ChromaCompressParams c = ACES2::init_ChromaCompressParams(peak_luminance, t);
 
     unsigned resourceIndex = shaderCreator->getNextResourceIndex();
+    const std::string pxl(shaderCreator->getPixelName());
 
-    std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, c.reach_m_table);
+    const std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, s.reach_m_table);
+    const std::string tonescaleName_Fwd = _Add_Tonescale_func(shaderCreator, resourceIndex, false, p, t);
 
-    _Add_Tonescale_Compress_Fwd_Shader(shaderCreator, ss, resourceIndex, p, t, c, reachName);
+    _Add_WrapHueChannel_Shader(shaderCreator, ss);
+    _Add_SinCos_Shader(shaderCreator, ss);
+
+    ss.newLine() << ss.floatDecl("reachMaxM") << " = " << reachName << "_sample(" << pxl << ".b);";
+    ss.newLine() << ss.floatDecl("J_ts") << " = " << tonescaleName_Fwd << "(" << pxl << ".r);";
+
+    _Add_Tonescale_Compress_Fwd_Shader(shaderCreator, ss, resourceIndex, s, c);
 }
 
 void Add_Tonescale_Compress_Inv_Shader(
@@ -1573,15 +1517,25 @@ void Add_Tonescale_Compress_Inv_Shader(
 {
     const float peak_luminance = (float) params[0];
 
-    ACES2::JMhParams p = ACES2::init_JMhParams(ACES_AP0::primaries);
-    ACES2::ToneScaleParams t = ACES2::init_ToneScaleParams(peak_luminance);
-    ACES2::ChromaCompressParams c = ACES2::init_ChromaCompressParams(peak_luminance);
+    const ACES2::JMhParams p = ACES2::init_JMhParams(ACES_AP0::primaries);
+    const ACES2::ToneScaleParams t = ACES2::init_ToneScaleParams(peak_luminance);
+    const ACES2::JMhParams reachGamut = ACES2::init_JMhParams(ACES_AP1::primaries);
+    const ACES2::SharedCompressionParameters s = ACES2::init_SharedCompressionParams(peak_luminance, p, reachGamut);
+    const ACES2::ChromaCompressParams c = ACES2::init_ChromaCompressParams(peak_luminance, t);
 
     unsigned resourceIndex = shaderCreator->getNextResourceIndex();
+    const std::string pxl(shaderCreator->getPixelName());
 
-    std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, c.reach_m_table);
+    const std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, s.reach_m_table);
+    std::string tonescaleName_Inv = _Add_Tonescale_func(shaderCreator, resourceIndex, true, p, t);
 
-    _Add_Tonescale_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, p, t, c, reachName);
+    _Add_WrapHueChannel_Shader(shaderCreator, ss);
+    _Add_SinCos_Shader(shaderCreator, ss);
+
+    ss.newLine() << ss.floatDecl("reachMaxM") << " = " << reachName << "_sample(" << pxl << ".b);";
+    ss.newLine() << ss.floatDecl("J") << " = " << tonescaleName_Inv << "(" << pxl << ".r);";
+
+    _Add_Tonescale_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, s, c);
 }
 
 void Add_Gamut_Compress_Fwd_Shader(
@@ -1607,13 +1561,24 @@ void Add_Gamut_Compress_Fwd_Shader(
         {white_x, white_y}
     };
 
-    const ACES2::GamutCompressParams g = ACES2::init_GamutCompressParams(peak_luminance, primaries);
+    const ACES2::JMhParams pIn = ACES2::init_JMhParams(ACES_AP0::primaries);
+    const ACES2::JMhParams pLim = ACES2::init_JMhParams(primaries);
+    const ACES2::ToneScaleParams t = ACES2::init_ToneScaleParams(peak_luminance);
+    const ACES2::JMhParams reachGamut = ACES2::init_JMhParams(ACES_AP1::primaries);
+    const ACES2::SharedCompressionParameters s = ACES2::init_SharedCompressionParams(peak_luminance, pIn, reachGamut);
+    const ACES2::GamutCompressParams g = ACES2::init_GamutCompressParams(peak_luminance, pIn, pLim, t, s, reachGamut); 
 
     unsigned resourceIndex = shaderCreator->getNextResourceIndex();
+    const std::string pxl(shaderCreator->getPixelName());
 
-    std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, g.reach_m_table);
+    const std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, s.reach_m_table);
 
-    _Add_Gamut_Compress_Fwd_Shader(shaderCreator, ss, resourceIndex, g, reachName);
+    _Add_WrapHueChannel_Shader(shaderCreator, ss);
+    _Add_SinCos_Shader(shaderCreator, ss);
+
+    ss.newLine() << ss.floatDecl("reachMaxM") << " = " << reachName << "_sample(" << pxl << ".b);";
+
+    _Add_Gamut_Compress_Fwd_Shader(shaderCreator, ss, resourceIndex, s, g);
 }
 
 void Add_Gamut_Compress_Inv_Shader(
@@ -1639,13 +1604,24 @@ void Add_Gamut_Compress_Inv_Shader(
         {white_x, white_y}
     };
 
-    const ACES2::GamutCompressParams g = ACES2::init_GamutCompressParams(peak_luminance, primaries);
+    const ACES2::JMhParams pIn = ACES2::init_JMhParams(ACES_AP0::primaries);
+    const ACES2::JMhParams pLim = ACES2::init_JMhParams(primaries);
+    const ACES2::ToneScaleParams t = ACES2::init_ToneScaleParams(peak_luminance);
+    const ACES2::JMhParams reachGamut = ACES2::init_JMhParams(ACES_AP1::primaries);
+    const ACES2::SharedCompressionParameters s = ACES2::init_SharedCompressionParams(peak_luminance, pIn, reachGamut);
+    const ACES2::GamutCompressParams g = ACES2::init_GamutCompressParams(peak_luminance, pIn, pLim, t, s, reachGamut);
 
     unsigned resourceIndex = shaderCreator->getNextResourceIndex();
+    const std::string pxl(shaderCreator->getPixelName());
 
-    std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, g.reach_m_table);
+    const std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, s.reach_m_table);
 
-    _Add_Gamut_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, g, reachName);
+    _Add_WrapHueChannel_Shader(shaderCreator, ss);
+    _Add_SinCos_Shader(shaderCreator, ss);
+
+    ss.newLine() << ss.floatDecl("reachMaxM") << " = " << reachName << "_sample(" << pxl << ".b);";
+
+    _Add_Gamut_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, s, g);
 }
 
 void Add_Surround_10_Fwd_Shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, float gamma)
@@ -1906,14 +1882,20 @@ void Add_LIN_TO_GAMMA_LOG(
     ss.newLine() << ss.float3Decl("sign3") << " = sign(mirrorin);";
     ss.newLine() << ss.float3Decl("E") << " = abs(mirrorin) + " << ss.float3Const(mirrorPt) << ";";
     ss.newLine() << ss.float3Decl("isAboveBreak") << " = " << ss.float3GreaterThan("E", ss.float3Const(breakPt)) << ";";
+    ss.newLine() << ss.float3Decl("isAtOrBelowBreak") << " = " << ss.float3Const(1.0f) << " - isAboveBreak;";
+
     ss.newLine() << ss.float3Decl("Ep_gamma") << " = " << ss.float3Const(gammaSeg_slope)
-        << " * pow( E - " << ss.float3Const(gammaSeg_off) << ", " << ss.float3Const(gammaSeg_power) << ");";
-    ss.newLine() << ss.float3Decl("Ep_log") << " = " << ss.float3Const(logSeg_logSlope) << " * log( E * "
-        << ss.float3Const(logSeg_linSlope) <<  " +" << ss.float3Const(logSeg_linOff) << ") + " 
-        << ss.float3Const(logSeg_logOff) << ";";
+                 << " * pow( E - " << ss.float3Const(gammaSeg_off) << ", " << ss.float3Const(gammaSeg_power) << ");";
+
+    // Avoid NaNs by clamping log input below 1 if the branch will not be used.
+    ss.newLine() << ss.float3Decl("Ep_clamped") << " = max( isAtOrBelowBreak, E * "
+                 << ss.float3Const(logSeg_linSlope) << " + " << ss.float3Const(logSeg_linOff) << " );";
+    ss.newLine() << ss.float3Decl("Ep_log") << " = " << ss.float3Const(logSeg_logSlope) << " * log( Ep_clamped ) + "  
+                 << ss.float3Const(logSeg_logOff) << ";";
 
     // Combine log and gamma parts.
-    ss.newLine() << pxl << ".rgb = sign3 * (isAboveBreak * Ep_log + ( " << ss.float3Const(1.0f) << " - isAboveBreak ) * Ep_gamma);";
+    ss.newLine() << pxl << ".rgb = sign3 * (isAboveBreak * Ep_log + ( " << ss.float3Const(1.0f) 
+                 << " - isAboveBreak ) * Ep_gamma);";
 }
 
 void Add_GAMMA_LOG_TO_LIN(
@@ -2010,6 +1992,10 @@ void Add_LIN_TO_DOUBLE_LOG(
     ss.newLine();
     ss.newLine() << ss.float3Decl("logSeg1") << " = " << 
         pix3 << " * " << ss.float3Const(logSeg1_linSlope) << " + " << ss.float3Const(logSeg1_linOff) << ";";
+
+    // Clamp below 1 to avoid NaNs if the branch will not be used.
+    ss.newLine() << "logSeg1 = max( " << ss.float3Const(1.0) << " - isSegment1, logSeg1 );";
+
     ss.newLine() << "logSeg1 = " << 
         ss.float3Const(logSeg1_logSlope) << " * log( logSeg1 ) + " << ss.float3Const(logSeg1_logOff) << ";";
 
@@ -2017,6 +2003,10 @@ void Add_LIN_TO_DOUBLE_LOG(
     ss.newLine();
     ss.newLine() << ss.float3Decl("logSeg2") << " = " <<
         pix3 << " * " << ss.float3Const(logSeg2_linSlope) << " + " << ss.float3Const(logSeg2_linOff) << ";";
+
+    // Clamp below 1 to avoid NaNs if the branch will not be used.
+    ss.newLine() << "logSeg2 = max( " << ss.float3Const(1.0) << " - isSegment3, logSeg2 );";
+
     ss.newLine() << "logSeg2 = " <<
         ss.float3Const(logSeg2_logSlope) << " * log( logSeg2 ) + " << ss.float3Const(logSeg2_logOff) << ";";
 
