@@ -111,7 +111,8 @@ inline float _post_adaptation_cone_response_compression_fwd(float Rc)
 
 inline float _post_adaptation_cone_response_compression_inv(float Ra)
 {
-    const float F_L_Y = (cam_nl_offset * Ra) / (1.0f - Ra); // TODO: what happens when Ra >= 1.0
+    const float Ra_lim = std::min(Ra, 0.99f);
+    const float F_L_Y = (cam_nl_offset * Ra_lim) / (1.0f - Ra_lim);
     const float Rc    = powf(F_L_Y, 1.f / 0.42f);
     return Rc;
 }
