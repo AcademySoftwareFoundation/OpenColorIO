@@ -272,6 +272,9 @@ void AddLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st
 // Convert "grading log" values to scene-linear.
 void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st);
 
+// Texture converter from RGB to RGBA
+void RGBtoRGBATexture(const float* lutValues, int valueCount, std::vector<float>& float4AdaptedLutValues);
+
 } // namespace OCIO_NAMESPACE
 
 #endif
