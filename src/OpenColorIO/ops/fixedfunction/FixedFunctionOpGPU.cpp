@@ -1887,10 +1887,6 @@ void Add_LIN_TO_GAMMA_LOG(
     ss.newLine() << ss.float3Decl("Ep_gamma") << " = " << ss.float3Const(gammaSeg_slope)
                  << " * pow( E - " << ss.float3Const(gammaSeg_off) << ", " << ss.float3Const(gammaSeg_power) << ");";
 
-//     ss.newLine() << ss.float3Decl("Ep_log") << " = " << ss.float3Const(logSeg_logSlope) << " * log( E * "
-//         << ss.float3Const(logSeg_linSlope) <<  " +" << ss.float3Const(logSeg_linOff) << ") + " 
-//         << ss.float3Const(logSeg_logOff) << ";";
-
     // Avoid NaNs by clamping log input below 1 if the branch will not be used.
     ss.newLine() << ss.float3Decl("Ep_clamped") << " = max( isAtOrBelowBreak, E * "
                  << ss.float3Const(logSeg_linSlope) << " + " << ss.float3Const(logSeg_linOff) << " );";
