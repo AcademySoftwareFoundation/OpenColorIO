@@ -42,7 +42,9 @@ namespace Shader
     };
     inline LimitsDiff ValidateInf(float x1, float x2)
     {
-        if (fabs(x1) < largeThreshold && fabs(x2) < largeThreshold)
+        if ( (fabs(x1) < largeThreshold && fabs(x2) < largeThreshold) 
+            // If either value is NaN, consider this a NaN error rather than an Inf error.
+            || (std::isnan(x1) || std::isnan(x2)) )
         {
             return NOT_APPLICABLE;
         }
@@ -429,6 +431,9 @@ namespace
 
         const OCIOGPUTest::CustomValues::Values & image = test->getCustomValues().m_inputValues;
         float diff = 0.0f;
+        // Initialize these to a known reference value, if any of the four component checks
+        // below fail, it will be set to the index of the last failure. Only the last failure
+        // is printed below.
         size_t idxDiff = invalidIndex;
         size_t idxNan = invalidIndex;
         size_t idxInf = invalidIndex;
@@ -456,7 +461,7 @@ namespace
             if (diff > epsilon)
             {
                 err << std::setprecision(10)
-                    << " larger than epsilon.\nscr = {"
+                    << " larger than epsilon.\nsrc = {"
                     << image[4 * pixelIdx + 0] << ", " << image[4 * pixelIdx + 1] << ", "
                     << image[4 * pixelIdx + 2] << ", " << image[4 * pixelIdx + 3] << "}"
                     << "\ncpu = {"

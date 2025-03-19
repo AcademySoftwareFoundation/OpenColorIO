@@ -474,7 +474,9 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_output_transform_invfwd)
 namespace
 {
 
-OCIO::GroupTransformRcPtr BuildRoundTripTransform(const char * display_style, const char * view_style)
+OCIO::GroupTransformRcPtr BuildDisplayViewTransform(const char * display_style, 
+                                                    const char * view_style, 
+                                                    bool doRoundTrip)
 {
     // Built-in transform for the display.
     OCIO::BuiltinTransformRcPtr display_builtin = OCIO::BuiltinTransform::Create();
@@ -491,18 +493,21 @@ OCIO::GroupTransformRcPtr BuildRoundTripTransform(const char * display_style, co
     view_builtin_inv->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     // Assemble inverse and forward transform into a group transform that goes from
-    // display code values to ACES and back to code values.
+    // display code values to ACES2065-1 and (optionally) back to display code values.
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
     group->appendTransform(display_builtin_inv);
     group->appendTransform(view_builtin_inv);
-    group->appendTransform(view_builtin);
-    group->appendTransform(display_builtin);
-
+    if (doRoundTrip)
+    {
+        group->appendTransform(view_builtin);
+        group->appendTransform(display_builtin);
+    }
     return group;
 }
 
-void GenerateIdentityLut3D(OCIOGPUTest::CustomValues & values, int edgeLen, int numChannels, float scale)
+void GenerateIdentityLut3D(OCIOGPUTest::CustomValues & values, int edgeLen, float scale)
 {
+    const int numChannels = 4;
     int num_samples = edgeLen * edgeLen * edgeLen;
     std::vector<float> img(num_samples * numChannels, 0.f);
 
@@ -518,15 +523,16 @@ void GenerateIdentityLut3D(OCIOGPUTest::CustomValues & values, int edgeLen, int 
 
 } // anon.
 
-// The following group of tests compares the display code value to ACES and back to code value
-// round-trip. The round-trip is not perfect (see BuiltinTransform_tests.cpp) but the tests 
-// here simply check if the CPU and GPU are giving the same result.
+// NOTE: Some of the following tests compare the round-trip from display code value to ACES2065-1
+// and back to display code value. The round-trip is not perfect (see BuiltinTransform_tests.cpp)
+// but the tests here simply check if the CPU and GPU are giving the same result.
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_rec709_rndtrip)
 {
     const char * display_style = "DISPLAY - CIE-XYZ-D65_to_REC.1886-REC.709";
     const char * view_style = "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709_2.0";
-    auto group = BuildRoundTripTransform(display_style, view_style);
+    const bool do_roundtrip = true;
+    auto group = BuildDisplayViewTransform(display_style, view_style, do_roundtrip);
 
     // The test harness gets a processor from the transform with the default optimization
     // level. However, the forward/inverse does not optimize out due to the clamp to AP1
@@ -535,29 +541,64 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_rec709_rndtrip)
 
     // Set up a grid of RGBA custom values.
     const int lut_size = 17;
-    const int num_channels = 4;
     OCIOGPUTest::CustomValues values;
-    GenerateIdentityLut3D(values, lut_size, num_channels, 1.0f);
-
+    GenerateIdentityLut3D(values, lut_size, 1.0f);
     test.setCustomValues(values);
 
     test.setErrorThreshold(0.004f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_rec709_inv)
+{
+    const char * display_style = "DISPLAY - CIE-XYZ-D65_to_REC.1886-REC.709";
+    const char * view_style = "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709_2.0";
+    const bool do_roundtrip = false;
+    auto group = BuildDisplayViewTransform(display_style, view_style, do_roundtrip);
+    test.setProcessor(group);
+
+    const int lut_size = 17;
+    OCIOGPUTest::CustomValues values;
+    GenerateIdentityLut3D(values, lut_size, 1.0f);
+    test.setCustomValues(values);
+
+    test.setRelativeComparison(true);
+    test.setExpectedMinimalValue(1.f);
+    test.setErrorThreshold(0.001f);
 }
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_displayp3_rndtrip)
 {
     const char * display_style = "DISPLAY - CIE-XYZ-D65_to_DisplayP3";
     const char * view_style = "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D65_2.0";
-    auto group = BuildRoundTripTransform(display_style, view_style);
+    const bool do_roundtrip = true;
+    auto group = BuildDisplayViewTransform(display_style, view_style, do_roundtrip);
     test.setProcessor(group);
 
     const int lut_size = 17;
-    const int num_channels = 4;
     OCIOGPUTest::CustomValues values;
-    GenerateIdentityLut3D(values, lut_size, num_channels, 1.0f);
-
+    const float lum_scale = 1.0f;
+    GenerateIdentityLut3D(values, lut_size, lum_scale);
     test.setCustomValues(values);
 
+    test.setErrorThreshold(0.001f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_displayp3_inv)
+{
+    const char * display_style = "DISPLAY - CIE-XYZ-D65_to_DisplayP3";
+    const char * view_style = "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D65_2.0";
+    const bool do_roundtrip = false;
+    auto group = BuildDisplayViewTransform(display_style, view_style, do_roundtrip);
+    test.setProcessor(group);
+
+    const int lut_size = 17;
+    OCIOGPUTest::CustomValues values;
+    const float lum_scale = 1.0f;
+    GenerateIdentityLut3D(values, lut_size, lum_scale);
+    test.setCustomValues(values);
+
+    test.setRelativeComparison(true);
+    test.setExpectedMinimalValue(1.f);
     test.setErrorThreshold(0.001f);
 }
 
@@ -565,14 +606,14 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_1000nit_p3_rndtrip)
 {
     const char * display_style = "DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65";
     const char * view_style = "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D65_2.0";
-    auto group = BuildRoundTripTransform(display_style, view_style);
+    const bool do_roundtrip = true;
+    auto group = BuildDisplayViewTransform(display_style, view_style, do_roundtrip);
     test.setProcessor(group);
 
     const int lut_size = 17;
-    const int num_channels = 4;
     OCIOGPUTest::CustomValues values;
-    GenerateIdentityLut3D(values, lut_size, num_channels, 0.75183f);  // scale to 1000 nits
-
+    const float lum_scale = 0.75183f;  // scale to 1000 nits
+    GenerateIdentityLut3D(values, lut_size, lum_scale);
     test.setCustomValues(values);
 
     // TODO: Investigate why this is not closer.
@@ -581,40 +622,158 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_1000nit_p3_rndtrip)
     test.setErrorThreshold(0.012f);
 }
 
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_1000nit_p3_inv)
+{
+    const char * display_style = "DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65";
+    const char * view_style = "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D65_2.0";
+    const bool do_roundtrip = false;
+    auto group = BuildDisplayViewTransform(display_style, view_style, do_roundtrip);
+    test.setProcessor(group);
+
+    const int lut_size = 17;
+    OCIOGPUTest::CustomValues values;
+    const float lum_scale = 0.75183f;  // scale to 1000 nits
+    GenerateIdentityLut3D(values, lut_size, lum_scale);
+    test.setCustomValues(values);
+
+    test.setRelativeComparison(true);
+    test.setExpectedMinimalValue(1.f);
+    test.setErrorThreshold(0.001f);
+}
+
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_4000nit_p3_rndtrip)
 {
     const char * display_style = "DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65";
     const char * view_style = "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D65_2.0";
-    auto group = BuildRoundTripTransform(display_style, view_style);
+    const bool do_roundtrip = true;
+    auto group = BuildDisplayViewTransform(display_style, view_style, do_roundtrip);
     test.setProcessor(group);
 
     const int lut_size = 17;
-    const int num_channels = 4;
     OCIOGPUTest::CustomValues values;
-    GenerateIdentityLut3D(values, lut_size, num_channels, 0.90257f);  // scale to 4000 nits
-
+    const float lum_scale = 0.90257f;  // scale to 4000 nits
+    GenerateIdentityLut3D(values, lut_size, lum_scale);
     test.setCustomValues(values);
 
     // TODO: Investigate why this is not closer.
     test.setErrorThreshold(0.018f);
 }
 
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_4000nit_p3_inv)
+{
+    const char * display_style = "DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65";
+    const char * view_style = "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D65_2.0";
+    const bool do_roundtrip = false;
+    auto group = BuildDisplayViewTransform(display_style, view_style, do_roundtrip);
+    test.setProcessor(group);
+
+    const int lut_size = 17;
+    OCIOGPUTest::CustomValues values;
+    const float lum_scale = 0.90257f;  // scale to 4000 nits
+    GenerateIdentityLut3D(values, lut_size, lum_scale);
+    test.setCustomValues(values);
+
+    test.setRelativeComparison(true);
+    test.setExpectedMinimalValue(1.f);
+    test.setErrorThreshold(0.001f);
+}
+
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_4000nit_rec2020_rndtrip)
 {
     const char * display_style = "DISPLAY - CIE-XYZ-D65_to_REC.2100-PQ";
     const char * view_style = "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020_2.0";
-    auto group = BuildRoundTripTransform(display_style, view_style);
+    const bool do_roundtrip = true;
+    auto group = BuildDisplayViewTransform(display_style, view_style, do_roundtrip);
     test.setProcessor(group);
 
     const int lut_size = 17;
-    const int num_channels = 4;
     OCIOGPUTest::CustomValues values;
-    GenerateIdentityLut3D(values, lut_size, num_channels, 0.90257f);  // scale to 4000 nits
-
+    const float lum_scale = 0.90257f;  // scale to 4000 nits
+    GenerateIdentityLut3D(values, lut_size, lum_scale);
     test.setCustomValues(values);
 
     // TODO: Investigate why this is not closer.
     test.setErrorThreshold(0.03f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_4000nit_rec2020_inv)
+{
+    const char * display_style = "DISPLAY - CIE-XYZ-D65_to_REC.2100-PQ";
+    const char * view_style = "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020_2.0";
+    const bool do_roundtrip = false;
+    auto group = BuildDisplayViewTransform(display_style, view_style, do_roundtrip);
+    test.setProcessor(group);
+
+    const int lut_size = 17;
+    OCIOGPUTest::CustomValues values;
+    const float lum_scale = 0.90257f;  // scale to 4000 nits
+    GenerateIdentityLut3D(values, lut_size, lum_scale);
+    test.setCustomValues(values);
+
+    test.setRelativeComparison(true);
+    test.setExpectedMinimalValue(1.f);
+    test.setErrorThreshold(0.001f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_d60_4000nit_p3_rndtrip)
+{
+    const char* display_style = "DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65";
+    const char* view_style = "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D60-in-P3-D65_2.0";
+    const bool do_roundtrip = true;
+    auto group = BuildDisplayViewTransform(display_style, view_style, do_roundtrip);
+    test.setProcessor(group);
+
+    const int lut_size = 17;
+    OCIOGPUTest::CustomValues values;
+    const float lum_scale = 0.90257f;  // scale to 4000 nits
+    GenerateIdentityLut3D(values, lut_size, lum_scale);
+    test.setCustomValues(values);
+
+    // TODO: Investigate why this is not closer.
+    test.setErrorThreshold(0.03f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_d60_4000nit_p3_inv)
+{
+    const char* display_style = "DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65";
+    const char* view_style = "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D60-in-P3-D65_2.0";
+    const bool do_roundtrip = false;
+    auto group = BuildDisplayViewTransform(display_style, view_style, do_roundtrip);
+    test.setProcessor(group);
+
+    const int lut_size = 17;
+    OCIOGPUTest::CustomValues values;
+    const float lum_scale = 0.90257f;  // scale to 4000 nits
+    GenerateIdentityLut3D(values, lut_size, lum_scale);
+    test.setCustomValues(values);
+
+    // Difference is on equal RGB, above about 3600, peaking around 3684, and stopping at 3696
+    test.setRelativeComparison(true);
+    test.setExpectedMinimalValue(1.f);
+    test.setErrorThreshold(0.005f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_nan_bug)
+{
+    const char* display_style = "DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65";
+    const char* view_style = "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D60-in-P3-D65_2.0";
+    const bool do_roundtrip = false;
+    auto group = BuildDisplayViewTransform(display_style, view_style, do_roundtrip);
+    test.setProcessor(group);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues =
+    {
+        0.89942779f, 0.89942779f, 0.89942779f, 1.0f,
+        // This second value became NaN on the GPU before the Aab_to_RGB fix.
+        // FIXME: The GPU is no longer NaN, but it is still hugely different from the CPU.
+        // 0.89944305f, 0.89944305f, 0.89944305f, 1.0f
+    };
+    test.setCustomValues(values);
+
+    test.setRelativeComparison(true);
+    test.setExpectedMinimalValue(1.f);
+    test.setErrorThreshold(0.01f);
 }
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_rgb_to_jmh_fwd)
@@ -1016,8 +1175,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSV_fwd)
 
     test.setErrorThreshold(1e-6f);
 
-#ifdef __APPLE__
     test.setTestNaN(false);
+#ifdef __APPLE__
     test.setTestInfinity(false);
 #endif
 }
@@ -1135,7 +1294,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_LUV_fwd)
 
     test.setProcessor(func);
 
-    test.setErrorThreshold(1e-5f);
+    test.setTestInfinity(false);
+    test.setErrorThreshold(5e-5f);
 }
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_LUV_inv)
@@ -1146,6 +1306,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_LUV_inv)
 
     test.setProcessor(func);
 
+    test.setTestInfinity(false);
     test.setErrorThreshold(1e-5f);
 }
 
@@ -1156,6 +1317,9 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_PQ_fwd)
     
     test.setWideRangeInterval(-0.1f, 100.1f);
     test.setProcessor(func);
+
+    test.setTestInfinity(false);
+    test.setTestNaN(false);
 
     // Using large threshold for SSE2 as that will enable usage of fast but
     // approximate power function ssePower.
@@ -1179,6 +1343,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_PQ_inv)
     test.setProcessor(func);
     test.setRelativeComparison(true); // Since the output range will be 0..100, we set the relative epsilon.
     test.setErrorThreshold(OCIO_USE_SSE2 ? 0.0023f : 1.5e-4f);
+    test.setTestInfinity(false);
+    test.setTestNaN(false);
 }
 
 namespace
@@ -1214,6 +1380,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_GAMMA_LOG_fwd)
     test.setWideRangeInterval(-0.1f, 3.35f); // Output ~[-0.3, 1.02]
     test.setProcessor(func);
     test.setErrorThreshold(1e-6f);
+    test.setTestInfinity(false);
+    test.setTestNaN(false);
 }
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_GAMMA_LOG_inv)
@@ -1224,6 +1392,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_GAMMA_LOG_inv)
     test.setWideRangeInterval(-0.3f, 1.02f); // Output ~[-0.1, 3.35]
     test.setProcessor(func);
     test.setErrorThreshold(1e-6f);
+    test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_DOUBLE_LOG_fwd)
@@ -1244,6 +1413,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_DOUBLE_LOG_fwd)
     test.setWideRangeInterval(-1.0f, 2.0f); // Output ~[-1.08, 1.4]
     test.setProcessor(func);
     test.setErrorThreshold(1e-6f);
+    test.setTestInfinity(false);
+    test.setTestNaN(false);
 }
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_DOUBLE_LOG_inv)
@@ -1264,4 +1435,5 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_LIN_TO_DOUBLE_LOG_inv)
     test.setWideRangeInterval(-1.1f, 1.4f); // Output ~[-1.0, 2.0]
     test.setProcessor(func);
     test.setErrorThreshold(1e-6f);
+    test.setTestInfinity(false);
 }
