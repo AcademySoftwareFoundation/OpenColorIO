@@ -41,6 +41,7 @@ private:
     OpRcPtrVec    m_ops;
     bool          m_isNoOp = false;
     bool          m_hasChannelCrosstalk = true;
+    OptimizationFlags m_oFlags = OPTIMIZATION_DEFAULT;
     std::string   m_cacheID;
     mutable Mutex m_mutex;
 };

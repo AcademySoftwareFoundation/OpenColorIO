@@ -51,7 +51,7 @@ public:
 
     ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
-    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator, OptimizationFlags /*oFlags*/) const override;
 
 protected:
     ConstRangeOpDataRcPtr rangeData() const { return DynamicPtrCast<const RangeOpData>(data()); }
@@ -199,7 +199,7 @@ ConstOpCPURcPtr RangeOp::getCPUOp(bool /*fastLogExpPow*/) const
     return GetRangeRenderer(data);
 }
 
-void RangeOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
+void RangeOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator, OptimizationFlags /*oFlags*/) const
 {
     ConstRangeOpDataRcPtr data = rangeData();
     if (data->getDirection() == TRANSFORM_DIR_INVERSE)
