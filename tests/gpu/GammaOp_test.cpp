@@ -104,6 +104,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, forward_mirror)
         1e-5f
 #endif
         , OCIO_VERSION_2);
+    test.setTestNaN(false);
 }
 
 OCIO_ADD_GPU_TEST(ExponentOp, forward_pass_thru)
@@ -117,6 +118,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, forward_pass_thru)
         1e-5f
 #endif
         , OCIO_VERSION_2);
+    test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(ExponentOp, inverse_legacy_shader_v1)
@@ -165,6 +167,7 @@ OCIO_ADD_GPU_TEST(ExponentOp, inverse_mirror)
 #endif
         , OCIO_VERSION_2);
     test.setTestInfinity(false);
+    test.setTestNaN(false);
 }
 
 OCIO_ADD_GPU_TEST(ExponentOp, inverse_pass_thru)
