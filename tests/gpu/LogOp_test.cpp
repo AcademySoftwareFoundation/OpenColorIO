@@ -319,9 +319,9 @@ OCIO_ADD_GPU_TEST(LogCameraTransform, camera_lin2log)
 
     test.setErrorThreshold(g_epsilon);
 
+    test.setTestInfinity(false);
 #ifdef __APPLE__
     test.setTestNaN(false);
-    test.setTestInfinity(false);
 #endif
 }
 
@@ -346,8 +346,8 @@ OCIO_ADD_GPU_TEST(LogCameraTransform, camera_log2lin)
 
     test.setErrorThreshold(g_epsilon_inverse);
 
+    test.setTestInfinity(false);
 #ifdef __APPLE__
     test.setTestNaN(false);
-    test.setTestInfinity(false);
 #endif
 }

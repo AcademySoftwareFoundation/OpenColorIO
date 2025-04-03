@@ -50,6 +50,7 @@ int main(int argc, const char **argv)
     std::vector<std::string> stringAttrs;
 
     std::string outputDepth;
+    std::string inputconfig;
 
     bool usegpu                 = false;
     bool usegpuLegacy           = false;
@@ -85,6 +86,7 @@ int main(int argc, const char **argv)
                "--h",                   &help,                  "Display the help and exit",
                "--help",                &help,                  "Display the help and exit",
                "-v" ,                   &verbose,               "Display general information",
+              "--iconfig %s",           &inputconfig,           "Input .ocio configuration file (default: $OCIO)",
                "<SEPARATOR>", "\nOpenImageIO or OpenEXR options:",
                "--bitdepth %s",         &outputDepth,  "Output image bitdepth",
                "--float-attribute %L",  &floatAttrs,   "\"name=float\" pair defining OIIO float attribute "
@@ -266,34 +268,51 @@ int main(int argc, const char **argv)
         outputimage     = args[2].c_str();
     }
 
+    // Load the current config.
+    OCIO::ConstConfigRcPtr config;
+    
+    try
+    {
+        if (useLut)
+        {
+            config = OCIO::Config::CreateRaw();
+        }
+        else if (!inputconfig.empty() )
+        {
+            config = OCIO::Config::CreateFromFile(inputconfig.c_str());
+        }
+        else
+        {
+            const char * env = OCIO::GetEnvVariable("OCIO");
+            if (env && *env)
+                inputconfig = env;
+            config = OCIO::GetCurrentConfig();
+        }
+    }
+    catch (const OCIO::Exception & e)
+    {
+        std::cout << "ERROR loading config file: " << e.what() << std::endl;
+        exit(1);
+    }
+    catch (...)
+    {
+
+        std::cerr << "ERROR loading config file: '" << inputconfig << "'" << std::endl;
+        exit(1);
+    }
+
     if (verbose)
     {
         std::cout << std::endl;
         std::cout << OCIO::ImageIO::GetVersion() << std::endl;
         std::cout << "OCIO Version: " << OCIO::GetVersion() << std::endl;
-        const char * env = OCIO::GetEnvVariable("OCIO");
-        if (env && *env && !useLut)
+        if (!useLut)
         {
-            try
-            {
-                std::cout << std::endl;
-                std::cout << "OCIO Config. file:    '" << env << "'" << std::endl;
-                OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-                std::cout << "OCIO Config. version: " << config->getMajorVersion() << "." 
-                                                      << config->getMinorVersion() << std::endl;
-                std::cout << "OCIO search_path:     " << config->getSearchPath() << std::endl;
-            }
-            catch (const OCIO::Exception & e)
-            {
-                std::cout << "ERROR loading config file: " << e.what() << std::endl;
-                exit(1);
-            }
-            catch (...)
-            {
-
-                std::cerr << "ERROR loading config file: '" << env << "'" << std::endl;
-                exit(1);
-            }
+            std::cout << std::endl;
+            std::cout << "OCIO Config. file:    '" << inputconfig << "'" << std::endl;
+            std::cout << "OCIO Config. version: " << config->getMajorVersion() << "." 
+                                                  << config->getMinorVersion() << std::endl;
+            std::cout << "OCIO search_path:     " << config->getSearchPath() << std::endl;
         }
     }
 
@@ -388,10 +407,6 @@ int main(int argc, const char **argv)
     // Process the image.
     try
     {
-        // Load the current config.
-        OCIO::ConstConfigRcPtr config
-            = useLut ? OCIO::Config::CreateRaw() : OCIO::GetCurrentConfig();
-
         // Get the processor.
         OCIO::ConstProcessorRcPtr processor;
 
@@ -637,7 +652,6 @@ int main(int argc, const char **argv)
     {
         if (useDisplayView)
         {
-            OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
             outputcolorspace = config->getDisplayViewColorSpaceName(display, view);
         }
 
