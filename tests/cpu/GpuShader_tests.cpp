@@ -122,6 +122,7 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
 
         OCIO_CHECK_EQUAL(shaderDesc->getNum3DTextures(), 0U);
         OCIO_CHECK_NO_THROW(shaderDesc->add3DTexture("lut1", "lut1Sampler", edgelen,
+                                                     OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL,
                                                      OCIO::INTERP_TETRAHEDRAL,
                                                      &values[0]));
 
@@ -130,16 +131,18 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
         const char * textureName = nullptr;
         const char * samplerName = nullptr;
         unsigned e = 0;
+        OCIO::GpuShaderDesc::TextureType channel;
         OCIO::Interpolation i = OCIO::INTERP_UNKNOWN;
 
-        OCIO_CHECK_NO_THROW(shaderDesc->get3DTexture(0, textureName, samplerName, e, i));
+        OCIO_CHECK_NO_THROW(shaderDesc->get3DTexture(0, textureName, samplerName, e, channel, i));
 
         OCIO_CHECK_EQUAL(std::string(textureName), "lut1");
         OCIO_CHECK_EQUAL(std::string(samplerName), "lut1Sampler");
         OCIO_CHECK_EQUAL(edgelen, e);
+        OCIO_CHECK_EQUAL(OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL, channel);
         OCIO_CHECK_EQUAL(OCIO::INTERP_TETRAHEDRAL, i);
 
-        OCIO_CHECK_THROW_WHAT(shaderDesc->get3DTexture(1, textureName, samplerName, e, i),
+        OCIO_CHECK_THROW_WHAT(shaderDesc->get3DTexture(1, textureName, samplerName, e, channel, i),
                               OCIO::Exception,
                               "3D LUT access error");
 
@@ -158,6 +161,7 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
         // Supports several 3D LUTs
 
         OCIO_CHECK_NO_THROW(shaderDesc->add3DTexture("lut1", "lut1Sampler", edgelen,
+                                                     OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL,
                                                      OCIO::INTERP_TETRAHEDRAL,
                                                      &values[0]));
 
@@ -166,6 +170,7 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
         // Check the 3D LUT limit
 
         OCIO_CHECK_THROW(shaderDesc->add3DTexture("lut1", "lut1Sampler", 130,
+                                                  OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL,
                                                   OCIO::INTERP_TETRAHEDRAL,
                                                   &values[0]),
                          OCIO::Exception);

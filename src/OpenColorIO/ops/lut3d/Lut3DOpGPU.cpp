@@ -10,7 +10,6 @@
 #include "ops/lut3d/Lut3DOpGPU.h"
 #include "utils/StringUtils.h"
 
-
 namespace OCIO_NAMESPACE
 {
 
@@ -38,12 +37,30 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
     {
         samplerInterpolation = INTERP_NEAREST;
     }
-    // (Using CacheID here to potentially allow reuse of existing textures.)
-    shaderCreator->add3DTexture(name.c_str(),
+
+    if(shaderCreator->getLanguage() == GPU_LANGUAGE_MSL_2_0){ 
+        unsigned edgelen = lutData->getGridSize();
+        std::vector<float> float4AdaptedLutValues;
+        RGBtoRGBATexture(&lutData->getArray()[0], 3*edgelen*edgelen*edgelen, float4AdaptedLutValues);
+        
+        shaderCreator->add3DTexture(name.c_str(),
                                 GpuShaderText::getSamplerName(name).c_str(),
-                                lutData->getGridSize(),
+                                edgelen,
+                                GpuShaderCreator::TEXTURE_RGBA_CHANNEL,
                                 samplerInterpolation,
-                                &lutData->getArray()[0]);
+                                float4AdaptedLutValues.data());
+    } 
+    else 
+    {
+        // All other languages
+        // (Using CacheID here to potentially allow reuse of existing textures.)
+        shaderCreator->add3DTexture(name.c_str(),
+                                    GpuShaderText::getSamplerName(name).c_str(),
+                                    lutData->getGridSize(),
+                                    GpuShaderCreator::TEXTURE_RGB_CHANNEL,
+                                    samplerInterpolation,
+                                    &lutData->getArray()[0]);
+    }
 
     {
         GpuShaderText ss(shaderCreator->getLanguage());
