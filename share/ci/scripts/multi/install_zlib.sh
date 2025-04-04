@@ -13,6 +13,9 @@ ZLIB_MINOR=$(echo "${ZLIB_MAJOR_MINOR}" | cut   -d. -f2-)
 ZLIB_PATCH=$(echo "${ZLIB_VERSION}" | cut   -d. -f3-)
 ZLIB_VERSION_U="${ZLIB_MAJOR}.${ZLIB_MINOR}.${ZLIB_PATCH}"
 
+# Required for CMake-4.0+ compatibility
+export CMAKE_POLICY_VERSION_MINIMUM=3.5
+
 git clone https://github.com/madler/zlib
 cd zlib
 

@@ -11,6 +11,9 @@ YAMLCPP_MAJOR_MINOR=$(echo "${YAMLCPP_VERSION}" | cut -d. -f-2)
 YAMLCPP_MINOR=$(echo "${YAMLCPP_MAJOR_MINOR}" | cut -d. -f2-)
 YAMLCPP_PATCH=$(echo "${YAMLCPP_VERSION}" | cut -d. -f3-)
 
+# Required for CMake-4.0+ compatibility
+export CMAKE_POLICY_VERSION_MINIMUM=3.5
+
 git clone https://github.com/jbeder/yaml-cpp.git
 cd yaml-cpp
 

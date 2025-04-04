@@ -72,6 +72,8 @@ if(NOT ZLIB_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGE
             # version as the cmake_minimum_required and that version has no knowledge of the policy.
             # Since that policy gets unset, it causes a warning with CMake 3.25+.
             -DCMAKE_POLICY_DEFAULT_CMP0042=NEW
+            # Required for CMake 4.0+ compatibility
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5
             -DCMAKE_CXX_VISIBILITY_PRESET=${CMAKE_CXX_VISIBILITY_PRESET}
             -DCMAKE_VISIBILITY_INLINES_HIDDEN=${CMAKE_VISIBILITY_INLINES_HIDDEN}
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON
