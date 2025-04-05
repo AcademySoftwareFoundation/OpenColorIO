@@ -53,6 +53,13 @@ supported_apps:
       link : "http://www.isotropix.com/products/clarisse/ifx" 
 
     # portfolio item loop
+    - name : ColorBox
+      image : images/supported_apps/aja_colorbox.png
+      categories : ["Hardware"]
+      content : Native Support
+      link : "https://www.aja.com/products/colorbox"
+
+    # portfolio item loop
     - name : CryEngine
       image : images/supported_apps/cryengine.png
       categories : ["Game Engine", "3D"]
@@ -156,6 +163,13 @@ supported_apps:
       categories : ["2D", "Compositing"]
       content : Native support.
       link : "http://www.thefoundry.co.uk/products/nuke"
+
+    # portfolio item loop
+    - name : OG-ColorBox
+      image : images/supported_apps/aja_og_colorbox.png
+      categories : ["Hardware"]
+      content : Native Support
+      link : "https://www.aja.com/products/og-colorbox"
 
     # portfolio item loop
     - name : OpenImageIO
