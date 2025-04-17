@@ -27,9 +27,9 @@ supported_apps:
     # portfolio item loop
     - name : Autodesk Arnold
       image : images/supported_apps/arnold.png
-      categories : ["3D", "Render"]
+      categories : ["3D", "Lighting", "Look Dev", "Render"]
       content : Native support.
-      link : "https://www.arnoldrenderer.com/" 
+      link : "https://www.autodesk.com/products/arnold/overview" 
 
     # portfolio item loop
     - name : Blender
@@ -72,6 +72,13 @@ supported_apps:
       categories : ["Playback", "Review"]
       content : Native support.
       link : "https://darbyjohnston.github.io/DJV/"
+
+    # portfolio item loop
+    - name : Autodesk Flame
+      image : images/supported_apps/flame.png
+      categories : ["2D", "Compositing"]
+      content : Flame 2026 and up.
+      link : "https://www.autodesk.com/products/flame/overview"
 
     # portfolio item loop
     - name : Gaffer
@@ -179,11 +186,11 @@ supported_apps:
       link : "https://github.com/aferrero2707/PhotoFlow"
 
     # portfolio item loop
-    - name : RV
+    - name : Autodesk RV
       image : images/supported_apps/rv.png
-      categories : ["Review"]
+      categories : ["Review", "Playback"]
       content : Native support.
-      link : "http://www.tweaksoftware.com/"
+      link : "https://github.com/AcademySoftwareFoundation/OpenRV"
 
     # portfolio item loop
     - name : Silhouette
@@ -226,3 +233,10 @@ supported_apps:
       categories : ["Render", "3D"]
       content : V-Ray 4 and up.
       link : "https://chaosgroup.com/"
+
+    # portfolio item loop
+    - name : Autodesk VRED
+      image : images/supported_apps/vred.png
+      categories : ["3D", "Lighting", "Look Dev", "Render"]
+      content : VRED 2025.3 and up.
+      link : "https://www.autodesk.com/products/vred/overview"
