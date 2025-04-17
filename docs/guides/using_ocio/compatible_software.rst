@@ -59,11 +59,11 @@ Documentation :
 Arnold (Autodesk)
 *****************
 
-Website : `<https://www.arnoldrenderer.com/>`__
+Website : `<https://www.autodesk.com/products/arnold/overview>`__
 
 Documentation :
 
-- `Color Management <https://docs.arnoldrenderer.com/display/A5AFMUG/Color+Management>`__
+- `Color Management <https://help.autodesk.com/view/ARNOL/ENU/?guid=arnold_user_guide_ac_color_management_html>`__
 
 
 Blender
@@ -154,6 +154,18 @@ DJV
 Website: `<https://darbyjohnston.github.io/DJV/>`__
 
 
+Flame (Autodesk)
+****************
+
+Website: `Autodesk Flame <https://www.autodesk.com/products/vred/overview>`__
+
+Supported version: >= 2026
+
+Documentation:
+
+- `OCIO in Flame <https://help.autodesk.com/view/FLAME/2026/ENU/?guid=colour-management_opencolorio>`__
+
+
 Gaffer
 ******
 
@@ -203,14 +215,6 @@ Documentation:
 - `OpenColorIO Support <https://www.sidefx.com/docs/houdini/io/ocio.html>`__
 
 - `What's new in Houdini 16 <https://www.sidefx.com/filmtv/whats-new-h16/>`__
-
-
-Java (Beta)
-***********
-
-The OpenColorIO API is available for use in Java. This integration is currently considered a work in progress, and should not be relied upon for critical production work.
-
-Website: `<https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/src/bindings/java>`__
 
 
 Katana (Foundry)
@@ -371,7 +375,7 @@ Python
 
 The OpenColorIO API is available for use in Python.
 
-Website: `<https://github.com/AcademySoftwareFoundation/OpenColorIO/tree/main/src/bindings/python>`__
+Website: `<https://pypi.org/project/opencolorio/>`__
 
 Documentation:
 
@@ -383,7 +387,7 @@ Documentation:
 RV (Autodesk)
 *************
 
-Website : `<https://www.autodesk.com/products/flow-production-tracking/rv>`__
+Website : `<https://www.autodesk.com/products/flow-production-tracking/overview>`__
 
 OpenRV : `<https://github.com/AcademySoftwareFoundation/OpenRV>`__
 
@@ -450,6 +454,7 @@ Website : `<http://www.sonycreativesoftware.com/vegaspro>`__
 
 Supported Version: >= 12
 
+
 V-Ray (Chaos Group)
 *******************
 
@@ -460,6 +465,19 @@ Documentation :
 - `OpenColorIO support <https://docs.chaosgroup.com/display/VRAY4MAX/OpenColorIO+Support>`__
 
 - `VRayTexOCIO <https://docs.chaosgroup.com/display/VRAY4MAYA/VRayTexOCIO>`__
+
+
+VRED (Autodesk)
+***************
+
+Website : `<https://www.autodesk.com/products/vred/overview>`__
+
+Supported Version: >= 2025.3
+
+Documentation :
+
+- `Autodesk VRED 2025.3 <https://help.autodesk.com/view/VREDPRODUCTS/2025/ENU/?guid=color-vred-20253>`__
+
 
 
 Apps w/icc or luts
