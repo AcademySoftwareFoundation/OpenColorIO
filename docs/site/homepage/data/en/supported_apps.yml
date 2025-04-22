@@ -53,6 +53,13 @@ supported_apps:
       link : "http://www.isotropix.com/products/clarisse/ifx" 
 
     # portfolio item loop
+    - name : AJA ColorBox
+      image : images/supported_apps/aja_colorbox.png
+      categories : ["Hardware"]
+      content : Native Support
+      link : "https://www.aja.com/nav/products-color"
+
+    # portfolio item loop
     - name : CryEngine
       image : images/supported_apps/cryengine.png
       categories : ["Game Engine", "3D"]
