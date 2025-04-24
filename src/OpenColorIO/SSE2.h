@@ -27,10 +27,14 @@
             #undef _mm_min_ps
         #endif
 
-        // Current versions of MSVC do not define float16_t, so we do it ourselves using
-        // int16_t as an intermediate type
-        #if defined(_M_ARM64) && !defined(float16_t)
-            #define float16_t int16_t
+        // Current versions of MSVC/clang do not define float16_t, so we do it ourselves using
+        // int16_t as an intermediate type (on MSVC), or the built-in __fp16 type (on clang)
+        #if !defined(float16_t)
+            #if defined(__clang__)
+                #define float16_t __fp16
+            #else
+                #define float16_t int16_t
+            #endif
         #endif
 
         // Current versions of MSVC do not define vst1q_f16, so we do it ourselves using
