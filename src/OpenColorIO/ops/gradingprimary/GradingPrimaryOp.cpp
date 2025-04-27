@@ -52,7 +52,7 @@ public:
 
     ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
-    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator, OptimizationFlags /*oFlags*/) const override;
 
 protected:
     ConstGradingPrimaryOpDataRcPtr primaryData() const
@@ -190,7 +190,7 @@ ConstOpCPURcPtr GradingPrimaryOp::getCPUOp(bool /*fastLogExpPow*/) const
     return GetGradingPrimaryCPURenderer(data);
 }
 
-void GradingPrimaryOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
+void GradingPrimaryOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator, OptimizationFlags /*oFlags*/) const
 {
     ConstGradingPrimaryOpDataRcPtr data = primaryData();
     GetGradingPrimaryGPUShaderProgram(shaderCreator, data);
