@@ -404,6 +404,8 @@ void bindPyConfig(py::module & m)
              DOC(Config, addSharedView))
         .def("removeSharedView", &Config::removeSharedView, "view"_a, 
              DOC(Config, removeSharedView))
+        .def("clearSharedViews", &Config::clearSharedViews,
+             DOC(Config, clearSharedViews))
         .def("getSharedViews", [](ConfigRcPtr & self) 
             { 
                 return SharedViewIterator(self); 
@@ -456,6 +458,9 @@ void bindPyConfig(py::module & m)
         .def("getDisplayViewDescription", &Config::getDisplayViewDescription, 
              "display"_a, "view"_a, 
              DOC(Config, getDisplayViewDescription))
+        .def("displayHasView", &Config::displayHasView,
+             "display"_a, "view"_a,
+             DOC(Config, displayHasView))
         .def("addDisplayView", 
              (void (Config::*)(const char *, const char *, const char *, const char *)) 
              &Config::addDisplayView, 
@@ -475,20 +480,35 @@ void bindPyConfig(py::module & m)
              "ruleName"_a = "", 
              "description"_a = "", 
              DOC(Config, addDisplayView))
+        .def("viewIsShared", &Config::viewIsShared, "display"_a, "view"_a,
+             DOC(Config, viewIsShared))
         .def("addDisplaySharedView", &Config::addDisplaySharedView, "display"_a, "view"_a, 
              DOC(Config, addDisplaySharedView))
         .def("removeDisplayView", &Config::removeDisplayView, "display"_a, "view"_a, 
              DOC(Config, removeDisplayView))
         .def("clearDisplays", &Config::clearDisplays, 
              DOC(Config, clearDisplays))
+        .def_static("ViewsAreEqual", [](const ConstConfigRcPtr & first,
+                                        const ConstConfigRcPtr & second,
+                                        const char * dispName,
+                                        const char * viewName)
+            {
+                return Config::ViewsAreEqual(first, second, dispName, viewName);
+            },
+                    "first"_a, "second"_a, "dispName"_a, "viewName"_a,
+                    DOC(Config, ViewsAreEqual))
 
         // Virtual Display
+        .def("hasVirtualView", &Config::hasVirtualView, "view"_a,
+             DOC(Config, hasVirtualView))
         .def("addVirtualDisplayView", &Config::addVirtualDisplayView, 
              "view"_a, "viewTransformName"_a, "colorSpaceName"_a, 
              "looks"_a = "",
              "ruleName"_a = "", 
              "description"_a = "", 
              DOC(Config, addVirtualDisplayView))
+        .def("virtualViewIsShared", &Config::virtualViewIsShared, "view"_a,
+             DOC(Config, virtualViewIsShared))
         .def("addVirtualDisplaySharedView", &Config::addVirtualDisplaySharedView, "sharedView"_a,
              DOC(Config, addVirtualDisplaySharedView))
         .def("getVirtualDisplayViews", [](ConfigRcPtr & self, ViewType type)
@@ -532,6 +552,14 @@ void bindPyConfig(py::module & m)
                  return false;
              },
              "display"_a)
+        .def_static("VirtualViewsAreEqual", [](const ConstConfigRcPtr & first,
+                                               const ConstConfigRcPtr & second,
+                                               const char * viewName)
+            {
+                return Config::VirtualViewsAreEqual(first, second, viewName);
+            },
+                    "first"_a, "second"_a, "viewName"_a,
+                    DOC(Config, VirtualViewsAreEqual))
 
         // Active Displays and Views
         .def("setActiveDisplays", &Config::setActiveDisplays, "displays"_a, 
