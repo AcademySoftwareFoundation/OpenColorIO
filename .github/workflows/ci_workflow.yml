@@ -489,7 +489,7 @@ jobs:
             arch-type: "x86_64"
             build-type: Release
             build-shared: 'ON'
-            build-docs: 'ON'
+            build-docs: 'OFF'
             build-openfx: 'OFF'
             use-simd: 'OFF'
             use-oiio: 'OFF'
@@ -624,7 +624,7 @@ jobs:
             test-rosetta: "OFF"
             build-type: Release
             build-shared: 'ON'
-            build-docs: 'OFF'
+            build-docs: 'ON'
             build-openfx: 'OFF'
             use-simd: 'ON'
             use-oiio: 'OFF'
