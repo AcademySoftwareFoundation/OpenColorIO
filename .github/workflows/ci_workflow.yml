@@ -624,7 +624,7 @@ jobs:
             test-rosetta: "OFF"
             build-type: Release
             build-shared: 'ON'
-            build-docs: 'ON'
+            build-docs: 'OFF'
             build-openfx: 'OFF'
             use-simd: 'ON'
             use-oiio: 'OFF'
