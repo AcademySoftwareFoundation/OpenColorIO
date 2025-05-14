@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Authors on OpenColorIO</title>
+    <link>http://localhost:1313/author/</link>
+    <description>Recent content in Authors on OpenColorIO</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <copyright>copyright &amp;copy; 2020 OpenColorIO Contributors</copyright>
+    <atom:link href="http://localhost:1313/author/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>John Doe</title>
+      <link>http://localhost:1313/author/john-doe/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/author/john-doe/</guid>
+      <description>&lt;p&gt;Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin sit amet vulputate augue. Duis auctor lacus id vehicula gravida. Nam suscipit vitae purus et laoreet.&#xA;Donec nisi dolor, consequat vel pretium id, auctor in dui. Nam iaculis, neque ac ullamcorper.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Mark Dinn</title>
+      <link>http://localhost:1313/author/mark-dinn/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/author/mark-dinn/</guid>
+      <description>&lt;p&gt;Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin sit amet vulputate augue. Duis auctor lacus id vehicula gravida. Nam suscipit vitae purus et laoreet.&#xA;Donec nisi dolor, consequat vel pretium id, auctor in dui. Nam iaculis, neque ac ullamcorper.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
