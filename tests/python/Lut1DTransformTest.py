@@ -22,7 +22,7 @@ from TransformsBaseTest import TransformsBaseTest
 class Lut1DTransformTest(unittest.TestCase, TransformsBaseTest):
 
     def setUp(self):
-        self.tr = OCIO.Lut1DTransform()
+        self.tr: OCIO.Lut1DTransform = OCIO.Lut1DTransform()
 
     def test_default_constructor(self):
         """
@@ -163,7 +163,7 @@ class Lut1DTransformTest(unittest.TestCase, TransformsBaseTest):
         Test the setValue() and getValue() methods.
         """
 
-        self.tr = OCIO.Lut1DTransform(length=3)
+        self.tr: OCIO.Lut1DTransform = OCIO.Lut1DTransform(length=3)
         r, g, b = self.tr.getValue(0)
         self.assertEqual([r, g, b], [0, 0, 0])
         r, g, b = self.tr.getValue(1)

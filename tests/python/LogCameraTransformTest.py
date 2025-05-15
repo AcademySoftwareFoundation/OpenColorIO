@@ -205,7 +205,7 @@ class LogCameraTransformTest(unittest.TestCase):
         # Wrong type tests.
         for invalid in (None, 'test'):
             with self.assertRaises(TypeError):
-                lct.setBase(invalid)
+                lct.setBase(invalid)  # type: ignore[arg-type]
 
     def test_logSideSlope(self):
         """

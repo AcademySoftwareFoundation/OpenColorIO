@@ -15,7 +15,7 @@ from UnitTestUtils import STRING_TYPES
 
 class BuiltinTransformRegistryTest(unittest.TestCase):
     # BuiltinTransformRegistry singleton
-    REGISTRY = None
+    REGISTRY: OCIO.BuiltinTransformRegistry = None
 
     @classmethod
     def setUpClass(cls):

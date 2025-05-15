@@ -29,7 +29,7 @@ class ArchiveIsConfigArchivableTest(unittest.TestCase):
         self.CONFIG.validate()
     
     def tearDown(self):
-        self.CONFIG = None
+        self.CONFIG = None  # type: ignore[assigment]
 
     def test_is_archivable(self):
         """

@@ -58,10 +58,10 @@ class GradingDataTest(unittest.TestCase):
         self.assertEqual(0, rgbm3.red)
 
         with self.assertRaises(TypeError):
-            OCIO.GradingRGBM(0)
+            OCIO.GradingRGBM(0)  # type: ignore[call-overload]
 
         with self.assertRaises(TypeError):
-            OCIO.GradingRGBM(0, 0)
+            OCIO.GradingRGBM(0, 0)  # type: ignore[call-overload]
             
         # Constructor with named parameters.
         rgbm3 = OCIO.GradingRGBM(blue=1, green=2, master=3, red=4)
@@ -72,7 +72,7 @@ class GradingDataTest(unittest.TestCase):
 
         # Constructor with named parameters, some missing.
         with self.assertRaises(TypeError):
-            OCIO.GradingRGBM(master=.3, red=.4)
+            OCIO.GradingRGBM(master=.3, red=.4)  # type: ignore[call-overload]
 
         # Check comparison operators
         rgbm1 = OCIO.GradingRGBM()
@@ -322,10 +322,10 @@ class GradingDataTest(unittest.TestCase):
         self.assertEqual(3, rgbm4.width)
 
         with self.assertRaises(TypeError):
-            OCIO.GradingRGBMSW(0)
+            OCIO.GradingRGBMSW(0)  # type: ignore[call-overload]
 
         with self.assertRaises(TypeError):
-            OCIO.GradingRGBMSW(0, 0, 0)
+            OCIO.GradingRGBMSW(0, 0, 0)  # type: ignore[call-overload]
 
         # Constructor with named parameters.
         rgbm5 = OCIO.GradingRGBMSW(blue=1, master=2, green=3, start=4, width=5, red=6)
@@ -347,7 +347,7 @@ class GradingDataTest(unittest.TestCase):
 
         # Constructor with named parameters, some missing.
         with self.assertRaises(TypeError):
-            OCIO.GradingRGBMSW(green=3, start=4)
+            OCIO.GradingRGBMSW(green=3, start=4)  # type: ignore[call-overload]
 
         # Check comparison operators
         rgbm1 = OCIO.GradingRGBMSW(1, 2, 3, 4, 5, 6)
