@@ -22,11 +22,11 @@ class LegacyViewingPipelineTest(unittest.TestCase):
         pipeline.setLooksOverrideEnabled(None)
         self.assertFalse(pipeline.getLooksOverrideEnabled())
         with self.assertRaises(TypeError):
-            pipeline.setLooksOverrideEnabled()
+            pipeline.setLooksOverrideEnabled()  # type: ignore
         with self.assertRaises(TypeError):
-            pipeline.setLooksOverrideEnabled(OCIO.TRANSFORM_DIR_FORWARD)
+            pipeline.setLooksOverrideEnabled(OCIO.TRANSFORM_DIR_FORWARD)  # type: ignore
         with self.assertRaises(TypeError):
-            pipeline.setLooksOverrideEnabled('no')
+            pipeline.setLooksOverrideEnabled('no')  # type: ignore
 
         self.assertEqual(pipeline.getLooksOverride(), '')
         pipeline.setLooksOverride('test')
@@ -34,13 +34,13 @@ class LegacyViewingPipelineTest(unittest.TestCase):
         pipeline.setLooksOverride('')
         self.assertEqual(pipeline.getLooksOverride(), '')
         with self.assertRaises(TypeError):
-            pipeline.setLooksOverride(None)
+            pipeline.setLooksOverride(None)  # type: ignore
         with self.assertRaises(TypeError):
-            pipeline.setLooksOverride()
+            pipeline.setLooksOverride()  # type: ignore
         with self.assertRaises(TypeError):
-            pipeline.setLooksOverride(OCIO.TRANSFORM_DIR_FORWARD)
+            pipeline.setLooksOverride(OCIO.TRANSFORM_DIR_FORWARD)  # type: ignore
         with self.assertRaises(TypeError):
-            pipeline.setLooksOverride(False)
+            pipeline.setLooksOverride(False)  # type: ignore
 
     def test_display_view_transform(self):
         """
@@ -55,11 +55,11 @@ class LegacyViewingPipelineTest(unittest.TestCase):
         self.assertEqual(pipeline.getDisplayViewTransform(), None)
 
         with self.assertRaises(TypeError):
-            pipeline.setDisplayViewTransform()
+            pipeline.setDisplayViewTransform()  # type: ignore
         with self.assertRaises(TypeError):
-            pipeline.setDisplayViewTransform(OCIO.TRANSFORM_DIR_FORWARD)
+            pipeline.setDisplayViewTransform(OCIO.TRANSFORM_DIR_FORWARD)  # type: ignore
         with self.assertRaises(TypeError):
-            pipeline.setDisplayViewTransform(False)
+            pipeline.setDisplayViewTransform(False)  # type: ignore
 
     def test_linear_cc(self):
         """
@@ -78,11 +78,11 @@ class LegacyViewingPipelineTest(unittest.TestCase):
         self.assertEqual(pipeline.getLinearCC(), None)
 
         with self.assertRaises(TypeError):
-            pipeline.setLinearCC()
+            pipeline.setLinearCC()  # type: ignore
         with self.assertRaises(TypeError):
-            pipeline.setLinearCC(OCIO.TRANSFORM_DIR_FORWARD)
+            pipeline.setLinearCC(OCIO.TRANSFORM_DIR_FORWARD)  # type: ignore
         with self.assertRaises(TypeError):
-            pipeline.setLinearCC(False)
+            pipeline.setLinearCC(False)  # type: ignore
 
     def test_color_timing_cc(self):
         """
@@ -101,11 +101,11 @@ class LegacyViewingPipelineTest(unittest.TestCase):
         self.assertEqual(pipeline.getColorTimingCC(), None)
 
         with self.assertRaises(TypeError):
-            pipeline.setColorTimingCC()
+            pipeline.setColorTimingCC()  # type: ignore
         with self.assertRaises(TypeError):
-            pipeline.setColorTimingCC(OCIO.TRANSFORM_DIR_FORWARD)
+            pipeline.setColorTimingCC(OCIO.TRANSFORM_DIR_FORWARD)  # type: ignore
         with self.assertRaises(TypeError):
-            pipeline.setColorTimingCC(False)
+            pipeline.setColorTimingCC(False)  # type: ignore
 
     def test_channel_view(self):
         """
@@ -121,11 +121,11 @@ class LegacyViewingPipelineTest(unittest.TestCase):
         self.assertEqual(pipeline.getChannelView(), None)
 
         with self.assertRaises(TypeError):
-            pipeline.setChannelView()
+            pipeline.setChannelView()  # type: ignore
         with self.assertRaises(TypeError):
-            pipeline.setChannelView(OCIO.TRANSFORM_DIR_FORWARD)
+            pipeline.setChannelView(OCIO.TRANSFORM_DIR_FORWARD)  # type: ignore
         with self.assertRaises(TypeError):
-            pipeline.setChannelView(False)
+            pipeline.setChannelView(False)  # type: ignore
 
     def test_display_cc(self):
         """
@@ -144,11 +144,11 @@ class LegacyViewingPipelineTest(unittest.TestCase):
         self.assertEqual(pipeline.getDisplayCC(), None)
 
         with self.assertRaises(TypeError):
-            pipeline.setDisplayCC()
+            pipeline.setDisplayCC()  # type: ignore
         with self.assertRaises(TypeError):
-            pipeline.setDisplayCC(OCIO.TRANSFORM_DIR_FORWARD)
+            pipeline.setDisplayCC(OCIO.TRANSFORM_DIR_FORWARD)  # type: ignore
         with self.assertRaises(TypeError):
-            pipeline.setDisplayCC(False)
+            pipeline.setDisplayCC(False)  # type: ignore
 
     def test_get_processor_errors(self):
         """

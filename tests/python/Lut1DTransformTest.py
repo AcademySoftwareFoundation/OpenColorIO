@@ -22,7 +22,7 @@ from TransformsBaseTest import TransformsBaseTest
 class Lut1DTransformTest(unittest.TestCase, TransformsBaseTest):
 
     def setUp(self):
-        self.tr = OCIO.Lut1DTransform()
+        self.tr: OCIO.Lut1DTransform = OCIO.Lut1DTransform()
 
     def test_default_constructor(self):
         """

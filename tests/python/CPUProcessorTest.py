@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+from __future__ import annotations
+
 import logging
 import unittest
 
@@ -21,6 +23,47 @@ import PyOpenColorIO as OCIO
 class CPUProcessorTest(unittest.TestCase):
     FLOAT_DELTA = 1e+5
     UINT_DELTA = 1
+
+    default_cpu_proc_fwd: OCIO.CPUProcessor
+    default_cpu_proc_inv: OCIO.CPUProcessor
+    half_cpu_proc_fwd: OCIO.CPUProcessor
+    half_cpu_proc_inv: OCIO.CPUProcessor
+    uint16_cpu_proc_fwd: OCIO.CPUProcessor
+    uint16_cpu_proc_inv: OCIO.CPUProcessor
+    uint8_cpu_proc_fwd: OCIO.CPUProcessor
+    uint8_cpu_proc_inv: OCIO.CPUProcessor
+    config: OCIO.Config
+    proc_fwd: OCIO.Processor
+    proc_inv: OCIO.Processor
+    float_rgb_list: list[float]
+    float_rgba_list: list[float]
+    float_rgb_1d: np.ndarray
+    float_rgb_2d: np.ndarray
+    float_rgb_3d: np.ndarray
+    float_rgba_1d: np.ndarray
+    float_rgba_2d: np.ndarray
+    float_rgba_3d: np.ndarray
+
+    half_rgb_1d: np.ndarray
+    half_rgb_2d: np.ndarray
+    half_rgb_3d: np.ndarray
+    half_rgba_1d: np.ndarray
+    half_rgba_2d: np.ndarray
+    half_rgba_3d: np.ndarray
+
+    uint8_rgb_1d: np.ndarray
+    uint8_rgb_2d: np.ndarray
+    uint8_rgb_3d: np.ndarray
+    uint8_rgba_1d: np.ndarray
+    uint8_rgba_2d: np.ndarray
+    uint8_rgba_3d: np.ndarray
+
+    uint16_rgb_1d: np.ndarray
+    uint16_rgb_2d: np.ndarray
+    uint16_rgb_3d: np.ndarray
+    uint16_rgba_1d: np.ndarray
+    uint16_rgba_2d: np.ndarray
+    uint16_rgba_3d: np.ndarray
 
     @classmethod
     def setUpClass(cls):

@@ -5,7 +5,7 @@ try:
     from collections.abc import Iterable
 except ImportError:
     # Python 2
-    from collections import Iterable
+    from collections import Iterable  # type: ignore
 
 import unittest
 
@@ -15,7 +15,7 @@ from UnitTestUtils import STRING_TYPES
 
 class BuiltinTransformRegistryTest(unittest.TestCase):
     # BuiltinTransformRegistry singleton
-    REGISTRY = None
+    REGISTRY: OCIO.BuiltinTransformRegistry
 
     @classmethod
     def setUpClass(cls):

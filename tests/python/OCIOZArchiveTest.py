@@ -29,7 +29,7 @@ class ArchiveIsConfigArchivableTest(unittest.TestCase):
         self.CONFIG.validate()
     
     def tearDown(self):
-        self.CONFIG = None
+        self.CONFIG = None  # type: ignore
 
     def test_is_archivable(self):
         """
@@ -192,8 +192,8 @@ class ArchiveContextTest(unittest.TestCase):
         self.CONTEXT = ctx
 
     def tearDown(self):
-        self.CONFIG = None
-        self.CONTEXT = None
+        self.CONFIG = None  # type: ignore
+        self.CONTEXT = None  # type: ignore
 
     def test_search_paths(self):
         """
