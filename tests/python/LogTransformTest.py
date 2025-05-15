@@ -14,7 +14,7 @@ class LogTransformTest(unittest.TestCase, TransformsBaseTest):
     TEST_DIRECTION = OCIO.TRANSFORM_DIR_INVERSE
 
     def setUp(self):
-        self.tr = OCIO.LogTransform()
+        self.tr: OCIO.LogTransform = OCIO.LogTransform()
 
     def test_transform_type(self):
         """
@@ -111,4 +111,4 @@ class LogTransformTest(unittest.TestCase, TransformsBaseTest):
 
         for invalid in (None, 'test'):
             with self.assertRaises(TypeError):
-                log_tr = OCIO.LogTransform(invalid)
+                log_tr = OCIO.LogTransform(invalid)  # type: ignore[call-overload]

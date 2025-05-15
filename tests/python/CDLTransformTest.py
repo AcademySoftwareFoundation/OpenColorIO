@@ -25,7 +25,7 @@ class CDLTransformTest(unittest.TestCase, TransformsBaseTest):
     TEST_CDL_SAT = 6
 
     def setUp(self):
-        self.tr = OCIO.CDLTransform()
+        self.tr: OCIO.CDLTransform = OCIO.CDLTransform()
 
     def test_transform_type(self):
         """

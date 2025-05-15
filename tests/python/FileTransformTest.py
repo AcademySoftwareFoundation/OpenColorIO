@@ -41,7 +41,7 @@ class FileTransformTest(unittest.TestCase, TransformsBaseTest):
                        ('nukevf', 'vf')]
 
     def setUp(self):
-        self.tr = OCIO.FileTransform()
+        self.tr: OCIO.FileTransform = OCIO.FileTransform()
 
     def test_transform_type(self):
         """
@@ -65,7 +65,7 @@ class FileTransformTest(unittest.TestCase, TransformsBaseTest):
         # Wrong type tests.
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                self.tr.setCCCId(invalid)
+                self.tr.setCCCId(invalid)  # type: ignore[arg-type]
 
     def test_cdlstyle(self):
         """

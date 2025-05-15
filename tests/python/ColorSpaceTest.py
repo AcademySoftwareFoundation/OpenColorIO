@@ -77,7 +77,7 @@ class ColorSpaceTest(unittest.TestCase):
 
         # Wrong type tests (set to None.)
         with self.assertRaises(TypeError):
-            self.colorspace.setAllocation(None)
+            self.colorspace.setAllocation(None)  # type: ignore[arg-type]
 
     def test_allocation_vars(self):
         """
@@ -120,7 +120,7 @@ class ColorSpaceTest(unittest.TestCase):
 
         # Wrong type tests (set to None.)
         with self.assertRaises(TypeError):
-            self.colorspace.setBitDepth(None)
+            self.colorspace.setBitDepth(None)  # type: ignore[arg-type]
 
     def test_category(self):
         """
@@ -295,7 +295,7 @@ class ColorSpaceTest(unittest.TestCase):
         wrong_is_datas = [['test'], 'test']
         for wrong_is_data in wrong_is_datas:
             with self.assertRaises(TypeError):
-                self.colorspace.setIsData(wrong_is_data)
+                self.colorspace.setIsData(wrong_is_data)  # type: ignore[arg-type]
 
     def test_description(self):
         """

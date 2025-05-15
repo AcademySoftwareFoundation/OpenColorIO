@@ -22,7 +22,7 @@ class ExposureContrastTransformTest(unittest.TestCase, TransformsBaseTest):
     TEST_INVALIDS = (None, 'hello', [1, 2, 3])
 
     def setUp(self):
-        self.tr = OCIO.ExposureContrastTransform()
+        self.tr: OCIO.ExposureContrastTransform = OCIO.ExposureContrastTransform()
 
     def test_transform_type(self):
         """

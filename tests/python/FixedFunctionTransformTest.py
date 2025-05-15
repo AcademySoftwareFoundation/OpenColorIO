@@ -13,7 +13,7 @@ class FixedFunctionTransformTest(unittest.TestCase, TransformsBaseTest):
     TEST_DIRECTION = OCIO.TRANSFORM_DIR_INVERSE
 
     def setUp(self):
-        self.tr = OCIO.FixedFunctionTransform(
+        self.tr: OCIO.FixedFunctionTransform = OCIO.FixedFunctionTransform(
             OCIO.FIXED_FUNCTION_ACES_RED_MOD_03)
 
     def test_transform_type(self):

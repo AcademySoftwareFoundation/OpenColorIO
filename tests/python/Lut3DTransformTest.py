@@ -22,7 +22,7 @@ from TransformsBaseTest import TransformsBaseTest
 class Lut3DTransformTest(unittest.TestCase, TransformsBaseTest):
 
     def setUp(self):
-        self.tr = OCIO.Lut3DTransform()
+        self.tr: OCIO.Lut3DTransform = OCIO.Lut3DTransform()
 
     def test_default_constructor(self):
         """
@@ -127,7 +127,7 @@ class Lut3DTransformTest(unittest.TestCase, TransformsBaseTest):
         Test the setValue() and getValue() methods.
         """
 
-        self.tr = OCIO.Lut3DTransform(gridSize=3)
+        self.tr: OCIO.Lut3DTransform = OCIO.Lut3DTransform(gridSize=3)
         r, g, b = self.tr.getValue(0, 0, 0)
         self.assertEqual([r, g, b], [0, 0, 0])
         r, g, b = self.tr.getValue(1, 1, 1)
