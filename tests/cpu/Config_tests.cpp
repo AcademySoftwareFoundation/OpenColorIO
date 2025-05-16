@@ -3795,6 +3795,8 @@ colorspaces:
         OCIO_CHECK_EQUAL(std::string("Raw"), config1->getView(OCIO::VIEW_DISPLAY_DEFINED, "sRGB", 0));
         OCIO_CHECK_EQUAL(std::string("view"), config1->getView(OCIO::VIEW_DISPLAY_DEFINED, "sRGB", 1));
 
+        OCIO_CHECK_ASSERT(!config1->viewIsShared("sRGB", "view"));
+
         OCIO_CHECK_EQUAL(2, config1->getNumViews("sRGB"));
         OCIO_CHECK_EQUAL(std::string("view"), config1->getView("sRGB", 0));
 
@@ -3811,6 +3813,8 @@ colorspaces:
         OCIO_CHECK_EQUAL(std::string("view"), config2->getView(OCIO::VIEW_SHARED, "sRGB", 0));
         OCIO_CHECK_EQUAL(std::string("sview1"), config2->getView(OCIO::VIEW_SHARED, "sRGB", 1));
 
+        OCIO_CHECK_ASSERT(config2->viewIsShared("sRGB", "view"));
+
         OCIO_CHECK_ASSERT(OCIO::Config::ViewsAreEqual(config1, config2, "sRGB", "view"));
         
     }
@@ -3825,12 +3829,14 @@ colorspaces:
         OCIO_CHECK_EQUAL(config1->getDisplayAll(0), std::string("Raw"));
         OCIO_CHECK_EQUAL(1, config1->getNumViews(OCIO::VIEW_DISPLAY_DEFINED, "Raw"));
         OCIO_CHECK_EQUAL(std::string("Raw"), config1->getView(OCIO::VIEW_DISPLAY_DEFINED, "Raw", 0));
+        OCIO_CHECK_ASSERT(!config1->viewIsShared("Raw", "Raw"));
 
         // Active (display, view) pair where the view is display-defined.
         OCIO_REQUIRE_EQUAL(1, config2->getNumDisplays());
         OCIO_CHECK_EQUAL(std::string("Raw"), config2->getDefaultDisplay());
         OCIO_CHECK_EQUAL(1, config2->getNumViews(OCIO::VIEW_DISPLAY_DEFINED, "Raw"));
         OCIO_CHECK_EQUAL(std::string("Raw"), config2->getView(OCIO::VIEW_DISPLAY_DEFINED, "Raw", 0));
+        OCIO_CHECK_ASSERT(!config2->viewIsShared("Raw", "Raw"));
 
         OCIO_CHECK_ASSERT(OCIO::Config::ViewsAreEqual(config1, config2, "Raw", "Raw"));
     }
@@ -3842,11 +3848,13 @@ colorspaces:
         // Active (display, view) pair where the view is a reference to a shared view.
         OCIO_CHECK_EQUAL(1, config1->getNumViews(OCIO::VIEW_SHARED, "sRGB"));
         OCIO_CHECK_EQUAL(std::string("sview1"), config1->getView(OCIO::VIEW_SHARED, "sRGB", 0));
+        OCIO_CHECK_ASSERT(config1->viewIsShared("sRGB", "sview1"));
 
         // Inactive (display, view) pair where the view is a reference to a shared view.
         OCIO_CHECK_EQUAL(2, config2->getNumViews(OCIO::VIEW_SHARED, "sRGB"));
         OCIO_CHECK_EQUAL(std::string("view"), config2->getView(OCIO::VIEW_SHARED, "sRGB", 0));
         OCIO_CHECK_EQUAL(std::string("sview1"), config2->getView(OCIO::VIEW_SHARED, "sRGB", 1));
+        OCIO_CHECK_ASSERT(config2->viewIsShared("sRGB", "sview1"));
 
         OCIO_CHECK_ASSERT(OCIO::Config::ViewsAreEqual(config1, config2, "sRGB", "sview1"));
     }
@@ -3935,6 +3943,7 @@ colorspaces:
 
         OCIO_CHECK_EQUAL(1, cfg1->getNumViews(OCIO::VIEW_SHARED, "sRGB"));
         OCIO_CHECK_EQUAL(std::string("sview1"), cfg1->getView(OCIO::VIEW_SHARED, "sRGB", 0));
+        OCIO_CHECK_ASSERT(cfg1->viewIsShared("sRGB", "sview1"));
 
         OCIO_CHECK_ASSERT(cfg1->displayHasView("sRGB", "sview1"));
 
@@ -3946,6 +3955,7 @@ colorspaces:
         // Shared view still exists in the config.
         OCIO_CHECK_EQUAL(1, cfg1->getNumViews(OCIO::VIEW_SHARED, nullptr));
         OCIO_CHECK_EQUAL(std::string("sview1"), cfg1->getView(OCIO::VIEW_SHARED, nullptr, 0));
+        OCIO_CHECK_ASSERT(cfg1->viewIsShared(nullptr, "sview1"));
 
         OCIO_CHECK_ASSERT(!cfg1->displayHasView("sRGB", "sview1"));
 
