@@ -46,7 +46,7 @@ run only the CPU unit tests from the Builtins suite::
 
 Similarly you can run just Python tests directly::
 
-  python3 tests/python/OpenColorIOTestSuite.py 
+  python3 tests/python/OpenColorIOTestSuite.py
 
 Test framework
 ==============
