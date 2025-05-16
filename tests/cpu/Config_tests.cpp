@@ -9110,8 +9110,11 @@ roles:
 file_rules:
   - !<Rule> {name: Default, colorspace: default}
 
+viewing_rules:
+  - !<Rule> {name: Linear, colorspaces: default}
+
 shared_views:
-  - !<View> {name: Film, view_transform: display_vt, display_colorspace: <USE_DISPLAY_NAME>}
+  - !<View> {name: Film, view_transform: display_vt, display_colorspace: <USE_DISPLAY_NAME>, looks: look1, rule: Linear, description: Test view}
   - !<View> {name: view, view_transform: display_vt, display_colorspace: display_cs}
 
 displays:
@@ -9123,6 +9126,11 @@ displays:
 virtual_display:
   - !<View> {name: Raw, colorspace: raw}
   - !<Views> [Film, view]
+
+looks:
+  - !<Look>
+    name: look1
+    process_space: default
 
 view_transforms:
   - !<ViewTransform>
@@ -9151,6 +9159,9 @@ roles:
 file_rules:
   - !<Rule> {name: Default, colorspace: default}
 
+viewing_rules:
+  - !<Rule> {name: Linear, colorspaces: default}
+
 shared_views:
   - !<View> {name: view, view_transform: display_vt, display_colorspace: display_cs}
 
@@ -9163,8 +9174,13 @@ displays:
 
 virtual_display:
   - !<View> {name: Raw, colorspace: raw}
-  - !<View> {name: Film, view_transform: display_vt, display_colorspace: <USE_DISPLAY_NAME>}
+  - !<View> {name: Film, view_transform: display_vt, display_colorspace: <USE_DISPLAY_NAME>, looks: look1, rule: Linear, description: Test view}
   - !<Views> [view]
+
+looks:
+  - !<Look>
+    name: look1
+    process_space: default
 
 view_transforms:
   - !<ViewTransform>
@@ -9207,9 +9223,9 @@ colorspaces:
         OCIO_CHECK_EQUAL(std::string("Film"), viewName1);
         OCIO_CHECK_EQUAL(std::string("display_vt"), config1->getVirtualDisplayViewTransformName(viewName1));
         OCIO_CHECK_EQUAL(std::string("<USE_DISPLAY_NAME>"), config1->getVirtualDisplayViewColorSpaceName(viewName1));
-        OCIO_CHECK_EQUAL(std::string(""), config1->getVirtualDisplayViewLooks(viewName1));
-        OCIO_CHECK_EQUAL(std::string(""), config1->getVirtualDisplayViewRule(viewName1));
-        OCIO_CHECK_EQUAL(std::string(""), config1->getVirtualDisplayViewDescription(viewName1));
+        OCIO_CHECK_EQUAL(std::string("look1"), config1->getVirtualDisplayViewLooks(viewName1));
+        OCIO_CHECK_EQUAL(std::string("Linear"), config1->getVirtualDisplayViewRule(viewName1));
+        OCIO_CHECK_EQUAL(std::string("Test view"), config1->getVirtualDisplayViewDescription(viewName1));
 
         // Virtual view is a reference to a display-defined view.
         OCIO_REQUIRE_EQUAL(2, config2->getVirtualDisplayNumViews(OCIO::VIEW_DISPLAY_DEFINED));
@@ -9219,9 +9235,9 @@ colorspaces:
         OCIO_CHECK_EQUAL(std::string("Film"), viewName2);
         OCIO_CHECK_EQUAL(std::string("display_vt"), config2->getVirtualDisplayViewTransformName(viewName2));
         OCIO_CHECK_EQUAL(std::string("<USE_DISPLAY_NAME>"), config2->getVirtualDisplayViewColorSpaceName(viewName2));
-        OCIO_CHECK_EQUAL(std::string(""), config2->getVirtualDisplayViewLooks(viewName2));
-        OCIO_CHECK_EQUAL(std::string(""), config2->getVirtualDisplayViewRule(viewName2));
-        OCIO_CHECK_EQUAL(std::string(""), config2->getVirtualDisplayViewDescription(viewName2));
+        OCIO_CHECK_EQUAL(std::string("look1"), config2->getVirtualDisplayViewLooks(viewName2));
+        OCIO_CHECK_EQUAL(std::string("Linear"), config2->getVirtualDisplayViewRule(viewName2));
+        OCIO_CHECK_EQUAL(std::string("Test view"), config2->getVirtualDisplayViewDescription(viewName2));
 
         OCIO_CHECK_EQUAL(std::string(viewName1), std::string(viewName2));
         OCIO_CHECK_ASSERT(OCIO::Config::VirtualViewsAreEqual(config1, config2, viewName1));
