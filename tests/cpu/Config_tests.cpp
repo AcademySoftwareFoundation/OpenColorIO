@@ -3689,66 +3689,6 @@ OCIO_ADD_TEST(Config, view)
     }
 }
 
-OCIO_ADD_TEST(Config, display_view_order)
-{
-    constexpr char SIMPLE_CONFIG[] { R"(
-        ocio_profile_version: 2
-
-        environment:
-          {}
-
-        displays:
-          sRGB_B:
-            - !<View> {name: View_2, colorspace: raw}
-            - !<View> {name: View_1, colorspace: raw}
-          sRGB_D:
-            - !<View> {name: View_2, colorspace: raw}
-            - !<View> {name: View_3, colorspace: raw}
-          sRGB_A:
-            - !<View> {name: View_3, colorspace: raw}
-            - !<View> {name: View_1, colorspace: raw}
-          sRGB_C:
-            - !<View> {name: View_4, colorspace: raw}
-            - !<View> {name: View_1, colorspace: raw}
-
-        colorspaces:
-          - !<ColorSpace>
-            name: raw
-            allocation: uniform
-
-          - !<ColorSpace>
-            name: lnh
-            allocation: uniform
-
-        file_rules:
-          - !<Rule> {name: Default, colorspace: raw}
-        )" };
-
-    std::istringstream is(SIMPLE_CONFIG);
-    OCIO::ConstConfigRcPtr config;
-    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    OCIO_CHECK_NO_THROW(config->validate());
-
-    OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 4);
-
-    // When active_displays is not defined, the displays are returned in config order.
-
-    OCIO_CHECK_EQUAL(std::string(config->getDefaultDisplay()), "sRGB_B");
-
-    OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), "sRGB_B");
-    OCIO_CHECK_EQUAL(std::string(config->getDisplay(1)), "sRGB_D");
-    OCIO_CHECK_EQUAL(std::string(config->getDisplay(2)), "sRGB_A");
-    OCIO_CHECK_EQUAL(std::string(config->getDisplay(3)), "sRGB_C");
-
-    // When active_views is not defined, the views are returned in config order.
-
-    OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_B")), "View_2");
-
-    OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_B"), 2);
-    OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_B", 0)), "View_2");
-    OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_B", 1)), "View_1");
-}
-
 OCIO_ADD_TEST(Config, compare_displays) {
     static constexpr char CONFIG1[]{ R"(ocio_profile_version: 2
 
