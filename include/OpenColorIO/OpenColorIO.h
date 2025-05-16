@@ -3292,13 +3292,13 @@ public:
      *   The 'values' parameter contains the LUT data which must be used as-is as the dimensions and
      *   origin are hard-coded in the fragment shader program. So, it means one GPU texture per entry.
      **/
-    virtual void addTexture(const char * textureName,
-                            const char * samplerName,
-                            unsigned width, unsigned height,
-                            TextureType channel,
-                            TextureDimensions dimensions,
-                            Interpolation interpolation,
-                            const float * values) = 0;
+    virtual unsigned addTexture(const char * textureName,
+                                const char * samplerName,
+                                unsigned width, unsigned height,
+                                TextureType channel,
+                                TextureDimensions dimensions,
+                                Interpolation interpolation,
+                                const float * values) = 0;
 
     /**
      *  Add a 3D texture with RGB channel type.
@@ -3308,14 +3308,15 @@ public:
      *   and origin are hard-coded in the fragment shader program. So, it means one GPU 3D texture
      *   per entry.
      **/
-    virtual void add3DTexture(const char * textureName,
+    virtual unsigned add3DTexture(const char * textureName,
                               const char * samplerName,
                               unsigned edgelen,
                               Interpolation interpolation,
                               const float * values) = 0;
 
     // Methods to specialize parts of a OCIO shader program
-    virtual void addToDeclareShaderCode(const char * shaderCode);
+    virtual void addToParameterDeclareShaderCode(const char * shaderCode);
+    virtual void addToTextureDeclareShaderCode(const char* shaderCode);
     virtual void addToHelperShaderCode(const char * shaderCode);
     virtual void addToFunctionHeaderShaderCode(const char * shaderCode);
     virtual void addToFunctionShaderCode(const char * shaderCode);
@@ -3329,7 +3330,8 @@ public:
      *   to change some parts. Some product integrations add the color processing
      *   within a client shader program, imposing constraints requiring this flexibility.
      */
-    virtual void createShaderText(const char * shaderDeclarations,
+    virtual void createShaderText(const char * shaderParameterDeclarations,
+		                          const char * shaderTextureDeclarations,
                                   const char * shaderHelperMethods,
                                   const char * shaderFunctionHeader,
                                   const char * shaderFunctionBody,
@@ -3522,6 +3524,7 @@ public:
     struct UniformData
     {
         UniformDataType m_type{ UNIFORM_UNKNOWN };
+        std::size_t m_bufferOffset;
         DoubleGetter m_getDouble{};
         BoolGetter m_getBool{};
         Float3Getter m_getFloat3{};
@@ -3539,6 +3542,8 @@ public:
     virtual unsigned getNumUniforms() const noexcept = 0;
     /// Returns name of uniform and data as parameter.
     virtual const char * getUniform(unsigned index, UniformData & data) const = 0;
+
+	virtual std::size_t getUniformBufferSize() const noexcept = 0;
 
     // 1D lut related methods
     virtual unsigned getNumTextures() const noexcept = 0;

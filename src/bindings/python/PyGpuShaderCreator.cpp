@@ -94,8 +94,10 @@ void bindPyGpuShaderCreator(py::module & m)
             })
 
         // Methods to specialize parts of a OCIO shader program
-        .def("addToDeclareShaderCode", &GpuShaderCreator::addToDeclareShaderCode, "shaderCode"_a, 
-             DOC(GpuShaderCreator, addToDeclareShaderCode))
+        .def("addToParameterDeclareShaderCode", &GpuShaderCreator::addToParameterDeclareShaderCode, "shaderCode"_a, 
+             DOC(GpuShaderCreator, addToParameterDeclareShaderCode))
+        .def("addToTextureDeclareShaderCode", &GpuShaderCreator::addToTextureDeclareShaderCode, "shaderCode"_a,
+             DOC(GpuShaderCreator, addToTextureDeclareShaderCode))
         .def("addToHelperShaderCode", &GpuShaderCreator::addToHelperShaderCode, "shaderCode"_a, 
              DOC(GpuShaderCreator, addToHelperShaderCode))
         .def("addToFunctionHeaderShaderCode", 
@@ -109,7 +111,8 @@ void bindPyGpuShaderCreator(py::module & m)
              "shaderCode"_a, 
              DOC(GpuShaderCreator, addToFunctionFooterShaderCode))
         .def("createShaderText", &GpuShaderCreator::createShaderText, 
-             "shaderDeclarations"_a, "shaderHelperMethods"_a, "shaderFunctionHeader"_a, 
+			 "shaderParameterDeclarations"_a, "shaderTextureDeclarations"_a,
+             "shaderHelperMethods"_a, "shaderFunctionHeader"_a, 
              "shaderFunctionBody"_a, "shaderFunctionFooter"_a, 
              DOC(GpuShaderCreator, createShaderText))
         .def("finalize", &GpuShaderCreator::finalize, 

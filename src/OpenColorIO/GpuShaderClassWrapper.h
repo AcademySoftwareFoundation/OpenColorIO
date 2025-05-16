@@ -30,6 +30,8 @@ public:
     virtual std::string getClassWrapperHeader(const std::string & originalHeader) = 0;
     virtual std::string getClassWrapperFooter(const std::string & originalFooter) = 0;
 
+    virtual bool hasClassWrapperHeader() const = 0;
+
     virtual std::unique_ptr<GpuShaderClassWrapper> clone() const = 0;
 
     virtual ~GpuShaderClassWrapper() = default;
@@ -51,6 +53,10 @@ public:
     {
         return originalFooter;
     }
+	bool hasClassWrapperHeader() const final
+	{
+		return false;
+	}
 
     std::unique_ptr<GpuShaderClassWrapper> clone() const final;
 };
@@ -68,6 +74,11 @@ public:
     std::string getClassWrapperHeader(const std::string & originalHeader) final;
     std::string getClassWrapperFooter(const std::string & originalFooter) final;
 
+	bool hasClassWrapperHeader() const final
+	{
+		return true;
+	}
+
     std::unique_ptr<GpuShaderClassWrapper> clone() const final;
 
 private:
@@ -82,6 +93,11 @@ public:
                              const std::string & originalHeader) final;
     std::string getClassWrapperHeader(const std::string & originalHeader) final;
     std::string getClassWrapperFooter(const std::string & originalFooter) final;
+
+    bool hasClassWrapperHeader() const final
+    {
+        return true;
+    }
 
     std::unique_ptr<GpuShaderClassWrapper> clone() const final;
     MetalShaderClassWrapper& operator=(const MetalShaderClassWrapper& rhs);

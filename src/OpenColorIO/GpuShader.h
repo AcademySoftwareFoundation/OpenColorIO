@@ -45,11 +45,12 @@ public:
     bool addUniform(const char * name,
                     const SizeGetter & getSize,
                     const VectorIntGetter & getVectorInt) override;
+    std::size_t getUniformBufferSize() const noexcept override;
 
     // Accessors to the 1D & 2D textures built from 1D LUT
     //
     unsigned getNumTextures() const noexcept override;
-    void addTexture(const char * textureName,
+    unsigned addTexture(const char * textureName,
                     const char * samplerName,
                     unsigned width, unsigned height,
                     TextureType channel,
@@ -68,7 +69,7 @@ public:
     // Accessors to the 3D textures built from 3D LUT
     //
     unsigned getNum3DTextures() const noexcept override;
-    void add3DTexture(const char * textureName,
+    unsigned add3DTexture(const char * textureName,
                       const char * samplerName,
                       unsigned edgelen,
                       Interpolation interpolation,
