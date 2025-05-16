@@ -232,6 +232,11 @@ OCIO_ADD_TEST(SharedViews, basic)
 
     OCIO_CHECK_EQUAL(std::string(OCIO::OCIO_VIEW_USE_DISPLAY_NAME),
                      configBack->getDisplayViewColorSpaceName(nullptr, "shared3"));
+
+    // Remove all shared views
+    OCIO_REQUIRE_EQUAL(4, config->getNumViews(OCIO::VIEW_SHARED, nullptr));
+    OCIO_CHECK_NO_THROW(config->clearSharedViews());
+    OCIO_REQUIRE_EQUAL(0, config->getNumViews(OCIO::VIEW_SHARED, nullptr));
 }
 
 OCIO_ADD_TEST(Config, display_view_order)
