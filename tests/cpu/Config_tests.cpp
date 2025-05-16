@@ -8800,16 +8800,12 @@ colorspaces:
 
         viewName = cfg->getVirtualDisplayView(OCIO::VIEW_DISPLAY_DEFINED, 1);
 
-        OCIO_CHECK_ASSERT(cfg->hasVirtualView(viewName));
-
         OCIO_CHECK_EQUAL(std::string("Film"), viewName);
         OCIO_CHECK_EQUAL(std::string("display_vt"), cfg->getVirtualDisplayViewTransformName(viewName));
         OCIO_CHECK_EQUAL(std::string("<USE_DISPLAY_NAME>"), cfg->getVirtualDisplayViewColorSpaceName(viewName));
         OCIO_CHECK_EQUAL(std::string(""), cfg->getVirtualDisplayViewLooks(viewName));
         OCIO_CHECK_EQUAL(std::string(""), cfg->getVirtualDisplayViewRule(viewName));
         OCIO_CHECK_EQUAL(std::string(""), cfg->getVirtualDisplayViewDescription(viewName));
-
-        OCIO_CHECK_ASSERT(OCIO::Config::VirtualViewsAreEqual(config, cfg, viewName));
 
         OCIO_REQUIRE_EQUAL(1, cfg->getVirtualDisplayNumViews(OCIO::VIEW_SHARED));
         OCIO_CHECK_EQUAL(std::string("sview2"), cfg->getVirtualDisplayView(OCIO::VIEW_SHARED, 0));

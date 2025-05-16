@@ -3967,6 +3967,12 @@ const char * Config::getVirtualDisplayViewLooks(const char * view) const noexcep
 {
     if (!view) return "";
 
+    // Get the view looks for the case where a virtual view is shared
+    if (virtualViewIsShared(view))
+    {
+        return getDisplayViewLooks(nullptr, view);
+    }
+
     ViewVec::const_iterator iter = FindView(getImpl()->m_virtualDisplay.m_views, view);
     if (iter != getImpl()->m_virtualDisplay.m_views.end())
     {
@@ -3980,6 +3986,12 @@ const char * Config::getVirtualDisplayViewRule(const char * view) const noexcept
 {
     if (!view) return "";
 
+    // Get the view rule for the case where a virtual view is shared
+    if (virtualViewIsShared(view))
+    {
+        return getDisplayViewRule(nullptr, view);
+    }
+
     ViewVec::const_iterator iter = FindView(getImpl()->m_virtualDisplay.m_views, view);
     if (iter != getImpl()->m_virtualDisplay.m_views.end())
     {
@@ -3992,6 +4004,12 @@ const char * Config::getVirtualDisplayViewRule(const char * view) const noexcept
 const char * Config::getVirtualDisplayViewDescription(const char * view) const noexcept
 {
     if (!view) return "";
+
+    // Get the view description for the case where a virtual view is shared
+    if (virtualViewIsShared(view))
+    {
+        return getDisplayViewDescription(nullptr, view);
+    }
 
     ViewVec::const_iterator iter = FindView(getImpl()->m_virtualDisplay.m_views, view);
     if (iter != getImpl()->m_virtualDisplay.m_views.end())

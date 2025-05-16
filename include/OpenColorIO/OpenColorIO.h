@@ -897,6 +897,10 @@ public:
      * if the view is display-defined in one config and a reference to a shared view in the
      * other config (both within the same display), as long as the contents match. The
      * description text (if any) is ignored, since it is not a functional difference.
+     * 
+     * Note that the comparison is only on the strings contained in the view definition,
+     * the function does not attempt to compare that the color spaces or view transforms
+     * being referenced are identical (only that they have the same name).
      */
     static bool ViewsAreEqual(const ConstConfigRcPtr & first,
                               const ConstConfigRcPtr & second,
@@ -1028,6 +1032,10 @@ public:
      * virtual view in the other config, as long as the contents match.
      * 
      * The description text (if any) is ignored, since it is not a functional difference.
+     * 
+     * Note that the comparison is only on the strings contained in the view definition,
+     * the function does not attempt to compare that the color spaces or view transforms
+     * being referenced are identical (only that they have the same name).
      */
     static bool VirtualViewsAreEqual(const ConstConfigRcPtr & first,
                                      const ConstConfigRcPtr & second,
