@@ -233,3 +233,91 @@ OCIO_ADD_TEST(SharedViews, basic)
     OCIO_CHECK_EQUAL(std::string(OCIO::OCIO_VIEW_USE_DISPLAY_NAME),
                      configBack->getDisplayViewColorSpaceName(nullptr, "shared3"));
 }
+
+OCIO_ADD_TEST(Config, virtual_display_exceptions)
+{
+    // Test the validations around the virtual display definition.
+
+    static constexpr char CONFIG[]{ R"(ocio_profile_version: 2
+
+roles:
+  default: raw
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+shared_views:
+  - !<View> {name: sview1, colorspace: raw}
+
+displays:
+  Raw:
+    - !<View> {name: Raw, colorspace: raw}
+
+virtual_display:
+  - !<View> {name: Raw, colorspace: raw}
+  - !<Views> [sview1]
+
+view_transforms:
+  - !<ViewTransform>
+    name: default_vt
+    to_scene_reference: !<CDLTransform> {sat: 1.5}
+
+  - !<ViewTransform>
+    name: display_vt
+    to_display_reference: !<CDLTransform> {sat: 1.5}
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: display_cs
+    to_display_reference: !<CDLTransform> {sat: 1.5}
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+)" };
+
+    std::istringstream iss;
+    iss.str(CONFIG);
+
+    OCIO::ConfigRcPtr cfg;
+    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
+    OCIO_CHECK_NO_THROW(cfg->validate());
+
+    // Test failures for shared views.
+
+    OCIO_CHECK_THROW_WHAT(cfg->addVirtualDisplaySharedView("sview1"),
+                          OCIO::Exception,
+                          "Shared view could not be added to virtual_display: There is already a"
+                          " shared view named 'sview1'.");
+
+    OCIO_CHECK_NO_THROW(cfg->addVirtualDisplaySharedView("sview2"));
+    OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                          OCIO::Exception,
+                          "The display 'virtual_display' contains a shared view 'sview2' that is"
+                          " not defined.");
+
+    cfg->removeVirtualDisplayView("sview2");
+    OCIO_CHECK_NO_THROW(cfg->validate());
+
+    // Test failures for views.
+
+    OCIO_CHECK_THROW_WHAT(cfg->addVirtualDisplayView("Raw", nullptr, "raw", nullptr, nullptr, nullptr),
+                          OCIO::Exception,
+                          "View could not be added to virtual_display in config: View 'Raw' already"
+                          " exists.");
+
+    OCIO_CHECK_NO_THROW(cfg->addVirtualDisplayView("Raw1", nullptr, "raw1", nullptr, nullptr, nullptr));
+    OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                          OCIO::Exception,
+                          "Display 'virtual_display' has a view 'Raw1' that refers to a color space"
+                          " or a named transform, 'raw1', which is not defined.");
+
+    cfg->removeVirtualDisplayView("Raw1");
+    OCIO_CHECK_NO_THROW(cfg->validate());
+
+    OCIO_CHECK_NO_THROW(cfg->addVirtualDisplayView("Raw1", nullptr, "raw", "look", nullptr, nullptr));
+    OCIO_CHECK_THROW_WHAT(cfg->validate(),
+                          OCIO::Exception,
+                          "Display 'virtual_display' has a view 'Raw1' refers to a look, 'look',"
+                          " which is not defined.");
+}
