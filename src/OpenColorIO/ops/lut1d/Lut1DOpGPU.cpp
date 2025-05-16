@@ -199,15 +199,15 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     }
 
     // (Using CacheID here to potentially allow reuse of existing textures.)
-    shaderCreator->addTexture(name.c_str(),
-                              GpuShaderText::getSamplerName(name).c_str(),
-                              width,
-                              height,
-                              singleChannel ? GpuShaderCreator::TEXTURE_RED_CHANNEL
-                                            : GpuShaderCreator::TEXTURE_RGB_CHANNEL,
-                              dimensions,
-                              lutData->getConcreteInterpolation(),
-                              &values[0]);
+    const unsigned textureIndex = shaderCreator->addTexture(name.c_str(),
+                                                  GpuShaderText::getSamplerName(name).c_str(),
+                                                  width,
+                                                  height,
+                                                  singleChannel ? GpuShaderCreator::TEXTURE_RED_CHANNEL
+                                                                : GpuShaderCreator::TEXTURE_RGB_CHANNEL,
+                                                  dimensions,
+                                                  lutData->getConcreteInterpolation(),
+                                                  &values[0]);
 
     // Add the LUT code to the OCIO shader program.
 
@@ -219,8 +219,8 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
         {
             GpuShaderText ss(shaderCreator->getLanguage());
-            ss.declareTex2D(name);
-            shaderCreator->addToDeclareShaderCode(ss.string().c_str());
+            ss.declareTex2D(name, textureIndex);
+            shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
         }
 
         {
@@ -303,8 +303,8 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     else
     {
         GpuShaderText ss(shaderCreator->getLanguage());
-        ss.declareTex1D(name);
-        shaderCreator->addToDeclareShaderCode(ss.string().c_str());
+        ss.declareTex1D(name, textureIndex);
+        shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
 
     GpuShaderText ss(shaderCreator->getLanguage());

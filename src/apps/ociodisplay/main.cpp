@@ -380,8 +380,13 @@ void UpdateOCIOGLState()
     {
         double exponent = 1.0 / std::max(1e-6, static_cast<double>(g_display_gamma));
         const double exponent4f[4] = {exponent, exponent, exponent, exponent};
-        OCIO::ExponentTransformRcPtr expTransform = OCIO::ExponentTransform::Create();
-        expTransform->setValue(exponent4f);
+        //OCIO::ExponentTransformRcPtr expTransform = OCIO::ExponentTransform::Create();
+        //expTransform->setValue(exponent4f);
+
+		OCIO::GradingToneTransformRcPtr expTransform = OCIO::GradingToneTransform::Create(OCIO::GRADING_LOG);
+        expTransform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+		expTransform->setStyle(OCIO::GRADING_LOG);
+        //expTransform->setValue(tones);
         vp->setDisplayCC(expTransform);
     }
 
@@ -406,7 +411,7 @@ void UpdateOCIOGLState()
 #if __APPLE__
         g_useMetal ? OCIO::GPU_LANGUAGE_MSL_2_0 :
 #endif
-                   OCIO::GPU_LANGUAGE_GLSL_1_2);
+        OCIO::GPU_LANGUAGE_GLSL_VK_4_6);//OCIO::GPU_LANGUAGE_GLSL_1_2);
     shaderDesc->setFunctionName("OCIODisplay");
     shaderDesc->setResourcePrefix("ocio_");
 

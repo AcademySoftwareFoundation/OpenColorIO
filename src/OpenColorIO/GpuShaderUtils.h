@@ -171,11 +171,11 @@ public:
     static std::string getSamplerName(const std::string& textureName);
 
     // Declare the global texture and sampler information for a 1D texture.
-    void declareTex1D(const std::string& textureName);
+    void declareTex1D(const std::string& textureName, unsigned textureIndex);
     // Declare the global texture and sampler information for a 2D texture.
-    void declareTex2D(const std::string& textureName);
+    void declareTex2D(const std::string& textureName, unsigned textureIndex);
     // Declare the global texture and sampler information for a 3D texture.
-    void declareTex3D(const std::string& textureName);
+    void declareTex3D(const std::string& textureName, unsigned textureIndex);
 
     // Get the texture lookup call for a 1D texture.
     std::string sampleTex1D(const std::string& textureName, const std::string& coords) const;

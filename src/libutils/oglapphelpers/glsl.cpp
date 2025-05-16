@@ -463,6 +463,8 @@ std::string OpenGLBuilder::getGLSLVersionString()
         return "#version 130";
     case GPU_LANGUAGE_GLSL_4_0:
         return "#version 400 core";
+    case GPU_LANGUAGE_GLSL_VK_4_6:
+        return "#version 120 //460 core";
     case GPU_LANGUAGE_GLSL_ES_1_0:
         return "#version 100";
     case GPU_LANGUAGE_GLSL_ES_3_0:
