@@ -27,6 +27,27 @@ For verbose test output (listing each test and result status), run::
 
   ctest -V
 
+You can also run single test categories or individual tests. To view a list of 
+availble tests, run::
+
+  ctest -N
+
+You can run specific groups of tests by name using the ``-R`` (match by regex)
+option, for example::
+
+  ctest -V -R test_cpu
+  ctest -V -R test_gpu
+  ctest -V -R test_python
+
+You can also run individual test directly using ``--run_only``, for example to 
+run only the CPU unit tests from the Builtins suite::
+
+  tests/cpu/test_cpu_exec --run_only Builtins
+
+Similarly you can run just Python tests directly::
+
+  python3 tests/python/OpenColorIOTestSuite.py 
+
 Test framework
 ==============
 
