@@ -40,6 +40,8 @@ static void  CreateArray(const float * buf,
 namespace GPUShaderImpl
 {
 
+constexpr std::size_t UNIFORM_BUFFER_ALIGNMENT = 16; //Align variables in uniform buffers to 16 bytes
+
 class PrivateImpl
 {
 public:
@@ -104,43 +106,48 @@ public:
 
     struct Uniform
     {
-        Uniform(const char * name, const GpuShaderCreator::DoubleGetter & getDouble)
+        Uniform(const char * name, const GpuShaderCreator::DoubleGetter & getDouble, std::size_t bufferOffset)
             : Uniform(name)
         {
             m_data.m_type = UNIFORM_DOUBLE;
             m_data.m_getDouble = getDouble;
+			m_data.m_bufferOffset = bufferOffset;
         }
 
-        Uniform(const char * name, const GpuShaderCreator::BoolGetter & getBool)
+        Uniform(const char * name, const GpuShaderCreator::BoolGetter & getBool, std::size_t bufferOffset)
             : Uniform(name)
         {
             m_data.m_type = UNIFORM_BOOL;
             m_data.m_getBool = getBool;
+            m_data.m_bufferOffset = bufferOffset;
         }
 
-        Uniform(const char * name, const GpuShaderCreator::Float3Getter & getFloat3)
+        Uniform(const char * name, const GpuShaderCreator::Float3Getter & getFloat3, std::size_t bufferOffset)
             : Uniform(name)
         {
             m_data.m_type = UNIFORM_FLOAT3;
             m_data.m_getFloat3 = getFloat3;
+            m_data.m_bufferOffset = bufferOffset;
         }
 
         Uniform(const char * name, const GpuShaderCreator::SizeGetter & getSize,
-                const GpuShaderCreator::VectorFloatGetter & getVectorFloat)
+                const GpuShaderCreator::VectorFloatGetter & getVectorFloat, std::size_t bufferOffset)
             : Uniform(name)
         {
             m_data.m_type = UNIFORM_VECTOR_FLOAT;
             m_data.m_vectorFloat.m_getSize = getSize;
             m_data.m_vectorFloat.m_getVector = getVectorFloat;
+            m_data.m_bufferOffset = bufferOffset;
         }
 
         Uniform(const char * name, const GpuShaderCreator::SizeGetter & getSize,
-                const GpuShaderCreator::VectorIntGetter & getVectorInt)
+                const GpuShaderCreator::VectorIntGetter & getVectorInt, std::size_t bufferOffset)
             : Uniform(name)
         {
             m_data.m_type = UNIFORM_VECTOR_INT;
             m_data.m_vectorInt.m_getSize = getSize;
             m_data.m_vectorInt.m_getVector = getVectorInt;
+            m_data.m_bufferOffset = bufferOffset;
         }
 
         const std::string m_name;
@@ -161,7 +168,7 @@ public:
     typedef std::vector<Uniform> Uniforms;
 
 public:
-    PrivateImpl() : m_max1DLUTWidth(4 * 1024), m_allowTexture1D(true) {}
+    PrivateImpl() : m_max1DLUTWidth(4 * 1024), m_allowTexture1D(true), m_uniformBufferSize(0) {}
     PrivateImpl(const PrivateImpl & rhs) = delete;
     PrivateImpl& operator= (const PrivateImpl & rhs) = delete;
 
@@ -175,13 +182,13 @@ public:
     inline bool getAllowTexture1D() const { return m_allowTexture1D; }
     inline void setAllowTexture1D(bool allowed) { m_allowTexture1D = allowed; }
 
-    void addTexture(const char * textureName,
-                    const char * samplerName,
-                    unsigned width, unsigned height,
-                    GpuShaderDesc::TextureType channel,
-                    GpuShaderDesc::TextureDimensions dimensions,
-                    Interpolation interpolation,
-                    const float * values)
+    unsigned addTexture(const char * textureName,
+                        const char * samplerName,
+                        unsigned width, unsigned height,
+                        GpuShaderDesc::TextureType channel,
+                        GpuShaderDesc::TextureDimensions dimensions,
+                        Interpolation interpolation,
+                        const float * values)
     {
         if(width > get1dLutMaxWidth())
         {
@@ -190,10 +197,11 @@ public:
                 << width << " > " << get1dLutMaxWidth();
             throw Exception(ss.str().c_str());
         }
-
+        unsigned textureIndex = m_textures.size();
         unsigned numDimensions = static_cast<unsigned>(dimensions);
         Texture t(textureName, samplerName, width, height, 1, channel, numDimensions, interpolation, values);
         m_textures.push_back(t);
+        return textureIndex;
     }
 
     void getTexture(unsigned index,
@@ -243,11 +251,11 @@ public:
         values   = &t.m_values[0];
     }
 
-    void add3DTexture(const char * textureName,
-                      const char * samplerName,
-                      unsigned edgelen,
-                      Interpolation interpolation,
-                      const float * values)
+    unsigned add3DTexture(const char * textureName,
+                          const char * samplerName,
+                          unsigned edgelen,
+                          Interpolation interpolation,
+                          const float * values)
     {
         if(edgelen > get3dLutMaxLength())
         {
@@ -257,10 +265,12 @@ public:
             throw Exception(ss.str().c_str());
         }
 
+        unsigned textureIndex = m_textures3D.size();
         Texture t(textureName, samplerName, edgelen, edgelen, edgelen,
                   GpuShaderDesc::TEXTURE_RGB_CHANNEL, 3,
                   interpolation, values);
         m_textures3D.push_back(t);
+		return textureIndex;
     }
 
     void get3DTexture(unsigned index,
@@ -323,7 +333,8 @@ public:
             // Uniform is already there.
             return false;
         }
-        m_uniforms.emplace_back(name, getter);
+        m_uniforms.emplace_back(name, getter, m_uniformBufferSize);
+        m_uniformBufferSize += UNIFORM_BUFFER_ALIGNMENT;
         return true;
     }
 
@@ -334,7 +345,8 @@ public:
             // Uniform is already there.
             return false;
         }
-        m_uniforms.emplace_back(name, getter);
+        m_uniforms.emplace_back(name, getter, m_uniformBufferSize);
+        m_uniformBufferSize += UNIFORM_BUFFER_ALIGNMENT; //bool not supported for buffered uniforms, using int instead
         return true;
     }
 
@@ -345,7 +357,8 @@ public:
             // Uniform is already there.
             return false;
         }
-        m_uniforms.emplace_back(name, getter);
+        m_uniforms.emplace_back(name, getter, m_uniformBufferSize);
+        m_uniformBufferSize += UNIFORM_BUFFER_ALIGNMENT;
         return true;
     }
 
@@ -358,7 +371,9 @@ public:
             // Uniform is already there.
             return false;
         }
-        m_uniforms.emplace_back(name, getSize, getVector);
+        m_uniforms.emplace_back(name, getSize, getVector, m_uniformBufferSize);
+		const std::size_t arraySizeInBytes = sizeof(float) * getSize();
+        m_uniformBufferSize += arraySizeInBytes + UNIFORM_BUFFER_ALIGNMENT - (arraySizeInBytes % UNIFORM_BUFFER_ALIGNMENT);
         return true;
     }
 
@@ -371,9 +386,16 @@ public:
             // Uniform is already there.
             return false;
         }
-        m_uniforms.emplace_back(name, getSize, getVectorInt);
+        m_uniforms.emplace_back(name, getSize, getVectorInt, m_uniformBufferSize);
+        const std::size_t arraySizeInBytes = sizeof(int) * getSize();
+        m_uniformBufferSize += arraySizeInBytes + UNIFORM_BUFFER_ALIGNMENT - (arraySizeInBytes % UNIFORM_BUFFER_ALIGNMENT);
         return true;
     }
+
+	std::size_t getUniformBufferSize() const
+	{
+		return m_uniformBufferSize;
+	}
     Textures m_textures;
     Textures m_textures3D;
     Uniforms m_uniforms;
@@ -392,6 +414,7 @@ private:
     }
     unsigned m_max1DLUTWidth;
     bool m_allowTexture1D;
+    unsigned m_uniformBufferSize;
 };
 
 } // namespace GPUShaderImpl
@@ -459,6 +482,10 @@ bool GenericGpuShaderDesc::addUniform(const char * name,
     return getImplGeneric()->addUniform(name, getSize, getVectorInt);
 }
 
+std::size_t GenericGpuShaderDesc::getUniformBufferSize() const noexcept
+{
+	return getImplGeneric()->getUniformBufferSize();
+}
 
 unsigned GenericGpuShaderDesc::getTextureMaxWidth() const noexcept
 {
@@ -485,15 +512,15 @@ unsigned GenericGpuShaderDesc::getNumTextures() const noexcept
     return unsigned(getImplGeneric()->m_textures.size());
 }
 
-void GenericGpuShaderDesc::addTexture(const char * textureName,
-                                      const char * samplerName,
-                                      unsigned width, unsigned height,
-                                      TextureType channel,
-                                      TextureDimensions dimensions,
-                                      Interpolation interpolation,
-                                      const float * values)
+unsigned GenericGpuShaderDesc::addTexture(const char * textureName,
+                                          const char * samplerName,
+                                          unsigned width, unsigned height,
+                                          TextureType channel,
+                                          TextureDimensions dimensions,
+                                          Interpolation interpolation,
+                                          const float * values)
 {
-    getImplGeneric()->addTexture(textureName, samplerName, width, height, channel, dimensions, interpolation, values);
+    return getImplGeneric()->addTexture(textureName, samplerName, width, height, channel, dimensions, interpolation, values);
 }
 
 void GenericGpuShaderDesc::getTexture(unsigned index,
@@ -517,13 +544,13 @@ unsigned GenericGpuShaderDesc::getNum3DTextures() const noexcept
     return unsigned(getImplGeneric()->m_textures3D.size());
 }
 
-void GenericGpuShaderDesc::add3DTexture(const char * textureName,
-                                        const char * samplerName,
-                                        unsigned edgelen,
-                                        Interpolation interpolation,
-                                        const float * values)
+unsigned GenericGpuShaderDesc::add3DTexture(const char * textureName,
+                                            const char * samplerName,
+                                            unsigned edgelen,
+                                            Interpolation interpolation,
+                                            const float * values)
 {
-    getImplGeneric()->add3DTexture(textureName, samplerName, edgelen, interpolation, values);
+    return getImplGeneric()->add3DTexture(textureName, samplerName, edgelen, interpolation, values);
 }
 
 void GenericGpuShaderDesc::get3DTexture(unsigned index,

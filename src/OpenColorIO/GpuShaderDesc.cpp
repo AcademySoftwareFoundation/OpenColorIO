@@ -32,7 +32,8 @@ public:
     mutable std::string m_cacheID;
     mutable Mutex m_cacheIDMutex;
 
-    std::string m_declarations;
+    std::string m_parameterDeclarations;
+	std::string m_textureDeclarations;
     std::string m_helperMethods;
     std::string m_functionHeader;
     std::string m_functionBody;
@@ -69,11 +70,12 @@ public:
             m_numResources   = rhs.m_numResources;
             m_cacheID        = rhs.m_cacheID;
 
-            m_declarations   = rhs.m_declarations;
-            m_helperMethods  = rhs.m_helperMethods;
-            m_functionHeader = rhs.m_functionHeader;
-            m_functionBody   = rhs.m_functionBody;
-            m_functionFooter = rhs.m_functionFooter;
+            m_parameterDeclarations = rhs.m_parameterDeclarations;
+			m_textureDeclarations   = rhs.m_textureDeclarations;
+            m_helperMethods         = rhs.m_helperMethods;
+            m_functionHeader        = rhs.m_functionHeader;
+            m_functionBody          = rhs.m_functionBody;
+            m_functionFooter        = rhs.m_functionFooter;
             
             m_classWrappingInterface = rhs.m_classWrappingInterface->clone();
 
@@ -249,13 +251,22 @@ const char * GpuShaderCreator::getCacheID() const noexcept
     return getImpl()->m_cacheID.c_str();
 }
 
-void GpuShaderCreator::addToDeclareShaderCode(const char * shaderCode)
+void GpuShaderCreator::addToParameterDeclareShaderCode(const char * shaderCode)
 {
-    if(getImpl()->m_declarations.empty())
+    if(getImpl()->m_parameterDeclarations.empty())
     {
-        getImpl()->m_declarations += "\n// Declaration of all variables\n\n";
+        getImpl()->m_parameterDeclarations += "\n// Declaration of all variables\n\n";
     }
-    getImpl()->m_declarations += (shaderCode && *shaderCode) ? shaderCode : "";
+    getImpl()->m_parameterDeclarations += (shaderCode && *shaderCode) ? shaderCode : "";
+}
+
+void GpuShaderCreator::addToTextureDeclareShaderCode(const char* shaderCode)
+{
+    if (getImpl()->m_textureDeclarations.empty())
+    {
+        getImpl()->m_textureDeclarations += "\n// Declaration of all textures\n\n";
+    }
+    getImpl()->m_textureDeclarations += (shaderCode && *shaderCode) ? shaderCode : "";
 }
 
 void GpuShaderCreator::addToHelperShaderCode(const char * shaderCode)
@@ -282,7 +293,8 @@ void GpuShaderCreator::addToFunctionFooterShaderCode(const char * shaderCode)
     getImpl()->m_functionFooter += (shaderCode && *shaderCode) ? shaderCode : "";
 }
 
-void GpuShaderCreator::createShaderText(const char * shaderDeclarations,
+void GpuShaderCreator::createShaderText(const char * shaderParameterDeclarations,
+                                        const char * shaderTextureDeclarations,
                                         const char * shaderHelperMethods,
                                         const char * shaderFunctionHeader,
                                         const char * shaderFunctionBody,
@@ -292,11 +304,21 @@ void GpuShaderCreator::createShaderText(const char * shaderDeclarations,
 
     getImpl()->m_shaderCode.clear();
 
-    getImpl()->m_shaderCode += (shaderDeclarations   && *shaderDeclarations)   ? shaderDeclarations   : "";
-    getImpl()->m_shaderCode += (shaderHelperMethods  && *shaderHelperMethods)  ? shaderHelperMethods  : "";
-    getImpl()->m_shaderCode += (shaderFunctionHeader && *shaderFunctionHeader) ? shaderFunctionHeader : "";
-    getImpl()->m_shaderCode += (shaderFunctionBody   && *shaderFunctionBody)   ? shaderFunctionBody   : "";
-    getImpl()->m_shaderCode += (shaderFunctionFooter && *shaderFunctionFooter) ? shaderFunctionFooter : "";
+    if (getImpl()->m_language == GPU_LANGUAGE_GLSL_VK_4_6)
+    {
+		getImpl()->m_shaderCode += "/*layout (set = 0, binding = 0) uniform OCIOParameters\n {\n*/";
+    }
+    getImpl()->m_shaderCode += (shaderParameterDeclarations   && *shaderParameterDeclarations)   ? shaderParameterDeclarations   : "";
+    if (getImpl()->m_language == GPU_LANGUAGE_GLSL_VK_4_6)
+    {
+        getImpl()->m_shaderCode += "\n/*};*/\n";
+    }
+
+    getImpl()->m_shaderCode += (shaderTextureDeclarations   && *shaderTextureDeclarations)  ? shaderTextureDeclarations : "";
+    getImpl()->m_shaderCode += (shaderHelperMethods         && *shaderHelperMethods)        ? shaderHelperMethods       : "";
+    getImpl()->m_shaderCode += (shaderFunctionHeader        && *shaderFunctionHeader)       ? shaderFunctionHeader      : "";
+    getImpl()->m_shaderCode += (shaderFunctionBody          && *shaderFunctionBody)         ? shaderFunctionBody        : "";
+    getImpl()->m_shaderCode += (shaderFunctionFooter        && *shaderFunctionFooter)       ? shaderFunctionFooter      : "";
 
     getImpl()->m_shaderCodeID = CacheIDHash(getImpl()->m_shaderCode.c_str(),
                                             getImpl()->m_shaderCode.length());
@@ -309,18 +331,25 @@ void GpuShaderCreator::finalize()
     // For some GPU languages, the default header and footer do not fit well so, the class wrapper
     // encapsulates differences when needed.
 
+    const std::string originalHeader = getImpl()->m_parameterDeclarations + std::string("\n") + getImpl()->m_textureDeclarations;
     getImpl()->m_classWrappingInterface->prepareClassWrapper(getResourcePrefix(),
                                                              getImpl()->m_functionName,
-                                                             getImpl()->m_declarations);
+                                                             originalHeader);
 
-    getImpl()->m_declarations
-        = getImpl()->m_classWrappingInterface->getClassWrapperHeader(getImpl()->m_declarations);
+    if (getImpl()->m_classWrappingInterface->hasClassWrapperHeader())
+    {
+        getImpl()->m_parameterDeclarations
+            = getImpl()->m_classWrappingInterface->getClassWrapperHeader(originalHeader);
+		getImpl()->m_textureDeclarations.clear(); //clear texture declarations since they're already included in the header
+    }
     getImpl()->m_functionFooter
         = getImpl()->m_classWrappingInterface->getClassWrapperFooter(getImpl()->m_functionFooter);
 
+ 
     // Build the complete shader program.
 
-    createShaderText(getImpl()->m_declarations.c_str(),
+    createShaderText(getImpl()->m_parameterDeclarations.c_str(),
+		             getImpl()->m_textureDeclarations.c_str(),
                      getImpl()->m_helperMethods.c_str(),
                      getImpl()->m_functionHeader.c_str(),
                      getImpl()->m_functionBody.c_str(),

@@ -527,28 +527,28 @@ std::string _Add_Reach_table(
         dimensions = GpuShaderDesc::TEXTURE_2D;
     }
 
-    shaderCreator->addTexture(
-        name.c_str(),
-        GpuShaderText::getSamplerName(name).c_str(),
-        table.total_size,
-        1,
-        GpuShaderCreator::TEXTURE_RED_CHANNEL,
-        dimensions,
-        INTERP_NEAREST,
-        &(table[0]));
+    const unsigned textureIndex = shaderCreator->addTexture(
+                                            name.c_str(),
+                                            GpuShaderText::getSamplerName(name).c_str(),
+                                            table.total_size,
+                                            1,
+                                            GpuShaderCreator::TEXTURE_RED_CHANNEL,
+                                            dimensions,
+                                            INTERP_NEAREST,
+                                            &(table[0]));
 
 
     if (dimensions == GpuShaderDesc::TEXTURE_1D)
     {
         GpuShaderText ss(shaderCreator->getLanguage());
-        ss.declareTex1D(name);
-        shaderCreator->addToDeclareShaderCode(ss.string().c_str());
+        ss.declareTex1D(name, textureIndex);
+        shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
     else
     {
         GpuShaderText ss(shaderCreator->getLanguage());
-        ss.declareTex2D(name);
-        shaderCreator->addToDeclareShaderCode(ss.string().c_str());
+        ss.declareTex2D(name, textureIndex);
+        shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
 
     // Sampler function
@@ -825,27 +825,27 @@ std::string _Add_Cusp_table(
         dimensions = GpuShaderDesc::TEXTURE_2D;
     }
 
-    shaderCreator->addTexture(
-        name.c_str(),
-        GpuShaderText::getSamplerName(name).c_str(),
-        g.gamut_cusp_table.total_size,
-        1,
-        GpuShaderCreator::TEXTURE_RGB_CHANNEL,
-        dimensions,
-        INTERP_NEAREST,
-        &(g.gamut_cusp_table[0][0]));
+    const unsigned textureIndex = shaderCreator->addTexture(
+                                            name.c_str(),
+                                            GpuShaderText::getSamplerName(name).c_str(),
+                                            g.gamut_cusp_table.total_size,
+                                            1,
+                                            GpuShaderCreator::TEXTURE_RGB_CHANNEL,
+                                            dimensions,
+                                            INTERP_NEAREST,
+                                            &(g.gamut_cusp_table[0][0]));
 
     if (dimensions == GpuShaderDesc::TEXTURE_1D)
     {
         GpuShaderText ss(shaderCreator->getLanguage());
-        ss.declareTex1D(name);
-        shaderCreator->addToDeclareShaderCode(ss.string().c_str());
+        ss.declareTex1D(name, textureIndex);
+        shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
     else
     {
         GpuShaderText ss(shaderCreator->getLanguage());
-        ss.declareTex2D(name);
-        shaderCreator->addToDeclareShaderCode(ss.string().c_str());
+        ss.declareTex2D(name, textureIndex);
+        shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
 
     // Sampler function

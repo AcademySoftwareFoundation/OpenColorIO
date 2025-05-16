@@ -172,7 +172,7 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
     }
 
     {
-        OCIO_CHECK_NO_THROW(shaderDesc->addToDeclareShaderCode("vec2 coords;\n"));
+        OCIO_CHECK_NO_THROW(shaderDesc->addToParameterDeclareShaderCode("vec2 coords;\n"));
         OCIO_CHECK_NO_THROW(shaderDesc->addToHelperShaderCode("vec2 helpers() {}\n\n"));
         OCIO_CHECK_NO_THROW(shaderDesc->addToFunctionHeaderShaderCode("void func() {\n"));
         OCIO_CHECK_NO_THROW(shaderDesc->addToFunctionShaderCode("  int i;\n"));

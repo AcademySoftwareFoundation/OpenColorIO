@@ -91,7 +91,7 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
         // Declare uniform.
         GpuShaderText stDecl(shaderCreator->getLanguage());
         stDecl.declareUniformArrayFloat(name, maxSize);
-        shaderCreator->addToDeclareShaderCode(stDecl.string().c_str());
+        shaderCreator->addToParameterDeclareShaderCode(stDecl.string().c_str());
     }
 }
 
@@ -107,7 +107,7 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
         GpuShaderText stDecl(shaderCreator->getLanguage());
         // Need 2 ints for each RGBM curve.
         stDecl.declareUniformArrayInt(name, 8);
-        shaderCreator->addToDeclareShaderCode(stDecl.string().c_str());
+        shaderCreator->addToParameterDeclareShaderCode(stDecl.string().c_str());
     }
 }
 
@@ -121,7 +121,7 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
         // Declare uniform.
         GpuShaderText stDecl(shaderCreator->getLanguage());
         stDecl.declareUniformBool(name);
-        shaderCreator->addToDeclareShaderCode(stDecl.string().c_str());
+        shaderCreator->addToParameterDeclareShaderCode(stDecl.string().c_str());
     }
 }
 
