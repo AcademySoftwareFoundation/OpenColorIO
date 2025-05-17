@@ -870,7 +870,7 @@ public:
     const char * getDefaultView(const char * display, const char * colorspaceName) const;
 
     /**
-     * Return the number of views attached to the display including the number of
+     * Return the number of active views attached to the display including the number of
      * shared views if any. Return 0 if display does not exist.
      */
     int getNumViews(const char * display) const;
