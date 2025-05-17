@@ -489,7 +489,7 @@ jobs:
             arch-type: "x86_64"
             build-type: Release
             build-shared: 'ON'
-            build-docs: 'OFF'
+            build-docs: 'ON'
             build-openfx: 'OFF'
             use-simd: 'OFF'
             use-oiio: 'OFF'
