@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList id="none" version="2.0">
+
+    <Description>Transform should optimize into a basicPassThruRev with gamma=2.2/1.8</Description>
+
+    <Gamma inBitDepth="16f" outBitDepth="16f" style="basicPassThruFwd">
+        <GammaParams gamma="1.8" />
+    </Gamma>
+
+    <Matrix inBitDepth="16f" outBitDepth="16f">
+        <Description>Rec.709 to XYZ</Description>
+        <Array dim="3 3 3">
+0.412390799266 0.357584339384 0.180480788402
+0.212639005872 0.715168678768 0.072192315361
+0.019330818716 0.119194779795 0.95053215225 
+        </Array>
+    </Matrix>
+
+    <Matrix inBitDepth="16f" outBitDepth="16f">
+        <Description>XYZ to Rec.709</Description>
+        <Array dim="3 3 3">
+ 3.240969941905 -1.53738317757  -0.498610760293
+-0.969243636281  1.875967501508  0.041555057407
+ 0.055630079697 -0.203976958889  1.056971514243
+        </Array>
+    </Matrix>
+
+    <Gamma inBitDepth="16f" outBitDepth="16f" style="basicPassThruRev">
+        <GammaParams gamma="2.2" />
+    </Gamma>
+
+</ProcessList>

@@ -49,6 +49,7 @@ void CompareRender(OCIO::OpRcPtrVec & ops1, OCIO::OpRcPtrVec & ops2,
 
     for (const auto & op : ops1)
     {
+        // NB: This hard-codes OPTIMIZATION_FAST_LOG_EXP_POW to off, see Op.h.
         op->apply(&img1[0], &img1[0], nbPixels);
     }
 
@@ -1068,6 +1069,70 @@ OCIO_ADD_TEST(OpOptimizers, gamma_comp)
     // Now check that the optimized transform renders the same as the original.
     // TODO: Gamma is clamping alpha, and Range does not.
     CompareRender(ops, optOps, __LINE__, 1e-4f, true);
+}
+
+OCIO_ADD_TEST(OpOptimizers, gamma_comp_test2)
+{
+    // This transform has a pair of gammas separated by a pair of matrices that
+    // compose into an identity matrix and get optimized out. Then the gammas
+    // get composed into a non-identity gamma. Finally the exponent is inverted
+    // (to follow the convention of keeping it > 1) and the direction is inverted.
+
+    const std::string fileName("gamma_comp_test2.ctf");
+    OCIO::OpRcPtrVec ops;
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
+    OCIO_CHECK_NO_THROW(OCIO::BuildOpsTest(ops, fileName, context,
+                                           OCIO::TRANSFORM_DIR_FORWARD));
+
+    // First one is the file no op.
+    OCIO_CHECK_EQUAL(ops.size(), 5);
+
+    // Remove no ops & finalize for computation.
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_NONE));
+
+    OCIO_CHECK_EQUAL(ops.size(), 4);
+
+    OCIO::OpRcPtrVec optOps            = ops.clone();
+    OCIO::OpRcPtrVec optOps_noComp     = ops.clone();
+
+    OCIO_CHECK_EQUAL(optOps_noComp.size(), 4);
+    OCIO_CHECK_NO_THROW(optOps_noComp.finalize());
+    // NB: The op->apply function used here hard-codes OPTIMIZATION_FAST_LOG_EXP_POW to off.
+    OCIO_CHECK_NO_THROW(optOps_noComp.optimize(AllBut(OCIO::OPTIMIZATION_COMP_GAMMA)));
+    OCIO_CHECK_EQUAL(optOps_noComp.size(), 2);
+    OCIO_CHECK_EQUAL(optOps_noComp[0]->getInfo(), "<GammaOp>");
+    OCIO_CHECK_EQUAL(optOps_noComp[1]->getInfo(), "<GammaOp>");
+
+    // Due to rounding error in the two 3x3 matrix multiplies with much larger values, the
+    // 1.52e-4 input value is off by 60% going into the second gamma (see ociochecklut -s).
+    // Therefore the optOps_noComp and optOps are actually more accurate than ops here.
+    CompareRender(ops, optOps_noComp, __LINE__, 1e-4f);
+
+    OCIO_CHECK_NO_THROW(optOps.finalize());
+    OCIO_CHECK_NO_THROW(optOps.optimize(OCIO::OPTIMIZATION_DEFAULT));
+
+    // Now check that the optimized transform renders the same as the original.
+    CompareRender(ops, optOps, __LINE__, 1e-4f);
+
+    // Check the op is as expected.
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+    OCIO_REQUIRE_EQUAL(optOps.size(), 1);
+    OCIO::ConstOpRcPtr op(optOps[0]);
+    OCIO::CreateGammaTransform(group, op);
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+    auto transform = group->getTransform(0);
+    OCIO_REQUIRE_ASSERT(transform);
+    auto gTransform = OCIO_DYNAMIC_POINTER_CAST<OCIO::ExponentTransform>(transform);
+    OCIO_REQUIRE_ASSERT(gTransform);
+    OCIO_CHECK_EQUAL(gTransform->getNegativeStyle(), OCIO::NEGATIVE_PASS_THRU);
+    OCIO_CHECK_EQUAL(gTransform->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+    double vals[4];
+    gTransform->getValue(vals);
+    OCIO_CHECK_CLOSE(vals[0], 2.2/1.8, 1e-6f);
+    OCIO_CHECK_CLOSE(vals[1], 2.2/1.8, 1e-6f);
+    OCIO_CHECK_CLOSE(vals[2], 2.2/1.8, 1e-6f);
+    OCIO_CHECK_EQUAL(vals[3], 1.);
 }
 
 OCIO_ADD_TEST(OpOptimizers, gamma_comp_identity)
