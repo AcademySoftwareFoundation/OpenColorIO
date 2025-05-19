@@ -1569,7 +1569,7 @@ void GetGradingToneGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
     if (dyn)
     {
-        st.newLine() << "if (!" << properties.localBypass << ")";
+        st.newLine() << "if (!" << st.castToBool(properties.localBypass) << ")";
         st.newLine() << "{";
         st.indent();
     }

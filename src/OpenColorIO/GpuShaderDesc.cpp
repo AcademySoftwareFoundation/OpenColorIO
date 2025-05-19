@@ -304,14 +304,14 @@ void GpuShaderCreator::createShaderText(const char * shaderParameterDeclarations
 
     getImpl()->m_shaderCode.clear();
 
-    if (getImpl()->m_language == GPU_LANGUAGE_GLSL_VK_4_6)
+    if (getImpl()->m_language == GPU_LANGUAGE_GLSL_VK_4_6 && (shaderParameterDeclarations && *shaderParameterDeclarations))
     {
-		getImpl()->m_shaderCode += "/*layout (set = 0, binding = 0) uniform OCIOParameters\n {\n*/";
+		getImpl()->m_shaderCode += "layout (set = 0, binding = 0) uniform OCIOParameters\n {\n";
     }
     getImpl()->m_shaderCode += (shaderParameterDeclarations   && *shaderParameterDeclarations)   ? shaderParameterDeclarations   : "";
-    if (getImpl()->m_language == GPU_LANGUAGE_GLSL_VK_4_6)
+    if (getImpl()->m_language == GPU_LANGUAGE_GLSL_VK_4_6 && (shaderParameterDeclarations && *shaderParameterDeclarations))
     {
-        getImpl()->m_shaderCode += "\n/*};*/\n";
+        getImpl()->m_shaderCode += "\n};\n";
     }
 
     getImpl()->m_shaderCode += (shaderTextureDeclarations   && *shaderTextureDeclarations)  ? shaderTextureDeclarations : "";
