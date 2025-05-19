@@ -552,7 +552,7 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         AddGPLogProperties(shaderCreator, st, gpData, properties, dyn);
         if (dyn)
         {
-            st.newLine() << "if (!" << properties.localBypass << ")";
+            st.newLine() << "if (!" << st.castToBool(properties.localBypass) << ")";
             st.newLine() << "{";
             st.indent();
         }
@@ -579,7 +579,7 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         AddGPLinProperties(shaderCreator, st, gpData, properties, dyn);
         if (dyn)
         {
-            st.newLine() << "if (!" << properties.localBypass << ")";
+            st.newLine() << "if (!" << st.castToBool(properties.localBypass) << ")";
             st.newLine() << "{";
             st.indent();
         }
@@ -606,7 +606,7 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         AddGPVideoProperties(shaderCreator, st, gpData, properties, dyn);
         if (dyn)
         {
-            st.newLine() << "if (!" << properties.localBypass << ")";
+            st.newLine() << "if (!" << st.castToBool(properties.localBypass) << ")";
             st.newLine() << "{";
             st.indent();
         }

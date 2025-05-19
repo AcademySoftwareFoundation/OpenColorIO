@@ -383,9 +383,10 @@ void UpdateOCIOGLState()
         //OCIO::ExponentTransformRcPtr expTransform = OCIO::ExponentTransform::Create();
         //expTransform->setValue(exponent4f);
 
-		OCIO::GradingToneTransformRcPtr expTransform = OCIO::GradingToneTransform::Create(OCIO::GRADING_LOG);
+		OCIO::GradingPrimaryTransformRcPtr expTransform = OCIO::GradingPrimaryTransform::Create(OCIO::GRADING_LOG);
         expTransform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 		expTransform->setStyle(OCIO::GRADING_LOG);
+		expTransform->makeDynamic();
         //expTransform->setValue(tones);
         vp->setDisplayCC(expTransform);
     }

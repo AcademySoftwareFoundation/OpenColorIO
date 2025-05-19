@@ -231,6 +231,8 @@ public:
     // Get the string for taking the sign of a vector.
     std::string sign(const std::string & v) const;
 
+	std::string castToBool(const std::string& v) const;
+
     friend class GpuShaderLine;
 
 private:
