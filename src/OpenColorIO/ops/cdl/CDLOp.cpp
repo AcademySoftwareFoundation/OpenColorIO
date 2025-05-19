@@ -50,7 +50,7 @@ public:
 
     ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
-    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator, OptimizationFlags /*oFlags*/) const override;
 
 protected:
     ConstCDLOpDataRcPtr cdlData() const { return DynamicPtrCast<const CDLOpData>(data()); }
@@ -133,7 +133,7 @@ ConstOpCPURcPtr CDLOp::getCPUOp(bool fastLogExpPow) const
     return GetCDLCPURenderer(data, fastLogExpPow);
 }
 
-void CDLOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
+void CDLOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator, OptimizationFlags /*oFlags*/) const
 {
     ConstCDLOpDataRcPtr data = cdlData();
     GetCDLGPUShaderProgram(shaderCreator, data);
