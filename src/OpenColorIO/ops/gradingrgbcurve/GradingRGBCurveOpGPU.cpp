@@ -257,7 +257,7 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
 {
     if (dyn)
     {
-        st.newLine() << "if (!" << props.m_localBypass << ")";
+        st.newLine() << "if (!" << st.castToBool(props.m_localBypass) << ")";
         st.newLine() << "{";
         st.indent();
     }
@@ -305,7 +305,7 @@ void AddGCInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
 {
     if (dyn)
     {
-        st.newLine() << "if (!" << props.m_localBypass << ")";
+        st.newLine() << "if (!" << st.castToBool(props.m_localBypass) << ")";
         st.newLine() << "{";
         st.indent();
     }
