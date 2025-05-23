@@ -37,7 +37,7 @@ class AllocationTransformTest(unittest.TestCase, TransformsBaseTest):
         # Wrong type tests.
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                self.tr.setAllocation(invalid)  # type: ignore[arg-type]
+                self.tr.setAllocation(invalid)  # type: ignore
 
     def test_vars(self):
         """
@@ -64,7 +64,7 @@ class AllocationTransformTest(unittest.TestCase, TransformsBaseTest):
         # Wrong type tests.
         for invalid in (None, 'hello'):
             with self.assertRaises(TypeError):
-                self.tr.setVars(invalid)  # type: ignore[arg-type]
+                self.tr.setVars(invalid)  # type: ignore
 
     def test_constructor_with_keyword(self):
         """
@@ -112,4 +112,4 @@ class AllocationTransformTest(unittest.TestCase, TransformsBaseTest):
 
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                allo_tr = OCIO.AllocationTransform(invalid)  # type: ignore[call-overload]
+                allo_tr = OCIO.AllocationTransform(invalid)  # type: ignore

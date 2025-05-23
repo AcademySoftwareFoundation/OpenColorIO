@@ -1331,7 +1331,7 @@ class ConfigVirtualWithActiveDisplayTest(unittest.TestCase):
             SIMPLE_CONFIG_VIRTUAL_DISPLAY_ACTIVE_DISPLAY)
 
     def tearDown(self):
-        self.cfg_active_display = None  # type: ignore[assignment]
+        self.cfg_active_display = None  # type: ignore
 
     def test_virtual_display_with_active_displays(self):
         """

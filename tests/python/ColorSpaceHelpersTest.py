@@ -80,7 +80,7 @@ class ColorSpaceHelpersTest(unittest.TestCase):
         # Parameters are needed.
 
         with self.assertRaises(TypeError):
-            OCIO.ColorSpaceMenuHelper(None)  # type: ignore[arg-type]
+            OCIO.ColorSpaceMenuHelper(None)  # type: ignore
 
         # Create with sample config.
 

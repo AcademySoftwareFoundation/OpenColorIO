@@ -65,7 +65,7 @@ class FileTransformTest(unittest.TestCase, TransformsBaseTest):
         # Wrong type tests.
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                self.tr.setCCCId(invalid)  # type: ignore[arg-type]
+                self.tr.setCCCId(invalid)  # type: ignore
 
     def test_cdlstyle(self):
         """

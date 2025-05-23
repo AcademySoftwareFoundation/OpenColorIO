@@ -37,7 +37,7 @@ class LogTransformTest(unittest.TestCase, TransformsBaseTest):
         # Wrong type tests.
         for invalid in (None, 'test'):
             with self.assertRaises(TypeError):
-                self.tr.setBase(invalid)
+                self.tr.setBase(invalid)  # type: ignore
 
     def test_format_metadata(self):
         """
@@ -111,4 +111,4 @@ class LogTransformTest(unittest.TestCase, TransformsBaseTest):
 
         for invalid in (None, 'test'):
             with self.assertRaises(TypeError):
-                log_tr = OCIO.LogTransform(invalid)  # type: ignore[call-overload]
+                log_tr = OCIO.LogTransform(invalid)  # type: ignore

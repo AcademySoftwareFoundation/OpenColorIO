@@ -35,11 +35,8 @@ class OCIOSignatureGenerator(AdvancedSignatureGenerator):
             "*.__eq__": "(self, other: object) -> bool",
         },
         arg_type_overrides={
-            # ("*", "*", "Buffer"): "numpy.ndarray",
-            ("*", "*", re.compile(r"list\[(.*)\]")): r"Iterable[\1]",
+            ("*", "*", re.compile(r"list\[(.*)]")): r"Iterable[\1]",
         },
-        # result_type_overrides={},
-        # property_type_overrides={},
     )
 
     def process_sig(
@@ -167,7 +164,8 @@ def main() -> None:
             print("Stub verification failed!")
             print("Changes to the source code have resulted in a change to the stubs.")
             print(get_colored_diff(old_text, new_text))
-            print("Run `make pystubs` locally and commit the results for review.")
+            print("Run `cmake /path/to/source; cmake --build . --target pystubs` locally and "
+                  "commit the results for review.")
             sys.exit(2)
 
 

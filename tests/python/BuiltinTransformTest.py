@@ -9,7 +9,7 @@ from TransformsBaseTest import TransformsBaseTest
 
 class BuiltinTransformTest(unittest.TestCase, TransformsBaseTest):
     # BuiltinTransformRegistry singleton
-    REGISTRY: OCIO.BuiltinTransformRegistry = None
+    REGISTRY: OCIO.BuiltinTransformRegistry
 
     # Default values
     DEFAULT_STYLE = 'IDENTITY'
@@ -52,7 +52,7 @@ class BuiltinTransformTest(unittest.TestCase, TransformsBaseTest):
         # Safe invalid type handling
         for invalid in (None, 1, True):
             with self.assertRaises(TypeError):
-                self.tr.setStyle(invalid)  # type: ignore[arg-type]
+                self.tr.setStyle(invalid)  # type: ignore
 
     def test_constructor_keyword(self):
         # Keyword args in order

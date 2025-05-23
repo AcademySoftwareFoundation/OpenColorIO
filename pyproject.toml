@@ -47,12 +47,13 @@ before-build = 'bash -c "share/ci/scripts/windows/install_docs_env.sh $GITHUB_WO
 # for the stub-generator to import the freshly-built wheel.
 # There are two entry-points which are designed to call generate_stubs.py through
 # this test command:
-# - `make pystubs` is called during local development to generate the
-#   stubs and copy them into the git repo to be committed and reviewed.
+# - `cmake /path/to/source; cmake --build . --target pystubs` is called during
+#   local development to generate the stubs and copy them into the git repo to
+#   be committed and reviewed.
 # - in CI, the cibuildwheel action is used to validate that the stubs match what
 #   has been committed to the repo.
 test-requires = "mypy~=1.15.0 stubgenlib~=0.2.0"
-# Note: the python version here must be kept in sync with src/python/stubs/CMakeLists.txt
+# Note: the python version here must be kept in sync with src/bindings/python/CMakeLists.txt
 select = "cp311-manylinux_*64"
 inherit.test-command = "append"
 test-command = [
@@ -64,9 +65,6 @@ files = [
     "tests/python/",
     "src/bindings/python/stubs",
 ]
-#mypy_path = [
-#    "src/bindings/python/stubs",
-#]
 allow_redefinition = true
 check_untyped_defs = true
 disable_error_code = [
