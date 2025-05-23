@@ -5,7 +5,7 @@ try:
     from collections.abc import Iterable
 except ImportError:
     # Python 2
-    from collections import Iterable
+    from collections import Iterable  # type: ignore
 
 import unittest
 

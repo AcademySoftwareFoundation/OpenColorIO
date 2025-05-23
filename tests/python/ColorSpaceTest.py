@@ -21,8 +21,8 @@ class ColorSpaceTest(unittest.TestCase):
         self.log_tr = OCIO.LogTransform(10)
 
     def tearDown(self):
-        self.colorspace = None
-        self.log_tr = None
+        self.colorspace = None  # type: ignore
+        self.log_tr = None  # type: ignore
 
     def test_copy(self):
         """
@@ -101,7 +101,7 @@ class ColorSpaceTest(unittest.TestCase):
         wrong_alloc_vars = [['test'], 'test', 0.1, 1]
         for wrong_alloc_var in wrong_alloc_vars:
             with self.assertRaises(TypeError):
-                self.colorspace.setAllocationVars(wrong_alloc_var)
+                self.colorspace.setAllocationVars(wrong_alloc_var)  # type: ignore
 
     def test_bitdepth(self):
         """

@@ -199,4 +199,4 @@ class FixedFunctionTransformTest(unittest.TestCase, TransformsBaseTest):
 
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                fixed_func_tr = OCIO.FixedFunctionTransform(invalid)
+                fixed_func_tr = OCIO.FixedFunctionTransform(invalid)  # type: ignore

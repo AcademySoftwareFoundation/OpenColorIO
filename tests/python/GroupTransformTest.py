@@ -129,7 +129,7 @@ class GroupTransformTest(unittest.TestCase, TransformsBaseTest):
 
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                group_tr = OCIO.FixedFunctionTransform(invalid)
+                group_tr = OCIO.FixedFunctionTransform(invalid)  # type: ignore
 
     def test_write_clf(self):
         """

@@ -116,13 +116,13 @@ class GradingDataTest(unittest.TestCase):
         assertEqualPrimary(self, primaryLog, primaryVideo)
 
         with self.assertRaises(TypeError):
-            OCIO.GradingPrimary()
+            OCIO.GradingPrimary()  # type: ignore
 
         with self.assertRaises(AttributeError):
             OCIO.GradingPrimary(OCIO.TRANSFOR_DIRECTION_FORWARD)
 
         with self.assertRaises(TypeError):
-            OCIO.GradingPrimary(0)
+            OCIO.GradingPrimary(0)  # type: ignore
 
         newGamma = OCIO.GradingRGBM(1.1, 1.2, 1.3, 1)
         primaryLog.gamma = newGamma
@@ -160,7 +160,7 @@ class GradingDataTest(unittest.TestCase):
 
         # Create a similar bspline curve with alternate constructor.
         bs2 = OCIO.GradingBSplineCurve([0, 0, 0.1, 0.5, 0.4, 0.6, 0.6, 0.7, 1, 1])
-        cpts2 = bs2.getControlPoints()
+        cpts0 = bs2.getControlPoints()
 
         assertEqualBSpline(self, bs, bs2)
 
@@ -379,7 +379,7 @@ class GradingDataTest(unittest.TestCase):
             OCIO.GradingTone(OCIO.TRANSFOR_DIRECTION_FORWARD)
 
         with self.assertRaises(TypeError):
-            OCIO.GradingTone(0)
+            OCIO.GradingTone(0)  # type: ignore
 
         newMidtones = OCIO.GradingRGBMSW(1.1, 1.2, 1.3, 1, 0.2, 1.1)
         tone.midtones = newMidtones
