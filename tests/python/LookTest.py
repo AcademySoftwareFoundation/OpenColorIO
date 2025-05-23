@@ -18,7 +18,7 @@ class LookTest(unittest.TestCase):
         self.look = OCIO.Look()
 
     def tearDown(self):
-        self.look = None
+        self.look = None  # type: ignore
 
     def test_copy(self):
         """
@@ -55,7 +55,7 @@ class LookTest(unittest.TestCase):
         # Wrong type tests.
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                self.look.setName(invalid)
+                self.look.setName(invalid)  # type: ignore
 
     def test_process_space(self):
         """
@@ -72,7 +72,7 @@ class LookTest(unittest.TestCase):
         # Wrong type tests.
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                self.look.setProcessSpace(invalid)
+                self.look.setProcessSpace(invalid)  # type: ignore
 
     def test_description(self):
         """
@@ -89,7 +89,7 @@ class LookTest(unittest.TestCase):
         # Wrong type tests.
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                self.look.setDescription(invalid)
+                self.look.setDescription(invalid)  # type: ignore
 
     def test_transform(self):
         """
@@ -108,7 +108,7 @@ class LookTest(unittest.TestCase):
         # Wrong type tests.
         for invalid in (OCIO.ALLOCATION_UNIFORM, 1):
             with self.assertRaises(TypeError):
-                self.look.setTransform(invalid)
+                self.look.setTransform(invalid)  # type: ignore
 
     def test_inverse_transform(self):
         """
@@ -128,7 +128,7 @@ class LookTest(unittest.TestCase):
         # Wrong type tests.
         for invalid in (OCIO.ALLOCATION_UNIFORM, 1):
             with self.assertRaises(TypeError):
-                self.look.setInverseTransform(invalid)
+                self.look.setInverseTransform(invalid)  # type: ignore
 
     def test_constructor_with_keyword(self):
         """
@@ -191,4 +191,4 @@ class LookTest(unittest.TestCase):
 
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                look = OCIO.Look(invalid)
+                look = OCIO.Look(invalid)  # type: ignore
