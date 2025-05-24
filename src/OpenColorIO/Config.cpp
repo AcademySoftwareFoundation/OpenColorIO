@@ -3307,6 +3307,7 @@ void Config::setViewingRules(ConstViewingRulesRcPtr viewingRules)
 
 bool Config::viewIsShared(const char * dispName, const char * viewName) const
 {
+    if (!viewName || !*viewName) return false;
 
     for (int v = 0; v < getNumViews(VIEW_SHARED, dispName); v++)
     {
@@ -3785,6 +3786,8 @@ bool Config::hasVirtualView(const char * viewName) const
 
 bool Config::virtualViewIsShared(const char * viewName) const
 {
+    if (!viewName || !*viewName) return false;
+
     for (int v = 0; v < getVirtualDisplayNumViews(VIEW_SHARED); v++)
     {
         const char * sharedViewName = getVirtualDisplayView(VIEW_SHARED, v);

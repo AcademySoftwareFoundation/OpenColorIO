@@ -8505,6 +8505,8 @@ colorspaces:
     OCIO_CHECK_EQUAL(std::string("sview1"), config->getView(OCIO::VIEW_SHARED, "sRGB", 0));
     OCIO_CHECK_ASSERT(config->displayHasView("sRGB", "sview1"));
     OCIO_CHECK_ASSERT(config->viewIsShared("sRGB", "sview1"));
+    OCIO_CHECK_ASSERT(!config->viewIsShared("sRGB", ""));
+    OCIO_CHECK_ASSERT(!config->viewIsShared("sRGB", nullptr));
 
     OCIO_CHECK_EQUAL(std::string("raw"), config->getDisplayViewColorSpaceName("sRGB", "sview1"));
     OCIO_CHECK_EQUAL(std::string("raw"), config->getVirtualDisplayViewColorSpaceName("sview2"));
@@ -8549,6 +8551,9 @@ colorspaces:
         OCIO_CHECK_ASSERT(cfg->hasVirtualView("sview2"));
         OCIO_CHECK_ASSERT(cfg->virtualViewIsShared("sview2"));
         OCIO_CHECK_ASSERT(OCIO::Config::VirtualViewsAreEqual(config, cfg, "sview2"));
+
+        OCIO_CHECK_ASSERT(!cfg->virtualViewIsShared(""));
+        OCIO_CHECK_ASSERT(!cfg->virtualViewIsShared(nullptr));
 
         // Remove a view from the Virtual Display.
 
