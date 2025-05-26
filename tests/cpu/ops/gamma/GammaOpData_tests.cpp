@@ -579,7 +579,8 @@ void CheckGammaCompose(OCIO::GammaOpData::Style style1,
                        OCIO::GammaOpData::Style style2,
                        const OCIO::GammaOpData::Params & params2,
                        OCIO::GammaOpData::Style refStyle,
-                       const OCIO::GammaOpData::Params & refParams)
+                       const OCIO::GammaOpData::Params & refParams,
+                       unsigned line)
 {
     static const OCIO::GammaOpData::Params paramsA = { 1. };
 
@@ -591,12 +592,12 @@ void CheckGammaCompose(OCIO::GammaOpData::Style style1,
 
     const OCIO::GammaOpDataRcPtr g3 = g1.compose(g2);
 
-    OCIO_CHECK_EQUAL(g3->getStyle(), refStyle);
+    OCIO_CHECK_EQUAL_FROM(g3->getStyle(), refStyle, line);
 
-    OCIO_CHECK_ASSERT(g3->getRedParams()   == refParams);
-    OCIO_CHECK_ASSERT(g3->getGreenParams() == refParams);
-    OCIO_CHECK_ASSERT(g3->getBlueParams()  == refParams);
-    OCIO_CHECK_ASSERT(g3->getAlphaParams() == paramsA);
+    OCIO_CHECK_ASSERT_FROM(g3->getRedParams()   == refParams, line);
+    OCIO_CHECK_ASSERT_FROM(g3->getGreenParams() == refParams, line);
+    OCIO_CHECK_ASSERT_FROM(g3->getBlueParams()  == refParams, line);
+    OCIO_CHECK_ASSERT_FROM(g3->getAlphaParams() == paramsA, line);
 }
 
 };
@@ -610,7 +611,8 @@ OCIO_ADD_TEST(GammaOpData, compose)
 
         CheckGammaCompose(OCIO::GammaOpData::BASIC_FWD, params1,
                           OCIO::GammaOpData::BASIC_FWD, params2,
-                          OCIO::GammaOpData::BASIC_FWD, refParams);
+                          OCIO::GammaOpData::BASIC_FWD, refParams,
+                          __LINE__);
     }
 
     {
@@ -620,7 +622,8 @@ OCIO_ADD_TEST(GammaOpData, compose)
 
         CheckGammaCompose(OCIO::GammaOpData::BASIC_REV, params1,
                           OCIO::GammaOpData::BASIC_REV, params2,
-                          OCIO::GammaOpData::BASIC_REV, refParams);
+                          OCIO::GammaOpData::BASIC_REV, refParams,
+                          __LINE__);
     }
 
     {
@@ -630,7 +633,8 @@ OCIO_ADD_TEST(GammaOpData, compose)
 
         CheckGammaCompose(OCIO::GammaOpData::BASIC_REV, params1,
                           OCIO::GammaOpData::BASIC_FWD, params2,
-                          OCIO::GammaOpData::BASIC_REV, refParams);
+                          OCIO::GammaOpData::BASIC_REV, refParams,
+                          __LINE__);
     }
 
     {
@@ -640,7 +644,78 @@ OCIO_ADD_TEST(GammaOpData, compose)
 
         CheckGammaCompose(OCIO::GammaOpData::BASIC_REV, params1,
                           OCIO::GammaOpData::BASIC_FWD, params2,
-                          OCIO::GammaOpData::BASIC_FWD, refParams);
+                          OCIO::GammaOpData::BASIC_FWD, refParams,
+                          __LINE__);
+    }
+
+    {
+        const OCIO::GammaOpData::Params params1 = { 2. };
+        const OCIO::GammaOpData::Params params2 = { 4. };
+        const OCIO::GammaOpData::Params refParams = { 2. };
+
+        CheckGammaCompose(OCIO::GammaOpData::BASIC_FWD, params1,
+                          OCIO::GammaOpData::BASIC_REV, params2,
+                          OCIO::GammaOpData::BASIC_REV, refParams,
+                          __LINE__);
+    }
+
+    {
+        const OCIO::GammaOpData::Params params1 = { 2. };
+        const OCIO::GammaOpData::Params params2 = { 4. };
+        const OCIO::GammaOpData::Params refParams = { 2. };
+
+        CheckGammaCompose(OCIO::GammaOpData::BASIC_PASS_THRU_FWD, params1,
+                          OCIO::GammaOpData::BASIC_PASS_THRU_REV, params2,
+                          OCIO::GammaOpData::BASIC_PASS_THRU_REV, refParams,
+                          __LINE__);
+    }
+
+    {
+        const OCIO::GammaOpData::Params params1 = { 2. };
+        const OCIO::GammaOpData::Params params2 = { 4. };
+        const OCIO::GammaOpData::Params refParams = { 2. };
+
+        CheckGammaCompose(OCIO::GammaOpData::BASIC_MIRROR_FWD, params1,
+                          OCIO::GammaOpData::BASIC_MIRROR_REV, params2,
+                          OCIO::GammaOpData::BASIC_MIRROR_REV, refParams,
+                          __LINE__);
+    }
+
+    {
+        const OCIO::GammaOpData::Params params1 = { 2. };
+        const OCIO::GammaOpData::Params params2 = { 4. };
+        const OCIO::GammaOpData::Params refParams = { 2. };
+
+        CheckGammaCompose(OCIO::GammaOpData::BASIC_MIRROR_FWD, params1,
+                          OCIO::GammaOpData::BASIC_REV, params2,
+                          OCIO::GammaOpData::BASIC_REV, refParams,
+                          __LINE__);
+    }
+
+    {
+        const OCIO::GammaOpData::Params params1 = { 2. };
+        const OCIO::GammaOpData::Params params2 = { 4. };
+        const OCIO::GammaOpData::Params refParams = { 2. };
+
+        CheckGammaCompose(OCIO::GammaOpData::BASIC_PASS_THRU_FWD, params1,
+                          OCIO::GammaOpData::BASIC_REV, params2,
+                          OCIO::GammaOpData::BASIC_REV, refParams,
+                          __LINE__);
+    }
+
+    {
+        const OCIO::GammaOpData::Params params1 = { 4. };
+        OCIO::GammaOpData::Params paramsA = { 1. };
+        OCIO::GammaOpData g1(OCIO::GammaOpData::BASIC_MIRROR_FWD, 
+                             params1, params1, params1, paramsA);
+
+        OCIO::GammaOpData::Params params2 = { 2. };
+        OCIO::GammaOpData g2(OCIO::GammaOpData::BASIC_PASS_THRU_FWD, 
+                             params2, params2, params2, paramsA);
+
+        OCIO_CHECK_THROW_WHAT(g1.compose(g2), 
+                              OCIO::Exception, 
+                              "GammaOp can only be combined with some GammaOps");
     }
 
     {
