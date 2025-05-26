@@ -852,12 +852,19 @@ public:
      * \ref Config::validate will throw if the config does not contain
      * the matching display color space.
      */
+
+    /// Check if a view within a given display is referencing one of the config's shared views.
+    bool viewIsShared(const char * dispName, const char * viewName) const;
+
     /// Will throw if view or colorSpaceName are null or empty.
     void addSharedView(const char * view, const char * viewTransformName,
                        const char * colorSpaceName, const char * looks,
                        const char * ruleName, const char * description);
     /// Remove a shared view.  Will throw if the view does not exist.
     void removeSharedView(const char * view);
+
+    /// Clear all shared views. This will throw if any displays are still using the shared views.
+    void clearSharedViews();
 
     const char * getDefaultDisplay() const;
     int getNumDisplays() const;
@@ -884,6 +891,23 @@ public:
     const char * getView(const char * display, const char * colorspaceName, int index) const;
 
     /**
+     * \brief Compare views in a pair of configs.
+     *
+     * Will return false if either of the views does not exist. This will return true even
+     * if the view is display-defined in one config and a reference to a shared view in the
+     * other config (both within the same display), as long as the contents match. The
+     * description text (if any) is ignored, since it is not a functional difference.
+     * 
+     * Note that the comparison is only on the strings contained in the view definition,
+     * the function does not attempt to compare that the color spaces or view transforms
+     * being referenced are identical (only that they have the same name).
+     */
+    static bool ViewsAreEqual(const ConstConfigRcPtr & first,
+                              const ConstConfigRcPtr & second,
+                              const char * dispName,
+                              const char * viewName);
+
+    /**
      * Returns the view_transform attribute of the (display, view) pair. View can
      * be a shared view of the display. If display is null or empty, config shared views are used.
      */
@@ -899,6 +923,17 @@ public:
     const char * getDisplayViewRule(const char * display, const char * view) const noexcept;
     /// Returns the description attribute of a (display, view) pair.
     const char * getDisplayViewDescription(const char * display, const char * view) const noexcept;
+
+    /**
+     * \brief Determine if a display and view exist.
+     *
+     * This returns false if either the display or view doesn't exist. It works regardless
+     * of whether the display or view are active, and it works regardless of whether the
+     * view is display-defined or if the display has this as a shared view. It will only
+     * check config-level shared views if dispName is null. It will not check config level
+     * shared views if dispName is not null.
+     */
+    bool displayHasView(const char * dispName, const char * viewName) const;
 
     /**
      * For the (display, view) pair, specify which color space and look to use.
@@ -963,6 +998,18 @@ public:
      *
      */
 
+    /**
+     * \brief Determine if a virtual view exists.
+     *
+     * This returns false if the virtual view doesn't exist. It works regardless of
+     * whether the virtual view is active, and it works regardless of whether the virtual
+     * view is display-defined or if the display has this as a shared virtual view.
+     */
+    bool hasVirtualView(const char * viewName) const;
+
+    /// Check if a given virtual view is referencing one of the config's shared views.
+    bool virtualViewIsShared(const char * viewName) const;
+
     void addVirtualDisplayView(const char * view,
                                const char * viewTransformName,
                                const char * colorSpaceName,
@@ -976,6 +1023,23 @@ public:
     int getVirtualDisplayNumViews(ViewType type) const noexcept;
     /// Get the view name at a specific index.
     const char * getVirtualDisplayView(ViewType type, int index) const noexcept;
+
+    /**
+     * \brief Compare virtual views in a pair of configs.
+     *
+     * Will return false if either of the virtual views does not exist. This will return true
+     * even if the virtual view is display-defined in one config and a reference to a shared
+     * virtual view in the other config, as long as the contents match.
+     * 
+     * The description text (if any) is ignored, since it is not a functional difference.
+     * 
+     * Note that the comparison is only on the strings contained in the view definition,
+     * the function does not attempt to compare that the color spaces or view transforms
+     * being referenced are identical (only that they have the same name).
+     */
+    static bool VirtualViewsAreEqual(const ConstConfigRcPtr & first,
+                                     const ConstConfigRcPtr & second,
+                                     const char * viewName);
 
     const char * getVirtualDisplayViewTransformName(const char * view) const noexcept;
     const char * getVirtualDisplayViewColorSpaceName(const char * view) const noexcept;
