@@ -15,7 +15,7 @@ class DisplayViewTransformTest(unittest.TestCase, TransformsBaseTest):
     TEST_VIEW = ['view1', 'view2', 'film']
 
     def setUp(self):
-        self.tr = OCIO.DisplayViewTransform()
+        self.tr: OCIO.DisplayViewTransform = OCIO.DisplayViewTransform()
 
     def test_transform_type(self):
         """

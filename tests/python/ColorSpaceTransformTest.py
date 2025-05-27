@@ -14,7 +14,7 @@ class ColorSpaceTransformTest(unittest.TestCase, TransformsBaseTest):
     TEST_DST = 'bar'
 
     def setUp(self):
-        self.tr = OCIO.ColorSpaceTransform()
+        self.tr: OCIO.ColorSpaceTransform = OCIO.ColorSpaceTransform()
 
     def test_transform_type(self):
         """
@@ -38,7 +38,7 @@ class ColorSpaceTransformTest(unittest.TestCase, TransformsBaseTest):
         # Wrong type tests.
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                self.tr.setSrc(invalid)
+                self.tr.setSrc(invalid)  # type: ignore
 
     def test_dst(self):
         """
@@ -55,7 +55,7 @@ class ColorSpaceTransformTest(unittest.TestCase, TransformsBaseTest):
         # Wrong type tests.
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                self.tr.setDst(invalid)
+                self.tr.setDst(invalid)  # type: ignore
 
     def test_constructor_with_keyword(self):
         """
@@ -100,4 +100,4 @@ class ColorSpaceTransformTest(unittest.TestCase, TransformsBaseTest):
 
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                cs_tr = OCIO.ColorSpaceTransform(invalid)
+                cs_tr = OCIO.ColorSpaceTransform(invalid)  # type: ignore

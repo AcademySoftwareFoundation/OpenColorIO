@@ -22,7 +22,7 @@ class ExposureContrastTransformTest(unittest.TestCase, TransformsBaseTest):
     TEST_INVALIDS = (None, 'hello', [1, 2, 3])
 
     def setUp(self):
-        self.tr = OCIO.ExposureContrastTransform()
+        self.tr: OCIO.ExposureContrastTransform = OCIO.ExposureContrastTransform()
 
     def test_transform_type(self):
         """
@@ -58,7 +58,7 @@ class ExposureContrastTransformTest(unittest.TestCase, TransformsBaseTest):
         # Wrong type tests.
         for invalid in self.TEST_INVALIDS:
             with self.assertRaises(TypeError):
-                self.tr.setExposure(invalid)
+                self.tr.setExposure(invalid)  # type: ignore
 
     def test_exposure_dynamic(self):
         """
@@ -86,7 +86,7 @@ class ExposureContrastTransformTest(unittest.TestCase, TransformsBaseTest):
         # Wrong type tests.
         for invalid in self.TEST_INVALIDS:
             with self.assertRaises(TypeError):
-                self.tr.setContrast(invalid)
+                self.tr.setContrast(invalid)  # type: ignore
 
     def test_contrast_dynamic(self):
         """
@@ -114,7 +114,7 @@ class ExposureContrastTransformTest(unittest.TestCase, TransformsBaseTest):
         # Wrong type tests.
         for invalid in self.TEST_INVALIDS:
             with self.assertRaises(TypeError):
-                self.tr.setGamma(invalid)
+                self.tr.setGamma(invalid)  # type: ignore
 
     def test_gamma_dynamic(self):
         """
@@ -142,7 +142,7 @@ class ExposureContrastTransformTest(unittest.TestCase, TransformsBaseTest):
         # Wrong type tests.
         for invalid in self.TEST_INVALIDS:
             with self.assertRaises(TypeError):
-                self.tr.setPivot(invalid)
+                self.tr.setPivot(invalid)  # type: ignore
 
     def test_log_exposure_step(self):
         """
@@ -159,7 +159,7 @@ class ExposureContrastTransformTest(unittest.TestCase, TransformsBaseTest):
         # Wrong type tests.
         for invalid in self.TEST_INVALIDS:
             with self.assertRaises(TypeError):
-                self.tr.setLogExposureStep(invalid)
+                self.tr.setLogExposureStep(invalid)  # type: ignore
 
     def test_log_mid_gray(self):
         """
@@ -176,7 +176,7 @@ class ExposureContrastTransformTest(unittest.TestCase, TransformsBaseTest):
         # Wrong type tests.
         for invalid in self.TEST_INVALIDS:
             with self.assertRaises(TypeError):
-                self.tr.setLogMidGray(invalid)
+                self.tr.setLogMidGray(invalid)  # type: ignore
 
     def test_format_metadata(self):
         """
@@ -297,4 +297,4 @@ class ExposureContrastTransformTest(unittest.TestCase, TransformsBaseTest):
 
         for invalid in (None, 1, self.TEST_ID):
             with self.assertRaises(TypeError):
-                exp_tr = OCIO.ExponentWithLinearTransform(invalid)
+                exp_tr = OCIO.ExponentWithLinearTransform(invalid)  # type: ignore
