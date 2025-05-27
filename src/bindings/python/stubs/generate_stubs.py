@@ -146,8 +146,8 @@ def main() -> None:
 
     new_text = dest_path.read_text()
     new_text = (
-        "#\n# This file is auto-generated. DO NOT MODIFY!  "
-        "Run `make pystubs` to regenerate\n#\n\n"
+        "#\n# This file is auto-generated. DO NOT MODIFY!\n"
+        "# See docs/quick_start/installation.rst for more info\n#\n\n"
     ) + new_text
     dest_path.write_text(new_text)
 

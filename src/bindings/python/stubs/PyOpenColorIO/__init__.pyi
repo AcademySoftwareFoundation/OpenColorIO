@@ -1,5 +1,6 @@
 #
-# This file is auto-generated. DO NOT MODIFY!  Run `make pystubs` to regenerate
+# This file is auto-generated. DO NOT MODIFY!
+# See docs/quick_start/installation.rst for more info
 #
 
 import numpy
