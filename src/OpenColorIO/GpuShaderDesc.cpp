@@ -33,7 +33,7 @@ public:
     mutable Mutex m_cacheIDMutex;
 
     std::string m_parameterDeclarations;
-	std::string m_textureDeclarations;
+    std::string m_textureDeclarations;
     std::string m_helperMethods;
     std::string m_functionHeader;
     std::string m_functionBody;
@@ -71,7 +71,7 @@ public:
             m_cacheID        = rhs.m_cacheID;
 
             m_parameterDeclarations = rhs.m_parameterDeclarations;
-			m_textureDeclarations   = rhs.m_textureDeclarations;
+            m_textureDeclarations   = rhs.m_textureDeclarations;
             m_helperMethods         = rhs.m_helperMethods;
             m_functionHeader        = rhs.m_functionHeader;
             m_functionBody          = rhs.m_functionBody;
@@ -306,7 +306,7 @@ void GpuShaderCreator::createShaderText(const char * shaderParameterDeclarations
 
     if (getImpl()->m_language == GPU_LANGUAGE_GLSL_VK_4_6 && (shaderParameterDeclarations && *shaderParameterDeclarations))
     {
-		getImpl()->m_shaderCode += "layout (set = 0, binding = 0) uniform OCIOParameters\n {\n";
+        getImpl()->m_shaderCode += "layout (set = 0, binding = 0) uniform OCIOParameters\n {\n";
     }
     getImpl()->m_shaderCode += (shaderParameterDeclarations   && *shaderParameterDeclarations)   ? shaderParameterDeclarations   : "";
     if (getImpl()->m_language == GPU_LANGUAGE_GLSL_VK_4_6 && (shaderParameterDeclarations && *shaderParameterDeclarations))
@@ -340,7 +340,7 @@ void GpuShaderCreator::finalize()
     {
         getImpl()->m_parameterDeclarations
             = getImpl()->m_classWrappingInterface->getClassWrapperHeader(originalHeader);
-		getImpl()->m_textureDeclarations.clear(); //clear texture declarations since they're already included in the header
+        getImpl()->m_textureDeclarations.clear(); //clear texture declarations since they're already included in the header
     }
     getImpl()->m_functionFooter
         = getImpl()->m_classWrappingInterface->getClassWrapperFooter(getImpl()->m_functionFooter);
@@ -349,7 +349,7 @@ void GpuShaderCreator::finalize()
     // Build the complete shader program.
 
     createShaderText(getImpl()->m_parameterDeclarations.c_str(),
-		             getImpl()->m_textureDeclarations.c_str(),
+                     getImpl()->m_textureDeclarations.c_str(),
                      getImpl()->m_helperMethods.c_str(),
                      getImpl()->m_functionHeader.c_str(),
                      getImpl()->m_functionBody.c_str(),

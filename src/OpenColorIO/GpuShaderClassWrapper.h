@@ -53,10 +53,10 @@ public:
     {
         return originalFooter;
     }
-	bool hasClassWrapperHeader() const final
-	{
-		return false;
-	}
+    bool hasClassWrapperHeader() const final
+    {
+        return false;
+    }
 
     std::unique_ptr<GpuShaderClassWrapper> clone() const final;
 };
@@ -74,10 +74,10 @@ public:
     std::string getClassWrapperHeader(const std::string & originalHeader) final;
     std::string getClassWrapperFooter(const std::string & originalFooter) final;
 
-	bool hasClassWrapperHeader() const final
-	{
-		return true;
-	}
+    bool hasClassWrapperHeader() const final
+    {
+        return true;
+    }
 
     std::unique_ptr<GpuShaderClassWrapper> clone() const final;
 

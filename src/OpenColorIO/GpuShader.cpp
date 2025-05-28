@@ -111,7 +111,7 @@ public:
         {
             m_data.m_type = UNIFORM_DOUBLE;
             m_data.m_getDouble = getDouble;
-			m_data.m_bufferOffset = bufferOffset;
+            m_data.m_bufferOffset = bufferOffset;
         }
 
         Uniform(const char * name, const GpuShaderCreator::BoolGetter & getBool, std::size_t bufferOffset)
@@ -270,7 +270,7 @@ public:
                   GpuShaderDesc::TEXTURE_RGB_CHANNEL, 3,
                   interpolation, values);
         m_textures3D.push_back(t);
-		return textureIndex;
+        return textureIndex;
     }
 
     void get3DTexture(unsigned index,
@@ -372,7 +372,7 @@ public:
             return false;
         }
         m_uniforms.emplace_back(name, getSize, getVector, m_uniformBufferSize);
-		const std::size_t arraySizeInBytes = sizeof(float) * getSize();
+        const std::size_t arraySizeInBytes = sizeof(float) * getSize();
         m_uniformBufferSize += arraySizeInBytes + UNIFORM_BUFFER_ALIGNMENT - (arraySizeInBytes % UNIFORM_BUFFER_ALIGNMENT);
         return true;
     }
@@ -392,10 +392,10 @@ public:
         return true;
     }
 
-	std::size_t getUniformBufferSize() const
-	{
-		return m_uniformBufferSize;
-	}
+    std::size_t getUniformBufferSize() const
+    {
+        return m_uniformBufferSize;
+    }
     Textures m_textures;
     Textures m_textures3D;
     Uniforms m_uniforms;
@@ -484,7 +484,7 @@ bool GenericGpuShaderDesc::addUniform(const char * name,
 
 std::size_t GenericGpuShaderDesc::getUniformBufferSize() const noexcept
 {
-	return getImplGeneric()->getUniformBufferSize();
+    return getImplGeneric()->getUniformBufferSize();
 }
 
 unsigned GenericGpuShaderDesc::getTextureMaxWidth() const noexcept
