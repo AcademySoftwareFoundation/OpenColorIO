@@ -264,9 +264,10 @@ vertex VertexOut ColorCorrectionVS(unsigned int vId [[ vertex_id ]])
             const char* textureName;
             const char* samplerName;
             unsigned int edgeLen;
+            GpuShaderDesc::TextureType channel;
             Interpolation interpolation;
             
-            shaderDesc->get3DTexture(i, textureName, samplerName, edgeLen, interpolation);
+            shaderDesc->get3DTexture(i, textureName, samplerName, edgeLen, channel, interpolation);
             
             main << ",    texture3d<float> "
                  << textureName
