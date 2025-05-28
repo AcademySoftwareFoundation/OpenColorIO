@@ -3355,6 +3355,9 @@ public:
      * \note
      *   The 'values' parameter contains the LUT data which must be used as-is as the dimensions and
      *   origin are hard-coded in the fragment shader program. So, it means one GPU texture per entry.
+     * 
+     * \return Index of the texture. For shading languages using explicit texture bindings, the return
+     *         value is the same as the texture binding index in the generated shader program.
      **/
     virtual unsigned addTexture(const char * textureName,
                                 const char * samplerName,
@@ -3371,6 +3374,9 @@ public:
      *   The 'values' parameter contains the 3D LUT data which must be used as-is as the dimension
      *   and origin are hard-coded in the fragment shader program. So, it means one GPU 3D texture
      *   per entry.
+     * 
+     * \return Index of the texture. For shading languages using explicit texture bindings, the return
+     *         value is the same as the texture binding index in the generated shader program.
      **/
     virtual unsigned add3DTexture(const char * textureName,
                               const char * samplerName,
@@ -3584,6 +3590,11 @@ public:
      * * UNIFORM_FLOAT3: m_getFloat3.
      * * UNIFORM_VECTOR_FLOAT: m_vectorFloat.
      * * UNIFORM_VECTOR_INT: m_vectorInt.
+     * 
+     * The m_bufferOffset is the offset in bytes from the start of the uniform buffer.
+     * For shading languages that use uniform buffers, the offset can be used to
+     * determine the location of the uniform in the buffer and fill it with the 
+     * corresponding data.
      */
     struct UniformData
     {
@@ -3607,6 +3618,14 @@ public:
     /// Returns name of uniform and data as parameter.
     virtual const char * getUniform(unsigned index, UniformData & data) const = 0;
 
+    /**
+    * For shading languages that use uniform buffers, a uniform buffer
+    * containing all uniforms is generated in the shader code. This method can
+    * be used to create a buffer of the same size in the client code that can
+    * be filled with the corresponding data.
+    * 
+    * \return Size of the uniform buffer in bytes
+    **/
     virtual std::size_t getUniformBufferSize() const noexcept = 0;
 
     // 1D lut related methods
