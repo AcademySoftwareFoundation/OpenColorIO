@@ -3331,7 +3331,7 @@ public:
      *   within a client shader program, imposing constraints requiring this flexibility.
      */
     virtual void createShaderText(const char * shaderParameterDeclarations,
-		                          const char * shaderTextureDeclarations,
+                                  const char * shaderTextureDeclarations,
                                   const char * shaderHelperMethods,
                                   const char * shaderFunctionHeader,
                                   const char * shaderFunctionBody,
@@ -3543,7 +3543,7 @@ public:
     /// Returns name of uniform and data as parameter.
     virtual const char * getUniform(unsigned index, UniformData & data) const = 0;
 
-	virtual std::size_t getUniformBufferSize() const noexcept = 0;
+    virtual std::size_t getUniformBufferSize() const noexcept = 0;
 
     // 1D lut related methods
     virtual unsigned getNumTextures() const noexcept = 0;

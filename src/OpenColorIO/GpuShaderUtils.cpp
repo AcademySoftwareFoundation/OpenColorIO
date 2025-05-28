@@ -350,7 +350,7 @@ std::string GpuShaderText::constKeyword() const
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
-		case GPU_LANGUAGE_GLSL_VK_4_6:
+        case GPU_LANGUAGE_GLSL_VK_4_6:
         case GPU_LANGUAGE_GLSL_ES_1_0:
         case GPU_LANGUAGE_GLSL_ES_3_0:
         case GPU_LANGUAGE_MSL_2_0:
@@ -545,7 +545,7 @@ void GpuShaderText::declareFloatArrayConst(const std::string & name, int size, c
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
-		case GPU_LANGUAGE_GLSL_VK_4_6:
+        case GPU_LANGUAGE_GLSL_VK_4_6:
         case GPU_LANGUAGE_GLSL_ES_1_0:
         case GPU_LANGUAGE_GLSL_ES_3_0:
         {
@@ -608,7 +608,7 @@ void GpuShaderText::declareIntArrayConst(const std::string & name, int size, con
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
-		case GPU_LANGUAGE_GLSL_VK_4_6:
+        case GPU_LANGUAGE_GLSL_VK_4_6:
         case GPU_LANGUAGE_GLSL_ES_1_0:
         case GPU_LANGUAGE_GLSL_ES_3_0:
         {
@@ -912,31 +912,31 @@ std::string GpuShaderText::sampleTex3D(const std::string& textureName,
 void GpuShaderText::declareUniformFloat(const std::string & uniformName)
 {
     std::string uniformDeclString("uniform");
-	if (m_lang == GPU_LANGUAGE_MSL_2_0 || m_lang == GPU_LANGUAGE_GLSL_VK_4_6)
+    if (m_lang == GPU_LANGUAGE_MSL_2_0 || m_lang == GPU_LANGUAGE_GLSL_VK_4_6)
     {
-		uniformDeclString = "";
-	}
+        uniformDeclString = "";
+    }
     newLine() << uniformDeclString << floatKeyword() << " " << uniformName << ";";
-	if (m_lang == GPU_LANGUAGE_GLSL_VK_4_6)
+    if (m_lang == GPU_LANGUAGE_GLSL_VK_4_6)
     {
-		//add padding for 16 byte alignment required by Vulkan
-		newLine() << floatKeyword() << " " << uniformName<<"_pad0, "<< uniformName<<"_pad1, "<< uniformName<<"_pad2;";
-	}
+        //add padding for 16 byte alignment required by Vulkan
+        newLine() << floatKeyword() << " " << uniformName<<"_pad0, "<< uniformName<<"_pad1, "<< uniformName<<"_pad2;";
+    }
 }
 
 void GpuShaderText::declareUniformBool(const std::string & uniformName)
 {
     std::string uniformDeclString("uniform");
-	std::string boolKeyword("bool");
+    std::string boolKeyword("bool");
     if (m_lang == GPU_LANGUAGE_MSL_2_0)
     {
         uniformDeclString = "";
     }
-	else if (m_lang == GPU_LANGUAGE_GLSL_VK_4_6)
-	{
+    else if (m_lang == GPU_LANGUAGE_GLSL_VK_4_6)
+    {
         uniformDeclString = "";
-		boolKeyword = "int";
-	}
+        boolKeyword = "int";
+    }
     newLine() << uniformDeclString << boolKeyword << " " << uniformName << ";";
     if (m_lang == GPU_LANGUAGE_GLSL_VK_4_6)
     {
@@ -966,10 +966,10 @@ void GpuShaderText::declareUniformArrayFloat(const std::string & uniformName, un
     if (m_lang == GPU_LANGUAGE_MSL_2_0 || m_lang == GPU_LANGUAGE_GLSL_VK_4_6)
     {
         uniformDeclString = "";
-		if (m_lang == GPU_LANGUAGE_GLSL_VK_4_6)
+        if (m_lang == GPU_LANGUAGE_GLSL_VK_4_6)
         {
-			size = (size + 3) / 4 * 4; // round up to the next multiple of 4 for 16 byte alignment
-		}
+            size = (size + 3) / 4 * 4; // round up to the next multiple of 4 for 16 byte alignment
+        }
     }
     newLine() << uniformDeclString << floatKeyword() << " " << uniformName << "[" << size << "];";
 }
@@ -1003,7 +1003,7 @@ std::string matrix3Mul(const T * m3x3, const std::string & vecName, GpuLanguage 
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
-		case GPU_LANGUAGE_GLSL_VK_4_6:
+        case GPU_LANGUAGE_GLSL_VK_4_6:
         case GPU_LANGUAGE_GLSL_ES_1_0:
         case GPU_LANGUAGE_GLSL_ES_3_0:
         {
@@ -1201,7 +1201,7 @@ std::string GpuShaderText::float4GreaterThan(const std::string & a,
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
-		case GPU_LANGUAGE_GLSL_VK_4_6:
+        case GPU_LANGUAGE_GLSL_VK_4_6:
         case GPU_LANGUAGE_GLSL_ES_1_0:
         case GPU_LANGUAGE_GLSL_ES_3_0:
         case GPU_LANGUAGE_CG:
@@ -1246,7 +1246,7 @@ std::string GpuShaderText::float3GreaterThanEqual(const std::string& a,
     case GPU_LANGUAGE_GLSL_1_2:
     case GPU_LANGUAGE_GLSL_1_3:
     case GPU_LANGUAGE_GLSL_4_0:
-	case GPU_LANGUAGE_GLSL_VK_4_6:
+    case GPU_LANGUAGE_GLSL_VK_4_6:
     case GPU_LANGUAGE_GLSL_ES_1_0:
     case GPU_LANGUAGE_GLSL_ES_3_0:
     case GPU_LANGUAGE_CG:
@@ -1282,7 +1282,7 @@ std::string GpuShaderText::float4GreaterThanEqual(const std::string& a,
     case GPU_LANGUAGE_GLSL_1_2:
     case GPU_LANGUAGE_GLSL_1_3:
     case GPU_LANGUAGE_GLSL_4_0:
-	case GPU_LANGUAGE_GLSL_VK_4_6:
+    case GPU_LANGUAGE_GLSL_VK_4_6:
     case GPU_LANGUAGE_GLSL_ES_1_0:
     case GPU_LANGUAGE_GLSL_ES_3_0:
     case GPU_LANGUAGE_CG:
@@ -1368,7 +1368,7 @@ std::string GpuShaderText::sign(const std::string & v) const
         case GPU_LANGUAGE_GLSL_1_2:
         case GPU_LANGUAGE_GLSL_1_3:
         case GPU_LANGUAGE_GLSL_4_0:
-		case GPU_LANGUAGE_GLSL_VK_4_6:
+        case GPU_LANGUAGE_GLSL_VK_4_6:
         case GPU_LANGUAGE_GLSL_ES_1_0:
         case GPU_LANGUAGE_GLSL_ES_3_0:
         case GPU_LANGUAGE_HLSL_SM_5_0:
@@ -1395,9 +1395,9 @@ std::string GpuShaderText::castToBool(const std::string& v) const
 {
     if (m_lang == GPU_LANGUAGE_GLSL_VK_4_6)
     {
-		return "bool(" + v + ")";
+        return "bool(" + v + ")";
     }
-	return v;
+    return v;
 }
 
 
