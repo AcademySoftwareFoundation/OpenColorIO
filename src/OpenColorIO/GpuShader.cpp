@@ -35,12 +35,28 @@ static void  CreateArray(const float * buf,
     res.resize(size);
     std::memcpy(&res[0], buf, size * sizeof(float));
 }
+
+std::size_t alignOffset(std::size_t offset, std::size_t alignment)
+{
+    if (alignment == 0)
+    {
+        throw Exception("Alignment cannot be zero.");
+    }
+    return ((offset + alignment - 1) / alignment) * alignment;
+}
+
 }
 
 namespace GPUShaderImpl
 {
 
-constexpr std::size_t UNIFORM_BUFFER_ALIGNMENT = 16; //Align variables in uniform buffers to 16 bytes
+constexpr size_t GPU_FLOAT_SIZE = 4;
+constexpr size_t GPU_FLOAT_ALIGNMENT = 4;
+constexpr size_t GPU_INT_SIZE = 4;
+constexpr size_t GPU_INT_ALIGNMENT = 4;
+constexpr size_t GPU_VEC3_SIZE = 12;
+constexpr size_t GPU_VEC3_ALIGNMENT = 16;
+constexpr size_t GPU_ARRAY_ALIGNMENT = 16;
 
 class PrivateImpl
 {
@@ -197,7 +213,7 @@ public:
                 << width << " > " << get1dLutMaxWidth();
             throw Exception(ss.str().c_str());
         }
-        unsigned textureIndex = m_textures.size();
+        unsigned textureIndex = static_cast<unsigned>(m_textures.size());
         unsigned numDimensions = static_cast<unsigned>(dimensions);
         Texture t(textureName, samplerName, width, height, 1, channel, numDimensions, interpolation, values);
         m_textures.push_back(t);
@@ -265,7 +281,7 @@ public:
             throw Exception(ss.str().c_str());
         }
 
-        unsigned textureIndex = m_textures3D.size();
+        unsigned textureIndex = static_cast<unsigned>(m_textures3D.size());
         Texture t(textureName, samplerName, edgelen, edgelen, edgelen,
                   GpuShaderDesc::TEXTURE_RGB_CHANNEL, 3,
                   interpolation, values);
@@ -333,8 +349,9 @@ public:
             // Uniform is already there.
             return false;
         }
+        m_uniformBufferSize = alignOffset(m_uniformBufferSize, GPU_FLOAT_ALIGNMENT);
         m_uniforms.emplace_back(name, getter, m_uniformBufferSize);
-        m_uniformBufferSize += UNIFORM_BUFFER_ALIGNMENT;
+        m_uniformBufferSize += GPU_FLOAT_SIZE;
         return true;
     }
 
@@ -345,8 +362,9 @@ public:
             // Uniform is already there.
             return false;
         }
+        m_uniformBufferSize = alignOffset(m_uniformBufferSize, GPU_INT_ALIGNMENT);
         m_uniforms.emplace_back(name, getter, m_uniformBufferSize);
-        m_uniformBufferSize += UNIFORM_BUFFER_ALIGNMENT; //bool not supported for buffered uniforms, using int instead
+        m_uniformBufferSize += GPU_INT_SIZE; //bool not supported for buffered uniforms, using int instead
         return true;
     }
 
@@ -357,8 +375,9 @@ public:
             // Uniform is already there.
             return false;
         }
+        m_uniformBufferSize = alignOffset(m_uniformBufferSize, GPU_VEC3_ALIGNMENT);
         m_uniforms.emplace_back(name, getter, m_uniformBufferSize);
-        m_uniformBufferSize += UNIFORM_BUFFER_ALIGNMENT;
+        m_uniformBufferSize += GPU_VEC3_SIZE;
         return true;
     }
 
@@ -371,9 +390,9 @@ public:
             // Uniform is already there.
             return false;
         }
+        m_uniformBufferSize = alignOffset(m_uniformBufferSize, GPU_ARRAY_ALIGNMENT);
         m_uniforms.emplace_back(name, getSize, getVector, m_uniformBufferSize);
-        const std::size_t arraySizeInBytes = sizeof(float) * getSize();
-        m_uniformBufferSize += arraySizeInBytes + UNIFORM_BUFFER_ALIGNMENT - (arraySizeInBytes % UNIFORM_BUFFER_ALIGNMENT);
+        m_uniformBufferSize += GPU_FLOAT_SIZE * getSize();
         return true;
     }
 
@@ -386,9 +405,9 @@ public:
             // Uniform is already there.
             return false;
         }
+        m_uniformBufferSize = alignOffset(m_uniformBufferSize, GPU_ARRAY_ALIGNMENT);
         m_uniforms.emplace_back(name, getSize, getVectorInt, m_uniformBufferSize);
-        const std::size_t arraySizeInBytes = sizeof(int) * getSize();
-        m_uniformBufferSize += arraySizeInBytes + UNIFORM_BUFFER_ALIGNMENT - (arraySizeInBytes % UNIFORM_BUFFER_ALIGNMENT);
+        m_uniformBufferSize += GPU_INT_SIZE * getSize();
         return true;
     }
 
@@ -414,7 +433,7 @@ private:
     }
     unsigned m_max1DLUTWidth;
     bool m_allowTexture1D;
-    unsigned m_uniformBufferSize;
+    std::size_t m_uniformBufferSize;
 };
 
 } // namespace GPUShaderImpl
