@@ -186,7 +186,6 @@ std::string getTexSample(GpuLanguage lang,
         case GPU_LANGUAGE_GLSL_VK_4_6:
         {
             kw << "texture(" << samplerName << ", " << coords << ")";
-            //kw << "texture" << N << "D(" << samplerName << ", " << coords << ")";//TODO: For testing only, remove before commit
             break;
         }
         case GPU_LANGUAGE_GLSL_ES_3_0:

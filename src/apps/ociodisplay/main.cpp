@@ -380,14 +380,8 @@ void UpdateOCIOGLState()
     {
         double exponent = 1.0 / std::max(1e-6, static_cast<double>(g_display_gamma));
         const double exponent4f[4] = {exponent, exponent, exponent, exponent};
-        //OCIO::ExponentTransformRcPtr expTransform = OCIO::ExponentTransform::Create();
-        //expTransform->setValue(exponent4f);
-
-        OCIO::GradingPrimaryTransformRcPtr expTransform = OCIO::GradingPrimaryTransform::Create(OCIO::GRADING_LOG);
-        expTransform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
-        expTransform->setStyle(OCIO::GRADING_LOG);
-        expTransform->makeDynamic();
-        //expTransform->setValue(tones);
+        OCIO::ExponentTransformRcPtr expTransform = OCIO::ExponentTransform::Create();
+        expTransform->setValue(exponent4f);
         vp->setDisplayCC(expTransform);
     }
 
@@ -412,7 +406,7 @@ void UpdateOCIOGLState()
 #if __APPLE__
         g_useMetal ? OCIO::GPU_LANGUAGE_MSL_2_0 :
 #endif
-        OCIO::GPU_LANGUAGE_GLSL_VK_4_6);//OCIO::GPU_LANGUAGE_GLSL_1_2);
+                   OCIO::GPU_LANGUAGE_GLSL_1_2);
     shaderDesc->setFunctionName("OCIODisplay");
     shaderDesc->setResourcePrefix("ocio_");
 
@@ -420,13 +414,6 @@ void UpdateOCIOGLState()
     OCIO::ConstGPUProcessorRcPtr gpu = g_gpulegacy ? processor->getOptimizedLegacyGPUProcessor(g_optimization, 32)
                                                    : processor->getOptimizedGPUProcessor(g_optimization);
     gpu->extractGpuShaderInfo(shaderDesc);
-
-    for (int i = 0; i < shaderDesc->getNumUniforms(); ++i)
-    {
-        OCIO::GpuShaderDesc::UniformData uniform;
-        const char* name = shaderDesc->getUniform(i, uniform);
-        std::cout << name << " " << uniform.m_type << " " << uniform.m_bufferOffset << std::endl;
-    }
 
     g_oglApp->setShader(shaderDesc);
 }
