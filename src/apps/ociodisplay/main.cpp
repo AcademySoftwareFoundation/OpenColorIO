@@ -421,6 +421,13 @@ void UpdateOCIOGLState()
                                                    : processor->getOptimizedGPUProcessor(g_optimization);
     gpu->extractGpuShaderInfo(shaderDesc);
 
+    for (int i = 0; i < shaderDesc->getNumUniforms(); ++i)
+    {
+        OCIO::GpuShaderDesc::UniformData uniform;
+        const char* name = shaderDesc->getUniform(i, uniform);
+        std::cout << name << " " << uniform.m_type << " " << uniform.m_bufferOffset << std::endl;
+    }
+
     g_oglApp->setShader(shaderDesc);
 }
 

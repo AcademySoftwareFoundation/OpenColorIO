@@ -505,7 +505,7 @@ std::string GpuShaderText::declareVarStr(const std::string & name, bool v)
         throw Exception("GPU variable name is empty.");
     }
 
-    if (m_lang==LANGUAGE_OSL_1 || m_lang==GPU_LANGUAGE_GLSL_VK_4_6)
+    if (m_lang==LANGUAGE_OSL_1)
     {
         return intKeyword() + " " + name + " = " + (v ? "1" : "0");
     }
@@ -917,11 +917,6 @@ void GpuShaderText::declareUniformFloat(const std::string & uniformName)
         uniformDeclString = "";
     }
     newLine() << uniformDeclString << floatKeyword() << " " << uniformName << ";";
-    if (m_lang == GPU_LANGUAGE_GLSL_VK_4_6)
-    {
-        //add padding for 16 byte alignment required by Vulkan
-        newLine() << floatKeyword() << " " << uniformName<<"_pad0, "<< uniformName<<"_pad1, "<< uniformName<<"_pad2;";
-    }
 }
 
 void GpuShaderText::declareUniformBool(const std::string & uniformName)
@@ -938,11 +933,6 @@ void GpuShaderText::declareUniformBool(const std::string & uniformName)
         boolKeyword = "int";
     }
     newLine() << uniformDeclString << boolKeyword << " " << uniformName << ";";
-    if (m_lang == GPU_LANGUAGE_GLSL_VK_4_6)
-    {
-        //add padding for 16 byte alignment required by Vulkan
-        newLine() << boolKeyword << " " << uniformName << "_pad0, " << uniformName << "_pad1, " << uniformName << "_pad2;";
-    }
 }
 
 void GpuShaderText::declareUniformFloat3(const std::string & uniformName)
@@ -953,11 +943,6 @@ void GpuShaderText::declareUniformFloat3(const std::string & uniformName)
         uniformDeclString = "";
     }
     newLine() << uniformDeclString << float3Keyword() << " " << uniformName << ";";
-    if (m_lang == GPU_LANGUAGE_GLSL_VK_4_6)
-    {
-        //add padding for 16 byte alignment required by Vulkan
-        newLine() << floatKeyword() << " " << uniformName << "_pad;";
-    }
 }
 
 void GpuShaderText::declareUniformArrayFloat(const std::string & uniformName, unsigned int size)
@@ -966,10 +951,6 @@ void GpuShaderText::declareUniformArrayFloat(const std::string & uniformName, un
     if (m_lang == GPU_LANGUAGE_MSL_2_0 || m_lang == GPU_LANGUAGE_GLSL_VK_4_6)
     {
         uniformDeclString = "";
-        if (m_lang == GPU_LANGUAGE_GLSL_VK_4_6)
-        {
-            size = (size + 3) / 4 * 4; // round up to the next multiple of 4 for 16 byte alignment
-        }
     }
     newLine() << uniformDeclString << floatKeyword() << " " << uniformName << "[" << size << "];";
 }
@@ -980,10 +961,6 @@ void GpuShaderText::declareUniformArrayInt(const std::string & uniformName, unsi
     if (m_lang == GPU_LANGUAGE_MSL_2_0 || m_lang == GPU_LANGUAGE_GLSL_VK_4_6)
     {
         uniformDeclString = "";
-        if (m_lang == GPU_LANGUAGE_GLSL_VK_4_6)
-        {
-            size = (size + 3) / 4 * 4; // round up to the next multiple of 4 for 16 byte alignment
-        }
     }
     newLine() << uniformDeclString << intKeyword() << " " << uniformName << "[" << size << "];";
 }
