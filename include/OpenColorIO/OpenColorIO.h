@@ -3599,7 +3599,7 @@ public:
     struct UniformData
     {
         UniformDataType m_type{ UNIFORM_UNKNOWN };
-        std::size_t m_bufferOffset;
+        std::size_t m_bufferOffset{};
         DoubleGetter m_getDouble{};
         BoolGetter m_getBool{};
         Float3Getter m_getFloat3{};
