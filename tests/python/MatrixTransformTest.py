@@ -93,5 +93,5 @@ class MatrixTransformTest(unittest.TestCase):
         # Wrong type tests.
         for invalid in (None, 1, 'test'):
             with self.assertRaises(TypeError):
-                mt.setDirection(invalid)
+                mt.setDirection(invalid)  # type: ignore
 
