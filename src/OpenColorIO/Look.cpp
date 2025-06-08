@@ -86,7 +86,7 @@ const char * Look::getName() const
 
 void Look::setName(const char * name)
 {
-    getImpl()->m_name = name;
+    getImpl()->m_name = name ? name : "";
 }
 
 const char * Look::getProcessSpace() const
@@ -96,7 +96,7 @@ const char * Look::getProcessSpace() const
 
 void Look::setProcessSpace(const char * processSpace)
 {
-    getImpl()->m_processSpace = processSpace;
+    getImpl()->m_processSpace = processSpace ? processSpace : "";
 }
 
 ConstTransformRcPtr Look::getTransform() const
@@ -126,7 +126,7 @@ const char * Look::getDescription() const
 
 void Look::setDescription(const char * description)
 {
-    getImpl()->m_description = description;
+    getImpl()->m_description = description ? description : "";
 }
 
 bool CollectContextVariables(const Config & config,

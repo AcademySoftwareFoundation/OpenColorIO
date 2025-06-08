@@ -1979,6 +1979,37 @@ public:
     const char * getDescription() const noexcept;
     void setDescription(const char * description);
 
+    /**
+     * Get/Set the interop ID for the color space.
+     *
+     * The interop ID is a standardized identifier to uniquely identify commonly
+     * used color spaces. These IDs are defined by the Academy Software
+     * Foundation's Color Interop Forum project. If you create your own ID, you
+     * must prefix it with unique characters that will ensure it won't conflict
+     * with future Color Interop Forum IDs.
+     */
+    const char * getInteropID() const noexcept;
+    void setInteropID(const char * interopID);
+
+    /**
+     * Get/Set the AMF transform IDs for the color space.
+     * 
+     * The AMF transform IDs are used to identify specific transforms in the ACES Metadata File.
+     * Multiple transform IDs can be specified in a newline-separated string.
+     */
+    const char * getAMFTransformIDs() const noexcept;
+    void setAMFTransformIDs(const char * amfTransformIDs);
+
+    /**
+     * Get/Set the ICC profile name for the color space.
+     * 
+     * The ICC profile name identifies the ICC color profile associated with this color space.
+     * This can be used to link OCIO color spaces with corresponding ICC profiles for
+     * applications that need to work with both color management systems.
+     */
+    const char * getICCProfileName() const noexcept;
+    void setICCProfileName(const char * iccProfileName);
+
     BitDepth getBitDepth() const noexcept;
     void setBitDepth(BitDepth bitDepth);
 
