@@ -42,6 +42,9 @@ class ColorSpaceTest(unittest.TestCase):
         self.colorspace.setTransform(direction=OCIO.COLORSPACE_DIR_FROM_REFERENCE, transform=mat)
         self.colorspace.addAlias('alias')
         self.colorspace.addCategory('cat')
+        self.colorspace.setInteropID('ACEScg')
+        self.colorspace.setAMFTransformIDs('urn:ampas:aces:transformId:v1.5:ACEScsc.Academy.CG_to_ACES.a1.0.3')
+        self.colorspace.setICCProfileName('sRGB IEC61966-2.1')
 
         other = copy.deepcopy(self.colorspace)
         self.assertFalse(other is self.colorspace)
@@ -59,6 +62,9 @@ class ColorSpaceTest(unittest.TestCase):
         self.assertTrue(other.getTransform(OCIO.COLORSPACE_DIR_FROM_REFERENCE).equals(self.colorspace.getTransform(OCIO.COLORSPACE_DIR_FROM_REFERENCE)))
         self.assertEqual(list(other.getAliases()), list(self.colorspace.getAliases()))
         self.assertEqual(list(other.getCategories()), list(self.colorspace.getCategories()))
+        self.assertEqual(other.getInteropID(), self.colorspace.getInteropID())
+        self.assertEqual(other.getAMFTransformIDs(), self.colorspace.getAMFTransformIDs())
+        self.assertEqual(other.getICCProfileName(), self.colorspace.getICCProfileName())
 
     def test_allocation(self):
         """
@@ -279,6 +285,9 @@ class ColorSpaceTest(unittest.TestCase):
         self.assertFalse(cs.isData())
         self.assertEqual(cs.getAllocation(), OCIO.ALLOCATION_UNIFORM)
         self.assertEqual(cs.getAllocationVars(), [])
+        self.assertEqual(cs.getInteropID(), '')
+        self.assertEqual(cs.getAMFTransformIDs(), '')
+        self.assertEqual(cs.getICCProfileName(), '')
 
     def test_data(self):
         """
@@ -632,9 +641,138 @@ colorspaces:
         test_display_referred(self, cfg, "scene_linear-trans-alias", False)
         test_display_referred(self, cfg, "scene_ref", False)
         
+    def test_interop_id(self):
+        """
+        Test the setInteropID() and getInteropID() methods.
+        """
+        
+        # Test default value (should be empty).
+        self.assertEqual(self.colorspace.getInteropID(), '')
+        
+        # Test setting and getting a simple interop ID.
+        test_id = 'lin_ap0_scene'
+        self.colorspace.setInteropID(test_id)
+        self.assertEqual(self.colorspace.getInteropID(), test_id)
+        
+        # Test setting and getting a different interop ID.
+        test_id2 = 'srgb_ap1_scene'
+        self.colorspace.setInteropID(test_id2)
+        self.assertEqual(self.colorspace.getInteropID(), test_id2)
+        
+        # Test setting empty string.
+        self.colorspace.setInteropID('')
+        self.assertEqual(self.colorspace.getInteropID(), '')
+        
+        # Test setting None (should convert to empty string).
+        self.colorspace.setInteropID('something')
+        self.colorspace.setInteropID(None)
+        self.assertEqual(self.colorspace.getInteropID(), '')
+        
+        # Test wrong type (should raise TypeError).
+        with self.assertRaises(TypeError):
+            self.colorspace.setInteropID(123)
+        
+        with self.assertRaises(TypeError):
+            self.colorspace.setInteropID(['list'])
+
+    def test_amf_transform_ids(self):
+        """
+        Test the setAMFTransformIDs() and getAMFTransformIDs() methods.
+        """
+        
+        # Test default value (should be empty).
+        self.assertEqual(self.colorspace.getAMFTransformIDs(), '')
+        
+        # Test setting and getting a single transform ID.
+        single_id = 'urn:ampas:aces:transformId:v1.5:ACEScsc.Academy.CG_to_ACES.a1.0.3'
+        self.colorspace.setAMFTransformIDs(single_id)
+        self.assertEqual(self.colorspace.getAMFTransformIDs(), single_id)
+        
+        # Test setting and getting multiple transform IDs (newline-separated).
+        multiple_ids = ('urn:ampas:aces:transformId:v1.5:ACEScsc.Academy.CG_to_ACES.a1.0.3\n'
+                       'urn:ampas:aces:transformId:v1.5:ACEScsc.Academy.ACES_to_CG.a1.0.3\n'
+                       'urn:ampas:aces:transformId:v1.5:RRT.a1.0.3')
+        self.colorspace.setAMFTransformIDs(multiple_ids)
+        self.assertEqual(self.colorspace.getAMFTransformIDs(), multiple_ids)
+        
+        # Test setting empty string.
+        self.colorspace.setAMFTransformIDs('')
+        self.assertEqual(self.colorspace.getAMFTransformIDs(), '')
+        
+        # Test setting None (should convert to empty string).
+        self.colorspace.setAMFTransformIDs('something')
+        self.colorspace.setAMFTransformIDs(None)
+        self.assertEqual(self.colorspace.getAMFTransformIDs(), '')
+        
+        # Test with different line endings.
+        mixed_endings = 'id1\nid2\rid3\r\nid4'
+        self.colorspace.setAMFTransformIDs(mixed_endings)
+        self.assertEqual(self.colorspace.getAMFTransformIDs(), mixed_endings)
+        
+        # Test with leading/trailing whitespace.
+        whitespace_ids = '  \n  id1  \n  id2  \n  '
+        self.colorspace.setAMFTransformIDs(whitespace_ids)
+        self.assertEqual(self.colorspace.getAMFTransformIDs(), whitespace_ids)
+        
+        # Test wrong type (should raise TypeError).
+        with self.assertRaises(TypeError):
+            self.colorspace.setAMFTransformIDs(123)
+        
+        with self.assertRaises(TypeError):
+            self.colorspace.setAMFTransformIDs(['list', 'of', 'ids'])
+
+    def test_icc_profile_name(self):
+        """
+        Test the setICCProfileName() and getICCProfileName() methods.
+        """
+        
+        # Test default value (should be empty).
+        self.assertEqual(self.colorspace.getICCProfileName(), '')
+        
+        # Test setting and getting a simple profile name.
+        profile_name = 'sRGB IEC61966-2.1'
+        self.colorspace.setICCProfileName(profile_name)
+        self.assertEqual(self.colorspace.getICCProfileName(), profile_name)
+        
+        # Test setting and getting a different profile name.
+        profile_name2 = 'Adobe RGB (1998)'
+        self.colorspace.setICCProfileName(profile_name2)
+        self.assertEqual(self.colorspace.getICCProfileName(), profile_name2)
+        
+        # Test with a more complex profile name.
+        complex_name = 'Display P3 - Apple Cinema Display (Calibrated 2023-01-15)'
+        self.colorspace.setICCProfileName(complex_name)
+        self.assertEqual(self.colorspace.getICCProfileName(), complex_name)
+
+        # Test setting empty string.
+        self.colorspace.setICCProfileName('')
+        self.assertEqual(self.colorspace.getICCProfileName(), '')
+        
+        # Test setting None (should convert to empty string).
+        self.colorspace.setICCProfileName('something')
+        self.colorspace.setICCProfileName(None)
+        self.assertEqual(self.colorspace.getICCProfileName(), '')
+        
+        # Test with special characters and numbers.
+        special_name = 'ProPhoto RGB v2.0 (γ=1.8) [Custom Profile #123]'
+        self.colorspace.setICCProfileName(special_name)
+        self.assertEqual(self.colorspace.getICCProfileName(), special_name)
+        
+        # Test with Unicode characters.
+        unicode_name = 'Профиль RGB γ=2.2'
+        self.colorspace.setICCProfileName(unicode_name)
+        self.assertEqual(self.colorspace.getICCProfileName(), unicode_name)
+        
+        # Test wrong type (should raise TypeError).
+        with self.assertRaises(TypeError):
+            self.colorspace.setICCProfileName(123)
+        
+        with self.assertRaises(TypeError):
+            self.colorspace.setICCProfileName(['profile', 'name'])
+
     def test_processor_to_known_colorspace(self):
         
-        CONFIG = """ocio_profile_version: 2
+        CONFIG = """ocio_profile_version: 2.5
 
 roles:
   default: raw
@@ -690,12 +828,14 @@ colorspaces:
   - !<ColorSpace>
     name: ACES cg
     description: An ACEScg space with an unusual spelling.
+    interop_id: lin_ap1_scene
     isdata: false
     to_scene_reference: !<BuiltinTransform> {style: ACEScg_to_ACES2065-1}
 
   - !<ColorSpace>
     name: Linear ITU-R BT.709
     description: A linear Rec.709 space with an unusual spelling.
+    interop_id: lin_rec709_scene
     isdata: false
     from_scene_reference: !<GroupTransform>
       name: AP0 to Linear Rec.709 (sRGB)

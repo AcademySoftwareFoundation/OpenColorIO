@@ -3202,10 +3202,25 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs, unsigned int major
                 cs->addAlias(alias.c_str());
             }
         }
+        else if (key == "interop_id") 
+        {
+            load(iter->second, stringval);
+            cs->setInteropID(stringval.c_str());
+        }
         else if(key == "description")
         {
             loadDescription(iter->second, stringval);
             cs->setDescription(stringval.c_str());
+        }
+        else if (key == "amf_transform_ids") 
+        {
+            load(iter->second, stringval);
+            cs->setAMFTransformIDs(stringval.c_str());
+        }
+        else if (key == "icc_profile_name") 
+        {
+            load(iter->second, stringval);
+            cs->setICCProfileName(stringval.c_str());
         }
         else if(key == "family")
         {
@@ -3323,11 +3338,37 @@ inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs, unsigned int major
         }
         out << YAML::Flow << YAML::Value << aliases;
     }
+    
+    const std::string interopID{ cs->getInteropID() };
+    if (!interopID.empty())
+    {
+        out << YAML::Key << "interop_id";
+        out << YAML::Value << interopID;
+    }
+
     out << YAML::Key << "family" << YAML::Value << cs->getFamily();
+
     out << YAML::Key << "equalitygroup" << YAML::Value << cs->getEqualityGroup();
+
     out << YAML::Key << "bitdepth" << YAML::Value;
     save(out, cs->getBitDepth());
+    
     saveDescription(out, cs->getDescription());
+
+    const std::string amfTransformIDs{cs->getAMFTransformIDs()};
+    if (!amfTransformIDs.empty()) 
+    {
+        out << YAML::Key << "amf_transform_ids";
+        out << YAML::Value << amfTransformIDs;
+    }
+
+    const std::string iccProfileName{cs->getICCProfileName()};
+    if (!iccProfileName.empty()) 
+    {
+        out << YAML::Key << "icc_profile_name";
+        out << YAML::Value << iccProfileName;
+    }
+
     out << YAML::Key << "isdata" << YAML::Value << cs->isData();
 
     if(cs->getNumCategories() > 0)
@@ -4754,10 +4795,12 @@ inline void save(YAML::Emitter & out, const Config & config)
 {
     std::stringstream ss;
     const unsigned configMajorVersion = config.getMajorVersion();
+    const unsigned configMinorVersion = config.getMinorVersion();
+
     ss << configMajorVersion;
-    if(config.getMinorVersion()!=0)
+    if(configMinorVersion != 0)
     {
-        ss << "." << config.getMinorVersion();
+        ss << "." << configMinorVersion;
     }
 
     out << YAML::Block;
