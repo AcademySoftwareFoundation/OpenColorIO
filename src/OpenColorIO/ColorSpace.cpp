@@ -231,7 +231,43 @@ const char * ColorSpace::getInteropID() const noexcept
 
 void ColorSpace::setInteropID(const char * interopID)
 {
-    getImpl()->m_interopID = interopID ? interopID : "";
+    std::string id = interopID ? interopID : "";
+    
+    if (!id.empty())
+    {
+        // Count the number of ':' characters in the string
+        // We need to handle UTF-8 properly, so we iterate byte by byte
+        // but only count ASCII ':' characters (0x3A)
+        size_t colonCount = 0;
+        size_t lastColonPos = std::string::npos;
+        
+        for (size_t i = 0; i < id.length(); ++i)
+        {
+            if (id[i] == ':')
+            {
+                colonCount++;
+                lastColonPos = i;
+            }
+        }
+        
+        // Validate: only zero or one ':' character allowed
+        if (colonCount > 1)
+        {
+            std::ostringstream oss;
+            oss << "InteropID '" << id << "' is invalid: only zero or one ':' character is allowed.";
+            throw Exception(oss.str().c_str());
+        }
+        
+        // Validate: ':' cannot be the last character
+        if (colonCount == 1 && lastColonPos == id.length() - 1)
+        {
+            std::ostringstream oss;
+            oss << "InteropID '" << id << "' is invalid: ':' character cannot be the last character.";
+            throw Exception(oss.str().c_str());
+        }
+    }
+    
+    getImpl()->m_interopID = id;
 }
 
 const char * ColorSpace::getAMFTransformIDs() const noexcept

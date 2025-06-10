@@ -675,6 +675,71 @@ colorspaces:
         with self.assertRaises(TypeError):
             self.colorspace.setInteropID(['list'])
 
+        # Test valid InteropID with one colon (not at the end).
+        valid_with_colon = 'namespace:cs_name'
+        self.colorspace.setInteropID(valid_with_colon)
+        self.assertEqual(self.colorspace.getInteropID(), valid_with_colon)
+
+        # Test valid InteropID with colon in the middle.
+        valid_colon_middle = 'namespace:colorspace_name'
+        self.colorspace.setInteropID(valid_colon_middle)
+        self.assertEqual(self.colorspace.getInteropID(), valid_colon_middle)
+
+        # Test invalid InteropID with multiple colons.
+        with self.assertRaises(Exception) as context:
+            self.colorspace.setInteropID('name:space:cs_name')
+        self.assertIn("only zero or one ':' character is allowed", str(context.exception))
+
+        # Test invalid InteropID with colon at the end.
+        with self.assertRaises(Exception) as context:
+            self.colorspace.setInteropID('lin_ap1_scene:')
+        self.assertIn("':' character cannot be the last character", str(context.exception))
+
+        # Test invalid InteropID with three colons.
+        with self.assertRaises(Exception) as context:
+            self.colorspace.setInteropID('a:b:c:d')
+        self.assertIn("only zero or one ':' character is allowed", str(context.exception))
+
+        # Test UTF-8 strings with valid single colon.
+        utf8_valid_colon = '標準:萬國碼'
+        self.colorspace.setInteropID(utf8_valid_colon)
+        self.assertEqual(self.colorspace.getInteropID(), utf8_valid_colon)
+
+        # Test UTF-8 strings with invalid multiple colons.
+        with self.assertRaises(Exception) as context:
+            self.colorspace.setInteropID('標準:萬國:碼')
+        self.assertIn("only zero or one ':' character is allowed", str(context.exception))
+
+        # Test UTF-8 strings with invalid colon at end.
+        with self.assertRaises(Exception) as context:
+            self.colorspace.setInteropID('標準萬國碼:')
+        self.assertIn("':' character cannot be the last character", str(context.exception))
+
+        # Test UTF-8 strings without colon (should be valid).
+        utf8_no_colon = '標準萬國碼'
+        self.colorspace.setInteropID(utf8_no_colon)
+        self.assertEqual(self.colorspace.getInteropID(), utf8_no_colon)
+
+        # Test edge case: single colon character.
+        with self.assertRaises(Exception) as context:
+            self.colorspace.setInteropID(':')
+        self.assertIn("':' character cannot be the last character", str(context.exception))
+
+        # Test edge case: colon at beginning (should be valid).
+        colon_at_beginning = ':valid_name'
+        self.colorspace.setInteropID(colon_at_beginning)
+        self.assertEqual(self.colorspace.getInteropID(), colon_at_beginning)
+
+        # Test with Unicode characters that might look like colons but aren't ASCII colons.
+        unicode_similar = 'test：name'  # This uses a full-width colon (U+FF1A), not ASCII colon
+        self.colorspace.setInteropID(unicode_similar)
+        self.assertEqual(self.colorspace.getInteropID(), unicode_similar)
+
+        # Test mixed ASCII and Unicode with valid single ASCII colon.
+        mixed_valid = 'ñamespace:色空間'
+        self.colorspace.setInteropID(mixed_valid)
+        self.assertEqual(self.colorspace.getInteropID(), mixed_valid)
+
     def test_amf_transform_ids(self):
         """
         Test the setAMFTransformIDs() and getAMFTransformIDs() methods.
@@ -835,7 +900,7 @@ colorspaces:
   - !<ColorSpace>
     name: Linear ITU-R BT.709
     description: A linear Rec.709 space with an unusual spelling.
-    interop_id: lin_rec709_scene
+    interop_id: "mycompany:lin_rec709_scene"
     isdata: false
     from_scene_reference: !<GroupTransform>
       name: AP0 to Linear Rec.709 (sRGB)
