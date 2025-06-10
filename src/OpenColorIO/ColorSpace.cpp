@@ -236,8 +236,7 @@ void ColorSpace::setInteropID(const char * interopID)
     if (!id.empty())
     {
         // Count the number of ':' characters in the string
-        // We need to handle UTF-8 properly, so we iterate byte by byte
-        // but only count ASCII ':' characters (0x3A)
+        // This is UTF-8 safe.
         size_t colonCount = 0;
         size_t lastColonPos = std::string::npos;
         
@@ -265,6 +264,8 @@ void ColorSpace::setInteropID(const char * interopID)
             oss << "InteropID '" << id << "' is invalid: ':' character cannot be the last character.";
             throw Exception(oss.str().c_str());
         }
+
+        // TODO: If no namespace is given, verify the interopID against CIF list and warn if not found.
     }
     
     getImpl()->m_interopID = id;
