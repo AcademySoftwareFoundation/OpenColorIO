@@ -236,7 +236,7 @@ void ColorSpace::setInteropID(const char * interopID)
     if (!id.empty())
     {
         // Count the number of ':' characters in the string
-        // This is UTF-8 safe.
+        // and check for non-ASCII characters
         size_t colonCount = 0;
         size_t lastColonPos = std::string::npos;
         
@@ -246,6 +246,12 @@ void ColorSpace::setInteropID(const char * interopID)
             {
                 colonCount++;
                 lastColonPos = i;
+            }
+            else if (static_cast<unsigned char>(id[i]) >= 0x80)
+            {
+                std::ostringstream oss;
+                oss << "InteropID '" << id << "' is invalid: only ASCII characters [0x00..0x7F] are allowed.";
+                throw Exception(oss.str().c_str());
             }
         }
         
@@ -265,7 +271,7 @@ void ColorSpace::setInteropID(const char * interopID)
             throw Exception(oss.str().c_str());
         }
 
-        // TODO: If no namespace is given, verify the interopID against CIF list and warn if not found.
+        // TODO: Do we want to verify the interopID against the CIF list here?
     }
     
     getImpl()->m_interopID = id;
