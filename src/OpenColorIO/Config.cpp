@@ -3305,7 +3305,7 @@ void Config::setViewingRules(ConstViewingRulesRcPtr viewingRules)
     getImpl()->resetCacheIDs();
 }
 
-bool Config::viewIsShared(const char * dispName, const char * viewName) const
+bool Config::isViewShared(const char * dispName, const char * viewName) const
 {
     if (!viewName || !*viewName) return false;
 
@@ -3517,7 +3517,7 @@ const char * Config::getView(const char * display, const char * colorspace, int 
 }
 
 
-bool Config::ViewsAreEqual(const ConstConfigRcPtr & first,
+bool Config::AreViewsEqual(const ConstConfigRcPtr & first,
                            const ConstConfigRcPtr & second,
                            const char * dispName,               // may be empty or nullptr for shared views
                            const char * viewName)
@@ -3591,7 +3591,7 @@ const char * Config::getDisplayViewDescription(const char * display, const char 
     return viewPtr ? viewPtr->m_description.c_str() : "";
 }
 
-bool Config::displayHasView(const char * dispName, const char * viewName) const
+bool Config::hasView(const char * dispName, const char * viewName) const
 {
     // This returns null if either the display or view doesn't exist.
     // It works regardless of whether the display or view are active,
@@ -3784,7 +3784,7 @@ bool Config::hasVirtualView(const char * viewName) const
     return (cs && *cs);
 }
 
-bool Config::virtualViewIsShared(const char * viewName) const
+bool Config::isVirtualViewShared(const char * viewName) const
 {
     if (!viewName || !*viewName) return false;
 
@@ -3900,7 +3900,7 @@ const char * Config::getVirtualDisplayView(ViewType type, int index) const noexc
     return "";
 }
 
-bool Config::VirtualViewsAreEqual(const ConstConfigRcPtr & first,
+bool Config::AreVirtualViewsEqual(const ConstConfigRcPtr & first,
                                   const ConstConfigRcPtr & second,
                                   const char * viewName)
 {
@@ -3933,7 +3933,7 @@ const char * Config::getVirtualDisplayViewTransformName(const char * view) const
     if (!view) return "";
 
     // Get the view transform name for the case where a virtual view is shared.
-    if (virtualViewIsShared(view))
+    if (isVirtualViewShared(view))
     {
         return getDisplayViewTransformName(nullptr, view);
     }
@@ -3952,7 +3952,7 @@ const char * Config::getVirtualDisplayViewColorSpaceName(const char * view) cons
     if (!view) return "";
 
     // Get the colorspace name for the case where a virtual view is shared.
-    if (virtualViewIsShared(view))
+    if (isVirtualViewShared(view))
     {
         return getDisplayViewColorSpaceName(nullptr, view);
     }
@@ -3971,7 +3971,7 @@ const char * Config::getVirtualDisplayViewLooks(const char * view) const noexcep
     if (!view) return "";
 
     // Get the view looks for the case where a virtual view is shared
-    if (virtualViewIsShared(view))
+    if (isVirtualViewShared(view))
     {
         return getDisplayViewLooks(nullptr, view);
     }
@@ -3990,7 +3990,7 @@ const char * Config::getVirtualDisplayViewRule(const char * view) const noexcept
     if (!view) return "";
 
     // Get the view rule for the case where a virtual view is shared
-    if (virtualViewIsShared(view))
+    if (isVirtualViewShared(view))
     {
         return getDisplayViewRule(nullptr, view);
     }
@@ -4009,7 +4009,7 @@ const char * Config::getVirtualDisplayViewDescription(const char * view) const n
     if (!view) return "";
 
     // Get the view description for the case where a virtual view is shared
-    if (virtualViewIsShared(view))
+    if (isVirtualViewShared(view))
     {
         return getDisplayViewDescription(nullptr, view);
     }
