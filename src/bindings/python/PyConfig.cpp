@@ -488,15 +488,15 @@ void bindPyConfig(py::module & m)
              DOC(Config, removeDisplayView))
         .def("clearDisplays", &Config::clearDisplays, 
              DOC(Config, clearDisplays))
-        .def_static("areViewsEqual", [](const ConstConfigRcPtr & first,
+        .def_static("AreViewsEqual", [](const ConstConfigRcPtr & first,
                                         const ConstConfigRcPtr & second,
                                         const char * dispName,
                                         const char * viewName)
             {
-                return Config::areViewsEqual(first, second, dispName, viewName);
+                return Config::AreViewsEqual(first, second, dispName, viewName);
             },
                     "first"_a, "second"_a, "dispName"_a, "viewName"_a,
-                    DOC(Config, areViewsEqual))
+                    DOC(Config, AreViewsEqual))
 
         // Virtual Display
         .def("hasVirtualView", &Config::hasVirtualView, "view"_a,
@@ -552,14 +552,14 @@ void bindPyConfig(py::module & m)
                  return false;
              },
              "display"_a)
-        .def_static("areVirtualViewsEqual", [](const ConstConfigRcPtr & first,
+        .def_static("AreVirtualViewsEqual", [](const ConstConfigRcPtr & first,
                                                const ConstConfigRcPtr & second,
                                                const char * viewName)
             {
-                return Config::areVirtualViewsEqual(first, second, viewName);
+                return Config::AreVirtualViewsEqual(first, second, viewName);
             },
                     "first"_a, "second"_a, "viewName"_a,
-                    DOC(Config, areVirtualViewsEqual))
+                    DOC(Config, AreVirtualViewsEqual))
 
         // Active Displays and Views
         .def("setActiveDisplays", &Config::setActiveDisplays, "displays"_a, 

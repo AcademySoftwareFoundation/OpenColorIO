@@ -3517,7 +3517,7 @@ const char * Config::getView(const char * display, const char * colorspace, int 
 }
 
 
-bool Config::areViewsEqual(const ConstConfigRcPtr & first,
+bool Config::AreViewsEqual(const ConstConfigRcPtr & first,
                            const ConstConfigRcPtr & second,
                            const char * dispName,               // may be empty or nullptr for shared views
                            const char * viewName)
@@ -3900,7 +3900,7 @@ const char * Config::getVirtualDisplayView(ViewType type, int index) const noexc
     return "";
 }
 
-bool Config::areVirtualViewsEqual(const ConstConfigRcPtr & first,
+bool Config::AreVirtualViewsEqual(const ConstConfigRcPtr & first,
                                   const ConstConfigRcPtr & second,
                                   const char * viewName)
 {

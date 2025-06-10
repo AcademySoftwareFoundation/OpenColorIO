@@ -902,7 +902,7 @@ public:
      * the function does not attempt to compare that the color spaces or view transforms
      * being referenced are identical (only that they have the same name).
      */
-    static bool areViewsEqual(const ConstConfigRcPtr & first,
+    static bool AreViewsEqual(const ConstConfigRcPtr & first,
                               const ConstConfigRcPtr & second,
                               const char * dispName,
                               const char * viewName);
@@ -1037,7 +1037,7 @@ public:
      * the function does not attempt to compare that the color spaces or view transforms
      * being referenced are identical (only that they have the same name).
      */
-    static bool areVirtualViewsEqual(const ConstConfigRcPtr & first,
+    static bool AreVirtualViewsEqual(const ConstConfigRcPtr & first,
                                      const ConstConfigRcPtr & second,
                                      const char * viewName);
 
