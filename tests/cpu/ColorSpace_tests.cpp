@@ -97,8 +97,8 @@ OCIO_ADD_TEST(ColorSpace, basic)
     OCIO_CHECK_EQUAL(2.f, readVars[1]);
     cs->setInteropID("interop_id");
     OCIO_CHECK_EQUAL(std::string("interop_id"), cs->getInteropID());
-    cs->setAMFTransformIDs("amf_transform_id1\namf_tranform_id2");
-    OCIO_CHECK_EQUAL(std::string("amf_transform_id1\namf_tranform_id2"),
+    cs->setAMFTransformIDs("amf_transform_id1\namf_transform_id2");
+    OCIO_CHECK_EQUAL(std::string("amf_transform_id1\namf_transform_id2"),
                      cs->getAMFTransformIDs());
     cs->setICCProfileName("icc_profile_name");
     OCIO_CHECK_EQUAL(std::string("icc_profile_name"), cs->getICCProfileName());
