@@ -320,6 +320,10 @@ int main(int argc, const char **argv)
                     i));
 
                 // Validate InteropID if present
+                // TODO: When the CIF list for display color spaces is ready consider 
+                // splitting this validation into two parts so that display color spaces 
+                // are tested against the display CIF list.
+
                 std::string interopID = cs->getInteropID();
                 if (!interopID.empty())
                 {
