@@ -6,6 +6,7 @@
 #include <fstream>
 #include <set>
 #include <vector>
+#include <algorithm>
 
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
@@ -287,6 +288,26 @@ int main(int argc, const char **argv)
             std::cout << std::endl;
             std::cout << "** ColorSpaces **" << std::endl;
 
+            // Valid Color Interop Forum IDs
+            std::set<std::string> validInteropIDs = {
+                "lin_ap1_scene",
+                "lin_ap0_scene", 
+                "lin_rec709_scene",
+                "lin_p3d65_scene",
+                "lin_rec2020_scene",
+                "lin_adobergb_scene",
+                "lin_ciexyzd65_scene",
+                "srgb_rec709_scene",
+                "g22_rec709_scene",
+                "g18_rec709_scene",
+                "srgb_ap1_scene",
+                "g22_ap1_scene",
+                "srgb_p3d65_scene",
+                "g22_adobergb_scene",
+                "data",
+                "unknown"
+            };
+
             const int numCS = config->getNumColorSpaces(
                 OCIO::SEARCH_REFERENCE_SPACE_ALL,   // Iterate over scene & display color spaces.
                 OCIO::COLORSPACE_ALL);              // Iterate over active & inactive color spaces.
@@ -297,6 +318,27 @@ int main(int argc, const char **argv)
                     OCIO::SEARCH_REFERENCE_SPACE_ALL,
                     OCIO::COLORSPACE_ALL,
                     i));
+
+                // Validate InteropID if present
+                std::string interopID = cs->getInteropID();
+                if (!interopID.empty())
+                {
+                    // Check if the interopID contains a colon
+                    if (interopID.find(':') == std::string::npos)
+                    {
+                        // No colon found, check if it's a valid Color Interop Forum ID (case insensitive)
+                        std::string lowerInteropID = interopID;
+                        std::transform(lowerInteropID.begin(), lowerInteropID.end(), lowerInteropID.begin(), ::tolower);
+                        
+                        if (validInteropIDs.find(lowerInteropID) == validInteropIDs.end())
+                        {
+                            std::cout << "WARNING: Color space '" << cs->getName() 
+                                      << "' has unknown interop_id '" << interopID 
+                                      << "'. Expected one of the Color Interop Forum standard IDs or a namespaced ID with ':'." << std::endl;
+                        }
+                    }
+                    // If it contains a colon, it's assumed to be a namespaced ID and is valid
+                }
 
                 // Try to load the transform for the to_ref direction -- this will load any LUTs.
                 bool toRefOK = true;
