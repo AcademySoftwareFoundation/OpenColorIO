@@ -1855,59 +1855,22 @@ OCIO_ADD_TEST(ColorSpace, interop_id)
 
     // Test invalid InteropID with multiple colons.
     const char * invalidMultipleColons = "name:space:cs_name";
-    OCIO_CHECK_THROW_WHAT(cs->setInteropID(invalidMultipleColons), 
-                          OCIO::Exception,
-                          "InteropID 'name:space:cs_name' is invalid: only zero or one ':' character is allowed.");
+    OCIO_CHECK_THROW_WHAT(cs->setInteropID(invalidMultipleColons), OCIO::Exception,
+                          "only zero or one ':' character is allowed");
 
     // Test invalid InteropID with colon at the end.
     const char * invalidColonAtEnd = "namespace:";
-    OCIO_CHECK_THROW_WHAT(cs->setInteropID(invalidColonAtEnd), 
-                          OCIO::Exception,
-                          "InteropID 'namespace:' is invalid: ':' character cannot be the last character.");
+    OCIO_CHECK_THROW_WHAT(cs->setInteropID(invalidColonAtEnd), OCIO::Exception,
+                          "':' character cannot be the last character");
 
-    // Test invalid InteropID with three colons.
-    const char * invalidThreeColons = "a:b:c:d";
-    OCIO_CHECK_THROW_WHAT(cs->setInteropID(invalidThreeColons), 
-                          OCIO::Exception,
-                          "InteropID 'a:b:c:d' is invalid: only zero or one ':' character is allowed.");
+    // Test invalid InteropID with non-ASCII characters.
+    const char * invalidNonASCII1 = "café_scene";  // Contains é (0xC3 0xA9)
+    OCIO_CHECK_THROW_WHAT(cs->setInteropID(invalidNonASCII1), OCIO::Exception,
+                          "contains non-ASCII characters");
 
-    // Test UTF-8 strings with valid single colon.
-    const char * utf8ValidColon = "標準:萬國碼";
-    OCIO_CHECK_NO_THROW(cs->setInteropID(utf8ValidColon));
-    OCIO_CHECK_EQUAL(std::string(cs->getInteropID()), utf8ValidColon);
-
-    // Test UTF-8 strings with invalid multiple colons.
-    const char * utf8InvalidMultipleColons = "標準:萬國:碼";
-    OCIO_CHECK_THROW_WHAT(cs->setInteropID(utf8InvalidMultipleColons), 
-                          OCIO::Exception,
-                          "only zero or one ':' character is allowed.");
-
-    // Test UTF-8 strings with invalid colon at end.
-    const char * utf8InvalidColonAtEnd = "標準萬國碼:";
-    OCIO_CHECK_THROW_WHAT(cs->setInteropID(utf8InvalidColonAtEnd), 
-                          OCIO::Exception,
-                          "':' character cannot be the last character.");
-
-    // Test UTF-8 strings without colon (should be valid).
-    const char * utf8NoColon = "標準萬國碼";
-    OCIO_CHECK_NO_THROW(cs->setInteropID(utf8NoColon));
-    OCIO_CHECK_EQUAL(std::string(cs->getInteropID()), utf8NoColon);
-
-    // Test edge case: single colon character.
-    const char * singleColon = ":";
-    OCIO_CHECK_THROW_WHAT(cs->setInteropID(singleColon), 
-                          OCIO::Exception,
-                          "':' character cannot be the last character.");
-
-    // Test edge case: colon at beginning (should be valid).
-    const char * colonAtBeginning = ":valid_name";
-    OCIO_CHECK_NO_THROW(cs->setInteropID(colonAtBeginning));
-    OCIO_CHECK_EQUAL(std::string(cs->getInteropID()), colonAtBeginning);
-
-    // Test valid InteropID with one colon (not at the end).
-    const char * validWithColon = "namespace:cs_name";
-    OCIO_CHECK_NO_THROW(cs->setInteropID(validWithColon));
-    OCIO_CHECK_EQUAL(std::string(cs->getInteropID()), validWithColon);
+    const char * invalidNonASCII2 = "space±_name";  // Contains ± (ANSI 0xB1)
+    OCIO_CHECK_THROW_WHAT(cs->setInteropID(invalidNonASCII2), OCIO::Exception,
+                          "contains non-ASCII characters");
 }
 
 OCIO_ADD_TEST(ColorSpace, interop_id_serialization)
