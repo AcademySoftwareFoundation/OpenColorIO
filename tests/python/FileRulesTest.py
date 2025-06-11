@@ -56,7 +56,7 @@ class FileRulesTest(unittest.TestCase):
             rules.getName(4)
 
         with self.assertRaises(TypeError):
-            rules.getName('test')
+            rules.getName('test')  # type: ignore
 
     def test_pattern(self):
         """
@@ -86,12 +86,12 @@ class FileRulesTest(unittest.TestCase):
         # Wrong strings.
         for invalid in (None, '', '[]', '[a-b'):
             with self.assertRaises(OCIO.Exception):
-                rules.setPattern(0, invalid)
+                rules.setPattern(0, invalid)  # type: ignore
 
         # Wrong types.
         for invalid in (OCIO.TRANSFORM_DIR_INVERSE, 1):
             with self.assertRaises(TypeError):
-                rules.setPattern(0, invalid)
+                rules.setPattern(0, invalid)  # type: ignore
 
     def test_extension(self):
         """
@@ -119,12 +119,12 @@ class FileRulesTest(unittest.TestCase):
         # Wrong strings.
         for invalid in (None, '', '[]', 'jp[gG'):
             with self.assertRaises(OCIO.Exception):
-                rules.setExtension(0, invalid)
+                rules.setExtension(0, invalid)  # type: ignore
 
         # Wrong types.
         for invalid in (OCIO.TRANSFORM_DIR_INVERSE, 1):
             with self.assertRaises(TypeError):
-                rules.setExtension(0, invalid)
+                rules.setExtension(0, invalid)  # type: ignore
 
     def test_regex(self):
         """
@@ -158,12 +158,12 @@ class FileRulesTest(unittest.TestCase):
         # Wrong strings.
         for invalid in (None, '', '(.*)(\bwhat'):
             with self.assertRaises(OCIO.Exception):
-                rules.setRegex(0, invalid)
+                rules.setRegex(0, invalid)  # type: ignore
 
         # Wrong types.
         for invalid in (OCIO.TRANSFORM_DIR_INVERSE, 1):
             with self.assertRaises(TypeError):
-                rules.setRegex(0, invalid)
+                rules.setRegex(0, invalid)  # type: ignore
 
     def test_color_space(self):
         """
@@ -188,12 +188,12 @@ class FileRulesTest(unittest.TestCase):
         # Wrong strings.
         for invalid in (None, ''):
             with self.assertRaises(OCIO.Exception):
-                rules.setColorSpace(0, invalid)
+                rules.setColorSpace(0, invalid)  # type: ignore
 
         # Wrong types.
         for invalid in (OCIO.TRANSFORM_DIR_INVERSE, 1):
             with self.assertRaises(TypeError):
-                rules.setColorSpace(0, invalid)
+                rules.setColorSpace(0, invalid)  # type: ignore
 
     def test_custom_keys(self):
         """

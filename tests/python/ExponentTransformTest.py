@@ -14,7 +14,7 @@ class ExponentTransformTest(unittest.TestCase, TransformsBaseTest):
     TEST_DIRECTION = OCIO.TRANSFORM_DIR_INVERSE
 
     def setUp(self):
-        self.tr = OCIO.ExponentTransform()
+        self.tr: OCIO.ExponentTransform = OCIO.ExponentTransform()
 
     def test_transform_type(self):
         """
