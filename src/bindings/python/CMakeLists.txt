@@ -234,6 +234,8 @@ if(NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
 endif()
 
 file(COPY package/__init__.py DESTINATION "${_PyOpenColorIO_BUILD_PACKAGE_DIR}")
+file(COPY stubs/PyOpenColorIO/__init__.pyi DESTINATION "${_PyOpenColorIO_BUILD_PACKAGE_DIR}")
+file(COPY stubs/PyOpenColorIO/py.typed DESTINATION "${_PyOpenColorIO_BUILD_PACKAGE_DIR}")
 
 ###############################################################################
 # Install layout
