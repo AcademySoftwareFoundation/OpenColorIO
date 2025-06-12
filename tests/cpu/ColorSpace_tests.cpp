@@ -1866,11 +1866,11 @@ OCIO_ADD_TEST(ColorSpace, interop_id)
     // Test invalid InteropID with non-ASCII characters.
     const char * invalidNonASCII1 = "café_scene";  // Contains é (0xC3 0xA9)
     OCIO_CHECK_THROW_WHAT(cs->setInteropID(invalidNonASCII1), OCIO::Exception,
-                          "contains non-ASCII characters");
+                          "is invalid: only ASCII characters [0x00..0x7F] are allowed.");
 
     const char * invalidNonASCII2 = "space±_name";  // Contains ± (ANSI 0xB1)
     OCIO_CHECK_THROW_WHAT(cs->setInteropID(invalidNonASCII2), OCIO::Exception,
-                          "contains non-ASCII characters");
+                          "is invalid: only ASCII characters [0x00..0x7F] are allowed.");
 }
 
 OCIO_ADD_TEST(ColorSpace, interop_id_serialization)

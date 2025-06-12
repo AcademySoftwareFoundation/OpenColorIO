@@ -693,11 +693,11 @@ colorspaces:
         # Test invalid InteropID with non-ASCII characters.
         with self.assertRaises(Exception) as context:
             self.colorspace.setInteropID('café_scene')  # Contains é (UTF-8)
-        self.assertIn("contains non-ASCII characters", str(context.exception))
+        self.assertIn("is invalid: only ASCII characters [0x00..0x7F] are allowed.", str(context.exception))
 
         with self.assertRaises(Exception) as context:
             self.colorspace.setInteropID('space±_name')  # Contains ± (ANSI 0xB1)
-        self.assertIn("contains non-ASCII characters", str(context.exception))
+        self.assertIn("is invalid: only ASCII characters [0x00..0x7F] are allowed.", str(context.exception))
 
     def test_amf_transform_ids(self):
         """
