@@ -91,7 +91,7 @@ const char * ViewTransform::getName() const noexcept
 
 void ViewTransform::setName(const char * name) noexcept
 {
-    getImpl()->m_name = name;
+    getImpl()->m_name = name ? name : "";
 }
 
 const char * ViewTransform::getFamily() const noexcept
@@ -101,7 +101,7 @@ const char * ViewTransform::getFamily() const noexcept
 
 void ViewTransform::setFamily(const char * family)
 {
-    getImpl()->m_family = family;
+    getImpl()->m_family = family ? family : "";
 }
 
 const char * ViewTransform::getDescription() const noexcept
@@ -111,7 +111,7 @@ const char * ViewTransform::getDescription() const noexcept
 
 void ViewTransform::setDescription(const char * description)
 {
-    getImpl()->m_description = description;
+    getImpl()->m_description = description ? description : "";
 }
 
 bool ViewTransform::hasCategory(const char * category) const

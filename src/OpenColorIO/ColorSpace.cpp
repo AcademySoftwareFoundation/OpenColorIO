@@ -24,6 +24,9 @@ public:
     std::string m_equalityGroup;
     std::string m_description;
     std::string m_encoding;
+    std::string m_interopID;
+    std::string m_AMFTransformIDs;
+    std::string m_ICCProfileName;
     StringUtils::StringVec m_aliases;
 
     BitDepth m_bitDepth{ BIT_DEPTH_UNKNOWN };
@@ -62,6 +65,9 @@ public:
             m_equalityGroup = rhs.m_equalityGroup;
             m_description = rhs.m_description;
             m_encoding = rhs.m_encoding;
+            m_interopID = rhs.m_interopID;
+            m_AMFTransformIDs = rhs.m_AMFTransformIDs;
+            m_ICCProfileName = rhs.m_ICCProfileName;
             m_bitDepth = rhs.m_bitDepth;
             m_isData = rhs.m_isData;
             m_referenceSpaceType = rhs.m_referenceSpaceType;
@@ -195,7 +201,7 @@ const char * ColorSpace::getFamily() const noexcept
 
 void ColorSpace::setFamily(const char * family)
 {
-    getImpl()->m_family = family;
+    getImpl()->m_family = family ? family : "";
 }
 
 const char * ColorSpace::getEqualityGroup() const noexcept
@@ -205,7 +211,7 @@ const char * ColorSpace::getEqualityGroup() const noexcept
 
 void ColorSpace::setEqualityGroup(const char * equalityGroup)
 {
-    getImpl()->m_equalityGroup = equalityGroup;
+    getImpl()->m_equalityGroup = equalityGroup ? equalityGroup : "";
 }
 
 const char * ColorSpace::getDescription() const noexcept
@@ -215,7 +221,80 @@ const char * ColorSpace::getDescription() const noexcept
 
 void ColorSpace::setDescription(const char * description)
 {
-    getImpl()->m_description = description;
+    getImpl()->m_description = description ? description : "";
+}
+
+const char * ColorSpace::getInteropID() const noexcept
+{
+    return getImpl()->m_interopID.c_str();
+}
+
+void ColorSpace::setInteropID(const char * interopID)
+{
+    std::string id = interopID ? interopID : "";
+    
+    if (!id.empty())
+    {
+        // Count the number of ':' characters in the string
+        // and check for non-ASCII characters
+        size_t colonCount = 0;
+        size_t lastColonPos = std::string::npos;
+        
+        for (size_t i = 0; i < id.length(); ++i)
+        {
+            if (id[i] == ':')
+            {
+                colonCount++;
+                lastColonPos = i;
+            }
+            else if (static_cast<unsigned char>(id[i]) >= 0x80)
+            {
+                std::ostringstream oss;
+                oss << "InteropID '" << id << "' is invalid: only ASCII characters [0x00..0x7F] are allowed.";
+                throw Exception(oss.str().c_str());
+            }
+        }
+        
+        // Validate: only zero or one ':' character allowed
+        if (colonCount > 1)
+        {
+            std::ostringstream oss;
+            oss << "InteropID '" << id << "' is invalid: only zero or one ':' character is allowed.";
+            throw Exception(oss.str().c_str());
+        }
+        
+        // Validate: ':' cannot be the last character
+        if (colonCount == 1 && lastColonPos == id.length() - 1)
+        {
+            std::ostringstream oss;
+            oss << "InteropID '" << id << "' is invalid: ':' character cannot be the last character.";
+            throw Exception(oss.str().c_str());
+        }
+
+        // TODO: Do we want to verify the interopID against the CIF list here?
+    }
+    
+    getImpl()->m_interopID = id;
+}
+
+const char * ColorSpace::getAMFTransformIDs() const noexcept
+{
+    return getImpl()->m_AMFTransformIDs.c_str();
+}
+
+void ColorSpace::setAMFTransformIDs(const char * amfTransformIDs)
+{
+    getImpl()->m_AMFTransformIDs = amfTransformIDs ? amfTransformIDs : "";
+}
+
+const char * ColorSpace::getICCProfileName() const noexcept
+{
+    return getImpl()->m_ICCProfileName.c_str();
+}
+
+void ColorSpace::setICCProfileName(const char * iccProfileName)
+{
+    getImpl()->m_ICCProfileName = iccProfileName ? iccProfileName : "";
 }
 
 BitDepth ColorSpace::getBitDepth() const noexcept
@@ -265,7 +344,7 @@ const char * ColorSpace::getEncoding() const noexcept
 
 void ColorSpace::setEncoding(const char * encoding)
 {
-    getImpl()->m_encoding = encoding;
+    getImpl()->m_encoding = encoding ? encoding : "";
 }
 
 bool ColorSpace::isData() const noexcept
@@ -371,7 +450,6 @@ std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
         break;
     }
     os << "name=" << cs.getName() << ", ";
-    std::string str{ cs.getFamily() };
     const auto numAliases = cs.getNumAliases();
     if (numAliases == 1)
     {
@@ -386,6 +464,15 @@ std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
         }
         os << "], ";
     }
+
+    std::string str;
+    
+    str = cs.getInteropID();
+    if (!str.empty())
+    {
+        os << "interop_id=" << str << ", ";
+    }
+    str = cs.getFamily();
     if (!str.empty())
     {
         os << "family=" << str << ", ";
@@ -428,6 +515,16 @@ std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
     if (!str.empty())
     {
         os << ", description=" << str;
+    }
+    str = cs.getAMFTransformIDs();
+    if (!str.empty())
+    {
+        os << ", amf_transform_ids=" << str;
+    }
+    str = cs.getICCProfileName();
+    if (!str.empty())
+    {
+        os << ", icc_profile_name=" << str;
     }
     if(cs.getTransform(COLORSPACE_DIR_TO_REFERENCE))
     {

@@ -20,7 +20,7 @@
 
       2. __init__(self: PyOpenColorIO.ColorSpace, referenceSpace: PyOpenColorIO.ReferenceSpaceType) -> None
 
-      3. __init__(self: PyOpenColorIO.ColorSpace, referenceSpace: PyOpenColorIO.ReferenceSpaceType = <ReferenceSpaceType.REFERENCE_SPACE_SCENE: 0>, name: str = '', aliases: List[str] = [], family: str = '', encoding: str = '', equalityGroup: str = '', description: str = '', bitDepth: PyOpenColorIO.BitDepth = <BitDepth.BIT_DEPTH_UNKNOWN: 0>, isData: bool = False, allocation: PyOpenColorIO.Allocation = <Allocation.ALLOCATION_UNIFORM: 1>, allocationVars: List[float] = [], toReference: PyOpenColorIO.Transform = None, fromReference: PyOpenColorIO.Transform = None, categories: List[str] = []) -> None
+      3. __init__(self: PyOpenColorIO.ColorSpace, referenceSpace: PyOpenColorIO.ReferenceSpaceType = <ReferenceSpaceType.REFERENCE_SPACE_SCENE: 0>, name: str = '', aliases: List[str] = [], family: str = '', encoding: str = '', equalityGroup: str = '', description: str = '', bitDepth: PyOpenColorIO.BitDepth = <BitDepth.BIT_DEPTH_UNKNOWN: 0>, isData: bool = False, allocation: PyOpenColorIO.Allocation = <Allocation.ALLOCATION_UNIFORM: 1>, allocationVars: List[float] = [], toReference: PyOpenColorIO.Transform = None, fromReference: PyOpenColorIO.Transform = None, categories: List[str] = [], interopID: str = '', amfTransformIDs: str = '', iccProfileName: str = '') -> None
 
 
    .. py:method:: ColorSpace.addAlias(self: PyOpenColorIO.ColorSpace, alias: str) -> None
@@ -46,6 +46,14 @@
       :module: PyOpenColorIO
 
       Clear all the categories.
+
+
+   .. py:method:: ColorSpace.getAMFTransformIDs(self: PyOpenColorIO.ColorSpace) -> str
+      :module: PyOpenColorIO
+
+      Get/Set the AMF transform IDs for the color space.
+
+      The AMF transform IDs are used to identify specific transforms in the ACES Metadata File. Multiple transform IDs can be specified in a newline-separated string.
 
 
    .. py:method:: ColorSpace.getAliases(self: PyOpenColorIO.ColorSpace) -> PyOpenColorIO.ColorSpace.ColorSpaceAliasIterator
@@ -104,6 +112,21 @@
       Get the family, for use in user interfaces (optional) The family string could use a '/' separator to indicate levels to be used by hierarchical menus.
 
 
+   .. py:method:: ColorSpace.getICCProfileName(self: PyOpenColorIO.ColorSpace) -> str
+      :module: PyOpenColorIO
+
+      Get/Set the ICC profile name for the color space.
+
+      The ICC profile name identifies the ICC color profile associated with this color space. This can be used to link OCIO color spaces with corresponding ICC profiles for applications that need to work with both color management systems.
+
+
+   .. py:method:: ColorSpace.getInteropID(self: PyOpenColorIO.ColorSpace) -> str
+      :module: PyOpenColorIO
+
+      Get/Set the interop ID for the color space.
+
+      The interop ID is a standardized identifier to uniquely identify commonly used color spaces. These IDs are defined by the Academy Software Foundation's Color Interop Forum project. If you create your own ID, you must prefix it with unique characters that will ensure it won't conflict with future Color Interop Forum IDs.
+
    .. py:method:: ColorSpace.getName(self: PyOpenColorIO.ColorSpace) -> str
       :module: PyOpenColorIO
 
@@ -121,6 +144,11 @@
 
       If a transform in the specified direction has been specified, return it. Otherwise return a null ConstTransformRcPtr
 
+
+   .. py:method:: ColorSpace.hasAlias(self: PyOpenColorIO.ColorSpace, alias: str) -> bool
+      :module: PyOpenColorIO
+
+      Return true if alias exists.
 
    .. py:method:: ColorSpace.hasCategory(self: PyOpenColorIO.ColorSpace, category: str) -> bool
       :module: PyOpenColorIO
@@ -168,6 +196,10 @@
          Will do nothing if the category is missing.
 
 
+   .. py:method:: ColorSpace.setAMFTransformIDs(self: PyOpenColorIO.ColorSpace, amfTransformIDs: str) -> None
+      :module: PyOpenColorIO
+
+
    .. py:method:: ColorSpace.setAllocation(self: PyOpenColorIO.ColorSpace, allocation: PyOpenColorIO.Allocation) -> None
       :module: PyOpenColorIO
 
@@ -196,6 +228,14 @@
       :module: PyOpenColorIO
 
       Set the family, for use in user interfaces (optional)
+
+
+   .. py:method:: ColorSpace.setICCProfileName(self: PyOpenColorIO.ColorSpace, iccProfileName: str) -> None
+      :module: PyOpenColorIO
+
+
+   .. py:method:: ColorSpace.setInteropID(self: PyOpenColorIO.ColorSpace, interopID: str) -> None
+      :module: PyOpenColorIO
 
 
    .. py:method:: ColorSpace.setIsData(self: PyOpenColorIO.ColorSpace, isData: bool) -> None

@@ -253,7 +253,7 @@ void Context::setWorkingDir(const char * dirname)
 {
     AutoMutex lock(getImpl()->m_resultsCacheMutex);
 
-    getImpl()->m_workingDir = dirname;
+    getImpl()->m_workingDir = dirname ? dirname : "";
     getImpl()->clearCaches();
 }
 

@@ -247,7 +247,7 @@ static constexpr unsigned LastSupportedMajorVersion = OCIO_VERSION_MAJOR;
 
 // For each major version keep the most recent minor.
 static const unsigned int LastSupportedMinorVersion[] = {0, // Version 1
-                                                         4  // Version 2
+                                                         5  // Version 2
                                                          };
 
 } // namespace
@@ -1185,7 +1185,7 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
         // Check if it is an OCIOZ archive.
         if (magicNumber[0] == 'P' && magicNumber[1] == 'K')
         {
-            // Closing ifstream even though it should be close by ifstream deconstructor (RAII).
+            // Closing ifstream even though it should be closed by ifstream destructor (RAII).
             ifstream.close();
 
             // The file should be an OCIOZ archive file.
@@ -1499,7 +1499,8 @@ void Config::validate() const
 
 
         // Check for interchange roles requirements - scene-referred and display-referred.
-        if (getMajorVersion() >= 2 && getMinorVersion() >= 2)
+        unsigned int versionHex = (getMajorVersion() << 24) | (getMinorVersion() << 16);
+        if (versionHex >= 0x02020000u)  // v2.2 or higher
         {
             bool hasRoleSceneLinear                 = false;
             bool hasRoleCompositingLog              = false;
@@ -5589,6 +5590,8 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
 
 void Config::Impl::checkVersionConsistency() const
 {
+    unsigned int hexVersion = (m_majorVersion << 24) | (m_minorVersion << 16);
+
     // Check for the Transforms.
 
     ConstTransformVec transforms;
@@ -5658,17 +5661,42 @@ void Config::Impl::checkVersionConsistency() const
         }
     }
 
-    // Check for the DisplayColorSpaces.
+    // Check for the ColorSpaces.
 
-    if (m_majorVersion < 2)
+    const int nbCS = m_allColorSpaces->getNumColorSpaces();
+    for (int i = 0; i < nbCS; ++i)
     {
-        const int nbCS = m_allColorSpaces->getNumColorSpaces();
-        for (int i = 0; i < nbCS; ++i)
+        const auto & cs = m_allColorSpaces->getColorSpaceByIndex(i);
+        if (m_majorVersion < 2) 
         {
-            const auto & cs = m_allColorSpaces->getColorSpaceByIndex(i);
-            if (MatchReferenceType(SEARCH_REFERENCE_SPACE_DISPLAY, cs->getReferenceSpaceType()))
+            if (MatchReferenceType(SEARCH_REFERENCE_SPACE_DISPLAY, cs->getReferenceSpaceType())) 
             {
                 throw Exception("Only version 2 (or higher) can have DisplayColorSpaces.");
+            }
+        } 
+
+        if (hexVersion < 0x02050000) // Version 2.5
+        {
+            if (*cs->getInteropID())
+            {
+                std::ostringstream os;
+                os << "Config failed validation. The color space '" << cs->getName() << "' ";
+                os << "has non-empty InteropID and config version is less than 2.5.";
+                throw Exception(os.str().c_str());
+            }
+            if (*cs->getAMFTransformIDs())
+            {
+                std::ostringstream os;
+                os << "Config failed validation. The color space '" << cs->getName() << "' ";
+                os << "has non-empty AMFTransformIDs and config version is less than 2.5.";
+                throw Exception(os.str().c_str());
+            }
+            if (*cs->getICCProfileName())
+            {
+                std::ostringstream os;
+                os << "Config failed validation. The color space '" << cs->getName() << "' ";
+                os << "has non-empty ICCProfileName and config version is less than 2.5.";
+                throw Exception(os.str().c_str());
             }
         }
     }
