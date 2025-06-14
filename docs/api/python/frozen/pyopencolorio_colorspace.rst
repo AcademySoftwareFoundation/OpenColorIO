@@ -5,6 +5,7 @@
 
 .. py:class:: ColorSpace
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.ColorSpace
 
    The *:ref:`ColorSpace`* is the state of an image with respect to colorimetry and color encoding. Transforming images between different *ColorSpaces* is the primary motivation for this library.
 
@@ -20,7 +21,7 @@
 
       2. __init__(self: PyOpenColorIO.ColorSpace, referenceSpace: PyOpenColorIO.ReferenceSpaceType) -> None
 
-      3. __init__(self: PyOpenColorIO.ColorSpace, referenceSpace: PyOpenColorIO.ReferenceSpaceType = <ReferenceSpaceType.REFERENCE_SPACE_SCENE: 0>, name: str = '', aliases: List[str] = [], family: str = '', encoding: str = '', equalityGroup: str = '', description: str = '', bitDepth: PyOpenColorIO.BitDepth = <BitDepth.BIT_DEPTH_UNKNOWN: 0>, isData: bool = False, allocation: PyOpenColorIO.Allocation = <Allocation.ALLOCATION_UNIFORM: 1>, allocationVars: List[float] = [], toReference: PyOpenColorIO.Transform = None, fromReference: PyOpenColorIO.Transform = None, categories: List[str] = []) -> None
+      3. __init__(self: PyOpenColorIO.ColorSpace, referenceSpace: PyOpenColorIO.ReferenceSpaceType = <ReferenceSpaceType.REFERENCE_SPACE_SCENE: 0>, name: str = '', aliases: list[str] = [], family: str = '', encoding: str = '', equalityGroup: str = '', description: str = '', bitDepth: PyOpenColorIO.BitDepth = <BitDepth.BIT_DEPTH_UNKNOWN: 0>, isData: bool = False, allocation: PyOpenColorIO.Allocation = <Allocation.ALLOCATION_UNIFORM: 1>, allocationVars: list[float] = [], toReference: PyOpenColorIO.Transform = None, fromReference: PyOpenColorIO.Transform = None, categories: list[str] = []) -> None
 
 
    .. py:method:: ColorSpace.addAlias(self: PyOpenColorIO.ColorSpace, alias: str) -> None
@@ -60,7 +61,7 @@
       If this colorspace needs to be transferred to a limited dynamic range coding space (such as during display with a GPU path), use this allocation to maximize bit efficiency.
 
 
-   .. py:method:: ColorSpace.getAllocationVars(self: PyOpenColorIO.ColorSpace) -> List[float]
+   .. py:method:: ColorSpace.getAllocationVars(self: PyOpenColorIO.ColorSpace) -> list[float]
       :module: PyOpenColorIO
 
 
@@ -122,6 +123,12 @@
       If a transform in the specified direction has been specified, return it. Otherwise return a null ConstTransformRcPtr
 
 
+   .. py:method:: ColorSpace.hasAlias(self: PyOpenColorIO.ColorSpace, alias: str) -> bool
+      :module: PyOpenColorIO
+
+      Return true if alias exists.
+
+
    .. py:method:: ColorSpace.hasCategory(self: PyOpenColorIO.ColorSpace, category: str) -> bool
       :module: PyOpenColorIO
 
@@ -172,7 +179,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: ColorSpace.setAllocationVars(self: PyOpenColorIO.ColorSpace, vars: List[float]) -> None
+   .. py:method:: ColorSpace.setAllocationVars(self: PyOpenColorIO.ColorSpace, vars: list[float]) -> None
       :module: PyOpenColorIO
 
 
@@ -216,6 +223,7 @@
 
 .. py:class:: ColorSpaceCategoryIterator
    :module: PyOpenColorIO.ColorSpace
+   :canonical: PyOpenColorIO.ColorSpace.ColorSpaceCategoryIterator
 
 
    .. py:method:: ColorSpaceCategoryIterator.__getitem__(self: PyOpenColorIO.ColorSpace.ColorSpaceCategoryIterator, arg0: int) -> str
@@ -236,6 +244,7 @@
 
 .. py:class:: ColorSpaceAliasIterator
    :module: PyOpenColorIO.ColorSpace
+   :canonical: PyOpenColorIO.ColorSpace.ColorSpaceAliasIterator
 
 
    .. py:method:: ColorSpaceAliasIterator.__getitem__(self: PyOpenColorIO.ColorSpace.ColorSpaceAliasIterator, arg0: int) -> str

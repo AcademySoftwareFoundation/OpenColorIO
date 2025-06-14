@@ -5,6 +5,7 @@
 
 .. py:class:: LegacyViewingPipeline
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.LegacyViewingPipeline
 
    Whereas the :ref:`DisplayViewTransform` simply applies a specific view from an OCIO display, the :ref:`LegacyViewingPipeline` provides an example of a complete viewing pipeline of the sort that could be used to implement a viewport in a typical application. It therefore adds, around the :ref:`DisplayViewTransform`, various optional color correction steps and RGBA channel view swizzling. The direction of the DisplayViewTranform is used as the direction of the pipeline. Note: The :ref:`LegacyViewingPipeline` class provides the same functionality as the OCIO v1 DisplayTransform.
 

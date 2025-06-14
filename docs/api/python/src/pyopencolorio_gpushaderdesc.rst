@@ -23,9 +23,6 @@
    :undoc-members:
    :exclude-members: name
 
-   .. py:method:: name() -> str
-      :property:
-
 .. autoclass:: PyOpenColorIO.GpuShaderDesc.UniformData
    :members:
    :undoc-members:

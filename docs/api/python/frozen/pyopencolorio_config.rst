@@ -5,6 +5,7 @@
 
 .. py:class:: Config
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.Config
 
    A config defines all the color spaces to be available at runtime.
 
@@ -30,9 +31,17 @@
 
       Create a configuration using an OCIO built-in config.
 
-      :param configName: Built-in config name.
+      :param configName: Built-in config name (with or without the "ocio://" URI prefix).
 
-      The available configNames are: "cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1"-- ACES CG config, basic color spaces for computer graphics apps. More information about these configs is available at: https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES
+      Also supports the following OCIO URI format for Built-in configs: "ocio://default" - Default Built-in config. "ocio://cg-config-latest" - Latest Built-in CG config. "ocio://studio-config-latest" - Latest Built-in Studio config. "ocio://<CONFIG NAME>" - A specific Built-in config.
+
+      The available configNames are:
+
+      ACES Studio config, contains a more complete collection of color spaces and displays: "studio-config-v1.0.0_aces-v1.3_ocio-v2.1" "studio-config-v2.1.0_aces-v1.3_ocio-v2.3" "studio-config-v2.2.0_aces-v1.3_ocio-v2.4"
+
+      ACES CG config, basic color spaces for computer graphics apps: "cg-config-v1.0.0_aces-v1.3_ocio-v2.1" "cg-config-v2.1.0_aces-v1.3_ocio-v2.3" "cg-config-v2.2.0_aces-v1.3_ocio-v2.4"
+
+      More information is available at: https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES
 
       Information about the available configs is available from the :ref:`BuiltinConfigRegistry`.
 
@@ -41,7 +50,7 @@
       :return: One of the configs built into the OCIO library.
 
 
-   .. py:method:: Config.CreateFromConfigIOProxy(arg0: OpenColorIO_v2_2dev::ConfigIOProxy) -> PyOpenColorIO.Config
+   .. py:method:: Config.CreateFromConfigIOProxy(arg0: OpenColorIO_v2_5dev::ConfigIOProxy) -> PyOpenColorIO.Config
       :module: PyOpenColorIO
       :staticmethod:
 
@@ -62,9 +71,9 @@
 
       Create a configuration using the OCIO environment variable.
 
-      Also supports the OCIO URI format for Built-in configs and supports archived configs. See :ref:`Config::CreateFromFile`.
+      Also supports the OCIO URI format for Built-in configs and supports archived configs. See :ref:`CreateFromFile`.
 
-      If the variable is missing or empty, returns the same result as :ref:`Config::CreateRaw`. :return: The :ref:`Config` object.
+      If the variable is missing or empty, returns the same result as :ref:`CreateRaw`. :return: The :ref:`Config` object.
 
 
    .. py:method:: Config.CreateFromFile(fileName: str) -> PyOpenColorIO.Config
@@ -73,9 +82,9 @@
 
       Create a configuration using a specific config file.
 
-      Also supports the following OCIO URI format for Built-in configs: "ocio://default" - Default Built-in config. "ocio://<CONFIG NAME>" - A specific Built-in config. For the list of available <CONFIG NAME> strings, see :ref:`Config::CreateFromBuiltinConfig`.
+      Supports the OCIO URI format for Built-in configs. See :ref:`CreateFromBuiltinConfig`.
 
-      Also supports archived configs (.ocioz files).
+      Supports archived configs (.ocioz files).
 
       :exception :ref:`Exception`: If the file may not be read or does not parse.
 
@@ -110,10 +119,22 @@
 
    .. py:class:: Config.DisplayAllIterator
       :module: PyOpenColorIO
+      :canonical: PyOpenColorIO.Config.DisplayAllIterator
 
 
       .. py:method:: Config.DisplayAllIterator.__init__(*args, **kwargs)
          :module: PyOpenColorIO
+
+
+   .. py:method:: Config.GetProcessorFromBuiltinColorSpace(builtinColorSpaceName: str, srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str) -> PyOpenColorIO.Processor
+      :module: PyOpenColorIO
+      :staticmethod:
+
+      See description of GetProcessorToBuiltinColorSpace.
+
+      :param builtinColorSpaceName: The name of the color space in the current default Built-in config.
+      :param srcConfig: The user's source config.
+      :param srcColorSpaceName: The name of the color space in the source config.
 
 
    .. py:method:: Config.GetProcessorFromConfigs(*args, **kwargs)
@@ -134,23 +155,119 @@
 
       The srcInterchangeName and dstInterchangeName must refer to a pair of color spaces in the two configs that are the same. A role name may also be used.
 
+      Note: For all of the two-config GetProcessor functions, if either the source or destination color spaces are data spaces, the entire processor will be a no-op.
+
       4. GetProcessorFromConfigs(srcContext: PyOpenColorIO.Context, srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, srcInterchangeName: str, dstContext: PyOpenColorIO.Context, dstConfig: PyOpenColorIO.Config, dstColorSpaceName: str, dstInterchangeName: str) -> PyOpenColorIO.Processor
+
+      5. GetProcessorFromConfigs(srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, dstConfig: PyOpenColorIO.Config, dstDisplay: str, dstView: str, direction: PyOpenColorIO.TransformDirection) -> PyOpenColorIO.Processor
+
+      Get a processor to convert from a color space to a display and view in two separate configs.
+
+      6. GetProcessorFromConfigs(srcContext: PyOpenColorIO.Context, srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, dstContext: PyOpenColorIO.Context, dstConfig: PyOpenColorIO.Config, dstView: str, dstDisplay: str, direction: PyOpenColorIO.TransformDirection) -> PyOpenColorIO.Processor
+
+      7. GetProcessorFromConfigs(srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, srcInterchangeName: str, dstConfig: PyOpenColorIO.Config, dstDisplay: str, dstView: str, dstInterchangeName: str, direction: PyOpenColorIO.TransformDirection) -> PyOpenColorIO.Processor
+
+      The srcInterchangeName and dstInterchangeName must refer to a pair of color spaces in the two configs that are the same. A role name may also be used.
+
+      8. GetProcessorFromConfigs(srcContext: PyOpenColorIO.Context, srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, srcInterchangeName: str, dstContext: PyOpenColorIO.Context, dstConfig: PyOpenColorIO.Config, dstDisplay: str, dstView: str, dstInterchangeName: str, direction: PyOpenColorIO.TransformDirection) -> PyOpenColorIO.Processor
+
+
+   .. py:method:: Config.GetProcessorToBuiltinColorSpace(srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, builtinColorSpaceName: str) -> PyOpenColorIO.Processor
+      :module: PyOpenColorIO
+      :staticmethod:
+
+      Get a :ref:`Processor` to or from a known external color space.
+
+      These methods provide a way to interface color spaces in a config with known standard external color spaces. The set of external color space are those contained in the current default Built-in config. This includes common spaces such as "Linear Rec.709 (sRGB)", "sRGB - Texture", "ACEScg", and "ACES2065-1".
+
+      If the source config defines the necessary Interchange Role (typically "aces_interchange"), then the conversion will be well-defined and equivalent to calling GetProcessorFromConfigs with the source config and the Built-in config.
+
+      However, if the Interchange Roles are not present, heuristics will be used to try and identify a common color space in the source config that may be used to allow the conversion to proceed. If the heuristics fail to find a suitable space, an exception is thrown. The heuristics may evolve, so the results returned by this function for a given source config and color space may change in future releases of the library. However, the Interchange Roles are required in config versions 2.2 and higher, so it is hoped that the need for the heuristics will decrease over time.
+
+      :param srcConfig: The user's source config.
+      :param srcColorSpaceName: The name of the color space in the source config.
+      :param builtinColorSpaceName: The name of the color space in the current default Built-in config.
+
+      :exception :ref:`Exception`: if either the src or builtin interchange space cannot be identified.
+
+
+   .. py:method:: Config.IdentifyBuiltinColorSpace(srcConfig: PyOpenColorIO.Config, builtinConfig: PyOpenColorIO.Config, builtinColorSpaceName: str) -> str
+      :module: PyOpenColorIO
+      :staticmethod:
+
+      Find the name of the color space in the source config that is the same as a color space in the default built-in config. For example, setting the builtinColorSpaceName to "sRGB - Texture" (a color space name from that config), would return the name for the corresponding sRGB texture space in the current config (or empty if it was not found). Note that this method relies on heuristics which may evolve over time and which may not work on all configs.
+
+      The method only looks at active color spaces. If the interchange roles are missing and heuristics are used, only scene-referred color spaces are searched.
+
+      :param srcConfig: The config to search for the desired color space.
+      :param builtinConfig: The built-in config to use. See :ref:`CreateFromBuiltinConfig`.
+      :param builtinColorSpaceName: Color space name in the built-in default config.
+
+      :return: Matching color space name from the source config. Empty if not found.
+
+      :exception :ref:`Exception`: if an interchange space cannot be found or the equivalent space cannot be found.
+
+
+   .. py:method:: Config.IdentifyInterchangeSpace(srcConfig: PyOpenColorIO.Config, srcColorSpaceName: str, builtinConfig: PyOpenColorIO.Config, builtinColorSpaceName: str) -> tuple[str, str]
+      :module: PyOpenColorIO
+      :staticmethod:
+
+      Identify the two names of a common color space that exists in both the given config and the provided built-in config that may be used for converting color spaces between the two configs. If both configs have the interchange role set, than the color spaces set to that role will be returned. Otherwise, heuristics will be used to try and identify a known color space in the source config. These are the same heuristics that are used for other methods such as identifyBuiltinColorSpace and GetProcessorTo/FromBuiltinColorSpace.
+
+      Using this method in connection with GetProcessorFromConfigs is more efficient if you need to call GetProcessorTo/FromBuiltinColorSpace multiple times since it is only necessary to run the heuristics once (to identify the interchange spaces).
+
+      The srcColorSpaceName and builtinColorSpace name are used to decide which interchange role to use (scene- or display-referred). However, they are not used if the interchange roles are not present and the heuristics are used. It is actually only the :ref:`ReferenceSpaceType` of the color spaces that are used, so it is not necessary to call this function multiple times if all the spaces are of the same type. (These are the same arguments that would also be set if you were instead calling GetProcessorTo/FromBuiltinColorSpace.)
+
+      :param srcInterchangeName: Color space name from the source config.
+      :param builtinInterchangeName: Corresponding color space name from the built-in config.
+      :param srcConfig: The config to search for the desired color space.
+      :param srcColorSpaceName: Color space name in the given config to convert to/from.
+      :param builtinConfig: The built-in config to use. See :ref:`CreateFromBuiltinConfig`.
+      :param builtinColorSpaceName: Color space name in the default built-in config.
+
+      :exception :ref:`Exception`: if either the srcInterchange or builtinInterchange cannot be identified.
 
 
    .. py:class:: Config.ViewForViewTypeIterator
       :module: PyOpenColorIO
+      :canonical: PyOpenColorIO.Config.ViewForViewTypeIterator
 
 
       .. py:method:: Config.ViewForViewTypeIterator.__init__(*args, **kwargs)
          :module: PyOpenColorIO
 
 
+   .. py:method:: Config.ViewsAreEqual(first: PyOpenColorIO.Config, second: PyOpenColorIO.Config, dispName: str, viewName: str) -> bool
+      :module: PyOpenColorIO
+      :staticmethod:
+
+      Compare views in a pair of configs.
+
+      Will return false if either of the views does not exist. This will return true even if the view is display-defined in one config and a reference to a shared view in the other config (both within the same display), as long as the contents match. The description text (if any) is ignored, since it is not a functional difference.
+
+      Note that the comparison is only on the strings contained in the view definition, the function does not attempt to compare that the color spaces or view transforms being referenced are identical (only that they have the same name).
+
+
    .. py:class:: Config.VirtualViewIterator
       :module: PyOpenColorIO
+      :canonical: PyOpenColorIO.Config.VirtualViewIterator
 
 
       .. py:method:: Config.VirtualViewIterator.__init__(*args, **kwargs)
          :module: PyOpenColorIO
+
+
+   .. py:method:: Config.VirtualViewsAreEqual(first: PyOpenColorIO.Config, second: PyOpenColorIO.Config, viewName: str) -> bool
+      :module: PyOpenColorIO
+      :staticmethod:
+
+      Compare virtual views in a pair of configs.
+
+      Will return false if either of the virtual views does not exist. This will return true even if the virtual view is display-defined in one config and a reference to a shared virtual view in the other config, as long as the contents match.
+
+      The description text (if any) is ignored, since it is not a functional difference.
+
+      Note that the comparison is only on the strings contained in the view definition, the function does not attempt to compare that the color spaces or view transforms being referenced are identical (only that they have the same name).
 
 
    .. py:method:: Config.__init__(self: PyOpenColorIO.Config) -> None
@@ -182,7 +299,7 @@
 
       Add a (reference to a) shared view to a display.
 
-      The shared view must be part of the config. See :ref:`Config::addSharedView`
+      The shared view must be part of the config. See :ref:`addSharedView`
 
       This will throw if:
       - Display or view are null or empty.
@@ -229,14 +346,6 @@
       :module: PyOpenColorIO
 
       Will throw if view or colorSpaceName are null or empty.
-
-      The following methods only manipulate active displays and views. Active displays and views are defined from an env. variable or from the config file.
-
-      Looks is a potentially comma (or colon) delimited list of lookNames, Where +/- prefixes are optionally allowed to denote forward/inverse look specification. (And forward is assumed in the absence of either)
-
-      Add shared view (or replace existing one with same name). Shared views are defined at config level and can be referenced by several displays. Either provide a view transform and a display color space or just a color space (and a null view transform). Looks, rule and description are optional, they can be null or empty.
-
-      Shared views using a view transform may use the token <USE_DISPLAY_NAME> for the color space (see :c:var:`OCIO_VIEW_USE_DISPLAY_NAME`). In that case, when the view is referenced in a display, the display color space that is used will be the one matching the display name. In other words, the view will be customized based on the display it is used in. :ref:`Config::validate` will throw if the config does not contain the matching display color space.
 
 
    .. py:method:: Config.addViewTransform(self: PyOpenColorIO.Config, viewTransform: PyOpenColorIO.ViewTransform) -> None
@@ -294,8 +403,21 @@
       :module: PyOpenColorIO
 
 
+   .. py:method:: Config.clearProcessorCache(self: PyOpenColorIO.Config) -> None
+      :module: PyOpenColorIO
+
+      Control the caching of processors in the config instance. By default, caching is on.
+       The flags allow turning caching off entirely or only turning it off if dynamic properties are being used by the processor.
+
+
    .. py:method:: Config.clearSearchPaths(self: PyOpenColorIO.Config) -> None
       :module: PyOpenColorIO
+
+
+   .. py:method:: Config.clearSharedViews(self: PyOpenColorIO.Config) -> None
+      :module: PyOpenColorIO
+
+      Clear all shared views. This will throw if any displays are still using the shared views.
 
 
    .. py:method:: Config.clearViewTransforms(self: PyOpenColorIO.Config) -> None
@@ -306,6 +428,14 @@
       :module: PyOpenColorIO
 
       Clear the virtual display.
+
+
+   .. py:method:: Config.displayHasView(self: PyOpenColorIO.Config, display: str, view: str) -> bool
+      :module: PyOpenColorIO
+
+      Determine if a display and view exist.
+
+      This returns false if either the display or view doesn't exist. It works regardless of whether the display or view are active, and it works regardless of whether the view is display-defined or if the display has this as a shared view. It will only check config-level shared views if dispName is null. It will not check config level shared views if dispName is not null.
 
 
    .. py:method:: Config.filepathOnlyMatchesDefaultRule(self: PyOpenColorIO.Config, filePath: str) -> bool
@@ -385,7 +515,7 @@
       Get all active color spaces having a specific category in the order they appear in the config file.
 
       .. note::
-         If the category is null or empty, the method returns all the active color spaces like :ref:`Config::getNumColorSpaces` and :ref:`Config::getColorSpaceNameByIndex` do.
+         If the category is null or empty, the method returns all the active color spaces like :ref:`getNumColorSpaces` and :ref:`getColorSpaceNameByIndex` do.
 
       .. note::
          It's worth noticing that the method returns a copy of the selected color spaces decoupling the result from the config. Hence, any changes on the config do not affect the existing color space sets, and vice-versa.
@@ -393,6 +523,10 @@
       2. getColorSpaces(self: PyOpenColorIO.Config, searchReferenceType: PyOpenColorIO.SearchReferenceSpaceType, visibility: PyOpenColorIO.ColorSpaceVisibility) -> PyOpenColorIO.Config.ColorSpaceIterator
 
       3. getColorSpaces(self: PyOpenColorIO.Config) -> PyOpenColorIO.Config.ActiveColorSpaceIterator
+
+
+   .. py:method:: Config.getConfigIOProxy(self: PyOpenColorIO.Config) -> OpenColorIO_v2_5dev::ConfigIOProxy
+      :module: PyOpenColorIO
 
 
    .. py:method:: Config.getCurrentContext(self: PyOpenColorIO.Config) -> PyOpenColorIO.Context
@@ -403,7 +537,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: Config.getDefaultLumaCoefs(self: PyOpenColorIO.Config) -> List[float[3]]
+   .. py:method:: Config.getDefaultLumaCoefs(self: PyOpenColorIO.Config) -> Annotated[list[float], FixedSize(3)]
       :module: PyOpenColorIO
 
       Get the default coefficients for computing luma.
@@ -609,6 +743,14 @@
       13. getProcessor(self: PyOpenColorIO.Config, context: PyOpenColorIO.Context, transform: PyOpenColorIO.Transform, direction: PyOpenColorIO.TransformDirection) -> PyOpenColorIO.Processor
 
 
+   .. py:method:: Config.getRoleColorSpace(self: PyOpenColorIO.Config, roleName: str) -> str
+      :module: PyOpenColorIO
+
+      Get the role color space at index.
+
+      Return empty string if index is out of range.
+
+
    .. py:method:: Config.getRoleNames(self: PyOpenColorIO.Config) -> PyOpenColorIO.Config.RoleNameIterator
       :module: PyOpenColorIO
 
@@ -693,6 +835,22 @@
       Return true if the role has been defined.
 
 
+   .. py:method:: Config.hasVirtualView(self: PyOpenColorIO.Config, view: str) -> bool
+      :module: PyOpenColorIO
+
+      Determine if a virtual view exists.
+
+      Methods related to the Virtual Display.
+
+      ... (See descriptions for the non-virtual methods above.)
+
+      The virtual display is the way to incorporate the ICC monitor profile for a user's display into OCIO. The views that are defined for the virtual display are the views that are used to create a new display for an ICC profile. They serve as a kind of template that lets OCIO know how to build the new display.
+
+      Typically the views will define a View :ref:`Transform` and set the colorSpaceName to "<USE_DISPLAY_NAME>" so that it will use the display color space with the same name as the display, in this case corresponding to the ICC profile.
+
+      This returns false if the virtual view doesn't exist. It works regardless of whether the virtual view is active, and it works regardless of whether the virtual view is display-defined or if the display has this as a shared virtual view.
+
+
    .. py:method:: Config.instantiateDisplayFromICCProfile(self: PyOpenColorIO.Config, ICCProfileFilepath: str) -> int
       :module: PyOpenColorIO
 
@@ -769,12 +927,20 @@
       :module: PyOpenColorIO
 
 
+   .. py:method:: Config.isInactiveColorSpace(self: PyOpenColorIO.Config, colorspace: str) -> bool
+      :module: PyOpenColorIO
+
+      Return true if the color space name is present in the inactive_colorspaces list.
+
+
    .. py:method:: Config.isStrictParsingEnabled(self: PyOpenColorIO.Config) -> bool
       :module: PyOpenColorIO
 
 
    .. py:method:: Config.loadEnvironment(self: PyOpenColorIO.Config) -> None
       :module: PyOpenColorIO
+
+      Initialize the environment/context variables in the :ref:`Config`'s :ref:`Context`.
 
 
    .. py:method:: Config.parseColorSpaceFromString(self: PyOpenColorIO.Config, str: str) -> str
@@ -857,7 +1023,13 @@
          The setter does not override the envvar. The getter does not take into account the envvar value and thus may not represent what the user is seeing.
 
 
-   .. py:method:: Config.setDefaultLumaCoefs(self: PyOpenColorIO.Config, rgb: List[float[3]]) -> None
+   .. py:method:: Config.setConfigIOProxy(self: PyOpenColorIO.Config, ciop: OpenColorIO_v2_5dev::ConfigIOProxy) -> None
+      :module: PyOpenColorIO
+
+      Set the :ref:`ConfigIOProxy` object used to provision the config and LUTs from somewhere other than the file system. (This is set on the config's embedded :ref:`Context` object.)
+
+
+   .. py:method:: Config.setDefaultLumaCoefs(self: PyOpenColorIO.Config, rgb: Annotated[list[float], FixedSize(3)]) -> None
       :module: PyOpenColorIO
 
       These should be normalized (sum to 1.0 exactly).
@@ -873,6 +1045,16 @@
 
    .. py:method:: Config.setEnvironmentMode(self: PyOpenColorIO.Config, mode: PyOpenColorIO.EnvironmentMode) -> None
       :module: PyOpenColorIO
+
+      The :ref:`EnvironmentMode` controls the behavior of loadEnvironment.
+
+      - ENV_ENVIRONMENT_LOAD_PREDEFINED - Only update vars already added to the :ref:`Context`.
+      - ENV_ENVIRONMENT_LOAD_ALL - Load all env. vars into the :ref:`Context`.
+
+      .. note::
+         Loading ALL the env. vars may reduce performance and reduce cache efficiency.
+
+      Client programs generally will not use these methods because the:ref:`EnvironmentMode` is set automatically when a :ref:`Config` is loaded. If the :ref:`Config` has an "environment" section, the mode is set to LOAD_PREDEFINED, and otherwise set to LOAD_ALL.
 
 
    .. py:method:: Config.setFamilySeparator(self: PyOpenColorIO.Config, separator: str) -> None
@@ -935,14 +1117,18 @@
    .. py:method:: Config.setRole(self: PyOpenColorIO.Config, role: str, colorSpaceName: str) -> None
       :module: PyOpenColorIO
 
-      .. note::
+      Methods related to Roles.
+
+      A role allows a config author to indicate that a given color space should be used for a particular purpose.
+
+      Role names may be passed to most functions that accept color space names, such as getColorSpace. So for example, you may find the name of the color space assigned to the scene_linear role by getting the color space object for "scene_linear" and then calling getName on the color space object. .. note::
          Setting the `colorSpaceName` name to a null string unsets it.
 
 
    .. py:method:: Config.setSearchPath(self: PyOpenColorIO.Config, path: str) -> None
       :module: PyOpenColorIO
 
-      Set all search paths as a concatenated string, ':' to separate the paths.
+      Set all search paths as a concatenated string, use ':' to separate the paths.
 
       See :ref:`addSearchPath` for a more robust and platform-agnostic method of setting the search paths.
 
@@ -986,8 +1172,31 @@
       This will throw an exception if the config is malformed. The most common error occurs when references are made to colorspaces that do not exist.
 
 
+   .. py:method:: Config.viewIsShared(self: PyOpenColorIO.Config, display: str, view: str) -> bool
+      :module: PyOpenColorIO
+
+      Check if a view within a given display is referencing one of the config's shared views.
+
+      Methods related to displays and views.
+
+      The following methods only manipulate active displays and views. Active displays and views are defined from an env. variable or from the config file.
+
+      Looks is a potentially comma (or colon) delimited list of lookNames, Where +/- prefixes are optionally allowed to denote forward/inverse look specification. (And forward is assumed in the absence of either)
+
+      Add shared view (or replace existing one with same name). Shared views are defined at config level and can be referenced by several displays. Either provide a view transform and a display color space or just a color space (and a null view transform). Looks, rule and description are optional, they can be null or empty.
+
+      Shared views using a view transform may use the token <USE_DISPLAY_NAME> for the color space (see :c:var:`OCIO_VIEW_USE_DISPLAY_NAME`). In that case, when the view is referenced in a display, the display color space that is used will be the one matching the display name. In other words, the view will be customized based on the display it is used in. :ref:`validate` will throw if the config does not contain the matching display color space.
+
+
+   .. py:method:: Config.virtualViewIsShared(self: PyOpenColorIO.Config, view: str) -> bool
+      :module: PyOpenColorIO
+
+      Check if a given virtual view is referencing one of the config's shared views.
+
+
 .. py:class:: EnvironmentVarNameIterator
    :module: PyOpenColorIO.Config
+   :canonical: PyOpenColorIO.Config.EnvironmentVarNameIterator
 
 
    .. py:method:: EnvironmentVarNameIterator.__getitem__(self: PyOpenColorIO.Config.EnvironmentVarNameIterator, arg0: int) -> str
@@ -1008,6 +1217,7 @@
 
 .. py:class:: SearchPathIterator
    :module: PyOpenColorIO.Config
+   :canonical: PyOpenColorIO.Config.SearchPathIterator
 
 
    .. py:method:: SearchPathIterator.__getitem__(self: PyOpenColorIO.Config.SearchPathIterator, arg0: int) -> str
@@ -1028,6 +1238,7 @@
 
 .. py:class:: ColorSpaceNameIterator
    :module: PyOpenColorIO.Config
+   :canonical: PyOpenColorIO.Config.ColorSpaceNameIterator
 
 
    .. py:method:: ColorSpaceNameIterator.__getitem__(self: PyOpenColorIO.Config.ColorSpaceNameIterator, arg0: int) -> str
@@ -1048,6 +1259,7 @@
 
 .. py:class:: ColorSpaceIterator
    :module: PyOpenColorIO.Config
+   :canonical: PyOpenColorIO.Config.ColorSpaceIterator
 
 
    .. py:method:: ColorSpaceIterator.__getitem__(self: PyOpenColorIO.Config.ColorSpaceIterator, arg0: int) -> PyOpenColorIO.ColorSpace
@@ -1068,6 +1280,7 @@
 
 .. py:class:: ActiveColorSpaceNameIterator
    :module: PyOpenColorIO.Config
+   :canonical: PyOpenColorIO.Config.ActiveColorSpaceNameIterator
 
 
    .. py:method:: ActiveColorSpaceNameIterator.__getitem__(self: PyOpenColorIO.Config.ActiveColorSpaceNameIterator, arg0: int) -> str
@@ -1088,6 +1301,7 @@
 
 .. py:class:: ActiveColorSpaceIterator
    :module: PyOpenColorIO.Config
+   :canonical: PyOpenColorIO.Config.ActiveColorSpaceIterator
 
 
    .. py:method:: ActiveColorSpaceIterator.__getitem__(self: PyOpenColorIO.Config.ActiveColorSpaceIterator, arg0: int) -> PyOpenColorIO.ColorSpace
@@ -1108,6 +1322,7 @@
 
 .. py:class:: RoleNameIterator
    :module: PyOpenColorIO.Config
+   :canonical: PyOpenColorIO.Config.RoleNameIterator
 
 
    .. py:method:: RoleNameIterator.__getitem__(self: PyOpenColorIO.Config.RoleNameIterator, arg0: int) -> str
@@ -1128,6 +1343,7 @@
 
 .. py:class:: RoleColorSpaceIterator
    :module: PyOpenColorIO.Config
+   :canonical: PyOpenColorIO.Config.RoleColorSpaceIterator
 
 
    .. py:method:: RoleColorSpaceIterator.__getitem__(self: PyOpenColorIO.Config.RoleColorSpaceIterator, arg0: int) -> tuple
@@ -1148,6 +1364,7 @@
 
 .. py:class:: DisplayIterator
    :module: PyOpenColorIO.Config
+   :canonical: PyOpenColorIO.Config.DisplayIterator
 
 
    .. py:method:: DisplayIterator.__getitem__(self: PyOpenColorIO.Config.DisplayIterator, arg0: int) -> str
@@ -1168,6 +1385,7 @@
 
 .. py:class:: SharedViewIterator
    :module: PyOpenColorIO.Config
+   :canonical: PyOpenColorIO.Config.SharedViewIterator
 
 
    .. py:method:: SharedViewIterator.__getitem__(self: PyOpenColorIO.Config.SharedViewIterator, arg0: int) -> str
@@ -1188,6 +1406,7 @@
 
 .. py:class:: ViewIterator
    :module: PyOpenColorIO.Config
+   :canonical: PyOpenColorIO.Config.ViewIterator
 
 
    .. py:method:: ViewIterator.__getitem__(self: PyOpenColorIO.Config.ViewIterator, arg0: int) -> str
@@ -1208,6 +1427,7 @@
 
 .. py:class:: ViewForColorSpaceIterator
    :module: PyOpenColorIO.Config
+   :canonical: PyOpenColorIO.Config.ViewForColorSpaceIterator
 
 
    .. py:method:: ViewForColorSpaceIterator.__getitem__(self: PyOpenColorIO.Config.ViewForColorSpaceIterator, arg0: int) -> str
@@ -1228,6 +1448,7 @@
 
 .. py:class:: LookNameIterator
    :module: PyOpenColorIO.Config
+   :canonical: PyOpenColorIO.Config.LookNameIterator
 
 
    .. py:method:: LookNameIterator.__getitem__(self: PyOpenColorIO.Config.LookNameIterator, arg0: int) -> str
@@ -1248,6 +1469,7 @@
 
 .. py:class:: LookIterator
    :module: PyOpenColorIO.Config
+   :canonical: PyOpenColorIO.Config.LookIterator
 
 
    .. py:method:: LookIterator.__getitem__(self: PyOpenColorIO.Config.LookIterator, arg0: int) -> PyOpenColorIO.Look
@@ -1268,6 +1490,7 @@
 
 .. py:class:: ViewTransformNameIterator
    :module: PyOpenColorIO.Config
+   :canonical: PyOpenColorIO.Config.ViewTransformNameIterator
 
 
    .. py:method:: ViewTransformNameIterator.__getitem__(self: PyOpenColorIO.Config.ViewTransformNameIterator, arg0: int) -> str
@@ -1288,6 +1511,7 @@
 
 .. py:class:: ViewTransformIterator
    :module: PyOpenColorIO.Config
+   :canonical: PyOpenColorIO.Config.ViewTransformIterator
 
 
    .. py:method:: ViewTransformIterator.__getitem__(self: PyOpenColorIO.Config.ViewTransformIterator, arg0: int) -> PyOpenColorIO.ViewTransform
@@ -1308,6 +1532,7 @@
 
 .. py:class:: NamedTransformNameIterator
    :module: PyOpenColorIO.Config
+   :canonical: PyOpenColorIO.Config.NamedTransformNameIterator
 
 
    .. py:method:: NamedTransformNameIterator.__getitem__(self: PyOpenColorIO.Config.NamedTransformNameIterator, arg0: int) -> str
@@ -1328,6 +1553,7 @@
 
 .. py:class:: NamedTransformIterator
    :module: PyOpenColorIO.Config
+   :canonical: PyOpenColorIO.Config.NamedTransformIterator
 
 
    .. py:method:: NamedTransformIterator.__getitem__(self: PyOpenColorIO.Config.NamedTransformIterator, arg0: int) -> PyOpenColorIO.NamedTransform
@@ -1348,6 +1574,7 @@
 
 .. py:class:: ActiveNamedTransformNameIterator
    :module: PyOpenColorIO.Config
+   :canonical: PyOpenColorIO.Config.ActiveNamedTransformNameIterator
 
 
    .. py:method:: ActiveNamedTransformNameIterator.__getitem__(self: PyOpenColorIO.Config.ActiveNamedTransformNameIterator, arg0: int) -> str
@@ -1368,6 +1595,7 @@
 
 .. py:class:: ActiveNamedTransformIterator
    :module: PyOpenColorIO.Config
+   :canonical: PyOpenColorIO.Config.ActiveNamedTransformIterator
 
 
    .. py:method:: ActiveNamedTransformIterator.__getitem__(self: PyOpenColorIO.Config.ActiveNamedTransformIterator, arg0: int) -> PyOpenColorIO.NamedTransform

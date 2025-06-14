@@ -5,6 +5,7 @@
 
 .. py:class:: ReferenceSpaceType
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.ReferenceSpaceType
 
    OCIO does not mandate the image state of the main reference space and it is not required to be scene-referred. This enum is used in connection with the display color space and view transform features which do assume that the main reference space is scene-referred and the display reference space is display-referred. If a config used a non-scene-referred reference space, presumably it would not use either display color spaces or view transforms, so this enum becomes irrelevant.
 
@@ -14,8 +15,6 @@
 
      REFERENCE_SPACE_DISPLAY : the reference space for display color spaces
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: ReferenceSpaceType.REFERENCE_SPACE_DISPLAY
       :module: PyOpenColorIO

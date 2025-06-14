@@ -5,6 +5,7 @@
 
 .. py:class:: GradingBSplineCurve
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.GradingBSplineCurve
 
    A BSpline curve defined with :ref:`GradingControlPoint`.
 
@@ -18,7 +19,7 @@
 
       Create a BSpline curve with a specified number of control points.
 
-      2. __init__(self: PyOpenColorIO.GradingBSplineCurve, arg0: List[float]) -> None
+      2. __init__(self: PyOpenColorIO.GradingBSplineCurve, arg0: list[float]) -> None
 
       Create a BSpline curve with a list of control points.
 
@@ -37,6 +38,7 @@
 
 .. py:class:: GradingControlPointIterator
    :module: PyOpenColorIO.GradingBSplineCurve
+   :canonical: PyOpenColorIO.GradingBSplineCurve.GradingControlPointIterator
 
 
    .. py:method:: GradingControlPointIterator.__getitem__(self: PyOpenColorIO.GradingBSplineCurve.GradingControlPointIterator, arg0: int) -> PyOpenColorIO.GradingControlPoint

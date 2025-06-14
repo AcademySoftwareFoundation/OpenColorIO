@@ -5,6 +5,7 @@
 
 .. py:class:: GradingTone
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.GradingTone
 
    Grading tone values.
 

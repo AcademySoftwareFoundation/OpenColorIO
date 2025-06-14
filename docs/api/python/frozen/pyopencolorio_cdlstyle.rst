@@ -5,6 +5,7 @@
 
 .. py:class:: CDLStyle
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.CDLStyle
 
    Members:
 
@@ -14,8 +15,6 @@
 
      CDL_TRANSFORM_DEFAULT :
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: CDLStyle.CDL_ASC
       :module: PyOpenColorIO

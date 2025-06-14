@@ -5,6 +5,14 @@
 
 .. py:class:: FileTransform
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.FileTransform
+
+
+   .. py:method:: FileTransform.IsFormatExtensionSupported(extension: str) -> bool
+      :module: PyOpenColorIO
+      :staticmethod:
+
+      Returns true if the extension corresponds to a format supported by :ref:`FileTransform`. The argument is case-insensitive, and a leading dot, if present, is ignored. Note that :ref:`FileTransform` will attempt all format readers on a given file until it is successful, even files that contain an unsupported extension or no extension. However, this function is useful for applications that want to know which files are likely to be LUT files, based on their extension.
 
 
    .. py:method:: FileTransform.__init__(*args, **kwargs)
@@ -82,6 +90,7 @@
 
 .. py:class:: FormatIterator
    :module: PyOpenColorIO.FileTransform
+   :canonical: PyOpenColorIO.FileTransform.FormatIterator
 
 
    .. py:method:: FormatIterator.__getitem__(self: PyOpenColorIO.FileTransform.FormatIterator, arg0: int) -> tuple

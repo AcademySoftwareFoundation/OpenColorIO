@@ -5,6 +5,7 @@
 
 .. py:class:: GradingPrimaryTransform
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.GradingPrimaryTransform
 
    Primary color correction controls.
 

@@ -5,6 +5,7 @@
 
 .. py:class:: FixedFunctionStyle
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.FixedFunctionStyle
 
    Enumeration of the :cpp:class:`:ref:`FixedFunctionTransform`` transform algorithms.
 
@@ -38,12 +39,18 @@
 
      FIXED_FUNCTION_LIN_TO_PQ : SMPTE ST-2084 OETF, scaled with 100 nits at 1.0 (neg vals mirrored)
 
-     FIXED_FUNCTION_LIN_TO_GAMMA_LOG : Parametrized gamma and log segments with mirroring
+     FIXED_FUNCTION_LIN_TO_GAMMA_LOG : Parametrized gamma and log segments with mirroring.
 
-     FIXED_FUNCTION_LIN_TO_DOUBLE_LOG : Two parameterized LogAffineTransforms with a middle linear segment
+     FIXED_FUNCTION_LIN_TO_DOUBLE_LOG : Two parameterized LogAffineTransforms with a middle linear segment.
 
-   .. py:method:: name() -> str
-      :property:
+     FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20 : ACES 2.0 Display Rendering -- EXPERIMENTAL.
+
+     FIXED_FUNCTION_ACES_RGB_TO_JMH_20 : ACES 2.0 RGB to JMh -- EXPERIMENTAL.
+
+     FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20 : ACES 2.0 Tonescale and chroma compression -- EXPERIMENTAL.
+
+     FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20 : ACES 2.0 Gamut compression -- EXPERIMENTAL.
+
 
    .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_ACES_DARK_TO_DIM_10
       :module: PyOpenColorIO
@@ -58,6 +65,11 @@
    .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_ACES_GAMUTMAP_07
       :module: PyOpenColorIO
       :value: <FixedFunctionStyle.FIXED_FUNCTION_ACES_GAMUTMAP_07: 11>
+
+
+   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20
+      :module: PyOpenColorIO
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20: 19>
 
 
    .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_ACES_GAMUT_COMP_13
@@ -75,6 +87,11 @@
       :value: <FixedFunctionStyle.FIXED_FUNCTION_ACES_GLOW_10: 3>
 
 
+   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20
+      :module: PyOpenColorIO
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20: 16>
+
+
    .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_ACES_RED_MOD_03
       :module: PyOpenColorIO
       :value: <FixedFunctionStyle.FIXED_FUNCTION_ACES_RED_MOD_03: 0>
@@ -83,6 +100,31 @@
    .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_ACES_RED_MOD_10
       :module: PyOpenColorIO
       :value: <FixedFunctionStyle.FIXED_FUNCTION_ACES_RED_MOD_10: 1>
+
+
+   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_ACES_RGB_TO_JMH_20
+      :module: PyOpenColorIO
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_ACES_RGB_TO_JMH_20: 17>
+
+
+   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20
+      :module: PyOpenColorIO
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20: 18>
+
+
+   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_LIN_TO_DOUBLE_LOG
+      :module: PyOpenColorIO
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_LIN_TO_DOUBLE_LOG: 15>
+
+
+   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_LIN_TO_GAMMA_LOG
+      :module: PyOpenColorIO
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_LIN_TO_GAMMA_LOG: 14>
+
+
+   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_LIN_TO_PQ
+      :module: PyOpenColorIO
+      :value: <FixedFunctionStyle.FIXED_FUNCTION_LIN_TO_PQ: 13>
 
 
    .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_REC2100_SURROUND
@@ -109,18 +151,6 @@
       :module: PyOpenColorIO
       :value: <FixedFunctionStyle.FIXED_FUNCTION_XYZ_TO_xyY: 7>
 
-
-   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_LIN_TO_PQ
-      :module: PyOpenColorIO
-      :value: <FixedFunctionStyle.FIXED_FUNCTION_PQ_TO_LIN: 13>
-
-   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_LIN_TO_GAMMA_LOG
-      :module: PyOpenColorIO
-      :value: <FixedFunctionStyle.FIXED_FUNCTION_LIN_TO_GAMMA_LOG: 14>
-
-   .. py:attribute:: FixedFunctionStyle.FIXED_FUNCTION_LIN_TO_DOUBLE_LOG
-      :module: PyOpenColorIO
-      :value: <FixedFunctionStyle.FIXED_FUNCTION_LIN_TO_DOUBLE_LOG: 15>
 
    .. py:property:: FixedFunctionStyle.value
       :module: PyOpenColorIO

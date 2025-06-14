@@ -5,6 +5,7 @@
 
 .. py:class:: ExponentWithLinearTransform
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.ExponentWithLinearTransform
 
    Represents power functions with a linear section in the shadows such as sRGB and L*.
 
@@ -22,7 +23,7 @@
 
       1. __init__(self: PyOpenColorIO.ExponentWithLinearTransform) -> None
 
-      2. __init__(self: PyOpenColorIO.ExponentWithLinearTransform, gamma: List[float[4]] = [1.0, 1.0, 1.0, 1.0], offset: List[float[4]] = [0.0, 0.0, 0.0, 0.0], negativeStyle: PyOpenColorIO.NegativeStyle = <NegativeStyle.NEGATIVE_LINEAR: 3>, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
+      2. __init__(self: PyOpenColorIO.ExponentWithLinearTransform, gamma: Annotated[list[float], FixedSize(4)] = [1.0, 1.0, 1.0, 1.0], offset: Annotated[list[float], FixedSize(4)] = [0.0, 0.0, 0.0, 0.0], negativeStyle: PyOpenColorIO.NegativeStyle = <NegativeStyle.NEGATIVE_LINEAR: 3>, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
    .. py:method:: ExponentWithLinearTransform.equals(self: PyOpenColorIO.ExponentWithLinearTransform, other: PyOpenColorIO.ExponentWithLinearTransform) -> bool
@@ -39,7 +40,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: ExponentWithLinearTransform.getGamma(self: PyOpenColorIO.ExponentWithLinearTransform) -> List[float[4]]
+   .. py:method:: ExponentWithLinearTransform.getGamma(self: PyOpenColorIO.ExponentWithLinearTransform) -> Annotated[list[float], FixedSize(4)]
       :module: PyOpenColorIO
 
 
@@ -52,7 +53,7 @@
       - NEGATIVE_MIRROR -- Positive curve is rotated 180 degrees around the origin to handle negatives.
 
 
-   .. py:method:: ExponentWithLinearTransform.getOffset(self: PyOpenColorIO.ExponentWithLinearTransform) -> List[float[4]]
+   .. py:method:: ExponentWithLinearTransform.getOffset(self: PyOpenColorIO.ExponentWithLinearTransform) -> Annotated[list[float], FixedSize(4)]
       :module: PyOpenColorIO
 
 
@@ -66,7 +67,7 @@
       Note that this only affects the evaluation and not the values stored in the object.
 
 
-   .. py:method:: ExponentWithLinearTransform.setGamma(self: PyOpenColorIO.ExponentWithLinearTransform, values: List[float[4]]) -> None
+   .. py:method:: ExponentWithLinearTransform.setGamma(self: PyOpenColorIO.ExponentWithLinearTransform, values: Annotated[list[float], FixedSize(4)]) -> None
       :module: PyOpenColorIO
 
       Set the exponent value for the power function for R, G, B, A.
@@ -79,7 +80,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: ExponentWithLinearTransform.setOffset(self: PyOpenColorIO.ExponentWithLinearTransform, values: List[float[4]]) -> None
+   .. py:method:: ExponentWithLinearTransform.setOffset(self: PyOpenColorIO.ExponentWithLinearTransform, values: Annotated[list[float], FixedSize(4)]) -> None
       :module: PyOpenColorIO
 
       Set the offset value for the power function for R, G, B, A.

@@ -5,6 +5,7 @@
 
 .. py:class:: SystemMonitors
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.SystemMonitors
 
    Provides access to the ICC monitor profile provided by the operating system for each active display.
 
@@ -19,6 +20,7 @@
 
 .. py:class:: MonitorIterator
    :module: PyOpenColorIO.SystemMonitors
+   :canonical: PyOpenColorIO.SystemMonitors.MonitorIterator
 
 
    .. py:method:: MonitorIterator.__getitem__(self: PyOpenColorIO.SystemMonitors.MonitorIterator, arg0: int) -> tuple

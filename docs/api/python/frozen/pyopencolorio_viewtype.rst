@@ -5,6 +5,7 @@
 
 .. py:class:: ViewType
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.ViewType
 
    Members:
 
@@ -12,8 +13,6 @@
 
      VIEW_DISPLAY_DEFINED :
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: ViewType.VIEW_DISPLAY_DEFINED
       :module: PyOpenColorIO

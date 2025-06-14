@@ -5,6 +5,7 @@
 
 .. py:class:: FormatMetadata
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.FormatMetadata
 
    The :ref:`FormatMetadata` class is intended to be a generic container to hold metadata from various file formats.
 
@@ -105,6 +106,7 @@
 
 .. py:class:: AttributeNameIterator
    :module: PyOpenColorIO.FormatMetadata
+   :canonical: PyOpenColorIO.FormatMetadata.AttributeNameIterator
 
 
    .. py:method:: AttributeNameIterator.__getitem__(self: PyOpenColorIO.FormatMetadata.AttributeNameIterator, arg0: int) -> str
@@ -125,6 +127,7 @@
 
 .. py:class:: AttributeIterator
    :module: PyOpenColorIO.FormatMetadata
+   :canonical: PyOpenColorIO.FormatMetadata.AttributeIterator
 
 
    .. py:method:: AttributeIterator.__getitem__(self: PyOpenColorIO.FormatMetadata.AttributeIterator, arg0: int) -> tuple
@@ -145,6 +148,7 @@
 
 .. py:class:: ConstChildElementIterator
    :module: PyOpenColorIO.FormatMetadata
+   :canonical: PyOpenColorIO.FormatMetadata.ConstChildElementIterator
 
 
    .. py:method:: ConstChildElementIterator.__getitem__(self: PyOpenColorIO.FormatMetadata.ConstChildElementIterator, arg0: int) -> PyOpenColorIO.FormatMetadata
@@ -165,6 +169,7 @@
 
 .. py:class:: ChildElementIterator
    :module: PyOpenColorIO.FormatMetadata
+   :canonical: PyOpenColorIO.FormatMetadata.ChildElementIterator
 
 
    .. py:method:: ChildElementIterator.__getitem__(self: PyOpenColorIO.FormatMetadata.ChildElementIterator, arg0: int) -> PyOpenColorIO.FormatMetadata

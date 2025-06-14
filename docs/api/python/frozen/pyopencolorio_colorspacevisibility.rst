@@ -5,6 +5,7 @@
 
 .. py:class:: ColorSpaceVisibility
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.ColorSpaceVisibility
 
    Members:
 
@@ -14,8 +15,6 @@
 
      COLORSPACE_ALL :
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: ColorSpaceVisibility.COLORSPACE_ACTIVE
       :module: PyOpenColorIO

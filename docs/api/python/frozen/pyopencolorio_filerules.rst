@@ -5,6 +5,7 @@
 
 .. py:class:: FileRules
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.FileRules
 
    The File Rules are a set of filepath to color space mappings that are evaluated from first to last. The first rule to match is what determines which color space is returned. There are four types of rules available. Each rule type has a name key that may be used by applications to refer to that rule. Name values must be unique i.e. using a case insensitive comparison. The other keys depend on the rule type:
 
@@ -129,12 +130,12 @@
       Insert a rule at a given ruleIndex.
 
       Rule currently at ruleIndex will be pushed to index: ruleIndex + 1. Name must be unique.
-      - "Default" is a reserved name for the default rule. The default rule is automatically added and can't be removed. (see :ref:`FileRules::setDefaultRuleColorSpace` ).
-      - "ColorSpaceNamePathSearch" is also a reserved name (see :ref:`FileRules::insertPathSearchRule` ).
+      - "Default" is a reserved name for the default rule. The default rule is automatically added and can't be removed. (see :ref:`setDefaultRuleColorSpace` ).
+      - "ColorSpaceNamePathSearch" is also a reserved name (see :ref:`insertPathSearchRule` ).
 
       Will throw if pattern, extension or regex is a null or empty string.
 
-      Will throw if ruleIndex is not less than :ref:`FileRules::getNumEntries` .
+      Will throw if ruleIndex is not less than :ref:`getNumEntries` .
 
       2. insertRule(self: PyOpenColorIO.FileRules, ruleIndex: int, name: str, colorSpace: str, regex: str) -> None
 
@@ -149,7 +150,7 @@
       :module: PyOpenColorIO
 
       .. note::
-         Default rule can't be removed. Will throw if ruleIndex + 1 is not less than :ref:`FileRules::getNumEntries` .
+         Default rule can't be removed. Will throw if ruleIndex + 1 is not less than :ref:`getNumEntries` .
 
 
    .. py:method:: FileRules.setColorSpace(self: PyOpenColorIO.FileRules, ruleIndex: int, colorSpace: str) -> None

@@ -5,6 +5,7 @@
 
 .. py:class:: BuiltinTransform
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.BuiltinTransform
 
    A built-in transform is similar to a :ref:`FileTransform`, but without the file. OCIO knows how to build a set of commonly used transforms on-demand, thus avoiding the need for external files and simplifying config authoring.
 

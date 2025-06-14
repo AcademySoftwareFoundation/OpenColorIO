@@ -5,6 +5,7 @@
 
 .. py:class:: ColorSpaceMenuParameters
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.ColorSpaceMenuParameters
 
    Parameters controlling which color spaces appear in menus.
 
@@ -106,7 +107,7 @@
    .. py:method:: ColorSpaceMenuParameters.getSearchReferenceSpaceType(self: PyOpenColorIO.ColorSpaceMenuParameters) -> PyOpenColorIO.SearchReferenceSpaceType
       :module: PyOpenColorIO
 
-      Can be used to restrict the search using the ReferenceSpaceType of the color spaces. It has no effect on roles and named transforms.
+      Can be used to restrict the search using the :ref:`ReferenceSpaceType` of the color spaces. It has no effect on roles and named transforms.
 
 
    .. py:method:: ColorSpaceMenuParameters.getUserCategories(self: PyOpenColorIO.ColorSpaceMenuParameters) -> str

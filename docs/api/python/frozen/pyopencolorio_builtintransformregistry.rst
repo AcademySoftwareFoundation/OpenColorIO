@@ -5,6 +5,7 @@
 
 .. py:class:: BuiltinTransformRegistry
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.BuiltinTransformRegistry
 
    The built-in transform registry contains all the existing built-in transforms which can be used by a configuration (version 2 or higher only).
 
@@ -21,6 +22,7 @@
 
 .. py:class:: BuiltinStyleIterator
    :module: PyOpenColorIO.BuiltinTransformRegistry
+   :canonical: PyOpenColorIO.BuiltinTransformRegistry.BuiltinStyleIterator
 
 
    .. py:method:: BuiltinStyleIterator.__getitem__(self: PyOpenColorIO.BuiltinTransformRegistry.BuiltinStyleIterator, arg0: int) -> str
@@ -41,6 +43,7 @@
 
 .. py:class:: BuiltinIterator
    :module: PyOpenColorIO.BuiltinTransformRegistry
+   :canonical: PyOpenColorIO.BuiltinTransformRegistry.BuiltinIterator
 
 
    .. py:method:: BuiltinIterator.__getitem__(self: PyOpenColorIO.BuiltinTransformRegistry.BuiltinIterator, arg0: int) -> tuple

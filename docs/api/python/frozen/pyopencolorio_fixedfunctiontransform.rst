@@ -5,11 +5,12 @@
 
 .. py:class:: FixedFunctionTransform
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.FixedFunctionTransform
 
    Provides a set of hard-coded algorithmic building blocks that are needed to accurately implement various common color transformations.
 
 
-   .. py:method:: FixedFunctionTransform.__init__(self: PyOpenColorIO.FixedFunctionTransform, style: PyOpenColorIO.FixedFunctionStyle, params: List[float] = [], direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
+   .. py:method:: FixedFunctionTransform.__init__(self: PyOpenColorIO.FixedFunctionTransform, style: PyOpenColorIO.FixedFunctionStyle, params: list[float] = [], direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
       :module: PyOpenColorIO
 
 
@@ -27,7 +28,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: FixedFunctionTransform.getParams(self: PyOpenColorIO.FixedFunctionTransform) -> List[float]
+   .. py:method:: FixedFunctionTransform.getParams(self: PyOpenColorIO.FixedFunctionTransform) -> list[float]
       :module: PyOpenColorIO
 
 
@@ -45,7 +46,7 @@
       Note that this only affects the evaluation and not the values stored in the object.
 
 
-   .. py:method:: FixedFunctionTransform.setParams(self: PyOpenColorIO.FixedFunctionTransform, params: List[float]) -> None
+   .. py:method:: FixedFunctionTransform.setParams(self: PyOpenColorIO.FixedFunctionTransform, params: list[float]) -> None
       :module: PyOpenColorIO
 
       Set the parameters (for functions that require them).

@@ -5,6 +5,7 @@
 
 .. py:class:: CPUProcessor
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.CPUProcessor
 
 
    .. py:method:: CPUProcessor.__init__(*args, **kwargs)
@@ -59,7 +60,7 @@
 
       Overloaded function.
 
-      1. applyRGB(self: PyOpenColorIO.CPUProcessor, data: buffer) -> None
+      1. applyRGB(self: PyOpenColorIO.CPUProcessor, data: Buffer) -> None
 
 
       Apply to a packed RGB array adhering to the Python buffer protocol.
@@ -77,7 +78,7 @@
 
 
 
-      2. applyRGB(self: PyOpenColorIO.CPUProcessor, data: List[float]) -> List[float]
+      2. applyRGB(self: PyOpenColorIO.CPUProcessor, data: list[float]) -> list[float]
 
 
       Apply to a packed RGB list of float values. Any size is supported as
@@ -102,7 +103,7 @@
 
       Overloaded function.
 
-      1. applyRGBA(self: PyOpenColorIO.CPUProcessor, data: buffer) -> None
+      1. applyRGBA(self: PyOpenColorIO.CPUProcessor, data: Buffer) -> None
 
 
       Apply to a packed RGBA array adhering to the Python buffer protocol.
@@ -120,7 +121,7 @@
 
 
 
-      2. applyRGBA(self: PyOpenColorIO.CPUProcessor, data: List[float]) -> List[float]
+      2. applyRGBA(self: PyOpenColorIO.CPUProcessor, data: list[float]) -> list[float]
 
 
       Apply to a packed RGBA list of float values. Any size is supported as
@@ -167,6 +168,18 @@
 
    .. py:method:: CPUProcessor.hasChannelCrosstalk(self: PyOpenColorIO.CPUProcessor) -> bool
       :module: PyOpenColorIO
+
+
+   .. py:method:: CPUProcessor.hasDynamicProperty(self: PyOpenColorIO.CPUProcessor, type: PyOpenColorIO.DynamicPropertyType) -> bool
+      :module: PyOpenColorIO
+
+      True if at least one dynamic property of that type exists.
+
+
+   .. py:method:: CPUProcessor.isDynamic(self: PyOpenColorIO.CPUProcessor) -> bool
+      :module: PyOpenColorIO
+
+      True if at least one dynamic property of any type exists and is dynamic.
 
 
    .. py:method:: CPUProcessor.isIdentity(self: PyOpenColorIO.CPUProcessor) -> bool

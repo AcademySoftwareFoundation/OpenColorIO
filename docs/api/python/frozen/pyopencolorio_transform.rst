@@ -5,6 +5,7 @@
 
 .. py:class:: Transform
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.Transform
 
    Base class for all the transform classes.
 

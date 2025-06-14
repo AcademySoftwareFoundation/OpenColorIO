@@ -5,6 +5,7 @@
 
 .. py:class:: GradingControlPoint
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.GradingControlPoint
 
    2D control point used by :ref:`GradingBSplineCurve`.
 

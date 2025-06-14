@@ -5,6 +5,7 @@
 
 .. py:class:: LoggingLevel
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.LoggingLevel
 
    Members:
 
@@ -18,8 +19,6 @@
 
      LOGGING_LEVEL_UNKNOWN :
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: LoggingLevel.LOGGING_LEVEL_DEBUG
       :module: PyOpenColorIO

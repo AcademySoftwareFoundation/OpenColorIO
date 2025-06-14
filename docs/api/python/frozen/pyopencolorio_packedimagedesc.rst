@@ -5,6 +5,7 @@
 
 .. py:class:: PackedImageDesc
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.PackedImageDesc
 
    All the constructors expect a pointer to packed image data (such as rgbrgbrgb or rgbargbargba) starting at the first color channel of the first pixel to process (which does not need to be the first pixel of the image). The number of channels must be greater than or equal to 3. If a 4th channel is specified, it is assumed to be alpha information. Channels > 4 will be ignored.
 
@@ -17,19 +18,19 @@
 
       Overloaded function.
 
-      1. __init__(self: PyOpenColorIO.PackedImageDesc, data: buffer, width: int, height: int, numChannels: int) -> None
+      1. __init__(self: PyOpenColorIO.PackedImageDesc, data: Buffer, width: int, height: int, numChannels: int) -> None
 
       .. note::
          numChannels must be 3 (RGB) or 4 (RGBA).
 
-      2. __init__(self: PyOpenColorIO.PackedImageDesc, data: buffer, width: int, height: int, numChannels: int, bitDepth: PyOpenColorIO.BitDepth, chanStrideBytes: int, xStrideBytes: int, yStrideBytes: int) -> None
+      2. __init__(self: PyOpenColorIO.PackedImageDesc, data: Buffer, width: int, height: int, numChannels: int, bitDepth: PyOpenColorIO.BitDepth, chanStrideBytes: int, xStrideBytes: int, yStrideBytes: int) -> None
 
       .. note::
          numChannels must be 3 (RGB) or 4 (RGBA).
 
-      3. __init__(self: PyOpenColorIO.PackedImageDesc, data: buffer, width: int, height: int, chanOrder: PyOpenColorIO.ChannelOrdering) -> None
+      3. __init__(self: PyOpenColorIO.PackedImageDesc, data: Buffer, width: int, height: int, chanOrder: PyOpenColorIO.ChannelOrdering) -> None
 
-      4. __init__(self: PyOpenColorIO.PackedImageDesc, data: buffer, width: int, height: int, chanOrder: PyOpenColorIO.ChannelOrdering, bitDepth: PyOpenColorIO.BitDepth, chanStrideBytes: int, xStrideBytes: int, yStrideBytes: int) -> None
+      4. __init__(self: PyOpenColorIO.PackedImageDesc, data: Buffer, width: int, height: int, chanOrder: PyOpenColorIO.ChannelOrdering, bitDepth: PyOpenColorIO.BitDepth, chanStrideBytes: int, xStrideBytes: int, yStrideBytes: int) -> None
 
 
    .. py:method:: PackedImageDesc.getBitDepth(self: PyOpenColorIO.ImageDesc) -> PyOpenColorIO.BitDepth

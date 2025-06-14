@@ -5,6 +5,7 @@
 
 .. py:class:: Lut1DHueAdjust
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.Lut1DHueAdjust
 
    Used by :cpp:class`:ref:`Lut1DTransform`` to control optional hue restoration algorithm.
 
@@ -16,8 +17,6 @@
 
      HUE_WYPN : Weighted Yellow Power Norm -- NOT IMPLEMENTED YET.
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: Lut1DHueAdjust.HUE_DW3
       :module: PyOpenColorIO

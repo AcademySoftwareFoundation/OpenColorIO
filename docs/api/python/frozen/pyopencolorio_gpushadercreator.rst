@@ -5,6 +5,7 @@
 
 .. py:class:: GpuShaderCreator
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.GpuShaderCreator
 
    Inherit from the class to fully customize the implementation of a GPU shader program from a color transformation.
 
@@ -233,6 +234,7 @@
 
 .. py:class:: TextureType
    :module: PyOpenColorIO.GpuShaderCreator
+   :canonical: PyOpenColorIO.GpuShaderCreator.TextureType
 
    Members:
 
@@ -240,8 +242,6 @@
 
      TEXTURE_RGB_CHANNEL
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: TextureType.TEXTURE_RED_CHANNEL
       :module: PyOpenColorIO.GpuShaderCreator
@@ -259,6 +259,7 @@
 
 .. py:class:: DynamicPropertyIterator
    :module: PyOpenColorIO.GpuShaderCreator
+   :canonical: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator
 
 
    .. py:method:: DynamicPropertyIterator.__getitem__(self: PyOpenColorIO.GpuShaderCreator.DynamicPropertyIterator, arg0: int) -> PyOpenColorIO.DynamicProperty

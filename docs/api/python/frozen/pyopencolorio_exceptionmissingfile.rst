@@ -5,6 +5,7 @@
 
 .. py:exception:: ExceptionMissingFile
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.ExceptionMissingFile
 
    An exception class for errors detected at runtime.
 

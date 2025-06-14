@@ -5,6 +5,7 @@
 
 .. py:class:: ChannelOrdering
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.ChannelOrdering
 
    Used by :ref:`PackedImageDesc` to indicate the channel ordering of the image to process.
 
@@ -20,8 +21,6 @@
 
      CHANNEL_ORDERING_BGR :
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: ChannelOrdering.CHANNEL_ORDERING_ABGR
       :module: PyOpenColorIO

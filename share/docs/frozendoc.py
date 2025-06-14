@@ -141,6 +141,13 @@ class RSTRouter(object):
 
 
 def add_line(self, line, source, *lineno):
+    # PyOpenColorIO (pybind11) extension module is now a submodule of the
+    # PyOpenColorIO top level package. This enables easier inclusion of side
+    # content like the command line apps but results in duplicated module
+    # paths appearing in the type hints.
+    # As a simple workaround we manually remove this duplication here.
+    line = line.replace("PyOpenColorIO.PyOpenColorIO.", "PyOpenColorIO.")
+
     if line.strip():  # not a blank line
         line_out = self.indent + line
     else:

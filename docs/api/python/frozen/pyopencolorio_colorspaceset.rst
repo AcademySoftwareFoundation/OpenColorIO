@@ -5,11 +5,12 @@
 
 .. py:class:: ColorSpaceSet
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.ColorSpaceSet
 
-   The *:ref:`ColorSpaceSet`* is a set of color spaces (i.e. no color space duplication) which could be the result of :ref:`Config::getColorSpaces` or built from scratch.
+   The *:ref:`ColorSpaceSet`* is a set of color spaces (i.e. no color space duplication) which could be the result of :ref:`getColorSpaces` or built from scratch.
 
    .. note::
-      The color spaces are decoupled from the config ones, i.e., any changes to the set itself or to its color spaces do not affect the original color spaces from the configuration. If needed, use :ref:`Config::addColorSpace` to update the configuration.
+      The color spaces are decoupled from the config ones, i.e., any changes to the set itself or to its color spaces do not affect the original color spaces from the configuration. If needed, use :ref:`addColorSpace` to update the configuration.
 
 
    .. py:method:: ColorSpaceSet.__and__(self: PyOpenColorIO.ColorSpaceSet, arg0: PyOpenColorIO.ColorSpaceSet) -> PyOpenColorIO.ColorSpaceSet
@@ -49,6 +50,8 @@
       :module: PyOpenColorIO
 
       Perform the union of two sets.
+
+      ColorSpaceSetOperators
 
       .. note::
          This function provides operations on two color space sets where the result contains copied color spaces and no duplicates.
@@ -105,6 +108,19 @@
       :module: PyOpenColorIO
 
 
+   .. py:method:: ColorSpaceSet.hasColorSpace(self: PyOpenColorIO.ColorSpaceSet, name: str) -> bool
+      :module: PyOpenColorIO
+
+      .. note::
+         Only accepts color space names (i.e. no role name)
+
+      :param name:
+
+      :return: true
+
+      :return: false
+
+
    .. py:method:: ColorSpaceSet.removeColorSpace(self: PyOpenColorIO.ColorSpaceSet, colorSpace: str) -> None
       :module: PyOpenColorIO
 
@@ -120,6 +136,7 @@
 
 .. py:class:: ColorSpaceNameIterator
    :module: PyOpenColorIO.ColorSpaceSet
+   :canonical: PyOpenColorIO.ColorSpaceSet.ColorSpaceNameIterator
 
 
    .. py:method:: ColorSpaceNameIterator.__getitem__(self: PyOpenColorIO.ColorSpaceSet.ColorSpaceNameIterator, arg0: int) -> str
@@ -140,6 +157,7 @@
 
 .. py:class:: ColorSpaceIterator
    :module: PyOpenColorIO.ColorSpaceSet
+   :canonical: PyOpenColorIO.ColorSpaceSet.ColorSpaceIterator
 
 
    .. py:method:: ColorSpaceIterator.__getitem__(self: PyOpenColorIO.ColorSpaceSet.ColorSpaceIterator, arg0: int) -> PyOpenColorIO.ColorSpace

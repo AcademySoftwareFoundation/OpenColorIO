@@ -5,6 +5,7 @@
 
 .. py:class:: ExponentTransform
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.ExponentTransform
 
    Represents exponent transform: pow( clamp(color), value ).
 
@@ -19,7 +20,7 @@
 
       1. __init__(self: PyOpenColorIO.ExponentTransform) -> None
 
-      2. __init__(self: PyOpenColorIO.ExponentTransform, value: List[float[4]] = [1.0, 1.0, 1.0, 1.0], negativeStyle: PyOpenColorIO.NegativeStyle = <NegativeStyle.NEGATIVE_CLAMP: 0>, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
+      2. __init__(self: PyOpenColorIO.ExponentTransform, value: Annotated[list[float], FixedSize(4)] = [1.0, 1.0, 1.0, 1.0], negativeStyle: PyOpenColorIO.NegativeStyle = <NegativeStyle.NEGATIVE_CLAMP: 0>, direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
    .. py:method:: ExponentTransform.equals(self: PyOpenColorIO.ExponentTransform, other: PyOpenColorIO.ExponentTransform) -> bool
@@ -50,7 +51,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: ExponentTransform.getValue(self: PyOpenColorIO.ExponentTransform) -> List[float[4]]
+   .. py:method:: ExponentTransform.getValue(self: PyOpenColorIO.ExponentTransform) -> Annotated[list[float], FixedSize(4)]
       :module: PyOpenColorIO
 
 
@@ -64,7 +65,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: ExponentTransform.setValue(self: PyOpenColorIO.ExponentTransform, value: List[float[4]]) -> None
+   .. py:method:: ExponentTransform.setValue(self: PyOpenColorIO.ExponentTransform, value: Annotated[list[float], FixedSize(4)]) -> None
       :module: PyOpenColorIO
 
 

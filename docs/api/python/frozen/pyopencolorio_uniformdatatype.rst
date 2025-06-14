@@ -5,6 +5,7 @@
 
 .. py:class:: UniformDataType
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.UniformDataType
 
    Types for uniform data.
 
@@ -22,8 +23,6 @@
 
      UNIFORM_UNKNOWN :
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: UniformDataType.UNIFORM_BOOL
       :module: PyOpenColorIO

@@ -5,6 +5,7 @@
 
 .. py:class:: GradingRGBM
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.GradingRGBM
 
    Used by the grading transforms to hold the red, green, blue, and master components of a single parameter. The master component affects all three channels (RGB).
 

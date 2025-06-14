@@ -5,6 +5,7 @@
 
 .. py:class:: TransformDirection
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.TransformDirection
 
    Members:
 
@@ -12,8 +13,6 @@
 
      TRANSFORM_DIR_INVERSE :
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: TransformDirection.TRANSFORM_DIR_FORWARD
       :module: PyOpenColorIO

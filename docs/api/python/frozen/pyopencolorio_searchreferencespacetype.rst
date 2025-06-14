@@ -5,6 +5,7 @@
 
 .. py:class:: SearchReferenceSpaceType
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.SearchReferenceSpaceType
 
    Members:
 
@@ -14,8 +15,6 @@
 
      SEARCH_REFERENCE_SPACE_ALL :
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: SearchReferenceSpaceType.SEARCH_REFERENCE_SPACE_ALL
       :module: PyOpenColorIO

@@ -6,6 +6,3 @@
    :members:
    :undoc-members:
    :exclude-members: name
-
-   .. py:method:: name() -> str
-      :property:

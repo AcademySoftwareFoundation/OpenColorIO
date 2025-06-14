@@ -5,6 +5,7 @@
 
 .. py:class:: DynamicProperty
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.DynamicProperty
 
    Allows transform parameter values to be set on-the-fly (after finalization). For example, to modify the exposure in a viewport. Dynamic properties can be accessed from the `:ref:`CPUProcessor`` or `:ref:`GpuShaderCreator`` to change values between processing.
 
@@ -33,7 +34,7 @@
                OCIO::DynamicPropertyValue::AsGradingPrimary(dynProp);
            OCIO::GradingPrimary primary = primaryProp->getValue();
            primary.m_saturation += 0.1f;
-           rgbCurveProp->setValue(primary);
+           primaryProp->setValue(primary);
        }
        if (cpuProcessor->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_RGBCURVE))
        {

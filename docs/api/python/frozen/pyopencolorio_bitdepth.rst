@@ -5,6 +5,7 @@
 
 .. py:class:: BitDepth
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.BitDepth
 
    Used in a configuration file to indicate the bit-depth of a color space, and by the :ref:`Processor` to specify the input and output bit-depths of images to process. Note that :ref:`Processor` only supports: UINT8, UINT10, UINT12, UINT16, F16 and F32.
 
@@ -28,8 +29,6 @@
 
      BIT_DEPTH_F32 :
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: BitDepth.BIT_DEPTH_F16
       :module: PyOpenColorIO

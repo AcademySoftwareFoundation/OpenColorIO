@@ -5,6 +5,7 @@
 
 .. py:class:: PlanarImageDesc
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.PlanarImageDesc
 
    All the constructors expect pointers to the specified image planes (i.e. rrrr gggg bbbb) starting at the first color channel of the first pixel to process (which need not be the first pixel of the image). Pass NULL for aData if no alpha exists (r/g/bData must not be NULL).
 
@@ -17,15 +18,15 @@
 
       Overloaded function.
 
-      1. __init__(self: PyOpenColorIO.PlanarImageDesc, rData: buffer, gData: buffer, bData: buffer, width: int, height: int) -> None
+      1. __init__(self: PyOpenColorIO.PlanarImageDesc, rData: Buffer, gData: Buffer, bData: Buffer, width: int, height: int) -> None
 
-      2. __init__(self: PyOpenColorIO.PlanarImageDesc, rData: buffer, gData: buffer, bData: buffer, aData: buffer, width: int, height: int) -> None
+      2. __init__(self: PyOpenColorIO.PlanarImageDesc, rData: Buffer, gData: Buffer, bData: Buffer, aData: Buffer, width: int, height: int) -> None
 
       Note that although :ref:`PlanarImageDesc` is powerful enough to also describe all :ref:`PackedImageDesc` scenarios, it is recommended to use a :ref:`PackedImageDesc` where possible since that allows for additional optimizations.
 
-      3. __init__(self: PyOpenColorIO.PlanarImageDesc, rData: buffer, gData: buffer, bData: buffer, width: int, height: int, bitDepth: PyOpenColorIO.BitDepth, xStrideBytes: int, yStrideBytes: int) -> None
+      3. __init__(self: PyOpenColorIO.PlanarImageDesc, rData: Buffer, gData: Buffer, bData: Buffer, width: int, height: int, bitDepth: PyOpenColorIO.BitDepth, xStrideBytes: int, yStrideBytes: int) -> None
 
-      4. __init__(self: PyOpenColorIO.PlanarImageDesc, rData: buffer, gData: buffer, bData: buffer, aData: buffer, width: int, height: int, bitDepth: PyOpenColorIO.BitDepth, xStrideBytes: int, yStrideBytes: int) -> None
+      4. __init__(self: PyOpenColorIO.PlanarImageDesc, rData: Buffer, gData: Buffer, bData: Buffer, aData: Buffer, width: int, height: int, bitDepth: PyOpenColorIO.BitDepth, xStrideBytes: int, yStrideBytes: int) -> None
 
 
    .. py:method:: PlanarImageDesc.getAData(self: PyOpenColorIO.PlanarImageDesc) -> numpy.ndarray

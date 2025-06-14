@@ -5,6 +5,7 @@
 
 .. py:class:: ColorSpaceTransform
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.ColorSpaceTransform
 
 
    .. py:method:: ColorSpaceTransform.__init__(*args, **kwargs)

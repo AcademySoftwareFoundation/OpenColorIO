@@ -5,6 +5,7 @@
 
 .. py:class:: Lut1DTransform
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.Lut1DTransform
 
    Represents a 1D-LUT transform.
 
@@ -77,7 +78,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: Lut1DTransform.setData(self: PyOpenColorIO.Lut1DTransform, data: buffer) -> None
+   .. py:method:: Lut1DTransform.setData(self: PyOpenColorIO.Lut1DTransform, data: Buffer) -> None
       :module: PyOpenColorIO
 
 

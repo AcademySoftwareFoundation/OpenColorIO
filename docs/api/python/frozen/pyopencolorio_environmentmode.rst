@@ -5,17 +5,18 @@
 
 .. py:class:: EnvironmentMode
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.EnvironmentMode
+
+   Controls which environment variables are loaded into a :ref:`Context` object.
 
    Members:
 
      ENV_ENVIRONMENT_UNKNOWN :
 
-     ENV_ENVIRONMENT_LOAD_PREDEFINED :
+     ENV_ENVIRONMENT_LOAD_PREDEFINED : Only load vars in the config's environment section.
 
-     ENV_ENVIRONMENT_LOAD_ALL :
+     ENV_ENVIRONMENT_LOAD_ALL : Load all env. vars (note: may reduce performance)
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: EnvironmentMode.ENV_ENVIRONMENT_LOAD_ALL
       :module: PyOpenColorIO

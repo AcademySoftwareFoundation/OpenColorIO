@@ -10,6 +10,3 @@
 
 .. autoclass:: PyOpenColorIO.Processor.TransformFormatMetadataIterator
    :special-members: __getitem__, __iter__, __len__, __next__
-
-.. autoclass:: PyOpenColorIO.Processor.WriteFormatIterator
-   :special-members: __getitem__, __iter__, __len__, __next__

@@ -5,6 +5,7 @@
 
 .. py:class:: DisplayViewTransform
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.DisplayViewTransform
 
 
    .. py:method:: DisplayViewTransform.__init__(*args, **kwargs)

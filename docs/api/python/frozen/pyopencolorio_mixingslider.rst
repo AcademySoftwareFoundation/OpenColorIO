@@ -5,6 +5,7 @@
 
 .. py:class:: MixingSlider
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.MixingSlider
 
    The :ref:`MixingSlider` and :ref:`MixingColorSpaceManager` classes are to help applications implement correct color pickers. The term "color mixing" is used here to describe what is done in a typical application "color picker" user interface.
 

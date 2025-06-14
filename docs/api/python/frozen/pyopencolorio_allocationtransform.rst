@@ -5,6 +5,7 @@
 
 .. py:class:: AllocationTransform
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.AllocationTransform
 
    Forward direction wraps the 'expanded' range into the specified, often compressed, range.
 
@@ -16,7 +17,7 @@
 
       1. __init__(self: PyOpenColorIO.AllocationTransform) -> None
 
-      2. __init__(self: PyOpenColorIO.AllocationTransform, allocation: PyOpenColorIO.Allocation = <Allocation.ALLOCATION_UNIFORM: 1>, vars: List[float] = [], direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
+      2. __init__(self: PyOpenColorIO.AllocationTransform, allocation: PyOpenColorIO.Allocation = <Allocation.ALLOCATION_UNIFORM: 1>, vars: list[float] = [], direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
    .. py:method:: AllocationTransform.getAllocation(self: PyOpenColorIO.AllocationTransform) -> PyOpenColorIO.Allocation
@@ -31,7 +32,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: AllocationTransform.getVars(self: PyOpenColorIO.AllocationTransform) -> List[float]
+   .. py:method:: AllocationTransform.getVars(self: PyOpenColorIO.AllocationTransform) -> list[float]
       :module: PyOpenColorIO
 
 
@@ -45,7 +46,7 @@
       Note that this only affects the evaluation and not the values stored in the object.
 
 
-   .. py:method:: AllocationTransform.setVars(self: PyOpenColorIO.AllocationTransform, vars: List[float]) -> None
+   .. py:method:: AllocationTransform.setVars(self: PyOpenColorIO.AllocationTransform, vars: list[float]) -> None
       :module: PyOpenColorIO
 
 

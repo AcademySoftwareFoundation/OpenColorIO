@@ -5,6 +5,7 @@
 
 .. py:class:: Baker
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.Baker
 
    In certain situations it is necessary to serialize transforms into a variety of application specific LUT formats. Note that not all file formats that may be read also support baking.
 
@@ -20,8 +21,8 @@
        baker->setShaperSpace("log");
        baker->setTargetSpace("sRGB");
        auto & metadata = baker->getFormatMetadata();
-       metadata.addChildElement(:ref:`OCIO::METADATA_DESCRIPTION`, "A first comment");
-       metadata.addChildElement(:ref:`OCIO::METADATA_DESCRIPTION`, "A second comment");
+       metadata.addChildElement(OCIO::METADATA_DESCRIPTION, "A first comment");
+       metadata.addChildElement(OCIO::METADATA_DESCRIPTION, "A second comment");
        std::ostringstream out;
        baker->bake(out); // fresh bread anyone!
        std::cout << out.str();
@@ -147,7 +148,7 @@
    .. py:method:: Baker.setShaperSpace(self: PyOpenColorIO.Baker, shaperSpace: str) -> None
       :module: PyOpenColorIO
 
-      Set an *optional* :ref:`ColorSpace` to shape the incoming values of the LUT. When baking 3DLUT, this will correspond to the 1D shaper used to normalise incoming values to the unit range. When baking 1D LUT, this will be used to determine the input range of the LUT.
+      Set an *optional* :ref:`ColorSpace` or :ref:`NamedTransform` to shape the incoming values of the LUT. When baking 3DLUT, this will correspond to the 1D shaper used to normalise incoming values to the unit range. When baking 1D LUT, this will be used to determine the input range of the LUT.
 
 
    .. py:method:: Baker.setTargetSpace(self: PyOpenColorIO.Baker, targetSpace: str) -> None
@@ -158,6 +159,7 @@
 
 .. py:class:: FormatIterator
    :module: PyOpenColorIO.Baker
+   :canonical: PyOpenColorIO.Baker.FormatIterator
 
    Iterator on LUT baker Formats.
 
