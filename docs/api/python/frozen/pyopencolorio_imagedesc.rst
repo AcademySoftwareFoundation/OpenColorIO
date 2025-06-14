@@ -5,6 +5,7 @@
 
 .. py:class:: ImageDesc
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.ImageDesc
 
    This is a light-weight wrapper around an image, that provides a context for pixel access. This does NOT claim ownership of the pixels or copy image data.
 

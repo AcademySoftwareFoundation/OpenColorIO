@@ -5,6 +5,7 @@
 
 .. py:class:: Allocation
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.Allocation
 
    Members:
 
@@ -14,8 +15,6 @@
 
      ALLOCATION_LG2 :
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: Allocation.ALLOCATION_LG2
       :module: PyOpenColorIO

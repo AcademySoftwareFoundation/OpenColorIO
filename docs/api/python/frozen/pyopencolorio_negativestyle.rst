@@ -5,6 +5,7 @@
 
 .. py:class:: NegativeStyle
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.NegativeStyle
 
    Negative values handling style for :ref:`ExponentTransform` and :ref:`ExponentWithLinearTransform` transform algorithms.
 
@@ -18,8 +19,6 @@
 
      NEGATIVE_LINEAR : Linearly extrapolate the curve for negative values.
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: NegativeStyle.NEGATIVE_CLAMP
       :module: PyOpenColorIO

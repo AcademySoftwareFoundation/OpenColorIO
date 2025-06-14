@@ -10,5 +10,5 @@
 
    This is not used when using CreateFromFile with an OCIOZ archive or CreateFromConfigIOProxy.
 
-   :param ComputeHashFunction:
+   :param :ref:`ComputeHashFunction`:
 

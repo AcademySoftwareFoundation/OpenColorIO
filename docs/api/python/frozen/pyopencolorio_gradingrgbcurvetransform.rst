@@ -5,6 +5,7 @@
 
 .. py:class:: GradingRGBCurveTransform
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.GradingRGBCurveTransform
 
    RGB curve color correction controls.
 

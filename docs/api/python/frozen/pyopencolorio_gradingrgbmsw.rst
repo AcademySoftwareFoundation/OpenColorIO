@@ -5,6 +5,7 @@
 
 .. py:class:: GradingRGBMSW
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.GradingRGBMSW
 
    Used by the grading tone transforms to hold the red, green, blue, master, start, and width components of a single parameter. The master component affects all three channels (RGB). The start and width components control the range of tones affected. Although this struct simply uses "start" and "width" for all the range values, the actual user-facing name changes based on the parameter.
 

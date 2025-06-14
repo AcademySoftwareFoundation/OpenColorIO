@@ -5,6 +5,7 @@
 
 .. py:class:: GPUProcessor
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.GPUProcessor
 
 
    .. py:method:: GPUProcessor.__init__(*args, **kwargs)

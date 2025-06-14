@@ -5,6 +5,7 @@
 
 .. py:class:: LookTransform
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.LookTransform
 
 
    .. py:method:: LookTransform.__init__(*args, **kwargs)

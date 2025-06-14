@@ -5,6 +5,7 @@
 
 .. py:class:: OptimizationFlags
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.OptimizationFlags
 
    Provides control over how the ops in a :ref:`Processor` are combined in order to improve performance.
 
@@ -66,8 +67,6 @@
 
      OPTIMIZATION_DEFAULT :
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: OptimizationFlags.OPTIMIZATION_ALL
       :module: PyOpenColorIO

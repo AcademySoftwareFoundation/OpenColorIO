@@ -5,6 +5,7 @@
 
 .. py:class:: GradingPrimary
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.GradingPrimary
 
    Grading primary values.
 

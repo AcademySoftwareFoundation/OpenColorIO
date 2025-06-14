@@ -5,6 +5,7 @@
 
 .. py:class:: ColorSpaceDirection
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.ColorSpaceDirection
 
    Members:
 
@@ -12,8 +13,6 @@
 
      COLORSPACE_DIR_FROM_REFERENCE :
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: ColorSpaceDirection.COLORSPACE_DIR_FROM_REFERENCE
       :module: PyOpenColorIO

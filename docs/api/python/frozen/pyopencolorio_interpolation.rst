@@ -5,6 +5,7 @@
 
 .. py:class:: Interpolation
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.Interpolation
 
    Specify the interpolation type to use If the specified interpolation type is not supported in the requested context (for example, using tetrahedral interpolationon 1D LUTs) an exception will be thrown.
 
@@ -34,8 +35,6 @@
 
      INTERP_BEST : the 'best' suitable interpolation type
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: Interpolation.INTERP_BEST
       :module: PyOpenColorIO

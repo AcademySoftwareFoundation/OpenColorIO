@@ -5,6 +5,7 @@
 
 .. py:exception:: Exception
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.Exception
 
    An exception class to throw for errors detected at runtime.
 

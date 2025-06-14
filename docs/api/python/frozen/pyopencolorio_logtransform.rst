@@ -5,6 +5,7 @@
 
 .. py:class:: LogTransform
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.LogTransform
 
    Represents log transform: log(color, base)
 
