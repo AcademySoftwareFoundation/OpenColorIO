@@ -841,10 +841,10 @@ std::string GpuShaderText::getSamplerName(const std::string& textureName)
     return textureName + "Sampler";
 }
 
-void GpuShaderText::declareTex1D(const std::string & textureName, const unsigned textureIndex)
+void GpuShaderText::declareTex1D(const std::string & textureName, unsigned textureIndex, unsigned textureBindingStart)
 {
     std::string textureDecl, samplerDecl;
-    getTexDecl<1>(m_lang, textureName, getSamplerName(textureName), textureDecl, samplerDecl, textureIndex);
+    getTexDecl<1>(m_lang, textureName, getSamplerName(textureName), textureDecl, samplerDecl, textureIndex + textureBindingStart);
 
     if (!textureDecl.empty())
     {
@@ -857,10 +857,10 @@ void GpuShaderText::declareTex1D(const std::string & textureName, const unsigned
     }
 }
 
-void GpuShaderText::declareTex2D(const std::string & textureName, const unsigned textureIndex)
+void GpuShaderText::declareTex2D(const std::string & textureName, unsigned textureIndex, unsigned textureBindingStart)
 {
     std::string textureDecl, samplerDecl;
-    getTexDecl<2>(m_lang, textureName, getSamplerName(textureName), textureDecl, samplerDecl, textureIndex);
+    getTexDecl<2>(m_lang, textureName, getSamplerName(textureName), textureDecl, samplerDecl, textureIndex + textureBindingStart);
 
     if (!textureDecl.empty())
     {
@@ -873,10 +873,10 @@ void GpuShaderText::declareTex2D(const std::string & textureName, const unsigned
     }
 }
 
-void GpuShaderText::declareTex3D(const std::string& textureName, const unsigned textureIndex)
+void GpuShaderText::declareTex3D(const std::string& textureName, unsigned textureIndex, unsigned textureBindingStart)
 {
     std::string textureDecl, samplerDecl;
-    getTexDecl<3>(m_lang, textureName, getSamplerName(textureName), textureDecl, samplerDecl, textureIndex);
+    getTexDecl<3>(m_lang, textureName, getSamplerName(textureName), textureDecl, samplerDecl, textureIndex + textureBindingStart);
 
     if (!textureDecl.empty())
     {

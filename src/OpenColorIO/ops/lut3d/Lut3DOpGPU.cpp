@@ -47,7 +47,7 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
 
     {
         GpuShaderText ss(shaderCreator->getLanguage());
-        ss.declareTex3D(name, textureIndex);
+        ss.declareTex3D(name, textureIndex, shaderCreator->getTextureBindingStart());
         shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
 
