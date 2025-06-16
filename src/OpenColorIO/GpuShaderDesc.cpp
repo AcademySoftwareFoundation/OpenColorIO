@@ -46,6 +46,9 @@ public:
     
     std::unique_ptr<GpuShaderClassWrapper> m_classWrappingInterface;
 
+    unsigned m_descriptorSetIndex = 0;
+    unsigned m_textureBindingStart = 1;
+
     Impl()
         :   m_functionName("OCIOMain")
         ,   m_resourcePrefix("ocio")
@@ -78,6 +81,9 @@ public:
             m_functionFooter        = rhs.m_functionFooter;
             
             m_classWrappingInterface = rhs.m_classWrappingInterface->clone();
+
+            m_descriptorSetIndex = rhs.m_descriptorSetIndex;
+            m_textureBindingStart = rhs.m_textureBindingStart;
 
             m_shaderCode.clear();
             m_shaderCodeID.clear();
@@ -167,6 +173,29 @@ const char * GpuShaderCreator::getPixelName() const noexcept
 unsigned GpuShaderCreator::getNextResourceIndex() noexcept
 {
     return getImpl()->m_numResources++;
+}
+
+void GpuShaderCreator::setDescriptorSetIndex(unsigned index, unsigned textureBindingStart) noexcept
+{
+    getImpl()->m_descriptorSetIndex = index;
+    if (textureBindingStart != 0)
+    {
+        getImpl()->m_textureBindingStart = textureBindingStart;
+    }
+    else
+    {
+        getImpl()->m_textureBindingStart = 1;
+    }
+}
+
+unsigned GpuShaderCreator::getDescriptorSetIndex() const noexcept
+{
+    return getImpl()->m_descriptorSetIndex;
+}
+
+unsigned GpuShaderCreator::getTextureBindingStart() const noexcept
+{
+    return getImpl()->m_textureBindingStart;
 }
 
 bool GpuShaderCreator::hasDynamicProperty(DynamicPropertyType type) const
@@ -306,7 +335,7 @@ void GpuShaderCreator::createShaderText(const char * shaderParameterDeclarations
 
     if (getImpl()->m_language == GPU_LANGUAGE_GLSL_VK_4_6 && (shaderParameterDeclarations && *shaderParameterDeclarations))
     {
-        getImpl()->m_shaderCode += "layout (set = 0, binding = 0) uniform OCIOParameters\n {\n";
+        getImpl()->m_shaderCode += "layout (set = "+std::to_string(getImpl()->m_descriptorSetIndex) + ", binding = 0) uniform " + getImpl()->m_functionName + "_Parameters\n {\n";
     }
     getImpl()->m_shaderCode += (shaderParameterDeclarations   && *shaderParameterDeclarations)   ? shaderParameterDeclarations   : "";
     if (getImpl()->m_language == GPU_LANGUAGE_GLSL_VK_4_6 && (shaderParameterDeclarations && *shaderParameterDeclarations))
