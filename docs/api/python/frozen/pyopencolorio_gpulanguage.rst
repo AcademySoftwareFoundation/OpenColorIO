@@ -5,6 +5,7 @@
 
 .. py:class:: GpuLanguage
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.GpuLanguage
 
    Used when there is a choice of hardware shader language.
 
@@ -22,12 +23,12 @@
 
      GPU_LANGUAGE_GLSL_ES_3_0 : OpenGL ES Shading Language.
 
-     GPU_LANGUAGE_HLSL_DX11 : DirectX Shading Language.
+     GPU_LANGUAGE_HLSL_DX11 :
 
      GPU_LANGUAGE_MSL_2_0 : Metal Shading Language.
 
-   .. py:method:: name() -> str
-      :property:
+     LANGUAGE_OSL_1 : Open Shading Language.
+
 
    .. py:attribute:: GpuLanguage.GPU_LANGUAGE_CG
       :module: PyOpenColorIO
@@ -67,6 +68,11 @@
    .. py:attribute:: GpuLanguage.GPU_LANGUAGE_MSL_2_0
       :module: PyOpenColorIO
       :value: <GpuLanguage.GPU_LANGUAGE_MSL_2_0: 8>
+
+
+   .. py:attribute:: GpuLanguage.LANGUAGE_OSL_1
+      :module: PyOpenColorIO
+      :value: <GpuLanguage.LANGUAGE_OSL_1: 5>
 
 
    .. py:property:: GpuLanguage.value

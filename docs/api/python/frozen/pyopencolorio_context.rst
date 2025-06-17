@@ -5,13 +5,14 @@
 
 .. py:class:: Context
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.Context
 
    :ref:`Context`
 
    A context defines some overrides to a :ref:`Config`. For example, it can override the search path or change the value of a context variable.
 
    .. note::
-      Only some :ref:`Config::getProcessor` methods accept a custom context; otherwise, the default context instance is used (see Config::getCurrentContext).
+      Only some :ref:`getProcessor` methods accept a custom context; otherwise, the default context instance is used (see Config::getCurrentContext).
 
    :ref:`Context` Variables
 
@@ -22,10 +23,10 @@
    :ref:`Config` authors are recommended to include the "environment" section in their configs. This improves performance as well as making the config more readable. When present, this section must declare all context variables used in the config. It may also provide a default value, in case the variable is not present in the user's environment.
 
    A context variable may only be used in the following places:
-   - the `:ref:`ColorSpaceTransform`` to define the source and the destination color space names,
-   - the `:ref:`FileTransform`` to define the source file name (e.g. a LUT file name),
+   - the `ColorSpaceTransform` to define the source and the destination color space names,
+   - the `FileTransform` to define the source file name (e.g. a LUT file name),
    - the search_path,
-   - the cccid of the `:ref:`FileTransform`` to only extract one specific transform from the CDL & CCC files.
+   - the cccid of the `FileTransform` to only extract one specific transform from the CDL & CCC files.
 
    Some specific restrictions are worth calling out:
    - they cannot be used as either the name or value of a role,
@@ -39,7 +40,7 @@
 
       1. __init__(self: PyOpenColorIO.Context) -> None
 
-      2. __init__(self: PyOpenColorIO.Context, workingDir: str = '', searchPaths: List[str] = [], stringVars: Dict[str, str] = {}, environmentMode: PyOpenColorIO.EnvironmentMode = <EnvironmentMode.ENV_ENVIRONMENT_LOAD_PREDEFINED: 1>) -> None
+      2. __init__(self: PyOpenColorIO.Context, workingDir: str = '', searchPaths: list[str] = [], stringVars: dict[str, str] = {}, environmentMode: PyOpenColorIO.EnvironmentMode = <EnvironmentMode.ENV_ENVIRONMENT_LOAD_PREDEFINED: 1>) -> None
 
 
    .. py:method:: Context.addSearchPath(self: PyOpenColorIO.Context, path: str) -> None
@@ -81,7 +82,7 @@
    .. py:method:: Context.loadEnvironment(self: PyOpenColorIO.Context) -> None
       :module: PyOpenColorIO
 
-      Seed all string vars with the current environment.
+      Seed string vars with the current environment, based on the :ref:`EnvironmentMode` setting.
 
 
    .. py:method:: Context.resolveFileLocation(*args, **kwargs)
@@ -121,6 +122,8 @@
    .. py:method:: Context.setEnvironmentMode(self: PyOpenColorIO.Context, mode: PyOpenColorIO.EnvironmentMode) -> None
       :module: PyOpenColorIO
 
+      See :ref:`setEnvironmentMode`.
+
 
    .. py:method:: Context.setSearchPath(self: PyOpenColorIO.Context, path: str) -> None
       :module: PyOpenColorIO
@@ -132,6 +135,7 @@
 
 .. py:class:: StringVarNameIterator
    :module: PyOpenColorIO.Context
+   :canonical: PyOpenColorIO.Context.StringVarNameIterator
 
 
    .. py:method:: StringVarNameIterator.__getitem__(self: PyOpenColorIO.Context.StringVarNameIterator, arg0: int) -> str
@@ -152,6 +156,7 @@
 
 .. py:class:: StringVarIterator
    :module: PyOpenColorIO.Context
+   :canonical: PyOpenColorIO.Context.StringVarIterator
 
 
    .. py:method:: StringVarIterator.__getitem__(self: PyOpenColorIO.Context.StringVarIterator, arg0: int) -> tuple
@@ -172,6 +177,7 @@
 
 .. py:class:: SearchPathIterator
    :module: PyOpenColorIO.Context
+   :canonical: PyOpenColorIO.Context.SearchPathIterator
 
 
    .. py:method:: SearchPathIterator.__getitem__(self: PyOpenColorIO.Context.SearchPathIterator, arg0: int) -> str

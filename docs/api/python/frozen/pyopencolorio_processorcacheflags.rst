@@ -5,6 +5,7 @@
 
 .. py:class:: ProcessorCacheFlags
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.ProcessorCacheFlags
 
    cpp:type:: Enum to control the behavior of the internal caches e.g. the processor cache in
 
@@ -18,8 +19,6 @@
 
      PROCESSOR_CACHE_DEFAULT :
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: ProcessorCacheFlags.PROCESSOR_CACHE_DEFAULT
       :module: PyOpenColorIO
