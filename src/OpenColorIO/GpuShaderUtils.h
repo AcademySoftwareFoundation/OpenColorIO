@@ -231,6 +231,10 @@ public:
     // Get the string for taking the sign of a vector.
     std::string sign(const std::string & v) const;
 
+
+    //Add a cast to bool for shading languages that don't support implicit casts from int to bool.
+    //It is required to use this function when doing boolean operations on a bool uniform to be
+    //compatible with all shading languages.
     std::string castToBool(const std::string& v) const;
 
     friend class GpuShaderLine;
