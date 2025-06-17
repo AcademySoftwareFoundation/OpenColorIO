@@ -5,6 +5,7 @@
 
 .. py:class:: MixingColorSpaceManager
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.MixingColorSpaceManager
 
    Used to mix (or pick/choose) colors.
 
@@ -71,6 +72,7 @@
 
 .. py:class:: MixingSpaceIterator
    :module: PyOpenColorIO.MixingColorSpaceManager
+   :canonical: PyOpenColorIO.MixingColorSpaceManager.MixingSpaceIterator
 
 
    .. py:method:: MixingSpaceIterator.__getitem__(self: PyOpenColorIO.MixingColorSpaceManager.MixingSpaceIterator, arg0: int) -> str
@@ -91,6 +93,7 @@
 
 .. py:class:: MixingEncodingIterator
    :module: PyOpenColorIO.MixingColorSpaceManager
+   :canonical: PyOpenColorIO.MixingColorSpaceManager.MixingEncodingIterator
 
 
    .. py:method:: MixingEncodingIterator.__getitem__(self: PyOpenColorIO.MixingColorSpaceManager.MixingEncodingIterator, arg0: int) -> str

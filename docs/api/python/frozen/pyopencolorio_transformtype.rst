@@ -5,6 +5,7 @@
 
 .. py:class:: TransformType
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.TransformType
 
    Members:
 
@@ -52,8 +53,6 @@
 
      TRANSFORM_TYPE_RANGE :
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: TransformType.TRANSFORM_TYPE_ALLOCATION
       :module: PyOpenColorIO

@@ -5,6 +5,7 @@
 
 .. py:class:: RangeStyle
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.RangeStyle
 
    A :ref:`RangeTransform` may be set to clamp the values, or not.
 
@@ -14,8 +15,6 @@
 
      RANGE_CLAMP :
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: RangeStyle.RANGE_CLAMP
       :module: PyOpenColorIO

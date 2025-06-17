@@ -5,12 +5,13 @@
 
 .. py:class:: ViewTransform
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.ViewTransform
 
    A *:ref:`ViewTransform`* provides a conversion from the main (usually scene-referred) reference space to the display-referred reference space. This allows splitting the conversion from the main reference space to a display into two parts: the :ref:`ViewTransform` plus a display color space.
 
    It is also possible to provide a :ref:`ViewTransform` that converts from the display-referred reference space back to that space. This is useful in cases when a :ref:`ViewTransform` is needed when converting between displays (such as HDR to SDR).
 
-   The ReferenceSpaceType indicates whether the :ref:`ViewTransform` converts from scene-to-display reference or display-to-display reference.
+   The :ref:`ReferenceSpaceType` indicates whether the :ref:`ViewTransform` converts from scene-to-display reference or display-to-display reference.
 
    The from_reference transform direction is the one that is used when going out towards a display.
 
@@ -22,7 +23,7 @@
 
       1. __init__(self: PyOpenColorIO.ViewTransform, referenceSpace: PyOpenColorIO.ReferenceSpaceType) -> None
 
-      2. __init__(self: PyOpenColorIO.ViewTransform, referenceSpace: PyOpenColorIO.ReferenceSpaceType = <ReferenceSpaceType.REFERENCE_SPACE_SCENE: 0>, name: str = '', family: str = '', description: str = '', toReference: PyOpenColorIO.Transform = None, fromReference: PyOpenColorIO.Transform = None, categories: List[str] = []) -> None
+      2. __init__(self: PyOpenColorIO.ViewTransform, referenceSpace: PyOpenColorIO.ReferenceSpaceType = <ReferenceSpaceType.REFERENCE_SPACE_SCENE: 0>, name: str = '', family: str = '', description: str = '', toReference: PyOpenColorIO.Transform = None, fromReference: PyOpenColorIO.Transform = None, categories: list[str] = []) -> None
 
 
    .. py:method:: ViewTransform.addCategory(self: PyOpenColorIO.ViewTransform, category: str) -> None
@@ -105,6 +106,7 @@
 
 .. py:class:: ViewTransformCategoryIterator
    :module: PyOpenColorIO.ViewTransform
+   :canonical: PyOpenColorIO.ViewTransform.ViewTransformCategoryIterator
 
 
    .. py:method:: ViewTransformCategoryIterator.__getitem__(self: PyOpenColorIO.ViewTransform.ViewTransformCategoryIterator, arg0: int) -> str

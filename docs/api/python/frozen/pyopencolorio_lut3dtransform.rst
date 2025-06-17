@@ -5,6 +5,7 @@
 
 .. py:class:: Lut3DTransform
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.Lut3DTransform
 
    Represents a 3D-LUT transform.
 
@@ -65,7 +66,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: Lut3DTransform.setData(self: PyOpenColorIO.Lut3DTransform, data: buffer) -> None
+   .. py:method:: Lut3DTransform.setData(self: PyOpenColorIO.Lut3DTransform, data: Buffer) -> None
       :module: PyOpenColorIO
 
 

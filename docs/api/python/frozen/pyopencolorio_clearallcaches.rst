@@ -11,5 +11,5 @@
    Under normal usage, this is not necessary, but it can be helpful in particular instances, such as designing OCIO profiles, and wanting to re-read luts without restarting.
 
    .. note::
-      The method does not apply to instance specific caches such as the processor cache in a config instance or the GPU and CPU processor caches in a processor instance. Here deleting the instance flushes the cache.
+      This method does not apply to instance-specific caches such as the :ref:`Processor` cache in a :ref:`Config` instance or the GPU and CPU :ref:`Processor` caches in a :ref:`Processor` instance. So in cases where you still have a :ref:`Config` instance after calling ClearAllCaches, you should also call the :ref:`Config`'s clearProcessorCache method.
 

@@ -5,6 +5,7 @@
 
 .. py:class:: NamedTransform
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.NamedTransform
 
    :ref:`NamedTransform`.
 
@@ -16,11 +17,12 @@
       :module: PyOpenColorIO
       :staticmethod:
 
-      Get the requested transform, creating the transform from the inverse direction if the transform for the requested direction is missing.
+      Will create the transform from the inverse direction if the transform for requested direction is missing.
 
 
    .. py:class:: NamedTransform.NamedTransformAliasIterator
       :module: PyOpenColorIO
+      :canonical: PyOpenColorIO.NamedTransform.NamedTransformAliasIterator
 
 
       .. py:method:: NamedTransform.NamedTransformAliasIterator.__init__(*args, **kwargs)
@@ -34,7 +36,7 @@
 
       1. __init__(self: PyOpenColorIO.NamedTransform) -> None
 
-      2. __init__(self: PyOpenColorIO.NamedTransform, name: str = '', aliases: List[str] = [], family: str = '', description: str = '', forwardTransform: PyOpenColorIO.Transform = None, inverseTransform: PyOpenColorIO.Transform = None, categories: List[str] = []) -> None
+      2. __init__(self: PyOpenColorIO.NamedTransform, name: str = '', aliases: list[str] = [], family: str = '', description: str = '', forwardTransform: PyOpenColorIO.Transform = None, inverseTransform: PyOpenColorIO.Transform = None, categories: list[str] = []) -> None
 
 
    .. py:method:: NamedTransform.addAlias(self: PyOpenColorIO.NamedTransform, alias: str) -> None
@@ -94,6 +96,12 @@
       :module: PyOpenColorIO
 
 
+   .. py:method:: NamedTransform.hasAlias(self: PyOpenColorIO.NamedTransform, alias: str) -> bool
+      :module: PyOpenColorIO
+
+      Return true if alias exists.
+
+
    .. py:method:: NamedTransform.hasCategory(self: PyOpenColorIO.NamedTransform, category: str) -> bool
       :module: PyOpenColorIO
 
@@ -139,6 +147,7 @@
 
 .. py:class:: NamedTransformCategoryIterator
    :module: PyOpenColorIO.NamedTransform
+   :canonical: PyOpenColorIO.NamedTransform.NamedTransformCategoryIterator
 
 
    .. py:method:: NamedTransformCategoryIterator.__getitem__(self: PyOpenColorIO.NamedTransform.NamedTransformCategoryIterator, arg0: int) -> str

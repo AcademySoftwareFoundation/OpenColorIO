@@ -5,6 +5,7 @@
 
 .. py:class:: GpuShaderDesc
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.GpuShaderDesc
 
    This class holds the GPU-related information needed to build a shader program from a specific processor.
 
@@ -17,6 +18,7 @@
    To summarize, the complete shader program is:
 
    .. code-block:: cpp
+
 
        //                                                                    //
        //               The complete fragment shader program                 //
@@ -71,7 +73,7 @@
        //   //                                                          //   //
        //   //////////////////////////////////////////////////////////////   //
        //                                                                    //
-       ////////////////////////////////////////////////////////////////////////
+
 
    **Usage Example:** *Building a GPU shader*
 
@@ -195,7 +197,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: GpuShaderDesc.add3DTexture(self: PyOpenColorIO.GpuShaderDesc, textureName: str, samplerName: str, edgeLen: int, interpolation: PyOpenColorIO.Interpolation, values: buffer) -> None
+   .. py:method:: GpuShaderDesc.add3DTexture(self: PyOpenColorIO.GpuShaderDesc, textureName: str, samplerName: str, edgeLen: int, interpolation: PyOpenColorIO.Interpolation, values: Buffer) -> None
       :module: PyOpenColorIO
 
       Add a 3D texture with RGB channel type.
@@ -204,7 +206,7 @@
          The 'values' parameter contains the 3D LUT data which must be used as-is as the dimension and origin are hard-coded in the fragment shader program. So, it means one GPU 3D texture per entry.
 
 
-   .. py:method:: GpuShaderDesc.addTexture(self: PyOpenColorIO.GpuShaderDesc, textureName: str, samplerName: str, width: int, height: int, channel: PyOpenColorIO.GpuShaderCreator.TextureType, dimensions: PyOpenColorIO.GpuShaderCreator.TextureDimensions, interpolation: PyOpenColorIO.Interpolation, values: buffer) -> None
+   .. py:method:: GpuShaderDesc.addTexture(self: PyOpenColorIO.GpuShaderDesc, textureName: str, samplerName: str, width: int, height: int, channel: PyOpenColorIO.GpuShaderCreator.TextureType, dimensions: PyOpenColorIO.GpuShaderCreator.TextureDimensions, interpolation: PyOpenColorIO.Interpolation, values: Buffer) -> None
       :module: PyOpenColorIO
 
       Add a 1D or 2D texture
@@ -381,8 +383,6 @@
 
      TEXTURE_RGB_CHANNEL
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: TextureType.TEXTURE_RED_CHANNEL
       :module: PyOpenColorIO.GpuShaderDesc
@@ -400,6 +400,7 @@
 
 .. py:class:: UniformData
    :module: PyOpenColorIO.GpuShaderDesc
+   :canonical: PyOpenColorIO.GpuShaderDesc.UniformData
 
 
    .. py:method:: UniformData.getBool(self: PyOpenColorIO.GpuShaderDesc.UniformData) -> bool
@@ -410,7 +411,7 @@
       :module: PyOpenColorIO.GpuShaderDesc
 
 
-   .. py:method:: UniformData.getFloat3(self: PyOpenColorIO.GpuShaderDesc.UniformData) -> List[float[3]]
+   .. py:method:: UniformData.getFloat3(self: PyOpenColorIO.GpuShaderDesc.UniformData) -> Annotated[list[float], FixedSize(3)]
       :module: PyOpenColorIO.GpuShaderDesc
 
 
@@ -428,6 +429,7 @@
 
 .. py:class:: Texture
    :module: PyOpenColorIO.GpuShaderDesc
+   :canonical: PyOpenColorIO.GpuShaderDesc.Texture
 
 
    .. py:property:: Texture.channel
@@ -464,6 +466,7 @@
 
 .. py:class:: Texture3D
    :module: PyOpenColorIO.GpuShaderDesc
+   :canonical: PyOpenColorIO.GpuShaderDesc.Texture3D
 
 
    .. py:property:: Texture3D.edgeLen
@@ -488,6 +491,7 @@
 
 .. py:class:: UniformIterator
    :module: PyOpenColorIO.GpuShaderDesc
+   :canonical: PyOpenColorIO.GpuShaderDesc.UniformIterator
 
 
    .. py:method:: UniformIterator.__getitem__(self: PyOpenColorIO.GpuShaderDesc.UniformIterator, arg0: int) -> tuple
@@ -508,6 +512,7 @@
 
 .. py:class:: TextureIterator
    :module: PyOpenColorIO.GpuShaderDesc
+   :canonical: PyOpenColorIO.GpuShaderDesc.TextureIterator
 
 
    .. py:method:: TextureIterator.__getitem__(self: PyOpenColorIO.GpuShaderDesc.TextureIterator, arg0: int) -> PyOpenColorIO.GpuShaderDesc.Texture
@@ -528,6 +533,7 @@
 
 .. py:class:: Texture3DIterator
    :module: PyOpenColorIO.GpuShaderDesc
+   :canonical: PyOpenColorIO.GpuShaderDesc.Texture3DIterator
 
 
    .. py:method:: Texture3DIterator.__getitem__(self: PyOpenColorIO.GpuShaderDesc.Texture3DIterator, arg0: int) -> PyOpenColorIO.GpuShaderDesc.Texture3D

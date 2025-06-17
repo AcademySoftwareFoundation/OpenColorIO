@@ -5,6 +5,7 @@
 
 .. py:class:: RangeTransform
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.RangeTransform
 
    Represents a range transform
 

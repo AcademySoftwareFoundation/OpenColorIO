@@ -5,6 +5,7 @@
 
 .. py:class:: NamedTransformVisibility
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.NamedTransformVisibility
 
    Members:
 
@@ -14,8 +15,6 @@
 
      NAMEDTRANSFORM_ALL :
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: NamedTransformVisibility.NAMEDTRANSFORM_ACTIVE
       :module: PyOpenColorIO

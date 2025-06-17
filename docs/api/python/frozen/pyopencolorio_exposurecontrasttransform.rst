@@ -5,6 +5,7 @@
 
 .. py:class:: ExposureContrastTransform
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.ExposureContrastTransform
 
    Applies exposure, gamma, and pivoted contrast adjustments. Adjusts the math to be appropriate for linear, logarithmic, or video color spaces.
 

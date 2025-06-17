@@ -5,6 +5,7 @@
 
 .. py:class:: GradingRGBCurve
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.GradingRGBCurve
 
    A set of red, green, blue and master curves. It is used by RGBCurveTransform and can be used as a dynamic property (see :ref:`DynamicPropertyGradingRGBCurve`).
 

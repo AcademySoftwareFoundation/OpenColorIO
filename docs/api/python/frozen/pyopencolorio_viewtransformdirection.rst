@@ -5,6 +5,7 @@
 
 .. py:class:: ViewTransformDirection
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.ViewTransformDirection
 
    Members:
 
@@ -12,8 +13,6 @@
 
      VIEWTRANSFORM_DIR_FROM_REFERENCE :
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: ViewTransformDirection.VIEWTRANSFORM_DIR_FROM_REFERENCE
       :module: PyOpenColorIO
