@@ -3281,7 +3281,12 @@ public:
     *                            binding starts at textureBindingStart and is incremented by 1 for each texture. 
     *                            The binding of a texture is equal to the texture index + textureBindingStart.
     * */
-    void setDescriptorSetIndex(unsigned index, unsigned textureBindingStart = 0) noexcept;
+    * \param textureBindingStart The texture binding start index to use. The default index starts at 1
+    *                            and is incremented by 1 for each texture. Otherwise, the texture binding starts
+    *                            at textureBindingStart and is incremented by 1 for each texture. 
+    *                            The binding of a texture is equal to the texture index + textureBindingStart.
+    * */
+    void setDescriptorSetIndex(unsigned index, unsigned textureBindingStart = 1) noexcept;
     unsigned getDescriptorSetIndex() const noexcept;
     unsigned getTextureBindingStart() const noexcept;
 
