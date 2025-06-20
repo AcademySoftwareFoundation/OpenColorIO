@@ -7,6 +7,9 @@ set -ex
 PYBIND11_VERSION="$1"
 INSTALL_TARGET="$2"
 
+# Required for CMake-4.0+ compatibility
+export CMAKE_POLICY_VERSION_MINIMUM=3.5
+
 git clone https://github.com/pybind/pybind11.git
 cd pybind11
 

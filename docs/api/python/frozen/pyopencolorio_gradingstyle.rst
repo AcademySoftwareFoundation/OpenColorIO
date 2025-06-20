@@ -5,6 +5,7 @@
 
 .. py:class:: GradingStyle
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.GradingStyle
 
    Styles for grading transforms.
 
@@ -16,8 +17,6 @@
 
      GRADING_VIDEO : Algorithms for Video color spaces.
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: GradingStyle.GRADING_LIN
       :module: PyOpenColorIO

@@ -46,6 +46,8 @@ if(NOT pybind11_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PAC
 
         set(pybind11_CMAKE_ARGS
             ${pybind11_CMAKE_ARGS}
+            # Required for CMake 4.0+ compatibility.
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
             -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
             -DCMAKE_INSTALL_MESSAGE=${CMAKE_INSTALL_MESSAGE}

@@ -5,6 +5,7 @@
 
 .. py:class:: ColorSpaceMenuHelper
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.ColorSpaceMenuHelper
 
    Helper class to create menus for the content of a config.
 
@@ -73,6 +74,7 @@
 
 .. py:class:: ColorSpaceLevelIterator
    :module: PyOpenColorIO.ColorSpaceMenuHelper
+   :canonical: PyOpenColorIO.ColorSpaceMenuHelper.ColorSpaceLevelIterator
 
 
    .. py:method:: ColorSpaceLevelIterator.__getitem__(self: PyOpenColorIO.ColorSpaceMenuHelper.ColorSpaceLevelIterator, arg0: int) -> str

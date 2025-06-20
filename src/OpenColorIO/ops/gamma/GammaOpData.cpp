@@ -659,20 +659,24 @@ namespace
 GammaOpData::Style CombineBasicStyles(GammaOpData::Style a, GammaOpData::Style b)
 {
     // This function assumes that mayCompose was called on the inputs and returned true.
-    // The logic here is only valid for that situation.
+    // The logic here is only valid for that situation. There is no intent to preserve
+    // the direction, a forward style is always returned.
     if (a == GammaOpData::BASIC_FWD || a == GammaOpData::BASIC_REV ||
         b == GammaOpData::BASIC_FWD || b == GammaOpData::BASIC_REV)
     {
+        // If either a or b is a BASIC style, that is the combined style since the
+        // BASIC style clamps negatives, so the combination must also clamp.
         return GammaOpData::BASIC_FWD;
     }
     else if (a == GammaOpData::BASIC_MIRROR_FWD || a == GammaOpData::BASIC_MIRROR_REV)
     {
-        // b BASIC_MIRROR.
+        // Neither a or b is a BASIC style, so it may only be MIRROR or PASS_THRU, but
+        // mayCompose will not allow b to be PASS_THRU in this case, both are MIRROR.
         return GammaOpData::BASIC_MIRROR_FWD;
     }
-    else // a is BASIC_PASS_THRU (ensured by mayCompose).
+    else
     {
-        // b BASIC_PASS_THRU.
+        // Both a and b are BASIC_PASS_THRU as a consequence of mayCompose being true.
         return GammaOpData::BASIC_PASS_THRU_FWD;
     }
 }
@@ -715,7 +719,7 @@ GammaOpDataRcPtr GammaOpData::compose(const GammaOpData & B) const
     double b1 = getBlueParams()[0];
     double a1 = getAlphaParams()[0];
 
-    if (styleA == BASIC_REV || styleA == BASIC_MIRROR_REV || styleA == BASIC_PASS_THRU_FWD)
+    if (styleA == BASIC_REV || styleA == BASIC_MIRROR_REV || styleA == BASIC_PASS_THRU_REV)
     {
         r1 = 1. / r1;
         g1 = 1. / g1;
@@ -727,7 +731,7 @@ GammaOpDataRcPtr GammaOpData::compose(const GammaOpData & B) const
     double g2 = B.getGreenParams()[0];
     double b2 = B.getBlueParams()[0];
     double a2 = B.getAlphaParams()[0];
-    if (styleB == BASIC_REV || styleB == BASIC_MIRROR_REV || styleB == BASIC_PASS_THRU_FWD)
+    if (styleB == BASIC_REV || styleB == BASIC_MIRROR_REV || styleB == BASIC_PASS_THRU_REV)
     {
         r2 = 1. / r2;
         g2 = 1. / g2;
@@ -747,6 +751,7 @@ GammaOpDataRcPtr GammaOpData::compose(const GammaOpData & B) const
     RoundAround1(bOut);
     RoundAround1(aOut);
 
+    // NB: This always returns a forward style.
     Style style = CombineBasicStyles(styleA, styleB);
 
     // By convention, we try to keep the gamma parameter > 1.

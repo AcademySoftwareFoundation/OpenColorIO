@@ -5,6 +5,7 @@
 
 .. py:class:: LogAffineTransform
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.LogAffineTransform
 
    Applies a logarithm with an affine transform before and after. Represents the Cineon lin-to-log type transforms::
 
@@ -21,7 +22,7 @@
 
       1. __init__(self: PyOpenColorIO.LogAffineTransform) -> None
 
-      2. __init__(self: PyOpenColorIO.LogAffineTransform, logSideSlope: List[float[3]] = [1.0, 1.0, 1.0], logSideOffset: List[float[3]] = [0.0, 0.0, 0.0], linSideSlope: List[float[3]] = [1.0, 1.0, 1.0], linSideOffset: List[float[3]] = [0.0, 0.0, 0.0], direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
+      2. __init__(self: PyOpenColorIO.LogAffineTransform, logSideSlope: Annotated[list[float], FixedSize(3)] = [1.0, 1.0, 1.0], logSideOffset: Annotated[list[float], FixedSize(3)] = [0.0, 0.0, 0.0], linSideSlope: Annotated[list[float], FixedSize(3)] = [1.0, 1.0, 1.0], linSideOffset: Annotated[list[float], FixedSize(3)] = [0.0, 0.0, 0.0], direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
    .. py:method:: LogAffineTransform.equals(self: PyOpenColorIO.LogAffineTransform, other: PyOpenColorIO.LogAffineTransform) -> bool
@@ -42,19 +43,19 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: LogAffineTransform.getLinSideOffsetValue(self: PyOpenColorIO.LogAffineTransform) -> List[float[3]]
+   .. py:method:: LogAffineTransform.getLinSideOffsetValue(self: PyOpenColorIO.LogAffineTransform) -> Annotated[list[float], FixedSize(3)]
       :module: PyOpenColorIO
 
 
-   .. py:method:: LogAffineTransform.getLinSideSlopeValue(self: PyOpenColorIO.LogAffineTransform) -> List[float[3]]
+   .. py:method:: LogAffineTransform.getLinSideSlopeValue(self: PyOpenColorIO.LogAffineTransform) -> Annotated[list[float], FixedSize(3)]
       :module: PyOpenColorIO
 
 
-   .. py:method:: LogAffineTransform.getLogSideOffsetValue(self: PyOpenColorIO.LogAffineTransform) -> List[float[3]]
+   .. py:method:: LogAffineTransform.getLogSideOffsetValue(self: PyOpenColorIO.LogAffineTransform) -> Annotated[list[float], FixedSize(3)]
       :module: PyOpenColorIO
 
 
-   .. py:method:: LogAffineTransform.getLogSideSlopeValue(self: PyOpenColorIO.LogAffineTransform) -> List[float[3]]
+   .. py:method:: LogAffineTransform.getLogSideSlopeValue(self: PyOpenColorIO.LogAffineTransform) -> Annotated[list[float], FixedSize(3)]
       :module: PyOpenColorIO
 
 
@@ -72,19 +73,19 @@
       Note that this only affects the evaluation and not the values stored in the object.
 
 
-   .. py:method:: LogAffineTransform.setLinSideOffsetValue(self: PyOpenColorIO.LogAffineTransform, values: List[float[3]]) -> None
+   .. py:method:: LogAffineTransform.setLinSideOffsetValue(self: PyOpenColorIO.LogAffineTransform, values: Annotated[list[float], FixedSize(3)]) -> None
       :module: PyOpenColorIO
 
 
-   .. py:method:: LogAffineTransform.setLinSideSlopeValue(self: PyOpenColorIO.LogAffineTransform, values: List[float[3]]) -> None
+   .. py:method:: LogAffineTransform.setLinSideSlopeValue(self: PyOpenColorIO.LogAffineTransform, values: Annotated[list[float], FixedSize(3)]) -> None
       :module: PyOpenColorIO
 
 
-   .. py:method:: LogAffineTransform.setLogSideOffsetValue(self: PyOpenColorIO.LogAffineTransform, values: List[float[3]]) -> None
+   .. py:method:: LogAffineTransform.setLogSideOffsetValue(self: PyOpenColorIO.LogAffineTransform, values: Annotated[list[float], FixedSize(3)]) -> None
       :module: PyOpenColorIO
 
 
-   .. py:method:: LogAffineTransform.setLogSideSlopeValue(self: PyOpenColorIO.LogAffineTransform, values: List[float[3]]) -> None
+   .. py:method:: LogAffineTransform.setLogSideSlopeValue(self: PyOpenColorIO.LogAffineTransform, values: Annotated[list[float], FixedSize(3)]) -> None
       :module: PyOpenColorIO
 
 

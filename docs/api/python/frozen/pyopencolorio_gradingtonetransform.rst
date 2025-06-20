@@ -5,6 +5,7 @@
 
 .. py:class:: GradingToneTransform
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.GradingToneTransform
 
    Tonal color correction controls.
 

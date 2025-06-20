@@ -5,6 +5,7 @@
 
 .. py:class:: MatrixTransform
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.MatrixTransform
 
    Represents an MX+B Matrix transform.
 
@@ -12,7 +13,7 @@
       For singular matrices, an inverse direction will throw an exception during finalization.
 
 
-   .. py:method:: MatrixTransform.Fit(oldMin: List[float[4]] = [0.0, 0.0, 0.0, 0.0], oldMax: List[float[4]] = [1.0, 1.0, 1.0, 1.0], newMin: List[float[4]] = [0.0, 0.0, 0.0, 0.0], newMax: List[float[4]] = [1.0, 1.0, 1.0, 1.0]) -> PyOpenColorIO.MatrixTransform
+   .. py:method:: MatrixTransform.Fit(oldMin: Annotated[list[float], FixedSize(4)] = [0.0, 0.0, 0.0, 0.0], oldMax: Annotated[list[float], FixedSize(4)] = [1.0, 1.0, 1.0, 1.0], newMin: Annotated[list[float], FixedSize(4)] = [0.0, 0.0, 0.0, 0.0], newMax: Annotated[list[float], FixedSize(4)] = [1.0, 1.0, 1.0, 1.0]) -> PyOpenColorIO.MatrixTransform
       :module: PyOpenColorIO
       :staticmethod:
 
@@ -29,17 +30,17 @@
       :staticmethod:
 
 
-   .. py:method:: MatrixTransform.Sat(sat: float, lumaCoef: List[float[3]]) -> PyOpenColorIO.MatrixTransform
+   .. py:method:: MatrixTransform.Sat(sat: float, lumaCoef: Annotated[list[float], FixedSize(3)]) -> PyOpenColorIO.MatrixTransform
       :module: PyOpenColorIO
       :staticmethod:
 
 
-   .. py:method:: MatrixTransform.Scale(scale: List[float[4]]) -> PyOpenColorIO.MatrixTransform
+   .. py:method:: MatrixTransform.Scale(scale: Annotated[list[float], FixedSize(4)]) -> PyOpenColorIO.MatrixTransform
       :module: PyOpenColorIO
       :staticmethod:
 
 
-   .. py:method:: MatrixTransform.View(channelHot: List[int[4]], lumaCoef: List[float[3]]) -> PyOpenColorIO.MatrixTransform
+   .. py:method:: MatrixTransform.View(channelHot: Annotated[list[int], FixedSize(4)], lumaCoef: Annotated[list[float], FixedSize(3)]) -> PyOpenColorIO.MatrixTransform
       :module: PyOpenColorIO
       :staticmethod:
 
@@ -51,7 +52,7 @@
 
       1. __init__(self: PyOpenColorIO.MatrixTransform) -> None
 
-      2. __init__(self: PyOpenColorIO.MatrixTransform, matrix: List[float[16]] = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0], offset: List[float[4]] = [0.0, 0.0, 0.0, 0.0], direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
+      2. __init__(self: PyOpenColorIO.MatrixTransform, matrix: Annotated[list[float], FixedSize(16)] = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0], offset: Annotated[list[float], FixedSize(4)] = [0.0, 0.0, 0.0, 0.0], direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
    .. py:method:: MatrixTransform.equals(self: PyOpenColorIO.MatrixTransform, other: PyOpenColorIO.MatrixTransform) -> bool
@@ -80,11 +81,11 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: MatrixTransform.getMatrix(self: PyOpenColorIO.MatrixTransform) -> List[float[16]]
+   .. py:method:: MatrixTransform.getMatrix(self: PyOpenColorIO.MatrixTransform) -> Annotated[list[float], FixedSize(16)]
       :module: PyOpenColorIO
 
 
-   .. py:method:: MatrixTransform.getOffset(self: PyOpenColorIO.MatrixTransform) -> List[float[4]]
+   .. py:method:: MatrixTransform.getOffset(self: PyOpenColorIO.MatrixTransform) -> Annotated[list[float], FixedSize(4)]
       :module: PyOpenColorIO
 
 
@@ -106,7 +107,7 @@
       :module: PyOpenColorIO
 
 
-   .. py:method:: MatrixTransform.setMatrix(self: PyOpenColorIO.MatrixTransform, matrix: List[float[16]]) -> None
+   .. py:method:: MatrixTransform.setMatrix(self: PyOpenColorIO.MatrixTransform, matrix: Annotated[list[float], FixedSize(16)]) -> None
       :module: PyOpenColorIO
 
       Get or set the values of a Matrix. Expects 16 values, where the first four are the coefficients to generate the R output channel from R, G, B, A input channels.
@@ -116,7 +117,7 @@
       These values are normalized relative to what may be stored in file formats such as CLF. For example in a CLF file using a "32f" input depth and "10i" output depth, a value of 1023 in the file is normalized to 1.0. The values here are unclamped and may extend outside [0,1].
 
 
-   .. py:method:: MatrixTransform.setOffset(self: PyOpenColorIO.MatrixTransform, offset: List[float[4]]) -> None
+   .. py:method:: MatrixTransform.setOffset(self: PyOpenColorIO.MatrixTransform, offset: Annotated[list[float], FixedSize(4)]) -> None
       :module: PyOpenColorIO
 
       Get or set the R, G, B, A offsets to be applied after the matrix.

@@ -13,6 +13,9 @@ EXPAT_MINOR=$(echo "${EXPAT_MAJOR_MINOR}" | cut -d. -f2-)
 EXPAT_PATCH=$(echo "${EXPAT_VERSION}" | cut -d. -f3-)
 EXPAT_VERSION_U="${EXPAT_MAJOR}_${EXPAT_MINOR}_${EXPAT_PATCH}"
 
+# Required for CMake-4.0+ compatibility
+export CMAKE_POLICY_VERSION_MINIMUM=3.5
+
 git clone https://github.com/libexpat/libexpat.git
 cd libexpat
 
