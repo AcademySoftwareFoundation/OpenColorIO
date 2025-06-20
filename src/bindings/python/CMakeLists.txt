@@ -234,6 +234,8 @@ if(NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
 endif()
 
 file(COPY package/__init__.py DESTINATION "${_PyOpenColorIO_BUILD_PACKAGE_DIR}")
+file(COPY stubs/PyOpenColorIO/__init__.pyi DESTINATION "${_PyOpenColorIO_BUILD_PACKAGE_DIR}")
+file(COPY stubs/PyOpenColorIO/py.typed DESTINATION "${_PyOpenColorIO_BUILD_PACKAGE_DIR}")
 
 ###############################################################################
 # Install layout
@@ -259,3 +261,30 @@ install(TARGETS PyOpenColorIO
 )
 
 install(FILES package/__init__.py DESTINATION ${_PyOpenColorIO_SITE_PACKAGE_DIR})
+install(FILES stubs/PyOpenColorIO/__init__.pyi DESTINATION ${_PyOpenColorIO_SITE_PACKAGE_DIR})
+install(FILES stubs/PyOpenColorIO/py.typed DESTINATION ${_PyOpenColorIO_SITE_PACKAGE_DIR})
+
+###############################################################################
+
+# Note: the python version must be kept in sync with `[[tool.cibuildwheel.overrides]]` in pyproject.toml.
+# The stubs are generated within a container so the version of python does not need to match
+# the version of python that OpenColorIO is being built against.
+# Note: the version of cibuildwheel should be kept in sync with .github/workflows/wheel.yml
+add_custom_command (COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/src/bindings/python/stubs/generate_stubs_local.py
+                        --repo-root ${CMAKE_SOURCE_DIR} --python-version="3.11" --cibuildwheel-version="2.22.0"
+                        --output-dir "${CMAKE_BINARY_DIR}/wheelhouse"
+                    OUTPUT "${CMAKE_BINARY_DIR}/wheelhouse/PyOpenColorIO/__init__.pyi"
+                    DEPENDS "${CMAKE_SOURCE_DIR}/src/bindings/python/stubs/generate_stubs.py"
+                    DEPENDS "${CMAKE_SOURCE_DIR}/src/bindings/python/stubs/generate_stubs_local.py"
+                    COMMENT "pystubs: Generating python stubs"
+                    )
+
+add_custom_command (COMMAND ${CMAKE_COMMAND} -E copy
+                        "${CMAKE_BINARY_DIR}/wheelhouse/PyOpenColorIO/__init__.pyi"
+                        "${CMAKE_SOURCE_DIR}/src/bindings/python/stubs/PyOpenColorIO/__init__.pyi"
+                    OUTPUT "${CMAKE_SOURCE_DIR}/src/bindings/python/stubs/PyOpenColorIO/__init__.pyi"
+                    DEPENDS "${CMAKE_BINARY_DIR}/wheelhouse/PyOpenColorIO/__init__.pyi"
+                    COMMENT "pystubs: Copying generated stubs to source"
+                    )
+
+add_custom_target (pystubs DEPENDS "${CMAKE_SOURCE_DIR}/src/bindings/python/stubs/PyOpenColorIO/__init__.pyi")

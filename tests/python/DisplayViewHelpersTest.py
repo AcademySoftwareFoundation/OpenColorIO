@@ -14,7 +14,7 @@ class DisplayViewHelpersTest(unittest.TestCase):
         self.cfg = OCIO.Config().CreateFromStream(SAMPLE_CONFIG)
 
     def tearDown(self):
-        self.cfg = None
+        self.cfg = None  # type: ignore
 
     def test_get_processor(self):
         """
@@ -205,7 +205,7 @@ class DisplayViewHelpersTest(unittest.TestCase):
             OCIO.DisplayViewHelpers.AddDisplayView(config = self.cfg, colorSpaceName = 'view_51',
                                                    displayName = 'DISP_1',
                                                    transformFilePath = filePath,
-                                                   connectionColorSpaceName = 'lut_input_1')
+                                                   connectionColorSpaceName = 'lut_input_1')  # type: ignore
 
         # Connection CS does not exist.
         with self.assertRaises(OCIO.Exception):
