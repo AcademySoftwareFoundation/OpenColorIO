@@ -854,7 +854,7 @@ public:
      */
 
     /// Check if a view within a given display is referencing one of the config's shared views.
-    bool viewIsShared(const char * dispName, const char * viewName) const;
+    bool isViewShared(const char * dispName, const char * viewName) const;
 
     /// Will throw if view or colorSpaceName are null or empty.
     void addSharedView(const char * view, const char * viewTransformName,
@@ -902,7 +902,7 @@ public:
      * the function does not attempt to compare that the color spaces or view transforms
      * being referenced are identical (only that they have the same name).
      */
-    static bool ViewsAreEqual(const ConstConfigRcPtr & first,
+    static bool AreViewsEqual(const ConstConfigRcPtr & first,
                               const ConstConfigRcPtr & second,
                               const char * dispName,
                               const char * viewName);
@@ -933,7 +933,7 @@ public:
      * check config-level shared views if dispName is null. It will not check config level
      * shared views if dispName is not null.
      */
-    bool displayHasView(const char * dispName, const char * viewName) const;
+    bool hasView(const char * dispName, const char * viewName) const;
 
     /**
      * For the (display, view) pair, specify which color space and look to use.
@@ -1008,7 +1008,7 @@ public:
     bool hasVirtualView(const char * viewName) const;
 
     /// Check if a given virtual view is referencing one of the config's shared views.
-    bool virtualViewIsShared(const char * viewName) const;
+    bool isVirtualViewShared(const char * viewName) const;
 
     void addVirtualDisplayView(const char * view,
                                const char * viewTransformName,
@@ -1037,7 +1037,7 @@ public:
      * the function does not attempt to compare that the color spaces or view transforms
      * being referenced are identical (only that they have the same name).
      */
-    static bool VirtualViewsAreEqual(const ConstConfigRcPtr & first,
+    static bool AreVirtualViewsEqual(const ConstConfigRcPtr & first,
                                      const ConstConfigRcPtr & second,
                                      const char * viewName);
 
