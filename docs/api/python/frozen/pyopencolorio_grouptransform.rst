@@ -5,6 +5,7 @@
 
 .. py:class:: GroupTransform
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.GroupTransform
 
 
    .. py:method:: GroupTransform.GetWriteFormats() -> PyOpenColorIO.GroupTransform.WriteFormatIterator
@@ -19,7 +20,7 @@
 
       1. __init__(self: PyOpenColorIO.GroupTransform) -> None
 
-      2. __init__(self: PyOpenColorIO.GroupTransform, transforms: List[PyOpenColorIO.Transform] = [], direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
+      2. __init__(self: PyOpenColorIO.GroupTransform, transforms: list[PyOpenColorIO.Transform] = [], direction: PyOpenColorIO.TransformDirection = <TransformDirection.TRANSFORM_DIR_FORWARD: 0>) -> None
 
 
    .. py:method:: GroupTransform.appendTransform(self: PyOpenColorIO.GroupTransform, transform: PyOpenColorIO.Transform) -> None
@@ -98,6 +99,7 @@
 
 .. py:class:: WriteFormatIterator
    :module: PyOpenColorIO.GroupTransform
+   :canonical: PyOpenColorIO.GroupTransform.WriteFormatIterator
 
 
    .. py:method:: WriteFormatIterator.__getitem__(self: PyOpenColorIO.GroupTransform.WriteFormatIterator, arg0: int) -> tuple
@@ -118,6 +120,7 @@
 
 .. py:class:: TransformIterator
    :module: PyOpenColorIO.GroupTransform
+   :canonical: PyOpenColorIO.GroupTransform.TransformIterator
 
 
    .. py:method:: TransformIterator.__getitem__(self: PyOpenColorIO.GroupTransform.TransformIterator, arg0: int) -> PyOpenColorIO.Transform

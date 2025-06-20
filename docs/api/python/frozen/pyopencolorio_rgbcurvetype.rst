@@ -5,6 +5,7 @@
 
 .. py:class:: RGBCurveType
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.RGBCurveType
 
    Types for :ref:`GradingRGBCurve`.
 
@@ -20,8 +21,6 @@
 
      RGB_NUM_CURVES :
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: RGBCurveType.RGB_BLUE
       :module: PyOpenColorIO

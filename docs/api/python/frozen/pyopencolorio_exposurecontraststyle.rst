@@ -5,6 +5,7 @@
 
 .. py:class:: ExposureContrastStyle
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.ExposureContrastStyle
 
    Enumeration of the :cpp:class:`:ref:`ExposureContrastTransform`` transform algorithms.
 
@@ -16,8 +17,6 @@
 
      EXPOSURE_CONTRAST_LOGARITHMIC : E/C to be applied to a log space image.
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: ExposureContrastStyle.EXPOSURE_CONTRAST_LINEAR
       :module: PyOpenColorIO

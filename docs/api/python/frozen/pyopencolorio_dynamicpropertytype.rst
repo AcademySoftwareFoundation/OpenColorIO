@@ -5,6 +5,7 @@
 
 .. py:class:: DynamicPropertyType
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.DynamicPropertyType
 
    Types for dynamic properties.
 
@@ -22,8 +23,6 @@
 
      DYNAMIC_PROPERTY_GRADING_TONE : Used by :ref:`GradingToneTransform`.
 
-   .. py:method:: name() -> str
-      :property:
 
    .. py:attribute:: DynamicPropertyType.DYNAMIC_PROPERTY_CONTRAST
       :module: PyOpenColorIO

@@ -5,6 +5,7 @@
 
 .. py:class:: ProcessorMetadata
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.ProcessorMetadata
 
    This class contains meta information about the process that generated this processor. The results of these functions do not impact the pixel processing.
 
@@ -31,6 +32,7 @@
 
 .. py:class:: FileIterator
    :module: PyOpenColorIO.ProcessorMetadata
+   :canonical: PyOpenColorIO.ProcessorMetadata.FileIterator
 
 
    .. py:method:: FileIterator.__getitem__(self: PyOpenColorIO.ProcessorMetadata.FileIterator, arg0: int) -> str
@@ -51,6 +53,7 @@
 
 .. py:class:: LookIterator
    :module: PyOpenColorIO.ProcessorMetadata
+   :canonical: PyOpenColorIO.ProcessorMetadata.LookIterator
 
 
    .. py:method:: LookIterator.__getitem__(self: PyOpenColorIO.ProcessorMetadata.LookIterator, arg0: int) -> str

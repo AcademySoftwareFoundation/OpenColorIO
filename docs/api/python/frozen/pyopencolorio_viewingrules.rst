@@ -5,6 +5,7 @@
 
 .. py:class:: ViewingRules
    :module: PyOpenColorIO
+   :canonical: PyOpenColorIO.ViewingRules
 
    :ref:`ViewingRules`
 
@@ -31,7 +32,7 @@
       Add colorspace name. Will throw if:
 
       - RuleIndex is invalid.
-      - :ref:`ViewingRules::getNumEncodings` is not 0.
+      - :ref:`getNumEncodings` is not 0.
 
 
    .. py:method:: ViewingRules.addEncoding(self: PyOpenColorIO.ViewingRules, ruleIndex: int, encodingName: str) -> None
@@ -40,7 +41,7 @@
       Add encoding name. Will throw if:
 
       - RuleIndex is invalid.
-      - :ref:`ViewingRules::getNumColorSpaces` is not 0.
+      - :ref:`getNumColorSpaces` is not 0.
 
 
    .. py:method:: ViewingRules.getColorSpaces(self: PyOpenColorIO.ViewingRules, ruleIndex: int) -> PyOpenColorIO.ViewingRules.ViewingRuleColorSpaceIterator
@@ -121,6 +122,7 @@
 
 .. py:class:: ViewingRuleColorSpaceIterator
    :module: PyOpenColorIO.ViewingRules
+   :canonical: PyOpenColorIO.ViewingRules.ViewingRuleColorSpaceIterator
 
 
    .. py:method:: ViewingRuleColorSpaceIterator.__getitem__(self: PyOpenColorIO.ViewingRules.ViewingRuleColorSpaceIterator, arg0: int) -> str
@@ -141,6 +143,7 @@
 
 .. py:class:: ViewingRuleEncodingIterator
    :module: PyOpenColorIO.ViewingRules
+   :canonical: PyOpenColorIO.ViewingRules.ViewingRuleEncodingIterator
 
 
    .. py:method:: ViewingRuleEncodingIterator.__getitem__(self: PyOpenColorIO.ViewingRules.ViewingRuleEncodingIterator, arg0: int) -> str
