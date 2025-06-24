@@ -51,7 +51,7 @@ public:
     void apply(const void * inImg, void * outImg, long numPixels) const override
     { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
 
-    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & /*shaderCreator*/) const override {}
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & /*shaderCreator*/, OptimizationFlags /*oFlags*/) const override {}
 
     void getGpuAllocation(AllocationData & allocation) const;
 
@@ -322,7 +322,7 @@ public:
     void apply(const void * inImg, void * outImg, long numPixels) const override
     { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
 
-    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & /*shaderCreator*/) const override {}
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & /*shaderCreator*/, OptimizationFlags /*oFlags*/) const override {}
 
 private:
     std::string m_fileReference;
@@ -408,7 +408,7 @@ public:
     void apply(const void * inImg, void * outImg, long numPixels) const override
     { memcpy(outImg, inImg, numPixels * 4 * sizeof(float)); }
 
-    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & /*shaderCreator*/) const override {}
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & /*shaderCreator*/, OptimizationFlags /*oFlags*/) const override {}
 
 private:
     std::string m_look;

@@ -49,7 +49,7 @@ public:
 
     ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
-    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator, OptimizationFlags /*oFlags*/) const override;
 
 protected:
     ConstExposureContrastOpDataRcPtr ecData() const
@@ -135,7 +135,7 @@ ConstOpCPURcPtr ExposureContrastOp::getCPUOp(bool /*fastLogExpPow*/) const
     return GetExposureContrastCPURenderer(ecOpData);
 }
 
-void ExposureContrastOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
+void ExposureContrastOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator, OptimizationFlags /*oFlags*/) const
 {
     ConstExposureContrastOpDataRcPtr ecOpData = ecData();
     GetExposureContrastGPUShaderProgram(shaderCreator, ecOpData);
