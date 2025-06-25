@@ -541,13 +541,13 @@ std::string _Add_Reach_table(
     if (dimensions == GpuShaderDesc::TEXTURE_1D)
     {
         GpuShaderText ss(shaderCreator->getLanguage());
-        ss.declareTex1D(name, textureIndex, shaderCreator->getTextureBindingStart());
+        ss.declareTex1D(name, shaderCreator->getDescriptorSetIndex(), textureIndex, shaderCreator->getTextureBindingStart());
         shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
     else
     {
         GpuShaderText ss(shaderCreator->getLanguage());
-        ss.declareTex2D(name, textureIndex, shaderCreator->getTextureBindingStart());
+        ss.declareTex2D(name, shaderCreator->getDescriptorSetIndex(), textureIndex, shaderCreator->getTextureBindingStart());
         shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
 
@@ -838,13 +838,13 @@ std::string _Add_Cusp_table(
     if (dimensions == GpuShaderDesc::TEXTURE_1D)
     {
         GpuShaderText ss(shaderCreator->getLanguage());
-        ss.declareTex1D(name, textureIndex, shaderCreator->getTextureBindingStart());
+        ss.declareTex1D(name, shaderCreator->getDescriptorSetIndex(), textureIndex, shaderCreator->getTextureBindingStart());
         shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
     else
     {
         GpuShaderText ss(shaderCreator->getLanguage());
-        ss.declareTex2D(name, textureIndex, shaderCreator->getTextureBindingStart());
+        ss.declareTex2D(name, shaderCreator->getDescriptorSetIndex(), textureIndex, shaderCreator->getTextureBindingStart());
         shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
 
