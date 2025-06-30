@@ -6,10 +6,8 @@
 # http://sphinx.pocoo.org/config.html
 
 import os
-import shutil
 import subprocess
 import sys
-import re
 
 
 HERE = os.path.dirname(os.path.realpath(__file__))
@@ -17,15 +15,8 @@ ROOT = os.path.abspath(os.path.join(HERE, os.pardir))
 
 # -- Build options ------------------------------------------------------------
 
-# OCIO API has been modified. Update frozen API docs in source tree. 
-# Dependent on CMake build (so not RTD).
-BUILD_FROZEN = "@OCIO_BUILD_FROZEN_DOCS@" == "ON"
-
 # 'READTHEDOCS' env var set by Read the Docs
 RTD_BUILD = os.environ.get("READTHEDOCS") == "True"
-# 'CI' env var set by GitHub Actions. Only test frozen docs on Linux, since 
-# that's what RTD will use.
-CI_BUILD = os.environ.get("CI") == "true" and sys.platform in ("linux", "linux2")
 
 # -- Add local Sphinx extensions ----------------------------------------------
 
@@ -38,7 +29,6 @@ else:
 
 import expandvars
 import prettymethods
-import frozendoc
 
 # -- General configuration ----------------------------------------------------
 
@@ -76,7 +66,6 @@ extensions = [
     "breathe",
     "expandvars",
     "prettymethods",
-    "frozendoc",
 ]
 
 source_suffix = {
@@ -85,7 +74,7 @@ source_suffix = {
   ".txt": "markdown",
 }
 
-master_doc = "index"
+root_doc = "index"
 exclude_patterns = [
   "INSTALL.md",
   "README*",
@@ -107,15 +96,6 @@ rst_prolog = """
 
 # -- Extension Configuration --------------------------------------------------
 
-# frozendoc
-frozendoc_build = BUILD_FROZEN
-
-# When enabled, frozendoc_build is also enabled to build and compare new frozen
-# RST with frozen RST present in the source tree. This is only necessary in a 
-# CI job, where we want to confirm the contributor has built frozen RST along 
-# with any public API or documentation changes.
-frozendoc_compare = CI_BUILD
-
 # breathe
 breathe_projects = {project: "_doxygen/xml"}
 breathe_default_project = project
@@ -129,7 +109,6 @@ napoleon_include_init_with_doc = True
 
 # expandvars
 expandvars_define = {
-    "PYDIR": "frozen" if RTD_BUILD else "src",
     "OCIO_NAMESPACE": ocio_namespace,
 }
 
