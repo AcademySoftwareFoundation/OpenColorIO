@@ -86,7 +86,7 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
                 const std::string & name)
 {
     // Add the uniform if it does not already exist.
-    if (shaderCreator->addUniform(name.c_str(), getSize, getVector))
+    if (shaderCreator->addUniform(name.c_str(), getSize, getVector, maxSize))
     {
         // Declare uniform.
         GpuShaderText stDecl(shaderCreator->getLanguage());
@@ -101,7 +101,7 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
                 const std::string & name)
 {
     // Add the uniform if it does not already exist.
-    if (shaderCreator->addUniform(name.c_str(), getSize, getVector))
+    if (shaderCreator->addUniform(name.c_str(), getSize, getVector, 8))
     {
         // Declare uniform.
         GpuShaderText stDecl(shaderCreator->getLanguage());

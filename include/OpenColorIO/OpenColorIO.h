@@ -3332,11 +3332,13 @@ public:
 
     virtual bool addUniform(const char * name,
                             const SizeGetter & getSize,
-                            const VectorFloatGetter & getVectorFloat) = 0;
+                            const VectorFloatGetter & getVectorFloat,
+                            const unsigned maxSize) = 0;
 
     virtual bool addUniform(const char * name,
                             const SizeGetter & getSize,
-                            const VectorIntGetter & getVectorInt) = 0;
+                            const VectorIntGetter & getVectorInt,
+                            const unsigned maxSize) = 0;
 
     /// Adds the property (used internally).
     void addDynamicProperty(DynamicPropertyRcPtr & prop);
