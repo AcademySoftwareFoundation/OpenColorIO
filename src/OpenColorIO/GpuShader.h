@@ -41,10 +41,12 @@ public:
     bool addUniform(const char * name, const Float3Getter & getter) override;
     bool addUniform(const char * name,
                     const SizeGetter & getSize,
-                    const VectorFloatGetter & getVectorFloat) override;
+                    const VectorFloatGetter & getVectorFloat,
+                    const unsigned maxSize) override;
     bool addUniform(const char * name,
                     const SizeGetter & getSize,
-                    const VectorIntGetter & getVectorInt) override;
+                    const VectorIntGetter & getVectorInt,
+                    const unsigned maxSize) override;
     std::size_t getUniformBufferSize() const noexcept override;
 
     // Accessors to the 1D & 2D textures built from 1D LUT
