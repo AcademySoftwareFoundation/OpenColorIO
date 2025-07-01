@@ -57,6 +57,7 @@ constexpr size_t GPU_INT_ALIGNMENT = 4;
 constexpr size_t GPU_VEC3_SIZE = 12;
 constexpr size_t GPU_VEC3_ALIGNMENT = 16;
 constexpr size_t GPU_ARRAY_ALIGNMENT = 16;
+constexpr size_t GPU_ARRAY_STRIDE = 16;
 
 class PrivateImpl
 {
@@ -383,7 +384,8 @@ public:
 
     bool addUniform(const char * name,
                     const GpuShaderCreator::SizeGetter & getSize,
-                    const GpuShaderCreator::VectorFloatGetter & getVector)
+                    const GpuShaderCreator::VectorFloatGetter & getVector,
+                    const unsigned maxSize)
     {
         if (uniformNameUsed(name))
         {
@@ -392,13 +394,14 @@ public:
         }
         m_uniformBufferSize = alignOffset(m_uniformBufferSize, GPU_ARRAY_ALIGNMENT);
         m_uniforms.emplace_back(name, getSize, getVector, m_uniformBufferSize);
-        m_uniformBufferSize += GPU_FLOAT_SIZE * getSize();
+        m_uniformBufferSize += GPU_ARRAY_STRIDE * maxSize;
         return true;
     }
 
     bool addUniform(const char * name,
                     const GpuShaderCreator::SizeGetter & getSize,
-                    const GpuShaderCreator::VectorIntGetter & getVectorInt)
+                    const GpuShaderCreator::VectorIntGetter & getVectorInt,
+                    const unsigned maxSize)
     {
         if (uniformNameUsed(name)) 
         {
@@ -407,7 +410,7 @@ public:
         }
         m_uniformBufferSize = alignOffset(m_uniformBufferSize, GPU_ARRAY_ALIGNMENT);
         m_uniforms.emplace_back(name, getSize, getVectorInt, m_uniformBufferSize);
-        m_uniformBufferSize += GPU_INT_SIZE * getSize();
+        m_uniformBufferSize += GPU_ARRAY_STRIDE * maxSize;
         return true;
     }
 
@@ -489,16 +492,18 @@ bool GenericGpuShaderDesc::addUniform(const char * name, const Float3Getter & ge
 
 bool GenericGpuShaderDesc::addUniform(const char * name,
                                       const SizeGetter & getSize,
-                                      const VectorFloatGetter & getFloatArray)
+                                      const VectorFloatGetter & getFloatArray,
+                                      const unsigned maxSize)
 {
-    return getImplGeneric()->addUniform(name, getSize, getFloatArray);
+    return getImplGeneric()->addUniform(name, getSize, getFloatArray, maxSize);
 }
 
 bool GenericGpuShaderDesc::addUniform(const char * name,
                                       const SizeGetter & getSize,
-                                      const VectorIntGetter & getVectorInt)
+                                      const VectorIntGetter & getVectorInt,
+                                      const unsigned maxSize)
 {
-    return getImplGeneric()->addUniform(name, getSize, getVectorInt);
+    return getImplGeneric()->addUniform(name, getSize, getVectorInt, maxSize);
 }
 
 std::size_t GenericGpuShaderDesc::getUniformBufferSize() const noexcept
