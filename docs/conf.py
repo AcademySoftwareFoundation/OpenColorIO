@@ -201,6 +201,9 @@ if RTD_BUILD:
 
 if RTD_BUILD:
     subprocess.run(
-        [sys.executable, "-m", "pip", "install", f"opencolorio=={version}"], 
+        [
+            "python", "-m", "pip", "install", "--no-cache-dir", 
+            f"opencolorio=={version}"
+        ], 
         check=True
     )
