@@ -62,6 +62,13 @@ void bindPyGpuShaderCreator(py::module & m)
              DOC(GpuShaderCreator, getResourcePrefix))
         .def("setResourcePrefix", &GpuShaderCreator::setResourcePrefix, "prefix"_a, 
              DOC(GpuShaderCreator, setResourcePrefix))
+        .def("setDescriptorSetIndex", &GpuShaderCreator::setDescriptorSetIndex,
+             "index"_a, "textureBindingStart"_a,
+             DOC(GpuShaderCreator, setDescriptorSetIndex))
+        .def("getDescriptorSetIndex", &GpuShaderCreator::getDescriptorSetIndex,
+             DOC(GpuShaderCreator, getDescriptorSetIndex))
+        .def("getTextureBindingStart", &GpuShaderCreator::getTextureBindingStart,
+             DOC(GpuShaderCreator, getTextureBindingStart))
         .def("getCacheID", &GpuShaderCreator::getCacheID, 
              DOC(GpuShaderCreator, getCacheID))
         .def("begin", &GpuShaderCreator::begin, "uid"_a, 
@@ -111,7 +118,7 @@ void bindPyGpuShaderCreator(py::module & m)
              "shaderCode"_a, 
              DOC(GpuShaderCreator, addToFunctionFooterShaderCode))
         .def("createShaderText", &GpuShaderCreator::createShaderText, 
-			 "shaderParameterDeclarations"_a, "shaderTextureDeclarations"_a,
+             "shaderParameterDeclarations"_a, "shaderTextureDeclarations"_a,
              "shaderHelperMethods"_a, "shaderFunctionHeader"_a, 
              "shaderFunctionBody"_a, "shaderFunctionFooter"_a, 
              DOC(GpuShaderCreator, createShaderText))
