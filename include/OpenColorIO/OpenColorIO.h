@@ -3273,7 +3273,7 @@ public:
     /**
     * \brief Set the descriptor set index and texture binding start index to use for the shader program.
     * 
-    * \note Only supported for shading languages that use descriptor sets and texture bindings.
+    * \note Only supported for shading languages, such as Vulkan, that use descriptor sets and texture bindings.
     * 
     * \param index The descriptor set index to use.
     * \param textureBindingStart The texture binding start index to use. The default index starts at 1
@@ -3330,11 +3330,19 @@ public:
     virtual bool addUniform(const char * name,
                             const Float3Getter & getFloat3) = 0;
 
+    /// The size of the vector can be smaller than the size of the corresponding 
+    /// array that is declared in the shader. The parameter maxSize must be used 
+    /// to pass the size of the array declared in the shader. This is important for
+    /// being able to calculate the correct uniform buffer offset for subsequent uniforms
     virtual bool addUniform(const char * name,
                             const SizeGetter & getSize,
                             const VectorFloatGetter & getVectorFloat,
                             const unsigned maxSize) = 0;
 
+    /// The size of the vector can be smaller than the size of the corresponding 
+    /// array that is declared in the shader. The parameter maxSize must be used 
+    /// to pass the size of the array declared in the shader. This is important for
+    /// being able to calculate the correct uniform buffer offset for subsequent uniforms
     virtual bool addUniform(const char * name,
                             const SizeGetter & getSize,
                             const VectorIntGetter & getVectorInt,
