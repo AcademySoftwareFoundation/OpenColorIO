@@ -82,7 +82,7 @@ exclude_patterns = [
   "build",
   "*-prefix",
   "api/python",
-  "site"
+  "site",
 ]
 
 rst_prolog = """
