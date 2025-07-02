@@ -334,7 +334,7 @@ void GpuShaderCreator::createShaderText(const char * shaderParameterDeclarations
     {
         getImpl()->m_shaderCode += "layout (set = "+std::to_string(getImpl()->m_descriptorSetIndex) +
                                    ", binding = 0) uniform " +
-                                   getImpl()->m_functionName + "_Parameters\n {\n";
+                                   getImpl()->m_functionName + "_Parameters\n{\n";
     }
     getImpl()->m_shaderCode += (shaderParameterDeclarations && *shaderParameterDeclarations) ? shaderParameterDeclarations : "";
     if (getImpl()->m_language == GPU_LANGUAGE_GLSL_VK_4_6 && (shaderParameterDeclarations && *shaderParameterDeclarations))
