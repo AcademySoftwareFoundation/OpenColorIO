@@ -192,3 +192,15 @@ if RTD_BUILD:
 
     # Generate Doxygen XML
     subprocess.run(["doxygen", "Doxyfile"], check=True)
+
+# -- Install PyOpenColorIO ----------------------------------------------------
+
+# When building docs for Read the Docs, we won't have a local PyOpenColorIO 
+# build to run autodoc for, so we instead install the specific version needed
+# from PyPi.
+
+if RTD_BUILD:
+    subprocess.run(
+        [sys.executable, "-m", "pip", "install", f"opencolorio=={version}"], 
+        check=True
+    )

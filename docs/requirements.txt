@@ -12,4 +12,3 @@ sphinx-press-theme
 sphinx-tabs
 breathe
 setuptools<68.0.0
-opencolorio
