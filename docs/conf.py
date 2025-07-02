@@ -196,14 +196,13 @@ if RTD_BUILD:
 # -- Install PyOpenColorIO ----------------------------------------------------
 
 # When building docs for Read the Docs, we won't have a local PyOpenColorIO 
-# build to run autodoc for, so we instead install the specific version needed
-# from PyPi.
+# build to run autodoc for, so we try to install the specific version needed
+# from PyPi. If that version is not yet available (pre-release), fallback to 
+# installing the latest version.
 
 if RTD_BUILD:
-    subprocess.run(
-        [
-            "python", "-m", "pip", "install", "--no-cache-dir", 
-            f"opencolorio=={version}"
-        ], 
-        check=True
-    )
+    pip_cmd = ["python", "-m", "pip", "install", "--no-cache-dir"]
+    try:
+        subprocess.run(pip_cmd + [f"opencolorio=={version}"], check=True)
+    except subprocess.CalledProcessError:
+        subprocess.run(pip_cmd + ["--upgrade", "opencolorio"], check=True)
