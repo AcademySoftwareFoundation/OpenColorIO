@@ -107,6 +107,8 @@ void bindPyGpuShaderDesc(py::module & m)
             {
                 return UniformIterator(self);
             })
+        .def("getUniformBufferSize", &GpuShaderDesc::getUniformBufferSize,
+             DOC(GpuShaderDesc, getUniformBufferSize))
 
         // 1D lut related methods
         .def("addTexture", [](GpuShaderDescRcPtr & self,
@@ -187,6 +189,7 @@ void bindPyGpuShaderDesc(py::module & m)
         .def(py::init<const GpuShaderDesc::UniformData &>(), "data"_a)
         
         .def_readwrite("type", &GpuShaderDesc::UniformData::m_type)
+        .def_readwrite("bufferOffset", &GpuShaderDesc::UniformData::m_bufferOffset)
         
         .def("getDouble", [](GpuShaderDesc::UniformData & self) -> double
             {
