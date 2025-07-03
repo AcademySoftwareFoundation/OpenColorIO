@@ -307,6 +307,7 @@ ocioDisplay(
 }
 
 
+
 // Declaration of the OCIO shader function
 
 float4 Display(float4 inPixel)
@@ -394,6 +395,7 @@ ocioDisplay(
 )
 {
 }
+
 
 
 // Declaration of the OCIO shader function
@@ -486,7 +488,8 @@ ocioMyMethodName(
 }
 
 
-// Declaration of all variables
+
+// Declaration of all textures
 
 texture1d<float> ocio_lut1d_0;
 sampler ocio_lut1d_0Sampler;
@@ -594,7 +597,8 @@ ocioMyMethodName(
 }
 
 
-// Declaration of all variables
+
+// Declaration of all textures
 
 texture3d<float> ocio_lut3d_0;
 sampler ocio_lut3d_0Sampler;
@@ -696,7 +700,8 @@ ocioOCIOMain(
 }
 
 
-// Declaration of all variables
+
+// Declaration of all textures
 
 texture2d<float> ocio_lut1d_0;
 sampler ocio_lut1d_0Sampler;
@@ -825,7 +830,8 @@ ocioOCIOMain(
 }
 
 
-// Declaration of all variables
+
+// Declaration of all textures
 
 texture1d<float> ocio_lut1d_0;
 sampler ocio_lut1d_0Sampler;
@@ -970,8 +976,9 @@ ocioOCIOMain(
 
 // Declaration of all variables
 
-float ocio_exposure_contrast_exposureVal;
-float ocio_exposure_contrast_gammaVal;
+ float ocio_exposure_contrast_exposureVal;
+ float ocio_exposure_contrast_gammaVal;
+
 
 // Declaration of the OCIO shader function
 
@@ -1072,6 +1079,7 @@ ocioOCIOMain(
 )
 {
 }
+
 
 
 // Declaration of all helper methods
@@ -1235,11 +1243,12 @@ ocioOCIOMain(
 
 // Declaration of all variables
 
-int ocio_grading_rgbcurve_knotsOffsets[8];
-float ocio_grading_rgbcurve_knots[60];
-int ocio_grading_rgbcurve_coefsOffsets[8];
-float ocio_grading_rgbcurve_coefs[180];
-bool ocio_grading_rgbcurve_localBypass;
+ int ocio_grading_rgbcurve_knotsOffsets[8];
+ float ocio_grading_rgbcurve_knots[60];
+ int ocio_grading_rgbcurve_coefsOffsets[8];
+ float ocio_grading_rgbcurve_coefs[180];
+ bool ocio_grading_rgbcurve_localBypass;
+
 
 // Declaration of all helper methods
 
