@@ -10,6 +10,10 @@ build:
   os: ubuntu-20.04
   tools:
     python: "3.11"
+  jobs:
+    build:
+      html: 
+        - python -m sphinx -T -b -vvv html -d _build/doctrees -D language=en . $READTHEDOCS_OUTPUT/html
 
 sphinx:
   configuration: docs/conf.py
