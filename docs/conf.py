@@ -206,3 +206,6 @@ if RTD_BUILD:
         subprocess.run(pip_cmd + [f"opencolorio=={version}"], check=True)
     except subprocess.CalledProcessError:
         subprocess.run(pip_cmd + ["--upgrade", "opencolorio"], check=True)
+
+def setup(app):
+    app.verbosity = 2
