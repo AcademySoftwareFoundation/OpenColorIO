@@ -13,7 +13,7 @@ build:
   jobs:
     build:
       html: 
-        - python -m sphinx -T -b -vvv html -d _build/doctrees -D language=en . $READTHEDOCS_OUTPUT/html
+        - python -m sphinx -vvv -T -b html -d _build/doctrees -D language=en . $READTHEDOCS_OUTPUT/html
 
 sphinx:
   configuration: docs/conf.py
