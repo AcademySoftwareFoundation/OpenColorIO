@@ -28,7 +28,7 @@ will install the Python-related requirements for building the documentation
 and breathe) and Doxygen.  
 
 **Note:** If you are on Linux using yum and don't already have Doxygen installed, you will have to
-uncomment the relevant line in ``share/ci/scripts/linux/yum/install_docs_env.sh``
+uncomment the relevant line in ``share/ci/scripts/linux/dnf/install_docs_env.sh``
 
 Use GitBash (`provided with Git for Windows <https://gitforwindows.org/>`_) to 
 execute the script on Windows.
