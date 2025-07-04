@@ -5,9 +5,16 @@
 set -ex
 
 DOXYGEN_VERSION="$1"
+YUM_CMD="yum"
 
+# RockyLinux instead of CentOS?
+if command -v dnf >/dev/null; then
+    YUM_CMD="dnf"
+fi
+
+$YUM_CMD install -y epel-release
 if [ "$DOXYGEN_VERSION" == "latest" ]; then
-    yum install -y doxygen
+    $YUM_CMD install -y doxygen
 else
-    yum install -y doxygen-${DOXYGEN_VERSION}
+    $YUM_CMD install -y doxygen-${DOXYGEN_VERSION}
 fi
