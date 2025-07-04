@@ -200,9 +200,9 @@ if RTD_BUILD:
 # from PyPi. If that version is not yet available (pre-release), fallback to 
 # installing the latest version.
 
-if RTD_BUILD:
-    pip_cmd = ["python", "-m", "pip", "install", "--no-cache-dir"]
-    try:
-        subprocess.run(pip_cmd + [f"opencolorio=={version}"], check=True)
-    except subprocess.CalledProcessError:
-        subprocess.run(pip_cmd + ["--upgrade", "opencolorio"], check=True)
+# if RTD_BUILD:
+#     pip_cmd = ["python", "-m", "pip", "install", "--no-cache-dir"]
+#     try:
+#         subprocess.run(pip_cmd + [f"opencolorio=={version}"], check=True)
+#     except subprocess.CalledProcessError:
+#         subprocess.run(pip_cmd + ["--upgrade", "opencolorio"], check=True)
