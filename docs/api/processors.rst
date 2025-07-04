@@ -13,10 +13,6 @@ Processor
    .. group-tab:: Python
 
       .. autoclass:: PyOpenColorIO.Processor
-         :members:
-         :undoc-members:
-         :special-members: __init__
-         :exclude-members: TransformFormatMetadataIterator, WriteFormatIterator
 
       .. autoclass:: PyOpenColorIO.Processor.TransformFormatMetadataIterator
          :special-members: __getitem__, __iter__, __len__, __next__
