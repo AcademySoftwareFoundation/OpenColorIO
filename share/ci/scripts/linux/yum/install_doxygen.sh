@@ -12,7 +12,6 @@ if command -v dnf >/dev/null; then
     YUM_CMD="dnf"
 fi
 
-$YUM_CMD install -y epel-release
 if [ "$DOXYGEN_VERSION" == "latest" ]; then
     $YUM_CMD install -y doxygen
 else
