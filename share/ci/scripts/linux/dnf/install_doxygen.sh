@@ -6,7 +6,7 @@ set -ex
 
 DOXYGEN_VERSION="$1"
 
-if command -v doxygen >/dev/null; then
+if ! command -v doxygen >/dev/null; then
     if [ "$DOXYGEN_VERSION" == "latest" ]; then
         dnf install -y doxygen
     else

@@ -462,7 +462,7 @@ jobs:
     runs-on: macos-13
     strategy:
       matrix:
-        build: [1, 2, 3, 4]
+        build: [1, 2, 3, 4, 5]
         include:
           - build: 5
             arch-type: "x86_64"
@@ -757,7 +757,7 @@ jobs:
           - build: 4
             build-type: Release
             build-shared: 'ON'
-            build-docs: 'OFF'
+            build-docs: 'ON'
             build-openfx: 'ON'
             use-simd: 'OFF'
             use-oiio: 'ON'
