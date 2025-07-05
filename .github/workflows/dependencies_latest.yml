@@ -92,10 +92,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Install docs env
-        run: share/ci/scripts/linux/yum/install_docs_env.sh
+        run: share/ci/scripts/linux/dnf/install_docs_env.sh
         if: matrix.build-docs == 'ON'
       - name: Install tests env
-        run: share/ci/scripts/linux/yum/install_tests_env.sh
+        run: share/ci/scripts/linux/dnf/install_tests_env.sh
       - name: Setup ext environment
         run: |
           EXT_PATH=/usr/local

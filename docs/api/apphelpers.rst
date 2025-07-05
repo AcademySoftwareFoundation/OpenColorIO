@@ -12,7 +12,22 @@ ColorSpaceMenuHelpers
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_colorspacehelpers.rst
+      .. autofunction:: PyOpenColorIO.ColorSpaceHelpers.AddColorSpace
+
+      .. autoclass:: PyOpenColorIO.ColorSpaceMenuParameters
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :exclude-members: AddedColorSpaceIterator
+
+      .. autoclass:: PyOpenColorIO.ColorSpaceMenuHelper
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :exclude-members: ColorSpaceLevelIterator
+
+      .. autoclass:: PyOpenColorIO.ColorSpaceMenuHelper.ColorSpaceLevelIterator
+         :special-members: __getitem__, __iter__, __len__, __next__
 
    .. group-tab:: C++
 
@@ -38,7 +53,10 @@ DisplayViewHelpers
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_displayviewhelpers.rst
+      .. autofunction:: PyOpenColorIO.DisplayViewHelpers.GetProcessor
+      .. autofunction:: PyOpenColorIO.DisplayViewHelpers.GetIdentityProcessor
+      .. autofunction:: PyOpenColorIO.DisplayViewHelpers.AddDisplayView
+      .. autofunction:: PyOpenColorIO.DisplayViewHelpers.RemoveDisplayView
 
    .. group-tab:: C++
 
@@ -53,7 +71,10 @@ LegacyViewingPipeline
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_legacyviewingpipeline.rst
+      .. autoclass:: PyOpenColorIO.LegacyViewingPipeline
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
 
    .. group-tab:: C++
 
@@ -73,7 +94,22 @@ MixingHelpers
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_mixinghelpers.rst
+      .. autoclass:: PyOpenColorIO.MixingSlider
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+
+      .. autoclass:: PyOpenColorIO.MixingColorSpaceManager
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :exclude-members: MixingSpaceIterator, MixingEncodingIterator
+
+      .. autoclass:: PyOpenColorIO.MixingColorSpaceManager.MixingSpaceIterator
+         :special-members: __getitem__, __iter__, __len__, __next__
+
+      .. autoclass:: PyOpenColorIO.MixingColorSpaceManager.MixingEncodingIterator
+         :special-members: __getitem__, __iter__, __len__, __next__
 
    .. group-tab:: C++
 

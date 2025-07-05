@@ -12,7 +12,10 @@ LoggingLevel
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_logginglevel.rst
+      .. autoclass:: PyOpenColorIO.LoggingLevel
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -27,7 +30,10 @@ ReferenceSpaceType
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_referencespacetype.rst
+      .. autoclass:: PyOpenColorIO.ReferenceSpaceType
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -40,7 +46,10 @@ SearchReferenceSpaceType
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_searchreferencespacetype.rst
+      .. autoclass:: PyOpenColorIO.SearchReferenceSpaceType
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -53,7 +62,10 @@ NamedTransformVisibility
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_namedtransformvisibility.rst
+      .. autoclass:: PyOpenColorIO.NamedTransformVisibility
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -66,7 +78,10 @@ ColorSpaceVisibility
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_colorspacevisibility.rst
+      .. autoclass:: PyOpenColorIO.ColorSpaceVisibility
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -79,7 +94,10 @@ ViewType
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_viewtype.rst
+      .. autoclass:: PyOpenColorIO.ViewType
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -92,7 +110,10 @@ ColorSpaceDirection
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_colorspacedirection.rst
+      .. autoclass:: PyOpenColorIO.ColorSpaceDirection
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -107,7 +128,10 @@ ViewTransformDirection
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_viewtransformdirection.rst
+      .. autoclass:: PyOpenColorIO.ViewTransformDirection
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -122,7 +146,10 @@ TransformDirection
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_transformdirection.rst
+      .. autoclass:: PyOpenColorIO.TransformDirection
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -137,7 +164,10 @@ TransformType
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_transformtype.rst
+      .. autoclass:: PyOpenColorIO.TransformType
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -150,7 +180,10 @@ Interpolation
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_interpolation.rst
+      .. autoclass:: PyOpenColorIO.Interpolation
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -165,7 +198,10 @@ BitDepth
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_bitdepth.rst
+      .. autoclass:: PyOpenColorIO.BitDepth
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -180,7 +216,10 @@ Lut1DHueAdjust
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_lut1dhueadjust.rst
+      .. autoclass:: PyOpenColorIO.Lut1DHueAdjust
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -193,7 +232,10 @@ ChannelOrdering
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_channelordering.rst
+      .. autoclass:: PyOpenColorIO.ChannelOrdering
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -206,7 +248,10 @@ Allocation
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_allocation.rst
+      .. autoclass:: PyOpenColorIO.Allocation
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -221,7 +266,10 @@ GpuLanguage
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_gpulanguage.rst
+      .. autoclass:: PyOpenColorIO.GpuLanguage
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -236,7 +284,10 @@ EnvironmentMode
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_environmentmode.rst
+      .. autoclass:: PyOpenColorIO.EnvironmentMode
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -251,7 +302,10 @@ RangeStyle
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_rangestyle.rst
+      .. autoclass:: PyOpenColorIO.RangeStyle
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -266,7 +320,10 @@ FixedFunctionStyle
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_fixedfunctionstyle.rst
+      .. autoclass:: PyOpenColorIO.FixedFunctionStyle
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -281,7 +338,10 @@ ExposureContrastStyle
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_exposurecontraststyle.rst
+      .. autoclass:: PyOpenColorIO.ExposureContrastStyle
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -296,7 +356,10 @@ CDLStyle
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_cdlstyle.rst
+      .. autoclass:: PyOpenColorIO.CDLStyle
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -311,7 +374,10 @@ NegativeStyle
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_negativestyle.rst
+      .. autoclass:: PyOpenColorIO.NegativeStyle
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -326,7 +392,10 @@ GradingStyle
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_gradingstyle.rst
+      .. autoclass:: PyOpenColorIO.GradingStyle
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -341,7 +410,10 @@ DynamicPropertyType
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_dynamicpropertytype.rst
+      .. autoclass:: PyOpenColorIO.DynamicPropertyType
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -354,7 +426,10 @@ RGBCurveType
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_rgbcurvetype.rst
+      .. autoclass:: PyOpenColorIO.RGBCurveType
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -367,7 +442,10 @@ UniformDataType
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_uniformdatatype.rst
+      .. autoclass:: PyOpenColorIO.UniformDataType
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -380,7 +458,10 @@ OptimizationFlags
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_optimizationflags.rst
+      .. autoclass:: PyOpenColorIO.OptimizationFlags
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 
@@ -393,7 +474,10 @@ ProcessorCacheFlags
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_processorcacheflags.rst
+      .. autoclass:: PyOpenColorIO.ProcessorCacheFlags
+         :members:
+         :undoc-members:
+         :exclude-members: name
 
    .. group-tab:: C++
 

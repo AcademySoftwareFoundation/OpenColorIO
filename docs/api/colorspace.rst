@@ -9,7 +9,17 @@ ColorSpace
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_colorspace.rst
+      .. autoclass:: PyOpenColorIO.ColorSpace
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :exclude-members: ColorSpaceCategoryIterator, ColorSpaceAliasIterator
+
+      .. autoclass:: PyOpenColorIO.ColorSpace.ColorSpaceCategoryIterator
+         :special-members: __getitem__, __iter__, __len__, __next__
+
+      .. autoclass:: PyOpenColorIO.ColorSpace.ColorSpaceAliasIterator
+         :special-members: __getitem__, __iter__, __len__, __next__
 
    .. group-tab:: C++
 
@@ -29,7 +39,17 @@ ColorSpaceSet
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_colorspaceset.rst
+      .. autoclass:: PyOpenColorIO.ColorSpaceSet
+         :members:
+         :undoc-members:
+         :special-members: __init__, __eq__, __ne__, __sub__, __or__, __and__
+         :exclude-members: ColorSpaceNameIterator, ColorSpaceIterator
+
+      .. autoclass:: PyOpenColorIO.ColorSpaceSet.ColorSpaceNameIterator
+         :special-members: __getitem__, __iter__, __len__, __next__
+
+      .. autoclass:: PyOpenColorIO.ColorSpaceSet.ColorSpaceIterator
+         :special-members: __getitem__, __iter__, __len__, __next__
 
    .. group-tab:: C++
 

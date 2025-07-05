@@ -14,7 +14,11 @@ GradingPrimaryTransform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_gradingprimarytransform.rst
+      .. autoclass:: PyOpenColorIO.GradingPrimaryTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :inherited-members:
 
    .. group-tab:: C++
 
@@ -34,7 +38,10 @@ GradingPrimary
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_gradingprimary.rst
+      .. autoclass:: PyOpenColorIO.GradingPrimary
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
 
    .. group-tab:: C++
 
@@ -51,7 +58,10 @@ GradingRGBM
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_gradingrgbm.rst
+      .. autoclass:: PyOpenColorIO.GradingRGBM
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
 
    .. group-tab:: C++
 
@@ -68,7 +78,11 @@ GradingRGBCurveTransform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_gradingrgbcurvetransform.rst
+      .. autoclass:: PyOpenColorIO.GradingRGBCurveTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :inherited-members:
 
    .. group-tab:: C++
 
@@ -88,7 +102,10 @@ GradingRGBCurve
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_gradingrgbcurve.rst
+      .. autoclass:: PyOpenColorIO.GradingRGBCurve
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
 
    .. group-tab:: C++
 
@@ -108,7 +125,10 @@ GradingControlPoint
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_gradingcontrolpoint.rst
+      .. autoclass:: PyOpenColorIO.GradingControlPoint
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
 
    .. group-tab:: C++
 
@@ -125,7 +145,14 @@ GradingBSplineCurve
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_gradingbsplinecurve.rst
+      .. autoclass:: PyOpenColorIO.GradingBSplineCurve
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :exclude-members: GradingControlPointIterator
+
+      .. autoclass:: PyOpenColorIO.GradingBSplineCurve.GradingControlPointIterator
+         :special-members: __getitem__, __setitem__, __iter__, __len__, __next__
 
    .. group-tab:: C++
 
@@ -145,7 +172,11 @@ GradingToneTransform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_gradingtonetransform.rst
+      .. autoclass:: PyOpenColorIO.GradingToneTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :inherited-members:
 
    .. group-tab:: C++
 
@@ -165,7 +196,10 @@ GradingTone
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_gradingtone.rst
+      .. autoclass:: PyOpenColorIO.GradingTone
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
 
    .. group-tab:: C++
 
@@ -182,7 +216,10 @@ GradingRGBMSW
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_gradingrgbmsw.rst
+      .. autoclass:: PyOpenColorIO.GradingRGBMSW
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
 
    .. group-tab:: C++
 

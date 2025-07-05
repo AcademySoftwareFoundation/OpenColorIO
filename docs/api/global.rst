@@ -12,7 +12,7 @@ Caching
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_clearallcaches.rst
+      .. autofunction:: PyOpenColorIO.ClearAllCaches
 
    .. group-tab:: C++
 
@@ -27,9 +27,9 @@ Version
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_getversion.rst
+      .. autofunction:: PyOpenColorIO.GetVersion
 
-      .. include:: python/${PYDIR}/pyopencolorio_getversionhex.rst
+      .. autofunction:: PyOpenColorIO.GetVersionHex
 
    .. group-tab:: C++
 
@@ -44,9 +44,9 @@ Logging
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_getlogginglevel.rst
+      .. autofunction:: PyOpenColorIO.GetLoggingLevel
 
-      .. include:: python/${PYDIR}/pyopencolorio_setlogginglevel.rst
+      .. autofunction:: PyOpenColorIO.SetLoggingLevel
 
    .. group-tab:: C++
 
@@ -61,11 +61,11 @@ Logging Function
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_setloggingfunction.rst
+      .. autofunction:: PyOpenColorIO.SetLoggingFunction
 
-      .. include:: python/${PYDIR}/pyopencolorio_resettodefaultloggingfunction.rst
+      .. autofunction:: PyOpenColorIO.ResetToDefaultLoggingFunction
 
-      .. include:: python/${PYDIR}/pyopencolorio_logmessage.rst
+      .. autofunction:: PyOpenColorIO.LogMessage
 
    .. group-tab:: C++
 
@@ -84,9 +84,9 @@ Compute Hash Function
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_setcomputehashfunction.rst
+      .. autofunction:: PyOpenColorIO.SetComputeHashFunction
 
-      .. include:: python/${PYDIR}/pyopencolorio_resetcomputehashfunction.rst
+      .. autofunction:: PyOpenColorIO.ResetComputeHashFunction
 
    .. group-tab:: C++
 
@@ -103,13 +103,13 @@ Environment Variables
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_getenvvariable.rst
+      .. autofunction:: PyOpenColorIO.GetEnvVariable
 
-      .. include:: python/${PYDIR}/pyopencolorio_setenvvariable.rst
+      .. autofunction:: PyOpenColorIO.SetEnvVariable
 
-      .. include:: python/${PYDIR}/pyopencolorio_unsetenvvariable.rst
+      .. autofunction:: PyOpenColorIO.UnsetEnvVariable
 
-      .. include:: python/${PYDIR}/pyopencolorio_isenvvariablepresent.rst
+      .. autofunction:: PyOpenColorIO.IsEnvVariablePresent
 
    .. group-tab:: C++
 
@@ -142,9 +142,9 @@ Bool
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_booltostring.rst
+      .. autofunction:: PyOpenColorIO.BoolToString
 
-      .. include:: python/${PYDIR}/pyopencolorio_boolfromstring.rst
+      .. autofunction:: PyOpenColorIO.BoolFromString
 
    .. group-tab:: C++
 
@@ -161,9 +161,9 @@ LoggingLevel
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_loggingleveltostring.rst
+      .. autofunction:: PyOpenColorIO.LoggingLevelToString
 
-      .. include:: python/${PYDIR}/pyopencolorio_logginglevelfromstring.rst
+      .. autofunction:: PyOpenColorIO.LoggingLevelFromString
 
    .. group-tab:: C++
 
@@ -180,13 +180,13 @@ TransformDirection
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_transformdirectiontostring.rst
+      .. autofunction:: PyOpenColorIO.TransformDirectionToString
 
-      .. include:: python/${PYDIR}/pyopencolorio_transformdirectionfromstring.rst
+      .. autofunction:: PyOpenColorIO.TransformDirectionFromString
 
-      .. include:: python/${PYDIR}/pyopencolorio_getinversetransformdirection.rst
+      .. autofunction:: PyOpenColorIO.GetInverseTransformDirection
 
-      .. include:: python/${PYDIR}/pyopencolorio_combinetransformdirections.rst
+      .. autofunction:: PyOpenColorIO.CombineTransformDirections
 
    .. group-tab:: C++
 
@@ -207,13 +207,13 @@ BitDepth
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_bitdepthtostring.rst
+      .. autofunction:: PyOpenColorIO.BitDepthToString
 
-      .. include:: python/${PYDIR}/pyopencolorio_bitdepthfromstring.rst
+      .. autofunction:: PyOpenColorIO.BitDepthFromString
 
-      .. include:: python/${PYDIR}/pyopencolorio_bitdepthisfloat.rst
+      .. autofunction:: PyOpenColorIO.BitDepthIsFloat
 
-      .. include:: python/${PYDIR}/pyopencolorio_bitdepthtoint.rst
+      .. autofunction:: PyOpenColorIO.BitDepthToInt
 
    .. group-tab:: C++
 
@@ -234,9 +234,9 @@ Allocation
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_allocationtostring.rst
+      .. autofunction:: PyOpenColorIO.AllocationToString
 
-      .. include:: python/${PYDIR}/pyopencolorio_allocationfromstring.rst
+      .. autofunction:: PyOpenColorIO.AllocationFromString
 
    .. group-tab:: C++
 
@@ -253,9 +253,9 @@ Interpolation
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_interpolationtostring.rst
+      .. autofunction:: PyOpenColorIO.InterpolationToString
 
-      .. include:: python/${PYDIR}/pyopencolorio_interpolationfromstring.rst
+      .. autofunction:: PyOpenColorIO.InterpolationFromString
 
    .. group-tab:: C++
 
@@ -272,9 +272,9 @@ GpuLanguage
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_gpulanguagetostring.rst
+      .. autofunction:: PyOpenColorIO.GpuLanguageToString
 
-      .. include:: python/${PYDIR}/pyopencolorio_gpulanguagefromstring.rst
+      .. autofunction:: PyOpenColorIO.GpuLanguageFromString
 
    .. group-tab:: C++
 
@@ -291,9 +291,9 @@ EnvironmentMode
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_environmentmodetostring.rst
+      .. autofunction:: PyOpenColorIO.EnvironmentModeToString
 
-      .. include:: python/${PYDIR}/pyopencolorio_environmentmodefromstring.rst
+      .. autofunction:: PyOpenColorIO.EnvironmentModeFromString
 
    .. group-tab:: C++
 
@@ -310,9 +310,9 @@ CDLStyle
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_cdlstyletostring.rst
+      .. autofunction:: PyOpenColorIO.CDLStyleToString
 
-      .. include:: python/${PYDIR}/pyopencolorio_cdlstylefromstring.rst
+      .. autofunction:: PyOpenColorIO.CDLStyleFromString
 
    .. group-tab:: C++
 
@@ -329,9 +329,9 @@ RangeStyle
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_rangestyletostring.rst
+      .. autofunction:: PyOpenColorIO.RangeStyleToString
 
-      .. include:: python/${PYDIR}/pyopencolorio_rangestylefromstring.rst
+      .. autofunction:: PyOpenColorIO.RangeStyleFromString
 
    .. group-tab:: C++
 
@@ -348,9 +348,9 @@ FixedFunctionStyle
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_fixedfunctionstyletostring.rst
+      .. autofunction:: PyOpenColorIO.FixedFunctionStyleToString
 
-      .. include:: python/${PYDIR}/pyopencolorio_fixedfunctionstylefromstring.rst
+      .. autofunction:: PyOpenColorIO.FixedFunctionStyleFromString
 
    .. group-tab:: C++
 
@@ -367,9 +367,9 @@ GradingStyle
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_gradingstyletostring.rst
+      .. autofunction:: PyOpenColorIO.GradingStyleToString
 
-      .. include:: python/${PYDIR}/pyopencolorio_gradingstylefromstring.rst
+      .. autofunction:: PyOpenColorIO.GradingStyleFromString
 
    .. group-tab:: C++
 
@@ -386,9 +386,9 @@ ExposureContrastStyle
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_exposurecontraststyletostring.rst
+      .. autofunction:: PyOpenColorIO.ExposureContrastStyleToString
 
-      .. include:: python/${PYDIR}/pyopencolorio_exposurecontraststylefromstring.rst
+      .. autofunction:: PyOpenColorIO.ExposureContrastStyleFromString
 
    .. group-tab:: C++
 
@@ -405,9 +405,9 @@ NegativeStyle
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_negativestyletostring.rst
+      .. autofunction:: PyOpenColorIO.NegativeStyleToString
 
-      .. include:: python/${PYDIR}/pyopencolorio_negativestylefromstring.rst
+      .. autofunction:: PyOpenColorIO.NegativeStyleFromString
 
    .. group-tab:: C++
 

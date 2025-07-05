@@ -27,7 +27,7 @@ test-command = [
 ]
 
 [tool.cibuildwheel.linux]
-before-build = "share/ci/scripts/linux/yum/install_docs_env.sh"
+before-build = "share/ci/scripts/linux/dnf/install_docs_env.sh"
 
 [tool.cibuildwheel.macos]
 # cibuildwheel in some cases set this to 10.9 by default, OCIO needs >= 10.13

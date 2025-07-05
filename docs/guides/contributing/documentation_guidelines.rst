@@ -28,7 +28,7 @@ will install the Python-related requirements for building the documentation
 and breathe) and Doxygen.  
 
 **Note:** If you are on Linux using yum and don't already have Doxygen installed, you will have to
-uncomment the relevant line in ``share/ci/scripts/linux/yum/install_docs_env.sh``
+uncomment the relevant line in ``share/ci/scripts/linux/dnf/install_docs_env.sh``
 
 Use GitBash (`provided with Git for Windows <https://gitforwindows.org/>`_) to 
 execute the script on Windows.
@@ -81,25 +81,7 @@ Tip:
 Updating the Python docs
 ************************
 
-If a contributor makes changes to any part of OCIO which affects the Python API docs 
-(so, public headers, Python bindings, any documentation process code, etc.) they should 
-do a local build with the new CMake option -DOCIO_BUILD_FROZEN_DOCS=ON::
-
-    $ cmake -DOCIO_BUILD_FROZEN_DOCS=ON ../
-
-and add the modified rST files found under ``docs/api/python/frozen`` to their PR.
-
-**Note:** If you run the scripts on Linux, the freezing process should work well.  On other 
-platforms, the process may sometimes make spurious deltas to rST files unrelated to your 
-changes.  Please don't add these files to your PR.
-
-The OCIO conf.py module has a switch that detects when docs are being built on GH Actions 
-(CI env var == true); in that case it will backup the "frozen" folder to a sibling backup
-folder on Sphinx init, and following Sphinx build completion will do a file-by-file comparison
-of the new "frozen" and backup folders. If there are differences, the CI job may fail with
-an error explaining where the differences were found and with instructions on how to fix them.
-
-The conf.py also has a switch that detects when it is being run on RTD, and in that case 
+The conf.py has a switch that detects when it is being run on RTD, and in that case 
 will itself run Doxygen to generate the XML needed by breathe prior to building the docs, 
 and will also facilitate a CMake configure_file-like process (via Python) to handle 
 substitutions in headers and docs source files that CMake would usually handle, but can't 

@@ -9,7 +9,14 @@ ViewTransform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_viewtransform.rst
+      .. autoclass:: PyOpenColorIO.ViewTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :exclude-members: ViewTransformCategoryIterator
+
+      .. autoclass:: PyOpenColorIO.ViewTransform.ViewTransformCategoryIterator
+         :special-members: __getitem__, __iter__, __len__, __next__
 
    .. group-tab:: C++
 
