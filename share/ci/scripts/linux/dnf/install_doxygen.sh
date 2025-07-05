@@ -7,7 +7,7 @@ set -ex
 DOXYGEN_VERSION="$1"
 
 if command -v dnf >/dev/null; then
-    if [ "$DOXYGEN_VERSION" == "latest" ]; then
+    if [ "$DOXYGEN_VERSION" = "latest" ]; then
         dnf install -y doxygen
     else
         dnf install -y doxygen-${DOXYGEN_VERSION}
@@ -15,7 +15,11 @@ if command -v dnf >/dev/null; then
 else
     # Is some version of doxygen already available?
     if command -v doxygen >/dev/null; then
-        if [ "$DOXYGEN_VERSION" == "latest" ]; then
+        source /etc/os-release
+        if [ "$ID" = "centos" ]; then
+            # CentOS-7 was known to be compatible with this doxygen version
+            DOXYGEN_VERSION=1.8.5
+        elif [ "$DOXYGEN_VERSION" = "latest" ]; then
             # Get latest doxygen version from GH
             DOXYGEN_VERSION=$(
                 curl --silent https://api.github.com/repos/doxygen/doxygen/releases/latest | \
