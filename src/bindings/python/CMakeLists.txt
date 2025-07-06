@@ -10,9 +10,6 @@ if(OCIO_BUILD_DOCS)
 
 	# Sets Python_PRE_CMD, which sets PATH and PYTHONPATH for Python
     get_python_pre_command()
-    message(STATUS, "${Python_PRE_CMD}")
-    message(STATUS, "${Python_EXECUTABLE}")
-    message(STATUS, "${EXTRACT_DOCSTRINGS_PY}")
 
 	###########################################################################
 	### Extract docstrings from C++ headers for Python bindings ###
