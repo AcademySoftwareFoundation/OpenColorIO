@@ -278,7 +278,7 @@ jobs:
           - build: 5
             build-type: Release
             build-shared: 'ON'
-            build-docs: 'OFF'
+            build-docs: 'ON'
             build-openfx: 'ON'
             use-simd: 'OFF'
             use-oiio: 'OFF'
