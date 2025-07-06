@@ -6,6 +6,5 @@ set -ex
 
 HERE=$(dirname $0)
 
-cat /etc/os-release
 bash $HERE/install_doxygen.sh latest
 pip install -r $HERE/../../../../../docs/requirements.txt
