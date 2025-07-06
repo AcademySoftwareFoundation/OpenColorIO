@@ -16,23 +16,29 @@ if ! command -v doxygen >/dev/null; then
     else
         source /etc/os-release
         if [ "$ID" = "centos" ] && [ "$VERSION_ID" = "7" ]; then
+            if [ "$VERSION" = "7 (AltArch)" ]; then
+                BASE_DIR="altarch/7"
+            else
+                BASE_DIR="7.9.2009"
+            fi
+
             mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.bak
             tee /etc/yum.repos.d/CentOS-Vault.repo > /dev/null <<EOF
 [base]
 name=CentOS-7 - Base
-baseurl=http://vault.centos.org/7.9.2009/os/\$basearch/
+baseurl=http://vault.centos.org/$BASE_DIR/os/\$basearch/
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 
 [updates]
 name=CentOS-7 - Updates
-baseurl=http://vault.centos.org/7.9.2009/updates/\$basearch/
+baseurl=http://vault.centos.org/$BASE_DIR/updates/\$basearch/
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 
 [extras]
 name=CentOS-7 - Extras
-baseurl=http://vault.centos.org/7.9.2009/extras/\$basearch/
+baseurl=http://vault.centos.org/$BASE_DIR/extras/\$basearch/
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 EOF
