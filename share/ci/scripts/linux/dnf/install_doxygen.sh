@@ -15,26 +15,26 @@ if ! command -v doxygen >/dev/null; then
         fi
     else
         source /etc/os-release
-        if [ "$ID" = "centos" ]; then
+        if [ "$ID" = "centos" ] && [ "$VERSION_ID" = "7" ]; then
             mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.bak
             tee /etc/yum.repos.d/CentOS-Vault.repo > /dev/null <<EOF
 [base]
-name=CentOS-\$releasever - Base
-baseurl=http://vault.centos.org/\$releasever/os/\$basearch/
+name=CentOS-7 - Base
+baseurl=http://vault.centos.org/7.9.2009/os/\$basearch/
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-\$releasever
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 
 [updates]
-name=CentOS-\$releasever - Updates
-baseurl=http://vault.centos.org/\$releasever/updates/\$basearch/
+name=CentOS-7 - Updates
+baseurl=http://vault.centos.org/7.9.2009/updates/\$basearch/
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-\$releasever
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 
 [extras]
-name=CentOS-\$releasever - Extras
-baseurl=http://vault.centos.org/\$releasever/extras/\$basearch/
+name=CentOS-7 - Extras
+baseurl=http://vault.centos.org/7.9.2009/extras/\$basearch/
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-\$releasever
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 EOF
             yum clean all
             yum makecache
