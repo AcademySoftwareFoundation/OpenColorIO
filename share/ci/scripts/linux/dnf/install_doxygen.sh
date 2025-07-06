@@ -36,8 +36,8 @@ baseurl=http://vault.centos.org/\$releasever/extras/\$basearch/
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-\$releasever
 EOF
-            sudo yum clean all
-            sudo yum makecache
+            yum clean all
+            yum makecache
         fi
 
         if [ "$DOXYGEN_VERSION" == "latest" ]; then
