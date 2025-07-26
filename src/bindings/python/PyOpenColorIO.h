@@ -115,7 +115,7 @@ struct polymorphic_type_hook<OCIO::Transform> {
             {
                 type = &typeid(OCIO::AllocationTransform);
             }
-            if(dynamic_cast<const OCIO::BuiltinTransform*>(src))
+            else if(dynamic_cast<const OCIO::BuiltinTransform*>(src))
             {
                 type = &typeid(OCIO::BuiltinTransform);
             }
@@ -159,7 +159,11 @@ struct polymorphic_type_hook<OCIO::Transform> {
             {
                 type = &typeid(OCIO::GradingRGBCurveTransform);
             }
-            if(dynamic_cast<const OCIO::GradingToneTransform*>(src))
+            else if (dynamic_cast<const OCIO::GradingHueCurveTransform*>(src))
+            {
+                type = &typeid(OCIO::GradingHueCurveTransform);
+            }
+            else if(dynamic_cast<const OCIO::GradingToneTransform*>(src))
             {
                 type = &typeid(OCIO::GradingToneTransform);
             }

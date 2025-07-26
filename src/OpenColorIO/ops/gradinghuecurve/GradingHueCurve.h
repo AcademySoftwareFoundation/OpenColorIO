@@ -22,14 +22,14 @@ public:
     GradingHueCurveImpl();
     GradingHueCurveImpl(GradingStyle style);
     GradingHueCurveImpl(
-      ConstGradingBSplineCurveRcPtr hueHue,
-      ConstGradingBSplineCurveRcPtr hueSat,
-      ConstGradingBSplineCurveRcPtr hueLum,
-      ConstGradingBSplineCurveRcPtr lumSat,
-      ConstGradingBSplineCurveRcPtr satSat,
-      ConstGradingBSplineCurveRcPtr lumLum,
-      ConstGradingBSplineCurveRcPtr satLum,
-      ConstGradingBSplineCurveRcPtr hueFx );
+        ConstGradingBSplineCurveRcPtr hueHue,
+        ConstGradingBSplineCurveRcPtr hueSat,
+        ConstGradingBSplineCurveRcPtr hueLum,
+        ConstGradingBSplineCurveRcPtr lumSat,
+        ConstGradingBSplineCurveRcPtr satSat,
+        ConstGradingBSplineCurveRcPtr lumLum,
+        ConstGradingBSplineCurveRcPtr satLum,
+        ConstGradingBSplineCurveRcPtr hueFx );
     GradingHueCurveImpl(const ConstGradingHueCurveRcPtr & rhs);
 
     GradingHueCurveRcPtr createEditableCopy() const override;
@@ -41,6 +41,7 @@ public:
 
     static const GradingBSplineCurveImpl DefaultHueHue;
     static const GradingBSplineCurveImpl DefaultHueSat;
+    static const GradingBSplineCurveImpl DefaultHueLum;
     static const GradingBSplineCurveImpl DefaultHueFx;
     static const GradingBSplineCurveImpl DefaultLumSat;
     static const GradingBSplineCurveImpl DefaultLumSatLin;

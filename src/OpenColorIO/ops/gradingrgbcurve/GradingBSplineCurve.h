@@ -18,14 +18,14 @@ class GradingBSplineCurveImpl : public GradingBSplineCurve
 {
 public:
     explicit GradingBSplineCurveImpl(size_t size);
-    explicit GradingBSplineCurveImpl(size_t size, BSplineCurveType curveType);
+    explicit GradingBSplineCurveImpl(size_t size, BSplineType splineType);
     GradingBSplineCurveImpl(const std::vector<GradingControlPoint> & controlPoints);
-    GradingBSplineCurveImpl(const std::vector<GradingControlPoint> & controlPoints, BSplineCurveType curveType);
+    GradingBSplineCurveImpl(const std::vector<GradingControlPoint> & controlPoints, BSplineType splineType);
     ~GradingBSplineCurveImpl() = default;
 
     GradingBSplineCurveRcPtr createEditableCopy() const override;
-    BSplineCurveType getCurveType() const override;
-    void setCurveType(BSplineCurveType curveType) override;
+    BSplineType getSplineType() const override;
+    void setSplineType(BSplineType splineType) override;
     size_t getNumControlPoints() const noexcept override;
     void setNumControlPoints(size_t size) override;
     const GradingControlPoint & getControlPoint(size_t index) const override;
@@ -88,14 +88,16 @@ public:
         // control points but the number of knots may be, at most, the number of control
         // points * 2 - 1.
         // 
-        // There are 4 RGB curves (R, G, B, M) each represented by one RGBCurve.  We want to keep
-        // the total for two curves well below the 200 knot, 600 coef limit.
-        // (TODO: 6 Hue curves (H/H, H/S, H/L, L/S, L/L, S/S)).
+        // There are four spline curves (R, G, B, M) in an RGBCurve and eight in a HueCurve.
+        // We want to keep the total for two instances well below the 200 knot, 600 coef limit.
         //
         // A value of 60 knots would allow about 30 control points spread across the 4 or 6 curves.
         // Note that the default RGB curves use 3 control points each and the hue curves may use as
         // many as 6 even for the default.  However, there is an optimization below that does not
         // add knots for curves that are simply identity.
+        //
+        // UPDATE: Hardware has improved since this was introduced. For OCIO 2.5, double the
+        // allowed knots/coefs from 60/180 to 120/360.
         //
         // Maximum size of the knots array (for ALL curves).
         static constexpr int MAX_NUM_KNOTS = 120;
@@ -111,15 +113,22 @@ public:
 
         float evalCurve(int curveIdx, float x) const;
         float evalCurveRev(int curveIdx, float x) const;
+        float evalCurveRevHue(int c, float y, bool isHfx) const;
     };
 
     // Compute knots and coefs for a curve and add result to knotsCoefs. It has to be called for
     // each curve using a given curve order.
     void computeKnotsAndCoefs(KnotsCoefs & knotsCoefs, int curveIdx) const;
 
-    static void AddShaderEval(GpuShaderText & st,
-                              const std::string & knotsOffsets, const std::string & coefsOffsets,
-                              const std::string & knots, const std::string & coefs, bool isInv);
+    static void AddShaderEvalFwd(GpuShaderText & st,
+                                 const std::string & knotsOffsets, const std::string & coefsOffsets,
+                                 const std::string & knots, const std::string & coefs);
+    static void AddShaderEvalRev(GpuShaderText & st,
+                                 const std::string & knotsOffsets, const std::string & coefsOffsets,
+                                 const std::string & knots, const std::string & coefs);
+    static void AddShaderEvalRevHue(GpuShaderText & st,
+                                    const std::string & knotsOffsets, const std::string & coefsOffsets,
+                                    const std::string & knots, const std::string & coefs);
 private:
     void computeKnotsAndCoefsForRGBCurve(KnotsCoefs & knotsCoefs, int curveIdx) const;
     void computeKnotsAndCoefsForHueCurve(KnotsCoefs & knotsCoefs, int curveIdx) const;
@@ -129,7 +138,7 @@ private:
     std::vector<GradingControlPoint> m_controlPoints;
     std::vector<float> m_slopesArray;  // Optional slope values for the control points.
 
-    BSplineCurveType m_curveType = BSplineCurveType::B_SPLINE;
+    BSplineType m_splineType = BSplineType::B_SPLINE;
 };
 
 bool IsGradingCurveIdentity(const ConstGradingBSplineCurveRcPtr & curve);

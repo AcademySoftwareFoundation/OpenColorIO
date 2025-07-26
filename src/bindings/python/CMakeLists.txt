@@ -68,6 +68,7 @@ set(SOURCES
 	transforms/PyFixedFunctionTransform.cpp
 	transforms/PyGradingPrimaryTransform.cpp
 	transforms/PyGradingRGBCurveTransform.cpp
+	transforms/PyGradingHueCurveTransform.cpp
 	transforms/PyGradingToneTransform.cpp
 	transforms/PyGroupTransform.cpp
 	transforms/PyLogAffineTransform.cpp

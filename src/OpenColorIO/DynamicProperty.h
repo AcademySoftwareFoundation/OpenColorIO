@@ -205,7 +205,7 @@ public:
 private:
     void precompute();
 
-    ConstGradingHueCurveRcPtr m_hueCurve;
+    ConstGradingHueCurveRcPtr m_gradingHueCurve;
 
     // Holds curve data as knots and coefs. There are 8 curves.
     GradingBSplineCurveImpl::KnotsCoefs m_knotsCoefs{ 8 };

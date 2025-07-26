@@ -1721,6 +1721,8 @@ void Add_RGB_TO_HSY(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, f
     {
         ss.newLine() << "float sat = distRGB * 1.25;";
     }
+    // NB: Unlike typical HSV, HSY maps magenta rather than red to a hue of zero.
+    // (This allows for better placement of red when manipulating curves in a UI.)
     ss.newLine() << "float hue = 0.0;";
     ss.newLine() << "if (minRGB != maxRGB) {";
     ss.newLine() << "   float OneOverMaxMinusMin = 1.0 / (maxRGB - minRGB);";

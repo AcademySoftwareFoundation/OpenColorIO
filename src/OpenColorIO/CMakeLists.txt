@@ -95,6 +95,7 @@ set(SOURCES
     ops/gamma/GammaOpUtils.cpp
     ops/gamma/GammaOp.cpp
     ops/gradinghuecurve/GradingHueCurve.cpp
+    ops/gradinghuecurve/GradingHueCurveOpCPU.cpp
     ops/gradinghuecurve/GradingHueCurveOpData.cpp
     ops/gradinghuecurve/GradingHueCurveOpGPU.cpp
     ops/gradinghuecurve/GradingHueCurveOp.cpp

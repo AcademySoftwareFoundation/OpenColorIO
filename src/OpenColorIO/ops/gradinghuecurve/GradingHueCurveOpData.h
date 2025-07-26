@@ -41,7 +41,7 @@ public:
 
     void validate() const override;
 
-    Type getType() const override { return GradingRGBCurveType; }
+    Type getType() const override { return GradingHueCurveType; }
 
     bool isNoOp() const override;
     bool isIdentity() const override;

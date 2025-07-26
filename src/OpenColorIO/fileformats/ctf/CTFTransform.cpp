@@ -274,15 +274,28 @@ CTFVersion GetOpMinimumVersion(const ConstOpDataRcPtr & op)
         {
             minVersion = CTF_PROCESS_LIST_VERSION_2_4;
         }
+        else if (  ff->getStyle() == FixedFunctionOpData::RGB_TO_HSY_LOG
+                || ff->getStyle() == FixedFunctionOpData::HSY_LOG_TO_RGB
+                || ff->getStyle() == FixedFunctionOpData::RGB_TO_HSY_LIN
+                || ff->getStyle() == FixedFunctionOpData::HSY_LIN_TO_RGB
+                || ff->getStyle() == FixedFunctionOpData::RGB_TO_HSY_VID
+                || ff->getStyle() == FixedFunctionOpData::HSY_VID_TO_RGB )
+        {
+            minVersion = CTF_PROCESS_LIST_VERSION_2_5;
+        }
         break;
     }
     case OpData::GradingPrimaryType:
     case OpData::GradingRGBCurveType:
-    case OpData::GradingHueCurveType:
     case OpData::GradingToneType:
     case OpData::LogType:
     {
         minVersion = CTF_PROCESS_LIST_VERSION_2_0;
+        break;
+    }
+    case OpData::GradingHueCurveType:
+    {
+        minVersion = CTF_PROCESS_LIST_VERSION_2_5;
         break;
     }
     case OpData::ExponentType:

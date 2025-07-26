@@ -237,11 +237,16 @@ void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator
     }
     st.newLine() << "{";
     st.indent();
-
-    const bool isInv = gcData->getDirection() == TRANSFORM_DIR_INVERSE;
-    GradingBSplineCurveImpl::AddShaderEval(st, props.m_knotsOffsets, props.m_coefsOffsets,
-                                           props.m_knots, props.m_coefs, isInv);
-
+    if (gcData->getDirection() == TRANSFORM_DIR_INVERSE)
+    {
+        GradingBSplineCurveImpl::AddShaderEvalRev(st, props.m_knotsOffsets, props.m_coefsOffsets,
+                                                  props.m_knots, props.m_coefs);
+    }
+    else
+    {
+        GradingBSplineCurveImpl::AddShaderEvalFwd(st, props.m_knotsOffsets, props.m_coefsOffsets,
+                                                  props.m_knots, props.m_coefs);
+    }
     st.dedent();
     st.newLine() << "}";
 

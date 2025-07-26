@@ -8,10 +8,10 @@
 
 namespace OCIO = OCIO_NAMESPACE;
 
-// Test coming from GradingRGBCurveOpData_tests.cpp
 OCIO_ADD_TEST(GradingHueCurveOpData, accessors)
 {
-    // Create GradingHueCurveOpData and check values. Changes them and check.
+    // Create GradingHueCurveOpData and check values. Change them and check.
+
     OCIO::GradingHueCurveOpData gc( OCIO::GRADING_LOG );
 
     static constexpr char expected[]{ "log forward "
@@ -39,8 +39,9 @@ OCIO_ADD_TEST(GradingHueCurveOpData, accessors)
     gc.setBypassLinToLog(true);
     OCIO_CHECK_ASSERT(gc.getBypassLinToLog());
 
-    // Get dynamic property as a generic dynamic property and as a type one and verify they are
+    // Get dynamic property as a generic dynamic property and as a typed one and verify they are
     // the same and can be made dynamic.
+
     OCIO_CHECK_ASSERT(!gc.isDynamic());
     auto dp = gc.getDynamicProperty();
     OCIO_REQUIRE_ASSERT(dp);
@@ -57,6 +58,7 @@ OCIO_ADD_TEST(GradingHueCurveOpData, accessors)
     OCIO_CHECK_EQUAL(gc.getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
 
     // Test operator==.
+
     OCIO::GradingHueCurveOpData gc1{ OCIO::GRADING_LIN };
     OCIO::GradingHueCurveOpData gc2{ OCIO::GRADING_LIN };
 
@@ -74,19 +76,20 @@ OCIO_ADD_TEST(GradingHueCurveOpData, accessors)
     auto v1 = gc1.getValue()->createEditableCopy();
     auto hueHue = v1->getCurve(OCIO::HUE_HUE);
     hueHue->setNumControlPoints(4);
-    hueHue->getControlPoint(3).m_x = hueHue->getControlPoint(2).m_x + 1.f;
+    hueHue->getControlPoint(3).m_x = hueHue->getControlPoint(2).m_x + 0.25f;
     hueHue->getControlPoint(3).m_y = hueHue->getControlPoint(2).m_y + 0.5f;
     gc1.setValue(v1);
     OCIO_CHECK_ASSERT(!(gc1 == gc2));
     auto v2 = gc2.getValue()->createEditableCopy();
     auto hueHue2 = v2->getCurve(OCIO::HUE_HUE);
     hueHue2->setNumControlPoints(4);
-    hueHue2->getControlPoint(3).m_x = hueHue2->getControlPoint(2).m_x + 1.f;
+    hueHue2->getControlPoint(3).m_x = hueHue2->getControlPoint(2).m_x + 0.25f;
     hueHue2->getControlPoint(3).m_y = hueHue2->getControlPoint(2).m_y + 0.5f;
     gc2.setValue(v2);
     OCIO_CHECK_ASSERT(gc1 == gc2);
 
     gc1.setSlope(OCIO::HUE_SAT, 2, 0.9f);
+    OCIO_CHECK_ASSERT(!(gc1 == gc2));
     OCIO_CHECK_EQUAL(gc1.getSlope(OCIO::HUE_SAT, 2), 0.9f);
     OCIO_CHECK_ASSERT(gc1.slopesAreDefault(OCIO::HUE_LUM));
     OCIO_CHECK_ASSERT(!gc1.slopesAreDefault(OCIO::HUE_SAT));
@@ -96,23 +99,40 @@ OCIO_ADD_TEST(GradingHueCurveOpData, accessors)
 
     // Check isInverse.
 
-    // We have equal ops, inverse one.
-    gc1.setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    // Make two equal non-identity ops, invert one.
+    OCIO::GradingHueCurveOpData gc3{ OCIO::GRADING_LIN };
+    auto v3 = gc3.getValue()->createEditableCopy();
+    auto spline = v3->getCurve(OCIO::HUE_LUM);
+    spline->setNumControlPoints(2);
+    spline->getControlPoint(0) = OCIO::GradingControlPoint(0.f, 2.f);
+    spline->getControlPoint(1) = OCIO::GradingControlPoint(0.9f, 2.f);
+    gc3.setValue(v3);
+    OCIO_CHECK_ASSERT(!gc3.isIdentity());
     // Need a shared pointer for the parameter.
-    OCIO::ConstGradingHueCurveOpDataRcPtr gcptr2 = gc1.clone();
-    gc1.setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-    OCIO_CHECK_ASSERT(gc1.isInverse(gcptr2));
-    // Change value of one: no longer inverse.
-    hueHue->getControlPoint(3).m_y += 0.1f;
-    gc1.setValue(v1);
-    OCIO_CHECK_ASSERT(!gc1.isInverse(gcptr2));
+    OCIO::ConstGradingHueCurveOpDataRcPtr gcptr3 = gc3.clone();
+    gc3.setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    // They start as inverses.
+    OCIO_CHECK_ASSERT(gc3.isInverse(gcptr3));
+
+    // Change value of one: no longer an inverse.
+    spline->getControlPoint(1).m_y += 0.25f;
+    gc3.setValue(v3);
+    OCIO_CHECK_ASSERT(!gc3.isInverse(gcptr3));
     // Restore value.
-    hueHue->getControlPoint(3).m_y -= 0.1f;
-    gc1.setValue(v1);
-    OCIO_CHECK_ASSERT(gc1.isInverse(gcptr2));
-    // Change direction: no longer inverse.
-    gc1.setDirection(OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO_CHECK_ASSERT(!gc1.isInverse(gcptr2));
+    spline->getControlPoint(1).m_y -= 0.25f;
+    gc3.setValue(v3);
+    OCIO_CHECK_ASSERT(gc3.isInverse(gcptr3));
+
+    // Change slope of one: no longer an inverse.
+    gc3.setSlope(OCIO::HUE_SAT, 2, 0.9f);
+    OCIO_CHECK_ASSERT(!gc3.isInverse(gcptr3));
+    // Restore value.
+    gc3.setSlope(OCIO::HUE_SAT, 2, 0.f);
+    OCIO_CHECK_ASSERT(gc3.isInverse(gcptr3));
+
+    // Change direction: no longer an inverse.
+    gc3.setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_ASSERT(!gc3.isInverse(gcptr3));
 }
 
 OCIO_ADD_TEST(GradingHueCurveOpData, validate)
@@ -123,22 +143,28 @@ OCIO_ADD_TEST(GradingHueCurveOpData, validate)
 
     // Curves with a single control point are not valid.
     auto curve = OCIO::GradingBSplineCurve::Create(1);
-    auto curves = OCIO::GradingHueCurve::Create(curve, curve, curve, curve, curve, curve, curve, curve);
-    OCIO_CHECK_THROW_WHAT(gc.setValue(curves), OCIO::Exception,
-                          "There must be at least 2 control points.");
+    OCIO_CHECK_THROW_WHAT(auto curves = OCIO::GradingHueCurve::Create(
+        curve, curve, curve, curve, curve, curve, curve, curve),
+        OCIO::Exception, "There must be at least 2 control points.");
+
+    // A periodic curve may not have only two control points that wrap to the same point.
+    curve = OCIO::GradingBSplineCurve::Create({ { 0.f,0.f },{ 1.f,0.f } }, OCIO::HUE_FX);
+    OCIO_CHECK_THROW_WHAT(auto curves = OCIO::GradingHueCurve::Create(
+        curve, curve, curve, curve, curve, curve, curve, curve),
+        OCIO::Exception, "The periodic spline x coordinates may not wrap to the same value.");
 
     // Curve x coordinates have to increase.
     curve = OCIO::GradingBSplineCurve::Create({ { 0.f,0.f },{ 0.7f,0.3f },
                                                 { 0.5f,0.7f },{ 1.f,1.f } });
-
-    curves = OCIO::GradingHueCurve::Create(curve, curve, curve, curve, curve, curve, curve, curve);
-    OCIO_CHECK_THROW_WHAT(gc.setValue(curves), OCIO::Exception,
-                          "has a x coordinate '0.5' that is less from previous control "
-                          "point x cooordinate '0.7'.");
+    OCIO_CHECK_THROW_WHAT(auto curves = OCIO::GradingHueCurve::Create(
+        curve, curve, curve, curve, curve, curve, curve, curve),
+        OCIO::Exception, "has a x coordinate '0.5' that is less than previous control "
+                         "point x cooordinate '0.7'.");
 
     // Fix the curve x coordinate.
     curve->getControlPoint(1).m_x = 0.3f;
-    curves = OCIO::GradingHueCurve::Create(curve, curve, curve, curve, curve, curve, curve, curve);
-    OCIO_CHECK_NO_THROW(gc.setValue(curves));
-    OCIO_CHECK_NO_THROW(gc.validate());
+    // But the curves are not of the correct BSplineType.
+    OCIO_CHECK_THROW_WHAT(auto curves = OCIO::GradingHueCurve::Create(
+        curve, curve, curve, curve, curve, curve, curve, curve),
+        OCIO::Exception, "GradingHueCurve validation failed: 'hue_hue' curve is of the wrong BSplineType.");
 }

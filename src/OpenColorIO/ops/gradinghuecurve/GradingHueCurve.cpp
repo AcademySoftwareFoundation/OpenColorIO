@@ -44,20 +44,21 @@ static const std::vector<GradingControlPoint> DefaultLumLumLinCtrl{ { -7.0f, -7.
 
 }
 
-const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultHueHue(DefaultHueHueCtrl, BSplineCurveType::HUE_HUE_B_SPLINE );
-const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultHueSat(DefaultHueSatCtrl, BSplineCurveType::PERIODIC_1_B_SPLINE );
-const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultHueFx(DefaultHueFxCtrl, BSplineCurveType::PERIODIC_0_B_SPLINE );
-const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultLumSat(DefaultLumSatCtrl, BSplineCurveType::HORIZONTAL1_B_SPLINE);
-const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultLumSatLin(DefaultLumSatLinCtrl, BSplineCurveType::HORIZONTAL1_B_SPLINE);
-const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultSatSat(DefaultSatSatCtrl, BSplineCurveType::DIAGONAL_B_SPLINE);
-const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultSatLum(DefaultSatLumCtrl, BSplineCurveType::HORIZONTAL1_B_SPLINE);
-const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultLumLum(DefaultLumLumCtrl, BSplineCurveType::DIAGONAL_B_SPLINE);
-const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultLumLumLin(DefaultLumLumLinCtrl, BSplineCurveType::DIAGONAL_B_SPLINE);
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultHueHue(DefaultHueHueCtrl, BSplineType::HUE_HUE_B_SPLINE );
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultHueSat(DefaultHueSatCtrl, BSplineType::PERIODIC_1_B_SPLINE );
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultHueLum(DefaultHueSatCtrl, BSplineType::PERIODIC_1_B_SPLINE ); // HUE_LUM use the same as HUE_SAT
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultHueFx(DefaultHueFxCtrl, BSplineType::PERIODIC_0_B_SPLINE );
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultLumSat(DefaultLumSatCtrl, BSplineType::HORIZONTAL1_B_SPLINE);
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultLumSatLin(DefaultLumSatLinCtrl, BSplineType::HORIZONTAL1_B_SPLINE);
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultSatSat(DefaultSatSatCtrl, BSplineType::DIAGONAL_B_SPLINE);
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultSatLum(DefaultSatLumCtrl, BSplineType::HORIZONTAL1_B_SPLINE);
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultLumLum(DefaultLumLumCtrl, BSplineType::DIAGONAL_B_SPLINE);
+const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultLumLumLin(DefaultLumLumLinCtrl, BSplineType::DIAGONAL_B_SPLINE);
 
 const std::array<std::reference_wrapper<const GradingBSplineCurveImpl>, static_cast<size_t>(HUE_NUM_CURVES)> 
    GradingHueCurveImpl::DefaultCurvesLin( {  std::ref(DefaultHueHue),
                                              std::ref(DefaultHueSat),
-                                             std::ref(DefaultHueSat), // HUE_LUM use the same as HUE_SAT
+                                             std::ref(DefaultHueLum),
                                              std::ref(DefaultLumSatLin),
                                              std::ref(DefaultSatSat),
                                              std::ref(DefaultLumLumLin),
@@ -68,7 +69,7 @@ const std::array<std::reference_wrapper<const GradingBSplineCurveImpl>, static_c
 const std::array<std::reference_wrapper<const GradingBSplineCurveImpl>, static_cast<size_t>(HUE_NUM_CURVES)> 
    GradingHueCurveImpl::DefaultCurves(  {  std::ref(DefaultHueHue),
                                            std::ref(DefaultHueSat),
-                                           std::ref(DefaultHueSat), // HUE_LUM use the same as HUE_SAT
+                                           std::ref(DefaultHueLum),
                                            std::ref(DefaultLumSat),
                                            std::ref(DefaultSatSat),
                                            std::ref(DefaultLumLum),
@@ -136,10 +137,10 @@ GradingHueCurveRcPtr GradingHueCurveImpl::createEditableCopy() const
 
 namespace
 {
-const char * CurveType(int c)
+const char * CurveTypeName(int c)
 {
-    const HueCurveType curve = static_cast<HueCurveType>(c);
-    switch (curve)
+    const HueCurveType curveType = static_cast<HueCurveType>(c);
+    switch (curveType)
     {
     case HUE_HUE:
         return "hue_hue";
@@ -176,8 +177,18 @@ void GradingHueCurveImpl::validate() const
         catch (Exception & e)
         {
             std::ostringstream oss;
-            oss << "GradingHueCurve validation failed for curve: " << CurveType(c) << "' curve "
+            oss << "GradingHueCurve validation failed for '" << CurveTypeName(c) << "' curve "
                 << "with: " << e.what();
+            throw Exception(oss.str().c_str());
+        }
+
+        const BSplineType splineType = m_curves[c]->getSplineType();
+        const HueCurveType hueType = static_cast<HueCurveType>(c);
+        if (splineType != GetBSplineTypeForHueCurveType(hueType))
+        {
+            std::ostringstream oss;
+            oss << "GradingHueCurve validation failed: '" << CurveTypeName(c) << "' curve "
+                << "is of the wrong BSplineType.";
             throw Exception(oss.str().c_str());
         }
     }
@@ -221,6 +232,32 @@ GradingBSplineCurveRcPtr GradingHueCurveImpl::getCurve(HueCurveType c)
     return m_curves[c];
 }
 
+BSplineType GradingHueCurve::GetBSplineTypeForHueCurveType(HueCurveType curveType)
+{
+    switch (curveType)
+    {
+    case HUE_HUE:
+        return BSplineType::HUE_HUE_B_SPLINE;
+    case HUE_SAT:
+        return BSplineType::PERIODIC_1_B_SPLINE;
+    case HUE_LUM:
+        return BSplineType::PERIODIC_1_B_SPLINE;
+    case LUM_SAT:
+        return BSplineType::HORIZONTAL1_B_SPLINE;
+    case SAT_SAT:
+        return BSplineType::DIAGONAL_B_SPLINE;
+    case LUM_LUM:
+        return BSplineType::DIAGONAL_B_SPLINE;
+    case SAT_LUM:
+        return BSplineType::HORIZONTAL1_B_SPLINE;
+    case HUE_FX:
+        return BSplineType::PERIODIC_0_B_SPLINE;
+    case HUE_NUM_CURVES:
+    default:
+        return BSplineType::B_SPLINE;
+    }
+}
+
 GradingHueCurveRcPtr GradingHueCurve::Create(GradingStyle style)
 {
     auto newCurve = std::make_shared<GradingHueCurveImpl>(style);
@@ -254,6 +291,9 @@ GradingHueCurveRcPtr GradingHueCurve::Create(
        lumLum,
        satLum,
        hueFx);
+
+    newCurve->validate();
+
     GradingHueCurveRcPtr res = newCurve;
     return res;
 }

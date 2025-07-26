@@ -79,6 +79,8 @@ struct GCProperties
     std::string m_coefs{ "coefs" };
     std::string m_localBypass{ "localBypass" };
     std::string m_eval{ "evalBSplineCurve" };
+    std::string m_evalRev{ "evalBSplineCurveRev" };
+    std::string m_evalRevHue{ "evalBSplineCurveRevHue" };
 };
 
 void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
@@ -107,7 +109,7 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
     {
         // Declare uniform.
         GpuShaderText stDecl(shaderCreator->getLanguage());
-        // Need 2 ints for each curves.
+        // Need 2 ints for each curve.
         stDecl.declareUniformArrayInt(name, 16); // TODO: Avoid magic numbers (8 Curves * 2 values)
         shaderCreator->addToDeclareShaderCode(stDecl.string().c_str());
     }
@@ -154,10 +156,12 @@ void SetGCProperties(GpuShaderCreatorRcPtr & shaderCreator, bool dynamic, GCProp
         propNames.m_localBypass = BuildResourceName(shaderCreator, opPrefix,
                                                     propNames.m_localBypass);
         propNames.m_eval = BuildResourceName(shaderCreator, opPrefix, propNames.m_eval);
+        propNames.m_evalRev = BuildResourceName(shaderCreator, opPrefix, propNames.m_evalRev);
+        propNames.m_evalRevHue = BuildResourceName(shaderCreator, opPrefix, propNames.m_evalRevHue);
     }
     else
     {
-        // Non-dynamic ops need an helper function for each op.
+        // Non-dynamic ops need a helper function for each op.
         const auto resIndex = shaderCreator->getNextResourceIndex();
 
         propNames.m_knotsOffsets = BuildResourceNameIndexed(shaderCreator, opPrefix,
@@ -170,6 +174,10 @@ void SetGCProperties(GpuShaderCreatorRcPtr & shaderCreator, bool dynamic, GCProp
                                                      propNames.m_coefs, resIndex);
         propNames.m_eval = BuildResourceNameIndexed(shaderCreator, opPrefix,
                                                     propNames.m_eval, resIndex);
+        propNames.m_evalRev = BuildResourceNameIndexed(shaderCreator, opPrefix,
+                                                       propNames.m_evalRev, resIndex);
+        propNames.m_evalRevHue = BuildResourceNameIndexed(shaderCreator, opPrefix,
+                                                          propNames.m_evalRevHue, resIndex);
     }
 }
 
@@ -207,6 +215,21 @@ void AddGCPropertiesUniforms(GpuShaderCreatorRcPtr & shaderCreator,
     AddUniform(shaderCreator, getLB, propNames.m_localBypass);
 }
 
+void AddCurveFunctionName(GpuShaderCreatorRcPtr & shaderCreator, 
+                          GpuShaderText & st, 
+                          const std::string & funcName)                   
+{
+    st.newLine() << "";
+    if (shaderCreator->getLanguage() == LANGUAGE_OSL_1 || shaderCreator->getLanguage() == GPU_LANGUAGE_MSL_2_0)
+    {
+        st.newLine() << st.floatKeyword() << " " << funcName << "(int curveIdx, float x, float identity_x)";
+    }
+    else
+    {
+        st.newLine() << st.floatKeyword() << " " << funcName << "(in int curveIdx, in float x, in float identity_x)";
+    }
+}
+
 void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
                                            ConstGradingHueCurveOpDataRcPtr & gcData,
                                            const GCProperties & props,
@@ -228,24 +251,39 @@ void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator
         st.declareFloatArrayConst(props.m_coefs, propGC->getNumCoefs(), propGC->getCoefsArray());
     }
 
-    st.newLine() << "";
-    if (shaderCreator->getLanguage() == LANGUAGE_OSL_1 || shaderCreator->getLanguage() == GPU_LANGUAGE_MSL_2_0)
-    {
-        st.newLine() << st.floatKeyword() << " " << props.m_eval << "(int curveIdx, float x, float identity_x)";
-    }
-    else
-    {
-        st.newLine() << st.floatKeyword() << " " << props.m_eval << "(in int curveIdx, in float x, in float identity_x)";
-    }
+    // Both the forward and inverse hue curve eval need the forward spline eval, so always add that.
+
+    AddCurveFunctionName(shaderCreator, st, props.m_eval);
+
     st.newLine() << "{";
     st.indent();
-
-    const bool isInv = gcData->getDirection() == TRANSFORM_DIR_INVERSE;
-    GradingBSplineCurveImpl::AddShaderEval(st, props.m_knotsOffsets, props.m_coefsOffsets,
-                                           props.m_knots, props.m_coefs, isInv);
-
+    GradingBSplineCurveImpl::AddShaderEvalFwd(st, props.m_knotsOffsets, props.m_coefsOffsets,
+                                              props.m_knots, props.m_coefs);
     st.dedent();
     st.newLine() << "}";
+
+    if (gcData->getDirection() == TRANSFORM_DIR_INVERSE)
+    {
+        // Add inverse curve eval.
+        AddCurveFunctionName(shaderCreator, st, props.m_evalRev);
+
+        st.newLine() << "{";
+        st.indent();
+        GradingBSplineCurveImpl::AddShaderEvalRev(st, props.m_knotsOffsets, props.m_coefsOffsets,
+                                                  props.m_knots, props.m_coefs);
+        st.dedent();
+        st.newLine() << "}";
+
+        // Add inverse hue curve eval.
+        AddCurveFunctionName(shaderCreator, st, props.m_evalRevHue);
+
+        st.newLine() << "{";
+        st.indent();
+        GradingBSplineCurveImpl::AddShaderEvalRevHue(st, props.m_knotsOffsets, props.m_coefsOffsets,
+                                                     props.m_knots, props.m_coefs);
+        st.dedent();
+        st.newLine() << "}";
+    }
 
     shaderCreator->addToHelperShaderCode(st.string().c_str());
 }
@@ -262,6 +300,9 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
     const std::string pix(shaderCreator->getPixelName());
     if(drawCurveOnly)
     {
+        // Note that this is not within the localBypass if-statement since outColor
+        // needs to get processed even if isDefault is true for all curves since
+        // the default for the horizontal curves is all 1 rather than an identity.
         st.newLine() << pix << ".r = " << props.m_eval << "(1, " << pix << ".r, 1.);"; // HUE-SAT
         st.newLine() << pix << ".g = " << props.m_eval << "(1, " << pix << ".g, 1.);"; // HUE-SAT
         st.newLine() << pix << ".b = " << props.m_eval << "(1, " << pix << ".b, 1.);"; // HUE-SAT
@@ -299,6 +340,7 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
       st.newLine() << "}";
     }
 
+    // Lin to Log (on Luma only).
     if (doLinToLog)
     {
         // NB:  Although the linToLog and logToLin are correct inverses, the limits of
@@ -309,18 +351,28 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
         st.newLine() << "";
     }
 
+    // Apply the hue curves.
+
     st.newLine() << "";
-    st.newLine() << "float hueSatGain = max(0., " << props.m_eval << "(1, " << pix << ".r, 1.));"; // HUE-SAT
-    st.newLine() << "float hueLumGain = max(0., " << props.m_eval << "(2, " << pix << ".r, 1.));"; // HUE-LUM
-    st.newLine() << pix << ".r = " << props.m_eval << "(0, " << pix << ".r, " << pix << ".r);"; // HUE-HUE
-    st.newLine() << "" << pix << ".g = max(0., " << props.m_eval << "(4, " << pix << ".g, " << pix << ".g));"; // SAT-SAT
-    st.newLine() << "float lumSatGain = max(0., " << props.m_eval << "(3, " << pix << ".b, 1.));"; // LUM-SAT
+    // HUE-SAT
+    st.newLine() << "float hueSatGain = max(0., " << props.m_eval << "(1, " << pix << ".r, 1.));";
+    // HUE-LUM
+    st.newLine() << "float hueLumGain = max(0., " << props.m_eval << "(2, " << pix << ".r, 1.));";
+    // HUE-HUE
+    st.newLine() << pix << ".r = " << props.m_eval << "(0, " << pix << ".r, " << pix << ".r);";
+    // SAT-SAT
+    st.newLine() << "" << pix << ".g = max(0., " << props.m_eval << "(4, " << pix << ".g, " << pix << ".g));";
+    // LUM-SAT
+    st.newLine() << "float lumSatGain = max(0., " << props.m_eval << "(3, " << pix << ".b, 1.));";
+    // SAT-LUM
     st.newLine() << "float satGain = lumSatGain * hueSatGain;";
     st.newLine() << "" << pix << ".g = satGain * " << pix << ".g;";
-    st.newLine() << "float satLumGain = max(0., " << props.m_eval << "(6, " << pix << ".g, 1.));"; // SAT-LUM
-    st.newLine() << pix << ".b = " << props.m_eval << "(5, " << pix << ".b, " << pix << ".b);"; // LUM-LUM
+    st.newLine() << "float satLumGain = max(0., " << props.m_eval << "(6, " << pix << ".g, 1.));";
+    // LUM-LUM
+    st.newLine() << pix << ".b = " << props.m_eval << "(5, " << pix << ".b, " << pix << ".b);";
     st.newLine() << "";
 
+    // Log to Lin.
     if (doLinToLog)
     {
         st.newLine() << "";
@@ -331,16 +383,22 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << "";
     st.newLine() << "hueLumGain = 1. - (1. - hueLumGain) * min( 1., " << pix << ".g );";
     if (style == GRADING_LOG)
-      // Use shift rather than scale for log mode.
-      st.newLine() << pix << ".b = " << pix << ".b + (hueLumGain + satLumGain - 2.) * 0.1;";
+    {
+        // Use shift rather than scale for log mode.
+        st.newLine() << pix << ".b = " << pix << ".b + (hueLumGain + satLumGain - 2.) * 0.1;";
+    }
     else
-      // Note this is applied in linear space, for linear style.
-      st.newLine() << pix << ".b = " << pix << ".b * hueLumGain * satLumGain;";
+    {
+        // Note this is applied in linear space, for linear style.
+        st.newLine() << pix << ".b = " << pix << ".b * hueLumGain * satLumGain;";
+    }
     st.newLine() << "";
 
+    // HUE-FX
     st.newLine() << pix << ".r = " << pix << ".r - floor( " << pix << ".r );";
-    st.newLine() << pix << ".r = " << pix << ".r + " << props.m_eval << "(7, " << pix << ".r, 0.);"; // HUE-FX
+    st.newLine() << pix << ".r = " << pix << ".r + " << props.m_eval << "(7, " << pix << ".r, 0.);";
 
+    // Add the conversion from HSY to RGB.
     {
       FixedFunctionOpData::Style hsyStyle = FixedFunctionOpData::RGB_TO_HSY_LIN;
       switch(style)
@@ -370,59 +428,154 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
     }
 }
 
-// TODO: Implement the inverse shader.
-//void AddGCInverseShader(GpuShaderCreatorRcPtr & shaderCreator, 
-//                        GpuShaderText & st,
-//                        const GCProperties & props,
-//                        bool dyn,
-//                        bool doLinToLog,
-//                        GradingStyle style)
-//{
-//    if (dyn)
-//    {
-//        st.newLine() << "if (!" << props.m_localBypass << ")";
-//        st.newLine() << "{";
-//        st.indent();
-//    }
-//
-//    if (doLinToLog)
-//    {
-//        // NB:  Although the linToLog and logToLin are correct inverses, the limits of
-//        // floating-point arithmetic cause errors in the lowest bit of the round trip.
-//
-//        st.newLine() << "// Convert from lin to log.";
-//        AddLinToLogShader(shaderCreator, st);
-//        st.newLine() << "";
-//    }
-//
-//    const std::string pix(shaderCreator->getPixelName());
-//
-//    // Call the curve evaluation method for each curve.
-//    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(3, " << pix << ".rgb.r);"; // MASTER
-//    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(3, " << pix << ".rgb.g);"; // MASTER
-//    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(3, " << pix << ".rgb.b);"; // MASTER
-//    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(0, " << pix << ".rgb.r);"; // RED
-//    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(1, " << pix << ".rgb.g);"; // GREEN
-//    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(2, " << pix << ".rgb.b);"; // BLUE
-//
-//    if (doLinToLog)
-//    {
-//        st.newLine() << "";
-//        st.newLine() << "// Convert from log to lin.";
-//        AddLogToLinShader(shaderCreator, st);
-//    }
-//
-//    if (dyn)
-//    {
-//        st.dedent();
-//        st.newLine() << "}";
-//    }
-//}
+void AddGCInverseShader(GpuShaderCreatorRcPtr & shaderCreator, 
+                       GpuShaderText & st,
+                       const GCProperties & props,
+                       bool dyn,
+                       bool doLinToLog,
+                       bool drawCurveOnly,
+                       GradingStyle style)
+{
+    const std::string pix(shaderCreator->getPixelName());
+
+    if(drawCurveOnly)
+    {
+        // Note that this is not within the localBypass if-statement since outColor
+        // needs to get processed even if isDefault is true for all curves since
+        // the default for the horizontal curves is all 1 rather than an identity.
+        st.newLine() << pix << ".r = " << props.m_eval << "(1, " << pix << ".r, 1.);"; // HUE-SAT
+        st.newLine() << pix << ".g = " << props.m_eval << "(1, " << pix << ".g, 1.);"; // HUE-SAT
+        st.newLine() << pix << ".b = " << props.m_eval << "(1, " << pix << ".b, 1.);"; // HUE-SAT
+        return;
+    }
+
+   if (dyn)
+   {
+       st.newLine() << "if (!" << props.m_localBypass << ")";
+       st.newLine() << "{";
+       st.indent();
+   }
+
+    // Add the conversion from RGB to HSY.
+    {
+      FixedFunctionOpData::Style hsyStyle = FixedFunctionOpData::RGB_TO_HSY_LIN;
+      switch(style)
+      {
+        case GRADING_LIN:
+          hsyStyle = FixedFunctionOpData::RGB_TO_HSY_LIN;
+          break;
+        case GRADING_LOG:
+          hsyStyle = FixedFunctionOpData::RGB_TO_HSY_LOG;
+          break;
+        case GRADING_VIDEO:
+          hsyStyle = FixedFunctionOpData::RGB_TO_HSY_VID;
+          break;
+      }
+
+      st.newLine() << "{";   // establish scope so local variable names won't conflict
+      st.indent();
+      ConstFixedFunctionOpDataRcPtr funcOpData = std::make_shared<FixedFunctionOpData>(hsyStyle);
+      GetFixedFunctionGPUProcessingText(shaderCreator, st, funcOpData);
+      st.dedent();
+      st.newLine() << "}";
+    }
+
+    // Apply the hue curves inverse.
+
+    // Invert HUE-FX.
+    st.newLine() << pix << ".r = " << props.m_evalRevHue << "(7, " << pix << ".r, 0.);";
+
+    // Invert HUE-HUE.
+    st.newLine() << pix << ".r = " << props.m_evalRevHue << "(0, " << pix << ".r, " << pix << ".r);";
+    st.newLine() << "";
+
+    // Use the inverted hue to calculate the HUE-SAT & HUE-LUM gains.
+    st.newLine() << pix << ".r = " << pix << ".r - floor( " << pix << ".r );";
+    st.newLine() << "float hueSatGain = max(0., " << props.m_eval << "(1, " << pix << ".r, 1.));";
+    st.newLine() << "float hueLumGain = max(0., " << props.m_eval << "(2, " << pix << ".r, 1.));";
+
+    // Use the output sat to calculate the SAT-LUM gain.
+    st.newLine() << "" << pix << ".g = max(0., " << pix << ".g);";
+    st.newLine() << "float satLumGain = max(0., " << props.m_eval << "(6, " << pix << ".g, 1.));";
+
+    st.newLine() << "";
+    st.newLine() << "hueLumGain = 1. - (1. - hueLumGain) * min( 1., " << pix << ".g );";
+
+    // Invert the lum gain.
+    if (style == GRADING_LOG)
+    {
+        // Use shift rather than scale for log mode.
+        st.newLine() << pix << ".b = " << pix << ".b - (hueLumGain + satLumGain - 2.) * 0.1;";
+    }
+    else
+    {
+        // Note this is applied in linear space, for linear style.
+        st.newLine() << pix << ".b = " << pix << ".b / max(0.01, hueLumGain * satLumGain);";
+    }
+    st.newLine() << "";
+
+    if (doLinToLog)
+    {
+        st.newLine() << "// Convert from lin to log.";
+        AddLinToLogShaderChannelBlue(shaderCreator, st);
+        st.newLine() << "";
+    }
+
+    // Invert LUM-LUM.
+    st.newLine() << pix << ".b = " << props.m_evalRev << "(5, " << pix << ".b, " << pix << ".b);";
+    st.newLine() << "";
+
+    // Use it to calc the LUM-SAT gain.
+    st.newLine() << "float lumSatGain = max(0., " << props.m_eval << "(3, " << pix << ".b, 1.));";
+
+    if (doLinToLog)
+    {
+        st.newLine() << "";
+        st.newLine() << "// Convert from log to lin.";
+        AddLogToLinShaderChannelBlue(shaderCreator, st);
+    }
+
+    // Invert the sat gain.
+    st.newLine() << "float satGain = max(0.01, lumSatGain * hueSatGain);";
+    st.newLine() << "" << pix << ".g = " << pix << ".g / satGain;";
+
+    // Invert SAT-SAT.
+    st.newLine() << "" << pix << ".g = max(0., " << props.m_evalRev << "(4, " << pix << ".g, " << pix << ".g));";
+
+    // Add the conversion from HSY to RGB.
+    {
+      FixedFunctionOpData::Style hsyStyle = FixedFunctionOpData::RGB_TO_HSY_LIN;
+      switch(style)
+      {
+        case GRADING_LIN:
+          hsyStyle = FixedFunctionOpData::HSY_LIN_TO_RGB;
+          break;
+        case GRADING_LOG:
+          hsyStyle = FixedFunctionOpData::HSY_LOG_TO_RGB;
+          break;
+        case GRADING_VIDEO:
+          hsyStyle = FixedFunctionOpData::HSY_VID_TO_RGB;
+          break;
+      }
+      st.newLine() << "{";
+      st.indent();
+      ConstFixedFunctionOpDataRcPtr funcOpData = std::make_shared<FixedFunctionOpData>(hsyStyle);
+      GetFixedFunctionGPUProcessingText(shaderCreator, st, funcOpData);
+      st.dedent();
+      st.newLine() << "}";
+    }
+
+   if (dyn)
+   {
+       st.dedent();
+       st.newLine() << "}";
+   }
+}
 
 }
 
-void GetHueCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
-                                 ConstGradingHueCurveOpDataRcPtr & gcData)
+void GetGradingHueCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
+                                        ConstGradingHueCurveOpDataRcPtr & gcData)
 {
     const bool dyn = gcData->isDynamic() &&  shaderCreator->getLanguage() != LANGUAGE_OSL_1;
     if (!dyn)
@@ -488,8 +641,8 @@ void GetHueCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     case TRANSFORM_DIR_FORWARD:
         AddGCForwardShader(shaderCreator, st, properties, dyn, doLinToLog, gcData->getDrawCurveOnly(), style);
         break;
-    case TRANSFORM_DIR_INVERSE: // TODO: Implement the inverse shader.
-        //AddGCInverseShader(shaderCreator, st, properties, dyn, bypassLinToLog, style);
+    case TRANSFORM_DIR_INVERSE:
+        AddGCInverseShader(shaderCreator, st, properties, dyn, doLinToLog, gcData->getDrawCurveOnly(), style);
         break;
     }
 

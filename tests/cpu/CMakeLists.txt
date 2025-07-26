@@ -255,6 +255,7 @@ set(TESTS
     ops/gradingprimary/GradingPrimaryOp_tests.cpp
     ops/gradingrgbcurve/GradingBSplineCurve_tests.cpp
     ops/gradinghuecurve/GradingHueCurve_tests.cpp
+    ops/gradinghuecurve/GradingHueCurveOpCPU_tests.cpp
     ops/gradinghuecurve/GradingHueCurveOpData_tests.cpp
     ops/gradinghuecurve/GradingHueCurveOp_tests.cpp
     ops/gradingrgbcurve/GradingRGBCurve_tests.cpp

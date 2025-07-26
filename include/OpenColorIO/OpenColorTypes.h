@@ -593,7 +593,7 @@ enum HueCurveType
     HUE_NUM_CURVES
 };
 
-enum BSplineCurveType
+enum BSplineType
 {
    B_SPLINE = 0,                   //!< Monotonic quadratic B-spline used for the RGBM curves.
    DIAGONAL_B_SPLINE,              //!< Monotonic quadratic B-spline for the sat-sat and lum-lum curves.

@@ -513,12 +513,15 @@ class OCIOEXPORT GradingBSplineCurve
 public:
     /// Create a BSpline curve with a specified number of control points.
     static GradingBSplineCurveRcPtr Create(size_t size);
-    static GradingBSplineCurveRcPtr Create(size_t size, BSplineCurveType curveType);
+    static GradingBSplineCurveRcPtr Create(size_t size, BSplineType splineType);
+    static GradingBSplineCurveRcPtr Create(size_t size, HueCurveType curveType);
     /// Create a BSpline curve with a list of control points.
     static GradingBSplineCurveRcPtr Create(std::initializer_list<GradingControlPoint> values);
-    static GradingBSplineCurveRcPtr Create(std::initializer_list<GradingControlPoint> values, BSplineCurveType curveType);
+    static GradingBSplineCurveRcPtr Create(std::initializer_list<GradingControlPoint> values, BSplineType splineType);
+    static GradingBSplineCurveRcPtr Create(std::initializer_list<GradingControlPoint> values, HueCurveType curveType);
 
     virtual GradingBSplineCurveRcPtr createEditableCopy() const = 0;
+    /// Get the number of ControlPoint objects (and the number of slopes).
     virtual size_t getNumControlPoints() const noexcept = 0;
     virtual void setNumControlPoints(size_t size) = 0;
     virtual const GradingControlPoint & getControlPoint(size_t index) const = 0;
@@ -527,8 +530,8 @@ public:
     virtual void setSlope(size_t index, float slope) = 0;
     virtual bool slopesAreDefault() const = 0;
     virtual void validate() const = 0;
-    virtual BSplineCurveType getCurveType() const = 0;
-    virtual void setCurveType(BSplineCurveType curveType) = 0;
+    virtual BSplineType getSplineType() const = 0;
+    virtual void setSplineType(BSplineType splineType) = 0;
 
     GradingBSplineCurve(const GradingBSplineCurve &) = delete;
     GradingBSplineCurve & operator= (const GradingBSplineCurve &) = delete;
@@ -551,6 +554,8 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingBSpline
 class OCIOEXPORT GradingRGBCurve
 {
 public:
+    /// Create a GradingRGBCurve. (The style argument is not part of the object, it is simply
+    /// used to initialize the proper default curves.)
     static GradingRGBCurveRcPtr Create(GradingStyle style);
     static GradingRGBCurveRcPtr Create(const ConstGradingRGBCurveRcPtr & rhs);
     static GradingRGBCurveRcPtr Create(const ConstGradingBSplineCurveRcPtr & red,
@@ -582,6 +587,8 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingRGBCurv
 class OCIOEXPORT GradingHueCurve
 {
 public:
+    /// Create a GradingHueCurve. (The style argument is not part of the object, it is simply
+    /// used to initialize the proper default curves.)
     static GradingHueCurveRcPtr Create(GradingStyle style);
     static GradingHueCurveRcPtr Create(const ConstGradingHueCurveRcPtr & rhs);
     static GradingHueCurveRcPtr Create(
@@ -593,6 +600,8 @@ public:
        ConstGradingBSplineCurveRcPtr lumLum,
        ConstGradingBSplineCurveRcPtr satLum,
        ConstGradingBSplineCurveRcPtr hueFx);
+
+    static BSplineType GetBSplineTypeForHueCurveType(HueCurveType curveType);
 
     virtual GradingHueCurveRcPtr createEditableCopy() const = 0;
     virtual void validate() const = 0;
@@ -1261,7 +1270,24 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingPrimary
 /**
  * Hue color correction controls.
  *
- *   TODO: Description.
+ * RGB curve color correction controls.
+ *
+
+
+UPDATE
+
+ * This transform allows for modifying tone reproduction via B-spline curves.
+ *
+ * There is an R, G, and B curve along with a Master curve (that applies to R, G, and B).  Each
+ * curve is specified via the x and y coordinates of its control points.  A monotonic spline is
+ * fit to the control points.  The x coordinates must be non-decreasing. When the grading style
+ * is linear, the units for the control points are photographic stops relative to 0.18.
+ *
+ * The control points are dynamic, so they may be adjusted even after the Transform is included
+ * in a Processor.
+
+
+
  */
 class OCIOEXPORT GradingHueCurveTransform : public Transform
 {

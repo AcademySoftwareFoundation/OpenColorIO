@@ -487,9 +487,17 @@ GradingBSplineCurveRcPtr GradingBSplineCurve::Create(size_t size)
     return res;
 }
 
-GradingBSplineCurveRcPtr GradingBSplineCurve::Create(size_t size, BSplineCurveType curveType)
+GradingBSplineCurveRcPtr GradingBSplineCurve::Create(size_t size, BSplineType splineType)
 {
-    auto newSpline = std::make_shared<GradingBSplineCurveImpl>(size, curveType);
+    auto newSpline = std::make_shared<GradingBSplineCurveImpl>(size, splineType);
+    GradingBSplineCurveRcPtr res = newSpline;
+    return res;
+}
+
+GradingBSplineCurveRcPtr GradingBSplineCurve::Create(size_t size, HueCurveType curveType)
+{
+    const BSplineType splineType = GradingHueCurve::GetBSplineTypeForHueCurveType(curveType);
+    auto newSpline = std::make_shared<GradingBSplineCurveImpl>(size, splineType);
     GradingBSplineCurveRcPtr res = newSpline;
     return res;
 }
@@ -507,9 +515,23 @@ GradingBSplineCurveRcPtr GradingBSplineCurve::Create(std::initializer_list<Gradi
     return res;
 }
 
-GradingBSplineCurveRcPtr GradingBSplineCurve::Create(std::initializer_list<GradingControlPoint> values, BSplineCurveType curveType)
+GradingBSplineCurveRcPtr GradingBSplineCurve::Create(std::initializer_list<GradingControlPoint> values, BSplineType splineType)
 {
-    auto newSpline = std::make_shared<GradingBSplineCurveImpl>(values.size(), curveType);
+    auto newSpline = std::make_shared<GradingBSplineCurveImpl>(values.size(), splineType);
+    size_t i = 0;
+    for (const auto & c : values)
+    {
+        newSpline->getControlPoint(i++) = c;
+    }
+    GradingBSplineCurveRcPtr res;
+    res = newSpline;
+    return res;
+}
+
+GradingBSplineCurveRcPtr GradingBSplineCurve::Create(std::initializer_list<GradingControlPoint> values, HueCurveType curveType)
+{
+    const BSplineType splineType = GradingHueCurve::GetBSplineTypeForHueCurveType(curveType);
+    auto newSpline = std::make_shared<GradingBSplineCurveImpl>(values.size(), splineType);
     size_t i = 0;
     for (const auto & c : values)
     {
@@ -521,22 +543,22 @@ GradingBSplineCurveRcPtr GradingBSplineCurve::Create(std::initializer_list<Gradi
 }
 
 GradingBSplineCurveImpl::GradingBSplineCurveImpl(size_t size)
-    : m_controlPoints(size), m_slopesArray(size, 0.f), m_curveType(B_SPLINE)
+    : m_controlPoints(size), m_slopesArray(size, 0.f), m_splineType(B_SPLINE)
 {
 }
 
-GradingBSplineCurveImpl::GradingBSplineCurveImpl(size_t size, BSplineCurveType curveType)
-    : m_controlPoints(size), m_slopesArray(size, 0.f), m_curveType(curveType)
+GradingBSplineCurveImpl::GradingBSplineCurveImpl(size_t size, BSplineType splineType)
+    : m_controlPoints(size), m_slopesArray(size, 0.f), m_splineType(splineType)
 {
 }
 
 GradingBSplineCurveImpl::GradingBSplineCurveImpl(const std::vector<GradingControlPoint> & controlPoints)
-    : m_controlPoints(controlPoints), m_slopesArray(controlPoints.size(), 0.f), m_curveType(B_SPLINE)
+    : m_controlPoints(controlPoints), m_slopesArray(controlPoints.size(), 0.f), m_splineType(B_SPLINE)
 {
 }
 
-GradingBSplineCurveImpl::GradingBSplineCurveImpl(const std::vector<GradingControlPoint> & controlPoints, BSplineCurveType curveType)
-    : m_controlPoints(controlPoints), m_slopesArray(controlPoints.size(), 0.f), m_curveType(curveType)
+GradingBSplineCurveImpl::GradingBSplineCurveImpl(const std::vector<GradingControlPoint> & controlPoints, BSplineType splineType)
+    : m_controlPoints(controlPoints), m_slopesArray(controlPoints.size(), 0.f), m_splineType(splineType)
 {
 }
 
@@ -545,20 +567,20 @@ GradingBSplineCurveRcPtr GradingBSplineCurveImpl::createEditableCopy() const
     auto copy = std::make_shared<GradingBSplineCurveImpl>(0);
     copy->m_controlPoints = m_controlPoints;
     copy->m_slopesArray = m_slopesArray;
-    copy->m_curveType = m_curveType;
+    copy->m_splineType = m_splineType;
     GradingBSplineCurveRcPtr res;
     res = copy;
     return res;
 }
 
-BSplineCurveType GradingBSplineCurveImpl::getCurveType() const
+BSplineType GradingBSplineCurveImpl::getSplineType() const
 {
-    return m_curveType;
+    return m_splineType;
 }
 
-void GradingBSplineCurveImpl::setCurveType(BSplineCurveType curveType)
+void GradingBSplineCurveImpl::setSplineType(BSplineType splineType)
 {
-    m_curveType = curveType;
+    m_splineType = splineType;
 }
 
 size_t GradingBSplineCurveImpl::getNumControlPoints() const noexcept
@@ -578,7 +600,7 @@ void GradingBSplineCurveImpl::validateIndex(size_t index) const
     if (index >= numPoints)
     {
         std::ostringstream oss;
-        oss << "There are '"<< numPoints << "' control points. '" << index << "' is invalid.";
+        oss << "There are '"<< numPoints << "' control points. '" << index << "' is out of bounds.";
         throw Exception(oss.str().c_str());
     }
 }
@@ -641,29 +663,45 @@ void GradingBSplineCurveImpl::validate() const
         {
             std::ostringstream oss;
             oss << "Control point at index " << i << " has a x coordinate '" << x << "' that is ";
-            oss << "less from previous control point x cooordinate '" << lastX << "'.";
+            oss << "less than previous control point x cooordinate '" << lastX << "'.";
             throw Exception(oss.str().c_str());
         }
         lastX = x;
+    }
+
+    // Don't allow only x values of 0 and 1 for periodic curves (since they are essentially only one point).
+    if (numPoints == 2)
+    {    
+        // Periodic curve types only.
+        if( m_splineType == PERIODIC_1_B_SPLINE || 
+            m_splineType == PERIODIC_0_B_SPLINE || 
+            m_splineType == HUE_HUE_B_SPLINE )
+        {
+            const float del_x = m_controlPoints[1].m_x - m_controlPoints[0].m_x;
+            if (std::abs(1.f - del_x) < 1e-3)
+            {
+                throw Exception("The periodic spline x coordinates may not wrap to the same value.");
+            }
+        }
     }
 }
 
 bool GradingBSplineCurveImpl::isIdentity() const
 {
     bool isIdentity = true;
-    if( m_curveType == DIAGONAL_B_SPLINE || m_curveType == B_SPLINE || m_curveType == HUE_HUE_B_SPLINE )
+    if( m_splineType == DIAGONAL_B_SPLINE || m_splineType == B_SPLINE || m_splineType == HUE_HUE_B_SPLINE )
     {    
        isIdentity = std::all_of(m_controlPoints.cbegin(), 
                                 m_controlPoints.cend(), 
                                 [](const GradingControlPoint& cp) { return cp.m_x == cp.m_y; });
     } 
-    else if( m_curveType == PERIODIC_0_B_SPLINE )
+    else if( m_splineType == PERIODIC_0_B_SPLINE )
     {
        isIdentity = std::all_of(m_controlPoints.cbegin(), 
                                 m_controlPoints.cend(), 
                                 [](const GradingControlPoint& cp) { return cp.m_y == 0.f; });
     } 
-    else if( m_curveType == HORIZONTAL1_B_SPLINE || m_curveType == PERIODIC_1_B_SPLINE )
+    else if( m_splineType == HORIZONTAL1_B_SPLINE || m_splineType == PERIODIC_1_B_SPLINE )
     {
        isIdentity = std::all_of(m_controlPoints.cbegin(), 
                                 m_controlPoints.cend(), 
@@ -774,7 +812,7 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefsForHueCurve(KnotsCoefs & knots
 
         const int N_IDENTITY_KNOTS = 2;
         const int N_IDENTITY_COEFS = 3;
-        
+
         knotsCoefs.m_knotsOffsetsArray[curveIdx * 2] = numKnots;
         knotsCoefs.m_knotsOffsetsArray[curveIdx * 2 + 1] = N_IDENTITY_KNOTS;
         knotsCoefs.m_coefsOffsetsArray[curveIdx * 2] = knotsCoefs.m_numCoefs;
@@ -782,24 +820,23 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefsForHueCurve(KnotsCoefs & knots
 
         knotsCoefs.m_knotsArray.begin()[numKnots] = 0.f;
         knotsCoefs.m_knotsArray.begin()[numKnots + 1] = 1.f;
-        
+
         // Identity curve are linear or constant, so set the quadratic coefficient to zero.
         knotsCoefs.m_coefsArray.begin()[numCoefs] = 0.f;
-        
+
         // Set the linear coefficient to match the slope of the identity curve.
-        const float linearCoef = m_curveType == BSplineCurveType::DIAGONAL_B_SPLINE || 
-                                 m_curveType == BSplineCurveType::HUE_HUE_B_SPLINE ? 
+        const float linearCoef = m_splineType == BSplineType::DIAGONAL_B_SPLINE || 
+                                 m_splineType == BSplineType::HUE_HUE_B_SPLINE ? 
                                  1.0f : 0.f;
 
         knotsCoefs.m_coefsArray.begin()[numCoefs + 1] = linearCoef;
 
         // Set the constant coefficient for an identity curve.
-        const float constantCoef = m_curveType == BSplineCurveType::PERIODIC_1_B_SPLINE || 
-                                   m_curveType == BSplineCurveType::HORIZONTAL1_B_SPLINE ? 
+        const float constantCoef = m_splineType == BSplineType::PERIODIC_1_B_SPLINE || 
+                                   m_splineType == BSplineType::HORIZONTAL1_B_SPLINE ? 
                                    1.0f : 0.f;
-        
+
         knotsCoefs.m_coefsArray.begin()[numCoefs + 2] = constantCoef;
-        
 
         knotsCoefs.m_numKnots += N_IDENTITY_KNOTS;
         knotsCoefs.m_numCoefs += N_IDENTITY_COEFS;
@@ -808,14 +845,14 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefsForHueCurve(KnotsCoefs & knots
 
     bool isPeriodic = false;
     bool isHorizontal = true;
-    if (m_curveType == BSplineCurveType::PERIODIC_1_B_SPLINE  ||
-        m_curveType == BSplineCurveType::PERIODIC_0_B_SPLINE  ||
-        m_curveType == BSplineCurveType::HUE_HUE_B_SPLINE)
+    if (m_splineType == BSplineType::PERIODIC_1_B_SPLINE  ||
+        m_splineType == BSplineType::PERIODIC_0_B_SPLINE  ||
+        m_splineType == BSplineType::HUE_HUE_B_SPLINE)
     {
         isPeriodic = true;
     }
-    if (m_curveType == BSplineCurveType::DIAGONAL_B_SPLINE  ||
-        m_curveType == BSplineCurveType::HUE_HUE_B_SPLINE)
+    if (m_splineType == BSplineType::DIAGONAL_B_SPLINE  ||
+        m_splineType == BSplineType::HUE_HUE_B_SPLINE)
     {
         isHorizontal = false;
     }
@@ -824,7 +861,7 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefsForHueCurve(KnotsCoefs & knots
     PrepHueCurveData(m_controlPoints, resultCtrlPnts, isPeriodic, isHorizontal);
 
     // For the purposes of slope estimation, consider the hue-hue spline to be horizontal.
-    if (m_curveType == BSplineCurveType::HUE_HUE_B_SPLINE)
+    if (m_splineType == BSplineType::HUE_HUE_B_SPLINE)
     {
         isHorizontal = true;
     }
@@ -885,7 +922,7 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefsForHueCurve(KnotsCoefs & knots
 
 void GradingBSplineCurveImpl::computeKnotsAndCoefs(KnotsCoefs & knotsCoefs, int curveIdx) const
 {
-   if(m_curveType == BSplineCurveType::B_SPLINE)
+   if(m_splineType == BSplineType::B_SPLINE)
    {
        computeKnotsAndCoefsForRGBCurve(knotsCoefs, curveIdx);
    }
@@ -895,127 +932,214 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefs(KnotsCoefs & knotsCoefs, int 
    }
 }
 
-void GradingBSplineCurveImpl::AddShaderEval(GpuShaderText & st, 
-                                            const std::string & knotsOffsets,
-                                            const std::string & coefsOffsets,
-                                            const std::string & knots, 
-                                            const std::string & coefs, bool isInv)
+void GradingBSplineCurveImpl::AddShaderEvalFwd(GpuShaderText & st, 
+                                               const std::string & knotsOffsets,
+                                               const std::string & coefsOffsets,
+                                               const std::string & knots, 
+                                               const std::string & coefs)
 {
-    if (!isInv)     // Forward
-    {
-        st.newLine() << "int knotsOffs = " << knotsOffsets << "[curveIdx * 2];";
-        st.newLine() << "int knotsCnt = " << knotsOffsets << "[curveIdx * 2 + 1];";
-        st.newLine() << "int coefsOffs = " << coefsOffsets << "[curveIdx * 2];";
-        st.newLine() << "int coefsCnt = " << coefsOffsets << "[curveIdx * 2 + 1];";
-        st.newLine() << "int coefsSets = coefsCnt / 3;";
-        // If the curve has the default/identity values the coef data is empty, so return the input.
-        st.newLine() << "if (coefsSets == 0)";
-        st.newLine() << "{";
-        st.newLine() << "  return identity_x;";
-        st.newLine() << "}";
+    // See GradingHue/RGBCurveOpGPU.cpp:AddCurveEvalMethodTextToShaderProgram.
+    // The input arguments are:
+    //      curveIdx -- The index of the curve being evaluated.
+    //             x -- The input value.
+    //    identity_x -- The desired output if there is no curve to evaluate.
 
-        st.newLine() << "float knStart = " << knots << "[knotsOffs];";
-        st.newLine() << "float knEnd = " << knots << "[knotsOffs + knotsCnt - 1];";
+    st.newLine() << "int knotsOffs = " << knotsOffsets << "[curveIdx * 2];";
+    st.newLine() << "int knotsCnt = " << knotsOffsets << "[curveIdx * 2 + 1];";
+    st.newLine() << "int coefsOffs = " << coefsOffsets << "[curveIdx * 2];";
+    st.newLine() << "int coefsCnt = " << coefsOffsets << "[curveIdx * 2 + 1];";
+    st.newLine() << "int coefsSets = coefsCnt / 3;";
+    // If the curve has the default/identity values, the coef data is empty, return the identity.
+    st.newLine() << "if (coefsSets == 0)";
+    st.newLine() << "{";
+    st.newLine() << "  return identity_x;";
+    st.newLine() << "}";
 
-        st.newLine() << "if (x <= knStart)";
-        st.newLine() << "{";
-        st.newLine() << "  float B = " << coefs << "[coefsOffs + coefsSets];";
-        st.newLine() << "  float C = " << coefs << "[coefsOffs + coefsSets * 2];";
-        st.newLine() << "  return (x - knStart) * B + C;";
-        st.newLine() << "}";
+    st.newLine() << "float knStart = " << knots << "[knotsOffs];";
+    st.newLine() << "float knEnd = " << knots << "[knotsOffs + knotsCnt - 1];";
 
-        st.newLine() << "else if (x >= knEnd)";
-        st.newLine() << "{";
-        st.newLine() << "  float A = " << coefs << "[coefsOffs + coefsSets - 1];";
-        st.newLine() << "  float B = " << coefs << "[coefsOffs + coefsSets * 2 - 1];";
-        st.newLine() << "  float C = " << coefs << "[coefsOffs + coefsSets * 3 - 1];";
-        st.newLine() << "  float kn = " << knots << "[knotsOffs + knotsCnt - 2];";
-        st.newLine() << "  float t = knEnd - kn;";
-        st.newLine() << "  float slope = 2. * A * t + B;";
-        st.newLine() << "  float offs = ( A * t + B ) * t + C;";
-        st.newLine() << "  return (x - knEnd) * slope + offs;";
-        st.newLine() << "}";
+    st.newLine() << "if (x <= knStart)";
+    st.newLine() << "{";
+    st.newLine() << "  float B = " << coefs << "[coefsOffs + coefsSets];";
+    st.newLine() << "  float C = " << coefs << "[coefsOffs + coefsSets * 2];";
+    st.newLine() << "  return (x - knStart) * B + C;";
+    st.newLine() << "}";
 
-        // else
-        st.newLine() << "int i = 0;";
-        st.newLine() << "for (i = 0; i < knotsCnt - 2; ++i)";
-        st.newLine() << "{";
-        st.newLine() << "  if (x < " << knots << "[knotsOffs + i + 1])";
-        st.newLine() << "  {";
-        st.newLine() << "    break;";
-        st.newLine() << "  }";
-        st.newLine() << "}";
+    st.newLine() << "else if (x >= knEnd)";
+    st.newLine() << "{";
+    st.newLine() << "  float A = " << coefs << "[coefsOffs + coefsSets - 1];";
+    st.newLine() << "  float B = " << coefs << "[coefsOffs + coefsSets * 2 - 1];";
+    st.newLine() << "  float C = " << coefs << "[coefsOffs + coefsSets * 3 - 1];";
+    st.newLine() << "  float kn = " << knots << "[knotsOffs + knotsCnt - 2];";
+    st.newLine() << "  float t = knEnd - kn;";
+    st.newLine() << "  float slope = 2. * A * t + B;";
+    st.newLine() << "  float offs = ( A * t + B ) * t + C;";
+    st.newLine() << "  return (x - knEnd) * slope + offs;";
+    st.newLine() << "}";
 
-        st.newLine() << "float A = " << coefs << "[coefsOffs + i];";
-        st.newLine() << "float B = " << coefs << "[coefsOffs + coefsSets + i];";
-        st.newLine() << "float C = " << coefs << "[coefsOffs + coefsSets * 2 + i];";
-        st.newLine() << "float kn = " << knots << "[knotsOffs + i];";
-        st.newLine() << "float t = x - kn;";
-        st.newLine() << "return ( A * t + B ) * t + C;";
-    }
-    else            // Inverse
-    {
-        st.newLine() << "int knotsOffs = " << knotsOffsets << "[curveIdx * 2];";
-        st.newLine() << "int knotsCnt = " << knotsOffsets << "[curveIdx * 2 + 1];";
-        st.newLine() << "int coefsOffs = " << coefsOffsets << "[curveIdx * 2];";
-        st.newLine() << "int coefsCnt = " << coefsOffsets << "[curveIdx * 2 + 1];";
-        st.newLine() << "int coefsSets = coefsCnt / 3;";
-        // If the curve has the default/identity values the coef data is empty, so return the input.
-        st.newLine() << "if (coefsSets == 0)";
-        st.newLine() << "{";
-        st.newLine() << "  return identity_x;";
-        st.newLine() << "}";
+    // else
+    st.newLine() << "int i = 0;";
+    st.newLine() << "for (i = 0; i < knotsCnt - 2; ++i)";
+    st.newLine() << "{";
+    st.newLine() << "  if (x < " << knots << "[knotsOffs + i + 1])";
+    st.newLine() << "  {";
+    st.newLine() << "    break;";
+    st.newLine() << "  }";
+    st.newLine() << "}";
 
-        st.newLine() << "float knStart = " << knots << "[knotsOffs];";
-        st.newLine() << "float knEnd = " << knots << "[knotsOffs + knotsCnt - 1];";
-        st.newLine() << "float knStartY = " << coefs << "[coefsOffs + coefsSets * 2];";
-        st.newLine() << "float knEndY;";
-        st.newLine() << "{";
-        st.newLine() << "  float A = " << coefs << "[coefsOffs + coefsSets - 1];";
-        st.newLine() << "  float B = " << coefs << "[coefsOffs + coefsSets * 2 - 1];";
-        st.newLine() << "  float C = " << coefs << "[coefsOffs + coefsSets * 3 - 1];";
-        st.newLine() << "  float kn = " << knots << "[knotsOffs + knotsCnt - 2];";
-        st.newLine() << "  float t = knEnd - kn;";
-        st.newLine() << "  knEndY = ( A * t + B ) * t + C;";
-        st.newLine() << "}";
+    st.newLine() << "float A = " << coefs << "[coefsOffs + i];";
+    st.newLine() << "float B = " << coefs << "[coefsOffs + coefsSets + i];";
+    st.newLine() << "float C = " << coefs << "[coefsOffs + coefsSets * 2 + i];";
+    st.newLine() << "float kn = " << knots << "[knotsOffs + i];";
+    st.newLine() << "float t = x - kn;";
+    st.newLine() << "return ( A * t + B ) * t + C;";
+}
 
-        st.newLine() << "if (x <= knStartY)";
-        st.newLine() << "{";
-        st.newLine() << "  float B = " << coefs << "[coefsOffs + coefsSets];";
-        st.newLine() << "  float C = " << coefs << "[coefsOffs + coefsSets * 2];";
-        st.newLine() << "  return abs(B) < 1e-5 ? knStart : (x - C) / B + knStart;";
-        st.newLine() << "}";
+void GradingBSplineCurveImpl::AddShaderEvalRev(GpuShaderText & st, 
+                                               const std::string & knotsOffsets,
+                                               const std::string & coefsOffsets,
+                                               const std::string & knots, 
+                                               const std::string & coefs)
+{
+    // See GradingHue/RGBCurveOpGPU.cpp:AddCurveEvalMethodTextToShaderProgram.
+    // The input arguments are:
+    //      curveIdx -- The index of the curve being evaluated.
+    //             x -- The input value.
+    //    identity_x -- The desired output if there is no curve to evaluate.
 
-        st.newLine() << "else if (x >= knEndY)";
-        st.newLine() << "{";
-        st.newLine() << "  float A = " << coefs << "[coefsOffs + coefsSets - 1];";
-        st.newLine() << "  float B = " << coefs << "[coefsOffs + coefsSets * 2 - 1];";
-        st.newLine() << "  float C = " << coefs << "[coefsOffs + coefsSets * 3 - 1];";
-        st.newLine() << "  float kn = " << knots << "[knotsOffs + knotsCnt - 2];";
-        st.newLine() << "  float t = knEnd - kn;";
-        st.newLine() << "  float slope = 2. * A * t + B;";
-        st.newLine() << "  float offs = ( A * t + B ) * t + C;";
-        st.newLine() << "  return abs(slope) < 1e-5 ? knEnd : (x - offs) / slope + knEnd;";
-        st.newLine() << "}";
+    st.newLine() << "int knotsOffs = " << knotsOffsets << "[curveIdx * 2];";
+    st.newLine() << "int knotsCnt = " << knotsOffsets << "[curveIdx * 2 + 1];";
+    st.newLine() << "int coefsOffs = " << coefsOffsets << "[curveIdx * 2];";
+    st.newLine() << "int coefsCnt = " << coefsOffsets << "[curveIdx * 2 + 1];";
+    st.newLine() << "int coefsSets = coefsCnt / 3;";
 
-        // else
-        st.newLine() << "int i = 0;";
-        st.newLine() << "for (i = 0; i < knotsCnt - 2; ++i)";
-        st.newLine() << "{";
-        st.newLine() << "  if (x < " << coefs << "[coefsOffs + coefsSets * 2 + i + 1])";
-        st.newLine() << "  {";
-        st.newLine() << "    break;";
-        st.newLine() << "  }";
-        st.newLine() << "}";
+    st.newLine() << "if (coefsSets == 0)";
+    st.newLine() << "{";
+    st.newLine() << "  return identity_x;";
+    st.newLine() << "}";
 
-        st.newLine() << "float A = " << coefs << "[coefsOffs + i];";
-        st.newLine() << "float B = " << coefs << "[coefsOffs + coefsSets + i];";
-        st.newLine() << "float C = " << coefs << "[coefsOffs + coefsSets * 2 + i];";
-        st.newLine() << "float kn = " << knots << "[knotsOffs + i];";
-        st.newLine() << "float C0 = C - x;";
-        st.newLine() << "float discrim = sqrt(B * B - 4. * A * C0);";
-        st.newLine() << "return kn + (-2. * C0) / (discrim + B);";
-    }
+    st.newLine() << "float knStart = " << knots << "[knotsOffs];";
+    st.newLine() << "float knEnd = " << knots << "[knotsOffs + knotsCnt - 1];";
+    st.newLine() << "float knStartY = " << coefs << "[coefsOffs + coefsSets * 2];";
+    st.newLine() << "float knEndY;";
+    st.newLine() << "{";
+    st.newLine() << "  float A = " << coefs << "[coefsOffs + coefsSets - 1];";
+    st.newLine() << "  float B = " << coefs << "[coefsOffs + coefsSets * 2 - 1];";
+    st.newLine() << "  float C = " << coefs << "[coefsOffs + coefsSets * 3 - 1];";
+    st.newLine() << "  float kn = " << knots << "[knotsOffs + knotsCnt - 2];";
+    st.newLine() << "  float t = knEnd - kn;";
+    st.newLine() << "  knEndY = ( A * t + B ) * t + C;";
+    st.newLine() << "}";
+
+    st.newLine() << "if (x <= knStartY)";
+    st.newLine() << "{";
+    st.newLine() << "  float B = " << coefs << "[coefsOffs + coefsSets];";
+    st.newLine() << "  float C = " << coefs << "[coefsOffs + coefsSets * 2];";
+    st.newLine() << "  return abs(B) < 1e-5 ? knStart : (x - C) / B + knStart;";
+    st.newLine() << "}";
+
+    st.newLine() << "else if (x >= knEndY)";
+    st.newLine() << "{";
+    st.newLine() << "  float A = " << coefs << "[coefsOffs + coefsSets - 1];";
+    st.newLine() << "  float B = " << coefs << "[coefsOffs + coefsSets * 2 - 1];";
+    st.newLine() << "  float C = " << coefs << "[coefsOffs + coefsSets * 3 - 1];";
+    st.newLine() << "  float kn = " << knots << "[knotsOffs + knotsCnt - 2];";
+    st.newLine() << "  float t = knEnd - kn;";
+    st.newLine() << "  float slope = 2. * A * t + B;";
+    st.newLine() << "  float offs = ( A * t + B ) * t + C;";
+    st.newLine() << "  return abs(slope) < 1e-5 ? knEnd : (x - offs) / slope + knEnd;";
+    st.newLine() << "}";
+
+    // else
+    st.newLine() << "int i = 0;";
+    st.newLine() << "for (i = 0; i < knotsCnt - 2; ++i)";
+    st.newLine() << "{";
+    st.newLine() << "  if (x < " << coefs << "[coefsOffs + coefsSets * 2 + i + 1])";
+    st.newLine() << "  {";
+    st.newLine() << "    break;";
+    st.newLine() << "  }";
+    st.newLine() << "}";
+
+    st.newLine() << "float A = " << coefs << "[coefsOffs + i];";
+    st.newLine() << "float B = " << coefs << "[coefsOffs + coefsSets + i];";
+    st.newLine() << "float C = " << coefs << "[coefsOffs + coefsSets * 2 + i];";
+    st.newLine() << "float kn = " << knots << "[knotsOffs + i];";
+    st.newLine() << "float C0 = C - x;";
+    st.newLine() << "float discrim = sqrt(B * B - 4. * A * C0);";
+    st.newLine() << "return kn + (-2. * C0) / (discrim + B);";
+}
+
+void GradingBSplineCurveImpl::AddShaderEvalRevHue(GpuShaderText & st, 
+                                                  const std::string & knotsOffsets,
+                                                  const std::string & coefsOffsets,
+                                                  const std::string & knots, 
+                                                  const std::string & coefs)
+{
+    // See GradingHueCurveOpGPU.cpp:AddCurveEvalMethodTextToShaderProgram.
+    // The input arguments are:
+    //      curveIdx -- The index of the curve being evaluated.
+    //             x -- The input value.
+    //    identity_x -- The desired output if there is no curve to evaluate.
+
+    st.newLine() << "int knotsOffs = " << knotsOffsets << "[curveIdx * 2];";
+    st.newLine() << "int knotsCnt = " << knotsOffsets << "[curveIdx * 2 + 1];";
+    st.newLine() << "int coefsOffs = " << coefsOffsets << "[curveIdx * 2];";
+    st.newLine() << "int coefsCnt = " << coefsOffsets << "[curveIdx * 2 + 1];";
+    st.newLine() << "int coefsSets = coefsCnt / 3;";
+
+    st.newLine() << "if (coefsSets == 0)";
+    st.newLine() << "{";
+    st.newLine() << "  return identity_x;";
+    st.newLine() << "}";
+
+    st.newLine() << "float knStart = " << knots << "[knotsOffs];";
+    st.newLine() << "float knEnd = " << knots << "[knotsOffs + knotsCnt - 1];";
+    st.newLine() << "float knStartY = " << coefs << "[coefsOffs + coefsSets * 2];";
+    st.newLine() << "float knEndY;";
+    st.newLine() << "{";
+    st.newLine() << "  float A = " << coefs << "[coefsOffs + coefsSets - 1];";
+    st.newLine() << "  float B = " << coefs << "[coefsOffs + coefsSets * 2 - 1];";
+    st.newLine() << "  float C = " << coefs << "[coefsOffs + coefsSets * 3 - 1];";
+    st.newLine() << "  float kn = " << knots << "[knotsOffs + knotsCnt - 2];";
+    st.newLine() << "  float t = knEnd - kn;";
+    st.newLine() << "  knEndY = ( A * t + B ) * t + C;";
+    // The HUE-FX curve is index 7 and requires special handling.
+    st.newLine() << "  knEndY = (curveIdx == 7) ? knEndY + knEnd : knEndY;";
+    st.newLine() << "}";
+
+    st.newLine() << "if (x < knStartY)";
+    st.newLine() << "{";
+    st.newLine() << "  x = x + ceil(knStartY - x);";
+    st.newLine() << "}";
+
+    st.newLine() << "else if (x > knEndY)";
+    st.newLine() << "{";
+    st.newLine() << "  x = x - ceil(x - knEndY);";
+    st.newLine() << "}";
+
+    st.newLine() << "int i = 0;";
+    st.newLine() << "for (i = 0; i < knotsCnt - 2; ++i)";
+    st.newLine() << "{";
+    st.newLine() << "  float curve_x = " << coefs << "[coefsOffs + coefsSets * 2 + i + 1];";
+    st.newLine() << "  curve_x = (curveIdx == 7) ? curve_x + " << knots << "[knotsOffs + i + 1] : curve_x;";
+    st.newLine() << "  if (x < curve_x)";
+    st.newLine() << "  {";
+    st.newLine() << "    break;";
+    st.newLine() << "  }";
+    st.newLine() << "}";
+
+    st.newLine() << "float A = " << coefs << "[coefsOffs + i];";
+    st.newLine() << "float B = " << coefs << "[coefsOffs + coefsSets + i];";
+    st.newLine() << "float C = " << coefs << "[coefsOffs + coefsSets * 2 + i];";
+    st.newLine() << "float kn = " << knots << "[knotsOffs + i];";
+    st.newLine() << "if (curveIdx == 7)";
+    st.newLine() << "{";
+    st.newLine() << "  C = C + kn;";
+    st.newLine() << "  B = B + 1.;";
+    st.newLine() << "}";
+    st.newLine() << "float C0 = C - x;";
+    st.newLine() << "float discrim = sqrt(B * B - 4. * A * C0);";
+    st.newLine() << "return kn + (-2. * C0) / (discrim + B);";
 }
 
 GradingBSplineCurveImpl::KnotsCoefs::KnotsCoefs(size_t numCurves)
@@ -1030,6 +1154,9 @@ GradingBSplineCurveImpl::KnotsCoefs::KnotsCoefs(size_t numCurves)
 // TODO: Update to return hue curve identity value.
 float GradingBSplineCurveImpl::KnotsCoefs::evalCurve(int c, float x) const
 {
+    // NB: When evaluating hue curves, x should be wrapped to [0,1) by the caller
+    // so there is no extrapolation.
+
     const int coefsSets = m_coefsOffsetsArray[2 * c + 1] / 3;
     if (coefsSets == 0)
     {
@@ -1079,6 +1206,11 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurve(int c, float x) const
 // TODO: Update to return hue curve identity value.
 float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRev(int c, float y) const
 {
+    // Note: This is only intended to invert the monotonic curve types.
+    // The horizontal curve types only need to be evaluated in the forward
+    // direction, even when inverting the hue curve transform. The exception
+    // is the HueFX curve but that has its own inversion function below.
+
     const int coefsSets = m_coefsOffsetsArray[2 * c + 1] / 3;
     if (coefsSets == 0)
     {
@@ -1103,12 +1235,14 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRev(int c, float y) const
 
     if (y <= knStartY)
     {
+        // Extrapolate low side.
         const float B = m_coefsArray[coefsOffs + coefsSets];
         const float C = m_coefsArray[coefsOffs + coefsSets * 2];
         return std::fabs(B) < 1e-5f ? knStart : (y - C) / B + knStart;
     }
     else if (y >= knEndY)
     {
+        // Extrapolate high side.
         const float A  = m_coefsArray[coefsOffs + coefsSets - 1];
         const float B  = m_coefsArray[coefsOffs + coefsSets * 2 - 1];
         const float C  = m_coefsArray[coefsOffs + coefsSets * 3 - 1];
@@ -1136,6 +1270,74 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRev(int c, float y) const
     }
 }
 
+float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRevHue(int c, float y, bool isHfx) const
+{
+    // This function is specifically to invert the HueFX and Hue-Hue curve types.
+    //
+    // The output of the HueFX curve is a "delta hue" signal that is
+    // added on to the incoming hue:  HueOut = HueIn + HueFX(HueIn).
+    // The input to this function should be the HueOut, in other words,
+    // the sum of the HueIn and delta hue. It returns HueIn.
+
+    const int coefsSets = m_coefsOffsetsArray[2 * c + 1] / 3;
+    if (coefsSets == 0)
+    {
+        return y;
+    }
+    const int coefsOffs = m_coefsOffsetsArray[2 * c];
+    const int knotsCnt = m_knotsOffsetsArray[2 * c + 1];
+    const int knotsOffs = m_knotsOffsetsArray[2 * c];
+
+    const float knStart = m_knotsArray[knotsOffs];
+    const float knEnd = m_knotsArray[knotsOffs + knotsCnt - 1];
+    float knStartY = m_coefsArray[coefsOffs + coefsSets * 2];
+    knStartY = isHfx ? knStartY + knStart : knStartY;
+    float knEndY;
+    {
+        const float A  = m_coefsArray[coefsOffs + coefsSets - 1];
+        const float B  = m_coefsArray[coefsOffs + coefsSets * 2 - 1];
+        const float C  = m_coefsArray[coefsOffs + coefsSets * 3 - 1];
+        const float kn = m_knotsArray[knotsOffs + knotsCnt - 2];
+        const float t = knEnd - kn;
+        knEndY = (A * t + B) * t + C;
+        knEndY = isHfx ? knEndY + knEnd : knEndY;
+    }
+
+    if (y < knStartY)
+    {
+        // Wrap up into the valid hue range.
+        y += std::ceil(knStartY - y);
+    }
+    else if (y > knEndY)
+    {
+        // Wrap down into the valid hue range.
+        y -= std::ceil(y - knEndY);
+    }
+
+    int i;
+    for (i = 0; i < knotsCnt - 2; ++i)
+    {
+        float curve_y = m_coefsArray[coefsOffs + coefsSets * 2 + i + 1];
+        curve_y = isHfx ? curve_y + m_knotsArray[knotsOffs + i + 1] : curve_y;
+
+        if (y < curve_y)
+            break;
+    }
+    const float A  = m_coefsArray[coefsOffs + i];
+    float B  = m_coefsArray[coefsOffs + coefsSets + i];
+    float C  = m_coefsArray[coefsOffs + coefsSets * 2 + i];
+    const float kn = m_knotsArray[knotsOffs + i];
+    if (isHfx)
+    {
+        C += kn;     // shift curve up so left edge is on the main diagonal
+        B += 1.f;    // add diagonal line
+    }
+    const float C0 = C - y;
+    const float discrim = sqrt(B * B - 4.f * A * C0);
+    return kn + (-2.f * C0) / (discrim + B);
+    // Note: The caller should wrap to ensure the output is a hue on [0,1).
+}
+
 bool operator==(const GradingControlPoint & lhs, const GradingControlPoint & rhs)
 {
     return lhs.m_x == rhs.m_x && lhs.m_y == rhs.m_y;
@@ -1148,12 +1350,18 @@ bool operator!=(const GradingControlPoint & lhs, const GradingControlPoint & rhs
 
 bool operator==(const GradingBSplineCurve & lhs, const GradingBSplineCurve & rhs)
 {
+    if (lhs.getSplineType() != rhs.getSplineType())
+    {
+        return false;
+    }
+
     const auto num = lhs.getNumControlPoints();
     if (num == rhs.getNumControlPoints())
     {
         for (size_t i = 0; i < num; ++i)
         {
-            if (lhs.getControlPoint(i) != rhs.getControlPoint(i))
+            if ( lhs.getControlPoint(i) != rhs.getControlPoint(i)  ||
+                 lhs.getSlope(i) != rhs.getSlope(i) )
             {
                 return false;
             }

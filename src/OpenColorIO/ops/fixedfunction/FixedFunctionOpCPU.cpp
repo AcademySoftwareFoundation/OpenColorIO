@@ -1601,10 +1601,12 @@ void applyHSYToRGB(const void * inImg, void * outImg, long numPixels, float min0
 
     for(long idx=0; idx<numPixels; ++idx)
     {
+        // Make magenta 0 hue, rather than red.
         float hue = in[0] - 1.f/6.f;
         float sat = in[1];
         const float luma = in[2];
-  
+
+        // Rotate hue 180 deg. for negative luma values.
         hue = luma < 0.f ? hue + 0.5f : hue;
         hue = ( hue - std::floor( hue ) ) * 6.f;
   
@@ -1726,6 +1728,8 @@ void applyRGBToHSY(const void * inImg, void * outImg, long numPixels, float min0
             sat = distRgb * sat_gain;
         }
   
+        // NB: Unlike typical HSV, HSY maps magenta rather than red to a hue of zero.
+        // (This allows for better placement of red when manipulating curves in a UI.)
         float hue = 0.f;
         if (rgbMin != rgbMax)
         {

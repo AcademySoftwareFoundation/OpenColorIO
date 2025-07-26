@@ -7,6 +7,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "GpuShaderUtils.h"
+#include "ops/gradinghuecurve/GradingHueCurveOpCPU.h"
 #include "ops/gradinghuecurve/GradingHueCurveOpGPU.h"
 #include "ops/gradinghuecurve/GradingHueCurveOp.h"
 #include "transforms/GradingHueCurveTransform.h"
@@ -187,16 +188,14 @@ void GradingHueCurveOp::removeDynamicProperties()
 
 ConstOpCPURcPtr GradingHueCurveOp::getCPUOp(bool /*fastLogExpPow*/) const
 {
-    // TODO: Add CPU renderer before merging back the adsk fork    
-    //ConstGradingRGBCurveOpDataRcPtr data = rgbCurveData();
-    //return GetGradingRGBCurveCPURenderer(data);
-    return ConstOpCPURcPtr();
+    ConstGradingHueCurveOpDataRcPtr data = hueCurveData();
+    return GetGradingHueCurveCPURenderer(data);
 }
 
 void GradingHueCurveOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
 {
     ConstGradingHueCurveOpDataRcPtr data = hueCurveData();
-    GetHueCurveGPUShaderProgram(shaderCreator, data);
+    GetGradingHueCurveGPUShaderProgram(shaderCreator, data);
 }
 
 

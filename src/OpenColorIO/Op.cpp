@@ -429,6 +429,7 @@ void OpRcPtrVec::validateDynamicProperties()
     DynamicPropertyDoubleImplRcPtr dpGamma;
     DynamicPropertyGradingPrimaryImplRcPtr dpGradingPrimary;
     DynamicPropertyGradingRGBCurveImplRcPtr dpGradingRGBCurve;
+    DynamicPropertyGradingHueCurveImplRcPtr dpGradingHueCurve;
     DynamicPropertyGradingToneImplRcPtr dpGradingTone;
 
     for (auto op : m_ops)
@@ -439,6 +440,7 @@ void OpRcPtrVec::validateDynamicProperties()
         ValidateDynamicProperty(op, dpGamma, DYNAMIC_PROPERTY_GAMMA);
         ValidateDynamicProperty(op, dpGradingPrimary, DYNAMIC_PROPERTY_GRADING_PRIMARY);
         ValidateDynamicProperty(op, dpGradingRGBCurve, DYNAMIC_PROPERTY_GRADING_RGBCURVE);
+        ValidateDynamicProperty(op, dpGradingHueCurve, DYNAMIC_PROPERTY_GRADING_HUECURVE);
         ValidateDynamicProperty(op, dpGradingTone, DYNAMIC_PROPERTY_GRADING_TONE);
     }
 }
