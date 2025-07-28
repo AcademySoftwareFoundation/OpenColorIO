@@ -316,3 +316,93 @@ OCIO_ADD_TEST(GradingHueCurveOpCPU, lin_all_curves)
     OCIO_CHECK_NO_THROW(op->apply(res, res, num_samples));
     ValidateImage(input_32f, res, num_samples, __LINE__);
 }
+
+OCIO_ADD_TEST(GradingHueCurveOpCPU, draw_curve_only)
+{
+    auto gc = std::make_shared<OCIO::GradingHueCurveOpData>(OCIO::GRADING_LOG);
+
+    auto val = gc->getValue()->createEditableCopy();
+    auto spline = val->getCurve(OCIO::HUE_SAT);
+    spline->getControlPoint(1) = OCIO::GradingControlPoint(0.15f, 1.4f);
+    OCIO_CHECK_ASSERT(!val->isIdentity());
+
+    // Enable drawCurveOnly mode.  This should only evaluate the HUE-SAT spline for
+    // use in a user interface.
+    val->setDrawCurveOnly(true);
+    gc->setValue(val);
+
+    OCIO::ConstGradingHueCurveOpDataRcPtr gcc = gc;
+    OCIO::ConstOpCPURcPtr op;
+    OCIO_CHECK_NO_THROW(op = OCIO::GetGradingHueCurveCPURenderer(gcc));
+    OCIO_CHECK_ASSERT(op);
+
+    constexpr long num_samples = 2;
+    float res[4 * num_samples]{ 0.f };
+
+    constexpr float input_32f[] = {
+        -0.2f, 0.15f, 0.15f, 0.0f,
+         0.15f, 1.0f, 2.0f, 0.5f };
+
+    constexpr float expected_32f[] = {
+         1.0f, 1.4f, 1.4f, 0.0f,
+         1.4f, 1.0f, 1.0f, 0.5f };
+
+    // Test in forward direction.
+
+    OCIO_CHECK_NO_THROW(op->apply(input_32f, res, num_samples));
+    ValidateImage(expected_32f, res, num_samples, __LINE__);
+
+    // Test in inverse direction, which should be the same as the forward direction
+    // since the direction is ignored for DrawCurveOnly mode.
+
+    gc->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO_CHECK_NO_THROW(op = OCIO::GetGradingHueCurveCPURenderer(gcc));
+    OCIO_CHECK_ASSERT(op);
+    OCIO_CHECK_NO_THROW(op->apply(input_32f, res, num_samples));
+    ValidateImage(expected_32f, res, num_samples, __LINE__);
+}
+
+OCIO_ADD_TEST(GradingHueCurveOpCPU, bypass_rgbtohsy)
+{
+    auto gc = std::make_shared<OCIO::GradingHueCurveOpData>(OCIO::GRADING_LOG);
+
+    gc->setBypassRGBToHSY(true);
+
+    auto val = gc->getValue()->createEditableCopy();
+    auto spline = val->getCurve(OCIO::SAT_SAT);
+    spline->getControlPoint(1) = OCIO::GradingControlPoint(0.4f, 0.8f);
+    OCIO_CHECK_ASSERT(!val->isIdentity());
+    gc->setValue(val);
+
+    OCIO::ConstGradingHueCurveOpDataRcPtr gcc = gc;
+    OCIO::ConstOpCPURcPtr op;
+    OCIO_CHECK_NO_THROW(op = OCIO::GetGradingHueCurveCPURenderer(gcc));
+    OCIO_CHECK_ASSERT(op);
+
+    constexpr long num_samples = 2;
+    float res[4 * num_samples]{ 0.f };
+
+    constexpr float input_32f[] = {
+         0.2f, 0.2f, -0.1f, 0.0f,
+         0.1f, 0.4f,  2.0f, 0.5f };
+
+    // Only the green channel gets processed, using the sat-sat curve.
+    constexpr float expected_32f[] = {
+         0.2f, 0.4475418f, -0.1f, 0.0f,
+         0.1f, 0.8000000f,  2.0f, 0.5f };
+
+    // Test in forward direction.
+
+    OCIO_CHECK_NO_THROW(op->apply(input_32f, res, num_samples));
+    ValidateImage(expected_32f, res, num_samples, __LINE__);
+
+    // Test in inverse direction.
+
+    gc->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO_CHECK_NO_THROW(op = OCIO::GetGradingHueCurveCPURenderer(gcc));
+    OCIO_CHECK_ASSERT(op);
+    OCIO_CHECK_NO_THROW(op->apply(res, res, num_samples));
+    ValidateImage(input_32f, res, num_samples, __LINE__);
+}

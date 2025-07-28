@@ -330,14 +330,23 @@ class GradingDataTest(unittest.TestCase):
         assertEqualBSpline(self, hueLog.lum_lum, defLog)
         with self.assertRaises(AssertionError):
             assertEqualBSpline(self, hueLog.lum_lum, defLin)
+        self.assertEqual(hueLog.getDrawCurveOnly(), False)
 
         hueVideo = OCIO.GradingHueCurve(OCIO.GRADING_VIDEO)
         assertEqualHueCurve(self, hueLog, hueVideo)
         
         # Check comparison operators
+
         huec1 = OCIO.GradingHueCurve(OCIO.GRADING_LIN)
         huec2 = OCIO.GradingHueCurve(OCIO.GRADING_LIN)
         self.assertEqual(huec1, huec2)
+
+        huec1.setDrawCurveOnly(True)
+        self.assertNotEqual(huec1, huec2)
+        self.assertEqual(huec1.isIdentity(), True)
+        huec1.setDrawCurveOnly(False)
+        self.assertEqual(huec1, huec2)
+
         self.assertEqual(huec1.isIdentity(), True)
         huec1.sat_lum.getControlPoints()[1] = OCIO.GradingControlPoint(0.4, 0.8)
         self.assertNotEqual(huec1, huec2)

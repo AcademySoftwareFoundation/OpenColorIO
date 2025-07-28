@@ -111,24 +111,14 @@ bool GradingHueCurveTransformImpl::slopesAreDefault(HueCurveType c) const
     return data().slopesAreDefault(c);
 }
 
-bool GradingHueCurveTransformImpl::getBypassLinToLog() const noexcept
+bool GradingHueCurveTransformImpl::getBypassRGBToHSY() const noexcept
 {
-    return data().getBypassLinToLog();
+    return data().getBypassRGBToHSY();
 }
 
-void GradingHueCurveTransformImpl::setBypassLinToLog(bool bypass) noexcept
+void GradingHueCurveTransformImpl::setBypassRGBToHSY(bool bypass) noexcept
 {
-    data().setBypassLinToLog(bypass);
-}
-
-bool GradingHueCurveTransformImpl::getDrawCurveOnly() const noexcept
-{
-    return data().getDrawCurveOnly();
-}
-
-void GradingHueCurveTransformImpl::setDrawCurveOnly( bool drawCurveOnly ) noexcept
-{
-    data().setDrawCurveOnly( drawCurveOnly );
+    data().setBypassRGBToHSY(bypass);
 }
 
 bool GradingHueCurveTransformImpl::isDynamic() const noexcept
@@ -152,6 +142,10 @@ std::ostream& operator<< (std::ostream & os, const GradingHueCurveTransform & t)
     os << "direction=" << TransformDirectionToString(t.getDirection());
     os << ", style=" << GradingStyleToString(t.getStyle());
     os << ", values=" << *t.getValue();
+    if (t.getBypassRGBToHSY())
+    {
+        os << ", bypassRGBToHSY=true";
+    }
     if (t.isDynamic())
     {
         os << ", dynamic";

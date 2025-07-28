@@ -4645,7 +4645,7 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_huecurves_log)
     OCIO_REQUIRE_ASSERT(gradingCurves0);
     OCIO_CHECK_EQUAL(gradingCurves0->getStyle(), OCIO::GRADING_LOG);
     OCIO_CHECK_EQUAL(gradingCurves0->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
-    OCIO_CHECK_ASSERT(!gradingCurves0->getBypassLinToLog());
+    OCIO_CHECK_ASSERT(!gradingCurves0->getBypassRGBToHSY());
     OCIO_CHECK_ASSERT(gradingCurves0->isDynamic());
     auto curves = gradingCurves0->getValue();
     auto hh = curves->getCurve(OCIO::HUE_HUE);
@@ -7335,7 +7335,7 @@ OCIO_ADD_TEST(CTFTransform, grading_huecurve_lin_ctf)
     // All curves are default curves, no curve is saved.
     curves = OCIO::GradingHueCurve::Create(OCIO::GRADING_LIN);
     gradingCurves->setValue(curves);
-    gradingCurves->setBypassLinToLog(true);
+    gradingCurves->setBypassRGBToHSY(true);
     // Make it dynamic so it is not identity.
     gradingCurves->makeDynamic();
     {
@@ -7348,7 +7348,7 @@ OCIO_ADD_TEST(CTFTransform, grading_huecurve_lin_ctf)
 
         const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="2.5" id="UIDGradingCurves">
-    <GradingHueCurve inBitDepth="32f" outBitDepth="32f" style="linear" bypassLinToLog="true">
+    <GradingHueCurve inBitDepth="32f" outBitDepth="32f" style="linear" bypassRGBToHSY="true">
         <DynamicParameter param="HUE_CURVE" />
     </GradingHueCurve>
 </ProcessList>

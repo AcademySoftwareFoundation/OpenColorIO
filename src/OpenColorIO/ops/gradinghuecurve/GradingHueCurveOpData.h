@@ -63,11 +63,8 @@ public:
     void setSlope(HueCurveType c, size_t index, float slope);
     bool slopesAreDefault(HueCurveType c) const;
 
-    bool getBypassLinToLog() const noexcept { return m_bypassLinToLog; }
-    void setBypassLinToLog(bool bypass) noexcept { m_bypassLinToLog = bypass; }
-
-    bool getDrawCurveOnly() const noexcept { return m_drawCurveOnly; }
-    void setDrawCurveOnly(bool drawCurveOnly) noexcept { m_drawCurveOnly = drawCurveOnly; }
+    bool getBypassRGBToHSY() const noexcept { return m_bypassRGBToHSY; }
+    void setBypassRGBToHSY(bool bypass) noexcept { m_bypassRGBToHSY = bypass; }
 
     TransformDirection getDirection() const noexcept;
     void setDirection(TransformDirection dir) noexcept;
@@ -87,8 +84,7 @@ public:
 private:
     GradingStyle                            m_style;
     DynamicPropertyGradingHueCurveImplRcPtr m_value;
-    bool                                    m_bypassLinToLog{ false };
-    bool                                    m_drawCurveOnly{ false };
+    bool                                    m_bypassRGBToHSY{ false };
     TransformDirection                      m_direction{ TRANSFORM_DIR_FORWARD };
 };
 

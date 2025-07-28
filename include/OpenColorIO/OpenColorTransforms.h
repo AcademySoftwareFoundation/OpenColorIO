@@ -606,6 +606,18 @@ public:
     virtual GradingHueCurveRcPtr createEditableCopy() const = 0;
     virtual void validate() const = 0;
     virtual bool isIdentity() const = 0;
+    /**
+     * Enable drawCurveOnly mode to return the output value of a spline curve without any of the 
+     * other associated processing of the RGB values. This is useful when the curves need to be 
+     * graphed independently in a user interface. To use this, set the curve parameters on the 
+     * Hue-Sat curve. The R, G, and B values will be sent through that curve with the interpretation 
+     * that they are the input axis to the curve (which would be hue, sat, or luma) rather than RGB.
+     * This mode does not apply the RGB-to-HSY or Lin-to-Log, so for scene-linear curves the luma 
+     * values are interpreted as already being in the logarithmic (f-stop) space. The forward curve
+     * evaluation is done regardless of the transform direction.
+     */
+    virtual bool getDrawCurveOnly() const = 0;
+    virtual void setDrawCurveOnly(bool drawCurveOnly) = 0;
     virtual ConstGradingBSplineCurveRcPtr getCurve(HueCurveType c) const = 0;
     virtual GradingBSplineCurveRcPtr getCurve(HueCurveType c) = 0;
 
@@ -1268,26 +1280,43 @@ protected:
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingPrimaryTransform &) noexcept;
 
 /**
- * Hue color correction controls.
+ * Hue curve color correction controls.
  *
- * RGB curve color correction controls.
- *
-
-
-UPDATE
-
- * This transform allows for modifying tone reproduction via B-spline curves.
- *
- * There is an R, G, and B curve along with a Master curve (that applies to R, G, and B).  Each
- * curve is specified via the x and y coordinates of its control points.  A monotonic spline is
- * fit to the control points.  The x coordinates must be non-decreasing. When the grading style
- * is linear, the units for the control points are photographic stops relative to 0.18.
- *
+ * This transform provides eight spline curves to make the following adjustments:
+ * 
+ * - Hue-Hue: Map input hue to output hue (where a diagonal line is the identity).
+ * - Hue-Sat: Adjust saturation as a function of hue (a value of 1.0 is the identity).
+ * - Hue-Lum: Adjust luma as a function of hue (a value of 1.0 is the identity).
+ * - Lum-Sat: Adjust saturation as a function of luma (a value of 1.0 is the identity).
+ * - Sat-Sat: Adjust saturation as a function of saturation (a diagonal is the identity).
+ * - Lum-Lum: Adjust luma as a function of luma, maintaining hue & sat (diagonal is identity).
+ * - Sat-Lum: Adjust luma as a function of saturation (a value of 1.0 is the identity).
+ * - Hue-FX : Map input hue to delta output hue (a value of 0.0 is the identity).
+ * 
+ * The algorithm is different for scene-linear, logarithmic, and video color spaces, so
+ * initialize the style argument appropriately before setting the curves.
+ * 
+ * An RGB-to-HSY FixedFunction is used to convert RGB into a hue, saturation, luma color
+ * space. However, there is an option to bypass that conversion to use an outboard transform.
+ * 
+ * Like the GradingRGBCurveTransform, the curves are defined by the x and y coordinates of a
+ * set of control points. A spline will be fit to the control points. Monotonicity is preserved
+ * for curves where the diagonal is the identity. For curves that take luma as input, if the
+ * style is scene-linear, the units are in photographic stops relative to 0.18. For log and
+ * video, the luma is scaled the same as the input RGB.
+ * 
+ * The hue variable is [0,1] and is periodic. For example, -0.2, 0.8, and 1.8 are equivalent.
+ * The domain of the curves is [0,1] and control points outside that domain are mapped into it.
+ * A hue of 0 or 1 corresponds to a magenta hue.
+ * 
+ * The transform is invertible as long as the curves allow it. For example, if saturation is
+ * mapped to zero, obviously that cannot be resaturated. Care should be taken with the Hue-FX
+ * curve because it is possible to fold hues over on themselves, which also cannot be inverted.
+ * In most cases the Hue-FX curve is not necessary since the Hue-Hue curve provides similar
+ * functionality with the added benefit of being strictly invertible.
+ * 
  * The control points are dynamic, so they may be adjusted even after the Transform is included
  * in a Processor.
-
-
-
  */
 class OCIOEXPORT GradingHueCurveTransform : public Transform
 {
@@ -1312,7 +1341,7 @@ public:
     virtual const ConstGradingHueCurveRcPtr getValue() const = 0;
 
     /// Throws if value is not valid.
-    virtual void setValue(const ConstGradingHueCurveRcPtr & values) = 0;    
+    virtual void setValue(const ConstGradingHueCurveRcPtr & value) = 0;    
     
     /**
      * It is possible to provide a desired slope value for each control point.  The number of slopes is 
@@ -1327,24 +1356,12 @@ public:
     virtual bool slopesAreDefault(HueCurveType c) const = 0;
 
     /**
-     * The scene-linear grading style applies a lin-to-log transform to the pixel
-     * values before going through the curve.  However, in some cases (e.g. drawing curves in a UI)
-     * it may be useful to bypass the lin-to-log. Default value is false.
+     * By default, the input is transformed into HSY space to apply the hue curves and then the result is
+     * transformed back to RGB. However, this may be bypassed to use other hue/sat/luma type transforms
+     * applied separately before and after this transform.
      */
-    virtual bool getBypassLinToLog() const = 0;
-    virtual void setBypassLinToLog(bool bypass) = 0;
-
-    /**
-     * Enable drawCurveOnly mode to return the output value of a spline curve without any of the 
-     * other associated processing of the RGB values. This is useful when the curves need to be 
-     * graphed independently in a user interface. To use this, set the curve parameters on the 
-     * Hue-Sat curve. The R, G, and B values will be sent through that curve but with the interpretation 
-     * that they are the input axis to the curve (which would be hue, sat, or luma) rather than RGB.
-     * This mode ignores the setting of BypassLinToLog, so for scene-linear curves the luma values are 
-     * interpreted as already being in the logarithmic (f-stop) space.
-     */
-    virtual bool getDrawCurveOnly() const = 0;
-    virtual void setDrawCurveOnly( bool drawCurveOnly ) = 0;
+    virtual bool getBypassRGBToHSY() const = 0;
+    virtual void setBypassRGBToHSY(bool bypass) = 0;
 
     ///**
     // * Parameters can be made dynamic so the values can be changed through the CPU or GPU processor,
@@ -1371,7 +1388,7 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingHueCurv
  *
  * This transform allows for modifying tone reproduction via B-spline curves.
  *
- * There is an R, G, and B curve along with a Master curve (that applies to R, G, and B).  Each
+ * There is an R, G, and B curve followed by a Master curve (that applies to R, G, and B).  Each
  * curve is specified via the x and y coordinates of its control points.  A monotonic spline is
  * fit to the control points.  The x coordinates must be non-decreasing. When the grading style
  * is linear, the units for the control points are photographic stops relative to 0.18.

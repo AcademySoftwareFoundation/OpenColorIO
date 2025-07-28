@@ -217,12 +217,13 @@ void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator
     if (!dyn)
     {
         auto propGC = gcData->getDynamicPropertyInternal();
+        const int numOffsets = propGC->GetNumOffsetValues();
 
         // 2 ints for each curve.
         st.newLine() << "";
-        st.declareIntArrayConst(props.m_knotsOffsets, 4 * 2, propGC->getKnotsOffsetsArray());
+        st.declareIntArrayConst(props.m_knotsOffsets, numOffsets, propGC->getKnotsOffsetsArray());
         st.declareFloatArrayConst(props.m_knots, propGC->getNumKnots(), propGC->getKnotsArray());
-        st.declareIntArrayConst(props.m_coefsOffsets, 4 * 2, propGC->getCoefsOffsetsArray());
+        st.declareIntArrayConst(props.m_coefsOffsets, numOffsets, propGC->getCoefsOffsetsArray());
         st.declareFloatArrayConst(props.m_coefs, propGC->getNumCoefs(), propGC->getCoefsArray());
     }
 

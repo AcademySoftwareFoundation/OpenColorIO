@@ -801,46 +801,71 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefsForRGBCurve(KnotsCoefs & knots
 
 //------------------------------------------------------------------------------------------------
 //
-void GradingBSplineCurveImpl::computeKnotsAndCoefsForHueCurve(KnotsCoefs & knotsCoefs, int curveIdx) const
+void GradingBSplineCurveImpl::computeKnotsAndCoefsForHueCurve(KnotsCoefs & knotsCoefs,
+                                                              int curveIdx,
+                                                              bool drawCurveOnly) const
 {
     // Return 0 knots and coefficients when the curve is identity.
     if (m_controlPoints.size() < 2 || isIdentity()) 
     {
-        // Set knots and coefficients that represent identity curve.
-        const int numKnots = static_cast<int>(knotsCoefs.m_numKnots);
-        const int numCoefs = static_cast<int>(knotsCoefs.m_numCoefs);
+        if (!drawCurveOnly)
+        {
+            // In this case, do not add any knots or coefs. This will allow localBypass
+            // to be true if all the curves are identities.
 
-        const int N_IDENTITY_KNOTS = 2;
-        const int N_IDENTITY_COEFS = 3;
+            // Identity curve: offset is -1 and count is 0.
+            knotsCoefs.m_knotsOffsetsArray[curveIdx * 2] = -1;
+            knotsCoefs.m_knotsOffsetsArray[curveIdx * 2 + 1] = 0;
+            knotsCoefs.m_coefsOffsetsArray[curveIdx * 2] = -1;
+            knotsCoefs.m_coefsOffsetsArray[curveIdx * 2 + 1] = 0;
+            return;
+        }
+        else
+        {
+            // DrawCurveOnly is set when drawing the splines for a UI. In this mode, the
+            // spline is always set on the HueSat curve and the HueCurve eval only computes
+            // that one curve. But the curve/spline type are not known, so the polynomial
+            // must be set so that it returns the correct values, even if it is an identity.
+            // Note that the value returned for an identity varies among the spline types.
 
-        knotsCoefs.m_knotsOffsetsArray[curveIdx * 2] = numKnots;
-        knotsCoefs.m_knotsOffsetsArray[curveIdx * 2 + 1] = N_IDENTITY_KNOTS;
-        knotsCoefs.m_coefsOffsetsArray[curveIdx * 2] = knotsCoefs.m_numCoefs;
-        knotsCoefs.m_coefsOffsetsArray[curveIdx * 2 + 1] = N_IDENTITY_COEFS;
+            // Set knots and coefficients that represent an identity curve.
 
-        knotsCoefs.m_knotsArray.begin()[numKnots] = 0.f;
-        knotsCoefs.m_knotsArray.begin()[numKnots + 1] = 1.f;
+            const int numKnots = static_cast<int>(knotsCoefs.m_numKnots);
+            const int numCoefs = static_cast<int>(knotsCoefs.m_numCoefs);
 
-        // Identity curve are linear or constant, so set the quadratic coefficient to zero.
-        knotsCoefs.m_coefsArray.begin()[numCoefs] = 0.f;
+            const int N_IDENTITY_KNOTS = 2;
+            const int N_IDENTITY_COEFS = 3;
 
-        // Set the linear coefficient to match the slope of the identity curve.
-        const float linearCoef = m_splineType == BSplineType::DIAGONAL_B_SPLINE || 
-                                 m_splineType == BSplineType::HUE_HUE_B_SPLINE ? 
-                                 1.0f : 0.f;
+            knotsCoefs.m_knotsOffsetsArray[curveIdx * 2] = numKnots;
+            knotsCoefs.m_knotsOffsetsArray[curveIdx * 2 + 1] = N_IDENTITY_KNOTS;
+            knotsCoefs.m_coefsOffsetsArray[curveIdx * 2] = knotsCoefs.m_numCoefs;
+            knotsCoefs.m_coefsOffsetsArray[curveIdx * 2 + 1] = N_IDENTITY_COEFS;
 
-        knotsCoefs.m_coefsArray.begin()[numCoefs + 1] = linearCoef;
+            knotsCoefs.m_knotsArray.begin()[numKnots] = 0.f;
+            knotsCoefs.m_knotsArray.begin()[numKnots + 1] = 1.f;
 
-        // Set the constant coefficient for an identity curve.
-        const float constantCoef = m_splineType == BSplineType::PERIODIC_1_B_SPLINE || 
-                                   m_splineType == BSplineType::HORIZONTAL1_B_SPLINE ? 
-                                   1.0f : 0.f;
+            // Identity curve are linear or constant, so set the quadratic coefficient to zero.
+            knotsCoefs.m_coefsArray.begin()[numCoefs] = 0.f;
 
-        knotsCoefs.m_coefsArray.begin()[numCoefs + 2] = constantCoef;
+            // Set the linear coefficient to match the slope of the identity curve.
+            const float linearCoef = m_splineType == BSplineType::DIAGONAL_B_SPLINE || 
+                                     m_splineType == BSplineType::HUE_HUE_B_SPLINE ? 
+                                     1.0f : 0.f;
 
-        knotsCoefs.m_numKnots += N_IDENTITY_KNOTS;
-        knotsCoefs.m_numCoefs += N_IDENTITY_COEFS;
-        return;
+            knotsCoefs.m_coefsArray.begin()[numCoefs + 1] = linearCoef;
+
+            // Set the constant coefficient for an identity curve.
+            const float constantCoef = m_splineType == BSplineType::PERIODIC_1_B_SPLINE || 
+                                       m_splineType == BSplineType::HORIZONTAL1_B_SPLINE ? 
+                                       1.0f : 0.f;
+
+            knotsCoefs.m_coefsArray.begin()[numCoefs + 2] = constantCoef;
+
+            knotsCoefs.m_numKnots += N_IDENTITY_KNOTS;
+            knotsCoefs.m_numCoefs += N_IDENTITY_COEFS;
+
+            return;
+        }
     }
 
     bool isPeriodic = false;
@@ -920,7 +945,7 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefsForHueCurve(KnotsCoefs & knots
 }
 
 
-void GradingBSplineCurveImpl::computeKnotsAndCoefs(KnotsCoefs & knotsCoefs, int curveIdx) const
+void GradingBSplineCurveImpl::computeKnotsAndCoefs(KnotsCoefs & knotsCoefs, int curveIdx, bool drawCurveOnly) const
 {
    if(m_splineType == BSplineType::B_SPLINE)
    {
@@ -928,7 +953,7 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefs(KnotsCoefs & knotsCoefs, int 
    }
    else
    {
-       computeKnotsAndCoefsForHueCurve(knotsCoefs, curveIdx);
+       computeKnotsAndCoefsForHueCurve(knotsCoefs, curveIdx, drawCurveOnly);
    }
 }
 
@@ -1005,7 +1030,6 @@ void GradingBSplineCurveImpl::AddShaderEvalRev(GpuShaderText & st,
     // The input arguments are:
     //      curveIdx -- The index of the curve being evaluated.
     //             x -- The input value.
-    //    identity_x -- The desired output if there is no curve to evaluate.
 
     st.newLine() << "int knotsOffs = " << knotsOffsets << "[curveIdx * 2];";
     st.newLine() << "int knotsCnt = " << knotsOffsets << "[curveIdx * 2 + 1];";
@@ -1015,7 +1039,7 @@ void GradingBSplineCurveImpl::AddShaderEvalRev(GpuShaderText & st,
 
     st.newLine() << "if (coefsSets == 0)";
     st.newLine() << "{";
-    st.newLine() << "  return identity_x;";
+    st.newLine() << "  return x;";
     st.newLine() << "}";
 
     st.newLine() << "float knStart = " << knots << "[knotsOffs];";
@@ -1079,7 +1103,6 @@ void GradingBSplineCurveImpl::AddShaderEvalRevHue(GpuShaderText & st,
     // The input arguments are:
     //      curveIdx -- The index of the curve being evaluated.
     //             x -- The input value.
-    //    identity_x -- The desired output if there is no curve to evaluate.
 
     st.newLine() << "int knotsOffs = " << knotsOffsets << "[curveIdx * 2];";
     st.newLine() << "int knotsCnt = " << knotsOffsets << "[curveIdx * 2 + 1];";
@@ -1089,7 +1112,7 @@ void GradingBSplineCurveImpl::AddShaderEvalRevHue(GpuShaderText & st,
 
     st.newLine() << "if (coefsSets == 0)";
     st.newLine() << "{";
-    st.newLine() << "  return identity_x;";
+    st.newLine() << "  return x;";
     st.newLine() << "}";
 
     st.newLine() << "float knStart = " << knots << "[knotsOffs];";
@@ -1151,8 +1174,7 @@ GradingBSplineCurveImpl::KnotsCoefs::KnotsCoefs(size_t numCurves)
     m_knotsArray.resize(DynamicPropertyGradingRGBCurveImpl::GetMaxKnots());
 }
 
-// TODO: Update to return hue curve identity value.
-float GradingBSplineCurveImpl::KnotsCoefs::evalCurve(int c, float x) const
+float GradingBSplineCurveImpl::KnotsCoefs::evalCurve(int c, float x, float identity_x) const
 {
     // NB: When evaluating hue curves, x should be wrapped to [0,1) by the caller
     // so there is no extrapolation.
@@ -1160,7 +1182,7 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurve(int c, float x) const
     const int coefsSets = m_coefsOffsetsArray[2 * c + 1] / 3;
     if (coefsSets == 0)
     {
-        return x;
+        return identity_x;
     }
     const int coefsOffs = m_coefsOffsetsArray[2 * c];
     const int knotsCnt = m_knotsOffsetsArray[2 * c + 1];
@@ -1203,7 +1225,6 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurve(int c, float x) const
     }
 }
 
-// TODO: Update to return hue curve identity value.
 float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRev(int c, float y) const
 {
     // Note: This is only intended to invert the monotonic curve types.
@@ -1270,7 +1291,7 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRev(int c, float y) const
     }
 }
 
-float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRevHue(int c, float y, bool isHfx) const
+float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRevHue(int c, float y) const
 {
     // This function is specifically to invert the HueFX and Hue-Hue curve types.
     //
@@ -1284,6 +1305,7 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRevHue(int c, float y, bool 
     {
         return y;
     }
+
     const int coefsOffs = m_coefsOffsetsArray[2 * c];
     const int knotsCnt = m_knotsOffsetsArray[2 * c + 1];
     const int knotsOffs = m_knotsOffsetsArray[2 * c];
@@ -1291,6 +1313,7 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRevHue(int c, float y, bool 
     const float knStart = m_knotsArray[knotsOffs];
     const float knEnd = m_knotsArray[knotsOffs + knotsCnt - 1];
     float knStartY = m_coefsArray[coefsOffs + coefsSets * 2];
+    const bool isHfx = c == 7;
     knStartY = isHfx ? knStartY + knStart : knStartY;
     float knEndY;
     {

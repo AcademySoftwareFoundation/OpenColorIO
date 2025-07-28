@@ -60,6 +60,9 @@ OCIO_ADD_TEST(GradingHueCurve, basic)
     copiedCurve->setSplineType(OCIO::DIAGONAL_B_SPLINE);
     OCIO_CHECK_THROW_WHAT(hueCurve->validate(), OCIO::Exception,
                          "GradingHueCurve validation failed: 'hue_hue' curve is of the wrong BSplineType.");
+    // Turn on drawCurveOnly mode and verify that any spline type is now allowed.
+    hueCurve->setDrawCurveOnly(true);
+    OCIO_CHECK_NO_THROW(hueCurve->validate());
 
     // Test default curves.
     auto hueCurveLin = OCIO::GradingHueCurve::Create(OCIO::GRADING_LIN);
@@ -101,12 +104,18 @@ OCIO_ADD_TEST(GradingHueCurve, basic)
     OCIO_CHECK_EQUAL(7.f,  hueCurveLin->getCurve(OCIO::LUM_LUM)->getControlPoint(2).m_x);
     OCIO_CHECK_EQUAL(7.f,  hueCurveLin->getCurve(OCIO::LUM_LUM)->getControlPoint(2).m_y);
 
+    OCIO_CHECK_ASSERT(!hueCurveLin->getDrawCurveOnly());
+    hueCurveLin->setDrawCurveOnly(true);
+    OCIO_CHECK_ASSERT(hueCurveLin->getDrawCurveOnly());
+
     // Validate that the other Create function made copies of its arguments.
     auto hueCurveLinCopy = OCIO::GradingHueCurve::Create(hueCurveLin);
     OCIO_REQUIRE_ASSERT(hueCurveLinCopy);
     OCIO_CHECK_ASSERT(hueCurveLin != hueCurveLinCopy);
     // Use overloaded op== to compare the contents of the curves.
     OCIO_CHECK_ASSERT(*hueCurveLin == *hueCurveLinCopy);
+
+    OCIO_CHECK_ASSERT(hueCurveLinCopy->getDrawCurveOnly());
 
     // Test createEditableCopy.
     hueCurveLinCopy = hueCurveLin->createEditableCopy();
@@ -163,7 +172,7 @@ OCIO_ADD_TEST(GradingHueCurve, max_ctrl_pnts)
     {
         // Use non const curve accessor to modify the curves.
         OCIO::GradingBSplineCurveRcPtr spline = hueCurve->getCurve(static_cast<OCIO::HueCurveType>(c));
-        spline->setNumControlPoints(26);
+        spline->setNumControlPoints(28);
     }
 
     OCIO::DynamicPropertyGradingHueCurveImplRcPtr res;

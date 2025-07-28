@@ -98,6 +98,7 @@ static constexpr char ATTR_BITDEPTH_IN[] = "inBitDepth";
 static constexpr char ATTR_BITDEPTH_OUT[] = "outBitDepth";
 static constexpr char ATTR_BYPASS[] = "bypass";
 static constexpr char ATTR_BYPASS_LIN_TO_LOG[] = "bypassLinToLog";
+static constexpr char ATTR_BYPASS_RGB_TO_HSY[] = "bypassRGBToHSY";
 static constexpr char ATTR_CENTER[] = "center";
 static constexpr char ATTR_CHAN[] = "channel";
 static constexpr char ATTR_COMP_CLF_VERSION[] = "compCLFversion";

@@ -12,6 +12,8 @@
 #include "ops/gradinghuecurve/GradingHueCurveOpCPU.h"
 #include "ops/fixedfunction/FixedFunctionOpCPU.h"
 #include "ops/fixedfunction/FixedFunctionOpData.h"
+#include "ops/matrix/MatrixOpCPU.h"
+#include "ops/matrix/MatrixOpData.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -85,7 +87,7 @@ GradingHueCurveOpCPU::GradingHueCurveOpCPU(ConstGradingHueCurveOpDataRcPtr & gcD
     const GradingStyle style = gcData->getStyle();
 
     FixedFunctionOpData::Style fwdStyle = FixedFunctionOpData::RGB_TO_HSY_LIN;
-    FixedFunctionOpData::Style invStyle = FixedFunctionOpData::RGB_TO_HSY_LIN;
+    FixedFunctionOpData::Style invStyle = FixedFunctionOpData::HSY_LIN_TO_RGB;
     switch(style)
     {
     case GRADING_LIN:
@@ -103,12 +105,22 @@ GradingHueCurveOpCPU::GradingHueCurveOpCPU(ConstGradingHueCurveOpDataRcPtr & gcD
         break;
     }
 
-    ConstFixedFunctionOpDataRcPtr fwdOpData = std::make_shared<FixedFunctionOpData>(fwdStyle);
-    m_rgbToHsyOp = GetFixedFunctionCPURenderer(fwdOpData, false /* fastLogExpPow */);
-    ConstFixedFunctionOpDataRcPtr invOpData = std::make_shared<FixedFunctionOpData>(invStyle);
-    m_hsyToRgbOp = GetFixedFunctionCPURenderer(invOpData, false /* fastLogExpPow */);
+    if (gcData->getBypassRGBToHSY())
+    {
+        // TODO: Could template the apply function to avoid the need for a matrix op.
+        ConstMatrixOpDataRcPtr fwdOpData = std::make_shared<MatrixOpData>(TRANSFORM_DIR_FORWARD);
+        m_rgbToHsyOp = GetMatrixRenderer(fwdOpData);
+        m_hsyToRgbOp = GetMatrixRenderer(fwdOpData);
+    }
+    else
+    {
+        ConstFixedFunctionOpDataRcPtr fwdOpData = std::make_shared<FixedFunctionOpData>(fwdStyle);
+        m_rgbToHsyOp = GetFixedFunctionCPURenderer(fwdOpData, false /* fastLogExpPow */);
+        ConstFixedFunctionOpDataRcPtr invOpData = std::make_shared<FixedFunctionOpData>(invStyle);
+        m_hsyToRgbOp = GetFixedFunctionCPURenderer(invOpData, false /* fastLogExpPow */);
+    }
 
-    if (style == GRADING_LIN && !gcData->getBypassLinToLog())
+    if (style == GRADING_LIN)
     {
         m_applyLinLog = LinLog;
         m_applyLogLin = LogLin;
@@ -145,6 +157,44 @@ DynamicPropertyRcPtr GradingHueCurveOpCPU::getDynamicProperty(DynamicPropertyTyp
     }
 
     throw Exception("GradingHueCurve property is not dynamic.");
+}
+
+class GradingHueCurveDrawOpCPU : public GradingHueCurveOpCPU
+{
+public:
+    GradingHueCurveDrawOpCPU(const GradingHueCurveOpCPU &) = delete;
+    GradingHueCurveDrawOpCPU() = delete;
+
+    explicit GradingHueCurveDrawOpCPU(ConstGradingHueCurveOpDataRcPtr & ghuec);
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+};
+
+GradingHueCurveDrawOpCPU::GradingHueCurveDrawOpCPU(ConstGradingHueCurveOpDataRcPtr & ghuec)
+    : GradingHueCurveOpCPU(ghuec)
+{
+}
+
+void GradingHueCurveDrawOpCPU::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    // NB: LocalBypass does not matter, need to evaluate even if it's an identity.
+
+    const GradingBSplineCurveImpl::KnotsCoefs & knotsCoefs = m_ghuecurve->getKnotsCoefs();
+
+    const float * in = (float *)inImg;
+    float * out = (float *)outImg;
+
+    for (long idx = 0; idx < numPixels; ++idx)
+    {
+        // In drawCurveOnly mode, only evaluate the HueSat curve, with no RGB-to-HSY or LogLin.
+        // (In practice it may be any of the curves, but only eval the one stored in that slot.)
+        out[0] = knotsCoefs.evalCurve(static_cast<int>(HUE_SAT), in[0], 1.f);
+        out[1] = knotsCoefs.evalCurve(static_cast<int>(HUE_SAT), in[1], 1.f);
+        out[2] = knotsCoefs.evalCurve(static_cast<int>(HUE_SAT), in[2], 1.f);
+        out[3] = in[3];
+
+        in += 4;
+        out += 4;
+    }
 }
 
 class GradingHueCurveFwdOpCPU : public GradingHueCurveOpCPU
@@ -187,24 +237,24 @@ void GradingHueCurveFwdOpCPU::apply(const void * inImg, void * outImg, long numP
         m_applyLinLog(out);
 
         // HUE-SAT
-        const float hueSatGain = std::max(0.f, knotsCoefs.evalCurve(static_cast<int>(HUE_SAT), out[0]));
+        const float hueSatGain = std::max(0.f, knotsCoefs.evalCurve(static_cast<int>(HUE_SAT), out[0], 1.f));
         // HUE-LUM
-        float hueLumGain = std::max(0.f, knotsCoefs.evalCurve(static_cast<int>(HUE_LUM), out[0]));
+        float hueLumGain = std::max(0.f, knotsCoefs.evalCurve(static_cast<int>(HUE_LUM), out[0], 1.f));
         // HUE-HUE
-        out[0] = knotsCoefs.evalCurve(static_cast<int>(HUE_HUE), out[0]);
+        out[0] = knotsCoefs.evalCurve(static_cast<int>(HUE_HUE), out[0], out[0]);
         // SAT-SAT
-        out[1] = std::max(0.f, knotsCoefs.evalCurve(static_cast<int>(SAT_SAT), out[1]));
+        out[1] = std::max(0.f, knotsCoefs.evalCurve(static_cast<int>(SAT_SAT), out[1], out[1]));
         // LUM-SAT
-        const float lumSatGain = std::max(0.f, knotsCoefs.evalCurve(static_cast<int>(LUM_SAT), out[2]));
+        const float lumSatGain = std::max(0.f, knotsCoefs.evalCurve(static_cast<int>(LUM_SAT), out[2], 1.f));
 
         // Apply sat gain.
         const float satGain = lumSatGain * hueSatGain;
         out[1] *= satGain;
 
         // SAT-LUM
-        const float satLumGain = std::max(0.f, knotsCoefs.evalCurve(static_cast<int>(SAT_LUM), out[1]));
+        const float satLumGain = std::max(0.f, knotsCoefs.evalCurve(static_cast<int>(SAT_LUM), out[1], 1.f));
         // LUM-LUM
-        out[2] = knotsCoefs.evalCurve(static_cast<int>(LUM_LUM), out[2]);
+        out[2] = knotsCoefs.evalCurve(static_cast<int>(LUM_LUM), out[2], out[2]);
 
         m_applyLogLin(out);
 
@@ -218,7 +268,7 @@ void GradingHueCurveFwdOpCPU::apply(const void * inImg, void * outImg, long numP
 
         // HUE-FX
         out[0] = out[0] - std::floor(out[0]);   // wrap to [0,1)
-        out[0] = out[0] + knotsCoefs.evalCurve(static_cast<int>(HUE_FX), out[0]);
+        out[0] = out[0] + knotsCoefs.evalCurve(static_cast<int>(HUE_FX), out[0], 0.f);
 
         m_hsyToRgbOp->apply(out, out, 1L);
 
@@ -263,19 +313,19 @@ void GradingHueCurveRevOpCPU::apply(const void * inImg, void * outImg, long numP
         m_rgbToHsyOp->apply(in, out, 1L);
 
         // Invert HUE-FX.
-        out[0] = knotsCoefs.evalCurveRevHue(static_cast<int>(HUE_FX), out[0], true);
+        out[0] = knotsCoefs.evalCurveRevHue(static_cast<int>(HUE_FX), out[0]);
 
         // Invert HUE-HUE.
-        out[0] = knotsCoefs.evalCurveRevHue(static_cast<int>(HUE_HUE), out[0], false);
+        out[0] = knotsCoefs.evalCurveRevHue(static_cast<int>(HUE_HUE), out[0]);
 
         // Use the inverted hue to calculate the HUE-SAT & HUE-LUM gains.
         out[0] = out[0] - std::floor(out[0]);   // wrap to [0,1)
-        const float hue_sat_gain = std::max( 0.f, knotsCoefs.evalCurve(static_cast<int>(HUE_SAT), out[0]) );
-        float hue_lum_gain = std::max( 0.f, knotsCoefs.evalCurve(static_cast<int>(HUE_LUM), out[0]) );
+        const float hue_sat_gain = std::max( 0.f, knotsCoefs.evalCurve(static_cast<int>(HUE_SAT), out[0], 1.f) );
+        float hue_lum_gain = std::max( 0.f, knotsCoefs.evalCurve(static_cast<int>(HUE_LUM), out[0], 1.f) );
 
         // Use the output sat to calculate the SAT-LUM gain.
-        out[1] = std::max(0.f, out[1]);  // guard against negative saturation
-        const float sat_lum_gain = std::max( 0.f, knotsCoefs.evalCurve(static_cast<int>(SAT_LUM), out[1]) );
+        out[1] = std::max(0.f, out[1]);         // guard against negative saturation
+        const float sat_lum_gain = std::max( 0.f, knotsCoefs.evalCurve(static_cast<int>(SAT_LUM), out[1], 1.f) );
 
         hue_lum_gain = 1.f - (1.f - hue_lum_gain) * std::min(out[1], 1.f);
 
@@ -290,7 +340,7 @@ void GradingHueCurveRevOpCPU::apply(const void * inImg, void * outImg, long numP
         out[2] = knotsCoefs.evalCurveRev(static_cast<int>(LUM_LUM), out[2]);
 
         // Use it to calc the LUM-SAT gain.
-        const float lum_sat_gain = std::max( 0.f, knotsCoefs.evalCurve(static_cast<int>(LUM_SAT), out[2]) );
+        const float lum_sat_gain = std::max( 0.f, knotsCoefs.evalCurve(static_cast<int>(LUM_SAT), out[2], 1.f) );
 
         m_applyLogLin(out);
 
@@ -314,6 +364,13 @@ void GradingHueCurveRevOpCPU::apply(const void * inImg, void * outImg, long numP
 
 ConstOpCPURcPtr GetGradingHueCurveCPURenderer(ConstGradingHueCurveOpDataRcPtr & prim)
 {
+
+    // DrawCurveOnly mode ignores the direction, it's always the forward transform.
+    auto dynProp = prim->getDynamicPropertyInternal();
+    if (dynProp->getValue()->getDrawCurveOnly())
+    {
+        return std::make_shared<GradingHueCurveDrawOpCPU>(prim);
+    }
 
     switch (prim->getDirection())
     {

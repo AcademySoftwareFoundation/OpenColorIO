@@ -452,27 +452,49 @@ OCIO_ADD_TEST(DynamicPropertyImpl, grading_hue_curve_knots_coefs)
 
     auto curves = OCIO::GradingHueCurve::Create(hh, hs, hl, ls, ss, ll, sl, hfx);
 
-    // Fit the polynomials.
+    {
+        // Fit the polynomials.
+        OCIO::DynamicPropertyGradingHueCurveImplRcPtr dp =
+            std::make_shared<OCIO::DynamicPropertyGradingHueCurveImpl>(curves, false);
+
+        OCIO_CHECK_EQUAL(46, dp->getNumKnots());
+        OCIO_CHECK_EQUAL(129, dp->getNumCoefs());
+
+        const int * coefsOffsets = dp->getCoefsOffsetsArray();
+        const int * knotsOffsets = dp->getKnotsOffsetsArray();
+
+        // These are offset0, count0, offset1, count1, offset2, count2, ...
+        const int true_knotsOffsets[] = {0, 15, 15, 19, 34, 12, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0};
+        const int true_coefsOffsets[] = {0, 42, 42, 54, 96, 33, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0};
+        OCIO_CHECK_EQUAL(16, dp->GetNumOffsetValues());
+        for (int i=0; i < dp->GetNumOffsetValues(); i++)
+        {
+            OCIO_CHECK_EQUAL(knotsOffsets[i], true_knotsOffsets[i]);
+            OCIO_CHECK_EQUAL(coefsOffsets[i], true_coefsOffsets[i]);
+        }
+    }
+
+    // Repeat the test in DrawCurveOnly mode. This will yield identity knots and coefs for the
+    // curves that are identities.
+
+    curves->setDrawCurveOnly(true);
+
     OCIO::DynamicPropertyGradingHueCurveImplRcPtr dp =
         std::make_shared<OCIO::DynamicPropertyGradingHueCurveImpl>(curves, false);
 
-    const int numOffsets = dp->GetNumOffsetValues();
-    OCIO_CHECK_EQUAL(16, numOffsets);
+    OCIO_CHECK_EQUAL(56, dp->getNumKnots());
+    OCIO_CHECK_EQUAL(144, dp->getNumCoefs());
 
     const int * coefsOffsets = dp->getCoefsOffsetsArray();
     const int * knotsOffsets = dp->getKnotsOffsetsArray();
 
-    // These are offset0, count0, offset1, count1, offset2, count2, ...
     const int true_knotsOffsets[] = {0, 15, 15, 19, 34, 12, 46, 2, 48, 2, 50, 2, 52, 2, 54, 2};
     const int true_coefsOffsets[] = {0, 42, 42, 54, 96, 33, 129, 3, 132, 3, 135, 3, 138, 3, 141, 3};
-    for (int i=0; i < numOffsets; i++)
+    for (int i=0; i < dp->GetNumOffsetValues(); i++)
     {
         OCIO_CHECK_EQUAL(knotsOffsets[i], true_knotsOffsets[i]);
         OCIO_CHECK_EQUAL(coefsOffsets[i], true_coefsOffsets[i]);
     }
-
-    OCIO_CHECK_EQUAL(56, dp->getNumKnots());
-    OCIO_CHECK_EQUAL(144, dp->getNumCoefs());
 
     {
         // Hue-Hue

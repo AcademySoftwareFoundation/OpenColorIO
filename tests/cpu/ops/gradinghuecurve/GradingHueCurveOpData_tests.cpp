@@ -32,12 +32,12 @@ OCIO_ADD_TEST(GradingHueCurveOpData, accessors)
     OCIO_CHECK_ASSERT(gc.isIdentity());
     OCIO_CHECK_ASSERT(gc.isNoOp());
     OCIO_CHECK_ASSERT(gc.hasChannelCrosstalk());
-    OCIO_CHECK_ASSERT(!gc.getBypassLinToLog());
+    OCIO_CHECK_ASSERT(!gc.getBypassRGBToHSY());
     
     gc.setStyle(OCIO::GRADING_LIN);
     OCIO_CHECK_EQUAL(gc.getStyle(), OCIO::GRADING_LIN);
-    gc.setBypassLinToLog(true);
-    OCIO_CHECK_ASSERT(gc.getBypassLinToLog());
+    gc.setBypassRGBToHSY(true);
+    OCIO_CHECK_ASSERT(gc.getBypassRGBToHSY());
 
     // Get dynamic property as a generic dynamic property and as a typed one and verify they are
     // the same and can be made dynamic.

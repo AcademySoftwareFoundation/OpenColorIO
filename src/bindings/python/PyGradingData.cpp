@@ -502,6 +502,10 @@ void bindPyGradingData(py::module & m)
              DOC(GradingHueCurve, validate))
         .def("isIdentity", &GradingHueCurve::isIdentity, 
              DOC(GradingHueCurve, isIdentity))
+        .def("getDrawCurveOnly", &GradingHueCurve::getDrawCurveOnly, 
+             DOC(GradingHueCurve, getDrawCurveOnly))
+        .def("setDrawCurveOnly", &GradingHueCurve::setDrawCurveOnly, "drawcurveonly"_a, 
+             DOC(GradingHueCurve, setDrawCurveOnly))
 
        .def_property("hue_hue", 
                      [](const GradingHueCurveRcPtr & hueCurve)

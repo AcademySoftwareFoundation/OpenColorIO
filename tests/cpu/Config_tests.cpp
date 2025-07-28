@@ -4658,6 +4658,7 @@ OCIO_ADD_TEST(Config, grading_huecurve_serialization)
             "          direction: inverse\n"
             "        - !<GradingHueCurveTransform>\n"
             "          style: linear\n"
+            "          rgbtohsy_bypass: true\n"
             "          sat_sat: {control_points: [0, 0, 0.1, 0.2, 0.5, 0.5, 0.7, 0.6, 1, 1.5]}\n"
             "          lum_lum: {control_points: [-1, -1, 0, 0.1, 0.5, 0.6, 1, 1.1]}\n"
             "        - !<GradingHueCurveTransform>\n"

@@ -2094,6 +2094,12 @@ inline void load(const YAML::Node & node, GradingHueCurveTransformRcPtr & t)
             load(iter->second, val);
             t->setDirection(val);
         }
+        else if (key == "rgbtohsy_bypass")
+        {
+            bool bypass = true;
+            load(iter->second, bypass);
+            t->setBypassRGBToHSY(bypass);
+        }
         else if (key == "hue_hue")
         {
             hh = GradingBSplineCurve::Create(0, HUE_HUE);
@@ -2146,9 +2152,6 @@ inline void load(const YAML::Node & node, GradingHueCurveTransformRcPtr & t)
         }
     }
 
-//     auto & defCurve = t->getStyle() == GRADING_LIN ? GradingHueCurveImpl::DefaultCurvesLin :
-//                                                      GradingHueCurveImpl::DefaultCurves;
-// 
     if (!hh) hh = GradingHueCurveImpl::DefaultHueHue.createEditableCopy();
     if (!hs) hs = GradingHueCurveImpl::DefaultHueSat.createEditableCopy();
     if (!hl) hl = GradingHueCurveImpl::DefaultHueLum.createEditableCopy();
@@ -2192,6 +2195,12 @@ inline void save(YAML::Emitter & out, ConstGradingHueCurveTransformRcPtr t)
     const auto style = t->getStyle();
     out << YAML::Key << "style";
     out << YAML::Value << YAML::Flow << GradingStyleToString(style);
+
+    if (t->getBypassRGBToHSY())
+    {
+        out << YAML::Key << "rgbtohsy_bypass";
+        out << YAML::Value << YAML::Flow << true;
+    }
 
     static const std::vector<const char *> curveNames = { "hue_hue", "hue_sat", "hue_lum",
         "lum_sat", "sat_sat", "lum_lum", "sat_lum", "hue_fx" };

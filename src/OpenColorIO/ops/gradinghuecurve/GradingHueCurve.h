@@ -36,6 +36,8 @@ public:
 
     void validate() const override;
     bool isIdentity() const override;
+    bool getDrawCurveOnly() const override;
+    void setDrawCurveOnly(bool drawCurveOnly) override;
     ConstGradingBSplineCurveRcPtr getCurve(HueCurveType) const override;
     GradingBSplineCurveRcPtr getCurve(HueCurveType) override;
 
@@ -56,6 +58,7 @@ public:
 private:
     bool isHueCurveTypeValid(HueCurveType c) const;
 
+    bool m_drawCurveOnly = false;
     std::array<GradingBSplineCurveRcPtr, static_cast<size_t>(HUE_NUM_CURVES)> m_curves;
 };
 

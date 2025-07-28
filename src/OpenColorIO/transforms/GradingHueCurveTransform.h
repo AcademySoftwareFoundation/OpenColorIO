@@ -46,12 +46,9 @@ public:
     void setSlope(HueCurveType c, size_t index, float slope) override;
     bool slopesAreDefault(HueCurveType c) const override;
 
-    bool getBypassLinToLog() const noexcept override;
-    void setBypassLinToLog(bool bypass) noexcept override;
+    bool getBypassRGBToHSY() const noexcept override;
+    void setBypassRGBToHSY(bool bypass) noexcept override;
     
-    bool getDrawCurveOnly() const noexcept override;
-    void setDrawCurveOnly(bool drawCurveOnly) noexcept override;
-
     bool isDynamic() const noexcept override;
     void makeDynamic() noexcept override;
     void makeNonDynamic() noexcept override;

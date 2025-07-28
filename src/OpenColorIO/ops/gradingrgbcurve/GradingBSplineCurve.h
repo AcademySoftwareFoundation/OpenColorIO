@@ -111,27 +111,33 @@ public:
         int m_numCoefs = 0;
         int m_numKnots = 0;
 
-        float evalCurve(int curveIdx, float x) const;
-        float evalCurveRev(int curveIdx, float x) const;
-        float evalCurveRevHue(int c, float y, bool isHfx) const;
+        // Forward evaluation of any spline type.
+        float evalCurve(int curveIdx, float x, float identity_x) const;
+        // Reverse evaluation of B_SPLINE or DIAGONAL_B_SPLINE.
+        float evalCurveRev(int curveIdx, float y) const;
+        // Reverse evaluation of HUE_HUE_B_SPLINE or HUE_FX curves using PERIODIC_0_B_SPLINE.
+        float evalCurveRevHue(int c, float y) const;
     };
 
     // Compute knots and coefs for a curve and add result to knotsCoefs. It has to be called for
     // each curve using a given curve order.
-    void computeKnotsAndCoefs(KnotsCoefs & knotsCoefs, int curveIdx) const;
+    void computeKnotsAndCoefs(KnotsCoefs & knotsCoefs, int curveIdx, bool drawCurveOnly) const;
 
+    // Forward evaluation of any spline type.
     static void AddShaderEvalFwd(GpuShaderText & st,
                                  const std::string & knotsOffsets, const std::string & coefsOffsets,
                                  const std::string & knots, const std::string & coefs);
+    // Reverse evaluation of B_SPLINE or DIAGONAL_B_SPLINE.
     static void AddShaderEvalRev(GpuShaderText & st,
                                  const std::string & knotsOffsets, const std::string & coefsOffsets,
                                  const std::string & knots, const std::string & coefs);
+    // Reverse evaluation of HUE_HUE_B_SPLINE or HUE_FX curves using PERIODIC_0_B_SPLINE.
     static void AddShaderEvalRevHue(GpuShaderText & st,
                                     const std::string & knotsOffsets, const std::string & coefsOffsets,
                                     const std::string & knots, const std::string & coefs);
 private:
     void computeKnotsAndCoefsForRGBCurve(KnotsCoefs & knotsCoefs, int curveIdx) const;
-    void computeKnotsAndCoefsForHueCurve(KnotsCoefs & knotsCoefs, int curveIdx) const;
+    void computeKnotsAndCoefsForHueCurve(KnotsCoefs & knotsCoefs, int curveIdx, bool drawCurveOnly) const;
 
     void validateIndex(size_t index) const;
 

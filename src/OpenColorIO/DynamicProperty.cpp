@@ -276,7 +276,7 @@ void DynamicPropertyGradingRGBCurveImpl::precompute()
     {
         ConstGradingBSplineCurveRcPtr curve = m_gradingRGBCurve->getCurve(c);
         auto curveImpl = dynamic_cast<const GradingBSplineCurveImpl *>(curve.get());
-        curveImpl->computeKnotsAndCoefs(m_knotsCoefs, static_cast<int>(c));
+        curveImpl->computeKnotsAndCoefs(m_knotsCoefs, static_cast<int>(c), false);
     }
     if (m_knotsCoefs.m_numKnots <= 0) m_knotsCoefs.m_localBypass = true;
 }
@@ -370,7 +370,8 @@ void DynamicPropertyGradingHueCurveImpl::precompute()
     {
         ConstGradingBSplineCurveRcPtr curve = m_gradingHueCurve->getCurve(c);
         auto curveImpl = dynamic_cast<const GradingBSplineCurveImpl *>(curve.get());
-        curveImpl->computeKnotsAndCoefs(m_knotsCoefs, static_cast<int>(c));
+        curveImpl->computeKnotsAndCoefs(m_knotsCoefs, static_cast<int>(c),
+                                        m_gradingHueCurve->getDrawCurveOnly());
     }
     if (m_knotsCoefs.m_numKnots == 0) m_knotsCoefs.m_localBypass = true;
 }

@@ -120,6 +120,7 @@ GradingHueCurveImpl::GradingHueCurveImpl(const ConstGradingHueCurveRcPtr & rhs)
         {
             m_curves[c] = impl->m_curves[c]->createEditableCopy();
         }
+        m_drawCurveOnly = rhs->getDrawCurveOnly();
     }
 }
 
@@ -130,7 +131,8 @@ GradingHueCurveRcPtr GradingHueCurveImpl::createEditableCopy() const
     {
         newCurve->m_curves[c] = m_curves[c]->createEditableCopy();
     }
-    
+    newCurve->setDrawCurveOnly(m_drawCurveOnly);
+
     GradingHueCurveRcPtr res = newCurve;
     return res;
 }
@@ -182,14 +184,19 @@ void GradingHueCurveImpl::validate() const
             throw Exception(oss.str().c_str());
         }
 
-        const BSplineType splineType = m_curves[c]->getSplineType();
-        const HueCurveType hueType = static_cast<HueCurveType>(c);
-        if (splineType != GetBSplineTypeForHueCurveType(hueType))
+        // Unless drawCurveOnly is enabled, check that the spline type is correct for
+        // the given hue curve type.
+        if (!getDrawCurveOnly())
         {
-            std::ostringstream oss;
-            oss << "GradingHueCurve validation failed: '" << CurveTypeName(c) << "' curve "
-                << "is of the wrong BSplineType.";
-            throw Exception(oss.str().c_str());
+            const BSplineType splineType = m_curves[c]->getSplineType();
+            const HueCurveType hueType = static_cast<HueCurveType>(c);
+            if (splineType != GetBSplineTypeForHueCurveType(hueType))
+            {
+                std::ostringstream oss;
+                oss << "GradingHueCurve validation failed: '" << CurveTypeName(c) << "' curve "
+                    << "is of the wrong BSplineType.";
+                throw Exception(oss.str().c_str());
+            }
         }
     }
 }
@@ -204,6 +211,16 @@ bool GradingHueCurveImpl::isIdentity() const
         }
     }
     return true;
+}
+
+bool GradingHueCurveImpl::getDrawCurveOnly() const
+{
+    return m_drawCurveOnly;
+}
+
+void GradingHueCurveImpl::setDrawCurveOnly(bool drawCurveOnly)
+{
+    m_drawCurveOnly = drawCurveOnly;
 }
 
 bool GradingHueCurveImpl::isHueCurveTypeValid(HueCurveType c) const
@@ -307,6 +324,10 @@ bool operator==(const GradingHueCurve & lhs, const GradingHueCurve & rhs)
         {
             return false;
         }
+    }
+    if (lhs.getDrawCurveOnly() != rhs.getDrawCurveOnly())
+    {
+        return false;
     }
     return true;
 }
