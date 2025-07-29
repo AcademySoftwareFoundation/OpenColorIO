@@ -76,7 +76,6 @@ GradingHueCurveOpData & GradingHueCurveOpData::operator=(const GradingHueCurveOp
         m_value->makeDynamic();
     }
 
-
     return *this;
 }
 
@@ -150,7 +149,7 @@ std::string GradingHueCurveOpData::getCacheID() const
     cacheIDStream << TransformDirectionToString(getDirection()) << " ";
     if (m_bypassRGBToHSY)
     {
-        cacheIDStream << " bypassRGBToHSY";
+        cacheIDStream << " bypassRGBToHSY ";
     }
     if (!isDynamic())
     {

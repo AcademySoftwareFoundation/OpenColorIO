@@ -68,7 +68,7 @@ void bindPyGradingHueCurveTransform(py::module & m)
              DOC(GradingHueCurveTransform, setSlope))
         .def("slopesAreDefault", &GradingHueCurveTransform::slopesAreDefault, "curve"_a,
              DOC(GradingHueCurveTransform, slopesAreDefault))
-// TODO: Add more pythonic version?
+// TODO: The above follows what is in GradingRGBCurveTransform, but could add a more pythonic version?
 //         .def("getSlopes", [](GradingHueCurveTransformRcPtr self, HueCurveType curveType)
 //             {
 //                 std::vector<float> slopes;

@@ -65,7 +65,6 @@ protected:
     }
 };
 
-
 GradingHueCurveOp::GradingHueCurveOp(GradingHueCurveOpDataRcPtr & hueCurveData)
     : Op()
 {
@@ -198,14 +197,9 @@ void GradingHueCurveOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreat
     GetGradingHueCurveGPUShaderProgram(shaderCreator, data);
 }
 
-
 }  // Anon namespace
 
-
-
-
 ///////////////////////////////////////////////////////////////////////////
-
 
 void CreateGradingHueCurveOp(OpRcPtrVec & ops,
                              GradingHueCurveOpDataRcPtr & curveData,

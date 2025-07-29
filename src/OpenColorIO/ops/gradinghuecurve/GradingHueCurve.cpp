@@ -10,8 +10,10 @@
 
 namespace OCIO_NAMESPACE
 {
+
 namespace
 {
+
 static const std::vector<GradingControlPoint> DefaultHueHueCtrl{ {0.0f, 0.0f}, 
                                                                  {1.f/6.f, 1.f/6.f}, 
                                                                  {2.f/6.f, 2.f/6.f}, 
@@ -42,7 +44,7 @@ static const std::vector<GradingControlPoint> DefaultSatLumCtrl{ {0.0f, 1.0f}, {
 static const std::vector<GradingControlPoint> DefaultLumLumCtrl{ { 0.f, 0.f },{ 0.5f, 0.5f },{ 1.0f, 1.0f } };
 static const std::vector<GradingControlPoint> DefaultLumLumLinCtrl{ { -7.0f, -7.0f },{ 0.f, 0.f },{ 7.0f, 7.0f } };
 
-}
+} // anon
 
 const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultHueHue(DefaultHueHueCtrl, BSplineType::HUE_HUE_B_SPLINE );
 const GradingBSplineCurveImpl GradingHueCurveImpl::DefaultHueSat(DefaultHueSatCtrl, BSplineType::PERIODIC_1_B_SPLINE );
@@ -336,7 +338,6 @@ bool operator!=(const GradingHueCurve & lhs, const GradingHueCurve & rhs)
 {
     return !(lhs == rhs);
 }
-
 
 } // namespace OCIO_NAMESPACE
 

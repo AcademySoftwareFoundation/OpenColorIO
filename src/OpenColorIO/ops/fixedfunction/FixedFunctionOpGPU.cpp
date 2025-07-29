@@ -1692,7 +1692,9 @@ void Add_RGB_TO_HSV(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
     ss.newLine() << pxl << ".rgb = " << ss.float3Const("hue * 1./6.", "sat", "val") << ";";
 }
 
-void Add_RGB_TO_HSY(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, float min0)
+void Add_RGB_TO_HSY(GpuShaderCreatorRcPtr & shaderCreator, 
+                    GpuShaderText & ss, 
+                    FixedFunctionOpData::Style funcStyle)
 {
     const std::string pxl(shaderCreator->getPixelName());
 
@@ -1703,7 +1705,7 @@ void Add_RGB_TO_HSY(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, f
     ss.newLine() << "float maxRGB =  max( " << pxl << ".x, max( " << pxl << ".y, " << pxl << ".z ) );";
     ss.newLine() << ss.float3Decl("RGBm") << " = " << pxl << ".rgb - luma;";
     ss.newLine() << "float distRGB  = dot( abs(RGBm), ones );";
-    if (min0 > 0.f)
+    if (funcStyle == FixedFunctionOpData::RGB_TO_HSY_LIN)
     {
         ss.newLine() << "float sumRGB  = dot( " << pxl << ".rgb, ones );";
         ss.newLine() << "float sat_hi  = distRGB / (0.15 + sumRGB);";
@@ -1713,11 +1715,11 @@ void Add_RGB_TO_HSY(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, f
         ss.newLine() << "float sat = sat_lo + alpha * (sat_hi - sat_lo);";
         ss.newLine() << "sat *= 1.4;";
     }
-    else if (min0 < 0.f)
+    else if (funcStyle == FixedFunctionOpData::RGB_TO_HSY_LOG)
     {
         ss.newLine() << "float sat = distRGB * 4.;";
     }
-    else
+    else  // RGB_TO_HSY_VID
     {
         ss.newLine() << "float sat = distRGB * 1.25;";
     }
@@ -1733,7 +1735,9 @@ void Add_RGB_TO_HSY(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, f
     ss.newLine() << "" << pxl << ".r = hue * 1./6.; " << pxl << ".g = sat; " << pxl << ".b = luma;";
 }
 
-void Add_HSY_TO_RGB(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, float min0)
+void Add_HSY_TO_RGB(GpuShaderCreatorRcPtr & shaderCreator, 
+                    GpuShaderText & ss, 
+                    FixedFunctionOpData::Style funcStyle)
 {
     const std::string pxl(shaderCreator->getPixelName());
 
@@ -1754,7 +1758,7 @@ void Add_HSY_TO_RGB(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, f
 
     ss.newLine() << "float sat = " << pxl << ".y;";
     ss.newLine() << "float distRGB = dot( abs(RGB0 - luma), ones );";
-    if (min0 > 0.f)
+    if (funcStyle == FixedFunctionOpData::HSY_LIN_TO_RGB)
     {
         ss.newLine() << "float sumRGB  = dot( RGB0, ones );";
         ss.newLine() << "float k = 0.15;";
@@ -1773,11 +1777,11 @@ void Add_HSY_TO_RGB(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, f
         ss.newLine() << "sm = (sm >= 0.) ? sm : (2. * c) / (denom + discrim * 2.);";
         ss.newLine() << "float gainS = (alpha == 1.) ? s1 : (alpha == 0.) ? s0 : sm;";
     }
-    else if (min0 < 0.f)
+    else if (funcStyle == FixedFunctionOpData::HSY_LOG_TO_RGB)
     {
         ss.newLine() << "float gainS = sat / max(1e-10, distRGB * 4.);";
     }
-    else
+    else  // HSY_VID_TO_RGB
     {
         ss.newLine() << "float gainS = sat / max(1e-10, distRGB * 1.25);";
     }
@@ -1786,32 +1790,32 @@ void Add_HSY_TO_RGB(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss, f
 
 void Add_RGB_TO_HSY_LOG(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
 {
-    Add_RGB_TO_HSY(shaderCreator, ss, -0.1f);
+    Add_RGB_TO_HSY(shaderCreator, ss, FixedFunctionOpData::RGB_TO_HSY_LOG);
 }
 
 void Add_RGB_TO_HSY_LIN(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
 {
-    Add_RGB_TO_HSY(shaderCreator, ss, 0.2f);
+    Add_RGB_TO_HSY(shaderCreator, ss, FixedFunctionOpData::RGB_TO_HSY_LIN);
 }
 
 void Add_RGB_TO_HSY_VID(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
 {
-    Add_RGB_TO_HSY(shaderCreator, ss, 0.0f);
+    Add_RGB_TO_HSY(shaderCreator, ss, FixedFunctionOpData::RGB_TO_HSY_VID);
 }
 
 void Add_HSY_LOG_TO_RGB(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
 {
-    Add_HSY_TO_RGB(shaderCreator, ss, -0.1f);
+    Add_HSY_TO_RGB(shaderCreator, ss, FixedFunctionOpData::HSY_LOG_TO_RGB);
 }
 
 void Add_HSY_LIN_TO_RGB(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
 {
-    Add_HSY_TO_RGB(shaderCreator, ss, 0.2f);
+    Add_HSY_TO_RGB(shaderCreator, ss, FixedFunctionOpData::HSY_LIN_TO_RGB);
 }
 
 void Add_HSY_VID_TO_RGB(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
 {
-    Add_HSY_TO_RGB(shaderCreator, ss, 0.0f);
+    Add_HSY_TO_RGB(shaderCreator, ss, FixedFunctionOpData::HSY_VID_TO_RGB);
 }
 
 void Add_HSV_TO_RGB(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)

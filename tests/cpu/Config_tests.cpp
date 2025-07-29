@@ -5397,9 +5397,7 @@ R"([OpenColorIO Warning]: FixedFunction style is experimental and may be removed
             OCIO_CHECK_NO_THROW(ss << *config.get());
             OCIO_CHECK_EQUAL(ss.str(), str);
         }
-
     }
-
 }
 
 OCIO_ADD_TEST(Config, exposure_contrast_serialization)

@@ -62,12 +62,12 @@ public:
         ACES_TONESCALE_COMPRESS_20_INV, // ACES2 Tonescale and chroma compression (inv)
         ACES_GAMUT_COMPRESS_20_FWD,     // ACES2 Gamut compression
         ACES_GAMUT_COMPRESS_20_INV,     // ACES2 Gamut compression (inv)
-        RGB_TO_HSY_LOG,                 // RGB to HSY (Hue, Saturation, Lightness) using log
-        RGB_TO_HSY_LIN,                 // RGB to HSY (Hue, Saturation, Lightness) using linear
-        RGB_TO_HSY_VID,                 // RGB to HSY (Hue, Saturation, Lightness) using video
-        HSY_LOG_TO_RGB,                 // HSY (Hue, Saturation, Lightness) using log to RGB 
-        HSY_LIN_TO_RGB,                 // HSY (Hue, Saturation, Lightness) using linear to RGB
-        HSY_VID_TO_RGB                  // HSY (Hue, Saturation, Lightness) using video to RGB
+        RGB_TO_HSY_LIN,                 // RGB to HSY (Hue, Saturation, Luminance) for linear spaces
+        RGB_TO_HSY_LOG,                 // RGB to HSY (Hue, Saturation, Luma) for log spaces
+        RGB_TO_HSY_VID,                 // RGB to HSY (Hue, Saturation, Luma) for video spaces
+        HSY_LIN_TO_RGB,                 // HSY (Hue, Saturation, Luminance) to RGB for linear spaces
+        HSY_LOG_TO_RGB,                 // HSY (Hue, Saturation, Luma) to RGB for log spaces
+        HSY_VID_TO_RGB                  // HSY (Hue, Saturation, Luma) to RGB for video spaces
     };
 
     static const char * ConvertStyleToString(Style style, bool detailed);

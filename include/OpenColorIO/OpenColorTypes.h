@@ -510,9 +510,9 @@ enum FixedFunctionStyle
     FIXED_FUNCTION_ACES_RGB_TO_JMH_20,          ///< ACES 2.0 RGB to JMh -- EXPERIMENTAL
     FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20,  ///< ACES 2.0 Tonescale and chroma compression -- EXPERIMENTAL
     FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20,      ///< ACES 2.0 Gamut compression -- EXPERIMENTAL
-    FIXED_FUNCTION_RGB_TO_HSY_LIN,              ///< RGB to HSY (Hue, Saturation, Lightness) using linear
-    FIXED_FUNCTION_RGB_TO_HSY_LOG,              ///< RGB to HSY (Hue, Saturation, Lightness) using log
-    FIXED_FUNCTION_RGB_TO_HSY_VID,              ///< RGB to HSY (Hue, Saturation, Lightness) using video
+    FIXED_FUNCTION_RGB_TO_HSY_LIN,              ///< RGB to HSY (Hue, Saturation, Luminance) for linear spaces
+    FIXED_FUNCTION_RGB_TO_HSY_LOG,              ///< RGB to HSY (Hue, Saturation, Luma) for log spaces
+    FIXED_FUNCTION_RGB_TO_HSY_VID,              ///< RGB to HSY (Hue, Saturation, Luma) for video spaces
 };
 
 /// Enumeration of the :cpp:class:`ExposureContrastTransform` transform algorithms.

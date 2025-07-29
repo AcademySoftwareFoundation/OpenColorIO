@@ -304,7 +304,6 @@ void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator
     shaderCreator->addToHelperShaderCode(st.string().c_str());
 }
 
-
 void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
                         GpuShaderText & st,
                         const GCProperties & props,
@@ -594,7 +593,7 @@ void AddGCInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
    }
 }
 
-}
+} // anon
 
 void GetGradingHueCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
                                         ConstGradingHueCurveOpDataRcPtr & gcData)

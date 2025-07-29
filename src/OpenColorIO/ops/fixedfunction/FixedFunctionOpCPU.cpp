@@ -240,7 +240,6 @@ public:
 
 class Renderer_RGB_TO_HSY_LOG : public OpCPU
 {
-    const float MIN_0 = -0.1f;
 public:
     Renderer_RGB_TO_HSY_LOG() = delete;
     explicit Renderer_RGB_TO_HSY_LOG(ConstFixedFunctionOpDataRcPtr & data);
@@ -250,7 +249,6 @@ public:
 
 class Renderer_HSY_LOG_TO_RGB : public OpCPU
 {
-    const float MIN_0 = -0.1f;;
 public:
     Renderer_HSY_LOG_TO_RGB() = delete;
     explicit Renderer_HSY_LOG_TO_RGB(ConstFixedFunctionOpDataRcPtr & data);
@@ -260,7 +258,6 @@ public:
 
 class Renderer_RGB_TO_HSY_VID : public OpCPU
 {
-    const float MIN_0 = 0.0f;
 public:
     Renderer_RGB_TO_HSY_VID() = delete;
     explicit Renderer_RGB_TO_HSY_VID(ConstFixedFunctionOpDataRcPtr & data);
@@ -270,7 +267,6 @@ public:
 
 class Renderer_HSY_VID_TO_RGB : public OpCPU
 {
-    const float MIN_0 = 0.0f;
 public:
     Renderer_HSY_VID_TO_RGB() = delete;
     explicit Renderer_HSY_VID_TO_RGB(ConstFixedFunctionOpDataRcPtr & data);
@@ -280,7 +276,6 @@ public:
 
 class Renderer_RGB_TO_HSY_LIN : public OpCPU
 {
-    const float MIN_0 = 0.2f;
 public:
     Renderer_RGB_TO_HSY_LIN() = delete;
     explicit Renderer_RGB_TO_HSY_LIN(ConstFixedFunctionOpDataRcPtr & data);
@@ -290,7 +285,6 @@ public:
 
 class Renderer_HSY_LIN_TO_RGB : public OpCPU
 {
-    const float MIN_0 = 0.2f;
 public:
     Renderer_HSY_LIN_TO_RGB() = delete;
     explicit Renderer_HSY_LIN_TO_RGB(ConstFixedFunctionOpDataRcPtr & data);
@@ -1594,7 +1588,7 @@ void Renderer_HSV_TO_RGB::apply(const void * inImg, void * outImg, long numPixel
     }
 }
 
-void applyHSYToRGB(const void * inImg, void * outImg, long numPixels, float min0)
+void applyHSYToRGB(const void * inImg, void * outImg, long numPixels, FixedFunctionOpData::Style funcStyle)
 {
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
@@ -1623,7 +1617,7 @@ void applyHSYToRGB(const void * inImg, void * outImg, long numPixels, float min0
   
         const float distRgb = std::fabs(red - luma) + std::fabs(grn - luma) + std::fabs(blu - luma);
   
-        if (min0 > 0.f) // linear
+        if (funcStyle == FixedFunctionOpData::HSY_LIN_TO_RGB)
         {
             const float sumRgb = red + grn + blu;
     
@@ -1656,13 +1650,13 @@ void applyHSYToRGB(const void * inImg, void * outImg, long numPixels, float min0
               gainS = gainS >= 0.f ? gainS : (2.f * c) / (denom + discrim * 2.f);
             }
         }
-        else if (min0 < 0.f) // log
+        else if (funcStyle == FixedFunctionOpData::HSY_LOG_TO_RGB)
         {
             const float satGain = 4.f;
             const float currSat = distRgb * satGain;
             gainS = sat / std::max(1e-10f, currSat);
         }
-        else // video
+        else  // funcStyle == FixedFunctionOpData::HSY_VID_TO_RGB
         {
             const float satGain = 1.25f;
             const float currSat = distRgb * satGain;
@@ -1680,7 +1674,7 @@ void applyHSYToRGB(const void * inImg, void * outImg, long numPixels, float min0
     
 }
 
-void applyRGBToHSY(const void * inImg, void * outImg, long numPixels, float min0)
+void applyRGBToHSY(const void * inImg, void * outImg, long numPixels, FixedFunctionOpData::Style funcStyle)
 {
     const float * in = (const float *)inImg;
     float * out = (float *)outImg;
@@ -1704,7 +1698,7 @@ void applyRGBToHSY(const void * inImg, void * outImg, long numPixels, float min0
   
         float sat = 0.f;
   
-        if (min0 > 0.f)         // linear
+        if (funcStyle == FixedFunctionOpData::RGB_TO_HSY_LIN)
         {
             const float sumRgb = red + grn + blu;
             const float k = 0.15f;
@@ -1717,12 +1711,12 @@ void applyRGBToHSY(const void * inImg, void * outImg, long numPixels, float min0
             sat = satLo + alpha * (satHi - satLo);
             sat *= 1.4f;
         }
-        else if (min0 < 0.f)    // log
+        else if (funcStyle == FixedFunctionOpData::RGB_TO_HSY_LOG)
         {
             const float sat_gain = 4.f;
             sat = distRgb * sat_gain;
         }
-        else                     // video
+        else  // FixedFunctionOpData::RGB_TO_HSY_VID
         {
             const float sat_gain = 1.25f;
             sat = distRgb * sat_gain;
@@ -1769,7 +1763,7 @@ Renderer_RGB_TO_HSY_LOG::Renderer_RGB_TO_HSY_LOG(ConstFixedFunctionOpDataRcPtr &
 
 void Renderer_RGB_TO_HSY_LOG::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    applyRGBToHSY(inImg, outImg, numPixels, MIN_0);
+    applyRGBToHSY(inImg, outImg, numPixels, FixedFunctionOpData::RGB_TO_HSY_LOG);
 }
 
 Renderer_HSY_LOG_TO_RGB::Renderer_HSY_LOG_TO_RGB(ConstFixedFunctionOpDataRcPtr & /*data*/)
@@ -1779,7 +1773,7 @@ Renderer_HSY_LOG_TO_RGB::Renderer_HSY_LOG_TO_RGB(ConstFixedFunctionOpDataRcPtr &
 
 void Renderer_HSY_LOG_TO_RGB::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    applyHSYToRGB(inImg, outImg, numPixels, MIN_0);  
+    applyHSYToRGB(inImg, outImg, numPixels, FixedFunctionOpData::HSY_LOG_TO_RGB);  
 }
 
 Renderer_RGB_TO_HSY_LIN::Renderer_RGB_TO_HSY_LIN(ConstFixedFunctionOpDataRcPtr & /*data*/)
@@ -1789,7 +1783,7 @@ Renderer_RGB_TO_HSY_LIN::Renderer_RGB_TO_HSY_LIN(ConstFixedFunctionOpDataRcPtr &
 
 void Renderer_RGB_TO_HSY_LIN::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    applyRGBToHSY(inImg, outImg, numPixels, MIN_0); 
+    applyRGBToHSY(inImg, outImg, numPixels, FixedFunctionOpData::RGB_TO_HSY_LIN); 
 }
 
 Renderer_HSY_LIN_TO_RGB::Renderer_HSY_LIN_TO_RGB(ConstFixedFunctionOpDataRcPtr & /*data*/)
@@ -1799,7 +1793,7 @@ Renderer_HSY_LIN_TO_RGB::Renderer_HSY_LIN_TO_RGB(ConstFixedFunctionOpDataRcPtr &
 
 void Renderer_HSY_LIN_TO_RGB::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    applyHSYToRGB(inImg, outImg, numPixels, MIN_0);   
+    applyHSYToRGB(inImg, outImg, numPixels, FixedFunctionOpData::HSY_LIN_TO_RGB);   
 }
 
 Renderer_RGB_TO_HSY_VID::Renderer_RGB_TO_HSY_VID(ConstFixedFunctionOpDataRcPtr & /*data*/)
@@ -1809,7 +1803,7 @@ Renderer_RGB_TO_HSY_VID::Renderer_RGB_TO_HSY_VID(ConstFixedFunctionOpDataRcPtr &
 
 void Renderer_RGB_TO_HSY_VID::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    applyRGBToHSY(inImg, outImg, numPixels, MIN_0); 
+    applyRGBToHSY(inImg, outImg, numPixels, FixedFunctionOpData::RGB_TO_HSY_VID); 
 }
 
 Renderer_HSY_VID_TO_RGB::Renderer_HSY_VID_TO_RGB(ConstFixedFunctionOpDataRcPtr & /*data*/)
@@ -1819,7 +1813,7 @@ Renderer_HSY_VID_TO_RGB::Renderer_HSY_VID_TO_RGB(ConstFixedFunctionOpDataRcPtr &
 
 void Renderer_HSY_VID_TO_RGB::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    applyHSYToRGB(inImg, outImg, numPixels, MIN_0); 
+    applyHSYToRGB(inImg, outImg, numPixels, FixedFunctionOpData::HSY_VID_TO_RGB); 
 }
 
 Renderer_XYZ_TO_xyY::Renderer_XYZ_TO_xyY(ConstFixedFunctionOpDataRcPtr & /*data*/)

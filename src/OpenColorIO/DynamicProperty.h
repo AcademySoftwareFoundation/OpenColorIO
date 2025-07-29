@@ -151,7 +151,7 @@ public:
     bool getLocalBypass() const;
     int getNumKnots() const;
     int getNumCoefs() const;
-    static int GetNumOffsetValues() { return 8; }
+    static int GetNumOffsetValues() { return 8; }  // offset and num vals for four curves
     const int * getKnotsOffsetsArray() const;
     const int * getCoefsOffsetsArray() const;
     const float * getKnotsArray() const;
@@ -189,7 +189,7 @@ public:
     bool getLocalBypass() const;
     int getNumKnots() const;
     int getNumCoefs() const;
-    static int GetNumOffsetValues() { return 16; }
+    static int GetNumOffsetValues() { return 16; }  // offset and num vals for eight curves
     const int * getKnotsOffsetsArray() const;
     const int * getCoefsOffsetsArray() const;
     const float * getKnotsArray() const;

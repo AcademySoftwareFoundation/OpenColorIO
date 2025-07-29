@@ -275,7 +275,6 @@ void AddLinToLogShaderChannelBlue(GpuShaderCreatorRcPtr & shaderCreator, GpuShad
 // Convert "grading log" values to scene-linear.
 void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st);
 
-
 void AddLogToLinShaderChannelBlue(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st);
 
 } // namespace OCIO_NAMESPACE

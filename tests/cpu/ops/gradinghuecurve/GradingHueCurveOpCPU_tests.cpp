@@ -30,7 +30,7 @@ void ValidateImage(const float * expected, const float * res, long numPix, unsig
         }
     }
 }
-}
+}  // anon
 
 OCIO_ADD_TEST(GradingHueCurveOpCPU, identity)
 {
@@ -87,22 +87,30 @@ OCIO_ADD_TEST(GradingHueCurveOpCPU, identity)
 OCIO_ADD_TEST(GradingHueCurveOpCPU, log_identity)
 {
     // Identity curves (for log or video) that are different from the default curves.
-    auto hh = OCIO::GradingBSplineCurve::Create({ {0.f, 0.f}, {0.1f, 0.1f}, {0.2f, 0.2f}, 
-        {0.4f, 0.4f}, {0.6f, 0.6f}, {0.8f, 0.8f} }, OCIO::HUE_HUE);
-    auto hs = OCIO::GradingBSplineCurve::Create({ {0.f, 1.f}, {0.1f, 1.f}, {0.2f, 1.f}, 
-        {0.4f, 1.f}, {0.6f, 1.f}, {0.8f, 1.f} }, OCIO::HUE_SAT);
-    auto hl = OCIO::GradingBSplineCurve::Create({ {0.f, 1.f}, {0.1f, 1.f}, {0.2f, 1.f}, 
-        {0.4f, 1.f}, {0.6f, 1.f}, {0.8f, 1.f} }, OCIO::HUE_LUM);
-    auto ls = OCIO::GradingBSplineCurve::Create({ {0.f, 1.f}, {1.f, 1.f} }, 
+    auto hh = OCIO::GradingBSplineCurve::Create(
+        { {0.f, 0.f}, {0.1f, 0.1f}, {0.2f, 0.2f}, {0.4f, 0.4f}, {0.6f, 0.6f}, {0.8f, 0.8f} },
+        OCIO::HUE_HUE);
+    auto hs = OCIO::GradingBSplineCurve::Create(
+        { {0.f, 1.f}, {0.1f, 1.f}, {0.2f, 1.f}, {0.4f, 1.f}, {0.6f, 1.f}, {0.8f, 1.f} },
+        OCIO::HUE_SAT);
+    auto hl = OCIO::GradingBSplineCurve::Create(
+        { {0.f, 1.f}, {0.1f, 1.f}, {0.2f, 1.f}, {0.4f, 1.f}, {0.6f, 1.f}, {0.8f, 1.f} },
+        OCIO::HUE_LUM);
+    auto ls = OCIO::GradingBSplineCurve::Create(
+        { {0.f, 1.f}, {1.f, 1.f} }, 
         OCIO::LUM_SAT);
-    auto ss = OCIO::GradingBSplineCurve::Create({ {0.f, 0.f}, {0.25f, 0.25f}, {1.f, 1.f} },
+    auto ss = OCIO::GradingBSplineCurve::Create(
+        { {0.f, 0.f}, {0.25f, 0.25f}, {1.f, 1.f} },
         OCIO::SAT_SAT);
-    auto ll = OCIO::GradingBSplineCurve::Create({ {0.f, 0.f}, {0.25f, 0.25f}, {0.5f, 0.5f}, {1.f, 1.f} },
+    auto ll = OCIO::GradingBSplineCurve::Create(
+        { {0.f, 0.f}, {0.25f, 0.25f}, {0.5f, 0.5f}, {1.f, 1.f} },
         OCIO::LUM_LUM);
-    auto sl = OCIO::GradingBSplineCurve::Create({ {0.f, 1.f}, {0.25f, 1.f}, {0.5f, 1.f}, {1.f, 1.f} },
+    auto sl = OCIO::GradingBSplineCurve::Create(
+        { {0.f, 1.f}, {0.25f, 1.f}, {0.5f, 1.f}, {1.f, 1.f} },
         OCIO::SAT_LUM);
-    auto hfx = OCIO::GradingBSplineCurve::Create({ {0.f, 0.f}, {0.1f, 0.f}, {0.2f, 0.f}, 
-        {0.4f, 0.f}, {0.6f, 0.f}, {0.8f, 0.f} }, OCIO::HUE_FX);
+    auto hfx = OCIO::GradingBSplineCurve::Create(
+        { {0.f, 0.f}, {0.1f, 0.f}, {0.2f, 0.f}, {0.4f, 0.f}, {0.6f, 0.f}, {0.8f, 0.f} },
+        OCIO::HUE_FX);
 
     auto gc = std::make_shared<OCIO::GradingHueCurveOpData>(OCIO::GRADING_LOG, 
         hh, hs, hl, ls, ss, ll, sl, hfx);
@@ -150,10 +158,12 @@ OCIO_ADD_TEST(GradingHueCurveOpCPU, hh_hfx_curves)
     auto sl = OCIO::GradingBSplineCurve::Create({ {0.f, 1.f}, {0.9f, 1.f} }, OCIO::SAT_LUM);
 
     // Set hh and hfx to non-identities.
-    auto hh = OCIO::GradingBSplineCurve::Create({ {0.05f, 0.15f}, {0.2f, 0.3f}, {0.35f, 0.4f}, 
-        {0.45f, 0.45f}, {0.6f, 0.7f}, {0.8f, 0.85f} }, OCIO::HUE_HUE);
-    auto hfx = OCIO::GradingBSplineCurve::Create({ {0.2f, 0.05f}, {0.4f, -0.09f}, {0.6f, -0.2f}, 
-        { 0.8f, 0.05f}, {0.99f, -0.02f} }, OCIO::HUE_FX);
+    auto hh = OCIO::GradingBSplineCurve::Create(
+        { {0.05f, 0.15f}, {0.2f, 0.3f}, {0.35f, 0.4f}, {0.45f, 0.45f}, {0.6f, 0.7f}, {0.8f, 0.85f} },
+        OCIO::HUE_HUE);
+    auto hfx = OCIO::GradingBSplineCurve::Create(
+        { {0.2f, 0.05f}, {0.4f, -0.09f}, {0.6f, -0.2f}, { 0.8f, 0.05f}, {0.99f, -0.02f} },
+        OCIO::HUE_FX);
 
     auto gc = std::make_shared<OCIO::GradingHueCurveOpData>(OCIO::GRADING_LOG, 
         hh, hs, hl, ls, ss, ll, sl, hfx);
@@ -197,22 +207,30 @@ OCIO_ADD_TEST(GradingHueCurveOpCPU, hh_hfx_curves)
 OCIO_ADD_TEST(GradingHueCurveOpCPU_1, log_all_curves)
 {
     // All curves are non-identities.
-    auto hh = OCIO::GradingBSplineCurve::Create({ {0.05f, 0.15f}, {0.2f, 0.3f}, {0.35f, 0.4f}, 
-        {0.45f, 0.45f}, {0.6f, 0.7f}, {0.8f, 0.85f} }, OCIO::HUE_HUE);
-    auto hs = OCIO::GradingBSplineCurve::Create({ {-0.1f, 1.2f}, {0.2f, 0.7f}, {0.4f, 1.5f}, 
-        {0.5f, 0.5f}, {0.6f, 1.4f}, {0.8f, 0.7f} }, OCIO::HUE_SAT);
-    auto hl = OCIO::GradingBSplineCurve::Create({ {0.1f, 1.5f}, {0.2f, 0.7f}, {0.4f, 1.4f}, 
-        {0.5f, 0.8f}, {0.8f, 0.5f} }, OCIO::HUE_LUM);
-    auto ls = OCIO::GradingBSplineCurve::Create({ {0.05f, 1.5f}, {0.5f, 0.9f}, {1.1f, 1.4f}, 
-        }, OCIO::LUM_SAT);
-    auto ss = OCIO::GradingBSplineCurve::Create({ {0.f, 0.1f}, {0.5f, 0.45f}, {1.f, 1.1f} },
+    auto hh = OCIO::GradingBSplineCurve::Create(
+        { {0.05f, 0.15f}, {0.2f, 0.3f}, {0.35f, 0.4f}, {0.45f, 0.45f}, {0.6f, 0.7f}, {0.8f, 0.85f} },
+        OCIO::HUE_HUE);
+    auto hs = OCIO::GradingBSplineCurve::Create(
+        { {-0.1f, 1.2f}, {0.2f, 0.7f}, {0.4f, 1.5f}, {0.5f, 0.5f}, {0.6f, 1.4f}, {0.8f, 0.7f} }, 
+        OCIO::HUE_SAT);
+    auto hl = OCIO::GradingBSplineCurve::Create(
+        { {0.1f, 1.5f}, {0.2f, 0.7f}, {0.4f, 1.4f}, {0.5f, 0.8f}, {0.8f, 0.5f} }, 
+        OCIO::HUE_LUM);
+    auto ls = OCIO::GradingBSplineCurve::Create(
+        { {0.05f, 1.5f}, {0.5f, 0.9f}, {1.1f, 1.4f} }, 
+        OCIO::LUM_SAT);
+    auto ss = OCIO::GradingBSplineCurve::Create(
+        { {0.f, 0.1f}, {0.5f, 0.45f}, {1.f, 1.1f} },
         OCIO::SAT_SAT);
-    auto ll = OCIO::GradingBSplineCurve::Create({ {-0.02f, -0.04f}, {0.2f, 0.1f}, {0.8f, 0.95f}, {1.1f, 1.2f} },
+    auto ll = OCIO::GradingBSplineCurve::Create(
+        { {-0.02f, -0.04f}, {0.2f, 0.1f}, {0.8f, 0.95f}, {1.1f, 1.2f} },
         OCIO::LUM_LUM);
-    auto sl = OCIO::GradingBSplineCurve::Create({ {0.f, 1.2f}, {0.6f, 0.8f}, {0.9f, 1.1f} },
+    auto sl = OCIO::GradingBSplineCurve::Create(
+        { {0.f, 1.2f}, {0.6f, 0.8f}, {0.9f, 1.1f} },
         OCIO::SAT_LUM);
-    auto hfx = OCIO::GradingBSplineCurve::Create({ {0.2f, 0.05f}, {0.4f, -0.09f}, {0.6f, -0.2f}, 
-        { 0.8f, 0.05f}, {0.99f, -0.02f} }, OCIO::HUE_FX);
+    auto hfx = OCIO::GradingBSplineCurve::Create(
+        { {0.2f, 0.05f}, {0.4f, -0.09f}, {0.6f, -0.2f}, { 0.8f, 0.05f}, {0.99f, -0.02f} }, 
+        OCIO::HUE_FX);
 
     auto gc = std::make_shared<OCIO::GradingHueCurveOpData>(OCIO::GRADING_LOG, 
         hh, hs, hl, ls, ss, ll, sl, hfx);
@@ -258,22 +276,30 @@ OCIO_ADD_TEST(GradingHueCurveOpCPU_1, log_all_curves)
 OCIO_ADD_TEST(GradingHueCurveOpCPU, lin_all_curves)
 {
     // All curves are non-identities.
-    auto hh = OCIO::GradingBSplineCurve::Create({ {0.05f, 0.15f}, {0.2f, 0.3f}, {0.35f, 0.4f}, 
-        {0.45f, 0.45f}, {0.6f, 0.7f}, {0.8f, 0.85f} }, OCIO::HUE_HUE);
-    auto hs = OCIO::GradingBSplineCurve::Create({ {-0.1f, 1.2f}, {0.2f, 0.7f}, {0.4f, 1.5f}, 
-        {0.5f, 0.5f}, {0.6f, 1.4f}, {0.8f, 0.7f} }, OCIO::HUE_SAT);
-    auto hl = OCIO::GradingBSplineCurve::Create({ {0.1f, 1.5f}, {0.2f, 0.7f}, {0.4f, 1.4f}, 
-        {0.5f, 0.8f}, {0.8f, 0.5f} }, OCIO::HUE_LUM);
-    auto ss = OCIO::GradingBSplineCurve::Create({ {0.f, 0.1f}, {0.5f, 0.45f}, {1.f, 1.1f} },
+    auto hh = OCIO::GradingBSplineCurve::Create(
+        { {0.05f, 0.15f}, {0.2f, 0.3f}, {0.35f, 0.4f}, {0.45f, 0.45f}, {0.6f, 0.7f}, {0.8f, 0.85f} },
+        OCIO::HUE_HUE);
+    auto hs = OCIO::GradingBSplineCurve::Create(
+        { {-0.1f, 1.2f}, {0.2f, 0.7f}, {0.4f, 1.5f}, {0.5f, 0.5f}, {0.6f, 1.4f}, {0.8f, 0.7f} }, 
+        OCIO::HUE_SAT);
+    auto hl = OCIO::GradingBSplineCurve::Create(
+        { {0.1f, 1.5f}, {0.2f, 0.7f}, {0.4f, 1.4f}, {0.5f, 0.8f}, {0.8f, 0.5f} }, 
+        OCIO::HUE_LUM);
+    auto ss = OCIO::GradingBSplineCurve::Create(
+        { {0.f, 0.1f}, {0.5f, 0.45f}, {1.f, 1.1f} },
         OCIO::SAT_SAT);
-    auto sl = OCIO::GradingBSplineCurve::Create({ {0.f, 1.2f}, {0.6f, 0.8f}, {0.9f, 1.1f} },
+    auto sl = OCIO::GradingBSplineCurve::Create(
+        { {0.f, 1.2f}, {0.6f, 0.8f}, {0.9f, 1.1f} },
         OCIO::SAT_LUM);
-    auto hfx = OCIO::GradingBSplineCurve::Create({ {0.2f, 0.05f}, {0.4f, -0.09f}, {0.6f, -0.2f}, 
-        { 0.8f, 0.05f}, {0.99f, -0.02f} }, OCIO::HUE_FX);
+    auto hfx = OCIO::GradingBSplineCurve::Create(
+        { {0.2f, 0.05f}, {0.4f, -0.09f}, {0.6f, -0.2f}, { 0.8f, 0.05f}, {0.99f, -0.02f} }, 
+        OCIO::HUE_FX);
     // Adjust these two, relative to previous test, to work in f-stops.
-    auto ls = OCIO::GradingBSplineCurve::Create({ {-6.f, 0.9f}, {-3.f, 0.8f}, {0.f, 1.2f}, 
-        {2.f, 1.f}, {4.f, 0.6f}, {6.f, 0.55f} }, OCIO::LUM_SAT);
-    auto ll = OCIO::GradingBSplineCurve::Create({ {-8.f, -7.f}, {-2.f, -3.f}, {2.f, 3.5f}, {8.f, 7.f} },
+    auto ls = OCIO::GradingBSplineCurve::Create(
+        { {-6.f, 0.9f}, {-3.f, 0.8f}, {0.f, 1.2f}, {2.f, 1.f}, {4.f, 0.6f}, {6.f, 0.55f} }, 
+        OCIO::LUM_SAT);
+    auto ll = OCIO::GradingBSplineCurve::Create(
+        { {-8.f, -7.f}, {-2.f, -3.f}, {2.f, 3.5f}, {8.f, 7.f} },
         OCIO::LUM_LUM);
 
     auto gc = std::make_shared<OCIO::GradingHueCurveOpData>(OCIO::GRADING_LIN, 

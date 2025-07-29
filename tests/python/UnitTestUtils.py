@@ -67,20 +67,6 @@ def assertAlmostEqualVector(testCase, first, second, delta=1e-6):
     for pt1, pt2 in zip(first, second):
         testCase.assertAlmostEqual(pt1, pt2, delta=delta)
 
-# 
-#     for pt1 in first:
-#         try:
-#             pt2 = next(second)
-#             testCase.assertAlmostEqual(testCase, pt1, pt2, delta=delta)
-#         except StopIteration:
-#             raise AssertionError("Different number of elements")
-#     try:
-#         pt2 = next(second)
-#     except StopIteration:
-#         pass
-#     else:
-#         raise AssertionError("Different number of elements")
-
 def assertEqualRGBCurve(testCase, first, second):
     assertEqualBSpline(testCase, first.red, second.red)
     assertEqualBSpline(testCase, first.green, second.green)

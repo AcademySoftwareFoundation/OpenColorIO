@@ -227,22 +227,30 @@ OCIO_ADD_TEST(GradingHueCurveTransform, serialization)
 {
     // Test the serialization of the transform.
 
-    auto hh = OCIO::GradingBSplineCurve::Create({ {-0.1f, -0.15f}, {0.2f, 0.3f}, {0.5f, 0.25f}, 
-        {0.8f, 0.7f}, {0.85f, 0.8f}, {1.05f, 0.9f} }, OCIO::HUE_HUE);
-    auto hs = OCIO::GradingBSplineCurve::Create({ {0.f, 1.2f}, {0.1f, 1.2f}, {0.4f, 0.7f}, 
-        {0.6f, 0.3f}, {0.8f, 0.5f}, {0.9f, 0.8f} }, OCIO::HUE_SAT);
-    auto hl = OCIO::GradingBSplineCurve::Create({ {0.1f, 1.4f}, {0.2f, 1.4f}, {0.4f, 0.7f}, 
-        {0.6f, 0.5f}, {0.8f, 0.8f} }, OCIO::HUE_LUM);
-    auto ls = OCIO::GradingBSplineCurve::Create({ {0.0f, 1.0f}, {0.5f, 1.5f}, {1.0f, 0.9f}, 
-        {1.1f, 1.1f} }, OCIO::LUM_SAT);
-    auto ss = OCIO::GradingBSplineCurve::Create({ {0.f, 0.05f}, {0.5f, 0.8f}, {1.f, 1.05f} },
+    auto hh = OCIO::GradingBSplineCurve::Create(
+        { {-0.1f, -0.15f}, {0.2f, 0.3f}, {0.5f, 0.25f}, {0.8f, 0.7f}, {0.85f, 0.8f}, {1.05f, 0.9f} },
+        OCIO::HUE_HUE);
+    auto hs = OCIO::GradingBSplineCurve::Create(
+        { {0.f, 1.2f}, {0.1f, 1.2f}, {0.4f, 0.7f}, {0.6f, 0.3f}, {0.8f, 0.5f}, {0.9f, 0.8f} },
+        OCIO::HUE_SAT);
+    auto hl = OCIO::GradingBSplineCurve::Create(
+        { {0.1f, 1.4f}, {0.2f, 1.4f}, {0.4f, 0.7f}, {0.6f, 0.5f}, {0.8f, 0.8f} },
+        OCIO::HUE_LUM);
+    auto ls = OCIO::GradingBSplineCurve::Create(
+        { {0.0f, 1.0f}, {0.5f, 1.5f}, {1.0f, 0.9f}, {1.1f, 1.1f} },
+        OCIO::LUM_SAT);
+    auto ss = OCIO::GradingBSplineCurve::Create(
+        { {0.f, 0.05f}, {0.5f, 0.8f}, {1.f, 1.05f} },
         OCIO::SAT_SAT);
-    auto ll = OCIO::GradingBSplineCurve::Create({ {0.f, -0.0005f}, {0.5f, 0.3f}, {1.f, 0.9f} },
+    auto ll = OCIO::GradingBSplineCurve::Create(
+        { {0.f, -0.0005f}, {0.5f, 0.3f}, {1.f, 0.9f} },
         OCIO::LUM_LUM);
-    auto sl = OCIO::GradingBSplineCurve::Create({ {0.05f, 1.1f}, {0.3f, 1.f}, {1.2f, 0.9f} },
+    auto sl = OCIO::GradingBSplineCurve::Create(
+        { {0.05f, 1.1f}, {0.3f, 1.f}, {1.2f, 0.9f} },
         OCIO::SAT_LUM);
-    auto hfx = OCIO::GradingBSplineCurve::Create({ {-0.15f, 0.1f}, {0.f, -0.05f}, {0.2f, -0.1f}, 
-        {0.4f, 0.3f}, {0.6f, 0.25f}, { 0.8f, 0.2f}, {0.9f, 0.05f}, {1.1f, -0.07f} }, OCIO::HUE_FX);
+    auto hfx = OCIO::GradingBSplineCurve::Create(
+        { {-0.15f, 0.1f}, {0.f, -0.05f}, {0.2f, -0.1f}, {0.4f, 0.3f}, {0.6f, 0.25f}, { 0.8f, 0.2f}, {0.9f, 0.05f}, {1.1f, -0.07f} },
+        OCIO::HUE_FX);
 
     auto data = OCIO::GradingHueCurve::Create(hh, hs, hl, ls, ss, ll, sl, hfx);
 

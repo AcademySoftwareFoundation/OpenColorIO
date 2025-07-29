@@ -18,5 +18,3 @@ void GetGradingHueCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 } // namespace OCIO_NAMESPACE
 
 #endif
-
-

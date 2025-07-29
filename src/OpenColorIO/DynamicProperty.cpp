@@ -373,7 +373,7 @@ void DynamicPropertyGradingHueCurveImpl::precompute()
         curveImpl->computeKnotsAndCoefs(m_knotsCoefs, static_cast<int>(c),
                                         m_gradingHueCurve->getDrawCurveOnly());
     }
-    if (m_knotsCoefs.m_numKnots == 0) m_knotsCoefs.m_localBypass = true;
+    if (m_knotsCoefs.m_numKnots <= 0) m_knotsCoefs.m_localBypass = true;
 }
 
 DynamicPropertyGradingHueCurveImplRcPtr DynamicPropertyGradingHueCurveImpl::createEditableCopy() const

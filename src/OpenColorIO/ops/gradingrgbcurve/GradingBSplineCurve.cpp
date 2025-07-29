@@ -13,8 +13,10 @@
 
 namespace OCIO_NAMESPACE
 {
+
 namespace
 {
+
 //------------------------------------------------------------------------------------------------
 //
 void PrepHueCurveData(const std::vector<GradingControlPoint>& ctrlPnts,
@@ -327,6 +329,8 @@ void EstimateHueSlopes(const std::vector<GradingControlPoint>& ctrlPnts,
   }
 }
 
+//------------------------------------------------------------------------------------------------
+//
 void EstimateRGBSlopes(const std::vector<GradingControlPoint> & ctrlPnts, 
                        std::vector<float> & slopes)
 {
@@ -378,6 +382,8 @@ void EstimateRGBSlopes(const std::vector<GradingControlPoint> & ctrlPnts,
     slopes[0] = std::max(0.01f, 0.5f * (3.f * secantSlope[0] - slopes[1]));
 }
 
+//------------------------------------------------------------------------------------------------
+//
 void FitRGBSpline(const std::vector<GradingControlPoint> & ctrlPnts,
                   const std::vector<float> & slopes,
                   std::vector<float> & knots,
@@ -438,6 +444,8 @@ void FitRGBSpline(const std::vector<GradingControlPoint> & ctrlPnts,
     }
 }
 
+//------------------------------------------------------------------------------------------------
+//
 bool AdjustRGBSlopes(const std::vector<GradingControlPoint> & ctrlPnts,
                      std::vector<float> & slopes,
                      std::vector<float> & knots)
@@ -480,6 +488,8 @@ bool AdjustRGBSlopes(const std::vector<GradingControlPoint> & ctrlPnts,
 
 }   // namespace
 
+//------------------------------------------------------------------------------------------------
+//
 GradingBSplineCurveRcPtr GradingBSplineCurve::Create(size_t size)
 {
     auto newSpline = std::make_shared<GradingBSplineCurveImpl>(size);
@@ -641,6 +651,8 @@ bool GradingBSplineCurveImpl::slopesAreDefault() const
     return true;
 }
 
+//------------------------------------------------------------------------------------------------
+//
 void GradingBSplineCurveImpl::validate() const
 {
     const size_t numPoints = m_controlPoints.size();
@@ -686,6 +698,8 @@ void GradingBSplineCurveImpl::validate() const
     }
 }
 
+//------------------------------------------------------------------------------------------------
+//
 bool GradingBSplineCurveImpl::isIdentity() const
 {
     bool isIdentity = true;
@@ -718,6 +732,8 @@ bool GradingBSplineCurveImpl::isIdentity() const
     return true;
 }
 
+//------------------------------------------------------------------------------------------------
+//
 bool IsGradingCurveIdentity(const ConstGradingBSplineCurveRcPtr & curve)
 {
     auto curveImpl = dynamic_cast<const GradingBSplineCurveImpl *>(curve.get());
@@ -944,7 +960,8 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefsForHueCurve(KnotsCoefs & knots
     knotsCoefs.m_numCoefs += newCoefs;
 }
 
-
+//------------------------------------------------------------------------------------------------
+//
 void GradingBSplineCurveImpl::computeKnotsAndCoefs(KnotsCoefs & knotsCoefs, int curveIdx, bool drawCurveOnly) const
 {
    if(m_splineType == BSplineType::B_SPLINE)
@@ -957,6 +974,8 @@ void GradingBSplineCurveImpl::computeKnotsAndCoefs(KnotsCoefs & knotsCoefs, int 
    }
 }
 
+//------------------------------------------------------------------------------------------------
+//
 void GradingBSplineCurveImpl::AddShaderEvalFwd(GpuShaderText & st, 
                                                const std::string & knotsOffsets,
                                                const std::string & coefsOffsets,
@@ -1020,6 +1039,8 @@ void GradingBSplineCurveImpl::AddShaderEvalFwd(GpuShaderText & st,
     st.newLine() << "return ( A * t + B ) * t + C;";
 }
 
+//------------------------------------------------------------------------------------------------
+//
 void GradingBSplineCurveImpl::AddShaderEvalRev(GpuShaderText & st, 
                                                const std::string & knotsOffsets,
                                                const std::string & coefsOffsets,
@@ -1093,6 +1114,8 @@ void GradingBSplineCurveImpl::AddShaderEvalRev(GpuShaderText & st,
     st.newLine() << "return kn + (-2. * C0) / (discrim + B);";
 }
 
+//------------------------------------------------------------------------------------------------
+//
 void GradingBSplineCurveImpl::AddShaderEvalRevHue(GpuShaderText & st, 
                                                   const std::string & knotsOffsets,
                                                   const std::string & coefsOffsets,
@@ -1165,6 +1188,8 @@ void GradingBSplineCurveImpl::AddShaderEvalRevHue(GpuShaderText & st,
     st.newLine() << "return kn + (-2. * C0) / (discrim + B);";
 }
 
+//------------------------------------------------------------------------------------------------
+//
 GradingBSplineCurveImpl::KnotsCoefs::KnotsCoefs(size_t numCurves)
 {
     m_knotsOffsetsArray.resize(2 * numCurves);
@@ -1174,6 +1199,8 @@ GradingBSplineCurveImpl::KnotsCoefs::KnotsCoefs(size_t numCurves)
     m_knotsArray.resize(DynamicPropertyGradingRGBCurveImpl::GetMaxKnots());
 }
 
+//------------------------------------------------------------------------------------------------
+//
 float GradingBSplineCurveImpl::KnotsCoefs::evalCurve(int c, float x, float identity_x) const
 {
     // NB: When evaluating hue curves, x should be wrapped to [0,1) by the caller
@@ -1225,6 +1252,8 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurve(int c, float x, float ident
     }
 }
 
+//------------------------------------------------------------------------------------------------
+//
 float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRev(int c, float y) const
 {
     // Note: This is only intended to invert the monotonic curve types.
@@ -1291,6 +1320,8 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRev(int c, float y) const
     }
 }
 
+//------------------------------------------------------------------------------------------------
+//
 float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRevHue(int c, float y) const
 {
     // This function is specifically to invert the HueFX and Hue-Hue curve types.
