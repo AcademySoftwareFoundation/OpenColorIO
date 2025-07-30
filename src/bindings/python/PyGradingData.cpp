@@ -346,8 +346,7 @@ void bindPyGradingData(py::module & m)
                     slopes[pt] = self->getSlope(pt);
                 }
                 return slopes;
-            }, 
-             DOC(GradingBSplineCurve, getSlopes))
+            })
         .def("setSlopes", [](GradingBSplineCurveRcPtr self, const std::vector<float> & slopes)
             {
                 const size_t numPts = self->getNumControlPoints();
@@ -360,8 +359,7 @@ void bindPyGradingData(py::module & m)
                 {
                     self->setSlope(pt, slopes[pt]);
                 }
-            },
-             DOC(GradingBSplineCurve, getSlopes));
+            });
 
     defRepr(clsGradingBSplineCurve);
 
