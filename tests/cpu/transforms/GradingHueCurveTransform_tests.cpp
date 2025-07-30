@@ -252,6 +252,10 @@ OCIO_ADD_TEST(GradingHueCurveTransform, serialization)
         { {-0.15f, 0.1f}, {0.f, -0.05f}, {0.2f, -0.1f}, {0.4f, 0.3f}, {0.6f, 0.25f}, { 0.8f, 0.2f}, {0.9f, 0.05f}, {1.1f, -0.07f} },
         OCIO::HUE_FX);
 
+    ss->setSlope(0, 1.2f);
+    ss->setSlope(1, 0.8f);
+    ss->setSlope(2, 0.4f);
+
     auto data = OCIO::GradingHueCurve::Create(hh, hs, hl, ls, ss, ll, sl, hfx);
 
     auto curve = OCIO::GradingHueCurveTransform::Create(OCIO::GRADING_VIDEO);
@@ -266,32 +270,32 @@ OCIO_ADD_TEST(GradingHueCurveTransform, serialization)
         "<x=0.85, y=0.8><x=1.05, y=0.9>]>, hue_sat=<control_points=[<x=0, y=1.2><x=0.1, y=1.2>"
         "<x=0.4, y=0.7><x=0.6, y=0.3><x=0.8, y=0.5><x=0.9, y=0.8>]>, hue_lum=<control_points="
         "[<x=0.1, y=1.4><x=0.2, y=1.4><x=0.4, y=0.7><x=0.6, y=0.5><x=0.8, y=0.8>]>, lum_sat="
-        "<control_points=[<x=0, y=1><x=0.5, y=1.5><x=1, y=0.9><x=1.1, y=1.1>]>, sat_sat="
-        "<control_points=[<x=0, y=0.05><x=0.5, y=0.8><x=1, y=1.05>]>, lum_lum=<control_points="
+        "<control_points=[<x=0, y=1><x=0.5, y=1.5><x=1, y=0.9><x=1.1, y=1.1>]>, sat_sat=<control_points="
+        "[<x=0, y=0.05, slp=1.2><x=0.5, y=0.8, slp=0.8><x=1, y=1.05, slp=0.4>]>, lum_lum=<control_points="
         "[<x=0, y=-0.0005><x=0.5, y=0.3><x=1, y=0.9>]>, sat_lum=<control_points=[<x=0.05, y=1.1>"
         "<x=0.3, y=1><x=1.2, y=0.9>]>, hue_fx=<control_points=[<x=-0.15, y=0.1><x=0, y=-0.05>"
         "<x=0.2, y=-0.1><x=0.4, y=0.3><x=0.6, y=0.25><x=0.8, y=0.2><x=0.9, y=0.05><x=1.1, y=-0.07>]>>>";
 
     {
-       std::ostringstream oss;
-       oss << *curve;
+        std::ostringstream oss;
+        oss << *curve;
 
-       OCIO_CHECK_EQUAL(oss.str(), CURVE_STR);
+        OCIO_CHECK_EQUAL(oss.str(), CURVE_STR);
     }
 
     OCIO::GroupTransformRcPtr grp = OCIO::GroupTransform::Create();
     grp->appendTransform(OCIO::DynamicPtrCast<OCIO::Transform>(curve));
 
     {
-       std::ostringstream oss;
-       oss << *grp;
+        std::ostringstream oss;
+        oss << *grp;
 
-       std::string GROUP_STR("<GroupTransform direction=forward, transforms=\n");
-       GROUP_STR += "        ";
-       GROUP_STR += CURVE_STR;
-       GROUP_STR += ">";
+        std::string GROUP_STR("<GroupTransform direction=forward, transforms=\n");
+        GROUP_STR += "        ";
+        GROUP_STR += CURVE_STR;
+        GROUP_STR += ">";
 
-       OCIO_CHECK_EQUAL(oss.str(), GROUP_STR);
+        OCIO_CHECK_EQUAL(oss.str(), GROUP_STR);
     }
 }
 
