@@ -522,49 +522,9 @@ protected:
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const MixingColorSpaceManager &);
 
 /**
- * The ConfigMergingParameters class represent all the options that a merge can have.
+ * The ConfigMergingParameters class represents all the options that a merge can have.
  * 
- * In terms of OCIOM file, it represent one of the merges in a OCIOM file.
- * 
- * Let's take the following OCIOM structure:
- * 
- *   ociom_version: 1
- *   search_path:
- *   - .
- *   - subfolder
- *   merge:
- *   Merge_ADD_THIS:
- *       [...]
- *   Merge_ADD_THAT:
- *       [...]
- * 
- * In the OCIOM above, there would be two instances of ConfigMergingParameters.
- * One for the merge "Merge_ADD_THIS" and one for the merge "Merge_ADD_THAT".
- * 
- * Where the [...] have the following structure:
- *    Merge1:
- *      base: base1.ocio
- *      input: base1.ocio
- *      options:
- *        input_family_prefix: ""
- *        base_family_prefix: ""
- *        input_first: true
- *        error_on_conflict: false
- *        default_strategy: PreferInput
- *        avoid_duplicates: true
- *        assume_common_reference_space: false
- *      overrides:
- *        name: ""
- *        description: ""
- *        search_path: ""
- *        environment: {}
- *        active_displays: []
- *        active_views: []
- *        inactive_colorspaces: []
- *      params:
- *        roles:
- *          strategy: PreferInput
- *        [...]
+ * In terms of OCIOM file, it represent one of the merges in an OCIOM file.
  * 
  */
 class OCIOEXPORT ConfigMergingParameters
@@ -573,125 +533,138 @@ public:
 
     enum MergeStrategies
     {
-        // Merge, pieces from the input config replace those from the base config.
-        // On conflict, take from input.
+        /// Combine elements of the base and input configs, with the input taking priority.
         STRATEGY_PREFER_INPUT = 0,
-        // Merge, pieces from the input config are ignored.
-        // On conflict, take from base.
+        /// Combine elements of the base and input configs, with the base taking priority.
         STRATEGY_PREFER_BASE,
-        // Don't merge, replace the base content with the content of the input config.
+        /// Use only the base elements for that section of the config.
         STRATEGY_INPUT_ONLY,
-        // Don't merge, just keep the base content.
+        /// Use only the input elements for that section of the config.
         STRATEGY_BASE_ONLY,
-        // Pieces from the input config are removed from the base config. The prefixes are 
-        // not used in this case. If the names match, the item is removed, even if the content 
-        // is not identical.
+        /// The elements in the input config are removed from the base config. (If the names
+        /// match, the item is removed, even if the content is not identical.)
         STRATEGY_REMOVE,
+        /// Strategy has not been set yet.
         STRATEGY_UNSPECIFIED
     };
 
-    // Default object
     static ConfigMergingParametersRcPtr Create();
 
     ConfigMergingParametersRcPtr createEditableCopy() const;
 
+    /// Set the file name of the base config. This is used along with the search path of 
+    /// the ConfigMerger object.
     void setBaseConfigName(const char * baseConfig);
     const char * getBaseConfigName() const;
 
+    /// Set the file name of the base config. This is used along with the search path of 
+    /// the ConfigMerger object.
     void setInputConfigName(const char * inputConfig);
     const char * getInputConfigName() const;
 
+    /// Set a name to use for this merger. This may be used as the input or base config name
+    /// in subsequent mergers.
     void setOutputName(const char * outputName);
     const char * getOutputName() const;   
 
     // Options
+
+    /// Set the default strategy. This will be used if the strategy for a given config section
+    /// is not set, and will be used for basic attributes such as the config description.
     void setDefaultStrategy(const ConfigMergingParameters::MergeStrategies strategy);
     ConfigMergingParameters::MergeStrategies getDefaultStrategy() const;
 
-    /**
-     * @brief Set the Input Family Prefix object
-     * 
-     * The default separator '/' must be used here.
-     * It will be replaced by the right separator based on the merged parameters.
-     * 
-     * @param prefix Prefix
-     */
+    /// Set a prefix to add to the family of input config items. (It must use '/' as the
+    /// separator and will be replaced by the actual default separator of the config.)
     void setInputFamilyPrefix(const char * prefix);
     const char * getInputFamilyPrefix() const;
 
-    /**
-     * @brief Set the Base Family Prefix object
-     * 
-     * The default separator '/' must be used here.
-     * It will be replaced by the right separator based on the merged parameters.
-     * 
-     * @param prefix Prefix
-     */
+    /// Set a prefix to add to the family of base config items. (It must use '/' as the
+    /// separator and will be replaced by the actual default separator of the config.)
     void setBaseFamilyPrefix(const char * prefix);
     const char * getBaseFamilyPrefix() const;
 
+    /// If true, items from the input config will precede those of the base config.
     void setInputFirst(bool enabled);
     bool isInputFirst() const;
 
+    /// If true, throw an exception rather than log a warning when a conflict is detected.
     void setErrorOnConflict(bool enabled);
     bool isErrorOnConflict() const;
 
+    /// If true, a color space from the input config is compared against those of the base
+    /// config. If it is mathematically equivalent, it is not added. Instead, its name and
+    /// aliases are added to the original color space.
     void setAvoidDuplicates(bool enabled);
     bool isAvoidDuplicates() const;
 
+    /// If false, the reference spaces of the base and input config are compared and color
+    /// spaces from the input config will be adjusted to use the reference space of the base.
+    /// If the interchange roles are not set, heuristics will be used to try and determine
+    /// the reference space.
     void setAssumeCommonReferenceSpace(bool enabled);
     bool isAssumeCommonReferenceSpace() const;
 
     // Overrides
+
+    /// Override the name of the merged config.
     void setName(const char * mergedConfigName);
     const char * getName() const;
 
+    /// Override the description of the merged config.
     void setDescription(const char * mergedConfigDesc);
     const char * getDescription() const;
 
+    /// Override the a context variable in the merged config.
     void addEnvironmentVar(const char * name, const char * defaultValue);
     int getNumEnvironmentVars() const;
     const char * getEnvironmentVar(int index) const;
     const char * getEnvironmentVarValue(int index) const;
 
+    /// Override the search_path of the merged config.
     void setSearchPath(const char * path);
     void addSearchPath(const char * path);
     const char * getSearchPath() const;
 
+    /// Override the active_displays of the merged config.
     void setActiveDisplays(const char * displays);
     const char * getActiveDisplays() const;
 
+    /// Override the active_views of the merged config.
     void setActiveViews(const char * views);
     const char * getActiveViews() const;
 
+    /// Override the inactive_colorspaces of the merged config.
     void setInactiveColorspaces(const char * colorspaces);
     const char * getInactiveColorSpaces() const;
 
-    ////////////
+    // Config section strategies
 
-    // roles
+    /// Set the merge strategy for the roles section.
     void setRoles(MergeStrategies strategy);
     MergeStrategies getRoles() const;
 
-    // file_rules
+    /// Set the merge strategy for the file_rules section.
     void setFileRules(MergeStrategies strategy);
     MergeStrategies getFileRules() const;
 
-    // Includes shared_views, displays, view_transforms, viewing_rules, virtual_display, 
-    // active_display, active_views and default_view_transform.    
+    /// Set the merge strategy for the displays/views section.
+    /// This includes shared_views, displays, view_transforms, viewing_rules,
+    /// virtual_display, active_display, active_views, and default_view_transform.    
     void setDisplayViews(MergeStrategies strategy);
     MergeStrategies getDisplayViews() const;
     
-    // looks
+    /// Set the merge strategy for the looks section.
     void setLooks(MergeStrategies strategy);
     MergeStrategies getLooks() const;
 
-    // Includes colorspaces, display_colorspaces, environment,
-    // search_path, family_separator and inactive_colorspaces.
+    /// Set the merge strategy for the color spaces section.
+    /// This includes colorspaces, display_colorspaces, environment, search_path,
+    /// family_separator, and inactive_colorspaces.
     void setColorspaces(MergeStrategies strategy);
     MergeStrategies getColorspaces() const;
     
-    // named_transforms
+    /// Set the merge strategy for the named_transforms section.
     void setNamedTransforms(MergeStrategies strategy);
     MergeStrategies getNamedTransforms() const;
 
@@ -718,12 +691,65 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const ConfigMergingP
 /**
  * The ConfigMerger class is the controller for the merging process.
  * 
- * It is controlling the ociom_version, the search_path to find the base and input config,
- * and the merges.
+ * It may be read from or serialized to an OCIOM file.
+ *
+ * It is controlling the search_path to find the base and input config, and the merge parameters.
  * 
- * It contains an instance of ConfigMergingParameters for each merges present under the "merge" 
+ * It contains an instance of ConfigMergingParameters for each merge present under the "merge" 
  * section.
  * 
+ * For example, consider the following OCIOM file contents:
+ * 
+ *   ociom_version: 1.0
+ *   search_path:
+ *     - /usr/local/configs
+ *     - .
+ *   merge:
+ *     Merge_ADD_THIS:
+ *       [...]
+ *     Merge_ADD_THAT:
+ *       [...]
+ * 
+ * For this OCIOM, there would be two instances of ConfigMergingParameters.
+ * One for the merge with output name "Merge_ADD_THIS" and one for "Merge_ADD_THAT".
+ * 
+ * Where the [...] sections have the following structure:
+ *
+ *    Merge_ADD_THIS:
+ *      base: base.ocio
+ *      input: input.ocio
+ *      options:
+ *        input_family_prefix: ""
+ *        base_family_prefix: ""
+ *        input_first: true
+ *        error_on_conflict: false
+ *        default_strategy: PreferInput
+ *        avoid_duplicates: false
+ *        assume_common_reference_space: true
+ *      overrides:
+ *        name: ""
+ *        description: ""
+ *        search_path: ""
+ *        environment: {}
+ *        active_displays: []
+ *        active_views: []
+ *        inactive_colorspaces: []
+ *      params:
+ *        roles:
+ *          strategy: PreferBase
+ *        file_rules:
+ *          strategy: PreferInput
+ *        display-views:
+ *          strategy: InputOnly
+ *        looks:
+ *          strategy: BaseOnly
+ *        colorspaces:
+ *          strategy: PreferInput
+ *        named_transform:
+ *          strategy: Remove
+ * 
+ * The indentation is significant and must be as shown. Default items may be omitted.
+ *
  */
 class OCIOEXPORT ConfigMerger
 {
@@ -735,29 +761,37 @@ public:
 
     ConfigMergerRcPtr createEditableCopy() const;
 
+    /// These search paths are used to locate the input and base config.
+    /// Set the entire search path. The ':' character is used to separate paths.
     void setSearchPath(const char * path);
+    /// Add a single path to the search paths.
     void addSearchPath(const char * path);
+    /// Get the number of search paths.
     int getNumSearchPaths() const;
     const char * getSearchPath(int index) const;
 
     void setWorkingDir(const char * dirname);
     const char * getWorkingDir() const;
 
+    /// Get the parameters for one of the merges.
     ConfigMergingParametersRcPtr getParams(int index) const;
-    int getNumOfConfigMergingParameters() const;
+    int getNumConfigMergingParameters() const;
     void addParams(ConfigMergingParametersRcPtr params);
+
+    /// Get the final merged config.
+    ConstConfigRcPtr getMergedConfig() const;
+    /// Get one of the merged configs (if there are a series of merges).
+    ConstConfigRcPtr getMergedConfig(int index) const;
 
     void addMergedConfig(ConstConfigRcPtr cfg);
 
-    ConstConfigRcPtr getMergedConfig() const;
-    ConstConfigRcPtr getMergedConfig(int index) const;
-
+    /// Serialize to the OCIOM file format.
     void serialize(std::ostream& os) const;
 
+    /// Set the version of the OCIOM file format.
     void setMajorVersion(unsigned int major);
     void setMinorVersion(unsigned int minor);
     void setVersion(unsigned int major, unsigned int minor);
-
     unsigned int getMajorVersion() const;
     unsigned int getMinorVersion() const;
     
@@ -791,7 +825,7 @@ namespace ConfigMergingHelpers
  * programmatically configuring it.
  * 
  * \param merger Merger object
- * \return OCIOEXPORT 
+ * \return a merger object (call getMergedConfig to obtain the result)
  */
 extern OCIOEXPORT ConstConfigMergerRcPtr MergeConfigs(const ConstConfigMergerRcPtr & merger);
 
@@ -811,7 +845,7 @@ extern OCIOEXPORT ConfigRcPtr MergeConfigs(const ConfigMergingParametersRcPtr & 
  * \brief Merge a single color space into the base config, using the supplied merge parameters.
  * 
  * Note that the assumeCommonReferenceSpace merge parameter will be ignored and set to true.
- * To use automatice reference space conversion, add the color space to an input config that
+ * To use automatic reference space conversion, add the color space to an input config that
  * has the necessary interchange role set.
  *
  * \param params ConfigMergingParameters controlling the merger.

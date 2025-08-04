@@ -4,8 +4,6 @@
 #ifndef INCLUDED_OCIO_CONFIG_UTILS_H
 #define INCLUDED_OCIO_CONFIG_UTILS_H
 
-#include <map>
-
 #include <OpenColorIO/OpenColorIO.h>
 
 namespace OCIO_NAMESPACE

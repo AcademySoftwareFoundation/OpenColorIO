@@ -507,7 +507,7 @@ inline void save(YAML::Emitter & out, const ConfigMerger & merger)
     out << YAML::Key << "merge";
     out << YAML::Value << YAML::BeginMap;
 
-    for (int mp = 0; mp < merger.getNumOfConfigMergingParameters(); mp++)
+    for (int mp = 0; mp < merger.getNumConfigMergingParameters(); mp++)
     {
         // Serialized every merge section.
         ConfigMergingParametersRcPtr p = merger.getParams(mp);

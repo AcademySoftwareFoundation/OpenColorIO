@@ -183,12 +183,16 @@ OCIO_ADD_TEST(MergeConfigs, ociom_parser)
     OCIO_CHECK_EQUAL(merger->getMajorVersion(), 1);
     OCIO_CHECK_EQUAL(merger->getMinorVersion(), 0);
 
+    // Check the search path for finding the base and input configs.
+    OCIO_CHECK_EQUAL(merger->getNumSearchPaths(), 2);
+    OCIO_CHECK_EQUAL(std::string(merger->getSearchPath(0)), std::string("/usr/local/configs"));
+    OCIO_CHECK_EQUAL(std::string(merger->getSearchPath(1)), std::string("."));
+
     // The parser_test.ociom contains only one merge.
+    OCIO_CHECK_EQUAL(merger->getNumConfigMergingParameters(), 1);
     OCIO::ConstConfigMergingParametersRcPtr p = merger->getParams(0);
 
     // Test that the all the options are loaded correctly.
-    // Note that is does not test all possibilities.
-    // e.g. it does not test all the strategies for all sections.
 
     OCIO_CHECK_EQUAL(std::string(p->getBaseConfigName()), std::string("base0.ocio"));
     OCIO_CHECK_EQUAL(std::string(p->getInputConfigName()), std::string("input0.ocio"));
@@ -198,7 +202,7 @@ OCIO_ADD_TEST(MergeConfigs, ociom_parser)
     OCIO_CHECK_EQUAL(std::string(p->getBaseFamilyPrefix()), std::string("def"));
     OCIO_CHECK_EQUAL(p->isInputFirst(), true);
     OCIO_CHECK_EQUAL(p->isErrorOnConflict(), false);
-    // PreferInput
+
     OCIO_CHECK_EQUAL(p->getDefaultStrategy(), MergeStrategy::STRATEGY_INPUT_ONLY);
     OCIO_CHECK_EQUAL(p->isAvoidDuplicates(), true);
     OCIO_CHECK_EQUAL(p->isAssumeCommonReferenceSpace(), false);
@@ -249,6 +253,7 @@ OCIO_ADD_TEST(MergeConfigs, ociom_serialization)
             constexpr const char * REF {
 R"(ociom_version: 1.0
 search_path:
+  - /usr/local/configs
   - .
 merge:
   Merge1:

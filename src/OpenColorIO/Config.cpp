@@ -1201,7 +1201,7 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
         {
             // TODO: This isn't the most robust method. Comments at the top of the file would break it.
 
-            // Check for "ociom" at the start of the file. (ociom_profile)
+            // Check for "ociom" at the start of the file (ociom_version).
             if (magicNumber[0] == 'o' && magicNumber[1] == 'c' &&
                 magicNumber[2] == 'i' && magicNumber[3] == 'o' && magicNumber[4] == 'm' )
             {
@@ -1211,7 +1211,7 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
 
                     ConstConfigMergerRcPtr merger = ConfigMerger::CreateFromFile(filename);
                     ConstConfigMergerRcPtr newMerger = ConfigMergingHelpers::MergeConfigs(merger);
-                    // return final merged config.
+                    // Return final merged config.
                     return newMerger->getMergedConfig();
                 }
                 catch(const Exception & e)

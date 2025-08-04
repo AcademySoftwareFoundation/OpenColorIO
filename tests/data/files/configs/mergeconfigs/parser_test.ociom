@@ -1,5 +1,7 @@
 ociom_version: 1.0
-search_path: "."
+search_path: 
+  - /usr/local/configs
+  - .
 
 merge:
   Merge1:

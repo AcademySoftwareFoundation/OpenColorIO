@@ -198,7 +198,7 @@ public:
         return m_mergeParams.at(index);
     }
 
-    int getNumOfConfigMergingParameters() const
+    int getNumConfigMergingParameters() const
     {
         return static_cast<int>(m_mergeParams.size());
     }

@@ -167,7 +167,7 @@ int main(int argc, const char **argv)
         // "Show-all" option take priority over the "show" option.
         if (displayAllConfig)
         {
-            for (int i = 0; i < merger->getNumOfConfigMergingParameters(); i++)
+            for (int i = 0; i < merger->getNumConfigMergingParameters(); i++)
             {
                 std::cout << "*********************" << std::endl;
                 std::cout << "Merged Config " << i << std::endl;

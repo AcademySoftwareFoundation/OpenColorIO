@@ -387,7 +387,7 @@ ConstConfigRcPtr ConfigMerger::Impl::loadConfig(const char * value) const
     catch(...) { /* don't capture the exception */ }
 
     // Must be a reference to a config from a previous merge.
-    for (int i = 0; i < getNumOfConfigMergingParameters(); i++)
+    for (int i = 0; i < getNumConfigMergingParameters(); i++)
     {
         if (Platform::Strcasecmp(getParams(i)->getOutputName(), value) == 0)
         {
@@ -499,7 +499,7 @@ ConfigMergingParametersRcPtr ConfigMerger::getParams(int index) const
     return nullptr;
 }
 
-int ConfigMerger::getNumOfConfigMergingParameters() const
+int ConfigMerger::getNumConfigMergingParameters() const
 {
     return static_cast<int>(getImpl()->m_mergeParams.size());
 }
@@ -562,7 +562,7 @@ ConstConfigRcPtr ConfigMerger::getMergedConfig() const
 
 ConstConfigRcPtr ConfigMerger::getMergedConfig(int index) const
 {
-    if (index < static_cast<int>(getImpl()->m_mergedConfigs.size()))
+    if (index >= 0 && index < static_cast<int>(getImpl()->m_mergedConfigs.size()))
     {
         return getImpl()->m_mergedConfigs.at(index);
     }
@@ -625,7 +625,7 @@ ConstConfigRcPtr loadConfig(const ConfigMergerRcPtr merger,
     catch(...) { /* don't capture the exception */ }
 
     // Must be a reference to a config from a previous merge.
-    for (int i = 0; i < merger->getNumOfConfigMergingParameters(); i++)
+    for (int i = 0; i < merger->getNumConfigMergingParameters(); i++)
     {
         if (Platform::Strcasecmp(merger->getParams(i)->getOutputName(), value) == 0)
         {
@@ -646,7 +646,7 @@ ConstConfigMergerRcPtr MergeConfigs(const ConstConfigMergerRcPtr & merger)
 
     ConfigMergerRcPtr editableMerger = merger->createEditableCopy();
 
-    for (int i = 0; i < merger->getNumOfConfigMergingParameters(); i++)
+    for (int i = 0; i < merger->getNumConfigMergingParameters(); i++)
     {
         ConstConfigMergingParametersRcPtr params = merger->getParams(i);
         
