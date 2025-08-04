@@ -3,7 +3,6 @@ ocio_profile_version: 2.1
 environment: 
   SHOT: shot4
   LUT_PATH: shot3/lut1.clf
-  CCCID: look-02
 
 search_path: 
   - ./$SHOT
@@ -16,12 +15,6 @@ roles:
 displays:
   sRGB:
     - !<View> {name: Raw, colorspace: raw}
-
-looks:
-  - !<Look>
-    name: shot_look
-    process_space: reference
-    transform: !<FileTransform> {src: "looks.cdl", cccid: $CCCID}
 
 colorspaces:
 

@@ -29,6 +29,8 @@ display_colorspaces:   # reference space = linear rec 709
     aliases: []
     family: Display~Standard
     description: from input
+    categories: [file-io, texture]
+    encoding: sdr-video
     from_display_reference: !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
 
   - !<ColorSpace>
@@ -44,17 +46,23 @@ colorspaces:   # reference space = linear rec 709
     aliases: [aces]
     family: ACES~Linear
     description: from input
+    categories: [texture]
+    encoding: scene-linear
     to_scene_reference: !<MatrixTransform> {matrix: [ 2.521686186744, -1.134130988240, -0.387555198504, 0, -0.276479914230, 1.372719087668, -0.096239173438, 0, -0.015378064966, -0.152975335867, 1.168353400833, 0, 0, 0, 0, 1 ]}
 
   - !<ColorSpace>
     name: sRGB
     family: Texture~
     description: from input
+    categories: [texture]
+    encoding: sdr-video
     to_scene_reference: !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055}
 
   - !<ColorSpace>
     name: rec709
     description: from input
+    categories: [texture]
+    encoding: sdr-video
 
   - !<ColorSpace>
     name: Raw
@@ -64,5 +72,5 @@ colorspaces:   # reference space = linear rec 709
     bitdepth: 32f
     description: The utility "Raw" colorspace.
     isdata: true
-    categories: [file-io]
+    categories: [file-io, texture]
     allocation: uniform

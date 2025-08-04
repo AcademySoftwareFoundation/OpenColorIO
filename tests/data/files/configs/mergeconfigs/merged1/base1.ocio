@@ -34,6 +34,7 @@ display_colorspaces:   # reference space = cie xyz d65
     aliases: [srgb_display]
     family: Display-Basic
     description: from base
+    categories: [file-io, display]
     from_display_reference: !<BuiltinTransform> {style: DISPLAY - CIE-XYZ-D65_to_sRGB}
 
   - !<ColorSpace>
@@ -53,6 +54,7 @@ colorspaces:   # reference space = aces2065-1
   - !<ColorSpace>
     name: ap0
     family: ACES-Linear
+    categories: [file-io]
     description: from base
 
   - !<ColorSpace>
@@ -60,6 +62,7 @@ colorspaces:   # reference space = aces2065-1
     family: Texture
     aliases: [srgb, srgb_tx]
     description: from base
+    categories: [file-io]
     from_scene_reference: !<GroupTransform>
       children:
         - !<MatrixTransform> {matrix: [2.52168618674388, -1.13413098823972, -0.387555198504164, 0, -0.276479914229922, 1.37271908766826, -0.096239173438334, 0, -0.0153780649660342, -0.152975335867399, 1.16835340083343, 0, 0, 0, 0, 1]}

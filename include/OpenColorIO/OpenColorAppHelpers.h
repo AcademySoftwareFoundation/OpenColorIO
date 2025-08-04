@@ -587,7 +587,7 @@ public:
         // not used in this case. If the names match, the item is removed, even if the content 
         // is not identical.
         STRATEGY_REMOVE,
-        STRATEGY_UNSET
+        STRATEGY_UNSPECIFIED
     };
 
     // Default object

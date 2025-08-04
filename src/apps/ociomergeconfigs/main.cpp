@@ -76,7 +76,6 @@ int main(int argc, const char **argv)
     // Options
     std::string baseConfigName;
     std::string inputConfigName;
-    std::string mergeParameters;
     std::string outputFile;
     bool displayConfig = false;
     bool displayAllConfig = false;
@@ -89,16 +88,15 @@ int main(int argc, const char **argv)
     OCIO::ConstConfigMergingParametersRcPtr params;
     OCIO::ConstConfigMergerRcPtr merger;
 
-    ap.options("ociomergeconfigs -- Merge two configs\n\n"
+    ap.options("ociomergeconfigs -- Merge configs using an OCIOM file with merge parameters\n\n"
                "Usage:\n"
-               "    ociomergeconfigs [options] -b config.ocio -i extra.ocio \n\n",
+               "    ociomergeconfigs [options] mergeFile.ociom \n",
                "%*", parse_end_args, "",
                "<SEPARATOR>", "Options:",
-               "--validate",     &validate,         "Validate the final merged config",
-               "--merge %s",     &mergeParameters,  "Path to merge parameters file (.ociom)",
                "--out %s",       &outputFile,       "Filepath to save the merged config",
+               "--validate",     &validate,         "Validate the final merged config",
                "--show-last",    &displayConfig,    "Display the last merged config to screen",
-               "--show-all",     &displayAllConfig, "Display ALL merged config to screen",
+               "--show-all",     &displayAllConfig, "Display ALL merged configs to screen",
                "--show-params",  &displayParams,    "Display merger options (OCIOM)",
                "--help",    &help,                  "Display the help and exit",
                "-h",        &help,                  "Display the help and exit",
@@ -108,13 +106,22 @@ int main(int argc, const char **argv)
     if (ap.parse(argc, argv) < 0)
     {
         std::cerr << ap.geterror() << std::endl;
+        ap.usage();
         exit(1);
     }
+    else if (args.size() != 1)
+    {
+        std::cerr << "ERROR: Expecting 1 arguments, found " << args.size() << "." << std::endl;
+        ap.usage();
+        exit(1);
+    }
+
+    const std::string mergeParameters = args[0].c_str();
 
     if (help)
     {
         ap.usage();
-        return 0;
+        exit(0);
     }
 
     // Load the options from the ociom file.
@@ -126,6 +133,7 @@ int main(int argc, const char **argv)
     catch (OCIO::Exception & e)
     {
         std::cout << e.what() << std::endl;
+        exit(1);
     }
 
     try
@@ -138,7 +146,7 @@ int main(int argc, const char **argv)
                 LogGuard logGuard;
                 newMerger->getMergedConfig()->validate();
             }
-            catch(OCIO::Exception & exception)
+            catch (OCIO::Exception & exception)
             {
                 std::cout << exception.what() << std::endl;
                 exit(1);
@@ -190,7 +198,7 @@ int main(int argc, const char **argv)
             mergedCfg.close();
         }
     }
-    catch(const std::exception& e)
+    catch (const std::exception& e)
     {
         std::cerr << e.what();
         exit(1);

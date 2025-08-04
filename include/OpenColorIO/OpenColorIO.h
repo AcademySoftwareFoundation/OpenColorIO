@@ -108,48 +108,6 @@ public:
     ~ExceptionMissingFile();
 };
 
-/**
- * \brief An exception class for errors detected while adding a colorspace to a config object.
- */
-class OCIOEXPORT ExceptionAddColorspace : public Exception
-{
-public:
-    ExceptionAddColorspace() = delete;
-    /// Constructor that takes a string as the exception message.
-    explicit ExceptionAddColorspace(const char *, AddColorspaceError errorCode);
-    /// Constructor that takes an existing exception.
-    ExceptionAddColorspace(const ExceptionAddColorspace &);
-    ExceptionAddColorspace & operator= (const ExceptionAddColorspace &) = delete;
-
-    AddColorspaceError getErrorCode() const noexcept;
-
-    ~ExceptionAddColorspace();
-
-private:
-    AddColorspaceError m_errorCode;
-};
-
-/**
- * \brief An exception class for errors detected while adding a named transform to a config object.
- */
-class OCIOEXPORT ExceptionAddNamedTransform: public Exception
-{
-public:
-    ExceptionAddNamedTransform() = delete;
-    /// Constructor that takes a string as the exception message.
-    explicit ExceptionAddNamedTransform(const char *, AddNamedTransformError errorCode);
-    /// Constructor that takes an existing exception.
-    ExceptionAddNamedTransform(const ExceptionAddNamedTransform &);
-    ExceptionAddNamedTransform & operator= (const ExceptionAddNamedTransform &) = delete;
-
-    AddNamedTransformError getErrorCode() const noexcept;
-
-    ~ExceptionAddNamedTransform();
-
-private:
-    AddNamedTransformError m_errorCode;
-};
-
 // Restore default warning behaviour for Visual Studio.
 #ifdef _MSC_VER
 #pragma warning( pop )

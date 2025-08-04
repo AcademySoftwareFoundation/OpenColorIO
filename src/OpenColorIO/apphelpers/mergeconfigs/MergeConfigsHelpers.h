@@ -31,13 +31,6 @@ public:
     // Overrides used to replace various parameters of a merged config.
     std::string m_name;
     std::string m_description;
-//     std::vector<std::string> m_searchPaths;
-//     StringUtils::StringVec m_activeDisplays;
-//     StringUtils::StringVec m_activeViews;
-//     StringUtils::StringVec m_inactiveColorspaces;
-//     mutable std::string m_activeDisplaysStr;
-//     mutable std::string m_activeViewsStr;
-//     mutable std::string m_inactiveColorSpaceStr;
 
     // Used to store the overrides for the following sections:
     // search_path, active_displays, active_views and inactive_colorspace.
@@ -86,12 +79,12 @@ public:
         m_avoidDuplicates = true;
         m_assumeCommonReferenceSpace = false;
         
-        m_roles = STRATEGY_UNSET;
-        m_fileRules = STRATEGY_UNSET;
-        m_displayViews = STRATEGY_UNSET;
-        m_looks = STRATEGY_UNSET;
-        m_colorspaces = STRATEGY_UNSET;
-        m_namedTransforms = STRATEGY_UNSET;
+        m_roles = STRATEGY_UNSPECIFIED;
+        m_fileRules = STRATEGY_UNSPECIFIED;
+        m_displayViews = STRATEGY_UNSPECIFIED;
+        m_looks = STRATEGY_UNSPECIFIED;
+        m_colorspaces = STRATEGY_UNSPECIFIED;
+        m_namedTransforms = STRATEGY_UNSPECIFIED;
     }
 
     ~Impl() = default;
@@ -108,7 +101,6 @@ public:
             // Overrides
             m_name = rhs.m_name;
             m_description = rhs.m_description;
-//            m_searchPaths = rhs.m_searchPaths;
 
             // Options
             m_defaultStrategy = rhs.m_defaultStrategy;

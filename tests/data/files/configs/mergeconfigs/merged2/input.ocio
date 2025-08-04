@@ -1,7 +1,6 @@
 ocio_profile_version: 2.1
 name: input
 search_path: lut_dir
-inactive_colorspaces: [ACES2065-1]
 
 roles:
   cie_xyz_d65_interchange: CIE-XYZ-D65
@@ -18,6 +17,8 @@ view_transforms:
   - !<ViewTransform>
     name: SDR Video
     from_scene_reference: !<BuiltinTransform> {style: ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-P3lim_1.1}
+
+inactive_colorspaces: [ACES2065-1]
 
 display_colorspaces:   # reference space = linear rec 709
   - !<ColorSpace>

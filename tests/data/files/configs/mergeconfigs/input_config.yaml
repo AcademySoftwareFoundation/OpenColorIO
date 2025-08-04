@@ -1,4 +1,4 @@
-ocio_profile_version: 2
+ocio_profile_version: 2.1
 
 environment:
   test: differentValue
@@ -8,6 +8,7 @@ search_path:
   - .
   - def
 
+luma: [0.262700, 0.677998, 0.059301]
 name: input0
 description: |
   My description 2

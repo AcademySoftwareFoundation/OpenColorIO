@@ -8,6 +8,7 @@ search_path:
   - .
   - abc
 
+luma: [0.2126, 0.7152, 0.0722]
 name: base0
 description: |
   My description 1

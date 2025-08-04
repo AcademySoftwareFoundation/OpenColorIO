@@ -79,7 +79,6 @@ const char * findEquivalentColorspace(const ColorSpaceFingerprints & fingerprint
                                       const ConstColorSpaceRcPtr & inputCS);
 
 // Temporarily deactivate the Processor cache on a Config object.
-// Currently, this also clears the cache.
 //
 class SuspendCacheGuard
 {

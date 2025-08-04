@@ -9,9 +9,11 @@ search_path:
   - .
 
 roles:
-  cie_xyz_d65_interchange: CIE-XYZ-D65
+  cie_xyz_d65_interchange: ap0
+  scene_linear: ACEScg
 
 file_rules:
+  - !<Rule> {name: OpenEXR, colorspace: ACEScg, extension: "exr", pattern: "*"}
   - !<Rule> {name: Default, colorspace: ACEScg}
 
 display_colorspaces:   # reference space = cie xyz d65

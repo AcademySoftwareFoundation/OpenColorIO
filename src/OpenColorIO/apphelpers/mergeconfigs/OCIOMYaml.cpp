@@ -103,7 +103,7 @@ ConfigMergingParameters::MergeStrategies OCIOMYaml::strategyToEnum(const char * 
         return it->second;
     }
 
-    return ConfigMergingParameters::MergeStrategies::STRATEGY_UNSET;
+    return ConfigMergingParameters::MergeStrategies::STRATEGY_UNSPECIFIED;
 }
 
 
@@ -128,7 +128,7 @@ ConfigMergingParameters::MergeStrategies OCIOMYaml::genericStrategyHandler(const
     }
 
     auto srategyEnum = strategyToEnum(strategy.c_str());
-    if (srategyEnum == ConfigMergingParameters::MergeStrategies::STRATEGY_UNSET)
+    if (srategyEnum == ConfigMergingParameters::MergeStrategies::STRATEGY_UNSPECIFIED)
     {
         std::ostringstream os;
         os << "The value '" << strategy;
@@ -173,7 +173,7 @@ void OCIOMYaml::loadOptions(const YAML::Node & node, ConfigMergingParametersRcPt
         {
             const std::string & strategy = it->second.as<std::string>();
             auto srategyEnum = strategyToEnum(strategy.c_str());
-            if (srategyEnum == ConfigMergingParameters::MergeStrategies::STRATEGY_UNSET)
+            if (srategyEnum == ConfigMergingParameters::MergeStrategies::STRATEGY_UNSPECIFIED)
             {
                 std::ostringstream os;
                 os << "The value '" << strategy;
@@ -476,8 +476,8 @@ const char * stategyEnumToString(ConfigMergingParameters::MergeStrategies strate
         case ConfigMergingParameters::MergeStrategies::STRATEGY_REMOVE:
             return "Remove";
             break;
-        case ConfigMergingParameters::MergeStrategies::STRATEGY_UNSET:
-            return "Unset";
+        case ConfigMergingParameters::MergeStrategies::STRATEGY_UNSPECIFIED:
+            return "Unspecified";
             break;
         default:
             return "Unknown";
@@ -490,10 +490,7 @@ inline void save(YAML::Emitter & out, const ConfigMerger & merger)
     std::stringstream ss;
     const unsigned parserMajorVersion = merger.getMajorVersion();
     ss << parserMajorVersion;
-//     if (merger.getMinorVersion() != 0)
-//     {
-        ss << "." << merger.getMinorVersion();
-//     }
+    ss << "." << merger.getMinorVersion();
 
     out << YAML::Block;
     out << YAML::BeginMap;

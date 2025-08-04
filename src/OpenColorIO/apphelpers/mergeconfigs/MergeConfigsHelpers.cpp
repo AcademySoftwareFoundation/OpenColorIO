@@ -22,16 +22,6 @@
 namespace OCIO_NAMESPACE
 {
 
-//
-// Config merging feature
-//
-
-/// Private implementation section
-
-// ...
-
-/// Public implementation section
-
 ConfigMergingParameters::ConfigMergingParameters() : m_impl(new ConfigMergingParameters::Impl())
 {
 
@@ -260,7 +250,7 @@ void ConfigMergingParameters::setRoles(MergeStrategies strategy)
 
 ConfigMergingParameters::MergeStrategies ConfigMergingParameters::getRoles() const
 {
-    if (getImpl()->m_roles == MergeStrategies::STRATEGY_UNSET)
+    if (getImpl()->m_roles == MergeStrategies::STRATEGY_UNSPECIFIED)
     {
         return getDefaultStrategy();
     }
@@ -274,7 +264,7 @@ void ConfigMergingParameters::setFileRules(MergeStrategies strategy)
 
 ConfigMergingParameters::MergeStrategies ConfigMergingParameters::getFileRules() const
 {
-    if (getImpl()->m_fileRules == MergeStrategies::STRATEGY_UNSET)
+    if (getImpl()->m_fileRules == MergeStrategies::STRATEGY_UNSPECIFIED)
     {
         return getDefaultStrategy();
     }
@@ -288,7 +278,7 @@ void ConfigMergingParameters::setDisplayViews(MergeStrategies strategy)
 
 ConfigMergingParameters::MergeStrategies ConfigMergingParameters::getDisplayViews() const
 {
-    if (getImpl()->m_displayViews == MergeStrategies::STRATEGY_UNSET)
+    if (getImpl()->m_displayViews == MergeStrategies::STRATEGY_UNSPECIFIED)
     {
         return getDefaultStrategy();
     }
@@ -302,7 +292,7 @@ void ConfigMergingParameters::setLooks(MergeStrategies strategy)
 
 ConfigMergingParameters::MergeStrategies ConfigMergingParameters::getLooks() const
 {
-    if (getImpl()->m_looks == MergeStrategies::STRATEGY_UNSET)
+    if (getImpl()->m_looks == MergeStrategies::STRATEGY_UNSPECIFIED)
     {
         return getDefaultStrategy();
     }
@@ -316,7 +306,7 @@ void ConfigMergingParameters::setColorspaces(MergeStrategies strategy)
 
 ConfigMergingParameters::MergeStrategies ConfigMergingParameters::getColorspaces() const
 {
-    if (getImpl()->m_colorspaces == MergeStrategies::STRATEGY_UNSET)
+    if (getImpl()->m_colorspaces == MergeStrategies::STRATEGY_UNSPECIFIED)
     {
         return getDefaultStrategy();
     }
@@ -330,7 +320,7 @@ void ConfigMergingParameters::setNamedTransforms(MergeStrategies strategy)
 
 ConfigMergingParameters::MergeStrategies ConfigMergingParameters::getNamedTransforms() const
 {
-    if (getImpl()->m_namedTransforms == MergeStrategies::STRATEGY_UNSET)
+    if (getImpl()->m_namedTransforms == MergeStrategies::STRATEGY_UNSPECIFIED)
     {
         return getDefaultStrategy();
     }
@@ -364,7 +354,7 @@ ConstConfigMergerRcPtr ConfigMerger::Impl::Read(std::istream & istream, const ch
 
         ociomParser.load(node, merger, filepath);
 
-        // Look at each set of Params and check if there are any 'Unset' sections.
+        // Look at each set of Params and check if there are any 'Unspecified' sections.
         // If so, initialize them to the default strategy.
         // If there are no default, use PreferInput.
     }
@@ -430,6 +420,7 @@ ConfigMergerRcPtr ConfigMerger::Create()
     return ConfigMergerRcPtr(new ConfigMerger(), &deleter);
 }
 
+// TODO: Refactor with the loadConfig function below.
 ConstConfigMergerRcPtr ConfigMerger::CreateFromFile(const char * filepath)
 {
     if (!filepath || !*filepath)
@@ -618,6 +609,10 @@ ConstConfigRcPtr loadConfig(const ConfigMergerRcPtr merger,
                                                                           value);
             return Config::CreateFromFile(resolvedfullpath.c_str());
         }
+        // TODO: If the file exists but won't load, this hides the error.
+        // (Tried using ExceptionMissingFile, but the implementation of that is not what I
+        // expected, Config::CreateFromFile only uses that if the argument is empty, not
+        // if it can't read the file.)
         catch(...) { /* don't capture the exception */ }
     }
 
@@ -644,6 +639,11 @@ ConstConfigRcPtr loadConfig(const ConfigMergerRcPtr merger,
 
 ConstConfigMergerRcPtr MergeConfigs(const ConstConfigMergerRcPtr & merger)
 {
+    if (!merger)
+    {
+        throw(Exception("The merger object was not initialized."));
+    }
+
     ConfigMergerRcPtr editableMerger = merger->createEditableCopy();
 
     for (int i = 0; i < merger->getNumOfConfigMergingParameters(); i++)

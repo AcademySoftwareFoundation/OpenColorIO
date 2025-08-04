@@ -122,8 +122,7 @@ public:
         const char * csName = cs->getName();
         if (!*csName)
         {
-            throw ExceptionAddColorspace("Cannot add a color space with an empty name.",
-                                         ADD_CS_ERROR_EMPTY);
+            throw Exception("Cannot add a color space with an empty name.");
         }
 
         auto entryIdx = getIndex(csName);
@@ -138,8 +137,7 @@ public:
                 std::ostringstream os;
                 os << "Cannot add '" << csName << "' color space, existing color space, '";
                 os << m_colorSpaces[entryIdx]->getName() << "' is using this name as an alias.";
-                throw ExceptionAddColorspace(os.str().c_str(),
-                                             ADD_CS_ERROR_NAME_IDENTICAL_TO_EXISTING_COLORSPACE_ALIAS);
+                throw Exception(os.str().c_str());
             }
             // There is a color space with the same name that will be replaced (if new color space
             // can be used).
@@ -150,7 +148,6 @@ public:
         for (size_t aidx = 0; aidx < numAliases; ++aidx)
         {
             const char * alias = cs->getAlias(aidx);
-            // Note that getIndex return the index to either a colorspace or an alias.
             entryIdx = getIndex(alias);
             // Is an alias of the color space already used by a color space?
             // Skip existing colorspace that might be replaced.
@@ -159,22 +156,8 @@ public:
                 std::ostringstream os;
                 os << "Cannot add '" << csName << "' color space, it has '" << alias;
                 os << "' alias and existing color space, '";
-
-                // Check if entryIdx is a colorspace.
-                if (entryIdx < size() && StringUtils::Compare(get(entryIdx)->getName(), alias))
-                {
-                    // conflict with a colorspace name
-                    os << m_colorSpaces[entryIdx]->getName() << "' has the same name.";
-                    throw ExceptionAddColorspace(os.str().c_str(),
-                                                 ADD_CS_ERROR_ALIAS_IDENTICAL_TO_EXISTING_COLORSPACE_NAME);
-                }
-                else
-                {
-                    // Conflict with a colorspace alias.
-                    os << m_colorSpaces[entryIdx]->getName() << "' is using the same alias.";
-                    throw ExceptionAddColorspace(os.str().c_str(),
-                                                 ADD_CS_ERROR_ALIAS_IDENTICAL_TO_EXISTING_COLORSPACE_ALIAS);
-                }
+                os << m_colorSpaces[entryIdx]->getName() << "' is using the same alias.";
+                throw Exception(os.str().c_str());
             }
         }
         if (replaceIdx != (size_t)-1)
