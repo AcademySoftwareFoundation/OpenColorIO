@@ -26,25 +26,13 @@ public:
                          const std::string & msg);
     void CheckDuplicates(const YAML::Node & node);
     
-    /**
-     * \brief Load the options section.
-     */
     void loadOptions(const YAML::Node & node, ConfigMergingParametersRcPtr & params);
-    /**
-     * \brief Load the overrides section.
-     */
+
     void loadOverrides(const YAML::Node & node, ConfigMergingParametersRcPtr & params);
-    /**
-     * \brief Load the params section.
-     */
+
     void loadParams(const YAML::Node & node, ConfigMergingParametersRcPtr & params);
 
     ConfigMergingParameters::MergeStrategies genericStrategyHandler(const YAML::Node & pnode, const YAML::Node & node);
-
-    /**
-     * \brief Converts a string into a ConfigMergingParameters::MergeStrategies enum.
-     */
-    ConfigMergingParameters::MergeStrategies strategyToEnum(const char * enumStr) const;
 
     void read(std::istream & istream, ConfigMergerRcPtr & merger, const char * filepath);
     void write(std::ostream & ostream, const ConfigMerger & merger);
@@ -63,8 +51,11 @@ public:
      */
     int countMerges(const YAML::Node& node);
 
+    static ConfigMergingParameters::MergeStrategies StrategyStringToEnum(const char * enumStr);
+    static const char * EnumToStrategyString(ConfigMergingParameters::MergeStrategies strategy);
+
 private:
-    std::unordered_map<std::string, ConfigMergingParameters::MergeStrategies> m_mergeStrategiesMap;
+    static std::unordered_map<std::string, ConfigMergingParameters::MergeStrategies> m_mergeStrategiesMap;
 };
 
 } // namespace OCIO_NAMESPACE

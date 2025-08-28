@@ -45,5 +45,5 @@ merge:
           # search_path, family_separator and inactive_colorspaces.
         strategy: Remove
 
-      named_transform:
+      named_transforms:
         strategy: PreferBase

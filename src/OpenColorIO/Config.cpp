@@ -1179,8 +1179,8 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
         throw Exception (os.str().c_str());
     }
 
-    char magicNumber[5] = { 0 };
-    if (ifstream.read(magicNumber, 5))
+    char magicNumber[2] = { 0 };
+    if (ifstream.read(magicNumber, 2))
     {
         // Check if it is an OCIOZ archive.
         if (magicNumber[0] == 'P' && magicNumber[1] == 'K')
@@ -1197,32 +1197,9 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
             ciop->buildEntries();
             return CreateFromConfigIOProxy(ciop);
         }
-        else
-        {
-            // TODO: This isn't the most robust method. Comments at the top of the file would break it.
-
-            // Check for "ociom" at the start of the file (ociom_version).
-            if (magicNumber[0] == 'o' && magicNumber[1] == 'c' &&
-                magicNumber[2] == 'i' && magicNumber[3] == 'o' && magicNumber[4] == 'm' )
-            {
-                try
-                {
-                    ifstream.close();
-
-                    ConstConfigMergerRcPtr merger = ConfigMerger::CreateFromFile(filename);
-                    ConstConfigMergerRcPtr newMerger = ConfigMergingHelpers::MergeConfigs(merger);
-                    // Return final merged config.
-                    return newMerger->getMergedConfig();
-                }
-                catch(const Exception & e)
-                {
-                    throw e;
-                }
-            }
-        }
     } 
 
-    // Not an OCIOZ archive or OCIOM file. Continue as usual.
+    // Not an OCIOZ archive. Continue as usual.
     ifstream.clear();
     ifstream.seekg(0);
     return Config::Impl::Read(ifstream, filename);

@@ -236,6 +236,33 @@ OCIO_ADD_TEST(MergeConfigs, ociom_parser)
     OCIO_CHECK_EQUAL(p->getNamedTransforms(), MergeStrategy::STRATEGY_PREFER_BASE);
 }
 
+OCIO_ADD_TEST(MergeConfigs, params_serialization)
+{
+    std::vector<std::string> paths = { 
+        std::string(OCIO::GetTestFilesDir()),
+        std::string("configs"),
+        std::string("mergeconfigs"),
+        std::string("parser_test.ociom")
+    }; 
+    const std::string ociomPath = pystring::os::path::normpath(pystring::os::path::join(paths));
+
+    OCIO::ConstConfigMergerRcPtr merger = OCIO::ConfigMerger::CreateFromFile(ociomPath.c_str());
+    OCIO::ConstConfigMergingParametersRcPtr p = merger->getParams(0);
+
+    static constexpr char REF[]
+      = "<base: base0.ocio, input: input0.ocio, output_name: Merge1, input_family_prefix: abc, "
+        "base_family_prefix: def, input_first: true, error_on_conflict: false, default_strategy: InputOnly, "
+        "avoid_duplicates: true, assume_common_reference_space: false, name: my merge, description: my desc, "
+        "search_path: abc, active_displays: D1, D2, active_views: V1, V2, inactive_colorspaces: I1, I2, "
+        "roles: PreferInput, file_rules: PreferBase, display-views: InputOnly, looks: BaseOnly, "
+        "colorspaces: Remove, named_transforms: PreferBase, environment: [test=valueOther, test1=value123]>";
+
+    std::ostringstream oss;
+    oss << *p;
+
+    OCIO_CHECK_EQUAL(oss.str(), REF);
+}
+
 OCIO_ADD_TEST(MergeConfigs, ociom_serialization)
 {
     std::vector<std::string> paths = { 
@@ -288,11 +315,16 @@ merge:
         strategy: BaseOnly
       colorspaces:
         strategy: Remove
-      named_transform:
+      named_transforms:
         strategy: PreferBase)" };
  
     std::istringstream rss(REF);
     OCIO_CHECK_EQUAL(oss.str(), rss.str());
+
+    std::ostringstream oss2;
+    oss2 << *merger;
+
+    OCIO_CHECK_EQUAL(oss2.str(), rss.str());
 }
 
 OCIO_ADD_TEST(MergeConfigs, ociom_parser_no_overrides)

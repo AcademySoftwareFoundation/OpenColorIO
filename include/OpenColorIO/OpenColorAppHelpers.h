@@ -522,7 +522,7 @@ protected:
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const MixingColorSpaceManager &);
 
 /**
- * The ConfigMergingParameters class represents all the options that a merge can have.
+ * The ConfigMergingParameters class holds the options that control how a merge is done.
  * 
  * In terms of OCIOM file, it represent one of the merges in an OCIOM file.
  * 
@@ -537,9 +537,9 @@ public:
         STRATEGY_PREFER_INPUT = 0,
         /// Combine elements of the base and input configs, with the base taking priority.
         STRATEGY_PREFER_BASE,
-        /// Use only the base elements for that section of the config.
-        STRATEGY_INPUT_ONLY,
         /// Use only the input elements for that section of the config.
+        STRATEGY_INPUT_ONLY,
+        /// Use only the base elements for that section of the config.
         STRATEGY_BASE_ONLY,
         /// The elements in the input config are removed from the base config. (If the names
         /// match, the item is removed, even if the content is not identical.)

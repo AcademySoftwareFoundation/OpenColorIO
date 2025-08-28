@@ -419,6 +419,9 @@ void RolesMerger::handleRemove()
 
 /////////////////////////////////// FileRulesMerger //////////////////////////////////////
 
+namespace
+{
+
 bool fileRulesAreEqual(const ConstFileRulesRcPtr & f1,
                        size_t f1Idx,
                        const ConstFileRulesRcPtr & f2,
@@ -514,6 +517,8 @@ void copyRule(const ConstFileRulesRcPtr & input,   // rule source
                              input->getCustomKeyValue(inputRuleIdx, k));
     }
 }
+
+} // anon.
 
 void FileRulesMerger::addRulesIfNotPresent(const ConstFileRulesRcPtr & input,
                                            FileRulesRcPtr & merged) const
@@ -1977,6 +1982,9 @@ void LooksMerger::handleRemove()
 
 /////////////////////////////////// ColorspacesMerger ////////////////////////////////////
 
+namespace
+{
+
 bool hasSearchPath(const ConstConfigRcPtr & cfg, const char * path)
 {
     for (int i = 0; i < cfg->getNumSearchPaths(); i++)
@@ -1988,6 +1996,45 @@ bool hasSearchPath(const ConstConfigRcPtr & cfg, const char * path)
     }
     return false;
 }
+
+void cleanUpInactiveList(ConfigRcPtr & mergeConfig)
+{
+    StringUtils::StringVec originalList, validList;
+    splitActiveList(mergeConfig->getInactiveColorSpaces(), originalList);
+    for (auto & item : originalList)
+    {
+        const std::string name = StringUtils::Trim(item);
+        ConstColorSpaceRcPtr existingCS = mergeConfig->getColorSpace(name.c_str());
+        ConstNamedTransformRcPtr existingNT = mergeConfig->getNamedTransform(name.c_str());
+
+        if (existingCS)
+        {
+            // Don't want aliases in the inactive list.
+            if (Platform::Strcasecmp(existingCS->getName(), name.c_str()) == 0)
+            {
+                validList.push_back(name);
+            }
+        }
+        else if (existingNT)
+        {
+            if (Platform::Strcasecmp(existingNT->getName(), name.c_str()) == 0)
+            {
+                validList.push_back(name);
+            }
+        }
+    }
+    mergeConfig->setInactiveColorSpaces(StringUtils::Join(validList, ',').c_str());
+}
+
+std::string replaceSeparator(std::string str, char inSep, char outSep)
+{
+    std::string defaultSeparatorStr(1, inSep);
+    std::string mergedSeparatorStr(1, outSep);
+    std::string updatedStr = StringUtils::Replace(str, defaultSeparatorStr, mergedSeparatorStr);
+    return updatedStr;
+}
+
+} // anon.
 
 void ColorspacesMerger::processSearchPaths() const
 {
@@ -2036,43 +2083,6 @@ void ColorspacesMerger::processSearchPaths() const
             }
         }
     }
-}
-
-void cleanUpInactiveList(ConfigRcPtr & mergeConfig)
-{
-    StringUtils::StringVec originalList, validList;
-    splitActiveList(mergeConfig->getInactiveColorSpaces(), originalList);
-    for (auto & item : originalList)
-    {
-        const std::string name = StringUtils::Trim(item);
-        ConstColorSpaceRcPtr existingCS = mergeConfig->getColorSpace(name.c_str());
-        ConstNamedTransformRcPtr existingNT = mergeConfig->getNamedTransform(name.c_str());
-
-        if (existingCS)
-        {
-            // Don't want aliases in the inactive list.
-            if (Platform::Strcasecmp(existingCS->getName(), name.c_str()) == 0)
-            {
-                validList.push_back(name);
-            }
-        }
-        else if (existingNT)
-        {
-            if (Platform::Strcasecmp(existingNT->getName(), name.c_str()) == 0)
-            {
-                validList.push_back(name);
-            }
-        }
-    }
-    mergeConfig->setInactiveColorSpaces(StringUtils::Join(validList, ',').c_str());
-}
-
-std::string replaceSeparator(std::string str, char inSep, char outSep)
-{
-    std::string defaultSeparatorStr(1, inSep);
-    std::string mergedSeparatorStr(1, outSep);
-    std::string updatedStr = StringUtils::Replace(str, defaultSeparatorStr, mergedSeparatorStr);
-    return updatedStr;
 }
 
 void ColorspacesMerger::updateFamily(std::string & family, bool fromBase) const
@@ -2293,7 +2303,6 @@ bool ColorspacesMerger::handleAvoidDuplicatesOption(ConfigUtils::ColorSpaceFinge
     }
     return notDuplicate;
 }
-
 
 bool ColorspacesMerger::colorSpaceMayBeMerged(const ConstConfigRcPtr & mergeConfig, 
                                               const ConstColorSpaceRcPtr & inputCS) const

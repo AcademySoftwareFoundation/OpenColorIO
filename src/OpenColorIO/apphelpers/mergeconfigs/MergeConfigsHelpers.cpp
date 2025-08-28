@@ -43,13 +43,6 @@ void ConfigMergingParameters::deleter(ConfigMergingParameters * c)
     delete c;
 }
 
-//TODO Not implemented
-std::ostream & operator<<(std::ostream & os, const ConfigMergingParameters & ms)
-{
-    (void)ms;
-    return os;
-}
-
 ConfigMergingParametersRcPtr ConfigMergingParameters::createEditableCopy() const
 {
     ConfigMergingParametersRcPtr params = ConfigMergingParameters::Create();
@@ -327,6 +320,75 @@ ConfigMergingParameters::MergeStrategies ConfigMergingParameters::getNamedTransf
     return getImpl()->m_namedTransforms;
 }
 
+std::ostream & operator<<(std::ostream & os, const ConfigMergingParameters & params)
+{
+    os << "<";
+    bool first = true;
+
+    auto print_str = [&](const char* label, const char* value) {
+        if (value && *value)
+        {
+            if (!first) os << ", ";
+            os << label << ": " << value;
+            first = false;
+        }
+    };
+
+    auto print_bool = [&](const char* label, bool value) {
+        if (!first) os << ", ";
+        os << label << ": " << (value ? "true" : "false");
+        first = false;
+    };
+
+    auto print_enum = [&](const char* label, ConfigMergingParameters::MergeStrategies value) {
+        if (!first) os << ", ";
+        os << label << ": " << OCIOMYaml::EnumToStrategyString(value);
+        first = false;
+    };
+
+    print_str("base", params.getBaseConfigName());
+    print_str("input", params.getInputConfigName());
+    print_str("output_name", params.getOutputName());
+    print_str("input_family_prefix", params.getInputFamilyPrefix());
+    print_str("base_family_prefix", params.getBaseFamilyPrefix());
+    print_bool("input_first", params.isInputFirst());
+    print_bool("error_on_conflict", params.isErrorOnConflict());
+    print_enum("default_strategy", params.getDefaultStrategy());
+    print_bool("avoid_duplicates", params.isAvoidDuplicates());
+    print_bool("assume_common_reference_space", params.isAssumeCommonReferenceSpace());
+    print_str("name", params.getName());
+    print_str("description", params.getDescription());
+    print_str("search_path", params.getSearchPath());
+    print_str("active_displays", params.getActiveDisplays());
+    print_str("active_views", params.getActiveViews());
+    print_str("inactive_colorspaces", params.getInactiveColorSpaces());
+    print_enum("roles", params.getRoles());
+    print_enum("file_rules", params.getFileRules());
+    print_enum("display-views", params.getDisplayViews());
+    print_enum("looks", params.getLooks());
+    print_enum("colorspaces", params.getColorspaces());
+    print_enum("named_transforms", params.getNamedTransforms());
+
+    // Environment vars.
+    int numEnv = params.getNumEnvironmentVars();
+    if (numEnv > 0)
+    {
+        if (!first) os << ", ";
+        os << "environment: [";
+        for (int i = 0; i < numEnv; ++i)
+        {
+            if (i > 0) os << ", ";
+            os << params.getEnvironmentVar(i);
+            const char* val = params.getEnvironmentVarValue(i);
+            if (val && *val) os << "=" << val;
+        }
+        os << "]";
+    }
+
+    os << ">";
+    return os;
+}
+
 /////////////////////////////////////////
 // Implementation ConfigMerger
 /////////////////////////////////////////
@@ -522,6 +584,12 @@ void ConfigMerger::serialize(std::ostream& os) const
         error << "Error building YAML: " << e.what();
         throw Exception(error.str().c_str());
     }
+}
+
+std::ostream & operator<<(std::ostream & os, const ConfigMerger & m)
+{
+    m.serialize(os);
+    return os;
 }
 
 unsigned int ConfigMerger::getMajorVersion() const
