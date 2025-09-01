@@ -138,7 +138,7 @@ int main(int argc, const char **argv)
 
     try
     {
-        OCIO::ConstConfigMergerRcPtr newMerger = OCIO::ConfigMergingHelpers::MergeConfigs(merger);
+        OCIO::ConstConfigMergerRcPtr newMerger = merger->mergeConfigs();
         if (validate)
         {
             try

@@ -728,53 +728,6 @@ void FileRulesMerger::handleRemove()
 namespace
 {
 
-bool viewTransformsAreEqual(const ConstConfigRcPtr & first,
-                            const ConstConfigRcPtr & second,
-                            const char * name)
-{
-    ConstViewTransformRcPtr vt1 = first->getViewTransform(name);
-    ConstViewTransformRcPtr vt2 = second->getViewTransform(name);
-    if (vt1 && vt2)
-    {
-        // Both configs have a view transform by this name, now check the parts.
-        // Note: Not checking family or description since it is not a functional difference.
-
-        // TODO: Check categories.
-
-        if (vt1->getReferenceSpaceType() != vt2->getReferenceSpaceType())
-        {
-            return false;
-        }
-
-        ConstTransformRcPtr t1_to = vt1->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE);
-        ConstTransformRcPtr t2_to = vt2->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE);
-        if (t1_to || t2_to)
-        {
-            if (!t1_to || !t2_to)  // one of them has a transform but the other does not
-            {
-                return false;
-            }
-
-            // TODO: Compare transforms.
-        }
-
-        ConstTransformRcPtr t1_from = vt1->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE);
-        ConstTransformRcPtr t2_from = vt2->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE);
-        if (t1_from || t2_from)
-        {
-            if (!t1_from || !t2_from)  // one of them has a transform but the other does not
-            {
-                return false;
-            }
-
-            // TODO: Compare transforms.
-        }
-
-        return true;
-    }
-    return false;
-}
-
 bool viewingRulesAreEqual(const ConstViewingRulesRcPtr & r1,
                           size_t r1Idx,
                           const ConstViewingRulesRcPtr & r2,
@@ -1358,74 +1311,6 @@ void DisplayViewMerger::processActiveLists()
     }
 }
 
-void DisplayViewMerger::addViewTransform(const ConstConfigRcPtr & cfg,
-                                         const char * name, 
-                                         bool isInput)
-{
-    ConstViewTransformRcPtr vt = cfg->getViewTransform(name);
-    if (!vt) return;
-
-    if (!isInput || m_params->isAssumeCommonReferenceSpace())
-    {
-        m_mergedConfig->addViewTransform(vt);
-    }
-    else
-    {
-        // Add the reference space adapter transforms.
-        ViewTransformRcPtr eVT = vt->createEditableCopy();
-        ConfigUtils::updateReferenceView(eVT, m_inputToBaseGtScene, m_inputToBaseGtDisplay);
-        m_mergedConfig->addViewTransform(eVT);
-    }
-}
-
-void DisplayViewMerger::addUniqueViewTransforms(const ConstConfigRcPtr & cfg, bool isInput)
-{
-    for (int i = 0; i < cfg->getNumViewTransforms(); i++)
-    {
-        const char * name = cfg->getViewTransformNameByIndex(i);
-        // Take the view from the config if it does not exist in merged config.
-        if (m_mergedConfig->getViewTransform(name) == nullptr)
-        {
-            addViewTransform(cfg, name, isInput);
-        }
-    }
-}
-
-void DisplayViewMerger::processViewTransforms(const ConstConfigRcPtr & first,
-                                              const ConstConfigRcPtr & second,
-                                              bool preferSecond,
-                                              bool secondIsInput)
-{
-    for (int i = 0; i < first->getNumViewTransforms(); i++)
-    {
-        const char * name = first->getViewTransformNameByIndex(i);
-        if (name && *name)
-        {
-            ConstViewTransformRcPtr vt2 = second->getViewTransform(name);
-            if (vt2 && !viewTransformsAreEqual(first, second, name))
-            {
-                std::ostringstream os;
-                os << "The Input config contains a value that would override ";
-                os << "the Base config: view_transforms: " << name;
-                notify(os.str(), m_params->isErrorOnConflict());
-            }
-
-            if (vt2 && preferSecond)
-            {
-                addViewTransform(second, name, secondIsInput);
-            }
-            else
-            {
-                addViewTransform(first, name, !secondIsInput);
-            }
-        }
-    }
-
-    // Add the remaining unique views transform.
-
-    addUniqueViewTransforms(second, secondIsInput);
-}
-
 void DisplayViewMerger::processViewingRules(const ConstConfigRcPtr & first,
                                             const ConstConfigRcPtr & second,
                                             bool preferSecond) const
@@ -1523,31 +1408,6 @@ void DisplayViewMerger::handlePreferInput()
     // Merge active_displays and active_views.
     processActiveLists();
 
-    // Merge view_transforms.
-    m_mergedConfig->clearViewTransforms();
-    if (m_params->isInputFirst())
-    {
-        processViewTransforms(m_inputConfig, m_baseConfig, false, false);
-    }
-    else
-    {
-        processViewTransforms(m_baseConfig, m_inputConfig, true, true);
-    }
-
-    // Merge default_view_transform.
-    const char * baseName = m_baseConfig->getDefaultViewTransformName();
-    const char * inputName = m_inputConfig->getDefaultViewTransformName();
-    if (!(Platform::Strcasecmp(baseName, inputName) == 0))
-    {
-        notify("The Input config contains a value that would override the Base config: "\
-               "default_view_transform: " + std::string(inputName), m_params->isErrorOnConflict());
-    }
-    // If the input config does not specify a default, keep the one from the base.
-    if (inputName && *inputName)
-    {
-        m_mergedConfig->setDefaultViewTransformName(inputName);
-    }
-
     // Merge viewing_rules.
     if (m_params->isInputFirst())
     {
@@ -1591,31 +1451,6 @@ void DisplayViewMerger::handlePreferBase()
 
     // Merge active_displays and active_views.
     processActiveLists();
-
-    // Merge view_transforms.
-    m_mergedConfig->clearViewTransforms();
-    if (m_params->isInputFirst())
-    {
-        processViewTransforms(m_inputConfig, m_baseConfig, true, false);
-    }
-    else
-    {
-        processViewTransforms(m_baseConfig, m_inputConfig, false, true);
-    }
-
-    // Merge default_view_transform.
-    const char * baseName = m_baseConfig->getDefaultViewTransformName();
-    const char * inputName = m_inputConfig->getDefaultViewTransformName();
-    if (!(Platform::Strcasecmp(baseName, inputName) == 0))
-    {
-        notify("The Input config contains a value that would override the Base config: "\
-               "default_view_transform: " + std::string(inputName), m_params->isErrorOnConflict());
-    }
-    // Only use the input if the base is missing.
-    if (!baseName || !*baseName)
-    {
-        m_mergedConfig->setDefaultViewTransformName(inputName);
-    }
 
     // Merge viewing_rules.
     if (m_params->isInputFirst())
@@ -1667,13 +1502,6 @@ void DisplayViewMerger::handleInputOnly()
         // Take active_views from config.
         m_mergedConfig->setActiveViews(m_inputConfig->getActiveViews());
     }
-
-    // Merge view_transforms.
-    m_mergedConfig->clearViewTransforms();
-    addUniqueViewTransforms(m_inputConfig, true);
-
-    // Merge default_view_transform.
-    m_mergedConfig->setDefaultViewTransformName(m_inputConfig->getDefaultViewTransformName());
 
     // Merge viewing_rules.
     m_mergedConfig->setViewingRules(m_inputConfig->getViewingRules());
@@ -1824,27 +1652,6 @@ void DisplayViewMerger::handleRemove()
     }
     m_mergedConfig->setActiveViews(StringUtils::Join(mergedActiveViews, ',').c_str());
 
-    // Remove from view_transforms.
-    m_mergedConfig->clearViewTransforms();
-    // Add view transforms that are present in the base config and NOT present in the input config.
-    for (int i = 0; i < m_baseConfig->getNumViewTransforms(); i++)
-    {
-        const char * name = m_baseConfig->getViewTransformNameByIndex(i);
-        if (m_inputConfig->getViewTransform(name) == nullptr)
-        {
-            m_mergedConfig->addViewTransform(m_baseConfig->getViewTransform(name));
-        }
-    }
-
-    // Handle default_view_transform.
-    // Leave the base alone unless it identified a view transform that was removed.
-    const char * baseName = m_baseConfig->getDefaultViewTransformName();
-    if (m_mergedConfig->getViewTransform(baseName) == nullptr)
-    {
-        // Set to empty string, the first view transform will be used by default.
-        m_mergedConfig->setDefaultViewTransformName("");
-    }
-
     // Handle viewing_rules.
 
     ViewingRulesRcPtr mergedRules = ViewingRules::Create();
@@ -1870,6 +1677,224 @@ void DisplayViewMerger::handleRemove()
 }
 
 /////////////////////////////////// DisplayViewMerger ////////////////////////////////////
+
+/////////////////////////////////// ViewTransformMerger ////////////////////////////////////
+
+namespace
+{
+
+bool viewTransformsAreEqual(const ConstConfigRcPtr & first,
+                            const ConstConfigRcPtr & second,
+                            const char * name)
+{
+    ConstViewTransformRcPtr vt1 = first->getViewTransform(name);
+    ConstViewTransformRcPtr vt2 = second->getViewTransform(name);
+    if (vt1 && vt2)
+    {
+        // Both configs have a view transform by this name, now check the parts.
+        // Note: Not checking family or description since it is not a functional difference.
+
+        // TODO: Check categories.
+
+        if (vt1->getReferenceSpaceType() != vt2->getReferenceSpaceType())
+        {
+            return false;
+        }
+
+        ConstTransformRcPtr t1_to = vt1->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE);
+        ConstTransformRcPtr t2_to = vt2->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE);
+        if (t1_to || t2_to)
+        {
+            if (!t1_to || !t2_to)  // one of them has a transform but the other does not
+            {
+                return false;
+            }
+
+            // TODO: Compare transforms.
+        }
+
+        ConstTransformRcPtr t1_from = vt1->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE);
+        ConstTransformRcPtr t2_from = vt2->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE);
+        if (t1_from || t2_from)
+        {
+            if (!t1_from || !t2_from)  // one of them has a transform but the other does not
+            {
+                return false;
+            }
+
+            // TODO: Compare transforms.
+        }
+
+        return true;
+    }
+    return false;
+}
+
+} // anon.
+
+void ViewTransformsMerger::addViewTransform(const ConstConfigRcPtr & cfg,
+                                         const char * name, 
+                                         bool isInput)
+{
+    ConstViewTransformRcPtr vt = cfg->getViewTransform(name);
+    if (!vt) return;
+
+    if (!isInput || !m_params->isAdjustInputReferenceSpace())
+    {
+        m_mergedConfig->addViewTransform(vt);
+    }
+    else
+    {
+        // Add the reference space adapter transforms.
+        ViewTransformRcPtr eVT = vt->createEditableCopy();
+        ConfigUtils::updateReferenceView(eVT, m_inputToBaseGtScene, m_inputToBaseGtDisplay);
+        m_mergedConfig->addViewTransform(eVT);
+    }
+}
+
+void ViewTransformsMerger::addUniqueViewTransforms(const ConstConfigRcPtr & cfg, bool isInput)
+{
+    for (int i = 0; i < cfg->getNumViewTransforms(); i++)
+    {
+        const char * name = cfg->getViewTransformNameByIndex(i);
+        // Take the view from the config if it does not exist in merged config.
+        if (m_mergedConfig->getViewTransform(name) == nullptr)
+        {
+            addViewTransform(cfg, name, isInput);
+        }
+    }
+}
+
+void ViewTransformsMerger::processViewTransforms(const ConstConfigRcPtr & first,
+                                                 const ConstConfigRcPtr & second,
+                                                 bool preferSecond,
+                                                 bool secondIsInput)
+{
+    for (int i = 0; i < first->getNumViewTransforms(); i++)
+    {
+        const char * name = first->getViewTransformNameByIndex(i);
+        if (name && *name)
+        {
+            ConstViewTransformRcPtr vt2 = second->getViewTransform(name);
+            if (vt2 && !viewTransformsAreEqual(first, second, name))
+            {
+                std::ostringstream os;
+                os << "The Input config contains a value that would override ";
+                os << "the Base config: view_transforms: " << name;
+                notify(os.str(), m_params->isErrorOnConflict());
+            }
+
+            if (vt2 && preferSecond)
+            {
+                addViewTransform(second, name, secondIsInput);
+            }
+            else
+            {
+                addViewTransform(first, name, !secondIsInput);
+            }
+        }
+    }
+
+    // Add the remaining unique views transform.
+
+    addUniqueViewTransforms(second, secondIsInput);
+}
+
+void ViewTransformsMerger::handlePreferInput()
+{
+    // Merge view_transforms.
+    m_mergedConfig->clearViewTransforms();
+    if (m_params->isInputFirst())
+    {
+        processViewTransforms(m_inputConfig, m_baseConfig, false, false);
+    }
+    else
+    {
+        processViewTransforms(m_baseConfig, m_inputConfig, true, true);
+    }
+
+    // Merge default_view_transform.
+    const char * baseName = m_baseConfig->getDefaultViewTransformName();
+    const char * inputName = m_inputConfig->getDefaultViewTransformName();
+    if (!(Platform::Strcasecmp(baseName, inputName) == 0))
+    {
+        notify("The Input config contains a value that would override the Base config: "\
+               "default_view_transform: " + std::string(inputName), m_params->isErrorOnConflict());
+    }
+    // If the input config does not specify a default, keep the one from the base.
+    if (inputName && *inputName)
+    {
+        m_mergedConfig->setDefaultViewTransformName(inputName);
+    }
+}
+
+void ViewTransformsMerger::handlePreferBase()
+{
+    // Merge view_transforms.
+    m_mergedConfig->clearViewTransforms();
+    if (m_params->isInputFirst())
+    {
+        processViewTransforms(m_inputConfig, m_baseConfig, true, false);
+    }
+    else
+    {
+        processViewTransforms(m_baseConfig, m_inputConfig, false, true);
+    }
+
+    // Merge default_view_transform.
+    const char * baseName = m_baseConfig->getDefaultViewTransformName();
+    const char * inputName = m_inputConfig->getDefaultViewTransformName();
+    if (!(Platform::Strcasecmp(baseName, inputName) == 0))
+    {
+        notify("The Input config contains a value that would override the Base config: "\
+               "default_view_transform: " + std::string(inputName), m_params->isErrorOnConflict());
+    }
+    // Only use the input if the base is missing.
+    if (!baseName || !*baseName)
+    {
+        m_mergedConfig->setDefaultViewTransformName(inputName);
+    }
+}
+
+void ViewTransformsMerger::handleInputOnly()
+{
+    // Merge view_transforms.
+    m_mergedConfig->clearViewTransforms();
+    addUniqueViewTransforms(m_inputConfig, true);
+
+    // Merge default_view_transform.
+    m_mergedConfig->setDefaultViewTransformName(m_inputConfig->getDefaultViewTransformName());
+}
+
+void ViewTransformsMerger::handleBaseOnly()
+{
+}
+
+void ViewTransformsMerger::handleRemove()
+{
+    // Remove from view_transforms.
+    m_mergedConfig->clearViewTransforms();
+    // Add view transforms that are present in the base config and NOT present in the input config.
+    for (int i = 0; i < m_baseConfig->getNumViewTransforms(); i++)
+    {
+        const char * name = m_baseConfig->getViewTransformNameByIndex(i);
+        if (m_inputConfig->getViewTransform(name) == nullptr)
+        {
+            m_mergedConfig->addViewTransform(m_baseConfig->getViewTransform(name));
+        }
+    }
+
+    // Handle default_view_transform.
+    // Leave the base alone unless it identified a view transform that was removed.
+    const char * baseName = m_baseConfig->getDefaultViewTransformName();
+    if (m_mergedConfig->getViewTransform(baseName) == nullptr)
+    {
+        // Set to empty string, the first view transform will be used by default.
+        m_mergedConfig->setDefaultViewTransformName("");
+    }
+}
+
+/////////////////////////////////// ViewTransformMerger ////////////////////////////////////
 
 /////////////////////////////////// LooksMerger //////////////////////////////////////////
 
@@ -2608,7 +2633,7 @@ void ColorspacesMerger::addColorSpaces()
 
         ColorSpaceRcPtr eCS = cs->createEditableCopy();
 
-            if (!m_params->isAssumeCommonReferenceSpace())
+            if (m_params->isAdjustInputReferenceSpace())
             {
                 if (eCS->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
                     ConfigUtils::updateReferenceColorspace(eCS, m_inputToBaseGtDisplay);

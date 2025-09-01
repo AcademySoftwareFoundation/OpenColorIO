@@ -209,16 +209,6 @@ public:
         {
             m_strategy = options.params->getDefaultStrategy();
         }
-
-        if (!options.params->isAssumeCommonReferenceSpace())
-        {
-            // TODO: This may throw, is it worth continuing without ref space conversion?
-            // Just call LogError() and continue?
-            ConfigUtils::initializeRefSpaceConverters(m_inputToBaseGtScene,
-                                                      m_inputToBaseGtDisplay,
-                                                      m_baseConfig,
-                                                      m_inputConfig);
-        }
     }
 
 private:
@@ -241,16 +231,52 @@ private:
 
     void processActiveLists();
 
+    void processViewingRules(const ConstConfigRcPtr & first,
+                             const ConstConfigRcPtr & second,
+                             bool preferSecond) const;
+
+    void handlePreferInput();
+    void handlePreferBase();    
+    void handleInputOnly();
+    void handleBaseOnly();
+    void handleRemove();
+};
+
+class ViewTransformsMerger : public SectionMerger
+{
+public:
+    ViewTransformsMerger(MergeHandlerOptions options) : SectionMerger(options)
+    {
+        ConfigMergingParameters::MergeStrategies strat = options.params->getViewTransforms();
+        if (strat != ConfigMergingParameters::MergeStrategies::STRATEGY_UNSPECIFIED)
+        {
+            m_strategy = strat;
+        }
+        else
+        {
+            m_strategy = options.params->getDefaultStrategy();
+        }
+
+        if (options.params->isAdjustInputReferenceSpace())
+        {
+            // TODO: This may throw, is it worth continuing without ref space conversion?
+            // Just call LogError() and continue?
+            ConfigUtils::initializeRefSpaceConverters(m_inputToBaseGtScene,
+                                                      m_inputToBaseGtDisplay,
+                                                      m_baseConfig,
+                                                      m_inputConfig);
+        }
+    }
+
+private:
+    const std::string getName() const { return "View Transforms"; }
+
     void addViewTransform(const ConstConfigRcPtr & cfg, const char * name, bool isInput);
     void addUniqueViewTransforms(const ConstConfigRcPtr & cfg, bool isInput);
     void processViewTransforms(const ConstConfigRcPtr & first,
                                const ConstConfigRcPtr & second,
                                bool preferSecond,
                                bool secondIsInput);
-
-    void processViewingRules(const ConstConfigRcPtr & first,
-                             const ConstConfigRcPtr & second,
-                             bool preferSecond) const;
 
     void handlePreferInput();
     void handlePreferBase();    
@@ -300,7 +326,7 @@ public:
             m_strategy = options.params->getDefaultStrategy();
         }
 
-        if (!options.params->isAssumeCommonReferenceSpace())
+        if (options.params->isAdjustInputReferenceSpace())
         {
             ConfigUtils::initializeRefSpaceConverters(m_inputToBaseGtScene,
                                                       m_inputToBaseGtDisplay,

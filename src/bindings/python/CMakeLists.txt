@@ -55,6 +55,7 @@ set(SOURCES
 	apphelpers/PyColorSpaceHelpers.cpp
 	apphelpers/PyDisplayViewHelpers.cpp
 	apphelpers/PyLegacyViewingPipeline.cpp
+	apphelpers/PyMergeConfigs.cpp
 	apphelpers/PyMixingHelpers.cpp
 	transforms/PyAllocationTransform.cpp
 	transforms/PyBuiltinTransform.cpp

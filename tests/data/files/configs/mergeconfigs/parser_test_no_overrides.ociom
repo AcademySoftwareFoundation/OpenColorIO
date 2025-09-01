@@ -12,7 +12,7 @@ merge:
       error_on_conflict: false
       default_strategy: InputOnly
       avoid_duplicates: true
-      assume_common_reference_space: false
+      adjust_input_reference_space: true
     # If no overrides are needed, the overrides can be
     # removed from the file or initialized as follows:
     # overrides:
@@ -31,9 +31,12 @@ merge:
         strategy: PreferBase
 
       display-views:
-        # Includes shared_views, displays, view_transforms, viewing_rules, virtual_display, 
-        # active_display, active_views and default_view_transform.      
+        # Includes shared_views, displays, viewing_rules, virtual_display, 
+        # active_display, and active_views.
         strategy: InputOnly
+
+      view_transforms:
+        strategy: PreferBase
 
       looks:
         strategy: BaseOnly

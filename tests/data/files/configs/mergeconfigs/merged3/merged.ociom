@@ -14,7 +14,7 @@ merge:
       error_on_conflict: false
       default_strategy: PreferInput
       avoid_duplicates: false
-      assume_common_reference_space: true
+      adjust_input_reference_space: false
     overrides:
       name: Merged1
       description: Basic merge with default strategy

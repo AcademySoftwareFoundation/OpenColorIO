@@ -159,9 +159,14 @@ void OCIOMYaml::loadOptions(const YAML::Node & node, ConfigMergingParametersRcPt
         {
             params->setAvoidDuplicates(it->second.as<bool>());
         }
+        else if (key == "adjust_input_reference_space")
+        {
+            params->setAdjustInputReferenceSpace(it->second.as<bool>());
+        }
         else if (key == "assume_common_reference_space")
         {
-            params->setAssumeCommonReferenceSpace(it->second.as<bool>());
+            // Need to support this as a synonym for adjust_input_reference_space.
+            params->setAdjustInputReferenceSpace(!it->second.as<bool>());
         }
         else if (key == "default_strategy")
         {
@@ -251,7 +256,7 @@ void OCIOMYaml::loadOverrides(const YAML::Node & node, ConfigMergingParametersRc
             std::vector<std::string> inactiveCSs;
             load(it->second, inactiveCSs);
             const std::string inactivecCSsStr = StringUtils::Join(inactiveCSs, ',');
-            params->setInactiveColorspaces(inactivecCSsStr.c_str());
+            params->setInactiveColorSpaces(inactivecCSsStr.c_str());
         }
     }
 }
@@ -275,6 +280,10 @@ void OCIOMYaml::loadParams(const YAML::Node & node, ConfigMergingParametersRcPtr
         else if (key == "display-views")
         {
             params->setDisplayViews(genericStrategyHandler(it->first, it->second));
+        }  
+        else if (key == "view_transforms")
+        {
+            params->setViewTransforms(genericStrategyHandler(it->first, it->second));
         }  
         else if (key == "looks")
         {
@@ -317,12 +326,12 @@ void OCIOMYaml::load(const YAML::Node& node, ConfigMergerRcPtr & merger, const c
 
             if(results.size() == 1)
             {
-                merger->setMajorVersion(std::stoi(results[0].c_str()));
+                merger->setVersion(std::stoi(results[0].c_str()), 0);
             }
             else if(results.size() == 2)
             {
-                merger->setMajorVersion(std::stoi(results[0].c_str()));
-                merger->setMinorVersion(std::stoi(results[1].c_str()));
+                merger->setVersion(std::stoi(results[0].c_str()),
+                                   std::stoi(results[1].c_str()));
             }
             if (merger->getMajorVersion() > 1u || merger->getMinorVersion() > 0u)
             {
@@ -534,7 +543,7 @@ inline void save(YAML::Emitter & out, const ConfigMerger & merger)
         out << YAML::Key << "error_on_conflict" << YAML::Value << p->isErrorOnConflict();
         out << YAML::Key << "default_strategy" << YAML::Value << OCIOMYaml::EnumToStrategyString(p->getDefaultStrategy());
         out << YAML::Key << "avoid_duplicates" << YAML::Value << p->isAvoidDuplicates();
-        out << YAML::Key << "assume_common_reference_space" << YAML::Value << p->isAssumeCommonReferenceSpace();
+        out << YAML::Key << "adjust_input_reference_space" << YAML::Value << p->isAdjustInputReferenceSpace();
         // End of options section.
         out << YAML::EndMap;
         out << YAML::Newline;
@@ -595,6 +604,11 @@ inline void save(YAML::Emitter & out, const ConfigMerger & merger)
         out << YAML::Key << "display-views";
         out << YAML::Value << YAML::BeginMap;
         out << YAML::Key << "strategy" << YAML::Value << OCIOMYaml::EnumToStrategyString(p->getDisplayViews());
+        out << YAML::EndMap;
+
+        out << YAML::Key << "view_transforms";
+        out << YAML::Value << YAML::BeginMap;
+        out << YAML::Key << "strategy" << YAML::Value << OCIOMYaml::EnumToStrategyString(p->getViewTransforms());
         out << YAML::EndMap;
 
         out << YAML::Key << "looks";

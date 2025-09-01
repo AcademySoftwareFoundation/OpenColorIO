@@ -42,7 +42,7 @@ public:
     bool m_inputFirst;
     bool m_errorOnConflict;
     bool m_avoidDuplicates;
-    bool m_assumeCommonReferenceSpace;
+    bool m_adjustInputReferenceSpace;
 
     // Merge strategy for each section of the config.
 
@@ -50,9 +50,10 @@ public:
     MergeStrategies m_defaultStrategy;
     MergeStrategies m_roles;
     MergeStrategies m_fileRules;
-    // Includes shared_views, displays, view_transforms, viewing_rules, virtual_display, 
-    //          active_display, active_views, and default_view_transform.
+    // Includes shared_views, displays, viewing_rules, virtual_display, active_display, active_views.
     MergeStrategies m_displayViews;
+    // Includes view_transforms and default_view_transform. 
+    MergeStrategies m_viewTransforms;
     MergeStrategies m_looks;
     // Includes colorspaces, environment, search_path, family_separator, and inactive_colorspaces.
     MergeStrategies m_colorspaces;
@@ -77,11 +78,12 @@ public:
         m_inputFirst = true;
         m_errorOnConflict = false;
         m_avoidDuplicates = true;
-        m_assumeCommonReferenceSpace = false;
+        m_adjustInputReferenceSpace = true;
         
         m_roles = STRATEGY_UNSPECIFIED;
         m_fileRules = STRATEGY_UNSPECIFIED;
         m_displayViews = STRATEGY_UNSPECIFIED;
+        m_viewTransforms = STRATEGY_UNSPECIFIED;
         m_looks = STRATEGY_UNSPECIFIED;
         m_colorspaces = STRATEGY_UNSPECIFIED;
         m_namedTransforms = STRATEGY_UNSPECIFIED;
@@ -109,11 +111,12 @@ public:
             m_inputFirst = rhs.m_inputFirst;
             m_errorOnConflict = rhs.m_errorOnConflict;
             m_avoidDuplicates = rhs.m_avoidDuplicates;
-            m_assumeCommonReferenceSpace = rhs.m_assumeCommonReferenceSpace;
+            m_adjustInputReferenceSpace = rhs.m_adjustInputReferenceSpace;
 
             m_roles = rhs.m_roles;
             m_fileRules = rhs.m_fileRules;
             m_displayViews = rhs.m_displayViews;
+            m_viewTransforms = rhs.m_viewTransforms;
             m_looks = rhs.m_looks;
             m_colorspaces = rhs.m_colorspaces;
             m_namedTransforms = rhs.m_namedTransforms;
@@ -144,7 +147,6 @@ public:
 
     Impl()
     {
-
     }
 
     ~Impl() = default;
@@ -187,21 +189,7 @@ public:
      * 3 - If not found, try to use the name as the output of a previous merge.
      * 4 - If still not found, return an empty config object.
      */
-    ConstConfigRcPtr loadConfig(const char * value) const;
-
-    ConfigMergingParametersRcPtr getParams(int index) const
-    {
-        if (index >= 0 && index < static_cast<int>(m_mergeParams.size()))
-        {
-            return nullptr;
-        }
-        return m_mergeParams.at(index);
-    }
-
-    int getNumConfigMergingParameters() const
-    {
-        return static_cast<int>(m_mergeParams.size());
-    }
+    ConstConfigRcPtr loadConfig(const char * value);
 };
 
 }  // namespace OCIO_NAMESPACE

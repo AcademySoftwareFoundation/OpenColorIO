@@ -205,7 +205,7 @@ OCIO_ADD_TEST(MergeConfigs, ociom_parser)
 
     OCIO_CHECK_EQUAL(p->getDefaultStrategy(), MergeStrategy::STRATEGY_INPUT_ONLY);
     OCIO_CHECK_EQUAL(p->isAvoidDuplicates(), true);
-    OCIO_CHECK_EQUAL(p->isAssumeCommonReferenceSpace(), false);
+    OCIO_CHECK_EQUAL(p->isAdjustInputReferenceSpace(), true);
 
     OCIO_CHECK_EQUAL(std::string(p->getName()), std::string("my merge"));
     OCIO_CHECK_EQUAL(std::string(p->getDescription()), std::string("my desc"));
@@ -252,10 +252,11 @@ OCIO_ADD_TEST(MergeConfigs, params_serialization)
     static constexpr char REF[]
       = "<base: base0.ocio, input: input0.ocio, output_name: Merge1, input_family_prefix: abc, "
         "base_family_prefix: def, input_first: true, error_on_conflict: false, default_strategy: InputOnly, "
-        "avoid_duplicates: true, assume_common_reference_space: false, name: my merge, description: my desc, "
+        "avoid_duplicates: true, adjust_input_reference_space: true, name: my merge, description: my desc, "
         "search_path: abc, active_displays: D1, D2, active_views: V1, V2, inactive_colorspaces: I1, I2, "
-        "roles: PreferInput, file_rules: PreferBase, display-views: InputOnly, looks: BaseOnly, "
-        "colorspaces: Remove, named_transforms: PreferBase, environment: [test=valueOther, test1=value123]>";
+        "roles: PreferInput, file_rules: PreferBase, display-views: InputOnly, view_transforms: PreferBase, "
+        "looks: BaseOnly, colorspaces: Remove, named_transforms: PreferBase, "
+        "environment: [test=valueOther, test1=value123]>";
 
     std::ostringstream oss;
     oss << *p;
@@ -293,7 +294,7 @@ merge:
       error_on_conflict: false
       default_strategy: InputOnly
       avoid_duplicates: true
-      assume_common_reference_space: false
+      adjust_input_reference_space: true
     overrides:
       name: my merge
       description: my desc
@@ -311,6 +312,8 @@ merge:
         strategy: PreferBase
       display-views:
         strategy: InputOnly
+      view_transforms:
+        strategy: PreferBase
       looks:
         strategy: BaseOnly
       colorspaces:
@@ -356,7 +359,7 @@ OCIO_ADD_TEST(MergeConfigs, ociom_parser_no_overrides)
     // PreferInput
     OCIO_CHECK_EQUAL(p->getDefaultStrategy(), MergeStrategy::STRATEGY_INPUT_ONLY);
     OCIO_CHECK_EQUAL(p->isAvoidDuplicates(), true);
-    OCIO_CHECK_EQUAL(p->isAssumeCommonReferenceSpace(), false);
+    OCIO_CHECK_EQUAL(p->isAdjustInputReferenceSpace(), true);
 
     OCIO_CHECK_EQUAL(std::string(p->getName()), std::string(""));
     OCIO_CHECK_EQUAL(std::string(p->getDescription()), std::string(""));
@@ -369,17 +372,12 @@ OCIO_ADD_TEST(MergeConfigs, ociom_parser_no_overrides)
     OCIO_CHECK_EQUAL(std::string(p->getActiveViews()), std::string(""));
     OCIO_CHECK_EQUAL(std::string(p->getInactiveColorSpaces()), std::string(""));
 
-    // PreferInput
     OCIO_CHECK_EQUAL(p->getRoles(), MergeStrategy::STRATEGY_PREFER_INPUT);
-    // PreferBase
     OCIO_CHECK_EQUAL(p->getFileRules(), MergeStrategy::STRATEGY_PREFER_BASE);
-    // InputOnly
     OCIO_CHECK_EQUAL(p->getDisplayViews(), MergeStrategy::STRATEGY_INPUT_ONLY);
-    // BaseOnly
+    OCIO_CHECK_EQUAL(p->getViewTransforms(), MergeStrategy::STRATEGY_PREFER_BASE);
     OCIO_CHECK_EQUAL(p->getLooks(), MergeStrategy::STRATEGY_BASE_ONLY);
-    // Remove
     OCIO_CHECK_EQUAL(p->getColorspaces(), MergeStrategy::STRATEGY_REMOVE);
-    // PreferBase
     OCIO_CHECK_EQUAL(p->getNamedTransforms(), MergeStrategy::STRATEGY_PREFER_BASE);
 }
 
@@ -410,7 +408,7 @@ OCIO_ADD_TEST(MergeConfigs, overrides)
                 merger->getParams(0)->addEnvironmentVar("OVR2", "VALUE2");
                 merger->getParams(0)->setActiveDisplays("OVR DISP 1,OVR DISP 2");
                 merger->getParams(0)->setActiveViews("OVR VIEW 1,OVR VIEW 2");
-                merger->getParams(0)->setInactiveColorspaces("view_1, ACES2065-1");
+                merger->getParams(0)->setInactiveColorSpaces("view_1, ACES2065-1");
 
         return params;
     };
@@ -452,7 +450,6 @@ OCIO_ADD_TEST(MergeConfigs, overrides)
             },
             "The Input config contains a value that would override the Base config: shared_views: SHARED_1",
             "The Input config contains a value that would override the Base config: display: DISP_1, view: VIEW_1",
-            "The Input config contains a value that would override the Base config: default_view_transform: Un-tone-mapped-2",
             "The Input config contains a value that would override the Base config: viewing_rules: RULE_1",
             "Color space 'ACES2065-1' will replace a color space in the base config.",
             "Color space 'view_1' will replace a color space in the base config.");
@@ -477,7 +474,6 @@ OCIO_ADD_TEST(MergeConfigs, overrides)
             },
             "The Input config contains a value that would override the Base config: shared_views: SHARED_1",
             "The Input config contains a value that would override the Base config: display: DISP_1, view: VIEW_1",
-            "The Input config contains a value that would override the Base config: default_view_transform: Un-tone-mapped-2",
             "The Input config contains a value that would override the Base config: viewing_rules: RULE_1",
             "Color space 'ACES2065-1' was not merged as it's already present in the base config.",
             "Color space 'view_1' was not merged as it's already present in the base config.");
@@ -936,7 +932,7 @@ OCIO_ADD_TEST(MergeConfigs, file_rules_section)
         OCIO::ConfigMergingParametersRcPtr params = OCIO::ConfigMergingParameters::Create();
         merger->addParams(params);
         merger->getParams(0)->setFileRules(strategy);
-        merger->getParams(0)->setAssumeCommonReferenceSpace(true);
+        merger->getParams(0)->setAdjustInputReferenceSpace(false);
         merger->getParams(0)->setAvoidDuplicates(false);
 
         return params;
@@ -1463,8 +1459,6 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveViews()), 
                                      "SHARED_1, SHARED_3, VIEW_1, VIEW_3");
 
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getDefaultViewTransformName()), "Un-tone-mapped-2");
-
         // Validate shared_views
         OCIO_CHECK_EQUAL(mergedConfig->getNumViews(OCIO::VIEW_SHARED, nullptr), 2);
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getView(OCIO::VIEW_SHARED, nullptr, 0)), "SHARED_1");
@@ -1492,11 +1486,6 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
         OCIO_CHECK_EQUAL(mergedConfig->getNumViews(OCIO::VIEW_DISPLAY_DEFINED, "DISP_3"), 2);
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getView(OCIO::VIEW_DISPLAY_DEFINED, "DISP_3", 0)), "VIEW_1");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getView(OCIO::VIEW_DISPLAY_DEFINED, "DISP_3", 1)), "VIEW_3");
-
-        // Validate view_transforms
-        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 2);
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), "SDR Video");
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), "Un-tone-mapped-2");
 
        // Validate viewing_rules
         OCIO::ConstViewingRulesRcPtr rules = mergedConfig->getViewingRules();
@@ -1533,15 +1522,11 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
            [&options]() { OCIO::DisplayViewMerger(options).merge(); },
             "The Input config contains a value that would override the Base config: shared_views: SHARED_1",
             "The Input config contains a value that would override the Base config: display: DISP_1, view: VIEW_1",
-            "The Input config contains a value that would override the Base config: default_view_transform: Un-tone-mapped-2",
             "The Input config contains a value that would override the Base config: viewing_rules: RULE_1");
 
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveDisplays()), "DISP_1, DISP_3, DISP_2");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveViews()), 
                                      "SHARED_1, SHARED_3, VIEW_1, VIEW_3, SHARED_2, VIEW_2");
-
-        // Validate default_view_transform
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getDefaultViewTransformName()), "Un-tone-mapped-2");
 
         // Validate shared_views
         OCIO_CHECK_EQUAL(mergedConfig->getNumViews(OCIO::VIEW_SHARED, nullptr), 3);
@@ -1582,20 +1567,6 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getView(OCIO::VIEW_DISPLAY_DEFINED, "DISP_2", 0)), "VIEW_1");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getView(OCIO::VIEW_DISPLAY_DEFINED, "DISP_2", 1)), "VIEW_2");
 
-        // Validate view_transforms
-
-        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 3);
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), "SDR Video");
-        OCIO::ConstTransformRcPtr tf;
-        OCIO_CHECK_NO_THROW(tf = mergedConfig->getViewTransform("SDR Video")
-                                             ->getTransform(OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
-        auto bi = OCIO_DYNAMIC_POINTER_CAST<const OCIO::BuiltinTransform>(tf);
-        OCIO_REQUIRE_ASSERT(bi);
-        OCIO_CHECK_EQUAL(std::string(bi->getStyle()), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-P3lim_1.1");
-
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), "Un-tone-mapped-2");
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(2)), "Un-tone-mapped");
-        
         // Validate viewing_rules
         OCIO::ConstViewingRulesRcPtr rules = mergedConfig->getViewingRules();
 
@@ -1637,14 +1608,11 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
            [&options]() { OCIO::DisplayViewMerger(options).merge(); },
             "The Input config contains a value that would override the Base config: shared_views: SHARED_1",
             "The Input config contains a value that would override the Base config: display: DISP_1, view: VIEW_1",
-            "The Input config contains a value that would override the Base config: default_view_transform: Un-tone-mapped-2",
             "The Input config contains a value that would override the Base config: viewing_rules: RULE_1");
 
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveDisplays()), "DISP_1, DISP_2, DISP_3");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveViews()), 
                                      "SHARED_1, SHARED_2, VIEW_1, VIEW_2, SHARED_3, VIEW_3");
-
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getDefaultViewTransformName()), "Un-tone-mapped-2");
 
         // Validate shared_views
         OCIO_CHECK_EQUAL(mergedConfig->getNumViews(OCIO::VIEW_SHARED, nullptr), 3);
@@ -1686,20 +1654,6 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getView(OCIO::VIEW_DISPLAY_DEFINED, "DISP_3", 1)), "VIEW_3");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getDisplayViewLooks("DISP_3", "VIEW_3")), "look_input");
         
-        // Validate view_transforms
-
-        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 3);
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), std::string("SDR Video"));
-        OCIO::ConstTransformRcPtr tf;
-        OCIO_CHECK_NO_THROW(tf = mergedConfig->getViewTransform("SDR Video")
-                                             ->getTransform(OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
-        auto bi = OCIO_DYNAMIC_POINTER_CAST<const OCIO::BuiltinTransform>(tf);
-        OCIO_REQUIRE_ASSERT(bi);
-        OCIO_CHECK_EQUAL(std::string(bi->getStyle()), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-P3lim_1.1");
-
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), std::string("Un-tone-mapped"));
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(2)), std::string("Un-tone-mapped-2"));
-
         // Validate viewing_rules
         OCIO::ConstViewingRulesRcPtr rules = mergedConfig->getViewingRules();
 
@@ -1741,14 +1695,11 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
            [&options]() { OCIO::DisplayViewMerger(options).merge(); },
             "The Input config contains a value that would override the Base config: shared_views: SHARED_1",
             "The Input config contains a value that would override the Base config: display: DISP_1, view: VIEW_1",
-            "The Input config contains a value that would override the Base config: default_view_transform: Un-tone-mapped-2",
             "The Input config contains a value that would override the Base config: viewing_rules: RULE_1");
         
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveDisplays()), "DISP_1, DISP_3, DISP_2");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveViews()), 
                                      "SHARED_1, SHARED_3, VIEW_1, VIEW_3, SHARED_2, VIEW_2");
-
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getDefaultViewTransformName()), "SDR Video");
 
         // Validate shared_views
         OCIO_CHECK_EQUAL(mergedConfig->getNumViews(OCIO::VIEW_SHARED, nullptr), 3);
@@ -1791,20 +1742,6 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getDisplayViewRule("DISP_2", "VIEW_1")), "RULE_2");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getView(OCIO::VIEW_DISPLAY_DEFINED, "DISP_2", 1)), "VIEW_2");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getDisplayViewLooks("DISP_2", "VIEW_2")), "look_base");
-
-        // Validate view_transforms
-
-        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 3);
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), "SDR Video");
-        OCIO::ConstTransformRcPtr tf;
-        OCIO_CHECK_NO_THROW(tf = mergedConfig->getViewTransform("SDR Video")
-                                             ->getTransform(OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
-        auto bi = OCIO_DYNAMIC_POINTER_CAST<const OCIO::BuiltinTransform>(tf);
-        OCIO_REQUIRE_ASSERT(bi);
-        OCIO_CHECK_EQUAL(std::string(bi->getStyle()), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO_1.0");
-
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), "Un-tone-mapped-2");
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(2)), "Un-tone-mapped");
 
         // Validate viewing_rules
         OCIO::ConstViewingRulesRcPtr rules = mergedConfig->getViewingRules();
@@ -1847,14 +1784,11 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
            [&options]() { OCIO::DisplayViewMerger(options).merge(); },
             "The Input config contains a value that would override the Base config: shared_views: SHARED_1",
             "The Input config contains a value that would override the Base config: display: DISP_1, view: VIEW_1",
-            "The Input config contains a value that would override the Base config: default_view_transform: Un-tone-mapped-2",
             "The Input config contains a value that would override the Base config: viewing_rules: RULE_1");
 
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveDisplays()), "DISP_1, DISP_2, DISP_3");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveViews()), 
                                      "SHARED_1, SHARED_2, VIEW_1, VIEW_2, SHARED_3, VIEW_3");
-
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getDefaultViewTransformName()), "SDR Video");
 
         // Validate shared_views
         OCIO_CHECK_EQUAL(mergedConfig->getNumViews(OCIO::VIEW_SHARED, nullptr), 3);
@@ -1897,20 +1831,6 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getView(OCIO::VIEW_DISPLAY_DEFINED, "DISP_3", 0)), "VIEW_1");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getView(OCIO::VIEW_DISPLAY_DEFINED, "DISP_3", 1)), "VIEW_3");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getDisplayViewLooks("DISP_3", "VIEW_3")), "look_input");
-
-        // Validate view_transforms
-
-        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 3);
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), "SDR Video");
-        OCIO::ConstTransformRcPtr tf;
-        OCIO_CHECK_NO_THROW(tf = mergedConfig->getViewTransform("SDR Video")
-                                             ->getTransform(OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
-        auto bi = OCIO_DYNAMIC_POINTER_CAST<const OCIO::BuiltinTransform>(tf);
-        OCIO_REQUIRE_ASSERT(bi);
-        OCIO_CHECK_EQUAL(std::string(bi->getStyle()), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO_1.0");
-
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), "Un-tone-mapped");
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(2)), "Un-tone-mapped-2");
 
        // Validate viewing_rules
         OCIO::ConstViewingRulesRcPtr rules = mergedConfig->getViewingRules();
@@ -1954,8 +1874,6 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveViews()), 
                                      "SHARED_1, SHARED_2, VIEW_1, VIEW_2");
 
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getDefaultViewTransformName()), "SDR Video");
-
         // Validate shared_views
         OCIO_CHECK_EQUAL(mergedConfig->getNumViews(OCIO::VIEW_SHARED, nullptr), 2);
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getView(OCIO::VIEW_SHARED, nullptr, 0)), "SHARED_1");
@@ -1987,11 +1905,6 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getDisplayViewRule("DISP_2", "VIEW_1")), "RULE_2");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getView(OCIO::VIEW_DISPLAY_DEFINED, "DISP_2", 1)), "VIEW_2");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getDisplayViewLooks("DISP_2", "VIEW_2")), "look_base");
-
-        // Validate view_transforms
-        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 2);
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), "SDR Video");
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), "Un-tone-mapped");
 
        // Validate viewing_rules
         OCIO::ConstViewingRulesRcPtr rules = mergedConfig->getViewingRules();
@@ -2028,8 +1941,6 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveViews()), 
                                      "SHARED_1, SHARED_3, VIEW_1, VIEW_3");
 
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getDefaultViewTransformName()), "Un-tone-mapped-2");
-
         // Validate shared_views
         OCIO_CHECK_EQUAL(mergedConfig->getNumViews(OCIO::VIEW_SHARED, nullptr), 2);
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getView(OCIO::VIEW_SHARED, nullptr, 0)), "SHARED_1");
@@ -2059,19 +1970,6 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getView(OCIO::VIEW_DISPLAY_DEFINED, "DISP_3", 0)), "VIEW_1");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getView(OCIO::VIEW_DISPLAY_DEFINED, "DISP_3", 1)), "VIEW_3");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getDisplayViewLooks("DISP_3", "VIEW_3")), "look_input");
-
-        // Validate view_transforms
-
-        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 2);
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), "SDR Video");
-        OCIO::ConstTransformRcPtr tf;
-        OCIO_CHECK_NO_THROW(tf = mergedConfig->getViewTransform("SDR Video")
-                                             ->getTransform(OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
-        auto bi = OCIO_DYNAMIC_POINTER_CAST<const OCIO::BuiltinTransform>(tf);
-        OCIO_REQUIRE_ASSERT(bi);
-        OCIO_CHECK_EQUAL(std::string(bi->getStyle()), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-P3lim_1.1");
-
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), "Un-tone-mapped-2");
 
         // Validate viewing_rules
         OCIO::ConstViewingRulesRcPtr rules = mergedConfig->getViewingRules();
@@ -2108,10 +2006,6 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveDisplays()), "DISP_2");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getActiveViews()), "SHARED_2, VIEW_2");
 
-        // Note that the "SDR Video" view transform was removed, so the "SDR Video" value
-        // of the default view transform was reset to empty (will use the first one by default).
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getDefaultViewTransformName()), "");
-
         // Validate shared_views
         OCIO_CHECK_EQUAL(mergedConfig->getNumViews(OCIO::VIEW_SHARED, nullptr), 1);
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getView(OCIO::VIEW_SHARED, nullptr, 0)), "SHARED_2");
@@ -2134,10 +2028,6 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getView(OCIO::VIEW_DISPLAY_DEFINED, "DISP_2", 1)), "VIEW_2");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getDisplayViewLooks("DISP_2", "VIEW_2")), "look_base");
 
-        // Validate view_transforms
-        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 1);
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), std::string("Un-tone-mapped"));
-
         // Validate viewing_rules
         OCIO::ConstViewingRulesRcPtr rules = mergedConfig->getViewingRules();
         OCIO_CHECK_EQUAL(rules->getNumEntries(), 1);
@@ -2153,8 +2043,6 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
         OCIO_CHECK_EQUAL(mergedConfig->getVirtualDisplayView(OCIO::VIEW_SHARED, 0), std::string("SHARED_1"));
     }
 
-    constexpr char PREFIX[] { "The Input config contains a value that would override the Base config: " };
-
     // Test that error_on_conflicts is processed correctly.
     // strategy = PreferInput, InputFirst = false
     {
@@ -2167,17 +2055,258 @@ OCIO_ADD_TEST(MergeConfigs, displays_views_section)
         merger->getParams(0)->setInputFirst(false);
         merger->getParams(0)->setErrorOnConflict(true);
 
-        // Test that an error is thrown when the input config's COLORSPACE is different
+        constexpr char PREFIX[] { "The Input config contains a value that would override the Base config: " };
+
+        // Test that an error is thrown when the input config values are different.
         {
             OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
             checkForLogOrException(LOG_TYPE_ERROR, __LINE__,
                                    [&options]() { OCIO::DisplayViewMerger(options).merge(); },
                                    std::string(PREFIX) + std::string("shared_views: SHARED_1"),
                                    std::string(PREFIX) + std::string("display: DISP_1, views: VIEW_1"),
-                                   std::string(PREFIX) + std::string("default_view_transform: SDR Video"),
-                                   std::string(PREFIX) + std::string("view_transforms: SDR Video"),
                                    std::string(PREFIX) + std::string("viewing_rules: RULE_1"),
                                    std::string(PREFIX) + std::string("virtual_display: ACES"));
+        }
+    }
+}
+
+OCIO_ADD_TEST(MergeConfigs, view_transforms_section)
+{
+    OCIO::ConstConfigRcPtr baseConfig;
+    OCIO_CHECK_NO_THROW(baseConfig = getBaseConfig());
+
+    OCIO::ConstConfigRcPtr inputConfig;
+    OCIO_CHECK_NO_THROW(inputConfig = getInputConfig());
+
+    auto setupBasics = [](OCIO::ConfigMergerRcPtr & merger, MergeStrategy strategy) -> OCIO::ConfigMergingParametersRcPtr
+    {
+        OCIO::ConfigMergingParametersRcPtr params = OCIO::ConfigMergingParameters::Create();
+        merger->addParams(params);
+        merger->getParams(0)->setViewTransforms(strategy);
+        return params;
+    };
+
+    // Allowed strategies: All
+    // Allowed merge options: All
+
+    // Test that the default strategy is used as a fallback if the section strategy was not defined.
+    {
+        OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+
+        // Using STRATEGY_UNSPECIFIED as this simulates that the section
+        // is missing from the OCIOM file.
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_UNSPECIFIED);
+        // Simulate settings from OCIOM file.
+        merger->getParams(0)->setDefaultStrategy(MergeStrategy::STRATEGY_INPUT_ONLY);
+        merger->getParams(0)->setInputFirst(true);
+
+        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        OCIO::ViewTransformsMerger(options).merge();
+
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getDefaultViewTransformName()), "Un-tone-mapped-2");
+
+        // Validate view_transforms
+        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 2);
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), "SDR Video");
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), "Un-tone-mapped-2");
+    }
+
+    // Test display/views with strategy = PreferInput, options InputFirst = true.
+    {
+        OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_PREFER_INPUT);
+        merger->getParams(0)->setInputFirst(true);
+        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
+           [&options]() { OCIO::ViewTransformsMerger(options).merge(); },
+            "The Input config contains a value that would override the Base config: default_view_transform: Un-tone-mapped-2"
+        );
+
+        // Validate default_view_transform
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getDefaultViewTransformName()), "Un-tone-mapped-2");
+
+        // Validate view_transforms
+
+        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 3);
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), "SDR Video");
+        OCIO::ConstTransformRcPtr tf;
+        OCIO_CHECK_NO_THROW(tf = mergedConfig->getViewTransform("SDR Video")
+                                             ->getTransform(OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
+        auto bi = OCIO_DYNAMIC_POINTER_CAST<const OCIO::BuiltinTransform>(tf);
+        OCIO_REQUIRE_ASSERT(bi);
+        OCIO_CHECK_EQUAL(std::string(bi->getStyle()), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-P3lim_1.1");
+
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), "Un-tone-mapped-2");
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(2)), "Un-tone-mapped");
+    }
+
+    // Test display/views with strategy=PreferInput, options InputFirst = false.
+    {
+        OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_PREFER_INPUT);
+        merger->getParams(0)->setInputFirst(false);
+        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
+           [&options]() { OCIO::ViewTransformsMerger(options).merge(); },
+            "The Input config contains a value that would override the Base config: default_view_transform: Un-tone-mapped-2"
+        );
+
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getDefaultViewTransformName()), "Un-tone-mapped-2");
+
+        // Validate view_transforms
+
+        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 3);
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), std::string("SDR Video"));
+        OCIO::ConstTransformRcPtr tf;
+        OCIO_CHECK_NO_THROW(tf = mergedConfig->getViewTransform("SDR Video")
+                                             ->getTransform(OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
+        auto bi = OCIO_DYNAMIC_POINTER_CAST<const OCIO::BuiltinTransform>(tf);
+        OCIO_REQUIRE_ASSERT(bi);
+        OCIO_CHECK_EQUAL(std::string(bi->getStyle()), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-P3lim_1.1");
+
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), std::string("Un-tone-mapped"));
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(2)), std::string("Un-tone-mapped-2"));
+    }
+
+    // Test display/views with strategy = PreferBase, options InputFirst = true.
+    {
+        OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_PREFER_BASE);
+        merger->getParams(0)->setInputFirst(true);
+        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
+           [&options]() { OCIO::ViewTransformsMerger(options).merge(); },
+            "The Input config contains a value that would override the Base config: default_view_transform: Un-tone-mapped-2"
+        );
+     
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getDefaultViewTransformName()), "SDR Video");
+
+        // Validate view_transforms
+
+        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 3);
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), "SDR Video");
+        OCIO::ConstTransformRcPtr tf;
+        OCIO_CHECK_NO_THROW(tf = mergedConfig->getViewTransform("SDR Video")
+                                             ->getTransform(OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
+        auto bi = OCIO_DYNAMIC_POINTER_CAST<const OCIO::BuiltinTransform>(tf);
+        OCIO_REQUIRE_ASSERT(bi);
+        OCIO_CHECK_EQUAL(std::string(bi->getStyle()), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO_1.0");
+
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), "Un-tone-mapped-2");
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(2)), "Un-tone-mapped");
+    }
+
+    // Test display/views with strategy = PreferBase, options InputFirst = false.
+    {
+        OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_PREFER_BASE);
+        merger->getParams(0)->setInputFirst(false);
+        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
+           [&options]() { OCIO::ViewTransformsMerger(options).merge(); },
+            "The Input config contains a value that would override the Base config: default_view_transform: Un-tone-mapped-2"
+        );
+
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getDefaultViewTransformName()), "SDR Video");
+
+        // Validate view_transforms
+
+        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 3);
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), "SDR Video");
+        OCIO::ConstTransformRcPtr tf;
+        OCIO_CHECK_NO_THROW(tf = mergedConfig->getViewTransform("SDR Video")
+                                             ->getTransform(OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
+        auto bi = OCIO_DYNAMIC_POINTER_CAST<const OCIO::BuiltinTransform>(tf);
+        OCIO_REQUIRE_ASSERT(bi);
+        OCIO_CHECK_EQUAL(std::string(bi->getStyle()), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO_1.0");
+
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), "Un-tone-mapped");
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(2)), "Un-tone-mapped-2");
+    }
+
+    // Test display/views with strategy = BaseOnly.
+    {
+        OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_BASE_ONLY);
+        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        OCIO::ViewTransformsMerger(options).merge();
+
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getDefaultViewTransformName()), "SDR Video");
+
+        // Validate view_transforms
+        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 2);
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), "SDR Video");
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), "Un-tone-mapped");
+    }
+
+    // Test display/views with strategy = InputOnly.
+    {
+        OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_INPUT_ONLY);
+        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        OCIO::ViewTransformsMerger(options).merge();
+
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getDefaultViewTransformName()), "Un-tone-mapped-2");
+
+        // Validate view_transforms
+
+        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 2);
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), "SDR Video");
+        OCIO::ConstTransformRcPtr tf;
+        OCIO_CHECK_NO_THROW(tf = mergedConfig->getViewTransform("SDR Video")
+                                             ->getTransform(OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
+        auto bi = OCIO_DYNAMIC_POINTER_CAST<const OCIO::BuiltinTransform>(tf);
+        OCIO_REQUIRE_ASSERT(bi);
+        OCIO_CHECK_EQUAL(std::string(bi->getStyle()), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-P3lim_1.1");
+
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), "Un-tone-mapped-2");
+    }
+
+    // Test display/views with strategy = Remove
+    {
+        OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+        auto params = setupBasics(merger, MergeStrategy::STRATEGY_REMOVE);
+        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+        OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        OCIO::ViewTransformsMerger(options).merge();
+
+        // Note that the "SDR Video" view transform was removed, so the "SDR Video" value
+        // of the default view transform was reset to empty (will use the first one by default).
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getDefaultViewTransformName()), "");
+
+        // Validate view_transforms
+        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 1);
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), std::string("Un-tone-mapped"));
+    }
+
+    // Test that error_on_conflicts is processed correctly.
+    // strategy = PreferInput, InputFirst = false
+    {
+        OCIO::ConfigMergerRcPtr merger = OCIO::ConfigMerger::Create();
+        OCIO::ConfigRcPtr mergedConfig = baseConfig->createEditableCopy();
+
+        OCIO::ConfigMergingParametersRcPtr params = OCIO::ConfigMergingParameters::Create();
+        merger->addParams(params);
+        merger->getParams(0)->setViewTransforms(MergeStrategy::STRATEGY_PREFER_INPUT);
+        merger->getParams(0)->setInputFirst(false);
+        merger->getParams(0)->setErrorOnConflict(true);
+
+        constexpr char PREFIX[] { "The Input config contains a value that would override the Base config: " };
+
+        // Test that an error is thrown when the the input values are different.
+        {
+            OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+            checkForLogOrException(LOG_TYPE_ERROR, __LINE__,
+                                   [&options]() { OCIO::ViewTransformsMerger(options).merge(); },
+                                   std::string(PREFIX) + std::string("default_view_transform: Un-tone-mapped-2"),
+                                   std::string(PREFIX) + std::string("view_transforms: SDR Video"));
         }
     }
 }
@@ -2200,7 +2329,7 @@ OCIO_ADD_TEST(MergeConfigs, colorspaces_section)
         merger->getParams(0)->setInputFamilyPrefix("Input/");
         merger->getParams(0)->setBaseFamilyPrefix("Base/");
 
-        merger->getParams(0)->setAssumeCommonReferenceSpace(true);
+        merger->getParams(0)->setAdjustInputReferenceSpace(false);
         merger->getParams(0)->setAvoidDuplicates(false);
 
         return params;
@@ -2616,7 +2745,7 @@ OCIO_ADD_TEST(MergeConfigs, colorspaces_section_common_reference_and_duplicates)
         merger->getParams(0)->setInputFamilyPrefix("Input/");
         merger->getParams(0)->setBaseFamilyPrefix("Base/");
 
-        merger->getParams(0)->setAssumeCommonReferenceSpace(false);
+        merger->getParams(0)->setAdjustInputReferenceSpace(true);
         merger->getParams(0)->setAvoidDuplicates(true);
 
         return params;
@@ -2633,6 +2762,7 @@ OCIO_ADD_TEST(MergeConfigs, colorspaces_section_common_reference_and_duplicates)
         checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
             [&options]() { OCIO::RolesMerger(options).merge();
                            OCIO::DisplayViewMerger(options).merge();
+                           OCIO::ViewTransformsMerger(options).merge();
                            OCIO::ColorspacesMerger(options).merge(); },
             "Equivalent input color space 'sRGB - Display' replaces 'sRGB - Display' in the base config, preserving aliases.",
             "Equivalent input color space 'CIE-XYZ-D65' replaces 'CIE-XYZ-D65' in the base config, preserving aliases.",
@@ -2812,6 +2942,7 @@ OCIO_ADD_TEST(MergeConfigs, colorspaces_section_common_reference_and_duplicates)
         checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
             [&options]() { OCIO::RolesMerger(options).merge();
                            OCIO::DisplayViewMerger(options).merge();
+                           OCIO::ViewTransformsMerger(options).merge();
                            OCIO::ColorspacesMerger(options).merge(); },
             "Equivalent base color space 'sRGB - Display' overrides 'sRGB - Display' in the input config, preserving aliases.",
             "Equivalent base color space 'CIE-XYZ-D65' overrides 'CIE-XYZ-D65' in the input config, preserving aliases.",
@@ -2961,7 +3092,7 @@ OCIO_ADD_TEST(MergeConfigs, colorspaces_section_errors)
         merger->getParams(0)->setInputFamilyPrefix("Input/");
         merger->getParams(0)->setBaseFamilyPrefix("Base/");
 
-        merger->getParams(0)->setAssumeCommonReferenceSpace(true);
+        merger->getParams(0)->setAdjustInputReferenceSpace(false);
         merger->getParams(0)->setAvoidDuplicates(false);
 
         return params;
@@ -4063,7 +4194,7 @@ OCIO_ADD_TEST(MergeConfigs, looks_section)
                    MergeStrategy::STRATEGY_PREFER_INPUT,
                    [](OCIO::ConfigMergerRcPtr & merger)
                    { 
-                      merger->getParams(0)->setAssumeCommonReferenceSpace(true);
+                      merger->getParams(0)->setAdjustInputReferenceSpace(false);
                    });
                    
         OCIO_CHECK_EQUAL(mergedConfig->getNumLooks(), 3);
@@ -4090,7 +4221,7 @@ OCIO_ADD_TEST(MergeConfigs, looks_section)
                    [](OCIO::ConfigMergerRcPtr & merger)
                    { 
                        merger->getParams(0)->setInputFirst(false);
-                       merger->getParams(0)->setAssumeCommonReferenceSpace(true);
+                       merger->getParams(0)->setAdjustInputReferenceSpace(false);
                    });
 
         OCIO_CHECK_EQUAL(mergedConfig->getNumLooks(), 3);
@@ -4116,7 +4247,7 @@ OCIO_ADD_TEST(MergeConfigs, looks_section)
                    [](OCIO::ConfigMergerRcPtr & merger)
                    { 
                        merger->getParams(0)->setInputFirst(true);
-                       merger->getParams(0)->setAssumeCommonReferenceSpace(true);
+                       merger->getParams(0)->setAdjustInputReferenceSpace(false);
                    });
 
         OCIO_CHECK_EQUAL(mergedConfig->getNumLooks(), 3);
@@ -4142,7 +4273,7 @@ OCIO_ADD_TEST(MergeConfigs, looks_section)
                    [](OCIO::ConfigMergerRcPtr & merger)
                    { 
                        merger->getParams(0)->setInputFirst(false);
-                       merger->getParams(0)->setAssumeCommonReferenceSpace(true);
+                       merger->getParams(0)->setAdjustInputReferenceSpace(false);
                    });
 
         OCIO_CHECK_EQUAL(mergedConfig->getNumLooks(), 3);
@@ -4235,7 +4366,7 @@ OCIO_ADD_TEST(MergeConfigs, named_transform_section)
         merger->getParams(0)->setInputFamilyPrefix("Input/");
         merger->getParams(0)->setBaseFamilyPrefix("Base/");
 
-        merger->getParams(0)->setAssumeCommonReferenceSpace(true);
+        merger->getParams(0)->setAdjustInputReferenceSpace(false);
         merger->getParams(0)->setAvoidDuplicates(true);
         merger->getParams(0)->setInputFirst(true);
 
@@ -4561,7 +4692,7 @@ OCIO_ADD_TEST(MergeConfigs, named_transform_section_errors)
         merger->getParams(0)->setInputFamilyPrefix("Input/");
         merger->getParams(0)->setBaseFamilyPrefix("Base/");
 
-        merger->getParams(0)->setAssumeCommonReferenceSpace(true);
+        merger->getParams(0)->setAdjustInputReferenceSpace(false);
         merger->getParams(0)->setAvoidDuplicates(false);
 
         return params;
@@ -5678,7 +5809,7 @@ OCIO_ADD_TEST(MergeConfigs, merges_with_ociom_file)
             OCIO::ConstConfigMergerRcPtr merger = OCIO::ConfigMerger::CreateFromFile(ociomPath.c_str());
             OCIO::ConstConfigMergerRcPtr newMerger;
             checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
-                [&newMerger, &merger]() { newMerger = OCIO::ConfigMergingHelpers::MergeConfigs(merger); },
+                [&newMerger, &merger]() { newMerger = merger->mergeConfigs(); },
                 "The Input config contains a value that would override the Base config: file_rules: Default",
                 "Merged color space 'ACES2065-1' has a conflict with alias 'aces' in color space 'ACEScg'",
                 "Equivalent input color space 'sRGB - Display' replaces 'sRGB - Display' in the base config, preserving aliases.",
@@ -5715,7 +5846,7 @@ OCIO_ADD_TEST(MergeConfigs, merges_with_ociom_file)
             OCIO::ConstConfigMergerRcPtr merger = OCIO::ConfigMerger::CreateFromFile(ociomPath.c_str());
             OCIO::ConstConfigMergerRcPtr newMerger;
             checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
-                [&newMerger, &merger]() { newMerger = OCIO::ConfigMergingHelpers::MergeConfigs(merger); },
+                [&newMerger, &merger]() { newMerger = merger->mergeConfigs(); },
                 "The Input config contains a value that would override the Base config: file_rules: Default",
                 "The Input config contains a role that would override Base config role 'cie_xyz_d65_interchange'",
                 "Color space 'sRGB - Display' was not merged as it's already present in the base config",
@@ -5723,6 +5854,9 @@ OCIO_ADD_TEST(MergeConfigs, merges_with_ociom_file)
                 "Merged color space 'ACES2065-1' has a conflict with alias 'aces' in color space 'ACEScg'",
                 "Color space 'sRGB' was not merged as it conflicts with an alias in color space 'sRGB - Texture'",
                 "Equivalent base color space 'ap0' overrides 'rec709' in the input config, preserving aliases");
+
+            OCIO_CHECK_EQUAL(newMerger->getNumMergedConfigs(), 2);
+
             OCIO::ConstConfigRcPtr mergedConfig = newMerger->getMergedConfig();
 
             OCIO_CHECK_NO_THROW(mergedConfig->validate());
@@ -5781,7 +5915,7 @@ OCIO_ADD_TEST(MergeConfigs, merges_with_ociom_file)
             OCIO::ConstConfigMergerRcPtr merger = OCIO::ConfigMerger::CreateFromFile(ociomPath.c_str());
             OCIO::ConstConfigMergerRcPtr newMerger;
             checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
-               [&newMerger, &merger]() { newMerger = OCIO::ConfigMergingHelpers::MergeConfigs(merger); },
+                [&newMerger, &merger]() { newMerger = merger->mergeConfigs(); },
                 "Color space 'raw' will replace a color space in the base config.");
             OCIO::ConstConfigRcPtr mergedConfig = newMerger->getMergedConfig();
             OCIO_CHECK_NO_THROW(mergedConfig->validate());
@@ -5820,7 +5954,7 @@ OCIO_ADD_TEST(MergeConfigs, merges_with_ociom_file)
             merger->getParams(0)->setColorspaces(OCIO::ConfigMergingParameters::STRATEGY_INPUT_ONLY);
             // The rest of the merges uses PreferInput strategy.
 
-            OCIO::ConstConfigMergerRcPtr newMerger = OCIO::ConfigMergingHelpers::MergeConfigs(merger);
+            OCIO::ConstConfigMergerRcPtr newMerger = merger->mergeConfigs();
             OCIO::ConstConfigRcPtr mergedConfig = newMerger->getMergedConfig();
             OCIO_CHECK_ASSERT(!mergedConfig->getConfigIOProxy());
 
@@ -5851,7 +5985,7 @@ OCIO_ADD_TEST(MergeConfigs, merges_with_ociom_file)
         // InputOnly
         {
             OCIO::ConstConfigMergerRcPtr merger = OCIO::ConfigMerger::CreateFromFile(ociomPath.c_str());
-            OCIO::ConstConfigMergerRcPtr newMerger = OCIO::ConfigMergingHelpers::MergeConfigs(merger);
+            OCIO::ConstConfigMergerRcPtr newMerger = merger->mergeConfigs();
             OCIO::ConstConfigRcPtr mergedConfig = newMerger->getMergedConfig();
 
             OCIO_CHECK_NO_THROW(mergedConfig->validate());
@@ -5899,7 +6033,7 @@ OCIO_ADD_TEST(MergeConfigs, merges_with_ocioz_file)
     params->setDefaultStrategy(strategy);
     params->setInputFamilyPrefix("Input/");
     params->setBaseFamilyPrefix("Base/");
-    params->setAssumeCommonReferenceSpace(true);
+    params->setAdjustInputReferenceSpace(false);
     params->setAvoidDuplicates(false);
 
     {
@@ -6058,7 +6192,7 @@ colorspaces:
     params->setDefaultStrategy(strategy);
     params->setInputFamilyPrefix("Input/");
     params->setBaseFamilyPrefix("Base/");
-    params->setAssumeCommonReferenceSpace(true);
+    params->setAdjustInputReferenceSpace(false);
     params->setAvoidDuplicates(false);
 
     OCIO::ConfigRcPtr mergedConfig;
@@ -6161,7 +6295,7 @@ colorspaces:
     params->setDefaultStrategy(strategy);
     params->setInputFamilyPrefix("Input/");
     params->setBaseFamilyPrefix("Base/");
-    params->setAssumeCommonReferenceSpace(true);
+    params->setAdjustInputReferenceSpace(false);
     params->setAvoidDuplicates(false);
 
     OCIO::ConfigRcPtr mergedConfig = OCIO::ConfigMergingHelpers::MergeColorSpace(params, baseConfig, colorspace);

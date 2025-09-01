@@ -13,7 +13,7 @@ merge:
       error_on_conflict: false
       default_strategy: PreferBase
       avoid_duplicates: true
-      assume_common_reference_space: true
+      adjust_input_reference_space: false
     overrides:
       name: Merged1
       description: Basic merge with default strategy
@@ -32,7 +32,7 @@ merge:
       error_on_conflict: false
       default_strategy: BaseOnly
       avoid_duplicates: true
-      assume_common_reference_space: true
+      adjust_input_reference_space: false
     overrides:
       name: Merged2
       description: Description override

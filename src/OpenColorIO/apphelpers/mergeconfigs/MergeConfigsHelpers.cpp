@@ -146,7 +146,7 @@ const char * ConfigMergingParameters::getActiveViews() const
     return getImpl()->m_overrideCfg->getActiveViews();
 }
 
-void ConfigMergingParameters::setInactiveColorspaces(const char * colorspaces)
+void ConfigMergingParameters::setInactiveColorSpaces(const char * colorspaces)
 {
     getImpl()->m_overrideCfg->setInactiveColorSpaces(colorspaces);
 }
@@ -226,14 +226,14 @@ bool ConfigMergingParameters::isAvoidDuplicates() const
     return getImpl()->m_avoidDuplicates;
 }
 
-void ConfigMergingParameters::setAssumeCommonReferenceSpace(bool enabled)
+void ConfigMergingParameters::setAdjustInputReferenceSpace(bool enabled)
 {
-    getImpl()->m_assumeCommonReferenceSpace = enabled;
+    getImpl()->m_adjustInputReferenceSpace = enabled;
 }
 
-bool ConfigMergingParameters::isAssumeCommonReferenceSpace() const
+bool ConfigMergingParameters::isAdjustInputReferenceSpace() const
 {
-    return getImpl()->m_assumeCommonReferenceSpace;
+    return getImpl()->m_adjustInputReferenceSpace;
 }
 
 void ConfigMergingParameters::setRoles(MergeStrategies strategy)
@@ -276,6 +276,20 @@ ConfigMergingParameters::MergeStrategies ConfigMergingParameters::getDisplayView
         return getDefaultStrategy();
     }
     return getImpl()->m_displayViews;
+}
+
+void ConfigMergingParameters::setViewTransforms(MergeStrategies strategy)
+{
+    getImpl()->m_viewTransforms = strategy;
+}
+
+ConfigMergingParameters::MergeStrategies ConfigMergingParameters::getViewTransforms() const
+{
+    if (getImpl()->m_viewTransforms == MergeStrategies::STRATEGY_UNSPECIFIED)
+    {
+        return getDefaultStrategy();
+    }
+    return getImpl()->m_viewTransforms;
 }
 
 void ConfigMergingParameters::setLooks(MergeStrategies strategy)
@@ -355,7 +369,7 @@ std::ostream & operator<<(std::ostream & os, const ConfigMergingParameters & par
     print_bool("error_on_conflict", params.isErrorOnConflict());
     print_enum("default_strategy", params.getDefaultStrategy());
     print_bool("avoid_duplicates", params.isAvoidDuplicates());
-    print_bool("assume_common_reference_space", params.isAssumeCommonReferenceSpace());
+    print_bool("adjust_input_reference_space", params.isAdjustInputReferenceSpace());
     print_str("name", params.getName());
     print_str("description", params.getDescription());
     print_str("search_path", params.getSearchPath());
@@ -365,6 +379,7 @@ std::ostream & operator<<(std::ostream & os, const ConfigMergingParameters & par
     print_enum("roles", params.getRoles());
     print_enum("file_rules", params.getFileRules());
     print_enum("display-views", params.getDisplayViews());
+    print_enum("view_transforms", params.getViewTransforms());
     print_enum("looks", params.getLooks());
     print_enum("colorspaces", params.getColorspaces());
     print_enum("named_transforms", params.getNamedTransforms());
@@ -431,14 +446,48 @@ ConstConfigMergerRcPtr ConfigMerger::Impl::Read(std::istream & istream, const ch
     return merger;
 }
 
-ConstConfigRcPtr ConfigMerger::Impl::loadConfig(const char * value) const
+ConstConfigRcPtr ConfigMerger::Impl::loadConfig(const char * value)
 {
-    try
+    // Get the absolute path.
+    StringUtils::StringVec searchpaths;
+
+    if (m_searchPaths.size() == 0)
     {
-        // Try to load the provided config name as a file.
-        return Config::CreateFromFile(value);
+        searchpaths.emplace_back(m_workingDir);
     }
-    catch(...) { /* don't capture the exception */ }
+
+    for (size_t i = 0; i < m_searchPaths.size(); ++i)
+    {
+        // Resolve variables in case the expansion adds slashes.
+        const std::string path = m_searchPaths[i];
+
+        // Remove trailing "/", and spaces.
+        std::string dirname = StringUtils::RightTrim(StringUtils::Trim(path), '/');
+
+        if (!pystring::os::path::isabs(dirname))
+        {
+            dirname = pystring::os::path::join(m_workingDir, dirname);
+        }
+
+        searchpaths.push_back(pystring::os::path::normpath(dirname));
+    }
+
+    for (size_t i = 0; i < searchpaths.size(); ++i)
+    {
+        try
+        {
+            // Try to load the provided config using the search paths.
+            // Return as soon as they find a valid path.
+            const std::string resolvedfullpath = pystring::os::path::join(searchpaths[i], 
+                                                                          value);
+            return Config::CreateFromFile(resolvedfullpath.c_str());
+        }
+        // TODO: If the file exists but won't load, this hides the error.
+        // (Tried using ExceptionMissingFile, but the implementation of that is not what I
+        // expected, Config::CreateFromFile only uses that if the argument is empty, not
+        // if it can't read the file.)
+        catch(...) { /* don't capture the exception */ }
+    }
 
     // Try to load the provided base config name as a built-in config.
     try
@@ -449,20 +498,18 @@ ConstConfigRcPtr ConfigMerger::Impl::loadConfig(const char * value) const
     catch(...) { /* don't capture the exception */ }
 
     // Must be a reference to a config from a previous merge.
-    for (int i = 0; i < getNumConfigMergingParameters(); i++)
+    for (size_t i = 0; i < m_mergeParams.size(); i++)
     {
-        if (Platform::Strcasecmp(getParams(i)->getOutputName(), value) == 0)
+        if (Platform::Strcasecmp(m_mergeParams.at(i)->getOutputName(), value) == 0)
         {
             // Use the config from the index.
-            if (i < (int) m_mergedConfigs.size())
-            {
-                return m_mergedConfigs.at(i);
-            }
+            return m_mergedConfigs.at(i);
         }
     }
 
     return nullptr;
 }
+
 
 // Public
 
@@ -482,7 +529,6 @@ ConfigMergerRcPtr ConfigMerger::Create()
     return ConfigMergerRcPtr(new ConfigMerger(), &deleter);
 }
 
-// TODO: Refactor with the loadConfig function below.
 ConstConfigMergerRcPtr ConfigMerger::CreateFromFile(const char * filepath)
 {
     if (!filepath || !*filepath)
@@ -554,7 +600,7 @@ const char * ConfigMerger::getWorkingDir() const
 
 ConfigMergingParametersRcPtr ConfigMerger::getParams(int index) const
 {
-    if (index < static_cast<int>(getImpl()->m_mergeParams.size()))
+    if (index >= 0 && index < static_cast<int>(getImpl()->m_mergeParams.size()))
     {
         return getImpl()->m_mergeParams.at(index);
     }
@@ -597,30 +643,20 @@ unsigned int ConfigMerger::getMajorVersion() const
     return getImpl()->m_majorVersion;
 }
 
-void ConfigMerger::setMajorVersion(unsigned int version)
-{
-    getImpl()->m_majorVersion = version;
-}
-
 unsigned int ConfigMerger::getMinorVersion() const
 {
     return getImpl()->m_minorVersion;
 }
 
-void ConfigMerger::setMinorVersion(unsigned int version)
-{
-    getImpl()->m_minorVersion = version;
-}
-
 void ConfigMerger::setVersion(unsigned int major, unsigned int minor)
 {
-    setMajorVersion(major);
-    setMinorVersion(minor);
+    getImpl()->m_majorVersion = major;
+    getImpl()->m_minorVersion = minor;
 }
 
-void ConfigMerger::addMergedConfig(ConstConfigRcPtr cfg)
+int ConfigMerger::getNumMergedConfigs() const
 {
-    getImpl()->m_mergedConfigs.push_back(cfg);
+    return getImpl()->m_mergedConfigs.size();
 }
 
 ConstConfigRcPtr ConfigMerger::getMergedConfig() const
@@ -637,92 +673,19 @@ ConstConfigRcPtr ConfigMerger::getMergedConfig(int index) const
     return nullptr;
 }
 
-namespace ConfigMergingHelpers
+ConstConfigMergerRcPtr ConfigMerger::mergeConfigs() const
 {
+    ConfigMergerRcPtr editableMerger = this->createEditableCopy();
 
-ConstConfigRcPtr loadConfig(const ConfigMergerRcPtr merger, 
-                            const char * value)
-{
-    // Get the absolute path.
-    StringUtils::StringVec searchpaths;
-
-    if (merger->getNumSearchPaths() == 0)
+    for (int i = 0; i < getNumConfigMergingParameters(); i++)
     {
-        merger->addSearchPath(merger->getWorkingDir());
-    }
-
-    for (int i = 0; i < merger->getNumSearchPaths(); ++i)
-    {
-        // Resolve variables in case the expansion adds slashes.
-        const std::string path = merger->getSearchPath(i);
-
-        // Remove trailing "/", and spaces.
-        std::string dirname = StringUtils::RightTrim(StringUtils::Trim(path), '/');
-
-        if (!pystring::os::path::isabs(dirname))
-        {
-            dirname = pystring::os::path::join(merger->getWorkingDir(), dirname);
-        }
-
-        searchpaths.push_back(pystring::os::path::normpath(dirname));
-    }
-
-    for (size_t i = 0; i < searchpaths.size(); ++i)
-    {
-        try
-        {
-            // Try to load the provided config using the search paths.
-            // Return as soon as they find a valid path.
-            const std::string resolvedfullpath = pystring::os::path::join(searchpaths[i], 
-                                                                          value);
-            return Config::CreateFromFile(resolvedfullpath.c_str());
-        }
-        // TODO: If the file exists but won't load, this hides the error.
-        // (Tried using ExceptionMissingFile, but the implementation of that is not what I
-        // expected, Config::CreateFromFile only uses that if the argument is empty, not
-        // if it can't read the file.)
-        catch(...) { /* don't capture the exception */ }
-    }
-
-    // Try to load the provided base config name as a built-in config.
-    try
-    {
-        // Check if the base config name is a built-in config.
-        return Config::CreateFromBuiltinConfig(value);
-    }
-    catch(...) { /* don't capture the exception */ }
-
-    // Must be a reference to a config from a previous merge.
-    for (int i = 0; i < merger->getNumConfigMergingParameters(); i++)
-    {
-        if (Platform::Strcasecmp(merger->getParams(i)->getOutputName(), value) == 0)
-        {
-            // Use the config from the index.
-            return merger->getMergedConfig(i);
-        }
-    }
-
-    return nullptr;
-}
-
-ConstConfigMergerRcPtr MergeConfigs(const ConstConfigMergerRcPtr & merger)
-{
-    if (!merger)
-    {
-        throw(Exception("The merger object was not initialized."));
-    }
-
-    ConfigMergerRcPtr editableMerger = merger->createEditableCopy();
-
-    for (int i = 0; i < merger->getNumConfigMergingParameters(); i++)
-    {
-        ConstConfigMergingParametersRcPtr params = merger->getParams(i);
+        ConfigMergingParametersRcPtr params = getImpl()->m_mergeParams[i];
         
         // Load base config.
-        ConstConfigRcPtr baseCfg = loadConfig(editableMerger, params->getBaseConfigName());
+        ConstConfigRcPtr baseCfg = editableMerger->getImpl()->loadConfig(params->getBaseConfigName());
 
         // Load input config.
-        ConstConfigRcPtr inputCfg = loadConfig(editableMerger, params->getInputConfigName());
+        ConstConfigRcPtr inputCfg = editableMerger->getImpl()->loadConfig(params->getInputConfigName());
 
         if (baseCfg && inputCfg)
         {
@@ -732,11 +695,12 @@ ConstConfigMergerRcPtr MergeConfigs(const ConstConfigMergerRcPtr & merger)
             // Process merge.
             try
             {
-                MergeHandlerOptions options = { baseCfg, inputCfg, merger->getParams(i), mergedConfig };
+                MergeHandlerOptions options = { baseCfg, inputCfg, params, mergedConfig };
                 GeneralMerger(options).merge();
                 RolesMerger(options).merge();
                 FileRulesMerger(options).merge();
                 DisplayViewMerger(options).merge();
+                ViewTransformsMerger(options).merge();
                 LooksMerger(options).merge();
                 ColorspacesMerger(options).merge();
                 NamedTransformsMerger(options).merge();
@@ -747,7 +711,8 @@ ConstConfigMergerRcPtr MergeConfigs(const ConstConfigMergerRcPtr & merger)
             }
 
             // Add new config object to m_mergedConfigs so they can be used for following merges.
-            editableMerger->addMergedConfig(mergedConfig);
+            editableMerger->getImpl()->m_mergedConfigs.push_back(mergedConfig);
+
         }
         else
         {
@@ -757,6 +722,9 @@ ConstConfigMergerRcPtr MergeConfigs(const ConstConfigMergerRcPtr & merger)
 
     return editableMerger;
 }
+
+namespace ConfigMergingHelpers
+{
 
 ConfigRcPtr MergeConfigs(const ConfigMergingParametersRcPtr & params,
                          const ConstConfigRcPtr & baseConfig,
@@ -778,6 +746,7 @@ ConfigRcPtr MergeConfigs(const ConfigMergingParametersRcPtr & params,
         RolesMerger(options).merge();
         FileRulesMerger(options).merge();
         DisplayViewMerger(options).merge();
+        ViewTransformsMerger(options).merge();
         LooksMerger(options).merge();
         ColorspacesMerger(options).merge();
         NamedTransformsMerger(options).merge();
@@ -809,7 +778,7 @@ ConfigRcPtr MergeColorSpace(const ConfigMergingParametersRcPtr & params,
     // With only the color space, the reference space is unknown, so turn off
     // automatic reference space conversion to the reference space of the base config.
     ConfigMergingParametersRcPtr eParams = params->createEditableCopy();
-    eParams->setAssumeCommonReferenceSpace(true);
+    eParams->setAdjustInputReferenceSpace(false);
 
     // Process the merge.
     try
