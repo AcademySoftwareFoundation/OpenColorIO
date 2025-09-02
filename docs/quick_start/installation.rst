@@ -289,7 +289,6 @@ Here are the most common OCIO-specific CMake options (the default values are sho
 - ``-DOCIO_USE_HEADLESS=OFF`` (Set to ON to do headless GPU rendering)
 - ``-DOCIO_WARNING_AS_ERROR=ON`` (Set to OFF to turn off warnings as errors)
 - ``-DOCIO_BUILD_DOCS=OFF`` (Set to ON to build the documentation)
-- ``-DOCIO_BUILD_FROZEN_DOCS=OFF`` (Set to ON to update the Python documentation)
 
 Note that OCIO will turn off any specific SIMD CPU performance optimizations if they are not supported 
 by the build target architecture. The default for ``OCIO_USE_SSE2``, ``OCIO_USE_AVX``, ``OCIO_USE_AVX2`` and 

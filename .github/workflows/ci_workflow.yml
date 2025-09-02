@@ -154,10 +154,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Install docs env
-        run: share/ci/scripts/linux/yum/install_docs_env.sh
+        run: share/ci/scripts/linux/dnf/install_docs_env.sh
         if: matrix.build-docs == 'ON'
       - name: Install tests env
-        run: share/ci/scripts/linux/yum/install_tests_env.sh
+        run: share/ci/scripts/linux/dnf/install_tests_env.sh
       - name: Create build directories
         run: |
           mkdir _install
@@ -366,10 +366,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Install docs env
-        run: share/ci/scripts/linux/yum/install_docs_env.sh
+        run: share/ci/scripts/linux/dnf/install_docs_env.sh
         if: matrix.build-docs == 'ON'
       - name: Install tests env
-        run: share/ci/scripts/linux/yum/install_tests_env.sh
+        run: share/ci/scripts/linux/dnf/install_tests_env.sh
       - name: Create build directories
         run: |
           mkdir _install
@@ -462,7 +462,7 @@ jobs:
     runs-on: macos-13
     strategy:
       matrix:
-        build: [1, 2, 3, 4]
+        build: [1, 2, 3, 4, 5]
         include:
           - build: 5
             arch-type: "x86_64"
@@ -736,7 +736,7 @@ jobs:
   #       Debug build testing with Python bindings and docs enabled.
 
   windows:
-    name: 'Windows 2019 
+    name: 'Windows 2022 
       <MSVC 
        config=${{ matrix.build-type }}, 
        shared=${{ matrix.build-shared }}, 
@@ -749,7 +749,7 @@ jobs:
     if: |
       github.event_name == 'push' ||
       github.event.pull_request.head.repo.full_name != github.repository
-    runs-on: windows-2019
+    runs-on: windows-2022
     strategy:
       matrix:
         build: [1, 2, 3, 4]
@@ -766,7 +766,7 @@ jobs:
           - build: 3
             build-type: Release
             build-shared: 'OFF'
-            build-docs: 'OFF'
+            build-docs: 'ON'
             build-openfx: 'OFF'
             use-simd: 'ON'
             use-oiio: 'OFF'
