@@ -8,4 +8,4 @@ HERE=$(dirname $0)
 DOXYGEN_LOCATION="$1"
 
 bash $HERE/install_doxygen.sh "$DOXYGEN_LOCATION"
-pip install -r $HERE/../../../../docs/requirements.txt
+pip3 install -r $HERE/../../../../docs/requirements.txt

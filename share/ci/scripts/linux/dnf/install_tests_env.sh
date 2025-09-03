@@ -6,4 +6,4 @@ set -ex
 
 HERE=$(dirname $0)
 
-pip install -r $HERE/../../../../../tests/python/requirements.txt
+pip3 install -r $HERE/../../../../../tests/python/requirements.txt
