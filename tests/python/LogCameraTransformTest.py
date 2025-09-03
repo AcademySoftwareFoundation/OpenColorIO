@@ -72,10 +72,10 @@ class LogCameraTransformTest(unittest.TestCase):
         self.assertEqual(lct.getDirection(), OCIO.TRANSFORM_DIR_INVERSE)
 
         self.assertEqual(str(lct), '<LogCameraTransform direction=inverse, '
-                                   'base=2.5, logSideSlope=1.1 1.2 1.3, '
-                                   'logSideOffset=0.01 0.02 0.03, linSideSlope=1.3 1.2 1.1, '
-                                   'linSideOffset=0.02 0.03 0.01, linSideBreak=0.1 0.2 0.3, '
-                                   'linearSlope=0.9 0.8 0.7>')
+                                   'base=2.5, logSideSlope=[1.1, 1.2, 1.3], '
+                                   'logSideOffset=[0.01, 0.02, 0.03], linSideSlope=[1.3, 1.2, 1.1], '
+                                   'linSideOffset=[0.02, 0.03, 0.01], linSideBreak=[0.1, 0.2, 0.3], '
+                                   'linearSlope=[0.9, 0.8, 0.7]>')
 
         LIN_SB = [0.15, 0.2, 0.3]
         BASE = 10

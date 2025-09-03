@@ -302,6 +302,84 @@ OCIO_ADD_TEST(FixedFunctionOps, RGB_TO_HSV)
     OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_RGB_TO_HSV"));
 }
 
+OCIO_ADD_TEST(FixedFunctionOps, RGB_TO_HSY_LIN)
+{
+    OCIO::OpRcPtrVec ops;
+
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::RGB_TO_HSY_LIN, {}));
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::HSY_LIN_TO_RGB, {}));
+
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OCIO::ConstOpRcPtr op1 = ops[1];
+
+    OCIO_CHECK_ASSERT(!op0->isIdentity());
+    OCIO_CHECK_ASSERT(!op1->isIdentity());
+
+    OCIO_CHECK_ASSERT(op0->isSameType(op1));
+    OCIO_CHECK_ASSERT(op0->isInverse(op1));
+    OCIO_CHECK_ASSERT(op1->isInverse(op0));
+
+    OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp(false);
+    const OCIO::OpCPU & c = *cpuOp;
+    const std::string typeName(typeid(c).name());
+    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_RGB_TO_HSY_LIN"));
+}
+
+OCIO_ADD_TEST(FixedFunctionOps, RGB_TO_HSY_LOG)
+{
+    OCIO::OpRcPtrVec ops;
+
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::RGB_TO_HSY_LOG, {}));
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::HSY_LOG_TO_RGB, {}));
+
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OCIO::ConstOpRcPtr op1 = ops[1];
+
+    OCIO_CHECK_ASSERT(!op0->isIdentity());
+    OCIO_CHECK_ASSERT(!op1->isIdentity());
+
+    OCIO_CHECK_ASSERT(op0->isSameType(op1));
+    OCIO_CHECK_ASSERT(op0->isInverse(op1));
+    OCIO_CHECK_ASSERT(op1->isInverse(op0));
+
+    OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp(false);
+    const OCIO::OpCPU & c = *cpuOp;
+    const std::string typeName(typeid(c).name());
+    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_RGB_TO_HSY_LOG"));
+}
+
+OCIO_ADD_TEST(FixedFunctionOps, RGB_TO_HSY_VID)
+{
+    OCIO::OpRcPtrVec ops;
+
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::RGB_TO_HSY_VID, {}));
+    OCIO_CHECK_NO_THROW(OCIO::CreateFixedFunctionOp(ops, OCIO::FixedFunctionOpData::HSY_VID_TO_RGB, {}));
+
+    OCIO_CHECK_NO_THROW(ops.finalize());
+    OCIO_REQUIRE_EQUAL(ops.size(), 2);
+
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OCIO::ConstOpRcPtr op1 = ops[1];
+
+    OCIO_CHECK_ASSERT(!op0->isIdentity());
+    OCIO_CHECK_ASSERT(!op1->isIdentity());
+
+    OCIO_CHECK_ASSERT(op0->isSameType(op1));
+    OCIO_CHECK_ASSERT(op0->isInverse(op1));
+    OCIO_CHECK_ASSERT(op1->isInverse(op0));
+
+    OCIO::ConstOpCPURcPtr cpuOp = op0->getCPUOp(false);
+    const OCIO::OpCPU & c = *cpuOp;
+    const std::string typeName(typeid(c).name());
+    OCIO_CHECK_NE(std::string::npos, StringUtils::Find(typeName, "Renderer_RGB_TO_HSY_VID"));
+}
+
 OCIO_ADD_TEST(FixedFunctionOps, XYZ_TO_xyY)
 {
     OCIO::OpRcPtrVec ops;

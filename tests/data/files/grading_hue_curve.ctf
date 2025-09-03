@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2.5" id="hue curve">
+    <GradingHueCurve inBitDepth="32f" outBitDepth="32f" style="log">
+
+        <HueHue>
+            <ControlPoints>
+0.05, 0.15, 0.2, 0.3, 0.35, 0.4, 0.45, 0.45, 0.6, 0.7, 0.8, 0.85
+            </ControlPoints>
+        </HueHue>
+        <HueSat>
+            <ControlPoints>
+-0.1, 1.2, 0.2, 0.7, 0.4, 1.5, 0.5, 0.5, 0.6, 1.4, 0.8, 0.7
+            </ControlPoints>
+        </HueSat>
+        <HueLum>
+            <ControlPoints>
+0.1, 1.5, 0.2, 0.7, 0.4, 1.4, 0.5, 0.8, 0.8, 0.5
+            </ControlPoints>
+        </HueLum>
+        <LumSat>
+            <ControlPoints>
+0.05, 1.5, 0.5, 0.9, 1.1, 1.4
+            </ControlPoints>
+        </LumSat>
+        <SatSat>
+            <ControlPoints>
+0., 0.1, 0.5, 0.45, 1., 1.1
+            </ControlPoints>
+        </SatSat>
+        <LumLum>
+            <ControlPoints>
+-0.02, -0.04, 0.2, 0.1, 0.8, 0.95, 1.1, 1.2
+            </ControlPoints>
+        </LumLum>
+        <SatLum>
+            <ControlPoints>
+0., 1.2, 0.6, 0.8, 0.9, 1.1
+            </ControlPoints>
+        </SatLum>
+        <HueFx>
+            <ControlPoints>
+0.2, 0.05, .4, -0.09, .6, -0.2, .8, 0.05, 0.99, -0.02
+            </ControlPoints>
+        </HueFx>
+
+    </GradingHueCurve>
+</ProcessList>

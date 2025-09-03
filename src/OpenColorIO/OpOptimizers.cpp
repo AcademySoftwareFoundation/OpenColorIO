@@ -41,6 +41,7 @@ bool IsPairInverseEnabled(OpData::Type type, OptimizationFlags flags)
 
     case OpData::GradingPrimaryType:
     case OpData::GradingRGBCurveType:
+    case OpData::GradingHueCurveType:
     case OpData::GradingToneType:
         return HasFlag(flags, OPTIMIZATION_PAIR_IDENTITY_GRADING);
 

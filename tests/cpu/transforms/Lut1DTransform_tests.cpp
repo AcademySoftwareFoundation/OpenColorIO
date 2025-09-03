@@ -99,7 +99,7 @@ OCIO_ADD_TEST(Lut1DTransform, basic)
     oss << *lut;
     OCIO_CHECK_EQUAL(oss.str(), "<Lut1DTransform direction=inverse, fileoutdepth=8ui,"
         " interpolation=default, inputhalf=0, outputrawhalf=0, hueadjust=0,"
-        " length=3, minrgb=[-0.2 0.1 -0.3], maxrgb=[1.2 1.3 0.8]>");
+        " length=3, minrgb=[-0.2, 0.1, -0.3], maxrgb=[1.2, 1.3, 0.8]>");
 
     auto lut2 = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Lut1DTransform>(lut->createEditableCopy());
     std::ostringstream oss2;

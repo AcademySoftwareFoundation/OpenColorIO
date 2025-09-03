@@ -465,6 +465,17 @@ private:
             TAG_RGB_CURVE_RED
         };
 
+        static const std::vector<const char *> gradingHueCurveSubElements = {
+            TAG_HUE_CURVE_HUE_HUE,
+            TAG_HUE_CURVE_HUE_SAT,
+            TAG_HUE_CURVE_HUE_LUM,
+            TAG_HUE_CURVE_LUM_SAT,
+            TAG_HUE_CURVE_SAT_SAT,
+            TAG_HUE_CURVE_LUM_LUM,
+            TAG_HUE_CURVE_SAT_LUM,
+            TAG_HUE_CURVE_HUE_FX,
+        };
+
         XMLParserHelper * pImpl = (XMLParserHelper*)userData;
 
         if (!pImpl || !name || !*name)
@@ -539,7 +550,7 @@ private:
             }
 
             // Safety check to try and ensure that all new elements will get handled here.
-            static_assert(CTFReaderOpElt::NoType == 17, "Need to handle new type here");
+            static_assert(CTFReaderOpElt::NoType == 18, "Need to handle new type here");
 
             // Will allow to give better error feedback to the user if the
             // element name is not handled. If any case recognizes the name,
@@ -585,6 +596,11 @@ private:
                                       TAG_PROCESS_LIST, recognizedName))
             {
                 pImpl->AddOpReader(CTFReaderOpElt::GradingRGBCurveType, name);
+            }
+            else if (SupportedElement(name, pElt, TAG_HUE_CURVE,
+                                      TAG_PROCESS_LIST, recognizedName))
+            {
+                pImpl->AddOpReader(CTFReaderOpElt::GradingHueCurveType, name);
             }
             else if (SupportedElement(name, pElt, TAG_TONE, TAG_PROCESS_LIST, recognizedName))
             {
@@ -897,7 +913,9 @@ private:
                             pImpl->getXmlFilename()));
                 }
                 else if (SupportedElement(name, pElt, gradingRGBCurveSubElements,
-                                          TAG_RGB_CURVE, recognizedName))
+                                          TAG_RGB_CURVE, recognizedName) ||
+                         SupportedElement(name, pElt, gradingHueCurveSubElements,
+                                          TAG_HUE_CURVE, recognizedName))
                 {
                     pImpl->m_elms.push_back(
                         std::make_shared<CTFReaderGradingCurveElt>(
@@ -907,7 +925,9 @@ private:
                             pImpl->getXmlFilename()));
                 }
                 else if (SupportedElement(name, pElt, TAG_CURVE_CTRL_PNTS,
-                                          gradingRGBCurveSubElements, recognizedName))
+                                          gradingRGBCurveSubElements, recognizedName) ||
+                         SupportedElement(name, pElt, TAG_CURVE_CTRL_PNTS,
+                                          gradingHueCurveSubElements, recognizedName))
                 {
                     pImpl->m_elms.push_back(
                         std::make_shared<CTFReaderGradingCurvePointsElt>(
@@ -917,7 +937,9 @@ private:
                             pImpl->getXmlFilename()));
                 }
                 else if (SupportedElement(name, pElt, TAG_CURVE_SLOPES,
-                                          gradingRGBCurveSubElements, recognizedName))
+                                          gradingRGBCurveSubElements, recognizedName) ||
+                         SupportedElement(name, pElt, TAG_CURVE_SLOPES,
+                                          gradingHueCurveSubElements, recognizedName))
                 {
                     pImpl->m_elms.push_back(
                         std::make_shared<CTFReaderGradingCurveSlopesElt>(
