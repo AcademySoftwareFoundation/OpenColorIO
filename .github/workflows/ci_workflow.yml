@@ -57,7 +57,7 @@ jobs:
     container:
       # DockerHub: https://hub.docker.com/u/aswf
       # Source: https://github.com/AcademySoftwareFoundation/aswf-docker
-      image: aswf/ci-ocio:${{ matrix.vfx-cy }}
+      image: aswf/ci-ocio:${{ matrix.vfx-cy }}.1
     strategy:
       fail-fast: true
       matrix:
