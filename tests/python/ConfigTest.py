@@ -1590,3 +1590,12 @@ class ConfigVirtualDisplayTest(unittest.TestCase):
                          "Display 'virtual_display' has a view 'Raw1' that " +
                          "refers to a color space or a named transform, " +
                          "'raw1', which is not defined.")
+
+    def test_temporary_display(self):
+        """
+        Test the ability to get and set the temporary display status.
+        """
+
+        self.assertFalse(self.cfg.isDisplayTemporary('sRGB'))
+        self.cfg.setDisplayTemporary('sRGB', True)
+        self.assertTrue(self.cfg.isDisplayTemporary('sRGB'))

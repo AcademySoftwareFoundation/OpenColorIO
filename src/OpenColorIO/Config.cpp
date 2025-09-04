@@ -4170,6 +4170,18 @@ bool Config::isDisplayTemporary(int index) const noexcept
     return false;
 }
 
+void Config::setDisplayTemporary(int index, bool isTemporary) noexcept
+{
+    if (index >= 0 || index < static_cast<int>(getImpl()->m_displays.size()))
+    {
+        getImpl()->m_displays[index].second.m_temporary = isTemporary;
+
+        getImpl()->m_displayCache.clear();
+        AutoMutex lock(getImpl()->m_cacheidMutex);
+        getImpl()->resetCacheIDs();
+    }
+}
+
 int Config::getNumViews(ViewType type, const char * display) const
 {
     if (!display || !*display)

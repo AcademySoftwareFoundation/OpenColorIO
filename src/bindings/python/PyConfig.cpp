@@ -552,6 +552,18 @@ void bindPyConfig(py::module & m)
                  return false;
              },
              "display"_a)
+        .def("setDisplayTemporary", [](ConfigRcPtr & self, const std::string & display, bool isTemporary)
+             {
+                 for (int i = 0; i < self->getNumDisplaysAll(); i++)
+                 {
+                     std::string other(self->getDisplayAll(i));
+                     if (StringUtils::Compare(display, other))
+                     {
+                         self->setDisplayTemporary(i, isTemporary);
+                     }
+                 }
+             },
+             "display"_a, "isTemporary"_a)
         .def_static("AreVirtualViewsEqual", [](const ConstConfigRcPtr & first,
                                                const ConstConfigRcPtr & second,
                                                const char * viewName)
