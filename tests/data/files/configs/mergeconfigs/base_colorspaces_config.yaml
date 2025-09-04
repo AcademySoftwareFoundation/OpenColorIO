@@ -1,0 +1,57 @@
+ocio_profile_version: 2
+
+environment:
+  test: value
+  test1: value1
+
+search_path: 
+  - .
+  - abc
+
+family_separator: "#"
+inactive_colorspaces: [sRGB - Texture, sRGB - Display, ACEScg]
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: ACEScg}
+
+displays:
+  MyDisplay:
+    - !<View> {name: MyDisplayView, view_transform: MyViewTransform, display_colorspace: sRGB - Display}
+
+view_transforms:
+  - !<ViewTransform>
+    name: MyViewTransform
+    from_scene_reference: !<BuiltinTransform> {style: ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO_1.0}
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: sRGB - Display
+    aliases: [srgb_display]
+    family: Display#Basic
+    description: from base
+    from_display_reference: !<BuiltinTransform> {style: DISPLAY - CIE-XYZ-D65_to_sRGB}
+
+colorspaces:
+  - !<ColorSpace>
+    name: ACEScg
+    aliases: [aces]
+    family: ACES#Linear
+    description: from base
+    to_scene_reference: !<BuiltinTransform> {style: ACEScg_to_ACES2065-1}
+
+  - !<ColorSpace>
+    name: sRGB - Texture
+    family: Texture
+    aliases: [srgb, srgb_tx]
+    description: from base
+    from_scene_reference: !<GroupTransform>
+      children:
+        - !<MatrixTransform> {matrix: [2.52168618674388, -1.13413098823972, -0.387555198504164, 0, -0.276479914229922, 1.37271908766826, -0.096239173438334, 0, -0.0153780649660342, -0.152975335867399, 1.16835340083343, 0, 0, 0, 0, 1]}
+        - !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
+
+  - !<ColorSpace>
+    name: look
+    aliases: 
+    family:
+    description: from base
+    from_scene_reference: !<ColorSpaceTransform> {src: ACEScg, dst: sRGB - Texture}

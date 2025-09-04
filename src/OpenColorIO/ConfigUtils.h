@@ -31,8 +31,52 @@ const char * IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
                                        const ConstConfigRcPtr & builtinConfig, 
                                        const char * builtinColorSpaceName);
 
+ConstTransformRcPtr simplifyTransform(const ConstGroupTransformRcPtr & gt);
+ConstTransformRcPtr invertTransform(const ConstTransformRcPtr & t);
+ConstTransformRcPtr getTransformDir(const ConstColorSpaceRcPtr & cs, ColorSpaceDirection dir);
+
+ConstTransformRcPtr getRefSpaceConverter(const ConstConfigRcPtr & srcConfig, 
+                                         const ConstConfigRcPtr & dstConfig, 
+                                         ReferenceSpaceType refSpaceType);
+
+void initializeRefSpaceConverters(ConstTransformRcPtr & inputToBaseGtScene,
+                                  ConstTransformRcPtr & inputToBaseGtDisplay,
+                                  const ConstConfigRcPtr & baseConfig,
+                                  const ConstConfigRcPtr & inputConfig);
+
+void updateReferenceColorspace(ColorSpaceRcPtr & cs, 
+                               const ConstTransformRcPtr & toNewReferenceTransform);
+void updateReferenceView(ViewTransformRcPtr & vt, 
+                         const ConstTransformRcPtr & toNewSceneReferenceTransform,
+                         const ConstTransformRcPtr & toNewDisplayReferenceTransform);
+
+struct Fingerprint
+{
+    const char * csName;
+    ReferenceSpaceType type;
+    std::vector<float> vals;
+};
+
+struct ColorSpaceFingerprints
+{
+    std::vector<Fingerprint> vec;
+    std::vector<float> sceneRefTestVals;
+    std::vector<float> displayRefTestVals;
+};
+
+bool calcColorSpaceFingerprint(std::vector<float> & fingerprintVals, 
+                               const ColorSpaceFingerprints & fingerprints, 
+                               const ConstConfigRcPtr & config, 
+                               const ConstColorSpaceRcPtr & cs);
+
+void initializeColorSpaceFingerprints(ColorSpaceFingerprints & fingerprints,
+                                      const ConstConfigRcPtr & config);
+
+const char * findEquivalentColorspace(const ColorSpaceFingerprints & fingerprints,
+                                      const ConstConfigRcPtr & inputConfig, 
+                                      const ConstColorSpaceRcPtr & inputCS);
+
 // Temporarily deactivate the Processor cache on a Config object.
-// Currently, this also clears the cache.
 //
 class SuspendCacheGuard
 {

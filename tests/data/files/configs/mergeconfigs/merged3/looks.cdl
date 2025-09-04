@@ -1,0 +1,42 @@
+<ColorDecisionList xmlns="urn:ASC:CDL:v1.01">
+
+	<ColorDecision>
+		<ColorCorrection id="look-01">
+			<SOPNode>
+				<Slope>1.1 1.0 0.9</Slope>
+				<Offset>-.03 -2e-2 0</Offset>
+				<Power>1.25 1 1e0</Power>
+			</SOPNode>
+			<SatNode>
+				<Saturation>1.700000</Saturation>
+			</SatNode>
+		</ColorCorrection>
+	</ColorDecision>
+
+	<ColorDecision>
+		<ColorCorrection id="look-02">
+			<SOPNode>
+				<Slope>0.9000 0.700 0.6000</Slope>
+				<Offset>0.100 0.100 0.100</Offset>
+				<Power>0.9 0.9 0.9</Power>
+			</SOPNode>
+			<SatNode>
+				<Saturation>0.7</Saturation>
+			</SatNode>
+		</ColorCorrection>
+	</ColorDecision>
+
+	<ColorDecision>
+		<ColorCorrection id="look-03">
+			<SOPNode>
+				<Slope>1.2000 1.1000 1.0000</Slope>
+				<Offset>0.000 0.0000 0.0000</Offset>
+				<Power>0.9 1.0 1.2</Power>
+			</SOPNode>
+			<SatNode>
+				<Saturation>1.000000</Saturation>
+			</SatNode>
+		</ColorCorrection>
+	</ColorDecision>
+
+</ColorDecisionList>

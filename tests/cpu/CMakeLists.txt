@@ -123,6 +123,8 @@ endfunction(add_ocio_test)
 # but for now, we will maintain the status quo and copy all from the
 # OpenColorIO target
 set(SOURCES
+    apphelpers/mergeconfigs/OCIOMYaml.cpp
+    apphelpers/mergeconfigs/SectionMerger.cpp
     builtinconfigs/CGConfig.cpp
     builtinconfigs/StudioConfig.cpp
     ConfigUtils.cpp
@@ -187,6 +189,7 @@ set(TESTS
     apphelpers/ColorSpaceHelpers_tests.cpp
     apphelpers/DisplayViewHelpers_tests.cpp
     apphelpers/LegacyViewingPipeline_tests.cpp
+    apphelpers/MergeConfigsHelpers_tests.cpp
     apphelpers/MixingHelpers_tests.cpp
     Baker_tests.cpp
     BitDepthUtils_tests.cpp
@@ -195,6 +198,7 @@ set(TESTS
     ColorSpace_tests.cpp
     ColorSpaceSet_tests.cpp
     Config_tests.cpp
+    ConfigUtils_tests.cpp
     Context_tests.cpp
     ContextVariableUtils_tests.cpp
     CPUProcessor_tests.cpp

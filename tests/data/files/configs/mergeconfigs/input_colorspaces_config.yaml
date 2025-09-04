@@ -1,0 +1,63 @@
+ocio_profile_version: 2
+
+environment:
+  test: differentValue
+  test3: value3
+
+search_path: 
+  - .
+  - def
+
+name: input config
+description: The input test config.
+
+roles:
+  default: ACES2065-1
+
+family_separator: "~"
+inactive_colorspaces: [ACES2065-1, sRGB - Display]
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  MyDisplay:
+    - !<View> {name: MyDisplayView, view_transform: MyViewTransform, display_colorspace: sRGB - Display}
+
+view_transforms:
+  - !<ViewTransform>
+    name: MyViewTransform
+    from_scene_reference: !<BuiltinTransform> {style: ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO_1.0}
+
+active_displays: [MyDisplay]
+active_views: [MyDisplayView]
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: sRGB - Display
+    aliases: [srgb_display]
+    family: Display~Standard
+    description: from input
+    from_display_reference: !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
+
+  - !<ColorSpace>
+    name: look
+    aliases: [look1]
+    family: Display~Standard
+    description: from input
+    from_display_reference: !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055, direction: inverse}
+
+colorspaces:
+  - !<ColorSpace>
+    name: ACES2065-1
+    aliases: [aces]
+    family: ACES~Linear
+    description: from input
+    to_scene_reference: !<MatrixTransform> {matrix: [ 2.521686186744, -1.134130988240, -0.387555198504, 0, -0.276479914230, 1.372719087668, -0.096239173438, 0, -0.015378064966, -0.152975335867, 1.168353400833, 0, 0, 0, 0, 1 ]}
+
+  - !<ColorSpace>
+    name: sRGB
+    aliases: [my_srgb]
+    family: Texture~
+    description: from input
+    to_scene_reference: !<ExponentWithLinearTransform> {gamma: 2.4, offset: 0.055}
