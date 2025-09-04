@@ -106,7 +106,7 @@ class NamedTransformTest(unittest.TestCase):
         # Wrong type tests.
         for invalid in self.TEST_INVALIDS:
             with self.assertRaises(TypeError):
-                self.named_tr.setName(invalid)
+                self.named_tr.setName(invalid)  # type: ignore
 
     def test_family(self):
         """
@@ -122,7 +122,7 @@ class NamedTransformTest(unittest.TestCase):
         # Wrong type tests.
         for invalid in self.TEST_INVALIDS:
             with self.assertRaises(TypeError):
-                self.named_tr.setFamily(invalid)
+                self.named_tr.setFamily(invalid)  # type: ignore
 
     def test_description(self):
         """
@@ -138,7 +138,7 @@ class NamedTransformTest(unittest.TestCase):
         # Wrong type tests.
         for invalid in self.TEST_INVALIDS:
             with self.assertRaises(TypeError):
-                self.named_tr.setDescription(invalid)
+                self.named_tr.setDescription(invalid)  # type: ignore
 
     def test_transform(self):
         """
@@ -161,7 +161,7 @@ class NamedTransformTest(unittest.TestCase):
         # Wrong type tests.
         for invalid in self.TEST_INVALIDS:
             with self.assertRaises(TypeError):
-                self.named_tr.setTransform(invalid, OCIO.TRANSFORM_DIR_FORWARD)
+                self.named_tr.setTransform(invalid, OCIO.TRANSFORM_DIR_FORWARD)  # type: ignore
 
 
     def test_constructor_with_keywords(self):
@@ -254,7 +254,7 @@ class NamedTransformTest(unittest.TestCase):
 
         for invalid in self.TEST_INVALIDS:
             with self.assertRaises(TypeError):
-                named_tr = OCIO.NamedTransform(invalid)
+                named_tr = OCIO.NamedTransform(invalid)  # type: ignore
 
     def test_static_get_transform(self):
         """

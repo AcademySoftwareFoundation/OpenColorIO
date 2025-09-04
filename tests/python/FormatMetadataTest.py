@@ -119,11 +119,11 @@ class FormatMetadataTest(unittest.TestCase):
 
         # Test invalid cases. Name and value have to be strings.
         with self.assertRaises(TypeError):
-            child3.addChildElement('string', 42)
+            child3.addChildElement('string', 42)  # type: ignore
         with self.assertRaises(TypeError):
-            child3.addChildElement(42, 'string')
+            child3.addChildElement(42, 'string')  # type: ignore
         with self.assertRaises(TypeError):
-            child3.addChildElement('name', None)
+            child3.addChildElement('name', None)  # type: ignore
 
     def test_attributes(self):
         """

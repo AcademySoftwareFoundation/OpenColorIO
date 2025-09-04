@@ -58,10 +58,10 @@ class GradingDataTest(unittest.TestCase):
         self.assertEqual(0, rgbm3.red)
 
         with self.assertRaises(TypeError):
-            OCIO.GradingRGBM(0)
+            OCIO.GradingRGBM(0)  # type: ignore
 
         with self.assertRaises(TypeError):
-            OCIO.GradingRGBM(0, 0)
+            OCIO.GradingRGBM(0, 0)  # type: ignore
             
         # Constructor with named parameters.
         rgbm3 = OCIO.GradingRGBM(blue=1, green=2, master=3, red=4)
@@ -72,7 +72,7 @@ class GradingDataTest(unittest.TestCase):
 
         # Constructor with named parameters, some missing.
         with self.assertRaises(TypeError):
-            OCIO.GradingRGBM(master=.3, red=.4)
+            OCIO.GradingRGBM(master=.3, red=.4)  # type: ignore
 
         # Check comparison operators
         rgbm1 = OCIO.GradingRGBM()
@@ -116,13 +116,13 @@ class GradingDataTest(unittest.TestCase):
         assertEqualPrimary(self, primaryLog, primaryVideo)
 
         with self.assertRaises(TypeError):
-            OCIO.GradingPrimary()
+            OCIO.GradingPrimary()  # type: ignore
 
         with self.assertRaises(AttributeError):
             OCIO.GradingPrimary(OCIO.TRANSFOR_DIRECTION_FORWARD)
 
         with self.assertRaises(TypeError):
-            OCIO.GradingPrimary(0)
+            OCIO.GradingPrimary(0)  # type: ignore
 
         newGamma = OCIO.GradingRGBM(1.1, 1.2, 1.3, 1)
         primaryLog.gamma = newGamma
@@ -160,7 +160,7 @@ class GradingDataTest(unittest.TestCase):
 
         # Create a similar bspline curve with alternate constructor.
         bs2 = OCIO.GradingBSplineCurve([0, 0, 0.1, 0.5, 0.4, 0.6, 0.6, 0.7, 1, 1])
-        cpts2 = bs2.getControlPoints()
+        cpts0 = bs2.getControlPoints()
 
         assertEqualBSpline(self, bs, bs2)
 
@@ -322,10 +322,10 @@ class GradingDataTest(unittest.TestCase):
         self.assertEqual(3, rgbm4.width)
 
         with self.assertRaises(TypeError):
-            OCIO.GradingRGBMSW(0)
+            OCIO.GradingRGBMSW(0)  # type: ignore
 
         with self.assertRaises(TypeError):
-            OCIO.GradingRGBMSW(0, 0, 0)
+            OCIO.GradingRGBMSW(0, 0, 0)  # type: ignore
 
         # Constructor with named parameters.
         rgbm5 = OCIO.GradingRGBMSW(blue=1, master=2, green=3, start=4, width=5, red=6)
@@ -347,7 +347,7 @@ class GradingDataTest(unittest.TestCase):
 
         # Constructor with named parameters, some missing.
         with self.assertRaises(TypeError):
-            OCIO.GradingRGBMSW(green=3, start=4)
+            OCIO.GradingRGBMSW(green=3, start=4)  # type: ignore
 
         # Check comparison operators
         rgbm1 = OCIO.GradingRGBMSW(1, 2, 3, 4, 5, 6)
@@ -379,7 +379,7 @@ class GradingDataTest(unittest.TestCase):
             OCIO.GradingTone(OCIO.TRANSFOR_DIRECTION_FORWARD)
 
         with self.assertRaises(TypeError):
-            OCIO.GradingTone(0)
+            OCIO.GradingTone(0)  # type: ignore
 
         newMidtones = OCIO.GradingRGBMSW(1.1, 1.2, 1.3, 1, 0.2, 1.1)
         tone.midtones = newMidtones

@@ -15,7 +15,7 @@ class ExponentWithLinearTransformTest(unittest.TestCase, TransformsBaseTest):
     TEST_DIRECTION = OCIO.TRANSFORM_DIR_INVERSE
 
     def setUp(self):
-        self.tr = OCIO.ExponentWithLinearTransform()
+        self.tr: OCIO.ExponentWithLinearTransform = OCIO.ExponentWithLinearTransform()
 
     def test_transform_type(self):
         """

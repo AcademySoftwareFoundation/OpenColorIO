@@ -10,7 +10,7 @@ from TransformsBaseTest import TransformsBaseTest
 class LookTransformTest(unittest.TestCase, TransformsBaseTest):
 
     def setUp(self):
-        self.tr = OCIO.LookTransform('src', 'dst')
+        self.tr: OCIO.LookTransform = OCIO.LookTransform('src', 'dst')
 
     def test_constructor(self):
         """
@@ -37,9 +37,9 @@ class LookTransformTest(unittest.TestCase, TransformsBaseTest):
         self.assertEqual(lt.getDirection(), OCIO.TRANSFORM_DIR_INVERSE)
 
         with self.assertRaises(TypeError):
-            OCIO.LookTransform(src='src')
+            OCIO.LookTransform(src='src')  # type: ignore
         with self.assertRaises(TypeError):
-            OCIO.LookTransform(dst='dst')
+            OCIO.LookTransform(dst='dst')  # type: ignore
         with self.assertRaises(OCIO.Exception):
             OCIO.LookTransform(src='', dst='dst')
         with self.assertRaises(OCIO.Exception):
@@ -55,7 +55,7 @@ class LookTransformTest(unittest.TestCase, TransformsBaseTest):
 
         for invalid in (None, 1, [0, 0], [0, 0, 0, 0]):
             with self.assertRaises(TypeError):
-                self.tr.setSrc(invalid)
+                self.tr.setSrc(invalid)  # type: ignore
 
     def test_dst(self):
         """
@@ -67,7 +67,7 @@ class LookTransformTest(unittest.TestCase, TransformsBaseTest):
 
         for invalid in (None, 1, [0, 0], [0, 0, 0, 0]):
             with self.assertRaises(TypeError):
-                self.tr.setDst(invalid)
+                self.tr.setDst(invalid)  # type: ignore
 
     def test_looks(self):
         """
@@ -79,7 +79,7 @@ class LookTransformTest(unittest.TestCase, TransformsBaseTest):
 
         for invalid in (None, 1, [0, 0], [0, 0, 0, 0]):
             with self.assertRaises(TypeError):
-                self.tr.setLooks(invalid)
+                self.tr.setLooks(invalid)  # type: ignore
 
     def test_skip_conversion(self):
         """
