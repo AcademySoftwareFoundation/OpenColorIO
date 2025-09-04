@@ -10,6 +10,8 @@ dist*
 mastercopy
 *.pyc
 !*.yml
-.vscode
+.idea/
+.venv/
+.vscode/
 
-src/apps/ocioview/poetry.lock
+src/apps/ocioview/uv.lock
