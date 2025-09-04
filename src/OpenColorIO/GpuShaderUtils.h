@@ -171,11 +171,11 @@ public:
     static std::string getSamplerName(const std::string& textureName);
 
     // Declare the global texture and sampler information for a 1D texture.
-    void declareTex1D(const std::string& textureName);
+    void declareTex1D(const std::string& textureName, unsigned descriptorSetIndex, unsigned textureIndex, unsigned textureBindingStart);
     // Declare the global texture and sampler information for a 2D texture.
-    void declareTex2D(const std::string& textureName);
+    void declareTex2D(const std::string& textureName, unsigned descriptorSetIndex, unsigned textureIndex, unsigned textureBindingStart);
     // Declare the global texture and sampler information for a 3D texture.
-    void declareTex3D(const std::string& textureName);
+    void declareTex3D(const std::string& textureName, unsigned descriptorSetIndex, unsigned textureIndex, unsigned textureBindingStart);
 
     // Get the texture lookup call for a 1D texture.
     std::string sampleTex1D(const std::string& textureName, const std::string& coords) const;
@@ -230,6 +230,12 @@ public:
 
     // Get the string for taking the sign of a vector.
     std::string sign(const std::string & v) const;
+
+
+    //Add a cast to bool for shading languages that don't support implicit casts from int to bool.
+    //It is required to use this function when doing boolean operations on a bool uniform to be
+    //compatible with all shading languages.
+    std::string castToBool(const std::string& v) const;
 
     friend class GpuShaderLine;
 
