@@ -13,7 +13,7 @@ else
 fi
 
 if [ "$NUMPY_VERSION" == "latest" ]; then
-    sudo pip install numpy
+    sudo pip3 install numpy
 else
-    sudo pip install numpy==${NUMPY_VERSION}
+    sudo pip3 install numpy==${NUMPY_VERSION}
 fi
