@@ -52,7 +52,7 @@ public:
     ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
     bool supportedByLegacyShader() const override { return false; }
-    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator, OptimizationFlags /*oFlags*/) const override;
 
     ConstLut1DOpDataRcPtr lut1DData() const { return DynamicPtrCast<const Lut1DOpData>(data()); }
     Lut1DOpDataRcPtr lut1DData() { return DynamicPtrCast<Lut1DOpData>(data()); }
@@ -154,7 +154,7 @@ ConstOpCPURcPtr Lut1DOp::getCPUOp(bool /*fastLogExpPow*/) const
     return GetLut1DRenderer(data, BIT_DEPTH_F32, BIT_DEPTH_F32);
 }
 
-void Lut1DOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
+void Lut1DOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator, OptimizationFlags /*oFlags*/) const
 {
     ConstLut1DOpDataRcPtr lutData = lut1DData();
     if (lutData->getDirection() == TRANSFORM_DIR_INVERSE)
