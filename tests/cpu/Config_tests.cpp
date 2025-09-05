@@ -3444,6 +3444,13 @@ OCIO_ADD_TEST(Config, display)
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+
+        // The active displays list is ignored if it would remove all displays.
+        OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 6);
+        OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_2"));
+        OCIO_CHECK_EQUAL(std::string(config->getDisplay(1)), std::string("sRGB_F"));
+        OCIO_CHECK_EQUAL(std::string(config->getDefaultDisplay()), "sRGB_2");
+
         OCIO_CHECK_THROW_WHAT(config->validate(),
                               OCIO::Exception,
                               "The list of active displays [ABCDEF] from the config file is invalid.");
@@ -3562,6 +3569,7 @@ OCIO_ADD_TEST(Config, view)
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_1")), "View_1");
+        // The active views list is ignored, for a display, if it would remove all views.
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_1"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 0)), "View_1");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 1)), "View_2");
@@ -3747,6 +3755,112 @@ OCIO_ADD_TEST(Config, display_view_order)
     OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_B"), 2);
     OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_B", 0)), "View_2");
     OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_B", 1)), "View_1");
+}
+
+OCIO_ADD_TEST(Config, active_displayview_lists)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::CreateRaw()->createEditableCopy();
+
+    // Test add.
+    OCIO_CHECK_EQUAL(config->getNumActiveDisplays(), 0);
+    OCIO_CHECK_EQUAL(config->getNumActiveViews(), 0);
+    config->addActiveDisplay("sRGB");
+    config->addActiveDisplay("Display P3");
+    config->addActiveView("v1");
+    config->addActiveView("v2");
+
+    // Test getter.
+    OCIO_CHECK_EQUAL(config->getNumActiveDisplays(), 2);
+    OCIO_CHECK_EQUAL(std::string(config->getActiveDisplay(0)), "sRGB");
+    OCIO_CHECK_EQUAL(std::string(config->getActiveDisplay(1)), "Display P3");
+    OCIO_CHECK_EQUAL(config->getNumActiveViews(), 2);
+    OCIO_CHECK_EQUAL(std::string(config->getActiveView(0)), "v1");
+    OCIO_CHECK_EQUAL(std::string(config->getActiveView(1)), "v2");
+
+    // Trying to add one that is already present doesn't add one, but does not throw.
+    OCIO_CHECK_NO_THROW(config->addActiveDisplay("sRGB"));
+    OCIO_CHECK_NO_THROW(config->addActiveView("v1"));
+    OCIO_CHECK_EQUAL(config->getNumActiveDisplays(), 2);
+    OCIO_CHECK_EQUAL(config->getNumActiveViews(), 2);
+
+    // Test commas may be used.
+    config->setActiveDisplays("sRGB:01, \"Name, with comma\", \"Quoted name\"");
+    OCIO_CHECK_EQUAL(config->getNumActiveDisplays(), 3);
+    OCIO_CHECK_EQUAL(std::string(config->getActiveDisplay(0)), "sRGB:01");
+    OCIO_CHECK_EQUAL(std::string(config->getActiveDisplay(1)), "Name, with comma");
+    config->setActiveViews("v:01, \"View, with comma\", \"Quoted view\"");
+    OCIO_CHECK_EQUAL(config->getNumActiveViews(), 3);
+    OCIO_CHECK_EQUAL(std::string(config->getActiveView(0)), "v:01");
+    OCIO_CHECK_EQUAL(std::string(config->getActiveView(1)), "View, with comma");
+
+    // Test remove.
+    config->removeActiveDisplay("Name, with comma");
+    OCIO_CHECK_EQUAL(config->getNumActiveDisplays(), 2);
+    OCIO_CHECK_EQUAL(std::string(config->getActiveDisplay(1)), "Quoted name");
+    config->removeActiveView("View, with comma");
+    OCIO_CHECK_EQUAL(config->getNumActiveViews(), 2);
+    OCIO_CHECK_EQUAL(std::string(config->getActiveView(1)), "Quoted view");
+
+    // Test clear.
+    config->clearActiveDisplays();
+    OCIO_CHECK_EQUAL(config->getNumActiveDisplays(), 0);
+    config->clearActiveViews();
+    OCIO_CHECK_EQUAL(config->getNumActiveViews(), 0);
+
+    // Trying to remove one that doesn't exist throws.
+    OCIO_CHECK_THROW_WHAT(config->removeActiveDisplay("not found"),
+                          OCIO::Exception,
+                          "Active display could not be removed from config");
+    OCIO_CHECK_THROW_WHAT(config->removeActiveView("not found"),
+                          OCIO::Exception,
+                          "Active view could not be removed from config");
+
+    // Test setting an empty string behaves as expected.
+    config->setActiveDisplays("");
+    OCIO_CHECK_EQUAL(config->getNumActiveDisplays(), 0);
+    config->addActiveDisplay("sRGB");
+    OCIO_CHECK_EQUAL(config->getNumActiveDisplays(), 1);
+    config->setActiveViews("");
+    OCIO_CHECK_EQUAL(config->getNumActiveViews(), 0);
+    config->addActiveView("v1");
+    OCIO_CHECK_EQUAL(config->getNumActiveViews(), 1);
+
+    // Test commas may be serialized and restored.
+    {
+        config->setActiveDisplays("sRGB:01, \"Name, with comma\", \"Quoted name\"");
+        config->setActiveViews("v:01, \"View, with comma\", \"Quoted view\"");
+        std::ostringstream oss;
+        config->serialize(oss);
+        std::istringstream iss;
+        iss.str(oss.str());
+        OCIO::ConstConfigRcPtr config2 = OCIO::Config::CreateFromStream(iss);
+        OCIO_CHECK_EQUAL(config2->getNumActiveDisplays(), 3);
+        OCIO_CHECK_EQUAL(std::string(config2->getActiveDisplay(0)), "sRGB:01");
+        OCIO_CHECK_EQUAL(std::string(config2->getActiveDisplay(1)), "Name, with comma");
+        OCIO_CHECK_EQUAL(std::string(config2->getActiveDisplay(2)), "Quoted name");
+        OCIO_CHECK_EQUAL(config2->getNumActiveViews(), 3);
+        OCIO_CHECK_EQUAL(std::string(config2->getActiveView(0)), "v:01");
+        OCIO_CHECK_EQUAL(std::string(config2->getActiveView(1)), "View, with comma");
+        OCIO_CHECK_EQUAL(std::string(config2->getActiveView(2)), "Quoted view");
+    }
+
+    // Check how an active list that uses colons as the separator is serialized.
+    // Turns out these are serialized as commas, so this was never a viable method to
+    // set an active list to handle use of commas in names. (It would be ok for use in
+    // the env. var., but not in the config itself.)
+    {
+        config->setActiveDisplays("sRGB01 : Name : \"Quoted name\"");
+        config->setActiveViews("v01:View: \"Quoted view\"");
+        std::ostringstream oss;
+        config->serialize(oss);
+        std::istringstream iss;
+        iss.str(oss.str());
+        OCIO::ConstConfigRcPtr config2 = OCIO::Config::CreateFromStream(iss);
+        OCIO_CHECK_EQUAL(config2->getNumActiveDisplays(), 3);
+        OCIO_CHECK_EQUAL(std::string(config2->getActiveDisplays()), "sRGB01, Name, Quoted name");
+        OCIO_CHECK_EQUAL(config2->getNumActiveViews(), 3);
+        OCIO_CHECK_EQUAL(std::string(config2->getActiveViews()), "v01, View, Quoted view");
+    }
 }
 
 OCIO_ADD_TEST(Config, log_serialization)
