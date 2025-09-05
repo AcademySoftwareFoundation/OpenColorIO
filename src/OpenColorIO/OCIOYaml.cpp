@@ -4992,13 +4992,26 @@ inline void save(YAML::Emitter & out, const Config & config)
     out << YAML::Newline;
     out << YAML::Key << "active_displays";
     StringUtils::StringVec active_displays;
-    if(config.getActiveDisplays() != NULL && strlen(config.getActiveDisplays()) > 0)
-        active_displays = SplitStringEnvStyle(config.getActiveDisplays());
+    int nDisplays = config.getNumActiveDisplays();
+    active_displays.reserve( nDisplays );
+    for (int i = 0; i < nDisplays; i++)
+    {
+        active_displays.push_back(config.getActiveDisplay(i));
+    }
+
+    // The YAML library will wrap names that use a comma in quotes.
     out << YAML::Value << YAML::Flow << active_displays;
+
     out << YAML::Key << "active_views";
     StringUtils::StringVec active_views;
-    if(config.getActiveViews() != NULL && strlen(config.getActiveViews()) > 0)
-        active_views = SplitStringEnvStyle(config.getActiveViews());
+    int nViews = config.getNumActiveViews();
+    active_views.reserve( nViews );
+    for (int i = 0; i < nViews; i++)
+    {
+        active_views.push_back(config.getActiveView(i));
+    }
+    
+    // The YAML library will wrap names that use a comma in quotes.
     out << YAML::Value << YAML::Flow << active_views;
 
     const std::string inactiveCSs = config.getInactiveColorSpaces();
