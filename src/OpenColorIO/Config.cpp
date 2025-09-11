@@ -2497,6 +2497,27 @@ const char * Config::getCanonicalName(const char * name) const
     return "";
 }
 
+ConstColorSpaceRcPtr Config::getColorSpaceFromInteropID(const char * interopID, InteropIDSearchMethod method) const
+{
+    // TODO: this currently searches for roles as well. Do we want that? /coz
+
+    auto cs = getColorSpace(interopID);
+
+    // Fall back to name-only if allowed.
+    if(!cs && method == NameOnlyFallback)
+    {
+        std::string id(interopID);
+        size_t pos = id.find(':');
+        if(pos != std::string::npos)
+        {
+            std::string csname = id.substr(pos+1);
+            cs = getColorSpace(id.c_str());
+        }
+    }
+
+    return cs;
+}
+
 int Config::getNumColorSpaces() const
 {
     return getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ACTIVE);

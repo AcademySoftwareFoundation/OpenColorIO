@@ -27,6 +27,103 @@ const char * DESC_STRING = "\n\n"
 "Ociocheck can also be used to clean up formatting on an existing profile\n"
 "that has been manually edited, using the '-o' option.\n";
 
+
+// returns true if the interopID is valid
+bool isValidInteropID(const std::string& id)
+{
+    static const std::set<std::string> cifTextureIDs = {
+        "lin_ap1_scene",
+        "lin_ap0_scene",
+        "lin_rec709_scene",
+        "lin_p3d65_scene",
+        "lin_rec2020_scene",
+        "lin_adobergb_scene",
+        "lin_ciexyzd65_scene",
+        "srgb_rec709_scene",
+        "g22_rec709_scene",
+        "g18_rec709_scene",
+        "srgb_ap1_scene",
+        "g22_ap1_scene",
+        "srgb_p3d65_scene",
+        "g22_adobergb_scene",
+        "data",
+        "unknown"
+    };
+
+    // empty is fine
+    if (id.empty()) 
+        return true;
+
+    // check if it only uses ASCII characters: 0-9, a-z, and the following characters (no spaces):
+    // - _ ~ / * # % ^ + ( ) [ ] |
+    auto allowed = [](char c)
+    {
+        return (c >= '0' && c <= '9') ||
+               (c >= 'a' && c <= 'z') ||
+               c=='-'||c=='_'||c=='~'||c=='/'||c=='*'||c=='#'||c=='%'||
+               c=='^'||c=='+'||c=='('||c==')'||c=='['||c==']'||c=='|' || c==':';
+    };
+
+    if (!std::all_of(id.begin(), id.end(), allowed)) 
+    {
+        std::cout << "ERROR: InteropID '" << id << "' contains invalid characters. "
+            "Only lowercase a-z, 0-9 and - _ ~ / * # % ^ + ( ) [ ] | are allowed." << 
+            std::endl;
+        return false;
+    }
+
+    // Check if has a namespace.
+    size_t pos = id.find(':');
+    if (pos == std::string::npos) 
+    {
+        // No namespace, so id must be in the forumID list.
+        if (cifTextureIDs.count(id) == 0)
+        {
+            std::cout << "ERROR: InteropID '" << id << "' is not valid. "
+                "It should either be one of Color Interop Forum standard IDs or "
+                "it must contain a namespace followed by ':', e.g. 'mycompany:mycolorspace'." << 
+                std::endl;
+            return false;
+        }
+    }
+    else
+    {
+        // Namespace found, split into namespace and id.
+        std::string ns = id.substr(0, pos);
+        std::string cs = id.substr(pos+1);
+        
+        // both should be non-empty
+        if (ns.empty() || cs.empty()) 
+        {
+            std::cout << "ERROR: InteropID '" << id << "' is not valid. "
+                "If a namespace is used, it must be followed by a non-empty ID, e.g. 'mycompany:mycolorspace'." << 
+                std::endl;
+            return false;
+        }
+
+        // More than one ':' is an error.
+        if (cs.find(':') != std::string::npos) 
+        {
+            std::cout << "ERROR: InteropID '" << id << "' is not valid. "
+                "Only one ':' is allowed to separate the namespace and ID, e.g. 'mycompany:mycolorspace'." << 
+                std::endl;
+            return false;
+        }
+        
+        // id should not be in the cifID list.
+        if (cifTextureIDs.count(cs) > 0) 
+        {
+            std::cout << "ERROR: InteropID '" << id << "' is not valid. "
+                "The ID part must not be one of the Color Interop Forum standard IDs when a namespace is used." << 
+                std::endl;
+            return false;
+        }
+    }
+
+    // all clear.
+    return true;
+}
+
 int main(int argc, const char **argv)
 {
     bool help = false;
@@ -288,25 +385,7 @@ int main(int argc, const char **argv)
             std::cout << std::endl;
             std::cout << "** ColorSpaces **" << std::endl;
 
-            // Valid Color Interop Forum IDs
-            std::set<std::string> validInteropIDs = {
-                "lin_ap1_scene",
-                "lin_ap0_scene", 
-                "lin_rec709_scene",
-                "lin_p3d65_scene",
-                "lin_rec2020_scene",
-                "lin_adobergb_scene",
-                "lin_ciexyzd65_scene",
-                "srgb_rec709_scene",
-                "g22_rec709_scene",
-                "g18_rec709_scene",
-                "srgb_ap1_scene",
-                "g22_ap1_scene",
-                "srgb_p3d65_scene",
-                "g22_adobergb_scene",
-                "data",
-                "unknown"
-            };
+
 
             const int numCS = config->getNumColorSpaces(
                 OCIO::SEARCH_REFERENCE_SPACE_ALL,   // Iterate over scene & display color spaces.
@@ -327,21 +406,10 @@ int main(int argc, const char **argv)
                 std::string interopID = cs->getInteropID();
                 if (!interopID.empty())
                 {
-                    // Check if the interopID contains a colon
-                    if (interopID.find(':') == std::string::npos)
+                    if (!isValidInteropID(interopID))
                     {
-                        // No colon found, check if it's a valid Color Interop Forum ID (case insensitive)
-                        std::string lowerInteropID = interopID;
-                        std::transform(lowerInteropID.begin(), lowerInteropID.end(), lowerInteropID.begin(), ::tolower);
-                        
-                        if (validInteropIDs.find(lowerInteropID) == validInteropIDs.end())
-                        {
-                            std::cout << "WARNING: Color space '" << cs->getName() 
-                                      << "' has unknown interop_id '" << interopID 
-                                      << "'. Expected one of the Color Interop Forum standard IDs or a namespaced ID with ':'." << std::endl;
-                        }
+                        errorcount += 1;
                     }
-                    // If it contains a colon, it's assumed to be a namespaced ID and is valid
                 }
 
                 // Try to load the transform for the to_ref direction -- this will load any LUTs.

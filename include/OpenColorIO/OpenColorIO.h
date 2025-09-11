@@ -622,6 +622,17 @@ public:
      */
     ConstColorSpaceRcPtr getColorSpace(const char * name) const;
 
+
+    enum InteropIDSearchMethod : uint8_t
+    {
+        FullID,             ///< Search only for the full interop ID ([namespace:]colorspace);
+        NameOnlyFallback    ///< If fullID fails, will search for name only (colorspace).
+    };
+    /**
+     * \brief Get the color space from the provided interopID.
+     */
+    ConstColorSpaceRcPtr getColorSpaceFromInteropID(const char * interopID, InteropIDSearchMethod method=FullID) const;
+
     /**
      * Accepts an alias, role name, named transform name, or color space name and returns the
      * color space name or the named transform name.
