@@ -4,6 +4,7 @@
 #include <cstring>
 #include <sstream>
 #include <vector>
+#include <map>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -12,6 +13,13 @@
 #include "PrivateTypes.h"
 #include "utils/StringUtils.h"
 
+
+namespace
+{
+const std::array<const std::string, 2> knownInterchangeNames = {
+    "amf_transform_ids",
+    "icc_profile_name" };
+}
 
 namespace OCIO_NAMESPACE
 {
@@ -25,9 +33,8 @@ public:
     std::string m_description;
     std::string m_encoding;
     std::string m_interopID;
-    std::string m_AMFTransformIDs;
-    std::string m_ICCProfileName;
     StringUtils::StringVec m_aliases;
+    std::map<std::string, std::string> m_interchangeAttribs;
 
     BitDepth m_bitDepth{ BIT_DEPTH_UNKNOWN };
     bool m_isData{ false };
@@ -66,8 +73,7 @@ public:
             m_description = rhs.m_description;
             m_encoding = rhs.m_encoding;
             m_interopID = rhs.m_interopID;
-            m_AMFTransformIDs = rhs.m_AMFTransformIDs;
-            m_ICCProfileName = rhs.m_ICCProfileName;
+            m_interchangeAttribs= rhs.m_interchangeAttribs;
             m_bitDepth = rhs.m_bitDepth;
             m_isData = rhs.m_isData;
             m_referenceSpaceType = rhs.m_referenceSpaceType;
@@ -277,27 +283,60 @@ void ColorSpace::setInteropID(const char * interopID)
     getImpl()->m_interopID = id;
 }
 
-const char * ColorSpace::getAMFTransformIDs() const noexcept
+const char * ColorSpace::getInterchangeAttribute(const char* attrName) const
 {
-    return getImpl()->m_AMFTransformIDs.c_str();
+    std::string nameTrimmed = StringUtils::Trim(attrName);
+    for (auto& key : knownInterchangeNames)
+    {
+        // do case-insensitive comparison.
+        if (StringUtils::Compare(key, nameTrimmed))
+        {
+            auto it = m_impl->m_interchangeAttribs.find(key);
+            if (it != m_impl->m_interchangeAttribs.end())
+            {
+                return it->second.c_str();
+            }
+            return "";
+        }
+    }
+
+    std::ostringstream oss;
+    oss << "Unknown attribute name '" << attrName << "'.";
+    throw Exception(oss.str().c_str());
 }
 
-void ColorSpace::setAMFTransformIDs(const char * amfTransformIDs)
+void ColorSpace::setInterchangeAttribute(const char* attrName, const char* value)
 {
-    getImpl()->m_AMFTransformIDs = amfTransformIDs ? amfTransformIDs : "";
+    std::string nameTrimmed = StringUtils::Trim(attrName);
+    for (auto& key : knownInterchangeNames)
+    {
+        // Do case-insensitive comparison.
+        if (StringUtils::Compare(key, nameTrimmed))
+        {
+            // use key instead of nameTrim for storing in correct capitalization.
+            if (!value || !*value)
+            {
+                m_impl->m_interchangeAttribs.erase(key);
+            } 
+            else
+            {
+                m_impl->m_interchangeAttribs[key] = value;
+            }
+            return;
+        }
+    }
+
+    std::ostringstream oss;
+    oss << "Unknown attribute name '" << attrName << "'.";
+    throw Exception(oss.str().c_str());
 }
 
-const char * ColorSpace::getICCProfileName() const noexcept
+std::map<std::string, std::string> ColorSpace::getInterchangeAttributes() const noexcept
 {
-    return getImpl()->m_ICCProfileName.c_str();
+    return m_impl->m_interchangeAttribs;
 }
 
-void ColorSpace::setICCProfileName(const char * iccProfileName)
-{
-    getImpl()->m_ICCProfileName = iccProfileName ? iccProfileName : "";
-}
-
-BitDepth ColorSpace::getBitDepth() const noexcept
+BitDepth ColorSpace::ColorSpace::getBitDepth() const noexcept
 {
     return getImpl()->m_bitDepth;
 }
@@ -516,15 +555,10 @@ std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
     {
         os << ", description=" << str;
     }
-    str = cs.getAMFTransformIDs();
-    if (!str.empty())
+    // TODO: Do we need to output the section name too?
+    for (const auto& attr : cs.getInterchangeAttributes())
     {
-        os << ", amf_transform_ids=" << str;
-    }
-    str = cs.getICCProfileName();
-    if (!str.empty())
-    {
-        os << ", icc_profile_name=" << str;
+        os << ", " << attr.first << "=" << attr.second;
     }
     if(cs.getTransform(COLORSPACE_DIR_TO_REFERENCE))
     {

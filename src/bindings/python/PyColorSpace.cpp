@@ -91,9 +91,8 @@ void bindPyColorSpace(py::module & m)
                          const TransformRcPtr & toReference,
                          const TransformRcPtr & fromReference,
                          const std::vector<std::string> & categories,
-                         const std::string & interopID,
-                         const std::string& AMFTransformID,
-                         const std::string& ICCProfileName) 
+                         const std::string & interopID
+            ) 
             {
                 ColorSpaceRcPtr p = ColorSpace::Create(referenceSpace);
                 if (!aliases.empty())
@@ -111,8 +110,6 @@ void bindPyColorSpace(py::module & m)
                 if (!equalityGroup.empty())  { p->setEqualityGroup(equalityGroup.c_str()); }
                 if (!description.empty())    { p->setDescription(description.c_str()); }
                 if (!interopID.empty())      { p->setInteropID(interopID.c_str()); }
-                if (!AMFTransformID.empty()) { p->setAMFTransformIDs(AMFTransformID.c_str()); }
-                if (!ICCProfileName.empty()) { p->setICCProfileName(ICCProfileName.c_str()); }
                 p->setBitDepth(bitDepth);
                 p->setIsData(isData);
                 p->setAllocation(allocation);
@@ -157,8 +154,6 @@ void bindPyColorSpace(py::module & m)
              "fromReference"_a = DEFAULT->getTransform(COLORSPACE_DIR_FROM_REFERENCE),
              "categories"_a = getCategoriesStdVec(DEFAULT),
              "interopID"_a = DEFAULT->getInteropID(),
-             "amfTransformIDs"_a = DEFAULT->getAMFTransformIDs(),
-             "iccProfileName"_a = DEFAULT->getICCProfileName(),
              DOC(ColorSpace, Create, 2))
 
         .def("__deepcopy__", [](const ConstColorSpaceRcPtr & self, py::dict)
@@ -206,14 +201,10 @@ void bindPyColorSpace(py::module & m)
              DOC(ColorSpace, getInteropID))
         .def("setInteropID", &ColorSpace::setInteropID, "interopID"_a,
              DOC(ColorSpace, setInteropID))
-        .def("getAMFTransformIDs", &ColorSpace::getAMFTransformIDs,
-             DOC(ColorSpace, getAMFTransformIDs))
-        .def("setAMFTransformIDs", &ColorSpace::setAMFTransformIDs, "amfTransformIDs"_a,
-             DOC(ColorSpace, setAMFTransformIDs))
-        .def("getICCProfileName", &ColorSpace::getICCProfileName,
-             DOC(ColorSpace, getICCProfileName))
-        .def("setICCProfileName", &ColorSpace::setICCProfileName, "iccProfileName"_a,
-             DOC(ColorSpace, setICCProfileName))
+        .def("getInterchangeAttribute", &ColorSpace::getInterchangeAttribute, "attrName"_a,
+             DOC(ColorSpace, getInterchangeAttribute))
+        .def("setInterchangeAttribute", &ColorSpace::setInterchangeAttribute, "attrName"_a, "attrValue"_a,
+            DOC(ColorSpace, setInterchangeAttribute))
         .def("getBitDepth", &ColorSpace::getBitDepth, 
              DOC(ColorSpace, getBitDepth))
         .def("setBitDepth", &ColorSpace::setBitDepth, "bitDepth"_a, 

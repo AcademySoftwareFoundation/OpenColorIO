@@ -13,6 +13,7 @@
 #include <fstream>
 #include <vector>
 #include <cstdint>
+#include <map>
 
 #include "OpenColorABI.h"
 #include "OpenColorTypes.h"
@@ -1992,23 +1993,25 @@ public:
     void setInteropID(const char * interopID);
 
     /**
-     * Get/Set the AMF transform IDs for the color space.
-     * 
-     * The AMF transform IDs are used to identify specific transforms in the ACES Metadata File.
-     * Multiple transform IDs can be specified in a newline-separated string.
+     * Get/Set the interchange attributes.
+     *
+     * Currently supported attribute names are "amf_transform_ids" and
+     * "icc_profile_name". Using any other name will throw. If the attribute is
+     * not defined, it'll return empty string. Similarly setting it to empty
+     * string will effectively delete the attribute.
+     *
+     * The AMF transform IDs are used to identify specific transforms in the
+     * ACES Metadata File. Multiple transform IDs can be specified in a
+     * newline-separated string.
+     *
+     * The ICC profile name identifies the ICC color profile associated with
+     * this color space. This can be used to link OCIO color spaces with
+     * corresponding ICC profiles for applications that need to work with both
+     * color management systems.
      */
-    const char * getAMFTransformIDs() const noexcept;
-    void setAMFTransformIDs(const char * amfTransformIDs);
-
-    /**
-     * Get/Set the ICC profile name for the color space.
-     * 
-     * The ICC profile name identifies the ICC color profile associated with this color space.
-     * This can be used to link OCIO color spaces with corresponding ICC profiles for
-     * applications that need to work with both color management systems.
-     */
-    const char * getICCProfileName() const noexcept;
-    void setICCProfileName(const char * iccProfileName);
+    const char *getInterchangeAttribute(const char *attrName) const;
+    void setInterchangeAttribute(const char* attrName, const char *value);
+    std::map<std::string, std::string> getInterchangeAttributes() const noexcept;
 
     BitDepth getBitDepth() const noexcept;
     void setBitDepth(BitDepth bitDepth);

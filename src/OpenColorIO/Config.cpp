@@ -5675,27 +5675,20 @@ void Config::Impl::checkVersionConsistency() const
             }
         } 
 
-        if (hexVersion < 0x02050000) // Version 2.5
+        if (m_majorVersion < 2) 
         {
             if (*cs->getInteropID())
             {
                 std::ostringstream os;
                 os << "Config failed validation. The color space '" << cs->getName() << "' ";
-                os << "has non-empty InteropID and config version is less than 2.5.";
+                os << "has non-empty InteropID and config version is less than 2.0.";
                 throw Exception(os.str().c_str());
             }
-            if (*cs->getAMFTransformIDs())
+            if (cs->getInterchangeAttributes().size()>0)
             {
                 std::ostringstream os;
                 os << "Config failed validation. The color space '" << cs->getName() << "' ";
-                os << "has non-empty AMFTransformIDs and config version is less than 2.5.";
-                throw Exception(os.str().c_str());
-            }
-            if (*cs->getICCProfileName())
-            {
-                std::ostringstream os;
-                os << "Config failed validation. The color space '" << cs->getName() << "' ";
-                os << "has non-empty ICCProfileName and config version is less than 2.5.";
+                os << "has non-empty interchange attributes and config version is less than 2.0.";
                 throw Exception(os.str().c_str());
             }
         }
