@@ -9,7 +9,10 @@ DynamicProperty
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_dynamicproperty.rst
+      .. autoclass:: PyOpenColorIO.DynamicProperty
+         :members:
+         :undoc-members:
+         :special-members: __init__
 
    .. group-tab:: C++
 

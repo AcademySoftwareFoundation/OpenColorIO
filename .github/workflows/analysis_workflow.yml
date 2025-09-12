@@ -47,9 +47,9 @@ jobs:
       - name:  Install sonar-scanner and build-wrapper
         uses: sonarsource/sonarcloud-github-c-cpp@v2
       - name: Install docs env
-        run: share/ci/scripts/linux/yum/install_docs_env.sh
+        run: share/ci/scripts/linux/dnf/install_docs_env.sh
       - name: Install tests env
-        run: share/ci/scripts/linux/yum/install_tests_env.sh
+        run: share/ci/scripts/linux/dnf/install_tests_env.sh
       - name: Create build directories
         run: |
           mkdir _install
