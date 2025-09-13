@@ -115,6 +115,8 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
             -DCMAKE_PREFIX_PATH=${_EXT_DIST_ROOT}
         )
 
+        set(OpenEXR_CMAKE_ARGS ${OpenEXR_CMAKE_ARGS} -DOPENEXR_FORCE_INTERNAL_DEFLATE=ON)
+
         if(CMAKE_TOOLCHAIN_FILE)
             set(OpenEXR_CMAKE_ARGS
                 ${OpenEXR_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
@@ -209,7 +211,7 @@ if(_OpenEXR_TARGET_CREATE)
     set_target_properties(OpenEXR::OpenEXR PROPERTIES
         IMPORTED_LOCATION ${OpenEXR_LIBRARY}
         INTERFACE_INCLUDE_DIRECTORIES "${OpenEXR_INCLUDE_DIR}"
-        INTERFACE_LINK_LIBRARIES "OpenEXR::IlmThreadConfig;Imath::Imath;OpenEXR::IlmThreadConfig;OpenEXR::Iex;OpenEXR::IlmThread;ZLIB::ZLIB"
+        INTERFACE_LINK_LIBRARIES "OpenEXR::IlmThreadConfig;Imath::Imath;OpenEXR::IlmThreadConfig;OpenEXR::Iex;OpenEXR::IlmThread;OpenEXR::OpenEXRCore"
     )
     set_target_properties(OpenEXR::OpenEXRConfig PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES "${OpenEXR_INCLUDE_DIR};${OpenEXR_INCLUDE_DIR}/OpenEXR"
@@ -217,13 +219,13 @@ if(_OpenEXR_TARGET_CREATE)
     set_target_properties(OpenEXR::OpenEXRCore PROPERTIES
         IMPORTED_LOCATION ${OpenEXRCore_LIBRARY}
         INTERFACE_INCLUDE_DIRECTORIES "${OpenEXR_INCLUDE_DIR}"
-        INTERFACE_LINK_LIBRARIES "OpenEXR::IlmThreadConfig;ZLIB::ZLIB;\$<LINK_ONLY:Imath::ImathConfig>"
+        INTERFACE_LINK_LIBRARIES "OpenEXR::IlmThreadConfig;Imath::Imath"
         STATIC_LIBRARY_OPTIONS "-no_warning_for_no_symbols"
     )
     set_target_properties(OpenEXR::OpenEXRUtil PROPERTIES
         IMPORTED_LOCATION ${OpenEXRUtil_LIBRARY}
         INTERFACE_INCLUDE_DIRECTORIES "${OpenEXR_INCLUDE_DIR}"
-        INTERFACE_LINK_LIBRARIES "OpenEXR::IlmThreadConfig;OpenEXR::OpenEXR"
+        INTERFACE_LINK_LIBRARIES "OpenEXR::IlmThreadConfig;OpenEXR::OpenEXR;OpenEXR::OpenEXRCore"
     )
 
     mark_as_advanced(OpenEXR_INCLUDE_DIR OpenEXR_LIBRARY OpenEXR_VERSION)

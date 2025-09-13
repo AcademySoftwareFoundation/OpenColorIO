@@ -122,28 +122,28 @@ items manually:
 
 Required components:
 
-- C++ 11-17 compiler (gcc, clang, msvc)
+- C++ 17-23 compiler (gcc, clang, msvc)
 - CMake >= 3.14
 - \*Expat >= 2.4.1 (XML parser for CDL/CLF/CTF)
-- \*yaml-cpp >= 0.7.0 (YAML parser for Configs)
+- \*yaml-cpp >= 0.8.0 (YAML parser for Configs)
 - \*Imath >= 3.1.1 (for half domain LUTs)
 - \*pystring >= 1.1.3
-- \*minizip-ng >= 3.0.7 (for config archiving)
+- \*minizip-ng >= 3.0.8 (for config archiving)
 - \*ZLIB >= 1.2.13 (for config archiving)
 
 Optional OCIO functionality also depends on:
 
 - \*Little CMS >= 2.2 (for ociobakelut ICC profile baking)
 - \*OpenGL GLUT & GLEW (for ociodisplay)
-- \*OpenEXR >= 3.0.5 (for apps including ocioconvert)
+- \*OpenEXR >= 3.1.6 (for apps including ocioconvert)
 - OpenImageIO >= 2.2.14 (for apps including ocioconvert)
 - \*OpenFX >= 1.4 (for the OpenFX plug-ins)
-- OpenShadingLanguage >= 1.11 (for the OSL unit tests)
+- OpenShadingLanguage >= 1.13 (for the OSL unit tests)
 - Doxygen (for the docs)
 - NumPy (optionally used in the Python test suite)
 - \*pybind11 >= 2.9.2 (for the Python binding)
-- Python >= 3.7 (for the Python binding only)
-- Python 3.7 - 3.9 (for building the documentation)
+- Python >= 3.9 (for the Python binding only)
+- Python 3.9+ (for building the documentation)
 
 Building the documentation requires the following packages, available via PyPI:
 

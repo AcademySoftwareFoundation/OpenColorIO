@@ -42,10 +42,16 @@ if(NOT minizip-ng_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_P
         set(minizip-ng_VERSION ${minizip-ng_FIND_VERSION})
     endif()
 
-    set(minizip-ng_INCLUDE_DIR "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_INCLUDEDIR}/minizip-ng")
+    # TODO: Only from a specific version?
+    set(minizip-ng_INCLUDE_DIR "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_INCLUDEDIR}/minizip-ng/minizip-ng")
 
     # Minizip-ng use a hardcoded lib prefix instead of CMAKE_STATIC_LIBRARY_PREFIX
-    set(_minizip-ng_LIB_PREFIX "lib")
+    # Fixed from 4.0.7, see https://github.com/zlib-ng/minizip-ng/issues/778
+    if(${minizip-ng_VERSION} VERSION_GREATER_EQUAL "4.0.7")
+        set(_minizip-ng_LIB_PREFIX "${CMAKE_STATIC_LIBRARY_PREFIX}")
+    else()
+        set(_minizip-ng_LIB_PREFIX "lib")
+    endif()
 
     set(minizip-ng_LIBRARY
         "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_LIBDIR}/${_minizip-ng_LIB_PREFIX}minizip-ng${_minizip-ng_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")

@@ -153,7 +153,7 @@ jobs:
                 -Dpystring_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -Dyaml-cpp_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -Dyaml-cpp_STATIC_LIBRARY=ON \
-                -Dyaml-cpp_VERSION=0.7.0 \
+                -Dyaml-cpp_VERSION=0.8.0 \
                 -DZLIB_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -DZLIB_STATIC_LIBRARY=ON \
                 -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist \
@@ -187,14 +187,14 @@ jobs:
             build-shared: ON
             cxx-standard: 23
             enable-sanitizer: OFF
-            python-version: '3.11'
+            python-version: '3.13'
           - build: 2
             build-python: OFF
             build-type: Debug
             build-shared: ON
             cxx-standard: 23
             enable-sanitizer: ON
-            python-version: '3.11'
+            python-version: '3.9'
     steps:
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -266,7 +266,7 @@ jobs:
                 -Dpystring_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -Dyaml-cpp_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -Dyaml-cpp_STATIC_LIBRARY=ON \
-                -Dyaml-cpp_VERSION=0.7.0 \
+                -Dyaml-cpp_VERSION=0.8.0 \
                 -DZLIB_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -DZLIB_STATIC_LIBRARY=ON \
                 -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist \
@@ -299,13 +299,13 @@ jobs:
             build-type: Release
             build-shared: ON
             cxx-standard: 23
-            python-version: '3.11'
+            python-version: '3.13'
           - build: 2
             build-python: ON
             build-type: Debug
             build-shared: ON
             cxx-standard: 23
-            python-version: '3.11'
+            python-version: '3.9'
     steps:
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -387,7 +387,7 @@ jobs:
                 -Dpystring_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -Dyaml-cpp_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -Dyaml-cpp_STATIC_LIBRARY=ON \
-                -Dyaml-cpp_VERSION=0.7.0 \
+                -Dyaml-cpp_VERSION=0.8.0 \
                 -DZLIB_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -DZLIB_STATIC_LIBRARY=ON \
                 -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist \

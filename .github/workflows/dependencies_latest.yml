@@ -49,7 +49,7 @@ jobs:
           - build: 1
             build-docs: 'ON'
             build-openfx: 'ON'
-            cxx-standard: 17
+            cxx-standard: 20
             cxx-compiler: g++
             cc-compiler: gcc
             compiler-desc: GCC
@@ -58,7 +58,7 @@ jobs:
           - build: 2
             build-docs: 'OFF'
             build-openfx: 'OFF'
-            cxx-standard: 14
+            cxx-standard: 17
             cxx-compiler: g++
             cc-compiler: gcc
             compiler-desc: GCC
@@ -70,7 +70,7 @@ jobs:
           - build: 3
             build-docs: 'OFF'
             build-openfx: 'OFF'
-            cxx-standard: 17
+            cxx-standard: 20
             cxx-compiler: clang++
             cc-compiler: clang
             compiler-desc: Clang
@@ -79,7 +79,7 @@ jobs:
           - build: 4
             build-docs: 'ON'
             build-openfx: 'ON'
-            cxx-standard: 14
+            cxx-standard: 17
             cxx-compiler: clang++
             cc-compiler: clang
             compiler-desc: Clang
@@ -106,13 +106,13 @@ jobs:
       - name: Install fixed ext package versions
         # Minizip-ng depends on ZLIB. ZLIB must be installed first.
         run: |
-          share/ci/scripts/multi/install_expat.sh 2.4.1 $EXT_PATH
-          share/ci/scripts/multi/install_lcms2.sh 2.2 $EXT_PATH
-          share/ci/scripts/multi/install_yaml-cpp.sh 0.7.0 $EXT_PATH
-          share/ci/scripts/multi/install_pystring.sh 1.1.3 $EXT_PATH
-          share/ci/scripts/multi/install_pybind11.sh 2.9.2 $EXT_PATH
-          share/ci/scripts/multi/install_zlib.sh 1.2.12 $EXT_PATH
-          share/ci/scripts/multi/install_minizip-ng.sh 3.0.6 $EXT_PATH
+          share/ci/scripts/multi/install_expat.sh 2.7.1 $EXT_PATH
+          share/ci/scripts/multi/install_lcms2.sh 2.17 $EXT_PATH
+          share/ci/scripts/multi/install_yaml-cpp.sh 0.8.0 $EXT_PATH
+          share/ci/scripts/multi/install_pystring.sh 1.1.4 $EXT_PATH
+          share/ci/scripts/multi/install_pybind11.sh 3.0.1 $EXT_PATH
+          share/ci/scripts/multi/install_zlib.sh 1.3.1 $EXT_PATH
+          share/ci/scripts/multi/install_minizip-ng.sh 4.0.10 $EXT_PATH
       - name: Install latest ext package versions
         run: |
           share/ci/scripts/multi/install_imath.sh latest $EXT_PATH
@@ -178,13 +178,13 @@ jobs:
           - build: 1
             build-docs: 'ON'
             build-openfx: 'ON'
-            cxx-standard: 17
-            python-version: '3.11'
+            cxx-standard: 20
+            python-version: '3.13'
             use-oiio: 'ON'
           - build: 2
             build-docs: 'ON'
             build-openfx: 'ON'
-            cxx-standard: 14
+            cxx-standard: 17
             python-version: '3.9'
             use-oiio: 'OFF'
     steps:
@@ -211,13 +211,13 @@ jobs:
       - name: Install fixed ext package versions
         # Minizip-ng depends on ZLIB. ZLIB must be installed first.
         run: |
-          share/ci/scripts/multi/install_expat.sh 2.4.1 $EXT_PATH
-          share/ci/scripts/multi/install_lcms2.sh 2.2 $EXT_PATH
-          share/ci/scripts/multi/install_yaml-cpp.sh 0.7.0 $EXT_PATH
-          share/ci/scripts/multi/install_pystring.sh 1.1.3 $EXT_PATH
-          share/ci/scripts/multi/install_pybind11.sh 2.9.2 $EXT_PATH
-          share/ci/scripts/multi/install_zlib.sh 1.2.12 $EXT_PATH
-          share/ci/scripts/multi/install_minizip-ng.sh 3.0.6 $EXT_PATH
+          share/ci/scripts/multi/install_expat.sh 2.7.1 $EXT_PATH
+          share/ci/scripts/multi/install_lcms2.sh 2.17 $EXT_PATH
+          share/ci/scripts/multi/install_yaml-cpp.sh 0.8.0 $EXT_PATH
+          share/ci/scripts/multi/install_pystring.sh 1.1.4 $EXT_PATH
+          share/ci/scripts/multi/install_pybind11.sh 3.0.1 $EXT_PATH
+          share/ci/scripts/multi/install_zlib.sh 1.3.1 $EXT_PATH
+          share/ci/scripts/multi/install_minizip-ng.sh 4.0.10 $EXT_PATH
       - name: Install latest ext package versions
         run: |
           share/ci/scripts/multi/install_imath.sh latest $EXT_PATH
@@ -283,13 +283,13 @@ jobs:
           - build: 1
             build-docs: 'ON'
             build-openfx: 'ON'
-            cxx-standard: 17
-            python-version: '3.11'
+            cxx-standard: 20
+            python-version: '3.13'
             use-oiio: 'ON'
           - build: 2
             build-docs: 'ON'
             build-openfx: 'ON'
-            cxx-standard: 14
+            cxx-standard: 17
             python-version: '3.9'
             use-oiio: 'OFF'
     steps:
@@ -335,13 +335,13 @@ jobs:
       - name: Install fixed ext package versions
         # Minizip-ng depends on ZLIB. ZLIB must be installed first.
         run: |
-          share/ci/scripts/multi/install_lcms2.sh 2.2 $EXT_PATH
-          share/ci/scripts/multi/install_yaml-cpp.sh 0.7.0 $EXT_PATH
-          share/ci/scripts/multi/install_pystring.sh 1.1.3 $EXT_PATH
-          share/ci/scripts/multi/install_pybind11.sh 2.9.2 $EXT_PATH
-          share/ci/scripts/multi/install_expat.sh 2.4.1 $EXT_PATH
-          share/ci/scripts/multi/install_zlib.sh 1.2.12 $EXT_PATH
-          share/ci/scripts/multi/install_minizip-ng.sh 3.0.6 $EXT_PATH
+          share/ci/scripts/multi/install_lcms2.sh 2.17 $EXT_PATH
+          share/ci/scripts/multi/install_yaml-cpp.sh 0.8.0 $EXT_PATH
+          share/ci/scripts/multi/install_pystring.sh 1.1.4 $EXT_PATH
+          share/ci/scripts/multi/install_pybind11.sh 3.0.1 $EXT_PATH
+          share/ci/scripts/multi/install_expat.sh 2.7.1 $EXT_PATH
+          share/ci/scripts/multi/install_zlib.sh 1.3.1 $EXT_PATH
+          share/ci/scripts/multi/install_minizip-ng.sh 4.0.10 $EXT_PATH
         shell: bash
       # OSL not installed due to LLVM compilation time.
       - name: Install latest ext package versions

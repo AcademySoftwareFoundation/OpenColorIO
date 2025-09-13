@@ -15,6 +15,9 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #ifdef OCIO_GPU_ENABLED
 #include "oglapp.h"
+#if __APPLE__
+#include "metalapp.h"
+#endif
 #endif // OCIO_GPU_ENABLED
 
 #include "imageio.h"
@@ -53,6 +56,9 @@ int main(int argc, const char **argv)
     std::string inputconfig;
 
     bool usegpu                 = false;
+#if __APPLE__
+    bool useMetal = false;
+#endif
     bool usegpuLegacy           = false;
     bool outputgpuInfo          = false;
     bool verbose                = false;
@@ -80,6 +86,9 @@ int main(int argc, const char **argv)
                "--namedtransform",      &useNamedTransform,     "Convert using a named transform in the forward direction",
                "--invnamedtransform",   &useInvNamedTransform,  "Convert using a named transform in the inverse direction",
                "--gpu",                 &usegpu,                "Use GPU color processing instead of CPU (CPU is the default)",
+#if __APPLE__
+               "--metal",               &useMetal,              "Use Metal",
+#endif
                "--gpulegacy",           &usegpuLegacy,          "Use the legacy (i.e. baked) GPU color processing "
                                                                 "instead of the CPU one (--gpu is ignored)",
                "--gpuinfo",             &outputgpuInfo,         "Output the OCIO shader program",
@@ -383,7 +392,16 @@ int main(int argc, const char **argv)
 
         try
         {
-            oglApp = OCIO::OglApp::CreateOglApp("ocioconvert", 256, 20);
+        #if __APPLE__
+            if (useMetal)
+            {
+                oglApp = std::make_shared<OCIO::MetalApp>("ocioconvert", 256, 20);
+            }
+            else
+        #endif
+            {
+                oglApp = OCIO::OglApp::CreateOglApp("ocioconvert", 256, 20);
+            }
         }
         catch (const OCIO::Exception & e)
         {
@@ -486,7 +504,11 @@ int main(int argc, const char **argv)
         {
             // Get the GPU shader program from the processor and set oglApp to use it.
             OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-            shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
+            shaderDesc->setLanguage(
+                #if __APPLE__
+                        useMetal ? OCIO::GPU_LANGUAGE_MSL_2_0 :
+                #endif
+                        OCIO::GPU_LANGUAGE_GLSL_1_2);
 
             OCIO::ConstGPUProcessorRcPtr gpu
                 = usegpuLegacy ? processor->getOptimizedLegacyGPUProcessor(OCIO::OPTIMIZATION_DEFAULT, 32)

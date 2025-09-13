@@ -1469,8 +1469,25 @@ OCIO_ADD_TEST(FileFormatCTF, difficult_xml_unknown_elements)
         const StringUtils::StringVec parts = StringUtils::SplitByLines(StringUtils::RightTrim(guard.output()));
         OCIO_REQUIRE_EQUAL(parts.size(), 11);
 
+        // Expat > 2.5.0 returns incorrect line number for the unrecognized Matrix element
+        // Temporarily ignore this test for affected versions
+        // https://github.com/AcademySoftwareFoundation/OpenColorIO/issues/2093
+        const XML_Expat_Version expatVersion = XML_ExpatVersionInfo();
+        const XML_Expat_Version buggedVersion{2, 6, 0};
+        const int buggedLineIdx = 8;
+
+        auto is_less_than = [] (const XML_Expat_Version & a, const XML_Expat_Version & b) {
+            return (a.major < b.major ||
+                (a.major == b.major && a.minor < b.minor));
+        };
+
         for (size_t i = 0; i < parts.size(); ++i)
         {
+            if (i == buggedLineIdx && !is_less_than(expatVersion, buggedVersion))
+            {
+                continue;
+            }
+
             OCIO_CHECK_NE(std::string::npos, StringUtils::Find(parts[i], ErrorOutputs[i]));
         }
     }

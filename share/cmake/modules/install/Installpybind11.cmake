@@ -120,5 +120,13 @@ if(_pybind11_TARGET_CREATE)
         INTERFACE_INCLUDE_DIRECTORIES ${pybind11_INCLUDE_DIR}
     )
 
+    # See pybind11Common.cmake for reasoning
+    if (MSVC)
+        set_target_properties(pybind11::module PROPERTIES
+            INTERFACE_COMPILE_OPTIONS /bigobj
+        )
+
+    endif()
+
     mark_as_advanced(pybind11_INCLUDE_DIR pybind11_VERSION)
 endif()
