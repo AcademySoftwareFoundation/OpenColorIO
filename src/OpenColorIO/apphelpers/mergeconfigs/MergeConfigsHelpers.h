@@ -189,7 +189,7 @@ public:
      * 3 - If not found, try to use the name as the output of a previous merge.
      * 4 - If still not found, return an empty config object.
      */
-    ConstConfigRcPtr loadConfig(const char * value);
+    ConstConfigRcPtr loadConfig(const char * value) const;
 };
 
 }  // namespace OCIO_NAMESPACE

@@ -1710,7 +1710,16 @@ bool viewTransformsAreEqual(const ConstConfigRcPtr & first,
                 return false;
             }
 
-            // TODO: Compare transforms.
+            // Compare transforms. NB: This is a fast comparison that does not load file transforms.
+            std::ostringstream oss1;
+            oss1 << *t1_to;
+            std::ostringstream oss2;
+            oss2 << *t2_to;
+
+            if (oss1.str() != oss2.str())
+            {
+                return false;
+            }
         }
 
         ConstTransformRcPtr t1_from = vt1->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE);
@@ -1722,7 +1731,16 @@ bool viewTransformsAreEqual(const ConstConfigRcPtr & first,
                 return false;
             }
 
-            // TODO: Compare transforms.
+            // Compare transforms. NB: This is a fast comparison that does not load file transforms.
+            std::ostringstream oss1;
+            oss1 << *t1_from;
+            std::ostringstream oss2;
+            oss2 << *t2_from;
+
+            if (oss1.str() != oss2.str())
+            {
+                return false;
+            }
         }
 
         return true;
@@ -1733,8 +1751,8 @@ bool viewTransformsAreEqual(const ConstConfigRcPtr & first,
 } // anon.
 
 void ViewTransformsMerger::addViewTransform(const ConstConfigRcPtr & cfg,
-                                         const char * name, 
-                                         bool isInput)
+                                            const char * name, 
+                                            bool isInput)
 {
     ConstViewTransformRcPtr vt = cfg->getViewTransform(name);
     if (!vt) return;
@@ -1795,7 +1813,7 @@ void ViewTransformsMerger::processViewTransforms(const ConstConfigRcPtr & first,
         }
     }
 
-    // Add the remaining unique views transform.
+    // Add the remaining unique view transforms.
 
     addUniqueViewTransforms(second, secondIsInput);
 }

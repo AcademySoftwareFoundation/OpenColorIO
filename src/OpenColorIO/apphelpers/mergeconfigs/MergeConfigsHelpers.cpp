@@ -446,7 +446,7 @@ ConstConfigMergerRcPtr ConfigMerger::Impl::Read(std::istream & istream, const ch
     return merger;
 }
 
-ConstConfigRcPtr ConfigMerger::Impl::loadConfig(const char * value)
+ConstConfigRcPtr ConfigMerger::Impl::loadConfig(const char * value) const
 {
     // Get the absolute path.
     StringUtils::StringVec searchpaths;

@@ -2107,9 +2107,11 @@ OCIO_ADD_TEST(MergeConfigs, view_transforms_section)
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getDefaultViewTransformName()), "Un-tone-mapped-2");
 
         // Validate view_transforms
-        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 2);
+
+        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 3);
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), "SDR Video");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), "Un-tone-mapped-2");
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(2)), "Equal");
     }
 
     // Test display/views with strategy = PreferInput, options InputFirst = true.
@@ -2121,6 +2123,7 @@ OCIO_ADD_TEST(MergeConfigs, view_transforms_section)
         OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
         checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
            [&options]() { OCIO::ViewTransformsMerger(options).merge(); },
+            "The Input config contains a value that would override the Base config: view_transforms: SDR Video",
             "The Input config contains a value that would override the Base config: default_view_transform: Un-tone-mapped-2"
         );
 
@@ -2129,17 +2132,21 @@ OCIO_ADD_TEST(MergeConfigs, view_transforms_section)
 
         // Validate view_transforms
 
-        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 3);
+        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 4);
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), "SDR Video");
         OCIO::ConstTransformRcPtr tf;
         OCIO_CHECK_NO_THROW(tf = mergedConfig->getViewTransform("SDR Video")
                                              ->getTransform(OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
         auto bi = OCIO_DYNAMIC_POINTER_CAST<const OCIO::BuiltinTransform>(tf);
         OCIO_REQUIRE_ASSERT(bi);
+        // Note that the style of "SDR Video" differs between input and base, which is why a warning is
+        // logged for that one, whereas the transform for "Equal" is the same in input and base.
         OCIO_CHECK_EQUAL(std::string(bi->getStyle()), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-P3lim_1.1");
 
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), "Un-tone-mapped-2");
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(2)), "Un-tone-mapped");
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(2)), "Equal");
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(3)), "Un-tone-mapped");
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransform("Equal")->getDescription()), "from input");
     }
 
     // Test display/views with strategy=PreferInput, options InputFirst = false.
@@ -2151,6 +2158,7 @@ OCIO_ADD_TEST(MergeConfigs, view_transforms_section)
         OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
         checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
            [&options]() { OCIO::ViewTransformsMerger(options).merge(); },
+            "The Input config contains a value that would override the Base config: view_transforms: SDR Video",
             "The Input config contains a value that would override the Base config: default_view_transform: Un-tone-mapped-2"
         );
 
@@ -2158,7 +2166,7 @@ OCIO_ADD_TEST(MergeConfigs, view_transforms_section)
 
         // Validate view_transforms
 
-        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 3);
+        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 4);
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), std::string("SDR Video"));
         OCIO::ConstTransformRcPtr tf;
         OCIO_CHECK_NO_THROW(tf = mergedConfig->getViewTransform("SDR Video")
@@ -2168,7 +2176,8 @@ OCIO_ADD_TEST(MergeConfigs, view_transforms_section)
         OCIO_CHECK_EQUAL(std::string(bi->getStyle()), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-P3lim_1.1");
 
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), std::string("Un-tone-mapped"));
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(2)), std::string("Un-tone-mapped-2"));
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(2)), "Equal");
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(3)), std::string("Un-tone-mapped-2"));
     }
 
     // Test display/views with strategy = PreferBase, options InputFirst = true.
@@ -2180,6 +2189,7 @@ OCIO_ADD_TEST(MergeConfigs, view_transforms_section)
         OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
         checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
            [&options]() { OCIO::ViewTransformsMerger(options).merge(); },
+            "The Input config contains a value that would override the Base config: view_transforms: SDR Video",
             "The Input config contains a value that would override the Base config: default_view_transform: Un-tone-mapped-2"
         );
      
@@ -2187,7 +2197,7 @@ OCIO_ADD_TEST(MergeConfigs, view_transforms_section)
 
         // Validate view_transforms
 
-        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 3);
+        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 4);
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), "SDR Video");
         OCIO::ConstTransformRcPtr tf;
         OCIO_CHECK_NO_THROW(tf = mergedConfig->getViewTransform("SDR Video")
@@ -2197,7 +2207,9 @@ OCIO_ADD_TEST(MergeConfigs, view_transforms_section)
         OCIO_CHECK_EQUAL(std::string(bi->getStyle()), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO_1.0");
 
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), "Un-tone-mapped-2");
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(2)), "Un-tone-mapped");
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(2)), "Equal");
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(3)), "Un-tone-mapped");
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransform("Equal")->getDescription()), "from base");
     }
 
     // Test display/views with strategy = PreferBase, options InputFirst = false.
@@ -2209,6 +2221,7 @@ OCIO_ADD_TEST(MergeConfigs, view_transforms_section)
         OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
         checkForLogOrException(LOG_TYPE_WARNING, __LINE__, 
            [&options]() { OCIO::ViewTransformsMerger(options).merge(); },
+            "The Input config contains a value that would override the Base config: view_transforms: SDR Video",
             "The Input config contains a value that would override the Base config: default_view_transform: Un-tone-mapped-2"
         );
 
@@ -2216,7 +2229,7 @@ OCIO_ADD_TEST(MergeConfigs, view_transforms_section)
 
         // Validate view_transforms
 
-        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 3);
+        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 4);
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), "SDR Video");
         OCIO::ConstTransformRcPtr tf;
         OCIO_CHECK_NO_THROW(tf = mergedConfig->getViewTransform("SDR Video")
@@ -2226,7 +2239,8 @@ OCIO_ADD_TEST(MergeConfigs, view_transforms_section)
         OCIO_CHECK_EQUAL(std::string(bi->getStyle()), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO_1.0");
 
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), "Un-tone-mapped");
-        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(2)), "Un-tone-mapped-2");
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(2)), "Equal");
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(3)), "Un-tone-mapped-2");
     }
 
     // Test display/views with strategy = BaseOnly.
@@ -2240,9 +2254,11 @@ OCIO_ADD_TEST(MergeConfigs, view_transforms_section)
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getDefaultViewTransformName()), "SDR Video");
 
         // Validate view_transforms
-        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 2);
+
+        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 3);
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), "SDR Video");
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), "Un-tone-mapped");
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(2)), "Equal");
     }
 
     // Test display/views with strategy = InputOnly.
@@ -2257,7 +2273,7 @@ OCIO_ADD_TEST(MergeConfigs, view_transforms_section)
 
         // Validate view_transforms
 
-        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 2);
+        OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 3);
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), "SDR Video");
         OCIO::ConstTransformRcPtr tf;
         OCIO_CHECK_NO_THROW(tf = mergedConfig->getViewTransform("SDR Video")
@@ -2267,6 +2283,7 @@ OCIO_ADD_TEST(MergeConfigs, view_transforms_section)
         OCIO_CHECK_EQUAL(std::string(bi->getStyle()), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-VIDEO-P3lim_1.1");
 
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(1)), "Un-tone-mapped-2");
+        OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(2)), "Equal");
     }
 
     // Test display/views with strategy = Remove
@@ -2282,6 +2299,7 @@ OCIO_ADD_TEST(MergeConfigs, view_transforms_section)
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getDefaultViewTransformName()), "");
 
         // Validate view_transforms
+
         OCIO_CHECK_EQUAL(mergedConfig->getNumViewTransforms(), 1);
         OCIO_CHECK_EQUAL(std::string(mergedConfig->getViewTransformNameByIndex(0)), std::string("Un-tone-mapped"));
     }
@@ -2305,8 +2323,8 @@ OCIO_ADD_TEST(MergeConfigs, view_transforms_section)
             OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
             checkForLogOrException(LOG_TYPE_ERROR, __LINE__,
                                    [&options]() { OCIO::ViewTransformsMerger(options).merge(); },
-                                   std::string(PREFIX) + std::string("default_view_transform: Un-tone-mapped-2"),
-                                   std::string(PREFIX) + std::string("view_transforms: SDR Video"));
+                                   std::string(PREFIX) + std::string("view_transforms: SDR Video"),
+                                   std::string(PREFIX) + std::string("default_view_transform: Un-tone-mapped-2"));
         }
     }
 }
