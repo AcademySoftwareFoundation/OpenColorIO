@@ -242,7 +242,7 @@ void ColorSpace::setInteropID(const char * interopID)
     if (!id.empty())
     {
         // check if it only uses ASCII characters: 0-9, a-z, and the following characters (no spaces):
-        // - _ ~ / * # % ^ + ( ) [ ] |
+        // . - _ ~ / * # % ^ + ( ) [ ] |
         auto allowed = [](char c)
         {
             return  (c >= '0' && c <= '9')||
