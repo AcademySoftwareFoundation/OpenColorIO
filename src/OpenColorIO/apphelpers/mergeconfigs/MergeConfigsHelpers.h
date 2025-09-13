@@ -72,7 +72,6 @@ public:
         m_overrideCfg->clearEnvironmentVars();
 
         // Options
-        m_defaultStrategy = STRATEGY_PREFER_INPUT;
         m_inputFamilyPrefix  = "";
         m_baseFamilyPrefix  = "";
         m_inputFirst = true;
@@ -80,6 +79,7 @@ public:
         m_avoidDuplicates = true;
         m_adjustInputReferenceSpace = true;
         
+        m_defaultStrategy = STRATEGY_PREFER_INPUT;
         m_roles = STRATEGY_UNSPECIFIED;
         m_fileRules = STRATEGY_UNSPECIFIED;
         m_displayViews = STRATEGY_UNSPECIFIED;
@@ -103,9 +103,9 @@ public:
             // Overrides
             m_name = rhs.m_name;
             m_description = rhs.m_description;
+            m_overrideCfg = rhs.m_overrideCfg;
 
             // Options
-            m_defaultStrategy = rhs.m_defaultStrategy;
             m_inputFamilyPrefix  = rhs.m_inputFamilyPrefix;
             m_baseFamilyPrefix  = rhs.m_baseFamilyPrefix;
             m_inputFirst = rhs.m_inputFirst;
@@ -113,6 +113,7 @@ public:
             m_avoidDuplicates = rhs.m_avoidDuplicates;
             m_adjustInputReferenceSpace = rhs.m_adjustInputReferenceSpace;
 
+            m_defaultStrategy = rhs.m_defaultStrategy;
             m_roles = rhs.m_roles;
             m_fileRules = rhs.m_fileRules;
             m_displayViews = rhs.m_displayViews;

@@ -557,7 +557,7 @@ public:
     void setBaseConfigName(const char * baseConfig);
     const char * getBaseConfigName() const;
 
-    /// Set the file name of the base config. This is used along with the search path of 
+    /// Set the file name of the input config. This is used along with the search path of 
     /// the ConfigMerger object.
     void setInputConfigName(const char * inputConfig);
     const char * getInputConfigName() const;
@@ -585,7 +585,7 @@ public:
     void setBaseFamilyPrefix(const char * prefix);
     const char * getBaseFamilyPrefix() const;
 
-    /// If true, items from the input config will by higher in the file than those of the
+    /// If true, items from the input config will be higher in the file than those of the
     /// base config. Default = true.
     void setInputFirst(bool enabled);
     bool isInputFirst() const;
@@ -633,7 +633,6 @@ public:
     /// Override the active_displays of the merged config.
     void setActiveDisplays(const char * displays);
     const char * getActiveDisplays() const;
-// REMOVE?
 
     /// Override the active_views of the merged config.
     void setActiveViews(const char * views);
@@ -781,6 +780,13 @@ public:
     int getNumSearchPaths() const;
     const char * getSearchPath(int index) const;
 
+    /**
+     * \brief Set the home directory used to resolve relative search paths.
+     * 
+     * The working directory defaults to the location of the OCIOM file. It is used to convert
+     * any relative paths to absolute. If no search paths have been set, the working directory
+     * will be used as the fallback search path. 
+     */
     void setWorkingDir(const char * dirname);
     const char * getWorkingDir() const;
 
@@ -796,7 +802,6 @@ public:
      * ConfigMerger::CreateFromFile or created from scratch by using ConfigMerger::Create() and 
      * programmatically configuring it.
      * 
-     * \param merger Merger object
      * \return a merger object (call getMergedConfig to obtain the result)
      */
     ConstConfigMergerRcPtr mergeConfigs() const;

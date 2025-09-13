@@ -90,16 +90,16 @@ int main(int argc, const char **argv)
 
     ap.options("ociomergeconfigs -- Merge configs using an OCIOM file with merge parameters\n\n"
                "Usage:\n"
-               "    ociomergeconfigs [options] mergeFile.ociom \n",
-               "%*", parse_end_args, "",
-               "<SEPARATOR>", "Options:",
+               "    ociomergeconfigs [options] mergeFile.ociom --out mergedConfig.ocio\n",
+               "%*",             parse_end_args,    "",
+               "<SEPARATOR>",                       "Options:",
                "--out %s",       &outputFile,       "Filepath to save the merged config",
                "--validate",     &validate,         "Validate the final merged config",
                "--show-last",    &displayConfig,    "Display the last merged config to screen",
                "--show-all",     &displayAllConfig, "Display ALL merged configs to screen",
-               "--show-params",  &displayParams,    "Display merger options (OCIOM)",
-               "--help",    &help,                  "Display the help and exit",
-               "-h",        &help,                  "Display the help and exit",
+               "--show-params",  &displayParams,    "Display merger options from OCIOM file",
+               "--help",         &help,             "Display the help and exit",
+               "-h",             &help,             "Display the help and exit",
                NULL
                );
 

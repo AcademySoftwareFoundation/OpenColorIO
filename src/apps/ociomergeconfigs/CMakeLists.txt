@@ -22,8 +22,10 @@ target_link_libraries(ociomergeconfigs
         apputils
         pystring::pystring
         OpenColorIO
-        MINIZIP::minizip-ng
 )
+
+include(StripUtils)
+ocio_strip_binary(ociomergeconfigs)
 
 install(TARGETS ociomergeconfigs
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
