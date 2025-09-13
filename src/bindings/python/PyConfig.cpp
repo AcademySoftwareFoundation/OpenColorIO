@@ -316,6 +316,8 @@ void bindPyConfig(py::module & m)
             {
                 return ActiveColorSpaceIterator(self);
             })
+        .def("getColorSpaceFromInteropID", &Config::getColorSpaceFromInteropID, "interopID"_a, "searchMethod"_a,
+            DOC(Config, getColorSpaceFromInteropID))
         .def("getCanonicalName", &Config::getCanonicalName, "name"_a,
              DOC(Config, getCanonicalName))
         .def("addColorSpace", &Config::addColorSpace, "colorSpace"_a, 

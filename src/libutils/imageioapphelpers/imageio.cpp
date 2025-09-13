@@ -192,6 +192,9 @@ ptrdiff_t ImageIO::getImageBytes() const
 void ImageIO::init(const ImageIO & img, BitDepth bitDepth)
 {
     m_impl->init(*img.m_impl, bitDepth);
+
+    // Do not propagate colorInteropID.
+    attribute("colorInteropID", "unknown");
 }
 
 void ImageIO::init(long width, long height, ChannelOrdering chanOrder, BitDepth bitDepth)

@@ -631,7 +631,7 @@ public:
     /**
      * \brief Get the color space from the provided interopID.
      */
-    ConstColorSpaceRcPtr getColorSpaceFromInteropID(const char * interopID, InteropIDSearchMethod method=FullID) const;
+    ConstColorSpaceRcPtr getColorSpaceFromInteropID(const char * interopID, InteropIDSearchMethod method) const;
 
     /**
      * Accepts an alias, role name, named transform name, or color space name and returns the
@@ -1992,13 +1992,16 @@ public:
     void setDescription(const char * description);
 
     /**
-     * Get/Set the interop ID for the color space.
-     *
-     * The interop ID is a standardized identifier to uniquely identify commonly
-     * used color spaces. These IDs are defined by the Academy Software
-     * Foundation's Color Interop Forum project. If you create your own ID, you
-     * must prefix it with unique characters that will ensure it won't conflict
-     * with future Color Interop Forum IDs.
+     * Get/Set the interop ID for the color space. The interop ID is a
+     * structured string defined by the Color Interop Forum. It is intended to
+     * identify color spaces in a way that is portable across different configs,
+     * making it suitable for use in various file formats. The Color Interop
+     * Forum publishes ID strings for common color spaces. If you create your
+     * own IDs, they must be preceded by a namespace string. The setter will
+     * throw if the string does not follow certain rules (run ociocheck for a
+     * more complete validation). For more details, please review the interop ID
+     * white paper available from:
+     * https://github.com/AcademySoftwareFoundation/ColorInterop.
      */
     const char * getInteropID() const noexcept;
     void setInteropID(const char * interopID);
@@ -2008,7 +2011,7 @@ public:
      *
      * Currently supported attribute names are "amf_transform_ids" and
      * "icc_profile_name". Using any other name will throw. If the attribute is
-     * not defined, it'll return empty string. Similarly setting it to empty
+     * not defined, it'll return empty string. Setting the value to an empty
      * string will effectively delete the attribute.
      *
      * The AMF transform IDs are used to identify specific transforms in the

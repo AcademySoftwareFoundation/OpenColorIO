@@ -2499,8 +2499,7 @@ const char * Config::getCanonicalName(const char * name) const
 
 ConstColorSpaceRcPtr Config::getColorSpaceFromInteropID(const char * interopID, InteropIDSearchMethod method) const
 {
-    // TODO: this currently searches for roles as well. Do we want that? /coz
-
+    // NOTE: This will search color space names, aliases, and roles.
     auto cs = getColorSpace(interopID);
 
     // Fall back to name-only if allowed.
@@ -5682,11 +5681,13 @@ void Config::Impl::checkVersionConsistency() const
         }
     }
 
-    // Check for the ColorSpaces.
+    // Check ColorSpace properties.
 
     const int nbCS = m_allColorSpaces->getNumColorSpaces();
     for (int i = 0; i < nbCS; ++i)
     {
+        // Check for display color spaces.
+
         const auto & cs = m_allColorSpaces->getColorSpaceByIndex(i);
         if (m_majorVersion < 2) 
         {
@@ -5695,6 +5696,8 @@ void Config::Impl::checkVersionConsistency() const
                 throw Exception("Only version 2 (or higher) can have DisplayColorSpaces.");
             }
         } 
+
+        // Check for new color space attributes.
 
         if (m_majorVersion < 2) 
         {
@@ -5705,11 +5708,15 @@ void Config::Impl::checkVersionConsistency() const
                 os << "has non-empty InteropID and config version is less than 2.0.";
                 throw Exception(os.str().c_str());
             }
+        }
+
+        if (hexVersion < 0x02050000) 
+        {
             if (cs->getInterchangeAttributes().size()>0)
             {
                 std::ostringstream os;
                 os << "Config failed validation. The color space '" << cs->getName() << "' ";
-                os << "has non-empty interchange attributes and config version is less than 2.0.";
+                os << "has non-empty interchange attributes and config version is less than 2.5.";
                 throw Exception(os.str().c_str());
             }
         }

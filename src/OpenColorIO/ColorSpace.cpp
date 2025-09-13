@@ -241,43 +241,53 @@ void ColorSpace::setInteropID(const char * interopID)
     
     if (!id.empty())
     {
-        // Count the number of ':' characters in the string
-        // and check for non-ASCII characters
-        size_t colonCount = 0;
-        size_t lastColonPos = std::string::npos;
-        
-        for (size_t i = 0; i < id.length(); ++i)
+        // check if it only uses ASCII characters: 0-9, a-z, and the following characters (no spaces):
+        // - _ ~ / * # % ^ + ( ) [ ] |
+        auto allowed = [](char c)
         {
-            if (id[i] == ':')
-            {
-                colonCount++;
-                lastColonPos = i;
-            }
-            else if (static_cast<unsigned char>(id[i]) >= 0x80)
-            {
-                std::ostringstream oss;
-                oss << "InteropID '" << id << "' is invalid: only ASCII characters [0x00..0x7F] are allowed.";
-                throw Exception(oss.str().c_str());
-            }
-        }
-        
-        // Validate: only zero or one ':' character allowed
-        if (colonCount > 1)
+            return  (c >= '0' && c <= '9')||
+                    (c >= 'a' && c <= 'z')||
+                    c=='.'||c=='-'||c=='_'||c=='~'||c=='/'||c=='*'||c=='#'||c=='%'||
+                    c=='^'||c=='+'||c=='('||c==')'||c=='['||c==']'||c=='|'||c==':';
+        };
+
+        if (!std::all_of(id.begin(), id.end(), allowed)) 
         {
             std::ostringstream oss;
-            oss << "InteropID '" << id << "' is invalid: only zero or one ':' character is allowed.";
-            throw Exception(oss.str().c_str());
-        }
-        
-        // Validate: ':' cannot be the last character
-        if (colonCount == 1 && lastColonPos == id.length() - 1)
-        {
-            std::ostringstream oss;
-            oss << "InteropID '" << id << "' is invalid: ':' character cannot be the last character.";
+            oss << "InteropID '" << id << "' contains invalid characters. "
+                "Only lowercase a-z, 0-9 and . - _ ~ / * # % ^ + ( ) [ ] | are allowed." << 
+                std::endl;
             throw Exception(oss.str().c_str());
         }
 
-        // TODO: Do we want to verify the interopID against the CIF list here?
+        // Check if has a namespace.
+        size_t pos = id.find(':');
+        if (pos != std::string::npos) 
+        {
+            // Namespace found, split into namespace and color space.
+            std::string ns = id.substr(0, pos);
+            std::string cs = id.substr(pos+1);
+        
+            // both should be non-empty
+            if (ns.empty() || cs.empty()) 
+            {
+                std::ostringstream oss;
+                oss << "InteropID '" << id << "' is not valid. "
+                    "If ':' is used, both the namespace and the color space parts must be non-empty." <<
+                    std::endl;
+                throw Exception(oss.str().c_str());
+            }
+
+            // More than one ':' is an error.
+            if (cs.find(':') != std::string::npos) 
+            {
+                std::ostringstream oss;
+                oss << "ERROR: InteropID '" << id << "' is not valid. "
+                    "Only one ':' is allowed to separate the namespace and the color space." << 
+                    std::endl;
+                throw Exception(oss.str().c_str());
+            }
+        }
     }
     
     getImpl()->m_interopID = id;
@@ -285,11 +295,12 @@ void ColorSpace::setInteropID(const char * interopID)
 
 const char * ColorSpace::getInterchangeAttribute(const char* attrName) const
 {
-    std::string nameTrimmed = StringUtils::Trim(attrName);
+    std::string name = attrName ? attrName : "";
+
     for (auto& key : knownInterchangeNames)
     {
         // do case-insensitive comparison.
-        if (StringUtils::Compare(key, nameTrimmed))
+        if (StringUtils::Compare(key, name))
         {
             auto it = m_impl->m_interchangeAttribs.find(key);
             if (it != m_impl->m_interchangeAttribs.end())
@@ -301,19 +312,20 @@ const char * ColorSpace::getInterchangeAttribute(const char* attrName) const
     }
 
     std::ostringstream oss;
-    oss << "Unknown attribute name '" << attrName << "'.";
+    oss << "Unknown attribute name '" << name << "'.";
     throw Exception(oss.str().c_str());
 }
 
 void ColorSpace::setInterchangeAttribute(const char* attrName, const char* value)
 {
-    std::string nameTrimmed = StringUtils::Trim(attrName);
+    std::string name = attrName ? attrName : "";
+
     for (auto& key : knownInterchangeNames)
     {
         // Do case-insensitive comparison.
-        if (StringUtils::Compare(key, nameTrimmed))
+        if (StringUtils::Compare(key, name))
         {
-            // use key instead of nameTrim for storing in correct capitalization.
+            // use key instead of name for storing in correct capitalization.
             if (!value || !*value)
             {
                 m_impl->m_interchangeAttribs.erase(key);
@@ -327,7 +339,7 @@ void ColorSpace::setInterchangeAttribute(const char* attrName, const char* value
     }
 
     std::ostringstream oss;
-    oss << "Unknown attribute name '" << attrName << "'.";
+    oss << "Unknown attribute name '" << name << "'.";
     throw Exception(oss.str().c_str());
 }
 
@@ -336,7 +348,7 @@ std::map<std::string, std::string> ColorSpace::getInterchangeAttributes() const 
     return m_impl->m_interchangeAttribs;
 }
 
-BitDepth ColorSpace::ColorSpace::getBitDepth() const noexcept
+BitDepth ColorSpace::getBitDepth() const noexcept
 {
     return getImpl()->m_bitDepth;
 }
@@ -555,7 +567,6 @@ std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
     {
         os << ", description=" << str;
     }
-    // TODO: Do we need to output the section name too?
     for (const auto& attr : cs.getInterchangeAttributes())
     {
         os << ", " << attr.first << "=" << attr.second;

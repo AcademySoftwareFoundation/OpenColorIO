@@ -344,7 +344,7 @@ inline void loadCustomKeys(const YAML::Node& node, CustomKeysLoader & ck, const 
     else
     {
         std::ostringstream ss;
-        ss << "The '" << sectionName << "' section  need to be a YAML map.";
+        ss << "Expected a YAML map in the " << sectionName << " section.";
         throwError(node, ss.str().c_str());
     }
 }
@@ -3259,7 +3259,7 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs, unsigned int major
                         keyval.first.as<std::string>().c_str(), 
                         val.c_str());
                 }
-                catch (Exception*)
+                catch (Exception &)
                 {
                     LogUnknownKeyWarning(iter->second, keyval.first);
                 }
@@ -3381,13 +3381,6 @@ inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs, unsigned int major
         }
         out << YAML::Flow << YAML::Value << aliases;
     }
-    
-    const std::string interopID{ cs->getInteropID() };
-    if (!interopID.empty())
-    {
-        out << YAML::Key << "interop_id";
-        out << YAML::Value << interopID;
-    }
 
     out << YAML::Key << "family" << YAML::Value << cs->getFamily();
 
@@ -3450,6 +3443,13 @@ inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs, unsigned int major
     {
         out << YAML::Key << "encoding";
         out << YAML::Value << is;
+    }
+        
+    const std::string interopID{ cs->getInteropID() };
+    if (!interopID.empty())
+    {
+        out << YAML::Key << "interop_id";
+        out << YAML::Value << interopID;
     }
 
     out << YAML::Key << "allocation" << YAML::Value;

@@ -31,6 +31,8 @@ const char * DESC_STRING = "\n\n"
 // returns true if the interopID is valid
 bool isValidInteropID(const std::string& id)
 {
+    // See https://github.com/AcademySoftwareFoundation/ColorInterop for the details.
+
     static const std::set<std::string> cifTextureIDs = {
         "lin_ap1_scene",
         "lin_ap0_scene",
@@ -50,34 +52,30 @@ bool isValidInteropID(const std::string& id)
         "unknown"
     };
 
-    // empty is fine
-    if (id.empty()) 
-        return true;
-
-    // check if it only uses ASCII characters: 0-9, a-z, and the following characters (no spaces):
-    // - _ ~ / * # % ^ + ( ) [ ] |
-    auto allowed = [](char c)
-    {
-        return (c >= '0' && c <= '9') ||
-               (c >= 'a' && c <= 'z') ||
-               c=='-'||c=='_'||c=='~'||c=='/'||c=='*'||c=='#'||c=='%'||
-               c=='^'||c=='+'||c=='('||c==')'||c=='['||c==']'||c=='|' || c==':';
+    static const std::set<std::string> cifDisplayIDs = {
+        "srgb_rec709_display",
+        "g24_rec709_display",
+        "srgb_p3d65_display",
+        "srgbx_p3d65_display",
+        "pq_p3d65_display",
+        "pq_rec2020_display",
+        "hlg_rec2020_display",
+        "g22_rec709_display",
+        "g22_adobergb_display",
+        "g26_p3d65_display",
+        "g26_xyzd65_display",
+        "pq_xyzd65_display",
     };
 
-    if (!std::all_of(id.begin(), id.end(), allowed)) 
-    {
-        std::cout << "ERROR: InteropID '" << id << "' contains invalid characters. "
-            "Only lowercase a-z, 0-9 and - _ ~ / * # % ^ + ( ) [ ] | are allowed." << 
-            std::endl;
-        return false;
-    }
+    if (id.empty()) 
+        return true;
 
     // Check if has a namespace.
     size_t pos = id.find(':');
     if (pos == std::string::npos) 
     {
-        // No namespace, so id must be in the forumID list.
-        if (cifTextureIDs.count(id) == 0)
+        // No namespace, so id must be in the Color Interop Forum ID list.
+        if (cifTextureIDs.count(id) == 0 && cifDisplayIDs.count(id)==0)
         {
             std::cout << "ERROR: InteropID '" << id << "' is not valid. "
                 "It should either be one of Color Interop Forum standard IDs or "
@@ -91,27 +89,9 @@ bool isValidInteropID(const std::string& id)
         // Namespace found, split into namespace and id.
         std::string ns = id.substr(0, pos);
         std::string cs = id.substr(pos+1);
-        
-        // both should be non-empty
-        if (ns.empty() || cs.empty()) 
-        {
-            std::cout << "ERROR: InteropID '" << id << "' is not valid. "
-                "If a namespace is used, it must be followed by a non-empty ID, e.g. 'mycompany:mycolorspace'." << 
-                std::endl;
-            return false;
-        }
 
-        // More than one ':' is an error.
-        if (cs.find(':') != std::string::npos) 
-        {
-            std::cout << "ERROR: InteropID '" << id << "' is not valid. "
-                "Only one ':' is allowed to separate the namespace and ID, e.g. 'mycompany:mycolorspace'." << 
-                std::endl;
-            return false;
-        }
-        
-        // id should not be in the cifID list.
-        if (cifTextureIDs.count(cs) > 0) 
+        // Id should not be in the Color Interop Forum ID list.
+        if (cifTextureIDs.count(cs) > 0 || cifDisplayIDs.count(cs)> 0) 
         {
             std::cout << "ERROR: InteropID '" << id << "' is not valid. "
                 "The ID part must not be one of the Color Interop Forum standard IDs when a namespace is used." << 
@@ -385,8 +365,6 @@ int main(int argc, const char **argv)
             std::cout << std::endl;
             std::cout << "** ColorSpaces **" << std::endl;
 
-
-
             const int numCS = config->getNumColorSpaces(
                 OCIO::SEARCH_REFERENCE_SPACE_ALL,   // Iterate over scene & display color spaces.
                 OCIO::COLORSPACE_ALL);              // Iterate over active & inactive color spaces.
@@ -397,11 +375,6 @@ int main(int argc, const char **argv)
                     OCIO::SEARCH_REFERENCE_SPACE_ALL,
                     OCIO::COLORSPACE_ALL,
                     i));
-
-                // Validate InteropID if present
-                // TODO: When the CIF list for display color spaces is ready consider 
-                // splitting this validation into two parts so that display color spaces 
-                // are tested against the display CIF list.
 
                 std::string interopID = cs->getInteropID();
                 if (!interopID.empty())
