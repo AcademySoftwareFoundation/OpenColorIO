@@ -622,17 +622,6 @@ public:
      */
     ConstColorSpaceRcPtr getColorSpace(const char * name) const;
 
-
-    enum InteropIDSearchMethod : uint8_t
-    {
-        FullID,             ///< Search only for the full interop ID ([namespace:]colorspace);
-        NameOnlyFallback    ///< If fullID fails, will search for name only (colorspace).
-    };
-    /**
-     * \brief Get the color space from the provided interopID.
-     */
-    ConstColorSpaceRcPtr getColorSpaceFromInteropID(const char * interopID, InteropIDSearchMethod method) const;
-
     /**
      * Accepts an alias, role name, named transform name, or color space name and returns the
      * color space name or the named transform name.
@@ -2011,7 +2000,7 @@ public:
      *
      * Currently supported attribute names are "amf_transform_ids" and
      * "icc_profile_name". Using any other name will throw. If the attribute is
-     * not defined, it'll return empty string. Setting the value to an empty
+     * not defined, it'll return an empty string. Setting the value to an empty
      * string will effectively delete the attribute.
      *
      * The AMF transform IDs are used to identify specific transforms in the

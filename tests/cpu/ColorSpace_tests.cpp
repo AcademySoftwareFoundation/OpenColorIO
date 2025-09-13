@@ -10,6 +10,7 @@
 
 #include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
+#include "UnitTestLogUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -295,7 +296,7 @@ active_views: []
         OCIO_CHECK_EQUAL(cfgString, os.str());
     }
 
-    // Adding a color space that uses all parameters.
+    // Adding a color space that uses all parameters (as of 2.0).
     {
         constexpr char End[]{ R"(colorspaces:
   - !<ColorSpace>
@@ -786,6 +787,7 @@ colorspaces:
         std::istringstream is;
         is.str(cfgString);
         OCIO::ConstConfigRcPtr config;
+        OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_REQUIRE_EQUAL(!config, false);
         auto attrMap = config->getColorSpace("raw")->getInterchangeAttributes();
@@ -1091,7 +1093,7 @@ OCIO_ADD_TEST(ColorSpace, amf_transform_ids_serialization)
     auto deserializedIDs = deserializedCs->getInterchangeAttribute("amf_transform_ids");
     OCIO_CHECK_EQUAL(deserializedIDs, amfIDs);
 
-    // Verify that that earlier versions retain amf_transform_ids.
+    // Verify that that earlier versions reject amf_transform_ids.
     OCIO::ConfigRcPtr cfgCopy = cfg->createEditableCopy();
     cfgCopy->setVersion(2,4);
     OCIO_CHECK_THROW_WHAT(cfgCopy->serialize(ss),
@@ -1178,7 +1180,7 @@ OCIO_ADD_TEST(ColorSpace, icc_profile_name_serialization)
         OCIO::Exception,
         "has non-empty interchange attributes and config version is less than 2.5.");
 
-    // Test with empty IccProfileName (should be valid in 2.4 and should not appear in YAML).
+    // Test with empty IccProfileName (should not appear in YAML, and so won't invalidate a 2.4 config).
     cs->setInterchangeAttribute("icc_profile_name", nullptr);
     cfg->addColorSpace(cs); // replace the existing CS
     ss.str("");

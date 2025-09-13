@@ -472,12 +472,14 @@ class ColorSpaceTest(unittest.TestCase):
         # Test invalid InteropID with multiple colons.
         with self.assertRaises(Exception) as context:
             self.colorspace.setInteropID('name:space:cs_name')
-        self.assertIn("Only one ':' is allowed to separate the namespace and the color space.", str(context.exception))
+        self.assertIn("Only one ':' is allowed to separate the namespace and the color space.",
+                      str(context.exception))
 
         # Test invalid InteropID with colon at the end.
         with self.assertRaises(Exception) as context:
             self.colorspace.setInteropID('namespace:')
-        self.assertIn("If ':' is used, both the namespace and the color space parts must be non-empty.", str(context.exception))
+        self.assertIn("If ':' is used, both the namespace and the color space parts must be non-empty.",
+                      str(context.exception))
 
         # Test invalid InteropID with non-ASCII characters.
         with self.assertRaises(Exception) as context:

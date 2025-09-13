@@ -3382,6 +3382,13 @@ inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs, unsigned int major
         out << YAML::Flow << YAML::Value << aliases;
     }
 
+    const std::string interopID{ cs->getInteropID() };
+    if (!interopID.empty())
+    {
+        out << YAML::Key << "interop_id";
+        out << YAML::Value << interopID;
+    }
+
     out << YAML::Key << "family" << YAML::Value << cs->getFamily();
 
     out << YAML::Key << "equalitygroup" << YAML::Value << cs->getEqualityGroup();
@@ -3390,6 +3397,26 @@ inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs, unsigned int major
     save(out, cs->getBitDepth());
     
     saveDescription(out, cs->getDescription());
+
+    out << YAML::Key << "isdata" << YAML::Value << cs->isData();
+
+    if(cs->getNumCategories() > 0)
+    {
+        StringUtils::StringVec categories;
+        for(int idx=0; idx<cs->getNumCategories(); ++idx)
+        {
+            categories.push_back(cs->getCategory(idx));
+        }
+        out << YAML::Key << "categories";
+        out << YAML::Flow << YAML::Value << categories;
+    }
+
+    const std::string is{ cs->getEncoding() };
+    if (!is.empty())
+    {
+        out << YAML::Key << "encoding";
+        out << YAML::Value << is;
+    }
 
     auto interchangemap = cs->getInterchangeAttributes();
     if (interchangemap.size())
@@ -3423,33 +3450,6 @@ inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs, unsigned int major
         }
 
         out << YAML::EndMap;
-    }
-
-    out << YAML::Key << "isdata" << YAML::Value << cs->isData();
-
-    if(cs->getNumCategories() > 0)
-    {
-        StringUtils::StringVec categories;
-        for(int idx=0; idx<cs->getNumCategories(); ++idx)
-        {
-            categories.push_back(cs->getCategory(idx));
-        }
-        out << YAML::Key << "categories";
-        out << YAML::Flow << YAML::Value << categories;
-    }
-
-    const std::string is{ cs->getEncoding() };
-    if (!is.empty())
-    {
-        out << YAML::Key << "encoding";
-        out << YAML::Value << is;
-    }
-        
-    const std::string interopID{ cs->getInteropID() };
-    if (!interopID.empty())
-    {
-        out << YAML::Key << "interop_id";
-        out << YAML::Value << interopID;
     }
 
     out << YAML::Key << "allocation" << YAML::Value;
