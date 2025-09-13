@@ -772,7 +772,7 @@ colorspaces:
   - !<ColorSpace>
     name: raw
     interchange:
-        unknown: will be ignored
+        my-attrib: will be ignored
     family: raw
     equalitygroup: ""
     bitdepth: 32f
@@ -789,6 +789,7 @@ colorspaces:
         OCIO::ConstConfigRcPtr config;
         OCIO::LogGuard logGuard;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_EQUAL(logGuard.output(), "[OpenColorIO Warning]: Unknown key in interchange: 'my-attrib'.\n");
         OCIO_REQUIRE_EQUAL(!config, false);
         auto attrMap = config->getColorSpace("raw")->getInterchangeAttributes();
         OCIO_CHECK_EQUAL(attrMap.size(), 0);

@@ -3249,19 +3249,18 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs, unsigned int major
 
             for (const auto& keyval : kv.m_keyVals)
             {
+                std::string keystr = keyval.first.as<std::string>();
+                std::string valstr = keyval.second.as<std::string>();
+                SanitizeLoadedNewlines(valstr);
+                
                 // OCIO exception means the key is not recognized. Convert that to a warning.
                 try
                 {
-                    std::string val = keyval.second.as<std::string>();
-                    SanitizeLoadedNewlines(val);
-
-                    cs->setInterchangeAttribute(
-                        keyval.first.as<std::string>().c_str(), 
-                        val.c_str());
+                    cs->setInterchangeAttribute(keystr.c_str(), valstr.c_str());
                 }
                 catch (Exception &)
                 {
-                    LogUnknownKeyWarning(iter->second, keyval.first);
+                    LogUnknownKeyWarning(key, keyval.first);
                 }
             }
         }
