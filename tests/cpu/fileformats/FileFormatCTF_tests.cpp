@@ -5124,7 +5124,7 @@ OCIO_ADD_TEST(CTFTransform, save_lut1d_halfdomain)
         }
         else
         {
-            OCIO_CHECK_EQUAL(loaded, expected);
+            OCIO_CHECK_EQUAL(loaded.bits(), expected.bits());
             OCIO_CHECK_EQUAL(loadedVal, lut->getArray()[3 * i + 1]);
             OCIO_CHECK_EQUAL(loadedVal, lut->getArray()[3 * i + 2]);
         }

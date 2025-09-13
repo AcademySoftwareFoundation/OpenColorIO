@@ -6,7 +6,7 @@ set -ex
 
 DOXYGEN_VERSION="$1"
 
-if [ "$DOXYGEN_VERSION" == "latest" ]; then
+if [ "$DOXYGEN_VERSION" = "latest" ]; then
     apt-get install doxygen
 else
     apt-get install doxygen=${DOXYGEN_VERSION}
