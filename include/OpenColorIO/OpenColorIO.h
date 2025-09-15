@@ -1988,9 +1988,7 @@ public:
      * Forum publishes ID strings for common color spaces. If you create your
      * own IDs, they must be preceded by a namespace string. The setter will
      * throw if the string does not follow certain rules (run ociocheck for a
-     * more complete validation). For more details, please review the interop ID
-     * white paper available from:
-     * https://github.com/AcademySoftwareFoundation/ColorInterop.
+     * more complete validation).
      */
     const char * getInteropID() const noexcept;
     void setInteropID(const char * interopID);
