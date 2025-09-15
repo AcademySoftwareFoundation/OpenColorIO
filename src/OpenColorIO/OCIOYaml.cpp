@@ -3425,9 +3425,6 @@ inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs, unsigned int major
         out << YAML::BeginMap;
         for (const auto& keyval : interchangemap)
         {
-            //out << YAML::Key << keyval.first;
-            //<< YAML::Value << keyval.second;
-
             // Remove trailing newlines so that only one is saved because they won't
             // be read back.
             std::string valStr{keyval.second};

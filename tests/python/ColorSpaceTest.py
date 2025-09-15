@@ -490,7 +490,7 @@ class ColorSpaceTest(unittest.TestCase):
             self.colorspace.setInteropID('space±_name')  # Contains ± (ANSI 0xB1)
         self.assertIn("contains invalid characters.", str(context.exception))
 
-    def test_interchange_atttributes(self):
+    def test_interchange_attributes(self):
         """
         Test the setInterchangeAttribute() and getInterchangeAttribute() methods.
         """
