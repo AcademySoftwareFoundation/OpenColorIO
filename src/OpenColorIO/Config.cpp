@@ -1450,6 +1450,22 @@ void Config::validate() const
             throw Exception(getImpl()->m_validationtext.c_str());
         }
 
+        // Make sure that all used interopIDs are available in this config.
+        const char* interop = cs->getInteropID();
+        if(interop && *interop)
+        {
+            if(!getColorSpace(interop))
+            {
+                std::ostringstream os;
+                os << "Config failed color space validation. ";
+                os << "The color space '" << name << "' ";
+                os << "refers to an interop ID, '" << interop << "', ";
+                os << "which is not defined in this config.";
+                getImpl()->m_validationtext = os.str();
+                throw Exception(getImpl()->m_validationtext.c_str());
+            }
+        }
+
         // AddColorSpace, addNamedTransform & setRole already check there is no name & alias
         // conflict.
 

@@ -665,6 +665,7 @@ active_views: []
         constexpr char End[]{R"(colorspaces:
   - !<ColorSpace>
     name: raw
+    aliases: [ data ]
     interop_id: data
     family: raw
     equalitygroup: ""
@@ -683,6 +684,71 @@ active_views: []
         auto cs = config->getColorSpace("raw");
         OCIO_CHECK_ASSERT(cs);
         OCIO_CHECK_EQUAL(std::string(cs->getInteropID()), "data");
+
+        OCIO_CHECK_NO_THROW(config->validate());
+    }
+
+    // Test that the undefined interop_id does not pass validation
+    {
+        constexpr char End[]{R"(colorspaces:
+  - !<ColorSpace>
+    name: raw
+    interop_id: data
+    family: raw
+    equalitygroup: ""
+    bitdepth: 32f
+    description: Some text.
+    isdata: true
+    allocation: uniform
+)"};
+        std::string cfgString{Start};
+        cfgString += End;
+
+        std::istringstream is;
+        is.str(cfgString);
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        auto cs = config->getColorSpace("raw");
+        OCIO_CHECK_ASSERT(cs);
+        OCIO_CHECK_EQUAL(std::string(cs->getInteropID()), "data");
+
+        OCIO_CHECK_THROW_WHAT(config->validate(),
+            OCIO::Exception,
+            "Config failed color space validation. The color space 'raw' refers "
+            "to an interop ID, 'data', which is not defined in this config.");
+    }
+
+    // Test that the interop id can be found in another color space.
+    {
+        constexpr char End[]{R"(colorspaces:
+  - !<ColorSpace>
+    name: raw
+    interop_id: data
+    family: raw
+    equalitygroup: ""
+    bitdepth: 32f
+    description: one data color space.
+    isdata: true
+    allocation: uniform
+  - !<ColorSpace>
+    name: data
+    interop_id: data
+    family: raw
+    equalitygroup: ""
+    bitdepth: 32f
+    description: another data color space.
+    isdata: true
+    allocation: uniform
+)"};
+        std::string cfgString{Start};
+        cfgString += End;
+
+        std::istringstream is;
+        is.str(cfgString);
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+
+        OCIO_CHECK_NO_THROW(config->validate());
     }
 
     // Test that the interchange is NOT valid in v2.0 config.
