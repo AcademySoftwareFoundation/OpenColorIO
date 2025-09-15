@@ -99,7 +99,7 @@ void bindPyColorSpaceMenuHelpers(py::module & m)
              "includeColorSpaces"_a = true,
              "searchReferenceSpaceType"_a = SEARCH_REFERENCE_SPACE_ALL,
              "includeNamedTransforms"_a = false,
-             "treatNoCategoryAsAny"_a = false,
+             "treatNoCategoryAsAny"_a = true,
              "appCategories"_a.none(false) = "",
              "encodings"_a.none(false) = "",
              "userCategories"_a.none(false) = "",

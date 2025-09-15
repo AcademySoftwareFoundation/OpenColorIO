@@ -37,6 +37,7 @@ OCIO_ADD_TEST(DisplayViewHelpers, basic)
     //
 
     auto params = OCIO::ColorSpaceMenuParameters::Create(cfg);
+    params->setTreatNoCategoryAsAny(false);
     params->setAppCategories("working-space");
     OCIO::ColorSpaceMenuHelperRcPtr workingMenuHelper;
     OCIO_CHECK_NO_THROW(workingMenuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
