@@ -5,11 +5,15 @@ import logging
 import unittest
 import os
 import sys
+import argparse
 
 logging.basicConfig(
     level=logging.INFO,
     format="[%(levelname)s] %(name)s: %(message)s",
 )
+
+# A single test suite may be run manually as follows (assuming you are in the typical build dir):
+# python ../tests/python/OpenColorIOTestSuite.py $PWD --run_only ColorSpaceTest 
 
 # We are called from CTest if called with arguments (build_tree, build_type)
 if len(sys.argv) > 1:
@@ -91,71 +95,89 @@ import TransformsTest
 import ViewingRulesTest
 import ViewTransformTest
 
-def suite():
+def get_test_modules():
+    return [
+        ("AllocationTransformTest", AllocationTransformTest),
+        ("BakerTest", BakerTest),
+        ("BuiltinConfigRegistryTest", BuiltinConfigRegistryTest),
+        ("BuiltinTransformRegistryTest", BuiltinTransformRegistryTest),
+        ("BuiltinTransformTest", BuiltinTransformTest),
+        ("CDLTransformTest", CDLTransformTest),
+        ("ColorSpaceHelpersTest", ColorSpaceHelpersTest),
+        ("ColorSpaceTest", ColorSpaceTest),
+        ("ColorSpaceTransformTest", ColorSpaceTransformTest),
+        ("ConfigTest", ConfigTest),
+        ("ConstantsTest", ConstantsTest),
+        ("ContextTest", ContextTest),
+        ("CPUProcessorTest", CPUProcessorTest),
+        ("DisplayViewHelpersTest", DisplayViewHelpersTest),
+        ("DisplayViewTransformTest", DisplayViewTransformTest),
+        ("ExponentTransformTest", ExponentTransformTest),
+        ("ExponentWithLinearTransformTest", ExponentWithLinearTransformTest),
+        ("ExposureContrastTransformTest", ExposureContrastTransformTest),
+        ("FileTransformTest", FileTransformTest),
+        ("FileRulesTest", FileRulesTest),
+        ("FixedFunctionTransformTest", FixedFunctionTransformTest),
+        ("FormatMetadataTest", FormatMetadataTest),
+        ("GpuShaderDescTest", GpuShaderDescTest),
+        ("GradingDataTest", GradingDataTest),
+        ("GradingPrimaryTransformTest", GradingPrimaryTransformTest),
+        ("GradingRGBCurveTransformTest", GradingRGBCurveTransformTest),
+        ("GradingToneTransformTest", GradingToneTransformTest),
+        ("GroupTransformTest", GroupTransformTest),
+        ("LegacyViewingPipelineTest", LegacyViewingPipelineTest),
+        ("LogCameraTransformTest", LogCameraTransformTest),
+        ("LogTransformTest", LogTransformTest),
+        ("LookTest", LookTest),
+        ("LookTransformTest", LookTransformTest),
+        ("Lut1DTransformTest", Lut1DTransformTest),
+        ("Lut3DTransformTest", Lut3DTransformTest),
+        ("MatrixTransformTest", MatrixTransformTest),
+        ("MixingHelpersTest", MixingHelpersTest),
+        ("NamedTransformTest", NamedTransformTest),
+        ("OCIOZArchiveTest", OCIOZArchiveTest),
+        ("OpenColorIOTest", OpenColorIOTest),
+        ("ProcessorCacheTest", ProcessorCacheTest),
+        ("ProcessorTest", ProcessorTest),
+        ("RangeTransformTest", RangeTransformTest),
+        ("TransformsTest", TransformsTest),
+        ("ViewingRulesTest", ViewingRulesTest),
+        ("ViewTransformTest", ViewTransformTest),
+    ]
+
+def suite(run_only=None):
     """Load unittest.TestCase objects from *Test.py files within ./tests/Python
 
+    :param run_only: Optional name of a single test module to run.
     :return: unittest test suite of TestCase objects.
     :rtype: unittest.TestSuite
     """
-
-    # top level directory cached on loader instance
     suite = unittest.TestSuite()
     loader = unittest.TestLoader()
-
-    suite.addTest(loader.loadTestsFromModule(AllocationTransformTest))
-    suite.addTest(loader.loadTestsFromModule(BakerTest))
-    suite.addTest(loader.loadTestsFromModule(BuiltinConfigRegistryTest))
-    suite.addTest(loader.loadTestsFromModule(BuiltinTransformRegistryTest))
-    suite.addTest(loader.loadTestsFromModule(BuiltinTransformTest))
-    suite.addTest(loader.loadTestsFromModule(CDLTransformTest))
-    suite.addTest(loader.loadTestsFromModule(ColorSpaceHelpersTest))
-    suite.addTest(loader.loadTestsFromModule(ColorSpaceTest))
-    suite.addTest(loader.loadTestsFromModule(ColorSpaceTransformTest))
-    suite.addTest(loader.loadTestsFromModule(ConfigTest))
-    suite.addTest(loader.loadTestsFromModule(ConstantsTest))
-    suite.addTest(loader.loadTestsFromModule(ContextTest))
-    suite.addTest(loader.loadTestsFromModule(CPUProcessorTest))
-    suite.addTest(loader.loadTestsFromModule(DisplayViewHelpersTest))
-    suite.addTest(loader.loadTestsFromModule(DisplayViewTransformTest))
-    suite.addTest(loader.loadTestsFromModule(ExponentTransformTest))
-    suite.addTest(loader.loadTestsFromModule(ExponentWithLinearTransformTest))
-    suite.addTest(loader.loadTestsFromModule(ExposureContrastTransformTest))
-    suite.addTest(loader.loadTestsFromModule(FileTransformTest))
-    suite.addTest(loader.loadTestsFromModule(FileRulesTest))
-    suite.addTest(loader.loadTestsFromModule(FixedFunctionTransformTest))
-    suite.addTest(loader.loadTestsFromModule(FormatMetadataTest))
-    suite.addTest(loader.loadTestsFromModule(GpuShaderDescTest))
-    suite.addTest(loader.loadTestsFromModule(GradingDataTest))
-    suite.addTest(loader.loadTestsFromModule(GradingPrimaryTransformTest))
-    suite.addTest(loader.loadTestsFromModule(GradingRGBCurveTransformTest))
-    suite.addTest(loader.loadTestsFromModule(GradingToneTransformTest))
-    suite.addTest(loader.loadTestsFromModule(GroupTransformTest))
-    suite.addTest(loader.loadTestsFromModule(LegacyViewingPipelineTest))
-    suite.addTest(loader.loadTestsFromModule(LogCameraTransformTest))
-    suite.addTest(loader.loadTestsFromModule(LogTransformTest))
-    suite.addTest(loader.loadTestsFromModule(LookTest))
-    suite.addTest(loader.loadTestsFromModule(LookTransformTest))
-    suite.addTest(loader.loadTestsFromModule(Lut1DTransformTest))
-    suite.addTest(loader.loadTestsFromModule(Lut3DTransformTest))
-    suite.addTest(loader.loadTestsFromModule(MatrixTransformTest))
-    suite.addTest(loader.loadTestsFromModule(MixingHelpersTest))
-    suite.addTest(loader.loadTestsFromModule(NamedTransformTest))
-    suite.addTest(loader.loadTestsFromModule(OCIOZArchiveTest))
-    suite.addTest(loader.loadTestsFromModule(OpenColorIOTest))
-    suite.addTest(loader.loadTestsFromModule(ProcessorCacheTest))
-    suite.addTest(loader.loadTestsFromModule(ProcessorTest))
-    suite.addTest(loader.loadTestsFromModule(RangeTransformTest))
-    suite.addTest(loader.loadTestsFromModule(TransformsTest))
-    suite.addTest(loader.loadTestsFromModule(ViewingRulesTest))
-    suite.addTest(loader.loadTestsFromModule(ViewTransformTest))
-
+    modules = get_test_modules()
+    if run_only:
+        modules = [m for m in modules if m[0] == run_only]
+        if not modules:
+            raise ValueError(f"No test module named '{run_only}' found.")
+    for name, module in modules:
+        suite.addTest(loader.loadTestsFromModule(module))
     return suite
 
-
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="OpenColorIO Python Test Suite")
+    parser.add_argument('--run_only', type=str, help="Only run the specified test module (e.g., ColorSpaceTest)")
+    args, unknown = parser.parse_known_args()
+    # Remove argparse args from sys.argv so unittest doesn't get confused
+    sys.argv = [sys.argv[0]] + unknown
+
+    try:
+        test_suite = suite(run_only=args.run_only)
+    except ValueError as e:
+        print(e)
+        sys.exit(1)
+
     runner = unittest.TextTestRunner(verbosity=2)
-    test_suite = suite()
     result = runner.run(test_suite)
-    if result.wasSuccessful() == False:
+    if not result.wasSuccessful():
         sys.exit(1)
     sys.exit(0)
