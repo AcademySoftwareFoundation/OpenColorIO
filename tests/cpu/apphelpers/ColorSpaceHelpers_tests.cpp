@@ -691,9 +691,9 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, encodings)
 
 OCIO_ADD_TEST(ColorSpaceMenuHelper, usability_issues)
 {
-
     // Adding a color space without categories to a config (and app) that uses them
-    // results in that color space not showing up.
+    // results in that color space not showing up. This is fixed by treating color
+    // spaces without categories as having all categories.
     {
 
         std::istringstream is{ R"(ocio_profile_version: 2
@@ -747,7 +747,8 @@ colorspaces:
     }
 
     // Adding a color space with categories to a config that does not use them results
-    // in the original color space not showing up (for apps that use categories).
+    // in the original color spaces disappearing (for apps that use categories). This
+    // is fixed by treating color spaces without categories as having all categories.
     {
 
         std::istringstream is{ R"(ocio_profile_version: 2

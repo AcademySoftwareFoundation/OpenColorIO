@@ -186,16 +186,16 @@ class ColorSpaceHelpersTest(unittest.TestCase):
         params = OCIO.ColorSpaceMenuParameters(config = self.cfg, role = 'non-existing',
                                                appCategories = 'working-space')
         menu = OCIO.ColorSpaceMenuHelper(params)
-        self.assertEqual(menu.getNumColorSpaces(), 7)
+        self.assertEqual(menu.getNumColorSpaces(), 11)
 
     def test_menu_creation_catgeories(self):
         """
         Test the constructor() with categories.
         """
         params = OCIO.ColorSpaceMenuParameters(config = self.cfg,
-                                               appCategories = 'working-space, file-io')
+                                               appCategories = 'working-space, file-io',
+                                               treatNoCategoryAsAny = False)
         menu = OCIO.ColorSpaceMenuHelper(params)
-        # [lin_1, lin_2, log_1, in_1, in_2, in_3, lut_input_3, display_lin_1, display_lin_2, display_log_1]
         self.assertEqual(menu.getNumColorSpaces(), 10)
         self.assertEqual(menu.getName(0), 'lin_1')
         self.assertEqual(menu.getName(1), 'lin_2')
@@ -260,9 +260,9 @@ class ColorSpaceHelpersTest(unittest.TestCase):
         self.assertEqual(next(hlevels), 'Roles')
 
         params = OCIO.ColorSpaceMenuParameters(config = self.cfg, includeRoles = True,
-                                               appCategories='file-io, working-space')
+                                               appCategories='file-io, working-space',
+                                               treatNoCategoryAsAny = False)
         menu = OCIO.ColorSpaceMenuHelper(params)
-        # [lin_1, lin_2, log_1, in_1, in_2, in_3, lut_input_3, display_lin_1, display_lin_2, display_log_1, default, reference, rendering, scene_linear]
         self.assertEqual(menu.getNumColorSpaces(), 14)
         self.assertEqual(menu.getName(0), 'lin_1')
         self.assertEqual(menu.getName(1), 'lin_2')

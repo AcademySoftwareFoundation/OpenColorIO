@@ -130,7 +130,6 @@ public:
     bool m_includeColorSpaces = true;
     bool m_includeRoles = false;
     bool m_includeNamedTransforms = false;
-//     bool m_treatNoCategoryAsAny = false;
     bool m_treatNoCategoryAsAny = true;
     SearchReferenceSpaceType m_colorSpaceType = SEARCH_REFERENCE_SPACE_ALL;
 

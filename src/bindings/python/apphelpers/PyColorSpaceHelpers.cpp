@@ -132,7 +132,7 @@ void bindPyColorSpaceMenuHelpers(py::module & m)
         .def("getTreatNoCategoryAsAny", &ColorSpaceMenuParameters::getTreatNoCategoryAsAny,
              DOC(ColorSpaceMenuParameters, getTreatNoCategoryAsAny))
         .def("setTreatNoCategoryAsAny", &ColorSpaceMenuParameters::setTreatNoCategoryAsAny,
-             "treatNoCategoryAsAny"_a = false,
+             "treatNoCategoryAsAny"_a = true,
              DOC(ColorSpaceMenuParameters, setTreatNoCategoryAsAny))
         .def("getEncodings", &ColorSpaceMenuParameters::getEncodings,
              DOC(ColorSpaceMenuParameters, getEncodings))
