@@ -184,7 +184,6 @@ if(OCIO_BUILD_PYTHON OR OCIO_BUILD_DOCS)
 endif()
 
 # Set OpenEXR Minimum version as a variable since it it used at multiple places.
-# set(OpenEXR_MININUM_VERSION "3.0.5")
 set(OpenEXR_MININUM_VERSION "3.1.6")
 if((OCIO_BUILD_APPS AND OCIO_USE_OIIO_FOR_APPS) OR OCIO_BUILD_TESTS)
     # OpenImageIO is required for OSL unit test and optional for apps.
