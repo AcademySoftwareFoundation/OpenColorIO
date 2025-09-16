@@ -12,7 +12,7 @@ if(OCIO_BUILD_APPS)
 	add_subdirectory(ociowrite)
 
 	if(TARGET OpenColorIO::ImageIOBackend)
-		add_subdirectory(ociolutimage)
+#		add_subdirectory(ociolutimage)
 		add_subdirectory(ocioconvert)
 		add_subdirectory(ociodisplay)
 	else()
