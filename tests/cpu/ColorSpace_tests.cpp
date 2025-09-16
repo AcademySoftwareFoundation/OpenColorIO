@@ -1089,7 +1089,7 @@ OCIO_ADD_TEST(ColorSpace, interop_id_serialization)
     cfg->serialize(ss);
     std::string yamlStr2 = ss.str();
 
-    // Verify empty imterop_id does not appear in YAML.
+    // Verify empty interop_id does not appear in YAML.
     OCIO_CHECK_EQUAL(yamlStr2.find("interop_id"), std::string::npos);
 }
 
