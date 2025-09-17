@@ -13,6 +13,7 @@
 #include <fstream>
 #include <vector>
 #include <cstdint>
+#include <map>
 
 #include "OpenColorABI.h"
 #include "OpenColorTypes.h"
@@ -1983,6 +1984,40 @@ public:
 
     const char * getDescription() const noexcept;
     void setDescription(const char * description);
+
+    /**
+     * Get/Set the interop ID for the color space. The interop ID is a
+     * structured string defined by the Color Interop Forum. It is intended to
+     * identify color spaces in a way that is portable across different configs,
+     * making it suitable for use in various file formats. The Color Interop
+     * Forum publishes ID strings for common color spaces. If you create your
+     * own IDs, they must be preceded by a namespace string. The setter will
+     * throw if the string does not follow certain rules (run ociocheck for a
+     * more complete validation).
+     */
+    const char * getInteropID() const noexcept;
+    void setInteropID(const char * interopID);
+
+    /**
+     * Get/Set the interchange attributes.
+     *
+     * Currently supported attribute names are "amf_transform_ids" and
+     * "icc_profile_name". Using any other name will throw. If the attribute is
+     * not defined, it'll return an empty string. Setting the value to an empty
+     * string will effectively delete the attribute.
+     *
+     * The AMF transform IDs are used to identify specific transforms in the
+     * ACES Metadata File. Multiple transform IDs can be specified in a
+     * newline-separated string.
+     *
+     * The ICC profile name identifies the ICC color profile associated with
+     * this color space. This can be used to link OCIO color spaces with
+     * corresponding ICC profiles for applications that need to work with both
+     * color management systems.
+     */
+    const char *getInterchangeAttribute(const char *attrName) const;
+    void setInterchangeAttribute(const char* attrName, const char *value);
+    std::map<std::string, std::string> getInterchangeAttributes() const noexcept;
 
     BitDepth getBitDepth() const noexcept;
     void setBitDepth(BitDepth bitDepth);
