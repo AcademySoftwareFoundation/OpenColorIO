@@ -205,7 +205,7 @@ void bindPyColorSpace(py::module & m)
              DOC(ColorSpace, getInterchangeAttribute))
         .def("setInterchangeAttribute", &ColorSpace::setInterchangeAttribute, "attrName"_a, "attrValue"_a,
             DOC(ColorSpace, setInterchangeAttribute))
-        .def_property_readonly("interchangeAttributes", &ColorSpace::getInterchangeAttributes,
+        .def("getInterchangeAttributes", &ColorSpace:: getInterchangeAttributes,
             DOC(ColorSpace, getInterchangeAttributes))
         .def("getBitDepth", &ColorSpace::getBitDepth, 
              DOC(ColorSpace, getBitDepth))
