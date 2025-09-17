@@ -33,27 +33,31 @@ namespace
 {
 typedef YAML::const_iterator Iterator;
 
-void SanitizeLoadedNewlines(std::string &str)
+std::string SanitizeNewlines(const std::string &input)
 {
-    if (!str.empty())
+    if (input.empty()) 
+        return input;
+
+    // YAML is changing the trailing newlines when reading them:
+    // - Written as YAML::Literal (starts with a "|"), descriptions will be read back with a
+    //   single newline. One is  added if there was none, only one is kept if there were
+    //   several.
+    // - Written as YAML::Value string (does not start with "|"), all trailing newlines ('\n')
+    //   are preserved.
+    // Trailing newlines are inconsistently preserved, lets remove them in all cases.
+    std::string str = input;
+    auto last = str.back();
+    while (last == '\n' && str.length())
     {
-        // YAML is changing the trailing newlines when reading them:
-        // - Written as YAML::Literal (starts with a "|"), descriptions will be read back with a
-        //   single newline. One is  added if there was none, only one is kept if there were
-        //   several.
-        // - Written as YAML::Value string (does not start with "|"), all trailing newlines ('\n')
-        //   are preserved.
-        // Trailing newlines are inconsistently preserved, lets remove them in all cases.
-        auto last = str.back();
-        while (last == '\n' && str.length())
-        {
-            str.pop_back();
-            last = str.back();
-        }
+        str.pop_back();
+        last = str.back();
     }
+
     // Also, note that a \n is only interpreted as a newline if it is used in a string that is
     // within double quotes.  E.g., "A string \n with embedded \n newlines."  Indeed, without the
     // double quotes the backslash is generally not interpreted as an escape character in YAML.
+
+    return str;
 }
 
 // Basic types
@@ -208,7 +212,7 @@ inline void save(YAML::Emitter& out, Interpolation interp)
 inline void loadDescription(const YAML::Node& node, std::string& x)
 {
     load(node, x);
-    SanitizeLoadedNewlines(x);
+    x = SanitizeNewlines(x);
 }
 
 inline void saveDescription(YAML::Emitter & out, const char * desc)
@@ -216,15 +220,7 @@ inline void saveDescription(YAML::Emitter & out, const char * desc)
     if (desc && *desc)
     {
         // Remove trailing newlines so that only one is saved because they won't be read back.
-        std::string descStr{ desc };
-        {
-            auto last = descStr.back();
-            while (last == '\n' && descStr.length())
-            {
-                descStr.pop_back();
-                last = descStr.back();
-            }
-        }
+        std::string descStr = SanitizeNewlines(desc);
 
         out << YAML::Key << "description" << YAML::Value;
         if (descStr.find_first_of('\n') != std::string::npos)
@@ -234,7 +230,6 @@ inline void saveDescription(YAML::Emitter & out, const char * desc)
         out << descStr;
     }
 }
-//
 
 inline void LogUnknownKeyWarning(const YAML::Node & node,
                                  const YAML::Node & key)
@@ -3251,7 +3246,7 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs, unsigned int major
             {
                 std::string keystr = keyval.first.as<std::string>();
                 std::string valstr = keyval.second.as<std::string>();
-                SanitizeLoadedNewlines(valstr);
+                valstr = SanitizeNewlines(valstr);
                 
                 // OCIO exception means the key is not recognized. Convert that to a warning.
                 try
@@ -3425,17 +3420,7 @@ inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs, unsigned int major
         out << YAML::BeginMap;
         for (const auto& keyval : interchangemap)
         {
-            // Remove trailing newlines so that only one is saved because they won't
-            // be read back.
-            std::string valStr{keyval.second};
-            {
-                auto last = valStr.back();
-                while (last == '\n' && valStr.length()) 
-                {
-                    valStr.pop_back();
-                    last = valStr.back();
-                }
-            }
+            std::string valStr = SanitizeNewlines(keyval.second);
 
             out << YAML::Key << keyval.first << YAML::Value;
             if (valStr.find_first_of('\n') != std::string::npos) 

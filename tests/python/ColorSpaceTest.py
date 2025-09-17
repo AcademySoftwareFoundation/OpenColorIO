@@ -65,6 +65,8 @@ class ColorSpaceTest(unittest.TestCase):
         self.assertEqual(other.getInteropID(), self.colorspace.getInteropID())
         self.assertEqual(other.getInterchangeAttribute('amf_transform_ids'), self.colorspace.getInterchangeAttribute('amf_transform_ids'))
         self.assertEqual(other.getInterchangeAttribute('icc_profile_name'), self.colorspace.getInterchangeAttribute('icc_profile_name'))
+        self.assertEqual(other.interchangeAttributes, self.colorspace.interchangeAttributes)
+        self.assertListEqual(list(other.interchangeAttributes.items()), list(self.colorspace.interchangeAttributes.items()))
 
     def test_allocation(self):
         """
@@ -288,6 +290,7 @@ class ColorSpaceTest(unittest.TestCase):
         self.assertEqual(cs.getInteropID(), '')
         self.assertEqual(cs.getInterchangeAttribute("amf_transform_ids"), '')
         self.assertEqual(cs.getInterchangeAttribute("icc_profile_name"), '')
+        self.assertEqual(len(cs.interchangeAttributes), 0)
 
     def test_data(self):
         """
@@ -503,6 +506,8 @@ class ColorSpaceTest(unittest.TestCase):
         single_id = 'urn:ampas:aces:transformId:v1.5:ACEScsc.Academy.CG_to_ACES.a1.0.3'
         self.colorspace.setInterchangeAttribute('amf_transform_ids', single_id)
         self.assertEqual(self.colorspace.getInterchangeAttribute('amf_transform_ids'), single_id)
+        self.assertEqual(len(self.colorspace.interchangeAttributes), 1)
+        self.assertEqual(self.colorspace.interchangeAttributes["amf_transform_ids"], single_id)
         
         # Test setting and getting multiple transform IDs (newline-separated).
         multiple_ids = ('urn:ampas:aces:transformId:v1.5:ACEScsc.Academy.CG_to_ACES.a1.0.3\n'
@@ -510,16 +515,20 @@ class ColorSpaceTest(unittest.TestCase):
                        'urn:ampas:aces:transformId:v1.5:RRT.a1.0.3')
         self.colorspace.setInterchangeAttribute('amf_transform_ids', multiple_ids)
         self.assertEqual(self.colorspace.getInterchangeAttribute('amf_transform_ids'), multiple_ids)
+        self.assertEqual(len(self.colorspace.interchangeAttributes), 1)
+        self.assertEqual(self.colorspace.interchangeAttributes["amf_transform_ids"], multiple_ids)
         
         # Test setting empty string.
         self.colorspace.setInterchangeAttribute('amf_transform_ids', '')
         self.assertEqual(self.colorspace.getInterchangeAttribute('amf_transform_ids'), '')
-        
+        self.assertEqual(len(self.colorspace.interchangeAttributes), 0)
+       
         # Test setting None (should convert to empty string).
         self.colorspace.setInterchangeAttribute('amf_transform_ids', 'something')
         self.colorspace.setInterchangeAttribute('amf_transform_ids', None)
         self.assertEqual(self.colorspace.getInterchangeAttribute('amf_transform_ids'), '')
-        
+        self.assertEqual(len(self.colorspace.interchangeAttributes), 0)
+
         # Test with different line endings.
         mixed_endings = 'id1\nid2\rid3\r\nid4'
         self.colorspace.setInterchangeAttribute('amf_transform_ids', mixed_endings)
@@ -537,6 +546,10 @@ class ColorSpaceTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             self.colorspace.setInterchangeAttribute('amf_transform_ids', ['list', 'of', 'ids'])
 
+        # clear amf_transform_ids for the next test
+        self.colorspace.setInterchangeAttribute('amf_transform_ids', '')
+        self.assertEqual(len(self.colorspace.interchangeAttributes), 0)
+
         # icc_profile_name
 
         # Test default value (should be empty).
@@ -546,11 +559,15 @@ class ColorSpaceTest(unittest.TestCase):
         profile_name = 'sRGB IEC61966-2.1'
         self.colorspace.setInterchangeAttribute('icc_profile_name', profile_name)
         self.assertEqual(self.colorspace.getInterchangeAttribute('icc_profile_name'), profile_name)
+        self.assertEqual(len(self.colorspace.interchangeAttributes), 1)
+        self.assertEqual(self.colorspace.interchangeAttributes["icc_profile_name"], profile_name)
         
         # Test setting and getting a different profile name.
         profile_name2 = 'Adobe RGB (1998)'
         self.colorspace.setInterchangeAttribute('icc_profile_name', profile_name2)
         self.assertEqual(self.colorspace.getInterchangeAttribute('icc_profile_name'), profile_name2)
+        self.assertEqual(len(self.colorspace.interchangeAttributes), 1)
+        self.assertEqual(self.colorspace.interchangeAttributes["icc_profile_name"], profile_name2)
         
         # Test with a more complex profile name.
         complex_name = 'Display P3 - Apple Cinema Display (Calibrated 2023-01-15)'
@@ -560,11 +577,13 @@ class ColorSpaceTest(unittest.TestCase):
         # Test setting empty string.
         self.colorspace.setInterchangeAttribute('icc_profile_name', '')
         self.assertEqual(self.colorspace.getInterchangeAttribute('icc_profile_name'), '')
+        self.assertEqual(len(self.colorspace.interchangeAttributes), 0)
         
         # Test setting None (should convert to empty string).
         self.colorspace.setInterchangeAttribute('icc_profile_name', 'something')
         self.colorspace.setInterchangeAttribute('icc_profile_name', None)
         self.assertEqual(self.colorspace.getInterchangeAttribute('icc_profile_name'), '')
+        self.assertEqual(len(self.colorspace.interchangeAttributes), 0)
         
         # Test with special characters and numbers.
         special_name = 'ProPhoto RGB v2.0 (γ=1.8) [Custom Profile #123]'
@@ -582,6 +601,14 @@ class ColorSpaceTest(unittest.TestCase):
         
         with self.assertRaises(TypeError):
             self.colorspace.setInterchangeAttribute('icc_profile_name', ['profile', 'name'])
+
+        # test both interchange attributes together.
+
+        self.colorspace.setInterchangeAttribute('icc_profile_name', 'icc_value')
+        self.colorspace.setInterchangeAttribute('amf_transform_ids', 'amf_value')
+        self.assertEqual(len(self.colorspace.interchangeAttributes), 2)
+        self.assertEqual(self.colorspace.getInterchangeAttribute('icc_profile_name'), 'icc_value')
+        self.assertEqual(self.colorspace.getInterchangeAttribute('amf_transform_ids'), 'amf_value')
 
         # unsupported interchange key
 

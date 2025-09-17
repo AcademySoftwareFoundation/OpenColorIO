@@ -61,7 +61,7 @@ void bindPyColorSpace(py::module & m)
         py::class_<ColorSpaceCategoryIterator>(
             clsColorSpace, "ColorSpaceCategoryIterator");
 
-    auto clsColorSpacAliasIterator = 
+    auto clsColorSpaceAliasIterator = 
         py::class_<ColorSpaceAliasIterator>(
             clsColorSpace, "ColorSpaceAliasIterator");
 
@@ -205,6 +205,8 @@ void bindPyColorSpace(py::module & m)
              DOC(ColorSpace, getInterchangeAttribute))
         .def("setInterchangeAttribute", &ColorSpace::setInterchangeAttribute, "attrName"_a, "attrValue"_a,
             DOC(ColorSpace, setInterchangeAttribute))
+        .def_property_readonly("interchangeAttributes", &ColorSpace::getInterchangeAttributes,
+            DOC(ColorSpace, getInterchangeAttributes))
         .def("getBitDepth", &ColorSpace::getBitDepth, 
              DOC(ColorSpace, getBitDepth))
         .def("setBitDepth", &ColorSpace::setBitDepth, "bitDepth"_a, 
@@ -280,7 +282,7 @@ void bindPyColorSpace(py::module & m)
                 return it.m_obj->getCategory(i);
             });
 
-    clsColorSpacAliasIterator
+    clsColorSpaceAliasIterator
         .def("__len__", [](ColorSpaceAliasIterator & it) 
             { 
                 return it.m_obj->getNumAliases(); 
