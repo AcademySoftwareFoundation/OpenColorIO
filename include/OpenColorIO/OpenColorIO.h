@@ -1137,6 +1137,11 @@ public:
      * intended to be temporary (i.e. for the current session) and are not saved to a config file.
      */
     bool isDisplayTemporary(int index) const noexcept;
+    /**
+     * Allows setting the flag that controls whether a display is temporary. This may be helpful,
+     * for example, to share a config with a temporary instantiated display with an OFX plug-in.
+     */
+    void setDisplayTemporary(int index, bool isTemporary) noexcept;
 
     /**
      * Get either the shared or display-defined views for a display. The
