@@ -298,13 +298,13 @@ jobs:
             build-python: ON
             build-type: Release
             build-shared: ON
-            cxx-standard: 23
+            cxx-standard: 20
             python-version: '3.13'
           - build: 2
             build-python: ON
             build-type: Debug
             build-shared: ON
-            cxx-standard: 23
+            cxx-standard: 20
             python-version: '3.9'
     steps:
       - name: Setup Python
