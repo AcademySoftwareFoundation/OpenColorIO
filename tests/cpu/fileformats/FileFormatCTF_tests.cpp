@@ -1454,7 +1454,7 @@ OCIO_ADD_TEST(FileFormatCTF, difficult_xml_unknown_elements)
             "(37): Unrecognized element 'just_ignore' where its parent is 'ProcessList' (8): Unknown element",
             "(69): Unrecognized element 'just_ignore' where its parent is 'Description' (66)",
             "(70): Unrecognized element 'just_ignore' where its parent is 'just_ignore' (69)",
-            "(75): Unrecognized element 'Matrix' where its parent is 'LUT1D' (43): 'Matrix' not allowed in this element",
+            "(75): Unrecognized element 'Matrix' where its parent is 'LUT1D' (", // Line number is expat library version dependent.
             "(76): Unrecognized element 'Description' where its parent is 'Matrix' (75)",
             "(77): Unrecognized element 'Array' where its parent is 'Matrix' (75)"
         };
@@ -1469,25 +1469,8 @@ OCIO_ADD_TEST(FileFormatCTF, difficult_xml_unknown_elements)
         const StringUtils::StringVec parts = StringUtils::SplitByLines(StringUtils::RightTrim(guard.output()));
         OCIO_REQUIRE_EQUAL(parts.size(), 11);
 
-        // Expat > 2.5.0 returns incorrect line number for the unrecognized Matrix element
-        // Temporarily ignore this test for affected versions
-        // https://github.com/AcademySoftwareFoundation/OpenColorIO/issues/2093
-        const XML_Expat_Version expatVersion = XML_ExpatVersionInfo();
-        const XML_Expat_Version buggedVersion{2, 6, 0};
-        const int buggedLineIdx = 8;
-
-        auto is_less_than = [] (const XML_Expat_Version & a, const XML_Expat_Version & b) {
-            return (a.major < b.major ||
-                (a.major == b.major && a.minor < b.minor));
-        };
-
         for (size_t i = 0; i < parts.size(); ++i)
         {
-            if (i == buggedLineIdx && !is_less_than(expatVersion, buggedVersion))
-            {
-                continue;
-            }
-
             OCIO_CHECK_NE(std::string::npos, StringUtils::Find(parts[i], ErrorOutputs[i]));
         }
     }

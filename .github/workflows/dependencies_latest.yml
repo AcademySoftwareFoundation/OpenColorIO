@@ -106,7 +106,7 @@ jobs:
       - name: Install fixed ext package versions
         # Minizip-ng depends on ZLIB. ZLIB must be installed first.
         run: |
-          share/ci/scripts/multi/install_expat.sh 2.7.1 $EXT_PATH
+          share/ci/scripts/multi/install_expat.sh 2.7.2 $EXT_PATH
           share/ci/scripts/multi/install_lcms2.sh 2.17 $EXT_PATH
           share/ci/scripts/multi/install_yaml-cpp.sh 0.8.0 $EXT_PATH
           share/ci/scripts/multi/install_pystring.sh 1.1.4 $EXT_PATH
@@ -211,7 +211,7 @@ jobs:
       - name: Install fixed ext package versions
         # Minizip-ng depends on ZLIB. ZLIB must be installed first.
         run: |
-          share/ci/scripts/multi/install_expat.sh 2.7.1 $EXT_PATH
+          share/ci/scripts/multi/install_expat.sh 2.7.2 $EXT_PATH
           share/ci/scripts/multi/install_lcms2.sh 2.17 $EXT_PATH
           share/ci/scripts/multi/install_yaml-cpp.sh 0.8.0 $EXT_PATH
           share/ci/scripts/multi/install_pystring.sh 1.1.4 $EXT_PATH
@@ -339,7 +339,7 @@ jobs:
           share/ci/scripts/multi/install_yaml-cpp.sh 0.8.0 $EXT_PATH
           share/ci/scripts/multi/install_pystring.sh 1.1.4 $EXT_PATH
           share/ci/scripts/multi/install_pybind11.sh 3.0.1 $EXT_PATH
-          share/ci/scripts/multi/install_expat.sh 2.7.1 $EXT_PATH
+          share/ci/scripts/multi/install_expat.sh 2.7.2 $EXT_PATH
           share/ci/scripts/multi/install_zlib.sh 1.3.1 $EXT_PATH
           share/ci/scripts/multi/install_minizip-ng.sh 4.0.10 $EXT_PATH
         shell: bash
