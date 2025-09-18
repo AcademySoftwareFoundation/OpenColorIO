@@ -110,6 +110,7 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
             -DBUILD_SHARED_LIBS=OFF
             -DBUILD_TESTING=OFF
             -DOPENEXR_INSTALL_EXAMPLES=OFF
+            -DOPENEXR_BUILD_EXAMPLES=OFF
             -DOPENEXR_BUILD_TOOLS=OFF
             # Try to use in-source built Imath first, if available.
             -DCMAKE_PREFIX_PATH=${_EXT_DIST_ROOT}
@@ -178,6 +179,13 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
         add_library(OpenEXR::OpenEXRUtil STATIC IMPORTED GLOBAL)
 
         add_dependencies(OpenEXR::OpenEXR openexr_install)
+
+        # When building Imath ourselves, make sure it has been built first
+        # so that OpenEXR can find it. Otherwise OpenEXR will build its
+        # own copy of Imath which might result in version conflicts.
+        if (TARGET imath_install)
+            add_dependencies(openexr_install imath_install)
+        endif()
 
         if(OCIO_VERBOSE)
             message(STATUS "Installing OpenEXR: ${OpenEXR_LIBRARY} (version \"${OpenEXR_VERSION}\")")
