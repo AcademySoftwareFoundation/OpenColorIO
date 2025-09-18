@@ -261,6 +261,10 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Remove brew OpenEXR/Imath
+        run: |
+          brew uninstall --ignore-dependencies openexr imath || true
+            
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.1.4
         env:

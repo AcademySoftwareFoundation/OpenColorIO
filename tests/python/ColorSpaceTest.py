@@ -42,6 +42,9 @@ class ColorSpaceTest(unittest.TestCase):
         self.colorspace.setTransform(direction=OCIO.COLORSPACE_DIR_FROM_REFERENCE, transform=mat)
         self.colorspace.addAlias('alias')
         self.colorspace.addCategory('cat')
+        self.colorspace.setInteropID('data')
+        self.colorspace.setInterchangeAttribute('amf_transform_ids', 'urn:ampas:aces:transformId:v1.5:ACEScsc.Academy.CG_to_ACES.a1.0.3')
+        self.colorspace.setInterchangeAttribute('icc_profile_name', 'sRGB IEC61966-2.1')
 
         other = copy.deepcopy(self.colorspace)
         self.assertFalse(other is self.colorspace)
@@ -59,6 +62,11 @@ class ColorSpaceTest(unittest.TestCase):
         self.assertTrue(other.getTransform(OCIO.COLORSPACE_DIR_FROM_REFERENCE).equals(self.colorspace.getTransform(OCIO.COLORSPACE_DIR_FROM_REFERENCE)))
         self.assertEqual(list(other.getAliases()), list(self.colorspace.getAliases()))
         self.assertEqual(list(other.getCategories()), list(self.colorspace.getCategories()))
+        self.assertEqual(other.getInteropID(), self.colorspace.getInteropID())
+        self.assertEqual(other.getInterchangeAttribute('amf_transform_ids'), self.colorspace.getInterchangeAttribute('amf_transform_ids'))
+        self.assertEqual(other.getInterchangeAttribute('icc_profile_name'), self.colorspace.getInterchangeAttribute('icc_profile_name'))
+        self.assertEqual(other.getInterchangeAttributes(), self.colorspace.getInterchangeAttributes())
+        self.assertListEqual(list(other.getInterchangeAttributes().items()), list(self.colorspace.getInterchangeAttributes().items()))
 
     def test_allocation(self):
         """
@@ -279,6 +287,10 @@ class ColorSpaceTest(unittest.TestCase):
         self.assertFalse(cs.isData())
         self.assertEqual(cs.getAllocation(), OCIO.ALLOCATION_UNIFORM)
         self.assertEqual(cs.getAllocationVars(), [])
+        self.assertEqual(cs.getInteropID(), '')
+        self.assertEqual(cs.getInterchangeAttribute("amf_transform_ids"), '')
+        self.assertEqual(cs.getInterchangeAttribute("icc_profile_name"), '')
+        self.assertEqual(len(cs.getInterchangeAttributes()), 0)
 
     def test_data(self):
         """
@@ -420,6 +432,195 @@ class ColorSpaceTest(unittest.TestCase):
         aliases = cs.getAliases()
         self.assertEqual(len(aliases), 0)
         self.assertFalse(cs.hasAlias('alias1'))
+
+    def test_interop_id(self):
+        """
+        Test the setInteropID() and getInteropID() methods.
+        """
+        
+        # Test default value (should be empty).
+        self.assertEqual(self.colorspace.getInteropID(), '')
+        
+        # Test setting and getting a simple interop ID.
+        test_id = 'lin_ap0_scene'
+        self.colorspace.setInteropID(test_id)
+        self.assertEqual(self.colorspace.getInteropID(), test_id)
+        
+        # Test setting and getting a different interop ID.
+        test_id2 = 'srgb_ap1_scene'
+        self.colorspace.setInteropID(test_id2)
+        self.assertEqual(self.colorspace.getInteropID(), test_id2)
+        
+        # Test setting empty string.
+        self.colorspace.setInteropID('')
+        self.assertEqual(self.colorspace.getInteropID(), '')
+        
+        # Test setting None (should convert to empty string).
+        self.colorspace.setInteropID('something')
+        self.colorspace.setInteropID(None)
+        self.assertEqual(self.colorspace.getInteropID(), '')
+        
+        # Test wrong type (should raise TypeError).
+        with self.assertRaises(TypeError):
+            self.colorspace.setInteropID(123)
+        
+        with self.assertRaises(TypeError):
+            self.colorspace.setInteropID(['list'])
+
+        # Test valid InteropID with one colon (not at the end).
+        valid_with_colon = 'namespace:cs_name'
+        self.colorspace.setInteropID(valid_with_colon)
+        self.assertEqual(self.colorspace.getInteropID(), valid_with_colon)
+
+        # Test invalid InteropID with multiple colons.
+        with self.assertRaises(Exception) as context:
+            self.colorspace.setInteropID('name:space:cs_name')
+        self.assertIn("Only one ':' is allowed to separate the namespace and the color space.",
+                      str(context.exception))
+
+        # Test invalid InteropID with colon at the end.
+        with self.assertRaises(Exception) as context:
+            self.colorspace.setInteropID('namespace:')
+        self.assertIn("If ':' is used, both the namespace and the color space parts must be non-empty.",
+                      str(context.exception))
+
+        # Test invalid InteropID with non-ASCII characters.
+        with self.assertRaises(Exception) as context:
+            self.colorspace.setInteropID('café_scene')  # Contains é (UTF-8)
+        self.assertIn("contains invalid characters.", str(context.exception))
+
+        with self.assertRaises(Exception) as context:
+            self.colorspace.setInteropID('space±_name')  # Contains ± (ANSI 0xB1)
+        self.assertIn("contains invalid characters.", str(context.exception))
+
+    def test_interchange_attributes(self):
+        """
+        Test the setInterchangeAttribute() and getInterchangeAttribute() methods.
+        """
+        # amf_transform_ids
+
+        # Test default value (should be empty).
+        self.assertEqual(self.colorspace.getInterchangeAttribute('amf_transform_ids'), '')
+        
+        # Test setting and getting a single amf transform ID.
+        single_id = 'urn:ampas:aces:transformId:v1.5:ACEScsc.Academy.CG_to_ACES.a1.0.3'
+        self.colorspace.setInterchangeAttribute('amf_transform_ids', single_id)
+        self.assertEqual(self.colorspace.getInterchangeAttribute('amf_transform_ids'), single_id)
+        self.assertEqual(len(self.colorspace.getInterchangeAttributes()), 1)
+        self.assertEqual(self.colorspace.getInterchangeAttributes()["amf_transform_ids"], single_id)
+        
+        # Test setting and getting multiple transform IDs (newline-separated).
+        multiple_ids = ('urn:ampas:aces:transformId:v1.5:ACEScsc.Academy.CG_to_ACES.a1.0.3\n'
+                       'urn:ampas:aces:transformId:v1.5:ACEScsc.Academy.ACES_to_CG.a1.0.3\n'
+                       'urn:ampas:aces:transformId:v1.5:RRT.a1.0.3')
+        self.colorspace.setInterchangeAttribute('amf_transform_ids', multiple_ids)
+        self.assertEqual(self.colorspace.getInterchangeAttribute('amf_transform_ids'), multiple_ids)
+        self.assertEqual(len(self.colorspace.getInterchangeAttributes()), 1)
+        self.assertEqual(self.colorspace.getInterchangeAttributes()["amf_transform_ids"], multiple_ids)
+        
+        # Test setting empty string.
+        self.colorspace.setInterchangeAttribute('amf_transform_ids', '')
+        self.assertEqual(self.colorspace.getInterchangeAttribute('amf_transform_ids'), '')
+        self.assertEqual(len(self.colorspace.getInterchangeAttributes()), 0)
+       
+        # Test setting None (should convert to empty string).
+        self.colorspace.setInterchangeAttribute('amf_transform_ids', 'something')
+        self.colorspace.setInterchangeAttribute('amf_transform_ids', None)
+        self.assertEqual(self.colorspace.getInterchangeAttribute('amf_transform_ids'), '')
+        self.assertEqual(len(self.colorspace.getInterchangeAttributes()), 0)
+
+        # Test with different line endings.
+        mixed_endings = 'id1\nid2\rid3\r\nid4'
+        self.colorspace.setInterchangeAttribute('amf_transform_ids', mixed_endings)
+        self.assertEqual(self.colorspace.getInterchangeAttribute('amf_transform_ids'), mixed_endings)
+        
+        # Test with leading/trailing whitespace.
+        whitespace_ids = '  \n  id1  \n  id2  \n  '
+        self.colorspace.setInterchangeAttribute('amf_transform_ids', whitespace_ids)
+        self.assertEqual(self.colorspace.getInterchangeAttribute('amf_transform_ids'), whitespace_ids)
+        
+        # Test wrong type (should raise TypeError).
+        with self.assertRaises(TypeError):
+            self.colorspace.setInterchangeAttribute('amf_transform_ids', 123)
+        
+        with self.assertRaises(TypeError):
+            self.colorspace.setInterchangeAttribute('amf_transform_ids', ['list', 'of', 'ids'])
+
+        # clear amf_transform_ids for the next test
+        self.colorspace.setInterchangeAttribute('amf_transform_ids', '')
+        self.assertEqual(len(self.colorspace.getInterchangeAttributes()), 0)
+
+        # icc_profile_name
+
+        # Test default value (should be empty).
+        self.assertEqual(self.colorspace.getInterchangeAttribute('icc_profile_name'), '')
+ 
+        # Test setting and getting a simple profile name.
+        profile_name = 'sRGB IEC61966-2.1'
+        self.colorspace.setInterchangeAttribute('icc_profile_name', profile_name)
+        self.assertEqual(self.colorspace.getInterchangeAttribute('icc_profile_name'), profile_name)
+        self.assertEqual(len(self.colorspace.getInterchangeAttributes()), 1)
+        self.assertEqual(self.colorspace.getInterchangeAttributes()["icc_profile_name"], profile_name)
+        
+        # Test setting and getting a different profile name.
+        profile_name2 = 'Adobe RGB (1998)'
+        self.colorspace.setInterchangeAttribute('icc_profile_name', profile_name2)
+        self.assertEqual(self.colorspace.getInterchangeAttribute('icc_profile_name'), profile_name2)
+        self.assertEqual(len(self.colorspace.getInterchangeAttributes()), 1)
+        self.assertEqual(self.colorspace.getInterchangeAttributes()["icc_profile_name"], profile_name2)
+        
+        # Test with a more complex profile name.
+        complex_name = 'Display P3 - Apple Cinema Display (Calibrated 2023-01-15)'
+        self.colorspace.setInterchangeAttribute('icc_profile_name', complex_name)
+        self.assertEqual(self.colorspace.getInterchangeAttribute('icc_profile_name'), complex_name)
+
+        # Test setting empty string.
+        self.colorspace.setInterchangeAttribute('icc_profile_name', '')
+        self.assertEqual(self.colorspace.getInterchangeAttribute('icc_profile_name'), '')
+        self.assertEqual(len(self.colorspace.getInterchangeAttributes()), 0)
+        
+        # Test setting None (should convert to empty string).
+        self.colorspace.setInterchangeAttribute('icc_profile_name', 'something')
+        self.colorspace.setInterchangeAttribute('icc_profile_name', None)
+        self.assertEqual(self.colorspace.getInterchangeAttribute('icc_profile_name'), '')
+        self.assertEqual(len(self.colorspace.getInterchangeAttributes()), 0)
+        
+        # Test with special characters and numbers.
+        special_name = 'ProPhoto RGB v2.0 (γ=1.8) [Custom Profile #123]'
+        self.colorspace.setInterchangeAttribute('icc_profile_name', special_name)
+        self.assertEqual(self.colorspace.getInterchangeAttribute('icc_profile_name'), special_name)
+        
+        # Test with Unicode characters.
+        unicode_name = 'Профиль RGB γ=2.2'
+        self.colorspace.setInterchangeAttribute('icc_profile_name', unicode_name)
+        self.assertEqual(self.colorspace.getInterchangeAttribute('icc_profile_name'), unicode_name)
+        
+        # Test wrong type (should raise TypeError).
+        with self.assertRaises(TypeError):
+            self.colorspace.setInterchangeAttribute('icc_profile_name', 123)
+        
+        with self.assertRaises(TypeError):
+            self.colorspace.setInterchangeAttribute('icc_profile_name', ['profile', 'name'])
+
+        # test both interchange attributes together.
+
+        self.colorspace.setInterchangeAttribute('icc_profile_name', 'icc_value')
+        self.colorspace.setInterchangeAttribute('amf_transform_ids', 'amf_value')
+        self.assertEqual(len(self.colorspace.getInterchangeAttributes()), 2)
+        self.assertEqual(self.colorspace.getInterchangeAttribute('icc_profile_name'), 'icc_value')
+        self.assertEqual(self.colorspace.getInterchangeAttribute('amf_transform_ids'), 'amf_value')
+
+        # unsupported interchange key
+
+        # test that setting an unsupported key raises.
+        with self.assertRaises(Exception) as context:
+            self.colorspace.setInterchangeAttribute('this_should_fail', 'foo42')
+        self.assertIn("Unknown attribute name 'this_should_fail'", str(context.exception))
+
+        # test that getting an unsupported key raises.
+        with self.assertRaises(Exception) as context:
+            self.colorspace.getInterchangeAttribute('this_should_fail')
+        self.assertIn("Unknown attribute name 'this_should_fail'", str(context.exception))
 
     def test_is_colorspace_linear(self):
         """
@@ -634,7 +835,7 @@ colorspaces:
         
     def test_processor_to_known_colorspace(self):
         
-        CONFIG = """ocio_profile_version: 2
+        CONFIG = """ocio_profile_version: 2.0
 
 roles:
   default: raw
@@ -690,12 +891,14 @@ colorspaces:
   - !<ColorSpace>
     name: ACES cg
     description: An ACEScg space with an unusual spelling.
+    interop_id: lin_ap1_scene
     isdata: false
     to_scene_reference: !<BuiltinTransform> {style: ACEScg_to_ACES2065-1}
 
   - !<ColorSpace>
     name: Linear ITU-R BT.709
     description: A linear Rec.709 space with an unusual spelling.
+    interop_id: "mycompany:led_wall_1"
     isdata: false
     from_scene_reference: !<GroupTransform>
       name: AP0 to Linear Rec.709 (sRGB)
