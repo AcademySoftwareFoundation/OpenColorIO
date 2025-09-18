@@ -29,34 +29,6 @@ else()
     set(CUSTOM_CXX_FLAGS "-w")
 endif()
 
-if(${CMAKE_CXX_STANDARD} EQUAL 11)
-    if(USE_MSVC)
-        CHECK_CXX_COMPILER_FLAG("${CUSTOM_CXX_FLAGS} -std:c++11" COMPILER_SUPPORTS_CXX11)
-    else()
-        CHECK_CXX_COMPILER_FLAG("${CUSTOM_CXX_FLAGS} -std=c++11" COMPILER_SUPPORTS_CXX11)
-    endif()
-
-    if(NOT COMPILER_SUPPORTS_CXX11)
-        message(STATUS 
-            "The compiler ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} has no C++11 only support. Use C++14.")
-        set(CMAKE_CXX_STANDARD 14)
-    endif()
-endif()
-
-if(${CMAKE_CXX_STANDARD} EQUAL 14)
-    if(USE_MSVC)
-        CHECK_CXX_COMPILER_FLAG("${CUSTOM_CXX_FLAGS} -std:c++14" COMPILER_SUPPORTS_CXX14)
-    else()
-        CHECK_CXX_COMPILER_FLAG("${CUSTOM_CXX_FLAGS} -std=c++14" COMPILER_SUPPORTS_CXX14)
-    endif()
-
-    if(NOT COMPILER_SUPPORTS_CXX14)
-        message(STATUS 
-            "The compiler ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} has no C++14 only support. Use C++17.")
-        set(CMAKE_CXX_STANDARD 17)
-    endif()
-endif()
-
 if(${CMAKE_CXX_STANDARD} EQUAL 17)
     if(USE_MSVC)
         CHECK_CXX_COMPILER_FLAG("${CUSTOM_CXX_FLAGS} -std:c++17" COMPILER_SUPPORTS_CXX17)

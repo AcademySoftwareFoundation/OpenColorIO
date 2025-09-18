@@ -113,12 +113,8 @@ if(NOT yaml-cpp_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PAC
                 -DANDROID_STL=${ANDROID_STL})
         endif()
 
-        # Starting from 0.8.0, the tag format has changed
-        if(${yaml-cpp_VERSION} VERSION_GREATER_EQUAL "0.8.0")
-            set(yaml-cpp_GIT_TAG "${yaml-cpp_VERSION}")
-        else()
-            set(yaml-cpp_GIT_TAG "yaml-cpp-${yaml-cpp_VERSION}")
-        endif()
+        # in v0.8.0 yaml switched from "yaml-cpp-vA.B.C" to "vA.B.C" format for tags.
+        set(yaml-cpp_GIT_TAG "${yaml-cpp_VERSION}")
 
         # Hack to let imported target be built from ExternalProject_Add
         file(MAKE_DIRECTORY ${yaml-cpp_INCLUDE_DIR})
@@ -155,7 +151,7 @@ if(_yaml-cpp_TARGET_CREATE)
         IMPORTED_LOCATION ${yaml-cpp_LIBRARY}
         INTERFACE_INCLUDE_DIRECTORIES ${yaml-cpp_INCLUDE_DIR}
         # https://github.com/jbeder/yaml-cpp/issues/1339
-        INTERFACE_COMPILE_DEFINITIONS YAML_CPP_STATIC_DEFINE=1
+        INTERFACE_COMPILE_DEFINITIONS YAML_CPP_STATIC_DEFINE
     )
 
     mark_as_advanced(yaml-cpp_INCLUDE_DIR yaml-cpp_LIBRARY yaml-cpp_VERSION)
