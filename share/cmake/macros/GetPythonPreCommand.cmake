@@ -22,6 +22,7 @@ macro(get_python_pre_command)
     if(WIN32)
         # Use Windows path separators since this is being passed through to cmd
         file(TO_NATIVE_PATH ${PROJECT_BINARY_DIR} _WIN_BINARY_DIR)
+        file(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR} _WIN_SOURCE_DIR)
 
         set(_DLL_PATH "${_WIN_BINARY_DIR}\\src\\OpenColorIO")
         if(MSVC_IDE)
@@ -43,7 +44,7 @@ macro(get_python_pre_command)
         # Build path list
         set(_WIN_PATHS 
             ${_PYD_PATH} 
-            "${PROJECT_SOURCE_DIR}\\share\\docs"
+            "${_WIN_SOURCE_DIR}\\share\\docs"
         )
         # Include optional paths from macro arguments
         foreach(_PATH ${ARGN})
@@ -60,7 +61,9 @@ macro(get_python_pre_command)
         # on Windows with:
         #   '> set PYTHONPATH=XXX \n call CMD'
         # '\n' is here because '\\&' does not work.
-        set(Python_PRE_CMD set ${_PATH_SET} "\n" set ${_PYTHONPATH_SET} "\n" call)
+        set(Python_PRE_CMD set ${_PYTHONPATH_SET} "\n" call)
+
+        message(STATUS "Python pre-command: ${Python_PRE_CMD}")
 
     else()
         # Build path list
@@ -75,6 +78,8 @@ macro(get_python_pre_command)
 
         string(JOIN  ":" _PYTHONPATH_VALUE ${_PATHS})
         set(Python_PRE_CMD "PYTHONPATH=${_PYTHONPATH_VALUE}")
+
+        message(STATUS "Python pre-command: ${Python_PRE_CMD}")
 
     endif()
 

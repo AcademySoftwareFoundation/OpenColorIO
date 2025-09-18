@@ -76,6 +76,7 @@ jobs:
     #   github.event_name != 'schedule' ||
     #   github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     strategy:
+      fail-fast: false
       matrix:
         include:
           # -------------------------------------------------------------------
@@ -165,6 +166,7 @@ jobs:
     #   github.event_name != 'schedule' ||
     #   github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     strategy:
+      fail-fast: false
       matrix:
         include:
           # -------------------------------------------------------------------
@@ -337,6 +339,7 @@ jobs:
     #   github.event_name != 'schedule' ||
     #   github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     strategy:
+      fail-fast: false
       matrix:
         include:
           # -------------------------------------------------------------------

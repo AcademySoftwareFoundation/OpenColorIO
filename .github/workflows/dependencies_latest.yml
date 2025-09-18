@@ -32,7 +32,7 @@ jobs:
        cxx=${{ matrix.cxx-standard }}, 
        docs=${{ matrix.build-docs }}>'
     # Don't run on OCIO forks
-    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    # if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     # GH-hosted VM. The build runs in CentOS 7 'container' defined below.
     runs-on: ubuntu-latest
     container:
@@ -169,7 +169,7 @@ jobs:
        docs=${{ matrix.build-docs }}, 
        python=${{ matrix.python-version }}>'
     # Don't run on OCIO forks
-    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    # if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     runs-on: macos-latest
     strategy:
       matrix:
@@ -274,7 +274,7 @@ jobs:
        docs=${{ matrix.build-docs }}, 
        python=${{ matrix.python-version }}>'
     # Don't run on OCIO forks
-    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    # if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     runs-on: windows-latest
     strategy:
       matrix:
