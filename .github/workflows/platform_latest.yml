@@ -33,7 +33,7 @@ jobs:
        shared=${{ matrix.build-shared }}, 
        cxx=${{ matrix.cxx-standard }}>'
     # Don't run on OCIO forks
-    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    # if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -175,7 +175,7 @@ jobs:
        cxx=${{ matrix.cxx-standard }}, 
        python=${{ matrix.python-version }}>'
     # Don't run on OCIO forks
-    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    # if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     runs-on: macos-latest
     strategy:
       matrix:
@@ -288,7 +288,7 @@ jobs:
        cxx=${{ matrix.cxx-standard }}, 
        python=${{ matrix.python-version }}>'
     # Don't run on OCIO forks
-    if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
+    # if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
     runs-on: windows-latest
     strategy:
       matrix:
