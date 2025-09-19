@@ -184,6 +184,7 @@ void ColorSpaceMenuParametersImpl::setParameters(ConstColorSpaceMenuParametersRc
     m_includeColorSpaces     = impl.m_includeColorSpaces;
     m_includeRoles           = impl.m_includeRoles;
     m_includeNamedTransforms = impl.m_includeNamedTransforms;
+    m_treatNoCategoryAsAny   = impl.m_treatNoCategoryAsAny;
     m_colorSpaceType         = impl.m_colorSpaceType;
     m_additionalColorSpaces  = impl.m_additionalColorSpaces;
 }
@@ -268,6 +269,16 @@ bool ColorSpaceMenuParametersImpl::getIncludeNamedTransforms() const noexcept
     return m_includeNamedTransforms;
 }
 
+void ColorSpaceMenuParametersImpl::setTreatNoCategoryAsAny(bool value) noexcept
+{
+    m_treatNoCategoryAsAny = value;
+}
+
+bool ColorSpaceMenuParametersImpl::getTreatNoCategoryAsAny() const noexcept
+{
+    return m_treatNoCategoryAsAny;
+}
+
 void ColorSpaceMenuParametersImpl::addColorSpace(const char * name) noexcept
 {
     if (name && *name && !StringUtils::Contain(m_additionalColorSpaces, name))
@@ -334,6 +345,7 @@ std::ostream & operator<<(std::ostream & os, const ColorSpaceMenuParameters & p)
     os << ", includeColorSpaces: " << (p.getIncludeColorSpaces() ? "true" : "false");
     os << ", includeRoles: " << (p.getIncludeRoles() ? "true" : "false");
     os << ", includeNamedTransforms: " << (p.getIncludeNamedTransforms() ? "true" : "false");
+    os << ", treatNoCategoryAsAny: " << (p.getTreatNoCategoryAsAny() ? "true" : "false");
     if (impl.m_colorSpaceType == SEARCH_REFERENCE_SPACE_SCENE)
     {
         os << ", colorSpaceType: scene";
@@ -481,6 +493,7 @@ void ColorSpaceMenuHelperImpl::refresh()
                                         allAppCategories, allUserCategories,
                                         m_parameters.m_includeColorSpaces,
                                         m_parameters.m_includeNamedTransforms,
+                                        m_parameters.m_treatNoCategoryAsAny,
                                         allEncodings, m_parameters.m_colorSpaceType);
     }
 

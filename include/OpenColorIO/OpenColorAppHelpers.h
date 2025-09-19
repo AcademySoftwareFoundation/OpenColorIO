@@ -56,6 +56,11 @@ namespace OCIO_NAMESPACE
  *        - UserCategories: A list of strings specified by the end-user of the application.  OCIO
  *          will check for these strings in an environment variable, or they may be passed in from
  *          the application.
+ *        - TreatNoCategoryAsAny: By default, color spaces (or named transforms) that have no
+ *          categories are handled as if they had any of the categories.  Config authors that want to
+ *          hide color spaces without categories should either put them in the inactiveColorSpaces
+ *          list or add a category that will never be searched for (e.g., "invisible" or "hidden").
+ *          App developers may set this option to false to hide items without any categories.
  *
  * Basically the intent is for the filtering to return the intersection of the app categories,
  * encoding, and user categories.  However, some fall-backs are in place to ensure that the
@@ -130,6 +135,13 @@ public:
     virtual void setIncludeNamedTransforms(bool include) noexcept = 0;
     virtual bool getIncludeNamedTransforms() const noexcept = 0;
 
+    /**
+     * When searching for color spaces using app or user categories, treat color spaces or
+     * named transforms that have no categories as if they had any of the categories.
+     * Default is true.
+     */
+    virtual void setTreatNoCategoryAsAny(bool value) noexcept = 0;
+    virtual bool getTreatNoCategoryAsAny() const noexcept = 0;
 
     /**
      * App categories is a comma separated list of categories. If appCategories is not NULL and

@@ -37,6 +37,7 @@ Infos FindColorSpaceInfos(ConstConfigRcPtr config,
                           const Categories & userCategories,
                           bool includeColorSpaces,
                           bool includeNamedTransforms,
+                          bool treatNoCategoryAsAny,
                           const Encodings & encodings,
                           SearchReferenceSpaceType colorSpaceType);
 
