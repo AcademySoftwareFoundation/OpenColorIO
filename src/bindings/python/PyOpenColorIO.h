@@ -56,6 +56,7 @@ void bindPyTransform(py::module & m);
 
 // OpenColorIOAppHelpers
 void bindPyColorSpaceMenuHelpers(py::module & m);
+void bindPyConfigMergingHelpers(py::module & m);
 void bindPyDisplayViewHelpers(py::module & m);
 void bindPyLegacyViewingPipeline(py::module & m);
 void bindPyMixingHelpers(py::module & m);

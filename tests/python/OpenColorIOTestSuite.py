@@ -80,6 +80,7 @@ import LookTransformTest
 import Lut1DTransformTest
 import Lut3DTransformTest
 import MatrixTransformTest
+import MergeConfigsTest
 import MixingHelpersTest
 import NamedTransformTest
 import OCIOZArchiveTest
@@ -138,6 +139,7 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(Lut1DTransformTest))
     suite.addTest(loader.loadTestsFromModule(Lut3DTransformTest))
     suite.addTest(loader.loadTestsFromModule(MatrixTransformTest))
+    suite.addTest(loader.loadTestsFromModule(MergeConfigsTest))
     suite.addTest(loader.loadTestsFromModule(MixingHelpersTest))
     suite.addTest(loader.loadTestsFromModule(NamedTransformTest))
     suite.addTest(loader.loadTestsFromModule(OCIOZArchiveTest))

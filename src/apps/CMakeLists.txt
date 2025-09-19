@@ -9,6 +9,7 @@ if(OCIO_BUILD_APPS)
 	add_subdirectory(ociocpuinfo)
 	add_subdirectory(ociomakeclf)
 	add_subdirectory(ocioperf)
+	add_subdirectory(ociomergeconfigs)
 	add_subdirectory(ociowrite)
 
 	if(TARGET OpenColorIO::ImageIOBackend)

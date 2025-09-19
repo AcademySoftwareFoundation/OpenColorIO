@@ -6,6 +6,7 @@
 #include "ConfigUtils.h"
 #include "MathUtils.h"
 #include "utils/StringUtils.h"
+#include "Logging.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -359,6 +360,7 @@ bool containsBlockedTransform(const ConstTransformRcPtr & transform)
     {
         return true;
     }
+
     return false;
 }
 
@@ -823,7 +825,8 @@ const char * IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
                                                                        builtinConfig,
                                                                        builtinColorSpaceName,
                                                                        builtinInterchangeName);
-            if (isIdentityTransform(proc, vals, 1e-3f))
+            // Tolerance is just loose enough to accept both bfd and cat02 adaptation.
+            if (isIdentityTransform(proc, vals, 5e-3f))
             {
                 return cs->getName();
             }
@@ -834,6 +837,644 @@ const char * IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
     os  << "Heuristics were not able to find an equivalent to the requested color space: "
         << builtinColorSpaceName << ".";
     throw Exception(os.str().c_str());
+}
+
+// Simplify a transform by removing nested group transforms and identities.
+//
+ConstTransformRcPtr simplifyTransform(const ConstGroupTransformRcPtr & gt)
+{
+    ConstConfigRcPtr config = Config::CreateRaw();
+    ConstProcessorRcPtr p = config->getProcessor(gt);
+    ConstProcessorRcPtr opt = p->getOptimizedProcessor(OPTIMIZATION_DEFAULT);
+    GroupTransformRcPtr finalGt = opt->createGroupTransform();
+    if (finalGt->getNumTransforms() == 1)
+    {
+        return finalGt->getTransform(0);
+    }
+    return finalGt;
+}
+
+ConstTransformRcPtr invertTransform(const ConstTransformRcPtr & t)
+{
+    TransformRcPtr eT = t->createEditableCopy();
+    eT->setDirection(TRANSFORM_DIR_INVERSE);
+    return eT;
+}
+
+// Return a transform in either the to_ref or from_ref direction for this color space.
+// Return an identity matrix, if the color space has no transforms.
+//
+ConstTransformRcPtr getTransformForDir(const ConstColorSpaceRcPtr & cs, ColorSpaceDirection dir)
+{
+    ColorSpaceDirection otherDir = COLORSPACE_DIR_TO_REFERENCE;
+    if (dir == COLORSPACE_DIR_TO_REFERENCE)
+    {
+        otherDir = COLORSPACE_DIR_FROM_REFERENCE;
+    }
+
+    ConstTransformRcPtr t = cs->getTransform(dir);
+    if (t) 
+    {
+        return t;
+    }
+
+    ConstTransformRcPtr tOther = cs->getTransform(otherDir);
+    if (tOther) 
+    {
+        return invertTransform(tOther);
+    }
+
+    // If it's the reference space, it won't have a transform, so return an identity matrix.
+    double m44[16];
+    double offset4[4];
+    MatrixTransform::Identity(m44, offset4);
+    MatrixTransformRcPtr p = MatrixTransform::Create();
+    p->setMatrix(m44);
+    p->setOffset(offset4);
+
+    return p;
+}
+
+// Get a transform to convert from the source config reference space to the
+// destination config reference space.  The ref_space_type specifies whether
+// to work with the scene-referred or display-referred reference space.
+//
+ConstTransformRcPtr getRefSpaceConverter(const ConstConfigRcPtr & srcConfig, 
+                                         const ConstConfigRcPtr & dstConfig, 
+                                         ReferenceSpaceType refSpaceType)
+{
+    ConstConfigRcPtr builtinConfig = Config::CreateFromBuiltinConfig("ocio://cg-config-latest");
+
+    auto getColorspaceOfRefType = [](const ConstConfigRcPtr & config, 
+                                     ReferenceSpaceType refType) -> const char *
+    {
+        // Just return the first one, doesn't matter if it's inactive or a data space.
+        // All that matters is the reference space type.
+        // Casting to SearchReferenceSpaceType since they have the same values.
+        SearchReferenceSpaceType searchRefType = static_cast<SearchReferenceSpaceType>(refType);
+        for (int i = 0; i < config->getNumColorSpaces(searchRefType, COLORSPACE_ALL); i++)
+        {
+            const char * name = config->getColorSpaceNameByIndex(searchRefType, COLORSPACE_ALL, i);
+            ConstColorSpaceRcPtr cs = config->getColorSpace(name);
+            return cs->getName();
+        }
+
+        throw Exception("Config is lacking any color spaces of the requested reference space type.");
+    };
+
+    // Identify an interchange space for the src config.
+    // Note that the interchange space will always be a linear color space.
+    // TODO: IdentifyInterchangeSpace currently fails if the config does not have
+    //  a color space for the reference space.
+    // TODO: IdentifyInterchangeSpace will fail in the display-referred case if the
+    //  config does not have the cie_xyz_d65_interchange role.
+    const char * srcInterchange = nullptr;
+    const char * srcBuiltinInterchange = nullptr;
+    Config::IdentifyInterchangeSpace(&srcInterchange,
+                                     &srcBuiltinInterchange,
+                                     srcConfig,
+                                     getColorspaceOfRefType(srcConfig, refSpaceType),
+                                     builtinConfig,
+                                     getColorspaceOfRefType(builtinConfig, refSpaceType));
+
+    // Identify an interchange space for the dst config.
+    // Note that the interchange space will always be a linear color space.
+    const char * dstInterchange = nullptr;
+    const char * dstBuiltinInterchange = nullptr;
+    Config::IdentifyInterchangeSpace(&dstInterchange,
+                                     &dstBuiltinInterchange,
+                                     dstConfig,
+                                     getColorspaceOfRefType(dstConfig, refSpaceType),
+                                     builtinConfig,
+                                     getColorspaceOfRefType(builtinConfig, refSpaceType));
+
+    // Get the from_ref transform from the srcInterchange space.
+    ConstTransformRcPtr srcFromRef = getTransformForDir(srcConfig->getColorSpace(srcInterchange), 
+                                                        COLORSPACE_DIR_FROM_REFERENCE);
+
+    // Get a conversion from one builtin interchange to another
+    ColorSpaceTransformRcPtr cst = ColorSpaceTransform::Create();
+    GroupTransformRcPtr srcBuiltinToDstBuiltin;
+    if (srcBuiltinInterchange && *srcBuiltinInterchange &&
+        dstBuiltinInterchange && *dstBuiltinInterchange)
+    {
+        // srcBuiltinInterchange and dstBuiltinInterchange are not empty.
+        cst->setSrc(srcBuiltinInterchange);
+        cst->setDst(dstBuiltinInterchange);
+
+        srcBuiltinToDstBuiltin = builtinConfig->getProcessor(cst)->createGroupTransform();
+    }
+
+    // Append to_ref transform from the dstInterchange space.
+    ConstTransformRcPtr dstToRef = getTransformForDir(dstConfig->getColorSpace(dstInterchange), 
+                                                      COLORSPACE_DIR_TO_REFERENCE);
+
+    // Combine into a group transform.
+    // Note: Some of these pieces may be identities but the whole thing needs to get
+    // simplified/optimized after being combined with the existing transform anyway
+    // since one of these pieces may be the inverse of a color space's existing transform.
+    GroupTransformRcPtr gt = GroupTransform::Create();
+
+    // If the src or dst contain FileTransforms, resolve them so there is no dependence
+    // on the search_path of the original configs. This is necessary for simplifyTransform
+    // below and would fail if the conversion involved a transform that may not appear
+    // in a config, such as a LUT.
+    gt->appendTransform(srcConfig->getProcessor(srcFromRef)->createGroupTransform());
+    gt->appendTransform(srcBuiltinToDstBuiltin);
+    gt->appendTransform(dstConfig->getProcessor(dstToRef)->createGroupTransform());
+
+    return simplifyTransform(gt);
+}
+
+bool transformIsEmpty(const ConstTransformRcPtr & tr)
+{
+    if (tr->getTransformType() == TRANSFORM_TYPE_GROUP)
+    {
+        ConstGroupTransformRcPtr gt = DynamicPtrCast<const GroupTransform>(tr);
+        if (gt->getNumTransforms() == 0)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Update the reference space used by a color space's transforms.
+// The argument is a group transform that converts from the current to the new ref. space.
+//
+void updateReferenceColorspace(ColorSpaceRcPtr & cs, 
+                               const ConstTransformRcPtr & toNewReferenceTransform)
+{
+    if (!toNewReferenceTransform || !cs)
+    {
+        std::ostringstream os;
+        os << "Could not update reference space, converter transform was not initialized.";
+        throw Exception(os.str().c_str());
+    }
+
+    if (transformIsEmpty(toNewReferenceTransform))
+    {
+        return;
+    }
+
+    ConstTransformRcPtr transformTo = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+    if (transformTo)
+    {
+        GroupTransformRcPtr gt = GroupTransform::Create();
+        gt->appendTransform(transformTo->createEditableCopy());
+        gt->appendTransform(toNewReferenceTransform->createEditableCopy());
+
+        // NB: Don't want to call simplify_transforms on gt since it would do things like
+        // expand built-in or file transforms. But as a result, there could be transforms that
+        // appear more complex than necessary. In some cases there could be color spaces
+        // with transforms present that would actually simplify into an identity.  In other
+        // words there could be color spaces that are effectively the reference space that
+        // have from_ref or to_ref transforms.
+        cs->setTransform(gt, COLORSPACE_DIR_TO_REFERENCE);
+    }
+
+    ConstTransformRcPtr transformFrom = cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+    if (transformFrom)
+    {
+        ConstTransformRcPtr inv = invertTransform(toNewReferenceTransform);
+        GroupTransformRcPtr gt = GroupTransform::Create();
+        gt->appendTransform(inv->createEditableCopy());
+        gt->appendTransform(transformFrom->createEditableCopy());
+        cs->setTransform(gt, COLORSPACE_DIR_FROM_REFERENCE);
+    }
+
+    if (transformTo == nullptr && transformFrom == nullptr && !cs->isData())
+    {
+        GroupTransformRcPtr gt = GroupTransform::Create();
+        gt->appendTransform(toNewReferenceTransform->createEditableCopy());
+        cs->setTransform(gt, COLORSPACE_DIR_TO_REFERENCE);
+    }
+}
+
+// Update the transforms in a view transform to adapt the reference spaces.
+// Note that the from_ref transform converts from the scene-referred reference space to
+// the display-referred reference space.
+//
+void updateReferenceView(ViewTransformRcPtr & vt, 
+                         const ConstTransformRcPtr & toNewSceneReferenceTransform,
+                         const ConstTransformRcPtr & toNewDisplayReferenceTransform)
+{
+    if (!toNewSceneReferenceTransform || !toNewDisplayReferenceTransform || !vt)
+    {
+        std::ostringstream os;
+        os << "Could not update view transform reference spaces, converter transforms were not initialized.";
+        throw Exception(os.str().c_str());
+    }
+    // TODO: Is any more error checking needed here for robustness?
+
+    const bool emptySceneSide = transformIsEmpty(toNewSceneReferenceTransform);
+    const bool emptyDisplaySide = transformIsEmpty(toNewDisplayReferenceTransform);
+
+    if (emptySceneSide && emptyDisplaySide) return;
+
+    ConstTransformRcPtr transformTo = vt->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE);
+    if (transformTo)
+    {
+        GroupTransformRcPtr gt = GroupTransform::Create();
+        if (!emptyDisplaySide)
+        {
+            ConstTransformRcPtr inv = invertTransform(toNewDisplayReferenceTransform);
+            gt->appendTransform(inv->createEditableCopy());
+        }
+
+        gt->appendTransform(transformTo->createEditableCopy());
+
+        if (vt->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
+        {
+            // Use the converter to display reference on both sides.
+            if (!emptyDisplaySide)
+            {
+                gt->appendTransform(toNewDisplayReferenceTransform->createEditableCopy());
+            }
+        }
+        else
+        {
+            if (!emptySceneSide)
+            {
+                gt->appendTransform(toNewSceneReferenceTransform->createEditableCopy());
+            }
+        }
+        vt->setTransform(gt, VIEWTRANSFORM_DIR_TO_REFERENCE);
+    }
+
+    ConstTransformRcPtr transformFrom = vt->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE);
+    if (transformFrom)
+    {
+        GroupTransformRcPtr gt = GroupTransform::Create();
+
+        if (vt->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
+        {
+            // Use the converter to display reference on both sides.
+            if (!emptyDisplaySide)
+            {
+                ConstTransformRcPtr inv = invertTransform(toNewDisplayReferenceTransform);
+                gt->appendTransform(inv->createEditableCopy());
+            }
+        }
+        else
+        {
+            if (!emptySceneSide)
+            {
+                ConstTransformRcPtr inv = invertTransform(toNewSceneReferenceTransform); 
+                gt->appendTransform(inv->createEditableCopy());
+            }
+        }
+
+        gt->appendTransform(transformFrom->createEditableCopy());
+
+        if (!emptyDisplaySide)
+        {
+            gt->appendTransform(toNewDisplayReferenceTransform->createEditableCopy());
+        }
+        vt->setTransform(gt, VIEWTRANSFORM_DIR_FROM_REFERENCE);
+    }
+
+    // Note that Config::addViewTransform prevents creating a view transform that 
+    // has no transforms, so at least one direction will be present.
+}
+
+bool hasColorSpaceRefType(const ConstConfigRcPtr & config, ReferenceSpaceType refType)
+{
+    SearchReferenceSpaceType searchRefType = static_cast<SearchReferenceSpaceType>(refType);
+    int n = config->getNumColorSpaces(searchRefType, COLORSPACE_ALL);
+    return n > 0;
+}
+
+// Initialize the transforms that will be added to color spaces and view transforms to
+// convert the reference space from one config to another.
+//
+void initializeRefSpaceConverters(ConstTransformRcPtr & inputToBaseGtScene,
+                                  ConstTransformRcPtr & inputToBaseGtDisplay,
+                                  const ConstConfigRcPtr & baseConfig,
+                                  const ConstConfigRcPtr & inputConfig)
+{
+    // Note: The base config reference space is always used, regardless of strategy.
+
+    if (hasColorSpaceRefType(baseConfig, REFERENCE_SPACE_SCENE) &&
+        hasColorSpaceRefType(inputConfig, REFERENCE_SPACE_SCENE))
+    {
+        inputToBaseGtScene = getRefSpaceConverter(
+            inputConfig,
+            baseConfig,
+            REFERENCE_SPACE_SCENE
+        );
+    }
+    else
+    {
+        // Always need to initialize both transforms, even if they're empty.
+        inputToBaseGtScene = GroupTransform::Create();
+    }
+
+    // Only attempt to build the converter if the input config has this type of
+    // reference space. Using the input config for this determination since it is
+    // only input config color spaces whose reference space is converted.
+    if (hasColorSpaceRefType(baseConfig, REFERENCE_SPACE_DISPLAY) &&
+        hasColorSpaceRefType(inputConfig, REFERENCE_SPACE_DISPLAY))
+    {
+        inputToBaseGtDisplay = getRefSpaceConverter(
+            inputConfig,
+            baseConfig,
+            REFERENCE_SPACE_DISPLAY
+        );
+    }
+    else
+    {
+        // Always need to initialize both transforms, even if they're empty.
+        inputToBaseGtDisplay = GroupTransform::Create();
+    }
+}
+
+// Send the test vals through the color space and store the result in fingerprintVals.
+// Returns true if the color space should not be considered.
+//
+bool calcColorSpaceFingerprint(std::vector<float> & fingerprintVals, 
+                               const ColorSpaceFingerprints & fingerprints, 
+                               const ConstConfigRcPtr & config, 
+                               const ConstColorSpaceRcPtr & cs)
+{
+    bool skipColorSpace = false;
+
+    // TODO: Would it be helpful to compare to_refs to to_refs, rather than inverting?
+    ConstTransformRcPtr fromRef = getTransformForDir(cs, COLORSPACE_DIR_FROM_REFERENCE);
+
+    ConstCPUProcessorRcPtr cpu;
+    try
+    {
+        ConstProcessorRcPtr p = config->getProcessor(fromRef);
+        cpu = p->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
+    }
+    catch (...) 
+    { 
+        // If the transform doesn't validate (singular matrix, etc.), don't consider it.
+        return true;
+    }
+
+    // TODO: Should skip some transforms, e.g. those with a 3d-LUT.
+
+    if (cs->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
+    {
+        fingerprintVals = fingerprints.displayRefTestVals;
+    }
+    else
+    {
+        fingerprintVals = fingerprints.sceneRefTestVals;
+    }
+    const size_t n = fingerprintVals.size();
+    PackedImageDesc desc( &fingerprintVals[0], (long) n / 4, 1, CHANNEL_ORDERING_RGBA );
+
+    cpu->apply(desc);
+
+    return skipColorSpace;
+}
+
+// Define a set of test values to use for a config and store them in the fingerprints struct.
+// An attempt is made to convert them to the reference spaces of the config being used.
+// There are separate values for scene-referred and display-referred color spaces.
+//
+void initializeTestVals(ColorSpaceFingerprints & fingerprints, const ConstConfigRcPtr & config)
+{
+    // Define a set of test values that are slightly inside the Rec.709 gamut
+    // for the most common scene-referred and display-referred reference spaces.
+
+    // TODO: Including negative values would exclude some matches that are probably
+    // desirable, it's an open question how strict the matching should be.
+
+    std::vector<float> ACESvals = { 
+        0.408933127871f, 0.106169822808f, 0.027842572707f, 0.f, // lin_rec709 {0.9, 0.03, 0.01}
+        0.374615373650f, 0.739417755017f, 0.118862613721f, 0.f, // lin_rec709 {0.06, 0.9, 0.02}
+        0.171696591718f, 0.104272268468f, 0.786227391453f, 0.f, // lin_rec709 {0.01, 0.02, 0.9}
+        0.f            , 0.f            , 0.f            , 0.5f,
+        0.037018876439f, 0.030827687576f, 0.021641700645f, 0.f, // lin_rec709 {0.05, 0.03, 0.02}
+        1.f            , 1.f            , 1.f            , 1.f };
+
+    std::vector<float> XYZvals = { 
+        // Adjusted to keep it inside both Rec.601 and Rec.601 PAL.
+        0.383684057405f, 0.213552088801f, 0.030478901760f, 0.f, // lin_rec709 {0.9, 0.03, 0.01}
+        0.350178969169f, 0.657853997550f, 0.127445793983f, 0.f, // lin_rec709 {0.06, 0.9, 0.02}
+        0.173708304342f, 0.081402847459f, 0.858056140808f, 0.f, // lin_rec709 {0.01, 0.02, 0.9}
+        0.f            , 0.f            , 0.f            , 0.5f,
+        0.034956685913f, 0.033530856964f, 0.023553027375f, 0.f, // lin_rec709 {0.05, 0.03, 0.02}
+        0.950455927052f, 1.f            , 1.089057750760f, 1.f };
+
+    // Try to convert to the actual reference spaces of the config.
+
+    fingerprints.sceneRefTestVals = ACESvals;
+    fingerprints.displayRefTestVals = XYZvals;
+
+    ConstProcessorRcPtr p;
+    try
+    {
+        // First check if the config recognizes one of the common names.
+        ConstColorSpaceRcPtr cs;
+        cs = config->getColorSpace("aces_interchange");
+        if (!cs)
+        {
+            cs = config->getColorSpace("ACES2065-1");
+            if (!cs)
+            {
+                cs = config->getColorSpace("lin_ap0_scene");
+                if (!cs)
+                {
+                    // Otherwise, see if it's present using a different name.
+                    ConstConfigRcPtr builtinConfig = Config::CreateFromBuiltinConfig("ocio://cg-config-latest");
+                    // This throws if it cannot find the requested space.
+                    const char * cs_name = 
+                        Config::IdentifyBuiltinColorSpace(config, builtinConfig, "aces_interchange");
+                    cs = config->getColorSpace(cs_name);
+                }
+            }
+        }
+
+        ConstTransformRcPtr toRef = getTransformForDir(cs, COLORSPACE_DIR_TO_REFERENCE);
+        p = config->getProcessor(toRef);
+
+        const size_t n = ACESvals.size();
+        std::vector<float> out(n, 0.f);
+
+        PackedImageDesc descSrc( &ACESvals[0], (long) n / 4, 1, CHANNEL_ORDERING_RGBA );
+        PackedImageDesc descDst( &out[0], (long) n / 4, 1, CHANNEL_ORDERING_RGBA );
+
+        ConstCPUProcessorRcPtr cpu  = p->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
+        cpu->apply(descSrc, descDst);
+
+        fingerprints.sceneRefTestVals = out;
+    }
+    catch (...) 
+    { 
+        fingerprints.sceneRefTestVals = ACESvals;
+    }
+
+    const int m = config->getNumColorSpaces(SEARCH_REFERENCE_SPACE_DISPLAY, COLORSPACE_ALL);
+    if (m == 0)
+    {
+        return;
+    }
+
+    try
+    {
+        // First check if the config recognizes one of the common names.
+        ConstColorSpaceRcPtr cs;
+        cs = config->getColorSpace("cie_xyz_d65_interchange");
+        if (!cs)
+        {
+            cs = config->getColorSpace("CIE-XYZ-D65");
+            if (!cs)
+            {
+                cs = config->getColorSpace("CIE XYZ-D65");
+                if (!cs)
+                {
+                    // Otherwise, see if it's present using a different name.
+                    ConstConfigRcPtr builtinConfig = Config::CreateFromBuiltinConfig("ocio://cg-config-latest");
+                    const char * cs_name = 
+                        Config::IdentifyBuiltinColorSpace(config, builtinConfig, "cie_xyz_d65_interchange");
+                    cs = config->getColorSpace(cs_name);
+                }
+            }
+        }
+
+        ConstTransformRcPtr toRef = getTransformForDir(cs, COLORSPACE_DIR_TO_REFERENCE);
+        p = config->getProcessor(toRef);
+
+        const size_t n = XYZvals.size();
+        std::vector<float> out(n, 0.f);
+
+        PackedImageDesc descSrc( &XYZvals[0], (long) n / 4, 1, CHANNEL_ORDERING_RGBA );
+        PackedImageDesc descDst( &out[0], (long) n / 4, 1, CHANNEL_ORDERING_RGBA );
+
+        ConstCPUProcessorRcPtr cpu  = p->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
+        cpu->apply(descSrc, descDst);
+
+        fingerprints.displayRefTestVals = out;
+    }
+    catch (...) 
+    { 
+        fingerprints.displayRefTestVals = XYZvals;
+    }
+}
+
+// Calculate a fingerprint for every color space in a base config. These will be used
+// to compare against color spaces in an input config for merging. Store the results in
+// the fingerprint struct.
+//
+void initializeColorSpaceFingerprints(ColorSpaceFingerprints & fingerprints, const ConstConfigRcPtr & config)
+{
+    SuspendCacheGuard srcGuard(config);
+
+    initializeTestVals(fingerprints, config);
+
+    const int n = config->getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL);
+    fingerprints.vec.clear();
+    fingerprints.vec.reserve(n);
+    for (int i = 0; i < n; ++i)
+    {
+        const char * name = config->getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL,
+                                                             COLORSPACE_ALL,
+                                                             i);
+        ConstColorSpaceRcPtr cs = config->getColorSpace(name);
+        if (!cs || cs->isData())
+        {
+            // Don't put data color spaces in the collection.
+            continue;
+        }
+        if (cs->hasCategory("is-unique"))
+        {
+            // Don't fingerprint color spaces with this category.
+            // This provides a way to identify color spaces that must not be replaced.
+            // TODO: Perhaps fingerprint everything, and move this to the merge function?
+            continue;
+        }
+
+        ConstTransformRcPtr tFrom = cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+        ConstTransformRcPtr tTo = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+        if (tFrom && tTo)
+        {
+            // Don't bother with color spaces that have both directions defined,
+            // these are more complicated and less likely to be duplicates.
+            continue;
+        }
+
+        std::vector<float> fp;
+        const bool skipColorSpace = calcColorSpaceFingerprint(fp, fingerprints, config, cs);
+        if (!skipColorSpace)
+        {
+            Fingerprint fprint;
+            fprint.csName = cs->getName();
+            fprint.type = cs->getReferenceSpaceType();
+            fprint.vals = fp;
+            fingerprints.vec.push_back(fprint);
+        }
+    }
+}
+
+// If the base config contains a color space equivalent to inputCS, return its name.
+// Return an empty string if no equivalent color space is found (within the tolerance).
+// The ref_space_type specifies the type of inputCS and determines which part of the
+// config is searched. 
+//
+const char * findEquivalentColorspace(const ColorSpaceFingerprints & fingerprints,
+                                      const ConstConfigRcPtr & inputConfig, 
+                                      const ConstColorSpaceRcPtr & inputCS)
+{
+    // The fingerprints must first be initialized from the base config.
+    // NB: The inputConfig/inputCS must use the same reference space as the base config.
+    // In general, this means that updateReferenceColorspace must be called on inputCS
+    // before calling this function.
+
+    // TODO: Should data spaces ever be replaced?
+    if (inputCS->isData())
+    {
+        return "";
+    }
+
+    // Calculate the fingerprint of inputCS from inputConfig.
+    std::vector<float> inputVals;
+    const bool skipColorSpace = calcColorSpaceFingerprint(inputVals, fingerprints, inputConfig, inputCS);
+    if (skipColorSpace)
+    {
+        return "";
+    }
+
+    // TODO: Before looping over all color spaces, check to see if there's one with the same name.
+    // TODO: Perhaps add a hash based on the transform cacheIDs and check that before trying
+    // to compare processed pixel values?
+
+    // Increased from 1e-3 to 5e-3 to allow for use of either Bradford or CAT02 adaptation.
+    const float absTolerance = 5e-3f;
+
+    // Compare to the fingerprints from the base config.
+    const size_t n = inputVals.size();
+    for (const auto & fp : fingerprints.vec)
+    {
+        // Only compare color spaces that are using the same reference space type.
+        if (fp.type != inputCS->getReferenceSpaceType())
+        {
+            continue;
+        }
+
+        bool matchFound = true;
+        for (size_t i = 0; i < n; i++)
+        {
+            // Comparison is done in the color space, not the reference space.
+            // Could be linear, gamma-corrected, or log encoding.
+            // TODO: Could adjust the comparison based on the color space encoding.
+            if (!EqualWithAbsError(inputVals[i], fp.vals[i], absTolerance))
+            {
+                matchFound = false;
+                continue;
+            }
+        }
+        if (matchFound)
+        {
+            return fp.csName;
+        }
+    }
+
+    return "";
 }
 
 }  // namespace ConfigUtils

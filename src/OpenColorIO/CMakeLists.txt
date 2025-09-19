@@ -6,6 +6,9 @@ set(SOURCES
     apphelpers/ColorSpaceHelpers.cpp
     apphelpers/DisplayViewHelpers.cpp
     apphelpers/LegacyViewingPipeline.cpp
+    apphelpers/mergeconfigs/MergeConfigsHelpers.cpp
+    apphelpers/mergeconfigs/OCIOMYaml.cpp
+    apphelpers/mergeconfigs/SectionMerger.cpp
     apphelpers/MixingHelpers.cpp
     Baker.cpp
     BakingUtils.cpp

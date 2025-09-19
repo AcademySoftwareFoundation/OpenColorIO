@@ -216,6 +216,7 @@ setup(
             'ociodisplay=PyOpenColorIO.command_line:main',
             'ociolutimage=PyOpenColorIO.command_line:main',
             'ociomakeclf=PyOpenColorIO.command_line:main',
+            'ociomergeconfigs=PyOpenColorIO.command_line:main',
             'ocioperf=PyOpenColorIO.command_line:main',
             'ociowrite=PyOpenColorIO.command_line:main',
             # Python applications

@@ -1326,6 +1326,11 @@ public:
      */
     void addNamedTransform(const ConstNamedTransformRcPtr & namedTransform);
 
+    /**
+     * \brief Remove a named transform. (Does nothing if name is not found.)
+     */
+    void removeNamedTransform(const char * name);
+
     /// Clear all named transforms.
     void clearNamedTransforms();
 
@@ -1737,7 +1742,7 @@ public:
     /// Does include default rule. Result will be at least 1.
     size_t getNumEntries() const noexcept;
 
-    /// Get the index from the rule name.
+    /// Get the index from the rule name. Throws if the rule is not found.
     size_t getIndexForRule(const char * ruleName) const;
 
     /// Get name of the rule.
