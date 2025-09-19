@@ -217,31 +217,37 @@ void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator
     if (!dyn)
     {
         auto propGC = gcData->getDynamicPropertyInternal();
+        const int numOffsets = propGC->GetNumOffsetValues();
 
         // 2 ints for each curve.
         st.newLine() << "";
-        st.declareIntArrayConst(props.m_knotsOffsets, 4 * 2, propGC->getKnotsOffsetsArray());
+        st.declareIntArrayConst(props.m_knotsOffsets, numOffsets, propGC->getKnotsOffsetsArray());
         st.declareFloatArrayConst(props.m_knots, propGC->getNumKnots(), propGC->getKnotsArray());
-        st.declareIntArrayConst(props.m_coefsOffsets, 4 * 2, propGC->getCoefsOffsetsArray());
+        st.declareIntArrayConst(props.m_coefsOffsets, numOffsets, propGC->getCoefsOffsetsArray());
         st.declareFloatArrayConst(props.m_coefs, propGC->getNumCoefs(), propGC->getCoefsArray());
     }
 
     st.newLine() << "";
     if (shaderCreator->getLanguage() == LANGUAGE_OSL_1 || shaderCreator->getLanguage() == GPU_LANGUAGE_MSL_2_0)
     {
-        st.newLine() << st.floatKeyword() << " " << props.m_eval << "(int curveIdx, float x)";
+        st.newLine() << st.floatKeyword() << " " << props.m_eval << "(int curveIdx, float x, float identity_x)";
     }
     else
     {
-        st.newLine() << st.floatKeyword() << " " << props.m_eval << "(in int curveIdx, in float x)";
+        st.newLine() << st.floatKeyword() << " " << props.m_eval << "(in int curveIdx, in float x, in float identity_x)";
     }
     st.newLine() << "{";
     st.indent();
-
-    const bool isInv = gcData->getDirection() == TRANSFORM_DIR_INVERSE;
-    GradingBSplineCurveImpl::AddShaderEval(st, props.m_knotsOffsets, props.m_coefsOffsets,
-                                           props.m_knots, props.m_coefs, isInv);
-
+    if (gcData->getDirection() == TRANSFORM_DIR_INVERSE)
+    {
+        GradingBSplineCurveImpl::AddShaderEvalRev(st, props.m_knotsOffsets, props.m_coefsOffsets,
+                                                  props.m_knots, props.m_coefs);
+    }
+    else
+    {
+        GradingBSplineCurveImpl::AddShaderEvalFwd(st, props.m_knotsOffsets, props.m_coefsOffsets,
+                                                  props.m_knots, props.m_coefs);
+    }
     st.dedent();
     st.newLine() << "}";
 
@@ -275,13 +281,13 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
     const std::string pix(shaderCreator->getPixelName());
 
     // Call the curve evaluation method for each curve.
-    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(0, " << pix << ".rgb.r);"; // RED
-    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(1, " << pix << ".rgb.g);"; // GREEN
-    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(2, " << pix << ".rgb.b);"; // BLUE
+    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(0, " << pix << ".rgb.r, " << pix << ".rgb.r);"; // RED
+    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(1, " << pix << ".rgb.g, " << pix << ".rgb.g);"; // GREEN
+    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(2, " << pix << ".rgb.b, " << pix << ".rgb.b);"; // BLUE
     // TODO: vectorize master.
-    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(3, " << pix << ".rgb.r);"; // MASTER
-    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(3, " << pix << ".rgb.g);"; // MASTER
-    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(3, " << pix << ".rgb.b);"; // MASTER
+    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(3, " << pix << ".rgb.r, " << pix << ".rgb.r);"; // MASTER
+    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(3, " << pix << ".rgb.g, " << pix << ".rgb.g);"; // MASTER
+    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(3, " << pix << ".rgb.b, " << pix << ".rgb.b);"; // MASTER
 
     if (doLinToLog)
     {
@@ -323,12 +329,12 @@ void AddGCInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
     const std::string pix(shaderCreator->getPixelName());
 
     // Call the curve evaluation method for each curve.
-    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(3, " << pix << ".rgb.r);"; // MASTER
-    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(3, " << pix << ".rgb.g);"; // MASTER
-    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(3, " << pix << ".rgb.b);"; // MASTER
-    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(0, " << pix << ".rgb.r);"; // RED
-    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(1, " << pix << ".rgb.g);"; // GREEN
-    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(2, " << pix << ".rgb.b);"; // BLUE
+    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(3, " << pix << ".rgb.r, " << pix << ".rgb.r);"; // MASTER
+    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(3, " << pix << ".rgb.g, " << pix << ".rgb.g);"; // MASTER
+    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(3, " << pix << ".rgb.b, " << pix << ".rgb.b);"; // MASTER
+    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(0, " << pix << ".rgb.r, " << pix << ".rgb.r);"; // RED
+    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(1, " << pix << ".rgb.g, " << pix << ".rgb.g);"; // GREEN
+    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(2, " << pix << ".rgb.b, " << pix << ".rgb.b);"; // BLUE
 
     if (doLinToLog)
     {

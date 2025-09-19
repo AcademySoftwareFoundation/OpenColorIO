@@ -61,11 +61,27 @@ def assertEqualBSpline(testCase, first, second):
     else:
         raise AssertionError("Different number of control points")
 
+def assertAlmostEqualVector(testCase, first, second, delta=1e-6):
+    if len(first) != len(second):
+        raise AssertionError("Different number of elements")
+    for pt1, pt2 in zip(first, second):
+        testCase.assertAlmostEqual(pt1, pt2, delta=delta)
+
 def assertEqualRGBCurve(testCase, first, second):
     assertEqualBSpline(testCase, first.red, second.red)
     assertEqualBSpline(testCase, first.green, second.green)
     assertEqualBSpline(testCase, first.blue, second.blue)
     assertEqualBSpline(testCase, first.master, second.master)
+
+def assertEqualHueCurve(testCase, first, second):
+    assertEqualBSpline(testCase, first.hue_hue, second.hue_hue)
+    assertEqualBSpline(testCase, first.hue_sat, second.hue_sat)
+    assertEqualBSpline(testCase, first.hue_lum, second.hue_lum)
+    assertEqualBSpline(testCase, first.lum_sat, second.lum_sat)
+    assertEqualBSpline(testCase, first.sat_sat, second.sat_sat)
+    assertEqualBSpline(testCase, first.lum_lum, second.lum_lum)
+    assertEqualBSpline(testCase, first.sat_lum, second.sat_lum)
+    assertEqualBSpline(testCase, first.hue_fx, second.hue_fx)
 
 class MuteLogging:
   def __init__(self):

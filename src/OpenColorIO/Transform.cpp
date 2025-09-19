@@ -15,6 +15,7 @@
 #include "ops/gamma/GammaOp.h"
 #include "ops/gradingprimary/GradingPrimaryOp.h"
 #include "ops/gradingrgbcurve/GradingRGBCurveOp.h"
+#include "ops/gradinghuecurve/GradingHueCurveOp.h"
 #include "ops/gradingtone/GradingToneOp.h"
 #include "ops/log/LogOp.h"
 #include "ops/lut1d/Lut1DOp.h"
@@ -107,6 +108,11 @@ void BuildOps(OpRcPtrVec & ops,
         DynamicPtrCast<const GradingRGBCurveTransform>(transform))
     {
         BuildGradingRGBCurveOp(ops, config, context, *gradingCurveTransform, dir);
+    }
+    else if (ConstGradingHueCurveTransformRcPtr hueCurveTransform = \
+        DynamicPtrCast<const GradingHueCurveTransform>(transform))
+    {
+        BuildGradingHueCurveOp(ops, config, context, *hueCurveTransform, dir);
     }
     else if (ConstGradingToneTransformRcPtr gradingToneTransform = \
         DynamicPtrCast<const GradingToneTransform>(transform))
@@ -232,6 +238,11 @@ std::ostream& operator<< (std::ostream & os, const Transform & transform)
     {
         os << *gradingRGBCurveTransform;
     }
+    else if (const GradingHueCurveTransform * hueCurveTransform = \
+        dynamic_cast<const GradingHueCurveTransform*>(t))
+    {
+        os << *hueCurveTransform;
+    }
     else if (const GradingToneTransform * gradingToneTransform = \
         dynamic_cast<const GradingToneTransform*>(t))
     {
@@ -327,6 +338,10 @@ void CreateTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     else if (DynamicPtrCast<const GradingPrimaryOpData>(data))
     {
         CreateGradingPrimaryTransform(group, op);
+    }
+    else if (DynamicPtrCast<const GradingHueCurveOpData>(data))
+    {
+        CreateGradingHueCurveTransform(group, op);
     }
     else if (DynamicPtrCast<const GradingRGBCurveOpData>(data))
     {

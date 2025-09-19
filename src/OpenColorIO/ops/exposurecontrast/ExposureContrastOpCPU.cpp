@@ -86,6 +86,7 @@ bool ECRendererBase::hasDynamicProperty(DynamicPropertyType type) const
             break;
         case DYNAMIC_PROPERTY_GRADING_PRIMARY:
         case DYNAMIC_PROPERTY_GRADING_RGBCURVE:
+        case DYNAMIC_PROPERTY_GRADING_HUECURVE:
         case DYNAMIC_PROPERTY_GRADING_TONE:
         default:
             break;
@@ -118,6 +119,7 @@ DynamicPropertyRcPtr ECRendererBase::getDynamicProperty(DynamicPropertyType type
             break;
         case DYNAMIC_PROPERTY_GRADING_PRIMARY:
         case DYNAMIC_PROPERTY_GRADING_RGBCURVE:
+        case DYNAMIC_PROPERTY_GRADING_HUECURVE:
         case DYNAMIC_PROPERTY_GRADING_TONE:
         default:
             throw Exception("Dynamic property type not supported by ExposureContrast.");

@@ -351,17 +351,17 @@ std::ostream& operator<< (std::ostream& os, const MatrixTransform& t) noexcept
     os << "direction=" << TransformDirectionToString(t.getDirection());
     os << ", fileindepth=" << BitDepthToString(t.getFileInputBitDepth());
     os << ", fileoutdepth=" << BitDepthToString(t.getFileOutputBitDepth());
-    os << ", matrix=" << matrix[0];
+    os << ", matrix=[" << matrix[0];
     for (int i = 1; i < 16; ++i)
     {
-        os << " " << matrix[i];
+        os << ", " << matrix[i];
     }
-    os << ", offset=" << offset[0];
+    os << "], offset=[" << offset[0];
     for (int i = 1; i < 4; ++i)
     {
-        os << " " << offset[i];
+        os << ", " << offset[i];
     }
-    os << ">";
+    os << "]>";
     return os;
 }
 

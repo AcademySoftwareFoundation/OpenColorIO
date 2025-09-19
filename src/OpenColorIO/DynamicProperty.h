@@ -151,7 +151,7 @@ public:
     bool getLocalBypass() const;
     int getNumKnots() const;
     int getNumCoefs() const;
-    static int GetNumOffsetValues() { return 8; }
+    static int GetNumOffsetValues() { return 8; }  // offset and num vals for four curves
     const int * getKnotsOffsetsArray() const;
     const int * getCoefsOffsetsArray() const;
     const float * getKnotsArray() const;
@@ -171,6 +171,44 @@ private:
 
     // Holds curve data as knots and coefs. There are 4 curves.
     GradingBSplineCurveImpl::KnotsCoefs m_knotsCoefs{ 4 };
+};
+
+class DynamicPropertyGradingHueCurveImpl;
+typedef OCIO_SHARED_PTR<DynamicPropertyGradingHueCurveImpl> DynamicPropertyGradingHueCurveImplRcPtr;
+
+class DynamicPropertyGradingHueCurveImpl : public DynamicPropertyImpl,
+                                           public DynamicPropertyGradingHueCurve
+{
+public:
+    DynamicPropertyGradingHueCurveImpl() = delete;
+    DynamicPropertyGradingHueCurveImpl(const ConstGradingHueCurveRcPtr & value, bool dynamic);
+    ~DynamicPropertyGradingHueCurveImpl() = default;
+    const ConstGradingHueCurveRcPtr & getValue() const override;
+    void setValue(const ConstGradingHueCurveRcPtr & value) override;
+
+    bool getLocalBypass() const;
+    int getNumKnots() const;
+    int getNumCoefs() const;
+    static int GetNumOffsetValues() { return 16; }  // offset and num vals for eight curves
+    const int * getKnotsOffsetsArray() const;
+    const int * getCoefsOffsetsArray() const;
+    const float * getKnotsArray() const;
+    const float * getCoefsArray() const;
+
+    const GradingBSplineCurveImpl::KnotsCoefs & getKnotsCoefs() const { return m_knotsCoefs; }
+
+    static unsigned int GetMaxKnots();
+    static unsigned int GetMaxCoefs();
+
+    DynamicPropertyGradingHueCurveImplRcPtr createEditableCopy() const;
+
+private:
+    void precompute();
+
+    ConstGradingHueCurveRcPtr m_gradingHueCurve;
+
+    // Holds curve data as knots and coefs. There are 8 curves.
+    GradingBSplineCurveImpl::KnotsCoefs m_knotsCoefs{ 8 };
 };
 
 class DynamicPropertyGradingToneImpl;

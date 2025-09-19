@@ -99,7 +99,7 @@ OCIO_ADD_TEST(Lut3DTransform, basic)
     std::ostringstream oss;
     oss << *lut;
     OCIO_CHECK_EQUAL(oss.str(), "<Lut3DTransform direction=inverse, fileoutdepth=8ui,"
-        " interpolation=default, gridSize=3, minrgb=[-0.2 -0.1 -0.3], maxrgb=[1.2 1.3 1.8]>");
+        " interpolation=default, gridSize=3, minrgb=[-0.2, -0.1, -0.3], maxrgb=[1.2, 1.3, 1.8]>");
 }
 
 OCIO_ADD_TEST(Lut3DTransform, create_with_parameters)

@@ -69,6 +69,7 @@ import FormatMetadataTest
 import GpuShaderDescTest
 import GradingDataTest
 import GradingPrimaryTransformTest
+import GradingHueCurveTransformTest
 import GradingRGBCurveTransformTest
 import GradingToneTransformTest
 import GroupTransformTest
@@ -127,6 +128,7 @@ def suite():
     suite.addTest(loader.loadTestsFromModule(GpuShaderDescTest))
     suite.addTest(loader.loadTestsFromModule(GradingDataTest))
     suite.addTest(loader.loadTestsFromModule(GradingPrimaryTransformTest))
+    suite.addTest(loader.loadTestsFromModule(GradingHueCurveTransformTest))
     suite.addTest(loader.loadTestsFromModule(GradingRGBCurveTransformTest))
     suite.addTest(loader.loadTestsFromModule(GradingToneTransformTest))
     suite.addTest(loader.loadTestsFromModule(GroupTransformTest))

@@ -15,6 +15,7 @@
 #include "ops/gamma/GammaOpData.h"
 #include "ops/gradingprimary/GradingPrimaryOpData.h"
 #include "ops/gradingrgbcurve/GradingRGBCurveOpData.h"
+#include "ops/gradinghuecurve/GradingHueCurveOpData.h"
 #include "ops/gradingtone/GradingToneOpData.h"
 #include "ops/log/LogOpData.h"
 #include "ops/log/LogUtils.h"
@@ -323,6 +324,7 @@ public:
         GammaType,
         GradingPrimaryType,
         GradingRGBCurveType,
+        GradingHueCurveType,
         GradingToneType,
         InvLut1DType,
         InvLut3DType,
@@ -696,6 +698,34 @@ private:
     // Editable RGBCurve that will be set to the OpData when parsing of the element is done.
     GradingRGBCurveRcPtr m_loadingRGBCurve;
     GradingRGBCurveOpDataRcPtr m_gradingRGBCurve;
+};
+
+class CTFReaderGradingHueCurveElt : public CTFReaderOpElt
+{
+public:
+    CTFReaderGradingHueCurveElt();
+    ~CTFReaderGradingHueCurveElt() = default;
+
+    void start(const char ** atts) override;
+    void end() override;
+
+    const OpDataRcPtr getOp() const override;
+
+    const GradingHueCurveOpDataRcPtr & getGradingHueCurve() const
+    {
+        return m_gradingHueCurve;
+    }
+
+    // For sub-elements.
+    GradingHueCurveRcPtr & getLoadingHueCurve() { return m_loadingHueCurve; }
+
+protected:
+    bool isOpParameterValid(const char * att) const noexcept override;
+
+private:
+    // Editable HueCurve that will be set to the OpData when parsing of the element is done.
+    GradingHueCurveRcPtr m_loadingHueCurve;
+    GradingHueCurveOpDataRcPtr m_gradingHueCurve;
 };
 
 class CTFReaderGradingCurveElt : public XmlReaderComplexElt

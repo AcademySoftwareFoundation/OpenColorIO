@@ -27,6 +27,10 @@ void bindPyDynamicProperty(py::module & m)
              DOC(DynamicPropertyValue, AsGradingRGBCurve))
         .def("setGradingRGBCurve", &PyDynamicProperty::setGradingRGBCurve, "val"_a, 
              DOC(DynamicPropertyValue, AsGradingRGBCurve))
+        .def("getGradingHueCurve", &PyDynamicProperty::getGradingHueCurve, 
+             DOC(DynamicPropertyValue, AsGradingHueCurve))
+        .def("setGradingHueCurve", &PyDynamicProperty::setGradingHueCurve, "val"_a, 
+             DOC(DynamicPropertyValue, AsGradingHueCurve))
         .def("getGradingTone", &PyDynamicProperty::getGradingTone, 
              DOC(DynamicPropertyValue, AsGradingTone))
         .def("setGradingTone", &PyDynamicProperty::setGradingTone, "val"_a, 

@@ -68,6 +68,10 @@ void bindPyGradingData(py::module & m)
         py::class_<GradingRGBCurve, GradingRGBCurveRcPtr /*holder*/>(
             m.attr("GradingRGBCurve"));
 
+    auto clsGradingHueCurve = 
+        py::class_<GradingHueCurve, GradingHueCurveRcPtr /*holder*/>(
+            m.attr("GradingHueCurve"));
+
     clsGradingRGBM
         .def(py::init<>(), 
              DOC(GradingRGBM, GradingRGBM))
@@ -247,6 +251,22 @@ void bindPyGradingData(py::module & m)
             }),
              "size"_a,
              DOC(GradingBSplineCurve, Create))
+        .def(py::init([](size_t size,
+                         HueCurveType curveType)
+            {
+                return GradingBSplineCurve::Create(size, curveType);
+            }),
+             "size"_a,
+             "huecurvetype"_a,
+             DOC(GradingBSplineCurve, Create))
+        .def(py::init([](size_t size,
+                         BSplineType splineType)
+            {
+                return GradingBSplineCurve::Create(size, splineType);
+            }),
+             "size"_a,
+             "splinetype"_a,
+             DOC(GradingBSplineCurve, Create))
         .def(py::init([](const std::vector<float> & values)
             {
                 const auto size = values.size();
@@ -261,6 +281,29 @@ void bindPyGradingData(py::module & m)
                 auto numCtrlPts = size / 2;
 
                 GradingBSplineCurveRcPtr c = GradingBSplineCurve::Create(numCtrlPts);
+                for (size_t p = 0; p < numCtrlPts; ++p)
+                {
+                    c->getControlPoint(p).m_x = values[2 * p];
+                    c->getControlPoint(p).m_y = values[2 * p + 1];
+                }
+                return c;
+            }),
+             DOC(GradingBSplineCurve, Create, 2))
+        .def(py::init([](const std::vector<float> & values,
+                         HueCurveType curveType)
+            {
+                const auto size = values.size();
+                if (size < 4)
+                {
+                    throw Exception("GradingBSpline needs at least 4 values.");
+                }
+                if (size % 2 != 0)
+                {
+                    throw Exception("GradingBSpline needs an even number of values.");
+                }
+                auto numCtrlPts = size / 2;
+
+                GradingBSplineCurveRcPtr c = GradingBSplineCurve::Create(numCtrlPts, curveType);
                 for (size_t p = 0; p < numCtrlPts; ++p)
                 {
                     c->getControlPoint(p).m_x = values[2 * p];
@@ -286,6 +329,36 @@ void bindPyGradingData(py::module & m)
         .def("getControlPoints", [](GradingBSplineCurveRcPtr & self)
             {
                 return GradingControlPointIterator(self);
+            })
+        .def("getSplineType", &GradingBSplineCurve::getSplineType, 
+             DOC(GradingBSplineCurve, getSplineType))
+        .def("setSplineType", &GradingBSplineCurve::setSplineType, "splinetype"_a,
+             DOC(GradingBSplineCurve, setSplineType))
+        .def("slopesAreDefault", &GradingBSplineCurve::slopesAreDefault, 
+             DOC(GradingBSplineCurve, slopesAreDefault))
+        .def("getSlopes", [](GradingBSplineCurveRcPtr self)
+            {
+                std::vector<float> slopes;
+                const size_t numPts = self->getNumControlPoints();
+                slopes.resize(numPts);
+                for (size_t pt = 0; pt < numPts; ++pt)
+                {
+                    slopes[pt] = self->getSlope(pt);
+                }
+                return slopes;
+            })
+        .def("setSlopes", [](GradingBSplineCurveRcPtr self, const std::vector<float> & slopes)
+            {
+                const size_t numPts = self->getNumControlPoints();
+                const auto size = slopes.size();
+                if (size != numPts)
+                {
+                    throw Exception("Length of slopes vector must match number of control points.");
+                }
+                for (size_t pt = 0; pt < numPts; ++pt)
+                {
+                    self->setSlope(pt, slopes[pt]);
+                }
             });
 
     defRepr(clsGradingBSplineCurve);
@@ -345,6 +418,11 @@ void bindPyGradingData(py::module & m)
                 return self != other;
             }, py::is_operator())
 
+        .def("validate", &GradingRGBCurve::validate, 
+             DOC(GradingRGBCurve, validate))
+        .def("isIdentity", &GradingRGBCurve::isIdentity, 
+             DOC(GradingRGBCurve, isIdentity))
+
        .def_property("red", 
                      [](const GradingRGBCurveRcPtr & rgbCurve)
             {
@@ -386,7 +464,129 @@ void bindPyGradingData(py::module & m)
                 CopyGradingBSpline(rgbCurve->getCurve(RGB_MASTER), master);
             });
 
-    defRepr(clsGradingRGBCurve);
+    defRepr(clsGradingHueCurve);
+
+    clsGradingHueCurve
+        .def(py::init([](GradingStyle style)
+            {
+                return GradingHueCurve::Create(style);
+            }), 
+             "style"_a,
+             DOC(GradingHueCurve, GradingHueCurve))
+        .def(py::init([](const GradingBSplineCurveRcPtr & hue_hue,
+                         const GradingBSplineCurveRcPtr & hue_sat,
+                         const GradingBSplineCurveRcPtr & hue_lum, 
+                         const GradingBSplineCurveRcPtr & lum_sat, 
+                         const GradingBSplineCurveRcPtr & sat_sat, 
+                         const GradingBSplineCurveRcPtr & lum_lum, 
+                         const GradingBSplineCurveRcPtr & sat_lum, 
+                         const GradingBSplineCurveRcPtr & hue_fx)
+            {
+                return GradingHueCurve::Create(hue_hue, hue_sat, hue_lum, lum_sat,
+                                               sat_sat, lum_lum, sat_lum, hue_fx);
+            }),
+                DOC(GradingHueCurve, GradingHueCurve, 2))
+
+        .def("__eq__", [](const GradingHueCurve &self, const GradingHueCurve &other)
+            {
+                return self == other;
+            }, py::is_operator())
+        .def("__ne__", [](const GradingHueCurve &self, const GradingHueCurve &other)
+            {
+                return self != other;
+            }, py::is_operator())
+
+        .def("validate", &GradingHueCurve::validate, 
+             DOC(GradingHueCurve, validate))
+        .def("isIdentity", &GradingHueCurve::isIdentity, 
+             DOC(GradingHueCurve, isIdentity))
+        .def("getDrawCurveOnly", &GradingHueCurve::getDrawCurveOnly, 
+             DOC(GradingHueCurve, getDrawCurveOnly))
+        .def("setDrawCurveOnly", &GradingHueCurve::setDrawCurveOnly, "drawcurveonly"_a, 
+             DOC(GradingHueCurve, setDrawCurveOnly))
+
+       .def_property("hue_hue", 
+                     [](const GradingHueCurveRcPtr & hueCurve)
+            {
+                return hueCurve->getCurve(HUE_HUE);
+            },
+                     [](const GradingHueCurveRcPtr & hueCurve, 
+                        const GradingBSplineCurveRcPtr & hue_hue)
+            {
+                CopyGradingBSpline(hueCurve->getCurve(HUE_HUE), hue_hue);
+            })
+       .def_property("hue_sat", 
+                     [](const GradingHueCurveRcPtr & hueCurve)
+            {
+                return hueCurve->getCurve(HUE_SAT);
+            },
+                     [](const GradingHueCurveRcPtr & hueCurve, 
+                        const GradingBSplineCurveRcPtr & hue_sat)
+            {
+                CopyGradingBSpline(hueCurve->getCurve(HUE_SAT), hue_sat);
+            })
+       .def_property("hue_lum", 
+                     [](const GradingHueCurveRcPtr & hueCurve)
+            {
+                return hueCurve->getCurve(HUE_LUM);
+            },
+                     [](const GradingHueCurveRcPtr & hueCurve, 
+                        const GradingBSplineCurveRcPtr & hue_lum)
+            {
+                CopyGradingBSpline(hueCurve->getCurve(HUE_LUM), hue_lum);
+            })
+       .def_property("lum_sat", 
+                     [](const GradingHueCurveRcPtr & hueCurve)
+            {
+                return hueCurve->getCurve(LUM_SAT);
+            },
+                     [](const GradingHueCurveRcPtr & hueCurve, 
+                        const GradingBSplineCurveRcPtr & lum_sat)
+            {
+                CopyGradingBSpline(hueCurve->getCurve(LUM_SAT), lum_sat);
+            })
+       .def_property("sat_sat", 
+                     [](const GradingHueCurveRcPtr & hueCurve)
+            {
+                return hueCurve->getCurve(SAT_SAT);
+            },
+                     [](const GradingHueCurveRcPtr & hueCurve, 
+                        const GradingBSplineCurveRcPtr & sat_sat)
+            {
+                CopyGradingBSpline(hueCurve->getCurve(SAT_SAT), sat_sat);
+            })
+       .def_property("lum_lum", 
+                     [](const GradingHueCurveRcPtr & hueCurve)
+            {
+                return hueCurve->getCurve(LUM_LUM);
+            },
+                     [](const GradingHueCurveRcPtr & hueCurve, 
+                        const GradingBSplineCurveRcPtr & lum_lum)
+            {
+                CopyGradingBSpline(hueCurve->getCurve(LUM_LUM), lum_lum);
+            })
+       .def_property("sat_lum", 
+                     [](const GradingHueCurveRcPtr & hueCurve)
+            {
+                return hueCurve->getCurve(SAT_LUM);
+            },
+                     [](const GradingHueCurveRcPtr & hueCurve, 
+                        const GradingBSplineCurveRcPtr & sat_lum)
+            {
+                CopyGradingBSpline(hueCurve->getCurve(SAT_LUM), sat_lum);
+            })
+       .def_property("hue_fx", 
+                     [](const GradingHueCurveRcPtr & hueCurve)
+            {
+                return hueCurve->getCurve(HUE_FX);
+            },
+                     [](const GradingHueCurveRcPtr & hueCurve, 
+                        const GradingBSplineCurveRcPtr & hue_fx)
+            {
+                CopyGradingBSpline(hueCurve->getCurve(HUE_FX), hue_fx);
+            });
+
+    defRepr(clsGradingHueCurve);
 }
 
 } // namespace OCIO_NAMESPACE

@@ -103,13 +103,13 @@ std::ostream & operator<< (std::ostream & os, const ExponentTransform & t)
     os << "<ExponentTransform ";
     os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
 
-    os << "value=" << value[0];
+    os << "value=[" << value[0];
     for (int i = 1; i < 4; ++i)
     {
-        os << " " << value[i];
+        os << ", " << value[i];
     }
 
-    os << ", style=" << NegativeStyleToString(t.getNegativeStyle());
+    os << "], style=" << NegativeStyleToString(t.getNegativeStyle());
     os << ">";
     return os;
 }
