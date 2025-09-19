@@ -1381,6 +1381,72 @@ colorspaces:
       # Test the new value of the role color_picking.
       self.assertEqual(config.getRoleColorSpace("color_picking"), "ACEScct")
 
+    def test_active__displayview_lists(self):
+        config = OCIO.Config.CreateRaw()
+
+        # Test add.
+        self.assertEqual(len(config.getActiveDisplays()), 0)
+        self.assertEqual(len(config.getActiveViews()), 0)
+        config.addActiveDisplay("sRGB")
+        config.addActiveDisplay("Display P3")
+        config.addActiveView("v1")
+        config.addActiveView("v2")
+
+        # Test getters.
+        self.assertEqual(len(config.getActiveDisplays()), 2)
+        self.assertEqual(config.getActiveDisplays()[0], "sRGB")
+        self.assertEqual(config.getActiveDisplays()[1], "Display P3")
+        self.assertEqual(len(config.getActiveViews()), 2)
+        self.assertEqual(config.getActiveViews()[0], "v1")
+        self.assertEqual(config.getActiveViews()[1], "v2")
+
+        # Test that add doesn't throw on dupes.
+        config.addActiveDisplay("sRGB")
+        self.assertEqual(config.getNumActiveDisplays(), 2)
+        config.addActiveView("v1")
+        self.assertEqual(config.getNumActiveViews(), 2)
+
+        # Test commas may be used.
+        config.setActiveDisplays(displays='sRGB:01, "Name, with comma", "Quoted name"')
+        self.assertEqual(config.getNumActiveDisplays(), 3)
+        self.assertEqual(config.getActiveDisplays()[0], "sRGB:01")
+        self.assertEqual(config.getActiveDisplays()[1], "Name, with comma")
+        config.setActiveViews(views='v:01, "View, with comma", "Quoted view"')
+        self.assertEqual(config.getNumActiveViews(), 3)
+        self.assertEqual(config.getActiveViews()[0], "v:01")
+        self.assertEqual(config.getActiveViews()[1], "View, with comma")
+
+        # Test remove.
+        config.removeActiveDisplay(display="Name, with comma")
+        self.assertEqual(config.getActiveDisplays()[1], "Quoted name")
+        self.assertEqual(config.getNumActiveDisplays(), 2)
+        config.removeActiveView(view="View, with comma")
+        self.assertEqual(config.getActiveViews()[1], "Quoted view")
+        self.assertEqual(config.getNumActiveViews(), 2)
+
+        # Test clear.
+        config.clearActiveDisplays()
+        self.assertEqual(config.getNumActiveDisplays(), 0)
+        config.clearActiveViews()
+        self.assertEqual(config.getNumActiveViews(), 0)
+
+        # Trying to remove one that doesn't exist throws.
+        with self.assertRaises(OCIO.Exception):
+            config.removeActiveDisplay("not found")
+        with self.assertRaises(OCIO.Exception):
+            config.removeActiveView("not found")
+
+        # Test setting an empty string behaves as expected.
+        config.setActiveDisplays("")
+        self.assertEqual(config.getNumActiveDisplays(), 0)
+        config.addActiveDisplay(display="sRGB")
+        self.assertEqual(config.getNumActiveDisplays(), 1)
+        config.setActiveViews("")
+        self.assertEqual(config.getNumActiveViews(), 0)
+        config.addActiveView(view="v1")
+        self.assertEqual(config.getNumActiveViews(), 1)
+
+
 class ConfigVirtualWithActiveDisplayTest(unittest.TestCase):
     def setUp(self):
         self.cfg_active_display = OCIO.Config.CreateFromStream(

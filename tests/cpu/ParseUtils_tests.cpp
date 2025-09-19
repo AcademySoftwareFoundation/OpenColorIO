@@ -387,7 +387,12 @@ OCIO_ADD_TEST(ParseUtils, string_vec_to_int_vec)
 
 OCIO_ADD_TEST(ParseUtils, split_string_env_style)
 {
+    // For look parsing, the split needs to always return a result, even if empty.
     StringUtils::StringVec outputvec;
+    outputvec = OCIO::SplitStringEnvStyle("");
+    OCIO_CHECK_EQUAL(1, outputvec.size());
+    outputvec.clear();
+
     outputvec = OCIO::SplitStringEnvStyle("This:is:a:test");
     OCIO_CHECK_EQUAL(4, outputvec.size());
     OCIO_CHECK_EQUAL("This", outputvec[0]);
@@ -395,13 +400,15 @@ OCIO_ADD_TEST(ParseUtils, split_string_env_style)
     OCIO_CHECK_EQUAL("a", outputvec[2]);
     OCIO_CHECK_EQUAL("test", outputvec[3]);
     outputvec.clear();
-    outputvec = OCIO::SplitStringEnvStyle("   This  : is   :   a:   test  ");
+
+    outputvec = OCIO::SplitStringEnvStyle("   \"This\"  : is   :   a:   test  ");
     OCIO_CHECK_EQUAL(4, outputvec.size());
     OCIO_CHECK_EQUAL("This", outputvec[0]);
     OCIO_CHECK_EQUAL("is", outputvec[1]);
     OCIO_CHECK_EQUAL("a", outputvec[2]);
     OCIO_CHECK_EQUAL("test", outputvec[3]);
     outputvec.clear();
+
     outputvec = OCIO::SplitStringEnvStyle("   This  , is   ,   a,   test  ");
     OCIO_CHECK_EQUAL(4, outputvec.size());
     OCIO_CHECK_EQUAL("This", outputvec[0]);
@@ -409,16 +416,90 @@ OCIO_ADD_TEST(ParseUtils, split_string_env_style)
     OCIO_CHECK_EQUAL("a", outputvec[2]);
     OCIO_CHECK_EQUAL("test", outputvec[3]);
     outputvec.clear();
+
     outputvec = OCIO::SplitStringEnvStyle("This:is   ,   a:test  ");
     OCIO_CHECK_EQUAL(2, outputvec.size());
     OCIO_CHECK_EQUAL("This:is", outputvec[0]);
     OCIO_CHECK_EQUAL("a:test", outputvec[1]);
     outputvec.clear();
+
     outputvec = OCIO::SplitStringEnvStyle(",,");
     OCIO_CHECK_EQUAL(3, outputvec.size());
     OCIO_CHECK_EQUAL("", outputvec[0]);
     OCIO_CHECK_EQUAL("", outputvec[1]);
     OCIO_CHECK_EQUAL("", outputvec[2]);
+
+    outputvec = OCIO::SplitStringEnvStyle("   \"This  : is   \":   a:   test  ");
+    OCIO_CHECK_EQUAL(3, outputvec.size());
+    OCIO_CHECK_EQUAL("This  : is   ", outputvec[0]);
+    OCIO_CHECK_EQUAL("a", outputvec[1]);
+    OCIO_CHECK_EQUAL("test", outputvec[2]);
+
+    OCIO_CHECK_THROW_WHAT( OCIO::SplitStringEnvStyle("   This  : is   \":   a:   test  "),
+                           OCIO::Exception, 
+                           "The string 'This  : is   \":   a:   test' is not correctly formatted. "
+                           "It is missing a closing quote.");
+
+    OCIO_CHECK_THROW_WHAT( OCIO::SplitStringEnvStyle("   This  : is   :   a:   test  \""), 
+                           OCIO::Exception, 
+                           "The string 'This  : is   :   a:   test  \"' is not correctly formatted. "
+                           "It is missing a closing quote.");
+
+    outputvec = OCIO::SplitStringEnvStyle("   This  : is   \":   a:   test  \"");
+    OCIO_CHECK_EQUAL(2, outputvec.size());
+    OCIO_CHECK_EQUAL("This", outputvec[0]);
+    OCIO_CHECK_EQUAL("is   \":   a:   test  \"" , outputvec[1]);
+
+    outputvec = OCIO::SplitStringEnvStyle("   \"This  : is   \",   a,   test  ");
+    OCIO_CHECK_EQUAL(3, outputvec.size());
+    OCIO_CHECK_EQUAL("This  : is   ", outputvec[0]);
+    OCIO_CHECK_EQUAL("a", outputvec[1]);
+    OCIO_CHECK_EQUAL("test", outputvec[2]);
+
+    // If the string contains a comma, it is chosen as the separator character rather than
+    // the colon (even if it is within quotes and therefore not used as such).
+    outputvec = OCIO::SplitStringEnvStyle("   \"This  , is   \":   a:   test  ");
+    OCIO_CHECK_EQUAL(1, outputvec.size());
+    OCIO_CHECK_EQUAL("\"This  , is   \":   a:   test", outputvec[0]);
+
+    outputvec = OCIO::SplitStringEnvStyle("   \"This  , is   \":   a,   test  ");
+    OCIO_CHECK_EQUAL(2, outputvec.size());
+    OCIO_CHECK_EQUAL("\"This  , is   \":   a", outputvec[0]);
+    OCIO_CHECK_EQUAL("test", outputvec[1]);
+}
+
+OCIO_ADD_TEST(ParseUtils, join_string_env_style)
+{
+    StringUtils::StringVec outputvec {"This", "is", "a", "test"};
+
+    OCIO_CHECK_EQUAL( "This, is, a, test", OCIO::JoinStringEnvStyle(outputvec) );
+    outputvec.clear();
+
+    OCIO_CHECK_EQUAL( "", OCIO::JoinStringEnvStyle(outputvec) );
+    outputvec.clear();
+
+    outputvec = { "This:is", "a:test" };
+    OCIO_CHECK_EQUAL( "\"This:is\", \"a:test\"", OCIO::JoinStringEnvStyle(outputvec) );
+    outputvec.clear();
+
+    outputvec = { "", "", "" };
+    OCIO_CHECK_EQUAL( ", , ", OCIO::JoinStringEnvStyle(outputvec) );
+    outputvec.clear();
+
+    outputvec = { "This  : is", "a: test" };
+    OCIO_CHECK_EQUAL( "\"This  : is\", \"a: test\"", OCIO::JoinStringEnvStyle(outputvec) );
+    outputvec.clear();
+
+    outputvec = { "This", "is   \":   a:   test" };
+    OCIO_CHECK_EQUAL( "This, \"is   \":   a:   test\"", OCIO::JoinStringEnvStyle(outputvec) );
+
+    outputvec = { "\"This, is, a, string\"", "this, one, too" };
+    OCIO_CHECK_EQUAL( "\"This, is, a, string\", \"this, one, too\"" , 
+                      OCIO::JoinStringEnvStyle(outputvec) );
+
+    outputvec = { "This", "is: ", "\"a very good,\"", " fine, helpful, and useful ", "test" };
+    OCIO_CHECK_EQUAL( "This, \"is: \", \"a very good,\", \" fine, helpful, and useful \", test", 
+                      OCIO::JoinStringEnvStyle(outputvec) );
 }
 
 OCIO_ADD_TEST(ParseUtils, intersect_string_vecs_case_ignore)

@@ -687,33 +687,158 @@ bool StrEqualsCaseIgnore(const std::string & a, const std::string & b)
     return 0 == Platform::Strcasecmp(a.c_str(), b.c_str());
 }
 
+// Find the end of a name from a list contained in a string.
+// The elements of the list are separated by the character defined by the sep argument.
+// A name can be surrounded by quotes to enable names including the sep symbol, in 
+// other words, to prevent it from being used as a separator.
+static int FindEndOfName(const std::string & s, size_t start, char sep)
+{
+    int currentPos = static_cast<int>(start);
+    int nameEndPos = currentPos;
+    bool isEndFound = false;
+    
+    std::string symbols = "\"";
+    symbols += sep;
+
+    while ( !isEndFound )
+    {
+        nameEndPos =  static_cast<int>( s.find_first_of( symbols, currentPos ) );
+        if ( nameEndPos == static_cast<int>(std::string::npos) )
+        {
+            // Reached the end of the list.
+            nameEndPos =  static_cast<int>( s.size() );
+            isEndFound = true;
+        } 
+        else if ( s[nameEndPos] == '"' )
+        {
+            // Found a quote, need to find the next one.
+            nameEndPos =  static_cast<int>( s.find_first_of("\"", nameEndPos + 1) );
+            if ( nameEndPos == (int)std::string::npos )
+            {
+                // Reached the end of the list instead.
+                std::ostringstream os;
+                os << "The string '" << s << "' is not correctly formatted. " <<
+                "It is missing a closing quote.";
+                throw Exception(os.str().c_str());
+            }
+            else
+            {
+                // Found the second quote, need to continue the search for a symbol
+                // separating the elements (: or ,).
+                currentPos = nameEndPos + 1;
+            }
+        }
+        else if( s[nameEndPos] == sep )
+        {
+            // Found a symbol separating the elements, stop here.
+            isEndFound = true;
+        }
+    }
+
+    return nameEndPos;
+}
+
 StringUtils::StringVec SplitStringEnvStyle(const std::string & str)
 {
-    StringUtils::StringVec outputvec;
     const std::string s = StringUtils::Trim(str);
-    if (StringUtils::Find(s, ",") != std::string::npos)
+    if( s.size() == 0 ) 
     {
-        outputvec = StringUtils::Split(s, ',');
+        // Look parsing always wants a result, even if an empty string.
+        return { "" };
     }
-    else if (StringUtils::Find(s, ":") != std::string::npos)
+
+    StringUtils::StringVec outputvec;
+    auto foundComma = s.find_first_of(",");
+    auto foundColon = s.find_first_of(":");
+
+    if( foundComma != std::string::npos || 
+        foundColon != std::string::npos )
     {
-        outputvec = StringUtils::Split(s, ':');
+        int currentPos = 0;
+        while( s.size() > 0 && 
+               currentPos <= (int)s.size() )
+        {
+            int nameEndPos = FindEndOfName( s, 
+                                            currentPos, 
+                                            foundComma != std::string::npos ? ',' : ':' );
+            if(nameEndPos > currentPos)
+            {
+                outputvec.push_back(s.substr(currentPos, nameEndPos - currentPos));
+                currentPos = nameEndPos + 1;
+            }
+            else
+            {
+                outputvec.push_back("");
+                currentPos += 1;
+            }
+        }
     }
     else
     {
+        // If there is no comma or colon, consider the string as a single element.
         outputvec.push_back(s);
     }
 
-    for (auto & val : outputvec)
+    for ( auto & val : outputvec )
     {
-        val = StringUtils::Trim(val);
+        const std::string trimmedValue = StringUtils::Trim(val);
+
+        // If the trimmed value is surrounded by quotes, remove them.
+        if( trimmedValue.size() > 1 && 
+            trimmedValue[0] == '"' && 
+            trimmedValue[trimmedValue.size() - 1] == '"' )
+        {
+            val = trimmedValue.substr(1, trimmedValue.size() - 2);
+        }
+        else
+        {
+            val = trimmedValue;
+        }
     }
+    
     return outputvec;
 }
 
 std::string JoinStringEnvStyle(const StringUtils::StringVec & outputvec)
 {
-    return StringUtils::Join(outputvec, ',');
+    std::string result;
+    const int nElement = static_cast<int>(outputvec.size());
+    if( nElement == 0 )
+    {
+        return "";
+    }
+
+    // Check if the value contains a symbol that could be interpreted as a separator
+    // and if it is not already surrounded by quotes.
+    const std::string& firstValue = outputvec[0];
+    if( firstValue.find_first_of(",:") != std::string::npos &&
+        firstValue.size() > 1 &&
+        firstValue[0] != '"' &&
+        firstValue[firstValue.size() - 1] != '"' )
+    {
+        result += "\"" + firstValue + "\"";
+    }
+    else
+    {
+        result += firstValue;
+    }
+
+    for( int i = 1; i < nElement; ++i )
+    {
+        if( outputvec[i].find_first_of(",:") != std::string::npos &&
+            outputvec[i].size() > 1 &&
+            outputvec[i][0] != '"' &&
+            outputvec[i][outputvec[i].size() - 1] != '"' )
+        {
+            result += ", \"" + outputvec[i] + "\"";
+        }
+        else
+        {
+            result += ", " + outputvec[i];
+        }
+    }
+
+    return result;
 }
 
 // Return a vector of strings that are both in vec1 and vec2.
