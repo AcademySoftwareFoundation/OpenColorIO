@@ -976,8 +976,8 @@ ocioOCIOMain(
 
 // Declaration of all variables
 
- float ocio_exposure_contrast_exposureVal;
- float ocio_exposure_contrast_gammaVal;
+float ocio_exposure_contrast_exposureVal;
+float ocio_exposure_contrast_gammaVal;
 
 
 // Declaration of the OCIO shader function
@@ -1243,11 +1243,11 @@ ocioOCIOMain(
 
 // Declaration of all variables
 
- int ocio_grading_rgbcurve_knotsOffsets[8];
- float ocio_grading_rgbcurve_knots[60];
- int ocio_grading_rgbcurve_coefsOffsets[8];
- float ocio_grading_rgbcurve_coefs[180];
- bool ocio_grading_rgbcurve_localBypass;
+int ocio_grading_rgbcurve_knotsOffsets[8];
+float ocio_grading_rgbcurve_knots[60];
+int ocio_grading_rgbcurve_coefsOffsets[8];
+float ocio_grading_rgbcurve_coefs[180];
+bool ocio_grading_rgbcurve_localBypass;
 
 
 // Declaration of all helper methods

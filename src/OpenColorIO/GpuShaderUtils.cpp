@@ -921,17 +921,17 @@ std::string GpuShaderText::sampleTex3D(const std::string& textureName,
 
 void GpuShaderText::declareUniformFloat(const std::string & uniformName)
 {
-    std::string uniformDeclString("uniform");
+    std::string uniformDeclString("uniform ");
     if (m_lang == GPU_LANGUAGE_MSL_2_0 || m_lang == GPU_LANGUAGE_GLSL_VK_4_6)
     {
         uniformDeclString = "";
     }
-    newLine() << uniformDeclString << " " << floatKeyword() << " " << uniformName << ";";
+    newLine() << uniformDeclString << floatKeyword() << " " << uniformName << ";";
 }
 
 void GpuShaderText::declareUniformBool(const std::string & uniformName)
 {
-    std::string uniformDeclString("uniform");
+    std::string uniformDeclString("uniform ");
     std::string boolKeyword("bool");
     if (m_lang == GPU_LANGUAGE_MSL_2_0)
     {
@@ -942,37 +942,37 @@ void GpuShaderText::declareUniformBool(const std::string & uniformName)
         uniformDeclString = "";
         boolKeyword = "int";
     }
-    newLine() << uniformDeclString << " " << boolKeyword << " " << uniformName << ";";
+    newLine() << uniformDeclString << boolKeyword << " " << uniformName << ";";
 }
 
 void GpuShaderText::declareUniformFloat3(const std::string & uniformName)
 {
-    std::string uniformDeclString("uniform");
+    std::string uniformDeclString("uniform ");
     if (m_lang == GPU_LANGUAGE_MSL_2_0 || m_lang == GPU_LANGUAGE_GLSL_VK_4_6)
     {
         uniformDeclString = "";
     }
-    newLine() << uniformDeclString << " " << float3Keyword() << " " << uniformName << ";";
+    newLine() << uniformDeclString << float3Keyword() << " " << uniformName << ";";
 }
 
 void GpuShaderText::declareUniformArrayFloat(const std::string & uniformName, unsigned int size)
 {
-    std::string uniformDeclString("uniform");
+    std::string uniformDeclString("uniform ");
     if (m_lang == GPU_LANGUAGE_MSL_2_0 || m_lang == GPU_LANGUAGE_GLSL_VK_4_6)
     {
         uniformDeclString = "";
     }
-    newLine() << uniformDeclString << " " << floatKeyword() << " " << uniformName << "[" << size << "];";
+    newLine() << uniformDeclString << floatKeyword() << " " << uniformName << "[" << size << "];";
 }
 
 void GpuShaderText::declareUniformArrayInt(const std::string & uniformName, unsigned int size)
 {
-    std::string uniformDeclString("uniform");
+    std::string uniformDeclString("uniform ");
     if (m_lang == GPU_LANGUAGE_MSL_2_0 || m_lang == GPU_LANGUAGE_GLSL_VK_4_6)
     {
         uniformDeclString = "";
     }
-    newLine() << uniformDeclString << " " << intKeyword() << " " << uniformName << "[" << size << "];";
+    newLine() << uniformDeclString << intKeyword() << " " << uniformName << "[" << size << "];";
 }
 
 // Keep the method private as only float & double types are expected
