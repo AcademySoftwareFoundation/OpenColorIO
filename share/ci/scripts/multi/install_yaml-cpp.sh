@@ -23,8 +23,10 @@ if [ "$YAMLCPP_VERSION" == "latest" ]; then
 else
     if [[ "$YAMLCPP_MINOR" -lt 6 && "$YAMLCPP_PATCH" -lt 3 ]]; then
         git checkout tags/release-${YAMLCPP_VERSION} -b release-${YAMLCPP_VERSION}
-    else
+    elif [[ "$YAMLCPP_MINOR" -lt 8 ]]; then
         git checkout tags/yaml-cpp-${YAMLCPP_VERSION} -b yaml-cpp-${YAMLCPP_VERSION}
+    else
+        git checkout tags/${YAMLCPP_VERSION} -b ${YAMLCPP_VERSION}
     fi
 fi
 

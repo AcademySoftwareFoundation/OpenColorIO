@@ -60,12 +60,13 @@ if(USE_MSVC)
     # /we4062 Enables warning in switch when an enumeration value is not explicitly handled.
     set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};/EHsc;/DWIN32;/we4062")
 
-    if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 17)
-        # Inheriting from std::iterator is deprecated starting with C++17 and Yaml 0.6.3 does that.
-        set(PLATFORM_COMPILE_OPTIONS
-            "${PLATFORM_COMPILE_OPTIONS};/D_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING"
-        )
-    endif()
+	# seems no longer needed, there were c++ modernization on 0.7.0. /coz
+#    if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 17)
+#        # Inheriting from std::iterator is deprecated starting with C++17 and Yaml 0.6.3 does that.
+#        set(PLATFORM_COMPILE_OPTIONS
+#            "${PLATFORM_COMPILE_OPTIONS};/D_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING"
+#        )
+#    endif()
 
     # Make MSVC compiler report correct __cplusplus version (otherwise reports 199711L)
     set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};/Zc:__cplusplus")

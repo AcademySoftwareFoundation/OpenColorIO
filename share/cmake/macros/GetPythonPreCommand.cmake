@@ -22,6 +22,7 @@ macro(get_python_pre_command)
     if(WIN32)
         # Use Windows path separators since this is being passed through to cmd
         file(TO_NATIVE_PATH ${PROJECT_BINARY_DIR} _WIN_BINARY_DIR)
+        file(TO_NATIVE_PATH ${PROJECT_SOURCE_DIR} _WIN_SOURCE_DIR)
 
         set(_DLL_PATH "${_WIN_BINARY_DIR}\\src\\OpenColorIO")
         if(MSVC_IDE)
@@ -42,15 +43,20 @@ macro(get_python_pre_command)
 
         # Build path list
         set(_WIN_PATHS 
-            ${_PYD_PATH} 
-            "${PROJECT_SOURCE_DIR}\\share\\docs"
+            ${_PYD_PATH}
+            "${_WIN_SOURCE_DIR}\\share\\docs"
         )
         # Include optional paths from macro arguments
         foreach(_PATH ${ARGN})
             file(TO_NATIVE_PATH ${_PATH} _WIN_PATH)
             list(APPEND _WIN_PATHS ${_WIN_PATH})
         endforeach()
-        list(APPEND _WIN_PATHS "%PYTHONPATH%")
+
+        # Double % to escape as the cmd.exe will eat one level of %. That
+        # results in an empty path in the ENV variable and Python fails to
+        # convert that to absolute path. Possibly due to
+        # https://www.cve.news/cve-2023-41105/
+        list(APPEND _WIN_PATHS "%%PYTHONPATH%%")
 
         string(JOIN "\\\\;" _PYTHONPATH_VALUE ${_WIN_PATHS})
         string(CONCAT _PYTHONPATH_SET "PYTHONPATH=${_PYTHONPATH_VALUE}")

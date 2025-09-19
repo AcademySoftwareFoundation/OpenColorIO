@@ -30,9 +30,9 @@ test-command = [
 before-build = "share/ci/scripts/linux/dnf/install_docs_env.sh"
 
 [tool.cibuildwheel.macos]
-# cibuildwheel in some cases set this to 10.9 by default, OCIO needs >= 10.13
+# cibuildwheel in some cases set this to 10.9 by default, OCIO needs >= 10.15
 # macOS ARM wheels needs 11.0, cibuildwheel will automatically bump where appropriate
-environment = { MACOSX_DEPLOYMENT_TARGET="10.13" }
+environment = { MACOSX_DEPLOYMENT_TARGET="10.15" }
 before-build = "share/ci/scripts/macos/install_docs_env.sh"
 
 [tool.cibuildwheel.windows]

@@ -110,7 +110,9 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
             -DBUILD_SHARED_LIBS=OFF
             -DBUILD_TESTING=OFF
             -DOPENEXR_INSTALL_EXAMPLES=OFF
+            -DOPENEXR_BUILD_EXAMPLES=OFF
             -DOPENEXR_BUILD_TOOLS=OFF
+            -DOPENEXR_FORCE_INTERNAL_DEFLATE=ON
             # Try to use in-source built Imath first, if available.
             -DCMAKE_PREFIX_PATH=${_EXT_DIST_ROOT}
         )
@@ -177,6 +179,13 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
 
         add_dependencies(OpenEXR::OpenEXR openexr_install)
 
+        # When building Imath ourselves, make sure it has been built first
+        # so that OpenEXR can find it. Otherwise OpenEXR will build its
+        # own copy of Imath which might result in version conflicts.
+        if (TARGET imath_install)
+            add_dependencies(openexr_install imath_install)
+        endif()
+
         if(OCIO_VERBOSE)
             message(STATUS "Installing OpenEXR: ${OpenEXR_LIBRARY} (version \"${OpenEXR_VERSION}\")")
         endif()
@@ -209,7 +218,7 @@ if(_OpenEXR_TARGET_CREATE)
     set_target_properties(OpenEXR::OpenEXR PROPERTIES
         IMPORTED_LOCATION ${OpenEXR_LIBRARY}
         INTERFACE_INCLUDE_DIRECTORIES "${OpenEXR_INCLUDE_DIR}"
-        INTERFACE_LINK_LIBRARIES "OpenEXR::IlmThreadConfig;Imath::Imath;OpenEXR::IlmThreadConfig;OpenEXR::Iex;OpenEXR::IlmThread;ZLIB::ZLIB"
+        INTERFACE_LINK_LIBRARIES "OpenEXR::IlmThreadConfig;Imath::Imath;OpenEXR::IlmThreadConfig;OpenEXR::Iex;OpenEXR::IlmThread;OpenEXR::OpenEXRCore"
     )
     set_target_properties(OpenEXR::OpenEXRConfig PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES "${OpenEXR_INCLUDE_DIR};${OpenEXR_INCLUDE_DIR}/OpenEXR"
@@ -217,13 +226,13 @@ if(_OpenEXR_TARGET_CREATE)
     set_target_properties(OpenEXR::OpenEXRCore PROPERTIES
         IMPORTED_LOCATION ${OpenEXRCore_LIBRARY}
         INTERFACE_INCLUDE_DIRECTORIES "${OpenEXR_INCLUDE_DIR}"
-        INTERFACE_LINK_LIBRARIES "OpenEXR::IlmThreadConfig;ZLIB::ZLIB;\$<LINK_ONLY:Imath::ImathConfig>"
+        INTERFACE_LINK_LIBRARIES "OpenEXR::IlmThreadConfig;Imath::Imath"
         STATIC_LIBRARY_OPTIONS "-no_warning_for_no_symbols"
     )
     set_target_properties(OpenEXR::OpenEXRUtil PROPERTIES
         IMPORTED_LOCATION ${OpenEXRUtil_LIBRARY}
         INTERFACE_INCLUDE_DIRECTORIES "${OpenEXR_INCLUDE_DIR}"
-        INTERFACE_LINK_LIBRARIES "OpenEXR::IlmThreadConfig;OpenEXR::OpenEXR"
+        INTERFACE_LINK_LIBRARIES "OpenEXR::IlmThreadConfig;OpenEXR::OpenEXR;OpenEXR::OpenEXRCore"
     )
 
     mark_as_advanced(OpenEXR_INCLUDE_DIR OpenEXR_LIBRARY OpenEXR_VERSION)
