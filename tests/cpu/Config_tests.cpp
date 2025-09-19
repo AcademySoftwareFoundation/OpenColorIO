@@ -2093,12 +2093,12 @@ OCIO_ADD_TEST(Config, version)
     {
         OCIO_CHECK_THROW_WHAT(config->setVersion(2, 9), OCIO::Exception,
                               "The minor version 9 is not supported for major version 2. "
-                              "Maximum minor version is 4");
+                              "Maximum minor version is 5");
 
         OCIO_CHECK_NO_THROW(config->setMajorVersion(2));
         OCIO_CHECK_THROW_WHAT(config->setMinorVersion(9), OCIO::Exception,
                               "The minor version 9 is not supported for major version 2. "
-                              "Maximum minor version is 4");
+                              "Maximum minor version is 5");
     }
 
     {
@@ -8771,6 +8771,10 @@ colorspaces:
     OCIO_CHECK_EQUAL(2, cfg->getNumViews(OCIO::VIEW_DISPLAY_DEFINED, displayName.c_str()));
     OCIO_CHECK_EQUAL(1, cfg->getNumViews(OCIO::VIEW_SHARED, displayName.c_str()));
 
+    // The new display is marked as temporary.
+    OCIO_CHECK_ASSERT(!cfg->isDisplayTemporary(config->getNumDisplays() - 1));
+    OCIO_CHECK_ASSERT(cfg->isDisplayTemporary(config->getNumDisplays()));
+
     // Check the created display color space.
 
     OCIO::ConstColorSpaceRcPtr cs = cfg->getColorSpace(displayName.c_str());
@@ -8819,6 +8823,33 @@ colorspaces:
 
         OCIO_CHECK_EQUAL(config->getNumColorSpaces(),  config2->getNumColorSpaces());
         OCIO_CHECK_EQUAL(cfg->getNumColorSpaces() - 1, config2->getNumColorSpaces());
+    }
+
+    // Check that the display may be marked as non-temporary and therefore serialized in a config.
+
+    {
+        OCIO_CHECK_ASSERT(cfg->isDisplayTemporary(config->getNumDisplays()));
+        cfg->setDisplayTemporary(config->getNumDisplays(), false);
+        OCIO_CHECK_ASSERT(!cfg->isDisplayTemporary(config->getNumDisplays()));
+
+        std::ostringstream oss2;
+        OCIO_CHECK_NO_THROW(oss2 << *cfg.get());
+
+        std::istringstream iss2;
+        iss2.str(oss2.str());
+
+        OCIO::ConstConfigRcPtr config2;
+        OCIO_CHECK_NO_THROW(config2 = OCIO::Config::CreateFromStream(iss2));
+
+        // Check that (display, view) pair created by the virtual display instantiation is present.
+ 
+        OCIO_CHECK_EQUAL(config->getNumDisplays() + 1,  config2->getNumDisplays());
+        OCIO_CHECK_EQUAL(cfg->getNumDisplays(), config2->getNumDisplays());
+
+        // And the display color space is also present.
+
+        OCIO_CHECK_EQUAL(config->getNumColorSpaces() + 1,  config2->getNumColorSpaces());
+        OCIO_CHECK_EQUAL(cfg->getNumColorSpaces(), config2->getNumColorSpaces());
     }
 
     // Step 4 - 2 - Create a (display, view) using a custom ICC profile.

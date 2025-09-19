@@ -247,7 +247,7 @@ static constexpr unsigned LastSupportedMajorVersion = OCIO_VERSION_MAJOR;
 
 // For each major version keep the most recent minor.
 static const unsigned int LastSupportedMinorVersion[] = {0, // Version 1
-                                                         4  // Version 2
+                                                         5  // Version 2
                                                          };
 
 } // namespace
@@ -1186,7 +1186,7 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
         // Check if it is an OCIOZ archive.
         if (magicNumber[0] == 'P' && magicNumber[1] == 'K')
         {
-            // Closing ifstream even though it should be close by ifstream deconstructor (RAII).
+            // Closing ifstream even though it should be closed by ifstream destructor (RAII).
             ifstream.close();
 
             // The file should be an OCIOZ archive file.
@@ -1451,6 +1451,22 @@ void Config::validate() const
             throw Exception(getImpl()->m_validationtext.c_str());
         }
 
+        // Make sure that all used interopIDs are available in this config.
+        const char* interop = cs->getInteropID();
+        if(interop && *interop)
+        {
+            if(!getColorSpace(interop))
+            {
+                std::ostringstream os;
+                os << "Config failed color space validation. ";
+                os << "The color space '" << name << "' ";
+                os << "refers to an interop ID, '" << interop << "', ";
+                os << "which is not defined in this config.";
+                getImpl()->m_validationtext = os.str();
+                throw Exception(getImpl()->m_validationtext.c_str());
+            }
+        }
+
         // AddColorSpace, addNamedTransform & setRole already check there is no name & alias
         // conflict.
 
@@ -1500,7 +1516,8 @@ void Config::validate() const
 
 
         // Check for interchange roles requirements - scene-referred and display-referred.
-        if (getMajorVersion() >= 2 && getMinorVersion() >= 2)
+        unsigned int versionHex = (getMajorVersion() << 24) | (getMinorVersion() << 16);
+        if (versionHex >= 0x02020000u)  // v2.2 or higher
         {
             bool hasRoleSceneLinear                 = false;
             bool hasRoleCompositingLog              = false;
@@ -4337,6 +4354,18 @@ bool Config::isDisplayTemporary(int index) const noexcept
     return false;
 }
 
+void Config::setDisplayTemporary(int index, bool isTemporary) noexcept
+{
+    if (index >= 0 || index < static_cast<int>(getImpl()->m_displays.size()))
+    {
+        getImpl()->m_displays[index].second.m_temporary = isTemporary;
+
+        getImpl()->m_displayCache.clear();
+        AutoMutex lock(getImpl()->m_cacheidMutex);
+        getImpl()->resetCacheIDs();
+    }
+}
+
 int Config::getNumViews(ViewType type, const char * display) const
 {
     if (!display || !*display)
@@ -5756,6 +5785,8 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
 
 void Config::Impl::checkVersionConsistency() const
 {
+    unsigned int hexVersion = (m_majorVersion << 24) | (m_minorVersion << 16);
+
     // Check for the Transforms.
 
     ConstTransformVec transforms;
@@ -5825,17 +5856,43 @@ void Config::Impl::checkVersionConsistency() const
         }
     }
 
-    // Check for the DisplayColorSpaces.
+    // Check ColorSpace properties.
 
-    if (m_majorVersion < 2)
+    const int nbCS = m_allColorSpaces->getNumColorSpaces();
+    for (int i = 0; i < nbCS; ++i)
     {
-        const int nbCS = m_allColorSpaces->getNumColorSpaces();
-        for (int i = 0; i < nbCS; ++i)
+        // Check for display color spaces.
+
+        const auto & cs = m_allColorSpaces->getColorSpaceByIndex(i);
+        if (m_majorVersion < 2) 
         {
-            const auto & cs = m_allColorSpaces->getColorSpaceByIndex(i);
-            if (MatchReferenceType(SEARCH_REFERENCE_SPACE_DISPLAY, cs->getReferenceSpaceType()))
+            if (MatchReferenceType(SEARCH_REFERENCE_SPACE_DISPLAY, cs->getReferenceSpaceType())) 
             {
                 throw Exception("Only version 2 (or higher) can have DisplayColorSpaces.");
+            }
+        } 
+
+        // Check for new color space attributes.
+
+        if (m_majorVersion < 2) 
+        {
+            if (*cs->getInteropID())
+            {
+                std::ostringstream os;
+                os << "Config failed validation. The color space '" << cs->getName() << "' ";
+                os << "has non-empty InteropID and config version is less than 2.0.";
+                throw Exception(os.str().c_str());
+            }
+        }
+
+        if (hexVersion < 0x02050000) 
+        {
+            if (cs->getInterchangeAttributes().size()>0)
+            {
+                std::ostringstream os;
+                os << "Config failed validation. The color space '" << cs->getName() << "' ";
+                os << "has non-empty interchange attributes and config version is less than 2.5.";
+                throw Exception(os.str().c_str());
             }
         }
     }

@@ -259,6 +259,10 @@ jobs:
         with:
           python-version: '3.9'
 
+      - name: Remove brew OpenEXR/Imath
+        run: |
+          brew uninstall --ignore-dependencies openexr imath || true
+            
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.22.0
         env:
@@ -382,7 +386,7 @@ jobs:
 
 
   upload_pypi:
-    needs: [sdist, linux, macos, macos-arm, windows]
+    needs: [sdist, linux, linux-arm, macos, macos-arm, windows]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     steps:

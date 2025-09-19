@@ -658,6 +658,14 @@ int main(int argc, const char **argv)
         if (outputcolorspace)
         {
             imgOutput->attribute("oiio:ColorSpace", outputcolorspace);
+
+            // Set the color space interopID if available.
+            auto cs = config->getColorSpace(outputcolorspace);
+            const char* interopID = cs ? cs->getInteropID() : nullptr;
+            if(interopID && *interopID)
+            {
+                imgOutput->attribute("colorInteropID", interopID);
+            }
         }
 
         imgOutput->write(outputimage, userOutputBitDepth);

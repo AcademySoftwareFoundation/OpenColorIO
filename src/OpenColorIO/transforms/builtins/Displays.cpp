@@ -176,27 +176,44 @@ void GenerateLinearToHLGOps(OpRcPtrVec& ops)
 
 void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
 {
+    using ConversionFunctor = std::function<void(OpRcPtrVec&)>;
+
     {
-        auto CIE_XYZ_D65_to_REC1886_REC709_Functor = [](OpRcPtrVec & ops)
+        auto CIE_XYZ_D65_to_REC1886_REC709 = [](OpRcPtrVec & ops, GammaOpData::Style gammaStyle)
         {
-            MatrixOpData::MatrixArrayPtr matrix
+            MatrixOpData::MatrixArrayPtr matrix 
                 = build_conversion_matrix_from_XYZ_D65(REC709::primaries, ADAPTATION_NONE);
             CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
 
             const GammaOpData::Params rgbParams   = { 2.4 };
             const GammaOpData::Params alphaParams = { 1.0 };
-            auto gammaData = std::make_shared<GammaOpData>(GammaOpData::BASIC_REV,
-                                                           rgbParams, rgbParams, rgbParams, alphaParams);
+    
+            auto gammaData = std::make_shared<GammaOpData>(gammaStyle, 
+                rgbParams, rgbParams, rgbParams, alphaParams);
             CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
         };
 
+        ConversionFunctor CIE_XYZ_D65_to_REC1886_REC709_BASIC = 
+            [CIE_XYZ_D65_to_REC1886_REC709](OpRcPtrVec& ops)
+            {
+                CIE_XYZ_D65_to_REC1886_REC709(ops, GammaOpData::BASIC_REV);
+            };
         registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_REC.1886-REC.709", 
-                            "Convert CIE XYZ (D65 white) to Rec.1886/Rec.709 (HD video)",
-                            CIE_XYZ_D65_to_REC1886_REC709_Functor);
+                            "Convert CIE XYZ (D65 white) to Rec.1886/Rec.709, clamp neg. values",
+                            CIE_XYZ_D65_to_REC1886_REC709_BASIC);
+
+        ConversionFunctor CIE_XYZ_D65_to_REC1886_REC709_MIRROR = 
+            [CIE_XYZ_D65_to_REC1886_REC709](OpRcPtrVec& ops)
+            {
+                CIE_XYZ_D65_to_REC1886_REC709(ops, GammaOpData::BASIC_MIRROR_REV);
+            };
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_REC.1886-REC.709 - MIRROR NEGS", 
+                            "Convert CIE XYZ (D65 white) to Rec.1886/Rec.709, mirror neg. values",
+                            CIE_XYZ_D65_to_REC1886_REC709_MIRROR);
     }
 
     {
-        auto CIE_XYZ_D65_to_REC1886_REC2020_Functor = [](OpRcPtrVec & ops)
+        auto CIE_XYZ_D65_to_REC1886_REC2020 = [](OpRcPtrVec & ops, GammaOpData::Style gammaStyle)
         {
             MatrixOpData::MatrixArrayPtr matrix
                 = build_conversion_matrix_from_XYZ_D65(REC2020::primaries, ADAPTATION_NONE);
@@ -204,18 +221,32 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
 
             const GammaOpData::Params rgbParams   = { 2.4 };
             const GammaOpData::Params alphaParams = { 1.0 };
-            auto gammaData = std::make_shared<GammaOpData>(GammaOpData::BASIC_REV,
+            auto gammaData = std::make_shared<GammaOpData>(gammaStyle,
                                                            rgbParams, rgbParams, rgbParams, alphaParams);
             CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
         };
 
+        ConversionFunctor CIE_XYZ_D65_to_REC1886_REC2020_BASIC = 
+            [CIE_XYZ_D65_to_REC1886_REC2020](OpRcPtrVec& ops)
+            {
+                CIE_XYZ_D65_to_REC1886_REC2020(ops, GammaOpData::BASIC_REV);
+            };
         registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_REC.1886-REC.2020", 
-                            "Convert CIE XYZ (D65 white) to Rec.1886/Rec.2020 (UHD video)",
-                            CIE_XYZ_D65_to_REC1886_REC2020_Functor);
+                            "Convert CIE XYZ (D65 white) to Rec.1886/Rec.2020, clamp neg. values",
+                            CIE_XYZ_D65_to_REC1886_REC2020_BASIC);
+
+        ConversionFunctor CIE_XYZ_D65_to_REC1886_REC2020_MIRROR = 
+            [CIE_XYZ_D65_to_REC1886_REC2020](OpRcPtrVec& ops)
+            {
+                CIE_XYZ_D65_to_REC1886_REC2020(ops, GammaOpData::BASIC_MIRROR_REV);
+            };
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_REC.1886-REC.2020 - MIRROR NEGS", 
+                            "Convert CIE XYZ (D65 white) to Rec.1886/Rec.2020, mirror neg. values",
+                            CIE_XYZ_D65_to_REC1886_REC2020_MIRROR);
     }
 
     {
-        auto CIE_XYZ_D65_to_G22_REC709_Functor = [](OpRcPtrVec & ops)
+        auto CIE_XYZ_D65_to_G22_REC709 = [](OpRcPtrVec & ops, GammaOpData::Style gammaStyle)
         {
             MatrixOpData::MatrixArrayPtr matrix
                 = build_conversion_matrix_from_XYZ_D65(REC709::primaries, ADAPTATION_NONE);
@@ -223,18 +254,32 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
 
             const GammaOpData::Params rgbParams   = { 2.2 };
             const GammaOpData::Params alphaParams = { 1.0 };
-            auto gammaData = std::make_shared<GammaOpData>(GammaOpData::BASIC_REV,
+            auto gammaData = std::make_shared<GammaOpData>(gammaStyle,
                                                            rgbParams, rgbParams, rgbParams, alphaParams);
             CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
         };
 
+        ConversionFunctor CIE_XYZ_D65_to_G22_REC709_BASIC = 
+            [CIE_XYZ_D65_to_G22_REC709](OpRcPtrVec& ops)
+            {
+                CIE_XYZ_D65_to_G22_REC709(ops, GammaOpData::BASIC_REV);
+            };
         registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_G2.2-REC.709", 
-                            "Convert CIE XYZ (D65 white) to Gamma2.2, Rec.709",
-                            CIE_XYZ_D65_to_G22_REC709_Functor);
+                            "Convert CIE XYZ (D65 white) to Gamma2.2, Rec.709, clamp neg. values",
+                            CIE_XYZ_D65_to_G22_REC709_BASIC);
+
+        ConversionFunctor CIE_XYZ_D65_to_G22_REC709_MIRROR = 
+            [CIE_XYZ_D65_to_G22_REC709](OpRcPtrVec& ops)
+            {
+                CIE_XYZ_D65_to_G22_REC709(ops, GammaOpData::BASIC_MIRROR_REV);
+            };
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_G2.2-REC.709 - MIRROR NEGS", 
+                            "Convert CIE XYZ (D65 white) to Gamma2.2, Rec.709, mirror neg. values",
+                            CIE_XYZ_D65_to_G22_REC709_MIRROR);
     }
 
     {
-        auto CIE_XYZ_D65_to_SRGB_Functor = [](OpRcPtrVec & ops)
+        auto CIE_XYZ_D65_to_SRGB = [](OpRcPtrVec & ops, GammaOpData::Style gammaStyle)
         {
             MatrixOpData::MatrixArrayPtr matrix
                 = build_conversion_matrix_from_XYZ_D65(REC709::primaries, ADAPTATION_NONE);
@@ -242,14 +287,28 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
 
             const GammaOpData::Params rgbParams   = { 2.4, 0.055 };
             const GammaOpData::Params alphaParams = { 1.0, 0.0 };
-            auto gammaData = std::make_shared<GammaOpData>(GammaOpData::MONCURVE_REV,
+            auto gammaData = std::make_shared<GammaOpData>(gammaStyle,
                                                            rgbParams, rgbParams, rgbParams, alphaParams);
             CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
         };
 
+        ConversionFunctor CIE_XYZ_D65_to_SRGB_MONCURVE = 
+            [CIE_XYZ_D65_to_SRGB](OpRcPtrVec& ops)
+            {
+                CIE_XYZ_D65_to_SRGB(ops, GammaOpData::MONCURVE_REV);
+            };
         registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_sRGB", 
                             "Convert CIE XYZ (D65 white) to sRGB (piecewise EOTF)",
-                            CIE_XYZ_D65_to_SRGB_Functor);
+                            CIE_XYZ_D65_to_SRGB_MONCURVE);
+
+        ConversionFunctor CIE_XYZ_D65_to_SRGB_MIRROR = 
+            [CIE_XYZ_D65_to_SRGB](OpRcPtrVec& ops)
+            {
+                CIE_XYZ_D65_to_SRGB(ops, GammaOpData::MONCURVE_MIRROR_REV);
+            };
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_sRGB - MIRROR NEGS", 
+                            "Convert CIE XYZ (D65 white) to sRGB (piecewise EOTF), mirror neg. values",
+                            CIE_XYZ_D65_to_SRGB_MIRROR);
     }
 
     {
@@ -272,7 +331,7 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
     }
 
     {
-        auto CIE_XYZ_D65_to_P3_D65_Functor = [](OpRcPtrVec & ops)
+        auto CIE_XYZ_D65_to_P3_D65 = [](OpRcPtrVec & ops, GammaOpData::Style gammaStyle)
         {
             MatrixOpData::MatrixArrayPtr matrix
                 = build_conversion_matrix_from_XYZ_D65(P3_D65::primaries, ADAPTATION_NONE);
@@ -280,14 +339,28 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
 
             const GammaOpData::Params rgbParams   = { 2.6 };
             const GammaOpData::Params alphaParams = { 1.0 };
-            auto gammaData = std::make_shared<GammaOpData>(GammaOpData::BASIC_REV,
+            auto gammaData = std::make_shared<GammaOpData>(gammaStyle,
                                                            rgbParams, rgbParams, rgbParams, alphaParams);
             CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
         };
 
+        ConversionFunctor CIE_XYZ_D65_to_P3_D65_BASIC = 
+            [CIE_XYZ_D65_to_P3_D65](OpRcPtrVec& ops)
+            {
+                CIE_XYZ_D65_to_P3_D65(ops, GammaOpData::BASIC_REV);
+            };
         registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_G2.6-P3-D65", 
-                            "Convert CIE XYZ (D65 white) to Gamma 2.6, P3-D65",
-                            CIE_XYZ_D65_to_P3_D65_Functor);
+                            "Convert CIE XYZ (D65 white) to Gamma 2.6, P3-D65, clamp neg. values",
+                            CIE_XYZ_D65_to_P3_D65_BASIC);
+
+        ConversionFunctor CIE_XYZ_D65_to_P3_D65_MIRROR = 
+            [CIE_XYZ_D65_to_P3_D65](OpRcPtrVec& ops)
+            {
+                CIE_XYZ_D65_to_P3_D65(ops, GammaOpData::BASIC_MIRROR_REV);
+            };
+        registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_G2.6-P3-D65 - MIRROR NEGS", 
+                            "Convert CIE XYZ (D65 white) to Gamma 2.6, P3-D65, mirror neg. values",
+                            CIE_XYZ_D65_to_P3_D65_MIRROR);
     }
 
     {
@@ -356,13 +429,13 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
         };
 
         registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_DisplayP3", 
-                            "Convert CIE XYZ (D65 white) to Apple Display P3",
+                            "Convert CIE XYZ (D65 white) to Apple Display P3, mirror neg. values",
                             CIE_XYZ_D65_to_DisplayP3_Functor);
 
         // NOTE: This builtin is defined to be able to partition SDR and HDR view transforms under two separate
         // displays rather than a single one.
         registry.addBuiltin("DISPLAY - CIE-XYZ-D65_to_DisplayP3-HDR",
-                            "Convert CIE XYZ (D65 white) to Apple Display P3 (HDR)",
+                            "Convert CIE XYZ (D65 white) to Apple Display P3 (HDR), mirror neg. values",
                             CIE_XYZ_D65_to_DisplayP3_Functor);
     }
 

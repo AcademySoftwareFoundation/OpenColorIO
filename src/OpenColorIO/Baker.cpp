@@ -126,7 +126,7 @@ void Baker::setFormat(const char * formatName)
         {
             if (formatInfoVec[i].capabilities & FORMAT_CAPABILITY_BAKE)
             {
-                getImpl()->m_formatName = formatName;
+                getImpl()->m_formatName = formatName ? formatName : "";
                 return;
             }
         }
@@ -155,7 +155,7 @@ FormatMetadata & Baker::getFormatMetadata()
 
 void Baker::setInputSpace(const char * inputSpace)
 {
-    getImpl()->m_inputSpace = inputSpace;
+    getImpl()->m_inputSpace = inputSpace ? inputSpace : "";
 }
 
 const char * Baker::getInputSpace() const
@@ -165,7 +165,7 @@ const char * Baker::getInputSpace() const
 
 void Baker::setShaperSpace(const char * shaperSpace)
 {
-    getImpl()->m_shaperSpace = shaperSpace;
+    getImpl()->m_shaperSpace = shaperSpace ? shaperSpace : "";
 }
 
 const char * Baker::getShaperSpace() const
@@ -175,7 +175,7 @@ const char * Baker::getShaperSpace() const
 
 void Baker::setLooks(const char * looks)
 {
-    getImpl()->m_looks = looks;
+    getImpl()->m_looks = looks ? looks : "";
 }
 
 const char * Baker::getLooks() const
@@ -185,7 +185,7 @@ const char * Baker::getLooks() const
 
 void Baker::setTargetSpace(const char * targetSpace)
 {
-    getImpl()->m_targetSpace = targetSpace;
+    getImpl()->m_targetSpace = targetSpace ? targetSpace : "";
 }
 
 const char * Baker::getTargetSpace() const
@@ -205,7 +205,7 @@ const char * Baker::getView() const
 
 void Baker::setDisplayView(const char * display, const char * view)
 {
-    if (!display ^ !view)
+    if (!display || !view)
     {
         throw Exception("Both display and view must be set.");
     }
