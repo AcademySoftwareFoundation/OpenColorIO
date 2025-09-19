@@ -56,7 +56,8 @@ public:
 
     bool addUniform(const char * /*name*/, 
                     const SizeGetter & /*getSize*/,
-                    const VectorFloatGetter & /*getVectorFloat*/) override
+                    const VectorFloatGetter & /*getVectorFloat*/,
+                    const unsigned /*maxSize*/) override
     {
         throw OCIO::Exception("Unsupported by OSL unit tests.");
         return false; 
@@ -64,13 +65,14 @@ public:
 
     bool addUniform(const char * /*name*/,
                     const SizeGetter & /*getSize*/,
-                    const VectorIntGetter & /*getVectorInt*/) override
+                    const VectorIntGetter & /*getVectorInt*/,
+                    const unsigned /*maxSize*/) override
     {
         throw OCIO::Exception("Unsupported by OSL unit tests.");
         return false; 
     }
 
-    void addTexture(const char * /*textureName*/,
+    unsigned addTexture(const char * /*textureName*/,
                     const char * /*samplerName*/,
                     unsigned /*width*/, 
                     unsigned /*height*/,
@@ -80,24 +82,28 @@ public:
                     const float * /*values*/) override
     {
         throw OCIO::Exception("Unsupported by OSL unit tests.");
+        return 0;
     }
 
-    void add3DTexture(const char * /*textureName*/,
+    unsigned add3DTexture(const char * /*textureName*/,
                       const char * /*samplerName*/,
                       unsigned /*edgelen*/,
                       OCIO::Interpolation /*interpolation*/,
                       const float * /*values*/) override
     {
         throw OCIO::Exception("Unsupported by OSL unit tests.");
+        return 0;
     }
 
-    void createShaderText(const char * shaderDeclarations,
+    void createShaderText(const char * shaderParameterDeclarations,
+                          const char * shaderTextureDeclarations,
                           const char * shaderHelperMethods,
                           const char * shaderFunctionHeader,
                           const char * shaderFunctionBody,
                           const char * shaderFunctionFooter) override
     {
-        m_shaderCode += shaderDeclarations;
+        m_shaderCode += shaderParameterDeclarations;
+        m_shaderCode += shaderTextureDeclarations;
         m_shaderCode += shaderHelperMethods;
         m_shaderCode += shaderFunctionHeader;
         m_shaderCode += shaderFunctionBody;
