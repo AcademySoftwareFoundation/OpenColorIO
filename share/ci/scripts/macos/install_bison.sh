@@ -6,7 +6,7 @@ set -ex
 
 BISON_VERSION="$1"
 
-if [ "$BISON_VERSION" == "latest" ]; then
+if [ "$BISON_VERSION" = "latest" ]; then
     brew install bison
 else
     brew install bison@${BISON_VERSION}
