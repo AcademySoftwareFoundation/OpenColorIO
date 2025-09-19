@@ -84,12 +84,12 @@ class MuteLogging:
 if sys.version_info.major >= 3:
     STRING_TYPES = str
 else:  # Python 2
-    STRING_TYPES = basestring
+    STRING_TYPES = basestring  # type: ignore
 
 # -----------------------------------------------------------------------------
 # Test data
 # -----------------------------------------------------------------------------
-TEST_DATAFILES_DIR = os.getenv('TEST_DATAFILES_DIR')
+TEST_DATAFILES_DIR: str = os.getenv('TEST_DATAFILES_DIR')  # type: ignore
 
 TEST_NAMES = ['default_name', 'HelloWorld', 'Simple Colourspace', 'a1b2c3d4', 
               'RGBA.1&2*3#']

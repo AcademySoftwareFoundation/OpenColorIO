@@ -18,7 +18,7 @@ class LogCameraTransformTest(unittest.TestCase):
 
         # Required parameter missing.
         with self.assertRaises(TypeError):
-            OCIO.LogCameraTransform()
+            OCIO.LogCameraTransform()  # type: ignore
 
         LIN_SB = [0.1, 0.2, 0.3]
         lct = OCIO.LogCameraTransform(LIN_SB)
@@ -169,7 +169,7 @@ class LogCameraTransformTest(unittest.TestCase):
         # Wrong type tests.
         for invalid in (None, 1, 'test'):
             with self.assertRaises(TypeError):
-                lct.setDirection(invalid)
+                lct.setDirection(invalid)  # type: ignore
 
     def test_format_metadata(self):
         """
@@ -205,7 +205,7 @@ class LogCameraTransformTest(unittest.TestCase):
         # Wrong type tests.
         for invalid in (None, 'test'):
             with self.assertRaises(TypeError):
-                lct.setBase(invalid)
+                lct.setBase(invalid)  # type: ignore
 
     def test_logSideSlope(self):
         """
