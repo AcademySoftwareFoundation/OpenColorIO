@@ -1407,20 +1407,20 @@ colorspaces:
         self.assertEqual(config.getNumActiveViews(), 2)
 
         # Test commas may be used.
-        config.setActiveDisplays('sRGB:01, "Name, with comma", "Quoted name"')
+        config.setActiveDisplays(displays='sRGB:01, "Name, with comma", "Quoted name"')
         self.assertEqual(config.getNumActiveDisplays(), 3)
         self.assertEqual(config.getActiveDisplays()[0], "sRGB:01")
         self.assertEqual(config.getActiveDisplays()[1], "Name, with comma")
-        config.setActiveViews('v:01, "View, with comma", "Quoted view"')
+        config.setActiveViews(views='v:01, "View, with comma", "Quoted view"')
         self.assertEqual(config.getNumActiveViews(), 3)
         self.assertEqual(config.getActiveViews()[0], "v:01")
         self.assertEqual(config.getActiveViews()[1], "View, with comma")
 
         # Test remove.
-        config.removeActiveDisplay("Name, with comma")
+        config.removeActiveDisplay(display="Name, with comma")
         self.assertEqual(config.getActiveDisplays()[1], "Quoted name")
         self.assertEqual(config.getNumActiveDisplays(), 2)
-        config.removeActiveView("View, with comma")
+        config.removeActiveView(view="View, with comma")
         self.assertEqual(config.getActiveViews()[1], "Quoted view")
         self.assertEqual(config.getNumActiveViews(), 2)
 
@@ -1439,11 +1439,11 @@ colorspaces:
         # Test setting an empty string behaves as expected.
         config.setActiveDisplays("")
         self.assertEqual(config.getNumActiveDisplays(), 0)
-        config.addActiveDisplay("sRGB")
+        config.addActiveDisplay(display="sRGB")
         self.assertEqual(config.getNumActiveDisplays(), 1)
         config.setActiveViews("")
         self.assertEqual(config.getNumActiveViews(), 0)
-        config.addActiveView("v1")
+        config.addActiveView(view="v1")
         self.assertEqual(config.getNumActiveViews(), 1)
 
 

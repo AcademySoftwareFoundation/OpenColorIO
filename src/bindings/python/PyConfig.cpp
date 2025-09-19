@@ -595,9 +595,9 @@ void bindPyConfig(py::module & m)
             { 
                 return ActiveViewsListIterator(self); 
             })
-        .def("addActiveView", &Config::addActiveView, "display"_a, 
+        .def("addActiveView", &Config::addActiveView, "view"_a, 
              DOC(Config, addActiveView))
-        .def("removeActiveView", &Config::removeActiveView, "display"_a, 
+        .def("removeActiveView", &Config::removeActiveView, "view"_a, 
              DOC(Config, removeActiveView))
         .def("clearActiveViews", &Config::clearActiveViews, 
              DOC(Config, clearActiveViews))
