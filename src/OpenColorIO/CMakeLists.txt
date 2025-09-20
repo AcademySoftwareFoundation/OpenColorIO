@@ -315,7 +315,7 @@ target_link_libraries(OpenColorIO
         "$<BUILD_INTERFACE:utils::from_chars>"
         "$<BUILD_INTERFACE:utils::strings>"
         "$<BUILD_INTERFACE:xxHash>"
-        ${YAML_CPP_LIBRARIES}
+        yaml-cpp::yaml-cpp
         MINIZIP::minizip-ng
 )
 

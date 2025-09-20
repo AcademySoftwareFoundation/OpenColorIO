@@ -12,10 +12,6 @@
 # Global targets defined by this module:
 #   yaml-cpp::yaml-cpp
 #
-# For compatibility with the upstream CMake package, the following variables and targets are defined:
-#   YAML_CPP_LIBRARIES      - Libraries to link against yaml-cpp
-#   YAML_CPP_INCLUDE_DIR    - Include directory
-#
 # Usually CMake will use the dynamic library rather than static, if both are present. 
 # In this case, you may set yaml-cpp_STATIC_LIBRARY to ON to request use of the static one. 
 # If only the static library is present (such as when OCIO builds the dependency), then the option 
@@ -162,11 +158,4 @@ if (yaml-cpp_FOUND AND NOT TARGET yaml-cpp::yaml-cpp)
     if (NOT TARGET yaml-cpp)
         add_library(yaml-cpp ALIAS yaml-cpp::yaml-cpp)
     endif ()
-endif ()
-
-if (yaml-cpp_FOUND)
-    # TODO: Remove this variable and use the `yaml-cpp::yaml-cpp` target
-    # directly when the minimum version of yaml-cpp is updated to 0.8.
-    get_target_property(YAML_CPP_INCLUDE_DIR yaml-cpp::yaml-cpp INCLUDE_DIRECTORIES)
-    set(YAML_CPP_LIBRARIES yaml-cpp::yaml-cpp)
 endif ()

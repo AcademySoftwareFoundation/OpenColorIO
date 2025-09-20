@@ -1454,7 +1454,7 @@ OCIO_ADD_TEST(FileFormatCTF, difficult_xml_unknown_elements)
             "(37): Unrecognized element 'just_ignore' where its parent is 'ProcessList' (8): Unknown element",
             "(69): Unrecognized element 'just_ignore' where its parent is 'Description' (66)",
             "(70): Unrecognized element 'just_ignore' where its parent is 'just_ignore' (69)",
-            "(75): Unrecognized element 'Matrix' where its parent is 'LUT1D' (43): 'Matrix' not allowed in this element",
+            "(75): Unrecognized element 'Matrix' where its parent is 'LUT1D' (", // Line number is expat library version dependent.
             "(76): Unrecognized element 'Description' where its parent is 'Matrix' (75)",
             "(77): Unrecognized element 'Array' where its parent is 'Matrix' (75)"
         };

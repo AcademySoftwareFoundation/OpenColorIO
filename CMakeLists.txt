@@ -21,7 +21,7 @@ set(CMAKE_WARN_DEPRECATED ON)
 if(APPLE AND NOT DEFINED CMAKE_OSX_DEPLOYMENT_TARGET)
     # The value of this variable should be set prior to the first project() command invocation
     # because it may influence configuration of the toolchain and flags.
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum OS X deployment version")
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
 endif()
 
 

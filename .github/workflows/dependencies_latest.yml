@@ -27,19 +27,20 @@ jobs:
   # ---------------------------------------------------------------------------
 
   linux_latest:
-    name: 'Linux CentOS 7 VFX CY${{ matrix.vfx-cy }} latest 
+    name: 'Linux VFX CY${{ matrix.vfx-cy }} latest 
       <${{ matrix.compiler-desc }} 
        cxx=${{ matrix.cxx-standard }}, 
        docs=${{ matrix.build-docs }}>'
     # Don't run on OCIO forks
     if: github.repository == 'AcademySoftwareFoundation/OpenColorIO'
-    # GH-hosted VM. The build runs in CentOS 7 'container' defined below.
+    # GH-hosted VM. The build runs in ASWF 'container' defined below.
     runs-on: ubuntu-latest
     container:
       # DockerHub: https://hub.docker.com/u/aswf
       # Source: https://github.com/AcademySoftwareFoundation/aswf-docker
       image: aswf/ci-base:${{ matrix.vfx-cy }}
     strategy:
+      fail-fast: false
       matrix:
         build: [1, 2, 3, 4]
         include:
@@ -49,42 +50,38 @@ jobs:
           - build: 1
             build-docs: 'ON'
             build-openfx: 'ON'
+            cxx-standard: 20
+            cxx-compiler: g++
+            cc-compiler: gcc
+            compiler-desc: GCC
+            vfx-cy: 2025
+          - build: 2
+            build-docs: 'OFF'
+            build-openfx: 'OFF'
             cxx-standard: 17
             cxx-compiler: g++
             cc-compiler: gcc
             compiler-desc: GCC
-            vfx-cy: 2022
-            use-oiio: 'ON'
-          - build: 2
-            build-docs: 'OFF'
-            build-openfx: 'OFF'
-            cxx-standard: 14
-            cxx-compiler: g++
-            cc-compiler: gcc
-            compiler-desc: GCC
-            vfx-cy: 2021
-            use-oiio: 'OFF'
+            vfx-cy: 2024
           # -------------------------------------------------------------------
           # Clang
           # -------------------------------------------------------------------
           - build: 3
             build-docs: 'OFF'
             build-openfx: 'OFF'
+            cxx-standard: 20
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang
+            vfx-cy: 2025
+          - build: 4
+            build-docs: 'ON'
+            build-openfx: 'ON'
             cxx-standard: 17
             cxx-compiler: clang++
             cc-compiler: clang
             compiler-desc: Clang
-            vfx-cy: 2022
-            use-oiio: 'OFF'
-          - build: 4
-            build-docs: 'ON'
-            build-openfx: 'ON'
-            cxx-standard: 14
-            cxx-compiler: clang++
-            cc-compiler: clang
-            compiler-desc: Clang
-            vfx-cy: 2021
-            use-oiio: 'ON'
+            vfx-cy: 2024
     env:
       CXX: ${{ matrix.cxx-compiler }}
       CC: ${{ matrix.cc-compiler }}
@@ -100,25 +97,20 @@ jobs:
         run: |
           EXT_PATH=/usr/local
           echo "EXT_PATH=$EXT_PATH" >> $GITHUB_ENV
-      - name: Install indirect dependencies
-        run: |
-          share/ci/scripts/multi/install_pugixml.sh latest
       - name: Install fixed ext package versions
         # Minizip-ng depends on ZLIB. ZLIB must be installed first.
         run: |
-          share/ci/scripts/multi/install_expat.sh 2.4.1 $EXT_PATH
-          share/ci/scripts/multi/install_lcms2.sh 2.2 $EXT_PATH
-          share/ci/scripts/multi/install_yaml-cpp.sh 0.7.0 $EXT_PATH
-          share/ci/scripts/multi/install_pystring.sh 1.1.3 $EXT_PATH
-          share/ci/scripts/multi/install_pybind11.sh 2.9.2 $EXT_PATH
-          share/ci/scripts/multi/install_zlib.sh 1.2.12 $EXT_PATH
-          share/ci/scripts/multi/install_minizip-ng.sh 3.0.6 $EXT_PATH
+          share/ci/scripts/multi/install_expat.sh 2.7.2 $EXT_PATH
+          share/ci/scripts/multi/install_lcms2.sh 2.17 $EXT_PATH
+          share/ci/scripts/multi/install_yaml-cpp.sh 0.8.0 $EXT_PATH
+          share/ci/scripts/multi/install_pystring.sh 1.1.4 $EXT_PATH
+          share/ci/scripts/multi/install_pybind11.sh 3.0.1 $EXT_PATH
+          share/ci/scripts/multi/install_zlib.sh 1.3.1 $EXT_PATH
+          share/ci/scripts/multi/install_minizip-ng.sh 4.0.10 $EXT_PATH
       - name: Install latest ext package versions
         run: |
           share/ci/scripts/multi/install_imath.sh latest $EXT_PATH
           share/ci/scripts/multi/install_openexr.sh latest $EXT_PATH
-          share/ci/scripts/multi/install_oiio.sh latest $EXT_PATH
-          share/ci/scripts/multi/install_osl.sh latest $EXT_PATH
           share/ci/scripts/multi/install_openfx.sh latest $EXT_PATH
       - name: Create build directories
         run: |
@@ -135,8 +127,7 @@ jobs:
                 -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_INSTALL_EXT_PACKAGES=NONE \
                 -DOCIO_WARNING_AS_ERROR=OFF \
-                -DPython_EXECUTABLE=$(which python) \
-                -DOCIO_USE_OIIO_FOR_APPS=${{ matrix.use-oiio }}
+                -DPython_EXECUTABLE=$(which python)
         working-directory: _build
       - name: Build
         run: |
@@ -155,6 +146,8 @@ jobs:
                 -DCMAKE_BUILD_TYPE=Release
           cmake --build . \
                 --config Release
+          # ASWF ci-base 2025.2 is missing lib64 (2025.1 have it)
+          export LD_LIBRARY_PATH=/usr/local/lib64:$LD_LIBRARY_PATH
           ./consumer
         working-directory: _build/tests/cmake-consumer-dist
 
@@ -178,15 +171,13 @@ jobs:
           - build: 1
             build-docs: 'ON'
             build-openfx: 'ON'
-            cxx-standard: 17
-            python-version: '3.11'
-            use-oiio: 'ON'
+            cxx-standard: 20
+            python-version: '3.13'
           - build: 2
             build-docs: 'ON'
             build-openfx: 'ON'
-            cxx-standard: 14
+            cxx-standard: 17
             python-version: '3.9'
-            use-oiio: 'OFF'
     steps:
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -201,29 +192,23 @@ jobs:
         run: share/ci/scripts/macos/install_tests_env.sh
       - name: Setup ext environment
         run: |
-          EXT_PATH=/usr/local
+          EXT_PATH=$GITHUB_WORKSPACE/_ext
           echo "EXT_PATH=$EXT_PATH" >> $GITHUB_ENV
-      - name: Install indirect dependencies
-        run: |
-          share/ci/scripts/macos/install_bison.sh latest
-          share/ci/scripts/macos/install_boost.sh latest
-          share/ci/scripts/multi/install_pugixml.sh latest $EXT_PATH
+          echo "CMAKE_PREFIX_PATH=$EXT_PATH" >> $GITHUB_ENV
       - name: Install fixed ext package versions
         # Minizip-ng depends on ZLIB. ZLIB must be installed first.
         run: |
-          share/ci/scripts/multi/install_expat.sh 2.4.1 $EXT_PATH
-          share/ci/scripts/multi/install_lcms2.sh 2.2 $EXT_PATH
-          share/ci/scripts/multi/install_yaml-cpp.sh 0.7.0 $EXT_PATH
-          share/ci/scripts/multi/install_pystring.sh 1.1.3 $EXT_PATH
-          share/ci/scripts/multi/install_pybind11.sh 2.9.2 $EXT_PATH
-          share/ci/scripts/multi/install_zlib.sh 1.2.12 $EXT_PATH
-          share/ci/scripts/multi/install_minizip-ng.sh 3.0.6 $EXT_PATH
+          share/ci/scripts/multi/install_expat.sh 2.7.2 $EXT_PATH
+          share/ci/scripts/multi/install_lcms2.sh 2.17 $EXT_PATH
+          share/ci/scripts/multi/install_yaml-cpp.sh 0.8.0 $EXT_PATH
+          share/ci/scripts/multi/install_pystring.sh 1.1.4 $EXT_PATH
+          share/ci/scripts/multi/install_pybind11.sh 3.0.1 $EXT_PATH
+          share/ci/scripts/multi/install_zlib.sh 1.3.1 $EXT_PATH
+          share/ci/scripts/multi/install_minizip-ng.sh 4.0.10 $EXT_PATH
       - name: Install latest ext package versions
         run: |
           share/ci/scripts/multi/install_imath.sh latest $EXT_PATH
           share/ci/scripts/multi/install_openexr.sh latest $EXT_PATH
-          share/ci/scripts/multi/install_oiio.sh latest $EXT_PATH
-          share/ci/scripts/multi/install_osl.sh latest $EXT_PATH
           share/ci/scripts/multi/install_openfx.sh latest $EXT_PATH
       - name: Create build directories
         run: |
@@ -240,8 +225,7 @@ jobs:
                 -DOCIO_BUILD_GPU_TESTS=OFF \
                 -DOCIO_INSTALL_EXT_PACKAGES=NONE \
                 -DOCIO_WARNING_AS_ERROR=OFF \
-                -DPython_EXECUTABLE=$(which python) \
-                -DOCIO_USE_OIIO_FOR_APPS=${{ matrix.use-oiio }}
+                -DPython_EXECUTABLE=$(which python)
         working-directory: _build
       - name: Build
         run: |
@@ -260,6 +244,7 @@ jobs:
                 -DCMAKE_BUILD_TYPE=Release
           cmake --build . \
                 --config Release
+          export DYLD_LIBRARY_PATH=$EXT_PATH/lib:$DYLD_LIBRARY_PATH
           ./consumer
         working-directory: _build/tests/cmake-consumer-dist
 
@@ -283,13 +268,13 @@ jobs:
           - build: 1
             build-docs: 'ON'
             build-openfx: 'ON'
-            cxx-standard: 17
-            python-version: '3.11'
+            cxx-standard: 20
+            python-version: '3.13'
             use-oiio: 'ON'
           - build: 2
             build-docs: 'ON'
             build-openfx: 'ON'
-            cxx-standard: 14
+            cxx-standard: 17
             python-version: '3.9'
             use-oiio: 'OFF'
     steps:
@@ -323,32 +308,23 @@ jobs:
         run: |
           vcpkg install zlib:x64-windows
           vcpkg install tiff:x64-windows
-          vcpkg install boost-asio:x64-windows
-          vcpkg install boost-container:x64-windows
-          vcpkg install boost-filesystem:x64-windows
-          vcpkg install boost-math:x64-windows
-          vcpkg install boost-stacktrace:x64-windows
-          vcpkg install boost-system:x64-windows
-          vcpkg install boost-thread:x64-windows
-          share/ci/scripts/multi/install_pugixml.sh latest $EXT_PATH
         shell: bash
       - name: Install fixed ext package versions
         # Minizip-ng depends on ZLIB. ZLIB must be installed first.
         run: |
-          share/ci/scripts/multi/install_lcms2.sh 2.2 $EXT_PATH
-          share/ci/scripts/multi/install_yaml-cpp.sh 0.7.0 $EXT_PATH
-          share/ci/scripts/multi/install_pystring.sh 1.1.3 $EXT_PATH
-          share/ci/scripts/multi/install_pybind11.sh 2.9.2 $EXT_PATH
-          share/ci/scripts/multi/install_expat.sh 2.4.1 $EXT_PATH
-          share/ci/scripts/multi/install_zlib.sh 1.2.12 $EXT_PATH
-          share/ci/scripts/multi/install_minizip-ng.sh 3.0.6 $EXT_PATH
+          share/ci/scripts/multi/install_lcms2.sh 2.17 $EXT_PATH
+          share/ci/scripts/multi/install_yaml-cpp.sh 0.8.0 $EXT_PATH
+          share/ci/scripts/multi/install_pystring.sh 1.1.4 $EXT_PATH
+          share/ci/scripts/multi/install_pybind11.sh 3.0.1 $EXT_PATH
+          share/ci/scripts/multi/install_expat.sh 2.7.2 $EXT_PATH
+          share/ci/scripts/multi/install_zlib.sh 1.3.1 $EXT_PATH
+          share/ci/scripts/multi/install_minizip-ng.sh 4.0.10 $EXT_PATH
         shell: bash
       # OSL not installed due to LLVM compilation time.
       - name: Install latest ext package versions
         run: |
           share/ci/scripts/multi/install_imath.sh latest $EXT_PATH
           share/ci/scripts/multi/install_openexr.sh latest $EXT_PATH
-          share/ci/scripts/multi/install_oiio.sh latest $EXT_PATH
           share/ci/scripts/multi/install_openfx.sh latest $EXT_PATH
         shell: bash
       - name: Create build directories
@@ -369,8 +345,7 @@ jobs:
                 -DOCIO_INSTALL_EXT_PACKAGES=NONE \
                 -DOCIO_WARNING_AS_ERROR=OFF \
                 -DPython_EXECUTABLE=$(which python) \
-                -DOCIO_BUILD_PYTHON=OFF \
-                -DOCIO_USE_OIIO_FOR_APPS=${{ matrix.use-oiio }}
+                -DOCIO_BUILD_PYTHON=OFF
         shell: bash
         working-directory: _build
       - name: Build

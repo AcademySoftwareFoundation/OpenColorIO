@@ -50,9 +50,11 @@ if(NOT openfx_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKA
 
         ExternalProject_Add(openfx_install
             GIT_REPOSITORY "https://github.com/ofxa/openfx.git"
-            # The latest version from 2015 is OFX_Release_1_4_TAG. 
+            # The latest version from 2015 is OFX_Release_1_4_TAG.
+            # The latest version from 2024 is OFX_Release_1.5.
             # Need to be careful since older version might have the patch number in the tag.
-            GIT_TAG "OFX_Release_${openfx_VERSION_MAJOR}_${openfx_VERSION_MINOR}_TAG"
+            # There don't seem to be enough consistency in tag names that we can rely on.
+            GIT_TAG "OFX_Release_${openfx_VERSION_MAJOR}.${openfx_VERSION_MINOR}"
             GIT_CONFIG advice.detachedHead=false
             GIT_SHALLOW TRUE
             PREFIX "${_EXT_BUILD_ROOT}/openfx"

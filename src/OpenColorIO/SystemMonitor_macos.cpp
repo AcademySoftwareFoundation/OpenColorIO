@@ -190,13 +190,13 @@ void SystemMonitorsImpl::getAllMonitors()
                 CFDictionaryGetKeysAndValues(productInfo, nullptr, (const void **)&values[0]);
 
                 const CFIndex bufferSize = CFStringGetLength(values[0]) + 1; // +1 for null termination
-                char buffer[bufferSize];
+                std::vector<char> buffer(bufferSize);
 
                 // Return false if the buffer is too small or if the conversion fails.  
-                if (CFStringGetCString(values[0], buffer, bufferSize, kCFStringEncodingUTF8))
+                if (CFStringGetCString(values[0], buffer.data(), buffer.size(), kCFStringEncodingUTF8))
                 {
                     // Build a name using the vendor information.
-                    displayName = buffer;
+                    displayName = buffer.data();
 
                     // Add the display unit number (i.e. identify the display's framebuffer)
                     // to differentiate same type of monitors.
