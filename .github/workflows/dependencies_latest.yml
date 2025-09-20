@@ -38,7 +38,7 @@ jobs:
     container:
       # DockerHub: https://hub.docker.com/u/aswf
       # Source: https://github.com/AcademySoftwareFoundation/aswf-docker
-      image: aswf/ci-base:${{ matrix.vfx-cy }}.1
+      image: aswf/ci-base:${{ matrix.vfx-cy }}
     strategy:
       matrix:
         build: [1, 2, 3, 4]
