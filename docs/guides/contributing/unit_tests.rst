@@ -19,13 +19,34 @@ expected to validate the behavior of every part of OCIO:
 * Any change to existing functionality should have tests added if they don't 
   already exist.
 
-The test should should be run, via ``ctest``, before submitting a pull request.
+The test should be run, via ``ctest``, before submitting a pull request.
 Pull requests will not be merged until tests are present, running and passing 
 as part of the OpenColorIO CI system.
 
 For verbose test output (listing each test and result status), run::
 
   ctest -V
+
+You can also run single test categories or individual tests. To view a list of 
+availble tests, run::
+
+  ctest -N
+
+You can run specific groups of tests by name using the ``-R`` (match by regex)
+option, for example::
+
+  ctest -V -R test_cpu
+  ctest -V -R test_gpu
+  ctest -V -R test_python
+
+You can also run individual test directly using ``--run_only``, for example to 
+run only the CPU unit tests from the Builtins suite::
+
+  tests/cpu/test_cpu_exec --run_only Builtins
+
+You can view additional options for the CPU tests, such as `--stop_on_error`, by using the --help otion::
+
+  tests/cpu/test_cpu_exec --help
 
 Test framework
 ==============
