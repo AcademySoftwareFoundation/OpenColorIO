@@ -146,6 +146,8 @@ jobs:
                 -DCMAKE_BUILD_TYPE=Release
           cmake --build . \
                 --config Release
+          # ASWF ci-base 2025.2 is missing lib64 (2025.1 have it)
+          export LD_LIBRARY_PATH=/usr/local/lib64:$LD_LIBRARY_PATH
           ./consumer
         working-directory: _build/tests/cmake-consumer-dist
 
