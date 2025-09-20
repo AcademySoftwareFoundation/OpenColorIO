@@ -1001,14 +1001,14 @@ colorspaces:
             self.assertEqual(len(builtinCfgC.getColorSpaceNames()), numberOfExpectedColorspaces)
 
         uriPrefix = OCIO.OCIO_BUILTIN_URI_PREFIX;
-        cgConfigName = "cg-config-v2.2.0_aces-v1.3_ocio-v2.4"
-        studioConfigName = "studio-config-v2.2.0_aces-v1.3_ocio-v2.4"
+        cgConfigName = "cg-config-v4.0.0_aces-v2.0_ocio-v2.5"
+        studioConfigName = "studio-config-v4.0.0_aces-v2.0_ocio-v2.5"
         defaultName = "default"
         latestCGName = "cg-config-latest"
         latestStudioName = "studio-config-latest"
 
-        nbOfColorspacesForCGConfig = 23
-        nbOfColorspacesForStudioConfig = 54
+        nbOfColorspacesForCGConfig = 25
+        nbOfColorspacesForStudioConfig = 55
 
         # Test that CreateFromFile does not work without ocio:// prefix for built-in config.
         with self.assertRaises(OCIO.Exception) as cm:
@@ -1276,9 +1276,9 @@ colorspaces:
         OCIO.ClearAllCaches()
 
     def test_resolve_config(self):
-        defaultBuiltinConfig = "ocio://cg-config-v2.2.0_aces-v1.3_ocio-v2.4"
-        cgLatestBuiltinConfig = "ocio://cg-config-v2.2.0_aces-v1.3_ocio-v2.4"
-        studioLatestBuiltinConfig = "ocio://studio-config-v2.2.0_aces-v1.3_ocio-v2.4"
+        defaultBuiltinConfig = "ocio://cg-config-v4.0.0_aces-v2.0_ocio-v2.5"
+        cgLatestBuiltinConfig = "ocio://cg-config-v4.0.0_aces-v2.0_ocio-v2.5"
+        studioLatestBuiltinConfig = "ocio://studio-config-v4.0.0_aces-v2.0_ocio-v2.5"
 
         # Testing just a few built-in config path.
         self.assertEqual(

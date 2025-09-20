@@ -104,88 +104,114 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
         # Config specific tests
 
         # Test number of configs.
-        self.assertEqual(len(self.REGISTRY), 6)
+        self.assertEqual(len(self.REGISTRY), 8)
 
         # Test for the default built-in config.
         self.assertEqual(
             self.REGISTRY.getDefaultBuiltinConfigName(),
-            "cg-config-v2.2.0_aces-v1.3_ocio-v2.4"
+            "cg-config-v4.0.0_aces-v2.0_ocio-v2.5"
         )
 
         # Test the CG configs.
+
+        cfgidx = 0
         # Name
-        self.assertEqual(values[0][0], "cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
+        self.assertEqual(values[cfgidx][0], "cg-config-v1.0.0_aces-v1.3_ocio-v2.1")
         # UI name
-        self.assertEqual(
-            values[0][1], 
+        self.assertEqual(values[cfgidx][1], 
             ("Academy Color Encoding System - CG Config [COLORSPACES v1.0.0] [ACES v1.3] "
             "[OCIO v2.1]"))
         # isRecommended
-        self.assertEqual(values[0][2], False)
+        self.assertEqual(values[cfgidx][2], False)
 		# isDefault
-        self.assertEqual(values[0][3], False)
+        self.assertEqual(values[cfgidx][3], False)
 
+        cfgidx += 1
         # Name
-        self.assertEqual(values[1][0], "cg-config-v2.1.0_aces-v1.3_ocio-v2.3")
+        self.assertEqual(values[cfgidx][0], "cg-config-v2.1.0_aces-v1.3_ocio-v2.3")
         # UI name
-        self.assertEqual(
-            values[1][1], 
+        self.assertEqual(values[cfgidx][1], 
             ("Academy Color Encoding System - CG Config [COLORSPACES v2.0.0] [ACES v1.3] "
             "[OCIO v2.3]"))
         # isRecommended
-        self.assertEqual(values[1][2], False)
+        self.assertEqual(values[cfgidx][2], False)
         # isDefault
-        self.assertEqual(values[1][3], False)
+        self.assertEqual(values[cfgidx][3], False)
 
+        cfgidx += 1
         # Name
-        self.assertEqual(values[2][0], "cg-config-v2.2.0_aces-v1.3_ocio-v2.4")
+        self.assertEqual(values[cfgidx][0], "cg-config-v2.2.0_aces-v1.3_ocio-v2.4")
         # UI name
-        self.assertEqual(
-            values[2][1], 
+        self.assertEqual(values[cfgidx][1], 
             ("Academy Color Encoding System - CG Config [COLORSPACES v2.2.0] [ACES v1.3] "
             "[OCIO v2.4]"))
         # isRecommended
-        self.assertEqual(values[2][2], True)
+        self.assertEqual(values[cfgidx][2], False)
 		# isDefault
-        self.assertEqual(values[2][3], True)
+        self.assertEqual(values[cfgidx][3], False)
+
+        cfgidx += 1
+        # Name
+        self.assertEqual(values[cfgidx][0], "cg-config-v4.0.0_aces-v2.0_ocio-v2.5")
+        # UI name
+        self.assertEqual(values[cfgidx][1], 
+            ("Academy Color Encoding System - CG Config [COLORSPACES v4.0.0] [ACES v2.0] "
+            "[OCIO v2.5]"))
+        # isRecommended
+        self.assertEqual(values[cfgidx][2], True)
+		# isDefault
+        self.assertEqual(values[cfgidx][3], True)
 
         # Test the Studio configs
+
+        cfgidx += 1
+        # Test the Studio configs
         # Name
-        self.assertEqual(values[3][0], "studio-config-v1.0.0_aces-v1.3_ocio-v2.1")
+        self.assertEqual(values[cfgidx][0], "studio-config-v1.0.0_aces-v1.3_ocio-v2.1")
         # UI name
-        self.assertEqual(
-            values[3][1], 
+        self.assertEqual(values[cfgidx][1], 
             ("Academy Color Encoding System - Studio Config [COLORSPACES v1.0.0] [ACES v1.3] "
             "[OCIO v2.1]"))
         # isRecommended
-        self.assertEqual(values[3][2], False)
+        self.assertEqual(values[cfgidx][2], False)
 		# isDefault
-        self.assertEqual(values[3][3], False)
+        self.assertEqual(values[cfgidx][3], False)
 
+        cfgidx += 1
         # Name
-        self.assertEqual(values[4][0], "studio-config-v2.1.0_aces-v1.3_ocio-v2.3")
+        self.assertEqual(values[cfgidx][0], "studio-config-v2.1.0_aces-v1.3_ocio-v2.3")
         # UI name
-        self.assertEqual(
-            values[4][1], 
+        self.assertEqual(values[cfgidx][1], 
             ("Academy Color Encoding System - Studio Config [COLORSPACES v2.0.0] [ACES v1.3] "
             "[OCIO v2.3]"))
         # isRecommended
-        self.assertEqual(values[4][2], False)
+        self.assertEqual(values[cfgidx][2], False)
         # isDefault
-        self.assertEqual(values[4][3], False)
+        self.assertEqual(values[cfgidx][3], False)
 
+        cfgidx += 1
         # Name
-        self.assertEqual(values[5][0], "studio-config-v2.2.0_aces-v1.3_ocio-v2.4")
+        self.assertEqual(values[cfgidx][0], "studio-config-v2.2.0_aces-v1.3_ocio-v2.4")
         # UI name
-        self.assertEqual(
-            values[5][1], 
+        self.assertEqual(values[cfgidx][1], 
             ("Academy Color Encoding System - Studio Config [COLORSPACES v2.2.0] [ACES v1.3] "
             "[OCIO v2.4]"))
         # isRecommended
-        self.assertEqual(values[5][2], True)
+        self.assertEqual(values[cfgidx][2], False)
         # isDefault
-        self.assertEqual(values[5][3], False)
+        self.assertEqual(values[cfgidx][3], False)
 
+        cfgidx += 1
+        # Name
+        self.assertEqual(values[cfgidx][0], "studio-config-v4.0.0_aces-v2.0_ocio-v2.5")
+        # UI name
+        self.assertEqual(values[cfgidx][1], 
+            ("Academy Color Encoding System - Studio Config [COLORSPACES v4.0.0] [ACES v2.0] "
+            "[OCIO v2.5]"))
+        # isRecommended
+        self.assertEqual(values[cfgidx][2], True)
+        # isDefault
+        self.assertEqual(values[cfgidx][3], False)
 
     def test_multi_reference(self):
         # Registry is a singleton. Make sure multiple Python 

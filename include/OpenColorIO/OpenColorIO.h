@@ -219,8 +219,8 @@ extern OCIOEXPORT void SetCurrentConfig(const ConstConfigRcPtr & config);
  * "ocio://studio-config-latest" will point to newer versions of those configs. Therefore, it is 
  * recommended that application developers not save those strings and instead save the string that 
  * refers to the current version of that config. That way, it's guaranteed that there will be no 
- * change of behavior in the future. For example, as of OCIO 2.4, "ocio://default" should be saved
- * as "ocio://cg-config-v2.2.0_aces-v1.3_ocio-v2.4".
+ * change of behavior in the future. For example, as of OCIO 2.5, "ocio://default" should be saved
+ * as "cg-config-v4.0.0_aces-v2.0_ocio-v2.5".
  * 
  * Note that there is no validation done on the path. That is left to the application since 
  * typically the application will load the config before attempting to save its path
@@ -378,11 +378,13 @@ public:
      * "studio-config-v1.0.0_aces-v1.3_ocio-v2.1"
      * "studio-config-v2.1.0_aces-v1.3_ocio-v2.3"
      * "studio-config-v2.2.0_aces-v1.3_ocio-v2.4"
+     * "studio-config-v4.0.0_aces-v2.0_ocio-v2.5"
      * 
      * ACES CG config, basic color spaces for computer graphics apps:
      * "cg-config-v1.0.0_aces-v1.3_ocio-v2.1"
      * "cg-config-v2.1.0_aces-v1.3_ocio-v2.3"
      * "cg-config-v2.2.0_aces-v1.3_ocio-v2.4"
+     * "cg-config-v4.0.0_aces-v2.0_ocio-v2.5"
      * 
      * More information is available at: 
      * %https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES
