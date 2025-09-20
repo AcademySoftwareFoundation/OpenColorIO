@@ -79,7 +79,20 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
 
     set(_OpenEXR_LIB_VER "${_OpenEXR_VERSION_MAJOR}_${_OpenEXR_VERSION_MINOR}")
 
-    set(openjph_LIBRARY "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}openjph${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    # Specify which OpenJPH version to use as we need to know the library name
+    # for the Windows library, and OpenEXR would otherwise pull the latest master
+    # branch commit which may result in less stable builds.
+    set(openjph_VERSION_MAJOR 0)
+    set(openjph_VERSION_MINOR 23)
+    set(openjph_VERSION_PATCH 1)
+    set(openjph_VERSION "${openjph_VERSION_MAJOR}.${openjph_VERSION_MINOR}.${openjph_VERSION_PATCH}")
+
+    if (MSVC)
+        set(openjph_LIBRARY "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}openjph.${openjph_VERSION_MAJOR}.${openjph_VERSION_MINOR}${_OpenEXR_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    else()
+        set(openjph_LIBRARY "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}openjph${_OpenEXR_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    endif()
+
     set_target_location(Iex)
     set_target_location(IlmThread)
     set_target_location(OpenEXR)
@@ -115,6 +128,7 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
             -DOPENEXR_BUILD_TOOLS=OFF
             -DOPENEXR_FORCE_INTERNAL_DEFLATE=ON
             -DOPENEXR_FORCE_INTERNAL_OPENJPH=ON
+            -DOPENEXR_OPENJPH_TAG=${openjph_VERSION}
             # Try to use in-source built Imath first, if available.
             -DCMAKE_PREFIX_PATH=${_EXT_DIST_ROOT}
         )

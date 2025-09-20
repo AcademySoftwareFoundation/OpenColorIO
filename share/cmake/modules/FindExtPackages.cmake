@@ -245,6 +245,7 @@ if(OCIO_BUILD_APPS)
         #   OpenEXR_VERSION        - Library's version
         #
         # Imported targets defined by this module, if found:
+        #   OpenEXR::openjph (version 3.4.0+)
         #   OpenEXR::Iex
         #   OpenEXR::IexConfig
         #   OpenEXR::IlmThread
