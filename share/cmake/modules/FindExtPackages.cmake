@@ -258,7 +258,7 @@ if(OCIO_BUILD_APPS)
         # Calling find_package in CONFIG mode using PREFER_CONFIG option.
         ocio_handle_dependency(  OpenEXR PREFER_CONFIG ALLOW_INSTALL
                                  MIN_VERSION 3.2.0
-                                 RECOMMENDED_VERSION 3.3.5
+                                 RECOMMENDED_VERSION 3.4.0
                                  RECOMMENDED_VERSION_REASON "Latest version tested with OCIO"
                                  PROMOTE_TARGET OpenEXR::OpenEXR)
 
