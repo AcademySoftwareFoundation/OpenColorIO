@@ -52,9 +52,9 @@ macro(get_python_pre_command)
             list(APPEND _WIN_PATHS ${_WIN_PATH})
         endforeach()
 
-        # Double % to escape as the cmd.exe will eat one level of %. That
-        # results in an empty path in the ENV variable and Python fails to
-        # convert that to absolute path. Possibly due to
+        # Double % to escape as an intermediate cmd.exe step causes early
+        # expansion. That results in an empty path in the ENV variable and
+        # Python 3.11+ fails to convert that to absolute path. Possibly due to
         # https://www.cve.news/cve-2023-41105/
         list(APPEND _WIN_PATHS "%%PYTHONPATH%%")
 

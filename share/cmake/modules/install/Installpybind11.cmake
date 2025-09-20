@@ -120,7 +120,8 @@ if(_pybind11_TARGET_CREATE)
         INTERFACE_INCLUDE_DIRECTORIES ${pybind11_INCLUDE_DIR}
     )
 
-    # See pybind11Common.cmake for reasoning
+    # /bigobj is needed for bigger binding projects due to the limit to 64k
+    # addressable sections (see pybind11Common.cmake).
     if (MSVC)
         set_target_properties(pybind11::module PROPERTIES
             INTERFACE_COMPILE_OPTIONS /bigobj
