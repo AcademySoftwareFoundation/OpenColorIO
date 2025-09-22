@@ -344,6 +344,65 @@ inline void loadCustomKeys(const YAML::Node& node, CustomKeysLoader & ck, const 
     }
 }
 
+// Interchange Attributes
+
+void saveInterchangeAttributes(
+    YAML::Emitter& out, 
+    const std::map<std::string, std::string>& interchangemap)
+{
+    if (interchangemap.empty()) 
+        return;
+
+    out << YAML::Key << "interchange";
+    out << YAML::Value;
+    out << YAML::BeginMap;
+    for (const auto& keyval : interchangemap)
+    {
+        std::string valStr = SanitizeNewlines(keyval.second);
+
+        out << YAML::Key << keyval.first << YAML::Value;
+        if (valStr.find_first_of('\n') != std::string::npos)
+        {
+            out << YAML::Literal;
+        }
+        out << valStr;
+    }
+
+    out << YAML::EndMap;
+}
+
+template<class T>
+void loadInterchangeAttributes(const YAML::Node& node, T& owner)
+{
+    if (node.Type() != YAML::NodeType::Map)
+    {
+        std::ostringstream os;
+        os << "The 'interchange' content needs to be a map.";
+        throwError(node, os.str());
+    }
+
+    CustomKeysLoader kv;
+    loadCustomKeys(node, kv, "interchange");
+
+    for (const auto& keyval : kv.m_keyVals)
+    {
+        std::string keystr = keyval.first.as<std::string>();
+        std::string valstr = keyval.second.as<std::string>();
+        valstr = SanitizeNewlines(valstr);
+
+        // OCIO exception means the key is not recognized. Convert that to a warning.
+        try
+        {
+            owner->setInterchangeAttribute(keystr.c_str(), valstr.c_str());
+        }
+        catch (Exception &)
+        {
+            LogUnknownKeyWarning("interchange", keyval.first);
+        }
+    }
+}
+
+
 // View
 
 inline void load(const YAML::Node& node, View& v)
@@ -3239,25 +3298,7 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs, unsigned int major
         }
         else if (key == "interchange")
         {
-            CustomKeysLoader kv;
-            loadCustomKeys(iter->second, kv, "ColorSpace interchange");
-
-            for (const auto& keyval : kv.m_keyVals)
-            {
-                std::string keystr = keyval.first.as<std::string>();
-                std::string valstr = keyval.second.as<std::string>();
-                valstr = SanitizeNewlines(valstr);
-                
-                // OCIO exception means the key is not recognized. Convert that to a warning.
-                try
-                {
-                    cs->setInterchangeAttribute(keystr.c_str(), valstr.c_str());
-                }
-                catch (Exception &)
-                {
-                    LogUnknownKeyWarning(key, keyval.first);
-                }
-            }
+            loadInterchangeAttributes(iter->second, cs);
         }
         else if(key == "family")
         {
@@ -3358,6 +3399,8 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs, unsigned int major
     }
 }
 
+
+
 inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs, unsigned int majorVersion)
 {
     out << YAML::VerbatimTag("ColorSpace");
@@ -3412,26 +3455,7 @@ inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs, unsigned int major
         out << YAML::Value << is;
     }
 
-    auto interchangemap = cs->getInterchangeAttributes();
-    if (interchangemap.size())
-    {
-        out << YAML::Key << "interchange";
-        out << YAML::Value;
-        out << YAML::BeginMap;
-        for (const auto& keyval : interchangemap)
-        {
-            std::string valStr = SanitizeNewlines(keyval.second);
-
-            out << YAML::Key << keyval.first << YAML::Value;
-            if (valStr.find_first_of('\n') != std::string::npos) 
-            {
-                out << YAML::Literal;
-            }
-            out << valStr;
-        }
-
-        out << YAML::EndMap;
-    }
+    saveInterchangeAttributes(out, cs->getInterchangeAttributes());
 
     out << YAML::Key << "allocation" << YAML::Value;
     save(out, cs->getAllocation());
@@ -3511,6 +3535,10 @@ inline void load(const YAML::Node& node, LookRcPtr& look)
             loadDescription(iter->second, stringval);
             look->setDescription(stringval.c_str());
         }
+        else if(key == "interchange")
+        {
+            loadInterchangeAttributes(iter->second, look);
+        }
         else
         {
             LogUnknownKeyWarning(node, iter->first);
@@ -3525,6 +3553,7 @@ inline void save(YAML::Emitter& out, ConstLookRcPtr look, unsigned int majorVers
     out << YAML::Key << "name" << YAML::Value << look->getName();
     out << YAML::Key << "process_space" << YAML::Value << look->getProcessSpace();
     saveDescription(out, look->getDescription());
+    saveInterchangeAttributes(out, look->getInterchangeAttributes());
 
     if(look->getTransform())
     {
@@ -3627,6 +3656,10 @@ inline void load(const YAML::Node & node, ViewTransformRcPtr & vt)
             loadDescription(iter->second, stringval);
             vt->setDescription(stringval.c_str());
         }
+        else if (key == "interchange")
+        {
+            loadInterchangeAttributes(iter->second, vt);
+        }
         else if (key == "family")
         {
             std::string stringval;
@@ -3685,6 +3718,7 @@ inline void save(YAML::Emitter & out, ConstViewTransformRcPtr & vt, unsigned int
         out << YAML::Key << "family" << YAML::Value << family;
     }
     saveDescription(out, vt->getDescription());
+    saveInterchangeAttributes(out, vt->getInterchangeAttributes());
 
     if (vt->getNumCategories() > 0)
     {

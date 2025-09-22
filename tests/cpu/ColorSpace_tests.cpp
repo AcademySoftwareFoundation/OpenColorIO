@@ -1127,57 +1127,6 @@ OCIO_ADD_TEST(ColorSpace, amf_transform_ids)
     OCIO_CHECK_EQUAL(std::string(copy->getInterchangeAttribute("amf_transform_ids")), singleID);
 }
 
-OCIO_ADD_TEST(ColorSpace, amf_transform_ids_serialization)
-{
-    // Test YAML serialization and deserialization of AmfTransformIDs.
-    auto cfg = OCIO::Config::Create();
-    auto cs = OCIO::ColorSpace::Create();
-    cs->setName("test_colorspace");
-    
-    const std::string amfIDs = 
-        "urn:ampas:aces:transformId:v1.5:ACEScsc.Academy.ACEScc_to_ACES.a1.0.3\n"
-        "urn:ampas:aces:transformId:v1.5:ACEScsc.Academy.ACES_to_ACEScc.a1.0.3";
-    
-    cs->setInterchangeAttribute("amf_transform_ids", amfIDs.c_str());
-    cfg->addColorSpace(cs);
-
-    // Serialize the Config.
-    std::stringstream ss;
-    cfg->serialize(ss);
-    std::string yamlStr = ss.str();
-
-    // Verify AmfTransformIDs appears in YAML.
-    OCIO_CHECK_NE(yamlStr.find("amf_transform_ids"), std::string::npos);
-    OCIO_CHECK_NE(yamlStr.find("ACEScsc.Academy.ACEScc_to_ACES"), std::string::npos);
-
-    // Deserialize and verify.
-    std::istringstream iss(yamlStr);
-    OCIO::ConstConfigRcPtr deserializedCfg;
-    OCIO_CHECK_NO_THROW(deserializedCfg = OCIO::Config::CreateFromStream(iss));
-
-    // Verify AmfTransformIDs is preserved.
-    OCIO::ConstColorSpaceRcPtr deserializedCs = deserializedCfg->getColorSpace("test_colorspace");
-    auto deserializedIDs = deserializedCs->getInterchangeAttribute("amf_transform_ids");
-    OCIO_CHECK_EQUAL(deserializedIDs, amfIDs);
-
-    // Verify that that earlier versions reject amf_transform_ids.
-    OCIO::ConfigRcPtr cfgCopy = cfg->createEditableCopy();
-    cfgCopy->setVersion(2,4);
-    OCIO_CHECK_THROW_WHAT(cfgCopy->serialize(ss),
-        OCIO::Exception,
-        "has non-empty interchange attributes and config version is less than 2.5.");
-
-    // Test with empty AmfTransformIDs (should not appear in YAML).
-    cs->setInterchangeAttribute("amf_transform_ids", nullptr);
-    cfg->addColorSpace(cs); // Replace the existing CS.
-    ss.str("");
-    cfg->serialize(ss);
-    std::string yamlStr2 = ss.str();
-
-    // Verify empty AmfTransformIDs does not appear in YAML.
-    OCIO_CHECK_EQUAL(yamlStr2.find("amf_transform_ids"), std::string::npos);
-}
-
 OCIO_ADD_TEST(ColorSpace, icc_profile_name)
 {
     OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();

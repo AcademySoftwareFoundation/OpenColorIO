@@ -2044,7 +2044,7 @@ public:
      *
      * Currently supported attribute names are "amf_transform_ids" and
      * "icc_profile_name". Using any other name will throw. If the attribute is
-     * not defined, it'll return an empty string. Setting the value to an empty
+     * not defined, it will return an empty string. Setting the value to an empty
      * string will effectively delete the attribute.
      *
      * The AMF transform IDs are used to identify specific transforms in the
@@ -2407,6 +2407,22 @@ public:
     const char * getDescription() const;
     void setDescription(const char * description);
 
+    /**
+    * Get/Set the interchange attributes.
+    *
+    * Currently the only supported attribute name is "amf_transform_ids". Using
+    * any other name will throw. If the attribute is not defined, it will return
+    * an empty string. Setting the value to an empty string will effectively
+    * delete the attribute.
+    *
+    * The AMF transform IDs are used to identify specific transforms in the ACES
+    * Metadata File. Multiple transform IDs can be specified in a
+    * newline-separated string.
+    */
+    const char *getInterchangeAttribute(const char *attrName) const;
+    void setInterchangeAttribute(const char* attrName, const char *value);
+    std::map<std::string, std::string> getInterchangeAttributes() const noexcept;
+
     Look(const Look &) = delete;
     Look& operator= (const Look &) = delete;
     /// Do not use (needed only for pybind11).
@@ -2541,6 +2557,22 @@ public:
 
     const char * getDescription() const noexcept;
     void setDescription(const char * description);
+
+    /**
+    * Get/Set the interchange attributes.
+    *
+    * Currently the only supported attribute name is "amf_transform_ids". Using
+    * any other name will throw. If the attribute is not defined, it will return
+    * an empty string. Setting the value to an empty string will effectively
+    * delete the attribute.
+    *
+    * The AMF transform IDs are used to identify specific transforms in the ACES
+    * Metadata File. Multiple transform IDs can be specified in a
+    * newline-separated string.
+    */
+    const char *getInterchangeAttribute(const char *attrName) const;
+    void setInterchangeAttribute(const char* attrName, const char *value);
+    std::map<std::string, std::string> getInterchangeAttributes() const noexcept;
 
     /// \see ColorSpace::hasCategory
     bool hasCategory(const char * category) const;
