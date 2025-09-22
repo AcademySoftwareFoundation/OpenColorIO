@@ -170,7 +170,7 @@ void Look::setInterchangeAttribute(const char* attrName, const char* value)
         // Do case-insensitive comparison.
         if (StringUtils::Compare(key, name))
         {
-            // use key instead of name for storing in correct capitalization.
+            // Use key instead of name for storing in correct capitalization.
             if (!value || !*value)
             {
                 m_impl->m_interchangeAttribs.erase(key);

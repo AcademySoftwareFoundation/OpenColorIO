@@ -70,7 +70,7 @@ class ViewTransformTest(unittest.TestCase):
         self.assertEqual(other.getDescription(), vt.getDescription())
         self.assertEqual(
             other.getInterchangeAttribute("amf_transform_ids"), 
-            other.getInterchangeAttribute("amf_transform_ids"))
+            vt.getInterchangeAttribute("amf_transform_ids"))
         self.assertTrue(other.getTransform(OCIO.VIEWTRANSFORM_DIR_TO_REFERENCE).equals(vt.getTransform(OCIO.VIEWTRANSFORM_DIR_TO_REFERENCE)))
         self.assertTrue(other.getTransform(OCIO.VIEWTRANSFORM_DIR_FROM_REFERENCE).equals(vt.getTransform(OCIO.VIEWTRANSFORM_DIR_FROM_REFERENCE)))
         self.assertEqual(list(other.getCategories()), list(vt.getCategories()))

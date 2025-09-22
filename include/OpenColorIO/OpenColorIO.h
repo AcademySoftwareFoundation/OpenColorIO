@@ -2044,7 +2044,7 @@ public:
      *
      * Currently supported attribute names are "amf_transform_ids" and
      * "icc_profile_name". Using any other name will throw. If the attribute is
-     * not defined, it'll return an empty string. Setting the value to an empty
+     * not defined, it will return an empty string. Setting the value to an empty
      * string will effectively delete the attribute.
      *
      * The AMF transform IDs are used to identify specific transforms in the
@@ -2411,7 +2411,7 @@ public:
     * Get/Set the interchange attributes.
     *
     * Currently the only supported attribute name is "amf_transform_ids". Using
-    * any other name will throw. If the attribute is not defined, it'll return
+    * any other name will throw. If the attribute is not defined, it will return
     * an empty string. Setting the value to an empty string will effectively
     * delete the attribute.
     *
@@ -2562,7 +2562,7 @@ public:
     * Get/Set the interchange attributes.
     *
     * Currently the only supported attribute name is "amf_transform_ids". Using
-    * any other name will throw. If the attribute is not defined, it'll return
+    * any other name will throw. If the attribute is not defined, it will return
     * an empty string. Setting the value to an empty string will effectively
     * delete the attribute.
     *
