@@ -10200,7 +10200,7 @@ view_transforms:
         OCIO_CHECK_THROW_WHAT(
             config->validate(),
             OCIO::Exception,
-            "Config failed validation. The ViewTransform 'vt1' has non-empty "
+            "Config failed validation. The view transform 'vt1' has non-empty "
             "interchange attributes and config version is less than 2.5.");
 
         // Remove the attribute and check that the config can be downgraded to 2.4.
@@ -10248,7 +10248,7 @@ view_transforms:
         OCIO_CHECK_THROW_WHAT(
             config->validate(),
             OCIO::Exception,
-            "Config failed validation. The Look 'beauty' has non-empty "
+            "Config failed validation. The look 'beauty' has non-empty "
             "interchange attributes and config version is less than 2.5.");
 
         // Remove the attribute and check that the config can be downgraded to 2.4.
