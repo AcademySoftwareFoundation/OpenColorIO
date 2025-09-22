@@ -18,6 +18,7 @@ OCIO_ADD_TEST(ViewTransform, basic)
     OCIO_CHECK_EQUAL(std::string(""), vt->getFamily());
     OCIO_CHECK_EQUAL(std::string(""), vt->getDescription());
     OCIO_CHECK_EQUAL(0, vt->getNumCategories());
+    OCIO_CHECK_EQUAL(std::string(""), vt->getInterchangeAttribute("amf_transform_ids"));
 
     vt->setName("name");
     OCIO_CHECK_EQUAL(std::string("name"), vt->getName());
@@ -25,6 +26,9 @@ OCIO_ADD_TEST(ViewTransform, basic)
     OCIO_CHECK_EQUAL(std::string("family"), vt->getFamily());
     vt->setDescription("description");
     OCIO_CHECK_EQUAL(std::string("description"), vt->getDescription());
+    vt->setInterchangeAttribute("amf_transform_ids", "amf_text");
+    OCIO_CHECK_EQUAL(std::string("amf_text"), vt->getInterchangeAttribute("amf_transform_ids"));
+    OCIO_CHECK_EQUAL(1, vt->getInterchangeAttributes().size());
 
     OCIO_CHECK_EQUAL(vt->getNumCategories(), 0);
 
