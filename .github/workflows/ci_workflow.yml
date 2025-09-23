@@ -732,8 +732,6 @@ jobs:
   # ---------------------------------------------------------------------------
   # Windows
   # ---------------------------------------------------------------------------
-  # TODO: Install pythonXX_d.lib (or work around it being needed) to support 
-  #       Debug build testing with Python bindings and docs enabled.
 
   windows:
     name: 'Windows 2022 
