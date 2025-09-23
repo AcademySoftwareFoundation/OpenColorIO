@@ -80,8 +80,8 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
     set(_OpenEXR_LIB_VER "${_OpenEXR_VERSION_MAJOR}_${_OpenEXR_VERSION_MINOR}")
 
     # Specify which OpenJPH version to use as we need to know the library name
-    # for the Windows library, and OpenEXR would otherwise pull the latest master
-    # branch commit which may result in less stable builds.
+    # for the Windows library. OpenEXR 3.4.0 would install 0.22.0 by default,
+    # here we request the latest version at release time including build fixes.
     set(openjph_VERSION_MAJOR 0)
     set(openjph_VERSION_MINOR 23)
     set(openjph_VERSION_PATCH 1)
