@@ -18,9 +18,6 @@
 
 static constexpr char OUT_OF_RANGE_EXCEPTION_TEXT[] = "Config index is out of range.";
 
-// TODO: Remove once getDefaultBuiltinConfigName is removed.
-static constexpr char DEFAULT_BUILTIN_CONFIG[] = "cg-config-v4.0.0_aces-v2.0_ocio-v2.5";
-
 // These are used for ResolveConfigPath function and we need to return a variable that still exists
 // once the function finishes since we are returning a const char *.
 static constexpr char DEFAULT_BUILTIN_CONFIG_URI[] = "ocio://cg-config-v4.0.0_aces-v2.0_ocio-v2.5";
@@ -166,11 +163,6 @@ bool BuiltinConfigRegistryImpl::isBuiltinConfigRecommended(size_t configIndex) c
     }
 
     return m_builtinConfigs[configIndex].m_isRecommended;
-}
-
-const char * BuiltinConfigRegistryImpl::getDefaultBuiltinConfigName() const
-{
-    return DEFAULT_BUILTIN_CONFIG;
 }
 
 } // namespace OCIO_NAMESPACE

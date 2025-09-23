@@ -61,13 +61,7 @@ void bindPyBuiltinConfigRegistry(py::module & m)
         .def("getBuiltinConfigs", [](PyBuiltinConfigRegistry & self) 
             {
                 return BuiltinConfigIterator(self);
-            })
-        .def("getDefaultBuiltinConfigName", [](PyBuiltinConfigRegistry & self) 
-            { 
-                return self.getDefaultBuiltinConfigName(); 
-            },
-            DOC(BuiltinConfigRegistry, getDefaultBuiltinConfigName));
-
+            });
 
     clsBuiltinConfigIterator
         .def("__len__", [](BuiltinConfigIterator & it) { return it.m_obj.getNumBuiltinConfigs(); })
@@ -77,8 +71,8 @@ void bindPyBuiltinConfigRegistry(py::module & m)
                                       it.m_obj.getBuiltinConfigUIName(i),
                                       it.m_obj.isBuiltinConfigRecommended(i),
                                       StringUtils::Compare(
-                                          std::string(it.m_obj.getBuiltinConfigName(i)), 
-                                          std::string(it.m_obj.getDefaultBuiltinConfigName())));
+                                          std::string("ocio://") + std::string(it.m_obj.getBuiltinConfigName(i)), 
+                                          std::string(ResolveConfigPath("ocio://default"))));
             })
         .def("__iter__", [](BuiltinConfigIterator & it) -> BuiltinConfigIterator & { return it; })
         .def("__next__", [](BuiltinConfigIterator & it)
@@ -88,8 +82,8 @@ void bindPyBuiltinConfigRegistry(py::module & m)
                                       it.m_obj.getBuiltinConfigUIName(i),
                                       it.m_obj.isBuiltinConfigRecommended(i),
                                       StringUtils::Compare(
-                                          std::string(it.m_obj.getBuiltinConfigName(i)), 
-                                          std::string(it.m_obj.getDefaultBuiltinConfigName())));
+                                          std::string("ocio://") + std::string(it.m_obj.getBuiltinConfigName(i)), 
+                                          std::string(ResolveConfigPath("ocio://default"))));
             });
 
     clsBuiltinConfigNameIterator

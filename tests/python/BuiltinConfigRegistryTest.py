@@ -108,8 +108,8 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
 
         # Test for the default built-in config.
         self.assertEqual(
-            self.REGISTRY.getDefaultBuiltinConfigName(),
-            "cg-config-v4.0.0_aces-v2.0_ocio-v2.5"
+            OCIO.ResolveConfigPath('ocio://default'),
+            "ocio://cg-config-v4.0.0_aces-v2.0_ocio-v2.5"
         )
 
         # Test the CG configs.
