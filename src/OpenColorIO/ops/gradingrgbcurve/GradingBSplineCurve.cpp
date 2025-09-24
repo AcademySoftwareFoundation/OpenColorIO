@@ -73,6 +73,7 @@ void PrepHueCurveData(const std::vector<GradingControlPoint>& ctrlPnts,
      }
      if (!isHorizontal)
      {
+         // Ensure that there is a minimum space between the y values.
          const float y_span = outCtrlPnts[numCtrlPnts - 1].m_y - outCtrlPnts[0].m_y;
          for (unsigned i = 1; i < outCtrlPnts.size(); ++i)
          {
@@ -665,29 +666,72 @@ void GradingBSplineCurveImpl::validate() const
         throw Exception("The slopes array must be the same length as the control points.");
     }
 
-    // Make sure the points are non-decreasing.
+    // Make sure the x-coordinates are non-decreasing.
     float lastX = -std::numeric_limits<float>::max();
     for (size_t i = 0; i < numPoints; ++i)
     {
-        // Test x values only.
         const float x = m_controlPoints[i].m_x;
         if (x < lastX)
         {
             std::ostringstream oss;
             oss << "Control point at index " << i << " has a x coordinate '" << x << "' that is ";
-            oss << "less than previous control point x cooordinate '" << lastX << "'.";
+            oss << "less than previous control point x coordinate '" << lastX << "'.";
             throw Exception(oss.str().c_str());
         }
         lastX = x;
+    }
+
+    // The x-coordinates for a hue-hue spline must be in [0,1].
+    if (m_splineType == HUE_HUE_B_SPLINE)
+    {
+        if (m_controlPoints[0].m_x < 0.f)
+        {
+            std::ostringstream oss;
+            oss << "The HUE-HUE spline may not have negative x coordinates.";
+            throw Exception(oss.str().c_str());
+        }
+        else if (m_controlPoints[numPoints - 1].m_x > 1.f)
+        {
+            std::ostringstream oss;
+            oss << "The HUE-HUE spline may not have x coordinates greater than one.";
+            throw Exception(oss.str().c_str());
+        }
+    }
+
+    // Make sure the y-coordinates are non-decreasing, for diagonal spline types.
+    if ( m_splineType == B_SPLINE          || 
+         m_splineType == DIAGONAL_B_SPLINE ||
+         m_splineType == HUE_HUE_B_SPLINE )
+    {
+        float lastY = -std::numeric_limits<float>::max();
+        if (m_splineType == HUE_HUE_B_SPLINE)
+        {
+            // The curve is diagonal but continues in a periodic way, so wrap the last point
+            // around and ensure the first point would preserve monotonicity.
+            lastY = m_controlPoints[numPoints - 1].m_y - 1.f;
+        }
+
+        for (size_t i = 0; i < numPoints; ++i)
+        {
+            const float y = m_controlPoints[i].m_y;
+            if (y < lastY)
+            {
+                std::ostringstream oss;
+                oss << "Control point at index " << i << " has a y coordinate '" << y << "' that is ";
+                oss << "less than previous control point y coordinate '" << lastY << "'.";
+                throw Exception(oss.str().c_str());
+            }
+            lastY = y;
+        }
     }
 
     // Don't allow only x values of 0 and 1 for periodic curves (since they are essentially only one point).
     if (numPoints == 2)
     {    
         // Periodic curve types only.
-        if( m_splineType == PERIODIC_1_B_SPLINE || 
-            m_splineType == PERIODIC_0_B_SPLINE || 
-            m_splineType == HUE_HUE_B_SPLINE )
+        if ( m_splineType == PERIODIC_1_B_SPLINE || 
+             m_splineType == PERIODIC_0_B_SPLINE || 
+             m_splineType == HUE_HUE_B_SPLINE )
         {
             const float del_x = m_controlPoints[1].m_x - m_controlPoints[0].m_x;
             if (std::abs(1.f - del_x) < 1e-3)

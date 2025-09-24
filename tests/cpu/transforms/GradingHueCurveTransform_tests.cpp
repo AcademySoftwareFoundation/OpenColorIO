@@ -84,14 +84,28 @@ OCIO_ADD_TEST(GradingHueCurveTransform, basic)
                          "There are '3' control points. '4' is out of bounds.");
 
     // X-coordinate has to be increasing.
-    OCIO::GradingHueCurveTransformRcPtr hct = OCIO::GradingHueCurveTransform::Create(OCIO::GRADING_VIDEO);
-    OCIO::GradingHueCurveRcPtr hueCurve = hct->getValue()->createEditableCopy();
-    OCIO::GradingBSplineCurveRcPtr lumsat = hueCurve->getCurve(OCIO::LUM_SAT);
-    OCIO::GradingControlPoint & cp = lumsat->getControlPoint(0);
-    cp = OCIO::GradingControlPoint(0.7f, 1.f);
-    OCIO_CHECK_THROW_WHAT(hct->setValue(hueCurve), OCIO::Exception,
-                         "has a x coordinate '0.5' that is less than previous control "
-                         "point x cooordinate '0.7'.");
+    {
+        OCIO::GradingHueCurveTransformRcPtr hct = OCIO::GradingHueCurveTransform::Create(OCIO::GRADING_VIDEO);
+        OCIO::GradingHueCurveRcPtr hueCurve = hct->getValue()->createEditableCopy();
+        OCIO::GradingBSplineCurveRcPtr lumsat = hueCurve->getCurve(OCIO::LUM_SAT);
+        OCIO::GradingControlPoint & cp = lumsat->getControlPoint(0);
+        cp = OCIO::GradingControlPoint(0.7f, 1.f);
+        OCIO_CHECK_THROW_WHAT(hct->setValue(hueCurve), OCIO::Exception,
+                             "has a x coordinate '0.5' that is less than previous control "
+                             "point x coordinate '0.7'.");
+    }
+
+    // Y-coordinate has to be increasing, for diagonal curves.
+    {
+        OCIO::GradingHueCurveTransformRcPtr hct = OCIO::GradingHueCurveTransform::Create(OCIO::GRADING_VIDEO);
+        OCIO::GradingHueCurveRcPtr hueCurve = hct->getValue()->createEditableCopy();
+        OCIO::GradingBSplineCurveRcPtr lumlum = hueCurve->getCurve(OCIO::LUM_LUM);
+        OCIO::GradingControlPoint & cp = lumlum->getControlPoint(0);
+        cp = OCIO::GradingControlPoint(0.f, 0.6f);
+        OCIO_CHECK_THROW_WHAT(hct->setValue(hueCurve), OCIO::Exception,
+                             "has a y coordinate '0.5' that is less than previous control "
+                             "point y coordinate '0.6'.");
+    }
 
     // Check slopes.
     gct->setSlope(OCIO::LUM_LUM, 2, 0.9f);
@@ -228,7 +242,7 @@ OCIO_ADD_TEST(GradingHueCurveTransform, serialization)
     // Test the serialization of the transform.
 
     auto hh = OCIO::GradingBSplineCurve::Create(
-        { {-0.1f, -0.15f}, {0.2f, 0.3f}, {0.5f, 0.25f}, {0.8f, 0.7f}, {0.85f, 0.8f}, {1.05f, 0.9f} },
+        { {0.1f, -0.05f}, {0.2f, 0.23f}, {0.5f, 0.25f}, {0.8f, 0.7f}, {0.85f, 0.8f}, {0.95f, 0.9f} },
         OCIO::HUE_HUE);
     auto hs = OCIO::GradingBSplineCurve::Create(
         { {0.f, 1.2f}, {0.1f, 1.2f}, {0.4f, 0.7f}, {0.6f, 0.3f}, {0.8f, 0.5f}, {0.9f, 0.8f} },
@@ -266,8 +280,8 @@ OCIO_ADD_TEST(GradingHueCurveTransform, serialization)
 
     static constexpr char CURVE_STR[]
       = "<GradingHueCurveTransform direction=forward, style=video, values="
-        "<hue_hue=<control_points=[<x=-0.1, y=-0.15><x=0.2, y=0.3><x=0.5, y=0.25><x=0.8, y=0.7>"
-        "<x=0.85, y=0.8><x=1.05, y=0.9>]>, hue_sat=<control_points=[<x=0, y=1.2><x=0.1, y=1.2>"
+        "<hue_hue=<control_points=[<x=0.1, y=-0.05><x=0.2, y=0.23><x=0.5, y=0.25><x=0.8, y=0.7>"
+        "<x=0.85, y=0.8><x=0.95, y=0.9>]>, hue_sat=<control_points=[<x=0, y=1.2><x=0.1, y=1.2>"
         "<x=0.4, y=0.7><x=0.6, y=0.3><x=0.8, y=0.5><x=0.9, y=0.8>]>, hue_lum=<control_points="
         "[<x=0.1, y=1.4><x=0.2, y=1.4><x=0.4, y=0.7><x=0.6, y=0.5><x=0.8, y=0.8>]>, lum_sat="
         "<control_points=[<x=0, y=1><x=0.5, y=1.5><x=1, y=0.9><x=1.1, y=1.1>]>, sat_sat=<control_points="

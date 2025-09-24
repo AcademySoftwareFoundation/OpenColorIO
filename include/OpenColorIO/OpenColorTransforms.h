@@ -1309,14 +1309,18 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const GradingPrimary
  * The domain of the curves is [0,1] and control points outside that domain are mapped into it.
  * A hue of 0 or 1 corresponds to a magenta hue.
  * 
+ * The control points are dynamic, so they may be adjusted even after the Transform is included
+ * in a Processor. However, creating a curve or setting the parameters will call the
+ * GradingBSplineCurveImpl::validate function, which will throw an exception if the control
+ * points do not meet certain requirements, for example that the X-coordinates are non-decreasing
+ * Please review that function for details on the validation. Applications that provide a UI to
+ * edit curves must ensure that they prevent users from creating control points that are not valid.
+ * 
  * The transform is invertible as long as the curves allow it. For example, if saturation is
  * mapped to zero, obviously that cannot be resaturated. Care should be taken with the Hue-FX
  * curve because it is possible to fold hues over on themselves, which also cannot be inverted.
  * In most cases the Hue-FX curve is not necessary since the Hue-Hue curve provides similar
  * functionality with the added benefit of being strictly invertible.
- * 
- * The control points are dynamic, so they may be adjusted even after the Transform is included
- * in a Processor.
  */
 class OCIOEXPORT GradingHueCurveTransform : public Transform
 {

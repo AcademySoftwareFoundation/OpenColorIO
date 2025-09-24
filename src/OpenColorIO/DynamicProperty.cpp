@@ -137,6 +137,8 @@ DynamicPropertyDoubleImplRcPtr DynamicPropertyDoubleImpl::createEditableCopy() c
     return std::make_shared<DynamicPropertyDoubleImpl>(getType(), getValue(), isDynamic());
 }
 
+//========================================================================================
+
 DynamicPropertyGradingPrimaryImpl::DynamicPropertyGradingPrimaryImpl(GradingStyle style,
                                                                      TransformDirection dir,
                                                                      const GradingPrimary & value,
@@ -194,6 +196,8 @@ void DynamicPropertyGradingPrimaryImpl::setDirection(TransformDirection dir) noe
         m_preRenderValues.update(m_style, m_direction, m_value);
     }
 }
+
+//========================================================================================
 
 DynamicPropertyGradingRGBCurveImpl::DynamicPropertyGradingRGBCurveImpl(
     const ConstGradingRGBCurveRcPtr & value, bool dynamic)
@@ -288,6 +292,7 @@ DynamicPropertyGradingRGBCurveImplRcPtr DynamicPropertyGradingRGBCurveImpl::crea
     return res;
 }
 
+//========================================================================================
 
 DynamicPropertyGradingHueCurveImpl::DynamicPropertyGradingHueCurveImpl(
     const ConstGradingHueCurveRcPtr & value, bool dynamic)
@@ -382,6 +387,8 @@ DynamicPropertyGradingHueCurveImplRcPtr DynamicPropertyGradingHueCurveImpl::crea
     res->m_knotsCoefs = m_knotsCoefs;
     return res;
 }
+
+//========================================================================================
 
 DynamicPropertyGradingToneImpl::DynamicPropertyGradingToneImpl(const GradingTone & value,
                                                                GradingStyle style,

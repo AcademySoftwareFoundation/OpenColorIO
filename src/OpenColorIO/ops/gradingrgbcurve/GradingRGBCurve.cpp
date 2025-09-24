@@ -104,6 +104,15 @@ void GradingRGBCurveImpl::validate() const
                 << "with: " << e.what();
             throw Exception(oss.str().c_str());
         }
+
+        if (m_curves[c]->getSplineType() != B_SPLINE)
+        {
+            // TODO: Allow use of the hue curve diagonal spline types?
+            std::ostringstream oss;
+            oss << "GradingRGBCurve validation failed: '" << CurveType(c) << "' curve "
+                << "is of the wrong BSplineType.";
+            throw Exception(oss.str().c_str());
+        }
     }
 }
 

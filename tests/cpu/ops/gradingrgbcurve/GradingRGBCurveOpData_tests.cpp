@@ -145,11 +145,25 @@ OCIO_ADD_TEST(GradingRGBCurveOpData, validate)
     curves = OCIO::GradingRGBCurve::Create(curve, curve, curve, curve);
     OCIO_CHECK_THROW_WHAT(gc.setValue(curves), OCIO::Exception,
                           "has a x coordinate '0.5' that is less than previous control "
-                          "point x cooordinate '0.7'.");
+                          "point x coordinate '0.7'.");
 
     // Fix the curve x coordinate.
     curve->getControlPoint(1).m_x = 0.3f;
     curves = OCIO::GradingRGBCurve::Create(curve, curve, curve, curve);
     OCIO_CHECK_NO_THROW(gc.setValue(curves));
     OCIO_CHECK_NO_THROW(gc.validate());
+
+    // Curve y coordinates have to increase.
+    curve = OCIO::GradingBSplineCurve::Create({ { 0.f,0.f },{ 0.3f,0.3f },
+                                                { 0.5f,0.27f },{ 1.f,1.f } });
+    curves = OCIO::GradingRGBCurve::Create(curve, curve, curve, curve);
+    OCIO_CHECK_THROW_WHAT(gc.setValue(curves), OCIO::Exception,
+                          "point at index 2 has a y coordinate '0.27' that is less than "
+                          "previous control point y coordinate '0.3'.");
+
+    // Curve must use the proper spline type.
+    curve = OCIO::GradingBSplineCurve::Create({ { 0.f,0.f },{ 0.9f,0.f } }, OCIO::HUE_FX);
+    curves = OCIO::GradingRGBCurve::Create(curve, curve, curve, curve);
+    OCIO_CHECK_THROW_WHAT(gc.setValue(curves), OCIO::Exception,
+                          "validation failed: 'red' curve is of the wrong BSplineType.");
 }

@@ -159,12 +159,34 @@ OCIO_ADD_TEST(GradingHueCurveOpData, validate)
     OCIO_CHECK_THROW_WHAT(auto curves = OCIO::GradingHueCurve::Create(
         curve, curve, curve, curve, curve, curve, curve, curve),
         OCIO::Exception, "has a x coordinate '0.5' that is less than previous control "
-                         "point x cooordinate '0.7'.");
+                         "point x coordinate '0.7'.");
 
-    // Fix the curve x coordinate.
-    curve->getControlPoint(1).m_x = 0.3f;
-    // But the curves are not of the correct BSplineType.
+    // A hue-hue curve must have x-coordinates in [0,1].
+    curve = OCIO::GradingBSplineCurve::Create({ { 0.1f,0.05f },{ 1.1f,1.05f } }, OCIO::HUE_HUE);
     OCIO_CHECK_THROW_WHAT(auto curves = OCIO::GradingHueCurve::Create(
         curve, curve, curve, curve, curve, curve, curve, curve),
-        OCIO::Exception, "GradingHueCurve validation failed: 'hue_hue' curve is of the wrong BSplineType.");
+        OCIO::Exception, "The HUE-HUE spline may not have x coordinates greater than one.");
+
+    // Fix the curve x coordinate.
+    curve->getControlPoint(1).m_x = 1.f;
+    // But the curves are not all of the correct BSplineType.
+    OCIO_CHECK_THROW_WHAT(auto curves = OCIO::GradingHueCurve::Create(
+        curve, curve, curve, curve, curve, curve, curve, curve),
+        OCIO::Exception, "GradingHueCurve validation failed: 'hue_sat' curve is of the wrong BSplineType.");
+
+    // Curve y coordinates have to increase.
+    curve = OCIO::GradingBSplineCurve::Create({ { 0.f,0.f },{ 0.3f,0.3f },
+                                                { 0.5f,0.27f },{ 1.f,1.f } });
+    OCIO_CHECK_THROW_WHAT(auto curves = OCIO::GradingHueCurve::Create(
+        curve, curve, curve, curve, curve, curve, curve, curve),
+        OCIO::Exception,  "point at index 2 has a y coordinate '0.27' that is less than "
+                          "previous control point y coordinate '0.3'.");
+
+    // Curve y coordinates have to increase. For hue-hue this includes comparing the wrapped last
+    // point to the first point. In this case, 1.1 at the end is equivalent to 0.1 at the start.
+    curve = OCIO::GradingBSplineCurve::Create({ { 0.1f,0.05f },{ 1.f,1.1f } }, OCIO::HUE_HUE);
+    OCIO_CHECK_THROW_WHAT(auto curves = OCIO::GradingHueCurve::Create(
+        curve, curve, curve, curve, curve, curve, curve, curve),
+        OCIO::Exception, "Control point at index 0 has a y coordinate '0.05' that is less than "
+                         "previous control point y coordinate '0.1'.");
 }

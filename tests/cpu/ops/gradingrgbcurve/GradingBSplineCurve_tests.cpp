@@ -72,7 +72,7 @@ OCIO_ADD_TEST(GradingBSplineCurve, validate)
                                                 { 0.5f,0.7f },{ 1.f,1.f } });
     OCIO_CHECK_THROW_WHAT(curve->validate(), OCIO::Exception,
                           "has a x coordinate '0.5' that is less than previous control "
-                          "point x cooordinate '0.7'.");
+                          "point x coordinate '0.7'.");
 
     curve->getControlPoint(1).m_x = 0.3f;
     OCIO_CHECK_NO_THROW(curve->validate());

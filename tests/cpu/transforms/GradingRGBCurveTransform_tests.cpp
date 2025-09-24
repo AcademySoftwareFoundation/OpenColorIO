@@ -85,7 +85,7 @@ OCIO_ADD_TEST(GradingRGBCurveTransform, basic)
     auto newCurve = OCIO::GradingRGBCurve::Create(red, red, invalidCurve, red);
     OCIO_CHECK_THROW_WHAT(gct->setValue(newCurve), OCIO::Exception,
                           "has a x coordinate '0.2' that is less than previous control "
-                          "point x cooordinate '0.5'.");
+                          "point x coordinate '0.5'.");
 
     // Check slopes.
     gct->setSlope(OCIO::RGB_BLUE, 2, 0.9f);

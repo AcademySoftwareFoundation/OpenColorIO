@@ -4514,7 +4514,7 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_rgbcurves_log)
       </Red>
       <Green>
          <ControlPoints>
-            0.015625 1
+            0.015625 0.1
             2.5 0.5
             3.5 1.5
          </ControlPoints>
@@ -4528,7 +4528,7 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_rgbcurves_log)
       </Blue>
       <Master>
          <ControlPoints>
-            11 11 12.5 10.5 13.5 0.5 26.5 -1.5
+            11 11 12.5 11.5 13.5 12.5 26.5 15
          </ControlPoints>
       </Master>
       <DynamicParameter param="RGB_CURVE" />
@@ -4567,11 +4567,11 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_rgbcurves_log)
     OCIO_CHECK_EQUAL(master->getControlPoint(0).m_x, 11.0f);
     OCIO_CHECK_EQUAL(master->getControlPoint(0).m_y, 11.0f);
     OCIO_CHECK_EQUAL(master->getControlPoint(1).m_x, 12.5f);
-    OCIO_CHECK_EQUAL(master->getControlPoint(1).m_y, 10.5f);
+    OCIO_CHECK_EQUAL(master->getControlPoint(1).m_y, 11.5f);
     OCIO_CHECK_EQUAL(master->getControlPoint(2).m_x, 13.5f);
-    OCIO_CHECK_EQUAL(master->getControlPoint(2).m_y,  0.5f);
+    OCIO_CHECK_EQUAL(master->getControlPoint(2).m_y, 12.5f);
     OCIO_CHECK_EQUAL(master->getControlPoint(3).m_x, 26.5f);
-    OCIO_CHECK_EQUAL(master->getControlPoint(3).m_y, -1.5f);
+    OCIO_CHECK_EQUAL(master->getControlPoint(3).m_y, 15.f);
 }
 
 OCIO_ADD_TEST(FileFormatCTF, load_grading_huecurves_log)
@@ -4583,47 +4583,50 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_huecurves_log)
       <HueHue>
          <ControlPoints>
             0.015625 0
-            0.5 0.5
-            2 2
+            0.5 0.6
+            0.9 0.8
          </ControlPoints>
       </HueHue>
       <HueSat>
          <ControlPoints>
             0.015625 1
-            2.5 0.5
-            3.5 1.5
+            0.5 0.5
+            0.9 1.5
          </ControlPoints>
       </HueSat>
       <HueLum>
          <ControlPoints>
-            -4 -4
-            4.5 0.5
-            5 3
+            0.1, 1.5, 0.2, 0.7, 0.4, 1.4, 0.5, 0.8, 0.8, 0.5
          </ControlPoints>
       </HueLum>
       <LumSat>
          <ControlPoints>
-            11 11 12.5 10.5 13.5 0.5 26.5 -1.5
+           -0.1  1.0
+            0.5  1.5
+            1.0  0.9
+            1.1  1.2
          </ControlPoints>
       </LumSat>
       <SatSat>
          <ControlPoints>
-            11 11 12.5 10.5 13.5 0.5 26.5 -1.5
+            0., 0.1, 0.5, 0.45, 1., 1.1
          </ControlPoints>
       </SatSat>
       <LumLum>
          <ControlPoints>
-            11 11 12.5 10.5 13.5 0.5 26.5 -1.5
+            0.  -0.0005
+            0.5  0.3
+            1.  0.9
          </ControlPoints>
       </LumLum>
       <SatLum>
          <ControlPoints>
-            11 11 12.5 10.5 13.5 0.5 26.5 -1.5
+            0., 1.2, 0.6, 0.8, 0.9, 1.1
          </ControlPoints>
       </SatLum>
       <HueFx>
          <ControlPoints>
-            11 11 12.5 10.5 13.5 0.5 26.5 -1.5
+            0.2, 0.05, .4, -0.09, .6, -0.2, .8, 0.05, 0.99, -0.02
          </ControlPoints>
       </HueFx>
       <DynamicParameter param="HUE_CURVE" />
@@ -4653,20 +4656,29 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_huecurves_log)
     OCIO_CHECK_EQUAL(hh->getControlPoint(0).m_x, 0.015625f);
     OCIO_CHECK_EQUAL(hh->getControlPoint(0).m_y, 0.0f);
     OCIO_CHECK_EQUAL(hh->getControlPoint(1).m_x, 0.5f);
-    OCIO_CHECK_EQUAL(hh->getControlPoint(1).m_y, 0.5f);
-    OCIO_CHECK_EQUAL(hh->getControlPoint(2).m_x, 2.0f);
-    OCIO_CHECK_EQUAL(hh->getControlPoint(2).m_y, 2.0f);
+    OCIO_CHECK_EQUAL(hh->getControlPoint(1).m_y, 0.6f);
+    OCIO_CHECK_EQUAL(hh->getControlPoint(2).m_x, 0.9f);
+    OCIO_CHECK_EQUAL(hh->getControlPoint(2).m_y, 0.8f);
 
     auto ls = curves->getCurve(OCIO::LUM_SAT);
     OCIO_CHECK_EQUAL(ls->getNumControlPoints(), 4);
-    OCIO_CHECK_EQUAL(ls->getControlPoint(0).m_x, 11.0f);
-    OCIO_CHECK_EQUAL(ls->getControlPoint(0).m_y, 11.0f);
-    OCIO_CHECK_EQUAL(ls->getControlPoint(1).m_x, 12.5f);
-    OCIO_CHECK_EQUAL(ls->getControlPoint(1).m_y, 10.5f);
-    OCIO_CHECK_EQUAL(ls->getControlPoint(2).m_x, 13.5f);
-    OCIO_CHECK_EQUAL(ls->getControlPoint(2).m_y,  0.5f);
-    OCIO_CHECK_EQUAL(ls->getControlPoint(3).m_x, 26.5f);
-    OCIO_CHECK_EQUAL(ls->getControlPoint(3).m_y, -1.5f);
+    OCIO_CHECK_EQUAL(ls->getControlPoint(0).m_x, -0.1f);
+    OCIO_CHECK_EQUAL(ls->getControlPoint(0).m_y,  1.0f);
+    OCIO_CHECK_EQUAL(ls->getControlPoint(1).m_x,  0.5f);
+    OCIO_CHECK_EQUAL(ls->getControlPoint(1).m_y,  1.5f);
+    OCIO_CHECK_EQUAL(ls->getControlPoint(2).m_x,  1.0f);
+    OCIO_CHECK_EQUAL(ls->getControlPoint(2).m_y,  0.9f);
+    OCIO_CHECK_EQUAL(ls->getControlPoint(3).m_x,  1.1f);
+    OCIO_CHECK_EQUAL(ls->getControlPoint(3).m_y,  1.2f);
+
+    auto sl = curves->getCurve(OCIO::SAT_LUM);
+    OCIO_CHECK_EQUAL(sl->getNumControlPoints(), 3);
+    OCIO_CHECK_EQUAL(sl->getControlPoint(0).m_x,  0.0f);
+    OCIO_CHECK_EQUAL(sl->getControlPoint(0).m_y,  1.2f);
+    OCIO_CHECK_EQUAL(sl->getControlPoint(1).m_x,  0.6f);
+    OCIO_CHECK_EQUAL(sl->getControlPoint(1).m_y,  0.8f);
+    OCIO_CHECK_EQUAL(sl->getControlPoint(2).m_x,  0.9f);
+    OCIO_CHECK_EQUAL(sl->getControlPoint(2).m_y,  1.1f);
 }
 
 OCIO_ADD_TEST(FileFormatCTF, load_grading_curves_errors)
@@ -4750,7 +4762,7 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_curves_errors)
     </GradingRGBCurve>
 </ProcessList>
 )"), OCIO::Exception, "Control point at index 2 has a x coordinate '-1' that is less than "
-                      "previous control point x cooordinate '0'");
+                      "previous control point x coordinate '0'");
 
     // Number of slopes matches control points.
     OCIO_CHECK_THROW_WHAT(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>

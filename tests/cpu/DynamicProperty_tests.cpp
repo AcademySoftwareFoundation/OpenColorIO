@@ -257,6 +257,55 @@ OCIO_ADD_TEST(DynamicPropertyImpl, equal_grading_rgb_curve)
     OCIO_CHECK_ASSERT(!(*dp0 == *dpImplDouble));
 }
 
+OCIO_ADD_TEST(DynamicPropertyImpl, setter_validation)
+{
+    // Make an identity dynamic transform.
+    OCIO::GradingHueCurveTransformRcPtr gct = OCIO::GradingHueCurveTransform::Create(OCIO::GRADING_LOG);
+    gct->makeDynamic();
+
+    // Apply it on CPU.
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    OCIO::ConstProcessorRcPtr processor = config->getProcessor(gct);
+    OCIO::ConstCPUProcessorRcPtr cpuProcessor = processor->getDefaultCPUProcessor();
+
+    float pixel[3] = { 0.4f, 0.3f, 0.2f };
+    cpuProcessor->applyRGB(pixel);
+
+    const float error = 1e-5f;
+    OCIO_CHECK_CLOSE(pixel[0], pixel[0], error);
+    OCIO_CHECK_CLOSE(pixel[1], pixel[1], error);
+    OCIO_CHECK_CLOSE(pixel[2], pixel[2], error);
+
+    // Get a handle to the dynamic property.
+    OCIO::DynamicPropertyRcPtr dp;
+    OCIO_CHECK_NO_THROW(dp = cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_HUECURVE));
+    auto dpVal = OCIO::DynamicPropertyValue::AsGradingHueCurve(dp);
+    OCIO_REQUIRE_ASSERT(dpVal);
+
+    // Set a non-identity value.
+    OCIO::GradingHueCurveRcPtr hueCurve = dpVal->getValue()->createEditableCopy();
+    OCIO::GradingBSplineCurveRcPtr huehue = hueCurve->getCurve(OCIO::HUE_HUE);
+    huehue->setNumControlPoints(3);
+    huehue->getControlPoint(0) = OCIO::GradingControlPoint(0.f, -0.1f);
+    huehue->getControlPoint(1) = OCIO::GradingControlPoint(0.5f, 0.5f);
+    huehue->getControlPoint(2) = OCIO::GradingControlPoint(0.8f, 0.8f);
+    dpVal->setValue(hueCurve);
+    cpuProcessor->applyRGB(pixel);
+
+    OCIO_CHECK_CLOSE(pixel[0], 0.4385873675f, error);
+    OCIO_CHECK_CLOSE(pixel[1], 0.2829087377f, error);
+    OCIO_CHECK_CLOSE(pixel[2], 0.2556785941f, error);
+
+    // Ensure that validation of control points is happening as expected. Set the last point
+    // so that it is no longer monotonic with respect to the first point. Because it is periodic,
+    // the last point Y value becomes -0.05 when wrapped around to an X value of -0.2.
+    huehue->getControlPoint(2) = OCIO::GradingControlPoint(0.8f, 0.95f);
+    OCIO_CHECK_THROW_WHAT(dpVal->setValue(hueCurve),
+                          OCIO::Exception,
+                          "GradingHueCurve validation failed for 'hue_hue' curve with: Control point at index 0 "
+                          "has a y coordinate '-0.1' that is less than previous control point y coordinate '-0.05'.");
+}
+
 OCIO_ADD_TEST(DynamicPropertyImpl, grading_rgb_curve_knots_coefs)
 {
     auto curve11 = OCIO::GradingBSplineCurve::Create({ { 0.f, 10.f },{ 2.f, 10.f },{ 3.f, 10.f },
@@ -431,8 +480,8 @@ void checkKnotsAndCoefs(
 
 OCIO_ADD_TEST(DynamicPropertyImpl, grading_hue_curve_knots_coefs)
 {
-    auto hh = OCIO::GradingBSplineCurve::Create(
-        { {-0.1f, -0.15f}, {0.2f, 0.3f}, {0.5f, 0.25f}, {0.8f, 0.7f}, {0.85f, 0.8f}, {1.05f, 0.9f} },
+     auto hh = OCIO::GradingBSplineCurve::Create(
+        { {0.1f, 0.05f}, {0.2f, 0.3f}, {0.5f, 0.4f}, {0.8f, 0.7f}, {0.9f, 0.75f}, {1.0f, 0.9f} },
         OCIO::HUE_HUE);
     auto hs = OCIO::GradingBSplineCurve::Create(
         { {-0.15f, 1.25f}, {0.f, 0.8f}, {0.2f, 0.9f}, {0.4f, 1.8f}, {0.6f, 1.4f}, {0.8f, 1.3f}, {0.9f, 1.1f}, {1.1f, 0.7f} },
@@ -505,20 +554,20 @@ OCIO_ADD_TEST(DynamicPropertyImpl, grading_hue_curve_knots_coefs)
 
     {
         // Hue-Hue
+        const float true_knots[15] = {-0.1f, -0.06928571f, 0.0f, 0.05642857f, 0.1f, 0.17549634f, 0.2f, 0.33714286f,
+                                       0.5f,  0.62499860f, 0.8f, 0.85261905f, 0.9f, 0.93071429f, 1.f };
 
-        const float true_knots[15] = {-0.1f, -0.01816964f, 0.05f, 0.125f, 0.2f, 0.35f, 0.5f, 0.57558291f, 0.8f, 0.82731918f, 
-                                       0.85f, 0.87808036f, 0.9f, 0.98183036f, 1.05f };
         // Quadratic coefs.
-        const float true_coefsA[14] = { -2.29385141e+00f, 3.43265663e+00f, 2.95979024e+01f, -3.34850652e+01f, -2.11943922e-02f,
-                                         2.11186821e-02f, 9.58311056e+00f, 3.05897301e-01f, 1.69849435e+01f, -2.62364216e+01f,
-                                        -5.36565978e+00f, -1.21350984e+01f, -2.29385141e+00f, 3.43265663e+00f};
+        const float true_coefsA[14] = { 15.95930233f, -1.66237113f, -1.44778481f, 6.17827869f, 10.39930009f,
+                                       -58.70626575f, -1.54375789f,  1.03834397f, 3.7077401f,  -2.12344738f,
+                                        -3.54260935f,  4.81365159f, 15.95930233f,-1.66237113f };
         // Linear coefs.
-        const float true_coefsB[14] = {  5.00000000e-01f, 1.24586640e-01f, 5.92592593e-01f, 5.03227795e+00f, 9.51817043e-03f,
-                                         3.15985276e-03f, 9.49545739e-03f, 1.45813415e+00f, 1.59543132e+00f, 2.52346065e+00f,
-                                         1.33333333e+00f, 1.03199405e+00f, 5.00000000e-01f, 1.24586640e-01f };
+        const float true_coefsB[14] = { 0.75f, 1.73035714f, 1.5f, 1.33660714f, 1.875f, 3.44521825f, 0.56818182f,
+                                        0.14475108f, 0.48295455f, 1.40987919f, 0.66666667f, 0.29384921f, 0.75f, 1.73035714f };
+
         // Constant coefs.
-        const float true_coefsC[14] = { -0.15f, -0.12444493f, -0.1f, 0.11093265f, 0.3f, 0.30095085f, 0.3019f, 0.35736386f,
-                                         0.7f, 0.75626237f, 0.8f, 0.83320962f, 0.85f, 0.87555507f };
+        const float true_coefsC[14] = { -0.25f, -0.2119088f, -0.1f, -0.01996716f, 0.05f, 0.25082851f, 0.3f, 
+                                         0.34888683f, 0.4f, 0.51830078f, 0.7f, 0.72527072f, 0.75f, 0.7880912f };
 
         checkKnotsAndCoefs(dp, 0, true_knots, true_coefsA, true_coefsB, true_coefsC, __LINE__);
     }
