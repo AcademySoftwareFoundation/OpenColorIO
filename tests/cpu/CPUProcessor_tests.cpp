@@ -276,9 +276,9 @@ OCIO_ADD_TEST(CPUProcessor, with_one_matrix)
                 1.0000f,  1.2500f,  1.9900f  };
 
         const std::vector<float> resImg
-            = { -0.01929f,  -0.3995f,  0.4002f, 0.5f,
-                 1.58960f,   0.9050f,  1.5025f, 0.5f,
-                 2.070699f,  1.6505f,  2.4002f, 0.5f   };
+            = { -0.01929f,  -0.3995f,  0.4002f, 1.5f,
+                 1.58960f,   0.9050f,  1.5025f, 1.5f,
+                 2.070699f,  1.6505f,  2.4002f, 1.5f   };
 
         ComputeValues<OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32>( 
             __LINE__, processor,
@@ -620,10 +620,10 @@ OCIO_ADD_TEST(CPUProcessor, with_one_1d_lut)
               5120,  20480, 65535  };
 
         const std::vector<uint16_t> resImg
-            = {    95,    24,     0,     0,
-                  268,   178,   123,     0,
-                  955,   598,   394,     0,
-                65535,  8589,  1986,     0 };
+            = {    95,    24,     0,     1,
+                  268,   178,   123,     1,
+                  955,   598,   394,     1,
+                65535,  8589,  1986,     1 };
 
         ComputeValues<OCIO::BIT_DEPTH_UINT16, OCIO::BIT_DEPTH_UINT16>( 
             __LINE__, processor,
@@ -656,10 +656,10 @@ OCIO_ADD_TEST(CPUProcessor, with_one_1d_lut)
                   128,  1023,   640  };
 
         const std::vector<uint16_t> ui10_resImg
-            = {     0,     6,    15,   0,
-                   26,    48,   106,   0,
-                   36,   106,   252,   0,
-                   48,  1023,   384,   0 };
+            = {     0,     6,    15,   1,
+                   26,    48,   106,   1,
+                   36,   106,   252,   1,
+                   48,  1023,   384,   1 };
 
         ComputeValues<OCIO::BIT_DEPTH_UINT10, OCIO::BIT_DEPTH_UINT10>( 
             __LINE__, processor,
@@ -668,10 +668,10 @@ OCIO_ADD_TEST(CPUProcessor, with_one_1d_lut)
             NB_PIXELS);
 
         const std::vector<uint16_t> ui16_resImg
-            = {     0,   394,   955,   0,
-                 1656,  3092,  6794,   0,
-                 2301,  6794, 16162,   0,
-                 3092, 65535, 24593,   0 };
+            = {     0,   394,   955,   64,
+                 1656,  3092,  6794,   64,
+                 2301,  6794, 16162,   64,
+                 3092, 65535, 24593,   64 };
 
         ComputeValues<OCIO::BIT_DEPTH_UINT10, OCIO::BIT_DEPTH_UINT16>( 
             __LINE__, processor,
@@ -704,10 +704,10 @@ OCIO_ADD_TEST(CPUProcessor, with_one_1d_lut)
                  1024,  2048,  4095  };
 
         const std::vector<uint16_t> ui12_resImg
-            = {     0,    11,    25,   0,
-                   37,    60,   103,   0,
-                   49,   103,   193,   0,
-                  424,  1009,  4095,   0 };
+            = {     0,    11,    25,   1,
+                   37,    60,   103,   1,
+                   49,   103,   193,   1,
+                  424,  1009,  4095,   1 };
 
         ComputeValues<OCIO::BIT_DEPTH_UINT12, OCIO::BIT_DEPTH_UINT12>( 
             __LINE__, processor,
@@ -715,10 +715,10 @@ OCIO_ADD_TEST(CPUProcessor, with_one_1d_lut)
             &ui12_resImg[0], OCIO::CHANNEL_ORDERING_RGBA,
             NB_PIXELS);
         const std::vector<uint16_t> ui16_resImg
-            = {     0,   178,   394,   0,
-                  598,   955,  1655,   0,
-                  779,  1655,  3089,   0,
-                 6789, 16143, 65535,   0 };
+            = {     0,   178,   394,   16,
+                  598,   955,  1655,   16,
+                  779,  1655,  3089,   16,
+                 6789, 16143, 65535,   16 };
 
         ComputeValues<OCIO::BIT_DEPTH_UINT12, OCIO::BIT_DEPTH_UINT16>( 
             __LINE__, processor,
