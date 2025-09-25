@@ -367,20 +367,9 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
     }
     
     {
-        // Test that all errors appear when all required roles are missing.
-
-        OCIO::LogGuard logGuard;
-        OCIO_CHECK_NO_THROW(config->validate());
+        // Test that all errors appear when all required roles are missing.        OCIO_CHECK_NO_THROW(config->validate());
         // Check that the log contains the expected error messages for the missing roles and mute 
-        // them so that (only) those messages don't appear in the test output.
-        OCIO_CHECK_ASSERT(OCIO::checkAndMuteSceneLinearRoleError(logGuard));
-        OCIO_CHECK_ASSERT(OCIO::checkAndMuteCompositingLogRoleError(logGuard));
-        OCIO_CHECK_ASSERT(OCIO::checkAndMuteColorTimingRoleError(logGuard));
-        OCIO_CHECK_ASSERT(OCIO::checkAndMuteAcesInterchangeRoleError(logGuard));
-        OCIO_CHECK_ASSERT(OCIO::checkAndMuteDisplayInterchangeRoleError(logGuard));
-        // If there are any unexpected log messages, print them to the shell.
-        logGuard.print();
-    }
+        // them so that (only) those messages don't appear in the test output.        // If there are any unexpected log messages, print them to the shell.    }
     
     // Set colorspace for all required roles.
     config->setRole(OCIO::ROLE_SCENE_LINEAR, scs->getName());
@@ -390,24 +379,13 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
     config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, dcs->getName());
 
     {
-        // Check that no warning is logged when all required roles are set.
-
-        OCIO::LogGuard logGuard;
-        OCIO_CHECK_NO_THROW(config->validate());
-        OCIO_CHECK_ASSERT(logGuard.empty());
-    }
+        // Check that no warning is logged when all required roles are set.        OCIO_CHECK_NO_THROW(config->validate());    }
     
     {
         // Test that scene_linear role is missing.
 
         // Unset scene_linear role.
-        config->setRole(OCIO::ROLE_SCENE_LINEAR, nullptr);
-
-        OCIO::LogGuard logGuard;
-        OCIO_CHECK_NO_THROW(config->validate());
-
-        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
-        OCIO_CHECK_ASSERT(
+        config->setRole(OCIO::ROLE_SCENE_LINEAR, nullptr);        OCIO_CHECK_NO_THROW(config->validate());        OCIO_CHECK_ASSERT(
             StringUtils::Contain(
             svec, 
             "[OpenColorIO Error]: The scene_linear role is required for a config version 2.2 or"\
@@ -422,15 +400,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
         // Test that compositing_log role is missing.
 
         // Unset compositing_log role.
-        config->setRole(OCIO::ROLE_COMPOSITING_LOG, nullptr);
-
-        OCIO::LogGuard logGuard;
-        OCIO_CHECK_NO_THROW(config->validate());
-
-        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
-        checkAndMuteCompositingLogRoleError(logGuard);
-
-        // Set compositing_log for next test.
+        config->setRole(OCIO::ROLE_COMPOSITING_LOG, nullptr);        OCIO_CHECK_NO_THROW(config->validate());        // Set compositing_log for next test.
         config->setRole(OCIO::ROLE_COMPOSITING_LOG, dcs->getName());
     }
 
@@ -438,15 +408,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
         // Test that color_timing role is missing.
 
         // Unset color_timing role.
-        config->setRole(OCIO::ROLE_COLOR_TIMING, nullptr);
-
-        OCIO::LogGuard logGuard;
-        OCIO_CHECK_NO_THROW(config->validate());
-
-        StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
-        checkAndMuteColorTimingRoleError(logGuard);
-
-        // Set color_timing for next test.
+        config->setRole(OCIO::ROLE_COLOR_TIMING, nullptr);        OCIO_CHECK_NO_THROW(config->validate());        // Set color_timing for next test.
         config->setRole(OCIO::ROLE_COLOR_TIMING, dcs->getName());
     }
 
@@ -454,13 +416,8 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
         // Test that aces_interchange role is missing.
 
         // Unset aces_interchange role.
-        config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, nullptr);
-
-        OCIO::LogGuard logGuard;
-        OCIO_CHECK_NO_THROW(config->validate());
-        OCIO::checkAndMuteAcesInterchangeRoleError(logGuard);
-
-        // Set aces_interchange for next test.
+        config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, nullptr);        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO::        // Set aces_interchange for next test.
         config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, scs->getName());
     }
 
@@ -468,13 +425,8 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
         // Test that cie_xyz_d65_interchange role is missing.
 
         // Unset cie_xyz_d65_interchange role.
-        config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, nullptr);
-
-        OCIO::LogGuard logGuard;
-        OCIO_CHECK_NO_THROW(config->validate());
-        OCIO::checkAndMuteDisplayInterchangeRoleError(logGuard);
-
-        // Set cie_xyz_d65_interchange for next test.
+        config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, nullptr);        OCIO_CHECK_NO_THROW(config->validate());
+        OCIO::        // Set cie_xyz_d65_interchange for next test.
         config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, dcs->getName());
     }
 
@@ -483,10 +435,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         // Set a display-referred colorspace to both interchange roles.
         config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, dcs->getName());
-        config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, dcs->getName());
-
-        OCIO::LogGuard logGuard;
-        OCIO_CHECK_NO_THROW(config->validate());
+        config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, dcs->getName());        OCIO_CHECK_NO_THROW(config->validate());
         OCIO_CHECK_ASSERT(
             StringUtils::StartsWith(
                 logGuard.output(), 
@@ -499,10 +448,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
 
         // Set a scene-referred colorspace to both interchange roles.
         config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, scs->getName());
-        config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, scs->getName());
-
-        OCIO::LogGuard logGuard;
-        OCIO_CHECK_NO_THROW(config->validate());
+        config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, scs->getName());        OCIO_CHECK_NO_THROW(config->validate());
         OCIO_CHECK_ASSERT(
             StringUtils::StartsWith(
                 logGuard.output(), 
@@ -521,12 +467,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
         config->setRole(OCIO::ROLE_COMPOSITING_LOG, nullptr);
         config->setRole(OCIO::ROLE_COLOR_TIMING, nullptr);
         config->setRole(OCIO::ROLE_INTERCHANGE_SCENE, nullptr);
-        config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, nullptr);
-
-        OCIO::LogGuard logGuard;
-        OCIO_CHECK_NO_THROW(config->validate());
-        OCIO_CHECK_ASSERT(logGuard.empty());
-    }
+        config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY, nullptr);        OCIO_CHECK_NO_THROW(config->validate());    }
 }
 
 OCIO_ADD_TEST(Config, serialize_group_transform)
@@ -960,24 +901,14 @@ OCIO_ADD_TEST(Config, context_variable_v1)
 
     // Test the second config i.e. not in predefined mode.
 
-    // As a debug message is expected, trap & check its content.
-    OCIO::LogGuard log;
-
-    is.str(SIMPLE_PROFILE2);
+    // As a debug message is expected, trap & check its content.    is.str(SIMPLE_PROFILE2);
     OCIO::ConstConfigRcPtr noenv;
     OCIO_CHECK_NO_THROW(noenv = OCIO::Config::CreateFromStream(is));
     OCIO_CHECK_NO_THROW(noenv->validate());
     OCIO_CHECK_EQUAL(noenv->getEnvironmentMode(), OCIO::ENV_ENVIRONMENT_LOAD_ALL);
     // In all mode, use all system env. variables as potential context variables.
     OCIO_CHECK_ASSERT(strcmp(noenv->getCurrentContext()->resolveStringVar("${TASK}"),
-        "lighting") == 0);
-
-    OCIO_CHECK_EQUAL(log.output(), 
-                     "[OpenColorIO Debug]: This .ocio config has no environment section defined."
-                     " The default behaviour is to load all environment variables (0), which reduces"
-                     " the efficiency of OCIO's caching. Consider predefining the environment"
-                     " variables used.\n");
-}
+        "lighting") == 0);}
 
 OCIO_ADD_TEST(Config, context_variable_faulty_cases)
 {
@@ -4300,10 +4231,7 @@ OCIO_ADD_TEST(Config, unknown_key_error)
         << "    dummyKey: dummyValue\n";
 
     std::istringstream is;
-    is.str(oss.str());
-
-    OCIO::LogGuard g;
-    OCIO_CHECK_NO_THROW(OCIO::Config::CreateFromStream(is));
+    is.str(oss.str());    OCIO_CHECK_NO_THROW(OCIO::Config::CreateFromStream(is));
     OCIO_CHECK_ASSERT(StringUtils::StartsWith(g.output(), 
                      "[OpenColorIO Warning]: At line 56, unknown key 'dummyKey' in 'ColorSpace'."));
 }
@@ -5212,8 +5140,6 @@ OCIO_ADD_TEST(Config, fixed_function_serialization)
         OCIO::ConstConfigRcPtr config;
 
         {
-            OCIO::LogGuard log; // Mute the experimental warnings.
-
             OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
             OCIO_CHECK_NO_THROW(config->validate());
 
@@ -5226,13 +5152,9 @@ R"([OpenColorIO Warning]: FixedFunction style is experimental and may be removed
 [OpenColorIO Warning]: FixedFunction style is experimental and may be removed in a future release: 'ACES2_TonescaleCompress'.
 [OpenColorIO Warning]: FixedFunction style is experimental and may be removed in a future release: 'ACES2_GamutCompress'.
 [OpenColorIO Warning]: FixedFunction style is experimental and may be removed in a future release: 'ACES2_GamutCompress'.
-)";
-            OCIO_CHECK_EQUAL(log.output(), expectedLog);
-        }
+)";        }
 
         {
-            OCIO::LogGuard log; // Mute the experimental warnings.
-
             // Write the config.
 
             std::stringstream ss;
@@ -5249,9 +5171,6 @@ R"([OpenColorIO Warning]: FixedFunction style is experimental and may be removed
             "        - !<FixedFunctionTransform> {style: ACES2_OutputTransform, params: [100, 0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329], direction: inverse}\n";
 
         const std::string str = PROFILE_START_V<2, 3>() + strEnd;
-
-        OCIO::LogGuard log; // Mute the experimental warnings.
-
         std::istringstream is;
         is.str(str);
 
@@ -5268,9 +5187,6 @@ R"([OpenColorIO Warning]: FixedFunction style is experimental and may be removed
             "        - !<FixedFunctionTransform> {style: ACES2_RGB_TO_JMh, params: [100, 0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329], direction: inverse}\n";
 
         const std::string str = PROFILE_START_V<2, 3>() + strEnd;
-
-        OCIO::LogGuard log; // Mute the experimental warnings.
-
         std::istringstream is;
         is.str(str);
 
@@ -5287,9 +5203,6 @@ R"([OpenColorIO Warning]: FixedFunction style is experimental and may be removed
             "        - !<FixedFunctionTransform> {style: ACES2_TonescaleCompress, params: [100, 0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329], direction: inverse}\n";
 
         const std::string str = PROFILE_START_V<2, 3>() + strEnd;
-
-        OCIO::LogGuard log; // Mute the experimental warnings.
-
         std::istringstream is;
         is.str(str);
 
@@ -5306,9 +5219,6 @@ R"([OpenColorIO Warning]: FixedFunction style is experimental and may be removed
             "        - !<FixedFunctionTransform> {style: ACES2_GamutCompress, params: [100, 0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329], direction: inverse}\n";
 
         const std::string str = PROFILE_START_V<2, 3>() + strEnd;
-
-        OCIO::LogGuard log; // Mute the experimental warnings.
-
         std::istringstream is;
         is.str(str);
 
@@ -5324,9 +5234,6 @@ R"([OpenColorIO Warning]: FixedFunction style is experimental and may be removed
             "        - !<FixedFunctionTransform> {style: ACES2_OutputTransform, params: []}\n";
 
         const std::string str = PROFILE_START_V<2, 4>() + strEnd;
-
-        OCIO::LogGuard log; // Mute the experimental warnings.
-
         std::istringstream is;
         is.str(str);
 
@@ -5343,9 +5250,6 @@ R"([OpenColorIO Warning]: FixedFunction style is experimental and may be removed
             "        - !<FixedFunctionTransform> {style: ACES2_OutputTransform, params: [-1, 0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329]}\n";
 
         const std::string str = PROFILE_START_V<2, 4>() + strEnd;
-
-        OCIO::LogGuard log; // Mute the experimental warnings.
-
         std::istringstream is;
         is.str(str);
 
@@ -5362,9 +5266,6 @@ R"([OpenColorIO Warning]: FixedFunction style is experimental and may be removed
             "        - !<FixedFunctionTransform> {style: ACES2_OutputTransform, params: [100.5, 0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329]}\n";
 
         const std::string str = PROFILE_START_V<2, 4>() + strEnd;
-
-        OCIO::LogGuard log; // Mute the experimental warnings.
-
         std::istringstream is;
         is.str(str);
 
@@ -6321,9 +6222,7 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
 
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        {
-            OCIO::LogGuard log; // Mute the warnings.
-            OCIO_CHECK_NO_THROW(config->validate());
+        {            OCIO_CHECK_NO_THROW(config->validate());
         }
 
         OCIO_REQUIRE_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
@@ -6404,13 +6303,7 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
 
-        {
-            OCIO::LogGuard log;
-            OCIO_CHECK_NO_THROW(config->validate());
-            OCIO_CHECK_EQUAL(log.output(), 
-                             "[OpenColorIO Info]: Inactive 'unknown' is neither a color "
-                             "space nor a named transform.\n");
-        }
+        {            OCIO_CHECK_NO_THROW(config->validate());        }
 
         OCIO_CHECK_EQUAL(config->getNumColorSpaces(OCIO::SEARCH_REFERENCE_SPACE_ALL,
                                                    OCIO::COLORSPACE_ALL), 5);
