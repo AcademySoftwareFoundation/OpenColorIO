@@ -475,6 +475,7 @@ enum RangeStyle
 };
 
 /// Enumeration of the :cpp:class:`FixedFunctionTransform` transform algorithms.
+
 enum FixedFunctionStyle
 {
     FIXED_FUNCTION_ACES_RED_MOD_03 = 0,         ///< Red modifier (ACES 0.3/0.7)
@@ -493,10 +494,10 @@ enum FixedFunctionStyle
     FIXED_FUNCTION_LIN_TO_PQ,                   ///< SMPTE ST-2084 OETF, scaled with 100 nits at 1.0 (neg vals mirrored)
     FIXED_FUNCTION_LIN_TO_GAMMA_LOG,            ///< Parametrized gamma and log segments with mirroring
     FIXED_FUNCTION_LIN_TO_DOUBLE_LOG,           ///< Two parameterized LogAffineTransforms with a middle linear segment
-    FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20,    ///< ACES 2.0 Display Rendering Transform
-    FIXED_FUNCTION_ACES_RGB_TO_JMH_20,          ///< ACES 2.0 RGB to JMh Transform
-    FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20,  ///< ACES 2.0 Tonescale and chroma compression Transform
-    FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20       ///< ACES 2.0 Gamut compression Transform
+    FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20,    ///< ACES 2.0 Display Rendering
+    FIXED_FUNCTION_ACES_RGB_TO_JMH_20,          ///< ACES 2.0 RGB to JMh
+    FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20,  ///< ACES 2.0 Tonescale and chroma compression
+    FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20       ///< ACES 2.0 Gamut compression
 };
 
 /// Enumeration of the :cpp:class:`ExposureContrastTransform` transform algorithms.
