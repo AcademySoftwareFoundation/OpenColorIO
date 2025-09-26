@@ -206,7 +206,7 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
         OCIO_CHECK_EQUAL(shaderDesc->getDescriptorSetIndex(), 123);
         OCIO_CHECK_EQUAL(shaderDesc->getTextureBindingStart(), 456);
 
-        auto getSize = []() -> float { return 2; }; //simulate only 2 elements in the array
+        auto getSize = []() -> int { return 2; }; //simulate only 2 elements in the array
         auto getArray = []() -> const float* { return nullptr; };
         const unsigned maxSize = 3;
         OCIO_CHECK_NO_THROW(shaderDesc->addUniform("array", getSize, getArray, maxSize));
