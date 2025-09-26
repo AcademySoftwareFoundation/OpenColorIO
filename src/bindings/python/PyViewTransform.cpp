@@ -105,6 +105,12 @@ void bindPyViewTransform(py::module & m)
              DOC(ViewTransform, getDescription))
         .def("setDescription", &ViewTransform::setDescription, "description"_a,
              DOC(ViewTransform, setDescription))
+        .def("getInterchangeAttribute", &ViewTransform::getInterchangeAttribute, "attrName"_a,
+             DOC(ViewTransform, getInterchangeAttribute))
+        .def("setInterchangeAttribute", &ViewTransform::setInterchangeAttribute, "attrName"_a, "attrValue"_a,
+            DOC(ViewTransform, setInterchangeAttribute))
+        .def("getInterchangeAttributes", &ViewTransform:: getInterchangeAttributes,
+            DOC(ViewTransform, getInterchangeAttributes))
         .def("hasCategory", &ViewTransform::hasCategory, "category"_a,
              DOC(ViewTransform, hasCategory))
         .def("addCategory", &ViewTransform::addCategory, "category"_a,

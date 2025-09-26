@@ -13,6 +13,7 @@
 #include <fstream>
 #include <vector>
 #include <cstdint>
+#include <map>
 
 #include "OpenColorABI.h"
 #include "OpenColorTypes.h"
@@ -854,7 +855,7 @@ public:
      */
 
     /// Check if a view within a given display is referencing one of the config's shared views.
-    bool viewIsShared(const char * dispName, const char * viewName) const;
+    bool isViewShared(const char * dispName, const char * viewName) const;
 
     /// Will throw if view or colorSpaceName are null or empty.
     void addSharedView(const char * view, const char * viewTransformName,
@@ -902,7 +903,7 @@ public:
      * the function does not attempt to compare that the color spaces or view transforms
      * being referenced are identical (only that they have the same name).
      */
-    static bool ViewsAreEqual(const ConstConfigRcPtr & first,
+    static bool AreViewsEqual(const ConstConfigRcPtr & first,
                               const ConstConfigRcPtr & second,
                               const char * dispName,
                               const char * viewName);
@@ -933,7 +934,7 @@ public:
      * check config-level shared views if dispName is null. It will not check config level
      * shared views if dispName is not null.
      */
-    bool displayHasView(const char * dispName, const char * viewName) const;
+    bool hasView(const char * dispName, const char * viewName) const;
 
     /**
      * For the (display, view) pair, specify which color space and look to use.
@@ -1008,7 +1009,7 @@ public:
     bool hasVirtualView(const char * viewName) const;
 
     /// Check if a given virtual view is referencing one of the config's shared views.
-    bool virtualViewIsShared(const char * viewName) const;
+    bool isVirtualViewShared(const char * viewName) const;
 
     void addVirtualDisplayView(const char * view,
                                const char * viewTransformName,
@@ -1037,7 +1038,7 @@ public:
      * the function does not attempt to compare that the color spaces or view transforms
      * being referenced are identical (only that they have the same name).
      */
-    static bool VirtualViewsAreEqual(const ConstConfigRcPtr & first,
+    static bool AreVirtualViewsEqual(const ConstConfigRcPtr & first,
                                      const ConstConfigRcPtr & second,
                                      const char * viewName);
 
@@ -1095,37 +1096,78 @@ public:
     /**
      * \brief
      * 
-     * $OCIO_ACTIVE_DISPLAYS envvar can, at runtime, optionally override the
-     * allowed displays. It is a comma or colon delimited list. Active displays
-     * that are not in the specified profile will be ignored, and the
-     * left-most defined display will be the default.
+     * The Active Displays list allows end users, config authors, and client apps to filter and
+     * reorder of the list of displays available in a user-interface. The list may be left empty
+     * to indicate all displays are active.
+     *
+     * The first active display is the config's Default Display.
+     *
+     * If the active list would remove all displays from a config, it is ignored (though the
+     * config won't validate).
+     *
+     * When serialized in the config, commas are used as separators. However, if a display name
+     * contains a comma, the name will be enclosed in quotes so its comma is not a separator.
      * 
-     * Comma-delimited list of names to filter and order the active displays.
-     * 
-     * \note
-     *      The setter does not override the envvar.  The getter does not take into
-     *      account the envvar value and thus may not represent what the user is seeing.
+     * The OCIO_ACTIVE_DISPLAYS environment variable will override the active list specified in
+     * the config file as well as any modifications made by the client app. These functions
+     * only get and set what is in the config object and do not take into account the override
+     * and thus may not represent the actual user experience.
      */
+    /// Set all active displays at once as a comma or colon delimited string. This replaces any
+    /// previous contents of the list.
     void setActiveDisplays(const char * displays);
+    /// Get a string with all active displays (as it would appear in a config file).
+    /// Commas are always used as the separator.
     const char * getActiveDisplays() const;
+    /// Get the number of active displays.
+    int getNumActiveDisplays() const;
+    /// Get a single active display, by index. Returns nullptr if the index is out of range.
+    const char * getActiveDisplay(int index) const;
+    /// Add a single active display to the end of the list. If the display is already present,
+    /// no action is taken.
+    void addActiveDisplay(const char * display);
+    /// Remove a single display. Will throw if the display is not present.
+    void removeActiveDisplay(const char * display);
+    /// Clear the active displays list.
+    void clearActiveDisplays();
 
     /**
      * \brief
      * 
-     * $OCIO_ACTIVE_VIEWS envvar can, at runtime, optionally override the allowed views.
-     * It is a comma or colon delimited list.
-     * Active views that are not in the specified profile will be ignored, and the
-     * left-most defined view will be the default.
+     * The Active Views list allows end users, config authors, and client apps to filter and
+     * reorder of the list of views available in a user-interface. The list may be left empty
+     * to indicate all views are active.
+     *
+     * The first active view for a display is its Default View.
+     *
+     * If the active list would remove all views from a display, the list is ignored for that
+     * display and all views are shown for it.
+     *
+     * When serialized in the config, commas are used as separators. However, if a view name
+     * contains a comma, the name will be enclosed in quotes so its comma is not a separator.
      * 
-     * Comma-delimited list of names to filter and order the active views.
-     * 
-     * \note
-     *     The setter does not override the envvar. The getter does not take
-     *     into account the envvar value and thus may not represent what the
-     *     user is seeing.
+     * The OCIO_ACTIVE_VIEWS environment variable will override the active list specified in
+     * the config file as well as any modifications made by the client app. These functions
+     * only get and set what is in the config object and do not take into account the override
+     * and thus may not represent the actual user experience.
      */
+    /// Set all active views at once as a comma or colon delimited string. This replaces any
+    /// previous contents of the list.
     void setActiveViews(const char * views);
+    /// Get a string with all active views (as it would appear in a config file).
+    /// Commas are always used as the separator.
     const char * getActiveViews() const;
+    /// Get the number of active views.
+    int getNumActiveViews() const;
+    /// Get a single active view, by index. Returns nullptr if the index is out of range.
+    const char * getActiveView(int index) const;
+    /// Add a single active view to the end of the list. If the view is already present,
+    /// no action is taken.
+    void addActiveView(const char * view);
+    /// Remove a single view. Will throw if the view is not present.
+    void removeActiveView(const char * view);
+    /// Clear the active views list.
+    void clearActiveViews();
 
     /// Get all displays in the config, ignoring the active_displays list.
     int getNumDisplaysAll() const noexcept;
@@ -1136,6 +1178,11 @@ public:
      * intended to be temporary (i.e. for the current session) and are not saved to a config file.
      */
     bool isDisplayTemporary(int index) const noexcept;
+    /**
+     * Allows setting the flag that controls whether a display is temporary. This may be helpful,
+     * for example, to share a config with a temporary instantiated display with an OFX plug-in.
+     */
+    void setDisplayTemporary(int index, bool isTemporary) noexcept;
 
     /**
      * Get either the shared or display-defined views for a display. The
@@ -1979,6 +2026,40 @@ public:
     const char * getDescription() const noexcept;
     void setDescription(const char * description);
 
+    /**
+     * Get/Set the interop ID for the color space. The interop ID is a
+     * structured string defined by the Color Interop Forum. It is intended to
+     * identify color spaces in a way that is portable across different configs,
+     * making it suitable for use in various file formats. The Color Interop
+     * Forum publishes ID strings for common color spaces. If you create your
+     * own IDs, they must be preceded by a namespace string. The setter will
+     * throw if the string does not follow certain rules (run ociocheck for a
+     * more complete validation).
+     */
+    const char * getInteropID() const noexcept;
+    void setInteropID(const char * interopID);
+
+    /**
+     * Get/Set the interchange attributes.
+     *
+     * Currently supported attribute names are "amf_transform_ids" and
+     * "icc_profile_name". Using any other name will throw. If the attribute is
+     * not defined, it will return an empty string. Setting the value to an empty
+     * string will effectively delete the attribute.
+     *
+     * The AMF transform IDs are used to identify specific transforms in the
+     * ACES Metadata File. Multiple transform IDs can be specified in a
+     * newline-separated string.
+     *
+     * The ICC profile name identifies the ICC color profile associated with
+     * this color space. This can be used to link OCIO color spaces with
+     * corresponding ICC profiles for applications that need to work with both
+     * color management systems.
+     */
+    const char *getInterchangeAttribute(const char *attrName) const;
+    void setInterchangeAttribute(const char* attrName, const char *value);
+    std::map<std::string, std::string> getInterchangeAttributes() const noexcept;
+
     BitDepth getBitDepth() const noexcept;
     void setBitDepth(BitDepth bitDepth);
 
@@ -2326,6 +2407,22 @@ public:
     const char * getDescription() const;
     void setDescription(const char * description);
 
+    /**
+    * Get/Set the interchange attributes.
+    *
+    * Currently the only supported attribute name is "amf_transform_ids". Using
+    * any other name will throw. If the attribute is not defined, it will return
+    * an empty string. Setting the value to an empty string will effectively
+    * delete the attribute.
+    *
+    * The AMF transform IDs are used to identify specific transforms in the ACES
+    * Metadata File. Multiple transform IDs can be specified in a
+    * newline-separated string.
+    */
+    const char *getInterchangeAttribute(const char *attrName) const;
+    void setInterchangeAttribute(const char* attrName, const char *value);
+    std::map<std::string, std::string> getInterchangeAttributes() const noexcept;
+
     Look(const Look &) = delete;
     Look& operator= (const Look &) = delete;
     /// Do not use (needed only for pybind11).
@@ -2460,6 +2557,22 @@ public:
 
     const char * getDescription() const noexcept;
     void setDescription(const char * description);
+
+    /**
+    * Get/Set the interchange attributes.
+    *
+    * Currently the only supported attribute name is "amf_transform_ids". Using
+    * any other name will throw. If the attribute is not defined, it will return
+    * an empty string. Setting the value to an empty string will effectively
+    * delete the attribute.
+    *
+    * The AMF transform IDs are used to identify specific transforms in the ACES
+    * Metadata File. Multiple transform IDs can be specified in a
+    * newline-separated string.
+    */
+    const char *getInterchangeAttribute(const char *attrName) const;
+    void setInterchangeAttribute(const char* attrName, const char *value);
+    std::map<std::string, std::string> getInterchangeAttributes() const noexcept;
 
     /// \see ColorSpace::hasCategory
     bool hasCategory(const char * category) const;

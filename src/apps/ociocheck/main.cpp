@@ -6,6 +6,7 @@
 #include <fstream>
 #include <set>
 #include <vector>
+#include <algorithm>
 
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
@@ -25,6 +26,83 @@ const char * DESC_STRING = "\n\n"
 "regardless of whether they are active or inactive.\n\n"
 "Ociocheck can also be used to clean up formatting on an existing profile\n"
 "that has been manually edited, using the '-o' option.\n";
+
+
+// returns true if the interopID is valid
+bool isValidInteropID(const std::string& id)
+{
+    // See https://github.com/AcademySoftwareFoundation/ColorInterop for the details.
+
+    static const std::set<std::string> cifTextureIDs = {
+        "lin_ap1_scene",
+        "lin_ap0_scene",
+        "lin_rec709_scene",
+        "lin_p3d65_scene",
+        "lin_rec2020_scene",
+        "lin_adobergb_scene",
+        "lin_ciexyzd65_scene",
+        "srgb_rec709_scene",
+        "g22_rec709_scene",
+        "g18_rec709_scene",
+        "srgb_ap1_scene",
+        "g22_ap1_scene",
+        "srgb_p3d65_scene",
+        "g22_adobergb_scene",
+        "data",
+        "unknown"
+    };
+
+    static const std::set<std::string> cifDisplayIDs = {
+        "srgb_rec709_display",
+        "g24_rec709_display",
+        "srgb_p3d65_display",
+        "srgbx_p3d65_display",
+        "pq_p3d65_display",
+        "pq_rec2020_display",
+        "hlg_rec2020_display",
+        "g22_rec709_display",
+        "g22_adobergb_display",
+        "g26_p3d65_display",
+        "g26_xyzd65_display",
+        "pq_xyzd65_display",
+    };
+
+    if (id.empty()) 
+        return true;
+
+    // Check if has a namespace.
+    size_t pos = id.find(':');
+    if (pos == std::string::npos) 
+    {
+        // No namespace, so id must be in the Color Interop Forum ID list.
+        if (cifTextureIDs.count(id) == 0 && cifDisplayIDs.count(id)==0)
+        {
+            std::cout << "ERROR: InteropID '" << id << "' is not valid. "
+                "It should either be one of Color Interop Forum standard IDs or "
+                "it must contain a namespace followed by ':', e.g. 'mycompany:mycolorspace'." << 
+                std::endl;
+            return false;
+        }
+    }
+    else
+    {
+        // Namespace found, split into namespace and id.
+        std::string ns = id.substr(0, pos);
+        std::string cs = id.substr(pos+1);
+
+        // Id should not be in the Color Interop Forum ID list.
+        if (cifTextureIDs.count(cs) > 0 || cifDisplayIDs.count(cs)> 0) 
+        {
+            std::cout << "ERROR: InteropID '" << id << "' is not valid. "
+                "The ID part must not be one of the Color Interop Forum standard IDs when a namespace is used." << 
+                std::endl;
+            return false;
+        }
+    }
+
+    // all clear.
+    return true;
+}
 
 int main(int argc, const char **argv)
 {
@@ -297,6 +375,15 @@ int main(int argc, const char **argv)
                     OCIO::SEARCH_REFERENCE_SPACE_ALL,
                     OCIO::COLORSPACE_ALL,
                     i));
+
+                std::string interopID = cs->getInteropID();
+                if (!interopID.empty())
+                {
+                    if (!isValidInteropID(interopID))
+                    {
+                        errorcount += 1;
+                    }
+                }
 
                 // Try to load the transform for the to_ref direction -- this will load any LUTs.
                 bool toRefOK = true;

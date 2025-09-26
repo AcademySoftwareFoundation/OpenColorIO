@@ -56,6 +56,7 @@ class ViewTransformTest(unittest.TestCase):
         vt.setName('test name')
         vt.setFamily('test family')
         vt.setDescription('test description')
+        vt.setInterchangeAttribute('amf_transform_ids', 'test amf id')
         mat = OCIO.MatrixTransform()
         vt.setTransform(mat, OCIO.VIEWTRANSFORM_DIR_TO_REFERENCE)
         vt.setTransform(direction=OCIO.VIEWTRANSFORM_DIR_FROM_REFERENCE, transform=mat)
@@ -67,6 +68,9 @@ class ViewTransformTest(unittest.TestCase):
         self.assertEqual(other.getName(), vt.getName())
         self.assertEqual(other.getFamily(), vt.getFamily())
         self.assertEqual(other.getDescription(), vt.getDescription())
+        self.assertEqual(
+            other.getInterchangeAttribute("amf_transform_ids"), 
+            vt.getInterchangeAttribute("amf_transform_ids"))
         self.assertTrue(other.getTransform(OCIO.VIEWTRANSFORM_DIR_TO_REFERENCE).equals(vt.getTransform(OCIO.VIEWTRANSFORM_DIR_TO_REFERENCE)))
         self.assertTrue(other.getTransform(OCIO.VIEWTRANSFORM_DIR_FROM_REFERENCE).equals(vt.getTransform(OCIO.VIEWTRANSFORM_DIR_FROM_REFERENCE)))
         self.assertEqual(list(other.getCategories()), list(vt.getCategories()))
@@ -100,6 +104,24 @@ class ViewTransformTest(unittest.TestCase):
 
         vt.setDescription('test description')
         self.assertEqual(vt.getDescription(), 'test description')
+
+    def test_interchangeAttribute(self):
+        """
+        Test the setInterchangeAttribute() and setInterchangeAttribute() methods.
+        """
+        vt = OCIO.ViewTransform()
+
+        # Default initialized description value is ""
+        self.assertEqual(vt.getInterchangeAttribute('amf_transform_ids'), '')
+
+        vt.setInterchangeAttribute('amf_transform_ids', 'sample amf')
+        self.assertEqual('sample amf', vt.getInterchangeAttribute('amf_transform_ids'))
+        self.assertEqual(1, len(vt.getInterchangeAttributes()))
+
+        # Wrong key tests.
+        with self.assertRaises(TypeError):
+            vt.getInterchangeAttribute('icc_profile_ name', 'should be rejected')
+
 
     def test_transform(self):
         """

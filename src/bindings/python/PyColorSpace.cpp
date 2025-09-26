@@ -61,7 +61,7 @@ void bindPyColorSpace(py::module & m)
         py::class_<ColorSpaceCategoryIterator>(
             clsColorSpace, "ColorSpaceCategoryIterator");
 
-    auto clsColorSpacAliasIterator = 
+    auto clsColorSpaceAliasIterator = 
         py::class_<ColorSpaceAliasIterator>(
             clsColorSpace, "ColorSpaceAliasIterator");
 
@@ -90,7 +90,9 @@ void bindPyColorSpace(py::module & m)
                          const std::vector<float> & allocationVars,
                          const TransformRcPtr & toReference,
                          const TransformRcPtr & fromReference,
-                         const std::vector<std::string> & categories) 
+                         const std::vector<std::string> & categories,
+                         const std::string & interopID
+            ) 
             {
                 ColorSpaceRcPtr p = ColorSpace::Create(referenceSpace);
                 if (!aliases.empty())
@@ -102,11 +104,12 @@ void bindPyColorSpace(py::module & m)
                     }
                 }
                 // Setting the name will remove alias named the same, so set name after.
-                if (!name.empty())          { p->setName(name.c_str()); }
-                if (!family.empty())        { p->setFamily(family.c_str()); }
-                if (!encoding.empty())      { p->setEncoding(encoding.c_str()); }
-                if (!equalityGroup.empty()) { p->setEqualityGroup(equalityGroup.c_str()); }
-                if (!description.empty())   { p->setDescription(description.c_str()); }
+                if (!name.empty())           { p->setName(name.c_str()); }
+                if (!family.empty())         { p->setFamily(family.c_str()); }
+                if (!encoding.empty())       { p->setEncoding(encoding.c_str()); }
+                if (!equalityGroup.empty())  { p->setEqualityGroup(equalityGroup.c_str()); }
+                if (!description.empty())    { p->setDescription(description.c_str()); }
+                if (!interopID.empty())      { p->setInteropID(interopID.c_str()); }
                 p->setBitDepth(bitDepth);
                 p->setIsData(isData);
                 p->setAllocation(allocation);
@@ -150,6 +153,7 @@ void bindPyColorSpace(py::module & m)
              "toReference"_a = DEFAULT->getTransform(COLORSPACE_DIR_TO_REFERENCE),
              "fromReference"_a = DEFAULT->getTransform(COLORSPACE_DIR_FROM_REFERENCE),
              "categories"_a = getCategoriesStdVec(DEFAULT),
+             "interopID"_a = DEFAULT->getInteropID(),
              DOC(ColorSpace, Create, 2))
 
         .def("__deepcopy__", [](const ConstColorSpaceRcPtr & self, py::dict)
@@ -193,6 +197,16 @@ void bindPyColorSpace(py::module & m)
              DOC(ColorSpace, getDescription))
         .def("setDescription", &ColorSpace::setDescription, "description"_a, 
              DOC(ColorSpace, setDescription))
+        .def("getInteropID", &ColorSpace::getInteropID,
+             DOC(ColorSpace, getInteropID))
+        .def("setInteropID", &ColorSpace::setInteropID, "interopID"_a,
+             DOC(ColorSpace, setInteropID))
+        .def("getInterchangeAttribute", &ColorSpace::getInterchangeAttribute, "attrName"_a,
+             DOC(ColorSpace, getInterchangeAttribute))
+        .def("setInterchangeAttribute", &ColorSpace::setInterchangeAttribute, "attrName"_a, "attrValue"_a,
+            DOC(ColorSpace, setInterchangeAttribute))
+        .def("getInterchangeAttributes", &ColorSpace:: getInterchangeAttributes,
+            DOC(ColorSpace, getInterchangeAttributes))
         .def("getBitDepth", &ColorSpace::getBitDepth, 
              DOC(ColorSpace, getBitDepth))
         .def("setBitDepth", &ColorSpace::setBitDepth, "bitDepth"_a, 
@@ -268,7 +282,7 @@ void bindPyColorSpace(py::module & m)
                 return it.m_obj->getCategory(i);
             });
 
-    clsColorSpacAliasIterator
+    clsColorSpaceAliasIterator
         .def("__len__", [](ColorSpaceAliasIterator & it) 
             { 
                 return it.m_obj->getNumAliases(); 

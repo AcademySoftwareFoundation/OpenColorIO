@@ -26,6 +26,8 @@ enum ConfigIterator
     IT_SHARED_VIEW,
     IT_DISPLAY_VIEW,
     IT_DISPLAY_VIEW_COLORSPACE,
+    IT_ACTIVE_DISPLAYS_LIST,
+    IT_ACTIVE_VIEWS_LIST,
     IT_LOOK_NAME,
     IT_LOOK,
     IT_VIEW_TRANSFORM_NAME,
@@ -63,6 +65,8 @@ using ViewForColorSpaceIterator        = PyIterator<ConfigRcPtr, IT_DISPLAY_VIEW
                                                     std::string, std::string>;
 using ViewForViewTypeIterator          = PyIterator<ConfigRcPtr, IT_DISPLAY_VIEW_TYPE, 
                                                     ViewType, std::string>;
+using ActiveDisplaysListIterator       = PyIterator<ConfigRcPtr, IT_ACTIVE_DISPLAYS_LIST>;
+using ActiveViewsListIterator          = PyIterator<ConfigRcPtr, IT_ACTIVE_VIEWS_LIST>;
 using LookNameIterator                 = PyIterator<ConfigRcPtr, IT_LOOK_NAME>;
 using LookIterator                     = PyIterator<ConfigRcPtr, IT_LOOK>;
 using ViewTransformNameIterator        = PyIterator<ConfigRcPtr, IT_VIEW_TRANSFORM_NAME>;
@@ -141,6 +145,14 @@ void bindPyConfig(py::module & m)
     auto clsViewForViewTypeIterator =
         py::class_<ViewForViewTypeIterator>(
             clsConfig, "ViewForViewTypeIterator");
+
+    auto clsActiveDisplaysListIterator = 
+        py::class_<ActiveDisplaysListIterator>(
+            clsConfig, "ActiveDisplaysListIterator");
+
+    auto clsActiveViewsListIterator = 
+        py::class_<ActiveViewsListIterator>(
+            clsConfig, "ActiveViewsListIterator");
 
     auto clsLookNameIterator = 
         py::class_<LookNameIterator>(
@@ -458,9 +470,9 @@ void bindPyConfig(py::module & m)
         .def("getDisplayViewDescription", &Config::getDisplayViewDescription, 
              "display"_a, "view"_a, 
              DOC(Config, getDisplayViewDescription))
-        .def("displayHasView", &Config::displayHasView,
+        .def("hasView", &Config::hasView,
              "display"_a, "view"_a,
-             DOC(Config, displayHasView))
+             DOC(Config, hasView))
         .def("addDisplayView", 
              (void (Config::*)(const char *, const char *, const char *, const char *)) 
              &Config::addDisplayView, 
@@ -480,23 +492,23 @@ void bindPyConfig(py::module & m)
              "ruleName"_a = "", 
              "description"_a = "", 
              DOC(Config, addDisplayView))
-        .def("viewIsShared", &Config::viewIsShared, "display"_a, "view"_a,
-             DOC(Config, viewIsShared))
+        .def("isViewShared", &Config::isViewShared, "display"_a, "view"_a,
+             DOC(Config, isViewShared))
         .def("addDisplaySharedView", &Config::addDisplaySharedView, "display"_a, "view"_a, 
              DOC(Config, addDisplaySharedView))
         .def("removeDisplayView", &Config::removeDisplayView, "display"_a, "view"_a, 
              DOC(Config, removeDisplayView))
         .def("clearDisplays", &Config::clearDisplays, 
              DOC(Config, clearDisplays))
-        .def_static("ViewsAreEqual", [](const ConstConfigRcPtr & first,
+        .def_static("AreViewsEqual", [](const ConstConfigRcPtr & first,
                                         const ConstConfigRcPtr & second,
                                         const char * dispName,
                                         const char * viewName)
             {
-                return Config::ViewsAreEqual(first, second, dispName, viewName);
+                return Config::AreViewsEqual(first, second, dispName, viewName);
             },
                     "first"_a, "second"_a, "dispName"_a, "viewName"_a,
-                    DOC(Config, ViewsAreEqual))
+                    DOC(Config, AreViewsEqual))
 
         // Virtual Display
         .def("hasVirtualView", &Config::hasVirtualView, "view"_a,
@@ -507,8 +519,8 @@ void bindPyConfig(py::module & m)
              "ruleName"_a = "", 
              "description"_a = "", 
              DOC(Config, addVirtualDisplayView))
-        .def("virtualViewIsShared", &Config::virtualViewIsShared, "view"_a,
-             DOC(Config, virtualViewIsShared))
+        .def("isVirtualViewShared", &Config::isVirtualViewShared, "view"_a,
+             DOC(Config, isVirtualViewShared))
         .def("addVirtualDisplaySharedView", &Config::addVirtualDisplaySharedView, "sharedView"_a,
              DOC(Config, addVirtualDisplaySharedView))
         .def("getVirtualDisplayViews", [](ConfigRcPtr & self, ViewType type)
@@ -552,24 +564,57 @@ void bindPyConfig(py::module & m)
                  return false;
              },
              "display"_a)
-        .def_static("VirtualViewsAreEqual", [](const ConstConfigRcPtr & first,
+        .def("setDisplayTemporary", [](ConfigRcPtr & self, const std::string & display, bool isTemporary)
+             {
+                 for (int i = 0; i < self->getNumDisplaysAll(); i++)
+                 {
+                     std::string other(self->getDisplayAll(i));
+                     if (StringUtils::Compare(display, other))
+                     {
+                         self->setDisplayTemporary(i, isTemporary);
+                     }
+                 }
+             },
+             "display"_a, "isTemporary"_a)
+        .def_static("AreVirtualViewsEqual", [](const ConstConfigRcPtr & first,
                                                const ConstConfigRcPtr & second,
                                                const char * viewName)
             {
-                return Config::VirtualViewsAreEqual(first, second, viewName);
+                return Config::AreVirtualViewsEqual(first, second, viewName);
             },
                     "first"_a, "second"_a, "viewName"_a,
-                    DOC(Config, VirtualViewsAreEqual))
+                    DOC(Config, AreVirtualViewsEqual))
 
         // Active Displays and Views
         .def("setActiveDisplays", &Config::setActiveDisplays, "displays"_a, 
              DOC(Config, setActiveDisplays))
-        .def("getActiveDisplays", &Config::getActiveDisplays, 
-             DOC(Config, getActiveDisplays))
+        .def("getActiveDisplays", [](ConfigRcPtr & self) 
+            { 
+                return ActiveDisplaysListIterator(self); 
+            })
+        .def("addActiveDisplay", &Config::addActiveDisplay, "display"_a, 
+             DOC(Config, addActiveDisplay))
+        .def("removeActiveDisplay", &Config::removeActiveDisplay, "display"_a, 
+             DOC(Config, removeActiveDisplay))
+        .def("clearActiveDisplays", &Config::clearActiveDisplays, 
+             DOC(Config, clearActiveDisplays))
+        .def("getNumActiveDisplays", &Config::getNumActiveDisplays, 
+             DOC(Config, getNumActiveDisplays))
+
         .def("setActiveViews", &Config::setActiveViews, "views"_a, 
              DOC(Config, setActiveViews))
-        .def("getActiveViews", &Config::getActiveViews, 
-             DOC(Config, getActiveViews))
+        .def("getActiveViews", [](ConfigRcPtr & self) 
+            { 
+                return ActiveViewsListIterator(self); 
+            })
+        .def("addActiveView", &Config::addActiveView, "view"_a, 
+             DOC(Config, addActiveView))
+        .def("removeActiveView", &Config::removeActiveView, "view"_a, 
+             DOC(Config, removeActiveView))
+        .def("clearActiveViews", &Config::clearActiveViews, 
+             DOC(Config, clearActiveViews))
+        .def("getNumActiveViews", &Config::getNumActiveViews, 
+             DOC(Config, getNumActiveViews))
 
         // Luma
         .def("getDefaultLumaCoefs", [](ConfigRcPtr & self)
@@ -1247,6 +1292,34 @@ void bindPyConfig(py::module & m)
                                                            std::get<1>(it.m_args).c_str()));
                 return it.m_obj->getView(std::get<0>(it.m_args),
                                          std::get<1>(it.m_args).c_str(), i);
+            });
+
+    clsActiveDisplaysListIterator
+        .def("__len__", [](ActiveDisplaysListIterator & it) { return it.m_obj->getNumActiveDisplays(); })
+        .def("__getitem__", [](ActiveDisplaysListIterator & it, int i) 
+            { 
+                it.checkIndex(i, it.m_obj->getNumActiveDisplays());
+                return it.m_obj->getActiveDisplay(i);
+            })
+        .def("__iter__", [](ActiveDisplaysListIterator & it) -> ActiveDisplaysListIterator & { return it; })
+        .def("__next__", [](ActiveDisplaysListIterator & it)
+            {
+                int i = it.nextIndex(it.m_obj->getNumActiveDisplays());
+                return it.m_obj->getActiveDisplay(i);
+            });
+
+    clsActiveViewsListIterator
+        .def("__len__", [](ActiveViewsListIterator & it) { return it.m_obj->getNumActiveViews(); })
+        .def("__getitem__", [](ActiveViewsListIterator & it, int i) 
+            { 
+                it.checkIndex(i, it.m_obj->getNumActiveViews());
+                return it.m_obj->getActiveView(i);
+            })
+        .def("__iter__", [](ActiveViewsListIterator & it) -> ActiveViewsListIterator & { return it; })
+        .def("__next__", [](ActiveViewsListIterator & it)
+            {
+                int i = it.nextIndex(it.m_obj->getNumActiveViews());
+                return it.m_obj->getActiveView(i);
             });
 
     clsLookNameIterator

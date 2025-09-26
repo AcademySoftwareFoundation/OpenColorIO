@@ -9,7 +9,14 @@ SystemMonitors
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_systemmonitors.rst
+      .. autoclass:: PyOpenColorIO.SystemMonitors
+         :members:
+         :undoc-members:
+         :special-members: __init__
+         :exclude-members: MonitorIterator
+
+      .. autoclass:: PyOpenColorIO.SystemMonitors.MonitorIterator
+         :special-members: __getitem__, __iter__, __len__, __next__
 
    .. group-tab:: C++
 

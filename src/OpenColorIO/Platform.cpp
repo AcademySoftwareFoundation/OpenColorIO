@@ -154,6 +154,11 @@ bool isEnvPresent(const char * name)
 
 int Strcasecmp(const char * str1, const char * str2)
 {
+    if (!str1 || !str2) 
+    {
+        throw Exception("String pointer for comparison must not be null.");
+    }
+
 #ifdef _WIN32
     return ::_stricmp(str1, str2);
 #else
@@ -163,6 +168,11 @@ int Strcasecmp(const char * str1, const char * str2)
 
 int Strncasecmp(const char * str1, const char * str2, size_t n)
 {
+    if (!str1 || !str2) 
+    {
+        throw Exception("String pointer for comparison must not be null.");
+    }
+
 #ifdef _WIN32
     return ::_strnicmp(str1, str2, n);
 #else
