@@ -100,6 +100,19 @@ written to the dstImgDesc image, leaving srcImgDesc unchanged.
                 BitDepth bitDepth = getBufferBitDepth(info);
 
                 py::gil_scoped_release release;
+                bool isCContiguous = true;
+                if (info.ndim >= 2) 
+                {
+                    // last dimension stride should be itemsize
+                    if (info.strides.back() != info.itemsize) 
+                    {
+                        isCContiguous = false;
+                    }
+                }
+                if (!isCContiguous) 
+                {
+                    throw std::runtime_error("applyRGB only supports C-contiguous (row-major) arrays");
+                }
 
                 long numChannels = 3;
                 long width = (long)info.size / numChannels;

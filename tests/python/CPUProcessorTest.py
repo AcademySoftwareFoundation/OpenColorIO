@@ -385,6 +385,89 @@ class CPUProcessorTest(unittest.TestCase):
                 delta=self.FLOAT_DELTA
             )
 
+    def test_apply_rgb_buffer_column_major(self):
+        if not np:
+            logger.warning("NumPy not found. Skipping test!")
+            return
+
+        for arr, cpu_proc_fwd, cpu_proc_inv in [
+            (
+                self.float_rgb_2d,
+                self.default_cpu_proc_fwd,
+                self.default_cpu_proc_inv
+            ),
+            (
+                self.float_rgb_3d,
+                self.default_cpu_proc_fwd,
+                self.default_cpu_proc_inv
+            ),
+            (
+                self.half_rgb_2d, 
+                self.half_cpu_proc_fwd, 
+                self.half_cpu_proc_inv
+            ),
+            (
+                self.half_rgb_3d, 
+                self.half_cpu_proc_fwd, 
+                self.half_cpu_proc_inv
+            ),
+            (
+                self.uint16_rgb_2d, 
+                self.uint16_cpu_proc_fwd, 
+                self.uint16_cpu_proc_inv
+            ),
+            (
+                self.uint16_rgb_3d, 
+                self.uint16_cpu_proc_fwd, 
+                self.uint16_cpu_proc_inv
+            ),
+            (
+                self.uint8_rgb_2d, 
+                self.uint8_cpu_proc_fwd, 
+                self.uint8_cpu_proc_inv
+            ),
+            (
+                self.uint8_rgb_3d, 
+                self.uint8_cpu_proc_fwd, 
+                self.uint8_cpu_proc_inv
+            ),
+        ]:
+            # Transpose to column-major format and
+            # Process duplicate array
+            arr_copy = arr.copy().T
+
+            cpu_proc_fwd.applyRGB(arr_copy)
+            for i in range(arr_copy.size):
+                if arr.dtype in (np.float32, np.float16):
+                    self.assertAlmostEqual(
+                        arr_copy.flat[i], 
+                        arr.flat[i] * 0.5,
+                        delta=self.FLOAT_DELTA
+                    )
+                else:
+                    self.assertAlmostEqual(
+                        arr_copy.flat[i], 
+                        arr.flat[i] // 2,
+                        delta=self.UINT_DELTA
+                    )
+
+            # Inverse transform roundtrips values in place
+            cpu_proc_inv.applyRGB(arr_copy)
+
+            for i in range(arr_copy.size):
+                if arr.dtype in (np.float32, np.float16):
+                    self.assertAlmostEqual(
+                        arr_copy.flat[i], 
+                        arr.flat[i],
+                        delta=self.FLOAT_DELTA
+                    )
+                else:
+                    self.assertAlmostEqual(
+                        arr_copy.flat[i], 
+                        arr.flat[i],
+                        delta=self.UINT_DELTA
+                    )
+
     def test_apply_rgb_buffer(self):
         if not np:
             logger.warning("NumPy not found. Skipping test!")
