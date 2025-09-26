@@ -168,6 +168,8 @@ void bindPyContext(py::module & m)
             { 
                 return StringVarIterator(self); 
             })
+        .def("setStringVar", &Context::setStringVar, "name"_a, "value"_a, 
+             DOC(Context, setStringVar))
         .def("clearStringVars", &Context::clearStringVars, 
              DOC(Context, clearStringVars))
         .def("getEnvironmentMode", &Context::getEnvironmentMode, 
