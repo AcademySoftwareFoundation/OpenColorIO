@@ -89,6 +89,8 @@ looks:
     name: ACES 1.3 Reference Gamut Compression
     process_space: ACES2065-1
     description: LMT (applied in ACES2065-1) to compress scene-referred values from common cameras into the AP1 gamut
+    interchange:
+      amf_transform_ids: urn:ampas:aces:transformId:v2.0:Look.Academy.ReferenceGamutCompress.a2.v1
     transform: !<BuiltinTransform> {style: ACES-LMT - ACES 1.3 Reference Gamut Compression}
 
 
@@ -106,62 +108,105 @@ view_transforms:
   - !<ViewTransform>
     name: ACES 2.0 - SDR 100 nits (Rec.709)
     description: Component of ACES 2 Output Transforms for 100 nit SDR Rec709
+    interchange:
+      amf_transform_ids: |
+        urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D65_100nit_in_Rec709-D65_sRGB-Piecewise.a2.v1
+        urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D65_100nit_in_Rec709-D65_Gamma2pt2.a2.v1
+        urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D65_100nit_in_P3-D65_sRGB-Piecewise.a2.v1
+        urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D65_48nit_in_P3-D65_Gamma2pt6.a2.v1
+        urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D65_100nit_in_Rec709-D65_BT1886.a2.v1
+        urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D65_100nit_in_Rec2100-D65_ST2084.a2.v1
+        urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D65_100nit_in_P3-D65_ST2084.a2.v1
     from_scene_reference: !<BuiltinTransform> {style: ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709_2.0}
 
   - !<ViewTransform>
     name: ACES 2.0 - SDR 100 nits (P3 D65)
     description: Component of ACES 2 Output Transforms for 100 nit SDR P3-D65
+    interchange:
+      amf_transform_ids: |
+        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D65_48nit_in_XYZ-E_Gamma2pt6.a2.v1
+        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D65_100nit_in_P3-D65_sRGB-Piecewise.a2.v1
+        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D65_48nit_in_P3-D65_Gamma2pt6.a2.v1
     from_scene_reference: !<BuiltinTransform> {style: ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D65_2.0}
 
   - !<ViewTransform>
     name: ACES 2.0 - HDR 1000 nits (P3 D65)
     description: Component of ACES 2 Output Transforms for 1000 nit HDR P3-D65
+    interchange:
+      amf_transform_ids: |
+        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D65_1000nit_in_P3-D65_sRGB-Piecewise.a2.v1
+        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D65_1000nit_in_Rec2100-D65_HLG.a2.v1
+        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D65_1000nit_in_Rec2100-D65_ST2084.a2.v1
+        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D65_1000nit_in_P3-D65_ST2084.a2.v1
     from_scene_reference: !<BuiltinTransform> {style: ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D65_2.0}
 
   - !<ViewTransform>
     name: ACES 2.0 - HDR 500 nits (P3 D65)
     description: Component of ACES 2 Output Transforms for 500 nit HDR P3-D65
+    interchange:
+      amf_transform_ids: |
+        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D65_500nit_in_Rec2100-D65_ST2084.a2.v1
+        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D65_500nit_in_P3-D65_ST2084.a2.v1
     from_scene_reference: !<BuiltinTransform> {style: ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D65_2.0}
 
   - !<ViewTransform>
     name: ACES 2.0 - HDR 2000 nits (P3 D65)
     description: Component of ACES 2 Output Transforms for 2000 nit HDR P3-D65
+    interchange:
+      amf_transform_ids: |
+        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D65_2000nit_in_Rec2100-D65_ST2084.a2.v1
+        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D65_2000nit_in_P3-D65_ST2084.a2.v1
     from_scene_reference: !<BuiltinTransform> {style: ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D65_2.0}
 
   - !<ViewTransform>
     name: ACES 2.0 - HDR 4000 nits (P3 D65)
     description: Component of ACES 2 Output Transforms for 4000 nit HDR P3-D65
+    interchange:
+      amf_transform_ids: |
+        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D65_4000nit_in_Rec2100-D65_ST2084.a2.v1
+        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D65_4000nit_in_P3-D65_ST2084.a2.v1
     from_scene_reference: !<BuiltinTransform> {style: ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D65_2.0}
 
   - !<ViewTransform>
     name: ACES 2.0 - HDR 500 nits (Rec.2020)
     description: Component of ACES 2 Output Transforms for 500 nit HDR Rec2020
+    interchange:
+      amf_transform_ids: urn:ampas:aces:transformId:v2.0:Output.Academy.Rec2100-D65_500nit_in_Rec2100-D65_ST2084.a2.v1
     from_scene_reference: !<BuiltinTransform> {style: ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-REC2020_2.0}
 
   - !<ViewTransform>
     name: ACES 2.0 - HDR 1000 nits (Rec.2020)
     description: Component of ACES 2 Output Transforms for 1000 nit HDR Rec2020
+    interchange:
+      amf_transform_ids: urn:ampas:aces:transformId:v2.0:Output.Academy.Rec2100-D65_1000nit_in_Rec2100-D65_ST2084.a2.v1
     from_scene_reference: !<BuiltinTransform> {style: ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020_2.0}
 
   - !<ViewTransform>
     name: ACES 2.0 - HDR 2000 nits (Rec.2020)
     description: Component of ACES 2 Output Transforms for 2000 nit HDR Rec2020
+    interchange:
+      amf_transform_ids: urn:ampas:aces:transformId:v2.0:Output.Academy.Rec2100-D65_2000nit_in_Rec2100-D65_ST2084.a2.v1
     from_scene_reference: !<BuiltinTransform> {style: ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-REC2020_2.0}
 
   - !<ViewTransform>
     name: ACES 2.0 - HDR 4000 nits (Rec.2020)
     description: Component of ACES 2 Output Transforms for 4000 nit HDR Rec2020
+    interchange:
+      amf_transform_ids: urn:ampas:aces:transformId:v2.0:Output.Academy.Rec2100-D65_4000nit_in_Rec2100-D65_ST2084.a2.v1
     from_scene_reference: !<BuiltinTransform> {style: ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020_2.0}
 
   - !<ViewTransform>
     name: ACES 2.0 - HDR 108 nits (P3 D65)
     description: Component of ACES 2 Output Transforms for 108 nit HDR P3-D65
+    interchange:
+      amf_transform_ids: urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D65_108nit_in_P3-D65_ST2084.a2.v1
     from_scene_reference: !<BuiltinTransform> {style: ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-108nit-P3-D65_2.0}
 
 display_colorspaces:
   - !<ColorSpace>
     name: CIE XYZ-D65 - Display-referred
-    aliases: [cie_xyz_d65_display, lin_ciexyzd65_display]
+    aliases: [cie_xyz_d65_display, lin_ciexyzd65_display, ocio:lin_ciexyzd65_display]
+    interop_id: ocio:lin_ciexyzd65_display
     family: ""
     equalitygroup: ""
     bitdepth: 32f
@@ -185,8 +230,6 @@ display_colorspaces:
       amf_transform_ids: |
         urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D65_100nit_in_Rec709-D65_sRGB-Piecewise.a2.v1
         urn:ampas:aces:transformId:v2.0:InvOutput.Academy.Rec709-D65_100nit_in_Rec709-D65_sRGB-Piecewise.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D60_100nit_in_Rec709-D65_sRGB-Piecewise.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.Rec709-D60_100nit_in_Rec709-D65_sRGB-Piecewise.a2.v1
     allocation: uniform
     from_display_reference: !<BuiltinTransform> {style: DISPLAY - CIE-XYZ-D65_to_sRGB - MIRROR NEGS}
 
@@ -205,8 +248,6 @@ display_colorspaces:
       amf_transform_ids: |
         urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D65_100nit_in_Rec709-D65_Gamma2pt2.a2.v1
         urn:ampas:aces:transformId:v2.0:InvOutput.Academy.Rec709-D65_100nit_in_Rec709-D65_Gamma2pt2.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D60_100nit_in_Rec709-D65_Gamma2pt2.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.Rec709-D60_100nit_in_Rec709-D65_Gamma2pt2.a2.v1
     allocation: uniform
     from_display_reference: !<BuiltinTransform> {style: DISPLAY - CIE-XYZ-D65_to_G2.2-REC.709 - MIRROR NEGS}
 
@@ -225,8 +266,6 @@ display_colorspaces:
       amf_transform_ids: |
         urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D65_100nit_in_P3-D65_sRGB-Piecewise.a2.v1
         urn:ampas:aces:transformId:v2.0:InvOutput.Academy.P3-D65_100nit_in_P3-D65_sRGB-Piecewise.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D60_100nit_in_P3-D65_sRGB-Piecewise.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.P3-D60_100nit_in_P3-D65_sRGB-Piecewise.a2.v1
     allocation: uniform
     from_display_reference: !<BuiltinTransform> {style: DISPLAY - CIE-XYZ-D65_to_DisplayP3}
 
@@ -245,12 +284,8 @@ display_colorspaces:
       amf_transform_ids: |
         urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D65_1000nit_in_P3-D65_sRGB-Piecewise.a2.v1
         urn:ampas:aces:transformId:v2.0:InvOutput.Academy.P3-D65_1000nit_in_P3-D65_sRGB-Piecewise.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D60_1000nit_in_P3-D65_sRGB-Piecewise.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.P3-D60_1000nit_in_P3-D65_sRGB-Piecewise.a2.v1
         urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D65_100nit_in_P3-D65_sRGB-Piecewise.a2.v1
         urn:ampas:aces:transformId:v2.0:InvOutput.Academy.Rec709-D65_100nit_in_P3-D65_sRGB-Piecewise.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D60_100nit_in_P3-D65_sRGB-Piecewise.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.Rec709-D60_100nit_in_P3-D65_sRGB-Piecewise.a2.v1
     allocation: uniform
     from_display_reference: !<BuiltinTransform> {style: DISPLAY - CIE-XYZ-D65_to_DisplayP3-HDR}
 
@@ -269,12 +304,8 @@ display_colorspaces:
       amf_transform_ids: |
         urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D65_48nit_in_P3-D65_Gamma2pt6.a2.v1
         urn:ampas:aces:transformId:v2.0:InvOutput.Academy.P3-D65_48nit_in_P3-D65_Gamma2pt6.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D60_48nit_in_P3-D65_Gamma2pt6.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.P3-D60_48nit_in_P3-D65_Gamma2pt6.a2.v1
         urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D65_48nit_in_P3-D65_Gamma2pt6.a2.v1
         urn:ampas:aces:transformId:v2.0:InvOutput.Academy.Rec709-D65_48nit_in_P3-D65_Gamma2pt6.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D60_48nit_in_P3-D65_Gamma2pt6.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.Rec709-D60_48nit_in_P3-D65_Gamma2pt6.a2.v1
     allocation: uniform
     from_display_reference: !<BuiltinTransform> {style: DISPLAY - CIE-XYZ-D65_to_G2.6-P3-D65 - MIRROR NEGS}
 
@@ -293,8 +324,6 @@ display_colorspaces:
       amf_transform_ids: |
         urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D65_100nit_in_Rec709-D65_BT1886.a2.v1
         urn:ampas:aces:transformId:v2.0:InvOutput.Academy.Rec709-D65_100nit_in_Rec709-D65_BT1886.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D60_100nit_in_Rec709-D65_BT1886.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.Rec709-D60_100nit_in_Rec709-D65_BT1886.a2.v1
     allocation: uniform
     from_display_reference: !<BuiltinTransform> {style: DISPLAY - CIE-XYZ-D65_to_REC.1886-REC.709 - MIRROR NEGS}
 
@@ -313,8 +342,6 @@ display_colorspaces:
       amf_transform_ids: |
         urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D65_1000nit_in_Rec2100-D65_HLG.a2.v1
         urn:ampas:aces:transformId:v2.0:InvOutput.Academy.P3-D65_1000nit_in_Rec2100-D65_HLG.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D60_1000nit_in_Rec2100-D65_HLG.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.P3-D60_1000nit_in_Rec2100-D65_HLG.a2.v1
     allocation: uniform
     from_display_reference: !<BuiltinTransform> {style: DISPLAY - CIE-XYZ-D65_to_REC.2100-HLG-1000nit}
 
@@ -339,14 +366,6 @@ display_colorspaces:
         urn:ampas:aces:transformId:v2.0:InvOutput.Academy.P3-D65_2000nit_in_Rec2100-D65_ST2084.a2.v1
         urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D65_4000nit_in_Rec2100-D65_ST2084.a2.v1
         urn:ampas:aces:transformId:v2.0:InvOutput.Academy.P3-D65_4000nit_in_Rec2100-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D60_500nit_in_Rec2100-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.P3-D60_500nit_in_Rec2100-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D60_1000nit_in_Rec2100-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.P3-D60_1000nit_in_Rec2100-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D60_2000nit_in_Rec2100-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.P3-D60_2000nit_in_Rec2100-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D60_4000nit_in_Rec2100-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.P3-D60_4000nit_in_Rec2100-D65_ST2084.a2.v1
         urn:ampas:aces:transformId:v2.0:Output.Academy.Rec2100-D65_500nit_in_Rec2100-D65_ST2084.a2.v1
         urn:ampas:aces:transformId:v2.0:InvOutput.Academy.Rec2100-D65_500nit_in_Rec2100-D65_ST2084.a2.v1
         urn:ampas:aces:transformId:v2.0:Output.Academy.Rec2100-D65_1000nit_in_Rec2100-D65_ST2084.a2.v1
@@ -355,16 +374,6 @@ display_colorspaces:
         urn:ampas:aces:transformId:v2.0:InvOutput.Academy.Rec2100-D65_2000nit_in_Rec2100-D65_ST2084.a2.v1
         urn:ampas:aces:transformId:v2.0:Output.Academy.Rec2100-D65_4000nit_in_Rec2100-D65_ST2084.a2.v1
         urn:ampas:aces:transformId:v2.0:InvOutput.Academy.Rec2100-D65_4000nit_in_Rec2100-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.Rec2100-D60_500nit_in_Rec2100-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.Rec2100-D60_500nit_in_Rec2100-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.Rec2100-D60_1000nit_in_Rec2100-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.Rec2100-D60_1000nit_in_Rec2100-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.Rec2100-D60_2000nit_in_Rec2100-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.Rec2100-D60_2000nit_in_Rec2100-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.Rec2100-D60_4000nit_in_Rec2100-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.Rec2100-D60_4000nit_in_Rec2100-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D60_100nit_in_Rec2100-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.Rec709-D60_100nit_in_Rec2100-D65_ST2084.a2.v1
         urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D65_100nit_in_Rec2100-D65_ST2084.a2.v1
         urn:ampas:aces:transformId:v2.0:InvOutput.Academy.Rec709-D65_100nit_in_Rec2100-D65_ST2084.a2.v1
     allocation: uniform
@@ -393,20 +402,8 @@ display_colorspaces:
         urn:ampas:aces:transformId:v2.0:InvOutput.Academy.P3-D65_2000nit_in_P3-D65_ST2084.a2.v1
         urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D65_4000nit_in_P3-D65_ST2084.a2.v1
         urn:ampas:aces:transformId:v2.0:InvOutput.Academy.P3-D65_4000nit_in_P3-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D60_108nit_in_P3-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.P3-D60_108nit_in_P3-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D60_500nit_in_P3-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.P3-D60_500nit_in_P3-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D60_1000nit_in_P3-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.P3-D60_1000nit_in_P3-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D60_2000nit_in_P3-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.P3-D60_2000nit_in_P3-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D60_4000nit_in_P3-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.P3-D60_4000nit_in_P3-D65_ST2084.a2.v1
         urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D65_100nit_in_P3-D65_ST2084.a2.v1
         urn:ampas:aces:transformId:v2.0:InvOutput.Academy.Rec709-D65_100nit_in_P3-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D60_100nit_in_P3-D65_ST2084.a2.v1
-        urn:ampas:aces:transformId:v2.0:InvOutput.Academy.Rec709-D60_100nit_in_P3-D65_ST2084.a2.v1
     allocation: uniform
     from_display_reference: !<BuiltinTransform> {style: DISPLAY - CIE-XYZ-D65_to_ST2084-P3-D65}
 
@@ -436,7 +433,9 @@ colorspaces:
     categories: [file-io]
     encoding: log
     interchange:
-      amf_transform_ids: urn:ampas:aces:transformId:v2.0:CSC.Academy.ACES_to_ACEScc.a2.v1
+      amf_transform_ids: |
+        urn:ampas:aces:transformId:v2.0:CSC.Academy.ACES_to_ACEScc.a2.v1
+        urn:ampas:aces:transformId:v2.0:CSC.Academy.ACEScc_to_ACES.a2.v1
     allocation: uniform
     to_scene_reference: !<BuiltinTransform> {style: ACEScc_to_ACES2065-1}
 
@@ -452,7 +451,9 @@ colorspaces:
     categories: [file-io, working-space]
     encoding: log
     interchange:
-      amf_transform_ids: urn:ampas:aces:transformId:v2.0:CSC.Academy.ACES_to_ACEScct.a2.v1
+      amf_transform_ids: |
+        urn:ampas:aces:transformId:v2.0:CSC.Academy.ACES_to_ACEScct.a2.v1
+        urn:ampas:aces:transformId:v2.0:CSC.Academy.ACEScct_to_ACES.a2.v1
     allocation: uniform
     to_scene_reference: !<BuiltinTransform> {style: ACEScct_to_ACES2065-1}
 
@@ -468,7 +469,9 @@ colorspaces:
     categories: [file-io, working-space, texture]
     encoding: scene-linear
     interchange:
-      amf_transform_ids: urn:ampas:aces:transformId:v2.0:CSC.Academy.ACES_to_ACEScg.a2.v1
+      amf_transform_ids: |
+        urn:ampas:aces:transformId:v2.0:CSC.Academy.ACES_to_ACEScg.a2.v1
+        urn:ampas:aces:transformId:v2.0:CSC.Academy.ACEScg_to_ACES.a2.v1
     allocation: uniform
     to_scene_reference: !<BuiltinTransform> {style: ACEScg_to_ACES2065-1}
 
@@ -483,6 +486,10 @@ colorspaces:
     isdata: false
     categories: [file-io]
     encoding: log
+    interchange:
+      amf_transform_ids: |
+
+        urn:ampas:aces:transformId:v2.0:CSC.Academy.ADX10_to_ACES.a2.v1
     allocation: uniform
     to_scene_reference: !<BuiltinTransform> {style: ADX10_to_ACES2065-1}
 
@@ -497,6 +504,10 @@ colorspaces:
     isdata: false
     categories: [file-io]
     encoding: log
+    interchange:
+      amf_transform_ids: |
+
+        urn:ampas:aces:transformId:v2.0:CSC.Academy.ADX16_to_ACES.a2.v1
     allocation: uniform
     to_scene_reference: !<BuiltinTransform> {style: ADX16_to_ACES2065-1}
 
@@ -512,7 +523,9 @@ colorspaces:
     categories: [file-io]
     encoding: log
     interchange:
-      amf_transform_ids: urn:ampas:aces:transformId:v2.0:CSC.Apple.ACES_to_AppleLog_BT2020.a2.v1
+      amf_transform_ids: |
+        urn:ampas:aces:transformId:v2.0:CSC.Apple.ACES_to_AppleLog_BT2020.a2.v1
+        urn:ampas:aces:transformId:v2.0:CSC.Apple.AppleLog_BT2020_to_ACES.a2.v1
     allocation: uniform
     to_scene_reference: !<BuiltinTransform> {style: APPLE_LOG_to_ACES2065-1}
 
@@ -527,6 +540,10 @@ colorspaces:
     isdata: false
     categories: [file-io]
     encoding: log
+    interchange:
+      amf_transform_ids: |
+
+        urn:ampas:aces:transformId:v2.0:CSC.Arri.LogC3_to_ACES.a2.v1
     allocation: uniform
     to_scene_reference: !<GroupTransform>
       name: ARRI LogC3 (EI800) to ACES2065-1
@@ -563,7 +580,9 @@ colorspaces:
     categories: [file-io]
     encoding: log
     interchange:
-      amf_transform_ids: urn:ampas:aces:transformId:v2.0:CSC.Arri.ACES_to_LogC4.a2.v1
+      amf_transform_ids: |
+        urn:ampas:aces:transformId:v2.0:CSC.Arri.ACES_to_LogC4.a2.v1
+        urn:ampas:aces:transformId:v2.0:CSC.Arri.LogC4_to_ACES.a2.v1
     allocation: uniform
     to_scene_reference: !<GroupTransform>
       name: ARRI LogC4 to ACES2065-1
@@ -600,7 +619,9 @@ colorspaces:
     categories: [file-io]
     encoding: log
     interchange:
-      amf_transform_ids: urn:ampas:aces:transformId:v2.0:CSC.Academy.ACES_to_BMDFilm_WideGamut_Gen5.a2.v1
+      amf_transform_ids: |
+        urn:ampas:aces:transformId:v2.0:CSC.Academy.ACES_to_BMDFilm_WideGamut_Gen5.a2.v1
+        urn:ampas:aces:transformId:v2.0:CSC.Blackmagic.BMDFilm_WideGamut_Gen5_to_ACES.a2.v1
     allocation: uniform
     to_scene_reference: !<GroupTransform>
       name: Blackmagic Film Wide Gamut (Gen 5) to ACES2065-1
@@ -672,7 +693,9 @@ colorspaces:
     categories: [file-io]
     encoding: log
     interchange:
-      amf_transform_ids: urn:ampas:aces:transformId:v2.0:CSC.Canon.ACES_to_CLog2_CGamut.a1.v1
+      amf_transform_ids: |
+        urn:ampas:aces:transformId:v2.0:CSC.Canon.ACES_to_CLog2_CGamut.a1.v1
+        urn:ampas:aces:transformId:v2.0:CSC.Canon.CLog2_CGamut_to_ACES.a1.v1
     allocation: uniform
     to_scene_reference: !<BuiltinTransform> {style: CANON_CLOG2-CGAMUT_to_ACES2065-1}
 
@@ -705,7 +728,9 @@ colorspaces:
     categories: [file-io]
     encoding: log
     interchange:
-      amf_transform_ids: urn:ampas:aces:transformId:v2.0:CSC.Canon.ACES_to_CLog3_CGamut.a1.v1
+      amf_transform_ids: |
+        urn:ampas:aces:transformId:v2.0:CSC.Canon.ACES_to_CLog3_CGamut.a1.v1
+        urn:ampas:aces:transformId:v2.0:CSC.Canon.CLog3_CGamut_to_ACES.a1.v1
     allocation: uniform
     to_scene_reference: !<BuiltinTransform> {style: CANON_CLOG3-CGAMUT_to_ACES2065-1}
 
@@ -721,7 +746,9 @@ colorspaces:
     categories: [file-io]
     encoding: log
     interchange:
-      amf_transform_ids: urn:ampas:aces:transformId:v2.0:CSC.DJI.ACES_to_DLog_DGamut.a1.v1
+      amf_transform_ids: |
+        urn:ampas:aces:transformId:v2.0:CSC.DJI.ACES_to_DLog_DGamut.a1.v1
+        urn:ampas:aces:transformId:v2.0:CSC.DJI.DLog_DGamut_to_ACES.a1.v1
     allocation: uniform
     to_scene_reference: !<GroupTransform>
       name: DJI D-Log - D-Gamut to ACES2065-1
@@ -758,7 +785,9 @@ colorspaces:
     categories: [file-io]
     encoding: log
     interchange:
-      amf_transform_ids: urn:ampas:aces:transformId:v2.0:CSC.Panasonic.ACES_to_VLog_VGamut.a2.v1
+      amf_transform_ids: |
+        urn:ampas:aces:transformId:v2.0:CSC.Panasonic.ACES_to_VLog_VGamut.a2.v1
+        urn:ampas:aces:transformId:v2.0:CSC.Panasonic.VLog_VGamut_to_ACES.a2.v1
     allocation: uniform
     to_scene_reference: !<GroupTransform>
       name: Panasonic V-Log - V-Gamut to ACES2065-1
@@ -795,7 +824,9 @@ colorspaces:
     categories: [file-io]
     encoding: log
     interchange:
-      amf_transform_ids: urn:ampas:aces:transformId:v2.0:CSC.Red.ACES_to_Log3G10_RWG.a2.v1
+      amf_transform_ids: |
+        urn:ampas:aces:transformId:v2.0:CSC.Red.ACES_to_Log3G10_RWG.a2.v1
+        urn:ampas:aces:transformId:v2.0:CSC.Red.Log3G10_RWG_to_ACES.a2.v1
     allocation: uniform
     to_scene_reference: !<GroupTransform>
       name: RED Log3G10 REDWideGamutRGB to ACES2065-1
@@ -832,7 +863,9 @@ colorspaces:
     categories: [file-io]
     encoding: log
     interchange:
-      amf_transform_ids: urn:ampas:aces:transformId:v2.0:CSC.Sony.ACES_to_SLog3_SGamut3.a2.v1
+      amf_transform_ids: |
+        urn:ampas:aces:transformId:v2.0:CSC.Sony.ACES_to_SLog3_SGamut3.a2.v1
+        urn:ampas:aces:transformId:v2.0:CSC.Sony.SLog3_SGamut3_to_ACES.a2.v1
     allocation: uniform
     to_scene_reference: !<GroupTransform>
       name: Sony S-Log3 S-Gamut3 to ACES2065-1
@@ -852,7 +885,9 @@ colorspaces:
     categories: [file-io]
     encoding: log
     interchange:
-      amf_transform_ids: urn:ampas:aces:transformId:v2.0:CSC.Sony.ACES_to_SLog3_SGamut3Cine.a2.v1
+      amf_transform_ids: |
+        urn:ampas:aces:transformId:v2.0:CSC.Sony.ACES_to_SLog3_SGamut3Cine.a2.v1
+        urn:ampas:aces:transformId:v2.0:CSC.Sony.SLog3_SGamut3Cine_to_ACES.a2.v1
     allocation: uniform
     to_scene_reference: !<GroupTransform>
       name: Sony S-Log3 S-Gamut3.Cine to ACES2065-1
@@ -872,7 +907,9 @@ colorspaces:
     categories: [file-io]
     encoding: log
     interchange:
-      amf_transform_ids: urn:ampas:aces:transformId:v2.0:CSC.Sony.ACES_to_Venice_SLog3_SGamut3.a2.v1
+      amf_transform_ids: |
+        urn:ampas:aces:transformId:v2.0:CSC.Sony.ACES_to_Venice_SLog3_SGamut3.a2.v1
+        urn:ampas:aces:transformId:v2.0:CSC.Sony.Venice_SLog3_SGamut3_to_ACES.a2.v1
     allocation: uniform
     to_scene_reference: !<GroupTransform>
       name: Sony S-Log3 Venice S-Gamut3 to ACES2065-1
@@ -892,7 +929,9 @@ colorspaces:
     categories: [file-io]
     encoding: log
     interchange:
-      amf_transform_ids: urn:ampas:aces:transformId:v2.0:CSC.Sony.ACES_to_Venice_SLog3_SGamut3Cine.a2.v1
+      amf_transform_ids: |
+        urn:ampas:aces:transformId:v2.0:CSC.Sony.ACES_to_Venice_SLog3_SGamut3Cine.a2.v1
+        urn:ampas:aces:transformId:v2.0:CSC.Sony.Venice_SLog3_SGamut3Cine_to_ACES.a2.v1
     allocation: uniform
     to_scene_reference: !<GroupTransform>
       name: Sony S-Log3 Venice S-Gamut3.Cine to ACES2065-1
