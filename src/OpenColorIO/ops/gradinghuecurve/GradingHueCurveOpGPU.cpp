@@ -90,12 +90,12 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
                 const std::string & name)
 {
     // Add the uniform if it does not already exist.
-    if (shaderCreator->addUniform(name.c_str(), getSize, getVector))
+    if (shaderCreator->addUniform(name.c_str(), getSize, getVector, maxSize))
     {
         // Declare uniform.
         GpuShaderText stDecl(shaderCreator->getLanguage());
         stDecl.declareUniformArrayFloat(name, maxSize);
-        shaderCreator->addToDeclareShaderCode(stDecl.string().c_str());
+        shaderCreator->addToParameterDeclareShaderCode(stDecl.string().c_str());
     }
 }
 
@@ -104,14 +104,16 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
                 const GpuShaderCreator::VectorIntGetter & getVector,
                 const std::string & name)
 {
+    static constexpr unsigned arrayLen = 16u;  // 8 curves x 2 values (count and offset)
+
     // Add the uniform if it does not already exist.
-    if (shaderCreator->addUniform(name.c_str(), getSize, getVector))
+    if (shaderCreator->addUniform(name.c_str(), getSize, getVector, arrayLen))
     {
         // Declare uniform.
         GpuShaderText stDecl(shaderCreator->getLanguage());
         // Need 2 ints for each curve.
-        stDecl.declareUniformArrayInt(name, 16); // TODO: Avoid magic numbers (8 Curves * 2 values)
-        shaderCreator->addToDeclareShaderCode(stDecl.string().c_str());
+        stDecl.declareUniformArrayInt(name, arrayLen);
+        shaderCreator->addToParameterDeclareShaderCode(stDecl.string().c_str());
     }
 }
 
@@ -125,7 +127,7 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
         // Declare uniform.
         GpuShaderText stDecl(shaderCreator->getLanguage());
         stDecl.declareUniformBool(name);
-        shaderCreator->addToDeclareShaderCode(stDecl.string().c_str());
+        shaderCreator->addToParameterDeclareShaderCode(stDecl.string().c_str());
     }
 }
 
@@ -327,7 +329,7 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     if (dyn)
     {
-        st.newLine() << "if (!" << props.m_localBypass << ")";
+        st.newLine() << "if (!" << st.castToBool(props.m_localBypass) << ")";
         st.newLine() << "{";
         st.indent();
     }    
@@ -470,7 +472,7 @@ void AddGCInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     if (dyn)
     {
-        st.newLine() << "if (!" << props.m_localBypass << ")";
+        st.newLine() << "if (!" << st.castToBool(props.m_localBypass) << ")";
         st.newLine() << "{";
         st.indent();
     }

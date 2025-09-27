@@ -100,13 +100,15 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
                 const GpuShaderCreator::VectorIntGetter & getVector,
                 const std::string & name)
 {
+    static constexpr unsigned arrayLen = 8u;  // 4 curves x 2 values (count and offset)
+
     // Add the uniform if it does not already exist.
-    if (shaderCreator->addUniform(name.c_str(), getSize, getVector, 8))
+    if (shaderCreator->addUniform(name.c_str(), getSize, getVector, arrayLen))
     {
         // Declare uniform.
         GpuShaderText stDecl(shaderCreator->getLanguage());
         // Need 2 ints for each RGBM curve.
-        stDecl.declareUniformArrayInt(name, 8);
+        stDecl.declareUniformArrayInt(name, arrayLen);
         shaderCreator->addToParameterDeclareShaderCode(stDecl.string().c_str());
     }
 }
