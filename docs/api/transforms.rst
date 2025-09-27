@@ -14,7 +14,10 @@ Transform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_transform.rst
+      .. autoclass:: PyOpenColorIO.Transform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
 
    .. group-tab:: C++
 
@@ -34,7 +37,11 @@ AllocationTransform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_allocationtransform.rst
+      .. autoclass:: PyOpenColorIO.AllocationTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :inherited-members:
 
    .. group-tab:: C++
 
@@ -54,7 +61,11 @@ BuiltinTransform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_builtintransform.rst
+      .. autoclass:: PyOpenColorIO.BuiltinTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :inherited-members:
 
    .. group-tab:: C++
 
@@ -74,7 +85,17 @@ BuiltinTransformRegistry
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_builtintransformregistry.rst
+      .. autoclass:: PyOpenColorIO.BuiltinTransformRegistry
+         :members:
+         :undoc-members:
+         :special-members: __init__
+         :exclude-members: BuiltinStyleIterator, BuiltinIterator
+
+      .. autoclass:: PyOpenColorIO.BuiltinTransformRegistry.BuiltinStyleIterator
+         :special-members: __getitem__, __iter__, __len__, __next__
+
+      .. autoclass:: PyOpenColorIO.BuiltinTransformRegistry.BuiltinIterator
+         :special-members: __getitem__, __iter__, __len__, __next__
 
    .. group-tab:: C++
 
@@ -92,7 +113,11 @@ CDLTransform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_cdltransform.rst
+      .. autoclass:: PyOpenColorIO.CDLTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :inherited-members:
 
    .. group-tab:: C++
 
@@ -112,7 +137,11 @@ ColorSpaceTransform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_colorspacetransform.rst
+      .. autoclass:: PyOpenColorIO.ColorSpaceTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :inherited-members:
 
    .. group-tab:: C++
 
@@ -132,7 +161,11 @@ DisplayViewTransform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_displayviewtransform.rst
+      .. autoclass:: PyOpenColorIO.DisplayViewTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :inherited-members:
 
    .. group-tab:: C++
 
@@ -152,7 +185,11 @@ ExponentTransform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_exponenttransform.rst
+      .. autoclass:: PyOpenColorIO.ExponentTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :inherited-members:
 
    .. group-tab:: C++
 
@@ -172,7 +209,11 @@ ExponentWithLinearTransform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_exponentwithlineartransform.rst
+      .. autoclass:: PyOpenColorIO.ExponentWithLinearTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :inherited-members:
 
    .. group-tab:: C++
 
@@ -192,7 +233,11 @@ ExposureContrastTransform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_exposurecontrasttransform.rst
+      .. autoclass:: PyOpenColorIO.ExposureContrastTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :inherited-members:
 
    .. group-tab:: C++
 
@@ -212,7 +257,15 @@ FileTransform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_filetransform.rst
+      .. autoclass:: PyOpenColorIO.FileTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :inherited-members:
+         :exclude-members: FormatIterator
+
+      .. autoclass:: PyOpenColorIO.FileTransform.FormatIterator
+         :special-members: __getitem__, __iter__, __len__, __next__
 
    .. group-tab:: C++
 
@@ -232,7 +285,11 @@ FixedFunctionTransform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_fixedfunctiontransform.rst
+      .. autoclass:: PyOpenColorIO.FixedFunctionTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :inherited-members:
 
    .. group-tab:: C++
 
@@ -252,7 +309,18 @@ GroupTransform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_grouptransform.rst
+      .. autoclass:: PyOpenColorIO.GroupTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :inherited-members:
+         :exclude-members: TransformIterator, WriteFormatIterator
+
+      .. autoclass:: PyOpenColorIO.GroupTransform.WriteFormatIterator
+         :special-members: __getitem__, __iter__, __len__, __next__
+
+      .. autoclass:: PyOpenColorIO.GroupTransform.TransformIterator
+         :special-members: __getitem__, __iter__, __len__, __next__
 
    .. group-tab:: C++
 
@@ -272,7 +340,11 @@ LogAffineTransform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_logaffinetransform.rst
+      .. autoclass:: PyOpenColorIO.LogAffineTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :inherited-members:
 
    .. group-tab:: C++
 
@@ -292,7 +364,11 @@ LogCameraTransform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_logcameratransform.rst
+      .. autoclass:: PyOpenColorIO.LogCameraTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :inherited-members:
 
    .. group-tab:: C++
 
@@ -312,7 +388,11 @@ LogTransform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_logtransform.rst
+      .. autoclass:: PyOpenColorIO.LogTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :inherited-members:
 
    .. group-tab:: C++
 
@@ -332,7 +412,11 @@ LookTransform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_looktransform.rst
+      .. autoclass:: PyOpenColorIO.LookTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :inherited-members:
 
    .. group-tab:: C++
 
@@ -352,7 +436,11 @@ Lut1DTransform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_lut1dtransform.rst
+      .. autoclass:: PyOpenColorIO.Lut1DTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :inherited-members:
 
    .. group-tab:: C++
 
@@ -372,7 +460,11 @@ Lut3DTransform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_lut3dtransform.rst
+      .. autoclass:: PyOpenColorIO.Lut3DTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :inherited-members:
 
    .. group-tab:: C++
 
@@ -392,7 +484,11 @@ MatrixTransform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_matrixtransform.rst
+      .. autoclass:: PyOpenColorIO.MatrixTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :inherited-members:
 
    .. group-tab:: C++
 
@@ -412,7 +508,11 @@ RangeTransform
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_rangetransform.rst
+      .. autoclass:: PyOpenColorIO.RangeTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :inherited-members:
 
    .. group-tab:: C++
 

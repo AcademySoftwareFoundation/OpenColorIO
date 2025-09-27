@@ -38,8 +38,6 @@ class ViewingRule
 {
 public:
 
-    using CustomKeys = std::map<std::string, std::string>;
-
     ViewingRule() = delete;
     ViewingRule(const ViewingRule &) = delete;
     ViewingRule & operator=(const ViewingRule &) = delete;

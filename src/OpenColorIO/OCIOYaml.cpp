@@ -34,6 +34,33 @@ namespace
 {
 typedef YAML::const_iterator Iterator;
 
+std::string SanitizeNewlines(const std::string &input)
+{
+    if (input.empty()) 
+        return input;
+
+    // YAML is changing the trailing newlines when reading them:
+    // - Written as YAML::Literal (starts with a "|"), descriptions will be read back with a
+    //   single newline. One is  added if there was none, only one is kept if there were
+    //   several.
+    // - Written as YAML::Value string (does not start with "|"), all trailing newlines ('\n')
+    //   are preserved.
+    // Trailing newlines are inconsistently preserved, lets remove them in all cases.
+    std::string str = input;
+    auto last = str.back();
+    while (last == '\n' && str.length())
+    {
+        str.pop_back();
+        last = str.back();
+    }
+
+    // Also, note that a \n is only interpreted as a newline if it is used in a string that is
+    // within double quotes.  E.g., "A string \n with embedded \n newlines."  Indeed, without the
+    // double quotes the backslash is generally not interpreted as an escape character in YAML.
+
+    return str;
+}
+
 // Basic types
 
 inline void load(const YAML::Node& node, bool& x)
@@ -186,25 +213,7 @@ inline void save(YAML::Emitter& out, Interpolation interp)
 inline void loadDescription(const YAML::Node& node, std::string& x)
 {
     load(node, x);
-    if (!x.empty())
-    {
-        // YAML is changing the trailing newlines when reading them:
-        // - Written as YAML::Literal (starts with a "|"), descriptions will be read back with a
-        //   single newline. One is  added if there was none, only one is kept if there were
-        //   several.
-        // - Written as YAML::Value string (does not start with "|"), all trailing newlines ('\n')
-        //   are preserved.
-        // Trailing newlines are inconsistently preserved, lets remove them in all cases.
-        auto last = x.back();
-        while (last == '\n' && x.length())
-        {
-            x.pop_back();
-            last = x.back();
-        }
-    }
-    // Also, note that a \n is only interpreted as a newline if it is used in a string that is
-    // within double quotes.  E.g., "A string \n with embedded \n newlines."  Indeed, without the
-    // double quotes the backslash is generally not interpreted as an escape character in YAML.
+    x = SanitizeNewlines(x);
 }
 
 inline void saveDescription(YAML::Emitter & out, const char * desc)
@@ -212,15 +221,7 @@ inline void saveDescription(YAML::Emitter & out, const char * desc)
     if (desc && *desc)
     {
         // Remove trailing newlines so that only one is saved because they won't be read back.
-        std::string descStr{ desc };
-        {
-            auto last = descStr.back();
-            while (last == '\n' && descStr.length())
-            {
-                descStr.pop_back();
-                last = descStr.back();
-            }
-        }
+        std::string descStr = SanitizeNewlines(desc);
 
         out << YAML::Key << "description" << YAML::Value;
         if (descStr.find_first_of('\n') != std::string::npos)
@@ -230,7 +231,6 @@ inline void saveDescription(YAML::Emitter & out, const char * desc)
         out << descStr;
     }
 }
-//
 
 inline void LogUnknownKeyWarning(const YAML::Node & node,
                                  const YAML::Node & key)
@@ -319,6 +319,90 @@ inline void CheckDuplicates(const YAML::Node & node)
         }
     }
 }
+
+// Custom Key Loader
+
+struct CustomKeysLoader
+{
+    using Type = std::vector<std::pair<YAML::Node, YAML::Node>>;
+    Type m_keyVals;
+};
+
+inline void loadCustomKeys(const YAML::Node& node, CustomKeysLoader & ck, const char* sectionName)
+{
+    if (node.Type() == YAML::NodeType::Map)
+    {
+        for (Iterator iter = node.begin(); iter != node.end(); ++iter)
+        {
+            ck.m_keyVals.push_back(std::make_pair(iter->first, iter->second));
+        }
+    }
+    else
+    {
+        std::ostringstream ss;
+        ss << "Expected a YAML map in the " << sectionName << " section.";
+        throwError(node, ss.str().c_str());
+    }
+}
+
+// Interchange Attributes
+
+void saveInterchangeAttributes(
+    YAML::Emitter& out, 
+    const std::map<std::string, std::string>& interchangemap)
+{
+    if (interchangemap.empty()) 
+        return;
+
+    out << YAML::Key << "interchange";
+    out << YAML::Value;
+    out << YAML::BeginMap;
+    for (const auto& keyval : interchangemap)
+    {
+        std::string valStr = SanitizeNewlines(keyval.second);
+
+        out << YAML::Key << keyval.first << YAML::Value;
+        if (valStr.find_first_of('\n') != std::string::npos)
+        {
+            out << YAML::Literal;
+        }
+        out << valStr;
+    }
+
+    out << YAML::EndMap;
+}
+
+template<class T>
+void loadInterchangeAttributes(const YAML::Node& node, T& owner)
+{
+    if (node.Type() != YAML::NodeType::Map)
+    {
+        std::ostringstream os;
+        os << "The 'interchange' content needs to be a map.";
+        throwError(node, os.str());
+    }
+
+    CustomKeysLoader kv;
+    loadCustomKeys(node, kv, "interchange");
+
+    for (const auto& keyval : kv.m_keyVals)
+    {
+        std::string keystr = keyval.first.as<std::string>();
+        std::string valstr = keyval.second.as<std::string>();
+        valstr = SanitizeNewlines(valstr);
+
+        // OCIO exception means the key is not recognized. Convert that to a warning.
+        try
+        {
+            owner->setInterchangeAttribute(keystr.c_str(), valstr.c_str());
+        }
+        catch (Exception &)
+        {
+            LogUnknownKeyWarning("interchange", keyval.first);
+        }
+    }
+}
+
 
 // View
 
@@ -3370,10 +3454,19 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs, unsigned int major
                 cs->addAlias(alias.c_str());
             }
         }
+        else if (key == "interop_id") 
+        {
+            load(iter->second, stringval);
+            cs->setInteropID(stringval.c_str());
+        }
         else if(key == "description")
         {
             loadDescription(iter->second, stringval);
             cs->setDescription(stringval.c_str());
+        }
+        else if (key == "interchange")
+        {
+            loadInterchangeAttributes(iter->second, cs);
         }
         else if(key == "family")
         {
@@ -3474,6 +3567,8 @@ inline void load(const YAML::Node& node, ColorSpaceRcPtr& cs, unsigned int major
     }
 }
 
+
+
 inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs, unsigned int majorVersion)
 {
     out << YAML::VerbatimTag("ColorSpace");
@@ -3491,11 +3586,23 @@ inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs, unsigned int major
         }
         out << YAML::Flow << YAML::Value << aliases;
     }
+
+    const std::string interopID{ cs->getInteropID() };
+    if (!interopID.empty())
+    {
+        out << YAML::Key << "interop_id";
+        out << YAML::Value << interopID;
+    }
+
     out << YAML::Key << "family" << YAML::Value << cs->getFamily();
+
     out << YAML::Key << "equalitygroup" << YAML::Value << cs->getEqualityGroup();
+
     out << YAML::Key << "bitdepth" << YAML::Value;
     save(out, cs->getBitDepth());
+    
     saveDescription(out, cs->getDescription());
+
     out << YAML::Key << "isdata" << YAML::Value << cs->isData();
 
     if(cs->getNumCategories() > 0)
@@ -3515,6 +3622,8 @@ inline void save(YAML::Emitter& out, ConstColorSpaceRcPtr cs, unsigned int major
         out << YAML::Key << "encoding";
         out << YAML::Value << is;
     }
+
+    saveInterchangeAttributes(out, cs->getInterchangeAttributes());
 
     out << YAML::Key << "allocation" << YAML::Value;
     save(out, cs->getAllocation());
@@ -3594,6 +3703,10 @@ inline void load(const YAML::Node& node, LookRcPtr& look)
             loadDescription(iter->second, stringval);
             look->setDescription(stringval.c_str());
         }
+        else if(key == "interchange")
+        {
+            loadInterchangeAttributes(iter->second, look);
+        }
         else
         {
             LogUnknownKeyWarning(node, iter->first);
@@ -3608,6 +3721,7 @@ inline void save(YAML::Emitter& out, ConstLookRcPtr look, unsigned int majorVers
     out << YAML::Key << "name" << YAML::Value << look->getName();
     out << YAML::Key << "process_space" << YAML::Value << look->getProcessSpace();
     saveDescription(out, look->getDescription());
+    saveInterchangeAttributes(out, look->getInterchangeAttributes());
 
     if(look->getTransform())
     {
@@ -3710,6 +3824,10 @@ inline void load(const YAML::Node & node, ViewTransformRcPtr & vt)
             loadDescription(iter->second, stringval);
             vt->setDescription(stringval.c_str());
         }
+        else if (key == "interchange")
+        {
+            loadInterchangeAttributes(iter->second, vt);
+        }
         else if (key == "family")
         {
             std::string stringval;
@@ -3768,6 +3886,7 @@ inline void save(YAML::Emitter & out, ConstViewTransformRcPtr & vt, unsigned int
         out << YAML::Key << "family" << YAML::Value << family;
     }
     saveDescription(out, vt->getDescription());
+    saveInterchangeAttributes(out, vt->getInterchangeAttributes());
 
     if (vt->getNumCategories() > 0)
     {
@@ -3946,30 +4065,6 @@ inline void save(YAML::Emitter & out, ConstNamedTransformRcPtr & nt, unsigned in
 
 // File rules
 
-struct CustomKeysLoader
-{
-    StringUtils::StringVec m_keyVals;
-};
-
-inline void loadCustomKeys(const YAML::Node& node, CustomKeysLoader & ck)
-{
-    if (node.Type() == YAML::NodeType::Map)
-    {
-        for (Iterator iter = node.begin(); iter != node.end(); ++iter)
-        {
-            const std::string & key = iter->first.as<std::string>();
-            const std::string & val = iter->second.as<std::string>();
-
-            ck.m_keyVals.push_back(key);
-            ck.m_keyVals.push_back(val);
-        }
-    }
-    else
-    {
-        throwError(node, "The 'file_rules' custom attributes need to be a YAML map.");
-    }
-}
-
 inline void load(const YAML::Node & node, FileRulesRcPtr & fr, bool & defaultRuleFound)
 {
     if (node.Tag() != "Rule")
@@ -3979,7 +4074,7 @@ inline void load(const YAML::Node & node, FileRulesRcPtr & fr, bool & defaultRul
 
     std::string stringval;
     std::string name, colorspace, pattern, extension, regex;
-    StringUtils::StringVec keyVals;
+    CustomKeysLoader::Type keyVals;
 
     for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
@@ -4015,7 +4110,7 @@ inline void load(const YAML::Node & node, FileRulesRcPtr & fr, bool & defaultRul
         else if (key == FileRuleUtils::CustomKey)
         {
             CustomKeysLoader kv;
-            loadCustomKeys(iter->second, kv);
+            loadCustomKeys(iter->second, kv, "file_rules custom attribute");
             keyVals = kv.m_keyVals;
         }
         else
@@ -4086,11 +4181,15 @@ inline void load(const YAML::Node & node, FileRulesRcPtr & fr, bool & defaultRul
                 fr->insertRule(pos, name.c_str(), colorspace.c_str(), regex.c_str());
             }
         }
-        const auto numKeyVal = keyVals.size() / 2;
-        for (size_t i = 0; i < numKeyVal; ++i)
+
+        for (const auto& keyval : keyVals)
         {
-            fr->setCustomKey(pos, keyVals[i * 2].c_str(), keyVals[i * 2 + 1].c_str());
+            fr->setCustomKey(
+                pos, 
+                keyval.first.as<std::string>().c_str(),
+                keyval.second.as<std::string>().c_str());
         }
+
     }
     catch (Exception & ex)
     {
@@ -4153,7 +4252,7 @@ inline void load(const YAML::Node & node, ViewingRulesRcPtr & vr)
     std::string stringval;
     std::string name;
     StringUtils::StringVec colorspaces, encodings;
-    StringUtils::StringVec keyVals;
+    CustomKeysLoader::Type keyVals;
 
     for (Iterator iter = node.begin(); iter != node.end(); ++iter)
     {
@@ -4195,7 +4294,7 @@ inline void load(const YAML::Node & node, ViewingRulesRcPtr & vr)
         else if (key == ViewingRuleUtils::CustomKey)
         {
             CustomKeysLoader kv;
-            loadCustomKeys(iter->second, kv);
+            loadCustomKeys(iter->second, kv, "viewing_rules custom attribute");
             keyVals = kv.m_keyVals;
         }
         else
@@ -4218,10 +4317,12 @@ inline void load(const YAML::Node & node, ViewingRulesRcPtr & vr)
             vr->addEncoding(pos, is.c_str());
         }
 
-        const auto numKeyVal = keyVals.size() / 2;
-        for (size_t i = 0; i < numKeyVal; ++i)
+        for (const auto& keyval : keyVals) 
         {
-            vr->setCustomKey(pos, keyVals[i * 2].c_str(), keyVals[i * 2 + 1].c_str());
+            vr->setCustomKey(
+                pos, 
+                keyval.first.as<std::string>().c_str(),
+                keyval.second.as<std::string>().c_str());
         }
     }
     catch (Exception & ex)
@@ -4922,10 +5023,12 @@ inline void save(YAML::Emitter & out, const Config & config)
 {
     std::stringstream ss;
     const unsigned configMajorVersion = config.getMajorVersion();
+    const unsigned configMinorVersion = config.getMinorVersion();
+
     ss << configMajorVersion;
-    if(config.getMinorVersion()!=0)
+    if(configMinorVersion != 0)
     {
-        ss << "." << config.getMinorVersion();
+        ss << "." << configMinorVersion;
     }
 
     out << YAML::Block;
@@ -5160,13 +5263,26 @@ inline void save(YAML::Emitter & out, const Config & config)
     out << YAML::Newline;
     out << YAML::Key << "active_displays";
     StringUtils::StringVec active_displays;
-    if(config.getActiveDisplays() != NULL && strlen(config.getActiveDisplays()) > 0)
-        active_displays = SplitStringEnvStyle(config.getActiveDisplays());
+    int nDisplays = config.getNumActiveDisplays();
+    active_displays.reserve( nDisplays );
+    for (int i = 0; i < nDisplays; i++)
+    {
+        active_displays.push_back(config.getActiveDisplay(i));
+    }
+
+    // The YAML library will wrap names that use a comma in quotes.
     out << YAML::Value << YAML::Flow << active_displays;
+
     out << YAML::Key << "active_views";
     StringUtils::StringVec active_views;
-    if(config.getActiveViews() != NULL && strlen(config.getActiveViews()) > 0)
-        active_views = SplitStringEnvStyle(config.getActiveViews());
+    int nViews = config.getNumActiveViews();
+    active_views.reserve( nViews );
+    for (int i = 0; i < nViews; i++)
+    {
+        active_views.push_back(config.getActiveView(i));
+    }
+    
+    // The YAML library will wrap names that use a comma in quotes.
     out << YAML::Value << YAML::Flow << active_views;
 
     const std::string inactiveCSs = config.getInactiveColorSpaces();

@@ -9,7 +9,10 @@ ImageDesc
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_imagedesc.rst
+      .. autoclass:: PyOpenColorIO.ImageDesc
+         :members:
+         :undoc-members:
+         :special-members: __init__
 
       .. py:data:: AutoStride
          :module: PyOpenColorIO
@@ -35,7 +38,11 @@ PackedImageDesc
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_packedimagedesc.rst
+      .. autoclass:: PyOpenColorIO.PackedImageDesc
+         :members:
+         :undoc-members:
+         :special-members: __init__
+         :inherited-members:
 
    .. group-tab:: C++
 
@@ -50,7 +57,11 @@ PlanarImageDesc
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_planarimagedesc.rst
+      .. autoclass:: PyOpenColorIO.PlanarImageDesc
+         :members:
+         :undoc-members:
+         :special-members: __init__
+         :inherited-members:
 
    .. group-tab:: C++
 

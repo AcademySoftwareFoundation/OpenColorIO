@@ -88,7 +88,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Install tests env
-        run: share/ci/scripts/linux/yum/install_tests_env.sh
+        run: share/ci/scripts/linux/dnf/install_tests_env.sh
       - name: Create build directories
         run: |
           mkdir _install
