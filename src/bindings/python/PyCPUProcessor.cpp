@@ -92,27 +92,33 @@ written to the dstImgDesc image, leaving srcImgDesc unchanged.
 
 )doc")
         .def("applyRGB", [](CPUProcessorRcPtr & self, py::buffer & data) 
-            {
+        {
                 py::buffer_info info = data.request();
                 checkBufferDivisible(info, 3);
 
-                // Interpret as single row of RGB pixels
-                BitDepth bitDepth = getBufferBitDepth(info);
+                // --- detect C-contiguous ---
+                bool isC = true;
+                ptrdiff_t itemsize = info.itemsize;
+                auto shape = info.shape;
+                auto strides = info.strides;
+                py::ssize_t ndim = info.ndim;
 
-                py::gil_scoped_release release;
-                bool isCContiguous = true;
-                if (info.ndim >= 2) 
+                ptrdiff_t expected = itemsize;
+                for (py::ssize_t i = ndim - 1; i >= 0; --i)
                 {
-                    // last dimension stride should be itemsize
-                    if (info.strides.back() != info.itemsize) 
-                    {
-                        isCContiguous = false;
-                    }
+                    if (strides[i] != expected) { isC = false; break; }
+                    expected *= shape[i];
                 }
-                if (!isCContiguous) 
+
+                if (!isC)
                 {
                     throw std::runtime_error("applyRGB only supports C-contiguous (row-major) arrays");
                 }
+
+                // --- proceed normally ---
+                BitDepth bitDepth = getBufferBitDepth(info);
+
+                py::gil_scoped_release release;
 
                 long numChannels = 3;
                 long width = (long)info.size / numChannels;
@@ -128,8 +134,9 @@ written to the dstImgDesc image, leaving srcImgDesc unchanged.
                                     chanStrideBytes, 
                                     xStrideBytes, 
                                     yStrideBytes);
+
                 self->apply(img);
-            },
+        },
              "data"_a, 
              R"doc(
 Apply to a packed RGB array adhering to the Python buffer protocol. 
