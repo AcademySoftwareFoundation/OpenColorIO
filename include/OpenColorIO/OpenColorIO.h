@@ -3383,6 +3383,23 @@ public:
     ///  Set a prefix to the resource name
     void setResourcePrefix(const char * prefix) noexcept;
 
+    /**
+    * \brief Set the descriptor set index and texture binding start index to use for the shader program.
+    * 
+    * \note Only supported for shading languages, such as Vulkan, that use descriptor sets and texture bindings.
+    * 
+    * \param index The descriptor set index to use.
+    * \param textureBindingStart The texture binding start index to use. The default index starts at 1
+    *                            and is incremented by 1 for each texture. Otherwise, the texture binding starts
+    *                            at textureBindingStart and is incremented by 1 for each texture. 
+    *                            The binding of a texture is equal to the texture index + textureBindingStart.
+    *                            The texture binding start index must be greater than 0, as binding 0 is reserved
+    *                            for the uniform buffer binding
+    * */
+    void setDescriptorSetIndex(unsigned index, unsigned textureBindingStart = 1);
+    unsigned getDescriptorSetIndex() const noexcept;
+    unsigned getTextureBindingStart() const noexcept;
+
     virtual const char * getCacheID() const noexcept;
 
     /// Start to collect the shader data.
@@ -3426,13 +3443,23 @@ public:
     virtual bool addUniform(const char * name,
                             const Float3Getter & getFloat3) = 0;
 
+    /// The size of the vector can be smaller than the size of the corresponding 
+    /// array that is declared in the shader. The parameter maxSize must be used 
+    /// to pass the size of the array declared in the shader. This is important for
+    /// being able to calculate the correct uniform buffer offset for subsequent uniforms
     virtual bool addUniform(const char * name,
                             const SizeGetter & getSize,
-                            const VectorFloatGetter & getVectorFloat) = 0;
+                            const VectorFloatGetter & getVectorFloat,
+                            const unsigned maxSize) = 0;
 
+    /// The size of the vector can be smaller than the size of the corresponding 
+    /// array that is declared in the shader. The parameter maxSize must be used 
+    /// to pass the size of the array declared in the shader. This is important for
+    /// being able to calculate the correct uniform buffer offset for subsequent uniforms
     virtual bool addUniform(const char * name,
                             const SizeGetter & getSize,
-                            const VectorIntGetter & getVectorInt) = 0;
+                            const VectorIntGetter & getVectorInt,
+                            const unsigned maxSize) = 0;
 
     /// Adds the property (used internally).
     void addDynamicProperty(DynamicPropertyRcPtr & prop);
@@ -3468,14 +3495,17 @@ public:
      * \note
      *   The 'values' parameter contains the LUT data which must be used as-is as the dimensions and
      *   origin are hard-coded in the fragment shader program. So, it means one GPU texture per entry.
+     * 
+     * \return Index of the texture. For shading languages using explicit texture bindings, the return
+     *         value is the same as the texture binding index in the generated shader program.
      **/
-    virtual void addTexture(const char * textureName,
-                            const char * samplerName,
-                            unsigned width, unsigned height,
-                            TextureType channel,
-                            TextureDimensions dimensions,
-                            Interpolation interpolation,
-                            const float * values) = 0;
+    virtual unsigned addTexture(const char * textureName,
+                                const char * samplerName,
+                                unsigned width, unsigned height,
+                                TextureType channel,
+                                TextureDimensions dimensions,
+                                Interpolation interpolation,
+                                const float * values) = 0;
 
     /**
      *  Add a 3D texture with RGB channel type.
@@ -3484,15 +3514,19 @@ public:
      *   The 'values' parameter contains the 3D LUT data which must be used as-is as the dimension
      *   and origin are hard-coded in the fragment shader program. So, it means one GPU 3D texture
      *   per entry.
+     * 
+     * \return Index of the texture. For shading languages using explicit texture bindings, the return
+     *         value is the same as the texture binding index in the generated shader program.
      **/
-    virtual void add3DTexture(const char * textureName,
+    virtual unsigned add3DTexture(const char * textureName,
                               const char * samplerName,
                               unsigned edgelen,
                               Interpolation interpolation,
                               const float * values) = 0;
 
     // Methods to specialize parts of a OCIO shader program
-    virtual void addToDeclareShaderCode(const char * shaderCode);
+    virtual void addToParameterDeclareShaderCode(const char * shaderCode);
+    virtual void addToTextureDeclareShaderCode(const char* shaderCode);
     virtual void addToHelperShaderCode(const char * shaderCode);
     virtual void addToFunctionHeaderShaderCode(const char * shaderCode);
     virtual void addToFunctionShaderCode(const char * shaderCode);
@@ -3506,7 +3540,8 @@ public:
      *   to change some parts. Some product integrations add the color processing
      *   within a client shader program, imposing constraints requiring this flexibility.
      */
-    virtual void createShaderText(const char * shaderDeclarations,
+    virtual void createShaderText(const char * shaderParameterDeclarations,
+                                  const char * shaderTextureDeclarations,
                                   const char * shaderHelperMethods,
                                   const char * shaderFunctionHeader,
                                   const char * shaderFunctionBody,
@@ -3695,10 +3730,16 @@ public:
      * * UNIFORM_FLOAT3: m_getFloat3.
      * * UNIFORM_VECTOR_FLOAT: m_vectorFloat.
      * * UNIFORM_VECTOR_INT: m_vectorInt.
+     * 
+     * The m_bufferOffset is the offset in bytes from the start of the uniform buffer.
+     * For shading languages that use uniform buffers, the offset can be used to
+     * determine the location of the uniform in the buffer and fill it with the 
+     * corresponding data.
      */
     struct UniformData
     {
         UniformDataType m_type{ UNIFORM_UNKNOWN };
+        std::size_t m_bufferOffset{};
         DoubleGetter m_getDouble{};
         BoolGetter m_getBool{};
         Float3Getter m_getFloat3{};
@@ -3716,6 +3757,16 @@ public:
     virtual unsigned getNumUniforms() const noexcept = 0;
     /// Returns name of uniform and data as parameter.
     virtual const char * getUniform(unsigned index, UniformData & data) const = 0;
+
+    /**
+    * For shading languages that use uniform buffers, a uniform buffer
+    * containing all uniforms is generated in the shader code. This method can
+    * be used to create a buffer of the same size in the client code that can
+    * be filled with the corresponding data.
+    * 
+    * \return Size of the uniform buffer in bytes
+    **/
+    virtual std::size_t getUniformBufferSize() const noexcept = 0;
 
     // 1D lut related methods
     virtual unsigned getNumTextures() const noexcept = 0;
