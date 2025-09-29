@@ -44,7 +44,7 @@ public:
 
     ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
 
-    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
+    void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator, OptimizationFlags /*oFlags*/) const override;
 
 protected:
     ConstLogOpDataRcPtr logData() const { return DynamicPtrCast<const LogOpData>(data()); }
@@ -110,7 +110,7 @@ ConstOpCPURcPtr LogOp::getCPUOp(bool fastLogExpPow) const
     return GetLogRenderer(data, fastLogExpPow);
 }
 
-void LogOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
+void LogOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator, OptimizationFlags /*oFlags*/) const
 {
     ConstLogOpDataRcPtr data = logData();
     GetLogGPUShaderProgram(shaderCreator, data);
