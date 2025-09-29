@@ -5904,6 +5904,38 @@ void Config::Impl::checkVersionConsistency() const
         throw Exception("Only version 2 (or higher) can have ViewTransforms.");
     }
 
+    // Check for new ViewTransform properties.
+
+    if (hexVersion < 0x02050000) 
+    {
+        for (const auto& vt : m_viewTransforms)
+        {
+            if (vt->getInterchangeAttributes().size()>0)
+            {
+                std::ostringstream os;
+                os << "Config failed validation. The view transform '" << vt->getName() << "' ";
+                os << "has non-empty interchange attributes and config version is less than 2.5.";
+                throw Exception(os.str().c_str());
+            }
+        }
+    }
+
+    // Check for new Look properties.
+
+    if (hexVersion < 0x02050000) 
+    {
+        for (const auto& look : m_looksList)
+        {
+            if (look->getInterchangeAttributes().size()>0)
+            {
+                std::ostringstream os;
+                os << "Config failed validation. The look '" << look->getName() << "' ";
+                os << "has non-empty interchange attributes and config version is less than 2.5.";
+                throw Exception(os.str().c_str());
+            }
+        }
+    }
+
     // Check for the NamedTransforms.
 
     if (m_majorVersion < 2 && m_allNamedTransforms.size() != 0)

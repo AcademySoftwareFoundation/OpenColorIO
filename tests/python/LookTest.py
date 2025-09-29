@@ -27,6 +27,7 @@ class LookTest(unittest.TestCase):
         self.look.setName('test name')
         self.look.setProcessSpace('test space')
         self.look.setDescription('test description')
+        self.look.setInterchangeAttribute('amf_transform_ids', 'test amf id')
         mat = OCIO.MatrixTransform()
         self.look.setTransform(mat)
         self.look.setInverseTransform(mat)
@@ -37,6 +38,9 @@ class LookTest(unittest.TestCase):
         self.assertEqual(other.getName(), self.look.getName())
         self.assertEqual(other.getProcessSpace(), self.look.getProcessSpace())
         self.assertEqual(other.getDescription(), self.look.getDescription())
+        self.assertEqual(
+            other.getInterchangeAttribute('amf_transform_ids'), 
+            self.look.getInterchangeAttribute('amf_transform_ids'))
         self.assertTrue(other.getTransform().equals(self.look.getTransform()))
         self.assertTrue(other.getInverseTransform().equals(self.look.getInverseTransform()))
 
@@ -90,6 +94,22 @@ class LookTest(unittest.TestCase):
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
                 self.look.setDescription(invalid)
+
+    def test_interchangeAttribute(self):
+        """
+        Test the setInterchangeAttribute() and setInterchangeAttribute() methods.
+        """
+
+        # Default initialized description value is ""
+        self.assertEqual(self.look.getInterchangeAttribute('amf_transform_ids'), '')
+
+        self.look.setInterchangeAttribute('amf_transform_ids', 'sample amf')
+        self.assertEqual('sample amf', self.look.getInterchangeAttribute('amf_transform_ids'))
+        self.assertEqual(1, len(self.look.getInterchangeAttributes()))
+
+        # Wrong key tests.
+        with self.assertRaises(TypeError):
+            self.look.getInterchangeAttribute('icc_profile_ name', 'should be rejected')
 
     def test_transform(self):
         """

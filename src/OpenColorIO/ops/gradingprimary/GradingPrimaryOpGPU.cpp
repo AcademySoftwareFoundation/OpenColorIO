@@ -42,7 +42,7 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
         // Declare uniform.
         GpuShaderText stDecl(shaderCreator->getLanguage());
         stDecl.declareUniformFloat(name);
-        shaderCreator->addToDeclareShaderCode(stDecl.string().c_str());
+        shaderCreator->addToParameterDeclareShaderCode(stDecl.string().c_str());
     }
 }
 
@@ -56,7 +56,7 @@ void AddBoolUniform(GpuShaderCreatorRcPtr & shaderCreator,
         // Declare uniform.
         GpuShaderText stDecl(shaderCreator->getLanguage());
         stDecl.declareUniformBool(name);
-        shaderCreator->addToDeclareShaderCode(stDecl.string().c_str());
+        shaderCreator->addToParameterDeclareShaderCode(stDecl.string().c_str());
     }
 }
 
@@ -70,7 +70,7 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
         // Declare uniform.
         GpuShaderText stDecl(shaderCreator->getLanguage());
         stDecl.declareUniformFloat3(name);
-        shaderCreator->addToDeclareShaderCode(stDecl.string().c_str());
+        shaderCreator->addToParameterDeclareShaderCode(stDecl.string().c_str());
     }
 }
 
@@ -552,7 +552,7 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         AddGPLogProperties(shaderCreator, st, gpData, properties, dyn);
         if (dyn)
         {
-            st.newLine() << "if (!" << properties.localBypass << ")";
+            st.newLine() << "if (!" << st.castToBool(properties.localBypass) << ")";
             st.newLine() << "{";
             st.indent();
         }
@@ -579,7 +579,7 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         AddGPLinProperties(shaderCreator, st, gpData, properties, dyn);
         if (dyn)
         {
-            st.newLine() << "if (!" << properties.localBypass << ")";
+            st.newLine() << "if (!" << st.castToBool(properties.localBypass) << ")";
             st.newLine() << "{";
             st.indent();
         }
@@ -606,7 +606,7 @@ void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         AddGPVideoProperties(shaderCreator, st, gpData, properties, dyn);
         if (dyn)
         {
-            st.newLine() << "if (!" << properties.localBypass << ")";
+            st.newLine() << "if (!" << st.castToBool(properties.localBypass) << ")";
             st.newLine() << "{";
             st.indent();
         }

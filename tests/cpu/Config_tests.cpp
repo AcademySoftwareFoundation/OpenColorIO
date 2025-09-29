@@ -10093,3 +10093,173 @@ OCIO_ADD_TEST(Config, set_config_io_proxy)
         OCIO::ClearAllCaches();
     }
 }
+
+OCIO_ADD_TEST(Config, interchange_attributes)
+{
+    std::string END = {R"(
+view_transforms:
+  - !<ViewTransform>
+    name: vt1
+    from_scene_reference: !<RangeTransform> {min_in_value: 0., min_out_value: 0.})"};
+
+    const std::string str = PROFILE_START_V<2, 5>() + END;
+
+    std::istringstream is;
+    is.str(str);
+
+    OCIO::ConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    OCIO_REQUIRE_ASSERT(config);
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    // Color Space
+
+    {
+        auto cs = config->getColorSpace("log")->createEditableCopy();
+        OCIO_REQUIRE_ASSERT(cs);
+
+        // Set amf_transform_ids attribute and validate.
+
+        OCIO_CHECK_NO_THROW(cs->setInterchangeAttribute("amf_transform_ids", "sample amf id"));
+        config->addColorSpace(cs);
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Check that the attribute is in the serialized config.
+
+        std::stringstream ss;
+        config->serialize(ss);
+        auto cstrout = ss.str();
+        OCIO_CHECK_ASSERT(cstrout.find("amf_transform_ids: sample amf id") != std::string::npos);
+
+        // Check that loading the serialized config works with the attribute.
+
+        OCIO::ConstConfigRcPtr cfg2;
+        OCIO_CHECK_NO_THROW(cfg2 = OCIO::Config::CreateFromStream(ss));
+
+        OCIO::ConstColorSpaceRcPtr cs2;
+        OCIO_CHECK_NO_THROW(cs2 = config->getColorSpace("log"));
+        OCIO_CHECK_EQUAL(cs2->getInterchangeAttribute("amf_transform_ids"), std::string("sample amf id"));
+
+        // Check that the config can NOT be downgraded to 2.4 with the attribute.
+
+        config->setVersion(2, 4);
+        OCIO_CHECK_THROW_WHAT(
+            config->validate(),
+            OCIO::Exception,
+            "Config failed validation. The color space 'log' has non-empty "
+            "interchange attributes and config version is less than 2.5.");
+
+        // Remove the attribute and check that the config can be downgraded to 2.4.
+
+        OCIO_CHECK_NO_THROW(cs->setInterchangeAttribute("amf_transform_ids", ""));
+        config->addColorSpace(cs);
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Restore version 2.5.
+
+        config->setVersion(2, 5);
+    }
+
+    // View Transform
+
+    {
+        auto vt = config->getViewTransform("vt1")->createEditableCopy();
+        OCIO_REQUIRE_ASSERT(vt);
+
+        // Set amf_transform_ids attribute and validate.
+
+        OCIO_CHECK_NO_THROW(vt->setInterchangeAttribute("amf_transform_ids", "sample amf id"));
+        config->addViewTransform(vt);
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Setting the icc_profile_name attribute should throw.
+        OCIO_CHECK_THROW_WHAT(
+            vt->setInterchangeAttribute("icc_profile_name", "some icc profile"),
+            OCIO::Exception,
+            "Unknown attribute name 'icc_profile_name'.");
+
+        // Check that the attribute is in the serialized config.
+
+        std::stringstream ss;
+        config->serialize(ss);
+        auto cstrout = ss.str();
+        OCIO_CHECK_ASSERT(cstrout.find("amf_transform_ids: sample amf id") != std::string::npos);
+
+        // Check that loading the serialized config works with the attribute.
+
+        OCIO::ConstConfigRcPtr cfg2;
+        OCIO_CHECK_NO_THROW(cfg2 = OCIO::Config::CreateFromStream(ss));
+
+        OCIO::ConstViewTransformRcPtr vt2;
+        OCIO_CHECK_NO_THROW(vt2 = config->getViewTransform("vt1"));
+        OCIO_CHECK_EQUAL(vt2->getInterchangeAttribute("amf_transform_ids"), std::string("sample amf id"));
+
+        // Check that the config can NOT be downgraded to 2.4 with the attribute.
+
+        config->setVersion(2, 4);
+        OCIO_CHECK_THROW_WHAT(
+            config->validate(),
+            OCIO::Exception,
+            "Config failed validation. The view transform 'vt1' has non-empty "
+            "interchange attributes and config version is less than 2.5.");
+
+        // Remove the attribute and check that the config can be downgraded to 2.4.
+
+        OCIO_CHECK_NO_THROW(vt->setInterchangeAttribute("amf_transform_ids", ""));
+        config->addViewTransform(vt);
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Restore version 2.5.
+
+        config->setVersion(2, 5);
+    }
+
+    // Look
+
+    {
+        auto lk = config->getLook("beauty")->createEditableCopy();
+        OCIO_REQUIRE_ASSERT(lk);
+
+        // Set amf_transform_ids attribute and validate.
+
+        OCIO_CHECK_NO_THROW(lk->setInterchangeAttribute("amf_transform_ids", "sample amf id"));
+        config->addLook(lk);
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Check that the attribute is in the serialized config.
+
+        std::stringstream ss;
+        config->serialize(ss);
+        auto cstrout = ss.str();
+        OCIO_CHECK_ASSERT(cstrout.find("amf_transform_ids: sample amf id") != std::string::npos);
+
+        // Check that loading the serialized config works with the attribute.
+
+        OCIO::ConstConfigRcPtr cfg2;
+        OCIO_CHECK_NO_THROW(cfg2 = OCIO::Config::CreateFromStream(ss));
+
+        OCIO::ConstLookRcPtr lk2;
+        OCIO_CHECK_NO_THROW(lk2 = config->getLook("beauty"));
+        OCIO_CHECK_EQUAL(lk2->getInterchangeAttribute("amf_transform_ids"), std::string("sample amf id"));
+
+        // Check that the config can NOT be downgraded to 2.4 with the attribute.
+
+        config->setVersion(2, 4);
+        OCIO_CHECK_THROW_WHAT(
+            config->validate(),
+            OCIO::Exception,
+            "Config failed validation. The look 'beauty' has non-empty "
+            "interchange attributes and config version is less than 2.5.");
+
+        // Remove the attribute and check that the config can be downgraded to 2.4.
+
+        OCIO_CHECK_NO_THROW(lk->setInterchangeAttribute("amf_transform_ids", ""));
+        config->addLook(lk);
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Restore version 2.5.
+
+        config->setVersion(2, 5);
+    }
+}
+
