@@ -197,7 +197,7 @@ void bindPyConfigMergingHelpers(py::module & m)
         .def("getMergedConfig", 
             py::overload_cast<int>(&ConfigMerger::getMergedConfig, py::const_),
             "index"_a,
-            DOC(ConfigMerger, getMergedConfig, 2))
+            DOC(ConfigMerger, getMergedConfig))
         .def("serialize", [](const ConfigMerger & self) {
                 std::ostringstream os;
                 self.serialize(os);
@@ -220,7 +220,7 @@ void bindPyConfigMergingHelpers(py::module & m)
                                const ConstConfigRcPtr &>(
                 &ConfigMergingHelpers::MergeConfigs),
              "params"_a, "baseConfig"_a, "inputConfig"_a,
-             DOC(ConfigMergingHelpers, MergeConfigs, 2))
+             DOC(ConfigMergingHelpers, MergeConfigs))
         .def("MergeColorSpace",
              &ConfigMergingHelpers::MergeColorSpace,
              "params"_a, "baseConfig"_a, "colorspace"_a,

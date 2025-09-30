@@ -656,7 +656,7 @@ void ConfigMerger::setVersion(unsigned int major, unsigned int minor)
 
 int ConfigMerger::getNumMergedConfigs() const
 {
-    return getImpl()->m_mergedConfigs.size();
+    return static_cast<int>(getImpl()->m_mergedConfigs.size());
 }
 
 ConstConfigRcPtr ConfigMerger::getMergedConfig() const
