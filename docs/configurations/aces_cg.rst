@@ -17,6 +17,8 @@ color spaces and a wider set of displays and view should look at the :ref:`aces_
 Please note that some of the color spaces (e.g. for texturing) are not officially part of the 
 ACES specifications but are included because they are widely used in VFX, animation, and games.
 
+The most recent version of the CG config is based on ACES 2.0.
+
 The latest version of this config may be downloaded from the Releases page of its GitHub
 `repo. <https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES/releases>`_
 
@@ -25,11 +27,13 @@ and so requires no external LUT files.  In fact, even the config file is built i
 and users may access it from any application that uses OCIO 2.2 or higher by using one of the
 following strings in place of the config path:
 
-``ocio://studio-config-v2.2.0_aces-v1.3_ocio-v2.4``   (for OCIO 2.4 or higher)
+``ocio://cg-config-v4.0.0_aces-v2.0_ocio-v2.5``
 
-``ocio://studio-config-v2.1.0_aces-v1.3_ocio-v2.3``   (for OCIO 2.3 or higher)
+``ocio://cg-config-v2.2.0_aces-v1.3_ocio-v2.4``   (for OCIO 2.4 or higher)
 
-``ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1``   (for OCIO 2.2 or higher)
+``ocio://cg-config-v2.1.0_aces-v1.3_ocio-v2.3``   (for OCIO 2.3 or higher)
+
+``ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1``   (for OCIO 2.2 or higher)
 
 These new configs adopt an advanced naming convention so that they can be uniquely identified:
 
@@ -45,6 +49,15 @@ Where:
 * Colorspaces: The version for the color spaces and other config features
 * ACES: The aces-dev version being used
 * Profile: Minimum required OCIO version
+
+In addition, the latest version of the CG config may be accessed simply using:
+
+``ocio://cg-config-latest``
+
+and this is the default built-in config for the library:
+
+``ocio://default``
+
 
 The OCIO Configs Working Group collected input from the community and simplified the
 naming scheme relative to the earlier OCIO v1 ACES configs.  However, aliases have been 

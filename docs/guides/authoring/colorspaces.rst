@@ -241,6 +241,10 @@ proportional to an SDR video signal. Examples: Rec.709/Rec.1886 video, sRGB.
 ``hdr-video`` -- A display-referred encoding where the numeric representation is 
 proportional to an HDR video signal. Examples: Rec.2100/PQ or Rec.2100/HLG.
 
+``edr-video`` -- A display-referred encoding where the numeric representation is 
+proportional to an SDR video signal but allows extended range values intended
+for use on extended or high-dynamic range displays. Example: Display P3 HDR.
+
 ``data`` -- A non-color channel. Note that typically such a color space would 
 also have the isdata attribute set to true. Examples: alpha, normals, Z-depth.
 
@@ -398,6 +402,46 @@ compatibility.
 
     aliases: [shortName, obsoleteName]
 
+``interop_id``
+--------------
+
+Optional.
+
+OCIO supports the Color Interop ID developed by the Color Interop Forum. This allows
+config authors to set an ID on the color spaces in a config to unambiguously identify them
+as conforming to the recommendations of the ASWF Color Interop Forum. These IDs may then be
+used in file formats including OpenEXR and OpenUSD. 
+
+Note that if a color space has an ``interop_id``, that same string must appear as an alias or
+as the name of a color space in the config. Unlike color space names or aliases, more than 
+one color space may use the same interop ID string. This is because sometimes a config may 
+have multiple color spaces that correspond to a given external standard. In this situation,
+only one of those color spaces will have the alias and that will be the one that is used by
+default, for example when an application loads an OpenEXR file that uses that interop ID.
+
+The interop ID is not an arbitrary string, it must adhere to the rules and structure 
+defined by the Color Interop Forum. For example, only certain characters are allowed, and
+color spaces not published in a Color Interop Forum recommendation must include a namespace
+prefix.
+
+Although config authors may use a variety of names for a given color space, based on the
+needs and conventions of their studio, the intent is that everyone will use the same interop
+IDs and that this will allow better tagging in file formats than the local color space names
+that are only meaningful within the context of a specific config.
+
+Developers should note that these IDs are for use internally in file formats but the color 
+space's name attribute is still what should be used in a UI.
+
+The interop ID may be used in configs of version 2.0 or higher.
+
+.. code-block:: yaml
+
+    - !<ColorSpace>
+      name: ACEScg
+      aliases: [ACES - ACEScg, lin_ap1, lin_ap1_scene]
+      interop_id: lin_ap1_scene
+      [...]
+
 
 ``allocation`` and ``allocationvars``
 -------------------------------------
@@ -467,6 +511,46 @@ It's common to use literal ``|`` block syntax to preserve all newlines:
       description: |
         This is one line.
         This is the second.
+
+``interchange``
+---------------
+
+Optional.
+
+The interchange attributes are provided to allow better interop between OCIO and other
+color management standards.
+
+The ``amf_transform_ids` is a newline-separated list of transform IDs intended for use
+with the ACES Metadata File (AMF). Please note that this should include both the forward
+and inverse IDs (if available). For display color spaces, this should include the ACES
+Output Transform IDs used with that display. Note that the same attribute for the 
+View Transforms and Looks sections of the config should be populated as well.
+
+.. code-block:: yaml
+
+    - !<ColorSpace>
+      name: ACEScct
+      [...]
+      interchange:
+        amf_transform_ids: |
+          urn:ampas:aces:transformId:v2.0:CSC.Academy.ACES_to_ACEScct.a2.v1
+          urn:ampas:aces:transformId:v2.0:CSC.Academy.ACEScct_to_ACES.a2.v1
+
+The ``icc_profile_name`` is intended to identify an ICC profile to be used in connection
+with a given color space in the config. For example, some applications may want to embed
+an ICC profile when writing image files to indicate the color space. The profile should
+be located somewhere on the config's search path. Developers may use the resolveFileLocation
+function on the Context class to resolve the full path to the file.
+
+.. code-block:: yaml
+
+    - !<ColorSpace>
+      name: sRGB - Display
+      [...]
+      interchange:
+        icc_profile_name: srgb_profile.icc
+
+The interchange attributes may be used in configs of version 2.5 or higher.
 
 
 .. _config-display-colorspaces:

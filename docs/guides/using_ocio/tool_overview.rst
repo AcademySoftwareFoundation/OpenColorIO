@@ -18,7 +18,7 @@ point to the config file you want to use.
 Note that some tools depend on OpenEXR or OpenImageIO and other libraries:
  * ociolutimage: (OpenEXR or OpenImageIO)
  * ociodisplay: (OpenEXR or OpenImageIO), OpenGL, GLEW, GLUT
- * ocioconvert: (OpenEXR or OpenImageIO)
+ * ocioconvert: (OpenEXR or OpenImageIO), OpenGL, GLEW, GLUT
 
 .. TODO: link to build instructions
 .. TODO: check app lib dependencies
@@ -42,6 +42,10 @@ This command will expand it back out::
     $ ocioarchive --extract myarchive.ocioz
 
 The --list option may be used to see the contents of a .ocioz file.
+
+Note: Archive files generated on Windows machines in OCIO 2.4 or earlier should
+be regenerated in OCIO 2.5 or higher due to a bug in the third-party library
+being used.
 
 
 .. _overview-ociocheck:
@@ -281,6 +285,23 @@ ACES2065-1::
 
 The --list argument will print out all of the standard ACES color spaces that are 
 supported as --csc arguments.
+
+
+.. _overview-ociomergeconfigs:
+
+ociomergeconfigs
+****************
+
+The ociomergeconfigs tool processes an OCIOM file to merge one or more config files::
+
+    $ ociomergeconfigs mergeFile.ociom --out mergedConfig.ocio
+
+The OCIOM file identifies the source configs and controls the merge process. 
+Please refer to the API documentation for the ConfigMergingParameters class for an
+explanation of the OCIOM file format, the available merge strategies and the parameters
+available to control the merge process.
+
+Additional documentation on this feature will be forthcoming.
 
 
 .. _overview-ocioperf:
