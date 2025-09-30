@@ -21,9 +21,8 @@ Please be aware of the following changes when upgrading to OCIO 2.5.
 For Users
 +++++++++
 
-* OCIOZ archive files created on Windows in prior releases are incompatible with OCIO 2.5
-due to an issue in a third-party library and will need to be regenerated. Please see below 
-for more details. 
+* OCIOZ archive files created on Windows in prior releases should be regenerated due to an
+issue in a third-party library. Please see below for more details. 
 
 * For applications that use the categories attribute of color spaces to filter the color
 space menus shown to users, the filtering will now include color spaces that do not have
@@ -224,10 +223,10 @@ For Users
 
 * Support for minizip-ng 3.x has been dropped. Due to a bug in previous versions of that
 library, any OCIOZ files created on Windows would not have been cross-platform, are not
-supported in OCIO 2.5, and will need to be regenerated. You may use standard Zip 
+fully supported in OCIO 2.5, and should be regenerated. You may use standard Zip 
 decompressors to expand the .ocioz files on Windows and use the `ocioarchive` command-line 
-tool to recompress them. The new files will be cross-platform and will be compatible both 
-with OCIO 2.5 and previous releases.
+tool to recompress them. The new files will be cross-platform and will be compatible with
+both OCIO 2.5 and previous releases.
 
 For Developers
 ++++++++++++++

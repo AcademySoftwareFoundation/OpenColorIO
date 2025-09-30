@@ -45,7 +45,7 @@ The --list option may be used to see the contents of a .ocioz file.
 
 Note: Archive files generated on Windows machines in OCIO 2.4 or earlier should
 be regenerated in OCIO 2.5 or higher due to a bug in the third-party library
-being used.
+being used, otherwise they may not open properly on Linux or macOS systems.
 
 
 .. _overview-ociocheck:
@@ -96,6 +96,7 @@ problems it will detect are:
 * Required roles being undefined
 * At least one display device is defined
 * No v2 features are used in a v1 config
+* Validates the structure and usage of interop IDs 
 
 
 As with all the OCIO command-line tools, you can use the `--help` argument to
@@ -188,6 +189,8 @@ may be used to output the shader program used by the GPU renderer.
 
 Uses OpenImageIO or OpenEXR for opening and saving files and modifying
 metadata. Supported formats will vary depending on the use of OpenImageIO.
+The interop ID, if available, is written to the header of OpenEXR files.
+
 Use the --help argument for more information on to the available options.
 
 .. TODO: Examples
