@@ -7283,7 +7283,7 @@ OCIO_ADD_TEST(CTFTransform, grading_huecurve_lin_ctf)
 
     // Note: The default curves are not saved.
     OCIO::GradingHueCurveRcPtr curves = OCIO::GradingHueCurve::Create(OCIO::GRADING_LIN);
-    curves->getCurve(OCIO::LUM_SAT)->getControlPoint(0).m_y = 1.1;
+    curves->getCurve(OCIO::LUM_SAT)->getControlPoint(0).m_y = 1.1f;
     curves->getCurve(OCIO::LUM_LUM)->setNumControlPoints(4);
     curves->getCurve(OCIO::LUM_LUM)->getControlPoint(3).m_x = 16.f;
     curves->getCurve(OCIO::LUM_LUM)->getControlPoint(3).m_y = 10.f;

@@ -1625,8 +1625,14 @@ void applyHSYToRGB(const void * inImg, void * outImg, long numPixels, FixedFunct
             const float loGain = 5.f;
     
             sat /= 1.4f;
-            const float tmp = -sat * sumRgb + sat * 3.f * luma + distRgb;
-            const float s1 = (tmp == 0.f) ? 0.f : sat * (k + 3.f * luma) / tmp;
+            float tmp = -sat * sumRgb + sat * 3.f * luma + distRgb;
+            // Don't allow tmp to go negative, which would cause a negative gainS.
+            tmp = std::max( 1e-6f, tmp );
+
+            float s1 = sat * (k + 3.f * luma) / tmp;
+            // Prevent gainS from becoming too extreme.
+            s1 = std::min(s1, 50.f );
+
             const float s0 = sat / std::max(1e-10f, distRgb * loGain);
     
             const float maxLum = 0.01f;
@@ -1702,7 +1708,7 @@ void applyRGBToHSY(const void * inImg, void * outImg, long numPixels, FixedFunct
         {
             const float sumRgb = red + grn + blu;
             const float k = 0.15f;
-            const float satHi = distRgb / (k + sumRgb);
+            const float satHi = distRgb / std::max( 0.07f * distRgb + 1e-6f, k + sumRgb);
             const float loGain = 5.f;
             const float satLo = distRgb * loGain;
             const float maxLum = 0.01f;

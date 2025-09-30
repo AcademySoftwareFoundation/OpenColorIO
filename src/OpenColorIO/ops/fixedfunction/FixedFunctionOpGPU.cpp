@@ -1708,7 +1708,7 @@ void Add_RGB_TO_HSY(GpuShaderCreatorRcPtr & shaderCreator,
     if (funcStyle == FixedFunctionOpData::RGB_TO_HSY_LIN)
     {
         ss.newLine() << "float sumRGB  = dot( " << pxl << ".rgb, ones );";
-        ss.newLine() << "float sat_hi  = distRGB / (0.15 + sumRGB);";
+        ss.newLine() << "float sat_hi  = distRGB / max(0.07 * distRGB + 1e-6, 0.15 + sumRGB);";
         ss.newLine() << "float sat_lo  = distRGB * 5.;";
         ss.newLine() << "float alpha  = clamp( (luma - 0.001) / (0.01 - 0.001), 0., 1.);";
 
@@ -1765,7 +1765,9 @@ void Add_HSY_TO_RGB(GpuShaderCreatorRcPtr & shaderCreator,
         ss.newLine() << "float lo_gain = 5.;";
         ss.newLine() << "sat /= 1.4;";
         ss.newLine() << "float tmp = -sat * sumRGB + sat * 3. * luma + distRGB;";
-        ss.newLine() << "float s1 = (tmp == 0.) ? 0. : sat * (k + 3. * luma) / tmp;";
+        ss.newLine() << "tmp = max(1e-6, tmp);";
+        ss.newLine() << "float s1 = sat * (k + 3. * luma) / tmp;";
+        ss.newLine() << "s1 = min(s1, 50.);";
         ss.newLine() << "float s0 = sat / max(1e-10, distRGB * lo_gain);";
         ss.newLine() << "float alpha  = clamp( (luma - 0.001) / (0.01 - 0.001), 0., 1.);";
         ss.newLine() << "float a = distRGB * lo_gain * (1. - alpha) * (sumRGB - 3. * luma);";
