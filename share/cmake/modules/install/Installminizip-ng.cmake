@@ -45,7 +45,12 @@ if(NOT minizip-ng_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_P
     set(minizip-ng_INCLUDE_DIR "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_INCLUDEDIR}/minizip-ng")
 
     # Minizip-ng use a hardcoded lib prefix instead of CMAKE_STATIC_LIBRARY_PREFIX
-    set(_minizip-ng_LIB_PREFIX "lib")
+    # Fixed from 4.0.7, see https://github.com/zlib-ng/minizip-ng/issues/778
+    if(${minizip-ng_VERSION} VERSION_GREATER_EQUAL "4.0.7")
+        set(_minizip-ng_LIB_PREFIX "${CMAKE_STATIC_LIBRARY_PREFIX}")
+    else()
+        set(_minizip-ng_LIB_PREFIX "lib")
+    endif()
 
     set(minizip-ng_LIBRARY
         "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_LIBDIR}/${_minizip-ng_LIB_PREFIX}minizip-ng${_minizip-ng_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
@@ -63,11 +68,6 @@ if(NOT minizip-ng_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_P
             -DCMAKE_INSTALL_BINDIR=${CMAKE_INSTALL_BINDIR}
             -DCMAKE_INSTALL_DATADIR=${CMAKE_INSTALL_DATADIR}
             -DCMAKE_INSTALL_LIBDIR=${CMAKE_INSTALL_LIBDIR}
-            # Since the other modules create a subfolder for the includes by default and since
-            # minizip-ng does not, a suffix is added to CMAKE_INSTALL_INCLUDEDIR in order to
-            # install the headers under a subdirectory named "minizip-ng".
-            # Note that this does not affect external builds for minizip-ng.
-            -DCMAKE_INSTALL_INCLUDEDIR=${CMAKE_INSTALL_INCLUDEDIR}/minizip-ng
             -DCMAKE_OBJECT_PATH_MAX=${CMAKE_OBJECT_PATH_MAX}
             -DBUILD_SHARED_LIBS=OFF
             -DMZ_OPENSSL=OFF
