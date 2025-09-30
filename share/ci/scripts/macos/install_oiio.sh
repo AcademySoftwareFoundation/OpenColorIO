@@ -6,7 +6,7 @@ set -ex
 
 OIIO_VERSION="$1"
 
-if [ "$OIIO_VERSION" == "latest" ]; then
+if [ "$OIIO_VERSION" = "latest" ]; then
     brew install openimageio
 else
     brew install openimageio@${OIIO_VERSION}

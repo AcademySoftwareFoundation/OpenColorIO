@@ -2093,12 +2093,12 @@ OCIO_ADD_TEST(Config, version)
     {
         OCIO_CHECK_THROW_WHAT(config->setVersion(2, 9), OCIO::Exception,
                               "The minor version 9 is not supported for major version 2. "
-                              "Maximum minor version is 4");
+                              "Maximum minor version is 5");
 
         OCIO_CHECK_NO_THROW(config->setMajorVersion(2));
         OCIO_CHECK_THROW_WHAT(config->setMinorVersion(9), OCIO::Exception,
                               "The minor version 9 is not supported for major version 2. "
-                              "Maximum minor version is 4");
+                              "Maximum minor version is 5");
     }
 
     {
@@ -3444,6 +3444,13 @@ OCIO_ADD_TEST(Config, display)
         std::istringstream is(myProfile);
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+
+        // The active displays list is ignored if it would remove all displays.
+        OCIO_REQUIRE_EQUAL(config->getNumDisplays(), 6);
+        OCIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_2"));
+        OCIO_CHECK_EQUAL(std::string(config->getDisplay(1)), std::string("sRGB_F"));
+        OCIO_CHECK_EQUAL(std::string(config->getDefaultDisplay()), "sRGB_2");
+
         OCIO_CHECK_THROW_WHAT(config->validate(),
                               OCIO::Exception,
                               "The list of active displays [ABCDEF] from the config file is invalid.");
@@ -3562,6 +3569,7 @@ OCIO_ADD_TEST(Config, view)
         OCIO::ConstConfigRcPtr config;
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_1")), "View_1");
+        // The active views list is ignored, for a display, if it would remove all views.
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_1"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 0)), "View_1");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 1)), "View_2");
@@ -3747,6 +3755,112 @@ OCIO_ADD_TEST(Config, display_view_order)
     OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_B"), 2);
     OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_B", 0)), "View_2");
     OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_B", 1)), "View_1");
+}
+
+OCIO_ADD_TEST(Config, active_displayview_lists)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::CreateRaw()->createEditableCopy();
+
+    // Test add.
+    OCIO_CHECK_EQUAL(config->getNumActiveDisplays(), 0);
+    OCIO_CHECK_EQUAL(config->getNumActiveViews(), 0);
+    config->addActiveDisplay("sRGB");
+    config->addActiveDisplay("Display P3");
+    config->addActiveView("v1");
+    config->addActiveView("v2");
+
+    // Test getter.
+    OCIO_CHECK_EQUAL(config->getNumActiveDisplays(), 2);
+    OCIO_CHECK_EQUAL(std::string(config->getActiveDisplay(0)), "sRGB");
+    OCIO_CHECK_EQUAL(std::string(config->getActiveDisplay(1)), "Display P3");
+    OCIO_CHECK_EQUAL(config->getNumActiveViews(), 2);
+    OCIO_CHECK_EQUAL(std::string(config->getActiveView(0)), "v1");
+    OCIO_CHECK_EQUAL(std::string(config->getActiveView(1)), "v2");
+
+    // Trying to add one that is already present doesn't add one, but does not throw.
+    OCIO_CHECK_NO_THROW(config->addActiveDisplay("sRGB"));
+    OCIO_CHECK_NO_THROW(config->addActiveView("v1"));
+    OCIO_CHECK_EQUAL(config->getNumActiveDisplays(), 2);
+    OCIO_CHECK_EQUAL(config->getNumActiveViews(), 2);
+
+    // Test commas may be used.
+    config->setActiveDisplays("sRGB:01, \"Name, with comma\", \"Quoted name\"");
+    OCIO_CHECK_EQUAL(config->getNumActiveDisplays(), 3);
+    OCIO_CHECK_EQUAL(std::string(config->getActiveDisplay(0)), "sRGB:01");
+    OCIO_CHECK_EQUAL(std::string(config->getActiveDisplay(1)), "Name, with comma");
+    config->setActiveViews("v:01, \"View, with comma\", \"Quoted view\"");
+    OCIO_CHECK_EQUAL(config->getNumActiveViews(), 3);
+    OCIO_CHECK_EQUAL(std::string(config->getActiveView(0)), "v:01");
+    OCIO_CHECK_EQUAL(std::string(config->getActiveView(1)), "View, with comma");
+
+    // Test remove.
+    config->removeActiveDisplay("Name, with comma");
+    OCIO_CHECK_EQUAL(config->getNumActiveDisplays(), 2);
+    OCIO_CHECK_EQUAL(std::string(config->getActiveDisplay(1)), "Quoted name");
+    config->removeActiveView("View, with comma");
+    OCIO_CHECK_EQUAL(config->getNumActiveViews(), 2);
+    OCIO_CHECK_EQUAL(std::string(config->getActiveView(1)), "Quoted view");
+
+    // Test clear.
+    config->clearActiveDisplays();
+    OCIO_CHECK_EQUAL(config->getNumActiveDisplays(), 0);
+    config->clearActiveViews();
+    OCIO_CHECK_EQUAL(config->getNumActiveViews(), 0);
+
+    // Trying to remove one that doesn't exist throws.
+    OCIO_CHECK_THROW_WHAT(config->removeActiveDisplay("not found"),
+                          OCIO::Exception,
+                          "Active display could not be removed from config");
+    OCIO_CHECK_THROW_WHAT(config->removeActiveView("not found"),
+                          OCIO::Exception,
+                          "Active view could not be removed from config");
+
+    // Test setting an empty string behaves as expected.
+    config->setActiveDisplays("");
+    OCIO_CHECK_EQUAL(config->getNumActiveDisplays(), 0);
+    config->addActiveDisplay("sRGB");
+    OCIO_CHECK_EQUAL(config->getNumActiveDisplays(), 1);
+    config->setActiveViews("");
+    OCIO_CHECK_EQUAL(config->getNumActiveViews(), 0);
+    config->addActiveView("v1");
+    OCIO_CHECK_EQUAL(config->getNumActiveViews(), 1);
+
+    // Test commas may be serialized and restored.
+    {
+        config->setActiveDisplays("sRGB:01, \"Name, with comma\", \"Quoted name\"");
+        config->setActiveViews("v:01, \"View, with comma\", \"Quoted view\"");
+        std::ostringstream oss;
+        config->serialize(oss);
+        std::istringstream iss;
+        iss.str(oss.str());
+        OCIO::ConstConfigRcPtr config2 = OCIO::Config::CreateFromStream(iss);
+        OCIO_CHECK_EQUAL(config2->getNumActiveDisplays(), 3);
+        OCIO_CHECK_EQUAL(std::string(config2->getActiveDisplay(0)), "sRGB:01");
+        OCIO_CHECK_EQUAL(std::string(config2->getActiveDisplay(1)), "Name, with comma");
+        OCIO_CHECK_EQUAL(std::string(config2->getActiveDisplay(2)), "Quoted name");
+        OCIO_CHECK_EQUAL(config2->getNumActiveViews(), 3);
+        OCIO_CHECK_EQUAL(std::string(config2->getActiveView(0)), "v:01");
+        OCIO_CHECK_EQUAL(std::string(config2->getActiveView(1)), "View, with comma");
+        OCIO_CHECK_EQUAL(std::string(config2->getActiveView(2)), "Quoted view");
+    }
+
+    // Check how an active list that uses colons as the separator is serialized.
+    // Turns out these are serialized as commas, so this was never a viable method to
+    // set an active list to handle use of commas in names. (It would be ok for use in
+    // the env. var., but not in the config itself.)
+    {
+        config->setActiveDisplays("sRGB01 : Name : \"Quoted name\"");
+        config->setActiveViews("v01:View: \"Quoted view\"");
+        std::ostringstream oss;
+        config->serialize(oss);
+        std::istringstream iss;
+        iss.str(oss.str());
+        OCIO::ConstConfigRcPtr config2 = OCIO::Config::CreateFromStream(iss);
+        OCIO_CHECK_EQUAL(config2->getNumActiveDisplays(), 3);
+        OCIO_CHECK_EQUAL(std::string(config2->getActiveDisplays()), "sRGB01, Name, Quoted name");
+        OCIO_CHECK_EQUAL(config2->getNumActiveViews(), 3);
+        OCIO_CHECK_EQUAL(std::string(config2->getActiveViews()), "v01, View, Quoted view");
+    }
 }
 
 OCIO_ADD_TEST(Config, log_serialization)
@@ -9979,3 +10093,173 @@ OCIO_ADD_TEST(Config, set_config_io_proxy)
         OCIO::ClearAllCaches();
     }
 }
+
+OCIO_ADD_TEST(Config, interchange_attributes)
+{
+    std::string END = {R"(
+view_transforms:
+  - !<ViewTransform>
+    name: vt1
+    from_scene_reference: !<RangeTransform> {min_in_value: 0., min_out_value: 0.})"};
+
+    const std::string str = PROFILE_START_V<2, 5>() + END;
+
+    std::istringstream is;
+    is.str(str);
+
+    OCIO::ConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    OCIO_REQUIRE_ASSERT(config);
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    // Color Space
+
+    {
+        auto cs = config->getColorSpace("log")->createEditableCopy();
+        OCIO_REQUIRE_ASSERT(cs);
+
+        // Set amf_transform_ids attribute and validate.
+
+        OCIO_CHECK_NO_THROW(cs->setInterchangeAttribute("amf_transform_ids", "sample amf id"));
+        config->addColorSpace(cs);
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Check that the attribute is in the serialized config.
+
+        std::stringstream ss;
+        config->serialize(ss);
+        auto cstrout = ss.str();
+        OCIO_CHECK_ASSERT(cstrout.find("amf_transform_ids: sample amf id") != std::string::npos);
+
+        // Check that loading the serialized config works with the attribute.
+
+        OCIO::ConstConfigRcPtr cfg2;
+        OCIO_CHECK_NO_THROW(cfg2 = OCIO::Config::CreateFromStream(ss));
+
+        OCIO::ConstColorSpaceRcPtr cs2;
+        OCIO_CHECK_NO_THROW(cs2 = config->getColorSpace("log"));
+        OCIO_CHECK_EQUAL(cs2->getInterchangeAttribute("amf_transform_ids"), std::string("sample amf id"));
+
+        // Check that the config can NOT be downgraded to 2.4 with the attribute.
+
+        config->setVersion(2, 4);
+        OCIO_CHECK_THROW_WHAT(
+            config->validate(),
+            OCIO::Exception,
+            "Config failed validation. The color space 'log' has non-empty "
+            "interchange attributes and config version is less than 2.5.");
+
+        // Remove the attribute and check that the config can be downgraded to 2.4.
+
+        OCIO_CHECK_NO_THROW(cs->setInterchangeAttribute("amf_transform_ids", ""));
+        config->addColorSpace(cs);
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Restore version 2.5.
+
+        config->setVersion(2, 5);
+    }
+
+    // View Transform
+
+    {
+        auto vt = config->getViewTransform("vt1")->createEditableCopy();
+        OCIO_REQUIRE_ASSERT(vt);
+
+        // Set amf_transform_ids attribute and validate.
+
+        OCIO_CHECK_NO_THROW(vt->setInterchangeAttribute("amf_transform_ids", "sample amf id"));
+        config->addViewTransform(vt);
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Setting the icc_profile_name attribute should throw.
+        OCIO_CHECK_THROW_WHAT(
+            vt->setInterchangeAttribute("icc_profile_name", "some icc profile"),
+            OCIO::Exception,
+            "Unknown attribute name 'icc_profile_name'.");
+
+        // Check that the attribute is in the serialized config.
+
+        std::stringstream ss;
+        config->serialize(ss);
+        auto cstrout = ss.str();
+        OCIO_CHECK_ASSERT(cstrout.find("amf_transform_ids: sample amf id") != std::string::npos);
+
+        // Check that loading the serialized config works with the attribute.
+
+        OCIO::ConstConfigRcPtr cfg2;
+        OCIO_CHECK_NO_THROW(cfg2 = OCIO::Config::CreateFromStream(ss));
+
+        OCIO::ConstViewTransformRcPtr vt2;
+        OCIO_CHECK_NO_THROW(vt2 = config->getViewTransform("vt1"));
+        OCIO_CHECK_EQUAL(vt2->getInterchangeAttribute("amf_transform_ids"), std::string("sample amf id"));
+
+        // Check that the config can NOT be downgraded to 2.4 with the attribute.
+
+        config->setVersion(2, 4);
+        OCIO_CHECK_THROW_WHAT(
+            config->validate(),
+            OCIO::Exception,
+            "Config failed validation. The view transform 'vt1' has non-empty "
+            "interchange attributes and config version is less than 2.5.");
+
+        // Remove the attribute and check that the config can be downgraded to 2.4.
+
+        OCIO_CHECK_NO_THROW(vt->setInterchangeAttribute("amf_transform_ids", ""));
+        config->addViewTransform(vt);
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Restore version 2.5.
+
+        config->setVersion(2, 5);
+    }
+
+    // Look
+
+    {
+        auto lk = config->getLook("beauty")->createEditableCopy();
+        OCIO_REQUIRE_ASSERT(lk);
+
+        // Set amf_transform_ids attribute and validate.
+
+        OCIO_CHECK_NO_THROW(lk->setInterchangeAttribute("amf_transform_ids", "sample amf id"));
+        config->addLook(lk);
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Check that the attribute is in the serialized config.
+
+        std::stringstream ss;
+        config->serialize(ss);
+        auto cstrout = ss.str();
+        OCIO_CHECK_ASSERT(cstrout.find("amf_transform_ids: sample amf id") != std::string::npos);
+
+        // Check that loading the serialized config works with the attribute.
+
+        OCIO::ConstConfigRcPtr cfg2;
+        OCIO_CHECK_NO_THROW(cfg2 = OCIO::Config::CreateFromStream(ss));
+
+        OCIO::ConstLookRcPtr lk2;
+        OCIO_CHECK_NO_THROW(lk2 = config->getLook("beauty"));
+        OCIO_CHECK_EQUAL(lk2->getInterchangeAttribute("amf_transform_ids"), std::string("sample amf id"));
+
+        // Check that the config can NOT be downgraded to 2.4 with the attribute.
+
+        config->setVersion(2, 4);
+        OCIO_CHECK_THROW_WHAT(
+            config->validate(),
+            OCIO::Exception,
+            "Config failed validation. The look 'beauty' has non-empty "
+            "interchange attributes and config version is less than 2.5.");
+
+        // Remove the attribute and check that the config can be downgraded to 2.4.
+
+        OCIO_CHECK_NO_THROW(lk->setInterchangeAttribute("amf_transform_ids", ""));
+        config->addLook(lk);
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Restore version 2.5.
+
+        config->setVersion(2, 5);
+    }
+}
+

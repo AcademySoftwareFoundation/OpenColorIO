@@ -66,7 +66,7 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
         // Declare uniform.
         GpuShaderText stDecl(shaderCreator->getLanguage());
         stDecl.declareUniformFloat(name);
-        shaderCreator->addToDeclareShaderCode(stDecl.string().c_str());
+        shaderCreator->addToParameterDeclareShaderCode(stDecl.string().c_str());
     }
 }
 
@@ -80,7 +80,7 @@ void AddBoolUniform(GpuShaderCreatorRcPtr & shaderCreator,
         // Declare uniform.
         GpuShaderText stDecl(shaderCreator->getLanguage());
         stDecl.declareUniformBool(name);
-        shaderCreator->addToDeclareShaderCode(stDecl.string().c_str());
+        shaderCreator->addToParameterDeclareShaderCode(stDecl.string().c_str());
     }
 }
 
@@ -1569,7 +1569,7 @@ void GetGradingToneGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
     if (dyn)
     {
-        st.newLine() << "if (!" << properties.localBypass << ")";
+        st.newLine() << "if (!" << st.castToBool(properties.localBypass) << ")";
         st.newLine() << "{";
         st.indent();
     }

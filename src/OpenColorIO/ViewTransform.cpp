@@ -7,6 +7,12 @@
 
 #include "TokensManager.h"
 
+namespace
+{
+const std::array<const std::string, 1> knownInterchangeNames = {
+    "amf_transform_ids" };
+}
+
 namespace OCIO_NAMESPACE
 {
 
@@ -17,6 +23,7 @@ public:
     std::string m_family;
     std::string m_description;
     ReferenceSpaceType m_referenceSpaceType{ REFERENCE_SPACE_SCENE };
+    std::map<std::string, std::string> m_interchangeAttribs;
 
     TransformRcPtr m_toRefTransform;
     TransformRcPtr m_fromRefTransform;
@@ -41,6 +48,7 @@ public:
             m_description = rhs.m_description;
 
             m_referenceSpaceType = rhs.m_referenceSpaceType;
+            m_interchangeAttribs = rhs.m_interchangeAttribs;
 
             m_toRefTransform = rhs.m_toRefTransform ? rhs.m_toRefTransform->createEditableCopy() :
                                                       rhs.m_toRefTransform;
@@ -91,7 +99,7 @@ const char * ViewTransform::getName() const noexcept
 
 void ViewTransform::setName(const char * name) noexcept
 {
-    getImpl()->m_name = name;
+    getImpl()->m_name = name ? name : "";
 }
 
 const char * ViewTransform::getFamily() const noexcept
@@ -101,7 +109,7 @@ const char * ViewTransform::getFamily() const noexcept
 
 void ViewTransform::setFamily(const char * family)
 {
-    getImpl()->m_family = family;
+    getImpl()->m_family = family ? family : "";
 }
 
 const char * ViewTransform::getDescription() const noexcept
@@ -111,8 +119,64 @@ const char * ViewTransform::getDescription() const noexcept
 
 void ViewTransform::setDescription(const char * description)
 {
-    getImpl()->m_description = description;
+    getImpl()->m_description = description ? description : "";
 }
+
+const char * ViewTransform::getInterchangeAttribute(const char* attrName) const
+{
+    std::string name = attrName ? attrName : "";
+
+    for (auto& key : knownInterchangeNames)
+    {
+        // do case-insensitive comparison.
+        if (StringUtils::Compare(key, name))
+        {
+            auto it = m_impl->m_interchangeAttribs.find(key);
+            if (it != m_impl->m_interchangeAttribs.end())
+            {
+                return it->second.c_str();
+            }
+            return "";
+        }
+    }
+
+    std::ostringstream oss;
+    oss << "Unknown attribute name '" << name << "'.";
+    throw Exception(oss.str().c_str());
+}
+
+void ViewTransform::setInterchangeAttribute(const char* attrName, const char* value)
+{
+    std::string name = attrName ? attrName : "";
+
+    for (auto& key : knownInterchangeNames)
+    {
+        // Do case-insensitive comparison.
+        if (StringUtils::Compare(key, name))
+        {
+            // Use key instead of name for storing in correct capitalization.
+            if (!value || !*value)
+            {
+                m_impl->m_interchangeAttribs.erase(key);
+            } 
+            else
+            {
+                m_impl->m_interchangeAttribs[key] = value;
+            }
+            return;
+        }
+    }
+
+    std::ostringstream oss;
+    oss << "Unknown attribute name '" << name << "'.";
+    throw Exception(oss.str().c_str());
+}
+
+std::map<std::string, std::string> ViewTransform::getInterchangeAttributes() const noexcept
+{
+    return m_impl->m_interchangeAttribs;
+}
+
 
 bool ViewTransform::hasCategory(const char * category) const
 {
@@ -210,6 +274,12 @@ std::ostream & operator<< (std::ostream & os, const ViewTransform & vt)
     {
         os << ", description=" << desc;
     }
+
+    for (const auto& attr : vt.getInterchangeAttributes())
+    {
+        os << ", " << attr.first << "=" << attr.second;
+    }
+
     if (vt.getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE))
     {
         os << ",\n    " << vt.getName() << " --> Reference";

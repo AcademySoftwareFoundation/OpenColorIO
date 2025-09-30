@@ -247,7 +247,7 @@ static constexpr unsigned LastSupportedMajorVersion = OCIO_VERSION_MAJOR;
 
 // For each major version keep the most recent minor.
 static const unsigned int LastSupportedMinorVersion[] = {0, // Version 1
-                                                         4  // Version 2
+                                                         5  // Version 2
                                                          };
 
 } // namespace
@@ -1029,6 +1029,7 @@ public:
             oss << "Profile description: " << monitorDescription;
             cs->setDescription(oss.str().c_str());
             cs->setTransform(file, COLORSPACE_DIR_FROM_REFERENCE);
+            cs->setEncoding("sdr-video");
 
             // Note that it adds it or updates the existing one.
             m_allColorSpaces->addColorSpace(cs);
@@ -1185,7 +1186,7 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
         // Check if it is an OCIOZ archive.
         if (magicNumber[0] == 'P' && magicNumber[1] == 'K')
         {
-            // Closing ifstream even though it should be close by ifstream deconstructor (RAII).
+            // Closing ifstream even though it should be closed by ifstream destructor (RAII).
             ifstream.close();
 
             // The file should be an OCIOZ archive file.
@@ -1450,6 +1451,22 @@ void Config::validate() const
             throw Exception(getImpl()->m_validationtext.c_str());
         }
 
+        // Make sure that all used interopIDs are available in this config.
+        const char* interop = cs->getInteropID();
+        if(interop && *interop)
+        {
+            if(!getColorSpace(interop))
+            {
+                std::ostringstream os;
+                os << "Config failed color space validation. ";
+                os << "The color space '" << name << "' ";
+                os << "refers to an interop ID, '" << interop << "', ";
+                os << "which is not defined in this config.";
+                getImpl()->m_validationtext = os.str();
+                throw Exception(getImpl()->m_validationtext.c_str());
+            }
+        }
+
         // AddColorSpace, addNamedTransform & setRole already check there is no name & alias
         // conflict.
 
@@ -1499,7 +1516,8 @@ void Config::validate() const
 
 
         // Check for interchange roles requirements - scene-referred and display-referred.
-        if (getMajorVersion() >= 2 && getMinorVersion() >= 2)
+        unsigned int versionHex = (getMajorVersion() << 24) | (getMinorVersion() << 16);
+        if (versionHex >= 0x02020000u)  // v2.2 or higher
         {
             bool hasRoleSceneLinear                 = false;
             bool hasRoleCompositingLog              = false;
@@ -3369,7 +3387,7 @@ void Config::removeSharedView(const char * view)
     {
         std::ostringstream os;
         os << "Shared view could not be removed from config. A shared view named '"
-           << view << "' could be be found.";
+           << view << "' could not be found.";
         throw Exception(os.str().c_str());
     }
 }
@@ -4098,6 +4116,14 @@ void Config::setActiveDisplays(const char * displays)
     getImpl()->m_activeDisplays.clear();
     getImpl()->m_activeDisplays = SplitStringEnvStyle(displays);
 
+    // SplitStringEnvStyle needs to always return a result, even if empty, for look parsing.
+    // However, this does not count as an active display, so delete it.
+    if( getImpl()->m_activeDisplays.size() == 1 && 
+        getImpl()->m_activeDisplays[0].empty() )
+    {
+        getImpl()->m_activeDisplays.clear();
+    }
+
     getImpl()->m_displayCache.clear();
 
     AutoMutex lock(getImpl()->m_cacheidMutex);
@@ -4110,10 +4136,93 @@ const char * Config::getActiveDisplays() const
     return getImpl()->m_activeDisplaysStr.c_str();
 }
 
+void Config::addActiveDisplay(const char * display)
+{
+    if( !display || !display[0] )
+    {
+        throw Exception("Active display could not be added to config, display name was empty");
+    }
+    
+    auto it = std::find(getImpl()->m_activeDisplays.begin(),
+                        getImpl()->m_activeDisplays.end(), display);
+
+    if( it != getImpl()->m_activeDisplays.end() )
+    {
+        // Display is already present.
+        return;
+    }
+
+    getImpl()->m_activeDisplays.push_back(display);
+
+    getImpl()->m_displayCache.clear();
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
+}
+
+void Config::removeActiveDisplay(const char * display)
+{
+    if( !display || !display[0] )
+    {
+        throw Exception("Active display could not be removed from config, display name was empty.");
+    }
+        
+    auto it = std::find( getImpl()->m_activeDisplays.begin(),
+                         getImpl()->m_activeDisplays.end(), display );
+
+    if( it != getImpl()->m_activeDisplays.end() )
+    {
+        getImpl()->m_activeDisplays.erase(it);
+    }
+    else
+    {
+        std::ostringstream os;
+        os << "Active display could not be removed from config, display '"
+           << display << "' was not found.";
+        throw Exception(os.str().c_str());
+    }
+
+    getImpl()->m_displayCache.clear();
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
+}
+
+void Config::clearActiveDisplays()
+{
+    getImpl()->m_activeDisplays.clear();
+
+    getImpl()->m_displayCache.clear();
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
+}
+
+const char * Config::getActiveDisplay( int index ) const
+{
+    if( index<0 || 
+        index >= static_cast<int>(getImpl()->m_activeDisplays.size()))
+    {
+        return nullptr;
+    }
+
+    return getImpl()->m_activeDisplays[index].c_str();
+}
+
+int Config::getNumActiveDisplays() const
+{
+    return static_cast<int>(getImpl()->m_activeDisplays.size());
+}
+
 void Config::setActiveViews(const char * views)
 {
     getImpl()->m_activeViews.clear();
     getImpl()->m_activeViews = SplitStringEnvStyle(views);
+
+    // SplitStringEnvStyle needs to always return a result, even if empty, for look parsing.
+    // However, this does not count as an active view, so delete it.
+    if( getImpl()->m_activeViews.size() == 1 && 
+        getImpl()->m_activeViews[0].empty() )
+    {
+        getImpl()->m_activeViews.clear();
+    }
 
     getImpl()->m_displayCache.clear();
 
@@ -4125,6 +4234,81 @@ const char * Config::getActiveViews() const
 {
     getImpl()->m_activeViewsStr = JoinStringEnvStyle(getImpl()->m_activeViews);
     return getImpl()->m_activeViewsStr.c_str();
+}
+
+void Config::addActiveView(const char * view)
+{
+    if( !view || !view[0] )
+    {
+        throw Exception("Active view could not be added to config, view name was empty.");
+    }
+
+    auto it = std::find(getImpl()->m_activeViews.begin(),
+                        getImpl()->m_activeViews.end(), view);
+
+    if( it != getImpl()->m_activeViews.end() )
+    {
+        // View is already present.
+        return;
+    }
+
+    getImpl()->m_activeViews.push_back(view);
+
+    getImpl()->m_displayCache.clear();
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
+}
+
+void Config::removeActiveView(const char * view)
+{
+    if( !view || !view[0] )
+    {
+        throw Exception("Active view could not be removed from config, view name was empty.");
+    }
+        
+    auto it = std::find( getImpl()->m_activeViews.begin(),
+                         getImpl()->m_activeViews.end(), view );
+
+    if(it!=getImpl()->m_activeViews.end())
+    {
+            getImpl()->m_activeViews.erase(it);
+    }
+    else
+    {
+            std::ostringstream os;
+            os << "Active view could not be removed from config, view '"
+               << view << "' was not found.";
+            throw Exception(os.str().c_str());
+    }
+
+    getImpl()->m_displayCache.clear();
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
+}
+
+void Config::clearActiveViews()
+{
+    getImpl()->m_activeViews.clear();
+
+    getImpl()->m_displayCache.clear();
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
+}
+
+const char * Config::getActiveView( int index ) const
+{
+    if( index<0 || 
+        index >= static_cast<int>(getImpl()->m_activeViews.size()))
+    {
+        return nullptr;
+    }
+
+    return getImpl()->m_activeViews[index].c_str();
+}
+
+int Config::getNumActiveViews() const
+{
+    return static_cast<int>(getImpl()->m_activeViews.size());
 }
 
 int Config::getNumDisplaysAll() const noexcept
@@ -5601,6 +5785,8 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
 
 void Config::Impl::checkVersionConsistency() const
 {
+    unsigned int hexVersion = (m_majorVersion << 24) | (m_minorVersion << 16);
+
     // Check for the Transforms.
 
     ConstTransformVec transforms;
@@ -5670,17 +5856,43 @@ void Config::Impl::checkVersionConsistency() const
         }
     }
 
-    // Check for the DisplayColorSpaces.
+    // Check ColorSpace properties.
 
-    if (m_majorVersion < 2)
+    const int nbCS = m_allColorSpaces->getNumColorSpaces();
+    for (int i = 0; i < nbCS; ++i)
     {
-        const int nbCS = m_allColorSpaces->getNumColorSpaces();
-        for (int i = 0; i < nbCS; ++i)
+        // Check for display color spaces.
+
+        const auto & cs = m_allColorSpaces->getColorSpaceByIndex(i);
+        if (m_majorVersion < 2) 
         {
-            const auto & cs = m_allColorSpaces->getColorSpaceByIndex(i);
-            if (MatchReferenceType(SEARCH_REFERENCE_SPACE_DISPLAY, cs->getReferenceSpaceType()))
+            if (MatchReferenceType(SEARCH_REFERENCE_SPACE_DISPLAY, cs->getReferenceSpaceType())) 
             {
                 throw Exception("Only version 2 (or higher) can have DisplayColorSpaces.");
+            }
+        } 
+
+        // Check for new color space attributes.
+
+        if (m_majorVersion < 2) 
+        {
+            if (*cs->getInteropID())
+            {
+                std::ostringstream os;
+                os << "Config failed validation. The color space '" << cs->getName() << "' ";
+                os << "has non-empty InteropID and config version is less than 2.0.";
+                throw Exception(os.str().c_str());
+            }
+        }
+
+        if (hexVersion < 0x02050000) 
+        {
+            if (cs->getInterchangeAttributes().size()>0)
+            {
+                std::ostringstream os;
+                os << "Config failed validation. The color space '" << cs->getName() << "' ";
+                os << "has non-empty interchange attributes and config version is less than 2.5.";
+                throw Exception(os.str().c_str());
             }
         }
     }
@@ -5690,6 +5902,38 @@ void Config::Impl::checkVersionConsistency() const
     if (m_majorVersion < 2 && (m_viewTransforms.size() != 0 || !m_defaultViewTransform.empty()))
     {
         throw Exception("Only version 2 (or higher) can have ViewTransforms.");
+    }
+
+    // Check for new ViewTransform properties.
+
+    if (hexVersion < 0x02050000) 
+    {
+        for (const auto& vt : m_viewTransforms)
+        {
+            if (vt->getInterchangeAttributes().size()>0)
+            {
+                std::ostringstream os;
+                os << "Config failed validation. The view transform '" << vt->getName() << "' ";
+                os << "has non-empty interchange attributes and config version is less than 2.5.";
+                throw Exception(os.str().c_str());
+            }
+        }
+    }
+
+    // Check for new Look properties.
+
+    if (hexVersion < 0x02050000) 
+    {
+        for (const auto& look : m_looksList)
+        {
+            if (look->getInterchangeAttributes().size()>0)
+            {
+                std::ostringstream os;
+                os << "Config failed validation. The look '" << look->getName() << "' ";
+                os << "has non-empty interchange attributes and config version is less than 2.5.";
+                throw Exception(os.str().c_str());
+            }
+        }
     }
 
     // Check for the NamedTransforms.
