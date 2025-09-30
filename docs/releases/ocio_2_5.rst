@@ -14,7 +14,7 @@ calendar year 2026.
 
 
 Breaking Changes
-================
+****************
 
 Please be aware of the following changes when upgrading to OCIO 2.5.
 
@@ -22,20 +22,20 @@ For Users
 +++++++++
 
 * OCIOZ archive files created on Windows in prior releases should be regenerated due to an
-issue in a third-party library. Please see below for more details. 
+  issue in a third-party library. Please see below for more details. 
 
 * For applications that use the categories attribute of color spaces to filter the color
-space menus shown to users, the filtering will now include color spaces that do not have
-any category set. (Though applications may use a new API call to override this behavior.)
+  space menus shown to users, the filtering will now include color spaces that do not have
+  any category set. (Though applications may use a new API call to override this behavior.)
 
 For Developers
 ++++++++++++++
 
 * Applications that use the OCIO GPU renderer may need to make small adjustments to their
-code due to changes that were required in order to support the Khronos Vulkan graphics API.
+  code due to changes that were required in order to support the Khronos Vulkan graphics API.
 
 * The Python functions getActiveDisplays and getActiveViews now return iterators, please 
-see below for details.
+  see below for details.
 
 * Please see the section below about version updates to required third-party dependencies.
 
@@ -59,11 +59,11 @@ flexible OCIO config format such as:
 * Handling name or alias conflicts.
 
 * Handling differences in reference connection spaces by adding compensating color space 
-conversions to transforms.
+  conversions to transforms.
 
 * Avoiding adding duplicate color spaces (even if they are named are differently). This 
-allows applications to avoid adding color spaces that may already be present in the user's
-config.
+  allows applications to avoid adding color spaces that may already be present in the user's
+  config.
 
 * Providing a mechanism to group added color spaces under a separate menu hierarchy.
 
@@ -185,11 +185,11 @@ file formats but the color space's name attribute is still what should be used i
 
 The new attributes are:
 
-* `interop_id`: Holds an ID string intended to be used across configs and file formats.
+* ``interop_id``: Holds an ID string intended to be used across configs and file formats.
 
-* `icc_profile_name`: Holds the name of an associated ICC profile.
+* ``icc_profile_name``: Holds the name of an associated ICC profile.
 
-* `amf_transform_ids`: Holds the ID strings associated with the ACES Metadata Format (AMF).
+* ``amf_transform_ids``: Holds the ID strings associated with the ACES Metadata Format (AMF).
 
 Please note that the drafts of various Color Interop Forum recommendations on this topic are
 currently being finalized and should be `published on GitHub <https://github.com/AcademySoftwareFoundation/ColorInterop>`_ 
@@ -222,11 +222,11 @@ For Users
 +++++++++
 
 * Support for minizip-ng 3.x has been dropped. Due to a bug in previous versions of that
-library, any OCIOZ files created on Windows would not have been cross-platform, are not
-fully supported in OCIO 2.5, and should be regenerated. You may use standard Zip 
-decompressors to expand the .ocioz files on Windows and use the `ocioarchive` command-line 
-tool to recompress them. The new files will be cross-platform and will be compatible with
-both OCIO 2.5 and previous releases.
+  library, any OCIOZ files created on Windows would not have been cross-platform, are not
+  fully supported in OCIO 2.5, and should be regenerated. You may use standard Zip 
+  decompressors to expand the .ocioz files on Windows and use the `ocioarchive` command-line 
+  tool to recompress them. The new files will be cross-platform and will be compatible with
+  both OCIO 2.5 and previous releases.
 
 For Developers
 ++++++++++++++
@@ -262,17 +262,17 @@ the only change that requires a modification to existing code.
 In addition, here are some other new API functions:
 
 * The ``setDisplayTemporary`` function may be used to serialize displays created using an ICC 
-profile and a config's virtual display. This is helpful if a host application needs to serialize
-a config that includes those displays for use by plug-ins such as OpenFX.
+  profile and a config's virtual display. This is helpful if a host application needs to serialize
+  a config that includes those displays for use by plug-ins such as OpenFX.
 
 * The ``setTreatNoCategoryAsAny`` function may be used on the ColorSpaceMenuParameters class
-to control the menu filtering behavior for color spaces that do not have the categories 
-attribute set. The default is to include those color spaces when doing category filtering 
-since this is the least surprising behavior for end-users that are editing their own configs.
+  to control the menu filtering behavior for color spaces that do not have the categories 
+  attribute set. The default is to include those color spaces when doing category filtering 
+  since this is the least surprising behavior for end-users that are editing their own configs.
 
 * The following convenience methods have been added to the Config class for working with various
-types of views: ``isViewShared``, ``clearSharedViews``, ``AreViewsEqual``, ``hasView``, 
-``hasVirtualView``, ``isVirtualViewShared``, ``AreVirtualViewsEqual``.
+  types of views: ``isViewShared``, ``clearSharedViews``, ``AreViewsEqual``, ``hasView``, 
+  ``hasVirtualView``, ``isVirtualViewShared``, ``AreVirtualViewsEqual``.
 
 * The ``setStringVar`` function is now available on the Context class in Python.
 

@@ -23,7 +23,7 @@ films as SpiderMan 2 (2004), Surf's Up (2007), Cloudy with a Chance of Meatballs
 OpenColorIO v2 was in development from 2017 to 2020 and was feature complete as of
 SIGGRAPH 2020 and was released in January of 2021. Development has continued to be
 active since then with annual releases around September, timed in relation to the
- `VFX Reference Platform <https://vfxplatform.com/>`_.  Here is more information 
+`VFX Reference Platform <https://vfxplatform.com/>`_.  Here is more information 
 about our :ref:`upgrading_to_v2`.
 
 
@@ -38,12 +38,6 @@ gradually working on more coverage.
 The documentation is a work-in-progress and we would love to have your help to 
 improve it!  An easy way to get involved is to join the #docs or #ux channel on 
 :ref:`slack`.
-
-Accessing Other Versions
-************************
-
-You are reading the documentation for OCIO v2.  The documentation for the earlier
-1.x series of releases is available `here <https://opencolorio.org/old/index.html>`_.
 
 
 Community
