@@ -520,7 +520,7 @@ Optional.
 The interchange attributes are provided to allow better interop between OCIO and other
 color management standards.
 
-The ``amf_transform_ids` is a newline-separated list of transform IDs intended for use
+The ``amf_transform_ids`` is a newline-separated list of transform IDs intended for use
 with the ACES Metadata File (AMF). Please note that this should include both the forward
 and inverse IDs (if available). For display color spaces, this should include the ACES
 Output Transform IDs used with that display. Note that the same attribute for the 

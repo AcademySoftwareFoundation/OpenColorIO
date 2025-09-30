@@ -27,7 +27,7 @@ and so requires no external LUT files.  In fact, even the config file is built i
 and users may access it from any application that uses OCIO 2.2 or higher by using one of the
 following strings in place of the config path:
 
-``ocio://cg-config-v4.0.0_aces-v2.0_ocio-v2.5``
+``ocio://cg-config-v4.0.0_aces-v2.0_ocio-v2.5``   (for OCIO 2.5 or higher)
 
 ``ocio://cg-config-v2.2.0_aces-v1.3_ocio-v2.4``   (for OCIO 2.4 or higher)
 
@@ -47,7 +47,7 @@ Where:
 
 * Type: The type of the config, e.g., CG or Studio
 * Colorspaces: The version for the color spaces and other config features
-* ACES: The aces-dev version being used
+* ACES: The aces-dev version being used (currently supports ACES 1.3 and 2.0)
 * Profile: Minimum required OCIO version
 
 In addition, the latest version of the CG config may be accessed simply using:
