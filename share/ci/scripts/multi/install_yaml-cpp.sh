@@ -21,11 +21,8 @@ if [ "$YAMLCPP_VERSION" == "latest" ]; then
     LATEST_TAG=$(git describe --abbrev=0 --tags)
     git checkout tags/${LATEST_TAG} -b ${LATEST_TAG}
 else
-    if [[ "$YAMLCPP_MINOR" -lt 6 && "$YAMLCPP_PATCH" -lt 3 ]]; then
-        git checkout tags/release-${YAMLCPP_VERSION} -b release-${YAMLCPP_VERSION}
-    else
-        git checkout tags/yaml-cpp-${YAMLCPP_VERSION} -b yaml-cpp-${YAMLCPP_VERSION}
-    fi
+    # From 0.8.0, tags are now simply the version number.
+    git checkout tags/${YAMLCPP_VERSION} -b ${YAMLCPP_VERSION}
 fi
 
 mkdir build

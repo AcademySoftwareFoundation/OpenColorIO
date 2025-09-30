@@ -45,7 +45,7 @@ if(${Python_VERSION_MAJOR} GREATER_EQUAL 3)
     # Breathe
     # https://pypi.org/project/breathe/
     find_python_package(breathe REQUIRED)
-    
+
     ###########################################################################
     ### Setup PYTHONPATH ###
 

@@ -172,7 +172,7 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
     }
 
     {
-        OCIO_CHECK_NO_THROW(shaderDesc->addToDeclareShaderCode("vec2 coords;\n"));
+        OCIO_CHECK_NO_THROW(shaderDesc->addToParameterDeclareShaderCode("vec2 coords;\n"));
         OCIO_CHECK_NO_THROW(shaderDesc->addToHelperShaderCode("vec2 helpers() {}\n\n"));
         OCIO_CHECK_NO_THROW(shaderDesc->addToFunctionHeaderShaderCode("void func() {\n"));
         OCIO_CHECK_NO_THROW(shaderDesc->addToFunctionShaderCode("  int i;\n"));
@@ -194,6 +194,51 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
         fragText += "}\n";
 
         OCIO_CHECK_EQUAL(fragText, shaderDesc->getShaderText());
+    }
+
+    {
+        OCIO_CHECK_NE(shaderDesc->getLanguage(), OCIO::GPU_LANGUAGE_GLSL_VK_4_6);
+        OCIO_CHECK_NO_THROW(shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_VK_4_6));
+        OCIO_CHECK_EQUAL(shaderDesc->getLanguage(), OCIO::GPU_LANGUAGE_GLSL_VK_4_6);
+
+        OCIO_CHECK_THROW_WHAT(shaderDesc->setDescriptorSetIndex(123, 0),OCIO::Exception, "Texture binding start index must be greater than 0.");
+        OCIO_CHECK_NO_THROW(shaderDesc->setDescriptorSetIndex(123, 456));
+        OCIO_CHECK_EQUAL(shaderDesc->getDescriptorSetIndex(), 123);
+        OCIO_CHECK_EQUAL(shaderDesc->getTextureBindingStart(), 456);
+
+        auto getSize = []() -> int { return 2; }; //simulate only 2 elements in the array
+        auto getArray = []() -> const float* { return nullptr; };
+        const unsigned maxSize = 3;
+        OCIO_CHECK_NO_THROW(shaderDesc->addUniform("array", getSize, getArray, maxSize));
+        OCIO_CHECK_EQUAL(shaderDesc->getUniformBufferSize(), 16 * maxSize);
+
+        OCIO_CHECK_NO_THROW(shaderDesc->addToTextureDeclareShaderCode("layout(set=123, binding = 456) uniform sampler2D samplerName; \n"));
+
+        OCIO_CHECK_NO_THROW(shaderDesc->finalize());
+
+        std::string fragText;
+        fragText += "layout (set = 123, binding = 0) uniform 1sd234__Parameters\n";
+        fragText += "{\n";
+        fragText += "\n";
+        fragText += "// Declaration of all variables\n";
+        fragText += "\n";
+        fragText += "vec2 coords;\n";
+        fragText += "\n";
+        fragText += "};\n";
+        fragText += "\n";
+        fragText += "// Declaration of all textures\n";
+        fragText += "\n";
+        fragText += "layout(set=123, binding = 456) uniform sampler2D samplerName; \n";
+        fragText += "\n";
+        fragText += "// Declaration of all helper methods\n";
+        fragText += "\n";
+        fragText += "vec2 helpers() {}\n\n";
+        fragText += "void func() {\n";
+        fragText += "  int i;\n";
+        fragText += "}\n";
+
+        OCIO_CHECK_EQUAL(fragText, shaderDesc->getShaderText());
+
     }
 }
 
@@ -260,6 +305,7 @@ ocioDisplay(
 )
 {
 }
+
 
 
 // Declaration of the OCIO shader function
@@ -349,6 +395,7 @@ ocioDisplay(
 )
 {
 }
+
 
 
 // Declaration of the OCIO shader function
@@ -441,7 +488,8 @@ ocioMyMethodName(
 }
 
 
-// Declaration of all variables
+
+// Declaration of all textures
 
 texture1d<float> ocio_lut1d_0;
 sampler ocio_lut1d_0Sampler;
@@ -549,7 +597,8 @@ ocioMyMethodName(
 }
 
 
-// Declaration of all variables
+
+// Declaration of all textures
 
 texture3d<float> ocio_lut3d_0;
 sampler ocio_lut3d_0Sampler;
@@ -651,7 +700,8 @@ ocioOCIOMain(
 }
 
 
-// Declaration of all variables
+
+// Declaration of all textures
 
 texture2d<float> ocio_lut1d_0;
 sampler ocio_lut1d_0Sampler;
@@ -780,7 +830,8 @@ ocioOCIOMain(
 }
 
 
-// Declaration of all variables
+
+// Declaration of all textures
 
 texture1d<float> ocio_lut1d_0;
 sampler ocio_lut1d_0Sampler;
@@ -928,6 +979,7 @@ ocioOCIOMain(
 float ocio_exposure_contrast_exposureVal;
 float ocio_exposure_contrast_gammaVal;
 
+
 // Declaration of the OCIO shader function
 
 float4 OCIOMain(float4 inPixel)
@@ -1027,6 +1079,7 @@ ocioOCIOMain(
 )
 {
 }
+
 
 
 // Declaration of all helper methods
@@ -1195,6 +1248,7 @@ float ocio_grading_rgbcurve_knots[60];
 int ocio_grading_rgbcurve_coefsOffsets[8];
 float ocio_grading_rgbcurve_coefs[180];
 bool ocio_grading_rgbcurve_localBypass;
+
 
 // Declaration of all helper methods
 

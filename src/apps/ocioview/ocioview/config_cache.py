@@ -117,15 +117,7 @@ class ConfigCache:
         :return: List of active displays from the current config
         """
         if not cls.validate() or cls._active_displays is None:
-            cls._active_displays = list(
-                filter(
-                    None,
-                    re.split(
-                        r" *[,:] *",
-                        ocio.GetCurrentConfig().getActiveDisplays(),
-                    ),
-                )
-            )
+            cls._active_displays = list(ocio.GetCurrentConfig().getActiveDisplays())
 
         return cls._active_displays
 
@@ -135,14 +127,7 @@ class ConfigCache:
         :return: List of active views from the current config
         """
         if not cls.validate() or cls._active_views is None:
-            cls._active_views = list(
-                filter(
-                    None,
-                    re.split(
-                        r" *[,:] *", ocio.GetCurrentConfig().getActiveViews()
-                    ),
-                )
-            )
+            cls._active_views = list(ocio.GetCurrentConfig().getActiveViews())
 
         return cls._active_views
 

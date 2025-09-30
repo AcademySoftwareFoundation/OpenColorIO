@@ -12,7 +12,14 @@ Processor
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_processor.rst
+      .. autoclass:: PyOpenColorIO.Processor
+         :members:
+         :undoc-members:
+         :special-members: __init__
+         :exclude-members: TransformFormatMetadataIterator, WriteFormatIterator
+
+      .. autoclass:: PyOpenColorIO.Processor.TransformFormatMetadataIterator
+         :special-members: __getitem__, __iter__, __len__, __next__
 
    .. group-tab:: C++
 
@@ -30,7 +37,10 @@ CPUProcessor
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_cpuprocessor.rst
+      .. autoclass:: PyOpenColorIO.CPUProcessor
+         :members:
+         :undoc-members:
+         :special-members: __init__
 
    .. group-tab:: C++
 
@@ -48,7 +58,10 @@ GPUProcessor
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_gpuprocessor.rst
+      .. autoclass:: PyOpenColorIO.GPUProcessor
+         :members:
+         :undoc-members:
+         :special-members: __init__
 
    .. group-tab:: C++
 
@@ -66,7 +79,17 @@ ProcessorMetadata
 
    .. group-tab:: Python
 
-      .. include:: python/${PYDIR}/pyopencolorio_processormetadata.rst
+      .. autoclass:: PyOpenColorIO.ProcessorMetadata
+         :members:
+         :undoc-members:
+         :special-members: __init__
+         :exclude-members: FileIterator, LookIterator
+
+      .. autoclass:: PyOpenColorIO.ProcessorMetadata.FileIterator
+         :special-members: __getitem__, __iter__, __len__, __next__
+
+      .. autoclass:: PyOpenColorIO.ProcessorMetadata.LookIterator
+         :special-members: __getitem__, __iter__, __len__, __next__
 
    .. group-tab:: C++
 

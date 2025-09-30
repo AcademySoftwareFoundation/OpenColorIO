@@ -63,7 +63,13 @@ void bindPyLook(py::module & m)
         .def("getDescription", &Look::getDescription, 
              DOC(Look, getDescription))
         .def("setDescription", &Look::setDescription, "description"_a.none(false), 
-             DOC(Look, setDescription));
+             DOC(Look, setDescription))
+        .def("getInterchangeAttribute", &Look::getInterchangeAttribute, "attrName"_a,
+             DOC(Look, getInterchangeAttribute))
+        .def("setInterchangeAttribute", &Look::setInterchangeAttribute, "attrName"_a, "attrValue"_a,
+            DOC(Look, setInterchangeAttribute))
+        .def("getInterchangeAttributes", &Look:: getInterchangeAttributes,
+            DOC(Look, getInterchangeAttributes));
 
     defRepr(clsLook);
 }

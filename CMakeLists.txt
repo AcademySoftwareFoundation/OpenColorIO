@@ -21,7 +21,7 @@ set(CMAKE_WARN_DEPRECATED ON)
 if(APPLE AND NOT DEFINED CMAKE_OSX_DEPLOYMENT_TARGET)
     # The value of this variable should be set prior to the first project() command invocation
     # because it may influence configuration of the toolchain and flags.
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum OS X deployment version")
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
 endif()
 
 
@@ -144,8 +144,7 @@ option(OCIO_BUILD_TESTS "Specify whether to build unittests" ON)
 option(OCIO_BUILD_GPU_TESTS "Specify whether to build gpu unittests" ON)
 option(OCIO_USE_HEADLESS "Specify whether the GPU rendering is headless" OFF)
 
-option(OCIO_BUILD_FROZEN_DOCS "Specify whether to build frozen documentation, necessary when modifying the OCIO public API" OFF)
-option(OCIO_BUILD_DOCS "Specify whether to build documentation" ${OCIO_BUILD_FROZEN_DOCS})
+option(OCIO_BUILD_DOCS "Specify whether to build documentation" OFF)
 
 option(OCIO_BUILD_PYTHON "Specify whether to build python bindings" ON)
 set (OCIO_PYTHON_VERSION "" CACHE STRING
