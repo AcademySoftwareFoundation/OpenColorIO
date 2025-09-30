@@ -64,12 +64,12 @@ ColorSpaceVec GetColorSpaces(ConstConfigRcPtr config,
                                                                              COLORSPACE_ACTIVE,
                                                                              idx));
             
-            const bool skipCategory = treatNoCategoryAsAny && cs->getNumCategories() == 0;
+            const bool ignoreCategory = treatNoCategoryAsAny && cs->getNumCategories() == 0;
             for (const auto & cat : categories)
             {
                 for (const auto & enc : encodings)
                 {
-                    if ((skipCategory || HasCategory(cs, cat)) && HasEncoding(cs, enc))
+                    if ((ignoreCategory || HasCategory(cs, cat)) && HasEncoding(cs, enc))
                     {
                         AddElement(css, cs.get());
                     }
@@ -96,10 +96,10 @@ ColorSpaceVec GetColorSpaces(ConstConfigRcPtr config,
                                                                              COLORSPACE_ACTIVE,
                                                                              idx));
             
-            const bool skipCategory = treatNoCategoryAsAny && cs->getNumCategories() == 0;
+            const bool ignoreCategory = treatNoCategoryAsAny && cs->getNumCategories() == 0;
             for (const auto & cat : categories)
             {
-                if (skipCategory || HasCategory(cs, cat))
+                if (ignoreCategory || HasCategory(cs, cat))
                 {
                     AddElement(css, cs.get());
                 }
@@ -150,12 +150,12 @@ NamedTransformVec GetNamedTransforms(ConstConfigRcPtr config,
         {
             auto nt = config->getNamedTransform(config->getNamedTransformNameByIndex(idx));
 
-            const bool skipCategory = treatNoCategoryAsAny && nt->getNumCategories() == 0;
+            const bool ignoreCategory = treatNoCategoryAsAny && nt->getNumCategories() == 0;
             for (const auto & cat : categories)
             {
                 for (const auto & enc : encodings)
                 {
-                    if ((skipCategory || HasCategory(nt, cat)) && HasEncoding(nt, enc))
+                    if ((ignoreCategory || HasCategory(nt, cat)) && HasEncoding(nt, enc))
                     {
                         AddElement(nts, nt.get());
                     }
@@ -178,10 +178,10 @@ NamedTransformVec GetNamedTransforms(ConstConfigRcPtr config,
         {
             auto nt = config->getNamedTransform(config->getNamedTransformNameByIndex(idx));
 
-            const bool skipCategory = treatNoCategoryAsAny && nt->getNumCategories() == 0;
+            const bool ignoreCategory = treatNoCategoryAsAny && nt->getNumCategories() == 0;
             for (const auto & cat : categories)
             {
-                if (skipCategory || HasCategory(nt, cat))
+                if (ignoreCategory || HasCategory(nt, cat))
                 {
                     AddElement(nts, nt.get());
                 }
