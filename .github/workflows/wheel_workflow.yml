@@ -144,6 +144,9 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.1.4
         env:
+          # pass GITHUB_ACTIONS through to the build container so that custom
+          # processes can tell they are running in CI.
+          CIBW_ENVIRONMENT_PASS_LINUX: GITHUB_ACTIONS
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux }}
@@ -151,7 +154,11 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: cibw-wheels-${{ matrix.python }}-${{ matrix.manylinux }}
-          path: ./wheelhouse/*.whl
+          path: |
+            ./wheelhouse/*.whl
+            ./wheelhouse/PyOpenColorIO/__init__.pyi
+          # if stub validation fails we want to upload the stubs for users to review
+          if: success() || failure()
 
   # ---------------------------------------------------------------------------
   # Linux ARM Wheels
@@ -213,7 +220,11 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: cibw-wheels-${{ matrix.python }}-${{ matrix.manylinux }}
-          path: ./wheelhouse/*.whl
+          path: |
+            ./wheelhouse/*.whl
+            ./wheelhouse/PyOpenColorIO/__init__.pyi
+          # if stub validation fails we want to upload the stubs for users to review
+          if: success() || failure()
 
   # ---------------------------------------------------------------------------
   # macOS Wheels

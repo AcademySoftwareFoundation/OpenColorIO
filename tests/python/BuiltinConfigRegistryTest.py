@@ -15,7 +15,7 @@ import PyOpenColorIO as OCIO
 
 class BuiltinConfigRegistryTest(unittest.TestCase):
     # BuiltinRegistry singleton.
-    REGISTRY = None
+    REGISTRY: OCIO.BuiltinConfigRegistry
 
     @classmethod
     def setUpClass(cls):

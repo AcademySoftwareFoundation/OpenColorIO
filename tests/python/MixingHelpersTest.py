@@ -18,7 +18,7 @@ class MixingHelpersTest(unittest.TestCase):
         self.cfg = OCIO.Config().CreateFromStream(SAMPLE_CONFIG)
 
     def tearDown(self):
-        self.cfg = None
+        self.cfg = None  # type: ignore
 
     def test_encoding(self):
         """
@@ -42,11 +42,11 @@ class MixingHelpersTest(unittest.TestCase):
 
         for param in [None, 1, OCIO.TRANSFORM_DIR_FORWARD]:
             with self.assertRaises(TypeError):
-                mix.setSelectedMixingEncoding(param)
+                mix.setSelectedMixingEncoding(param)  # type: ignore
 
         for param in [None, 'test']:
             with self.assertRaises(TypeError):
-                mix.setSelectedMixingEncodingIdx(param)
+                mix.setSelectedMixingEncodingIdx(param)  # type: ignore
 
         # Print the MixingColorSpaceManager.
         self.assertEqual(str(mix),
@@ -78,11 +78,11 @@ class MixingHelpersTest(unittest.TestCase):
 
         for param in [None, 1, OCIO.TRANSFORM_DIR_FORWARD]:
             with self.assertRaises(TypeError):
-                mix.setSelectedMixingSpace(param)
+                mix.setSelectedMixingSpace(param)  # type: ignore
 
         for param in [None, 'test']:
             with self.assertRaises(TypeError):
-                mix.setSelectedMixingSpaceIdx(param)
+                mix.setSelectedMixingSpaceIdx(param)  # type: ignore
 
         mix = None
 
@@ -154,24 +154,24 @@ class MixingHelpersTest(unittest.TestCase):
         self.assertEqual(t.getStyle(), OCIO.FIXED_FUNCTION_RGB_TO_HSV)
 
         with self.assertRaises(TypeError):
-            proc = mix.getProcessor('lin_1', None, 'VIEW_1')
+            proc = mix.getProcessor('lin_1', None, 'VIEW_1')  # type: ignore
 
         with self.assertRaises(TypeError):
-            proc = mix.getProcessor(workingSpaceName = 'lin_1', displayName = 666, viewName = 'VIEW_1')
-
-        with self.assertRaises(TypeError):
-            proc = mix.getProcessor(workingSpaceName = 'lin_1', displayName = 'DISP_1',
-                                    viewName = OCIO.TRANSFORM_TYPE_LOG)
-
-        with self.assertRaises(TypeError):
-            proc = mix.getProcessor(workingSpaceName = 'lin_1', displayName = 'DISP_1')
+            proc = mix.getProcessor(workingSpaceName = 'lin_1', displayName = 666, viewName = 'VIEW_1')  # type: ignore
 
         with self.assertRaises(TypeError):
             proc = mix.getProcessor(workingSpaceName = 'lin_1', displayName = 'DISP_1',
+                                    viewName = OCIO.TRANSFORM_TYPE_LOG)  # type: ignore
+
+        with self.assertRaises(TypeError):
+            proc = mix.getProcessor(workingSpaceName = 'lin_1', displayName = 'DISP_1')  # type: ignore
+
+        with self.assertRaises(TypeError):
+            proc = mix.getProcessor(workingSpaceName = 'lin_1', displayName = 'DISP_1',  # type: ignore
                                     errorName = 'VIEW_1')
 
         with self.assertRaises(TypeError):
-            proc = mix.getProcessor(workingSpaceName = 'lin_1', displayName = 'DISP_1',
+            proc = mix.getProcessor(workingSpaceName = 'lin_1', displayName = 'DISP_1',  # type: ignore
                                     viewName = 'VIEW_1', tooMany = True)
 
         with self.assertRaises(OCIO.Exception):

@@ -11,7 +11,7 @@ class GroupTransformTest(unittest.TestCase, TransformsBaseTest):
     TEST_DIRECTION = OCIO.TRANSFORM_DIR_INVERSE
 
     def setUp(self):
-        self.tr = OCIO.GroupTransform()
+        self.tr: OCIO.GroupTransform = OCIO.GroupTransform()
 
     def test_transform_type(self):
         """
@@ -129,7 +129,7 @@ class GroupTransformTest(unittest.TestCase, TransformsBaseTest):
 
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                group_tr = OCIO.FixedFunctionTransform(invalid)
+                group_tr = OCIO.FixedFunctionTransform(invalid)  # type: ignore
 
     def test_write_clf(self):
         """

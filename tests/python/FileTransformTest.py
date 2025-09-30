@@ -41,7 +41,7 @@ class FileTransformTest(unittest.TestCase, TransformsBaseTest):
                        ('nukevf', 'vf')]
 
     def setUp(self):
-        self.tr = OCIO.FileTransform()
+        self.tr: OCIO.FileTransform = OCIO.FileTransform()
 
     def test_transform_type(self):
         """
@@ -65,7 +65,7 @@ class FileTransformTest(unittest.TestCase, TransformsBaseTest):
         # Wrong type tests.
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                self.tr.setCCCId(invalid)
+                self.tr.setCCCId(invalid)  # type: ignore
 
     def test_cdlstyle(self):
         """
@@ -83,7 +83,7 @@ class FileTransformTest(unittest.TestCase, TransformsBaseTest):
         # Wrong type tests.
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                self.tr.setCDLStyle(invalid)
+                self.tr.setCDLStyle(invalid)  # type: ignore
 
     def test_is_format_extension_supported(self):
         """
@@ -128,7 +128,7 @@ class FileTransformTest(unittest.TestCase, TransformsBaseTest):
         # Wrong type tests.
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                self.tr.setInterpolation(invalid)
+                self.tr.setInterpolation(invalid)  # type: ignore
 
     def test_src(self):
         """
@@ -145,7 +145,7 @@ class FileTransformTest(unittest.TestCase, TransformsBaseTest):
         # Wrong type tests.
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
-                self.tr.setSrc(invalid)
+                self.tr.setSrc(invalid)  # type: ignore
 
     def test_constructor_with_keyword(self):
         """
