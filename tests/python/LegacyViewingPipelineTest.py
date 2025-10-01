@@ -197,7 +197,7 @@ class LegacyViewingPipelineTest(unittest.TestCase):
         self.assertEqual(str(pipeline), ('DisplayViewTransform: <DisplayViewTransform direction=forward, '
             'src=colorspace1, display=sRGB, view=view1, , looksBypass=1>, '
             'LinearCC: <MatrixTransform direction=forward, fileindepth=unknown, '
-            'fileoutdepth=unknown, matrix=1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1, offset=0.1 0.2 0.3 0>'))
+            'fileoutdepth=unknown, matrix=[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], offset=[0.1, 0.2, 0.3, 0]>'))
 
     def test_get_processor(self):
         """

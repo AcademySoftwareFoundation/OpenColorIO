@@ -214,9 +214,9 @@ std::ostream & operator<< (std::ostream & os, const Lut1DTransform & t)
             bMax = std::max(bMax, b);
         }
         os << "minrgb=[";
-        os << rMin << " " << gMin << " " << bMin << "], ";
+        os << rMin << ", " << gMin << ", " << bMin << "], ";
         os << "maxrgb=[";
-        os << rMax << " " << gMax << " " << bMax << "]";
+        os << rMax << ", " << gMax << ", " << bMax << "]";
     }
     os << ">";
 

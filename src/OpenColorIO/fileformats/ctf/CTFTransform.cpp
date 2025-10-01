@@ -16,6 +16,8 @@
 #include "ops/gradingprimary/GradingPrimaryOpData.h"
 #include "ops/gradingrgbcurve/GradingRGBCurve.h"
 #include "ops/gradingrgbcurve/GradingRGBCurveOpData.h"
+#include "ops/gradinghuecurve/GradingHueCurve.h"
+#include "ops/gradinghuecurve/GradingHueCurveOpData.h"
 #include "ops/gradingtone/GradingToneOpData.h"
 #include "ops/log/LogOpData.h"
 #include "ops/log/LogUtils.h"
@@ -272,6 +274,15 @@ CTFVersion GetOpMinimumVersion(const ConstOpDataRcPtr & op)
         {
             minVersion = CTF_PROCESS_LIST_VERSION_2_4;
         }
+        else if (  ff->getStyle() == FixedFunctionOpData::RGB_TO_HSY_LOG
+                || ff->getStyle() == FixedFunctionOpData::HSY_LOG_TO_RGB
+                || ff->getStyle() == FixedFunctionOpData::RGB_TO_HSY_LIN
+                || ff->getStyle() == FixedFunctionOpData::HSY_LIN_TO_RGB
+                || ff->getStyle() == FixedFunctionOpData::RGB_TO_HSY_VID
+                || ff->getStyle() == FixedFunctionOpData::HSY_VID_TO_RGB )
+        {
+            minVersion = CTF_PROCESS_LIST_VERSION_2_5;
+        }
         break;
     }
     case OpData::GradingPrimaryType:
@@ -280,6 +291,11 @@ CTFVersion GetOpMinimumVersion(const ConstOpDataRcPtr & op)
     case OpData::LogType:
     {
         minVersion = CTF_PROCESS_LIST_VERSION_2_0;
+        break;
+    }
+    case OpData::GradingHueCurveType:
+    {
+        minVersion = CTF_PROCESS_LIST_VERSION_2_5;
         break;
     }
     case OpData::ExponentType:
@@ -1613,6 +1629,142 @@ void GradingRGBCurveWriter::writeContent() const
         m_formatter.writeEmptyTag(TAG_DYNAMIC_PARAMETER, attributes);
     }
 }
+///////////////////////////////////////////////////////////////////////////////
+
+class GradingHueCurveWriter : public OpWriter
+{
+public:
+    GradingHueCurveWriter() = delete;
+    GradingHueCurveWriter(const GradingHueCurveWriter&) = delete;
+    GradingHueCurveWriter& operator=(const GradingHueCurveWriter&) = delete;
+    GradingHueCurveWriter(XmlFormatter & formatter, ConstGradingHueCurveOpDataRcPtr primary);
+    virtual ~GradingHueCurveWriter();
+
+protected:
+    ConstOpDataRcPtr getOp() const override;
+    const char * getTagName() const override;
+    void getAttributes(XmlFormatter::Attributes & attributes) const override;
+    void writeContent() const override;
+
+private:
+    void writeCurve(const char * tag, const ConstGradingBSplineCurveRcPtr & curve) const;
+    ConstGradingHueCurveOpDataRcPtr m_curves;
+};
+
+GradingHueCurveWriter::GradingHueCurveWriter(XmlFormatter & formatter,
+                                             ConstGradingHueCurveOpDataRcPtr curves)
+    : OpWriter(formatter)
+    , m_curves(curves)
+{
+}
+
+GradingHueCurveWriter::~GradingHueCurveWriter()
+{
+}
+
+ConstOpDataRcPtr GradingHueCurveWriter::getOp() const
+{
+    return m_curves;
+}
+
+const char * GradingHueCurveWriter::getTagName() const
+{
+    return TAG_HUE_CURVE;
+}
+
+void GradingHueCurveWriter::getAttributes(XmlFormatter::Attributes& attributes) const
+{
+    OpWriter::getAttributes(attributes);
+
+    const auto style = m_curves->getStyle();
+    const auto dir = m_curves->getDirection();
+
+    const auto styleStr = ConvertGradingStyleAndDirToString(style, dir);
+    attributes.push_back(XmlFormatter::Attribute(ATTR_STYLE, styleStr));
+
+    if (m_curves->getRGBToHSY() == HSYTransformStyle::HSY_TRANSFORM_NONE)
+    {
+        attributes.push_back(XmlFormatter::Attribute(ATTR_RGB_TO_HSY, "none"));
+    }
+}
+
+void GradingHueCurveWriter::writeCurve(const char * tag,
+                                       const ConstGradingBSplineCurveRcPtr & curve) const
+{
+    m_formatter.writeStartTag(tag, XmlFormatter::Attributes());
+    {
+        XmlScopeIndent si0(m_formatter);
+        m_formatter.writeStartTag(TAG_CURVE_CTRL_PNTS, XmlFormatter::Attributes());
+        {
+            XmlScopeIndent si1(m_formatter);
+            const size_t numPnts = curve->getNumControlPoints();
+
+            // Write 1 control point per line in the form of "X Y"
+            for (size_t i = 0; i < numPnts; ++i)
+            {
+                const auto & ctPt = curve->getControlPoint(i);
+                std::ostringstream oss;
+                SetOStream(0.f, oss);
+                oss << ctPt.m_x << " " << ctPt.m_y;
+                m_formatter.writeContent(oss.str());
+            }
+        }
+        m_formatter.writeEndTag(TAG_CURVE_CTRL_PNTS);
+
+        if (!curve->slopesAreDefault())
+        {
+            m_formatter.writeStartTag(TAG_CURVE_SLOPES, XmlFormatter::Attributes());
+            {
+                XmlScopeIndent si1(m_formatter);
+                // (Number of slopes is always the same as control points.)
+                const size_t numSlopes = curve->getNumControlPoints();
+                std::ostringstream oss;
+                SetOStream(0.f, oss);
+                for (size_t i = 0; i < numSlopes; ++i)
+                {
+                    const float val = curve->getSlope(i);
+                    oss << val << " ";
+                }
+                m_formatter.writeContent(oss.str());
+            }
+            m_formatter.writeEndTag(TAG_CURVE_SLOPES);
+        }
+    }
+
+    m_formatter.writeEndTag(tag);
+}
+
+void GradingHueCurveWriter::writeContent() const
+{
+    const auto & vals = m_curves->getValue();
+
+    auto & defCurve = (m_curves->getStyle() == GRADING_LIN) ? GradingHueCurveImpl::DefaultCurvesLin:
+                                                              GradingHueCurveImpl::DefaultCurves;
+    static const std::vector<const char *> curveTags = { 
+        TAG_HUE_CURVE_HUE_HUE,
+        TAG_HUE_CURVE_HUE_SAT,
+        TAG_HUE_CURVE_HUE_LUM,
+        TAG_HUE_CURVE_LUM_SAT,
+        TAG_HUE_CURVE_SAT_SAT,
+        TAG_HUE_CURVE_LUM_LUM,
+        TAG_HUE_CURVE_SAT_LUM,
+        TAG_HUE_CURVE_HUE_FX
+     };
+    for (int c = 0; c < HUE_NUM_CURVES; ++c)
+    {
+        const auto & curve = vals->getCurve(static_cast<HueCurveType>(c));
+        if ((*curve != defCurve[c]) || !(curve->slopesAreDefault()))
+        {
+            writeCurve(curveTags[c], curve);
+        }
+    }
+    if (m_curves->isDynamic())
+    {
+        XmlFormatter::Attributes attributes;
+        attributes.push_back(XmlFormatter::Attribute(ATTR_PARAM, TAG_DYN_PROP_HUECURVE));
+        m_formatter.writeEmptyTag(TAG_DYNAMIC_PARAMETER, attributes);
+    }
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -2689,6 +2841,20 @@ void TransformWriter::writeOps(const CTFVersion & version) const
 
                 auto rgb = OCIO_DYNAMIC_POINTER_CAST<const GradingRGBCurveOpData>(op);
                 GradingRGBCurveWriter opWriter(m_formatter, rgb);
+                opWriter.setInputBitdepth(inBD);
+                opWriter.setOutputBitdepth(outBD);
+                opWriter.write();
+                break;
+            }
+            case OpData::GradingHueCurveType:
+            {
+                if (m_isCLF)
+                {
+                    ThrowWriteOp("GradingHueCurve");
+                }
+
+                auto hue = OCIO_DYNAMIC_POINTER_CAST<const GradingHueCurveOpData>(op);
+                GradingHueCurveWriter opWriter(m_formatter, hue);
                 opWriter.setInputBitdepth(inBD);
                 opWriter.setOutputBitdepth(outBD);
                 opWriter.write();

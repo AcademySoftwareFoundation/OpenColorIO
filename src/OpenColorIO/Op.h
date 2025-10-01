@@ -104,6 +104,7 @@ public:
         GammaType,            // A gamma (i.e. enhancement of the Exponent)
         GradingPrimaryType,   // A set of primary grading controls
         GradingRGBCurveType,  // A rgb curve
+        GradingHueCurveType,  // A hue curve
         GradingToneType,      // A set of grading controls for tonal ranges
         LogType,              // A log
         Lut1DType,            // A 1D LUT
@@ -266,6 +267,11 @@ public:
                                         DynamicPropertyGradingRGBCurveImplRcPtr & /* prop */)
     {
         throw Exception("Op does not implement grading rgb curve dynamic property.");
+    }
+    virtual void replaceDynamicProperty(DynamicPropertyType /* type */,
+                                        DynamicPropertyGradingHueCurveImplRcPtr & /* prop */)
+    {
+        throw Exception("Op does not implement grading hue curve dynamic property.");
     }
     virtual void replaceDynamicProperty(DynamicPropertyType /* type */,
                                         DynamicPropertyGradingToneImplRcPtr & /* prop */)

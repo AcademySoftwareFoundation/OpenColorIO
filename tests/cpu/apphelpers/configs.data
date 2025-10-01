@@ -37,6 +37,7 @@ displays:
 
 active_displays: []
 active_views: []
+inactive_colorspaces: [view_2, view_3]
 
 looks:
   - !<Look>
@@ -102,14 +103,19 @@ colorspaces:
 
   - !<ColorSpace>
     name: view_1
+    description: Note that this has no categories.
+    encoding: sdr-video
     from_reference: !<ExponentTransform> {value: [2.6, 2.6, 2.6, 1], direction: inverse}
 
   - !<ColorSpace>
     name: view_2
+    description: This color space is in the inactive list.
+    encoding: sdr-video
     from_reference: !<ExponentTransform> {value: [2.4, 2.4, 2.4, 1], direction: inverse}
 
   - !<ColorSpace>
     name: view_3
+    description: This color space is in the inactive list.
     from_reference: !<ExponentTransform> {value: [2.2, 2.2, 2.2, 1], direction: inverse}
 
   - !<ColorSpace>
@@ -153,6 +159,7 @@ named_transforms:
 
   - !<NamedTransform>
     name: nt2
+    description: Note that this has no categories.
     encoding: log
     inverse_transform: !<MatrixTransform> {name: inverse, offset: [-0.2, -0.1, -0.1, 0]}
 
@@ -160,7 +167,7 @@ named_transforms:
     name: nt3
     categories: [ file-io, basic-2d ]
     encoding: sdr-video
-    family: Raw 
+    family: NamedTransforms 
     transform: !<MatrixTransform> {name: forward, offset: [0.1, 0.2, 0.3, 0.4]}
     inverse_transform: !<MatrixTransform> {name: inverse, offset: [-0.2, -0.1, -0.1, 0]}
 )"};

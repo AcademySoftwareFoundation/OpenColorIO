@@ -91,23 +91,40 @@ OCIO_ADD_TEST(GradingRGBCurveOpData, accessors)
 
     // Check isInverse.
 
-    // We have equal ops, inverse one.
-    gc1.setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    // Make two equal non-identity ops, invert one.
+    OCIO::GradingRGBCurveOpData gc3{ OCIO::GRADING_LIN };
+    auto v3 = gc3.getValue()->createEditableCopy();
+    auto spline = v3->getCurve(OCIO::RGB_RED);
+    spline->setNumControlPoints(2);
+    spline->getControlPoint(0) = OCIO::GradingControlPoint(0.f, 2.f);
+    spline->getControlPoint(1) = OCIO::GradingControlPoint(0.9f, 2.f);
+    gc3.setValue(v3);
+    OCIO_CHECK_ASSERT(!gc3.isIdentity());
     // Need a shared pointer for the parameter.
-    OCIO::ConstGradingRGBCurveOpDataRcPtr gcptr2 = gc1.clone();
-    gc1.setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-    OCIO_CHECK_ASSERT(gc1.isInverse(gcptr2));
-    // Change value of one: no longer inverse.
-    red->getControlPoint(3).m_y += 0.1f;
-    gc1.setValue(v1);
-    OCIO_CHECK_ASSERT(!gc1.isInverse(gcptr2));
+    OCIO::ConstGradingRGBCurveOpDataRcPtr gcptr3 = gc3.clone();
+    gc3.setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    // They start as inverses.
+    OCIO_CHECK_ASSERT(gc3.isInverse(gcptr3));
+
+    // Change value of one: no longer an inverse.
+    spline->getControlPoint(1).m_y += 0.25f;
+    gc3.setValue(v3);
+    OCIO_CHECK_ASSERT(!gc3.isInverse(gcptr3));
     // Restore value.
-    red->getControlPoint(3).m_y -= 0.1f;
-    gc1.setValue(v1);
-    OCIO_CHECK_ASSERT(gc1.isInverse(gcptr2));
-    // Change direction: no longer inverse.
-    gc1.setDirection(OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO_CHECK_ASSERT(!gc1.isInverse(gcptr2));
+    spline->getControlPoint(1).m_y -= 0.25f;
+    gc3.setValue(v3);
+    OCIO_CHECK_ASSERT(gc3.isInverse(gcptr3));
+
+    // Change slope of one: no longer an inverse.
+    gc3.setSlope(OCIO::RGB_BLUE, 2, 0.9f);
+    OCIO_CHECK_ASSERT(!gc3.isInverse(gcptr3));
+    // Restore value.
+    gc3.setSlope(OCIO::RGB_BLUE, 2, 0.f);
+    OCIO_CHECK_ASSERT(gc3.isInverse(gcptr3));
+
+    // Change direction: no longer an inverse.
+    gc3.setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_ASSERT(!gc3.isInverse(gcptr3));
 }
 
 OCIO_ADD_TEST(GradingRGBCurveOpData, validate)
@@ -127,12 +144,26 @@ OCIO_ADD_TEST(GradingRGBCurveOpData, validate)
                                                 { 0.5f,0.7f },{ 1.f,1.f } });
     curves = OCIO::GradingRGBCurve::Create(curve, curve, curve, curve);
     OCIO_CHECK_THROW_WHAT(gc.setValue(curves), OCIO::Exception,
-                          "has a x coordinate '0.5' that is less from previous control "
-                          "point x cooordinate '0.7'.");
+                          "has a x coordinate '0.5' that is less than previous control "
+                          "point x coordinate '0.7'.");
 
     // Fix the curve x coordinate.
     curve->getControlPoint(1).m_x = 0.3f;
     curves = OCIO::GradingRGBCurve::Create(curve, curve, curve, curve);
     OCIO_CHECK_NO_THROW(gc.setValue(curves));
     OCIO_CHECK_NO_THROW(gc.validate());
+
+    // Curve y coordinates have to increase.
+    curve = OCIO::GradingBSplineCurve::Create({ { 0.f,0.f },{ 0.3f,0.3f },
+                                                { 0.5f,0.27f },{ 1.f,1.f } });
+    curves = OCIO::GradingRGBCurve::Create(curve, curve, curve, curve);
+    OCIO_CHECK_THROW_WHAT(gc.setValue(curves), OCIO::Exception,
+                          "point at index 2 has a y coordinate '0.27' that is less than "
+                          "previous control point y coordinate '0.3'.");
+
+    // Curve must use the proper spline type.
+    curve = OCIO::GradingBSplineCurve::Create({ { 0.f,0.f },{ 0.9f,0.f } }, OCIO::HUE_FX);
+    curves = OCIO::GradingRGBCurve::Create(curve, curve, curve, curve);
+    OCIO_CHECK_THROW_WHAT(gc.setValue(curves), OCIO::Exception,
+                          "validation failed: 'red' curve is of the wrong BSplineType.");
 }

@@ -25,6 +25,7 @@ void bindPyFileTransform(py::module & m);
 void bindPyFixedFunctionTransform(py::module & m);
 void bindPyGradingPrimaryTransform(py::module & m);
 void bindPyGradingRGBCurveTransform(py::module & m);
+void bindPyGradingHueCurveTransform(py::module & m);
 void bindPyGradingToneTransform(py::module & m);
 void bindPyGroupTransform(py::module & m);
 void bindPyLogAffineTransform(py::module & m);

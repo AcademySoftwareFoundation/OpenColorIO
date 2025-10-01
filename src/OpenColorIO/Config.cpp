@@ -5744,6 +5744,19 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
                     throw Exception(ss.str().c_str());
                 }
             }
+
+            if (m_majorVersion == 2 && m_minorVersion < 5 )
+            {
+                if( ffstyle == FIXED_FUNCTION_RGB_TO_HSY_LIN  || 
+                    ffstyle == FIXED_FUNCTION_RGB_TO_HSY_LOG ||
+                    ffstyle == FIXED_FUNCTION_RGB_TO_HSY_VID )
+                {
+                    std::ostringstream ss;
+                    ss << "Only config version 2.5 (or higher) can have FixedFunctionTransform style '" 
+                       << FixedFunctionStyleToString(ffstyle) << "'.";
+                    throw Exception(ss.str().c_str());
+                }
+            }
         }
         else if (DynamicPtrCast<const GradingPrimaryTransform>(transform))
         {
@@ -5759,6 +5772,14 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
             {
                 throw Exception("Only config version 2 (or higher) can have "
                                 "GradingRGBCurveTransform.");
+            }
+        }
+        else if (DynamicPtrCast<const GradingHueCurveTransform>(transform))
+        {
+            if (m_majorVersion == 2 && m_minorVersion < 5 )
+            {
+                throw Exception("Only config version 2.5 (or higher) can have "
+                                "GradingHueCurveTransform.");
             }
         }
         else if (DynamicPtrCast<const GradingToneTransform>(transform))
