@@ -30,13 +30,11 @@ test-command = [
 before-build = "share/ci/scripts/linux/dnf/install_docs_env.sh"
 
 [tool.cibuildwheel.macos]
-# cibuildwheel in some cases set this to 10.9 by default, OCIO needs >= 10.13
+# cibuildwheel in some cases set this to 10.9 by default, OCIO needs >= 10.15
 # macOS ARM wheels needs 11.0, cibuildwheel will automatically bump where appropriate
-environment = { MACOSX_DEPLOYMENT_TARGET="10.13" }
+environment = { MACOSX_DEPLOYMENT_TARGET="10.15" }
 before-build = "share/ci/scripts/macos/install_docs_env.sh"
 
 [tool.cibuildwheel.windows]
-# OCIO_PYTHON_LOAD_DLLS_FROM_PATH can cause segfaults in the current wheel workflow
-# Disable for now as wheels are built with static dependencies.
-environment = { PATH="$GITHUB_WORKSPACE/doxygen;$PATH", OCIO_PYTHON_LOAD_DLLS_FROM_PATH="0" }
+environment = { PATH="$GITHUB_WORKSPACE/doxygen;$PATH" }
 before-build = 'bash -c "share/ci/scripts/windows/install_docs_env.sh $GITHUB_WORKSPACE/doxygen"'
