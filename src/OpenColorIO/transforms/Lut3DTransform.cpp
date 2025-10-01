@@ -208,9 +208,9 @@ std::ostream & operator<< (std::ostream & os, const Lut3DTransform & t)
             }
         }
         os << "minrgb=[";
-        os << rMin << " " << gMin << " " << bMin << "], ";
+        os << rMin << ", " << gMin << ", " << bMin << "], ";
         os << "maxrgb=[";
-        os << rMax << " " << gMax << " " << bMax << "]";
+        os << rMax << ", " << gMax << ", " << bMax << "]";
     }
     os << ">";
 

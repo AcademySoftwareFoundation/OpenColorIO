@@ -101,7 +101,7 @@ OCIO_ADD_TEST(GradingRGBCurveOp, build_ops)
 
     // Sharing of dynamic properties is done through processor, changing the source will not
     // change the op.
-    auto curve = OCIO::GradingBSplineCurve::Create({ { 0.f,1.f },{ 0.2f,0.3f },
+    auto curve = OCIO::GradingBSplineCurve::Create({ { 0.f,0.1f },{ 0.2f,0.3f },
                                                      { 0.5f,0.8f },{ 2.f,1.5f } });
     auto rgbCurve = OCIO::GradingRGBCurve::Create(curve, curve, curve, curve);
     gcTransform->setValue(rgbCurve);
@@ -131,7 +131,7 @@ OCIO_ADD_TEST(GradingRGBCurveOp, build_ops)
 
     // Control point has moved.
     cpu->applyRGB(pixel);
-    OCIO_CHECK_CLOSE(pixel[0], 1.11148262f, error);
-    OCIO_CHECK_CLOSE(pixel[1], 0.04518771f, error);
+    OCIO_CHECK_CLOSE(pixel[0], 0.18597151f, error);
+    OCIO_CHECK_CLOSE(pixel[1], 0.47056902f, error);
     OCIO_CHECK_CLOSE(pixel[2], 1.32527864f, error);
 }

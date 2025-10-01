@@ -43,3 +43,4 @@ jobs:
         with:
           project-name: OpenColorIO
           buildspec-override: buildspec.yml
+          image-override: aswf/ci-ocio:2025

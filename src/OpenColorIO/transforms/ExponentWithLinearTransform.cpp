@@ -145,22 +145,22 @@ std::ostream & operator<< (std::ostream & os, const ExponentWithLinearTransform 
     double gamma[4];
     t.getGamma(gamma);
 
-    os << "gamma=" << gamma[0];
+    os << "gamma=[" << gamma[0];
     for (int i = 1; i < 4; ++i)
     {
-      os << " " << gamma[i];
+      os << ", " << gamma[i];
     }
 
     double offset[4];
     t.getOffset(offset);
 
-    os << ", offset=" << offset[0];
+    os << "], offset=[" << offset[0];
     for (int i = 1; i < 4; ++i)
     {
-      os << " " << offset[i];
+      os << ", " << offset[i];
     }
 
-    os << ", style=" << NegativeStyleToString(t.getNegativeStyle());
+    os << "], style=" << NegativeStyleToString(t.getNegativeStyle());
     os << ">";
     return os;
 }

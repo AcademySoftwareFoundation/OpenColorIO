@@ -77,22 +77,22 @@ OCIO_ADD_TEST(GradingRGBCurveTransform, basic)
 
     // Access out of range point.
     OCIO_CHECK_THROW_WHAT(red->getControlPoint(4), OCIO::Exception,
-                          "There are '3' control points. '4' is invalid.");
+                          "There are '3' control points. '4' is out of bounds.");
 
     // X has to be increasing.
     auto invalidCurve = OCIO::GradingBSplineCurve::Create({ { 0.0f, 0.0f }, { 0.5f, 0.2f },
                                                             { 0.2f, 0.7f }, { 1.0f, 1.0f } });
     auto newCurve = OCIO::GradingRGBCurve::Create(red, red, invalidCurve, red);
     OCIO_CHECK_THROW_WHAT(gct->setValue(newCurve), OCIO::Exception,
-                          "has a x coordinate '0.2' that is less from previous control "
-                          "point x cooordinate '0.5'.");
+                          "has a x coordinate '0.2' that is less than previous control "
+                          "point x coordinate '0.5'.");
 
     // Check slopes.
     gct->setSlope(OCIO::RGB_BLUE, 2, 0.9f);
     OCIO_CHECK_NO_THROW(gct->validate());
     OCIO_CHECK_EQUAL(gct->getSlope(OCIO::RGB_BLUE, 2), 0.9f);
     OCIO_CHECK_THROW_WHAT(gct->setSlope(OCIO::RGB_BLUE, 4, 2.f), OCIO::Exception,
-                          "There are '3' control points. '4' is invalid.");
+                          "There are '3' control points. '4' is out of bounds.");
     OCIO_CHECK_ASSERT(gct->slopesAreDefault(OCIO::RGB_GREEN));
     OCIO_CHECK_ASSERT(!gct->slopesAreDefault(OCIO::RGB_BLUE));
 }

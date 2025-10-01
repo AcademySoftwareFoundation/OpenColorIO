@@ -6,6 +6,7 @@
 #include "fileformats/FileFormatCTF.cpp"
 #include "ops/fixedfunction/FixedFunctionOp.h"
 #include "ops/gradingrgbcurve/GradingRGBCurve.h"
+#include "ops/gradinghuecurve/GradingHueCurve.h"
 #include "testutils/UnitTest.h"
 #include "UnitTestLogUtils.h"
 #include "UnitTestUtils.h"
@@ -3803,14 +3804,20 @@ void WriteGroupCLF(OCIO::ConstGroupTransformRcPtr group, std::ostringstream & ou
     group->write(cfg, OCIO::FILEFORMAT_CLF, outputTransform);
 }
 
-void ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::Style style,
-                                       const std::string & vers, int lineNo)
+void ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::Style style,
+                                const std::string & vers, int lineNo, std::string params="")
 {
     // Validate the load & save for any FixedFunction style without parameters.
 
     std::ostringstream ffStr;
     ffStr << "<FixedFunction inBitDepth=\"32f\" outBitDepth=\"32f\" style=\""
-          << OCIO::FixedFunctionOpData::ConvertStyleToString(style, false) << "\">";
+          << OCIO::FixedFunctionOpData::ConvertStyleToString(style, false) << "\""; //>";
+
+    if (!params.empty())
+    {
+        ffStr << " params=\"" << params << "\"";
+    }
+    ffStr << ">";
 
     std::ostringstream strebuf;
     strebuf << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -3819,6 +3826,7 @@ void ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::Style style,
             << "    </FixedFunction>\n"
             << "</ProcessList>\n";
 
+    // Test parsing.
     OCIO::LocalCachedFileRcPtr cachedFile;
     OCIO_CHECK_NO_THROW_FROM(cachedFile = ParseString(strebuf.str()), lineNo);
     OCIO::ConstOpDataVec & fileOps = cachedFile->m_transform->getOps();
@@ -3841,6 +3849,7 @@ void ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::Style style,
     OCIO_CHECK_NO_THROW_FROM(OCIO::CreateFixedFunctionTransform(group, constOp), lineNo);
     OCIO_REQUIRE_EQUAL_FROM(group->getNumTransforms(), 1, lineNo);
 
+    // Test serialization.
     std::ostringstream outputTransform;
     OCIO_CHECK_NO_THROW_FROM(WriteGroupCTF(group, outputTransform), lineNo);
 
@@ -3859,26 +3868,62 @@ void ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::Style style,
 
 OCIO_ADD_TEST(FileFormatCTF, ff_load_save_ctf)
 {
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_03_FWD, "2", __LINE__);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_03_INV, "2", __LINE__);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_10_FWD, "2", __LINE__);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_RED_MOD_10_INV, "2", __LINE__);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_03_FWD   , "2", __LINE__);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_03_INV   , "2", __LINE__);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_10_FWD   , "2", __LINE__);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_GLOW_10_INV   , "2", __LINE__);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD, "2", __LINE__);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV, "2", __LINE__);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::RGB_TO_HSV         , "2", __LINE__);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::HSV_TO_RGB         , "2", __LINE__);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::XYZ_TO_xyY         , "2", __LINE__);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::xyY_TO_XYZ         , "2", __LINE__);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::XYZ_TO_uvY         , "2", __LINE__);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::uvY_TO_XYZ         , "2", __LINE__);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::XYZ_TO_LUV         , "2", __LINE__);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::LUV_TO_XYZ         , "2", __LINE__);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::PQ_TO_LIN          , "2.4", __LINE__);
-    ValidateFixedFunctionStyleNoParam(OCIO::FixedFunctionOpData::LIN_TO_PQ          , "2.4", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::ACES_RED_MOD_03_FWD    , "2", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::ACES_RED_MOD_03_INV    , "2", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::ACES_RED_MOD_10_FWD    , "2", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::ACES_RED_MOD_10_INV    , "2", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::ACES_GLOW_03_FWD       , "2", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::ACES_GLOW_03_INV       , "2", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::ACES_GLOW_10_FWD       , "2", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::ACES_GLOW_10_INV       , "2", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD, "2", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV, "2", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD , "2.1", __LINE__,
+        "1.147 1.264 1.312 0.815 0.803 0.88 1.2");
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::REC2100_SURROUND_FWD   , "2", __LINE__,
+        "1");
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::REC2100_SURROUND_INV   , "2", __LINE__,
+        "1");
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::RGB_TO_HSV             , "2", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::HSV_TO_RGB             , "2", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::XYZ_TO_xyY             , "2", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::xyY_TO_XYZ             , "2", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::XYZ_TO_uvY             , "2", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::uvY_TO_XYZ             , "2", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::XYZ_TO_LUV             , "2", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::LUV_TO_XYZ             , "2", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::LIN_TO_PQ                     , "2.4", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::PQ_TO_LIN                     , "2.4", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::LIN_TO_GAMMA_LOG              , "2.4", __LINE__, 
+        "0 0.25 0.5 1 0 2.718 0.17883277 0.807825590164 1 -0.07116723");
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::GAMMA_LOG_TO_LIN              , "2.4", __LINE__, 
+        "0 0.25 0.5 1 0 2.718 0.17883277 0.807825590164 1 -0.07116723");
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::LIN_TO_DOUBLE_LOG             , "2.4", __LINE__, 
+        "10 0.25 0.5 -1 0 -1 1.25 1 1 1 0.5 1 0");
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::DOUBLE_LOG_TO_LIN             , "2.4", __LINE__, 
+        "10 0.25 0.5 -1 0 -1 1.25 1 1 1 0.5 1 0");
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_FWD  , "2.4", __LINE__,
+        "1000 0.68 0.32 0.265 0.69 0.15 0.06 0.3127 0.329");
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_INV  , "2.4", __LINE__,
+        "1000 0.68 0.32 0.265 0.69 0.15 0.06 0.3127 0.329");
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::ACES_RGB_TO_JMh_20            , "2.4", __LINE__,
+        "0.68 0.32 0.265 0.69 0.15 0.06 0.3127 0.329");
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::ACES_JMh_TO_RGB_20            , "2.4", __LINE__,
+        "0.68 0.32 0.265 0.69 0.15 0.06 0.3127 0.329");
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_FWD, "2.4", __LINE__,
+        "1000");
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_INV, "2.4", __LINE__,
+        "1000");
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_FWD    , "2.4", __LINE__,
+        "1000 0.68 0.32 0.265 0.69 0.15 0.06 0.3127 0.329");
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_INV    , "2.4", __LINE__,
+        "1000 0.68 0.32 0.265 0.69 0.15 0.06 0.3127 0.329");
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::RGB_TO_HSY_LOG         , "2.5", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::HSY_LOG_TO_RGB         , "2.5", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::RGB_TO_HSY_LIN         , "2.5", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::HSY_LIN_TO_RGB         , "2.5", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::RGB_TO_HSY_VID         , "2.5", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::HSY_VID_TO_RGB         , "2.5", __LINE__);
 }
 
 OCIO_ADD_TEST(FileFormatCTF, load_ff_fail_version)
@@ -4365,7 +4410,7 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_primary_errors)
 )"), OCIO::Exception, "Dynamic parameter 'CONTRAST' is not supported in 'GradingPrimary'");
 }
 
-OCIO_ADD_TEST(FileFormatCTF, load_grading_curves_lin)
+OCIO_ADD_TEST(FileFormatCTF, load_grading_rgbcurves_lin)
 {
     std::istringstream ctfLin;
     ctfLin.str(R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -4454,7 +4499,7 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_curves_lin)
     OCIO_CHECK_EQUAL(master->getSlope(2), 1.1f);
 }
 
-OCIO_ADD_TEST(FileFormatCTF, load_grading_curves_log)
+OCIO_ADD_TEST(FileFormatCTF, load_grading_rgbcurves_log)
 {
     std::istringstream ctfLog;
     ctfLog.str(R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -4469,7 +4514,7 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_curves_log)
       </Red>
       <Green>
          <ControlPoints>
-            0.015625 1
+            0.015625 0.1
             2.5 0.5
             3.5 1.5
          </ControlPoints>
@@ -4483,7 +4528,7 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_curves_log)
       </Blue>
       <Master>
          <ControlPoints>
-            11 11 12.5 10.5 13.5 0.5 26.5 -1.5
+            11 11 12.5 11.5 13.5 12.5 26.5 15
          </ControlPoints>
       </Master>
       <DynamicParameter param="RGB_CURVE" />
@@ -4522,11 +4567,118 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_curves_log)
     OCIO_CHECK_EQUAL(master->getControlPoint(0).m_x, 11.0f);
     OCIO_CHECK_EQUAL(master->getControlPoint(0).m_y, 11.0f);
     OCIO_CHECK_EQUAL(master->getControlPoint(1).m_x, 12.5f);
-    OCIO_CHECK_EQUAL(master->getControlPoint(1).m_y, 10.5f);
+    OCIO_CHECK_EQUAL(master->getControlPoint(1).m_y, 11.5f);
     OCIO_CHECK_EQUAL(master->getControlPoint(2).m_x, 13.5f);
-    OCIO_CHECK_EQUAL(master->getControlPoint(2).m_y,  0.5f);
+    OCIO_CHECK_EQUAL(master->getControlPoint(2).m_y, 12.5f);
     OCIO_CHECK_EQUAL(master->getControlPoint(3).m_x, 26.5f);
-    OCIO_CHECK_EQUAL(master->getControlPoint(3).m_y, -1.5f);
+    OCIO_CHECK_EQUAL(master->getControlPoint(3).m_y, 15.f);
+}
+
+OCIO_ADD_TEST(FileFormatCTF, load_grading_huecurves_log)
+{
+    std::istringstream ctfLog;
+    ctfLog.str(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2.5" id="empty">
+   <GradingHueCurve inBitDepth="16f" outBitDepth="32f" style="logRev" hsyTransform="none">
+      <HueHue>
+         <ControlPoints>
+            0.015625 0
+            0.5 0.6
+            0.9 0.8
+         </ControlPoints>
+      </HueHue>
+      <HueSat>
+         <ControlPoints>
+            0.015625 1
+            0.5 0.5
+            0.9 1.5
+         </ControlPoints>
+      </HueSat>
+      <HueLum>
+         <ControlPoints>
+            0.1, 1.5, 0.2, 0.7, 0.4, 1.4, 0.5, 0.8, 0.8, 0.5
+         </ControlPoints>
+      </HueLum>
+      <LumSat>
+         <ControlPoints>
+           -0.1  1.0
+            0.5  1.5
+            1.0  0.9
+            1.1  1.2
+         </ControlPoints>
+      </LumSat>
+      <SatSat>
+         <ControlPoints>
+            0., 0.1, 0.5, 0.45, 1., 1.1
+         </ControlPoints>
+      </SatSat>
+      <LumLum>
+         <ControlPoints>
+            0.  -0.0005
+            0.5  0.3
+            1.  0.9
+         </ControlPoints>
+      </LumLum>
+      <SatLum>
+         <ControlPoints>
+            0., 1.2, 0.6, 0.8, 0.9, 1.1
+         </ControlPoints>
+      </SatLum>
+      <HueFx>
+         <ControlPoints>
+            0.2, 0.05, .4, -0.09, .6, -0.2, .8, 0.05, 0.99, -0.02
+         </ControlPoints>
+      </HueFx>
+      <DynamicParameter param="HUE_CURVE" />
+   </GradingHueCurve>
+</ProcessList>)");
+
+    // Load file.
+    std::string emptyString;
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr file;
+    OCIO_CHECK_NO_THROW(file = tester.read(ctfLog, emptyString, OCIO::INTERP_DEFAULT));
+    OCIO::LocalCachedFileRcPtr cachedFile = OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
+    OCIO_REQUIRE_ASSERT(cachedFile);
+    const auto & fileOps = cachedFile->m_transform->getOps();
+
+    OCIO_REQUIRE_EQUAL(fileOps.size(), 1);
+    const auto op0 = fileOps[0];
+    const auto gradingCurves0 = std::dynamic_pointer_cast<const OCIO::GradingHueCurveOpData>(op0);
+    OCIO_REQUIRE_ASSERT(gradingCurves0);
+    OCIO_CHECK_EQUAL(gradingCurves0->getStyle(), OCIO::GRADING_LOG);
+    OCIO_CHECK_EQUAL(gradingCurves0->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_EQUAL(gradingCurves0->getRGBToHSY(), OCIO::HSY_TRANSFORM_NONE);
+    OCIO_CHECK_ASSERT(gradingCurves0->isDynamic());
+    auto curves = gradingCurves0->getValue();
+    auto hh = curves->getCurve(OCIO::HUE_HUE);
+    OCIO_CHECK_EQUAL(hh->getNumControlPoints(), 3);
+    OCIO_CHECK_EQUAL(hh->getControlPoint(0).m_x, 0.015625f);
+    OCIO_CHECK_EQUAL(hh->getControlPoint(0).m_y, 0.0f);
+    OCIO_CHECK_EQUAL(hh->getControlPoint(1).m_x, 0.5f);
+    OCIO_CHECK_EQUAL(hh->getControlPoint(1).m_y, 0.6f);
+    OCIO_CHECK_EQUAL(hh->getControlPoint(2).m_x, 0.9f);
+    OCIO_CHECK_EQUAL(hh->getControlPoint(2).m_y, 0.8f);
+
+    auto ls = curves->getCurve(OCIO::LUM_SAT);
+    OCIO_CHECK_EQUAL(ls->getNumControlPoints(), 4);
+    OCIO_CHECK_EQUAL(ls->getControlPoint(0).m_x, -0.1f);
+    OCIO_CHECK_EQUAL(ls->getControlPoint(0).m_y,  1.0f);
+    OCIO_CHECK_EQUAL(ls->getControlPoint(1).m_x,  0.5f);
+    OCIO_CHECK_EQUAL(ls->getControlPoint(1).m_y,  1.5f);
+    OCIO_CHECK_EQUAL(ls->getControlPoint(2).m_x,  1.0f);
+    OCIO_CHECK_EQUAL(ls->getControlPoint(2).m_y,  0.9f);
+    OCIO_CHECK_EQUAL(ls->getControlPoint(3).m_x,  1.1f);
+    OCIO_CHECK_EQUAL(ls->getControlPoint(3).m_y,  1.2f);
+
+    auto sl = curves->getCurve(OCIO::SAT_LUM);
+    OCIO_CHECK_EQUAL(sl->getNumControlPoints(), 3);
+    OCIO_CHECK_EQUAL(sl->getControlPoint(0).m_x,  0.0f);
+    OCIO_CHECK_EQUAL(sl->getControlPoint(0).m_y,  1.2f);
+    OCIO_CHECK_EQUAL(sl->getControlPoint(1).m_x,  0.6f);
+    OCIO_CHECK_EQUAL(sl->getControlPoint(1).m_y,  0.8f);
+    OCIO_CHECK_EQUAL(sl->getControlPoint(2).m_x,  0.9f);
+    OCIO_CHECK_EQUAL(sl->getControlPoint(2).m_y,  1.1f);
 }
 
 OCIO_ADD_TEST(FileFormatCTF, load_grading_curves_errors)
@@ -4540,12 +4692,26 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_curves_errors)
 </ProcessList>
 )"), OCIO::Exception, "CTF file version '1.8' does not support operator 'GradingRGBCurve'");
 
+    OCIO_CHECK_THROW_WHAT(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2.0" id="empty">
+  <GradingHueCurve inBitDepth="16f" outBitDepth="32f" style="video">
+  </GradingHueCurve>
+</ProcessList>
+)"), OCIO::Exception, "CTF file version '2' does not support operator 'GradingHueCurve'");
+
     // Missing style attribute.
     OCIO_CHECK_THROW_WHAT(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="2" id="empty">
   <GradingRGBCurve inBitDepth="16f" outBitDepth="32f">
       <DynamicParameter param="RGB_CURVE" />
    </GradingRGBCurve>
+</ProcessList>
+)"), OCIO::Exception, "Required attribute 'style' is missing");
+
+    OCIO_CHECK_THROW_WHAT(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2.5" id="empty">
+  <GradingHueCurve inBitDepth="16f" outBitDepth="32f">
+  </GradingRGBCurve>
 </ProcessList>
 )"), OCIO::Exception, "Required attribute 'style' is missing");
 
@@ -4595,8 +4761,8 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_curves_errors)
         </Red>
     </GradingRGBCurve>
 </ProcessList>
-)"), OCIO::Exception, "Control point at index 2 has a x coordinate '-1' that is less from "
-                      "previous control point x cooordinate '0'");
+)"), OCIO::Exception, "Control point at index 2 has a x coordinate '-1' that is less than "
+                      "previous control point x coordinate '0'");
 
     // Number of slopes matches control points.
     OCIO_CHECK_THROW_WHAT(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -4633,6 +4799,13 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_curves_errors)
     OCIO_CHECK_NE(std::string::npos, StringUtils::Find(parts[0], "Unrecognized element 'Grn'"));
     OCIO_CHECK_NE(std::string::npos, StringUtils::Find(parts[1], "Unrecognized element 'ControlPoints'"));
 
+    OCIO_CHECK_THROW_WHAT(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2.5" id="UIDGradingCurves">
+    <GradingHueCurve inBitDepth="32f" outBitDepth="32f" style="linear" hsyTransform="hsy1">
+        <DynamicParameter param="HUE_CURVE" />
+    </GradingHueCurve>
+</ProcessList>
+)"), OCIO::Exception, "Unknown hsyTransform value: 'hsy1'");
 }
 
 OCIO_ADD_TEST(CTFTransform, load_grading_tone)
@@ -7104,6 +7277,100 @@ OCIO_ADD_TEST(CTFTransform, grading_rgbcurve_lin_ctf)
     <GradingRGBCurve inBitDepth="32f" outBitDepth="32f" style="linear" bypassLinToLog="true">
         <DynamicParameter param="RGB_CURVE" />
     </GradingRGBCurve>
+</ProcessList>
+)" };
+
+        OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
+        OCIO_CHECK_EQUAL(expected, outputTransform.str());
+    }
+}
+
+OCIO_ADD_TEST(CTFTransform, grading_huecurve_lin_ctf)
+{
+    auto gradingCurves = OCIO::GradingHueCurveTransform::Create(OCIO::GRADING_LIN);
+
+    // Note: The default curves are not saved.
+    OCIO::GradingHueCurveRcPtr curves = OCIO::GradingHueCurve::Create(OCIO::GRADING_LIN);
+    curves->getCurve(OCIO::LUM_SAT)->getControlPoint(0).m_y = 1.1f;
+    curves->getCurve(OCIO::LUM_LUM)->setNumControlPoints(4);
+    curves->getCurve(OCIO::LUM_LUM)->getControlPoint(3).m_x = 16.f;
+    curves->getCurve(OCIO::LUM_LUM)->getControlPoint(3).m_y = 10.f;
+    curves->getCurve(OCIO::LUM_LUM)->setSlope(0, 1.f);
+    curves->getCurve(OCIO::LUM_LUM)->setSlope(1, 0.75f);
+    curves->getCurve(OCIO::LUM_LUM)->setSlope(2, 1.1f);
+    curves->getCurve(OCIO::LUM_LUM)->setSlope(3, 1.f);
+    gradingCurves->setValue(curves);
+    {
+        OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+        group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDGradingCurves");
+        group->appendTransform(gradingCurves);
+
+        std::ostringstream outputTransform;
+        OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+        const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2.5" id="UIDGradingCurves">
+    <GradingHueCurve inBitDepth="32f" outBitDepth="32f" style="linear">
+        <LumSat>
+            <ControlPoints>
+                         -7 1.1
+                          0 1
+                          7 1
+            </ControlPoints>
+        </LumSat>
+        <LumLum>
+            <ControlPoints>
+                         -7 -7
+                          0 0
+                          7 7
+                         16 10
+            </ControlPoints>
+            <Slopes>
+                          1 0.75 1.1 1 
+            </Slopes>
+        </LumLum>
+    </GradingHueCurve>
+</ProcessList>
+)" };
+
+        const StringUtils::StringVec osvec  = StringUtils::SplitByLines(outputTransform.str());
+        const StringUtils::StringVec resvec = StringUtils::SplitByLines(expected);
+        OCIO_CHECK_EQUAL(osvec.size(), resvec.size());
+        for(unsigned int i = 0; i < resvec.size(); ++i)
+        {
+            if ( (i >= 5 && i <= 7) ||
+                 (i >= 12 && i <= 15) ||
+                 (i == 18))
+            {
+                OCIO_CHECK_STR_FLOAT_VEC_CLOSE(osvec[i], resvec[i], 1e-5f);
+            }
+            else
+            {
+                OCIO_CHECK_EQUAL(osvec[i], resvec[i]);
+            }
+
+        }
+    }
+
+    // All curves are default curves, no curve is saved.
+    curves = OCIO::GradingHueCurve::Create(OCIO::GRADING_LIN);
+    gradingCurves->setValue(curves);
+    gradingCurves->setRGBToHSY(OCIO::HSY_TRANSFORM_NONE);
+    // Make it dynamic so it is not identity.
+    gradingCurves->makeDynamic();
+    {
+        OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+        group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDGradingCurves");
+        group->appendTransform(gradingCurves);
+
+        std::ostringstream outputTransform;
+        OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+        const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2.5" id="UIDGradingCurves">
+    <GradingHueCurve inBitDepth="32f" outBitDepth="32f" style="linear" hsyTransform="none">
+        <DynamicParameter param="HUE_CURVE" />
+    </GradingHueCurve>
 </ProcessList>
 )" };
 

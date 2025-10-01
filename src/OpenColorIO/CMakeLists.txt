@@ -6,6 +6,9 @@ set(SOURCES
     apphelpers/ColorSpaceHelpers.cpp
     apphelpers/DisplayViewHelpers.cpp
     apphelpers/LegacyViewingPipeline.cpp
+    apphelpers/mergeconfigs/MergeConfigsHelpers.cpp
+    apphelpers/mergeconfigs/OCIOMYaml.cpp
+    apphelpers/mergeconfigs/SectionMerger.cpp
     apphelpers/MixingHelpers.cpp
     Baker.cpp
     BakingUtils.cpp
@@ -94,6 +97,11 @@ set(SOURCES
     ops/gamma/GammaOpGPU.cpp
     ops/gamma/GammaOpUtils.cpp
     ops/gamma/GammaOp.cpp
+    ops/gradinghuecurve/GradingHueCurve.cpp
+    ops/gradinghuecurve/GradingHueCurveOpCPU.cpp
+    ops/gradinghuecurve/GradingHueCurveOpData.cpp
+    ops/gradinghuecurve/GradingHueCurveOpGPU.cpp
+    ops/gradinghuecurve/GradingHueCurveOp.cpp
     ops/gradingprimary/GradingPrimary.cpp
     ops/gradingprimary/GradingPrimaryOpCPU.cpp
     ops/gradingprimary/GradingPrimaryOpData.cpp
@@ -169,6 +177,7 @@ set(SOURCES
     transforms/ExposureContrastTransform.cpp
     transforms/FileTransform.cpp
     transforms/FixedFunctionTransform.cpp
+    transforms/GradingHueCurveTransform.cpp
     transforms/GradingPrimaryTransform.cpp
     transforms/GradingRGBCurveTransform.cpp
     transforms/GradingToneTransform.cpp

@@ -3297,6 +3297,25 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
     getImpl()->refreshActiveColorSpaces();
 }
 
+void Config::removeNamedTransform(const char * name)
+{
+    const std::string nameToSearch = StringUtils::Lower(name);
+    if (nameToSearch.empty()) return;
+
+    for (auto itr = getImpl()->m_allNamedTransforms.begin(); itr != getImpl()->m_allNamedTransforms.end(); ++itr)
+    {
+        if (StringUtils::Lower((*itr)->getName()) == nameToSearch)
+        {
+            getImpl()->m_allNamedTransforms.erase(itr);
+            return;
+        }
+    }
+
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
+    getImpl()->refreshActiveColorSpaces();
+}
+
 void Config::clearNamedTransforms()
 {
     getImpl()->m_allNamedTransforms.clear();
@@ -5725,6 +5744,19 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
                     throw Exception(ss.str().c_str());
                 }
             }
+
+            if (m_majorVersion == 2 && m_minorVersion < 5 )
+            {
+                if( ffstyle == FIXED_FUNCTION_RGB_TO_HSY_LIN  || 
+                    ffstyle == FIXED_FUNCTION_RGB_TO_HSY_LOG ||
+                    ffstyle == FIXED_FUNCTION_RGB_TO_HSY_VID )
+                {
+                    std::ostringstream ss;
+                    ss << "Only config version 2.5 (or higher) can have FixedFunctionTransform style '" 
+                       << FixedFunctionStyleToString(ffstyle) << "'.";
+                    throw Exception(ss.str().c_str());
+                }
+            }
         }
         else if (DynamicPtrCast<const GradingPrimaryTransform>(transform))
         {
@@ -5740,6 +5772,14 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
             {
                 throw Exception("Only config version 2 (or higher) can have "
                                 "GradingRGBCurveTransform.");
+            }
+        }
+        else if (DynamicPtrCast<const GradingHueCurveTransform>(transform))
+        {
+            if (m_majorVersion == 2 && m_minorVersion < 5 )
+            {
+                throw Exception("Only config version 2.5 (or higher) can have "
+                                "GradingHueCurveTransform.");
             }
         }
         else if (DynamicPtrCast<const GradingToneTransform>(transform))
