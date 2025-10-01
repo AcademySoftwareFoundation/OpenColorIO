@@ -85,6 +85,7 @@ import LookTransformTest
 import Lut1DTransformTest
 import Lut3DTransformTest
 import MatrixTransformTest
+import MergeConfigsTest
 import MixingHelpersTest
 import NamedTransformTest
 import OCIOZArchiveTest
@@ -135,6 +136,7 @@ def get_test_modules():
         ("Lut1DTransformTest", Lut1DTransformTest),
         ("Lut3DTransformTest", Lut3DTransformTest),
         ("MatrixTransformTest", MatrixTransformTest),
+        ("MergeConfigsTest", MergeConfigsTest),
         ("MixingHelpersTest", MixingHelpersTest),
         ("NamedTransformTest", NamedTransformTest),
         ("OCIOZArchiveTest", OCIOZArchiveTest),

@@ -266,6 +266,13 @@ class LegacyViewingPipeline;
 typedef OCIO_SHARED_PTR<LegacyViewingPipeline> LegacyViewingPipelineRcPtr;
 typedef OCIO_SHARED_PTR<const LegacyViewingPipeline> ConstLegacyViewingPipelineRcPtr;
 
+class ConfigMergingParameters;
+typedef OCIO_SHARED_PTR<ConfigMergingParameters> ConfigMergingParametersRcPtr;
+typedef OCIO_SHARED_PTR<const ConfigMergingParameters> ConstConfigMergingParametersRcPtr;
+
+class ConfigMerger;
+typedef OCIO_SHARED_PTR<ConfigMerger> ConfigMergerRcPtr;
+typedef OCIO_SHARED_PTR<const ConfigMerger> ConstConfigMergerRcPtr;
 
 template <class T, class U>
 inline OCIO_SHARED_PTR<T> DynamicPtrCast(OCIO_SHARED_PTR<U> const & ptr)

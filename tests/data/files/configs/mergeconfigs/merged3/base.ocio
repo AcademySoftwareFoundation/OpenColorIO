@@ -1,0 +1,28 @@
+ocio_profile_version: 2.1
+
+environment:
+  SHOT: shot1
+  CCCID: look-02
+
+search_path: 
+  - ./$SHOT
+  - shot2
+  - .
+
+roles:
+  default: raw
+
+displays:
+  sRGB:
+    - !<View> {name: Raw, colorspace: raw}
+
+looks:
+  - !<Look>
+    name: shot_look
+    process_space: reference
+    transform: !<FileTransform> {src: "looks.cdl", cccid: $CCCID}
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    isdata: true

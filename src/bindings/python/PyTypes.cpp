@@ -280,6 +280,14 @@ void bindPyTypes(py::module & m)
         m, "MixingColorSpaceManager", 
         DOC(MixingColorSpaceManager));
 
+    py::class_<ConfigMergingParameters, ConfigMergingParametersRcPtr /* holder */>(
+        m, "ConfigMergingParameters", 
+        DOC(ConfigMergingParameters));
+
+    py::class_<ConfigMerger, ConfigMergerRcPtr /* holder */>(
+        m, "ConfigMerger", 
+        DOC(ConfigMerger));
+
     // Enums
     py::enum_<LoggingLevel>(
         m, "LoggingLevel", py::arithmetic(), 

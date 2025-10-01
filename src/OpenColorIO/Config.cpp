@@ -3297,6 +3297,25 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
     getImpl()->refreshActiveColorSpaces();
 }
 
+void Config::removeNamedTransform(const char * name)
+{
+    const std::string nameToSearch = StringUtils::Lower(name);
+    if (nameToSearch.empty()) return;
+
+    for (auto itr = getImpl()->m_allNamedTransforms.begin(); itr != getImpl()->m_allNamedTransforms.end(); ++itr)
+    {
+        if (StringUtils::Lower((*itr)->getName()) == nameToSearch)
+        {
+            getImpl()->m_allNamedTransforms.erase(itr);
+            return;
+        }
+    }
+
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
+    getImpl()->refreshActiveColorSpaces();
+}
+
 void Config::clearNamedTransforms()
 {
     getImpl()->m_allNamedTransforms.clear();
