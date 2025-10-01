@@ -139,6 +139,10 @@ void bindPyTypes(py::module & m)
         m, "GradingRGBCurve", 
         DOC(GradingRGBCurve));
 
+    py::class_<GradingHueCurve, GradingHueCurveRcPtr /*holder*/>(
+        m, "GradingHueCurve", 
+        DOC(GradingHueCurve));
+
     py::class_<Transform, TransformRcPtr /* holder */>(
         m, "Transform", 
         DOC(Transform));
@@ -206,6 +210,12 @@ void bindPyTypes(py::module & m)
                Transform /* base */>(
         m, "GradingRGBCurveTransform", 
         DOC(GradingRGBCurveTransform));
+
+    py::class_<GradingHueCurveTransform,
+               GradingHueCurveTransformRcPtr /* holder */, 
+               Transform /* base */>(
+        m, "GradingHueCurveTransform", 
+        DOC(GradingHueCurveTransform));
 
     py::class_<GradingToneTransform,
                GradingToneTransformRcPtr /* holder */,
@@ -401,6 +411,8 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_GRADING_PRIMARY))
         .value("TRANSFORM_TYPE_GRADING_RGB_CURVE", TRANSFORM_TYPE_GRADING_RGB_CURVE, 
                DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_GRADING_RGB_CURVE))
+        .value("TRANSFORM_TYPE_GRADING_HUE_CURVE", TRANSFORM_TYPE_GRADING_HUE_CURVE, 
+               DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_GRADING_HUE_CURVE))
         .value("TRANSFORM_TYPE_GRADING_TONE", TRANSFORM_TYPE_GRADING_TONE, 
                DOC(PyOpenColorIO, TransformType, TRANSFORM_TYPE_GRADING_TONE))
         .value("TRANSFORM_TYPE_GROUP", TRANSFORM_TYPE_GROUP, 
@@ -599,6 +611,12 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20))
         .value("FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20", FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20,
                DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20))
+        .value("FIXED_FUNCTION_RGB_TO_HSY_LIN", FIXED_FUNCTION_RGB_TO_HSY_LIN,
+               DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_RGB_TO_HSY_LIN))
+        .value("FIXED_FUNCTION_RGB_TO_HSY_LOG", FIXED_FUNCTION_RGB_TO_HSY_LOG,
+               DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_RGB_TO_HSY_LOG))
+        .value("FIXED_FUNCTION_RGB_TO_HSY_VID", FIXED_FUNCTION_RGB_TO_HSY_VID,
+               DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_RGB_TO_HSY_VID))
         .export_values();
 
     py::enum_<ExposureContrastStyle>(
@@ -665,6 +683,8 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, DynamicPropertyType, DYNAMIC_PROPERTY_GRADING_PRIMARY))
         .value("DYNAMIC_PROPERTY_GRADING_RGBCURVE", DYNAMIC_PROPERTY_GRADING_RGBCURVE, 
                DOC(PyOpenColorIO, DynamicPropertyType, DYNAMIC_PROPERTY_GRADING_RGBCURVE))
+        .value("DYNAMIC_PROPERTY_GRADING_HUECURVE", DYNAMIC_PROPERTY_GRADING_HUECURVE, 
+               DOC(PyOpenColorIO, DynamicPropertyType, DYNAMIC_PROPERTY_GRADING_HUECURVE))
         .value("DYNAMIC_PROPERTY_GRADING_TONE", DYNAMIC_PROPERTY_GRADING_TONE, 
                DOC(PyOpenColorIO, DynamicPropertyType, DYNAMIC_PROPERTY_GRADING_TONE))
         .export_values();
@@ -683,6 +703,56 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, RGBCurveType, RGB_MASTER))
         .value("RGB_NUM_CURVES", RGB_NUM_CURVES, 
                DOC(PyOpenColorIO, RGBCurveType, RGB_NUM_CURVES))
+        .export_values();
+
+    py::enum_<HueCurveType>(
+        m, "HueCurveType", 
+        DOC(PyOpenColorIO, HueCurveType))
+
+        .value("HUE_HUE", HUE_HUE, 
+               DOC(PyOpenColorIO, HueCurveType, HUE_HUE))
+        .value("HUE_SAT", HUE_SAT, 
+               DOC(PyOpenColorIO, HueCurveType, HUE_SAT))
+        .value("HUE_LUM", HUE_LUM, 
+               DOC(PyOpenColorIO, HueCurveType, HUE_LUM))
+        .value("LUM_SAT", LUM_SAT, 
+               DOC(PyOpenColorIO, HueCurveType, LUM_SAT))
+        .value("SAT_SAT", SAT_SAT, 
+               DOC(PyOpenColorIO, HueCurveType, SAT_SAT))
+        .value("LUM_LUM", LUM_LUM, 
+               DOC(PyOpenColorIO, HueCurveType, LUM_LUM))
+        .value("SAT_LUM", SAT_LUM, 
+               DOC(PyOpenColorIO, HueCurveType, SAT_LUM))
+        .value("HUE_FX", HUE_FX, 
+               DOC(PyOpenColorIO, HueCurveType, HUE_FX))
+        .export_values();
+
+    py::enum_<HSYTransformStyle>(
+        m, "HSYTransformStyle", 
+        DOC(PyOpenColorIO, HSYTransformStyle))
+
+        .value("HSY_TRANSFORM_NONE", HSY_TRANSFORM_NONE, 
+               DOC(PyOpenColorIO, HSYTransformStyle, HSY_TRANSFORM_NONE))
+        .value("HSY_TRANSFORM_1", HSY_TRANSFORM_1, 
+               DOC(PyOpenColorIO, HSYTransformStyle, HSY_TRANSFORM_1))
+        .export_values();
+
+    py::enum_<BSplineType>(
+        m, "BSplineType", 
+        DOC(PyOpenColorIO, BSplineType))
+
+        .value("B_SPLINE", B_SPLINE, 
+               DOC(PyOpenColorIO, BSplineType, B_SPLINE))
+        .value("DIAGONAL_B_SPLINE", DIAGONAL_B_SPLINE, 
+               DOC(PyOpenColorIO, BSplineType, DIAGONAL_B_SPLINE))
+        .value("HUE_HUE_B_SPLINE", HUE_HUE_B_SPLINE, 
+               DOC(PyOpenColorIO, BSplineType, HUE_HUE_B_SPLINE))
+        .value("PERIODIC_1_B_SPLINE", PERIODIC_1_B_SPLINE, 
+               DOC(PyOpenColorIO, BSplineType, PERIODIC_1_B_SPLINE))
+        .value("PERIODIC_0_B_SPLINE", PERIODIC_0_B_SPLINE, 
+               DOC(PyOpenColorIO, BSplineType, PERIODIC_0_B_SPLINE))
+        .value("HORIZONTAL1_B_SPLINE", HORIZONTAL1_B_SPLINE, 
+               DOC(PyOpenColorIO, BSplineType, HORIZONTAL1_B_SPLINE))
         .export_values();
 
     py::enum_<UniformDataType>(

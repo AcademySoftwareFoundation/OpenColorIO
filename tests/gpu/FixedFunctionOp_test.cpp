@@ -1242,6 +1242,144 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSV_inv_custom)
     test.setErrorThreshold(1e-6f);
 }
 
+OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_LIN_fwd)
+{
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_LIN);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    test.setProcessor(func);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues = {
+        -0.075290f,  0.078996f, -0.108397f, 0.f,
+         0.3f,       0.4f,       0.5f,      0.f,
+         0.05f,      0.03f,      0.04f,     0.f,
+         0.01f,      0.01f,     -0.05f,     1.f,
+         0.05f,     -0.005f,    -0.05f,     1.f,
+        -0.048f,     0.01f,      0.05f,     0.f,
+         0.3f,      -0.4f,       0.5f,      0.f,
+        -0.055f,     0.01f,      0.05f,     0.f };
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_LIN_inv)
+{
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_LIN);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    test.setProcessor(func);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues = {
+         0.470554752f,    9.12594033f,   0.0326650218f,  0.f,   // hsy alpha == 1
+         0.75f,           0.22196741f,   0.38596f,       0.f,
+         0.08333333f,     0.12976444f,   0.034974f,      0.f,
+         0.333333333333f, 0.606036032f,  0.0056680f,     1.f,   // hsy mid alpha
+         0.241666666667f, 0.8372990325f, 0.0034440f,     1.f,
+         0.734693877551f, 0.752099600f,  0.0005572f,     0.f,   // hsy alpha == 0
+         0.96296296f,     9.7034f,      -0.1862f,        0.f,
+         0.730158730159f, 0.811517000f, -0.0009310f,     0.f };
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_LOG_fwd)
+{
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_LOG);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    test.setProcessor(func);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues = {
+        -0.075290f,  0.078996f, -0.108397f, 0.f,
+         0.3f,       0.4f,       0.5f,      0.f,
+         0.05f,      0.03f,      0.04f,     0.f,
+         0.01f,      0.01f,     -0.05f,     1.f,
+         0.05f,     -0.005f,    -0.05f,     1.f,
+        -0.048f,     0.01f,      0.05f,     0.f,
+         0.3f,      -0.4f,       0.5f,      0.f,
+        -0.055f,     0.01f,      0.05f,     0.f };
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_LOG_inv)
+{
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_LOG);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    test.setProcessor(func);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues = {
+         0.470554752f,    9.12594033f,   0.0326650218f,  0.f,   // hsy alpha == 1
+         0.75f,           0.22196741f,   0.38596f,       0.f,
+         0.08333333f,     0.12976444f,   0.034974f,      0.f,
+         0.333333333333f, 0.606036032f,  0.0056680f,     1.f,   // hsy mid alpha
+         0.241666666667f, 0.8372990325f, 0.0034440f,     1.f,
+         0.734693877551f, 0.752099600f,  0.0005572f,     0.f,   // hsy alpha == 0
+         0.96296296f,     9.7034f,      -0.1862f,        0.f,
+         0.730158730159f, 0.811517000f, -0.0009310f,     0.f };
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_VID_fwd)
+{
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_VID);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    test.setProcessor(func);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues = {
+        -0.075290f,  0.078996f, -0.108397f, 0.f,
+         0.3f,       0.4f,       0.5f,      0.f,
+         0.05f,      0.03f,      0.04f,     0.f,
+         0.01f,      0.01f,     -0.05f,     1.f,
+         0.05f,     -0.005f,    -0.05f,     1.f,
+        -0.048f,     0.01f,      0.05f,     0.f,
+         0.3f,      -0.4f,       0.5f,      0.f,
+        -0.055f,     0.01f,      0.05f,     0.f };
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_VID_inv)
+{
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_RGB_TO_HSY_VID);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    test.setProcessor(func);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues = {
+         0.470554752f,    9.12594033f,   0.0326650218f,  0.f,   // hsy alpha == 1
+         0.75f,           0.22196741f,   0.38596f,       0.f,
+         0.08333333f,     0.12976444f,   0.034974f,      0.f,
+         0.333333333333f, 0.606036032f,  0.0056680f,     1.f,   // hsy mid alpha
+         0.241666666667f, 0.8372990325f, 0.0034440f,     1.f,
+         0.734693877551f, 0.752099600f,  0.0005572f,     0.f,   // hsy alpha == 0
+         0.96296296f,     9.7034f,      -0.1862f,        0.f,
+         0.730158730159f, 0.811517000f, -0.0009310f,     0.f };
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(1e-6f);
+}
+
 OCIO_ADD_GPU_TEST(FixedFunction, style_XYZ_TO_xyY_fwd)
 {
     OCIO::FixedFunctionTransformRcPtr func =

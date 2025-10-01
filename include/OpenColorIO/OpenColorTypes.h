@@ -114,6 +114,10 @@ class OCIOEXPORT GradingRGBCurve;
 typedef OCIO_SHARED_PTR<const GradingRGBCurve> ConstGradingRGBCurveRcPtr;
 typedef OCIO_SHARED_PTR<GradingRGBCurve> GradingRGBCurveRcPtr;
 
+class OCIOEXPORT GradingHueCurve;
+typedef OCIO_SHARED_PTR<const GradingHueCurve> ConstGradingHueCurveRcPtr;
+typedef OCIO_SHARED_PTR<GradingHueCurve> GradingHueCurveRcPtr;
+
 class OCIOEXPORT ConfigIOProxy;
 typedef OCIO_SHARED_PTR<const ConfigIOProxy> ConstConfigIOProxyRcPtr;
 typedef OCIO_SHARED_PTR<ConfigIOProxy> ConfigIOProxyRcPtr;
@@ -163,6 +167,10 @@ class OCIOEXPORT DynamicPropertyGradingRGBCurve;
 typedef OCIO_SHARED_PTR<const DynamicPropertyGradingRGBCurve> ConstDynamicPropertyGradingRGBCurveRcPtr;
 typedef OCIO_SHARED_PTR<DynamicPropertyGradingRGBCurve> DynamicPropertyGradingRGBCurveRcPtr;
 
+class OCIOEXPORT DynamicPropertyGradingHueCurve;
+typedef OCIO_SHARED_PTR<const DynamicPropertyGradingHueCurve> ConstDynamicPropertyGradingHueCurveRcPtr;
+typedef OCIO_SHARED_PTR<DynamicPropertyGradingHueCurve> DynamicPropertyGradingHueCurveRcPtr;
+
 class OCIOEXPORT DynamicPropertyGradingTone;
 typedef OCIO_SHARED_PTR<const DynamicPropertyGradingTone> ConstDynamicPropertyGradingToneRcPtr;
 typedef OCIO_SHARED_PTR<DynamicPropertyGradingTone> DynamicPropertyGradingToneRcPtr;
@@ -190,6 +198,10 @@ typedef OCIO_SHARED_PTR<FixedFunctionTransform> FixedFunctionTransformRcPtr;
 class OCIOEXPORT GradingPrimaryTransform;
 typedef OCIO_SHARED_PTR<const GradingPrimaryTransform> ConstGradingPrimaryTransformRcPtr;
 typedef OCIO_SHARED_PTR<GradingPrimaryTransform> GradingPrimaryTransformRcPtr;
+
+class OCIOEXPORT GradingHueCurveTransform;
+typedef OCIO_SHARED_PTR<const GradingHueCurveTransform> ConstGradingHueCurveTransformRcPtr;
+typedef OCIO_SHARED_PTR<GradingHueCurveTransform> GradingHueCurveTransformRcPtr;
 
 class OCIOEXPORT GradingRGBCurveTransform;
 typedef OCIO_SHARED_PTR<const GradingRGBCurveTransform> ConstGradingRGBCurveTransformRcPtr;
@@ -351,6 +363,7 @@ enum TransformType
     TRANSFORM_TYPE_EXPOSURE_CONTRAST,
     TRANSFORM_TYPE_FILE,
     TRANSFORM_TYPE_FIXED_FUNCTION,
+    TRANSFORM_TYPE_GRADING_HUE_CURVE,
     TRANSFORM_TYPE_GRADING_PRIMARY,
     TRANSFORM_TYPE_GRADING_RGB_CURVE,
     TRANSFORM_TYPE_GRADING_TONE,
@@ -497,7 +510,10 @@ enum FixedFunctionStyle
     FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20,    ///< ACES 2.0 Display Rendering -- EXPERIMENTAL
     FIXED_FUNCTION_ACES_RGB_TO_JMH_20,          ///< ACES 2.0 RGB to JMh -- EXPERIMENTAL
     FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20,  ///< ACES 2.0 Tonescale and chroma compression -- EXPERIMENTAL
-    FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20       ///< ACES 2.0 Gamut compression -- EXPERIMENTAL
+    FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20,      ///< ACES 2.0 Gamut compression -- EXPERIMENTAL
+    FIXED_FUNCTION_RGB_TO_HSY_LIN,              ///< RGB to HSY (Hue, Saturation, Luminance) for linear spaces
+    FIXED_FUNCTION_RGB_TO_HSY_LOG,              ///< RGB to HSY (Hue, Saturation, Luma) for log spaces
+    FIXED_FUNCTION_RGB_TO_HSY_VID,              ///< RGB to HSY (Hue, Saturation, Luma) for video spaces
 };
 
 /// Enumeration of the :cpp:class:`ExposureContrastTransform` transform algorithms.
@@ -550,7 +566,8 @@ enum DynamicPropertyType
     DYNAMIC_PROPERTY_GAMMA,            ///< Image gamma value (double floating point value)
     DYNAMIC_PROPERTY_GRADING_PRIMARY,  ///< Used by GradingPrimaryTransform
     DYNAMIC_PROPERTY_GRADING_RGBCURVE, ///< Used by GradingRGBCurveTransform
-    DYNAMIC_PROPERTY_GRADING_TONE      ///< Used by GradingToneTransform
+    DYNAMIC_PROPERTY_GRADING_TONE,     ///< Used by GradingToneTransform
+    DYNAMIC_PROPERTY_GRADING_HUECURVE  ///< Used by GradingHueCurveTransform
 };
 
 /// Types for GradingRGBCurve.
@@ -561,6 +578,38 @@ enum RGBCurveType
     RGB_BLUE,
     RGB_MASTER,
     RGB_NUM_CURVES
+};
+
+/// Types for GradingHueCurve.
+enum HueCurveType
+{
+    HUE_HUE = 0,    //!< Map input hue to output hue (where a diagonal line is the identity).
+    HUE_SAT,        //!< Adjust saturation as a function of hue (a value of 1.0 is the identity).
+    HUE_LUM,        //!< Adjust luma as a function of hue (a value of 1.0 is the identity).
+    LUM_SAT,        //!< Adjust saturation as a function of luma (a value of 1.0 is the identity).
+    SAT_SAT,        //!< Adjust saturation as a function of saturation (a diagonal is the identity).
+    LUM_LUM,        //!< Adjust luma as a function of luma, maintaining hue & sat (diagonal is identity).
+    SAT_LUM,        //!< Adjust luma as a function of saturation (a value of 1.0 is the identity).
+    HUE_FX,         //!< Map input hue to delta output hue (a value of 0.0 is the identity).
+    HUE_NUM_CURVES
+};
+
+/// Types for GradingHueCurve.
+enum HSYTransformStyle
+{
+    HSY_TRANSFORM_NONE = 0, //!< No RGB to HSY conversion (use an outboard conversion).
+    HSY_TRANSFORM_1         //!< Default RGB to Hue, Saturation, Luma conversion.
+};
+
+/// Types for GradingBSplineCurve.
+enum BSplineType
+{
+   B_SPLINE = 0,           //!< Monotonic quadratic B-spline used for the RGBM curves.
+   DIAGONAL_B_SPLINE,      //!< Monotonic quadratic B-spline for the sat-sat and lum-lum curves.
+   HUE_HUE_B_SPLINE,       //!< Monotonic and periodic B-spline used for the hue-hue curve.
+   PERIODIC_1_B_SPLINE,    //!< Periodic, horizontal (at 1) B-spline for hue-sat and hue-lum curves.
+   PERIODIC_0_B_SPLINE,    //!< Periodic, horizontal (at 0) B-spline used for the hue-fx curve.
+   HORIZONTAL1_B_SPLINE,   //!< Horizontal (at 1) B-spline used for the lum-sat and sat-lum curves.
 };
 
 /// Types for uniform data.

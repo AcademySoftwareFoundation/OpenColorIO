@@ -73,6 +73,7 @@ import FormatMetadataTest
 import GpuShaderDescTest
 import GradingDataTest
 import GradingPrimaryTransformTest
+import GradingHueCurveTransformTest
 import GradingRGBCurveTransformTest
 import GradingToneTransformTest
 import GroupTransformTest
@@ -122,6 +123,7 @@ def get_test_modules():
         ("GpuShaderDescTest", GpuShaderDescTest),
         ("GradingDataTest", GradingDataTest),
         ("GradingPrimaryTransformTest", GradingPrimaryTransformTest),
+        ("GradingHueCurveTransformTest", GradingHueCurveTransformTest),
         ("GradingRGBCurveTransformTest", GradingRGBCurveTransformTest),
         ("GradingToneTransformTest", GradingToneTransformTest),
         ("GroupTransformTest", GroupTransformTest),
