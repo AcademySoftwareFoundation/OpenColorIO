@@ -7,6 +7,11 @@
 Presentations & Publications
 ============================
 
+* ASWF Open Source Days 2025 -- Project Update `video <https://youtu.be/w-T64bqFh5E?feature=shared>`_
+
+* Color Interop Forum -- "Color Space Encodings for Texture Assets and CG Rendering" 
+  `Recommendation <https://github.com/AcademySoftwareFoundation/ColorInterop/blob/main/Recommendations/01_TextureAssetColorSpaces/TextureAssetColorSpaces.md>`_
+
 * ASWF Open Source Days 2024 -- NanoColor `video <https://youtu.be/ym1kfYmGz-M?feature=shared>`_
 
 * ASWF Open Source Days 2024 -- Project Update `video <https://youtu.be/zizC0ORvwnc?feature=shared>`_

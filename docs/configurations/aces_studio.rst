@@ -17,6 +17,8 @@ used in the VFX, animation, games, and post-production industries.
 Users who need a simpler config that contains just the basics needed to use ACES color
 management in common DCC tools are encouraged to check out the :ref:`aces_cg`.
 
+The most recent version of the Studio config is based on ACES 2.0.
+
 The latest version of this config may be downloaded from the Releases page of its GitHub
 `repo. <https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES/releases>`_
 
@@ -24,6 +26,8 @@ The Studio Config leverages the high quality ACES implementation built into OCIO
 and so requires no external LUT files.  In fact, even the config file is built into OCIO
 and users may access it from any application that uses OCIO 2.2 or higher by using one of the
 following strings in place of the config path:
+
+``ocio://studio-config-v4.0.0_aces-v2.0_ocio-v2.5``   (for OCIO 2.5 or higher)
 
 ``ocio://studio-config-v2.2.0_aces-v1.3_ocio-v2.4``   (for OCIO 2.4 or higher)
 
@@ -43,8 +47,13 @@ Where:
 
 * Type: The type of the config, e.g., CG or Studio
 * Colorspaces: The version for the color spaces and other config features
-* ACES: The aces-dev version being used
+* ACES: The aces-dev version being used (currently supports ACES 1.3 and 2.0)
 * Profile: Minimum required OCIO version
+
+In addition, the latest version of the Studio config may be accessed simply using:
+
+``ocio://studio-config-latest``
+
 
 The OCIO Configs Working Group collected input from the community and simplified the
 naming scheme relative to the earlier OCIO v1 ACES configs.  However, aliases have been 

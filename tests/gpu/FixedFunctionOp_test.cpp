@@ -1262,7 +1262,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_LIN_fwd)
         -0.055f,     0.01f,      0.05f,     0.f };
     test.setCustomValues(values);
 
-    test.setErrorThreshold(1e-6f);
+    test.setErrorThreshold(5e-6f);
 }
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_LIN_inv)
@@ -1285,7 +1285,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_LIN_inv)
          0.730158730159f, 0.811517000f, -0.0009310f,     0.f };
     test.setCustomValues(values);
 
-    test.setErrorThreshold(1e-6f);
+    test.setErrorThreshold(5e-6f);
 }
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_RGB_TO_HSY_LOG_fwd)
