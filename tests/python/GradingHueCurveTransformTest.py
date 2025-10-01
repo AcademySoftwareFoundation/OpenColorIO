@@ -29,14 +29,14 @@ class GradingHueCurveTransformTest(unittest.TestCase):
         self.assertEqual(gct.getStyle(), OCIO.GRADING_LOG)
         assertEqualHueCurve(self, gct.getValue(), self.valDefaultLog)
         self.assertEqual(gct.isDynamic(), False)
-        self.assertEqual(gct.getBypassRGBToHSY(), False)
+        self.assertEqual(gct.getRGBToHSY(), OCIO.HSY_TRANSFORM_1)
         self.assertEqual(gct.getDirection(), OCIO.TRANSFORM_DIR_FORWARD)
 
         gct = OCIO.GradingHueCurveTransform(OCIO.GRADING_LIN)
         self.assertEqual(gct.getStyle(), OCIO.GRADING_LIN)
         assertEqualHueCurve(self, gct.getValue(), self.valDefaultLin)
         self.assertEqual(gct.isDynamic(), False)
-        self.assertEqual(gct.getBypassRGBToHSY(), False)
+        self.assertEqual(gct.getRGBToHSY(), OCIO.HSY_TRANSFORM_1)
         self.assertEqual(gct.getDirection(), OCIO.TRANSFORM_DIR_FORWARD)
 
         vals = OCIO.GradingHueCurve(OCIO.GRADING_LOG)
@@ -69,9 +69,9 @@ class GradingHueCurveTransformTest(unittest.TestCase):
         """
 
         gct = OCIO.GradingHueCurveTransform(OCIO.GRADING_LOG)
-        self.assertEqual(gct.getBypassRGBToHSY(), False)
-        gct.setBypassRGBToHSY(True)
-        self.assertEqual(gct.getBypassRGBToHSY(), True)
+        self.assertEqual(gct.getRGBToHSY(), OCIO.HSY_TRANSFORM_1)
+        gct.setRGBToHSY(OCIO.HSY_TRANSFORM_NONE)
+        self.assertEqual(gct.getRGBToHSY(), OCIO.HSY_TRANSFORM_NONE)
         self.assertEqual(gct.getDirection(), OCIO.TRANSFORM_DIR_FORWARD)
         gct.setDirection(OCIO.TRANSFORM_DIR_INVERSE)
         self.assertEqual(gct.getDirection(), OCIO.TRANSFORM_DIR_INVERSE)

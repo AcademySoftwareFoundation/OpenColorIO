@@ -104,7 +104,8 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
                 const GpuShaderCreator::VectorIntGetter & getVector,
                 const std::string & name)
 {
-    static constexpr unsigned arrayLen = 16u;  // 8 curves x 2 values (count and offset)
+    // 8 curves x 2 values (count and offset).
+    static constexpr unsigned arrayLen = HueCurveType::HUE_NUM_CURVES * 2;
 
     // Add the uniform if it does not already exist.
     if (shaderCreator->addUniform(name.c_str(), getSize, getVector, arrayLen))
@@ -660,7 +661,7 @@ void GetGradingHueCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     }
 
     const bool doLinToLog = style == GRADING_LIN;
-    const bool doRGBToHSY = !gcData->getBypassRGBToHSY();
+    const bool doRGBToHSY = gcData->getRGBToHSY() == HSY_TRANSFORM_1;
     switch (dir)
     {
     case TRANSFORM_DIR_FORWARD:

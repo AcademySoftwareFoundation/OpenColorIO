@@ -583,25 +583,33 @@ enum RGBCurveType
 /// Types for GradingHueCurve.
 enum HueCurveType
 {
-    HUE_HUE = 0,
-    HUE_SAT,
-    HUE_LUM,
-    LUM_SAT,
-    SAT_SAT,
-    LUM_LUM,
-    SAT_LUM,
-    HUE_FX,
+    HUE_HUE = 0,    //!< Map input hue to output hue (where a diagonal line is the identity).
+    HUE_SAT,        //!< Adjust saturation as a function of hue (a value of 1.0 is the identity).
+    HUE_LUM,        //!< Adjust luma as a function of hue (a value of 1.0 is the identity).
+    LUM_SAT,        //!< Adjust saturation as a function of luma (a value of 1.0 is the identity).
+    SAT_SAT,        //!< Adjust saturation as a function of saturation (a diagonal is the identity).
+    LUM_LUM,        //!< Adjust luma as a function of luma, maintaining hue & sat (diagonal is identity).
+    SAT_LUM,        //!< Adjust luma as a function of saturation (a value of 1.0 is the identity).
+    HUE_FX,         //!< Map input hue to delta output hue (a value of 0.0 is the identity).
     HUE_NUM_CURVES
 };
 
+/// Types for GradingHueCurve.
+enum HSYTransformStyle
+{
+    HSY_TRANSFORM_NONE = 0, //!< No RGB to HSY conversion (use an outboard conversion).
+    HSY_TRANSFORM_1         //!< Default RGB to Hue, Saturation, Luma conversion.
+};
+
+/// Types for GradingBSplineCurve.
 enum BSplineType
 {
-   B_SPLINE = 0,                   //!< Monotonic quadratic B-spline used for the RGBM curves.
-   DIAGONAL_B_SPLINE,              //!< Monotonic quadratic B-spline for the sat-sat and lum-lum curves.
-   HUE_HUE_B_SPLINE,               //!< Monotonic and periodic B-spline used for the hue-hue curve.
-   PERIODIC_1_B_SPLINE,            //!< Periodic, horizontal (at 1) B-spline for hue-sat and hue-lum curves.
-   PERIODIC_0_B_SPLINE,            //!< Periodic, horizontal (at 0) B-spline used for the hue-fx curve.
-   HORIZONTAL1_B_SPLINE,           //!< Horizontal (at 1) B-spline used for the lum-sat and sat-lum curves.
+   B_SPLINE = 0,           //!< Monotonic quadratic B-spline used for the RGBM curves.
+   DIAGONAL_B_SPLINE,      //!< Monotonic quadratic B-spline for the sat-sat and lum-lum curves.
+   HUE_HUE_B_SPLINE,       //!< Monotonic and periodic B-spline used for the hue-hue curve.
+   PERIODIC_1_B_SPLINE,    //!< Periodic, horizontal (at 1) B-spline for hue-sat and hue-lum curves.
+   PERIODIC_0_B_SPLINE,    //!< Periodic, horizontal (at 0) B-spline used for the hue-fx curve.
+   HORIZONTAL1_B_SPLINE,   //!< Horizontal (at 1) B-spline used for the lum-sat and sat-lum curves.
 };
 
 /// Types for uniform data.

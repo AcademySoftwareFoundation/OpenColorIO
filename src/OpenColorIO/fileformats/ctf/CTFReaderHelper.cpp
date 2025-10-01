@@ -2665,7 +2665,7 @@ bool CTFReaderGradingHueCurveElt::isOpParameterValid(const char * att) const noe
 {
     return CTFReaderOpElt::isOpParameterValid(att) ||
            0 == Platform::Strcasecmp(ATTR_STYLE, att) ||
-           0 == Platform::Strcasecmp(ATTR_BYPASS_RGB_TO_HSY, att);
+           0 == Platform::Strcasecmp(ATTR_RGB_TO_HSY, att);
 }
 
 void CTFReaderGradingHueCurveElt::start(const char ** atts)
@@ -2696,17 +2696,17 @@ void CTFReaderGradingHueCurveElt::start(const char ** atts)
             }
             isStyleFound = true;
         }
-        else if (0 == Platform::Strcasecmp(ATTR_BYPASS_RGB_TO_HSY, atts[i]))
+        else if (0 == Platform::Strcasecmp(ATTR_RGB_TO_HSY, atts[i]))
         {
-            if (0 != Platform::Strcasecmp("true", atts[i + 1]))
+            if (0 != Platform::Strcasecmp("none", atts[i + 1]))
             {
                 std::ostringstream oss;
-                oss << "Unknown bypassRGBToHSY value: '" << atts[i + 1];
+                oss << "Unknown hsyTransform value: '" << atts[i + 1];
                 oss << "' while parsing HueCurve.";
                 throwMessage(oss.str());
             }
 
-            m_gradingHueCurve->setBypassRGBToHSY(true);
+            m_gradingHueCurve->setRGBToHSY(HSYTransformStyle::HSY_TRANSFORM_NONE);
         }
 
         i += 2;

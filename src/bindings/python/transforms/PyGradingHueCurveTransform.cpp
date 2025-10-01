@@ -98,10 +98,10 @@ void bindPyGradingHueCurveTransform(py::module & m)
 //                 }
 //             },
 //              DOC(GradingHueCurveTransform, getSlopes));
-        .def("getBypassRGBToHSY", &GradingHueCurveTransform::getBypassRGBToHSY, 
-             DOC(GradingHueCurveTransform, getBypassRGBToHSY))
-        .def("setBypassRGBToHSY", &GradingHueCurveTransform::setBypassRGBToHSY, "bypass"_a, 
-             DOC(GradingHueCurveTransform, setBypassRGBToHSY))
+        .def("getRGBToHSY", &GradingHueCurveTransform::getRGBToHSY, 
+             DOC(GradingHueCurveTransform, getRGBToHSY))
+        .def("setRGBToHSY", &GradingHueCurveTransform::setRGBToHSY, "style"_a, 
+             DOC(GradingHueCurveTransform, setRGBToHSY))
         .def("isDynamic", &GradingHueCurveTransform::isDynamic, 
              DOC(GradingHueCurveTransform, isDynamic))
         .def("makeDynamic", &GradingHueCurveTransform::makeDynamic, 

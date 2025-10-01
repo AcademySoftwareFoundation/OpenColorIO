@@ -140,6 +140,10 @@ std::ostream& operator<< (std::ostream & os, const GradingRGBCurveTransform & t)
     os << "direction=" << TransformDirectionToString(t.getDirection());
     os << ", style=" << GradingStyleToString(t.getStyle());
     os << ", values=" << *t.getValue();
+    if (t.getBypassLinToLog())
+    {
+        os << ", bypass_lintolog";
+    }
     if (t.isDynamic())
     {
         os << ", dynamic";

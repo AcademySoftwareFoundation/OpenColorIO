@@ -1682,9 +1682,9 @@ void GradingHueCurveWriter::getAttributes(XmlFormatter::Attributes& attributes) 
     const auto styleStr = ConvertGradingStyleAndDirToString(style, dir);
     attributes.push_back(XmlFormatter::Attribute(ATTR_STYLE, styleStr));
 
-    if (m_curves->getBypassRGBToHSY())
+    if (m_curves->getRGBToHSY() == HSYTransformStyle::HSY_TRANSFORM_NONE)
     {
-        attributes.push_back(XmlFormatter::Attribute(ATTR_BYPASS_RGB_TO_HSY, "true"));
+        attributes.push_back(XmlFormatter::Attribute(ATTR_RGB_TO_HSY, "none"));
     }
 }
 

@@ -111,14 +111,14 @@ bool GradingHueCurveTransformImpl::slopesAreDefault(HueCurveType c) const
     return data().slopesAreDefault(c);
 }
 
-bool GradingHueCurveTransformImpl::getBypassRGBToHSY() const noexcept
+HSYTransformStyle GradingHueCurveTransformImpl::getRGBToHSY() const noexcept
 {
-    return data().getBypassRGBToHSY();
+    return data().getRGBToHSY();
 }
 
-void GradingHueCurveTransformImpl::setBypassRGBToHSY(bool bypass) noexcept
+void GradingHueCurveTransformImpl::setRGBToHSY(HSYTransformStyle style) noexcept
 {
-    data().setBypassRGBToHSY(bypass);
+    data().setRGBToHSY(style);
 }
 
 bool GradingHueCurveTransformImpl::isDynamic() const noexcept
@@ -142,9 +142,9 @@ std::ostream& operator<< (std::ostream & os, const GradingHueCurveTransform & t)
     os << "direction=" << TransformDirectionToString(t.getDirection());
     os << ", style=" << GradingStyleToString(t.getStyle());
     os << ", values=" << *t.getValue();
-    if (t.getBypassRGBToHSY())
+    if (t.getRGBToHSY() == HSY_TRANSFORM_NONE)
     {
-        os << ", bypassRGBToHSY=true";
+        os << ", hsy_transform=none";
     }
     if (t.isDynamic())
     {

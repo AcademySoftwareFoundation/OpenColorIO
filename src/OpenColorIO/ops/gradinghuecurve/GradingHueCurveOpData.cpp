@@ -67,7 +67,7 @@ GradingHueCurveOpData & GradingHueCurveOpData::operator=(const GradingHueCurveOp
 
     m_direction = rhs.m_direction;
     m_style = rhs.m_style;
-    m_bypassRGBToHSY = rhs.m_bypassRGBToHSY;
+    m_RGBToHSY = rhs.m_RGBToHSY;
 
     // Copy dynamic properties. Sharing happens when needed, with CPUOp for instance.
     m_value->setValue(rhs.m_value->getValue());
@@ -115,7 +115,7 @@ bool GradingHueCurveOpData::isInverse(ConstGradingHueCurveOpDataRcPtr & r) const
     }
 
     if (m_style == r->m_style &&
-        (m_style != GRADING_LIN || m_bypassRGBToHSY == r->m_bypassRGBToHSY) &&
+        (m_style != GRADING_LIN || m_RGBToHSY == r->m_RGBToHSY) &&
         m_value->equals(*r->m_value))
     {
         if (CombineTransformDirections(getDirection(), r->getDirection()) == TRANSFORM_DIR_INVERSE)
@@ -147,7 +147,7 @@ std::string GradingHueCurveOpData::getCacheID() const
 
     cacheIDStream << GradingStyleToString(getStyle()) << " ";
     cacheIDStream << TransformDirectionToString(getDirection()) << " ";
-    if (m_bypassRGBToHSY)
+    if (m_RGBToHSY != HSY_TRANSFORM_1)
     {
         cacheIDStream << " bypassRGBToHSY ";
     }
@@ -227,7 +227,7 @@ bool GradingHueCurveOpData::equals(const OpData & other) const
 
     if (m_direction      != rop->m_direction ||
         m_style          != rop->m_style ||
-        m_bypassRGBToHSY != rop->m_bypassRGBToHSY ||
+        m_RGBToHSY       != rop->m_RGBToHSY ||
        !m_value->equals(  *(rop->m_value)  ))
     {
         return false;

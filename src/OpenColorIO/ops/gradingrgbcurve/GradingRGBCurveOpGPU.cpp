@@ -100,7 +100,8 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
                 const GpuShaderCreator::VectorIntGetter & getVector,
                 const std::string & name)
 {
-    static constexpr unsigned arrayLen = 8u;  // 4 curves x 2 values (count and offset)
+    // 4 curves x 2 values (count and offset).
+    static constexpr unsigned arrayLen = RGBCurveType::RGB_NUM_CURVES * 2;
 
     // Add the uniform if it does not already exist.
     if (shaderCreator->addUniform(name.c_str(), getSize, getVector, arrayLen))

@@ -727,6 +727,16 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, HueCurveType, HUE_FX))
         .export_values();
 
+    py::enum_<HSYTransformStyle>(
+        m, "HSYTransformStyle", 
+        DOC(PyOpenColorIO, HSYTransformStyle))
+
+        .value("HSY_TRANSFORM_NONE", HSY_TRANSFORM_NONE, 
+               DOC(PyOpenColorIO, HSYTransformStyle, HSY_TRANSFORM_NONE))
+        .value("HSY_TRANSFORM_1", HSY_TRANSFORM_1, 
+               DOC(PyOpenColorIO, HSYTransformStyle, HSY_TRANSFORM_1))
+        .export_values();
+
     py::enum_<BSplineType>(
         m, "BSplineType", 
         DOC(PyOpenColorIO, BSplineType))

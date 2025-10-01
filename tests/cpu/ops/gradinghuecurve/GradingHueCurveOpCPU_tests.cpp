@@ -393,7 +393,7 @@ OCIO_ADD_TEST(GradingHueCurveOpCPU, bypass_rgbtohsy)
 {
     auto gc = std::make_shared<OCIO::GradingHueCurveOpData>(OCIO::GRADING_LOG);
 
-    gc->setBypassRGBToHSY(true);
+    gc->setRGBToHSY(OCIO::HSY_TRANSFORM_NONE);
 
     auto val = gc->getValue()->createEditableCopy();
     auto spline = val->getCurve(OCIO::SAT_SAT);

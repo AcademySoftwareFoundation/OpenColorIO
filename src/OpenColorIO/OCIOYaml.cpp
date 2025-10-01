@@ -2178,11 +2178,15 @@ inline void load(const YAML::Node & node, GradingHueCurveTransformRcPtr & t)
             load(iter->second, val);
             t->setDirection(val);
         }
-        else if (key == "rgbtohsy_bypass")
+        else if (key == "hsy_transform")
         {
-            bool bypass = true;
-            load(iter->second, bypass);
-            t->setBypassRGBToHSY(bypass);
+            std::string value;
+            load(iter->second, value);
+            if (value != "none")
+            {
+                throwValueError(node.Tag(), iter->first, "Unknown hsy_transform value.");
+            }
+            t->setRGBToHSY(HSY_TRANSFORM_NONE);
         }
         else if (key == "hue_hue")
         {
@@ -2280,10 +2284,10 @@ inline void save(YAML::Emitter & out, ConstGradingHueCurveTransformRcPtr t)
     out << YAML::Key << "style";
     out << YAML::Value << YAML::Flow << GradingStyleToString(style);
 
-    if (t->getBypassRGBToHSY())
+    if (t->getRGBToHSY() == HSY_TRANSFORM_NONE)
     {
-        out << YAML::Key << "rgbtohsy_bypass";
-        out << YAML::Value << YAML::Flow << true;
+        out << YAML::Key << "hsy_transform";
+        out << YAML::Value << YAML::Flow << "none";
     }
 
     static const std::vector<const char *> curveNames = { "hue_hue", "hue_sat", "hue_lum",

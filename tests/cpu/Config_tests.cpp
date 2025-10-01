@@ -4772,7 +4772,7 @@ OCIO_ADD_TEST(Config, grading_huecurve_serialization)
             "          direction: inverse\n"
             "        - !<GradingHueCurveTransform>\n"
             "          style: linear\n"
-            "          rgbtohsy_bypass: true\n"
+            "          hsy_transform: none\n"
             "          sat_sat: {control_points: [0, 0, 0.1, 0.2, 0.5, 0.5, 0.7, 0.6, 1, 1.5]}\n"
             "          lum_lum: {control_points: [-1, -1, 0, 0.1, 0.5, 0.6, 1, 1.1]}\n"
             "        - !<GradingHueCurveTransform>\n"
@@ -4827,6 +4827,20 @@ OCIO_ADD_TEST(Config, grading_huecurve_serialization)
 
         OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
                               "Number of slopes must match number of control points");
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<GradingHueCurveTransform> {style: linear, hsy_transform: hsy1}\n";
+        const std::string str = PROFILE_START_V<2, 5>() + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "Unknown hsy_transform value");
     }
 }
 

@@ -19,7 +19,7 @@ OCIO_ADD_TEST(GradingHueCurveTransform, basic)
     OCIO_CHECK_EQUAL(gctLin->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
     gctLin->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_CHECK_EQUAL(gctLin->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
-    OCIO_CHECK_ASSERT(!gctLin->getBypassRGBToHSY());
+    OCIO_CHECK_EQUAL(gctLin->getRGBToHSY(), OCIO::HSY_TRANSFORM_1);
     OCIO_CHECK_ASSERT(!gctLin->isDynamic());
     auto crv = gctLin->getValue()->getCurve(OCIO::LUM_SAT);
     OCIO_CHECK_EQUAL(crv->getNumControlPoints(), 3);
@@ -34,7 +34,7 @@ OCIO_ADD_TEST(GradingHueCurveTransform, basic)
     auto gctLog = OCIO::GradingHueCurveTransform::Create(OCIO::GRADING_LOG);
     OCIO_CHECK_EQUAL(gctLog->getStyle(), OCIO::GRADING_LOG);
     OCIO_CHECK_EQUAL(gctLog->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO_CHECK_ASSERT(!gctLog->getBypassRGBToHSY());
+    OCIO_CHECK_EQUAL(gctLog->getRGBToHSY(), OCIO::HSY_TRANSFORM_1);
     OCIO_CHECK_ASSERT(!gctLog->isDynamic());
     crv = gctLog->getValue()->getCurve(OCIO::LUM_SAT);
     OCIO_CHECK_EQUAL(crv->getNumControlPoints(), 3);
@@ -50,7 +50,7 @@ OCIO_ADD_TEST(GradingHueCurveTransform, basic)
     auto gctVid = OCIO::GradingHueCurveTransform::Create(OCIO::GRADING_VIDEO);
     OCIO_CHECK_EQUAL(gctVid->getStyle(), OCIO::GRADING_VIDEO);
     OCIO_CHECK_EQUAL(gctVid->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO_CHECK_ASSERT(!gctVid->getBypassRGBToHSY());
+    OCIO_CHECK_EQUAL(gctVid->getRGBToHSY(), OCIO::HSY_TRANSFORM_1);
     OCIO_CHECK_ASSERT(!gctVid->isDynamic());
     crv = gctVid->getValue()->getCurve(OCIO::LUM_SAT);
     OCIO_CHECK_EQUAL(crv->getNumControlPoints(), 3);
@@ -70,8 +70,8 @@ OCIO_ADD_TEST(GradingHueCurveTransform, basic)
     OCIO_CHECK_EQUAL(gct->getStyle(), OCIO::GRADING_LIN);
     gct->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
     OCIO_CHECK_EQUAL(gct->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
-    gct->setBypassRGBToHSY(true);
-    OCIO_CHECK_ASSERT(gct->getBypassRGBToHSY());
+    gct->setRGBToHSY(OCIO::HSY_TRANSFORM_NONE);
+    OCIO_CHECK_EQUAL(gct->getRGBToHSY(), OCIO::HSY_TRANSFORM_NONE);
     gct->makeDynamic();
     OCIO_CHECK_ASSERT(gct->isDynamic());
     gct->setValue(gctLin->getValue());

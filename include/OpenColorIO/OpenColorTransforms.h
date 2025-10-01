@@ -1361,11 +1361,11 @@ public:
 
     /**
      * By default, the input is transformed into HSY space to apply the hue curves and then the result is
-     * transformed back to RGB. However, this may be bypassed to use other hue/sat/luma type transforms
-     * applied separately before and after this transform.
+     * transformed back to RGB. However, this may be set to HSY_TRANSFORM_NONE to bypass this in order to
+     * use other hue/sat/luma type transforms applied separately before and after this transform.
      */
-    virtual bool getBypassRGBToHSY() const = 0;
-    virtual void setBypassRGBToHSY(bool bypass) = 0;
+    virtual HSYTransformStyle getRGBToHSY() const = 0;
+    virtual void setRGBToHSY(HSYTransformStyle style) = 0;
 
     ///**
     // * Parameters can be made dynamic so the values can be changed through the CPU or GPU processor,

@@ -105,7 +105,7 @@ GradingHueCurveOpCPU::GradingHueCurveOpCPU(ConstGradingHueCurveOpDataRcPtr & gcD
         break;
     }
 
-    if (gcData->getBypassRGBToHSY())
+    if (gcData->getRGBToHSY() == HSYTransformStyle::HSY_TRANSFORM_NONE)
     {
         // TODO: Could template the apply function to avoid the need for a matrix op.
         ConstMatrixOpDataRcPtr fwdOpData = std::make_shared<MatrixOpData>(TRANSFORM_DIR_FORWARD);

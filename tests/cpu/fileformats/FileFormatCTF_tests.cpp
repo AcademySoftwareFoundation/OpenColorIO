@@ -4579,7 +4579,7 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_huecurves_log)
     std::istringstream ctfLog;
     ctfLog.str(R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="2.5" id="empty">
-   <GradingHueCurve inBitDepth="16f" outBitDepth="32f" style="logRev">
+   <GradingHueCurve inBitDepth="16f" outBitDepth="32f" style="logRev" hsyTransform="none">
       <HueHue>
          <ControlPoints>
             0.015625 0
@@ -4648,7 +4648,7 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_huecurves_log)
     OCIO_REQUIRE_ASSERT(gradingCurves0);
     OCIO_CHECK_EQUAL(gradingCurves0->getStyle(), OCIO::GRADING_LOG);
     OCIO_CHECK_EQUAL(gradingCurves0->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
-    OCIO_CHECK_ASSERT(!gradingCurves0->getBypassRGBToHSY());
+    OCIO_CHECK_EQUAL(gradingCurves0->getRGBToHSY(), OCIO::HSY_TRANSFORM_NONE);
     OCIO_CHECK_ASSERT(gradingCurves0->isDynamic());
     auto curves = gradingCurves0->getValue();
     auto hh = curves->getCurve(OCIO::HUE_HUE);
@@ -4798,6 +4798,14 @@ OCIO_ADD_TEST(FileFormatCTF, load_grading_curves_errors)
     OCIO_REQUIRE_EQUAL(parts.size(), 2);
     OCIO_CHECK_NE(std::string::npos, StringUtils::Find(parts[0], "Unrecognized element 'Grn'"));
     OCIO_CHECK_NE(std::string::npos, StringUtils::Find(parts[1], "Unrecognized element 'ControlPoints'"));
+
+    OCIO_CHECK_THROW_WHAT(ParseString(R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2.5" id="UIDGradingCurves">
+    <GradingHueCurve inBitDepth="32f" outBitDepth="32f" style="linear" hsyTransform="hsy1">
+        <DynamicParameter param="HUE_CURVE" />
+    </GradingHueCurve>
+</ProcessList>
+)"), OCIO::Exception, "Unknown hsyTransform value: 'hsy1'");
 }
 
 OCIO_ADD_TEST(CTFTransform, load_grading_tone)
@@ -7347,7 +7355,7 @@ OCIO_ADD_TEST(CTFTransform, grading_huecurve_lin_ctf)
     // All curves are default curves, no curve is saved.
     curves = OCIO::GradingHueCurve::Create(OCIO::GRADING_LIN);
     gradingCurves->setValue(curves);
-    gradingCurves->setBypassRGBToHSY(true);
+    gradingCurves->setRGBToHSY(OCIO::HSY_TRANSFORM_NONE);
     // Make it dynamic so it is not identity.
     gradingCurves->makeDynamic();
     {
@@ -7360,7 +7368,7 @@ OCIO_ADD_TEST(CTFTransform, grading_huecurve_lin_ctf)
 
         const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
 <ProcessList version="2.5" id="UIDGradingCurves">
-    <GradingHueCurve inBitDepth="32f" outBitDepth="32f" style="linear" bypassRGBToHSY="true">
+    <GradingHueCurve inBitDepth="32f" outBitDepth="32f" style="linear" hsyTransform="none">
         <DynamicParameter param="HUE_CURVE" />
     </GradingHueCurve>
 </ProcessList>

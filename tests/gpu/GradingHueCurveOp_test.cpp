@@ -238,7 +238,7 @@ void BypassRGBtoHSY(OCIOGPUTest & test, OCIO::TransformDirection dir, bool dynam
     OCIO::GradingBSplineCurveRcPtr satsat = hueCurve->getCurve(OCIO::SAT_SAT);
     satsat->getControlPoint(1) = OCIO::GradingControlPoint(0.4f, 0.6f);
 
-    hc->setBypassRGBToHSY(true);
+    hc->setRGBToHSY(OCIO::HSY_TRANSFORM_NONE);
 
     hc->setValue(hueCurve);
     hc->setDirection(dir);

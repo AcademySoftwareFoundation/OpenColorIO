@@ -46,8 +46,8 @@ public:
     void setSlope(HueCurveType c, size_t index, float slope) override;
     bool slopesAreDefault(HueCurveType c) const override;
 
-    bool getBypassRGBToHSY() const noexcept override;
-    void setBypassRGBToHSY(bool bypass) noexcept override;
+    HSYTransformStyle getRGBToHSY() const noexcept override;
+    void setRGBToHSY(HSYTransformStyle style) noexcept override;
     
     bool isDynamic() const noexcept override;
     void makeDynamic() noexcept override;
