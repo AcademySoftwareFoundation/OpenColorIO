@@ -278,6 +278,9 @@ In addition, here are some other new API functions:
 
 * A ``removeNamedTransform`` function is now available.
 
+* The previously deprecated function ``getDefaultBuiltinConfigName`` has now been removed.
+  Please use ``ResolveConfigPath("ocio://default")`` instead.
+
 
 New Fixed Function Transforms
 *****************************

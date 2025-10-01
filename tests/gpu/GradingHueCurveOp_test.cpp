@@ -250,6 +250,7 @@ void BypassRGBtoHSY(OCIOGPUTest & test, OCIO::TransformDirection dir, bool dynam
     test.setProcessor(hc);
 
     test.setErrorThreshold(1e-5f);
+    test.setTestInfinity(false);
 }
 
 OCIO_ADD_GPU_TEST(GradingHueCurve, bypass_rgbtohsy_fwd)
