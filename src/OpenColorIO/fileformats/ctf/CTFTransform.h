@@ -119,9 +119,12 @@ static const CTFVersion CTF_PROCESS_LIST_VERSION_2_1 = CTFVersion(2, 1);
 // the LIN_TO_PQ, LIN_TO_GAMMA_LOG, AND LIN_TO_DOUBLE_LOG FixedFunctionOps.
 static const CTFVersion CTF_PROCESS_LIST_VERSION_2_4 = CTFVersion(2, 4);
 
+// Version 2.5 2025-08 adds the GradingHueCurve.
+static const CTFVersion CTF_PROCESS_LIST_VERSION_2_5 = CTFVersion(2, 5);
+
 // Add new version before this line
 // and do not forget to update the following line.
-static const CTFVersion CTF_PROCESS_LIST_VERSION = CTF_PROCESS_LIST_VERSION_2_4;
+static const CTFVersion CTF_PROCESS_LIST_VERSION = CTF_PROCESS_LIST_VERSION_2_5;
 
 
 // Version 1.0 initial Autodesk version for InfoElt.

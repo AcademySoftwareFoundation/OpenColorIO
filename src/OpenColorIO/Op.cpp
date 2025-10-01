@@ -17,6 +17,7 @@
 #include "ops/gamma/GammaOp.h"
 #include "ops/gradingprimary/GradingPrimaryOp.h"
 #include "ops/gradingrgbcurve/GradingRGBCurveOp.h"
+#include "ops/gradinghuecurve/GradingHueCurveOp.h"
 #include "ops/gradingtone/GradingToneOp.h"
 #include "ops/log/LogOp.h"
 #include "ops/lut1d/Lut1DOp.h"
@@ -120,6 +121,8 @@ const char * GetTypeName(OpData::Type type)
         return "GradingPrimary";
     case OpData::GradingRGBCurveType:
         return "GradingRGBCurve";
+    case OpData::GradingHueCurveType :
+        return "GradingHueCurve";
     case OpData::GradingToneType:
         return "GradingTone";
     case OpData::LogType:
@@ -404,6 +407,9 @@ void ValidateDynamicProperty(OpRcPtr op, std::shared_ptr<T> & prop, DynamicPrope
             case DYNAMIC_PROPERTY_GRADING_TONE:
                 os << "Grading tone";
                 break;
+            case DYNAMIC_PROPERTY_GRADING_HUECURVE:
+                os << "Grading hue curve";
+                break;
             }
             os << " dynamic property can only be there once.";
             LogWarning(os.str());
@@ -423,6 +429,7 @@ void OpRcPtrVec::validateDynamicProperties()
     DynamicPropertyDoubleImplRcPtr dpGamma;
     DynamicPropertyGradingPrimaryImplRcPtr dpGradingPrimary;
     DynamicPropertyGradingRGBCurveImplRcPtr dpGradingRGBCurve;
+    DynamicPropertyGradingHueCurveImplRcPtr dpGradingHueCurve;
     DynamicPropertyGradingToneImplRcPtr dpGradingTone;
 
     for (auto op : m_ops)
@@ -433,6 +440,7 @@ void OpRcPtrVec::validateDynamicProperties()
         ValidateDynamicProperty(op, dpGamma, DYNAMIC_PROPERTY_GAMMA);
         ValidateDynamicProperty(op, dpGradingPrimary, DYNAMIC_PROPERTY_GRADING_PRIMARY);
         ValidateDynamicProperty(op, dpGradingRGBCurve, DYNAMIC_PROPERTY_GRADING_RGBCURVE);
+        ValidateDynamicProperty(op, dpGradingHueCurve, DYNAMIC_PROPERTY_GRADING_HUECURVE);
         ValidateDynamicProperty(op, dpGradingTone, DYNAMIC_PROPERTY_GRADING_TONE);
     }
 }
@@ -539,6 +547,14 @@ void CreateOpVecFromOpData(OpRcPtrVec & ops,
         auto rgbSrc = std::dynamic_pointer_cast<const GradingRGBCurveOpData>(opData);
         auto rgb = std::make_shared<GradingRGBCurveOpData>(*rgbSrc);
         CreateGradingRGBCurveOp(ops, rgb, dir);
+        break;
+    }
+
+    case OpData::GradingHueCurveType:
+    {
+        auto hueSrc = std::dynamic_pointer_cast<const GradingHueCurveOpData>(opData);
+        auto hue = std::make_shared<GradingHueCurveOpData>(*hueSrc);
+        CreateGradingHueCurveOp(ops, hue, dir);
         break;
     }
 

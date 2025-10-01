@@ -275,8 +275,13 @@ std::string BuildResourceName(GpuShaderCreatorRcPtr & shaderCreator, const std::
 
 // Convert scene-linear values to "grading log".
 void AddLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st);
+
+void AddLinToLogShaderChannelBlue(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st);
+
 // Convert "grading log" values to scene-linear.
 void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st);
+
+void AddLogToLinShaderChannelBlue(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st);
 
 } // namespace OCIO_NAMESPACE
 

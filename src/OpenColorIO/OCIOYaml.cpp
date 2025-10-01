@@ -16,6 +16,7 @@
 #include "ops/exposurecontrast/ExposureContrastOpData.h"
 #include "ops/gradingprimary/GradingPrimaryOpData.h"
 #include "ops/gradingrgbcurve/GradingRGBCurve.h"
+#include "ops/gradinghuecurve/GradingHueCurve.h"
 #include "ops/gradingtone/GradingToneOpData.h"
 #include "ops/log/LogUtils.h"
 #include "ParseUtils.h"
@@ -2142,6 +2143,168 @@ inline void save(YAML::Emitter & out, ConstGradingRGBCurveTransformRcPtr t)
     out << YAML::EndMap;
 }
 
+// GradingHueCurveTransform
+
+inline void load(const YAML::Node & node, GradingHueCurveTransformRcPtr & t)
+{
+    CheckDuplicates(node);
+
+    t = GradingHueCurveTransform::Create(GRADING_LOG);
+
+    GradingBSplineCurveRcPtr hh;
+    GradingBSplineCurveRcPtr hs;
+    GradingBSplineCurveRcPtr hl;
+    GradingBSplineCurveRcPtr ls;
+    GradingBSplineCurveRcPtr ss;
+    GradingBSplineCurveRcPtr ll;
+    GradingBSplineCurveRcPtr sl;
+    GradingBSplineCurveRcPtr hfx;
+
+    for (Iterator iter = node.begin(); iter != node.end(); ++iter)
+    {
+        const std::string & key = iter->first.as<std::string>();
+
+        if (iter->second.IsNull() || !iter->second.IsDefined()) continue;
+
+        if (key == "style")
+        {
+            std::string style;
+            load(iter->second, style);
+            t->setStyle(GradingStyleFromString(style.c_str()));
+        }
+        else if (key == "direction")
+        {
+            TransformDirection val;
+            load(iter->second, val);
+            t->setDirection(val);
+        }
+        else if (key == "hsy_transform")
+        {
+            std::string value;
+            load(iter->second, value);
+            if (value != "none")
+            {
+                throwValueError(node.Tag(), iter->first, "Unknown hsy_transform value.");
+            }
+            t->setRGBToHSY(HSY_TRANSFORM_NONE);
+        }
+        else if (key == "hue_hue")
+        {
+            hh = GradingBSplineCurve::Create(0, HUE_HUE);
+            load(iter->first, iter->second, hh);
+        }
+        else if (key == "hue_sat")
+        {
+            hs = GradingBSplineCurve::Create(0, HUE_SAT);
+            load(iter->first, iter->second, hs);
+        }
+        else if (key == "hue_lum")
+        {
+            hl = GradingBSplineCurve::Create(0, HUE_LUM);
+            load(iter->first, iter->second, hl);
+        }
+        else if (key == "lum_sat")
+        {
+            ls = GradingBSplineCurve::Create(0, LUM_SAT);
+            load(iter->first, iter->second, ls);
+        }
+        else if (key == "sat_sat")
+        {
+            ss = GradingBSplineCurve::Create(0, SAT_SAT);
+            load(iter->first, iter->second, ss);
+        }
+        else if (key == "lum_lum")
+        {
+            ll = GradingBSplineCurve::Create(0, LUM_LUM);
+            load(iter->first, iter->second, ll);
+        }
+        else if (key == "sat_lum")
+        {
+            sl = GradingBSplineCurve::Create(0, SAT_LUM);
+            load(iter->first, iter->second, sl);
+        }
+        else if (key == "hue_fx")
+        {
+            hfx = GradingBSplineCurve::Create(0, HUE_FX);
+            load(iter->first, iter->second, hfx);
+        }
+        else if (key == "name")
+        {
+            std::string name;
+            load(iter->second, name);
+            t->getFormatMetadata().setName(name.c_str());
+        }
+        else
+        {
+            LogUnknownKeyWarning(node.Tag(), iter->first);
+        }
+    }
+
+    if (!hh) hh = GradingHueCurveImpl::DefaultHueHue.createEditableCopy();
+    if (!hs) hs = GradingHueCurveImpl::DefaultHueSat.createEditableCopy();
+    if (!hl) hl = GradingHueCurveImpl::DefaultHueLum.createEditableCopy();
+    if (!ls) ls = t->getStyle() == GRADING_LIN ? 
+        GradingHueCurveImpl::DefaultLumSatLin.createEditableCopy() :
+        GradingHueCurveImpl::DefaultLumSat.createEditableCopy();
+    if (!ss) ss = GradingHueCurveImpl::DefaultSatSat.createEditableCopy();
+    if (!ll) ll = t->getStyle() == GRADING_LIN ? 
+        GradingHueCurveImpl::DefaultLumLumLin.createEditableCopy() :
+        GradingHueCurveImpl::DefaultLumLum.createEditableCopy();
+    if (!sl) sl = GradingHueCurveImpl::DefaultSatLum.createEditableCopy();
+    if (!hfx) hfx = GradingHueCurveImpl::DefaultHueFx.createEditableCopy();
+
+    auto curves = GradingHueCurve::Create(hh, hs, hl, ls, ss, ll, sl, hfx);
+
+    t->setValue(curves);
+}
+
+inline void save(YAML::Emitter & out, ConstGradingHueCurveTransformRcPtr t)
+{
+    const auto & vals = t->getValue();
+    auto & defCurves = t->getStyle() == GRADING_LIN ? GradingHueCurveImpl::DefaultCurvesLin :
+                                                      GradingHueCurveImpl::DefaultCurves;
+    bool useLineBreaks = false;
+    for (int c = 0; c < HUE_NUM_CURVES; ++c)
+    {
+        const auto & curve = vals->getCurve(static_cast<HueCurveType>(c));
+        if (*curve != defCurves[c])
+        {
+            useLineBreaks = true;
+            break;
+        }
+    }
+
+    out << YAML::VerbatimTag("GradingHueCurveTransform");
+    if (!useLineBreaks) out << YAML::Flow;
+    out << YAML::BeginMap;
+
+    EmitTransformName(out, t->getFormatMetadata());
+
+    const auto style = t->getStyle();
+    out << YAML::Key << "style";
+    out << YAML::Value << YAML::Flow << GradingStyleToString(style);
+
+    if (t->getRGBToHSY() == HSY_TRANSFORM_NONE)
+    {
+        out << YAML::Key << "hsy_transform";
+        out << YAML::Value << YAML::Flow << "none";
+    }
+
+    static const std::vector<const char *> curveNames = { "hue_hue", "hue_sat", "hue_lum",
+        "lum_sat", "sat_sat", "lum_lum", "sat_lum", "hue_fx" };
+    for (int c = 0; c < HUE_NUM_CURVES; ++c)
+    {
+        const auto & curve = vals->getCurve(static_cast<HueCurveType>(c));
+        if ((*curve != defCurves[c]) || !(curve->slopesAreDefault()))
+        {
+            save(out, curveNames[c], curve);
+        }
+    }
+
+    EmitBaseTransformKeyValues(out, t);
+    out << YAML::EndMap;
+}
+
 // GradingToneTransform
 
 inline void load(const YAML::Node & parent, const YAML::Node & node, GradingRGBMSW & rgbm,
@@ -3115,6 +3278,12 @@ void load(const YAML::Node& node, TransformRcPtr& t)
         load(node, temp);
         t = temp;
     }
+    else if (type == "GradingHueCurveTransform")
+    {
+        GradingHueCurveTransformRcPtr temp;
+        load(node, temp);
+        t = temp;
+    }
     else if (type == "GradingToneTransform")
     {
         GradingToneTransformRcPtr temp;
@@ -3218,6 +3387,9 @@ void save(YAML::Emitter& out, ConstTransformRcPtr t, unsigned int majorVersion)
         save(out, GP_tran);
     else if (ConstGradingRGBCurveTransformRcPtr GC_tran = \
         DynamicPtrCast<const GradingRGBCurveTransform>(t))
+        save(out, GC_tran);
+    else if (ConstGradingHueCurveTransformRcPtr GC_tran = \
+        DynamicPtrCast<const GradingHueCurveTransform>(t))
         save(out, GC_tran);
     else if (ConstGradingToneTransformRcPtr GT_tran = \
         DynamicPtrCast<const GradingToneTransform>(t))

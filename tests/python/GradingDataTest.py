@@ -6,7 +6,9 @@ import os
 import sys
 
 import PyOpenColorIO as OCIO
-from UnitTestUtils import assertEqualRGBM, assertEqualPrimary, assertEqualRGBMSW, assertEqualTone, assertEqualBSpline, assertEqualRGBCurve
+from UnitTestUtils import assertEqualRGBM, assertEqualPrimary, assertEqualRGBMSW, \
+    assertEqualTone, assertEqualBSpline, assertEqualRGBCurve, assertEqualHueCurve, \
+    assertAlmostEqualVector
 
 class GradingDataTest(unittest.TestCase):
 
@@ -148,6 +150,8 @@ class GradingDataTest(unittest.TestCase):
         cpts[3] = OCIO.GradingControlPoint(0.6, 0.7)
         cpts[4] = OCIO.GradingControlPoint(1, 1)
         self.assertIsNone(bs.validate())
+        self.assertEqual(bs.getSplineType(), OCIO.B_SPLINE)
+        self.assertEqual(bs.slopesAreDefault(), True)
 
         # Move point 4 before point 3 on the x axis so that the control points are not anymore
         # monotonic. Then, it must throw an exception.
@@ -158,13 +162,32 @@ class GradingDataTest(unittest.TestCase):
         # Restore valid data.
         cpts[4] = OCIO.GradingControlPoint(1, 1)
 
+        # Test constructing via splineType or curveType.
+        spl1 = OCIO.GradingBSplineCurve(5, OCIO.DIAGONAL_B_SPLINE)
+        self.assertEqual(spl1.getSplineType(), OCIO.DIAGONAL_B_SPLINE)
+        spl2 = OCIO.GradingBSplineCurve(5, OCIO.HUE_HUE)
+        self.assertEqual(spl2.getSplineType(), OCIO.HUE_HUE_B_SPLINE)
+        spl2.setSplineType(OCIO.PERIODIC_1_B_SPLINE)
+        self.assertEqual(spl2.getSplineType(), OCIO.PERIODIC_1_B_SPLINE)
+
         # Create a similar bspline curve with alternate constructor.
         bs2 = OCIO.GradingBSplineCurve([0, 0, 0.1, 0.5, 0.4, 0.6, 0.6, 0.7, 1, 1])
         cpts2 = bs2.getControlPoints()
-
         assertEqualBSpline(self, bs, bs2)
+        self.assertEqual(bs2.getSplineType(), OCIO.B_SPLINE)
+        self.assertEqual(bs, bs2)
 
-        # Curve with less control points.
+        bs2 = OCIO.GradingBSplineCurve([0, 0, 0.1, 0.5, 0.4, 0.6, 0.6, 0.7, 1, 1],
+            OCIO.LUM_SAT)
+        cpts2 = bs2.getControlPoints()
+        # NB: This comparison function is only on the control points.
+        assertEqualBSpline(self, bs, bs2)
+        self.assertEqual(bs2.getSplineType(), OCIO.HORIZONTAL1_B_SPLINE)
+        self.assertEqual(bs2.slopesAreDefault(), True)
+        # The class op== detects that the curve type is different.
+        self.assertNotEqual(bs, bs2)
+
+        # Curve with fewer control points.
         bs3 = OCIO.GradingBSplineCurve(4)
         cpts3 = bs3.getControlPoints()
         cpts3[1] = OCIO.GradingControlPoint(0.1, 0.5)
@@ -186,7 +209,7 @@ class GradingDataTest(unittest.TestCase):
         with self.assertRaises(AssertionError):
             assertEqualBSpline(self, bs, bs4)
 
-        # Curve with the same number of control points but point at index 2 differ.
+        # Curve with the same number of control points but point at index 2 differs.
         bs5 = OCIO.GradingBSplineCurve(5)
         cpts5 = bs5.getControlPoints()
         cpts5[1] = OCIO.GradingControlPoint(0.1, 0.5)
@@ -215,10 +238,23 @@ class GradingDataTest(unittest.TestCase):
         bs1.getControlPoints()[2] = OCIO.GradingControlPoint(0.1, 0.4)
         self.assertNotEqual(cpts1, cpts2)
 
+        # Slopes.
+        s = [0.9, 0.8, 0.7, 0.6, 0.5]
+        bs1.setSlopes(s)
+        s1 = bs1.getSlopes()
+        assertAlmostEqualVector(self, s, s1, delta=1e-6)
+        with self.assertRaises(OCIO.Exception):
+            # Length of slopes must match control points.
+            bs1.setSlopes(s[2:])
+        # The comparison now fails since the slopes are not equal.
+        self.assertNotEqual(bs1, bs2)
+
     def test_rgbcurve(self):
         """
         Test the GradingRGBCurve, creation, default value, modification.
         """
+
+        # Check default values.
 
         rgbLin = OCIO.GradingRGBCurve(OCIO.GRADING_LIN)
 
@@ -246,15 +282,91 @@ class GradingDataTest(unittest.TestCase):
         with self.assertRaises(AssertionError):
             assertEqualBSpline(self, rgbLog.master, defLin)
 
-        rgbVideo = OCIO.GradingRGBCurve(OCIO.GRADING_LOG)
+        rgbVideo = OCIO.GradingRGBCurve(OCIO.GRADING_VIDEO)
         assertEqualRGBCurve(self, rgbLog, rgbVideo)
         
         # Check comparison operators
         rgbc1 = OCIO.GradingRGBCurve(OCIO.GRADING_LIN)
         rgbc2 = OCIO.GradingRGBCurve(OCIO.GRADING_LIN)
         self.assertEqual(rgbc1, rgbc2)
-        rgbc1.red.getControlPoints()[1] = OCIO.GradingControlPoint(0.4, 0.4)
+        self.assertEqual(rgbc1.isIdentity(), True)
+        rgbc1.red.getControlPoints()[1] = OCIO.GradingControlPoint(0.4, 0.5)
         self.assertNotEqual(rgbc1, rgbc2)
+        self.assertEqual(rgbc1.isIdentity(), False)
+        rgbc1.validate()
+
+        # Check full constructor.
+        bs1 = OCIO.GradingBSplineCurve([0, 0, 0.1, 0.5, 0.4, 0.6, 0.6, 0.7, 1, 1])
+        bs2 = OCIO.GradingBSplineCurve([0.1, 0.5, 0.4, 0.6, 0.6, 0.7, 1, 1.1])
+        rgbc1 = OCIO.GradingRGBCurve(bs1, bs2, bs1, bs2)
+        rgbc1.validate()
+        self.assertEqual(rgbc1.isIdentity(), False)
+        assertEqualBSpline(self, rgbc1.green, bs2)
+        self.assertEqual(rgbc1.green, bs2)
+
+    def test_huecurve(self):
+        """
+        Test the GradingHueCurve, creation, default value, modification.
+        """
+
+        # Check default values.
+
+        hueLin = OCIO.GradingHueCurve(OCIO.GRADING_LIN)
+
+        defLin = OCIO.GradingBSplineCurve(3)
+        cpts = defLin.getControlPoints()
+        cpts[0] = OCIO.GradingControlPoint(-7, -7)
+        cpts[1] = OCIO.GradingControlPoint(0, 0)
+        cpts[2] = OCIO.GradingControlPoint(7, 7)
+        assertEqualBSpline(self, hueLin.lum_lum, defLin)
+
+        hueLog = OCIO.GradingHueCurve(OCIO.GRADING_LOG)
+
+        defLog = OCIO.GradingBSplineCurve(3)
+        cpts = defLog.getControlPoints()
+        cpts[0] = OCIO.GradingControlPoint(0, 0)
+        cpts[1] = OCIO.GradingControlPoint(0.5, 0.5)
+        cpts[2] = OCIO.GradingControlPoint(1, 1)
+        assertEqualBSpline(self, hueLog.lum_lum, defLog)
+        with self.assertRaises(AssertionError):
+            assertEqualBSpline(self, hueLog.lum_lum, defLin)
+        self.assertEqual(hueLog.getDrawCurveOnly(), False)
+
+        hueVideo = OCIO.GradingHueCurve(OCIO.GRADING_VIDEO)
+        assertEqualHueCurve(self, hueLog, hueVideo)
+        
+        # Check comparison operators
+
+        huec1 = OCIO.GradingHueCurve(OCIO.GRADING_LIN)
+        huec2 = OCIO.GradingHueCurve(OCIO.GRADING_LIN)
+        self.assertEqual(huec1, huec2)
+
+        huec1.setDrawCurveOnly(True)
+        self.assertNotEqual(huec1, huec2)
+        self.assertEqual(huec1.isIdentity(), True)
+        huec1.setDrawCurveOnly(False)
+        self.assertEqual(huec1, huec2)
+
+        self.assertEqual(huec1.isIdentity(), True)
+        huec1.sat_lum.getControlPoints()[1] = OCIO.GradingControlPoint(0.4, 0.8)
+        self.assertNotEqual(huec1, huec2)
+        self.assertEqual(huec1.isIdentity(), False)
+        huec1.validate()
+
+        # Check full constructor.
+        hh = OCIO.GradingBSplineCurve(5, OCIO.HUE_HUE)
+        hs = OCIO.GradingBSplineCurve(5, OCIO.HUE_SAT)
+        hl = OCIO.GradingBSplineCurve(5, OCIO.HUE_LUM)
+        ls = OCIO.GradingBSplineCurve([0.1, 0.8, 0.9, 0.7], OCIO.LUM_SAT)
+        ss = OCIO.GradingBSplineCurve(5, OCIO.SAT_SAT)
+        ll = OCIO.GradingBSplineCurve(5, OCIO.LUM_LUM)
+        sl = OCIO.GradingBSplineCurve(5, OCIO.SAT_LUM)
+        hfx = OCIO.GradingBSplineCurve(5, OCIO.HUE_FX)
+        hcrv = OCIO.GradingHueCurve(hh, hs, hl, ls, ss, ll, sl, hfx)
+        hcrv.validate()
+        self.assertEqual(hcrv.isIdentity(), False)
+        assertEqualBSpline(self, hcrv.lum_sat, ls)
+        self.assertEqual(hcrv.lum_sat, ls)
 
     def test_rgbmsw(self):
         """

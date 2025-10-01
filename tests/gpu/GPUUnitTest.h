@@ -8,6 +8,7 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include "CPUInfoConfig.h"
 
@@ -90,9 +91,14 @@ class OCIOGPUTest
         inline float getExpectedMinimalValue() const { return m_expectedMinimalValue; }
         inline void setExpectedMinimalValue(float minValue) { m_expectedMinimalValue = minValue; }
 
-        // Dump or not the gpu shader program
+        // Dump or not the gpu shader program.
         inline void setVerbose(bool verbose) { m_verbose = verbose; }
         inline bool isVerbose() const { return m_verbose; }
+
+        // Fail the test and print the min and max values of the GPU output, excluding infinities.
+        // This is useful during development for assessing the range of values being tested.
+        inline void setPrintMinMax(bool print) { m_printMinMax = print; }
+        inline bool isPrintMinMax() const { return m_printMinMax; }
 
         inline void setLegacyShader(bool legacy) { m_legacyShader = legacy; }
         inline bool isLegacyShader() const { return m_legacyShader; }
@@ -159,6 +165,7 @@ class OCIOGPUTest
         bool m_testInfinity{ true };
         bool m_performRelativeComparison{ false };
         bool m_verbose{ false };
+        bool m_printMinMax{ false };
         bool m_enabled{ true };
         bool m_legacyShader{ false };
         unsigned m_legacyShaderLutEdge{ 32 };
