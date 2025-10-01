@@ -220,7 +220,7 @@ extern OCIOEXPORT void SetCurrentConfig(const ConstConfigRcPtr & config);
  * recommended that application developers not save those strings and instead save the string that 
  * refers to the current version of that config. That way, it's guaranteed that there will be no 
  * change of behavior in the future. For example, as of OCIO 2.5, "ocio://default" should be saved
- * as "cg-config-v4.0.0_aces-v2.0_ocio-v2.5".
+ * as "ocio://cg-config-v4.0.0_aces-v2.0_ocio-v2.5".
  * 
  * Note that there is no validation done on the path. That is left to the application since 
  * typically the application will load the config before attempting to save its path
