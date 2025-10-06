@@ -92,28 +92,12 @@ written to the dstImgDesc image, leaving srcImgDesc unchanged.
 
 )doc")
         .def("applyRGB", [](CPUProcessorRcPtr & self, py::buffer & data) 
-        {
+            {
                 py::buffer_info info = data.request();
                 checkBufferDivisible(info, 3);
 
                 // --- detect C-contiguous ---
-                bool isC = true;
-                ptrdiff_t itemsize = info.itemsize;
-                auto shape = info.shape;
-                auto strides = info.strides;
-                py::ssize_t ndim = info.ndim;
-
-                ptrdiff_t expected = itemsize;
-                for (py::ssize_t i = ndim - 1; i >= 0; --i)
-                {
-                    if (strides[i] != expected) { isC = false; break; }
-                    expected *= shape[i];
-                }
-
-                if (!isC)
-                {
-                    throw std::runtime_error("applyRGB only supports C-contiguous (row-major) arrays");
-                }
+                checkCContiguousArray(info);
 
                 // --- proceed normally ---
                 BitDepth bitDepth = getBufferBitDepth(info);
@@ -136,7 +120,7 @@ written to the dstImgDesc image, leaving srcImgDesc unchanged.
                                     yStrideBytes);
 
                 self->apply(img);
-        },
+            },
              "data"_a, 
              R"doc(
 Apply to a packed RGB array adhering to the Python buffer protocol. 
@@ -191,6 +175,8 @@ float values is returned, leaving the input list unchanged.
                 py::buffer_info info = data.request();
                 checkBufferDivisible(info, 4);
 
+                // --- detect C-contiguous ---
+                checkCContiguousArray(info);
                 // Interpret as single row of RGBA pixels
                 BitDepth bitDepth = getBufferBitDepth(info);
 

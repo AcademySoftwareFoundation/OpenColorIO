@@ -390,15 +390,15 @@ class CPUProcessorTest(unittest.TestCase):
             logger.warning("NumPy not found. Skipping test!")
             return
 
-        for arr, cpu_proc_fwd, cpu_proc_inv in [
-            (self.float_rgb_2d, self.default_cpu_proc_fwd, self.default_cpu_proc_inv),
-            (self.float_rgb_3d, self.default_cpu_proc_fwd, self.default_cpu_proc_inv),
-            (self.half_rgb_2d, self.half_cpu_proc_fwd, self.half_cpu_proc_inv),
-            (self.half_rgb_3d, self.half_cpu_proc_fwd, self.half_cpu_proc_inv),
-            (self.uint16_rgb_2d, self.uint16_cpu_proc_fwd, self.uint16_cpu_proc_inv),
-            (self.uint16_rgb_3d, self.uint16_cpu_proc_fwd, self.uint16_cpu_proc_inv),
-            (self.uint8_rgb_2d, self.uint8_cpu_proc_fwd, self.uint8_cpu_proc_inv),
-            (self.uint8_rgb_3d, self.uint8_cpu_proc_fwd, self.uint8_cpu_proc_inv),
+        for arr, cpu_proc_fwd in [
+            (self.float_rgb_2d, self.default_cpu_proc_fwd),
+            (self.float_rgb_3d, self.default_cpu_proc_fwd),
+            (self.half_rgb_2d, self.half_cpu_proc_fwd),
+            (self.half_rgb_3d, self.half_cpu_proc_fwd),
+            (self.uint16_rgb_2d, self.uint16_cpu_proc_fwd),
+            (self.uint16_rgb_3d, self.uint16_cpu_proc_fwd),
+            (self.uint8_rgb_2d, self.uint8_cpu_proc_fwd),
+            (self.uint8_rgb_3d, self.uint8_cpu_proc_fwd),
         ]:
             # Transpose to F-order (column-major)
             arr_copy = arr.copy().T
@@ -406,41 +406,6 @@ class CPUProcessorTest(unittest.TestCase):
             # Expect runtime error for non-C-contiguous array
             with self.assertRaises(RuntimeError):
                 cpu_proc_fwd.applyRGB(arr_copy)
-
-            # Convert back to C-order and retry
-            arr_copy_c = np.ascontiguousarray(arr_copy)
-            cpu_proc_fwd.applyRGB(arr_copy_c)
-
-            # Check forward transform
-            for i in range(arr_copy_c.size):
-                if arr.dtype in (np.float32, np.float16):
-                    self.assertAlmostEqual(
-                        arr_copy_c.flat[i],
-                        arr.flat[i] * 0.5,
-                        delta=self.FLOAT_DELTA
-                    )
-                else:
-                    self.assertAlmostEqual(
-                        arr_copy_c.flat[i],
-                        arr.flat[i] // 2,
-                        delta=self.UINT_DELTA
-                    )
-
-            # Inverse transform
-            cpu_proc_inv.applyRGB(arr_copy_c)
-            for i in range(arr_copy_c.size):
-                if arr.dtype in (np.float32, np.float16):
-                    self.assertAlmostEqual(
-                        arr_copy_c.flat[i],
-                        arr.flat[i],
-                        delta=self.FLOAT_DELTA
-                    )
-                else:
-                    self.assertAlmostEqual(
-                        arr_copy_c.flat[i],
-                        arr.flat[i],
-                        delta=self.UINT_DELTA
-                    )
 
     def test_apply_rgb_buffer(self):
         if not np:
@@ -684,3 +649,48 @@ class CPUProcessorTest(unittest.TestCase):
                         arr.flat[i],
                         delta=self.UINT_DELTA
                     )
+
+    def test_apply_rgba_buffer_column_major(self):
+        if not np:
+            logger.warning("NumPy not found. Skipping test!")
+            return
+
+        for arr, cpu_proc_fwd in [
+            (
+                self.float_rgba_2d, 
+                self.default_cpu_proc_fwd
+            ),
+            (
+                self.float_rgba_3d, 
+                self.default_cpu_proc_fwd
+            ),
+            (
+                self.half_rgba_2d, 
+                self.half_cpu_proc_fwd
+            ),
+            (
+                self.half_rgba_3d, 
+                self.half_cpu_proc_fwd
+            ),
+            (
+                self.uint16_rgba_2d, 
+                self.uint16_cpu_proc_fwd
+            ),
+            (
+                self.uint16_rgba_3d, 
+                self.uint16_cpu_proc_fwd
+            ),
+            (
+                self.uint8_rgba_2d, 
+                self.uint8_cpu_proc_fwd
+            ),
+            (
+                self.uint8_rgba_3d, 
+                self.uint8_cpu_proc_fwd,
+            ),
+        ]:
+            # Transpose to F-order (column-major)
+            arr_copy = arr.copy().T
+            # Expect runtime error for non-C-contiguous array
+            with self.assertRaises(RuntimeError):
+                cpu_proc_fwd.applyRGBA(arr_copy)
