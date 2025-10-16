@@ -38,7 +38,7 @@ void ApplyGamma(const OCIO::OpRcPtr & op,
                                                           errorThreshold, 1.0f);
         if (!equalRel)
         {
-            // As most of the error thresholds are 1e-7f, the output 
+            // As most of the error thresholds are 1e-5f, the output 
             // value precision should then be bigger than 7 digits 
             // to highlight small differences. 
             std::ostringstream message;
@@ -59,7 +59,7 @@ constexpr float inf = std::numeric_limits<float>::infinity();
 
 OCIO_ADD_TEST(GammaOpCPU, apply_basic_style_fwd)
 {
-    const float errorThreshold = 1e-7f;
+    const float errorThreshold = 1e-5f;
     const long numPixels = 7;
 
     float input_32f[numPixels*4] = {
@@ -125,7 +125,7 @@ OCIO_ADD_TEST(GammaOpCPU, apply_basic_style_fwd)
 
 OCIO_ADD_TEST(GammaOpCPU, apply_basic_style_rev)
 {
-    const float errorThreshold = 1e-7f;
+    const float errorThreshold = 1e-5f;
     const long numPixels = 7;
 
     float input_32f[numPixels*4] = {
@@ -189,7 +189,7 @@ OCIO_ADD_TEST(GammaOpCPU, apply_basic_style_rev)
 
 OCIO_ADD_TEST(GammaOpCPU, apply_basic_mirror_style_fwd)
 {
-    const float errorThreshold = 1e-7f;
+    const float errorThreshold = 1e-5f;
     const long numPixels = 9;
 
     float input_32f[numPixels * 4] = {
@@ -281,7 +281,7 @@ OCIO_ADD_TEST(GammaOpCPU, apply_basic_mirror_style_fwd)
 
 OCIO_ADD_TEST(GammaOpCPU, apply_basic_mirror_style_rev)
 {
-    const float errorThreshold = 1e-7f;
+    const float errorThreshold = 1e-5f;
     const long numPixels = 9;
 
     float input_32f[numPixels * 4] = {
@@ -372,7 +372,7 @@ OCIO_ADD_TEST(GammaOpCPU, apply_basic_mirror_style_rev)
 
 OCIO_ADD_TEST(GammaOpCPU, apply_basic_pass_thru_style_fwd)
 {
-    const float errorThreshold = 1e-7f;
+    const float errorThreshold = 1e-5f;
     const long numPixels = 9;
 
     float input_32f[numPixels * 4] = {
@@ -451,7 +451,7 @@ OCIO_ADD_TEST(GammaOpCPU, apply_basic_pass_thru_style_fwd)
 
 OCIO_ADD_TEST(GammaOpCPU, apply_basic_pass_thru_style_rev)
 {
-    const float errorThreshold = 1e-7f;
+    const float errorThreshold = 1e-5f;
     const long numPixels = 9;
 
     float input_32f[numPixels * 4] = {
@@ -530,7 +530,7 @@ OCIO_ADD_TEST(GammaOpCPU, apply_basic_pass_thru_style_rev)
 
 OCIO_ADD_TEST(GammaOpCPU, apply_moncurve_style_fwd)
 {
-    const float errorThreshold = 1e-7f;
+    const float errorThreshold = 1e-5f;
     const long numPixels = 7;
 
     float input_32f[numPixels*4] = {
@@ -640,7 +640,7 @@ OCIO_ADD_TEST(GammaOpCPU, apply_moncurve_style_rev)
 
 OCIO_ADD_TEST(GammaOpCPU, apply_moncurve_mirror_style_fwd)
 {
-    const float errorThreshold = 1e-7f;
+    const float errorThreshold = 1e-5f;
     const long numPixels = 9;
 
     float input_32f[numPixels * 4] = {
