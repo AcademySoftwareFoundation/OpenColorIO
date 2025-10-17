@@ -641,11 +641,11 @@ int main(int argc, const char **argv)
             StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
             if (!StringUtils::Contain(svec, "[OpenColorIO Error]"))
             {
-                std::cout << "passed" << std::endl;
+                std::cout << "Validation: passed" << std::endl;
             }
             else
             {
-                std::cout << "failed" << std::endl;
+                std::cout << "Validation: failed" << std::endl;
                 errorcount += 1;
             }
         }
@@ -654,7 +654,7 @@ int main(int argc, const char **argv)
             std::cout << "ERROR:" << std::endl;
             errorcount += 1;
             std::cout << exception.what() << std::endl;
-            std::cout << "failed" << std::endl;
+            std::cout << "Validation: failed" << std::endl;
         }
 
         std::cout << std::endl;

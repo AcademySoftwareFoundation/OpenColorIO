@@ -91,7 +91,7 @@ public:
                 os << "The rule '" << m_name << "' ";
                 os << "refers to encoding '" << std::string(encName);
                 os << "' that is not used by any of the color spaces.";
-                LogWarning(os.str());
+                LogInfo(os.str());
             }
         }
         if (numCS + numEnc == 0)
