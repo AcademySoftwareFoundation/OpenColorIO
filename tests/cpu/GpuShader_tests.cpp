@@ -715,7 +715,7 @@ float2 ocio_lut1d_0_computePos(float f)
   retVal.y = floor(dep / 4095.);
   retVal.x = dep - retVal.y * 4095.;
   retVal.x = (retVal.x + 0.5) / 4096.;
-  retVal.y = (retVal.y + 0.5) / 33.;
+  retVal.y = (retVal.y + 0.5) / 32.;
   return retVal;
 }
 
@@ -849,7 +849,7 @@ float2 ocio_lut1d_2_computePos(float f)
   retVal.y = floor(dep / 4095.);
   retVal.x = dep - retVal.y * 4095.;
   retVal.x = (retVal.x + 0.5) / 4096.;
-  retVal.y = (retVal.y + 0.5) / 33.;
+  retVal.y = (retVal.y + 0.5) / 32.;
   return retVal;
 }
 
