@@ -179,6 +179,27 @@ void checkBufferType(const py::buffer_info & info, BitDepth bitDepth)
     checkBufferType(info, bitDepthToDtype(bitDepth));
 }
 
+void checkCContiguousArray(const py::buffer_info & info)
+{
+    bool isC = true;
+    ptrdiff_t itemsize = info.itemsize;
+    auto shape = info.shape;
+    auto strides = info.strides;
+    py::ssize_t ndim = info.ndim;
+
+    ptrdiff_t expected = itemsize;
+    for (py::ssize_t i = ndim - 1; i >= 0; --i)
+    {
+        if (strides[i] != expected) { isC = false; break; }
+        expected *= shape[i];
+    }
+
+    if (!isC)
+    {
+        throw std::runtime_error("function only supports C-contiguous (row-major) arrays");
+    }
+}
+
 void checkBufferDivisible(const py::buffer_info & info, py::ssize_t numChannels)
 {
     if (info.size % numChannels != 0)
