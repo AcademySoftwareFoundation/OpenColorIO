@@ -55,6 +55,7 @@ set(SOURCES
 	apphelpers/PyColorSpaceHelpers.cpp
 	apphelpers/PyDisplayViewHelpers.cpp
 	apphelpers/PyLegacyViewingPipeline.cpp
+	apphelpers/PyMergeConfigs.cpp
 	apphelpers/PyMixingHelpers.cpp
 	transforms/PyAllocationTransform.cpp
 	transforms/PyBuiltinTransform.cpp
@@ -68,6 +69,7 @@ set(SOURCES
 	transforms/PyFixedFunctionTransform.cpp
 	transforms/PyGradingPrimaryTransform.cpp
 	transforms/PyGradingRGBCurveTransform.cpp
+	transforms/PyGradingHueCurveTransform.cpp
 	transforms/PyGradingToneTransform.cpp
 	transforms/PyGroupTransform.cpp
 	transforms/PyLogAffineTransform.cpp

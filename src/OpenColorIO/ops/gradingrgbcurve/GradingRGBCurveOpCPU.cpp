@@ -33,13 +33,13 @@ protected:
     void eval(const GradingBSplineCurveImpl::KnotsCoefs & knotsCoefs,
               float * out, const float * in) const
     {
-        out[0] = knotsCoefs.evalCurve(static_cast<int>(RGB_RED), in[0]);
-        out[1] = knotsCoefs.evalCurve(static_cast<int>(RGB_GREEN), in[1]);
-        out[2] = knotsCoefs.evalCurve(static_cast<int>(RGB_BLUE), in[2]);
+        out[0] = knotsCoefs.evalCurve(static_cast<int>(RGB_RED), in[0], in[0]);
+        out[1] = knotsCoefs.evalCurve(static_cast<int>(RGB_GREEN), in[1], in[1]);
+        out[2] = knotsCoefs.evalCurve(static_cast<int>(RGB_BLUE), in[2], in[2]);
         // TODO: Add vectorized version for master curve.
-        out[0] = knotsCoefs.evalCurve(static_cast<int>(RGB_MASTER), out[0]);
-        out[1] = knotsCoefs.evalCurve(static_cast<int>(RGB_MASTER), out[1]);
-        out[2] = knotsCoefs.evalCurve(static_cast<int>(RGB_MASTER), out[2]);
+        out[0] = knotsCoefs.evalCurve(static_cast<int>(RGB_MASTER), out[0], out[0]);
+        out[1] = knotsCoefs.evalCurve(static_cast<int>(RGB_MASTER), out[1], out[1]);
+        out[2] = knotsCoefs.evalCurve(static_cast<int>(RGB_MASTER), out[2], out[2]);
     }
     void evalRev(const GradingBSplineCurveImpl::KnotsCoefs & knotsCoefs,
                  float * out, const float * in) const

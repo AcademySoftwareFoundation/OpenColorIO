@@ -1068,6 +1068,88 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, RGB_TO_HSV)
     ApplyFixedFunction(&img[0], &rgbFrame[0], numHSV, dataFInv, 1e-6f, __LINE__);
 }
 
+OCIO_ADD_TEST(FixedFunctionOpCPU, RGB_TO_HSY_LIN)
+{
+    const int numPixels = 8;
+    const std::vector<float> hsyFrame {
+         0.470554752f,    9.12594033f,   0.0326650218f,  0.f,   // hsy alpha == 1
+         0.75f,           0.22196741f,   0.38596f,       0.f,
+         0.08333333f,     0.12976444f,   0.034974f,      0.f,
+         0.333333333333f, 0.606036032f,  0.0056680f,     1.f,   // hsy mid alpha
+         0.241666666667f, 0.8372990325f, 0.0034440f,     1.f,
+         0.734693877551f, 0.752099600f,  0.0005572f,     0.f,   // hsy alpha == 0
+         0.96296296f,     9.7034f,      -0.1862f,        0.f,
+         0.730158730159f, 0.811517000f, -0.0009310f,     0.f };
+
+    const std::vector<float> rgbFrame {
+        -0.075290f,  0.078996f, -0.108397f, 0.f,
+         0.3f,       0.4f,       0.5f,      0.f,
+         0.05f,      0.03f,      0.04f,     0.f,
+         0.01f,      0.01f,     -0.05f,     1.f,
+         0.05f,     -0.005f,    -0.05f,     1.f,
+        -0.048f,     0.01f,      0.05f,     0.f,
+         0.3f,      -0.4f,       0.5f,      0.f,
+        -0.055f,     0.01f,      0.05f,     0.f };
+
+    OCIO::ConstFixedFunctionOpDataRcPtr dataFwdLin 
+        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::RGB_TO_HSY_LIN);
+
+    std::vector<float> img = rgbFrame;
+    ApplyFixedFunction(&img[0], &hsyFrame[0], numPixels, dataFwdLin, 1e-6f, __LINE__);
+
+    OCIO::ConstFixedFunctionOpDataRcPtr dataFInvLin
+        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::HSY_LIN_TO_RGB);
+
+    img = hsyFrame;
+    ApplyFixedFunction(&img[0], &rgbFrame[0], numPixels, dataFInvLin, 1e-6f, __LINE__);
+}
+
+OCIO_ADD_TEST(FixedFunctionOpCPU, RGB_TO_HSY_LOG)
+{
+    const std::vector<float> hsyFrame {
+        14563.0f / 65535, 64392.0f / 65535, 20899.0f / 65535, 32007.0f / 65535,
+        50061.0f / 65535, 64310.0f / 65535, 6328.0f / 65535, 65535.0f / 65535 };
+
+    const std::vector<float> rgbFrame {
+        1800.0f / 4095, 1200.0f / 4095, 900.0f / 4095, 2000.0f / 4095,
+        40.0f / 4095, 440.0f / 4095, 1000.0f / 4095, 4095.0f / 4095 };
+
+    OCIO::ConstFixedFunctionOpDataRcPtr dataFwdLin 
+        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::RGB_TO_HSY_LOG);
+
+    std::vector<float> img = rgbFrame;
+    ApplyFixedFunction(&img[0], &hsyFrame[0], 2, dataFwdLin, 1e-5f, __LINE__);
+
+    OCIO::ConstFixedFunctionOpDataRcPtr dataFInvLin
+        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::HSY_LOG_TO_RGB);
+
+    img = hsyFrame;
+    ApplyFixedFunction(&img[0], &rgbFrame[0], 2, dataFInvLin, 1e-5f, __LINE__);
+}
+
+OCIO_ADD_TEST(FixedFunctionOpCPU, RGB_TO_HSY_VID)
+{
+    const std::vector<float> hsyFrame {
+        0.54190051555634f, 1.0851333141327f,  0.55111348628998f, 0.48840048909187f,
+        0.54262113571167f, 1.4824789762497f,  1.1281162500381f,   1.f };
+
+    const std::vector<float> rgbFrame {
+        0.12152557820082f, 0.70731294155121f, 0.26879417896271f, 0.48840048909187f,
+        0.53938156366348f, 1.3418402671814f,  0.74459171295166f, 1.f };
+
+    OCIO::ConstFixedFunctionOpDataRcPtr dataFwdLin 
+        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::RGB_TO_HSY_VID);
+
+    std::vector<float> img = rgbFrame;
+    ApplyFixedFunction(&img[0], &hsyFrame[0], 2, dataFwdLin, 1e-6f, __LINE__);
+
+    OCIO::ConstFixedFunctionOpDataRcPtr dataFInvLin
+        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::HSY_VID_TO_RGB);
+
+    img = hsyFrame;
+    ApplyFixedFunction(&img[0], &rgbFrame[0], 2, dataFInvLin, 1e-6f, __LINE__);
+}
+
 OCIO_ADD_TEST(FixedFunctionOpCPU, XYZ_TO_xyY)
 {
     const std::vector<float> inputFrame {

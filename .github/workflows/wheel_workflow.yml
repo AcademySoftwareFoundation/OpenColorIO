@@ -81,10 +81,6 @@ jobs:
           # -------------------------------------------------------------------
           # CPython 64 bits manylinux_2_28
           # -------------------------------------------------------------------
-          - build: CPython 3.8 64 bits manylinux_2_28
-            manylinux: manylinux_2_28
-            python: cp38-manylinux_x86_64
-            arch: x86_64
           - build: CPython 3.9 64 bits manylinux_2_28
             manylinux: manylinux_2_28
             python: cp39-manylinux_x86_64
@@ -105,13 +101,13 @@ jobs:
             manylinux: manylinux_2_28
             python: cp313-manylinux_x86_64
             arch: x86_64
+          # - build: CPython 3.14 64 bits manylinux_2_28
+          #   manylinux: manylinux_2_28
+          #   python: cp314-manylinux_x86_64
+          #   arch: x86_64
           # -------------------------------------------------------------------
           # CPython 64 bits manylinux2014
           # -------------------------------------------------------------------
-          - build: CPython 3.8 64 bits manylinux2014
-            manylinux: manylinux2014
-            python: cp38-manylinux_x86_64
-            arch: x86_64
           - build: CPython 3.9 64 bits manylinux2014
             manylinux: manylinux2014
             python: cp39-manylinux_x86_64
@@ -132,6 +128,10 @@ jobs:
             manylinux: manylinux2014
             python: cp313-manylinux_x86_64
             arch: x86_64
+          # - build: CPython 3.14 64 bits manylinux2014
+          #   manylinux: manylinux2014
+          #   python: cp314-manylinux_x86_64
+          #   arch: x86_64
 
     steps:
       - uses: actions/checkout@v4
@@ -139,10 +139,10 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.22.0
+        uses: pypa/cibuildwheel@v3.1.4
         env:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
@@ -170,10 +170,6 @@ jobs:
           # -------------------------------------------------------------------
           # CPython ARM 64 bits manylinux2014
           # -------------------------------------------------------------------
-          - build: CPython 3.8 ARM 64 bits manylinux2014
-            manylinux: manylinux2014
-            python: cp38-manylinux_aarch64
-            arch: aarch64
           - build: CPython 3.9 ARM 64 bits manylinux2014
             manylinux: manylinux2014
             python: cp39-manylinux_aarch64
@@ -194,6 +190,10 @@ jobs:
             manylinux: manylinux2014
             python: cp313-manylinux_aarch64
             arch: aarch64
+          # - build: CPython 3.14 ARM 64 bits manylinux2014
+          #   manylinux: manylinux2014
+          #   python: cp314-manylinux_aarch64
+          #   arch: aarch64
 
     steps:
       - uses: actions/checkout@v4
@@ -201,10 +201,10 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.22.0
+        uses: pypa/cibuildwheel@v3.1.4
         env:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
@@ -232,9 +232,6 @@ jobs:
           # -------------------------------------------------------------------
           # CPython 64 bits
           # -------------------------------------------------------------------
-          - build: CPython 3.8 64 bits
-            python: cp38-macosx_x86_64
-            arch: x86_64
           - build: CPython 3.9 64 bits
             python: cp39-macosx_x86_64
             arch: x86_64
@@ -250,6 +247,9 @@ jobs:
           - build: CPython 3.13 64 bits
             python: cp313-macosx_x86_64
             arch: x86_64
+          # - build: CPython 3.14 64 bits
+          #   python: cp314-macosx_x86_64
+          #   arch: x86_64
 
     steps:
       - uses: actions/checkout@v4
@@ -257,14 +257,14 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
       - name: Remove brew OpenEXR/Imath
         run: |
           brew uninstall --ignore-dependencies openexr imath || true
             
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.22.0
+        uses: pypa/cibuildwheel@v3.1.4
         env:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
@@ -291,9 +291,6 @@ jobs:
           # -------------------------------------------------------------------
           # CPython ARM 64 bits
           # -------------------------------------------------------------------
-          - build: CPython 3.8 ARM 64 bits
-            python: cp38-macosx_arm64
-            arch: arm64
           - build: CPython 3.9 ARM 64 bits
             python: cp39-macosx_arm64
             arch: arm64
@@ -309,6 +306,9 @@ jobs:
           - build: CPython 3.13 ARM 64 bits
             python: cp313-macosx_arm64
             arch: arm64
+          # - build: CPython 3.14 ARM 64 bits
+          #   python: cp314-macosx_arm64
+          #   arch: arm64
 
     steps:
       - uses: actions/checkout@v4
@@ -316,10 +316,10 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.22.0
+        uses: pypa/cibuildwheel@v3.1.4
         env:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
@@ -346,9 +346,6 @@ jobs:
           # -------------------------------------------------------------------
           # CPython 64 bits
           # -------------------------------------------------------------------
-          - build: CPython 3.8 64 bits
-            python: cp38-win_amd64
-            arch: AMD64
           - build: CPython 3.9 64 bits
             python: cp39-win_amd64
             arch: AMD64
@@ -364,6 +361,9 @@ jobs:
           - build: CPython 3.13 64 bits
             python: cp313-win_amd64
             arch: AMD64
+          # - build: CPython 3.14 64 bits
+          #   python: cp314-win_amd64
+          #   arch: AMD64
 
     steps:
       - uses: actions/checkout@v4
@@ -371,10 +371,10 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.22.0
+        uses: pypa/cibuildwheel@v3.1.4
         env:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}

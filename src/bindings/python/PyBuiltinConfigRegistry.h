@@ -45,11 +45,6 @@ public:
     {
         return BuiltinConfigRegistry::Get().isBuiltinConfigRecommended(configIndex);
     }
-
-    const char * getDefaultBuiltinConfigName() const
-    {
-        return BuiltinConfigRegistry::Get().getDefaultBuiltinConfigName();
-    }
 };
 
 } // namespace OCIO_NAMESPACE

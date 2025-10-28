@@ -172,7 +172,7 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
     }
 
     {
-        OCIO_CHECK_NO_THROW(shaderDesc->addToDeclareShaderCode("vec2 coords;\n"));
+        OCIO_CHECK_NO_THROW(shaderDesc->addToParameterDeclareShaderCode("vec2 coords;\n"));
         OCIO_CHECK_NO_THROW(shaderDesc->addToHelperShaderCode("vec2 helpers() {}\n\n"));
         OCIO_CHECK_NO_THROW(shaderDesc->addToFunctionHeaderShaderCode("void func() {\n"));
         OCIO_CHECK_NO_THROW(shaderDesc->addToFunctionShaderCode("  int i;\n"));
@@ -194,6 +194,51 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
         fragText += "}\n";
 
         OCIO_CHECK_EQUAL(fragText, shaderDesc->getShaderText());
+    }
+
+    {
+        OCIO_CHECK_NE(shaderDesc->getLanguage(), OCIO::GPU_LANGUAGE_GLSL_VK_4_6);
+        OCIO_CHECK_NO_THROW(shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_VK_4_6));
+        OCIO_CHECK_EQUAL(shaderDesc->getLanguage(), OCIO::GPU_LANGUAGE_GLSL_VK_4_6);
+
+        OCIO_CHECK_THROW_WHAT(shaderDesc->setDescriptorSetIndex(123, 0),OCIO::Exception, "Texture binding start index must be greater than 0.");
+        OCIO_CHECK_NO_THROW(shaderDesc->setDescriptorSetIndex(123, 456));
+        OCIO_CHECK_EQUAL(shaderDesc->getDescriptorSetIndex(), 123);
+        OCIO_CHECK_EQUAL(shaderDesc->getTextureBindingStart(), 456);
+
+        auto getSize = []() -> int { return 2; }; //simulate only 2 elements in the array
+        auto getArray = []() -> const float* { return nullptr; };
+        const unsigned maxSize = 3;
+        OCIO_CHECK_NO_THROW(shaderDesc->addUniform("array", getSize, getArray, maxSize));
+        OCIO_CHECK_EQUAL(shaderDesc->getUniformBufferSize(), 16 * maxSize);
+
+        OCIO_CHECK_NO_THROW(shaderDesc->addToTextureDeclareShaderCode("layout(set=123, binding = 456) uniform sampler2D samplerName; \n"));
+
+        OCIO_CHECK_NO_THROW(shaderDesc->finalize());
+
+        std::string fragText;
+        fragText += "layout (set = 123, binding = 0) uniform 1sd234__Parameters\n";
+        fragText += "{\n";
+        fragText += "\n";
+        fragText += "// Declaration of all variables\n";
+        fragText += "\n";
+        fragText += "vec2 coords;\n";
+        fragText += "\n";
+        fragText += "};\n";
+        fragText += "\n";
+        fragText += "// Declaration of all textures\n";
+        fragText += "\n";
+        fragText += "layout(set=123, binding = 456) uniform sampler2D samplerName; \n";
+        fragText += "\n";
+        fragText += "// Declaration of all helper methods\n";
+        fragText += "\n";
+        fragText += "vec2 helpers() {}\n\n";
+        fragText += "void func() {\n";
+        fragText += "  int i;\n";
+        fragText += "}\n";
+
+        OCIO_CHECK_EQUAL(fragText, shaderDesc->getShaderText());
+
     }
 }
 
@@ -260,6 +305,7 @@ ocioDisplay(
 )
 {
 }
+
 
 
 // Declaration of the OCIO shader function
@@ -349,6 +395,7 @@ ocioDisplay(
 )
 {
 }
+
 
 
 // Declaration of the OCIO shader function
@@ -441,7 +488,8 @@ ocioMyMethodName(
 }
 
 
-// Declaration of all variables
+
+// Declaration of all textures
 
 texture1d<float> ocio_lut1d_0;
 sampler ocio_lut1d_0Sampler;
@@ -549,7 +597,8 @@ ocioMyMethodName(
 }
 
 
-// Declaration of all variables
+
+// Declaration of all textures
 
 texture3d<float> ocio_lut3d_0;
 sampler ocio_lut3d_0Sampler;
@@ -651,7 +700,8 @@ ocioOCIOMain(
 }
 
 
-// Declaration of all variables
+
+// Declaration of all textures
 
 texture2d<float> ocio_lut1d_0;
 sampler ocio_lut1d_0Sampler;
@@ -780,7 +830,8 @@ ocioOCIOMain(
 }
 
 
-// Declaration of all variables
+
+// Declaration of all textures
 
 texture1d<float> ocio_lut1d_0;
 sampler ocio_lut1d_0Sampler;
@@ -928,6 +979,7 @@ ocioOCIOMain(
 float ocio_exposure_contrast_exposureVal;
 float ocio_exposure_contrast_gammaVal;
 
+
 // Declaration of the OCIO shader function
 
 float4 OCIOMain(float4 inPixel)
@@ -1029,6 +1081,7 @@ ocioOCIOMain(
 }
 
 
+
 // Declaration of all helper methods
 
 
@@ -1037,7 +1090,7 @@ constant constexpr static float ocio_grading_rgbcurve_knots_0[5] = {0., 0.333333
 constant constexpr static int ocio_grading_rgbcurve_coefsOffsets_0[8] = {0, 12, -1, 0, -1, 0, -1, 0};
 constant constexpr static float ocio_grading_rgbcurve_coefs_0[12] = {0.0982520878, 0.393008381, 0.347727984, 0.08693178, 0.934498608, 1., 1.13100278, 1.246912, 0., 0.322416425, 0.5, 0.698159397};
 
-float ocio_grading_rgbcurve_evalBSplineCurve_0(int curveIdx, float x)
+float ocio_grading_rgbcurve_evalBSplineCurve_0(int curveIdx, float x, float identity_x)
 {
   int knotsOffs = ocio_grading_rgbcurve_knotsOffsets_0[curveIdx * 2];
   int knotsCnt = ocio_grading_rgbcurve_knotsOffsets_0[curveIdx * 2 + 1];
@@ -1046,7 +1099,7 @@ float ocio_grading_rgbcurve_evalBSplineCurve_0(int curveIdx, float x)
   int coefsSets = coefsCnt / 3;
   if (coefsSets == 0)
   {
-    return x;
+    return identity_x;
   }
   float knStart = ocio_grading_rgbcurve_knots_0[knotsOffs];
   float knEnd = ocio_grading_rgbcurve_knots_0[knotsOffs + knotsCnt - 1];
@@ -1092,12 +1145,12 @@ float4 OCIOMain(float4 inPixel)
   // Add GradingRGBCurve 'log' forward processing
   
   {
-    outColor.rgb.r = ocio_grading_rgbcurve_evalBSplineCurve_0(0, outColor.rgb.r);
-    outColor.rgb.g = ocio_grading_rgbcurve_evalBSplineCurve_0(1, outColor.rgb.g);
-    outColor.rgb.b = ocio_grading_rgbcurve_evalBSplineCurve_0(2, outColor.rgb.b);
-    outColor.rgb.r = ocio_grading_rgbcurve_evalBSplineCurve_0(3, outColor.rgb.r);
-    outColor.rgb.g = ocio_grading_rgbcurve_evalBSplineCurve_0(3, outColor.rgb.g);
-    outColor.rgb.b = ocio_grading_rgbcurve_evalBSplineCurve_0(3, outColor.rgb.b);
+    outColor.rgb.r = ocio_grading_rgbcurve_evalBSplineCurve_0(0, outColor.rgb.r, outColor.rgb.r);
+    outColor.rgb.g = ocio_grading_rgbcurve_evalBSplineCurve_0(1, outColor.rgb.g, outColor.rgb.g);
+    outColor.rgb.b = ocio_grading_rgbcurve_evalBSplineCurve_0(2, outColor.rgb.b, outColor.rgb.b);
+    outColor.rgb.r = ocio_grading_rgbcurve_evalBSplineCurve_0(3, outColor.rgb.r, outColor.rgb.r);
+    outColor.rgb.g = ocio_grading_rgbcurve_evalBSplineCurve_0(3, outColor.rgb.g, outColor.rgb.g);
+    outColor.rgb.b = ocio_grading_rgbcurve_evalBSplineCurve_0(3, outColor.rgb.b, outColor.rgb.b);
   }
 
   return outColor;
@@ -1143,11 +1196,11 @@ struct ocioOCIOMain
 ocioOCIOMain(
   constant int ocio_grading_rgbcurve_knotsOffsets[8]
   , int ocio_grading_rgbcurve_knotsOffsets_count
-  , constant float ocio_grading_rgbcurve_knots[60]
+  , constant float ocio_grading_rgbcurve_knots[120]
   , int ocio_grading_rgbcurve_knots_count
   , constant int ocio_grading_rgbcurve_coefsOffsets[8]
   , int ocio_grading_rgbcurve_coefsOffsets_count
-  , constant float ocio_grading_rgbcurve_coefs[180]
+  , constant float ocio_grading_rgbcurve_coefs[360]
   , int ocio_grading_rgbcurve_coefs_count
   , bool ocio_grading_rgbcurve_localBypass
 )
@@ -1164,7 +1217,7 @@ ocioOCIOMain(
   {
     this->ocio_grading_rgbcurve_knots[i] = ocio_grading_rgbcurve_knots[i];
   }
-  for(int i = ocio_grading_rgbcurve_knots_count; i < 60; ++i)
+  for(int i = ocio_grading_rgbcurve_knots_count; i < 120; ++i)
   {
     this->ocio_grading_rgbcurve_knots[i] = 0;
   }
@@ -1180,7 +1233,7 @@ ocioOCIOMain(
   {
     this->ocio_grading_rgbcurve_coefs[i] = ocio_grading_rgbcurve_coefs[i];
   }
-  for(int i = ocio_grading_rgbcurve_coefs_count; i < 180; ++i)
+  for(int i = ocio_grading_rgbcurve_coefs_count; i < 360; ++i)
   {
     this->ocio_grading_rgbcurve_coefs[i] = 0;
   }
@@ -1191,15 +1244,16 @@ ocioOCIOMain(
 // Declaration of all variables
 
 int ocio_grading_rgbcurve_knotsOffsets[8];
-float ocio_grading_rgbcurve_knots[60];
+float ocio_grading_rgbcurve_knots[120];
 int ocio_grading_rgbcurve_coefsOffsets[8];
-float ocio_grading_rgbcurve_coefs[180];
+float ocio_grading_rgbcurve_coefs[360];
 bool ocio_grading_rgbcurve_localBypass;
+
 
 // Declaration of all helper methods
 
 
-float ocio_grading_rgbcurve_evalBSplineCurve(int curveIdx, float x)
+float ocio_grading_rgbcurve_evalBSplineCurve(int curveIdx, float x, float identity_x)
 {
   int knotsOffs = ocio_grading_rgbcurve_knotsOffsets[curveIdx * 2];
   int knotsCnt = ocio_grading_rgbcurve_knotsOffsets[curveIdx * 2 + 1];
@@ -1208,7 +1262,7 @@ float ocio_grading_rgbcurve_evalBSplineCurve(int curveIdx, float x)
   int coefsSets = coefsCnt / 3;
   if (coefsSets == 0)
   {
-    return x;
+    return identity_x;
   }
   float knStart = ocio_grading_rgbcurve_knots[knotsOffs];
   float knEnd = ocio_grading_rgbcurve_knots[knotsOffs + knotsCnt - 1];
@@ -1256,12 +1310,12 @@ float4 OCIOMain(float4 inPixel)
   {
     if (!ocio_grading_rgbcurve_localBypass)
     {
-      outColor.rgb.r = ocio_grading_rgbcurve_evalBSplineCurve(0, outColor.rgb.r);
-      outColor.rgb.g = ocio_grading_rgbcurve_evalBSplineCurve(1, outColor.rgb.g);
-      outColor.rgb.b = ocio_grading_rgbcurve_evalBSplineCurve(2, outColor.rgb.b);
-      outColor.rgb.r = ocio_grading_rgbcurve_evalBSplineCurve(3, outColor.rgb.r);
-      outColor.rgb.g = ocio_grading_rgbcurve_evalBSplineCurve(3, outColor.rgb.g);
-      outColor.rgb.b = ocio_grading_rgbcurve_evalBSplineCurve(3, outColor.rgb.b);
+      outColor.rgb.r = ocio_grading_rgbcurve_evalBSplineCurve(0, outColor.rgb.r, outColor.rgb.r);
+      outColor.rgb.g = ocio_grading_rgbcurve_evalBSplineCurve(1, outColor.rgb.g, outColor.rgb.g);
+      outColor.rgb.b = ocio_grading_rgbcurve_evalBSplineCurve(2, outColor.rgb.b, outColor.rgb.b);
+      outColor.rgb.r = ocio_grading_rgbcurve_evalBSplineCurve(3, outColor.rgb.r, outColor.rgb.r);
+      outColor.rgb.g = ocio_grading_rgbcurve_evalBSplineCurve(3, outColor.rgb.g, outColor.rgb.g);
+      outColor.rgb.b = ocio_grading_rgbcurve_evalBSplineCurve(3, outColor.rgb.b, outColor.rgb.b);
     }
   }
 
@@ -1275,11 +1329,11 @@ float4 OCIOMain(float4 inPixel)
 float4 OCIOMain(
   constant int ocio_grading_rgbcurve_knotsOffsets[8]
   , int ocio_grading_rgbcurve_knotsOffsets_count
-  , constant float ocio_grading_rgbcurve_knots[60]
+  , constant float ocio_grading_rgbcurve_knots[120]
   , int ocio_grading_rgbcurve_knots_count
   , constant int ocio_grading_rgbcurve_coefsOffsets[8]
   , int ocio_grading_rgbcurve_coefsOffsets_count
-  , constant float ocio_grading_rgbcurve_coefs[180]
+  , constant float ocio_grading_rgbcurve_coefs[360]
   , int ocio_grading_rgbcurve_coefs_count
   , bool ocio_grading_rgbcurve_localBypass
   , float4 inPixel)

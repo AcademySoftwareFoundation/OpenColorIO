@@ -224,9 +224,14 @@ colorspaces:
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
     OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 0);
 
+    params->setIncludeColorSpaces(true);
     params->setAppCategories("basic-2d");
     params->setSearchReferenceSpaceType(OCIO::SEARCH_REFERENCE_SPACE_SCENE);
+    params->setTreatNoCategoryAsAny(true);
+    OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
+    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 2);
 
+    params->setTreatNoCategoryAsAny(false);
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
     OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 1);
 
@@ -255,16 +260,19 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, categories)
     auto params = OCIO::ColorSpaceMenuParameters::Create(config);
     params->setAppCategories("file-io");
 
+    // Note: The test config has two active color spaces and a NT without categories.
+    params->setTreatNoCategoryAsAny(true);
+
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
 
-    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 4);
+    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 6);
 
     // Use app-oriented categories with other case.
 
     params->setAppCategories("FILE-IO");
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
 
-    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 4);
+    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 6);
 
     // Use app-oriented categories, including named transforms.
 
@@ -272,48 +280,57 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, categories)
     params->setIncludeNamedTransforms(true);
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
 
-    OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 5);
+    OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 8);
 
-    OCIO_CHECK_EQUAL(menuHelper->getName(0), std::string("in_1"));
-    OCIO_CHECK_EQUAL(menuHelper->getName(1), std::string("in_2"));
-    OCIO_CHECK_EQUAL(menuHelper->getName(2), std::string("in_3"));
-    OCIO_CHECK_EQUAL(menuHelper->getName(3), std::string("lut_input_3"));
-    OCIO_CHECK_EQUAL(menuHelper->getName(4), std::string("nt3"));
-    OCIO_CHECK_EQUAL(menuHelper->getName(5), std::string(""));
+    OCIO_CHECK_EQUAL(menuHelper->getName(0), std::string("raw"));
+    OCIO_CHECK_EQUAL(menuHelper->getName(1), std::string("in_1"));
+    OCIO_CHECK_EQUAL(menuHelper->getName(2), std::string("in_2"));
+    OCIO_CHECK_EQUAL(menuHelper->getName(3), std::string("in_3"));
+    OCIO_CHECK_EQUAL(menuHelper->getName(4), std::string("view_1"));
+    OCIO_CHECK_EQUAL(menuHelper->getName(5), std::string("lut_input_3"));
+    OCIO_CHECK_EQUAL(menuHelper->getName(6), std::string("nt2"));
+    OCIO_CHECK_EQUAL(menuHelper->getName(7), std::string("nt3"));
+    OCIO_CHECK_EQUAL(menuHelper->getName(8), std::string(""));
 
-    OCIO_CHECK_EQUAL(menuHelper->getUIName(0), std::string("in_1"));
-    OCIO_CHECK_EQUAL(menuHelper->getUIName(1), std::string("in_2"));
-    OCIO_CHECK_EQUAL(menuHelper->getUIName(2), std::string("in_3"));
-    OCIO_CHECK_EQUAL(menuHelper->getUIName(3), std::string("lut_input_3"));
-    OCIO_CHECK_EQUAL(menuHelper->getUIName(4), std::string("nt3"));
-    OCIO_CHECK_EQUAL(menuHelper->getUIName(5), std::string(""));
+    OCIO_CHECK_EQUAL(menuHelper->getUIName(0), std::string("raw"));
+    OCIO_CHECK_EQUAL(menuHelper->getUIName(1), std::string("in_1"));
+    OCIO_CHECK_EQUAL(menuHelper->getUIName(2), std::string("in_2"));
+    OCIO_CHECK_EQUAL(menuHelper->getUIName(3), std::string("in_3"));
+    OCIO_CHECK_EQUAL(menuHelper->getUIName(4), std::string("view_1"));
+    OCIO_CHECK_EQUAL(menuHelper->getUIName(5), std::string("lut_input_3"));
+    OCIO_CHECK_EQUAL(menuHelper->getUIName(6), std::string("nt2"));
+    OCIO_CHECK_EQUAL(menuHelper->getUIName(7), std::string("nt3"));
+    OCIO_CHECK_EQUAL(menuHelper->getUIName(8), std::string(""));
 
-    OCIO_CHECK_EQUAL(menuHelper->getNumHierarchyLevels(0), 3);
-    OCIO_CHECK_EQUAL(menuHelper->getNumHierarchyLevels(1), 0);
+    OCIO_CHECK_EQUAL(menuHelper->getNumHierarchyLevels(0), 1);
+    OCIO_CHECK_EQUAL(menuHelper->getNumHierarchyLevels(1), 3);
     OCIO_CHECK_EQUAL(menuHelper->getNumHierarchyLevels(2), 0);
     OCIO_CHECK_EQUAL(menuHelper->getNumHierarchyLevels(3), 0);
-    OCIO_CHECK_EQUAL(menuHelper->getNumHierarchyLevels(4), 1);
+    OCIO_CHECK_EQUAL(menuHelper->getNumHierarchyLevels(4), 0);
     OCIO_CHECK_EQUAL(menuHelper->getNumHierarchyLevels(5), 0);
+    OCIO_CHECK_EQUAL(menuHelper->getNumHierarchyLevels(6), 0);
+    OCIO_CHECK_EQUAL(menuHelper->getNumHierarchyLevels(7), 1);
+    OCIO_CHECK_EQUAL(menuHelper->getNumHierarchyLevels(8), 0);
 
-    OCIO_CHECK_EQUAL(menuHelper->getHierarchyLevel(0, 0), std::string("Input"));
-    OCIO_CHECK_EQUAL(menuHelper->getHierarchyLevel(0, 1), std::string("Camera"));
-    OCIO_CHECK_EQUAL(menuHelper->getHierarchyLevel(0, 2), std::string("Acme"));
-    OCIO_CHECK_EQUAL(menuHelper->getHierarchyLevel(4, 0), std::string("Raw"));
+    OCIO_CHECK_EQUAL(menuHelper->getHierarchyLevel(1, 0), std::string("Input"));
+    OCIO_CHECK_EQUAL(menuHelper->getHierarchyLevel(1, 1), std::string("Camera"));
+    OCIO_CHECK_EQUAL(menuHelper->getHierarchyLevel(1, 2), std::string("Acme"));
+    OCIO_CHECK_EQUAL(menuHelper->getHierarchyLevel(7, 0), std::string("NamedTransforms"));
 
     // Use null categories.
 
     params->setIncludeNamedTransforms(false);
     params->setAppCategories("");
-    // All color spaces (scene and display).
+    // All active color spaces (scene and display).
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
-    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 16);
+    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 14);
 
-    // Non display color spaces only.
+    // Active non-display color spaces only.
     params->setSearchReferenceSpaceType(OCIO::SEARCH_REFERENCE_SPACE_SCENE);
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
-    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 13);
+    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 11);
 
-    // Display only.
+    // Active display color spaces only.
     params->setSearchReferenceSpaceType(OCIO::SEARCH_REFERENCE_SPACE_DISPLAY);
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
     OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 3);
@@ -324,14 +341,15 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, categories)
     params->setIncludeNamedTransforms(true);
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
 
-    // All color spaces and named transforms.
-    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 19);
+    // All active color spaces and named transforms.
+    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 17);
 
     // Use app-oriented category, include roles.
 
     params->setIncludeNamedTransforms(false);
     params->setAppCategories("look-process-space");
     params->setIncludeRoles(true);
+    params->setTreatNoCategoryAsAny(false);
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
 
     OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 7);
@@ -398,7 +416,7 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, categories)
         OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 1);
         OCIO_CHECK_EQUAL(menuHelper->getUIName(0), std::string("nt1"));
 
-        // No color space is found, using all color spaces and log a warning.
+        // No color space is found, using all active color spaces and log a warning.
         OCIO::LogGuard guard;
         params->setIncludeNamedTransforms(false);
         OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
@@ -407,7 +425,7 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, categories)
             "color space using user categories. Categories have been ignored since they matched "
             "no color spaces.\n");
         guard.clear();
-        OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 16);
+        OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 14);
     }
 
     // Use a role.
@@ -456,26 +474,26 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, categories)
         params->setRole("");
         params->setAppCategories("unknown_category");
 
-        // Return all the color spaces.
+        // Return all the active color spaces.
         OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
         OCIO_CHECK_EQUAL(guard.output(),
             "[OpenColorIO Info]: All parameters could not be used to create the menu: Found no "
             "color space using app categories. Found no color space using user categories. "
             "Categories have been ignored since they matched no color spaces.\n");
         guard.clear();
-        OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 16);
+        OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 14);
 
         params->setAppCategories("");
         params->setRole("unknown_role");
 
-        // Return all the color spaces.
+        // Return all the active color spaces.
         OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
         OCIO_CHECK_EQUAL(guard.output(),
             "[OpenColorIO Info]: All parameters could not be used to create the menu: Found no "
             "color space using user categories. Categories have been ignored since they matched "
             "no color spaces.\n");
         guard.clear();
-        OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 16);
+        OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 14);
     }
 }
 
@@ -490,50 +508,52 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, user_categories)
 
     OCIO::ColorSpaceMenuHelperRcPtr menuHelper;
     auto params = OCIO::ColorSpaceMenuParameters::Create(config);
+    // Note: The test config has two active color spaces and a NT without categories.
+    params->setTreatNoCategoryAsAny(true);
 
     // User categories can be used instead of app-oriented categories.
 
     params->setUserCategories("basic-2d");
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
-    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 3);
+    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 5);
 
     params->setUserCategories("advanced-2d");
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
-    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 4);
+    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 6);
 
     params->setUserCategories("basic-2d, advanced-2d");
     params->setIncludeNamedTransforms(true);
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
-    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 9);
+    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 12);
 
     // Env. variable overrides parameter.
 
     OCIO::Platform::Setenv(OCIO::OCIO_USER_CATEGORIES_ENVVAR, "basic-3d");
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
-    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 1);
+    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 4);
     OCIO::Platform::Unsetenv(OCIO::OCIO_USER_CATEGORIES_ENVVAR);
 
     //
     // Using both app-oriented categories and user categories.
     //
 
-    // Intersection is used if non empty.
+    // Intersection is used if non-empty.
 
     params->setIncludeNamedTransforms(false);
     params->setAppCategories("file-io, working-space");
     params->setUserCategories("advanced-2d");
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
-    OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 3);
-    OCIO_CHECK_EQUAL(menuHelper->getName(0), std::string("in_2"));
+    OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 5);
+    OCIO_CHECK_EQUAL(menuHelper->getName(1), std::string("in_2"));
 
-    // Intersection is used if non empty, named transforms can be included.
+    // Intersection is used if non-empty, named transforms can be included.
 
     params->setIncludeNamedTransforms(true);
     params->setAppCategories("working-space");
     params->setUserCategories("basic-3d");
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
-    OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 1);
-    OCIO_CHECK_EQUAL(menuHelper->getName(0), std::string("nt1"));
+    OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 4);
+    OCIO_CHECK_EQUAL(menuHelper->getName(2), std::string("nt1"));
     params->setIncludeNamedTransforms(false);
 
     // Intersection is empty. App-oriented categories are used as the fall-back.
@@ -541,6 +561,7 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, user_categories)
     OCIO::LogGuard guard;
     params->setAppCategories("look-process-space");
     params->setUserCategories("advanced-3d");
+    params->setTreatNoCategoryAsAny(false);
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
     OCIO_CHECK_EQUAL(guard.output(),
         "[OpenColorIO Info]: All parameters could not be used to create the menu: Intersection "
@@ -554,6 +575,7 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, user_categories)
 
     params->setAppCategories("not a category, not used");
     params->setUserCategories("basic-2d, not used");
+    params->setTreatNoCategoryAsAny(false);
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
     OCIO_CHECK_EQUAL(guard.output(),
         "[OpenColorIO Info]: All parameters could not be used to create the menu: Found no "
@@ -574,12 +596,20 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, encodings)
     auto params = OCIO::ColorSpaceMenuParameters::Create(config);
     params->setAppCategories("file-io");
     params->setEncodings("sdr-video");
+    // Note: The test config has two active color spaces without categories
+    // but they don't have encodings and so are not included. However, there
+    // is a named transform with no category but an encoding.
+    params->setTreatNoCategoryAsAny(true);
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
-    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 2);
+    OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 3);
+    OCIO_CHECK_EQUAL(menuHelper->getName(0), std::string("in_1"));
+    OCIO_CHECK_EQUAL(menuHelper->getName(1), std::string("in_2"));
+    OCIO_CHECK_EQUAL(menuHelper->getName(2), std::string("view_1"));
 
     params->setIncludeNamedTransforms(true);
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
-    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 3);
+    OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 4);
+    OCIO_CHECK_EQUAL(menuHelper->getName(3), std::string("nt3"));
     params->setIncludeNamedTransforms(false);
 
     OCIO::LogGuard guard;
@@ -589,11 +619,13 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, encodings)
         "[OpenColorIO Info]: All parameters could not be used to create the menu: Encodings "
         "have been ignored since they matched no color spaces.\n");
     guard.clear();
-    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 4);
+    // The encoding doesn't match, so it's only the 4 with "file-io" and the two without categories.
+    OCIO_CHECK_EQUAL(menuHelper->getNumColorSpaces(), 6);
 
     // If intersection is empty, encodings are ignored.
 
     params->setIncludeNamedTransforms(true);
+    params->setTreatNoCategoryAsAny(false);
     params->setAppCategories("working-space");
     params->setUserCategories("basic-3d");
     params->setEncodings("log");
@@ -609,6 +641,7 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, encodings)
     // encodings are used.
 
     params->setIncludeNamedTransforms(true);
+    params->setTreatNoCategoryAsAny(false);
     params->setAppCategories("file-io");
     params->setUserCategories("basic-3d");
     params->setEncodings("sdr-video");
@@ -626,6 +659,7 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, encodings)
     // Categories give no color space, all categories are ignored but encodings are used.
 
     params->setIncludeNamedTransforms(true);
+    params->setTreatNoCategoryAsAny(false);
     params->setAppCategories("no");
     params->setUserCategories("no");
     params->setEncodings("sdr-video");
@@ -635,15 +669,17 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, encodings)
         "space using app categories. Found no color space using user categories. Categories have "
         "been ignored since they matched no color spaces.\n");
     guard.clear();
-    OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 5);
+    OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 6);
     OCIO_CHECK_EQUAL(menuHelper->getName(0), std::string("in_1"));
     OCIO_CHECK_EQUAL(menuHelper->getName(1), std::string("in_2"));
-    OCIO_CHECK_EQUAL(menuHelper->getName(2), std::string("display_lin_2"));
-    OCIO_CHECK_EQUAL(menuHelper->getName(3), std::string("nt1"));
-    OCIO_CHECK_EQUAL(menuHelper->getName(4), std::string("nt3"));
+    OCIO_CHECK_EQUAL(menuHelper->getName(2), std::string("view_1"));
+    OCIO_CHECK_EQUAL(menuHelper->getName(3), std::string("display_lin_2"));
+    OCIO_CHECK_EQUAL(menuHelper->getName(4), std::string("nt1"));
+    OCIO_CHECK_EQUAL(menuHelper->getName(5), std::string("nt3"));
 
     // App-oriented categories is empty, but encodings are used. Intersection with user categories.
 
+    params->setTreatNoCategoryAsAny(false);
     params->setAppCategories("");
     params->setEncodings("sdr-video");
     params->setUserCategories("advanced-2d");
@@ -651,6 +687,133 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, encodings)
     OCIO_CHECK_EQUAL(guard.output(), "");
     guard.clear();
     OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 2);
+}
+
+OCIO_ADD_TEST(ColorSpaceMenuHelper, usability_issues)
+{
+    // Adding a color space without categories to a config (and app) that uses them
+    // results in that color space not showing up. This is fixed by treating color
+    // spaces without categories as having all categories.
+    {
+
+        std::istringstream is{ R"(ocio_profile_version: 2
+roles:
+  default: raw
+
+displays:
+  DISP_1:
+    - !<View> {name: VIEW_1, colorspace: test_1}
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    categories: [ file-io ]
+
+  - !<ColorSpace>
+    name: test_1
+    categories: [ file-io, working-space ]
+
+  - !<ColorSpace>
+    name: test_2
+    categories: [ file-io ]
+
+    # A color space is then added with no categories present.
+
+  - !<ColorSpace>
+    name: test_3
+ )" };
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        auto params = OCIO::ColorSpaceMenuParameters::Create(config);
+        params->setAppCategories("file-io");
+        params->setTreatNoCategoryAsAny(false);
+
+        OCIO::ColorSpaceMenuHelperRcPtr menuHelper;
+        OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
+        // The last color space doesn't show up, which may cause end-user confusion.
+        OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 3);
+        OCIO_CHECK_EQUAL(menuHelper->getName(0), std::string("raw"));
+        OCIO_CHECK_EQUAL(menuHelper->getName(1), std::string("test_1"));
+        OCIO_CHECK_EQUAL(menuHelper->getName(2), std::string("test_2"));
+
+        // Treating color spaces with no categories as having all categories solves the issue.
+        params->setTreatNoCategoryAsAny(true);
+        OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
+        OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 4);
+        OCIO_CHECK_EQUAL(menuHelper->getName(3), std::string("test_3"));
+    }
+
+    // Adding a color space with categories to a config that does not use them results
+    // in the original color spaces disappearing (for apps that use categories). This
+    // is fixed by treating color spaces without categories as having all categories.
+    {
+
+        std::istringstream is{ R"(ocio_profile_version: 2
+roles:
+  default: raw
+
+displays:
+  DISP_1:
+    - !<View> {name: VIEW_1, colorspace: test_1}
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+
+  - !<ColorSpace>
+    name: test_1
+
+  - !<ColorSpace>
+    name: test_2
+
+    # A color space is then added that uses categories.
+
+  - !<ColorSpace>
+    name: test_3
+    categories: [ file-io ]
+ )" };
+
+        OCIO::ConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Make test_3 inactive to simulate it not being present.
+        config->setInactiveColorSpaces("test_3");
+
+        auto params = OCIO::ColorSpaceMenuParameters::Create(config);
+        params->setAppCategories("file-io");
+        params->setTreatNoCategoryAsAny(false);
+
+        OCIO::ColorSpaceMenuHelperRcPtr menuHelper;
+        {
+            OCIO::LogGuard guard;
+            OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
+            OCIO_CHECK_EQUAL(guard.output(),
+            "[OpenColorIO Info]: All parameters could not be used to create the menu: Found no "
+            "color space using app categories. Categories have been ignored since they matched "
+            "no color spaces.\n");
+        }
+        // All three expected color spaces show up, as desired.
+        OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 3);
+        OCIO_CHECK_EQUAL(menuHelper->getName(0), std::string("raw"));
+        OCIO_CHECK_EQUAL(menuHelper->getName(1), std::string("test_1"));
+        OCIO_CHECK_EQUAL(menuHelper->getName(2), std::string("test_2"));
+
+        // Add test_3, which contains a category.
+        config->setInactiveColorSpaces("");
+        OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
+        // The original three color spaces disappear, which may cause end-user confusion.
+        OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 1);
+
+        // Treating color spaces with no categories as having all categories solves the issue.
+        params->setTreatNoCategoryAsAny(true);
+        OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
+        OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 4);
+        OCIO_CHECK_EQUAL(menuHelper->getName(3), std::string("test_3"));
+    }
 }
 
 OCIO_ADD_TEST(ColorSpaceMenuHelper, no_category)
@@ -726,6 +889,8 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, input_color_transformation)
     OCIO::ColorSpaceMenuHelperRcPtr inputMenuHelper;
 
     params->setAppCategories("file-io");
+
+    params->setTreatNoCategoryAsAny(false);
 
     OCIO_CHECK_NO_THROW(inputMenuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
 
@@ -823,6 +988,7 @@ OCIO_ADD_TEST(ColorSpaceMenuHelper, additional_color_space)
     OCIO::ColorSpaceMenuHelperRcPtr menuHelper;
 
     params->setAppCategories("file-io");
+    params->setTreatNoCategoryAsAny(false);
     OCIO_CHECK_NO_THROW(menuHelper = OCIO::ColorSpaceMenuHelper::Create(params));
 
     OCIO_REQUIRE_EQUAL(menuHelper->getNumColorSpaces(), 4);

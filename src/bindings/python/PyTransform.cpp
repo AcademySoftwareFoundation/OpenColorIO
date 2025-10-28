@@ -43,6 +43,7 @@ void bindPyTransform(py::module & m)
     bindPyFixedFunctionTransform(m);
     bindPyGradingPrimaryTransform(m);
     bindPyGradingRGBCurveTransform(m);
+    bindPyGradingHueCurveTransform(m);
     bindPyGradingToneTransform(m);
     bindPyGroupTransform(m);
     bindPyLogAffineTransform(m);

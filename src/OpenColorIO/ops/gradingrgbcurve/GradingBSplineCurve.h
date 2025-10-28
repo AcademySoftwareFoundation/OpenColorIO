@@ -18,10 +18,14 @@ class GradingBSplineCurveImpl : public GradingBSplineCurve
 {
 public:
     explicit GradingBSplineCurveImpl(size_t size);
+    explicit GradingBSplineCurveImpl(size_t size, BSplineType splineType);
     GradingBSplineCurveImpl(const std::vector<GradingControlPoint> & controlPoints);
+    GradingBSplineCurveImpl(const std::vector<GradingControlPoint> & controlPoints, BSplineType splineType);
     ~GradingBSplineCurveImpl() = default;
 
     GradingBSplineCurveRcPtr createEditableCopy() const override;
+    BSplineType getSplineType() const override;
+    void setSplineType(BSplineType splineType) override;
     size_t getNumControlPoints() const noexcept override;
     void setNumControlPoints(size_t size) override;
     const GradingControlPoint & getControlPoint(size_t index) const override;
@@ -57,11 +61,7 @@ public:
     {
         KnotsCoefs() = delete;
 
-        explicit KnotsCoefs(size_t numCurves)
-        {
-            m_knotsOffsetsArray.resize(2 * numCurves);
-            m_coefsOffsetsArray.resize(2 * numCurves);
-        }
+        explicit KnotsCoefs(size_t numCurves);
 
         // Pre-processing scalar values.
 
@@ -88,40 +88,63 @@ public:
         // control points but the number of knots may be, at most, the number of control
         // points * 2 - 1.
         // 
-        // There are 4 RGB curves (R, G, B, M) each represented by one RGBCurve.  We want to keep
-        // the total for two curves well below the 200 knot, 600 coef limit.
-        // (TODO: 6 Hue curves (H/H, H/S, H/L, L/S, L/L, S/S)).
+        // There are four spline curves (R, G, B, M) in an RGBCurve and eight in a HueCurve.
+        // We want to keep the total for two instances well below the 200 knot, 600 coef limit.
         //
         // A value of 60 knots would allow about 30 control points spread across the 4 or 6 curves.
         // Note that the default RGB curves use 3 control points each and the hue curves may use as
         // many as 6 even for the default.  However, there is an optimization below that does not
         // add knots for curves that are simply identity.
         //
+        // UPDATE: Hardware has improved since this was introduced. For OCIO 2.5, double the
+        // allowed knots/coefs from 60/180 to 120/360.
+        //
         // Maximum size of the knots array (for ALL curves).
-        static constexpr int MAX_NUM_KNOTS = 60;
+        static constexpr int MAX_NUM_KNOTS = 120;
         // Maximum size of the coefs array (for ALL curves).
-        static constexpr int MAX_NUM_COEFS = 180;
+        static constexpr int MAX_NUM_COEFS = 360;
 
         // Pre-processing arrays of length MAX_NUM_KNOTS and MAX_NUM_COEFS.
         std::vector<float> m_coefsArray;  // Contains packed coefs of ALL curves.
         std::vector<float> m_knotsArray;  // Contains packed knots of ALL curves.
 
-        float evalCurve(int curveIdx, float x) const;
-        float evalCurveRev(int curveIdx, float x) const;
+        int m_numCoefs = 0;
+        int m_numKnots = 0;
+
+        // Forward evaluation of any spline type.
+        float evalCurve(int curveIdx, float x, float identity_x) const;
+        // Reverse evaluation of B_SPLINE or DIAGONAL_B_SPLINE.
+        float evalCurveRev(int curveIdx, float y) const;
+        // Reverse evaluation of HUE_HUE_B_SPLINE or HUE_FX curves using PERIODIC_0_B_SPLINE.
+        float evalCurveRevHue(int c, float y) const;
     };
 
     // Compute knots and coefs for a curve and add result to knotsCoefs. It has to be called for
     // each curve using a given curve order.
-    void computeKnotsAndCoefs(KnotsCoefs & knotsCoefs, int curveIdx) const;
+    void computeKnotsAndCoefs(KnotsCoefs & knotsCoefs, int curveIdx, bool drawCurveOnly) const;
 
-    static void AddShaderEval(GpuShaderText & st,
-                              const std::string & knotsOffsets, const std::string & coefsOffsets,
-                              const std::string & knots, const std::string & coefs, bool isInv);
+    // Forward evaluation of any spline type.
+    static void AddShaderEvalFwd(GpuShaderText & st,
+                                 const std::string & knotsOffsets, const std::string & coefsOffsets,
+                                 const std::string & knots, const std::string & coefs);
+    // Reverse evaluation of B_SPLINE or DIAGONAL_B_SPLINE.
+    static void AddShaderEvalRev(GpuShaderText & st,
+                                 const std::string & knotsOffsets, const std::string & coefsOffsets,
+                                 const std::string & knots, const std::string & coefs);
+    // Reverse evaluation of HUE_HUE_B_SPLINE or HUE_FX curves using PERIODIC_0_B_SPLINE.
+    static void AddShaderEvalRevHue(GpuShaderText & st,
+                                    const std::string & knotsOffsets, const std::string & coefsOffsets,
+                                    const std::string & knots, const std::string & coefs);
 private:
+    void computeKnotsAndCoefsForRGBCurve(KnotsCoefs & knotsCoefs, int curveIdx) const;
+    void computeKnotsAndCoefsForHueCurve(KnotsCoefs & knotsCoefs, int curveIdx, bool drawCurveOnly) const;
+
     void validateIndex(size_t index) const;
 
     std::vector<GradingControlPoint> m_controlPoints;
     std::vector<float> m_slopesArray;  // Optional slope values for the control points.
+
+    BSplineType m_splineType = BSplineType::B_SPLINE;
 };
 
 bool IsGradingCurveIdentity(const ConstGradingBSplineCurveRcPtr & curve);

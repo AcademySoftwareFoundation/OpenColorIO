@@ -29,17 +29,17 @@ public:
         return m_customKeys.size();
     }
 
-    const char * getName(size_t key) const
+    const char * getName(size_t idx) const
     {
-        validateIndex(key);
-        auto cust = std::next(m_customKeys.begin(), key);
+        validateIndex(idx);
+        auto cust = std::next(m_customKeys.begin(), idx);
         return (*cust).first.c_str();
     }
 
-    const char * getValue(size_t key) const
+    const char * getValue(size_t idx) const
     {
-        validateIndex(key);
-        auto cust = std::next(m_customKeys.begin(), key);
+        validateIndex(idx);
+        auto cust = std::next(m_customKeys.begin(), idx);
         return (*cust).second.c_str();
     }
 
@@ -57,6 +57,18 @@ public:
         {
             m_customKeys.erase(key);
         }
+    }
+
+    bool hasKey(const char * key)
+    {
+        std::string s = key;
+        return m_customKeys.count(s) > 0;
+    }
+
+    const char * getValueForKey(const char * key)
+    {
+        // NB: Will throw if the map doesn't have the key.
+        return m_customKeys[key].c_str();
     }
 
 private:

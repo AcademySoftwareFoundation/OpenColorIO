@@ -93,8 +93,6 @@ public:
     /// Throws for illegal index.
     bool isBuiltinConfigRecommended(size_t configIndex) const override;
 
-    /// Get the default recommended built-in config.
-    const char * getDefaultBuiltinConfigName() const override;
 private:
     BuiltinConfigs m_builtinConfigs;
 };
