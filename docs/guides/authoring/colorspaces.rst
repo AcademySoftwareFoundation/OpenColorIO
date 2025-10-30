@@ -579,7 +579,7 @@ its transforms.
 
       - !<ColorSpace>
         name: sRGB
-        family: 
+        family:
         description: |
           sRGB monitor (piecewise EOTF)
         isdata: false
@@ -589,3 +589,74 @@ its transforms.
           children:
             - !<BuiltinTransform> {style: "DISPLAY - CIE-XYZ-D65_to_sRGB"}
             - !<RangeTransform> {min_in_value: 0., min_out_value: 0., max_in_value: 1., max_out_value: 1.}
+
+
+Using Builtin Transforms
+-------------------------
+
+OCIO provides a set of builtin transforms that implement common color space conversions. These
+transforms are pre-defined and maintained as part of the OCIO library, ensuring consistent
+behavior across applications.
+
+To use a builtin transform, specify it with the ``!<BuiltinTransform>`` tag and provide the
+``style`` parameter with the name of the desired transform. For example:
+
+.. code-block:: yaml
+
+    - !<ColorSpace>
+      name: ProPhoto RGB
+      description: |
+        ProPhoto RGB / ROMM RGB (D50 white point, gamma 1.8 encoded)
+      from_scene_reference: !<BuiltinTransform> {style: "ACES2065-1_to_PROPHOTO-RGB-ENCODED"}
+
+The available builtin transform styles can be queried programmatically using the
+BuiltinTransformRegistry API, or by using the ``ociocheck`` command-line tool with the
+``--list-builtins`` option.
+
+ProPhotoRGB / ROMM RGB Builtin Transforms
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+ProPhotoRGB (also known as ROMM RGB) is a wide-gamut color space specified in ANSI/I3A
+IT10.7666:2003. OCIO provides builtin transforms to convert between ProPhotoRGB and ACES2065-1.
+
+The following builtin transform styles are available:
+
+Native ROMM RGB (Gamma 1.8):
+  * ``PROPHOTO-RGB_to_ACES2065-1`` - Linear ProPhoto RGB to ACES2065-1
+  * ``PROPHOTO-RGB-ENCODED_to_ACES2065-1`` - Gamma 1.8 encoded ProPhoto RGB to ACES2065-1
+  * ``ACES2065-1_to_PROPHOTO-RGB`` - ACES2065-1 to linear ProPhoto RGB
+  * ``ACES2065-1_to_PROPHOTO-RGB-ENCODED`` - ACES2065-1 to gamma 1.8 encoded ProPhoto RGB
+
+ProPhoto RGB with sRGB Gamma:
+  * ``PROPHOTO-RGB-SRGB-GAMMA_to_ACES2065-1`` - sRGB gamma encoded ProPhoto RGB to ACES2065-1
+  * ``ACES2065-1_to_PROPHOTO-RGB-SRGB-GAMMA`` - ACES2065-1 to sRGB gamma encoded ProPhoto RGB
+
+Example using ProPhotoRGB with gamma 1.8 encoding:
+
+.. code-block:: yaml
+
+    colorspaces:
+      - !<ColorSpace>
+        name: ProPhoto-RGB-Gamma1.8
+        family: Input/ProPhotoRGB
+        description: |
+          ProPhoto RGB / ROMM RGB with native gamma 1.8 encoding
+        isdata: false
+        categories: [ file-io, working-space ]
+        encoding: sdr-video
+        to_scene_reference: !<BuiltinTransform> {style: "PROPHOTO-RGB-ENCODED_to_ACES2065-1"}
+
+Example using ProPhotoRGB with sRGB gamma encoding (common in Adobe workflows):
+
+.. code-block:: yaml
+
+    colorspaces:
+      - !<ColorSpace>
+        name: ProPhoto-RGB-sRGB-Gamma
+        family: Input/ProPhotoRGB
+        description: |
+          ProPhoto RGB with sRGB transfer function (Adobe variant)
+        isdata: false
+        categories: [ file-io, working-space ]
+        encoding: sdr-video
+        to_scene_reference: !<BuiltinTransform> {style: "PROPHOTO-RGB-SRGB-GAMMA_to_ACES2065-1"}

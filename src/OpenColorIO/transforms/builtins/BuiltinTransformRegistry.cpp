@@ -17,6 +17,7 @@
 #include "transforms/builtins/CanonCameras.h"
 #include "transforms/builtins/Displays.h"
 #include "transforms/builtins/PanasonicCameras.h"
+#include "transforms/builtins/ProPhotoRGB.h"
 #include "transforms/builtins/RedCameras.h"
 #include "transforms/builtins/SonyCameras.h"
 #include "utils/StringUtils.h"
@@ -25,131 +26,134 @@
 namespace OCIO_NAMESPACE
 {
 
-namespace
-{
+	namespace
+	{
 
-static BuiltinTransformRegistryRcPtr globalRegistry;
-static Mutex globalRegistryMutex;
+		static BuiltinTransformRegistryRcPtr globalRegistry;
+		static Mutex globalRegistryMutex;
 
-} // anon.
+	} // anon.
 
-ConstBuiltinTransformRegistryRcPtr BuiltinTransformRegistry::Get() noexcept
-{
-    AutoMutex guard(globalRegistryMutex);
+	ConstBuiltinTransformRegistryRcPtr BuiltinTransformRegistry::Get() noexcept
+	{
+		AutoMutex guard(globalRegistryMutex);
 
-    if (!globalRegistry)
-    {
-        globalRegistry = std::make_shared<BuiltinTransformRegistryImpl>();
-        DynamicPtrCast<BuiltinTransformRegistryImpl>(globalRegistry)->registerAll();
-    }
+		if (!globalRegistry)
+		{
+			globalRegistry = std::make_shared<BuiltinTransformRegistryImpl>();
+			DynamicPtrCast<BuiltinTransformRegistryImpl>(globalRegistry)->registerAll();
+		}
 
-    return globalRegistry;
-}
+		return globalRegistry;
+	}
 
-void BuiltinTransformRegistryImpl::addBuiltin(const char * style, const char * description, OpCreator creator)
-{
-    BuiltinData data{ style, description ? description : "", creator };
+	void BuiltinTransformRegistryImpl::addBuiltin(const char* style, const char* description, OpCreator creator)
+	{
+		BuiltinData data{ style, description ? description : "", creator };
 
-    for (auto & builtin : m_builtins)
-    {
-        if (0==Platform::Strcasecmp(data.m_style.c_str(), builtin.m_style.c_str()))
-        {
-            builtin = data;
-            return;
-        }
-    }
+		for (auto& builtin : m_builtins)
+		{
+			if (0 == Platform::Strcasecmp(data.m_style.c_str(), builtin.m_style.c_str()))
+			{
+				builtin = data;
+				return;
+			}
+		}
 
-    m_builtins.push_back(data);
-}
+		m_builtins.push_back(data);
+	}
 
-size_t BuiltinTransformRegistryImpl::getNumBuiltins() const noexcept
-{
-    return m_builtins.size();
-}
+	size_t BuiltinTransformRegistryImpl::getNumBuiltins() const noexcept
+	{
+		return m_builtins.size();
+	}
 
-const char * BuiltinTransformRegistryImpl::getBuiltinStyle(size_t index) const
-{
-    if (index >= m_builtins.size())
-    {
-        throw Exception("Invalid index.");
-    }
+	const char* BuiltinTransformRegistryImpl::getBuiltinStyle(size_t index) const
+	{
+		if (index >= m_builtins.size())
+		{
+			throw Exception("Invalid index.");
+		}
 
-    return m_builtins[index].m_style.c_str();
-}
+		return m_builtins[index].m_style.c_str();
+	}
 
-const char * BuiltinTransformRegistryImpl::getBuiltinDescription(size_t index) const
-{
-    if (index >= m_builtins.size())
-    {
-        throw Exception("Invalid index.");
-    }
+	const char* BuiltinTransformRegistryImpl::getBuiltinDescription(size_t index) const
+	{
+		if (index >= m_builtins.size())
+		{
+			throw Exception("Invalid index.");
+		}
 
-    return m_builtins[index].m_description.c_str();
-}
+		return m_builtins[index].m_description.c_str();
+	}
 
-void BuiltinTransformRegistryImpl::createOps(size_t index, OpRcPtrVec & ops) const
-{
-    if (index >= m_builtins.size())
-    {
-        throw Exception("Invalid index.");
-    }
-    
-    m_builtins[index].m_creator(ops);
-}
+	void BuiltinTransformRegistryImpl::createOps(size_t index, OpRcPtrVec& ops) const
+	{
+		if (index >= m_builtins.size())
+		{
+			throw Exception("Invalid index.");
+		}
 
-void BuiltinTransformRegistryImpl::registerAll() noexcept
-{
-    m_builtins.clear();
+		m_builtins[index].m_creator(ops);
+	}
 
-    m_builtins.push_back({"IDENTITY", "", [](OpRcPtrVec & ops) -> void
-                                            {
-                                                CreateIdentityMatrixOp(ops);
-                                            } } );
+	void BuiltinTransformRegistryImpl::registerAll() noexcept
+	{
+		m_builtins.clear();
 
-    // ACES support.
-    ACES::RegisterAll(*this);
+		m_builtins.push_back({ "IDENTITY", "", [](OpRcPtrVec& ops) -> void
+												{
+													CreateIdentityMatrixOp(ops);
+												} });
 
-    // Camera support.
-    CAMERA::APPLE::RegisterAll(*this);
-    CAMERA::ARRI::RegisterAll(*this);
-    CAMERA::CANON::RegisterAll(*this);
-    CAMERA::PANASONIC::RegisterAll(*this);
-    CAMERA::RED::RegisterAll(*this);
-    CAMERA::SONY::RegisterAll(*this);
+		// ACES support.
+		ACES::RegisterAll(*this);
 
-    // Display support.
-    DISPLAY::RegisterAll(*this);
-}
+		// Camera support.
+		CAMERA::APPLE::RegisterAll(*this);
+		CAMERA::ARRI::RegisterAll(*this);
+		CAMERA::CANON::RegisterAll(*this);
+		CAMERA::PANASONIC::RegisterAll(*this);
+		CAMERA::RED::RegisterAll(*this);
+		CAMERA::SONY::RegisterAll(*this);
+
+		// ProPhoto RGB / ROMM RGB support.
+		PROPHOTO::RegisterAll(*this);
+
+		// Display support.
+		DISPLAY::RegisterAll(*this);
+	}
 
 
-void CreateBuiltinTransformOps(OpRcPtrVec & ops, size_t nameIndex, TransformDirection direction)
-{
-    if (nameIndex > BuiltinTransformRegistry::Get()->getNumBuiltins())
-    {
-        throw Exception("Invalid built-in transform name.");
-    }
+	void CreateBuiltinTransformOps(OpRcPtrVec& ops, size_t nameIndex, TransformDirection direction)
+	{
+		if (nameIndex > BuiltinTransformRegistry::Get()->getNumBuiltins())
+		{
+			throw Exception("Invalid built-in transform name.");
+		}
 
-    const BuiltinTransformRegistryImpl * registry
-        = dynamic_cast<const BuiltinTransformRegistryImpl *>(BuiltinTransformRegistry::Get().get());
+		const BuiltinTransformRegistryImpl* registry
+			= dynamic_cast<const BuiltinTransformRegistryImpl*>(BuiltinTransformRegistry::Get().get());
 
-    switch (direction)
-    {
-    case TRANSFORM_DIR_FORWARD:
-    {
-        registry->createOps(nameIndex, ops);
-        break;
-    }
-    case TRANSFORM_DIR_INVERSE:
-    {
-        OpRcPtrVec tmp;
-        registry->createOps(nameIndex, tmp);
+		switch (direction)
+		{
+		case TRANSFORM_DIR_FORWARD:
+		{
+			registry->createOps(nameIndex, ops);
+			break;
+		}
+		case TRANSFORM_DIR_INVERSE:
+		{
+			OpRcPtrVec tmp;
+			registry->createOps(nameIndex, tmp);
 
-        OpRcPtrVec t = tmp.invert();
-        ops.insert(ops.end(), t.begin(), t.end());
-        break;
-    }
-    }
-}
+			OpRcPtrVec t = tmp.invert();
+			ops.insert(ops.end(), t.begin(), t.end());
+			break;
+		}
+		}
+	}
 
 
 } // namespace OCIO_NAMESPACE

@@ -301,6 +301,7 @@ set(TESTS
     AVX512_tests.cpp
     transforms/AllocationTransform_tests.cpp
     transforms/builtins/BuiltinTransformRegistry_tests.cpp
+    transforms/builtins/ProPhotoRGB_tests.cpp
     transforms/BuiltinTransform_tests.cpp
     transforms/CDLTransform_tests.cpp
     transforms/ColorSpaceTransform_tests.cpp
