@@ -144,7 +144,7 @@ namespace OCIO_NAMESPACE
 		{
 			// Linear ProPhoto RGB to ACES2065-1.
 			{
-				auto ROMM_RGB_to_ACES2065_1_Functor = [](OpRcPtrVec& ops)
+				auto LINEAR_RIMM_to_ACES2065_1_BFD_Functor = [](OpRcPtrVec& ops)
 					{
 						// Convert from ROMM RGB (D50) to ACES AP0 (D60).
 						// Uses Bradford chromatic adaptation.
@@ -155,14 +155,14 @@ namespace OCIO_NAMESPACE
 						CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
 					};
 
-				registry.addBuiltin("PROPHOTO-RGB_to_ACES2065-1",
+				registry.addBuiltin("LINEAR-RIMM_to_ACES2065-1_BFD",
 					"Convert ProPhoto RGB (linear) to ACES2065-1",
-					ROMM_RGB_to_ACES2065_1_Functor);
+					LINEAR_RIMM_to_ACES2065_1_BFD_Functor);
 			}
 
 			// Encoded ProPhoto RGB (gamma 1.8) to ACES2065-1.
 			{
-				auto ROMM_RGB_ENCODED_to_ACES2065_1_Functor = [](OpRcPtrVec& ops)
+				auto ROMM_to_CIE_XYZ_D65_BFD_Functor = [](OpRcPtrVec& ops)
 					{
 						// 1. Decode gamma 1.8 to linear.
 						ROMM_RGB_GAMMA_18::GenerateEncodedToLinearOps(ops);
@@ -175,46 +175,9 @@ namespace OCIO_NAMESPACE
 						CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
 					};
 
-				registry.addBuiltin("PROPHOTO-RGB-ENCODED_to_ACES2065-1",
+				registry.addBuiltin("ROMM_to_CIE-XYZ-D65_BFD",
 					"Convert ProPhoto RGB (gamma 1.8 encoded) to ACES2065-1",
-					ROMM_RGB_ENCODED_to_ACES2065_1_Functor);
-			}
-
-			// ACES2065-1 to linear ProPhoto RGB.
-			{
-				auto ACES2065_1_to_ROMM_RGB_Functor = [](OpRcPtrVec& ops)
-					{
-						// Convert from ACES AP0 (D60) to ROMM RGB (D50).
-						MatrixOpData::MatrixArrayPtr matrix
-							= build_conversion_matrix(ACES_AP0::primaries,
-								ROMM_RGB::primaries,
-								ADAPTATION_BRADFORD);
-						CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
-					};
-
-				registry.addBuiltin("ACES2065-1_to_PROPHOTO-RGB",
-					"Convert ACES2065-1 to ProPhoto RGB (linear)",
-					ACES2065_1_to_ROMM_RGB_Functor);
-			}
-
-			// ACES2065-1 to encoded ProPhoto RGB (gamma 1.8).
-			{
-				auto ACES2065_1_to_ROMM_RGB_ENCODED_Functor = [](OpRcPtrVec& ops)
-					{
-						// 1. Convert color space from ACES AP0 (D60) to ROMM RGB (D50).
-						MatrixOpData::MatrixArrayPtr matrix
-							= build_conversion_matrix(ACES_AP0::primaries,
-								ROMM_RGB::primaries,
-								ADAPTATION_BRADFORD);
-						CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
-
-						// 2. Apply gamma 1.8 encoding.
-						ROMM_RGB_GAMMA_18::GenerateLinearToEncodedOps(ops);
-					};
-
-				registry.addBuiltin("ACES2065-1_to_PROPHOTO-RGB-ENCODED",
-					"Convert ACES2065-1 to ProPhoto RGB (gamma 1.8 encoded)",
-					ACES2065_1_to_ROMM_RGB_ENCODED_Functor);
+					ROMM_to_CIE_XYZ_D65_BFD_Functor);
 			}
 
 			// ProPhoto RGB with sRGB gamma to ACES2065-1.
@@ -237,25 +200,6 @@ namespace OCIO_NAMESPACE
 					ROMM_RGB_SRGB_to_ACES2065_1_Functor);
 			}
 
-			// ACES2065-1 to ProPhoto RGB with sRGB gamma.
-			{
-				auto ACES2065_1_to_ROMM_RGB_SRGB_Functor = [](OpRcPtrVec& ops)
-					{
-						// 1. Convert color space from ACES AP0 (D60) to ROMM RGB (D50).
-						MatrixOpData::MatrixArrayPtr matrix
-							= build_conversion_matrix(ACES_AP0::primaries,
-								ROMM_RGB::primaries,
-								ADAPTATION_BRADFORD);
-						CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
-
-						// 2. Apply sRGB gamma encoding.
-						ROMM_RGB_SRGB_GAMMA::GenerateLinearToEncodedOps(ops);
-					};
-
-				registry.addBuiltin("ACES2065-1_to_PROPHOTO-RGB-SRGB-GAMMA",
-					"Convert ACES2065-1 to ProPhoto RGB (sRGB gamma encoded)",
-					ACES2065_1_to_ROMM_RGB_SRGB_Functor);
-			}
 		}
 
 	} // namespace PROPHOTO
