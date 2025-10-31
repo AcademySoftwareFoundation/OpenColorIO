@@ -315,44 +315,6 @@ around the origin to pass negative values rather than clamp them:
 * ``DISPLAY - CIE-XYZ-D65_to_sRGB - MIRROR NEGS``
 * ``DISPLAY - CIE-XYZ-D65_to_G2.6-P3-D65 - MIRROR NEGS``
 
-ProPhotoRGB / ROMM RGB Built-in Transforms
-*******************************************
-
-For Config Authors
-++++++++++++++++++
-
-ProPhotoRGB (also known as ROMM RGB, Reference Output Medium Metric RGB) is now supported as
-a set of builtin transforms. ProPhotoRGB is specified in the ANSI/I3A IT10.7666:2003 standard
-and is a wide-gamut color space commonly used in photography workflows.
-
-The ProPhotoRGB color primaries are combined with the ACES2065-1 AP0 reference connection
-space using Bradford chromatic adaptation to convert between the D50 white point (ProPhotoRGB)
-and D60 white point (ACES AP0).
-
-Two transfer function variants are provided:
-
-Native ROMM RGB (Gamma 1.8)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The following styles implement the standard ROMM RGB gamma 1.8 piecewise transfer function:
-
-* ``PROPHOTO-RGB_to_ACES2065-1`` - Convert ProPhoto RGB (linear) to ACES2065-1
-* ``PROPHOTO-RGB-ENCODED_to_ACES2065-1`` - Convert ProPhoto RGB (gamma 1.8 encoded) to ACES2065-1
-* ``ACES2065-1_to_PROPHOTO-RGB`` - Convert ACES2065-1 to ProPhoto RGB (linear)
-* ``ACES2065-1_to_PROPHOTO-RGB-ENCODED`` - Convert ACES2065-1 to ProPhoto RGB (gamma 1.8 encoded)
-
-The gamma 1.8 curve is a piecewise function with a linear segment below 0.001953 (slope of 16)
-and a power function above that breakpoint.
-
-ProPhoto RGB with sRGB Gamma
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The following styles use ProPhotoRGB primaries but with the sRGB transfer function (gamma 2.4,
-offset 0.055). This variant is commonly used in Adobe applications and other photography workflows:
-
-* ``PROPHOTO-RGB-SRGB-GAMMA_to_ACES2065-1`` - Convert ProPhoto RGB (sRGB gamma) to ACES2065-1
-* ``ACES2065-1_to_PROPHOTO-RGB-SRGB-GAMMA`` - Convert ACES2065-1 to ProPhoto RGB (sRGB gamma)
-
 
 Release Notes
 =============
