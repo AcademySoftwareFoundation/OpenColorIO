@@ -11,6 +11,7 @@
 #include "OpBuilders.h"
 #include "Platform.h"
 #include "transforms/builtins/ACES.h"
+#include "transforms/builtins/ProPhotoRGB.h"
 #include "transforms/builtins/AppleCameras.h"
 #include "transforms/builtins/ArriCameras.h"
 #include "transforms/builtins/BuiltinTransformRegistry.h"
@@ -116,6 +117,9 @@ void BuiltinTransformRegistryImpl::registerAll() noexcept
     CAMERA::PANASONIC::RegisterAll(*this);
     CAMERA::RED::RegisterAll(*this);
     CAMERA::SONY::RegisterAll(*this);
+
+    // ProPhoto RGB / ROMM RGB support.
+    PROPHOTO::RegisterAll(*this);
 
     // Display support.
     DISPLAY::RegisterAll(*this);
