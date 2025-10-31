@@ -403,4 +403,9 @@ OCIO_ADD_TEST(Builtins, version_2_3_validation)
     TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020-D60-in-REC2020-D65_2.0");
     TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-REC2020-D60-in-REC2020-D65_2.0");
     TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020-D60-in-REC2020-D65_2.0");
+
+    // ProPhotoRGB / ROMM RGB builtin transforms.
+    TestStyle("LINEAR-RIMM_to_ACES2065-1_BFD");
+    TestStyle("ROMM_to_CIE-XYZ-D65_BFD");
+    TestStyle("PROPHOTO-RGB-SRGB-GAMMA_to_ACES2065-1");
 }
