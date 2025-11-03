@@ -53,32 +53,8 @@ namespace OCIO_NAMESPACE
 	{
 
 		static constexpr double gamma = 1.8;
-		static constexpr double breakLinear = 1.0 / 512.0;	// Linear breakpoint.
 		static constexpr double slope = 16.0;				// Slope of linear segment.
 		static constexpr double breakEnc = 1.0 / 32.0;		// Encoded breakpoint
-
-		void GenerateLinearToEncodedOps(OpRcPtrVec& ops)
-		{
-			// Linear to encoded gamma 1.8 curve using LUT for accuracy.
-			auto GenerateLutValues = [](double in) -> float
-				{
-					const double absIn = std::abs(in);
-					double out = 0.0;
-
-					if (absIn < breakLinear)
-					{
-						out = absIn * slope;
-					}
-					else
-					{
-						out = std::pow(absIn, 1.0 / gamma);
-					}
-
-					return float(std::copysign(out, in));
-				};
-
-			CreateHalfLut(ops, GenerateLutValues);
-		}
 
 		void GenerateEncodedToLinearOps(OpRcPtrVec& ops)
 		{
@@ -169,8 +145,7 @@ namespace OCIO_NAMESPACE
 
 						// 2. Convert color space from ROMM RGB (D50) to ACES AP0 (D60).
 						MatrixOpData::MatrixArrayPtr matrix
-							= build_conversion_matrix(ROMM_RGB::primaries,
-								ACES_AP0::primaries,
+							= build_conversion_matrix_to_XYZ_D65(ROMM_RGB::primaries,
 								ADAPTATION_BRADFORD);
 						CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
 					};
