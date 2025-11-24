@@ -40,10 +40,8 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     set(_Imath_REQUIRED_VARS Imath_LIBRARY)
     set(_Imath_LIB_VER "${Imath_FIND_VERSION_MAJOR}_${Imath_FIND_VERSION_MINOR}")
 
-    if(NOT DEFINED Imath_ROOT)
-        # Search for ImathConfig.cmake
-        find_package(Imath ${Imath_FIND_VERSION} CONFIG QUIET)
-    endif()
+    # Search for ImathConfig.cmake
+    find_package(Imath ${Imath_FIND_VERSION} CONFIG QUIET)
 
     if(Imath_FOUND)
         get_target_property(Imath_LIBRARY Imath::Imath LOCATION)

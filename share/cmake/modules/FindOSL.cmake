@@ -29,22 +29,22 @@
 ###############################################################################
 ### Try to find package ###
 
-if(NOT DEFINED OSL_ROOT)
-    find_package(OSL ${OSL_FIND_VERSION} CONFIG QUIET)
+find_package(OSL ${OSL_FIND_VERSION} CONFIG QUIET)
 
-    set(OSL_SHADERS_INCLUDE_DIR ${OSL_INCLUDE_DIR}/../share)
-    # Variable used by the OSL unit tests. 
-    set(OSL_SHADERS_DIR ${OSL_SHADERS_INCLUDE_DIR}/OSL/shaders)
+set(OSL_SHADERS_INCLUDE_DIR ${OSL_INCLUDE_DIR}/../share)
+# Variable used by the OSL unit tests. 
+set(OSL_SHADERS_DIR ${OSL_SHADERS_INCLUDE_DIR}/OSL/shaders)
 
-    include (FindPackageHandleStandardArgs)
-    find_package_handle_standard_args (OSL
-        REQUIRED_VARS 
-            OSL_INCLUDE_DIR 
-            OSL_LIB_DIR 
-        VERSION_VAR   
-            OSL_VERSION
-    )
-else()
+include (FindPackageHandleStandardArgs)
+find_package_handle_standard_args (OSL
+    REQUIRED_VARS 
+        OSL_INCLUDE_DIR 
+        OSL_LIB_DIR 
+    VERSION_VAR   
+        OSL_VERSION
+)
+
+if(NOT OSL_FOUND)
     set(OSL_INCLUDE_DIR ${OSL_ROOT}/include)
     set(OSL_VERSION_HEADER "${OSL_INCLUDE_DIR}/OSL/oslversion.h")
 
