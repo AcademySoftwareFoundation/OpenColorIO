@@ -459,7 +459,7 @@ jobs:
     if: |
       github.event_name == 'push' ||
       github.event.pull_request.head.repo.full_name != github.repository
-    runs-on: macos-13
+    runs-on: macos-15-intel
     strategy:
       matrix:
         build: [1, 2, 3, 4, 5]
