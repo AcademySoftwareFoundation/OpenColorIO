@@ -793,17 +793,23 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         }
     }
 
-    // The matrix/TRC transform in the ICC profile converts display device code values to the
-    // CIE XYZ based version of the ICC profile connection space (PCS).
-    // However, in OCIO the most common use of an ICC monitor profile is as a display color space,
-    // and in that usage it is more natural for the XYZ to display code value transform to be called
-    // the forward direction.
+    // The matrix/TRC transform in the ICC profile converts display device code
+    // values to the CIE XYZ based version of the ICC profile connection space
+    // (PCS). However, in OCIO the most common use of an ICC monitor profile is
+    // as a display color space, and in that usage it is more natural for the
+    // XYZ to display code value transform to be called the forward direction.
 
-    // All Curves / ParaCurves except type 0 (simple gamma) operates in the
-    // range 0.0 to 1.0 as per ICC specifications. For type 0, we're relaxing
-    // the spec to allow full range with mirroring for negative values. This
-    // makes it possible to use ICC profiles for linear color space conversions
-    // or for extended range displays.
+    // The ICC spec states that the TRC tags should clamp to [0,1]. For curves
+    // that are implemented in the ICC profile as LUTs and most parametric
+    // curves (which become LUTs in OCIO), this is the case. However, as
+    // floating-point and HDR workflows become more common, the clamping has
+    // become a critical roadblock. For example, it is now common to have ICC
+    // profiles for linear color spaces that need to pass values outside [0,1].
+    // Therefore, OCIO now implements single entry 'curv' tags and type 0 'para'
+    // tags without clamping using an ExponentTransform which extends above 1
+    // and mirrors below 0. (Note that gamma values of 1 do not need to be
+    // tested for here since they will be omitted as no-ops later by the
+    // optimizer.)
 
     switch (newDir)
     {

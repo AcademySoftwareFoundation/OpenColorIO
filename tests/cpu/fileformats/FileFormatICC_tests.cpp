@@ -349,9 +349,9 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
         OCIO_CHECK_NO_THROW(BuildOpsTest(opsInv, iccFileName, context, OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_CHECK_NO_THROW(opsInv.finalize());
         OCIO_CHECK_NO_THROW(opsInv.optimize(OCIO::OPTIMIZATION_LOSSLESS));
-        OCIO_REQUIRE_EQUAL(2, ops.size());
-        OCIO_CHECK_EQUAL("<GammaOp>",        ops[0]->getInfo());
-        OCIO_CHECK_EQUAL("<MatrixOffsetOp>", ops[1]->getInfo());
+        OCIO_REQUIRE_EQUAL(2, opsInv.size());
+        OCIO_CHECK_EQUAL("<MatrixOffsetOp>", opsInv[0]->getInfo());
+        OCIO_CHECK_EQUAL("<GammaOp>",        opsInv[1]->getInfo());
 
         for (const auto & op : opsInv)
         {
