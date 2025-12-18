@@ -15,7 +15,6 @@
 #include "ops/gamma/GammaOp.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/matrix/MatrixOp.h"
-#include "ops/range/RangeOp.h"
 #include "Platform.h"
 #include "transforms/FileTransform.h"
 
@@ -800,7 +799,11 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     // and in that usage it is more natural for the XYZ to display code value transform to be called
     // the forward direction.
 
-    // Curves / ParaCurves operates in the range 0.0 to 1.0 as per ICC specifications.
+    // All Curves / ParaCurves except type 0 (simple gamma) operates in the
+    // range 0.0 to 1.0 as per ICC specifications. For type 0, we're relaxing
+    // the spec to allow full range with mirroring for negative values. This
+    // makes it possible to use ICC profiles for linear color space conversions
+    // or for extended range displays.
 
     switch (newDir)
     {
@@ -817,17 +820,11 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
             const GammaOpData::Params greenParams = { cachedFile->mGammaRGB[1] };
             const GammaOpData::Params blueParams  = { cachedFile->mGammaRGB[2] };
             const GammaOpData::Params alphaParams = { cachedFile->mGammaRGB[3] };
-            auto gamma = std::make_shared<GammaOpData>(GammaOpData::BASIC_FWD, 
+            auto gamma = std::make_shared<GammaOpData>(GammaOpData::BASIC_MIRROR_FWD,
                                                        redParams,
                                                        greenParams,
                                                        blueParams,
                                                        alphaParams);
-
-            // GammaOp will clamp at 0 so we don't do it in the RangeOp.
-            CreateRangeOp(ops,
-                          RangeOpData::EmptyValue(), 1,
-                          RangeOpData::EmptyValue(), 1,
-                          TRANSFORM_DIR_FORWARD);
 
             CreateGammaOp(ops, gamma, TRANSFORM_DIR_FORWARD);
         }
@@ -859,18 +856,13 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
             const GammaOpData::Params greenParams = { cachedFile->mGammaRGB[1] };
             const GammaOpData::Params blueParams  = { cachedFile->mGammaRGB[2] };
             const GammaOpData::Params alphaParams = { cachedFile->mGammaRGB[3] };
-            auto gamma = std::make_shared<GammaOpData>(GammaOpData::BASIC_REV,
+            auto gamma = std::make_shared<GammaOpData>(GammaOpData::BASIC_MIRROR_REV,
                                                        redParams,
                                                        greenParams,
                                                        blueParams,
                                                        alphaParams);
 
             CreateGammaOp(ops, gamma, TRANSFORM_DIR_FORWARD);
-
-            CreateRangeOp(ops,
-                          RangeOpData::EmptyValue(), 1,
-                          RangeOpData::EmptyValue(), 1,
-                          TRANSFORM_DIR_FORWARD);
         }
         break;
     }
