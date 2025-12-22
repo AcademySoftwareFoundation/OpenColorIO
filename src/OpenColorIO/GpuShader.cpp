@@ -214,7 +214,8 @@ public:
                 << width << " > " << get1dLutMaxWidth();
             throw Exception(ss.str().c_str());
         }
-        unsigned textureIndex = static_cast<unsigned>(m_textures.size());
+        unsigned textureIndex = static_cast<unsigned>(m_textures.size())
+                              + static_cast<unsigned>(m_textures3D.size());
         unsigned numDimensions = static_cast<unsigned>(dimensions);
         Texture t(textureName, samplerName, width, height, 1, channel, numDimensions, interpolation, values);
         m_textures.push_back(t);
@@ -282,7 +283,8 @@ public:
             throw Exception(ss.str().c_str());
         }
 
-        unsigned textureIndex = static_cast<unsigned>(m_textures3D.size());
+        unsigned textureIndex = static_cast<unsigned>(m_textures.size())
+                              + static_cast<unsigned>(m_textures3D.size());
         Texture t(textureName, samplerName, edgelen, edgelen, edgelen,
                   GpuShaderDesc::TEXTURE_RGB_CHANNEL, 3,
                   interpolation, values);

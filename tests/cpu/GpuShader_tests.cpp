@@ -1354,3 +1354,100 @@ float4 OCIOMain(
     
     OCIO_CHECK_EQUAL(expected, text);
 }
+
+OCIO_ADD_TEST(GpuShader, VulkanSupport)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    auto ft = OCIO::FileTransform::Create();
+    std::vector<std::string> paths = { 
+        std::string(OCIO::GetTestFilesDir()),
+        std::string("clf"),
+        std::string("lut1d_lut3d_lut1d.clf")
+    }; 
+    const std::string filePath = pystring::os::path::normpath(
+        pystring::os::path::join(paths)
+    );
+    ft->setSrc(filePath.c_str());
+
+    auto processor = config->getProcessor(ft);
+    auto gpuProcessor = processor->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_NONE);
+
+    auto shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+    OCIO_CHECK_NO_THROW(shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_VK_4_6));
+    OCIO_CHECK_NO_THROW(shaderDesc->setDescriptorSetIndex(2, 10));
+
+    gpuProcessor->extractGpuShaderInfo(shaderDesc);
+    const std::string text(shaderDesc->getShaderText());
+
+    // Note that the binding index increments properly for the three LUTs.
+
+    static constexpr char expected[] = { R"(
+// Declaration of all textures
+
+layout(set=2, binding = 10) uniform sampler1D ocio_lut1d_0Sampler; 
+layout(set=2, binding = 11) uniform sampler3D ocio_lut3d_1Sampler; 
+layout(set=2, binding = 12) uniform sampler2D ocio_lut1d_2Sampler; 
+
+// Declaration of all helper methods
+
+vec2 ocio_lut1d_2_computePos(float f)
+{
+  float dep;
+  float abs_f = abs(f);
+  if (abs_f > 6.10351562e-05)
+  {
+    vec3 fComp = vec3(15., 15., 15.);
+    float absarr = min( abs_f, 65504.);
+    fComp.x = floor( log2( absarr ) );
+    float lower = pow( 2.0, fComp.x );
+    fComp.y = ( absarr - lower ) / lower;
+    vec3 scale = vec3(1024., 1024., 1024.);
+    dep = dot( fComp, scale );
+  }
+  else
+  {
+    dep = abs_f * 16777216.;
+  }
+  dep += (f < 0.) ? 32768.0 : 0.0;
+  vec2 retVal;
+  retVal.y = floor(dep / 4095.);
+  retVal.x = dep - retVal.y * 4095.;
+  retVal.x = (retVal.x + 0.5) / 4096.;
+  retVal.y = (retVal.y + 0.5) / 17.;
+  return retVal;
+}
+
+// Declaration of the OCIO shader function
+
+vec4 OCIOMain(vec4 inPixel)
+{
+  vec4 outColor = inPixel;
+  
+  // Add LUT 1D processing for ocio_lut1d_0
+  
+  {
+    vec3 ocio_lut1d_0_coords = (outColor.rgb * vec3(64., 64., 64.) + vec3(0.5, 0.5, 0.5) ) / vec3(65., 65., 65.);
+    outColor.r = texture(ocio_lut1d_0Sampler, ocio_lut1d_0_coords.r).r;
+    outColor.g = texture(ocio_lut1d_0Sampler, ocio_lut1d_0_coords.g).r;
+    outColor.b = texture(ocio_lut1d_0Sampler, ocio_lut1d_0_coords.b).r;
+  }
+  
+  // Add LUT 3D processing for ocio_lut3d_1
+  
+  vec3 ocio_lut3d_1_coords = (outColor.zyx * vec3(2., 2., 2.) + vec3(0.5, 0.5, 0.5)) / vec3(3., 3., 3.);
+  outColor.rgb = texture(ocio_lut3d_1Sampler, ocio_lut3d_1_coords).rgb;
+  
+  // Add LUT 1D processing for ocio_lut1d_2
+  
+  {
+    outColor.r = texture(ocio_lut1d_2Sampler, ocio_lut1d_2_computePos(outColor.r)).r;
+    outColor.g = texture(ocio_lut1d_2Sampler, ocio_lut1d_2_computePos(outColor.g)).r;
+    outColor.b = texture(ocio_lut1d_2Sampler, ocio_lut1d_2_computePos(outColor.b)).r;
+  }
+
+  return outColor;
+}
+)" };
+
+    OCIO_CHECK_EQUAL(expected, text);
+}
