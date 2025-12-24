@@ -586,6 +586,33 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_ot_20_rec709_100n_rt)
                        __LINE__);
 }
 
+OCIO_ADD_TEST(FixedFunctionOpCPU, aces_ot_20_edge_cases)
+{
+    constexpr int test_cases = 2;
+    constexpr int num_channels = 4;
+    std::array<float, test_cases * num_channels> input_32f = {
+        0.0f, 0.0f, 0.0f, 1.0f,
+       0.742242277f, 0.0931933373f, 0.321542144f, 1.0f // Bug 2220: related to hue angle calculation not wrapping
+    };
+    constexpr std::array<float, test_cases * num_channels> expected_32f = {
+        0.0f, 0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 0.0f, 1.0f,
+    };
+
+    OCIO::FixedFunctionOpData::Params params = {
+        // Peak luminance
+        100.f,
+        // Rec709 gamut
+        0.6400, 0.3300, 0.3000, 0.6000, 0.1500, 0.0600, 0.3127, 0.3290
+    };
+
+    OCIO::ConstFixedFunctionOpDataRcPtr funcData
+        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_FWD,
+                                                      params);
+
+    ApplyFixedFunction(input_32f.data(), expected_32f.data(), test_cases, funcData, 1e-6f, __LINE__);
+}
+
 OCIO_ADD_TEST(FixedFunctionOpCPU, aces_ot_20_p3d65_100n_rt)
 {
     const int lut_size = 8;
