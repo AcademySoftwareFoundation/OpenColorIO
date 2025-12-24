@@ -592,12 +592,15 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_ot_20_edge_cases)
     constexpr int num_channels = 4;
     std::array<float, test_cases * num_channels> input_32f = {
         0.0f, 0.0f, 0.0f, 1.0f,
-       0.742242277f, 0.0931933373f, 0.321542144f, 1.0f // Bug #2220: related to hue angle calculation not wrapping
+       0.742242277f, 0.0931933373f, 0.321542144f, 1.0f // Bug #2220: related to hue angle calculation
+                                                       // triggering an out of bounds access in the tables
+                                                       // at exactly 360 degrees
     };
     constexpr std::array<float, test_cases * num_channels> expected_32f = {
         0.0f, 0.0f, 0.0f, 1.0f,
-        0.74736571311951f, -0.0019352473318577f, 0.19451357424259f, 1.0f, // Note: exact output value is not significant to
-                                                                         // the test as the bug is in the internal logic
+        0.74736571311951f, -0.0019352473318577f, 0.19451357424259f, 1.0f, // Note: exact output value is not
+                                                                          // significant to the test as the bug
+                                                                          // was in the internal table access logic
     };
 
     OCIO::FixedFunctionOpData::Params params = {
