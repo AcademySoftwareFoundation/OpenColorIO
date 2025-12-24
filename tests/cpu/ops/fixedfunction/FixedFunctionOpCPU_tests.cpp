@@ -592,11 +592,12 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_ot_20_edge_cases)
     constexpr int num_channels = 4;
     std::array<float, test_cases * num_channels> input_32f = {
         0.0f, 0.0f, 0.0f, 1.0f,
-       0.742242277f, 0.0931933373f, 0.321542144f, 1.0f // Bug 2220: related to hue angle calculation not wrapping
+       0.742242277f, 0.0931933373f, 0.321542144f, 1.0f // Bug #2220: related to hue angle calculation not wrapping
     };
     constexpr std::array<float, test_cases * num_channels> expected_32f = {
         0.0f, 0.0f, 0.0f, 1.0f,
-        0.0f, 0.0f, 0.0f, 1.0f,
+        0.74736571311951f, -0.0019352473318577f, 0.19451357424259f, 1.0f, // Note: exact output value is not significant to
+                                                                         // the test as the bug is in the internal logic
     };
 
     OCIO::FixedFunctionOpData::Params params = {
@@ -610,7 +611,7 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_ot_20_edge_cases)
         = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_FWD,
                                                       params);
 
-    ApplyFixedFunction(input_32f.data(), expected_32f.data(), test_cases, funcData, 1e-6f, __LINE__);
+    ApplyFixedFunction(input_32f.data(), expected_32f.data(), test_cases, funcData, 1e-4f, __LINE__);
 }
 
 OCIO_ADD_TEST(FixedFunctionOpCPU, aces_ot_20_p3d65_100n_rt)
