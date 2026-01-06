@@ -10,11 +10,10 @@ The CTF may then be used with any of the other OCIO tools to process pixels.
 **Supports both AMF v1.0 and v2.0** with automatic version detection.
 
 Example files are provided:
-- ``example.amf`` - AMF v1.0 format
-- ``example_v2.amf`` - AMF v2.0 format (uses ``ASC_SOP``/``ASC_SAT`` elements)
+- ``example.amf`` - AMF v1.0 format, references ``example_referenced_lut.clf``
+- ``example_v2.amf`` - AMF v2.0 format
 
-Both reference the LUT file ``example_referenced_lut.clf``, which is in the
-Academy/ASC Common LUT Format (CLF).
+The referenced LUT file is in the Academy/ASC Common LUT Format (CLF).
 
 Usage
 -----
@@ -56,7 +55,7 @@ Implementation notes
 --------------------
 
 * Automatically detects AMF version (v1.0 or v2.0) from namespace URI or version attribute
-* Supports both v1.0 element names (``SOPNode``/``SatNode``) and v2.0 names (``ASC_SOP``/``ASC_SAT``)
+* Supports both ASC CDL element naming conventions (``SOPNode``/``SatNode`` and ``ASC_SOP``/``ASC_SAT``)
 * Uses a prototype ACES config ``config-aces-reference.yaml`` to interpret the
   ACES Transform IDs encountered in the AMF file. This file should be in the
   same directory as the script.

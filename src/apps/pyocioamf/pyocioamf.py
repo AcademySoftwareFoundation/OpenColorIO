@@ -30,10 +30,6 @@ import xml.etree.ElementTree as ET
 import PyOpenColorIO as ocio
 
 
-# Default color space name for ACES2065-1 (may vary by config)
-# Common names: 'ACES - ACES2065-1' (old configs), 'ACES2065-1' (new configs)
-DEFAULT_ACES_NAMES = ['ACES2065-1', 'ACES - ACES2065-1']
-
 # Namespace URIs for AMF versions
 AMF_NS_V1 = 'urn:ampas:aces:amf:v1.0'
 AMF_NS_V2 = 'urn:ampas:aces:amf:v2.0'
@@ -61,33 +57,11 @@ def get_ocio_major_minor_version(config):
 def find_aces_colorspace_name(config):
     """
     Find the ACES2065-1 colorspace name in the config.
-    Different configs may use different names for the same colorspace.
+    Uses the aces_interchange role which is defined in all ACES configs.
     """
-    # First try the aces_interchange role
-    try:
-        role_cs = config.getColorSpaceNameByRole('aces_interchange')
-        if role_cs:
-            return role_cs
-    except:
-        pass
-
-    # Fall back to searching for common names
-    for name in DEFAULT_ACES_NAMES:
-        try:
-            cs = config.getColorSpace(name)
-            if cs is not None:
-                return name
-        except:
-            continue
-
-    # Last resort: search by alias
-    for cs in config.getColorSpaces():
-        aliases = cs.getAliases() if hasattr(cs, 'getAliases') else []
-        for alias in aliases:
-            if 'aces2065' in alias.lower() or alias in DEFAULT_ACES_NAMES:
-                return cs.getName()
-
-    # Default fallback
+    if config.hasRole('aces_interchange'):
+        return config.getRoleColorSpace('aces_interchange')
+    # Fallback for non-standard configs
     return 'ACES2065-1'
 
 
@@ -334,7 +308,7 @@ def extract_three_floats(elem):
 
 def parse_cdl(look_elem, amf_version):
     """ Return the CDL slope, offset, power, and saturation values from a look element.
-        Supports both AMF v1.0 (SOPNode/SatNode) and v2.0 (ASC_SOP/ASC_SAT) element names.
+        Supports both ASC CDL element naming conventions: SOPNode/SatNode and ASC_SOP/ASC_SAT.
     """
     slopes = [1., 1., 1.]
     offsets = [0., 0., 0.]
@@ -342,7 +316,7 @@ def parse_cdl(look_elem, amf_version):
     sat = 1.
     has_cdl = False
 
-    # Try v2.0 element names first (ASC_SOP), then fall back to v1.0 (SOPNode)
+    # Support both ASC CDL element naming conventions
     sop_elem = look_elem.find('./cdl:ASC_SOP', namespaces=NS)
     if sop_elem is None:
         sop_elem = look_elem.find('./cdl:SOPNode', namespaces=NS)
@@ -359,7 +333,7 @@ def parse_cdl(look_elem, amf_version):
             powers = extract_three_floats(power_elem)
         has_cdl = True
 
-    # Try v2.0 element names first (ASC_SAT), then fall back to v1.0 (SatNode)
+    # Support both ASC CDL saturation element naming conventions
     sat_elem = look_elem.find('./cdl:ASC_SAT', namespaces=NS)
     if sat_elem is None:
         sat_elem = look_elem.find('./cdl:SatNode', namespaces=NS)
