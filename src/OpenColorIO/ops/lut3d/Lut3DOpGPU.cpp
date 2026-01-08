@@ -38,16 +38,23 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
     {
         samplerInterpolation = INTERP_NEAREST;
     }
-    // (Using CacheID here to potentially allow reuse of existing textures.)
-    const unsigned textureIndex = shaderCreator->add3DTexture(name.c_str(),
-                                                GpuShaderText::getSamplerName(name).c_str(),
-                                                lutData->getGridSize(),
-                                                samplerInterpolation,
-                                                &lutData->getArray()[0]);
 
+    // Copy the LUT into the shaderCreator as a Texture object.
+    const unsigned textureShaderBindingIndex = shaderCreator->add3DTexture(
+        name.c_str(),
+        GpuShaderText::getSamplerName(name).c_str(),
+        lutData->getGridSize(),
+        samplerInterpolation,
+        &lutData->getArray()[0]
+    );
+
+    // Create the texture declaration.
     {
         GpuShaderText ss(shaderCreator->getLanguage());
-        ss.declareTex3D(name, shaderCreator->getDescriptorSetIndex(), textureIndex, shaderCreator->getTextureBindingStart());
+        ss.declareTex3D(name, 
+                        shaderCreator->getDescriptorSetIndex(), 
+                        textureShaderBindingIndex, 
+                        shaderCreator->getTextureBindingStart());
         shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
 

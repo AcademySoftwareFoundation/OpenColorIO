@@ -36,7 +36,7 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
 
         OCIO_CHECK_NO_THROW(shaderDesc->finalize());
         const std::string id(shaderDesc->getCacheID());
-        OCIO_CHECK_EQUAL(id, std::string("glsl_1.3 1sd234_ res_1sd234_ pxl_1sd234_ 0 "
+        OCIO_CHECK_EQUAL(id, std::string("glsl_1.3 1sd234_ res_1sd234_ pxl_1sd234_ 0 0 1 "
                                          "6001c324468d497f99aa06d3014798d8"));
         OCIO_CHECK_NO_THROW(shaderDesc->setResourcePrefix("res_1"));
         OCIO_CHECK_NO_THROW(shaderDesc->finalize());
@@ -1377,6 +1377,74 @@ OCIO_ADD_TEST(GpuShader, VulkanSupport)
     OCIO_CHECK_NO_THROW(shaderDesc->setDescriptorSetIndex(2, 10));
 
     gpuProcessor->extractGpuShaderInfo(shaderDesc);
+
+    OCIO_CHECK_EQUAL(shaderDesc->getDescriptorSetIndex(), 2U);
+    OCIO_CHECK_EQUAL(shaderDesc->getNumTextures(), 2U);
+    OCIO_CHECK_EQUAL(shaderDesc->getNum3DTextures(), 1U);
+
+    // Check Lut1D textures.
+    {
+        const char * textureName = nullptr;
+        const char * samplerName = nullptr;
+        unsigned w = 0;
+        unsigned h = 0;
+        OCIO::GpuShaderDesc::TextureType t = OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL;
+        OCIO::GpuShaderDesc::TextureDimensions d = OCIO::GpuShaderDesc::TEXTURE_2D;
+        OCIO::Interpolation i = OCIO::INTERP_UNKNOWN;
+
+        const unsigned index = 0;
+        OCIO_CHECK_NO_THROW(shaderDesc->getTexture(index, textureName, samplerName, w, h, t, d, i));
+
+        OCIO_CHECK_EQUAL(std::string(textureName), "ocio_lut1d_0");
+        OCIO_CHECK_EQUAL(std::string(samplerName), "ocio_lut1d_0Sampler");
+        OCIO_CHECK_EQUAL(w, 65);
+        OCIO_CHECK_EQUAL(h, 1);
+        OCIO_CHECK_EQUAL(OCIO::GpuShaderDesc::TEXTURE_RED_CHANNEL, t);
+        OCIO_CHECK_EQUAL(OCIO::GpuShaderDesc::TEXTURE_1D, d);
+        OCIO_CHECK_EQUAL(OCIO::INTERP_LINEAR, i);
+
+        OCIO_CHECK_EQUAL(shaderDesc->getTextureShaderBindingIndex(index), 10U);
+    }
+    {
+        const char * textureName = nullptr;
+        const char * samplerName = nullptr;
+        unsigned w = 0;
+        unsigned h = 0;
+        OCIO::GpuShaderDesc::TextureType t = OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL;
+        OCIO::GpuShaderDesc::TextureDimensions d = OCIO::GpuShaderDesc::TEXTURE_1D;
+        OCIO::Interpolation i = OCIO::INTERP_UNKNOWN;
+
+        const unsigned index = 1;
+        OCIO_CHECK_NO_THROW(shaderDesc->getTexture(index, textureName, samplerName, w, h, t, d, i));
+
+        OCIO_CHECK_EQUAL(std::string(textureName), "ocio_lut1d_2");
+        OCIO_CHECK_EQUAL(std::string(samplerName), "ocio_lut1d_2Sampler");
+        OCIO_CHECK_EQUAL(w, 4096);
+        OCIO_CHECK_EQUAL(h, 17);
+        OCIO_CHECK_EQUAL(OCIO::GpuShaderDesc::TEXTURE_RED_CHANNEL, t);
+        OCIO_CHECK_EQUAL(OCIO::GpuShaderDesc::TEXTURE_2D, d);
+        OCIO_CHECK_EQUAL(OCIO::INTERP_LINEAR, i);
+
+        OCIO_CHECK_EQUAL(shaderDesc->getTextureShaderBindingIndex(index), 12U);
+    }
+    // Check Lut3D textures.
+    {
+        const char * textureName = nullptr;
+        const char * samplerName = nullptr;
+        unsigned edgelen = 0;
+        OCIO::Interpolation i = OCIO::INTERP_UNKNOWN;
+
+        const unsigned index = 0;
+        OCIO_CHECK_NO_THROW(shaderDesc->get3DTexture(index, textureName, samplerName, edgelen, i));
+
+        OCIO_CHECK_EQUAL(std::string(textureName), "ocio_lut3d_1");
+        OCIO_CHECK_EQUAL(std::string(samplerName), "ocio_lut3d_1Sampler");
+        OCIO_CHECK_EQUAL(edgelen, 3);
+        OCIO_CHECK_EQUAL(OCIO::INTERP_LINEAR, i);
+
+        OCIO_CHECK_EQUAL(shaderDesc->get3DTextureShaderBindingIndex(index), 11U);
+    }
+
     const std::string text(shaderDesc->getShaderText());
 
     // Note that the binding index increments properly for the three LUTs.

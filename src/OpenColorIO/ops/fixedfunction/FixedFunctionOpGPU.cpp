@@ -507,7 +507,7 @@ std::string _Add_Reach_table(
     unsigned resourceIndex,
     const ACES2::Table1D & table)
 {
-    // Reserve name
+    // Reserve name.
     std::ostringstream resName;
     resName << shaderCreator->getResourcePrefix()
             << std::string("_")
@@ -518,7 +518,7 @@ std::string _Add_Reach_table(
     std::string name(resName.str());
     StringUtils::ReplaceInPlace(name, "__", "_");
 
-    // Register texture
+    // Determine texture dimensions.
     GpuShaderDesc::TextureDimensions dimensions = GpuShaderDesc::TEXTURE_1D;
     if (shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_1_0
         || shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_3_0
@@ -527,31 +527,35 @@ std::string _Add_Reach_table(
         dimensions = GpuShaderDesc::TEXTURE_2D;
     }
 
-    const unsigned textureIndex = shaderCreator->addTexture(
-                                            name.c_str(),
-                                            GpuShaderText::getSamplerName(name).c_str(),
-                                            table.total_size,
-                                            1,
-                                            GpuShaderCreator::TEXTURE_RED_CHANNEL,
-                                            dimensions,
-                                            INTERP_NEAREST,
-                                            &(table[0]));
+    // Copy the LUT into the shaderCreator as a Texture object.
+    const unsigned textureShaderBindingIndex = shaderCreator->addTexture(
+        name.c_str(),
+        GpuShaderText::getSamplerName(name).c_str(),
+        table.total_size,
+        1,
+        GpuShaderCreator::TEXTURE_RED_CHANNEL,
+        dimensions,
+        INTERP_NEAREST,
+        &(table[0])
+    );
 
-
+    // Create the texture declaration.
     if (dimensions == GpuShaderDesc::TEXTURE_1D)
     {
         GpuShaderText ss(shaderCreator->getLanguage());
-        ss.declareTex1D(name, shaderCreator->getDescriptorSetIndex(), textureIndex, shaderCreator->getTextureBindingStart());
+        ss.declareTex1D(name, shaderCreator->getDescriptorSetIndex(), 
+                        textureShaderBindingIndex, shaderCreator->getTextureBindingStart());
         shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
     else
     {
         GpuShaderText ss(shaderCreator->getLanguage());
-        ss.declareTex2D(name, shaderCreator->getDescriptorSetIndex(), textureIndex, shaderCreator->getTextureBindingStart());
+        ss.declareTex2D(name, shaderCreator->getDescriptorSetIndex(), 
+                        textureShaderBindingIndex, shaderCreator->getTextureBindingStart());
         shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
 
-    // Sampler function
+    // Sampler function.
     GpuShaderText ss(shaderCreator->getLanguage());
 
     ss.newLine() << ss.floatKeyword() << " " << name << "_sample(float h)";
@@ -805,7 +809,7 @@ std::string _Add_Cusp_table(
     unsigned resourceIndex,
     const ACES2::GamutCompressParams & g)
 {
-    // Reserve name
+    // Reserve name.
     std::ostringstream resName;
     resName << shaderCreator->getResourcePrefix()
             << std::string("_")
@@ -816,7 +820,7 @@ std::string _Add_Cusp_table(
     std::string name(resName.str());
     StringUtils::ReplaceInPlace(name, "__", "_");
 
-    // Register texture
+    // Determine texture dimensions.
     GpuShaderDesc::TextureDimensions dimensions = GpuShaderDesc::TEXTURE_1D;
     if (shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_1_0
         || shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_3_0
@@ -825,30 +829,35 @@ std::string _Add_Cusp_table(
         dimensions = GpuShaderDesc::TEXTURE_2D;
     }
 
-    const unsigned textureIndex = shaderCreator->addTexture(
-                                            name.c_str(),
-                                            GpuShaderText::getSamplerName(name).c_str(),
-                                            g.gamut_cusp_table.total_size,
-                                            1,
-                                            GpuShaderCreator::TEXTURE_RGB_CHANNEL,
-                                            dimensions,
-                                            INTERP_NEAREST,
-                                            &(g.gamut_cusp_table[0][0]));
+    // Copy the LUT into the shaderCreator as a Texture object.
+    const unsigned textureShaderBindingIndex = shaderCreator->addTexture(
+        name.c_str(),
+        GpuShaderText::getSamplerName(name).c_str(),
+        g.gamut_cusp_table.total_size,
+        1,
+        GpuShaderCreator::TEXTURE_RGB_CHANNEL,
+        dimensions,
+        INTERP_NEAREST,
+        &(g.gamut_cusp_table[0][0])
+    );
 
+    // Create the texture declaration.
     if (dimensions == GpuShaderDesc::TEXTURE_1D)
     {
         GpuShaderText ss(shaderCreator->getLanguage());
-        ss.declareTex1D(name, shaderCreator->getDescriptorSetIndex(), textureIndex, shaderCreator->getTextureBindingStart());
+        ss.declareTex1D(name, shaderCreator->getDescriptorSetIndex(), 
+                        textureShaderBindingIndex, shaderCreator->getTextureBindingStart());
         shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
     else
     {
         GpuShaderText ss(shaderCreator->getLanguage());
-        ss.declareTex2D(name, shaderCreator->getDescriptorSetIndex(), textureIndex, shaderCreator->getTextureBindingStart());
+        ss.declareTex2D(name, shaderCreator->getDescriptorSetIndex(), 
+                        textureShaderBindingIndex, shaderCreator->getTextureBindingStart());
         shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
 
-    // Sampler function
+    // Sampler function.
     GpuShaderText ss(shaderCreator->getLanguage());
 
     const std::string hues_array_name = name + "_hues_array";
