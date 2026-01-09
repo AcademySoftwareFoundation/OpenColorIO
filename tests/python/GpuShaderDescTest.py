@@ -244,9 +244,10 @@ class GpuShaderDescTest(unittest.TestCase):
         self.assertEqual(t1.dimensions, OCIO.GpuShaderDesc.TEXTURE_1D)
         self.assertEqual(t1.interpolation, OCIO.INTERP_LINEAR)
         self.assertEqual(t1.textureShaderBindingIndex, 10)
-        v1 = t1.getValues()
-        self.assertEqual(len(v1), 65)
-        self.assertEqual(v1[0], np.float32(-0.25))  # -1023.75 / 4095
+        if np:
+            v1 = t1.getValues()
+            self.assertEqual(len(v1), 65)
+            self.assertEqual(v1[0], np.float32(-0.25))  # -1023.75 / 4095
 
         t2 = next(textures)
         self.assertEqual(t2.textureName, 'ocio_lut1d_2')
@@ -257,9 +258,10 @@ class GpuShaderDescTest(unittest.TestCase):
         self.assertEqual(t2.dimensions, OCIO.GpuShaderDesc.TEXTURE_2D)
         self.assertEqual(t2.interpolation, OCIO.INTERP_LINEAR)
         self.assertEqual(t2.textureShaderBindingIndex, 12)
-        v2 = t2.getValues()
-        self.assertEqual(len(v2), 69632)  # 4096 x 17
-        self.assertEqual(v2[0], np.float32(-0.0999755859375))  # halfToFloat(44646)
+        if np:
+            v2 = t2.getValues()
+            self.assertEqual(len(v2), 69632)  # 4096 x 17
+            self.assertEqual(v2[0], np.float32(-0.0999755859375))  # halfToFloat(44646)
 
         # Test 3D textures.
 
@@ -271,6 +273,7 @@ class GpuShaderDescTest(unittest.TestCase):
         self.assertEqual(t1.edgeLen, 3)
         self.assertEqual(t1.interpolation, OCIO.INTERP_LINEAR)
         self.assertEqual(t1.textureShaderBindingIndex, 11)
-        v1 = t1.getValues()
-        self.assertEqual(len(v1), 3*3*3*3)
-        self.assertEqual(v1[0], np.float32(-0.05865102639296188))  # -60.0 / 1023
+        if np:
+            v1 = t1.getValues()
+            self.assertEqual(len(v1), 3*3*3*3)
+            self.assertEqual(v1[0], np.float32(-0.05865102639296188))  # -60.0 / 1023

@@ -53,15 +53,18 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
                 0.1f, 0.2f, 0.3f,  0.4f, 0.5f, 0.6f,  0.7f, 0.8f, 0.9f };
 
         OCIO_CHECK_EQUAL(shaderDesc->getNumTextures(), 0U);
-        OCIO_CHECK_NO_THROW(shaderDesc->addTexture("lut1",
-                                                   "lut1Sampler",
-                                                   width, height,
-                                                   OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL,
-                                                   OCIO::GpuShaderDesc::TEXTURE_2D,
-                                                   OCIO::INTERP_TETRAHEDRAL,
-                                                   &values[0]));
+        unsigned textureShaderBindingIndex = 0U;
+        OCIO_CHECK_NO_THROW(
+            textureShaderBindingIndex = shaderDesc->addTexture("lut1", "lut1Sampler",
+                                                               width, height,
+                                                               OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL,
+                                                               OCIO::GpuShaderDesc::TEXTURE_2D,
+                                                               OCIO::INTERP_TETRAHEDRAL,
+                                                               &values[0])
+        );
 
         OCIO_CHECK_EQUAL(shaderDesc->getNumTextures(), 1U);
+        OCIO_CHECK_EQUAL(textureShaderBindingIndex, 1U);
 
         const char * textureName = nullptr;
         const char * samplerName = nullptr;
@@ -98,13 +101,15 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
 
         // Support several 1D LUTs
 
-        OCIO_CHECK_NO_THROW(shaderDesc->addTexture("lut2", "lut2Sampler", width, height,
-                                                   OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL,
-                                                   d,
-                                                   OCIO::INTERP_TETRAHEDRAL,
-                                                   &values[0]));
-
+        OCIO_CHECK_NO_THROW(
+            textureShaderBindingIndex = shaderDesc->addTexture("lut2", "lut2Sampler",
+                                                               width, height,
+                                                               OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL,
+                                                               d, OCIO::INTERP_TETRAHEDRAL,
+                                                               &values[0])
+        );
         OCIO_CHECK_EQUAL(shaderDesc->getNumTextures(), 2U);
+        OCIO_CHECK_EQUAL(textureShaderBindingIndex, 2U);
 
         OCIO_CHECK_NO_THROW(shaderDesc->getTextureValues(0, vals));
         OCIO_CHECK_NO_THROW(shaderDesc->getTextureValues(1, vals));
@@ -121,11 +126,14 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
                 0.1f, 0.2f, 0.3f,  0.4f, 0.5f, 0.6f,  0.7f, 0.8f, 0.9f,  0.7f, 0.8f, 0.9f, };
 
         OCIO_CHECK_EQUAL(shaderDesc->getNum3DTextures(), 0U);
-        OCIO_CHECK_NO_THROW(shaderDesc->add3DTexture("lut1", "lut1Sampler", edgelen,
-                                                     OCIO::INTERP_TETRAHEDRAL,
-                                                     &values[0]));
-
+        unsigned textureShaderBindingIndex = 0U;
+        OCIO_CHECK_NO_THROW(
+            textureShaderBindingIndex = shaderDesc->add3DTexture("lut1", "lut1Sampler", edgelen,
+                                                                 OCIO::INTERP_TETRAHEDRAL,
+                                                                 &values[0])
+        );
         OCIO_CHECK_EQUAL(shaderDesc->getNum3DTextures(), 1U);
+        OCIO_CHECK_EQUAL(textureShaderBindingIndex, 3U);
 
         const char * textureName = nullptr;
         const char * samplerName = nullptr;
@@ -157,11 +165,13 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
 
         // Supports several 3D LUTs
 
-        OCIO_CHECK_NO_THROW(shaderDesc->add3DTexture("lut1", "lut1Sampler", edgelen,
-                                                     OCIO::INTERP_TETRAHEDRAL,
-                                                     &values[0]));
-
+        OCIO_CHECK_NO_THROW(
+            textureShaderBindingIndex = shaderDesc->add3DTexture("lut2", "lut2Sampler", edgelen,
+                                                                 OCIO::INTERP_TETRAHEDRAL,
+                                                                 &values[0])
+        );
         OCIO_CHECK_EQUAL(shaderDesc->getNum3DTextures(), 2U);
+        OCIO_CHECK_EQUAL(textureShaderBindingIndex, 4U);
 
         // Check the 3D LUT limit
 
