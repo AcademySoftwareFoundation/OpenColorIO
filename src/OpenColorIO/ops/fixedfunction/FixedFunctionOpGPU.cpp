@@ -544,14 +544,14 @@ std::string _Add_Reach_table(
     {
         GpuShaderText ss(shaderCreator->getLanguage());
         ss.declareTex1D(name, shaderCreator->getDescriptorSetIndex(), 
-                        textureShaderBindingIndex, shaderCreator->getTextureBindingStart());
+                        textureShaderBindingIndex);
         shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
     else
     {
         GpuShaderText ss(shaderCreator->getLanguage());
         ss.declareTex2D(name, shaderCreator->getDescriptorSetIndex(), 
-                        textureShaderBindingIndex, shaderCreator->getTextureBindingStart());
+                        textureShaderBindingIndex);
         shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
 
@@ -846,14 +846,14 @@ std::string _Add_Cusp_table(
     {
         GpuShaderText ss(shaderCreator->getLanguage());
         ss.declareTex1D(name, shaderCreator->getDescriptorSetIndex(), 
-                        textureShaderBindingIndex, shaderCreator->getTextureBindingStart());
+                        textureShaderBindingIndex);
         shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
     else
     {
         GpuShaderText ss(shaderCreator->getLanguage());
         ss.declareTex2D(name, shaderCreator->getDescriptorSetIndex(), 
-                        textureShaderBindingIndex, shaderCreator->getTextureBindingStart());
+                        textureShaderBindingIndex);
         shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
 

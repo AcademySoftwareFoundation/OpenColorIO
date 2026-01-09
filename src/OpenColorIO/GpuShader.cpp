@@ -578,7 +578,9 @@ unsigned GenericGpuShaderDesc::addTexture(const char * textureName,
                                           Interpolation interpolation,
                                           const float * values)
 {
-    return getImplGeneric()->addTexture(textureName, samplerName, width, height, channel, dimensions, interpolation, values);
+    return getImplGeneric()->addTexture(textureName, samplerName, width, height, channel, 
+                                        dimensions, interpolation, values)
+                             + getTextureBindingStart();
 }
 
 void GenericGpuShaderDesc::getTexture(unsigned index,
@@ -589,7 +591,8 @@ void GenericGpuShaderDesc::getTexture(unsigned index,
                                       TextureDimensions & dimensions,
                                       Interpolation & interpolation) const
 {
-    getImplGeneric()->getTexture(index, textureName, samplerName, width, height, channel, dimensions, interpolation);
+    getImplGeneric()->getTexture(index, textureName, samplerName, width, height, channel,
+                                 dimensions, interpolation);
 }
 
 void GenericGpuShaderDesc::getTextureValues(unsigned index, const float *& values) const
@@ -613,7 +616,8 @@ unsigned GenericGpuShaderDesc::add3DTexture(const char * textureName,
                                             Interpolation interpolation,
                                             const float * values)
 {
-    return getImplGeneric()->add3DTexture(textureName, samplerName, edgelen, interpolation, values);
+    return getImplGeneric()->add3DTexture(textureName, samplerName, edgelen, interpolation, values)
+           + getTextureBindingStart();
 }
 
 void GenericGpuShaderDesc::get3DTexture(unsigned index,

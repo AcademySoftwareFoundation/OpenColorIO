@@ -223,7 +223,7 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         {
             GpuShaderText ss(shaderCreator->getLanguage());
             ss.declareTex2D(name, shaderCreator->getDescriptorSetIndex(), 
-                            textureShaderBindingIndex, shaderCreator->getTextureBindingStart());
+                            textureShaderBindingIndex);
             shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
         }
         // Create the helper function to deal with 2D array lookups.
@@ -309,7 +309,7 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         // Create a 1D texture declaration.
         GpuShaderText ss(shaderCreator->getLanguage());
         ss.declareTex1D(name, shaderCreator->getDescriptorSetIndex(), 
-                        textureShaderBindingIndex, shaderCreator->getTextureBindingStart());
+                        textureShaderBindingIndex);
         shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
 

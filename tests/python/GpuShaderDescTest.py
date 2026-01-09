@@ -17,7 +17,7 @@ except ImportError:
 
 import PyOpenColorIO as OCIO
 
-from UnitTestUtils import STRING_TYPES
+from UnitTestUtils import STRING_TYPES, TEST_DATAFILES_DIR
 
 
 class GpuShaderDescTest(unittest.TestCase):
@@ -29,7 +29,7 @@ class GpuShaderDescTest(unittest.TestCase):
         desc.setFunctionName("foo123")
         self.assertEqual("foo123", desc.getFunctionName())
         desc.finalize()
-        self.assertEqual("glsl_1.3 foo123 ocio outColor 0 6001c324468d497f99aa06d3014798d8",
+        self.assertEqual("glsl_1.3 foo123 ocio outColor 0 0 1 6001c324468d497f99aa06d3014798d8",
                          desc.getCacheID())
 
     def test_uniform(self):
@@ -132,14 +132,17 @@ class GpuShaderDescTest(unittest.TestCase):
 
         desc = OCIO.GpuShaderDesc.CreateShaderDesc()
         buf = np.array([0,0.1,0.2,0.3,0.4,0.5]).astype(np.float32)
-        desc.addTexture('tex', 'sampler', 2, 3,
-                        OCIO.GpuShaderDesc.TEXTURE_RED_CHANNEL,
-                        OCIO.GpuShaderDesc.TEXTURE_2D,
-                        OCIO.INTERP_DEFAULT, buf)
-        desc.addTexture(textureName='tex2', samplerName='sampler2', width=3, height=2,
-                        channel=OCIO.GpuShaderDesc.TEXTURE_RED_CHANNEL,
-                        dimensions=OCIO.GpuShaderDesc.TEXTURE_2D,
-                        interpolation=OCIO.INTERP_DEFAULT, values=buf)
+        textureShaderBindingIndex = desc.addTexture('tex', 'sampler', 2, 3,
+                                                    OCIO.GpuShaderDesc.TEXTURE_RED_CHANNEL,
+                                                    OCIO.GpuShaderDesc.TEXTURE_2D,
+                                                    OCIO.INTERP_DEFAULT, buf)
+        self.assertEqual(textureShaderBindingIndex, 1)
+        textureShaderBindingIndex = desc.addTexture(textureName='tex2', samplerName='sampler2', 
+                                                    width=3, height=2,
+                                                    channel=OCIO.GpuShaderDesc.TEXTURE_RED_CHANNEL,
+                                                    dimensions=OCIO.GpuShaderDesc.TEXTURE_2D,
+                                                    interpolation=OCIO.INTERP_DEFAULT, values=buf)
+        self.assertEqual(textureShaderBindingIndex, 2)
         textures = desc.getTextures()
         self.assertEqual(len(textures), 2)
         t1 = next(textures)
@@ -183,12 +186,14 @@ class GpuShaderDescTest(unittest.TestCase):
         desc = OCIO.GpuShaderDesc.CreateShaderDesc()
         buf = np.linspace(0, 1, num=8*3).astype(np.float32)
         bufTest1 = buf[3]
-        desc.add3DTexture('tex', 'sampler', 2,
-                          OCIO.INTERP_DEFAULT, buf)
+        textureShaderBindingIndex = desc.add3DTexture('tex', 'sampler', 2,
+                                                      OCIO.INTERP_DEFAULT, buf)
+        self.assertEqual(textureShaderBindingIndex, 1)
         buf = np.linspace(0, 1, num=27*3).astype(np.float32)
         bufTest2 = buf[42]
-        desc.add3DTexture('tex2', 'sampler2', 3,
-                          OCIO.INTERP_DEFAULT, buf)
+        textureShaderBindingIndex = desc.add3DTexture('tex2', 'sampler2', 3,
+                                                      OCIO.INTERP_DEFAULT, buf)
+        self.assertEqual(textureShaderBindingIndex, 2)
 
         textures = desc.get3DTextures()
         self.assertEqual(len(textures), 2)
@@ -208,3 +213,64 @@ class GpuShaderDescTest(unittest.TestCase):
         v2 = t2.getValues()
         self.assertEqual(len(v2), 3*27)
         self.assertEqual(v2[42], bufTest2)
+
+    def test_vulkan(self):
+        # Test texture binding functionality.
+        import os
+
+        config = OCIO.Config.CreateRaw()
+        test_file = os.path.join(TEST_DATAFILES_DIR, 'clf', 'lut1d_lut3d_lut1d.clf')
+        file_tr = OCIO.FileTransform(src=test_file)
+        processor = config.getProcessor(file_tr)
+
+        desc = OCIO.GpuShaderDesc.CreateShaderDesc()
+        desc.setDescriptorSetIndex(2, 10)
+        self.assertEqual(desc.getDescriptorSetIndex(), 2)
+        self.assertEqual(desc.getTextureBindingStart(), 10)
+        gpu_proc = processor.getDefaultGPUProcessor()
+        gpu_proc.extractGpuShaderInfo(desc)
+
+        # Test 1D textures.
+
+        textures = desc.getTextures()
+        self.assertEqual(len(textures), 2)
+
+        t1 = next(textures)
+        self.assertEqual(t1.textureName, 'ocio_lut1d_0')
+        self.assertEqual(t1.samplerName, 'ocio_lut1d_0Sampler')
+        self.assertEqual(t1.width, 65)
+        self.assertEqual(t1.height, 1)
+        self.assertEqual(t1.channel, OCIO.GpuShaderDesc.TEXTURE_RED_CHANNEL)
+        self.assertEqual(t1.dimensions, OCIO.GpuShaderDesc.TEXTURE_1D)
+        self.assertEqual(t1.interpolation, OCIO.INTERP_LINEAR)
+        self.assertEqual(t1.textureShaderBindingIndex, 10)
+        v1 = t1.getValues()
+        self.assertEqual(len(v1), 65)
+        self.assertEqual(v1[0], np.float32(-0.25))  # -1023.75 / 4095
+
+        t2 = next(textures)
+        self.assertEqual(t2.textureName, 'ocio_lut1d_2')
+        self.assertEqual(t2.samplerName, 'ocio_lut1d_2Sampler')
+        self.assertEqual(t2.width, 4096)
+        self.assertEqual(t2.height, 17)
+        self.assertEqual(t2.channel, OCIO.GpuShaderDesc.TEXTURE_RED_CHANNEL)
+        self.assertEqual(t2.dimensions, OCIO.GpuShaderDesc.TEXTURE_2D)
+        self.assertEqual(t2.interpolation, OCIO.INTERP_LINEAR)
+        self.assertEqual(t2.textureShaderBindingIndex, 12)
+        v2 = t2.getValues()
+        self.assertEqual(len(v2), 69632)  # 4096 x 17
+        self.assertEqual(v2[0], np.float32(-0.0999755859375))  # halfToFloat(44646)
+
+        # Test 3D textures.
+
+        textures = desc.get3DTextures()
+        self.assertEqual(len(textures), 1)
+        t1 = next(textures)
+        self.assertEqual(t1.textureName, 'ocio_lut3d_1')
+        self.assertEqual(t1.samplerName, 'ocio_lut3d_1Sampler')
+        self.assertEqual(t1.edgeLen, 3)
+        self.assertEqual(t1.interpolation, OCIO.INTERP_LINEAR)
+        self.assertEqual(t1.textureShaderBindingIndex, 11)
+        v1 = t1.getValues()
+        self.assertEqual(len(v1), 3*3*3*3)
+        self.assertEqual(v1[0], np.float32(-0.05865102639296188))  # -60.0 / 1023

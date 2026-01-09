@@ -3503,7 +3503,7 @@ public:
      *   The 'values' parameter contains the LUT data which must be used as-is as the dimensions and
      *   origin are hard-coded in the fragment shader program. So, it means one GPU texture per entry.
      * 
-     * \return Shader binding ndex of the texture. For shading languages using explicit texture bindings,
+     * \return Shader binding index of the texture. For shading languages using explicit texture bindings,
      *         the return value is the same as the texture binding index in the generated shader program.
      *         The setDescriptorSetIndex function may be used to offset the starting index value.
      **/
@@ -3523,7 +3523,7 @@ public:
      *   and origin are hard-coded in the fragment shader program. So, it means one GPU 3D texture
      *   per entry.
      * 
-     * \return Shader binding ndex of the texture. For shading languages using explicit texture bindings,
+     * \return Shader binding index of the texture. For shading languages using explicit texture bindings,
      *         the return value is the same as the texture binding index in the generated shader program.
      *         The setDescriptorSetIndex function may be used to offset the starting index value.
      **/
