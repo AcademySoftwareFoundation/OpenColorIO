@@ -117,7 +117,7 @@ std::string ConvertToRegularExpression(const char * globPattern, bool ignoreCase
 
         if (globString[idx] == ']')
         {
-            ThrowInvalidRegex(globPattern, globPattern + idx);
+            ThrowInvalidRegex(globPattern, &globString[idx]);
         }
 
         // Full processing from '[' to ']'.
