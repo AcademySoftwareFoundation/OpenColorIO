@@ -19,6 +19,9 @@
 #if __APPLE__
 #include "metalapp.h"
 #endif
+#ifdef OCIO_VULKAN_ENABLED
+#include "vulkanapp.h"
+#endif
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -536,6 +539,7 @@ int main(int argc, const char ** argv)
 
     bool printHelp = false;
     bool useMetalRenderer = false;
+    bool useVulkanRenderer = false;
     bool verbose = false;
     bool stopOnFirstError = false;
 
@@ -546,6 +550,7 @@ int main(int argc, const char ** argv)
     ap.options("\nCommand line arguments:\n",
                "--help",          &printHelp,        "Print help message",
                "--metal",         &useMetalRenderer, "Run the GPU unit test with Metal",
+               "--vulkan",        &useVulkanRenderer, "Run the GPU unit test with Vulkan",
                "-v",              &verbose,          "Output the GPU shader program",
                "--stop_on_error", &stopOnFirstError, "Stop on the first error",
                "--run_only %s",   &filter,           "Run only some unit tests\n"
@@ -589,6 +594,9 @@ int main(int argc, const char ** argv)
 
     // Step 1: Initialize the graphic library engines.
     OCIO::OglAppRcPtr app;
+#ifdef OCIO_VULKAN_ENABLED
+    OCIO::VulkanAppRcPtr vulkanApp;
+#endif
     
     try
     {
@@ -598,6 +606,16 @@ int main(int argc, const char ** argv)
             app = OCIO::MetalApp::CreateMetalGlApp("GPU tests - Metal", 10, 10);
 #else
             std::cerr << std::endl << "'GPU tests - Metal' is not supported" << std::endl;
+            return 1;
+#endif
+        }
+        else if(useVulkanRenderer)
+        {
+#ifdef OCIO_VULKAN_ENABLED
+            vulkanApp = OCIO::VulkanApp::CreateVulkanApp(g_winWidth, g_winHeight);
+            vulkanApp->printVulkanInfo();
+#else
+            std::cerr << std::endl << "'GPU tests - Vulkan' is not supported (OCIO_VULKAN_ENABLED not defined)" << std::endl;
             return 1;
 #endif
         }
@@ -611,16 +629,27 @@ int main(int argc, const char ** argv)
         std::cerr << std::endl << e.what() << std::endl;
         return 1;
     }
+    catch (const std::exception & e)
+    {
+        std::cerr << std::endl << e.what() << std::endl;
+        return 1;
+    }
 
-    app->printGLInfo();
+    if (!useVulkanRenderer)
+    {
+        app->printGLInfo();
+    }
 
     // Step 2: Allocate the texture that holds the image.
-    AllocateImageTexture(app);
+    if (!useVulkanRenderer)
+    {
+        AllocateImageTexture(app);
 
-    // Step 3: Create the frame buffer and render buffer.
-    app->createGLBuffers();
+        // Step 3: Create the frame buffer and render buffer.
+        app->createGLBuffers();
 
-    app->reshape(g_winWidth, g_winHeight);
+        app->reshape(g_winWidth, g_winHeight);
+    }
 
     // Step 4: Execute all the unit tests.
 
@@ -661,12 +690,18 @@ int main(int argc, const char ** argv)
         // Prepare the unit test.
 
         test->setVerbose(verbose);
-        test->setShadingLanguage(
+        OCIO::GpuLanguage gpuLang = OCIO::GPU_LANGUAGE_GLSL_1_2;
 #if __APPLE__
-            useMetalRenderer ?
-            OCIO::GPU_LANGUAGE_MSL_2_0 :
+        if (useMetalRenderer)
+        {
+            gpuLang = OCIO::GPU_LANGUAGE_MSL_2_0;
+        }
 #endif
-            OCIO::GPU_LANGUAGE_GLSL_1_2);
+        if (useVulkanRenderer)
+        {
+            gpuLang = OCIO::GPU_LANGUAGE_GLSL_VK_4_6;
+        }
+        test->setShadingLanguage(gpuLang);
 
         bool enabledTest = true;
         try
