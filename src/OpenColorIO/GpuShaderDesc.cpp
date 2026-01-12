@@ -181,8 +181,10 @@ void GpuShaderCreator::setDescriptorSetIndex(unsigned index, unsigned textureBin
     {
         throw Exception("Texture binding start index must be greater than 0.");
     }
+    AutoMutex lock(getImpl()->m_cacheIDMutex);
     getImpl()->m_descriptorSetIndex = index;
     getImpl()->m_textureBindingStart = textureBindingStart;
+    getImpl()->m_cacheID.clear();
 }
 
 unsigned GpuShaderCreator::getDescriptorSetIndex() const noexcept
@@ -270,6 +272,8 @@ const char * GpuShaderCreator::getCacheID() const noexcept
         os << getImpl()->m_resourcePrefix << " ";
         os << getImpl()->m_pixelName << " ";
         os << getImpl()->m_numResources << " ";
+        os << getImpl()->m_descriptorSetIndex << " ";
+        os << getImpl()->m_textureBindingStart << " ";
         os << getImpl()->m_shaderCodeID;
         getImpl()->m_cacheID = os.str();
     }
