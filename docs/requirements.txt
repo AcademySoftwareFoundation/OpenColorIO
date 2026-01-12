@@ -4,7 +4,7 @@
 urllib3<2
 # The builds for documentation fails with <0.18.0
 docutils>=0.18.1
-sphinx<=7.1.2
+sphinx<=9.1.0
 six
 testresources
 recommonmark
