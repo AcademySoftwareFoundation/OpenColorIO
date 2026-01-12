@@ -87,7 +87,7 @@ jobs:
       CC: ${{ matrix.cc-compiler }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
       - name: Install docs env
         run: share/ci/scripts/linux/dnf/install_docs_env.sh
         if: matrix.build-docs == 'ON'
@@ -184,7 +184,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Install docs env
         run: share/ci/scripts/macos/install_docs_env.sh
         if: matrix.build-docs == 'ON'
@@ -283,7 +283,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Install docs env
         run: |
           DOXYGEN_PATH=$GITHUB_WORKSPACE/doxygen

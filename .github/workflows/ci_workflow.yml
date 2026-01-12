@@ -194,7 +194,7 @@ jobs:
       CC: ${{ matrix.cc-compiler }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Install docs env
         run: share/ci/scripts/linux/dnf/install_docs_env.sh
         if: matrix.build-docs == 'ON'
@@ -360,11 +360,11 @@ jobs:
       #   uses: step-security/harden-runner@248ae51c2e8cc9622ecf50685c8bf7150c6e8813 # v1.4.3
       #   with:
       #     egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         # Note: can't upgrade to actions/checkout 4.0 because it needs newer
         # glibc than these containers have.
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
       - name: Install docs env
         run: share/ci/scripts/linux/dnf/install_docs_env.sh
         if: matrix.build-docs == 'ON'
@@ -521,7 +521,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Install docs env
         run: share/ci/scripts/macos/install_docs_env.sh
         if: matrix.build-docs == 'ON'
@@ -647,7 +647,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Install docs env
         run: share/ci/scripts/macos/install_docs_env.sh
         if: matrix.build-docs == 'ON'
@@ -795,7 +795,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Install docs env
         run: |
           DOXYGEN_PATH=$GITHUB_WORKSPACE/doxygen
