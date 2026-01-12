@@ -715,7 +715,7 @@ active_views: []
         OCIO_CHECK_THROW_WHAT(config->validate(),
             OCIO::Exception,
             "Config failed color space validation. The color space 'raw' refers "
-            "to an interop ID, 'data', which is not defined in this config.");
+            "to an interop ID, 'data', which is not a color space name or alias.");
     }
 
     // Test that the interop id can be found in another color space.

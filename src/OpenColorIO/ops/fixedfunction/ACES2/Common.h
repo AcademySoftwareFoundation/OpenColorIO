@@ -47,10 +47,11 @@ inline float from_radians(const float v) { return wrap_to_hue_limit(v); };
 
 struct TableBase
 {
-    static constexpr unsigned int _TABLE_ADDITION_ENTRIES = 2;
-    static constexpr unsigned int base_index = 1;
+    static constexpr unsigned int _TABLE_ADDITION_LOWER_ENTRIES = 1;
+    static constexpr unsigned int _TABLE_ADDITION_UPPER_ENTRIES = 2;
+    static constexpr unsigned int base_index = _TABLE_ADDITION_LOWER_ENTRIES;
     static constexpr unsigned int nominal_size = 360;
-    static constexpr unsigned int total_size = nominal_size + _TABLE_ADDITION_ENTRIES;
+    static constexpr unsigned int total_size = nominal_size + _TABLE_ADDITION_LOWER_ENTRIES + _TABLE_ADDITION_UPPER_ENTRIES;
 
     static constexpr unsigned int lower_wrap_index = 0;
     static constexpr unsigned int upper_wrap_index = base_index + nominal_size;
