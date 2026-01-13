@@ -7,6 +7,7 @@
 #include <cstring>
 #include <iomanip>
 #include <sstream>
+#include <limits>
 
 #include <OpenColorIO/OpenColorIO.h>
 

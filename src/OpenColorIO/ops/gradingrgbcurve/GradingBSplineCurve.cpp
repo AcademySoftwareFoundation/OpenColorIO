@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cmath>
 #include <sstream>
+#include <limits>
 
 #include <OpenColorIO/OpenColorIO.h>
 #include "OpenColorIO/DynamicProperty.h"

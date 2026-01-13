@@ -5,6 +5,7 @@
 #include <map>
 #include <utility>
 #include <vector>
+#include <limits>
 
 #include "transforms/BuiltinTransform.cpp"
 

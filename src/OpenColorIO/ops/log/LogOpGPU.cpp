@@ -2,6 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <algorithm>
+#include <limits>
 
 #include <OpenColorIO/OpenColorIO.h>
 

@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <limits>
+
 #include "ops/exposurecontrast/ExposureContrastOpCPU.cpp"
 
 #include "testutils/UnitTest.h"

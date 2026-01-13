@@ -6,6 +6,7 @@
 #if OCIO_USE_AVX
 
 #include <sstream>
+#include <limits>
 
 #include <OpenColorIO/OpenColorIO.h>
 

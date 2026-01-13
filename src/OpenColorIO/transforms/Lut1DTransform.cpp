@@ -5,6 +5,7 @@
 #include <cstring>
 #include <sstream>
 #include <vector>
+#include <limits>
 
 #include <OpenColorIO/OpenColorIO.h>
 

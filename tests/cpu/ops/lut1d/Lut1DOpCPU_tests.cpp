@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <limits>
+
 #include "ops/lut1d/Lut1DOpCPU.cpp"
 
 #include "testutils/UnitTest.h"
