@@ -6,7 +6,6 @@
 #include <vector>
 #include <map>
 #include <set>
-#include <limits>
 
 #include <pystring.h>
 

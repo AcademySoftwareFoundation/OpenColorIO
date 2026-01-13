@@ -4,6 +4,7 @@
 
 #include <cstring>
 #include <cstdlib>
+#include <limits>
 #ifndef _WIN32
 #include <sys/time.h>
 #endif

@@ -3,6 +3,7 @@
 
 #include <sstream>
 #include <regex>
+#include <limits>
 
 #include "BitDepthUtils.h"
 #include "fileformats/ctf/CTFReaderUtils.h"

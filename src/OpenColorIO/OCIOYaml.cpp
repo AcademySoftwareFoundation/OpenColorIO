@@ -3,6 +3,7 @@
 
 #include <cstring>
 #include <unordered_set>
+#include <limits>
 
 #include <pystring.h>
 

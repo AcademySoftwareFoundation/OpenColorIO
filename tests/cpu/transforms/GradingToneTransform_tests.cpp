@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <limits>
+
 #include "transforms/GradingToneTransform.cpp"
 
 #include "testutils/UnitTest.h"

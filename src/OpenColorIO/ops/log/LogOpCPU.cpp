@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cstring>
 #include <cmath>
+#include <limits>
 #if OCIO_USE_SSE2 == 0
 #include <tuple>
 #endif

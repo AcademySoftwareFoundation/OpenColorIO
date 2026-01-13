@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <limits>
+
 #include "MathUtils.h"
 
 #include "transforms/GradingPrimaryTransform.cpp"
