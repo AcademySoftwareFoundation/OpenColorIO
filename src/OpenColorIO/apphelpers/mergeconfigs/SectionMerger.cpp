@@ -8,8 +8,6 @@
 #include <sstream>
 #include <vector>
 
-#include <pystring.h>
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ConfigUtils.h"
