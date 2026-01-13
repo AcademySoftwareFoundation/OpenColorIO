@@ -12,7 +12,6 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Platform.h"
-#include "PrivateTypes.h"
 #include "utils/StringUtils.h"
 
 

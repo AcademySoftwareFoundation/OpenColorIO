@@ -10,7 +10,6 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "PrivateTypes.h"
 #include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE

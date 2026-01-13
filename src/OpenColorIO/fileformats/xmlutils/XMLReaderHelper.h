@@ -11,7 +11,6 @@
 
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "ops/cdl/CDLOpData.h"
-#include "PrivateTypes.h"
 #include "transforms/CDLTransform.h"
 #include "utils/StringUtils.h"
 

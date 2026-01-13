@@ -9,7 +9,6 @@
 #include "Logging.h"
 #include "Mutex.h"
 #include "Platform.h"
-#include "PrivateTypes.h"
 #include "utils/StringUtils.h"
 
 
