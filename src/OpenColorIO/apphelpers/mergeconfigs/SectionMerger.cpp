@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <iostream>
-#include <cstring>
-#include <map>
-#include <mutex>
+#include <string>
 #include <sstream>
 #include <vector>
 
@@ -13,8 +10,6 @@
 #include "ConfigUtils.h"
 #include "CustomKeys.h"
 #include "Logging.h"
-#include "OCIOMYaml.h"
-#include "ParseUtils.h"
 #include "Platform.h"
 #include "SectionMerger.h"
 #include "TokensManager.h"
