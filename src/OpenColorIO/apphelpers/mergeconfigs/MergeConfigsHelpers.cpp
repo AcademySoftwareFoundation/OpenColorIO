@@ -7,6 +7,7 @@
 #include <mutex>
 #include <sstream>
 #include <vector>
+#include <fstream>
 
 #include <pystring.h>
 
