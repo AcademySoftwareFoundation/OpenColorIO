@@ -3,7 +3,6 @@
 
 #include <cstdio>
 #include <iostream>
-#include <fstream>
 #include <sstream>
 
 #include <pystring.h>

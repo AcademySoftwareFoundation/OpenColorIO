@@ -3,6 +3,7 @@
 
 
 #include <cstdio>
+#include <fstream>
 
 #include "ops/exponent/ExponentOp.h"
 #include "ops/matrix/MatrixOpData.h"
