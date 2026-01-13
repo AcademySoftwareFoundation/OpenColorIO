@@ -29,12 +29,12 @@ endif()
 # Project definition.
 
 project(OpenColorIO 
-    VERSION 2.5.0
+    VERSION 2.5.1
     DESCRIPTION "OpenColorIO (OCIO) is a complete color management solution"
     HOMEPAGE_URL https://github.com/AcademySoftwareFoundation/OpenColorIO
     LANGUAGES CXX C)
 
-# "dev", "beta1", rc1", etc or "" for an official release.
+# Release type "dev", "beta1", rc1", etc or "" for an official release.
 set(OpenColorIO_VERSION_RELEASE_TYPE "")
 
 
