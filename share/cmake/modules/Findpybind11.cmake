@@ -24,10 +24,8 @@
 ### Try to find package ###
 
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
-    if(NOT DEFINED pybind11_ROOT)
-        # Search for pybind11Config.cmake
-        find_package(pybind11 ${pybind11_FIND_VERSION} CONFIG QUIET)
-    endif()
+    # Search for pybind11Config.cmake
+    find_package(pybind11 ${pybind11_FIND_VERSION} CONFIG QUIET)
 
     if(NOT pybind11_FOUND)
         # Find include directory

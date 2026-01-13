@@ -29,6 +29,7 @@ struct Texture
     GpuShaderDesc::TextureType m_channel;
     GpuShaderDesc::TextureDimensions m_dimensions;
     Interpolation m_interpolation;
+    unsigned m_textureShaderBindingIndex;
     GpuShaderDescRcPtr m_shaderDesc;
     int m_index;
 };
@@ -39,6 +40,7 @@ struct Texture3D
     std::string m_samplerName;
     unsigned m_edgelen;
     Interpolation m_interpolation;
+    unsigned m_textureShaderBindingIndex;
     GpuShaderDescRcPtr m_shaderDesc;
     int m_index;
 };
@@ -140,13 +142,13 @@ void bindPyGpuShaderDesc(py::module & m)
 
                 py::gil_scoped_release release;
 
-                self->addTexture(textureName.c_str(),
-                                 samplerName.c_str(), 
-                                 width, height,
-                                 channel, 
-                                 dimensions,
-                                 interpolation,
-                                 static_cast<float *>(info.ptr));
+                return self->addTexture(textureName.c_str(),
+                                        samplerName.c_str(), 
+                                        width, height,
+                                        channel, 
+                                        dimensions,
+                                        interpolation,
+                                        static_cast<float *>(info.ptr));
             },
              "textureName"_a, "samplerName"_a, "width"_a, "height"_a, "channel"_a, "dimensions"_a,
              "interpolation"_a, "values"_a, 
@@ -171,11 +173,11 @@ void bindPyGpuShaderDesc(py::module & m)
 
                 py::gil_scoped_release release;
 
-                self->add3DTexture(textureName.c_str(), 
-                                   samplerName.c_str(), 
-                                   edgelen,
-                                   interpolation,
-                                   static_cast<float *>(info.ptr));
+                return self->add3DTexture(textureName.c_str(), 
+                                          samplerName.c_str(), 
+                                          edgelen,
+                                          interpolation,
+                                          static_cast<float *>(info.ptr));
             },
              "textureName"_a, "samplerName"_a, "edgeLen"_a, "interpolation"_a, "values"_a, 
              DOC(GpuShaderCreator, add3DTexture))
@@ -253,6 +255,7 @@ void bindPyGpuShaderDesc(py::module & m)
         .def_readonly("channel", &Texture::m_channel)
         .def_readonly("dimensions", &Texture::m_dimensions)
         .def_readonly("interpolation", &Texture::m_interpolation)
+        .def_readonly("textureShaderBindingIndex", &Texture::m_textureShaderBindingIndex)
         .def("getValues", [](Texture & self)
             {
                 py::gil_scoped_release release;
@@ -297,9 +300,10 @@ void bindPyGpuShaderDesc(py::module & m)
                 Interpolation interpolation;
                 it.m_obj->getTexture(i, textureName, samplerName, width, height, channel, dimensions,
                                      interpolation);
+                unsigned textureShaderBindingIndex = it.m_obj->getTextureShaderBindingIndex(i);
 
                 return { textureName, samplerName, width, height, channel, dimensions, interpolation,
-                         it.m_obj, i};
+                         textureShaderBindingIndex, it.m_obj, i};
             })
         .def("__iter__", [](TextureIterator & it) -> TextureIterator & 
             { 
@@ -317,9 +321,10 @@ void bindPyGpuShaderDesc(py::module & m)
                 Interpolation interpolation;
                 it.m_obj->getTexture(i, textureName, samplerName, width, height, channel, dimensions,
                                      interpolation);
+                unsigned textureShaderBindingIndex = it.m_obj->getTextureShaderBindingIndex(i);
 
                 return { textureName, samplerName, width, height, channel, dimensions, interpolation,
-                         it.m_obj, i};
+                         textureShaderBindingIndex, it.m_obj, i};
             });
 
     clsTexture3D
@@ -327,6 +332,7 @@ void bindPyGpuShaderDesc(py::module & m)
         .def_readonly("samplerName", &Texture3D::m_samplerName)
         .def_readonly("edgeLen", &Texture3D::m_edgelen)
         .def_readonly("interpolation", &Texture3D::m_interpolation)
+        .def_readonly("textureShaderBindingIndex", &Texture3D::m_textureShaderBindingIndex)
         .def("getValues", [](Texture3D & self)
             {
                 py::gil_scoped_release release;
@@ -355,8 +361,10 @@ void bindPyGpuShaderDesc(py::module & m)
                 unsigned edgelen;
                 Interpolation interpolation;
                 it.m_obj->get3DTexture(i, textureName, samplerName, edgelen, interpolation);
+                unsigned textureShaderBindingIndex = it.m_obj->get3DTextureShaderBindingIndex(i);
 
-                return { textureName, samplerName, edgelen, interpolation, it.m_obj, i };
+                return { textureName, samplerName, edgelen, interpolation, textureShaderBindingIndex,
+                         it.m_obj, i };
             })
         .def("__iter__", [](Texture3DIterator & it) -> Texture3DIterator & 
             { 
@@ -371,8 +379,10 @@ void bindPyGpuShaderDesc(py::module & m)
                 unsigned edgelen;
                 Interpolation interpolation;
                 it.m_obj->get3DTexture(i, textureName, samplerName, edgelen, interpolation);
+                unsigned textureShaderBindingIndex = it.m_obj->get3DTextureShaderBindingIndex(i);
 
-                return { textureName, samplerName, edgelen, interpolation, it.m_obj, i };
+                return { textureName, samplerName, edgelen, interpolation, textureShaderBindingIndex,
+                         it.m_obj, i };
             });
 }
 

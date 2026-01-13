@@ -96,7 +96,10 @@ written to the dstImgDesc image, leaving srcImgDesc unchanged.
                 py::buffer_info info = data.request();
                 checkBufferDivisible(info, 3);
 
-                // Interpret as single row of RGB pixels
+                // --- detect C-contiguous ---
+                checkCContiguousArray(info);
+
+                // --- proceed normally ---
                 BitDepth bitDepth = getBufferBitDepth(info);
 
                 py::gil_scoped_release release;
@@ -115,6 +118,7 @@ written to the dstImgDesc image, leaving srcImgDesc unchanged.
                                     chanStrideBytes, 
                                     xStrideBytes, 
                                     yStrideBytes);
+
                 self->apply(img);
             },
              "data"_a, 
@@ -171,6 +175,8 @@ float values is returned, leaving the input list unchanged.
                 py::buffer_info info = data.request();
                 checkBufferDivisible(info, 4);
 
+                // --- detect C-contiguous ---
+                checkCContiguousArray(info);
                 // Interpret as single row of RGBA pixels
                 BitDepth bitDepth = getBufferBitDepth(info);
 

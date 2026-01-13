@@ -1461,7 +1461,7 @@ void Config::validate() const
                 os << "Config failed color space validation. ";
                 os << "The color space '" << name << "' ";
                 os << "refers to an interop ID, '" << interop << "', ";
-                os << "which is not defined in this config.";
+                os << "which is not a color space name or alias.";
                 getImpl()->m_validationtext = os.str();
                 throw Exception(getImpl()->m_validationtext.c_str());
             }
