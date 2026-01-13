@@ -3,7 +3,7 @@
 
 #include <cmath>
 #include <cstring>
-#include <iostream>
+#include <istream>
 #include <set>
 #include <sstream>
 

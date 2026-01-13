@@ -2,7 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <cstring>
-#include <iostream>
+#include <ostream>
 #include <map>
 #include <sstream>
 #include <string>

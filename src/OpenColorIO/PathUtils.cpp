@@ -2,7 +2,6 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <iostream>
 #include <map>
 
 #include <pystring.h>
