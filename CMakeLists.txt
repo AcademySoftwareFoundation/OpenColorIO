@@ -34,7 +34,7 @@ project(OpenColorIO
     HOMEPAGE_URL https://github.com/AcademySoftwareFoundation/OpenColorIO
     LANGUAGES CXX C)
 
-# "dev", "beta1", rc1", etc or "" for an official release.
+# Release type "dev", "beta1", rc1", etc or "" for an official release.
 set(OpenColorIO_VERSION_RELEASE_TYPE "")
 
 
