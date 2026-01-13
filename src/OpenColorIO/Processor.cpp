@@ -17,6 +17,8 @@
 #include "Processor.h"
 #include "TransformBuilder.h"
 #include "utils/StringUtils.h"
+#include "PrivateTypes.h"
+
 
 namespace OCIO_NAMESPACE
 {

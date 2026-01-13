@@ -16,7 +16,6 @@
 #include "Mutex.h"
 #include "OCIOZArchive.h"
 #include "PathUtils.h"
-#include "PrivateTypes.h"
 #include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE

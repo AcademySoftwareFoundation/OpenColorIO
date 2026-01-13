@@ -8,7 +8,6 @@
 
 #include "Op.h"
 #include "ops/OpArray.h"
-#include "PrivateTypes.h"
 
 
 namespace OCIO_NAMESPACE

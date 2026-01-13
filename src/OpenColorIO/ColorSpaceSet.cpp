@@ -6,7 +6,6 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "PrivateTypes.h"
 #include "utils/StringUtils.h"
 
 
