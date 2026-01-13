@@ -34,6 +34,7 @@ endif()
 if(OCIO_VULKAN_ENABLED)
 
     find_package(Vulkan REQUIRED)
+    find_package(glslang REQUIRED)
 
     list(APPEND SOURCES
         vulkanapp.cpp
@@ -133,6 +134,9 @@ if(OCIO_VULKAN_ENABLED)
     target_link_libraries(oglapphelpers
         PRIVATE
             Vulkan::Vulkan
+            glslang::glslang
+            glslang::glslang-default-resource-limits
+            glslang::SPIRV
     )
     target_compile_definitions(oglapphelpers
         PRIVATE

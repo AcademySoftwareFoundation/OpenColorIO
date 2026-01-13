@@ -9,6 +9,10 @@
 #include <cstring>
 #include <fstream>
 
+#include <glslang/Public/ShaderLang.h>
+#include <glslang/Public/ResourceLimits.h>
+#include <glslang/SPIRV/GlslangToSpv.h>
+
 #include "vulkanapp.h"
 
 namespace OCIO_NAMESPACE
@@ -651,25 +655,71 @@ void VulkanBuilder::buildShader(GpuShaderDescRcPtr & shaderDesc)
 
 std::vector<uint32_t> VulkanBuilder::compileGLSLToSPIRV(const std::string & glslSource)
 {
-    // This is a placeholder for GLSL to SPIR-V compilation.
-    // In a real implementation, you would use:
-    // - glslang library (libglslang)
-    // - shaderc library
-    // - Or call glslangValidator/glslc externally
-    
-    // For now, we'll throw an error indicating that SPIR-V compilation
-    // needs to be implemented with a proper shader compiler.
-    
-    // TODO: Implement GLSL to SPIR-V compilation using glslang or shaderc
-    // Example with shaderc:
-    // shaderc::Compiler compiler;
-    // shaderc::CompileOptions options;
-    // options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
-    // auto result = compiler.CompileGlslToSpv(glslSource, shaderc_compute_shader, "shader.comp", options);
-    // return std::vector<uint32_t>(result.cbegin(), result.cend());
+    // Initialize glslang (safe to call multiple times)
+    static bool glslangInitialized = false;
+    if (!glslangInitialized)
+    {
+        glslang::InitializeProcess();
+        glslangInitialized = true;
+    }
 
-    throw std::runtime_error("GLSL to SPIR-V compilation not yet implemented. "
-                             "Please link against glslang or shaderc library.");
+    // Create shader object
+    glslang::TShader shader(EShLangCompute);
+    
+    const char * shaderStrings[1] = { glslSource.c_str() };
+    shader.setStrings(shaderStrings, 1);
+
+    // Set up Vulkan 1.2 / SPIR-V 1.5 environment
+    shader.setEnvInput(glslang::EShSourceGlsl, EShLangCompute, glslang::EShClientVulkan, 460);
+    shader.setEnvClient(glslang::EShClientVulkan, glslang::EShTargetVulkan_1_2);
+    shader.setEnvTarget(glslang::EShTargetSpv, glslang::EShTargetSpv_1_5);
+
+    // Get default resource limits
+    const TBuiltInResource * resources = GetDefaultResources();
+
+    // Parse the shader
+    const int defaultVersion = 460;
+    const bool forwardCompatible = false;
+    const EShMessages messages = static_cast<EShMessages>(EShMsgSpvRules | EShMsgVulkanRules);
+
+    if (!shader.parse(resources, defaultVersion, forwardCompatible, messages))
+    {
+        std::string errorMsg = "GLSL parsing failed:\n";
+        errorMsg += shader.getInfoLog();
+        errorMsg += "\n";
+        errorMsg += shader.getInfoDebugLog();
+        throw std::runtime_error(errorMsg);
+    }
+
+    // Create program and link
+    glslang::TProgram program;
+    program.addShader(&shader);
+
+    if (!program.link(messages))
+    {
+        std::string errorMsg = "GLSL linking failed:\n";
+        errorMsg += program.getInfoLog();
+        errorMsg += "\n";
+        errorMsg += program.getInfoDebugLog();
+        throw std::runtime_error(errorMsg);
+    }
+
+    // Convert to SPIR-V
+    std::vector<uint32_t> spirv;
+    glslang::SpvOptions spvOptions;
+    spvOptions.generateDebugInfo = false;
+    spvOptions.stripDebugInfo = true;
+    spvOptions.disableOptimizer = false;
+    spvOptions.optimizeSize = false;
+
+    glslang::GlslangToSpv(*program.getIntermediate(EShLangCompute), spirv, &spvOptions);
+
+    if (spirv.empty())
+    {
+        throw std::runtime_error("SPIR-V generation produced empty output");
+    }
+
+    return spirv;
 }
 
 void VulkanBuilder::allocateAllTextures(unsigned maxTextureSize)
