@@ -5,7 +5,7 @@
 #define INCLUDED_OCIO_FILEFORMATS_XMLUTILS_XMLREADERHELPER_H
 
 
-#include <string.h>
+#include <cstring>
 #include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>

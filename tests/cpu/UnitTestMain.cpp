@@ -7,7 +7,7 @@
 #include <ctype.h>
 #endif
 
-#include <cstring>
+#include <cstddef>
 
 #include "testutils/UnitTest.h"
 #include "apputils/argparse.h"
