@@ -2,7 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <string.h>
+#include <cstring>
 
 #include "Exception.cpp"
 

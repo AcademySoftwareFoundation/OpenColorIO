@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <cstdio>
+#include <cstddef>
 #include <iostream>
+#include <string>
 #include <sstream>
+#include <cstring>
 
 #include <pystring.h>
 
@@ -13,7 +15,6 @@
 #include "fileformats/ctf/CTFTransform.h"
 #include "fileformats/ctf/CTFReaderHelper.h"
 #include "fileformats/ctf/CTFReaderUtils.h"
-#include "fileformats/FileFormatUtils.h"
 #include "fileformats/xmlutils/XMLReaderHelper.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "fileformats/xmlutils/XMLWriterUtils.h"
@@ -22,9 +23,8 @@
 #include "ops/range/RangeOp.h"
 #include "BakingUtils.h"
 #include "OpBuilders.h"
-#include "ops/noop/NoOps.h"
-#include "Platform.h"
 #include "TransformBuilder.h"
+#include "Platform.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
 

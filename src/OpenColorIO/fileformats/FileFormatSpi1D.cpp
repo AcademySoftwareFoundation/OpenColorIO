@@ -3,7 +3,6 @@
 
 #include <cmath>
 #include <cstdio>
-#include <cstring>
 #include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -12,7 +11,6 @@
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/matrix/MatrixOp.h"
 #include "BakingUtils.h"
-#include "ParseUtils.h"
 #include "Platform.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"

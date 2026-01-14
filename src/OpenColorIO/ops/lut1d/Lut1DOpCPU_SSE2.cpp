@@ -5,8 +5,6 @@
 
 #if OCIO_USE_SSE2
 
-#include <string.h>
-
 #include "SSE2.h"
 
 namespace OCIO_NAMESPACE

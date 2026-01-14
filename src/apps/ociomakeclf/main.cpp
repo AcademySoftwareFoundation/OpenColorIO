@@ -2,11 +2,13 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <cstdio>
+#include <cstddef>
 #include <iostream>
 #include <fstream>
+#include <vector>
+#include <string>
 #include <sstream>
-#include <string.h>
+#include <cstring>
 
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;

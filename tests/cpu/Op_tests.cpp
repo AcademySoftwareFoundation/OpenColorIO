@@ -2,6 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <cstring>
 #include <memory>
 
 #include "Op.cpp"

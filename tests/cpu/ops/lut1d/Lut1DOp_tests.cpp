@@ -2,7 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <cstring>
+#include <cstddef>
 
 #include "ops/lut1d/Lut1DOp.cpp"
 

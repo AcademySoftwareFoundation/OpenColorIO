@@ -3,6 +3,7 @@
 
 
 #include <limits>
+#include <cstring>
 
 #include "ops/lut1d/Lut1DOpData.cpp"
 

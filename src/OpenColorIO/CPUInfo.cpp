@@ -3,7 +3,7 @@
 
 
 #include "CPUInfo.h"
-#include <string.h>
+#include <cstring>
 
 #if _WIN32
 #include <limits.h>

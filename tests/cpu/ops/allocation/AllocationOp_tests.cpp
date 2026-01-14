@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <cstring>
+
 #include "ops/allocation/AllocationOp.cpp"
 
 #include "testutils/UnitTest.h"

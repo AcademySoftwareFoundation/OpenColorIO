@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <cstring>
+
 #include "ops/exponent/ExponentOp.cpp"
 
 #include "ops/noop/NoOps.h"

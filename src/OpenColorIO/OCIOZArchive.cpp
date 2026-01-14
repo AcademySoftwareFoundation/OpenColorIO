@@ -5,13 +5,12 @@
 #include <fstream>
 #include <vector>
 #include <map>
-#include <set>
+#include <cstring>
 
 #include <pystring.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Mutex.h"
 #include "Platform.h"
 #include "utils/StringUtils.h"
 #include "transforms/FileTransform.h"

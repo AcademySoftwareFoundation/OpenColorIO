@@ -2,9 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <iostream>
-#include <cstring>
-#include <map>
-#include <mutex>
+#include <cstddef>
+
 #include <sstream>
 #include <vector>
 #include <fstream>
@@ -14,8 +13,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "MergeConfigsHelpers.h"
-#include "Logging.h"
-#include "ParseUtils.h"
+
 #include "Platform.h"
 #include "OCIOMYaml.h"
 #include "utils/StringUtils.h"

@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <cstring>
+#include <string>
 #include <sstream>
 
 #include "FileRules.cpp"

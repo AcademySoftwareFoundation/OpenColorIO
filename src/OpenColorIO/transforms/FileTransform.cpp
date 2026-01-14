@@ -5,9 +5,9 @@
 #include <fstream>
 #include <map>
 #include <sstream>
-#include <string.h>
+#include <cstring>
+#include <string>
 #include <iostream>
-#include <iterator>
 
 #include <pystring.h>
 
@@ -18,7 +18,6 @@
 #include "Logging.h"
 #include "Mutex.h"
 #include "ops/noop/NoOps.h"
-#include "PathUtils.h"
 #include "Platform.h"
 #include "utils/StringUtils.h"
 

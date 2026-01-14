@@ -2,7 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <string.h>
+#include <cstring>
+#include <string>
 #include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -11,7 +12,6 @@
 #include "NamedTransform.h"
 #include "OpBuilders.h"
 #include "ops/allocation/AllocationOp.h"
-#include "ops/noop/NoOps.h"
 
 
 namespace OCIO_NAMESPACE

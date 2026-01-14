@@ -5,7 +5,6 @@
 #if OCIO_USE_AVX512
 
 #include <immintrin.h>
-#include <string.h>
 
 #include "AVX512.h"
 

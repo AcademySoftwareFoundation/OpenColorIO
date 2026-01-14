@@ -2,8 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include "OpBuilders.h"
 #include "ops/exponent/ExponentOp.h"
-#include "ops/gamma/GammaOp.h"
 #include "transforms/ExponentTransform.cpp"
 
 #include "testutils/UnitTest.h"

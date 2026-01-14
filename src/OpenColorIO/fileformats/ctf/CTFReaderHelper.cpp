@@ -3,6 +3,7 @@
 
 #include <limits>
 #include <sstream>
+#include <cstring>
 
 #include "BitDepthUtils.h"
 #include "fileformats/ctf/CTFReaderHelper.h"
@@ -11,7 +12,6 @@
 #include "Logging.h"
 #include "MathUtils.h"
 #include "ops/log/LogUtils.h"
-#include "ParseUtils.h"
 #include "Platform.h"
 #include "utils/StringUtils.h"
 

@@ -4,7 +4,8 @@
 
 #include <sstream>
 #include <string>
-#include <string.h>
+#include <memory>
+#include <cstring>
 
 #include <OpenColorIO/OpenColorIO.h>
 
