@@ -7,8 +7,6 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/matrix/MatrixOp.h"
-#include "ops/fixedfunction/FixedFunctionOp.h"
-#include "ops/range/RangeOp.h"
 #include "transforms/builtins/AppleCameras.h"
 #include "transforms/builtins/BuiltinTransformRegistry.h"
 #include "transforms/builtins/ColorMatrixHelpers.h"

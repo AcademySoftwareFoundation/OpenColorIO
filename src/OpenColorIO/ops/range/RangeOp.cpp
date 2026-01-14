@@ -17,6 +17,7 @@
 #include "ops/range/RangeOpGPU.h"
 #include "ops/range/RangeOp.h"
 #include "transforms/RangeTransform.h"
+#include "ops/matrix/MatrixOp.h"
 
 namespace OCIO_NAMESPACE
 {
