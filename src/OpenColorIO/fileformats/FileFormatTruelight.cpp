@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <iostream>
 #include <iterator>
+#include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 

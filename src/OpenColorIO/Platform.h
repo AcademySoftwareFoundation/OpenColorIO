@@ -22,6 +22,7 @@
 
 #include <fstream>
 #include <string>
+#include <sstream>
 
 
 // Missing functions on Windows.

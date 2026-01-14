@@ -8,6 +8,7 @@
 
 #endif
 
+#include <sstream>
 
 #include <ColorSync/ColorSync.h>
 #include <CoreGraphics/CoreGraphics.h>

@@ -4,6 +4,7 @@
 #include <cstring>
 #include <unordered_set>
 #include <iostream>
+#include <sstream>
 
 #include <pystring.h>
 

@@ -3,6 +3,7 @@
 
 #include <math.h>
 #include <limits>
+#include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 

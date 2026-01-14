@@ -3,6 +3,7 @@
 
 
 #include <limits>
+#include <sstream>
 
 #include "transforms/GradingToneTransform.cpp"
 

@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <sstream>
+
 #include "fileformats/FileFormatSpi1D.cpp"
 
 #include "testutils/UnitTest.h"

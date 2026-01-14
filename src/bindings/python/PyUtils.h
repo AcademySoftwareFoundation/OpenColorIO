@@ -7,6 +7,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <sstream>
 
 #include "PyOpenColorIO.h"
 

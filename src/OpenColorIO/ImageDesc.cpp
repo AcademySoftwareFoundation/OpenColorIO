@@ -3,7 +3,7 @@
 
 #include <cstdlib>
 #include <math.h>
-#include <sstream>
+#include <ostream>
 
 #include <OpenColorIO/OpenColorIO.h>
 

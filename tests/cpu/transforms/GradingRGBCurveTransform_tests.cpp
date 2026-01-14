@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <sstream>
+
 #include "ops/gradingrgbcurve/GradingBSplineCurve.h"
 #include "transforms/GradingRGBCurveTransform.cpp"
 

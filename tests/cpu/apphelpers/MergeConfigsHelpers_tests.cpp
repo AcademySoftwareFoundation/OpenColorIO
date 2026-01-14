@@ -2,6 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <pystring.h>
+#include <sstream>
 
 #include "apphelpers/mergeconfigs/MergeConfigsHelpers.cpp"
 

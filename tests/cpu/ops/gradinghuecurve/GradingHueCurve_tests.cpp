@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <sstream>
+
 #include "DynamicProperty.h"
 #include "ops/gradinghuecurve/GradingHueCurve.cpp"
 

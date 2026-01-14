@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <cstring>
 #include <istream>
-#include <iterator>
+#include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 

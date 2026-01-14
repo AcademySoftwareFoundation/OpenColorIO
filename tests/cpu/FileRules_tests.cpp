@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <sstream>
+
 #include "FileRules.cpp"
 
 #include "testutils/UnitTest.h"

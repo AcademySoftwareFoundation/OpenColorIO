@@ -5,7 +5,6 @@
 #ifndef INCLUDED_OCIO_ARCHIVEUTILS_H
 #define INCLUDED_OCIO_ARCHIVEUTILS_H
 
-#include <sstream>
 #include <vector>
 #include <map>
 #include <string>

@@ -5,7 +5,6 @@
 #define INCLUDED_OCIO_PARSEUTILS_H
 
 
-#include <sstream>
 #include <string>
 #include <vector>
 

@@ -6,6 +6,7 @@
 
 
 #include <string.h>
+#include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 

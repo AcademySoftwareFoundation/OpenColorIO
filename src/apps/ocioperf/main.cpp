@@ -10,6 +10,7 @@
 #include <chrono>
 #include <cmath>
 #include <iostream>
+#include <sstream>
 
 
 namespace OCIO = OCIO_NAMESPACE;
