@@ -6,7 +6,7 @@
 #include "fileformats/xmlutils/XMLWriterUtils.h"
 #include "ParseUtils.h"
 #include "transforms/CDLTransform.h"
-#include "transforms/FileTransform.h"
+#include "Platform.h"
 
 namespace OCIO_NAMESPACE
 {

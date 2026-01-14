@@ -7,7 +7,6 @@
 
 #include "fileformats/cdl/CDLParser.h"
 #include "fileformats/cdl/CDLWriter.h"
-#include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "fileformats/xmlutils/XMLWriterUtils.h"
 #include "transforms/FileTransform.h"
 #include "OpBuilders.h"

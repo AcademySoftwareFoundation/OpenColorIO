@@ -12,10 +12,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "MathUtils.h"
-#include "utils/StringUtils.h"
 #include "utils/NumberUtils.h"
-#include "Platform.h"
 
 
 namespace OCIO_NAMESPACE
