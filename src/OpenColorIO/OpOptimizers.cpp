@@ -2,7 +2,6 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <algorithm>
-#include <iterator>
 #include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -13,6 +12,8 @@
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ops/range/RangeOp.h"
+#include "ops/matrix/MatrixOp.h"
+#include "ops/matrix/MatrixOpData.h"
 
 namespace OCIO_NAMESPACE
 {

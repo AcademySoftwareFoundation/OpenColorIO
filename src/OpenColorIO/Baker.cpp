@@ -9,7 +9,6 @@
 
 #include "transforms/FileTransform.h"
 #include "BakingUtils.h"
-#include "MathUtils.h"
 
 
 namespace OCIO_NAMESPACE

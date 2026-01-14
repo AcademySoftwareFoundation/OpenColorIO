@@ -23,6 +23,7 @@
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ops/range/RangeOp.h"
+#include "ops/matrix/MatrixOp.h"
 
 namespace OCIO_NAMESPACE
 {

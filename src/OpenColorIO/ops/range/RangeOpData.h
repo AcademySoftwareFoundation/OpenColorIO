@@ -6,10 +6,13 @@
 #define INCLUDED_OCIO_RANGEOPDATA_H
 
 
+#include <string>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
-#include "ops/matrix/MatrixOp.h"
+#include "ops/matrix/MatrixOpData.h"
+
 
 
 namespace OCIO_NAMESPACE

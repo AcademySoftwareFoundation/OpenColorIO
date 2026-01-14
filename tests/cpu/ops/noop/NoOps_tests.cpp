@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <memory>
+
 #include "ops/noop/NoOps.cpp"
 
 #include "ops/lut1d/Lut1DOp.h"
