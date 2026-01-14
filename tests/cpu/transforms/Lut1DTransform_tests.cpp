@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <sstream>
+
 #include "transforms/Lut1DTransform.cpp"
 
 #include "testutils/UnitTest.h"

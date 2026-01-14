@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <sstream>
+
 #include "transforms/DisplayViewTransform.cpp"
 
 #include "ops/cdl/CDLOpData.h"

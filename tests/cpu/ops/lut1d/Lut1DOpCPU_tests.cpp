@@ -3,6 +3,7 @@
 
 
 #include <limits>
+#include <sstream>
 
 #include "ops/lut1d/Lut1DOpCPU.cpp"
 

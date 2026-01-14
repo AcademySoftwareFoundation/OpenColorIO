@@ -3,6 +3,7 @@
 
 
 #include <cstring>
+#include <sstream>
 
 #include "ops/fixedfunction/FixedFunctionOpCPU.cpp"
 

@@ -3,6 +3,7 @@
 
 
 #include <fstream>
+#include <sstream>
 
 #include "fileformats/FileFormatVF.cpp"
 

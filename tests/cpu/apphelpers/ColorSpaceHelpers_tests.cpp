@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <sstream>
+
 #include "apphelpers/ColorSpaceHelpers.cpp"
 #include "testutils/UnitTest.h"
 #include "UnitTestLogUtils.h"

@@ -3,6 +3,7 @@
 
 
 #include <limits>
+#include <sstream>
 
 #include "CPUProcessor.cpp"
 

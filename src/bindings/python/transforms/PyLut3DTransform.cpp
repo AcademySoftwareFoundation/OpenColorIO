@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <sstream>
-
 #include "PyTransform.h"
 
 namespace OCIO_NAMESPACE

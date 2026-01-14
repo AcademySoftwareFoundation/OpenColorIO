@@ -6,6 +6,7 @@
 #include <utility>
 #include <vector>
 #include <limits>
+#include <sstream>
 
 #include "transforms/BuiltinTransform.cpp"
 

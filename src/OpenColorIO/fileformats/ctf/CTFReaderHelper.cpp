@@ -2,6 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <limits>
+#include <sstream>
 
 #include "BitDepthUtils.h"
 #include "fileformats/ctf/CTFReaderHelper.h"

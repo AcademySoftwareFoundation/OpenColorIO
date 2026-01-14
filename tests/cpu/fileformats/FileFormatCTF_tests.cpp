@@ -4,6 +4,7 @@
 
 #include <limits>
 #include <fstream>
+#include <sstream>
 
 #include "BitDepthUtils.h"
 #include "fileformats/FileFormatCTF.cpp"

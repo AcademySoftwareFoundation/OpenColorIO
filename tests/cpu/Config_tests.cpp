@@ -4,6 +4,7 @@
 
 #include <sys/stat.h>
 #include <fstream>
+#include <sstream>
 
 #include <pystring.h>
 
