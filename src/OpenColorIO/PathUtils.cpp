@@ -12,7 +12,7 @@
 #include "PathUtils.h"
 #include "Platform.h"
 #include "utils/StringUtils.h"
-#include "OCIOZArchive.h"
+
 
 #if !defined(_WIN32)
 #include <sys/param.h>
