@@ -5,8 +5,8 @@
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
-#include <utility>
 #include <vector>
+#include <exception>
 
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;

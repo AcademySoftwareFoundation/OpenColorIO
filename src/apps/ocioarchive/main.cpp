@@ -4,6 +4,8 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <string>
+#include <exception>
 
 #include <OpenColorIO/OpenColorIO.h>
 #include "utils/StringUtils.h"
