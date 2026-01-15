@@ -4,7 +4,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include <IMath/half.h>
+#include <Imath/half.h>
 
 #include "ImagePacking.h"
 
