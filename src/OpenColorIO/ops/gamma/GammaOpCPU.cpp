@@ -3,15 +3,18 @@
 
 #include <algorithm>
 #include <cmath>
+#include <memory>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "BitDepthUtils.h"
 #include "ops/gamma/GammaOpCPU.h"
 #include "ops/gamma/GammaOpUtils.h"
 
 #include "SSE.h"
 
+#if OCIO_USE_SSE2 == 0
+#include <tuple>
+#endif
 
 namespace OCIO_NAMESPACE
 {

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <cmath>
 
-#include <math.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "GPUUnitTest.h"
 

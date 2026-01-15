@@ -9,6 +9,7 @@
 #include <memory>
 
 #include "ops/exposurecontrast/ExposureContrastOpCPU.cpp"
+#include "BitDepthUtils.h"
 
 #include "testutils/UnitTest.h"
 
