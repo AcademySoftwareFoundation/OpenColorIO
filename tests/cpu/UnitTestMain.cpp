@@ -95,7 +95,7 @@ int main(int argc, const char ** argv)
 
     if (ap.parse(argc, argv) < 0)
     {
-        std::cerr << ap.geterror() << std::endl;
+        std::cerr << ap.geterror() << "\n";
         ap.usage();
         return 1;
     }
@@ -192,7 +192,7 @@ int main(int argc, const char ** argv)
 
                 if (results.size() >= 3)
                 {
-                    std::cerr << "Invalid value for the argument '--run_only'." << std::endl;
+                    std::cerr << "Invalid value for the argument '--run_only'.\n";
                     ap.usage();
                     return 1;
                 }
@@ -241,12 +241,12 @@ int main(int argc, const char ** argv)
         }
         catch(std::exception & ex)
         {
-            std::cerr << "\nFAILED: " << ex.what() << "." << std::endl;
+            std::cerr << "\nFAILED: " << ex.what() << ".\n";
             ++unit_test_failures;
         }
         catch(...)
         {
-            std::cerr << "\nFAILED: Unexpected error." << std::endl;
+            std::cerr << "\nFAILED: Unexpected error.\n";
             ++unit_test_failures;
         }
 
@@ -270,7 +270,7 @@ int main(int argc, const char ** argv)
                   << std::left << std::setw(maxCharToDisplay+1)
                   << name << "] - "
                   << (passing ? skipped ? "SKIPPED" : "PASSED" : "FAILED")
-                  << std::endl;
+                  << "\n";
 
         if (stopOnFirstError && !passing)
         {

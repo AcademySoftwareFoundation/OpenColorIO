@@ -279,14 +279,14 @@ int main(int, const char **)
                              test->m_expectedMinimalValue,
                              test->m_relativeComparison);
 
-            std::cerr << "PASSED" << std::endl;
+            std::cerr << "PASSED\n";
         }
         catch(std::exception & ex)
         {
             failures++;
 
-            std::cerr << "FAILED" << std::endl;
-            std::cerr << ex.what() << std::endl;
+            std::cerr << "FAILED\n";
+            std::cerr << ex.what() << "\n";
 
             std::cerr << "\n***********\n";
             std::cerr << oslShaderString;
@@ -296,8 +296,8 @@ int main(int, const char **)
         {
             failures++;
 
-            std::cerr << "FAILED" << std::endl;
-            std::cerr << "Unexpected exception!" << std::endl;
+            std::cerr << "FAILED\n";
+            std::cerr << "Unexpected exception!\n";
 
             std::cerr << "\n***********\n";
             std::cerr << oslShaderString;
@@ -307,6 +307,6 @@ int main(int, const char **)
         noTest++;
     }
 
-    std::cerr << std::endl << failures << " tests failed" << std::endl << std::endl;
+    std::cerr << "\n" << failures << " tests failed\n\n";
     return failures;
 }

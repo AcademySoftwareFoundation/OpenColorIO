@@ -1584,7 +1584,7 @@ void LocalFileFormat::write(const ConstConfigRcPtr & config,
     CTFReaderTransformPtr transform = std::make_shared<CTFReaderTransform>(ops, metadata);
 
     // Write XML Header.
-    ostream << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl;
+    ostream << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
     XmlFormatter fmt(ostream);
 
     TransformWriter writer(fmt, transform, isCLF);
