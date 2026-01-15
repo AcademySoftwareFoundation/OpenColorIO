@@ -9,7 +9,6 @@
 
 #include "BitDepthUtils.h"
 #include "fileformats/FileFormatUtils.h"
-#include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ParseUtils.h"
 #include "transforms/FileTransform.h"
