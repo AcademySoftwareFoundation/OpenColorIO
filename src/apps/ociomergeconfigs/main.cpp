@@ -4,12 +4,13 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <string>
 #include <sstream>
+#include <exception>
 
 #include <pystring.h>
 
 #include <OpenColorIO/OpenColorIO.h>
-#include "utils/StringUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 

@@ -7,10 +7,10 @@
 #include <cstdio>
 #include <cstring>
 #include <iostream>
-#include <fstream>
 #include <map>
 #include <utility>
-#include <vector>
+#include <algorithm>
+#include <exception>
 
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;

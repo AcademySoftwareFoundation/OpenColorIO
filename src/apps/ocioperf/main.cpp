@@ -5,12 +5,13 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "apputils/argparse.h"
-#include "utils/StringUtils.h"
 
 #include <chrono>
-#include <cmath>
 #include <iostream>
+#include <string>
 #include <sstream>
+#include <exception>
+#include <vector>
 
 
 namespace OCIO = OCIO_NAMESPACE;

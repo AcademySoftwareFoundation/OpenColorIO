@@ -6,7 +6,7 @@
 #include <fstream>
 #include <set>
 #include <vector>
-#include <algorithm>
+#include <exception>
 
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;

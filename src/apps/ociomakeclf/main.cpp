@@ -9,6 +9,7 @@
 #include <string>
 #include <sstream>
 #include <cstring>
+#include <exception>
 
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
