@@ -7,8 +7,6 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "BitDepthUtils.h"
-#include "MathUtils.h"
 #include "ops/gradinghuecurve/GradingHueCurveOpCPU.h"
 #include "ops/fixedfunction/FixedFunctionOpCPU.h"
 #include "ops/fixedfunction/FixedFunctionOpData.h"

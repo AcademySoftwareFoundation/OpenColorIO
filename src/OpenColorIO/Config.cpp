@@ -11,12 +11,13 @@
 #include <vector>
 #include <regex>
 #include <functional>
+#include <algorithm>
+#include <exception>
 
 #include <pystring.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "builtinconfigs/BuiltinConfigRegistry.h"
 #include "ConfigUtils.h"
 #include "ContextVariableUtils.h"
 #include "Display.h"
@@ -27,16 +28,13 @@
 #include "LookParse.h"
 #include "MathUtils.h"
 #include "Mutex.h"
-#include "NamedTransform.h"
 #include "OCIOYaml.h"
 #include "OCIOZArchive.h"
-#include "OpBuilders.h"
 #include "ParseUtils.h"
 #include "PathUtils.h"
 #include "Platform.h"
 #include "PrivateTypes.h"
 #include "Processor.h"
-#include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
 #include "ViewingRules.h"
 #include "SystemMonitor.h"

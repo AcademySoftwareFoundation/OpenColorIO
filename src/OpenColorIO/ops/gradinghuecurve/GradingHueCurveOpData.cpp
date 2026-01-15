@@ -5,9 +5,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ops/gradinghuecurve/GradingHueCurve.h"
 #include "ops/gradinghuecurve/GradingHueCurveOpData.h"
-#include "Platform.h"
 
 namespace OCIO_NAMESPACE
 {

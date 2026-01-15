@@ -2,9 +2,15 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <cstring>
-#include <unordered_set>
+#include <string>
 #include <limits>
 #include <sstream>
+#include <iostream>
+#include <utility>
+#include <exception>
+#include <vector>
+#include <unordered_set>
+#include <map>
 
 #include <pystring.h>
 
@@ -16,11 +22,8 @@
 #include "MathUtils.h"
 #include "OCIOYaml.h"
 #include "ops/exposurecontrast/ExposureContrastOpData.h"
-#include "ops/gradingprimary/GradingPrimaryOpData.h"
 #include "ops/gradingrgbcurve/GradingRGBCurve.h"
 #include "ops/gradinghuecurve/GradingHueCurve.h"
-#include "ops/gradingtone/GradingToneOpData.h"
-#include "ops/log/LogUtils.h"
 #include "ParseUtils.h"
 #include "PathUtils.h"
 #include "Platform.h"
@@ -4462,9 +4465,9 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
             << "." << profile_minor_version
             << ". ";
 
-        os << "This version of the OpenColorIO library (" << GetVersion() << ") ";
-        os << "is not able to load that config version.";
-        os << std::endl << ex.what();
+        os << "This version of the OpenColorIO library (" << GetVersion() << ") "
+              "is not able to load that config version.\n";
+        os << ex.what();
 
         throw Exception(os.str().c_str());
     }

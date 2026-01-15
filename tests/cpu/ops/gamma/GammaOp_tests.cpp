@@ -2,11 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include "MathUtils.h"
 #include "ops/gamma/GammaOp.cpp"
-#include "ParseUtils.h"
 #include "testutils/UnitTest.h"
-#include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 

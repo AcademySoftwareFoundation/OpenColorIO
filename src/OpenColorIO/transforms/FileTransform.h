@@ -7,11 +7,13 @@
 
 
 #include <map>
+#include <string>
+#include <vector>
+#include <iosfwd>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
-#include "ops/noop/NoOps.h"
 #include "utils/StringUtils.h"
 
 

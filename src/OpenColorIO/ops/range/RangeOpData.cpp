@@ -10,7 +10,6 @@
 #include "MathUtils.h"
 #include "fileformats/ctf/IndexMapping.h"
 #include "ops/range/RangeOpData.h"
-#include "Platform.h"
 
 namespace OCIO_NAMESPACE
 {

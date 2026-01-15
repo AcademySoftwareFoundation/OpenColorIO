@@ -2,12 +2,13 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <string>
 #include <sstream>
+#include <algorithm>
 
 #include "fileformats/FileFormatHDL.cpp"
 
 #include "testutils/UnitTest.h"
-#include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 

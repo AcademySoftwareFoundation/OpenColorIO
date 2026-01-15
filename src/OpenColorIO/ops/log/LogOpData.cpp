@@ -1,18 +1,17 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <algorithm>
+#include <ios>
+#include <memory>
+#include <string>
 #include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "BitDepthUtils.h"
 #include "MathUtils.h"
 #include "ops/log/LogOpData.h"
-#include "ops/log/LogUtils.h"
 #include "ops/matrix/MatrixOpData.h"
 #include "ops/range/RangeOpData.h"
-#include "Platform.h"
 
 namespace OCIO_NAMESPACE
 {

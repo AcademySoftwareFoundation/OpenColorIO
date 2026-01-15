@@ -7,8 +7,6 @@
 #include <iostream>
 #include <regex>
 
-#include "Platform.h"
-#include "testutils/UnitTest.h"
 #include "UnitTestLogUtils.h"
 
 namespace OCIO_NAMESPACE

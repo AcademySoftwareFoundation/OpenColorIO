@@ -2,14 +2,14 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <algorithm>
+#include <string>
 #include <sstream>
+#include <ostream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ContextVariableUtils.h"
 #include "Display.h"
-#include "NamedTransform.h"
 #include "OpBuilders.h"
 
 

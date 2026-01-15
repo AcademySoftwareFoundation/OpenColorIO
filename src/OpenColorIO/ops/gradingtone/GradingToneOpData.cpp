@@ -5,10 +5,8 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "MathUtils.h"
 #include "ops/gradingtone/GradingTone.h"
 #include "ops/gradingtone/GradingToneOpData.h"
-#include "Platform.h"
 
 namespace OCIO_NAMESPACE
 {
