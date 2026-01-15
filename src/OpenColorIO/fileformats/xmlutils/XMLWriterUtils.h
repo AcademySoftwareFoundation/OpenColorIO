@@ -6,6 +6,8 @@
 
 #include <string>
 #include <vector>
+#include <utility>
+#include <iosfwd>
 
 #include <OpenColorIO/OpenColorIO.h>
 

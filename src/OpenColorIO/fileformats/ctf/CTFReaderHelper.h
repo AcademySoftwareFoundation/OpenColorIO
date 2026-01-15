@@ -4,6 +4,11 @@
 #ifndef INCLUDED_OCIO_FILEFORMATS_CTF_CTFREADERHELPER_H
 #define INCLUDED_OCIO_FILEFORMATS_CTF_CTFREADERHELPER_H
 
+#include <string>
+#include <vector>
+
+#include <OpenColorIO/OpenColorIO.h>
+
 #include "fileformats/xmlutils/XMLReaderHelper.h"
 #include "fileformats/ctf/CTFTransform.h"
 #include "fileformats/ctf/IndexMapping.h"

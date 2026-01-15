@@ -3,7 +3,9 @@
 
 #include <limits>
 #include <sstream>
+#include <string>
 #include <cstring>
+#include <exception>
 
 #include "BitDepthUtils.h"
 #include "fileformats/ctf/CTFReaderHelper.h"

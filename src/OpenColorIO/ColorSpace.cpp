@@ -3,8 +3,11 @@
 
 #include <cstring>
 #include <sstream>
+#include <ostream>
 #include <vector>
+#include <array>
 #include <map>
+#include <algorithm>
 
 #include <OpenColorIO/OpenColorIO.h>
 

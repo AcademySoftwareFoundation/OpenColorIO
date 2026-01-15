@@ -3,11 +3,14 @@
 
 
 #include <limits>
+#include <memory>
+#include <string>
 
 #include "ops/gradingrgbcurve/GradingRGBCurveOpCPU.cpp"
 
 #include "testutils/UnitTest.h"
 #include "utils/StringUtils.h"
+#include "MathUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 

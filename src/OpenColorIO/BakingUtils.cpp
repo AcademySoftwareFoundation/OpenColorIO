@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <string>
+#include <algorithm>
+
 #include "BakingUtils.h"
 
 namespace OCIO_NAMESPACE

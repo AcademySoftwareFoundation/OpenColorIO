@@ -4,8 +4,10 @@
 #if OCIO_USE_SSE2
 
 
+#include <string>
 #include <sstream>
 #include <limits>
+#include <cmath>
 
 #include <OpenColorIO/OpenColorIO.h>
 

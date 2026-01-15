@@ -11,6 +11,7 @@
 #include <OpenImageIO/errorhandler.h>
 
 #include <string>
+#include <utility>
 
 
 // Trap the OSL messages in case of error.

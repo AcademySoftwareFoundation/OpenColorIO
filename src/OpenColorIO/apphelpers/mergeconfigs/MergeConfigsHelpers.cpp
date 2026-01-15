@@ -4,8 +4,9 @@
 #include <iostream>
 #include <cstddef>
 
+#include <string>
 #include <sstream>
-#include <vector>
+#include <exception>
 #include <fstream>
 
 #include <pystring.h>

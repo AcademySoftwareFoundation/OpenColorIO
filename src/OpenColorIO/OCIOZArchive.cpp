@@ -2,10 +2,12 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <sstream>
+#include <ostream>
 #include <fstream>
 #include <vector>
 #include <map>
 #include <cstring>
+#include <utility>
 
 #include <pystring.h>
 

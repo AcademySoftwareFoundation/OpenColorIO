@@ -7,6 +7,7 @@
 #include "transforms/builtins/BuiltinTransformRegistry.cpp"
 
 #include "testutils/UnitTest.h"
+#include "Platform.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 

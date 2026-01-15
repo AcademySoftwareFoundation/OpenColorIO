@@ -3,6 +3,9 @@
 
 
 #include <limits>
+#include <algorithm>
+#include <memory>
+#include <cmath>
 
 #include "ops/log/LogOpCPU.cpp"
 

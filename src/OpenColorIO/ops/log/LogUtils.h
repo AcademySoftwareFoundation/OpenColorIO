@@ -5,6 +5,8 @@
 #ifndef INCLUDED_OCIO_LOGUTILS_H
 #define INCLUDED_OCIO_LOGUTILS_H
 
+#include <vector>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/log/LogOpData.h"

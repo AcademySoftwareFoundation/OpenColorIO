@@ -5,7 +5,11 @@
 #include <cstring>
 #include <istream>
 #include <set>
+#include <string>
 #include <sstream>
+#include <vector>
+#include <locale>
+#include <system_error>
 
 #include <OpenColorIO/OpenColorIO.h>
 

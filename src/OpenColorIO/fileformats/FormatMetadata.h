@@ -4,7 +4,7 @@
 #ifndef INCLUDED_OCIO_OPS_METADATA_H
 #define INCLUDED_OCIO_OPS_METADATA_H
 
-#include <list>
+#include <utility>
 #include <string>
 #include <vector>
 

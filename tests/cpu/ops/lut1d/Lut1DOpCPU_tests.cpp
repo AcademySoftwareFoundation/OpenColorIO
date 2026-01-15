@@ -4,6 +4,9 @@
 
 #include <limits>
 #include <sstream>
+#include <algorithm>
+#include <memory>
+#include <vector>
 
 #include "ops/lut1d/Lut1DOpCPU.cpp"
 
