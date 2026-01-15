@@ -96,15 +96,15 @@ void MetalApp::prepareAndBindOpenGLState()
     
     std::ostringstream main;
         
-    main <<    std::endl
-            << "uniform sampler2DRect img;" << std::endl
-            << std::endl
-            << "void main()" << std::endl
-            << "{" << std::endl
-            << "    gl_FragColor = texture2DRect(img, gl_TexCoord[0].st * "
-            << "vec2(" << m_outputImage->getWidth() << ", " << m_outputImage->getHeight() << "));"
-            << std::endl
-            << "}" << std::endl;
+    main <<    "\n"
+               "uniform sampler2DRect img;\n"
+               "\n"
+               "void main()\n"
+               "{\n"
+               "    gl_FragColor = texture2DRect(img, gl_TexCoord[0].st * "
+               "vec2(" << m_outputImage->getWidth() << ", " << m_outputImage->getHeight() << "));"
+               "\n"
+               "}\n";
     
     
     glActiveTexture(GL_TEXTURE0);
@@ -339,7 +339,7 @@ vertex VertexOut ColorCorrectionVS(unsigned int vId [[ vertex_id ]])
              <<  shaderDesc->getFunctionName() << "(" << params.str() << uniformParams.str() << separator << "inPixel);\n"
              << "}\n";
         
-        main << std::endl;
+        main << "\n";
     }
     else
     {
@@ -348,11 +348,8 @@ vertex VertexOut ColorCorrectionVS(unsigned int vId [[ vertex_id ]])
     
     if(printShader())
     {
-        std::cout << std::endl;
-        std::cout << "GPU Shader Program:" << std::endl;
-        std::cout << std::endl;
-        std::cout << main.str() << std::endl;
-        std::cout << std::endl;
+        std::cout << "\nGPU Shader Program:\n\n";
+        std::cout << main.str() << "\n\n";
     }
     
     // Build the fragment shader program.

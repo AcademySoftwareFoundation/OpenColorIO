@@ -90,8 +90,7 @@ public:
     {
         std::ostringstream ss;
 
-        ss << std::endl;
-        ss << "Image: [" << getWidth() << "x" << getHeight() << "] "
+        ss << "\nImage: [" << getWidth() << "x" << getHeight() << "] "
            << BitDepthToString(getBitDepth()) << " ";
 
         const std::vector<std::string> chanNames = getChannelNames();
@@ -111,7 +110,7 @@ public:
                 ss << ", ";
             }
         }
-        ss << std::endl;
+        ss << "\n";
 
         return ss.str();
     }

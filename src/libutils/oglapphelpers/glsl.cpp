@@ -18,6 +18,7 @@
 
 #endif
 
+#include <string>
 #include <sstream>
 #include <iostream>
 
@@ -491,9 +492,9 @@ unsigned OpenGLBuilder::buildProgram(const std::string & clientShaderProgram, bo
         }
 
         std::ostringstream oss;
-        oss  << getGLSLVersionString() << std::endl
-             << (!standaloneShader ? m_shaderDesc->getShaderText() : "") << std::endl
-             << clientShaderProgram << std::endl;
+        oss  << getGLSLVersionString() << "\n"
+             << (!standaloneShader ? m_shaderDesc->getShaderText() : "") << "\n"
+             << clientShaderProgram << "\n";
 
         if(m_verbose)
         {

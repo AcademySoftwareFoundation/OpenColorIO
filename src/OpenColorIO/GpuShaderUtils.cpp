@@ -338,7 +338,7 @@ void GpuShaderText::flushLine()
 
     m_ossText << std::string(tabSize * m_indent, ' ')
               << m_ossLine.str()
-              << std::endl;
+              << "\n";
 
     m_ossLine.str("");
     m_ossLine.clear();

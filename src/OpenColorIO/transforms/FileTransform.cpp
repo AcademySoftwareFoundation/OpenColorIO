@@ -601,8 +601,7 @@ void LoadFileUncached(FileFormat * & returnFormat,
 
     {
         std::ostringstream oss;
-        oss << "**" << std::endl
-            << "Opening " << filepath;
+        oss << "**\nOpening " << filepath;
         LogDebug(oss.str());
     }
 
@@ -637,9 +636,9 @@ void LoadFileUncached(FileFormat * & returnFormat,
             {
                 std::ostringstream os;
                 os << "The specified FileTransform srcfile, '";
-                os << filepath << "', could not be opened. ";
-                os << "Please confirm the file exists with ";
-                os << "appropriate read permissions.";
+                os << filepath << "', could not be opened. "
+                      "Please confirm the file exists with "
+                      "appropriate read permissions.";
                 throw Exception(os.str().c_str());
             }
 
@@ -649,7 +648,7 @@ void LoadFileUncached(FileFormat * & returnFormat,
             {
                 std::ostringstream os;
                 os << "    Loaded primary format ";
-                os << tryFormat->getName() << std::endl;
+                os << tryFormat->getName() << "\n";
                 LogDebug(os.str());
             }
 
@@ -706,10 +705,10 @@ void LoadFileUncached(FileFormat * & returnFormat,
             {
                 std::ostringstream os;
                 os << "The specified FileTransform srcfile, '";
-                os << filepath << "', could not be opened. ";
-                os << "Please confirm the file exists with ";
-                os << "appropriate read";
-                os << " permissions.";
+                os << filepath << "', could not be opened. "
+                      "Please confirm the file exists with "
+                      "appropriate read"
+                      " permissions.";
                 throw Exception(os.str().c_str());
             }
 

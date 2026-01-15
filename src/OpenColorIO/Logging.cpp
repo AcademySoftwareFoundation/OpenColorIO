@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <cstdlib>
+#include <string>
 #include <iostream>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -42,8 +42,8 @@ void InitLogging()
 
         if(g_logginglevel == LOGGING_LEVEL_UNKNOWN)
         {
-            std::cerr << "[OpenColorIO Warning]: Invalid $OCIO_LOGGING_LEVEL specified. ";
-            std::cerr << "Options: none (0), warning (1), info (2), debug (3)" << std::endl;
+            std::cerr << "[OpenColorIO Warning]: Invalid $OCIO_LOGGING_LEVEL specified. "
+                         "Options: none (0), warning (1), info (2), debug (3)\n";
             g_logginglevel = LOGGING_LEVEL_DEFAULT;
         }
     }

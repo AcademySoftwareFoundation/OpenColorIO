@@ -656,7 +656,7 @@ int main(int argc, const char ** argv)
 
     if (ap.parse(argc, argv) < 0)
     {
-        std::cerr << ap.geterror() << std::endl;
+        std::cerr << ap.geterror() << "\n";
         ap.usage();
         return 1;
     }
@@ -679,7 +679,7 @@ int main(int argc, const char ** argv)
 
                 if (results.size() >= 3)
                 {
-                    std::cerr << "Invalid value for the argument '--run_only'." << std::endl;
+                    std::cerr << "Invalid value for the argument '--run_only'.\n";
                     ap.usage();
                     return 1;
                 }
@@ -700,7 +700,7 @@ int main(int argc, const char ** argv)
 #if __APPLE__
             app = OCIO::MetalApp::CreateMetalGlApp("GPU tests - Metal", 10, 10);
 #else
-            std::cerr << std::endl << "'GPU tests - Metal' is not supported" << std::endl;
+            std::cerr << "\n'GPU tests - Metal' is not supported\n";
             return 1;
 #endif
         }
@@ -721,7 +721,7 @@ int main(int argc, const char ** argv)
     }
     catch (const OCIO::Exception & e)
     {
-        std::cerr << std::endl << e.what() << std::endl;
+        std::cerr << "\n" << e.what() << "\n";
         return 1;
     }
     catch (const std::exception & e)
@@ -889,7 +889,7 @@ int main(int argc, const char ** argv)
         catch(OCIO::Exception & ex)
         {
             ++failures;
-            std::cerr << "FAILED - " << ex.what() << std::endl;
+            std::cerr << "FAILED - " << ex.what() << "\n";
         }
         catch(const std::exception & ex)
         {
@@ -899,7 +899,7 @@ int main(int argc, const char ** argv)
         catch(...)
         {
             ++failures;
-            std::cerr << "FAILED - Unexpected error (unknown exception type)" << std::endl;
+            std::cerr << "FAILED - Unexpected error (unknown exception type)\n";
         }
 
         if (!enabledTest)
@@ -919,13 +919,13 @@ int main(int argc, const char ** argv)
         else if(!test->isValid())
         {
             ++failures;
-            std::cerr << "FAILED - Invalid test" << std::endl;
+            std::cerr << "FAILED - Invalid test\n";
         }
 
         // Get rid of the test.
         tests[idx] = nullptr;
     }
 
-    std::cout << std::endl << failures << " tests failed" << std::endl << std::endl;
+    std::cout << "\n" << failures << " tests failed\n" << std::endl;
     return failures;
 }
