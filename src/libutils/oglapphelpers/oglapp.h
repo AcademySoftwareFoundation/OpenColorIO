@@ -176,6 +176,7 @@ private:
 
 #ifdef OCIO_HEADLESS_ENABLED
 
+#include <vector>
 #include <EGL/egl.h>
 
 class HeadlessApp: public OglApp
