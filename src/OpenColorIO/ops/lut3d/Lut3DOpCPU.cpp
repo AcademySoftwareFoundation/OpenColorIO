@@ -8,10 +8,8 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "BitDepthUtils.h"
 #include "MathUtils.h"
 #include "ops/lut3d/Lut3DOpCPU.h"
-#include "ops/OpTools.h"
 #include "Platform.h"
 #include "SSE.h"
 #include "CPUInfo.h"

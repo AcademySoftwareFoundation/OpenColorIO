@@ -6,8 +6,6 @@
 
 #include "UnitTestOptimFlags.h"
 
-#include "Platform.h"
-
 namespace OCIO = OCIO_NAMESPACE;
 
 OCIOOptimizationFlagsEnvGuard::OCIOOptimizationFlagsEnvGuard(const char * newValue)

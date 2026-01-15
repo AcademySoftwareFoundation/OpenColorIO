@@ -2,8 +2,6 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <algorithm>
-
 #include "transforms/RangeTransform.cpp"
 
 #include "testutils/UnitTest.h"

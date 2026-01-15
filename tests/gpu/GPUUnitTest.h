@@ -8,7 +8,7 @@
 #include <functional>
 #include <string>
 #include <vector>
-#include <iostream>
+#include <memory>
 
 #include "CPUInfoConfig.h"
 

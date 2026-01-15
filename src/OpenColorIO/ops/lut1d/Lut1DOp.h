@@ -5,8 +5,6 @@
 #ifndef INCLUDED_OCIO_LUT1DOP_H
 #define INCLUDED_OCIO_LUT1DOP_H
 
-#include <vector>
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/lut1d/Lut1DOpData.h"

@@ -7,7 +7,6 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "MathUtils.h"
-#include "ops/matrix/MatrixOpCPU.h"
 #include "ops/range/RangeOpCPU.h"
 
 namespace OCIO_NAMESPACE

@@ -5,8 +5,6 @@
 #ifndef INCLUDED_OCIO_LOGOPS_H
 #define INCLUDED_OCIO_LOGOPS_H
 
-#include <vector>
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"

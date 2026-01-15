@@ -7,8 +7,7 @@
 
 #include "ops/gradingrgbcurve/GradingRGBCurve.h"
 #include "ops/gradingrgbcurve/GradingRGBCurveOpData.h"
-#include "ops/range/RangeOpData.h"
-#include "Platform.h"
+
 
 namespace OCIO_NAMESPACE
 {

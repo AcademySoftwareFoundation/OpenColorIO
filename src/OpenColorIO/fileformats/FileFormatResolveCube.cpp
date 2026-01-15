@@ -12,8 +12,6 @@
 #include "ops/matrix/MatrixOp.h"
 #include "BakingUtils.h"
 #include "ParseUtils.h"
-#include "MathUtils.h"
-#include "Logging.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
 

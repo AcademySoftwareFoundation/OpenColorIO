@@ -3,14 +3,16 @@
 
 #include <cstring>
 #include <unordered_set>
+#include <unordered_map>
 #include <iostream>
+#include <string>
 #include <sstream>
+#include <exception>
 
 #include <pystring.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Logging.h"
 #include "OCIOMYaml.h"
 #include "ParseUtils.h"
 #include "PathUtils.h"

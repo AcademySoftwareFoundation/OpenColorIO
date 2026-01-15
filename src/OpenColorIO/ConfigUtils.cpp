@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <string>
 #include <sstream>
+#include <vector>
+#include <cmath>
 
 #include <pystring.h>
 
 #include "ConfigUtils.h"
 #include "MathUtils.h"
 #include "utils/StringUtils.h"
-#include "Logging.h"
 
 namespace OCIO_NAMESPACE
 {

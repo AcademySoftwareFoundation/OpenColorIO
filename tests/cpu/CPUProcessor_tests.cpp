@@ -3,13 +3,12 @@
 
 
 #include <limits>
+#include <string>
 #include <sstream>
+#include <vector>
 
 #include "CPUProcessor.cpp"
 
-#include "ops/lut1d/Lut1DOp.h"
-#include "ops/lut1d/Lut1DOpData.h"
-#include "ScanlineHelper.h"
 #include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
 

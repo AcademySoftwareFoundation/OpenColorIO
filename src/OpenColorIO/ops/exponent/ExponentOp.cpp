@@ -8,7 +8,6 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "HashUtils.h"
 #include "ops/exponent/ExponentOp.h"
 #include "GpuShaderUtils.h"
 #include "MathUtils.h"

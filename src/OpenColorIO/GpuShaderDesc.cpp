@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <string>
 #include <sstream>
 #include <memory>
+#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "DynamicProperty.h"
 #include "GpuShader.h"
-#include "GpuShaderUtils.h"
 #include "GpuShaderClassWrapper.h"
 #include "HashUtils.h"
 #include "Logging.h"
@@ -391,10 +391,8 @@ void GpuShaderCreator::finalize()
     if(IsDebugLoggingEnabled())
     {
         std::ostringstream oss;
-        oss << std::endl
-            << "**" << std::endl
-            << "GPU Fragment Shader program" << std::endl
-            << getImpl()->m_shaderCode << std::endl;
+        oss << "\n**\nGPU Fragment Shader program\n"
+            << getImpl()->m_shaderCode << "\n";
 
         LogDebug(oss.str());
     }

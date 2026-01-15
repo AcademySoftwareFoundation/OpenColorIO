@@ -5,18 +5,15 @@
 #include <cstring>
 #include <cmath>
 #include <limits>
+#include <memory>
 #if OCIO_USE_SSE2 == 0
 #include <tuple>
 #endif
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "BitDepthUtils.h"
-#include "MathUtils.h"
 #include "ops/log/LogOpCPU.h"
 #include "ops/log/LogUtils.h"
-#include "ops/OpTools.h"
-#include "Platform.h"
 #include "SSE.h"
 
 namespace OCIO_NAMESPACE

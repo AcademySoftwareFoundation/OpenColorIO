@@ -4,8 +4,6 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/reference/ReferenceOpData.h"
-#include "Platform.h"
-#include "transforms/FileTransform.h"
 
 
 namespace OCIO_NAMESPACE

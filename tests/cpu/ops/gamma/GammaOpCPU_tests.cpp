@@ -8,7 +8,6 @@
 #include "ops/gamma/GammaOpCPU.cpp"
 
 #include "MathUtils.h"
-#include "ParseUtils.h"
 #include "ops/gamma/GammaOp.h"
 #include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"

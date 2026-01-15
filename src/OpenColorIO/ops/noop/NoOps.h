@@ -9,8 +9,6 @@
 
 #include "Op.h"
 
-#include <vector>
-
 namespace OCIO_NAMESPACE
 {
 

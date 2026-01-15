@@ -3,10 +3,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "BitDepthUtils.h"
-#include "MathUtils.h"
 #include "ops/matrix/MatrixOpCPU.h"
-#include "Platform.h"
 #include "SSE.h"
 
 namespace OCIO_NAMESPACE
