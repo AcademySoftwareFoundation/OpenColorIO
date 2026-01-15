@@ -10,7 +10,6 @@
 #include "fileformats/xmlutils/XMLWriterUtils.h"
 #include "transforms/FileTransform.h"
 #include "OpBuilders.h"
-#include "ParseUtils.h"
 
 namespace OCIO_NAMESPACE
 {

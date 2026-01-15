@@ -3,6 +3,7 @@
 
 #include <string>
 #include <limits>
+#include <cmath>
 
 #include <OpenColorIO/OpenColorIO.h>
 

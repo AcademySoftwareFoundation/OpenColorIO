@@ -1,8 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <string>
 #include <sstream>
+#include <ostream>
 #include <limits>
+#include <type_traits>
+#include <iterator>
+#include <vector>
+#include <memory>
 
 #include "BitDepthUtils.h"
 #include "fileformats/ctf/CTFReaderUtils.h"
@@ -26,8 +32,6 @@
 #include "ops/lut3d/Lut3DOpData.h"
 #include "ops/matrix/MatrixOpData.h"
 #include "ops/range/RangeOpData.h"
-#include "ops/reference/ReferenceOpData.h"
-#include "ParseUtils.h"
 #include "Platform.h"
 #include "transforms/CDLTransform.h"
 
