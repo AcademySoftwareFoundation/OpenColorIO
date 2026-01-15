@@ -2,6 +2,9 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <string>
+#include <vector>
+
 #include "ParseUtils.cpp"
 
 #include "testutils/UnitTest.h"

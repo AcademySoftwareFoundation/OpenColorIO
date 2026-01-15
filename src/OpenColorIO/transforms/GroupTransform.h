@@ -5,7 +5,12 @@
 #ifndef INCLUDED_OCIO_GROUPTRANSFORM_H
 #define INCLUDED_OCIO_GROUPTRANSFORM_H
 
+#include <vector>
+#include <iosfwd>
+
 #include <OpenColorIO/OpenColorIO.h>
+
+#include "fileformats/FormatMetadata.h"
 
 
 namespace OCIO_NAMESPACE

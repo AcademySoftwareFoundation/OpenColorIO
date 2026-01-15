@@ -6,6 +6,9 @@
 #define INCLUDED_OCIO_FIXEDFUNCTIONOPDATA_H
 
 
+#include <vector>
+#include <string>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"

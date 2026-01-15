@@ -8,6 +8,14 @@
 #endif
 
 #include <cstddef>
+#include <vector>
+#include <string>
+#include <system_error>
+#include <exception>
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+
 
 #include "apputils/argparse.h"
 #include "UnitTest.h"

@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <fstream>
 #include <cstring>
+#include <algorithm>
 
 #include "ops/exponent/ExponentOp.h"
 #include "ops/matrix/MatrixOpData.h"

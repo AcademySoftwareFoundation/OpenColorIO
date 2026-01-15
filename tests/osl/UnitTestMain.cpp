@@ -5,6 +5,11 @@
 #include <fstream>
 #include <memory>
 #include <vector>
+#include <string>
+#include <stdexcept>
+#include <exception>
+#include <iostream>
+#include <iomanip>
 
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;

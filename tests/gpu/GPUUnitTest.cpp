@@ -6,8 +6,11 @@
 #include <cmath>
 #include <cstddef>
 #include <iomanip>
+#include <iostream>
+#include <string>
 #include <sstream>
 #include <limits>
+#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 

@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstdio>
 #include <sstream>
+#include <system_error>
 
 #include <OpenColorIO/OpenColorIO.h>
 

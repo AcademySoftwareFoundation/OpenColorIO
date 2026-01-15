@@ -8,6 +8,7 @@
 
 #include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
+#include "Platform.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 

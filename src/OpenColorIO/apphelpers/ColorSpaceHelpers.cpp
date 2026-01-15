@@ -5,8 +5,12 @@
 #include <cstddef>
 #include <map>
 #include <mutex>
+#include <string>
 #include <sstream>
-#include <vector>
+#include <ostream>
+#include <memory>
+#include <mutex>
+#include <functional>
 
 #include <OpenColorIO/OpenColorIO.h>
 

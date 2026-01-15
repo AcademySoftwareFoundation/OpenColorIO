@@ -9,6 +9,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <system_error>
 
 #include <OpenColorIO/OpenColorIO.h>
 

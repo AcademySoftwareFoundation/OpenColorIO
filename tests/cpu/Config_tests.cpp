@@ -7,6 +7,7 @@
 #include <cstring>
 #include <string>
 #include <sstream>
+#include <vector>
 
 #include <pystring.h>
 

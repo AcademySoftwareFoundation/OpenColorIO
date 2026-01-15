@@ -2,7 +2,9 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <string>
 #include <map>
+#include <memory>
 
 #include <pystring.h>
 
@@ -15,6 +17,7 @@
 
 
 #if !defined(_WIN32)
+#include <vector>
 #include <sys/param.h>
 #include <unistd.h>
 #else

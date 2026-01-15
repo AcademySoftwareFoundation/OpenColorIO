@@ -5,6 +5,8 @@
 #ifndef INCLUDED_OCIO_SCANLINEHELPER_H
 #define INCLUDED_OCIO_SCANLINEHELPER_H
 
+#include <vector>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ImagePacking.h"

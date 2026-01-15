@@ -5,7 +5,7 @@
 #ifndef INCLUDED_OCIO_TOKENS_MANAGER_H
 #define INCLUDED_OCIO_TOKENS_MANAGER_H
 
-#include <vector>
+#include <string>
 
 #include <OpenColorIO/OpenColorIO.h>
 

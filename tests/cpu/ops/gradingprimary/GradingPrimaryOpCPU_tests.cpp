@@ -8,6 +8,7 @@
 
 #include "testutils/UnitTest.h"
 #include "utils/StringUtils.h"
+#include "MathUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 

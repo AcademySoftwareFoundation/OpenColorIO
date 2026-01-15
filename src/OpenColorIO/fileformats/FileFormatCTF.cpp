@@ -6,6 +6,7 @@
 #include <string>
 #include <sstream>
 #include <cstring>
+#include <algorithm>
 
 #include <pystring.h>
 

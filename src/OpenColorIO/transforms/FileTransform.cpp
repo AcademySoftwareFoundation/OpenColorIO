@@ -8,6 +8,7 @@
 #include <cstring>
 #include <string>
 #include <iostream>
+#include <exception>
 
 #include <pystring.h>
 

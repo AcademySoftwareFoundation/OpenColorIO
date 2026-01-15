@@ -3,6 +3,10 @@
 
 
 #include <limits>
+#include <algorithm>
+#include <cmath>
+#include <vector>
+#include <memory>
 
 #include "ops/exposurecontrast/ExposureContrastOpCPU.cpp"
 
