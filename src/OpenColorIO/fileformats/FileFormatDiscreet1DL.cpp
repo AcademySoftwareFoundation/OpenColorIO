@@ -4,8 +4,10 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
+#include <string>
 #include <sstream>
 #include <istream>
+#include <memory>
 
 #include <pystring.h>
 

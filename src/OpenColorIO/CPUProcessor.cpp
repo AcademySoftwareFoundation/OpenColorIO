@@ -3,6 +3,7 @@
 
 #include <cstring>
 #include <sstream>
+#include <memory>
 
 #include <OpenColorIO/OpenColorIO.h>
 

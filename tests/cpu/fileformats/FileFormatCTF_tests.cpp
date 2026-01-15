@@ -3,14 +3,15 @@
 
 
 #include <limits>
-#include <fstream>
+#include <string>
+#include <ios>
 #include <sstream>
+#include <memory>
 
 #include "BitDepthUtils.h"
 #include "fileformats/FileFormatCTF.cpp"
 #include "ops/fixedfunction/FixedFunctionOp.h"
 #include "ops/gradingrgbcurve/GradingRGBCurve.h"
-#include "ops/gradinghuecurve/GradingHueCurve.h"
 #include "testutils/UnitTest.h"
 #include "UnitTestLogUtils.h"
 #include "UnitTestUtils.h"

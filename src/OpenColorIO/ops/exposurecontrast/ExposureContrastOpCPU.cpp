@@ -6,7 +6,6 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "BitDepthUtils.h"
 #include "DynamicProperty.h"
 #include "ops/exposurecontrast/ExposureContrastOpCPU.h"
 #include "SSE.h"

@@ -2,7 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <cstdlib>
-#include <math.h>
+#include <cmath>
+#include <string>
 #include <ostream>
 
 #include <OpenColorIO/OpenColorIO.h>

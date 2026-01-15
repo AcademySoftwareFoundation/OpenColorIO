@@ -4,7 +4,10 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <string>
 #include <sstream>
+#include <iostream>
+#include <memory>
 
 #include <OpenColorIO/OpenColorIO.h>
 

@@ -4,7 +4,8 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "BitDepthUtils.h"
+#include <IMath/half.h>
+
 #include "ImagePacking.h"
 
 
