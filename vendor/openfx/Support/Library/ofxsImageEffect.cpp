@@ -2788,7 +2788,7 @@ namespace OFX {
       catch (const OFX::Exception::Suite &ex)
       {
 #      ifdef DEBUG
-        std::cout << "Caught OFX::Exception::Suite: " << ex.what() << std::endl;
+        std::cout << "Caught OFX::Exception::Suite: " << ex.what() << "\n";
 #      endif
         stat = ex.status();
       }
@@ -2797,7 +2797,7 @@ namespace OFX {
       catch (const OFX::Exception::HostInadequate &e)
       {
 #      ifdef DEBUG
-        std::cout << "Caught OFX::Exception::HostInadequate: " << e.what() << std::endl;
+        std::cout << "Caught OFX::Exception::HostInadequate: " << e.what() << "\n";
 #      endif
         stat = kOfxStatErrMissingHostFeature;
       }
@@ -2806,7 +2806,7 @@ namespace OFX {
       catch (const OFX::Exception::PropertyUnknownToHost &e)
       {
 #      ifdef DEBUG
-        std::cout << "Caught OFX::Exception::PropertyUnknownToHost: " << e.what() << std::endl;
+        std::cout << "Caught OFX::Exception::PropertyUnknownToHost: " << e.what() << "\n";
 #      endif
         stat = kOfxStatErrMissingHostFeature;
       }
@@ -2828,14 +2828,14 @@ namespace OFX {
       catch (const std::exception &e)
       {
 #      ifdef DEBUG
-        std::cout << "Caught exception: " << e.what() << std::endl;
+        std::cout << "Caught exception: " << e.what() << "\n";
 #      endif
         stat = kOfxStatFailed;
       }
       catch (...)
       {
 #      ifdef DEBUG
-        std::cout << "Caught Unknown exception" << std::endl;
+        std::cout << "Caught Unknown exception\n";
 #      endif
         stat = kOfxStatFailed;
       }
@@ -2886,7 +2886,7 @@ namespace OFX {
       catch (OFX::Exception::Suite &ex)
       {
 #      ifdef DEBUG
-        std::cout << "Caught OFX::Exception::Suite" << std::endl;
+        std::cout << "Caught OFX::Exception::Suite\n";
 #      endif
         stat = ex.status();
       }
@@ -2895,7 +2895,7 @@ namespace OFX {
       catch (OFX::Exception::HostInadequate &)
       {
 #      ifdef DEBUG
-        std::cout << "Caught OFX::Exception::HostInadequate" << std::endl;
+        std::cout << "Caught OFX::Exception::HostInadequate\n";
 #      endif
         stat = kOfxStatErrMissingHostFeature;
       }
@@ -2904,7 +2904,7 @@ namespace OFX {
       catch (OFX::Exception::PropertyUnknownToHost &)
       {
 #      ifdef DEBUG
-        std::cout << "Caught OFX::Exception::PropertyUnknownToHost" << std::endl;
+        std::cout << "Caught OFX::Exception::PropertyUnknownToHost\n";
 #      endif
         stat = kOfxStatErrMissingHostFeature;
       }
@@ -2926,7 +2926,7 @@ namespace OFX {
       catch (...)
       {
 #      ifdef DEBUG
-        std::cout << "Caught Unknown exception" << std::endl;
+        std::cout << "Caught Unknown exception\n";
 #      endif
         stat = kOfxStatFailed;
       }
