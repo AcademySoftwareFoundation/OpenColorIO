@@ -215,19 +215,18 @@ int main (int argc, const char* argv[])
 
     if (ap.parse(argc, argv) < 0 || help || inputfile.empty())
     {
-        std::cout << ap.geterror() << std::endl;
+        std::cout << ap.geterror() << "\n";
         ap.usage();
-        std::cout << DESC_STRING << std::endl;
+        std::cout << DESC_STRING << "\n";
         if (help)
         {
             // What are the allowed formats?
-            std::cout << "Formats supported:" << std::endl;
+            std::cout << "Formats supported:\n";
             const auto nbFormats = OCIO::FileTransform::GetNumFormats();
             for (int i = 0; i < nbFormats; ++i)
             {
                 std::cout << OCIO::FileTransform::GetFormatNameByIndex(i);
-                std::cout << " (." << OCIO::FileTransform::GetFormatExtensionByIndex(i) << ")";
-                std::cout << std::endl;
+                std::cout << " (." << OCIO::FileTransform::GetFormatExtensionByIndex(i) << ")\n";
             }
             return 0;
         }
@@ -237,15 +236,13 @@ int main (int argc, const char* argv[])
 
     if (verbose)
     {
-        std::cout << std::endl;
-        std::cout << "OCIO Version: " << OCIO::GetVersion() << std::endl;
+        std::cout << "\nOCIO Version: " << OCIO::GetVersion() << "\n";
     }
 
 #ifndef OCIO_GPU_ENABLED
     if (usegpu || outputgpuInfo || usegpuLegacy)
     {
-        std::cerr << "Compiled without OpenGL support, GPU options are not available.";
-        std::cerr << std::endl;
+        std::cerr << "Compiled without OpenGL support, GPU options are not available.\n";
         return 1;
     }
 #endif // OCIO_GPU_ENABLED
@@ -275,15 +272,15 @@ int main (int argc, const char* argv[])
             if (printops)
             {
                 auto transform = processor->createGroupTransform();
-                std::cout << "Transform operators: " << std::endl;
+                std::cout << "Transform operators:\n";
                 const auto numTransforms = transform->getNumTransforms();
                 for (int i = 0; i < numTransforms; ++i)
                 {
-                    std::cout << "\t" << *(transform->getTransform(i)) << std::endl;
+                    std::cout << "\t" << *(transform->getTransform(i)) << "\n";
                 }
                 if (numTransforms == 0)
                 {
-                    std::cout << "No transform." << std::endl;
+                    std::cout << "No transform.\n";
                 }
             }
             if (usegpu || usegpuLegacy)
@@ -298,12 +295,12 @@ int main (int argc, const char* argv[])
         }
         catch (const OCIO::Exception & exception)
         {
-            std::cerr << "ERROR: " << exception.what() << std::endl;
+            std::cerr << "ERROR: " << exception.what() << "\n";
             return 1;
         }
         catch (...)
         {
-            std::cerr << "ERROR: Unknown error encountered while creating processor." << std::endl;
+            std::cerr << "ERROR: Unknown error encountered while creating processor.\n";
             return 1;
         }
 
@@ -319,8 +316,7 @@ int main (int argc, const char* argv[])
 
         if (test && numInput > 0)
         {
-            std::cerr << "ERROR: Expecting either RGB (or RGBA) pixel or predefined RGB values (i.e. -t)."
-                      << std::endl;
+            std::cerr << "ERROR: Expecting either RGB (or RGBA) pixel or predefined RGB values (i.e. -t).\n";
             return 1;
         }            
 
@@ -331,8 +327,7 @@ int main (int argc, const char* argv[])
         }
         else if (numInput != 3 && !test)
         {
-            std::cerr << "ERROR: Expecting either RGB or RGBA pixel."
-                      << std::endl;
+            std::cerr << "ERROR: Expecting either RGB or RGBA pixel.\n";
             return 1;
         }
 
@@ -354,7 +349,7 @@ int main (int argc, const char* argv[])
 
         if (verbose || stepInfo)
         {
-            std::cout << std::endl;
+            std::cout << "\n";
         }
 
         while (validInput)
@@ -376,7 +371,7 @@ int main (int argc, const char* argv[])
                         std::vector<float> outputPixel = pixel;
                         const auto numTransforms = transform->getNumTransforms();
                         
-                        std::cout << std::endl;
+                        std::cout << "\n";
 
                         for (int i = 0; i < numTransforms; ++i)
                         {
@@ -403,7 +398,7 @@ int main (int argc, const char* argv[])
                             std::vector<std::string> out;
                             ToString(out, outputPixel, 0, comp);
 
-                            std::cout << "\n" << *(transform->getTransform(i)) << std::endl;
+                            std::cout << "\n" << *(transform->getTransform(i)) << "\n";
                             std::cout << "Input  [R G B";
                             if (comp == 4)
                             {
@@ -411,7 +406,7 @@ int main (int argc, const char* argv[])
                             }
                             std::cout << "]: [";
                             PrintAlignedVec(in, out, comp);
-                            std::cout << "]" << std::endl;
+                            std::cout << "]\n";
 
                             std::cout << "Output [R G B";
                             if (comp == 4)
@@ -420,19 +415,19 @@ int main (int argc, const char* argv[])
                             }
                             std::cout << "]: [";
                             PrintAlignedVec(out, in, comp);
-                            std::cout << "]" << std::endl;
+                            std::cout << "]\n";
 
                             inputPixel = outputPixel;         
                         }
                     }
                     catch (const OCIO::Exception& exception)
                     {
-                        std::cerr << "ERROR: " << exception.what() << std::endl;
+                        std::cerr << "ERROR: " << exception.what() << "\n";
                         return 1;
                     }
                     catch (...)
                     {
-                        std::cerr << "ERROR: Unknown error encountered while processing single step operator." << std::endl;
+                        std::cerr << "ERROR: Unknown error encountered while processing single step operator.\n";
                         return 1;
                     }
 
@@ -447,12 +442,12 @@ int main (int argc, const char* argv[])
                     }
                     catch (const OCIO::Exception& e)
                     {
-                        std::cerr << "ERROR: Processing pixel: " << e.what() << std::endl;
+                        std::cerr << "ERROR: Processing pixel: " << e.what() << "\n";
                         return 1;
                     }
                     catch (...)
                     {
-                        std::cerr << "ERROR: Unknown error encountered while processing pixel." << std::endl;
+                        std::cerr << "ERROR: Unknown error encountered while processing pixel.\n";
                         return 1;
                     }
 
@@ -461,7 +456,7 @@ int main (int argc, const char* argv[])
                     std::vector<std::string> out;
                     ToString(out, pixel, 0, comp);
 
-                    std::cout << std::endl;
+                    std::cout << "\n";
 
                     if (verbose)
                     {
@@ -475,7 +470,7 @@ int main (int argc, const char* argv[])
                         }
                         std::cout << "]: [";
                         PrintAlignedVec(in, out, comp);
-                        std::cout << "]" << std::endl;
+                        std::cout << "]\n";
 
                         std::cout << "Output [R G B";
                         if (comp == 4)
@@ -484,7 +479,7 @@ int main (int argc, const char* argv[])
                         }
                         std::cout << "]: [";
                         PrintAlignedVec(out, in, comp);
-                        std::cout << "]" << std::endl;
+                        std::cout << "]\n";
                     }
                     else
                     {
@@ -493,7 +488,7 @@ int main (int argc, const char* argv[])
                         {
                             std::cout << " " << out[3];
                         }
-                        std::cout << std::endl;
+                        std::cout << "\n";
                     }
                     curPix += comp;
                 }               
@@ -502,7 +497,7 @@ int main (int argc, const char* argv[])
             {
                 if (verbose)
                 {
-                    std::cout << "Testing with predefined set of RGB pixels." << std::endl;
+                    std::cout << "Testing with predefined set of RGB pixels.\n";
                 }
                 input = input4test;
                 comp = 3;

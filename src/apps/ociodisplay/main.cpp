@@ -73,7 +73,7 @@ static void InitImageTexture(const char * filename)
 
     if (filename && *filename)
     {
-        std::cout << "Loading: " << filename << std::endl;
+        std::cout << "Loading: " << filename << "\n" << std::flush;
 
         try
         {
@@ -81,19 +81,19 @@ static void InitImageTexture(const char * filename)
         }
         catch (const std::exception &e)
         {
-            std::cerr << "ERROR: Loading file failed: " << e.what() << std::endl;
+            std::cerr << "ERROR: Loading file failed: " << e.what() << "\n";
             exit(1);
         }
         catch (...)
         {
-            std::cerr << "ERROR: Loading file failed." << std::endl;
+            std::cerr << "ERROR: Loading file failed.\n";
             exit(1);
         }
     }
     // If no file is provided, use a default gradient texture
     else
     {
-        std::cout << "No image specified, loading gradient." << std::endl;
+        std::cout << "No image specified, loading gradient.\n";
 
         img.init(512, 512, OCIO::CHANNEL_ORDERING_RGBA, OCIO::BIT_DEPTH_F32);
 
@@ -126,7 +126,7 @@ static void InitImageTexture(const char * filename)
     else
     {
         std::cerr << "Cannot load image with " << img.getNumChannels()
-                  << " components." << std::endl;
+                  << " components.\n";
         exit(1);
     }
 
@@ -159,13 +159,12 @@ void InitOCIO(const char * filename)
         if (!cs.empty())
         {
             g_inputColorSpace = cs;
-            std::cout << "colorspace: " << cs << std::endl;
+            std::cout << "colorspace: " << cs << "\n";
         }
         else
         {
             std::cout << "colorspace: " << g_inputColorSpace
-                      << " \t(could not determine from filename, using default)"
-                      << std::endl;
+                      << " \t(could not determine from filename, using default)\n";
         }
     }
 }
@@ -323,27 +322,26 @@ void UpdateOCIOGLState()
 
     if (g_verbose)
     {
-        std::cout << std::endl;
-        std::cout << "Color transformation composed of:" << std::endl;
-        std::cout << "      Image ColorSpace is:\t" << g_inputColorSpace << std::endl;
-        std::cout << "      Views is:\t\t" << g_transformName << std::endl;
-        std::cout << "      Display is:\t\t" << g_display << std::endl;
-        std::cout << "      Looks Override is:\t'" << g_look << "'" << std::endl;
-        std::cout << "  with:" << std::endl;
-        std::cout << "    exposure_fstop = " << g_exposure_fstop << std::endl;
-        std::cout << "    display_gamma  = " << g_display_gamma << std::endl;
-        std::cout << "    channels       = "
-                  << (g_channelHot[0] ? "R" : "")
-                  << (g_channelHot[1] ? "G" : "")
-                  << (g_channelHot[2] ? "B" : "")
-                  << (g_channelHot[3] ? "A" : "") << std::endl;
+        std::cout << "\n"
+                     "Color transformation composed of:\n"
+                     "      Image ColorSpace is:\t" << g_inputColorSpace << "\n"
+                     "      Views is:\t\t\t" << g_transformName << "\n"
+                     "      Display is:\t\t" << g_display << "\n"
+                     "      Looks Override is:\t'" << g_look << "'\n"
+                     "  with:\n"
+                     "    exposure_fstop = " << g_exposure_fstop << "\n"
+                     "    display_gamma  = " << g_display_gamma << "\n"
+                     "    channels       = "
+                     << (g_channelHot[0] ? "R" : "")
+                     << (g_channelHot[1] ? "G" : "")
+                     << (g_channelHot[2] ? "B" : "")
+                     << (g_channelHot[3] ? "A" : "") << "\n";
 
         for (const auto &opt : OptmizationMenu)
         {
             if (opt.second == g_optimization)
             {
-                std::cout << std::endl
-                          << "Optimization: " << opt.first << std::endl;
+                std::cout << "\nOptimization: " << opt.first << "\n";
             }
         }
     }
@@ -391,7 +389,7 @@ void UpdateOCIOGLState()
     }
     catch (const OCIO::Exception &e)
     {
-        std::cerr << e.what() << std::endl;
+        std::cerr << e.what() << "\n";
         return;
     }
     catch (...)
@@ -621,19 +619,19 @@ void parseArguments(int argc, char **argv)
 #endif
         else if (0 == strcmp(argv[i], "-h"))
         {
-            std::cout << std::endl;
-            std::cout << "help:" << std::endl;
-            std::cout << "  ociodisplay [OPTIONS] [image]  where" << std::endl;
-            std::cout << std::endl;
-            std::cout << "  OPTIONS:" << std::endl;
-            std::cout << "     -h         :  displays the help and exit" << std::endl;
-            std::cout << "     -v         :  displays the color space information" << std::endl;
-            std::cout << "     -gpulegacy :  use the legacy (i.e. baked) GPU color processing" << std::endl;
-            std::cout << "     -gpuinfo   :  output the OCIO shader program" << std::endl;
+            std::cout << "\n"
+                         "help:\n"
+                         "  ociodisplay [OPTIONS] [image]  where\n"
+                         "\n"
+                         "  OPTIONS:\n"
+                         "     -h         :  displays the help and exit\n"
+                         "     -v         :  displays the color space information\n"
+                         "     -gpulegacy :  use the legacy (i.e. baked) GPU color processing\n"
+                         "     -gpuinfo   :  output the OCIO shader program\n"
 #if __APPLE__
-            std::cout << "     -metal     :  use metal OCIO shader backend " << std::endl;
+                         "     -metal     :  use metal OCIO shader backend \n"
 #endif
-            std::cout << std::endl;
+                         "\n";
             exit(0);
         }
         else
@@ -662,7 +660,7 @@ int main(int argc, char **argv)
     }
     catch (const OCIO::Exception &e)
     {
-        std::cerr << e.what() << std::endl;
+        std::cerr << e.what() << "\n";
         return 1;
     }
 
@@ -683,12 +681,11 @@ int main(int argc, char **argv)
     {
         if (!g_filename.empty())
         {
-            std::cout << std::endl;
-            std::cout << "Image: " << g_filename << std::endl;
+            std::cout << "\nImage: " << g_filename << "\n";
         }
-        std::cout << std::endl;
-        std::cout << OCIO::ImageIO::GetVersion() << std::endl;
-        std::cout << "OCIO Version: " << OCIO::GetVersion() << std::endl;
+        std::cout << "\n";
+        std::cout << OCIO::ImageIO::GetVersion() << "\n";
+        std::cout << "OCIO Version: " << OCIO::GetVersion() << "\n";
     }
 
     OCIO::ConstConfigRcPtr config;
@@ -709,16 +706,16 @@ int main(int argc, char **argv)
 
         if (env && *env)
         {
-            std::cout << std::endl;
-            std::cout << "OCIO Config. file   : '" << env << "'" << std::endl;
+            std::cout << "\n";
+            std::cout << "OCIO Config. file   : '" << env << "'\n";
             std::cout << "OCIO Config. version: " << config->getMajorVersion() << "."
-                      << config->getMinorVersion() << std::endl;
-            std::cout << "OCIO search_path    : " << config->getSearchPath() << std::endl;
+                      << config->getMinorVersion() << "\n";
+            std::cout << "OCIO search_path    : " << config->getSearchPath() << "\n";
         }
     }
 
-    std::cout << std::endl;
-    std::cout << USAGE_TEXT << std::endl;
+    std::cout << "\n";
+    std::cout << USAGE_TEXT << "\n";
 
     InitImageTexture(g_filename.c_str());
     try
@@ -727,7 +724,7 @@ int main(int argc, char **argv)
     }
     catch (OCIO::Exception &e)
     {
-        std::cerr << e.what() << std::endl;
+        std::cerr << e.what() << "\n";
         exit(1);
     }
 
@@ -739,7 +736,7 @@ int main(int argc, char **argv)
     }
     catch (const OCIO::Exception &e)
     {
-        std::cerr << e.what() << std::endl;
+        std::cerr << e.what() << "\n";
         exit(1);
     }
 

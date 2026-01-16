@@ -904,7 +904,7 @@ int main(int argc, const char ** argv)
 
         if (!enabledTest)
         {
-            std::cout << "DISABLED" << std::endl;
+            std::cout << "DISABLED\n" << std::flush;
         }
         else if(curr_failures==failures && test->isValid())
         {
@@ -914,7 +914,7 @@ int main(int argc, const char ** argv)
 
             std::cout << "PASSED - (MaxDiff: " << test->getMaxDiff()
                       << " at pix[" << pixelIdx
-                      << "][" << componentIdx << "])" << std::endl;
+                      << "][" << componentIdx << "])\n" << std::flush;
         }
         else if(!test->isValid())
         {
@@ -926,6 +926,6 @@ int main(int argc, const char ** argv)
         tests[idx] = nullptr;
     }
 
-    std::cout << "\n" << failures << " tests failed\n" << std::endl;
+    std::cout << "\n" << failures << " tests failed\n\n" << std::flush;
     return failures;
 }

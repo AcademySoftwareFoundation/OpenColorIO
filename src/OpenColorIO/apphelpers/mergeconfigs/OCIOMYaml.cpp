@@ -303,7 +303,7 @@ void OCIOMYaml::loadParams(const YAML::Node & node, ConfigMergingParametersRcPtr
         else
         {
             // Handle unsupported property or use default handler.
-            std::cout << "Unsupported property : " << key << std::endl;
+            std::cout << "Unsupported property : " << key << "\n";
         }
     }
 }

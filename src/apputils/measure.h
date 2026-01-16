@@ -74,7 +74,7 @@ public:
                   << m_explanations << "\n"
                   << "  Processing took: "
                   << (m_duration.count() / float(m_iterations))
-                  <<  " ms" << std::endl;
+                  <<  " ms\n" << std::flush;
     }
 
 private:
