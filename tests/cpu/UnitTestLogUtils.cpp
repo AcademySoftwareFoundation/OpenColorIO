@@ -115,29 +115,29 @@ MuteLogging::~MuteLogging()
 
 bool checkAndMuteSceneLinearRoleError(LogGuard & logGuard)
 {
-    const std::string interchange_scene = "[OpenColorIO Error]: The scene_linear role is "\
+    const std::string interchange_scene = "[OpenColorIO Error]: The scene_linear role is "
                                           "required for a config version 2.2 or higher.";
     return logGuard.findAndRemove(interchange_scene);
 }
 
 bool checkAndMuteCompositingLogRoleError(LogGuard & logGuard)
 {
-    const std::string compositing_log = "[OpenColorIO Error]: The compositing_log role is "\
+    const std::string compositing_log = "[OpenColorIO Error]: The compositing_log role is "
                                         "required for a config version 2.2 or higher.";
     return logGuard.findAndRemove(compositing_log);
 }
 
 bool checkAndMuteColorTimingRoleError(LogGuard & logGuard)
 {
-    const std::string color_timing = "[OpenColorIO Error]: The color_timing role is required "\
+    const std::string color_timing = "[OpenColorIO Error]: The color_timing role is required "
                                      "for a config version 2.2 or higher.";
     return logGuard.findAndRemove(color_timing);
 }
 
 bool checkAndMuteAcesInterchangeRoleError(LogGuard & logGuard)
 {
-    const std::string aces_interchange = "[OpenColorIO Error]: The aces_interchange role is "\
-                                         "required when there are scene-referred color spaces and "\
+    const std::string aces_interchange = "[OpenColorIO Error]: The aces_interchange role is "
+                                         "required when there are scene-referred color spaces and "
                                          "the config version is 2.2 or higher.";
     return logGuard.findAndRemove(aces_interchange);
 }

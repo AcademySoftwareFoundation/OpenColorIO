@@ -113,8 +113,8 @@ OCIO_ADD_TEST(Logging, message_function)
         OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_DEBUG);
 
         OCIO::LogDebug(std::string("My first msg\nMy second msg\nMy third msg"));
-        OCIO_CHECK_EQUAL(guard.output(), "[OpenColorIO Debug]: My first msg\n"\
-                                         "[OpenColorIO Debug]: My second msg\n"\
+        OCIO_CHECK_EQUAL(guard.output(), "[OpenColorIO Debug]: My first msg\n"
+                                         "[OpenColorIO Debug]: My second msg\n"
                                          "[OpenColorIO Debug]: My third msg\n");
     }
 }
