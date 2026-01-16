@@ -205,6 +205,16 @@ namespace
         app->initImage(g_winWidth, g_winHeight, OCIO::OglApp::COMPONENTS_RGBA, &image[0]);
     }
 
+#ifdef OCIO_VULKAN_ENABLED
+    void AllocateImageTexture(OCIO::VulkanAppRcPtr & app)
+    {
+        const unsigned numEntries = g_winWidth * g_winHeight * g_components;
+        OCIOGPUTest::CustomValues::Values image(numEntries, 0.0f);
+
+        app->initImage(g_winWidth, g_winHeight, OCIO::VulkanApp::COMPONENTS_RGBA, &image[0]);
+    }
+#endif
+
     void SetTestValue(float * image, float val, unsigned numComponents)
     {
         for (unsigned component = 0; component < numComponents; ++component)
@@ -331,6 +341,114 @@ namespace
         app->updateImage(&values.m_inputValues[0]);
     }
 
+#ifdef OCIO_VULKAN_ENABLED
+    void UpdateImageTexture(OCIO::VulkanAppRcPtr & app, OCIOGPUTestRcPtr & test)
+    {
+        // Note: User-specified custom values are padded out
+        // to the preferred size (g_winWidth x g_winHeight).
+
+        const unsigned predefinedNumEntries = g_winWidth * g_winHeight * g_components;
+
+        if (test->getCustomValues().m_inputValues.empty())
+        {
+            // It means to generate the input values.
+
+            const bool testNaN = false;
+            const bool testInfinity = false;
+
+            float min = 0.0f;
+            float max = 1.0f;
+            if(test->getTestWideRange())
+            {
+                test->getWideRangeInterval(min, max);
+            }
+            const float range = max - min;
+
+            OCIOGPUTest::CustomValues tmp;
+            tmp.m_originalInputValueSize = predefinedNumEntries;
+            tmp.m_inputValues = OCIOGPUTest::CustomValues::Values(predefinedNumEntries, min);
+
+            unsigned idx = 0;
+            unsigned numEntries = predefinedNumEntries;
+            const unsigned numTests = g_components * g_components;
+            if (testNaN)
+            {
+                const float qnan = std::numeric_limits<float>::quiet_NaN();
+                SetTestValue(&tmp.m_inputValues[0], qnan, g_components);
+                idx += numTests;
+                numEntries -= numTests;
+            }
+
+            if (testInfinity)
+            {
+                const float posinf = std::numeric_limits<float>::infinity();
+                SetTestValue(&tmp.m_inputValues[idx], posinf, g_components);
+                idx += numTests;
+                numEntries -= numTests;
+
+                const float neginf = -std::numeric_limits<float>::infinity();
+                SetTestValue(&tmp.m_inputValues[idx], neginf, g_components);
+                idx += numTests;
+                numEntries -= numTests;
+            }
+
+            // Compute the value step based on the remaining number of values.
+            const float step = range / float(numEntries);
+
+            for (unsigned int i=0; i < numEntries; ++i, ++idx)
+            {
+                tmp.m_inputValues[idx] = min + step * float(i);
+            }
+
+            test->setCustomValues(tmp);
+        }
+        else
+        {
+            // It means to use the custom input values.
+
+            const OCIOGPUTest::CustomValues::Values & existingInputValues
+                = test->getCustomValues().m_inputValues;
+
+            const size_t numInputValues = existingInputValues.size();
+            if (0 != (numInputValues%g_components))
+            {
+                throw OCIO::Exception("Only the RGBA input values are supported");
+            }
+
+            test->getCustomValues().m_originalInputValueSize = numInputValues;
+
+            if (numInputValues > predefinedNumEntries)
+            {
+                throw OCIO::Exception("Exceed the predefined texture maximum size");
+            }
+            else if (numInputValues < predefinedNumEntries)
+            {
+                OCIOGPUTest::CustomValues values;
+                values.m_originalInputValueSize = existingInputValues.size();
+
+                // Resize the buffer to fit the expected input image size.
+                values.m_inputValues.resize(predefinedNumEntries, 0);
+
+                for (size_t idx = 0; idx < numInputValues; ++idx)
+                {
+                    values.m_inputValues[idx] = existingInputValues[idx];
+                }
+
+                test->setCustomValues(values);
+            }
+        }
+
+        const OCIOGPUTest::CustomValues & values = test->getCustomValues();
+
+        if (predefinedNumEntries != values.m_inputValues.size())
+        {
+            throw OCIO::Exception("Missing some expected input values");
+        }
+
+        app->updateImage(&values.m_inputValues[0]);
+    }
+#endif
+
     void UpdateOCIOGLState(OCIO::OglAppRcPtr & app, OCIOGPUTestRcPtr & test)
     {
         app->setPrintShader(test->isVerbose());
@@ -354,6 +472,32 @@ namespace
 
         app->setShader(shaderDesc);
     }
+
+#ifdef OCIO_VULKAN_ENABLED
+    void UpdateOCIOVulkanState(OCIO::VulkanAppRcPtr & app, OCIOGPUTestRcPtr & test)
+    {
+        app->setPrintShader(test->isVerbose());
+
+        OCIO::ConstProcessorRcPtr & processor = test->getProcessor();
+        OCIO::GpuShaderDescRcPtr & shaderDesc = test->getShaderDesc();
+        
+        OCIO::ConstGPUProcessorRcPtr gpu;
+        if (test->isLegacyShader())
+        {
+            gpu = processor->getOptimizedLegacyGPUProcessor(OCIO::OPTIMIZATION_DEFAULT, 
+                                                            test->getLegacyShaderLutEdge());
+        }
+        else
+        {
+            gpu = processor->getDefaultGPUProcessor();
+        }
+
+        // Collect the shader program information for a specific processor.
+        gpu->extractGpuShaderInfo(shaderDesc);
+
+        app->setShader(shaderDesc);
+    }
+#endif
 
     void DiffComponent(const std::vector<float> & cpuImage,
                        const std::vector<float> & gpuImage,
@@ -527,6 +671,146 @@ namespace
             test->updateMaxDiff(diff, idxDiff);
         }
     }
+
+#ifdef OCIO_VULKAN_ENABLED
+    // Validate the GPU processing against the CPU one for Vulkan.
+    void ValidateImageTexture(OCIO::VulkanAppRcPtr & app, OCIOGPUTestRcPtr & test)
+    {
+        // Each retest is rebuilding a cpu proc.
+        OCIO::ConstCPUProcessorRcPtr processor = test->getProcessor()->getDefaultCPUProcessor();
+
+        const float epsilon = test->getErrorThreshold();
+        const float expectMinValue = test->getExpectedMinimalValue();
+
+        // Compute the width & height to avoid testing the padded values.
+
+        const size_t numPixels = test->getCustomValues().m_originalInputValueSize / g_components;
+
+        size_t width, height = 0;
+        if(numPixels<=g_winWidth)
+        {
+            width  = numPixels;
+            height = 1;
+        }
+        else
+        {
+            width  = g_winWidth;
+            height = numPixels/g_winWidth;
+            if((numPixels%g_winWidth)>0) height += 1;
+        }
+
+        if(width==0 || width>g_winWidth || height==0 || height>g_winHeight)
+        {
+            throw OCIO::Exception("Mismatch with the expected image size");
+        }
+
+        // Step 1: Compute the output using the CPU engine.
+
+        OCIOGPUTest::CustomValues::Values cpuImage = test->getCustomValues().m_inputValues;
+        OCIO::PackedImageDesc desc(&cpuImage[0], (long)width, (long)height, g_components);
+        processor->apply(desc);
+
+        // Step 2: Grab the GPU output from the rendering buffer.
+
+        OCIOGPUTest::CustomValues::Values gpuImage(g_winWidth*g_winHeight*g_components, 0.0f);
+        app->readImage(&gpuImage[0]);
+
+        // Step 3: Compare the two results.
+
+        const OCIOGPUTest::CustomValues::Values & image = test->getCustomValues().m_inputValues;
+        float diff = 0.0f;
+        size_t idxDiff = invalidIndex;
+        size_t idxNan = invalidIndex;
+        size_t idxInf = invalidIndex;
+        constexpr float huge = std::numeric_limits<float>::max();
+        float minVals[4] = {huge, huge, huge, huge};
+        float maxVals[4] = {-huge, -huge, -huge, -huge};
+        const bool relativeTest = test->getRelativeComparison();
+        for(size_t idx=0; idx<(width*height); ++idx)
+        {
+            for(size_t chan=0; chan<4; ++chan)
+            {
+                DiffComponent(cpuImage, gpuImage, 4 * idx + chan, relativeTest, expectMinValue,
+                              diff, idxDiff, idxInf, idxNan);
+                minVals[chan] = std::min(minVals[chan], 
+                                std::isinf(gpuImage[4 * idx + chan]) ? huge: gpuImage[4 * idx + chan]);
+                maxVals[chan] = std::max(maxVals[chan], 
+                                std::isinf(gpuImage[4 * idx + chan]) ? -huge: gpuImage[4 * idx + chan]);
+            }
+        }
+
+        size_t componentIdx = idxDiff % 4;
+        size_t pixelIdx = idxDiff / 4;
+        if (diff > epsilon || idxInf != invalidIndex || idxNan != invalidIndex || test->isPrintMinMax())
+        {
+            std::stringstream err;
+            err << std::setprecision(10);
+            err << "\n\nGPU max vals = {" 
+                << maxVals[0] << ", " << maxVals[1] << ", " << maxVals[2] << ", " << maxVals[3] << "}\n"
+                << "GPU min vals = {" 
+                << minVals[0] << ", " << minVals[1] << ", " << minVals[2] << ", " << minVals[3] << "}\n";
+
+            err << std::setprecision(10)
+                << "\nMaximum error: " << diff << " at pixel: " << pixelIdx
+                << " on component " << componentIdx;
+            if (diff > epsilon)
+            {
+                err << std::setprecision(10)
+                    << " larger than epsilon.\nsrc = {"
+                    << image[4 * pixelIdx + 0] << ", " << image[4 * pixelIdx + 1] << ", "
+                    << image[4 * pixelIdx + 2] << ", " << image[4 * pixelIdx + 3] << "}"
+                    << "\ncpu = {"
+                    << cpuImage[4 * pixelIdx + 0] << ", " << cpuImage[4 * pixelIdx + 1] << ", "
+                    << cpuImage[4 * pixelIdx + 2] << ", " << cpuImage[4 * pixelIdx + 3] << "}"
+                    << "\ngpu = {"
+                    << gpuImage[4 * pixelIdx + 0] << ", " << gpuImage[4 * pixelIdx + 1] << ", "
+                    << gpuImage[4 * pixelIdx + 2] << ", " << gpuImage[4 * pixelIdx + 3] << "}\n"
+                    << (test->getRelativeComparison() ? "relative " : "absolute ")
+                    << "tolerance="
+                    << epsilon;
+            }
+            if (idxInf != invalidIndex)
+            {
+                componentIdx = idxInf % 4;
+                pixelIdx = idxInf / 4;
+                err << std::setprecision(10)
+                    << "\nLarge number error: " << diff << " at pixel: " << pixelIdx
+                    << " on component " << componentIdx
+                    << ".\nsrc = {"
+                    << image[4 * pixelIdx + 0] << ", " << image[4 * pixelIdx + 1] << ", "
+                    << image[4 * pixelIdx + 2] << ", " << image[4 * pixelIdx + 3] << "}"
+                    << "\ncpu = {"
+                    << cpuImage[4 * pixelIdx + 0] << ", " << cpuImage[4 * pixelIdx + 1] << ", "
+                    << cpuImage[4 * pixelIdx + 2] << ", " << cpuImage[4 * pixelIdx + 3] << "}"
+                    << "\ngpu = {"
+                    << gpuImage[4 * pixelIdx + 0] << ", " << gpuImage[4 * pixelIdx + 1] << ", "
+                    << gpuImage[4 * pixelIdx + 2] << ", " << gpuImage[4 * pixelIdx + 3] << "}\n";
+            }
+            if (idxNan != invalidIndex)
+            {
+                componentIdx = idxNan % 4;
+                pixelIdx = idxNan / 4;
+                err << std::setprecision(10)
+                    << "\nNAN error: " << diff << " at pixel: " << pixelIdx
+                    << " on component " << componentIdx
+                    << ".\nsrc = {"
+                    << image[4 * pixelIdx + 0] << ", " << image[4 * pixelIdx + 1] << ", "
+                    << image[4 * pixelIdx + 2] << ", " << image[4 * pixelIdx + 3] << "}"
+                    << "\ncpu = {"
+                    << cpuImage[4 * pixelIdx + 0] << ", " << cpuImage[4 * pixelIdx + 1] << ", "
+                    << cpuImage[4 * pixelIdx + 2] << ", " << cpuImage[4 * pixelIdx + 3] << "}"
+                    << "\ngpu = {"
+                    << gpuImage[4 * pixelIdx + 0] << ", " << gpuImage[4 * pixelIdx + 1] << ", "
+                    << gpuImage[4 * pixelIdx + 2] << ", " << gpuImage[4 * pixelIdx + 3] << "}\n";
+            }
+            throw OCIO::Exception(err.str().c_str());
+        }
+        else
+        {
+            test->updateMaxDiff(diff, idxDiff);
+        }
+    }
+#endif
 };
 
 int main(int argc, const char ** argv)
@@ -641,7 +925,14 @@ int main(int argc, const char ** argv)
     }
 
     // Step 2: Allocate the texture that holds the image.
-    if (!useVulkanRenderer)
+#ifdef OCIO_VULKAN_ENABLED
+    if (useVulkanRenderer)
+    {
+        AllocateImageTexture(vulkanApp);
+        vulkanApp->reshape(g_winWidth, g_winHeight);
+    }
+    else
+#endif
     {
         AllocateImageTexture(app);
 
@@ -728,28 +1019,59 @@ int main(int argc, const char ** argv)
 
             if(test->isValid() && enabledTest)
             {
-                // Initialize the texture with the RGBA values to be processed.
-                UpdateImageTexture(app, test);
-
-                // Update the GPU shader program.
-                UpdateOCIOGLState(app, test);
-
-                const size_t numRetest = test->getNumRetests();
-                // Need to run once and for each retest.
-                for (size_t idxRetest = 0; idxRetest <= numRetest; ++idxRetest)
+#ifdef OCIO_VULKAN_ENABLED
+                if (useVulkanRenderer)
                 {
-                    if (idxRetest != 0) // Skip first run.
+                    // Initialize the texture with the RGBA values to be processed.
+                    UpdateImageTexture(vulkanApp, test);
+
+                    // Update the GPU shader program.
+                    UpdateOCIOVulkanState(vulkanApp, test);
+
+                    const size_t numRetest = test->getNumRetests();
+                    // Need to run once and for each retest.
+                    for (size_t idxRetest = 0; idxRetest <= numRetest; ++idxRetest)
                     {
-                        // Call the retest callback.
-                        test->retestSetup(idxRetest - 1);
+                        if (idxRetest != 0) // Skip first run.
+                        {
+                            // Call the retest callback.
+                            test->retestSetup(idxRetest - 1);
+                        }
+
+                        // Process the image texture into the rendering buffer.
+                        vulkanApp->redisplay();
+
+                        // Compute the expected values using the CPU and compare
+                        // against the GPU values.
+                        ValidateImageTexture(vulkanApp, test);
                     }
+                }
+                else
+#endif
+                {
+                    // Initialize the texture with the RGBA values to be processed.
+                    UpdateImageTexture(app, test);
 
-                    // Process the image texture into the rendering buffer.
-                    app->redisplay();
+                    // Update the GPU shader program.
+                    UpdateOCIOGLState(app, test);
 
-                    // Compute the expected values using the CPU and compare
-                    // against the GPU values.
-                    ValidateImageTexture(app, test);
+                    const size_t numRetest = test->getNumRetests();
+                    // Need to run once and for each retest.
+                    for (size_t idxRetest = 0; idxRetest <= numRetest; ++idxRetest)
+                    {
+                        if (idxRetest != 0) // Skip first run.
+                        {
+                            // Call the retest callback.
+                            test->retestSetup(idxRetest - 1);
+                        }
+
+                        // Process the image texture into the rendering buffer.
+                        app->redisplay();
+
+                        // Compute the expected values using the CPU and compare
+                        // against the GPU values.
+                        ValidateImageTexture(app, test);
+                    }
                 }
             }
         }

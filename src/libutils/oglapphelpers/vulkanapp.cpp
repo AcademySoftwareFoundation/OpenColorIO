@@ -182,6 +182,9 @@ void VulkanApp::cleanup()
     {
         vkDeviceWaitIdle(m_device);
 
+        // Destroy VulkanBuilder first (it holds shader module references)
+        m_vulkanBuilder.reset();
+
         if (m_computePipeline != VK_NULL_HANDLE)
         {
             vkDestroyPipeline(m_device, m_computePipeline, nullptr);
@@ -622,13 +625,22 @@ void VulkanBuilder::buildShader(GpuShaderDescRcPtr & shaderDesc)
     shader << "};\n";
     shader << "\n";
 
-    // Add OCIO shader helper code
-    shader << shaderDesc->getShaderText() << "\n";
+    // Add OCIO shader helper code (declarations and functions)
+    const char * shaderText = shaderDesc->getShaderText();
+    if (shaderText && strlen(shaderText) > 0)
+    {
+        shader << shaderText << "\n";
+    }
 
     shader << "\n";
     shader << "void main() {\n";
     shader << "    uvec2 gid = gl_GlobalInvocationID.xy;\n";
-    shader << "    uint width = " << 256 << ";\n";  // Will be set dynamically
+    shader << "    uint width = 256u;\n";
+    shader << "    uint height = 256u;\n";
+    shader << "    \n";
+    shader << "    // Bounds check to avoid out-of-bounds access\n";
+    shader << "    if (gid.x >= width || gid.y >= height) return;\n";
+    shader << "    \n";
     shader << "    uint idx = gid.y * width + gid.x;\n";
     shader << "    \n";
     shader << "    vec4 " << shaderDesc->getPixelName() << " = inputPixels[idx];\n";
