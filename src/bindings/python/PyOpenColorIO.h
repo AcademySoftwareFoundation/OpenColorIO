@@ -12,8 +12,6 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "utils/StringUtils.h"
-
 // Generated at build time: '${PROJECT_BINARY_DIR}/docs/_doxygen/docstrings.h'
 #include "docstrings.h"
 

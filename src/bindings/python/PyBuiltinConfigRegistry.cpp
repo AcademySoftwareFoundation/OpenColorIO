@@ -3,6 +3,7 @@
 
 #include "PyBuiltinConfigRegistry.h"
 #include "PyUtils.h"
+#include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE
 {
