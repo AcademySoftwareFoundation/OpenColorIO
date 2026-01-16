@@ -128,18 +128,18 @@ endif()
 
 if(OCIO_VULKAN_ENABLED)
     target_include_directories(oglapphelpers
-        PRIVATE
+        PUBLIC
             ${Vulkan_INCLUDE_DIRS}
     )
     target_link_libraries(oglapphelpers
-        PRIVATE
+        PUBLIC
             Vulkan::Vulkan
             glslang::glslang
             glslang::glslang-default-resource-limits
             glslang::SPIRV
     )
     target_compile_definitions(oglapphelpers
-        PRIVATE
+        PUBLIC
             OCIO_VULKAN_ENABLED
     )
 endif()
