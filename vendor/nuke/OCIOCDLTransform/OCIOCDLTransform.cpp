@@ -365,8 +365,8 @@ const char* OCIOCDLTransform::displayName() const
 const char* OCIOCDLTransform::node_help() const
 {
     // TODO more detailed help text
-    return "Use OpenColorIO to apply an ASC CDL grade. Applied using:\n\n"\
-        "out = (i * s + o)^p\n\nWhere i is the input value, s is slope, "\
+    return "Use OpenColorIO to apply an ASC CDL grade. Applied using:\n\n"
+        "out = (i * s + o)^p\n\nWhere i is the input value, s is slope, "
         "o is offset and p is power";
 }
 

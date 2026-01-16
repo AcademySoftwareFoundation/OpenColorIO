@@ -264,7 +264,7 @@ colorspaces:
 
     OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(iss),
                           OCIO::Exception,
-                          "Only config version 2.1 (or higher) can have BuiltinTransform style "\
+                          "Only config version 2.1 (or higher) can have BuiltinTransform style "
                           "'ACES-LMT - ACES 1.3 Reference Gamut Compression'.");
 }
 
@@ -308,7 +308,7 @@ colorspaces:
 
     OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(iss),
                           OCIO::Exception,
-                          "Only config version 2.2 (or higher) can have BuiltinTransform style "\
+                          "Only config version 2.2 (or higher) can have BuiltinTransform style "
                           "'ARRI_LOGC4_to_ACES2065-1'.");
 }
 
