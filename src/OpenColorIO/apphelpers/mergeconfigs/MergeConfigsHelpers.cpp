@@ -14,6 +14,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "MergeConfigsHelpers.h"
+#include "SectionMerger.h"
 
 #include "Platform.h"
 #include "OCIOMYaml.h"

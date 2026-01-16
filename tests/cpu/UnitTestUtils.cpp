@@ -7,7 +7,6 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Logging.h"
 #include "OpBuilders.h"
 #include "UnitTestUtils.h"
 #include "utils/StringUtils.h"

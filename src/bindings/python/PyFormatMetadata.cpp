@@ -5,6 +5,7 @@
 
 #include "PyOpenColorIO.h"
 #include "PyUtils.h"
+#include "utils/StringUtils.h"
 
 #include <sstream>
 

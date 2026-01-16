@@ -6,7 +6,6 @@
 
 #include "Logging.h"
 #include "ops/gradingtone/GradingToneOpGPU.h"
-#include "utils/StringUtils.h"
 
 
 namespace OCIO_NAMESPACE

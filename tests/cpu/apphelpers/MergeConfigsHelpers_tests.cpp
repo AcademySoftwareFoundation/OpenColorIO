@@ -3,6 +3,7 @@
 
 #include <pystring.h>
 #include <sstream>
+#include <iostream>
 
 #include "apphelpers/mergeconfigs/MergeConfigsHelpers.cpp"
 

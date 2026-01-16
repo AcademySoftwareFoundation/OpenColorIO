@@ -13,6 +13,7 @@
 #include <vector>
 #include <cstdint>
 #include <map>
+#include <functional>
 
 #include "OpenColorABI.h"
 #include "OpenColorTypes.h"
