@@ -1540,7 +1540,7 @@ void GetGradingToneGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
     if (gtData->isDynamic() && shaderCreator->getLanguage() == LANGUAGE_OSL_1)
     {
-        std::string msg("The dynamic properties are not yet supported by the 'Open Shading language"\
+        std::string msg("The dynamic properties are not yet supported by the 'Open Shading language"
                         " (OSL)' translation: The '");
         msg += opPrefix;
         msg += "' dynamic property is replaced by a local variable.";

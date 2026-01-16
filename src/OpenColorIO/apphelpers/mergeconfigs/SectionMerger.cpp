@@ -1830,7 +1830,7 @@ void ViewTransformsMerger::handlePreferInput()
     const char * inputName = m_inputConfig->getDefaultViewTransformName();
     if (!(Platform::Strcasecmp(baseName, inputName) == 0))
     {
-        notify("The Input config contains a value that would override the Base config: "\
+        notify("The Input config contains a value that would override the Base config: "
                "default_view_transform: " + std::string(inputName), m_params->isErrorOnConflict());
     }
     // If the input config does not specify a default, keep the one from the base.
@@ -1858,7 +1858,7 @@ void ViewTransformsMerger::handlePreferBase()
     const char * inputName = m_inputConfig->getDefaultViewTransformName();
     if (!(Platform::Strcasecmp(baseName, inputName) == 0))
     {
-        notify("The Input config contains a value that would override the Base config: "\
+        notify("The Input config contains a value that would override the Base config: "
                "default_view_transform: " + std::string(inputName), m_params->isErrorOnConflict());
     }
     // Only use the input if the base is missing.

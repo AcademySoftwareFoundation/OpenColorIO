@@ -1028,7 +1028,7 @@ void UpdateFileRulesFromV1ToV2(const Config & config, FileRulesRcPtr & fileRules
                 else
                 {
                     static constexpr char msg[]
-                        = "The default rule creation falls back to the first color space because "\
+                        = "The default rule creation falls back to the first color space because "
                           "no suitable color space exists.";
 
                     LogWarning(msg);
