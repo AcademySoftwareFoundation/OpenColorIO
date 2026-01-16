@@ -211,7 +211,7 @@ void SaveICCProfileToFile(const std::string & outputfile,
     // Write
     //
     if(verbose)
-        std::cout << "[OpenColorIO INFO]: Writing " << outputfile << std::endl;
+        std::cout << "[OpenColorIO INFO]: Writing " << outputfile << "\n";
     cmsSaveProfileToFile(hProfile, outputfile.c_str());
     cmsCloseProfile(hProfile);
 

@@ -233,7 +233,7 @@ void OglApp::printGLInfo() const noexcept
               << "GL Vendor:    " << glGetString(GL_VENDOR) << "\n"
               << "GL Renderer:  " << glGetString(GL_RENDERER) << "\n"
               << "GL Version:   " << glGetString(GL_VERSION) << "\n"
-              << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+              << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
 }
 
 void OglApp::setupCommon()
@@ -376,7 +376,7 @@ void HeadlessApp::printEGLInfo() const noexcept
 {
     std::cout << "\n"
               << "EGL Vendor:   " << eglQueryString(m_eglDisplay, EGL_VENDOR) << "\n"
-              << "EGL Version:  " << eglQueryString(m_eglDisplay, EGL_VERSION) << std::endl;
+              << "EGL Version:  " << eglQueryString(m_eglDisplay, EGL_VERSION) << "\n";
 }
 
 void HeadlessApp::redisplay()

@@ -89,11 +89,11 @@ OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
     }
     catch (const OCIO::Exception& e)
     {
-        std::cerr << "OCIOLookTransform: " << e.what() << std::endl;
+        std::cerr << "OCIOLookTransform: " << e.what() << "\n";
     }
     catch (...)
     {
-        std::cerr << "OCIOLookTransform: Unknown exception during OCIO setup." << std::endl;
+        std::cerr << "OCIOLookTransform: Unknown exception during OCIO setup.\n";
     }
     
     if(!config)
@@ -139,7 +139,7 @@ OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
     
     if(!m_hasColorSpaces)
     {
-        std::cerr << "OCIOLookTransform: No ColorSpaces available for input and/or output." << std::endl;
+        std::cerr << "OCIOLookTransform: No ColorSpaces available for input and/or output.\n";
     }
 }
 

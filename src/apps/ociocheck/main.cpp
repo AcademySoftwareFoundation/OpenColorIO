@@ -79,8 +79,7 @@ bool isValidInteropID(const std::string& id)
         {
             std::cout << "WARNING: InteropID '" << id << "' is not valid. "
                 "It should either be one of the Color Interop Forum standard IDs or "
-                "it must contain a namespace followed by ':', e.g. 'mycompany:mycolorspace'." << 
-                std::endl;
+                "it must contain a namespace followed by ':', e.g. 'mycompany:mycolorspace'.\n";
             return false;
         }
     }
@@ -95,7 +94,7 @@ bool isValidInteropID(const std::string& id)
         {
             std::cout << "WARNING: InteropID '" << id << "' is not valid. "
                 "The ID part must not be one of the Color Interop Forum standard IDs "
-                "when a namespace is used." << std::endl;
+                "when a namespace is used.\n";
             return false;
         }
     }
@@ -122,7 +121,7 @@ int main(int argc, const char **argv)
 
     if (ap.parse(argc, argv) < 0)
     {
-        std::cout << ap.geterror() << std::endl;
+        std::cout << ap.geterror() << "\n";
         ap.usage();
         std::cout << DESC_STRING;
         return 1;
@@ -142,27 +141,23 @@ int main(int argc, const char **argv)
     {
         OCIO::ConstConfigRcPtr srcConfig;
 
-        std::cout << std::endl;
-        std::cout << "OpenColorIO Library Version: " << OCIO::GetVersion() << std::endl;
-        std::cout << "OpenColorIO Library VersionHex: " << OCIO::GetVersionHex() << std::endl;
+        std::cout << "\nOpenColorIO Library Version: " << OCIO::GetVersion() << "\n"
+                     "OpenColorIO Library VersionHex: " << OCIO::GetVersionHex() << "\n";
 
         if(!inputconfig.empty())
         {
-            std::cout << std::endl;
-            std::cout << "Loading " << inputconfig << std::endl;
+            std::cout << "\nLoading " << inputconfig << "\n";
             srcConfig = OCIO::Config::CreateFromFile(inputconfig.c_str());
         }
         else if(OCIO::GetEnvVariable("OCIO"))
         {
-            std::cout << std::endl;
-            std::cout << "Loading $OCIO " << OCIO::GetEnvVariable("OCIO") << std::endl;
+            std::cout << "\nLoading $OCIO " << OCIO::GetEnvVariable("OCIO") << "\n";
             srcConfig = OCIO::Config::CreateFromEnv();
         }
         else
         {
-            std::cout << std::endl;
-            std::cout << "ERROR: You must specify an input OCIO configuration ";
-            std::cout << "(either with --iconfig or $OCIO).\n";
+            std::cout << "\nERROR: You must specify an input OCIO configuration "
+                         "(either with --iconfig or $OCIO).\n";
             ap.usage ();
             std::cout << DESC_STRING;
             return 1;
@@ -173,46 +168,43 @@ int main(int argc, const char **argv)
         OCIO::ConfigRcPtr config = srcConfig->createEditableCopy();
         config->setProcessorCacheFlags(OCIO::PROCESSOR_CACHE_OFF);
 
-        std::cout << std::endl;
-        std::cout << "** General **" << std::endl;
+        std::cout << "\n** General **\n";
 
         if (config->getNumEnvironmentVars() > 0)
         {
-            std::cout << "Environment:" << std::endl;
+            std::cout << "Environment:\n";
             for (int idx = 0; idx < config->getNumEnvironmentVars(); ++idx)
             {
                 const char * name = config->getEnvironmentVarNameByIndex(idx);
                 std::cout << "  " << name
                           << ": " << config->getEnvironmentVarDefault(name)
-                          << std::endl;
+                          << "\n";
             }
         }
         else
         {
             if (config->getEnvironmentMode() == OCIO::ENV_ENVIRONMENT_LOAD_PREDEFINED)
             {
-                std::cout << "Environment: {}" << std::endl;
+                std::cout << "Environment: {}\n";
             }
             else
             {
-                std::cout << "Environment: <missing>" << std::endl;
+                std::cout << "Environment: <missing>\n";
             }
         }
 
-        std::cout << "Search Path: " << config->getSearchPath() << std::endl;
-        std::cout << "Working Dir: " << config->getWorkingDir() << std::endl;
+        std::cout << "Search Path: " << config->getSearchPath() << "\n";
+        std::cout << "Working Dir: " << config->getWorkingDir() << "\n";
 
         if (config->getNumDisplays() == 0)
         {
-            std::cout << std::endl;
-            std::cout << "ERROR: At least one (display, view) pair must be defined." << std::endl;
+            std::cout << "\nERROR: At least one (display, view) pair must be defined.\n";
             errorcount += 1;
         }
         else
         {
-            std::cout << std::endl;
-            std::cout << "Default Display: " << config->getDefaultDisplay() << std::endl;
-            std::cout << "Default View: " << config->getDefaultView(config->getDefaultDisplay()) << std::endl;
+            std::cout << "\nDefault Display: " << config->getDefaultDisplay() << "\n";
+            std::cout << "Default View: " << config->getDefaultView(config->getDefaultDisplay()) << "\n";
 
             // It's important that the getProcessor call below always loads the transforms
             // involved in each display/view pair.  However, if the src color space is a
@@ -231,8 +223,7 @@ int main(int argc, const char **argv)
 
             if (config->getNumColorSpaces() > 0)
             {
-                std::cout << std::endl;
-                std::cout << "** (Display, View) pairs **" << std::endl;
+                std::cout << "\n** (Display, View) pairs **\n";
 
                 // Iterate over all displays & views (active & inactive).
 
@@ -255,12 +246,11 @@ int main(int argc, const char **argv)
                                                                   viewName,
                                                                   OCIO::TRANSFORM_DIR_FORWARD);
 
-                            std::cout << "(" << displayName << ", " << viewName << ")"
-                                      << std::endl;
+                            std::cout << "(" << displayName << ", " << viewName << ")\n";
                         }
                         catch(OCIO::Exception & exception)
                         {
-                            std::cout << "ERROR: " << exception.what() << std::endl;
+                            std::cout << "ERROR: " << exception.what() << "\n";
                             errorcount += 1;
                         }
                     }
@@ -279,12 +269,11 @@ int main(int argc, const char **argv)
                                                                   viewName,
                                                                   OCIO::TRANSFORM_DIR_FORWARD);
 
-                            std::cout << "(" << displayName << ", " << viewName << ")"
-                                      << std::endl;
+                            std::cout << "(" << displayName << ", " << viewName << ")\n";
                         }
                         catch(OCIO::Exception & exception)
                         {
-                            std::cout << "ERROR: " << exception.what() << std::endl;
+                            std::cout << "ERROR: " << exception.what() << "\n";
                             errorcount += 1;
                         }
                     }
@@ -293,8 +282,7 @@ int main(int argc, const char **argv)
         }
 
         {
-            std::cout << std::endl;
-            std::cout << "** Roles **" << std::endl;
+            std::cout << "\n** Roles **\n";
 
             // All roles defined in OpenColorTypes.h.
             std::set<std::string> allRolesSet = { 
@@ -322,17 +310,17 @@ int main(int argc, const char **argv)
                 {
                     if(allRolesSet.find(role) != allRolesSet.end())
                     {
-                        std::cout << cs->getName() << " (" << role << ")" << std::endl;
+                        std::cout << cs->getName() << " (" << role << ")\n";
                     }
                     else
                     {
-                        std::cout << cs->getName() << " (" << role << ": user)" << std::endl;
+                        std::cout << cs->getName() << " (" << role << ": user)\n";
                     }
                 }
                 else
                 {
                     // Note: The config->validate check below will also fail due to this.
-                    std::cout << "ERROR: SPACE MISSING (" << role << ")" << std::endl;
+                    std::cout << "ERROR: SPACE MISSING (" << role << ")\n";
                     errorcount += 1;
                 }
             }
@@ -357,15 +345,14 @@ int main(int argc, const char **argv)
                 OCIO::ConstColorSpaceRcPtr cs = config->getColorSpace(role.c_str());
                 if(!cs)
                 {
-                    std::cout << "WARNING: NOT DEFINED (" << role << ")" << std::endl;
+                    std::cout << "WARNING: NOT DEFINED (" << role << ")\n";
                     warningcount += 1;
                 }
             }
         }
 
         {
-            std::cout << std::endl;
-            std::cout << "** ColorSpaces **" << std::endl;
+            std::cout << "\n** ColorSpaces **\n";
 
             const int numCS = config->getNumColorSpaces(
                 OCIO::SEARCH_REFERENCE_SPACE_ALL,   // Iterate over scene & display color spaces.
@@ -434,21 +421,21 @@ int main(int argc, const char **argv)
                 {
                     // There was a problem with one of the color space's transforms.
                     std::cout << cs->getName();
-                    std::cout << " -- error" << std::endl;
+                    std::cout << " -- error\n";
                     if(!toRefOK)
                     {
-                        std::cout << "\t" << toRefErrorText << std::endl;
+                        std::cout << "\t" << toRefErrorText << "\n";
                     }
                     if(!fromRefOK)
                     {
-                        std::cout << "\t" << fromRefErrorText << std::endl;
+                        std::cout << "\t" << fromRefErrorText << "\n";
                     }
                     errorcount += 1;
                 }
                 else
                 {
                     // The color space's transforms load ok.
-                    std::cout << cs->getName() << std::endl;
+                    std::cout << cs->getName() << "\n";
                 }
             }
 
@@ -462,14 +449,13 @@ int main(int argc, const char **argv)
         }
 
         {
-            std::cout << std::endl;
-            std::cout << "** Named Transforms **" << std::endl;
+            std::cout << "\n** Named Transforms **\n";
 
             // Iterate over active & inactive named transforms.
             const int numNT = config->getNumNamedTransforms(OCIO::NAMEDTRANSFORM_ALL);
             if(numNT==0)
             {
-                std::cout << "no named transforms defined" << std::endl;
+                std::cout << "no named transforms defined\n";
             }
 
             bool foundCategory = false;
@@ -524,21 +510,21 @@ int main(int argc, const char **argv)
                 {
                     // There was a problem with one of the named transform's transforms.
                     std::cout << nt->getName();
-                    std::cout << " -- error" << std::endl;
+                    std::cout << " -- error\n";
                     if(!fwdOK)
                     {
-                        std::cout << "\t" << fwdErrorText << std::endl;
+                        std::cout << "\t" << fwdErrorText << "\n";
                     }
                     if(!invOK)
                     {
-                        std::cout << "\t" << invErrorText << std::endl;
+                        std::cout << "\t" << invErrorText << "\n";
                     }
                     errorcount += 1;
                 }
                 else
                 {
                     // The named transform's transforms load ok.
-                    std::cout << nt->getName() << std::endl;
+                    std::cout << nt->getName() << "\n";
                 }
             }
 
@@ -552,13 +538,12 @@ int main(int argc, const char **argv)
         }
 
         {
-            std::cout << std::endl;
-            std::cout << "** Looks **" << std::endl;
+            std::cout << "\n** Looks **\n";
 
             const int numL = config->getNumLooks();
             if(numL==0)
             {
-                std::cout << "no looks defined" << std::endl;
+                std::cout << "no looks defined\n";
             }
 
             for(int i=0; i<numL; ++i)
@@ -603,27 +588,26 @@ int main(int argc, const char **argv)
                 {
                     // There was a problem with one of the look transform's transforms.
                     std::cout << look->getName();
-                    std::cout << " -- error" << std::endl;
+                    std::cout << " -- error\n";
                     if(!fwdOK)
                     {
-                        std::cout << "\t" << fwdErrorText << std::endl;
+                        std::cout << "\t" << fwdErrorText << "\n";
                     }
                     if(!invOK)
                     {
-                        std::cout << "\t" << invErrorText << std::endl;
+                        std::cout << "\t" << invErrorText << "\n";
                     }
                     errorcount += 1;
                 }
                 else
                 {
                     // The look transform's transforms load ok.
-                    std::cout << look->getName() << std::endl;
+                    std::cout << look->getName() << "\n";
                 }
             }
         }
 
-        std::cout << std::endl;
-        std::cout << "** Validation **" << std::endl;
+        std::cout << "\n** Validation **\n";
 
         std::string cacheID;
         bool isArchivable = false;
@@ -641,26 +625,25 @@ int main(int argc, const char **argv)
             StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
             if (!StringUtils::Contain(svec, "[OpenColorIO Error]"))
             {
-                std::cout << "Validation: passed" << std::endl;
+                std::cout << "Validation: passed\n";
             }
             else
             {
-                std::cout << "Validation: failed" << std::endl;
+                std::cout << "Validation: failed\n";
                 errorcount += 1;
             }
         }
         catch(OCIO::Exception & exception)
         {
-            std::cout << "ERROR:" << std::endl;
+            std::cout << "ERROR:\n";
             errorcount += 1;
-            std::cout << exception.what() << std::endl;
-            std::cout << "Validation: failed" << std::endl;
+            std::cout << exception.what() << "\n";
+            std::cout << "Validation: failed\n";
         }
 
-        std::cout << std::endl;
-        std::cout << "** Miscellaneous **" << std::endl;
-        std::cout << "CacheID: " << cacheID << std::endl;
-        std::cout << "Archivable: " << (isArchivable ? "yes" : "no") << std::endl;
+        std::cout << "\n** Miscellaneous **\n";
+        std::cout << "CacheID: " << cacheID << "\n";
+        std::cout << "Archivable: " << (isArchivable ? "yes" : "no") << "\n";
 
         if(!outputconfig.empty())
         {
@@ -669,19 +652,19 @@ int main(int argc, const char **argv)
 
             if(!output.is_open())
             {
-                std::cout << "Error opening " << outputconfig << " for writing." << std::endl;
+                std::cout << "Error opening " << outputconfig << " for writing.\n";
             }
             else
             {
                 config->serialize(output);
                 output.close();
-                std::cout << "Wrote " << outputconfig << std::endl;
+                std::cout << "Wrote " << outputconfig << "\n";
             }
         }
     }
     catch(OCIO::Exception & exception)
     {
-        std::cout << "ERROR: " << exception.what() << std::endl;
+        std::cout << "ERROR: " << exception.what() << "\n";
         return 1;
     } catch (std::exception& exception) {
         std::cout << "ERROR: " << exception.what() << "\n";
@@ -689,24 +672,24 @@ int main(int argc, const char **argv)
     }
     catch(...)
     {
-        std::cout << "Unknown error encountered." << std::endl;
+        std::cout << "Unknown error encountered.\n";
         return 1;
     }
 
     if(warningcount > 0)
     {
-        std::cout << "\nWarnings encountered: " << warningcount << std::endl;
+        std::cout << "\nWarnings encountered: " << warningcount << "\n";
     }
 
-    std::cout << std::endl;
+    std::cout << "\n";
     if(errorcount == 0)
     {
-        std::cout << "Tests complete." << std::endl << std::endl;
+        std::cout << "Tests complete.\n\n";
         return 0;
     }
     else
     {
-        std::cout << errorcount << " tests failed." << std::endl << std::endl;
+        std::cout << errorcount << " tests failed.\n\n";
         return 1;
     }
 }

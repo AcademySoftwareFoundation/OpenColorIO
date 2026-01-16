@@ -100,7 +100,7 @@ int main(int argc, const char **argv)
 
     if (ap.parse (argc, argv) < 0)
     {
-        std::cerr << ap.geterror() << std::endl;
+        std::cerr << ap.geterror() << "\n";
         ap.usage ();
         exit(1);
     }
@@ -114,8 +114,7 @@ int main(int argc, const char **argv)
 #ifndef OCIO_GPU_ENABLED
     if (usegpu || outputgpuInfo || usegpuLegacy)
     {
-        std::cerr << "Compiled without OpenGL support, GPU options are not available.";
-        std::cerr << std::endl;
+        std::cerr << "Compiled without OpenGL support, GPU options are not available.\n";
         exit(1);
     }
 #endif // OCIO_GPU_ENABLED
@@ -159,7 +158,7 @@ int main(int argc, const char **argv)
         if (args.size() != 4)
         {
             std::cerr << "ERROR: Expecting 4 arguments, found " 
-                      << args.size() << "." << std::endl;
+                      << args.size() << ".\n";
             ap.usage();
             exit(1);
         }
@@ -170,7 +169,7 @@ int main(int argc, const char **argv)
     }
     else if (useLut && useDisplayView)
     {
-        std::cerr << "ERROR: Options lut & view can't be used at the same time." << std::endl;
+        std::cerr << "ERROR: Options lut & view can't be used at the same time.\n";
         ap.usage();
         exit(1);
     }
@@ -179,7 +178,7 @@ int main(int argc, const char **argv)
         if (args.size() != 3)
         {
             std::cerr << "ERROR: Expecting 3 arguments for --lut option, found "
-                      << args.size() << "." << std::endl;
+                      << args.size() << ".\n";
             ap.usage();
             exit(1);
         }
@@ -192,7 +191,7 @@ int main(int argc, const char **argv)
         if (args.size() != 5)
         {
             std::cerr << "ERROR: Expecting 5 arguments for --view option, found "
-                      << args.size() << "." << std::endl;
+                      << args.size() << ".\n";
             ap.usage();
             exit(1);
         }
@@ -204,7 +203,7 @@ int main(int argc, const char **argv)
     }
     else if (useDisplayView && useInvertView)
     {
-        std::cerr << "ERROR: Options view & invertview can't be used at the same time." << std::endl;
+        std::cerr << "ERROR: Options view & invertview can't be used at the same time.\n";
         ap.usage();
         exit(1);
     }
@@ -213,7 +212,7 @@ int main(int argc, const char **argv)
         if (args.size() != 5)
         {
             std::cerr << "ERROR: Expecting 5 arguments for --invertview option, found "
-                      << args.size() << "." << std::endl;
+                      << args.size() << ".\n";
             ap.usage();
             exit(1);
         }
@@ -227,8 +226,8 @@ int main(int argc, const char **argv)
     {
         if (useLut || useDisplayView || useInvertView || useInvNamedTransform)
         {
-            std::cerr << "ERROR: Option namedtransform can't be used with lut, view, invertview, \
-                or invnamedtransform at the same time." << std::endl;
+            std::cerr << "ERROR: Option namedtransform can't be used with lut, view, invertview, "
+                         "or invnamedtransform at the same time.\n";
             ap.usage();
             exit(1);
         }
@@ -236,7 +235,7 @@ int main(int argc, const char **argv)
         if (args.size() != 3)
         {
             std::cerr << "ERROR: Expecting 3 arguments for --namedtransform option, found "
-                << args.size() << "." << std::endl;
+                << args.size() << ".\n";
             ap.usage();
             exit(1);
         }
@@ -249,8 +248,8 @@ int main(int argc, const char **argv)
     {
         if (useLut || useDisplayView || useInvertView || useNamedTransform)
         {
-            std::cerr << "ERROR: Option invnamedtransform can't be used with lut, view, invertview, \
-                or namedtransform at the same time." << std::endl;
+            std::cerr << "ERROR: Option invnamedtransform can't be used with lut, view, invertview, "
+                         "or namedtransform at the same time.\n";
             ap.usage();
             exit(1);
         }
@@ -258,7 +257,7 @@ int main(int argc, const char **argv)
         if (args.size() != 3)
         {
             std::cerr << "ERROR: Expecting 3 arguments for --invnamedtransform option, found "
-                << args.size() << "." << std::endl;
+                << args.size() << ".\n";
             ap.usage();
             exit(1);
         }
@@ -291,40 +290,37 @@ int main(int argc, const char **argv)
     }
     catch (const OCIO::Exception & e)
     {
-        std::cout << "ERROR loading config file: " << e.what() << std::endl;
+        std::cout << "ERROR loading config file: " << e.what() << "\n";
         exit(1);
     }
     catch (...)
     {
 
-        std::cerr << "ERROR loading config file: '" << inputconfig << "'" << std::endl;
+        std::cerr << "ERROR loading config file: '" << inputconfig << "'\n";
         exit(1);
     }
 
     if (verbose)
     {
-        std::cout << std::endl;
-        std::cout << OCIO::ImageIO::GetVersion() << std::endl;
-        std::cout << "OCIO Version: " << OCIO::GetVersion() << std::endl;
+        std::cout << "\n"
+                  << OCIO::ImageIO::GetVersion() << "\n"
+                  << "OCIO Version: " << OCIO::GetVersion() << "\n";
         if (!useLut)
         {
-            std::cout << std::endl;
-            std::cout << "OCIO Config. file:    '" << inputconfig << "'" << std::endl;
-            std::cout << "OCIO Config. version: " << config->getMajorVersion() << "." 
-                                                  << config->getMinorVersion() << std::endl;
-            std::cout << "OCIO search_path:     " << config->getSearchPath() << std::endl;
+            std::cout << "\nOCIO Config. file:    '" << inputconfig << "'\n"
+                         "OCIO Config. version: "    << config->getMajorVersion() << "." 
+                                                     << config->getMinorVersion() << "\n"
+                         "OCIO search_path:     "    << config->getSearchPath() << "\n";
         }
     }
 
     if (usegpuLegacy)
     {
-        std::cout << std::endl;
-        std::cout << "Using legacy OCIO v1 GPU color processing." << std::endl;
+        std::cout << "\nUsing legacy OCIO v1 GPU color processing.\n";
     }
     else if (usegpu)
     {
-        std::cout << std::endl;
-        std::cout << "Using GPU color processing." << std::endl;
+        std::cout << "\nUsing GPU color processing.\n";
     }
 
     OCIO::ImageIO imgInput;
@@ -333,8 +329,7 @@ int main(int argc, const char **argv)
     OCIO::ImageIO *imgOutput = &imgInput;
 
     // Load the image.
-    std::cout << std::endl;
-    std::cout << "Loading " << inputimage << std::endl;
+    std::cout << "\nLoading " << inputimage << "\n";
     try
     {
         if (usegpu || usegpuLegacy)
@@ -346,16 +341,16 @@ int main(int argc, const char **argv)
             imgInput.read(inputimage);
         }
 
-        std::cout << imgInput.getImageDescStr() << std::endl;
+        std::cout << imgInput.getImageDescStr() << "\n";
     }
     catch (const std::exception & e)
     {
-        std::cerr << "ERROR: Loading file failed: " << e.what() << std::endl;
+        std::cerr << "ERROR: Loading file failed: " << e.what() << "\n";
         exit(1);
     }
     catch (...)
     {
-        std::cerr << "ERROR: Loading file failed." << std::endl;
+        std::cerr << "ERROR: Loading file failed.\n";
         exit(1);
     }
 
@@ -377,7 +372,7 @@ int main(int argc, const char **argv)
         else
         {
             std::cerr << "Cannot convert image with " << imgInput.getNumChannels()
-                      << " components." << std::endl;
+                      << " components.\n";
             exit(1);
         }
 
@@ -387,7 +382,7 @@ int main(int argc, const char **argv)
         }
         catch (const OCIO::Exception & e)
         {
-            std::cerr << std::endl << e.what() << std::endl;
+            std::cerr << "\n" << e.what() << "\n";
             exit(1);
         }
 
@@ -447,7 +442,7 @@ int main(int argc, const char **argv)
                 }
                 else
                 {
-                   std::cout << "ERROR: Could not get NamedTransform " << namedtransform << std::endl;
+                   std::cout << "ERROR: Could not get NamedTransform " << namedtransform << "\n";
                    exit(1);
                 }                
             }
@@ -461,7 +456,7 @@ int main(int argc, const char **argv)
                 }
                 else
                 {
-                    std::cout << "ERROR: Could not get NamedTransform " << namedtransform << std::endl;
+                    std::cout << "ERROR: Could not get NamedTransform " << namedtransform << "\n";
                     exit(1);
                 }
             }
@@ -472,12 +467,12 @@ int main(int argc, const char **argv)
         }
         catch (const OCIO::Exception & e)
         {
-            std::cout << "ERROR: OCIO failed with: " << e.what() << std::endl;
+            std::cout << "ERROR: OCIO failed with: " << e.what() << "\n";
             exit(1);
         }
         catch (...)
         {
-            std::cout << "ERROR: Creating processor unknown failure." << std::endl;
+            std::cout << "ERROR: Creating processor unknown failure.\n";
             exit(1);
         }
 
@@ -575,21 +570,18 @@ int main(int argc, const char **argv)
 
                 std::chrono::duration<float, std::milli> duration = end - start;
 
-                std::cout << std::endl;
-                std::cout << "CPU processing took: " 
-                          << duration.count()
-                          <<  " ms" << std::endl;
+                std::cout << "\nCPU processing took: " << duration.count() <<  " ms\n";
             }
         }
     }
     catch (const OCIO::Exception & exception)
     {
-        std::cerr << "ERROR: OCIO failed with: " << exception.what() << std::endl;
+        std::cerr << "ERROR: OCIO failed with: " << exception.what() << "\n";
         exit(1);
     }
     catch (...)
     {
-        std::cerr << "ERROR: Unknown error processing the image." << std::endl;
+        std::cerr << "ERROR: Unknown error processing the image.\n";
         exit(1);
     }
 
@@ -604,7 +596,7 @@ int main(int argc, const char **argv)
            !StringToFloat(&fval,value.c_str()))
         {
             std::cerr << "ERROR: Attribute string '" << floatAttrs[i]
-                      << "' should be in the form name=floatvalue." << std::endl;
+                      << "' should be in the form name=floatvalue.\n";
             parseError = true;
             continue;
         }
@@ -620,7 +612,7 @@ int main(int argc, const char **argv)
            !StringToInt(&ival,value.c_str()))
         {
             std::cerr << "ERROR: Attribute string '" << intAttrs[i]
-                      << "' should be in the form name=intvalue." << std::endl;
+                      << "' should be in the form name=intvalue.\n";
             parseError = true;
             continue;
         }
@@ -634,7 +626,7 @@ int main(int argc, const char **argv)
         if (!ParseNameValuePair(name, value, stringAttrs[i]))
         {
             std::cerr << "ERROR: Attribute string '" << stringAttrs[i]
-                      << "' should be in the form name=value." << std::endl;
+                      << "' should be in the form name=value.\n";
             parseError = true;
             continue;
         }
@@ -672,12 +664,12 @@ int main(int argc, const char **argv)
     }
     catch (...)
     {
-        std::cerr << "ERROR: Writing file \"" << outputimage << "\"." << std::endl;
+        std::cerr << "ERROR: Writing file \"" << outputimage << "\".\n";
         exit(1);
     }
 
-    std::cout << "Wrote " << outputimage << std::endl;
-    std::cout << imgOutput->getImageDescStr() << std::endl;
+    std::cout << "Wrote " << outputimage << "\n";
+    std::cout << imgOutput->getImageDescStr() << "\n";
 
     return 0;
 }

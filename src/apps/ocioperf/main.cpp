@@ -63,7 +63,7 @@ public:
 
             oss << "] ms";
 
-            std::cout << oss.str() << std::endl;
+            std::cout << oss.str() << "\n";
         }
     }
 
@@ -197,8 +197,8 @@ int main(int argc, const char **argv)
                "--verbose",                 &verbose,           
                                             "Display some general information",
                "--test %d",                 &testType,          
-                                            "Define the type of processing to measure: "\
-                                            "0 means on the complete image (the default), 1 is line-by-line, "\
+                                            "Define the type of processing to measure: "
+                                            "0 means on the complete image (the default), 1 is line-by-line, "
                                             "2 is pixel-per-pixel and -1 performs all the test types",
                "--transform %s",            &transformFile, 
                                             "Provide the transform file to apply on the image",
@@ -223,7 +223,7 @@ int main(int argc, const char **argv)
 
     if (ap.parse (argc, argv) < 0)
     {
-        std::cerr << ap.geterror() << std::endl;
+        std::cerr << ap.geterror() << "\n";
         ap.usage();
         return 1;
     }
@@ -236,18 +236,15 @@ int main(int argc, const char **argv)
 
     if (verbose)
     {
-        std::cout << std::endl;
-        std::cout << "OCIO Version: " << OCIO::GetVersion() << std::endl;
+        std::cout << "\nOCIO Version: " << OCIO::GetVersion() << "\n";
     }
 
     if (!transformFile.empty())
     {
-        std::cout << std::endl;
-        std::cout << "Processing using '" << transformFile << "'" << std::endl << std::endl;
+        std::cout << "\nProcessing using '" << transformFile << "'\n\n";
     }
     
-    std::cout << std::endl << std::endl;
-    std::cout << "Processing statistics:" << std::endl << std::endl;
+    std::cout << "\n\nProcessing statistics:\n\n" << std::flush;
 
     // Process the image.
     try
@@ -285,14 +282,12 @@ int main(int argc, const char **argv)
         {
             if(!inputconfig.empty())
             {
-                std::cout << std::endl;
-                std::cout << "Loading " << inputconfig << std::endl;
+                std::cout << "\nLoading " << inputconfig << "\n" << std::flush;
                 srcConfig = OCIO::Config::CreateFromFile(inputconfig.c_str());
             }
             else if(OCIO::GetEnvVariable("OCIO"))
             {
-                std::cout << std::endl;
-                std::cout << "Loading $OCIO " << OCIO::GetEnvVariable("OCIO") << std::endl;
+                std::cout << "\nLoading $OCIO " << OCIO::GetEnvVariable("OCIO") << "\n" << std::flush;
                 srcConfig = OCIO::Config::CreateFromEnv();
             }
             else
@@ -302,16 +297,14 @@ int main(int argc, const char **argv)
 
             if (verbose)
             {
-                std::cout << std::endl;
-                std::cout << "OCIO Config. version: " << srcConfig->getMajorVersion() << "." 
-                                                      << srcConfig->getMinorVersion() << std::endl;
-                std::cout << "OCIO search_path:     " << srcConfig->getSearchPath() << std::endl;
-                std::cout << std::endl;
+                std::cout << "\nOCIO Config. version: " << srcConfig->getMajorVersion() << "." 
+                                                        << srcConfig->getMinorVersion() << "\n";
+                std::cout << "OCIO search_path:     "   << srcConfig->getSearchPath() << "\n\n";
                 const std::string inputStr = !inColorSpace.empty() ?  inColorSpace : "(" + display + ", " + view + ")";
                 const std::string outputStr = !outColorSpace.empty() ?  outColorSpace : "(" + display + ", " + view + ")";
                 std::cout << "Processing from '" 
                           << inputStr << "' to '"
-                          << outputStr << "'" << std::endl;
+                          << outputStr << "'\n" << std::flush;
             }
 
             OCIO::ConfigRcPtr config  = srcConfig->createEditableCopy();
@@ -512,8 +505,7 @@ int main(int argc, const char **argv)
             }
         }
 
-        std::cout << std::endl << std::endl;
-        std::cout << "Image processing statistics:" << std::endl << std::endl;
+        std::cout << "\n\nImage processing statistics:\n\n" << std::flush;
 
         // Create an arbitrary 4K RGBA image.
 
@@ -701,22 +693,22 @@ int main(int argc, const char **argv)
             }
         }
 
-        std::cout << std::endl << std::endl;
+        std::cout << "\n\n";
 
     }
     catch (OCIO::Exception & ex)
     {
-        std::cerr << "OCIO ERROR: " << ex.what() << std::endl;
+        std::cerr << "OCIO ERROR: " << ex.what() << "\n";
         return 1;
     }
     catch (std::exception & ex)
     {
-        std::cerr << "ERROR: " << ex.what() << std::endl;
+        std::cerr << "ERROR: " << ex.what() << "\n";
         return 1;
     }
     catch (...)
     {
-        std::cerr << "ERROR: Unknown error encountered." << std::endl;
+        std::cerr << "ERROR: Unknown error encountered.\n";
         return 1;
     }
 
