@@ -371,9 +371,12 @@ void VulkanApp::setShader(GpuShaderDescRcPtr & shaderDesc)
 {
     if (!m_vulkanBuilder)
     {
-        m_vulkanBuilder = std::make_shared<VulkanBuilder>(m_device);
+        m_vulkanBuilder = std::make_shared<VulkanBuilder>(m_device, m_physicalDevice, 
+                                                           m_commandPool, m_computeQueue);
     }
 
+    // Allocate textures and uniforms before building shader
+    m_vulkanBuilder->allocateAllTextures(shaderDesc);
     m_vulkanBuilder->buildShader(shaderDesc);
 
     if (m_printShader)
@@ -394,7 +397,7 @@ void VulkanApp::createComputePipeline()
         {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}
     };
 
-    // Add texture bindings from shader builder
+    // Add texture and uniform bindings from shader builder
     auto textureBindings = m_vulkanBuilder->getDescriptorSetLayoutBindings();
     bindings.insert(bindings.end(), textureBindings.begin(), textureBindings.end());
 
@@ -433,10 +436,8 @@ void VulkanApp::createComputePipeline()
         throw std::runtime_error("Failed to create compute pipeline");
     }
 
-    // Create descriptor pool
-    std::vector<VkDescriptorPoolSize> poolSizes = {
-        {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 2}
-    };
+    // Create descriptor pool with sizes from VulkanBuilder
+    std::vector<VkDescriptorPoolSize> poolSizes = m_vulkanBuilder->getDescriptorPoolSizes();
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -485,7 +486,7 @@ void VulkanApp::createComputePipeline()
     vkUpdateDescriptorSets(m_device, static_cast<uint32_t>(descriptorWrites.size()),
                            descriptorWrites.data(), 0, nullptr);
 
-    // Update texture bindings
+    // Update texture and uniform bindings
     m_vulkanBuilder->updateDescriptorSet(m_descriptorSet);
 }
 
@@ -497,6 +498,12 @@ void VulkanApp::reshape(int width, int height)
 
 void VulkanApp::redisplay()
 {
+    // Update uniform values before dispatch (for dynamic parameters)
+    if (m_vulkanBuilder)
+    {
+        m_vulkanBuilder->updateUniforms();
+    }
+
     // Record command buffer
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -570,39 +577,670 @@ VulkanAppRcPtr VulkanApp::CreateVulkanApp(int bufWidth, int bufHeight)
 // VulkanBuilder Implementation
 //
 
-VulkanBuilder::VulkanBuilder(VkDevice device)
+VulkanBuilder::VulkanBuilder(VkDevice device, VkPhysicalDevice physicalDevice,
+                             VkCommandPool commandPool, VkQueue queue)
     : m_device(device)
+    , m_physicalDevice(physicalDevice)
+    , m_commandPool(commandPool)
+    , m_queue(queue)
 {
 }
 
 VulkanBuilder::~VulkanBuilder()
 {
-    if (m_device != VK_NULL_HANDLE)
-    {
-        if (m_shaderModule != VK_NULL_HANDLE)
-        {
-            vkDestroyShaderModule(m_device, m_shaderModule, nullptr);
-        }
+    deleteAllTextures();
+    deleteUniformBuffer();
 
-        for (auto & tex : m_textures)
+    if (m_device != VK_NULL_HANDLE && m_shaderModule != VK_NULL_HANDLE)
+    {
+        vkDestroyShaderModule(m_device, m_shaderModule, nullptr);
+    }
+}
+
+void VulkanBuilder::deleteAllTextures()
+{
+    if (m_device == VK_NULL_HANDLE) return;
+
+    auto deleteTextures = [this](std::vector<TextureResource> & textures) {
+        for (auto & tex : textures)
         {
             if (tex.sampler != VK_NULL_HANDLE)
-            {
                 vkDestroySampler(m_device, tex.sampler, nullptr);
-            }
             if (tex.imageView != VK_NULL_HANDLE)
-            {
                 vkDestroyImageView(m_device, tex.imageView, nullptr);
-            }
             if (tex.image != VK_NULL_HANDLE)
-            {
                 vkDestroyImage(m_device, tex.image, nullptr);
-            }
             if (tex.memory != VK_NULL_HANDLE)
-            {
                 vkFreeMemory(m_device, tex.memory, nullptr);
+        }
+        textures.clear();
+    };
+
+    deleteTextures(m_textures3D);
+    deleteTextures(m_textures1D2D);
+}
+
+void VulkanBuilder::deleteUniformBuffer()
+{
+    if (m_device == VK_NULL_HANDLE) return;
+
+    if (m_uniformBuffer != VK_NULL_HANDLE)
+    {
+        vkDestroyBuffer(m_device, m_uniformBuffer, nullptr);
+        m_uniformBuffer = VK_NULL_HANDLE;
+    }
+    if (m_uniformBufferMemory != VK_NULL_HANDLE)
+    {
+        vkFreeMemory(m_device, m_uniformBufferMemory, nullptr);
+        m_uniformBufferMemory = VK_NULL_HANDLE;
+    }
+    m_uniformBufferSize = 0;
+    m_uniforms.clear();
+}
+
+uint32_t VulkanBuilder::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
+{
+    VkPhysicalDeviceMemoryProperties memProperties;
+    vkGetPhysicalDeviceMemoryProperties(m_physicalDevice, &memProperties);
+
+    for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+    {
+        if ((typeFilter & (1 << i)) &&
+            (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+        {
+            return i;
+        }
+    }
+    throw std::runtime_error("Failed to find suitable memory type");
+}
+
+void VulkanBuilder::createImage(uint32_t width, uint32_t height, uint32_t depth,
+                                 VkFormat format, VkImageType imageType,
+                                 VkImageUsageFlags usage, VkMemoryPropertyFlags properties,
+                                 VkImage & image, VkDeviceMemory & imageMemory)
+{
+    VkImageCreateInfo imageInfo{};
+    imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageInfo.imageType = imageType;
+    imageInfo.extent.width = width;
+    imageInfo.extent.height = height;
+    imageInfo.extent.depth = depth;
+    imageInfo.mipLevels = 1;
+    imageInfo.arrayLayers = 1;
+    imageInfo.format = format;
+    imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imageInfo.usage = usage;
+    imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    if (vkCreateImage(m_device, &imageInfo, nullptr, &image) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Failed to create image");
+    }
+
+    VkMemoryRequirements memRequirements;
+    vkGetImageMemoryRequirements(m_device, image, &memRequirements);
+
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
+
+    if (vkAllocateMemory(m_device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Failed to allocate image memory");
+    }
+
+    vkBindImageMemory(m_device, image, imageMemory, 0);
+}
+
+VkImageView VulkanBuilder::createImageView(VkImage image, VkFormat format, VkImageViewType viewType)
+{
+    VkImageViewCreateInfo viewInfo{};
+    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewInfo.image = image;
+    viewInfo.viewType = viewType;
+    viewInfo.format = format;
+    viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    viewInfo.subresourceRange.baseMipLevel = 0;
+    viewInfo.subresourceRange.levelCount = 1;
+    viewInfo.subresourceRange.baseArrayLayer = 0;
+    viewInfo.subresourceRange.layerCount = 1;
+
+    VkImageView imageView;
+    if (vkCreateImageView(m_device, &viewInfo, nullptr, &imageView) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Failed to create image view");
+    }
+    return imageView;
+}
+
+VkSampler VulkanBuilder::createSampler(Interpolation interpolation)
+{
+    VkSamplerCreateInfo samplerInfo{};
+    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    
+    if (interpolation == INTERP_NEAREST)
+    {
+        samplerInfo.magFilter = VK_FILTER_NEAREST;
+        samplerInfo.minFilter = VK_FILTER_NEAREST;
+    }
+    else
+    {
+        samplerInfo.magFilter = VK_FILTER_LINEAR;
+        samplerInfo.minFilter = VK_FILTER_LINEAR;
+    }
+    
+    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.anisotropyEnable = VK_FALSE;
+    samplerInfo.maxAnisotropy = 1.0f;
+    samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+    samplerInfo.unnormalizedCoordinates = VK_FALSE;
+    samplerInfo.compareEnable = VK_FALSE;
+    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerInfo.mipLodBias = 0.0f;
+    samplerInfo.minLod = 0.0f;
+    samplerInfo.maxLod = 0.0f;
+
+    VkSampler sampler;
+    if (vkCreateSampler(m_device, &samplerInfo, nullptr, &sampler) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Failed to create sampler");
+    }
+    return sampler;
+}
+
+void VulkanBuilder::transitionImageLayout(VkImage image, VkFormat format,
+                                           VkImageLayout oldLayout, VkImageLayout newLayout)
+{
+    VkCommandBufferAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandPool = m_commandPool;
+    allocInfo.commandBufferCount = 1;
+
+    VkCommandBuffer commandBuffer;
+    vkAllocateCommandBuffers(m_device, &allocInfo, &commandBuffer);
+
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+    VkImageMemoryBarrier barrier{};
+    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.oldLayout = oldLayout;
+    barrier.newLayout = newLayout;
+    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.image = image;
+    barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    barrier.subresourceRange.baseMipLevel = 0;
+    barrier.subresourceRange.levelCount = 1;
+    barrier.subresourceRange.baseArrayLayer = 0;
+    barrier.subresourceRange.layerCount = 1;
+
+    VkPipelineStageFlags sourceStage;
+    VkPipelineStageFlags destinationStage;
+
+    if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+    {
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    }
+    else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+    {
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        destinationStage = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+    }
+    else
+    {
+        throw std::runtime_error("Unsupported layout transition");
+    }
+
+    vkCmdPipelineBarrier(commandBuffer, sourceStage, destinationStage, 0,
+                         0, nullptr, 0, nullptr, 1, &barrier);
+
+    vkEndCommandBuffer(commandBuffer);
+
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &commandBuffer;
+
+    vkQueueSubmit(m_queue, 1, &submitInfo, VK_NULL_HANDLE);
+    vkQueueWaitIdle(m_queue);
+
+    vkFreeCommandBuffers(m_device, m_commandPool, 1, &commandBuffer);
+}
+
+void VulkanBuilder::copyBufferToImage(VkBuffer buffer, VkImage image,
+                                       uint32_t width, uint32_t height, uint32_t depth)
+{
+    VkCommandBufferAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandPool = m_commandPool;
+    allocInfo.commandBufferCount = 1;
+
+    VkCommandBuffer commandBuffer;
+    vkAllocateCommandBuffers(m_device, &allocInfo, &commandBuffer);
+
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+    VkBufferImageCopy region{};
+    region.bufferOffset = 0;
+    region.bufferRowLength = 0;
+    region.bufferImageHeight = 0;
+    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    region.imageSubresource.mipLevel = 0;
+    region.imageSubresource.baseArrayLayer = 0;
+    region.imageSubresource.layerCount = 1;
+    region.imageOffset = {0, 0, 0};
+    region.imageExtent = {width, height, depth};
+
+    vkCmdCopyBufferToImage(commandBuffer, buffer, image,
+                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+    vkEndCommandBuffer(commandBuffer);
+
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &commandBuffer;
+
+    vkQueueSubmit(m_queue, 1, &submitInfo, VK_NULL_HANDLE);
+    vkQueueWaitIdle(m_queue);
+
+    vkFreeCommandBuffers(m_device, m_commandPool, 1, &commandBuffer);
+}
+
+void VulkanBuilder::createUniformBuffer(GpuShaderDescRcPtr & shaderDesc)
+{
+    deleteUniformBuffer();
+
+    const unsigned numUniforms = shaderDesc->getNumUniforms();
+    if (numUniforms == 0) return;
+
+    // Calculate buffer size with proper alignment (std140 layout)
+    size_t offset = 0;
+    for (unsigned idx = 0; idx < numUniforms; ++idx)
+    {
+        GpuShaderDesc::UniformData data;
+        const char * name = shaderDesc->getUniform(idx, data);
+        
+        UniformData uniformData;
+        uniformData.name = name;
+        uniformData.data = data;
+        
+        // Determine size and alignment based on type
+        size_t size = 0;
+        size_t alignment = 4; // Default to float alignment
+        
+        if (data.m_getDouble)
+        {
+            size = sizeof(float);
+            alignment = 4;
+        }
+        else if (data.m_getBool)
+        {
+            size = sizeof(int); // bool is represented as int in shader
+            alignment = 4;
+        }
+        else if (data.m_getFloat3)
+        {
+            size = 4 * sizeof(float); // vec3 padded to vec4 in std140
+            alignment = 16;
+        }
+        else if (data.m_vectorFloat.m_getSize && data.m_vectorFloat.m_getVector)
+        {
+            size = data.m_vectorFloat.m_getSize() * sizeof(float);
+            alignment = 16; // Arrays align to 16 bytes
+        }
+        else if (data.m_vectorInt.m_getSize && data.m_vectorInt.m_getVector)
+        {
+            size = data.m_vectorInt.m_getSize() * sizeof(int);
+            alignment = 16;
+        }
+        else
+        {
+            // Unknown uniform type - skip but log
+            std::cerr << "Warning: Unknown uniform type for '" << name << "'" << std::endl;
+            continue;
+        }
+        
+        // Align offset
+        offset = (offset + alignment - 1) & ~(alignment - 1);
+        uniformData.offset = offset;
+        uniformData.size = size;
+        offset += size;
+        
+        m_uniforms.push_back(uniformData);
+    }
+
+    // Align total size to 16 bytes
+    m_uniformBufferSize = (offset + 15) & ~15;
+    if (m_uniformBufferSize == 0) return;
+
+    // Create uniform buffer
+    VkBufferCreateInfo bufferInfo{};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = m_uniformBufferSize;
+    bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    if (vkCreateBuffer(m_device, &bufferInfo, nullptr, &m_uniformBuffer) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Failed to create uniform buffer");
+    }
+
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(m_device, m_uniformBuffer, &memRequirements);
+
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+    if (vkAllocateMemory(m_device, &allocInfo, nullptr, &m_uniformBufferMemory) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Failed to allocate uniform buffer memory");
+    }
+
+    vkBindBufferMemory(m_device, m_uniformBuffer, m_uniformBufferMemory, 0);
+
+    // Initialize uniform values
+    updateUniforms();
+}
+
+void VulkanBuilder::updateUniforms()
+{
+    if (m_uniformBufferSize == 0 || m_uniformBuffer == VK_NULL_HANDLE || !m_shaderDesc) return;
+
+    void * data;
+    vkMapMemory(m_device, m_uniformBufferMemory, 0, m_uniformBufferSize, 0, &data);
+    
+    // Zero-initialize the buffer first to ensure clean state
+    memset(data, 0, m_uniformBufferSize);
+
+    // Query uniform values directly from shader description (callbacks may have updated)
+    const unsigned numUniforms = m_shaderDesc->getNumUniforms();
+    for (unsigned idx = 0; idx < numUniforms && idx < m_uniforms.size(); ++idx)
+    {
+        GpuShaderDesc::UniformData uniformData;
+        m_shaderDesc->getUniform(idx, uniformData);
+        
+        char * dest = static_cast<char*>(data) + m_uniforms[idx].offset;
+        
+        if (uniformData.m_getDouble)
+        {
+            float val = static_cast<float>(uniformData.m_getDouble());
+            memcpy(dest, &val, sizeof(float));
+        }
+        else if (uniformData.m_getBool)
+        {
+            int val = uniformData.m_getBool() ? 1 : 0;
+            memcpy(dest, &val, sizeof(int));
+        }
+        else if (uniformData.m_getFloat3)
+        {
+            auto vals = uniformData.m_getFloat3();
+            memcpy(dest, vals.data(), 3 * sizeof(float));
+        }
+        else if (uniformData.m_vectorFloat.m_getSize && uniformData.m_vectorFloat.m_getVector)
+        {
+            const float * vals = uniformData.m_vectorFloat.m_getVector();
+            size_t count = uniformData.m_vectorFloat.m_getSize();
+            memcpy(dest, vals, count * sizeof(float));
+        }
+        else if (uniformData.m_vectorInt.m_getSize && uniformData.m_vectorInt.m_getVector)
+        {
+            const int * vals = uniformData.m_vectorInt.m_getVector();
+            size_t count = uniformData.m_vectorInt.m_getSize();
+            memcpy(dest, vals, count * sizeof(int));
+        }
+    }
+
+    vkUnmapMemory(m_device, m_uniformBufferMemory);
+}
+
+void VulkanBuilder::allocateAllTextures(GpuShaderDescRcPtr & shaderDesc)
+{
+    deleteAllTextures();
+    m_shaderDesc = shaderDesc;
+
+    // Create uniform buffer for dynamic parameters
+    createUniformBuffer(shaderDesc);
+
+    uint32_t bindingIndex = 2; // 0 and 1 are for input/output buffers
+
+    // Add uniform buffer binding if needed
+    if (hasUniforms())
+    {
+        bindingIndex++; // Reserve binding 2 for uniforms
+    }
+
+    // Process 3D LUTs
+    const unsigned num3DTextures = shaderDesc->getNum3DTextures();
+    for (unsigned idx = 0; idx < num3DTextures; ++idx)
+    {
+        const char * textureName = nullptr;
+        const char * samplerName = nullptr;
+        unsigned edgelen = 0;
+        Interpolation interpolation = INTERP_LINEAR;
+        shaderDesc->get3DTexture(idx, textureName, samplerName, edgelen, interpolation);
+
+        if (!textureName || !samplerName || edgelen == 0)
+        {
+            throw std::runtime_error("Invalid 3D texture data");
+        }
+
+        const float * values = nullptr;
+        shaderDesc->get3DTextureValues(idx, values);
+        if (!values)
+        {
+            throw std::runtime_error("Missing 3D texture values");
+        }
+
+        // Use RGBA format since RGB32F is not widely supported (especially on MoltenVK/macOS)
+        // Convert RGB to RGBA by adding alpha = 1.0
+        const size_t numTexels = edgelen * edgelen * edgelen;
+        std::vector<float> rgbaValues(numTexels * 4);
+        for (size_t i = 0; i < numTexels; ++i)
+        {
+            rgbaValues[i * 4 + 0] = values[i * 3 + 0];
+            rgbaValues[i * 4 + 1] = values[i * 3 + 1];
+            rgbaValues[i * 4 + 2] = values[i * 3 + 2];
+            rgbaValues[i * 4 + 3] = 1.0f;
+        }
+
+        // Create staging buffer
+        VkDeviceSize imageSize = numTexels * 4 * sizeof(float);
+        
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        
+        VkBufferCreateInfo bufferInfo{};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = imageSize;
+        bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        vkCreateBuffer(m_device, &bufferInfo, nullptr, &stagingBuffer);
+
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(m_device, stagingBuffer, &memRequirements);
+
+        VkMemoryAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocInfo.allocationSize = memRequirements.size;
+        allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+        vkAllocateMemory(m_device, &allocInfo, nullptr, &stagingBufferMemory);
+        vkBindBufferMemory(m_device, stagingBuffer, stagingBufferMemory, 0);
+
+        // Copy RGBA data to staging buffer
+        void * data;
+        vkMapMemory(m_device, stagingBufferMemory, 0, imageSize, 0, &data);
+        memcpy(data, rgbaValues.data(), static_cast<size_t>(imageSize));
+        vkUnmapMemory(m_device, stagingBufferMemory);
+
+        // Create 3D image with RGBA format
+        TextureResource tex;
+        tex.samplerName = samplerName;
+        tex.binding = bindingIndex++;
+
+        createImage(edgelen, edgelen, edgelen, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_TYPE_3D,
+                    VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, tex.image, tex.memory);
+
+        // Transition and copy
+        transitionImageLayout(tex.image, VK_FORMAT_R32G32B32A32_SFLOAT,
+                              VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        copyBufferToImage(stagingBuffer, tex.image, edgelen, edgelen, edgelen);
+        transitionImageLayout(tex.image, VK_FORMAT_R32G32B32A32_SFLOAT,
+                              VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+        // Create image view and sampler
+        tex.imageView = createImageView(tex.image, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_VIEW_TYPE_3D);
+        tex.sampler = createSampler(interpolation);
+
+        m_textures3D.push_back(tex);
+
+        // Cleanup staging buffer
+        vkDestroyBuffer(m_device, stagingBuffer, nullptr);
+        vkFreeMemory(m_device, stagingBufferMemory, nullptr);
+    }
+
+    // Process 1D/2D LUTs
+    const unsigned numTextures = shaderDesc->getNumTextures();
+    for (unsigned idx = 0; idx < numTextures; ++idx)
+    {
+        const char * textureName = nullptr;
+        const char * samplerName = nullptr;
+        unsigned width = 0;
+        unsigned height = 0;
+        GpuShaderDesc::TextureType channel = GpuShaderDesc::TEXTURE_RGB_CHANNEL;
+        Interpolation interpolation = INTERP_LINEAR;
+        GpuShaderDesc::TextureDimensions dimensions = GpuShaderDesc::TEXTURE_1D;
+        shaderDesc->getTexture(idx, textureName, samplerName, width, height, channel, dimensions, interpolation);
+
+        if (!textureName || !samplerName || width == 0)
+        {
+            throw std::runtime_error("Invalid texture data");
+        }
+
+        const float * values = nullptr;
+        shaderDesc->getTextureValues(idx, values);
+        if (!values)
+        {
+            throw std::runtime_error("Missing texture values");
+        }
+
+        // Use R32 for single channel, RGBA32 for RGB (since RGB32F not supported on MoltenVK)
+        unsigned imgHeight = (height > 0) ? height : 1;
+        const size_t numTexels = width * imgHeight;
+        VkFormat format;
+        VkDeviceSize imageSize;
+        std::vector<float> convertedValues;
+
+        if (channel == GpuShaderDesc::TEXTURE_RED_CHANNEL)
+        {
+            format = VK_FORMAT_R32_SFLOAT;
+            imageSize = numTexels * sizeof(float);
+        }
+        else
+        {
+            // Convert RGB to RGBA
+            format = VK_FORMAT_R32G32B32A32_SFLOAT;
+            imageSize = numTexels * 4 * sizeof(float);
+            convertedValues.resize(numTexels * 4);
+            for (size_t i = 0; i < numTexels; ++i)
+            {
+                convertedValues[i * 4 + 0] = values[i * 3 + 0];
+                convertedValues[i * 4 + 1] = values[i * 3 + 1];
+                convertedValues[i * 4 + 2] = values[i * 3 + 2];
+                convertedValues[i * 4 + 3] = 1.0f;
             }
         }
+
+        // Create staging buffer
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        
+        VkBufferCreateInfo bufferInfo{};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = imageSize;
+        bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        vkCreateBuffer(m_device, &bufferInfo, nullptr, &stagingBuffer);
+
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(m_device, stagingBuffer, &memRequirements);
+
+        VkMemoryAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocInfo.allocationSize = memRequirements.size;
+        allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+        vkAllocateMemory(m_device, &allocInfo, nullptr, &stagingBufferMemory);
+        vkBindBufferMemory(m_device, stagingBuffer, stagingBufferMemory, 0);
+
+        // Copy data
+        void * data;
+        vkMapMemory(m_device, stagingBufferMemory, 0, imageSize, 0, &data);
+        if (channel == GpuShaderDesc::TEXTURE_RED_CHANNEL)
+        {
+            memcpy(data, values, static_cast<size_t>(imageSize));
+        }
+        else
+        {
+            memcpy(data, convertedValues.data(), static_cast<size_t>(imageSize));
+        }
+        vkUnmapMemory(m_device, stagingBufferMemory);
+
+        // Create image (use 2D for both 1D and 2D textures in Vulkan)
+        TextureResource tex;
+        tex.samplerName = samplerName;
+        tex.binding = bindingIndex++;
+
+        createImage(width, imgHeight, 1, format, VK_IMAGE_TYPE_2D,
+                    VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, tex.image, tex.memory);
+
+        // Transition and copy
+        transitionImageLayout(tex.image, format,
+                              VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        copyBufferToImage(stagingBuffer, tex.image, width, imgHeight, 1);
+        transitionImageLayout(tex.image, format,
+                              VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+        // Create image view and sampler
+        tex.imageView = createImageView(tex.image, format, VK_IMAGE_VIEW_TYPE_2D);
+        tex.sampler = createSampler(interpolation);
+
+        m_textures1D2D.push_back(tex);
+
+        // Cleanup staging buffer
+        vkDestroyBuffer(m_device, stagingBuffer, nullptr);
+        vkFreeMemory(m_device, stagingBufferMemory, nullptr);
     }
 }
 
@@ -625,11 +1263,99 @@ void VulkanBuilder::buildShader(GpuShaderDescRcPtr & shaderDesc)
     shader << "};\n";
     shader << "\n";
 
-    // Add OCIO shader helper code (declarations and functions)
+    // Textures start at binding 2 (0=input buffer, 1=output buffer)
+    // Uniforms are handled by OCIO's shader text with bindings after textures
+
+    // Add sampler declarations for 3D LUT textures with correct bindings
+    for (const auto & tex : m_textures3D)
+    {
+        shader << "layout(set = 0, binding = " << tex.binding << ") uniform sampler3D " << tex.samplerName << ";\n";
+    }
+
+    // Add sampler declarations for 1D/2D LUT textures (use sampler2D for both)
+    for (const auto & tex : m_textures1D2D)
+    {
+        shader << "layout(set = 0, binding = " << tex.binding << ") uniform sampler2D " << tex.samplerName << ";\n";
+    }
+
+    if (!m_textures3D.empty() || !m_textures1D2D.empty())
+    {
+        shader << "\n";
+    }
+
+    // Get OCIO shader text and process it:
+    // 1. Remove sampler declarations (we've added our own with correct bindings)
+    // 2. Fix uniform block bindings to not conflict with our buffers (0=input, 1=output)
     const char * shaderText = shaderDesc->getShaderText();
     if (shaderText && strlen(shaderText) > 0)
     {
-        shader << shaderText << "\n";
+        std::string ocioShader(shaderText);
+        
+        // Calculate the binding for uniform blocks (after input/output buffers and textures)
+        uint32_t uniformBinding = 2 + static_cast<uint32_t>(m_textures3D.size() + m_textures1D2D.size());
+        
+        std::string result;
+        std::istringstream stream(ocioShader);
+        std::string line;
+        
+        while (std::getline(stream, line))
+        {
+            // Skip lines that declare samplers (we've already declared them with correct bindings)
+            if (line.find("uniform sampler") != std::string::npos && 
+                line.find("layout") != std::string::npos)
+            {
+                continue;
+            }
+            // Skip comment lines about texture declarations
+            if (line.find("// Declaration of all textures") != std::string::npos)
+            {
+                continue;
+            }
+            
+            // Fix uniform block bindings and add std140 layout
+            // OCIO generates: layout (set = 0, binding = 0) uniform BlockName
+            if (line.find("uniform") != std::string::npos && 
+                line.find("layout") != std::string::npos &&
+                line.find("binding") != std::string::npos &&
+                line.find("sampler") == std::string::npos)
+            {
+                // Replace binding = X with our calculated binding
+                size_t bindingPos = line.find("binding");
+                if (bindingPos != std::string::npos)
+                {
+                    size_t eqPos = line.find("=", bindingPos);
+                    if (eqPos != std::string::npos)
+                    {
+                        size_t numStart = eqPos + 1;
+                        while (numStart < line.size() && (line[numStart] == ' ' || line[numStart] == '\t'))
+                            numStart++;
+                        size_t numEnd = numStart;
+                        while (numEnd < line.size() && std::isdigit(line[numEnd]))
+                            numEnd++;
+                        
+                        if (numEnd > numStart)
+                        {
+                            line = line.substr(0, numStart) + std::to_string(uniformBinding) + line.substr(numEnd);
+                        }
+                    }
+                }
+                
+                // Add std140 layout qualifier if not present
+                if (line.find("std140") == std::string::npos)
+                {
+                    size_t layoutPos = line.find("layout");
+                    size_t parenPos = line.find("(", layoutPos);
+                    if (parenPos != std::string::npos)
+                    {
+                        line = line.substr(0, parenPos + 1) + "std140, " + line.substr(parenPos + 1);
+                    }
+                }
+            }
+            
+            result += line + "\n";
+        }
+        
+        shader << result;
     }
 
     shader << "\n";
@@ -744,24 +1470,41 @@ std::vector<uint32_t> VulkanBuilder::compileGLSLToSPIRV(const std::string & glsl
     return spirv;
 }
 
-void VulkanBuilder::allocateAllTextures(unsigned maxTextureSize)
-{
-    // TODO: Implement 3D LUT texture allocation for OCIO
-    // This would create VkImage, VkImageView, and VkSampler for each LUT
-}
-
 std::vector<VkDescriptorSetLayoutBinding> VulkanBuilder::getDescriptorSetLayoutBindings() const
 {
     std::vector<VkDescriptorSetLayoutBinding> bindings;
-    
-    // Add bindings for 3D LUT textures
-    // Starting at binding index 2 (0 and 1 are for input/output buffers)
-    uint32_t bindingIndex = 2;
-    for (size_t i = 0; i < m_textures.size(); ++i)
+
+    // Add bindings for 3D LUT textures (starting at binding 2)
+    for (const auto & tex : m_textures3D)
     {
         VkDescriptorSetLayoutBinding binding{};
-        binding.binding = bindingIndex++;
+        binding.binding = tex.binding;
         binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        binding.descriptorCount = 1;
+        binding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+        binding.pImmutableSamplers = nullptr;
+        bindings.push_back(binding);
+    }
+
+    // Add bindings for 1D/2D LUT textures
+    for (const auto & tex : m_textures1D2D)
+    {
+        VkDescriptorSetLayoutBinding binding{};
+        binding.binding = tex.binding;
+        binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        binding.descriptorCount = 1;
+        binding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+        binding.pImmutableSamplers = nullptr;
+        bindings.push_back(binding);
+    }
+
+    // Add uniform buffer binding after textures (matches shader generation)
+    if (hasUniforms())
+    {
+        uint32_t uniformBinding = 2 + static_cast<uint32_t>(m_textures3D.size() + m_textures1D2D.size());
+        VkDescriptorSetLayoutBinding binding{};
+        binding.binding = uniformBinding;
+        binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         binding.descriptorCount = 1;
         binding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
         binding.pImmutableSamplers = nullptr;
@@ -771,10 +1514,104 @@ std::vector<VkDescriptorSetLayoutBinding> VulkanBuilder::getDescriptorSetLayoutB
     return bindings;
 }
 
+std::vector<VkDescriptorPoolSize> VulkanBuilder::getDescriptorPoolSizes() const
+{
+    std::vector<VkDescriptorPoolSize> poolSizes;
+
+    // Storage buffers for input/output
+    poolSizes.push_back({VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 2});
+
+    // Uniform buffer for dynamic parameters
+    if (hasUniforms())
+    {
+        poolSizes.push_back({VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1});
+    }
+
+    // Combined image samplers for textures
+    uint32_t numTextures = static_cast<uint32_t>(m_textures3D.size() + m_textures1D2D.size());
+    if (numTextures > 0)
+    {
+        poolSizes.push_back({VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, numTextures});
+    }
+
+    return poolSizes;
+}
+
 void VulkanBuilder::updateDescriptorSet(VkDescriptorSet descriptorSet)
 {
-    // TODO: Update descriptor set with texture bindings
-    // This would write VkDescriptorImageInfo for each LUT texture
+    std::vector<VkWriteDescriptorSet> descriptorWrites;
+    std::vector<VkDescriptorImageInfo> imageInfos;
+    
+    // Use a single buffer info for uniform buffer (allocated on stack to avoid reallocation issues)
+    VkDescriptorBufferInfo uniformBufferInfo{};
+
+    // Reserve space to prevent reallocation
+    imageInfos.reserve(m_textures3D.size() + m_textures1D2D.size());
+
+    // Add 3D texture bindings first (starting at binding 2)
+    for (const auto & tex : m_textures3D)
+    {
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = tex.imageView;
+        imageInfo.sampler = tex.sampler;
+        imageInfos.push_back(imageInfo);
+
+        VkWriteDescriptorSet imageWrite{};
+        imageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        imageWrite.dstSet = descriptorSet;
+        imageWrite.dstBinding = tex.binding;
+        imageWrite.dstArrayElement = 0;
+        imageWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        imageWrite.descriptorCount = 1;
+        imageWrite.pImageInfo = &imageInfos.back();
+        descriptorWrites.push_back(imageWrite);
+    }
+
+    // Add 1D/2D texture bindings
+    for (const auto & tex : m_textures1D2D)
+    {
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        imageInfo.imageView = tex.imageView;
+        imageInfo.sampler = tex.sampler;
+        imageInfos.push_back(imageInfo);
+
+        VkWriteDescriptorSet imageWrite{};
+        imageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        imageWrite.dstSet = descriptorSet;
+        imageWrite.dstBinding = tex.binding;
+        imageWrite.dstArrayElement = 0;
+        imageWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        imageWrite.descriptorCount = 1;
+        imageWrite.pImageInfo = &imageInfos.back();
+        descriptorWrites.push_back(imageWrite);
+    }
+
+    // Add uniform buffer binding after textures (matches shader generation)
+    if (hasUniforms())
+    {
+        uint32_t uniformBinding = 2 + static_cast<uint32_t>(m_textures3D.size() + m_textures1D2D.size());
+        uniformBufferInfo.buffer = m_uniformBuffer;
+        uniformBufferInfo.offset = 0;
+        uniformBufferInfo.range = m_uniformBufferSize;
+
+        VkWriteDescriptorSet uniformWrite{};
+        uniformWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        uniformWrite.dstSet = descriptorSet;
+        uniformWrite.dstBinding = uniformBinding;
+        uniformWrite.dstArrayElement = 0;
+        uniformWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uniformWrite.descriptorCount = 1;
+        uniformWrite.pBufferInfo = &uniformBufferInfo;
+        descriptorWrites.push_back(uniformWrite);
+    }
+
+    if (!descriptorWrites.empty())
+    {
+        vkUpdateDescriptorSets(m_device, static_cast<uint32_t>(descriptorWrites.size()),
+                               descriptorWrites.data(), 0, nullptr);
+    }
 }
 
 } // namespace OCIO_NAMESPACE

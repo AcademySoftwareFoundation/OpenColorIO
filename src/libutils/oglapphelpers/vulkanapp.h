@@ -158,7 +158,8 @@ public:
     VulkanBuilder(const VulkanBuilder &) = delete;
     VulkanBuilder & operator=(const VulkanBuilder &) = delete;
 
-    explicit VulkanBuilder(VkDevice device);
+    explicit VulkanBuilder(VkDevice device, VkPhysicalDevice physicalDevice, 
+                           VkCommandPool commandPool, VkQueue queue);
     ~VulkanBuilder();
 
     // Build compute shader from OCIO GpuShaderDesc.
@@ -170,22 +171,72 @@ public:
     // Get the shader source code (for debugging).
     const std::string & getShaderSource() const { return m_shaderSource; }
 
-    // Allocate and setup 3D LUT textures.
-    void allocateAllTextures(unsigned maxTextureSize);
+    // Allocate and setup all textures (3D LUTs and 1D/2D LUTs).
+    void allocateAllTextures(GpuShaderDescRcPtr & shaderDesc);
 
-    // Get descriptor set layout bindings for textures.
+    // Get descriptor set layout bindings for textures and uniforms.
     std::vector<VkDescriptorSetLayoutBinding> getDescriptorSetLayoutBindings() const;
 
-    // Update descriptor set with texture bindings.
+    // Get descriptor pool sizes for textures and uniforms.
+    std::vector<VkDescriptorPoolSize> getDescriptorPoolSizes() const;
+
+    // Update descriptor set with texture and uniform bindings.
     void updateDescriptorSet(VkDescriptorSet descriptorSet);
+
+    // Update uniform values before each dispatch.
+    void updateUniforms();
+
+    // Get the uniform buffer for binding.
+    VkBuffer getUniformBuffer() const { return m_uniformBuffer; }
+    VkDeviceSize getUniformBufferSize() const { return m_uniformBufferSize; }
+
+    // Check if uniforms are used.
+    bool hasUniforms() const { return m_uniformBufferSize > 0; }
+
+    // Check if textures are used.
+    bool hasTextures() const { return !m_textures3D.empty() || !m_textures1D2D.empty(); }
 
 private:
     // Compile GLSL to SPIR-V.
     std::vector<uint32_t> compileGLSLToSPIRV(const std::string & glslSource);
 
+    // Helper to find memory type.
+    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
+    // Helper to create image.
+    void createImage(uint32_t width, uint32_t height, uint32_t depth,
+                     VkFormat format, VkImageType imageType,
+                     VkImageUsageFlags usage, VkMemoryPropertyFlags properties,
+                     VkImage & image, VkDeviceMemory & imageMemory);
+
+    // Helper to create image view.
+    VkImageView createImageView(VkImage image, VkFormat format, VkImageViewType viewType);
+
+    // Helper to create sampler.
+    VkSampler createSampler(Interpolation interpolation);
+
+    // Helper to transition image layout.
+    void transitionImageLayout(VkImage image, VkFormat format,
+                               VkImageLayout oldLayout, VkImageLayout newLayout);
+
+    // Helper to copy buffer to image.
+    void copyBufferToImage(VkBuffer buffer, VkImage image,
+                           uint32_t width, uint32_t height, uint32_t depth);
+
+    // Create uniform buffer.
+    void createUniformBuffer(GpuShaderDescRcPtr & shaderDesc);
+
+    // Delete all resources.
+    void deleteAllTextures();
+    void deleteUniformBuffer();
+
     VkDevice m_device{ VK_NULL_HANDLE };
+    VkPhysicalDevice m_physicalDevice{ VK_NULL_HANDLE };
+    VkCommandPool m_commandPool{ VK_NULL_HANDLE };
+    VkQueue m_queue{ VK_NULL_HANDLE };
     VkShaderModule m_shaderModule{ VK_NULL_HANDLE };
     std::string m_shaderSource;
+    GpuShaderDescRcPtr m_shaderDesc;
 
     // Texture resources for 3D LUTs
     struct TextureResource
@@ -194,8 +245,26 @@ private:
         VkDeviceMemory memory{ VK_NULL_HANDLE };
         VkImageView imageView{ VK_NULL_HANDLE };
         VkSampler sampler{ VK_NULL_HANDLE };
+        std::string samplerName;
+        uint32_t binding{ 0 };
     };
-    std::vector<TextureResource> m_textures;
+    std::vector<TextureResource> m_textures3D;
+    std::vector<TextureResource> m_textures1D2D;
+
+    // Uniform buffer for dynamic parameters
+    VkBuffer m_uniformBuffer{ VK_NULL_HANDLE };
+    VkDeviceMemory m_uniformBufferMemory{ VK_NULL_HANDLE };
+    VkDeviceSize m_uniformBufferSize{ 0 };
+
+    // Uniform data structure matching shader layout
+    struct UniformData
+    {
+        std::string name;
+        GpuShaderDesc::UniformData data;
+        size_t offset;
+        size_t size;
+    };
+    std::vector<UniformData> m_uniforms;
 };
 
 } // namespace OCIO_NAMESPACE
