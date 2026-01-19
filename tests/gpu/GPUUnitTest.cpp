@@ -167,6 +167,13 @@ OCIO::GpuShaderDescRcPtr & OCIOGPUTest::getShaderDesc()
         m_shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
         m_shaderDesc->setLanguage(m_gpuShadingLanguage);
         m_shaderDesc->setPixelName("myPixel");
+        
+        // Vulkan doesn't support 1D textures well on all platforms (e.g., MoltenVK/macOS)
+        // Force 2D textures for Vulkan to ensure compatibility
+        if (m_gpuShadingLanguage == OCIO::GPU_LANGUAGE_GLSL_VK_4_6)
+        {
+            m_shaderDesc->setAllowTexture1D(false);
+        }
     }
     return m_shaderDesc;
 }
@@ -1080,10 +1087,15 @@ int main(int argc, const char ** argv)
             ++failures;
             std::cerr << "FAILED - " << ex.what() << std::endl;
         }
+        catch(const std::exception & ex)
+        {
+            ++failures;
+            std::cerr << "FAILED - std::exception: " << ex.what() << std::endl;
+        }
         catch(...)
         {
             ++failures;
-            std::cerr << "FAILED - Unexpected error" << std::endl;
+            std::cerr << "FAILED - Unexpected error (unknown exception type)" << std::endl;
         }
 
         if (!enabledTest)

@@ -875,8 +875,12 @@ void VulkanBuilder::createUniformBuffer(GpuShaderDescRcPtr & shaderDesc)
     const unsigned numUniforms = shaderDesc->getNumUniforms();
     if (numUniforms == 0) return;
 
-    // Calculate buffer size with proper alignment (std140 layout)
-    size_t offset = 0;
+    // Use OCIO's provided buffer size and offsets - these are calculated correctly
+    // for the scalar layout used in Vulkan shaders
+    m_uniformBufferSize = shaderDesc->getUniformBufferSize();
+    if (m_uniformBufferSize == 0) return;
+
+    // Store uniform metadata using OCIO's provided offsets
     for (unsigned idx = 0; idx < numUniforms; ++idx)
     {
         GpuShaderDesc::UniformData data;
@@ -885,55 +889,39 @@ void VulkanBuilder::createUniformBuffer(GpuShaderDescRcPtr & shaderDesc)
         UniformData uniformData;
         uniformData.name = name;
         uniformData.data = data;
+        uniformData.offset = data.m_bufferOffset; // Use OCIO's calculated offset
         
-        // Determine size and alignment based on type
-        size_t size = 0;
-        size_t alignment = 4; // Default to float alignment
-        
+        // Calculate size based on type (for debugging/verification)
         if (data.m_getDouble)
         {
-            size = sizeof(float);
-            alignment = 4;
+            uniformData.size = sizeof(float);
         }
         else if (data.m_getBool)
         {
-            size = sizeof(int); // bool is represented as int in shader
-            alignment = 4;
+            uniformData.size = sizeof(int);
         }
         else if (data.m_getFloat3)
         {
-            size = 4 * sizeof(float); // vec3 padded to vec4 in std140
-            alignment = 16;
+            uniformData.size = 3 * sizeof(float);
         }
-        else if (data.m_vectorFloat.m_getSize && data.m_vectorFloat.m_getVector)
+        else if (data.m_vectorFloat.m_getSize)
         {
-            size = data.m_vectorFloat.m_getSize() * sizeof(float);
-            alignment = 16; // Arrays align to 16 bytes
+            // Size will be determined when writing data
+            uniformData.size = 0;
         }
-        else if (data.m_vectorInt.m_getSize && data.m_vectorInt.m_getVector)
+        else if (data.m_vectorInt.m_getSize)
         {
-            size = data.m_vectorInt.m_getSize() * sizeof(int);
-            alignment = 16;
+            // Size will be determined when writing data
+            uniformData.size = 0;
         }
         else
         {
-            // Unknown uniform type - skip but log
             std::cerr << "Warning: Unknown uniform type for '" << name << "'" << std::endl;
             continue;
         }
         
-        // Align offset
-        offset = (offset + alignment - 1) & ~(alignment - 1);
-        uniformData.offset = offset;
-        uniformData.size = size;
-        offset += size;
-        
         m_uniforms.push_back(uniformData);
     }
-
-    // Align total size to 16 bytes
-    m_uniformBufferSize = (offset + 15) & ~15;
-    if (m_uniformBufferSize == 0) return;
 
     // Create uniform buffer
     VkBufferCreateInfo bufferInfo{};
@@ -998,20 +986,29 @@ void VulkanBuilder::updateUniforms()
         }
         else if (uniformData.m_getFloat3)
         {
+            // vec3 in std140: write 3 floats (12 bytes), padded to 16 bytes
             auto vals = uniformData.m_getFloat3();
             memcpy(dest, vals.data(), 3 * sizeof(float));
         }
         else if (uniformData.m_vectorFloat.m_getSize && uniformData.m_vectorFloat.m_getVector)
         {
+            // In std140, each array element is padded to 16 bytes
             const float * vals = uniformData.m_vectorFloat.m_getVector();
             size_t count = uniformData.m_vectorFloat.m_getSize();
-            memcpy(dest, vals, count * sizeof(float));
+            for (size_t i = 0; i < count; ++i)
+            {
+                memcpy(dest + i * 16, &vals[i], sizeof(float));
+            }
         }
         else if (uniformData.m_vectorInt.m_getSize && uniformData.m_vectorInt.m_getVector)
         {
+            // In std140, each array element is padded to 16 bytes
             const int * vals = uniformData.m_vectorInt.m_getVector();
             size_t count = uniformData.m_vectorInt.m_getSize();
-            memcpy(dest, vals, count * sizeof(int));
+            for (size_t i = 0; i < count; ++i)
+            {
+                memcpy(dest + i * 16, &vals[i], sizeof(int));
+            }
         }
     }
 
@@ -1026,13 +1023,9 @@ void VulkanBuilder::allocateAllTextures(GpuShaderDescRcPtr & shaderDesc)
     // Create uniform buffer for dynamic parameters
     createUniformBuffer(shaderDesc);
 
-    uint32_t bindingIndex = 2; // 0 and 1 are for input/output buffers
-
-    // Add uniform buffer binding if needed
-    if (hasUniforms())
-    {
-        bindingIndex++; // Reserve binding 2 for uniforms
-    }
+    // Textures start at binding 2 (0=input buffer, 1=output buffer)
+    // Uniforms come AFTER textures (binding = 2 + num_textures)
+    uint32_t bindingIndex = 2;
 
     // Process 3D LUTs
     const unsigned num3DTextures = shaderDesc->getNum3DTextures();
@@ -1341,6 +1334,7 @@ void VulkanBuilder::buildShader(GpuShaderDescRcPtr & shaderDesc)
                 }
                 
                 // Add std140 layout qualifier if not present
+                // OCIO calculates uniform buffer offsets using std140 rules
                 if (line.find("std140") == std::string::npos)
                 {
                     size_t layoutPos = line.find("layout");
