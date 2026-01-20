@@ -6,7 +6,6 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "GpuShaderUtils.h"
 #include "ops/lut1d/Lut1DOpData.h"
 
 namespace OCIO_NAMESPACE
