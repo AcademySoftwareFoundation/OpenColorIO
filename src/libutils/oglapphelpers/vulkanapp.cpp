@@ -116,6 +116,24 @@ void VulkanApp::initVulkan()
         throw std::runtime_error("Failed to find a suitable GPU with compute support");
     }
 
+    // Print GPU information for diagnostics
+    VkPhysicalDeviceProperties deviceProperties;
+    vkGetPhysicalDeviceProperties(m_physicalDevice, &deviceProperties);
+    std::cout << "Vulkan GPU: " << deviceProperties.deviceName << std::endl;
+    std::cout << "  Device Type: ";
+    switch (deviceProperties.deviceType)
+    {
+        case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:   std::cout << "Discrete GPU"; break;
+        case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU: std::cout << "Integrated GPU"; break;
+        case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:    std::cout << "Virtual GPU"; break;
+        case VK_PHYSICAL_DEVICE_TYPE_CPU:            std::cout << "CPU (Software)"; break;
+        default:                                     std::cout << "Other"; break;
+    }
+    std::cout << std::endl;
+    std::cout << "  API Version: " << VK_VERSION_MAJOR(deviceProperties.apiVersion) << "."
+              << VK_VERSION_MINOR(deviceProperties.apiVersion) << "."
+              << VK_VERSION_PATCH(deviceProperties.apiVersion) << std::endl;
+
     // Create logical device
     float queuePriority = 1.0f;
     VkDeviceQueueCreateInfo queueCreateInfo{};
@@ -1023,11 +1041,7 @@ void VulkanBuilder::allocateAllTextures(GpuShaderDescRcPtr & shaderDesc)
     // Create uniform buffer for dynamic parameters
     createUniformBuffer(shaderDesc);
 
-    // Textures start at binding 2 (0=input buffer, 1=output buffer)
-    // Uniforms come AFTER textures (binding = 2 + num_textures)
-    uint32_t bindingIndex = 2;
-
-    // Process 3D LUTs
+    // Process 3D LUTs - use OCIO's get3DTextureShaderBindingIndex for correct bindings
     const unsigned num3DTextures = shaderDesc->getNum3DTextures();
     for (unsigned idx = 0; idx < num3DTextures; ++idx)
     {
@@ -1094,9 +1108,10 @@ void VulkanBuilder::allocateAllTextures(GpuShaderDescRcPtr & shaderDesc)
         vkUnmapMemory(m_device, stagingBufferMemory);
 
         // Create 3D image with RGBA format
+        // Use OCIO's get3DTextureShaderBindingIndex for the correct binding index
         TextureResource tex;
         tex.samplerName = samplerName;
-        tex.binding = bindingIndex++;
+        tex.binding = shaderDesc->get3DTextureShaderBindingIndex(idx);
 
         createImage(edgelen, edgelen, edgelen, VK_FORMAT_R32G32B32A32_SFLOAT, VK_IMAGE_TYPE_3D,
                     VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
@@ -1210,9 +1225,10 @@ void VulkanBuilder::allocateAllTextures(GpuShaderDescRcPtr & shaderDesc)
         vkUnmapMemory(m_device, stagingBufferMemory);
 
         // Create image (use 2D for both 1D and 2D textures in Vulkan)
+        // Use OCIO's getTextureShaderBindingIndex for the correct binding index
         TextureResource tex;
         tex.samplerName = samplerName;
-        tex.binding = bindingIndex++;
+        tex.binding = shaderDesc->getTextureShaderBindingIndex(idx);
 
         createImage(width, imgHeight, 1, format, VK_IMAGE_TYPE_2D,
                     VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
@@ -1256,35 +1272,19 @@ void VulkanBuilder::buildShader(GpuShaderDescRcPtr & shaderDesc)
     shader << "};\n";
     shader << "\n";
 
-    // Textures start at binding 2 (0=input buffer, 1=output buffer)
-    // Uniforms are handled by OCIO's shader text with bindings after textures
+    // OCIO generates texture sampler declarations with correct bindings when using
+    // GPU_LANGUAGE_GLSL_VK_4_6 and setDescriptorSetIndex(0, 2) is called on the shader descriptor.
+    // Textures start at binding 2 (0=input buffer, 1=output buffer).
+    // The uniform block binding is set to 0 by OCIO but we need it after all textures.
 
-    // Add sampler declarations for 3D LUT textures with correct bindings
-    for (const auto & tex : m_textures3D)
-    {
-        shader << "layout(set = 0, binding = " << tex.binding << ") uniform sampler3D " << tex.samplerName << ";\n";
-    }
-
-    // Add sampler declarations for 1D/2D LUT textures (use sampler2D for both)
-    for (const auto & tex : m_textures1D2D)
-    {
-        shader << "layout(set = 0, binding = " << tex.binding << ") uniform sampler2D " << tex.samplerName << ";\n";
-    }
-
-    if (!m_textures3D.empty() || !m_textures1D2D.empty())
-    {
-        shader << "\n";
-    }
-
-    // Get OCIO shader text and process it:
-    // 1. Remove sampler declarations (we've added our own with correct bindings)
-    // 2. Fix uniform block bindings to not conflict with our buffers (0=input, 1=output)
+    // Get OCIO shader text - it already contains sampler declarations with correct bindings
     const char * shaderText = shaderDesc->getShaderText();
     if (shaderText && strlen(shaderText) > 0)
     {
         std::string ocioShader(shaderText);
         
         // Calculate the binding for uniform blocks (after input/output buffers and textures)
+        // OCIO sets uniform block binding to 0, but we need it after all textures
         uint32_t uniformBinding = 2 + static_cast<uint32_t>(m_textures3D.size() + m_textures1D2D.size());
         
         std::string result;
@@ -1293,20 +1293,9 @@ void VulkanBuilder::buildShader(GpuShaderDescRcPtr & shaderDesc)
         
         while (std::getline(stream, line))
         {
-            // Skip lines that declare samplers (we've already declared them with correct bindings)
-            if (line.find("uniform sampler") != std::string::npos && 
-                line.find("layout") != std::string::npos)
-            {
-                continue;
-            }
-            // Skip comment lines about texture declarations
-            if (line.find("// Declaration of all textures") != std::string::npos)
-            {
-                continue;
-            }
-            
             // Fix uniform block bindings and add std140 layout
             // OCIO generates: layout (set = 0, binding = 0) uniform BlockName
+            // We need to change binding = 0 to binding = uniformBinding (after textures)
             if (line.find("uniform") != std::string::npos && 
                 line.find("layout") != std::string::npos &&
                 line.find("binding") != std::string::npos &&

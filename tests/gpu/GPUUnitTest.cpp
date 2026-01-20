@@ -173,6 +173,9 @@ OCIO::GpuShaderDescRcPtr & OCIOGPUTest::getShaderDesc()
         if (m_gpuShadingLanguage == OCIO::GPU_LANGUAGE_GLSL_VK_4_6)
         {
             m_shaderDesc->setAllowTexture1D(false);
+            // Set texture binding start to 2 since bindings 0 and 1 are used for
+            // input/output storage buffers in the Vulkan compute shader
+            m_shaderDesc->setDescriptorSetIndex(0, 2);
         }
     }
     return m_shaderDesc;
