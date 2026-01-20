@@ -2,6 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <fstream>
+#include <string>
 #include <sstream>
 
 #include "PyOpenColorIO.h"

@@ -11,6 +11,9 @@
 
 #include "PyOpenColorIO.h"
 
+#include <pybind11/numpy.h>
+
+
 namespace OCIO_NAMESPACE
 {
 
