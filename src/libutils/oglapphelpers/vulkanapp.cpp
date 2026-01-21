@@ -127,6 +127,8 @@ void VulkanApp::initVulkan()
         case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU: std::cout << "Integrated GPU"; break;
         case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:    std::cout << "Virtual GPU"; break;
         case VK_PHYSICAL_DEVICE_TYPE_CPU:            std::cout << "CPU (Software)"; break;
+        case VK_PHYSICAL_DEVICE_TYPE_OTHER:
+        case VK_PHYSICAL_DEVICE_TYPE_MAX_ENUM:
         default:                                     std::cout << "Other"; break;
     }
     std::cout << std::endl;
@@ -408,11 +410,13 @@ void VulkanApp::setShader(GpuShaderDescRcPtr & shaderDesc)
 void VulkanApp::createComputePipeline()
 {
     // Create descriptor set layout
+    // Use high binding numbers (100, 101) for input/output buffers to avoid conflicts with OCIO bindings
+    // OCIO uses binding 0 for uniforms and 1+ for textures
     std::vector<VkDescriptorSetLayoutBinding> bindings = {
         // Input buffer binding
-        {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr},
+        {100, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr},
         // Output buffer binding
-        {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}
+        {101, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}
     };
 
     // Add texture and uniform bindings from shader builder
@@ -494,10 +498,12 @@ void VulkanApp::createComputePipeline()
     outputBufferInfo.offset = 0;
     outputBufferInfo.range = bufferSize;
 
+    // Use high binding numbers (100, 101) to avoid conflicts with OCIO bindings
+    // OCIO uses binding 0 for uniforms and 1+ for textures
     std::vector<VkWriteDescriptorSet> descriptorWrites = {
-        {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, m_descriptorSet, 0, 0, 1,
+        {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, m_descriptorSet, 100, 0, 1,
          VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, nullptr, &inputBufferInfo, nullptr},
-        {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, m_descriptorSet, 1, 0, 1,
+        {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, m_descriptorSet, 101, 0, 1,
          VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, nullptr, &outputBufferInfo, nullptr}
     };
 
@@ -772,7 +778,7 @@ VkSampler VulkanBuilder::createSampler(Interpolation interpolation)
     return sampler;
 }
 
-void VulkanBuilder::transitionImageLayout(VkImage image, VkFormat format,
+void VulkanBuilder::transitionImageLayout(VkImage image, VkFormat /*format*/,
                                            VkImageLayout oldLayout, VkImageLayout newLayout)
 {
     VkCommandBufferAllocateInfo allocInfo{};
@@ -1263,82 +1269,27 @@ void VulkanBuilder::buildShader(GpuShaderDescRcPtr & shaderDesc)
     shader << "\n";
     shader << "layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;\n";
     shader << "\n";
-    shader << "layout(std430, set = 0, binding = 0) readonly buffer InputBuffer {\n";
+    // Use high binding numbers for input/output buffers to avoid conflicts with OCIO bindings.
+    // OCIO uses binding 0 for uniforms and 1+ for textures (via setDescriptorSetIndex(0, 1)).
+    // By using bindings 100 and 101 for I/O buffers, we avoid needing to edit OCIO's shader text.
+    shader << "layout(std430, set = 0, binding = 100) readonly buffer InputBuffer {\n";
     shader << "    vec4 inputPixels[];\n";
     shader << "};\n";
     shader << "\n";
-    shader << "layout(std430, set = 0, binding = 1) writeonly buffer OutputBuffer {\n";
+    shader << "layout(std430, set = 0, binding = 101) writeonly buffer OutputBuffer {\n";
     shader << "    vec4 outputPixels[];\n";
     shader << "};\n";
     shader << "\n";
 
     // OCIO generates texture sampler declarations with correct bindings when using
-    // GPU_LANGUAGE_GLSL_VK_4_6 and setDescriptorSetIndex(0, 2) is called on the shader descriptor.
-    // Textures start at binding 2 (0=input buffer, 1=output buffer).
-    // The uniform block binding is set to 0 by OCIO but we need it after all textures.
+    // GPU_LANGUAGE_GLSL_VK_4_6 and setDescriptorSetIndex(0, 1) is called on the shader descriptor.
+    // OCIO uses binding 0 for uniforms (by design) and 1+ for textures.
 
-    // Get OCIO shader text - it already contains sampler declarations with correct bindings
+    // Get OCIO shader text - it already contains sampler and uniform declarations with correct bindings
     const char * shaderText = shaderDesc->getShaderText();
     if (shaderText && strlen(shaderText) > 0)
     {
-        std::string ocioShader(shaderText);
-        
-        // Calculate the binding for uniform blocks (after input/output buffers and textures)
-        // OCIO sets uniform block binding to 0, but we need it after all textures
-        uint32_t uniformBinding = 2 + static_cast<uint32_t>(m_textures3D.size() + m_textures1D2D.size());
-        
-        std::string result;
-        std::istringstream stream(ocioShader);
-        std::string line;
-        
-        while (std::getline(stream, line))
-        {
-            // Fix uniform block bindings and add std140 layout
-            // OCIO generates: layout (set = 0, binding = 0) uniform BlockName
-            // We need to change binding = 0 to binding = uniformBinding (after textures)
-            if (line.find("uniform") != std::string::npos && 
-                line.find("layout") != std::string::npos &&
-                line.find("binding") != std::string::npos &&
-                line.find("sampler") == std::string::npos)
-            {
-                // Replace binding = X with our calculated binding
-                size_t bindingPos = line.find("binding");
-                if (bindingPos != std::string::npos)
-                {
-                    size_t eqPos = line.find("=", bindingPos);
-                    if (eqPos != std::string::npos)
-                    {
-                        size_t numStart = eqPos + 1;
-                        while (numStart < line.size() && (line[numStart] == ' ' || line[numStart] == '\t'))
-                            numStart++;
-                        size_t numEnd = numStart;
-                        while (numEnd < line.size() && std::isdigit(line[numEnd]))
-                            numEnd++;
-                        
-                        if (numEnd > numStart)
-                        {
-                            line = line.substr(0, numStart) + std::to_string(uniformBinding) + line.substr(numEnd);
-                        }
-                    }
-                }
-                
-                // Add std140 layout qualifier if not present
-                // OCIO calculates uniform buffer offsets using std140 rules
-                if (line.find("std140") == std::string::npos)
-                {
-                    size_t layoutPos = line.find("layout");
-                    size_t parenPos = line.find("(", layoutPos);
-                    if (parenPos != std::string::npos)
-                    {
-                        line = line.substr(0, parenPos + 1) + "std140, " + line.substr(parenPos + 1);
-                    }
-                }
-            }
-            
-            result += line + "\n";
-        }
-        
-        shader << result;
+        shader << shaderText;
     }
 
     shader << "\n";
@@ -1457,7 +1408,20 @@ std::vector<VkDescriptorSetLayoutBinding> VulkanBuilder::getDescriptorSetLayoutB
 {
     std::vector<VkDescriptorSetLayoutBinding> bindings;
 
-    // Add bindings for 3D LUT textures (starting at binding 2)
+    // Add uniform buffer binding at binding 0 (OCIO's default)
+    // OCIO generates uniform blocks with binding = 0 by design
+    if (hasUniforms())
+    {
+        VkDescriptorSetLayoutBinding binding{};
+        binding.binding = 0;
+        binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        binding.descriptorCount = 1;
+        binding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+        binding.pImmutableSamplers = nullptr;
+        bindings.push_back(binding);
+    }
+
+    // Add bindings for 3D LUT textures (starting at binding 1 via setDescriptorSetIndex(0, 1))
     for (const auto & tex : m_textures3D)
     {
         VkDescriptorSetLayoutBinding binding{};
@@ -1475,19 +1439,6 @@ std::vector<VkDescriptorSetLayoutBinding> VulkanBuilder::getDescriptorSetLayoutB
         VkDescriptorSetLayoutBinding binding{};
         binding.binding = tex.binding;
         binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        binding.descriptorCount = 1;
-        binding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-        binding.pImmutableSamplers = nullptr;
-        bindings.push_back(binding);
-    }
-
-    // Add uniform buffer binding after textures (matches shader generation)
-    if (hasUniforms())
-    {
-        uint32_t uniformBinding = 2 + static_cast<uint32_t>(m_textures3D.size() + m_textures1D2D.size());
-        VkDescriptorSetLayoutBinding binding{};
-        binding.binding = uniformBinding;
-        binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         binding.descriptorCount = 1;
         binding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
         binding.pImmutableSamplers = nullptr;
@@ -1531,7 +1482,25 @@ void VulkanBuilder::updateDescriptorSet(VkDescriptorSet descriptorSet)
     // Reserve space to prevent reallocation
     imageInfos.reserve(m_textures3D.size() + m_textures1D2D.size());
 
-    // Add 3D texture bindings first (starting at binding 2)
+    // Add uniform buffer binding at binding 0 (OCIO's default)
+    if (hasUniforms())
+    {
+        uniformBufferInfo.buffer = m_uniformBuffer;
+        uniformBufferInfo.offset = 0;
+        uniformBufferInfo.range = m_uniformBufferSize;
+
+        VkWriteDescriptorSet uniformWrite{};
+        uniformWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        uniformWrite.dstSet = descriptorSet;
+        uniformWrite.dstBinding = 0;
+        uniformWrite.dstArrayElement = 0;
+        uniformWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uniformWrite.descriptorCount = 1;
+        uniformWrite.pBufferInfo = &uniformBufferInfo;
+        descriptorWrites.push_back(uniformWrite);
+    }
+
+    // Add 3D texture bindings (starting at binding 1 via setDescriptorSetIndex(0, 1))
     for (const auto & tex : m_textures3D)
     {
         VkDescriptorImageInfo imageInfo{};
@@ -1569,25 +1538,6 @@ void VulkanBuilder::updateDescriptorSet(VkDescriptorSet descriptorSet)
         imageWrite.descriptorCount = 1;
         imageWrite.pImageInfo = &imageInfos.back();
         descriptorWrites.push_back(imageWrite);
-    }
-
-    // Add uniform buffer binding after textures (matches shader generation)
-    if (hasUniforms())
-    {
-        uint32_t uniformBinding = 2 + static_cast<uint32_t>(m_textures3D.size() + m_textures1D2D.size());
-        uniformBufferInfo.buffer = m_uniformBuffer;
-        uniformBufferInfo.offset = 0;
-        uniformBufferInfo.range = m_uniformBufferSize;
-
-        VkWriteDescriptorSet uniformWrite{};
-        uniformWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        uniformWrite.dstSet = descriptorSet;
-        uniformWrite.dstBinding = uniformBinding;
-        uniformWrite.dstArrayElement = 0;
-        uniformWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uniformWrite.descriptorCount = 1;
-        uniformWrite.pBufferInfo = &uniformBufferInfo;
-        descriptorWrites.push_back(uniformWrite);
     }
 
     if (!descriptorWrites.empty())
