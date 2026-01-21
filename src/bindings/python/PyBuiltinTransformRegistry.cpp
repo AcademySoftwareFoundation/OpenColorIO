@@ -7,6 +7,7 @@
 #include "PyBuiltinTransformRegistry.h"
 #include "PyUtils.h"
 #include "utils/StringUtils.h"
+#include "docstrings.h"
 
 namespace OCIO_NAMESPACE
 {

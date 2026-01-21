@@ -2,6 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include "PyOpenColorIO.h"
+#include "docstrings.h"
 
 namespace OCIO_NAMESPACE
 {

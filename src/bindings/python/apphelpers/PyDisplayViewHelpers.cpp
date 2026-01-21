@@ -4,6 +4,7 @@
 #include <string>
 
 #include "PyOpenColorIO.h"
+#include "docstrings.h"
 
 namespace OCIO_NAMESPACE
 {

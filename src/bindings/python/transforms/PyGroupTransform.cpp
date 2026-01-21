@@ -10,6 +10,7 @@
 
 #include "PyTransform.h"
 #include "PyUtils.h"
+#include "docstrings.h"
 
 namespace OCIO_NAMESPACE
 {

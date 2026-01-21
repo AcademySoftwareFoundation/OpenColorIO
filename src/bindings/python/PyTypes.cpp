@@ -7,6 +7,7 @@
 #include "PyBuiltinConfigRegistry.h"
 #include "PyBuiltinTransformRegistry.h"
 #include "PyDynamicProperty.h"
+#include "docstrings.h"
 
 namespace OCIO_NAMESPACE
 {
