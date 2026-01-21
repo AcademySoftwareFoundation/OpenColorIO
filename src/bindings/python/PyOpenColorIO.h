@@ -67,7 +67,7 @@ void bindPyMixingHelpers(py::module & m);
 
 namespace OCIO = OCIO_NAMESPACE;
 
-namespace pybind11 
+namespace PYBIND11_NAMESPACE 
 {
 
 template<> 
