@@ -4,7 +4,8 @@
 #ifndef INCLUDED_OCIO_PYBUILTINCONFIGREGISTRY_H
 #define INCLUDED_OCIO_PYBUILTINCONFIGREGISTRY_H
 
-#include "PyOpenColorIO.h"
+#include <OpenColorIO/OpenColorIO.h>
+
 
 namespace OCIO_NAMESPACE
 {
