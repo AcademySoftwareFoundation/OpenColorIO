@@ -68,6 +68,8 @@ HEADER_TEMPLATE = """/*
   This file contains docstrings for use in the Python bindings.
   Do not edit! They were automatically extracted by OpenColorIO/share/docs/extract_docstrings.py.
  */
+#ifndef INCLUDED_OCIO_DOCSTRINGS_H
+#define INCLUDED_OCIO_DOCSTRINGS_H
 
 #define __EXPAND(x)                                      x
 #define __COUNT(_1, _2, _3, _4, _5, _6, _7, COUNT, ...)  COUNT
@@ -92,6 +94,7 @@ HEADER_TEMPLATE = """/*
 
 #if defined(__GNUG__)
 #pragma GCC diagnostic pop
+#endif
 #endif
 """
 
