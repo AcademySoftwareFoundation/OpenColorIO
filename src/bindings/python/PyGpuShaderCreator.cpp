@@ -6,6 +6,7 @@
 #include "PyUtils.h"
 #include "PyDynamicProperty.h"
 #include "PyGpuShaderCreator.h"
+#include "docstrings.h"
 
 namespace OCIO_NAMESPACE
 {

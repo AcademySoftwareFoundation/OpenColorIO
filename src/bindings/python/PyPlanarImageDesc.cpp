@@ -7,6 +7,7 @@
 
 #include "PyImageDesc.h"
 #include "PyUtils.h"
+#include "docstrings.h"
 
 
 namespace OCIO_NAMESPACE

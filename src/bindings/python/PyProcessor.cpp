@@ -4,6 +4,7 @@
 #include "PyDynamicProperty.h"
 #include "PyOpenColorIO.h"
 #include "PyUtils.h"
+#include "docstrings.h"
 
 namespace OCIO_NAMESPACE
 {
