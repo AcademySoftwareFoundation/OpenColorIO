@@ -3,6 +3,9 @@
 
 #include <string>
 
+#include <pybind11/pybind11.h>
+#include <pybind11/functional.h>
+
 #include "PyOpenColorIO.h"
 #include "docstrings.h"
 
