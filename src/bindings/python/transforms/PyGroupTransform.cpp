@@ -2,9 +2,14 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <fstream>
+#include <string>
 #include <sstream>
+#include <vector>
+
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "PyTransform.h"
+#include "PyUtils.h"
 
 namespace OCIO_NAMESPACE
 {

@@ -3,7 +3,10 @@
 
 #include <sstream>
 
+#include <OpenColorIO/OpenColorIO.h>
+
 #include "PyImageDesc.h"
+#include "PyUtils.h"
 
 
 namespace OCIO_NAMESPACE

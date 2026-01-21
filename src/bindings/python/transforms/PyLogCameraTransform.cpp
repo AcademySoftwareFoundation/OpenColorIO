@@ -2,8 +2,14 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <limits>
+#include <array>
+#include <vector>
+
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "PyTransform.h"
+#include "PyUtils.h"
+
 
 namespace OCIO_NAMESPACE
 {

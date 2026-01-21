@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <memory>
+
+#include <OpenColorIO/OpenColorIO.h>
+
 #include "PyImageDesc.h"
+#include "PyUtils.h"
+
 
 namespace OCIO_NAMESPACE
 {
