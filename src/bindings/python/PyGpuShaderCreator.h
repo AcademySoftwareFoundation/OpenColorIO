@@ -4,12 +4,14 @@
 #ifndef INCLUDED_OCIO_PYGPUSHADERCREATOR_H
 #define INCLUDED_OCIO_PYGPUSHADERCREATOR_H
 
-#include "PyOpenColorIO.h"
-#include "PyUtils.h"
+#include "OpenColorABI.h"
+
+#include <pybind11/pybind11.h>
+
 namespace OCIO_NAMESPACE
 {
 
-void bindPyGpuShaderDesc(py::module & m);
+void bindPyGpuShaderDesc(pybind11::module & m);
 
 } // namespace OCIO_NAMESPACE
 
