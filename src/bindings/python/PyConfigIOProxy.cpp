@@ -2,9 +2,10 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <memory>
+#include <vector>
+#include <string>
 
 #include "PyOpenColorIO.h"
-#include "PyUtils.h"
 
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
