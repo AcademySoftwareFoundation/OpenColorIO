@@ -8,7 +8,12 @@
 #include <algorithm>
 #include <stdexcept>
 
+#include <OpenColorIO/OpenColorIO.h>
+
+#include <pybind11/pybind11.h>
+
 #include "PyUtils.h"
+
 
 namespace OCIO_NAMESPACE
 {

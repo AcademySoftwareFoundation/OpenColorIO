@@ -7,6 +7,8 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include <pybind11/pybind11.h>
+
 #include "PyTransform.h"
 #include "PyUtils.h"
 #include "docstrings.h"
