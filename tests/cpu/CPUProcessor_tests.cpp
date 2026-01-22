@@ -6,11 +6,13 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <cstddef>
 
 #include "CPUProcessor.cpp"
 
 #include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
+
 
 namespace OCIO = OCIO_NAMESPACE;
 
