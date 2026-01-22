@@ -4,6 +4,8 @@
 #ifndef INCLUDED_OCIO_PYIMAGEDESC_H
 #define INCLUDED_OCIO_PYIMAGEDESC_H
 
+#include <cstddef>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include <pybind11/pybind11.h>

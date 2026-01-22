@@ -7,6 +7,7 @@
 #include <vector>
 #include <algorithm>
 #include <stdexcept>
+#include <cstddef>
 
 #include <OpenColorIO/OpenColorIO.h>
 
