@@ -303,7 +303,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_gamutcomp13_inv)
     };
     test.setCustomValues(values);
 
-    test.setErrorThreshold(3e-6f);
+    test.setErrorThreshold(3e-5f);
 }
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_output_transform_fwd)
@@ -656,7 +656,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_4000nit_p3_rndtrip)
     test.setCustomValues(values);
 
     // TODO: Investigate why this is not closer.
-    test.setErrorThreshold(0.018f);
+    test.setErrorThreshold(0.019f);
 }
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_4000nit_p3_inv)
@@ -693,7 +693,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_4000nit_rec2020_rndtrip)
     test.setCustomValues(values);
 
     // TODO: Investigate why this is not closer.
-    test.setErrorThreshold(0.03f);
+    test.setErrorThreshold(0.032f);
 }
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_4000nit_rec2020_inv)

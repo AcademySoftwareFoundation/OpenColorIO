@@ -410,13 +410,13 @@ void VulkanApp::setShader(GpuShaderDescRcPtr & shaderDesc)
 void VulkanApp::createComputePipeline()
 {
     // Create descriptor set layout
-    // Use high binding numbers (100, 101) for input/output buffers to avoid conflicts with OCIO bindings
-    // OCIO uses binding 0 for uniforms and 1+ for textures
+    // Use bindings 1 and 2 for input/output buffers
+    // OCIO uses binding 0 for uniforms and 3+ for textures (via setDescriptorSetIndex(0, 3))
     std::vector<VkDescriptorSetLayoutBinding> bindings = {
         // Input buffer binding
-        {100, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr},
+        {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr},
         // Output buffer binding
-        {101, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}
+        {2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}
     };
 
     // Add texture and uniform bindings from shader builder
@@ -498,12 +498,12 @@ void VulkanApp::createComputePipeline()
     outputBufferInfo.offset = 0;
     outputBufferInfo.range = bufferSize;
 
-    // Use high binding numbers (100, 101) to avoid conflicts with OCIO bindings
-    // OCIO uses binding 0 for uniforms and 1+ for textures
+    // Use bindings 1 and 2 for input/output buffers
+    // OCIO uses binding 0 for uniforms and 3+ for textures (via setDescriptorSetIndex(0, 3))
     std::vector<VkWriteDescriptorSet> descriptorWrites = {
-        {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, m_descriptorSet, 100, 0, 1,
+        {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, m_descriptorSet, 1, 0, 1,
          VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, nullptr, &inputBufferInfo, nullptr},
-        {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, m_descriptorSet, 101, 0, 1,
+        {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, m_descriptorSet, 2, 0, 1,
          VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, nullptr, &outputBufferInfo, nullptr}
     };
 
@@ -1269,21 +1269,20 @@ void VulkanBuilder::buildShader(GpuShaderDescRcPtr & shaderDesc)
     shader << "\n";
     shader << "layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;\n";
     shader << "\n";
-    // Use high binding numbers for input/output buffers to avoid conflicts with OCIO bindings.
-    // OCIO uses binding 0 for uniforms and 1+ for textures (via setDescriptorSetIndex(0, 1)).
-    // By using bindings 100 and 101 for I/O buffers, we avoid needing to edit OCIO's shader text.
-    shader << "layout(std430, set = 0, binding = 100) readonly buffer InputBuffer {\n";
+    // Use bindings 1 and 2 for input/output buffers.
+    // OCIO uses binding 0 for uniforms and 3+ for textures (via setDescriptorSetIndex(0, 3)).
+    shader << "layout(std430, set = 0, binding = 1) readonly buffer InputBuffer {\n";
     shader << "    vec4 inputPixels[];\n";
     shader << "};\n";
     shader << "\n";
-    shader << "layout(std430, set = 0, binding = 101) writeonly buffer OutputBuffer {\n";
+    shader << "layout(std430, set = 0, binding = 2) writeonly buffer OutputBuffer {\n";
     shader << "    vec4 outputPixels[];\n";
     shader << "};\n";
     shader << "\n";
 
     // OCIO generates texture sampler declarations with correct bindings when using
-    // GPU_LANGUAGE_GLSL_VK_4_6 and setDescriptorSetIndex(0, 1) is called on the shader descriptor.
-    // OCIO uses binding 0 for uniforms (by design) and 1+ for textures.
+    // GPU_LANGUAGE_GLSL_VK_4_6 and setDescriptorSetIndex(0, 3) is called on the shader descriptor.
+    // OCIO uses binding 0 for uniforms (by design) and 3+ for textures.
 
     // Get OCIO shader text - it already contains sampler and uniform declarations with correct bindings
     const char * shaderText = shaderDesc->getShaderText();
