@@ -4,6 +4,10 @@
 #include <string>
 #include <sstream>
 
+#include <OpenColorIO/OpenColorIO.h>
+
+#include <pybind11/pybind11.h>
+
 #include "PyOpenColorIO.h"
 #include "PyUtils.h"
 #include "utils/StringUtils.h"

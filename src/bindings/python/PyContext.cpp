@@ -4,11 +4,18 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <map>
+
+#include <OpenColorIO/OpenColorIO.h>
+
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 #include "PyOpenColorIO.h"
 #include "PyUtils.h"
 #include "utils/StringUtils.h"
 #include "docstrings.h"
+
 
 namespace OCIO_NAMESPACE
 {

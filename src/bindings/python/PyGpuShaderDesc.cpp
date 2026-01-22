@@ -5,10 +5,13 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include <pybind11/pybind11.h>
+
 #include "PyOpenColorIO.h"
 #include "PyGpuShaderCreator.h"
 #include "PyUtils.h"
 #include "docstrings.h"
+
 
 namespace OCIO_NAMESPACE
 {

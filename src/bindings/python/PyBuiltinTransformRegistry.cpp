@@ -4,10 +4,15 @@
 #include <string>
 #include <sstream>
 
+#include <OpenColorIO/OpenColorIO.h>
+
+#include <pybind11/pybind11.h>
+
 #include "PyBuiltinTransformRegistry.h"
 #include "PyUtils.h"
 #include "utils/StringUtils.h"
 #include "docstrings.h"
+
 
 namespace OCIO_NAMESPACE
 {
