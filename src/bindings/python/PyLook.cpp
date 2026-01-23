@@ -6,6 +6,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 #include "PyOpenColorIO.h"
 #include "PyUtils.h"
