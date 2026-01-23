@@ -9,8 +9,9 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 
+#include "PyOpenColorIO.h"
 #include "PyImageDesc.h"
-#include "PyUtils.h"
+#include "PyBufferUtils.h"
 #include "docstrings.h"
 
 
