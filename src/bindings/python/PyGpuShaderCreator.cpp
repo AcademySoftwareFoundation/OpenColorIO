@@ -5,6 +5,7 @@
 
 #include <pybind11/pybind11.h>
 
+#include "PyOpenColorIO.h"
 #include "PyUtils.h"
 #include "PyDynamicProperty.h"
 #include "PyGpuShaderCreator.h"
