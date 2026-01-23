@@ -4,6 +4,8 @@
 #ifndef INCLUDED_OCIO_PYOPENCOLORIO_H
 #define INCLUDED_OCIO_PYOPENCOLORIO_H
 
+#include <typeinfo>
+
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>
 #include <pybind11/stl.h>
@@ -58,24 +60,22 @@ void bindPyMixingHelpers(pybind11::module & m);
 // is needed to return Transform subclass types from the OCIO API. See:
 //   https://pybind11.readthedocs.io/en/stable/advanced/classes.html#custom-automatic-downcasters
 
-namespace OCIO = OCIO_NAMESPACE;
-
 namespace PYBIND11_NAMESPACE 
 {
 
 template<> 
-struct polymorphic_type_hook<OCIO::ImageDesc> {
-    static const void *get(const OCIO::ImageDesc *const src, const std::type_info*& type) {
+struct polymorphic_type_hook<OCIO_NAMESPACE::ImageDesc> {
+    static const void *get(const OCIO_NAMESPACE::ImageDesc *const src, const std::type_info*& type) {
         // Note: src may be nullptr
         if (src)
         {
-            if(dynamic_cast<const OCIO::PackedImageDesc*>(src))
+            if(dynamic_cast<const OCIO_NAMESPACE::PackedImageDesc*>(src))
             {
-                type = &typeid(OCIO::PackedImageDesc);
+                type = &typeid(OCIO_NAMESPACE::PackedImageDesc);
             }
-            else if(dynamic_cast<const OCIO::PlanarImageDesc*>(src))
+            else if(dynamic_cast<const OCIO_NAMESPACE::PlanarImageDesc*>(src))
             {
-                type = &typeid(OCIO::PlanarImageDesc);
+                type = &typeid(OCIO_NAMESPACE::PlanarImageDesc);
             }
         }
         return src;
@@ -83,14 +83,14 @@ struct polymorphic_type_hook<OCIO::ImageDesc> {
 };
 
 template<> 
-struct polymorphic_type_hook<OCIO::GpuShaderCreator> {
-    static const void *get(const OCIO::GpuShaderCreator *const src, const std::type_info*& type) {
+struct polymorphic_type_hook<OCIO_NAMESPACE::GpuShaderCreator> {
+    static const void *get(const OCIO_NAMESPACE::GpuShaderCreator *const src, const std::type_info*& type) {
         // Note: src may be nullptr
         if (src)
         {
-            if(dynamic_cast<const OCIO::GpuShaderDesc*>(src))
+            if(dynamic_cast<const OCIO_NAMESPACE::GpuShaderDesc*>(src))
             {
-                type = &typeid(OCIO::GpuShaderDesc);
+                type = &typeid(OCIO_NAMESPACE::GpuShaderDesc);
             }
         }
         return src;
@@ -98,102 +98,102 @@ struct polymorphic_type_hook<OCIO::GpuShaderCreator> {
 };
 
 template<> 
-struct polymorphic_type_hook<OCIO::Transform> {
-    static const void *get(const OCIO::Transform *const src, const std::type_info*& type) {
+struct polymorphic_type_hook<OCIO_NAMESPACE::Transform> {
+    static const void *get(const OCIO_NAMESPACE::Transform *const src, const std::type_info*& type) {
         // Note: src may be nullptr
         if (src)
         {
-            if(dynamic_cast<const OCIO::AllocationTransform*>(src))
+            if(dynamic_cast<const OCIO_NAMESPACE::AllocationTransform*>(src))
             {
-                type = &typeid(OCIO::AllocationTransform);
+                type = &typeid(OCIO_NAMESPACE::AllocationTransform);
             }
-            else if(dynamic_cast<const OCIO::BuiltinTransform*>(src))
+            else if(dynamic_cast<const OCIO_NAMESPACE::BuiltinTransform*>(src))
             {
-                type = &typeid(OCIO::BuiltinTransform);
+                type = &typeid(OCIO_NAMESPACE::BuiltinTransform);
             }
-            else if(dynamic_cast<const OCIO::CDLTransform*>(src))
+            else if(dynamic_cast<const OCIO_NAMESPACE::CDLTransform*>(src))
             {
-                type = &typeid(OCIO::CDLTransform);
+                type = &typeid(OCIO_NAMESPACE::CDLTransform);
             }
-            else if(dynamic_cast<const OCIO::ColorSpaceTransform*>(src))
+            else if(dynamic_cast<const OCIO_NAMESPACE::ColorSpaceTransform*>(src))
             {
-                type = &typeid(OCIO::ColorSpaceTransform);
+                type = &typeid(OCIO_NAMESPACE::ColorSpaceTransform);
             }
-            else if(dynamic_cast<const OCIO::DisplayViewTransform*>(src))
+            else if(dynamic_cast<const OCIO_NAMESPACE::DisplayViewTransform*>(src))
             {
-                type = &typeid(OCIO::DisplayViewTransform);
+                type = &typeid(OCIO_NAMESPACE::DisplayViewTransform);
             }
-            else if(dynamic_cast<const OCIO::ExponentTransform*>(src))
+            else if(dynamic_cast<const OCIO_NAMESPACE::ExponentTransform*>(src))
             {
-                type = &typeid(OCIO::ExponentTransform);
+                type = &typeid(OCIO_NAMESPACE::ExponentTransform);
             }
-            else if(dynamic_cast<const OCIO::ExponentWithLinearTransform*>(src))
+            else if(dynamic_cast<const OCIO_NAMESPACE::ExponentWithLinearTransform*>(src))
             {
-                type = &typeid(OCIO::ExponentWithLinearTransform);
+                type = &typeid(OCIO_NAMESPACE::ExponentWithLinearTransform);
             }
-            else if(dynamic_cast<const OCIO::ExposureContrastTransform*>(src))
+            else if(dynamic_cast<const OCIO_NAMESPACE::ExposureContrastTransform*>(src))
             {
-                type = &typeid(OCIO::ExposureContrastTransform);
+                type = &typeid(OCIO_NAMESPACE::ExposureContrastTransform);
             }
-            else if(dynamic_cast<const OCIO::FileTransform*>(src))
+            else if(dynamic_cast<const OCIO_NAMESPACE::FileTransform*>(src))
             {
-                type = &typeid(OCIO::FileTransform);
+                type = &typeid(OCIO_NAMESPACE::FileTransform);
             }
-            else if(dynamic_cast<const OCIO::FixedFunctionTransform*>(src))
+            else if(dynamic_cast<const OCIO_NAMESPACE::FixedFunctionTransform*>(src))
             {
-                type = &typeid(OCIO::FixedFunctionTransform);
+                type = &typeid(OCIO_NAMESPACE::FixedFunctionTransform);
             }
-            else if (dynamic_cast<const OCIO::GradingPrimaryTransform*>(src))
+            else if (dynamic_cast<const OCIO_NAMESPACE::GradingPrimaryTransform*>(src))
             {
-                type = &typeid(OCIO::GradingPrimaryTransform);
+                type = &typeid(OCIO_NAMESPACE::GradingPrimaryTransform);
             }
-            else if (dynamic_cast<const OCIO::GradingRGBCurveTransform*>(src))
+            else if (dynamic_cast<const OCIO_NAMESPACE::GradingRGBCurveTransform*>(src))
             {
-                type = &typeid(OCIO::GradingRGBCurveTransform);
+                type = &typeid(OCIO_NAMESPACE::GradingRGBCurveTransform);
             }
-            else if (dynamic_cast<const OCIO::GradingHueCurveTransform*>(src))
+            else if (dynamic_cast<const OCIO_NAMESPACE::GradingHueCurveTransform*>(src))
             {
-                type = &typeid(OCIO::GradingHueCurveTransform);
+                type = &typeid(OCIO_NAMESPACE::GradingHueCurveTransform);
             }
-            else if(dynamic_cast<const OCIO::GradingToneTransform*>(src))
+            else if(dynamic_cast<const OCIO_NAMESPACE::GradingToneTransform*>(src))
             {
-                type = &typeid(OCIO::GradingToneTransform);
+                type = &typeid(OCIO_NAMESPACE::GradingToneTransform);
             }
-            else if(dynamic_cast<const OCIO::GroupTransform*>(src))
+            else if(dynamic_cast<const OCIO_NAMESPACE::GroupTransform*>(src))
             {
-                type = &typeid(OCIO::GroupTransform);
+                type = &typeid(OCIO_NAMESPACE::GroupTransform);
             }
-            else if(dynamic_cast<const OCIO::LogAffineTransform*>(src))
+            else if(dynamic_cast<const OCIO_NAMESPACE::LogAffineTransform*>(src))
             {
-                type = &typeid(OCIO::LogAffineTransform);
+                type = &typeid(OCIO_NAMESPACE::LogAffineTransform);
             }
-            else if(dynamic_cast<const OCIO::LogCameraTransform*>(src))
+            else if(dynamic_cast<const OCIO_NAMESPACE::LogCameraTransform*>(src))
             {
-                type = &typeid(OCIO::LogCameraTransform);
+                type = &typeid(OCIO_NAMESPACE::LogCameraTransform);
             }
-            else if(dynamic_cast<const OCIO::LogTransform*>(src))
+            else if(dynamic_cast<const OCIO_NAMESPACE::LogTransform*>(src))
             {
-                type = &typeid(OCIO::LogTransform);
+                type = &typeid(OCIO_NAMESPACE::LogTransform);
             }
-            else if(dynamic_cast<const OCIO::LookTransform*>(src))
+            else if(dynamic_cast<const OCIO_NAMESPACE::LookTransform*>(src))
             {
-                type = &typeid(OCIO::LookTransform);
+                type = &typeid(OCIO_NAMESPACE::LookTransform);
             }
-            else if(dynamic_cast<const OCIO::Lut1DTransform*>(src))
+            else if(dynamic_cast<const OCIO_NAMESPACE::Lut1DTransform*>(src))
             {
-                type = &typeid(OCIO::Lut1DTransform);
+                type = &typeid(OCIO_NAMESPACE::Lut1DTransform);
             }
-            else if(dynamic_cast<const OCIO::Lut3DTransform*>(src))
+            else if(dynamic_cast<const OCIO_NAMESPACE::Lut3DTransform*>(src))
             {
-                type = &typeid(OCIO::Lut3DTransform);
+                type = &typeid(OCIO_NAMESPACE::Lut3DTransform);
             }
-            else if(dynamic_cast<const OCIO::MatrixTransform*>(src))
+            else if(dynamic_cast<const OCIO_NAMESPACE::MatrixTransform*>(src))
             {
-                type = &typeid(OCIO::MatrixTransform);
+                type = &typeid(OCIO_NAMESPACE::MatrixTransform);
             }
-            else if(dynamic_cast<const OCIO::RangeTransform*>(src))
+            else if(dynamic_cast<const OCIO_NAMESPACE::RangeTransform*>(src))
             {
-                type = &typeid(OCIO::RangeTransform);
+                type = &typeid(OCIO_NAMESPACE::RangeTransform);
             }
         }
         return src;
