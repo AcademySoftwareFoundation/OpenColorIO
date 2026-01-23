@@ -15,6 +15,9 @@
 #include "PyOpenColorIO.h"
 
 
+namespace py = pybind11;
+
+
 PYBIND11_MAKE_OPAQUE(std::vector<uint8_t>);
 
 namespace OCIO_NAMESPACE

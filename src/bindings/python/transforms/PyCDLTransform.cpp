@@ -13,6 +13,10 @@
 #include "docstrings.h"
 
 
+namespace py = pybind11;
+using namespace pybind11::literals;
+
+
 namespace OCIO_NAMESPACE
 {
 

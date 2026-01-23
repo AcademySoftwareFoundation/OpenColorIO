@@ -7,10 +7,15 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 
 #include "PyImageDesc.h"
 #include "PyUtils.h"
 #include "docstrings.h"
+
+
+namespace py = pybind11;
+using namespace pybind11::literals;
 
 
 namespace OCIO_NAMESPACE
