@@ -6,12 +6,17 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 #include "PyDynamicProperty.h"
 #include "PyOpenColorIO.h"
 #include "PyUtils.h"
 #include "PyImageDesc.h"
 #include "docstrings.h"
+
+
+namespace py = pybind11;
+using namespace pybind11::literals;
 
 
 namespace OCIO_NAMESPACE

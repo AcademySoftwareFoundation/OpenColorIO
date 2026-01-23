@@ -10,49 +10,47 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-namespace py = pybind11;
-using namespace pybind11::literals;
 
 namespace OCIO_NAMESPACE
 {
 
 // OpenColorIOTypes
-void bindPyTypes(py::module & m);
+void bindPyTypes(pybind11::module & m);
 
 // OpenColorIO
-void bindPyBaker(py::module & m);
-void bindPyBuiltinConfigRegistry(py::module & m);
-void bindPyColorSpace(py::module & m);
-void bindPyColorSpaceSet(py::module & m);
-void bindPyConfig(py::module & m);
-void bindPyContext(py::module & m);
-void bindPyConfigIOProxy(py::module & m);
-void bindPyCPUProcessor(py::module & m);
-void bindPyFileRules(py::module & m);
-void bindPyGPUProcessor(py::module & m);
-void bindPyGpuShaderCreator(py::module & m);
-void bindPyImageDesc(py::module & m);
-void bindPyLook(py::module & m);
-void bindPyNamedTransform(py::module & m);
-void bindPyProcessor(py::module & m);
-void bindPyProcessorMetadata(py::module & m);
-void bindPySystemMonitors(py::module & m);
-void bindPyViewingRules(py::module & m);
-void bindPyViewTransform(py::module & m);
+void bindPyBaker(pybind11::module & m);
+void bindPyBuiltinConfigRegistry(pybind11::module & m);
+void bindPyColorSpace(pybind11::module & m);
+void bindPyColorSpaceSet(pybind11::module & m);
+void bindPyConfig(pybind11::module & m);
+void bindPyContext(pybind11::module & m);
+void bindPyConfigIOProxy(pybind11::module & m);
+void bindPyCPUProcessor(pybind11::module & m);
+void bindPyFileRules(pybind11::module & m);
+void bindPyGPUProcessor(pybind11::module & m);
+void bindPyGpuShaderCreator(pybind11::module & m);
+void bindPyImageDesc(pybind11::module & m);
+void bindPyLook(pybind11::module & m);
+void bindPyNamedTransform(pybind11::module & m);
+void bindPyProcessor(pybind11::module & m);
+void bindPyProcessorMetadata(pybind11::module & m);
+void bindPySystemMonitors(pybind11::module & m);
+void bindPyViewingRules(pybind11::module & m);
+void bindPyViewTransform(pybind11::module & m);
 
 // OpenColorIOTransforms
-void bindPyBuiltinTransformRegistry(py::module & m);
-void bindPyDynamicProperty(py::module & m);
-void bindPyFormatMetadata(py::module & m);
-void bindPyGradingData(py::module & m);
-void bindPyTransform(py::module & m);
+void bindPyBuiltinTransformRegistry(pybind11::module & m);
+void bindPyDynamicProperty(pybind11::module & m);
+void bindPyFormatMetadata(pybind11::module & m);
+void bindPyGradingData(pybind11::module & m);
+void bindPyTransform(pybind11::module & m);
 
 // OpenColorIOAppHelpers
-void bindPyColorSpaceMenuHelpers(py::module & m);
-void bindPyConfigMergingHelpers(py::module & m);
-void bindPyDisplayViewHelpers(py::module & m);
-void bindPyLegacyViewingPipeline(py::module & m);
-void bindPyMixingHelpers(py::module & m);
+void bindPyColorSpaceMenuHelpers(pybind11::module & m);
+void bindPyConfigMergingHelpers(pybind11::module & m);
+void bindPyDisplayViewHelpers(pybind11::module & m);
+void bindPyLegacyViewingPipeline(pybind11::module & m);
+void bindPyMixingHelpers(pybind11::module & m);
 
 } // namespace OCIO_NAMESPACE
 
