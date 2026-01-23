@@ -8,6 +8,7 @@
 
 #include <pybind11/pybind11.h>
 
+#include "PyOpenColorIO.h"
 #include "PyBuiltinTransformRegistry.h"
 #include "PyUtils.h"
 #include "utils/StringUtils.h"
