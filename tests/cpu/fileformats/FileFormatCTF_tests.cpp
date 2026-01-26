@@ -8,6 +8,8 @@
 #include <sstream>
 #include <memory>
 
+#include <Imath/half.h>
+
 #include "BitDepthUtils.h"
 #include "fileformats/FileFormatCTF.cpp"
 #include "ops/fixedfunction/FixedFunctionOp.h"

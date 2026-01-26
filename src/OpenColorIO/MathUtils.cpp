@@ -7,9 +7,12 @@
 #include <type_traits>
 #include <limits>
 
+#include <Imath/half.h>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "MathUtils.h"
+#include "MathHalfUtils.h"
 
 namespace OCIO_NAMESPACE
 {

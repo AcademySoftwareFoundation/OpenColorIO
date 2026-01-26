@@ -11,6 +11,8 @@
 #include <vector>
 #include <memory>
 
+#include <Imath/half.h>
+
 #include "BitDepthUtils.h"
 #include "fileformats/ctf/CTFReaderUtils.h"
 #include "fileformats/ctf/CTFTransform.h"

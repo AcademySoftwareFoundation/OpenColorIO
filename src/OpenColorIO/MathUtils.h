@@ -7,9 +7,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include <OpenColorIO/OpenColorIO.h>
-
-#include <Imath/half.h>
+#include <OpenColorABI.h>
 
 namespace OCIO_NAMESPACE
 {
@@ -212,12 +210,6 @@ inline float AddULP(const float f, const int ulp)
 //              compressDenorms flag.
 bool FloatsDiffer(const float expected, const float actual, 
                   const int tolerance, const bool compressDenorms);
-
-// Compares half-floats as raw integers with a tolerance (essentially in ULPs).
-// Returns true if the integer difference is strictly greater than the tolerance.
-// If aimHalf is a NaN, valHalf must also be one of the NaNs.
-// Inf is treated like any other value (diff from HALFMAX is 1).
-bool HalfsDiffer(const half expected, const half actual, const int tolerance);
 
 } // namespace OCIO_NAMESPACE
 

@@ -5,11 +5,14 @@
 #include <sstream>
 #include <memory>
 
+#include <Imath/half.h>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "BitDepthUtils.h"
 #include "HashUtils.h"
 #include "MathUtils.h"
+#include "MathHalfUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut1d/Lut1DOpData.h"
 #include "ops/OpTools.h"

@@ -5,6 +5,8 @@
 #include <iterator>
 #include <sstream>
 
+#include <Imath/half.h>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "GpuShaderUtils.h"
