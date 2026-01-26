@@ -6,6 +6,8 @@
 #include <memory>
 #include <cstdint>
 
+#include <Imath/half.h>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "BitDepthUtils.h"

@@ -8,6 +8,8 @@
 #include <sstream>
 #include <limits>
 
+#include <Imath/half.h>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "MathUtils.h"

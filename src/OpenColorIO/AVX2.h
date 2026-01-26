@@ -10,6 +10,10 @@
 
 #include <immintrin.h>
 
+#if OCIO_USE_F16C
+#include <Imath/half.h>
+#endif
+
 #include <OpenColorIO/OpenColorIO.h>
 #include "BitDepthUtils.h"
 

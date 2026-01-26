@@ -8,6 +8,10 @@
 #include <memory>
 #include <vector>
 
+#include <Imath/half.h>
+
+#include "MathHalfUtils.h"
+
 #include "ops/lut1d/Lut1DOpCPU.cpp"
 
 #include "testutils/UnitTest.h"

@@ -11,6 +11,8 @@
 
 #include <pystring.h>
 
+#include <Imath/half.h>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "BitDepthUtils.h"

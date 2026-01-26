@@ -8,6 +8,8 @@
 #include "CPUInfo.h"
 #if OCIO_USE_SSE2
 
+#include <Imath/half.h>
+
 // Include the appropriate SIMD intrinsics header based on the architecture (Intel vs. ARM).
 #if !defined(__aarch64__) && !defined(_M_ARM64)
     #include <emmintrin.h>
