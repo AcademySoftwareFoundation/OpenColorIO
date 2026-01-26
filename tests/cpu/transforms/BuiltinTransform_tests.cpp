@@ -2,6 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <cstddef>
 #include <algorithm>
 #include <cmath>
 #include <map>
@@ -18,11 +19,14 @@
 #include "ops/lut3d/Lut3DOp.h"
 
 #include "transforms/builtins/ColorMatrixHelpers.h"
+#include "ops/matrix/MatrixOpData.h"
 #include "transforms/builtins/OpHelpers.h"
 #include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
 
+
 namespace OCIO = OCIO_NAMESPACE;
+
 
 OCIO_ADD_TEST(BuiltinTransform, creation)
 {

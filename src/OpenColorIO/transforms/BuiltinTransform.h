@@ -6,6 +6,8 @@
 #define INCLUDED_OCIO_BUILTINTRANSFORM_H
 
 
+#include <cstddef>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 
