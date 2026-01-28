@@ -5,6 +5,10 @@
 #include "CPUInfo.h"
 #include <cstring>
 
+#if defined(__aarch64__) || defined(_M_ARM64) // ARM 64-bit processor (multiple platforms)
+#include <stdio.h>
+#endif
+
 #if _WIN32
 #include <limits.h>
 #include <intrin.h>
