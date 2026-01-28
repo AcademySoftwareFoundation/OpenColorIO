@@ -5,7 +5,8 @@
 #ifndef CPUInfo_H
 #define CPUInfo_H
 
-#include <OpenColorIO/OpenColorIO.h>
+#include "OpenColorABI.h"
+
 #include "CPUInfoConfig.h"
 
 namespace OCIO_NAMESPACE

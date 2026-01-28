@@ -2,14 +2,21 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <pystring.h>
+#include <string>
 #include <sstream>
+#include <vector>
+#include <memory>
+#include <functional>
 #include <iostream>
+
+#include <OpenColorIO/OpenColorIO.h>
+
+#include "apphelpers/mergeconfigs/SectionMerger.h"
 
 #include "apphelpers/mergeconfigs/MergeConfigsHelpers.cpp"
 
 #include "UnitTestUtils.h"
 
-#include "ConfigUtils.h"
 #include "testutils/UnitTest.h"
 #include "UnitTestLogUtils.h"
 

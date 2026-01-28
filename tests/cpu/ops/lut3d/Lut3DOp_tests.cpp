@@ -9,6 +9,8 @@
 #include <sys/time.h>
 #endif
 
+#include <OpenColorIO/OpenColorIO.h>
+
 #include "ops/matrix/MatrixOp.h"
 #include "OpBuilders.h"
 #include "ops/lut3d/Lut3DOp.cpp"

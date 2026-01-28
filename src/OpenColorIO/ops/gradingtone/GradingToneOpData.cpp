@@ -7,6 +7,8 @@
 
 #include "ops/gradingtone/GradingTone.h"
 #include "ops/gradingtone/GradingToneOpData.h"
+#include "Mutex.h"
+
 
 namespace OCIO_NAMESPACE
 {

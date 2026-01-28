@@ -12,7 +12,7 @@
 
 #include <Imath/half.h>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include "OpenColorABI.h"
 #include "BitDepthUtils.h"
 
 // Macros for alignment declarations

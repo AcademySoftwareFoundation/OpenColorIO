@@ -12,7 +12,7 @@
 #include "MathUtils.h"
 #include "ops/fixedfunction/FixedFunctionOpCPU.h"
 #include "SSE.h"
-#include "CPUInfo.h"
+#include "CPUInfoConfig.h"
 
 
 namespace OCIO_NAMESPACE

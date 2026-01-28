@@ -13,9 +13,9 @@
 #include "BitDepthUtils.h"
 #include "MathUtils.h"
 #include "ops/lut1d/Lut1DOpCPU.h"
+#include "CPUInfo.h"
 #include "SSE.h"
 
-#include "CPUInfo.h"
 #include "Lut1DOpCPU_SSE2.h"
 #include "Lut1DOpCPU_AVX.h"
 #include "Lut1DOpCPU_AVX2.h"

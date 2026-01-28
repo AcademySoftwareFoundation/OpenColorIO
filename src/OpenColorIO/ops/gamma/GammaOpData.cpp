@@ -9,6 +9,8 @@
 #include "ops/gamma/GammaOpData.h"
 #include "ops/range/RangeOpData.h"
 #include "Platform.h"
+#include "Mutex.h"
+
 
 namespace OCIO_NAMESPACE
 {

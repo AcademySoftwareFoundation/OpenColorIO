@@ -11,6 +11,8 @@
 #include "ops/exponent/ExponentOp.h"
 #include "GpuShaderUtils.h"
 #include "MathUtils.h"
+#include "Mutex.h"
+
 
 namespace OCIO_NAMESPACE
 {

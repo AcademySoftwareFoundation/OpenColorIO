@@ -12,6 +12,8 @@
 
 #include <Imath/half.h>
 
+#include <OpenColorIO/OpenColorIO.h>
+
 #include "BitDepthUtils.h"
 #include "fileformats/ctf/CTFReaderUtils.h"
 #include "fileformats/ctf/CTFTransform.h"

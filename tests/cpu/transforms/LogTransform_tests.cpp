@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <OpenColorIO/OpenColorIO.h>
+
 #include "transforms/LogTransform.cpp"
 
 #include "OpBuilders.h"

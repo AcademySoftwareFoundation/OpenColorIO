@@ -7,6 +7,8 @@
 
 #include "ops/gradingprimary/GradingPrimaryOpData.h"
 #include "ops/range/RangeOpData.h"
+#include "Mutex.h"
+
 
 namespace OCIO_NAMESPACE
 {

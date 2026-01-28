@@ -12,6 +12,8 @@
 #include "MathUtils.h"
 #include "fileformats/ctf/IndexMapping.h"
 #include "ops/range/RangeOpData.h"
+#include "Mutex.h"
+
 
 namespace OCIO_NAMESPACE
 {

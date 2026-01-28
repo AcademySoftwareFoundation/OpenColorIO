@@ -4,11 +4,15 @@
 
 #include <sstream>
 
+#include <OpenColorIO/OpenColorIO.h>
+
 #include "Caching.cpp"
 
 #include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
 #include "Platform.h"
+#include "Mutex.h"
+
 
 namespace OCIO = OCIO_NAMESPACE;
 

@@ -7,6 +7,7 @@
 
 #include "ops/gradingrgbcurve/GradingRGBCurve.h"
 #include "ops/gradingrgbcurve/GradingRGBCurveOpData.h"
+#include "Mutex.h"
 
 
 namespace OCIO_NAMESPACE

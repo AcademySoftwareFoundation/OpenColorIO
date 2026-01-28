@@ -2,7 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include "CPUInfo.h"
+#include "CPUInfoConfig.h"
+
 #if OCIO_USE_SSE2
 
 #include <sstream>

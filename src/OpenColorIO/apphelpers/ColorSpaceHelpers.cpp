@@ -9,7 +9,6 @@
 #include <sstream>
 #include <ostream>
 #include <memory>
-#include <mutex>
 #include <functional>
 
 #include <OpenColorIO/OpenColorIO.h>

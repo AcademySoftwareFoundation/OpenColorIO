@@ -4,8 +4,11 @@
 #include <cmath>
 #include <limits>
 
+#include <OpenColorIO/OpenColorIO.h>
+
 #include "ops/gradingtone/GradingToneOpCPU.cpp"
 
+#include "CPUInfoConfig.h"
 #include "testutils/UnitTest.h"
 #include "utils/StringUtils.h"
 

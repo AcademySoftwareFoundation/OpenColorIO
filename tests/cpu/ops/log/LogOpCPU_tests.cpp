@@ -7,8 +7,11 @@
 #include <memory>
 #include <cmath>
 
+#include <OpenColorIO/OpenColorIO.h>
+
 #include "ops/log/LogOpCPU.cpp"
 
+#include "CPUInfoConfig.h"
 #include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
 

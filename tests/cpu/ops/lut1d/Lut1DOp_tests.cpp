@@ -4,6 +4,8 @@
 
 #include <cstddef>
 
+#include <OpenColorIO/OpenColorIO.h>
+
 #include "ops/lut1d/Lut1DOp.cpp"
 
 #include "OpBuilders.h"

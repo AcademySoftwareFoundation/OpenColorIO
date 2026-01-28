@@ -9,13 +9,9 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "GPUProcessor.h"
-#include "GpuShader.h"
 #include "GpuShaderUtils.h"
 #include "HashUtils.h"
-#include "Logging.h"
-#include "ops/allocation/AllocationOp.h"
-#include "ops/lut3d/Lut3DOp.h"
-#include "ops/noop/NoOps.h"
+#include "Mutex.h"
 
 
 namespace OCIO_NAMESPACE

@@ -4,6 +4,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/matrix/MatrixOpCPU.h"
+#include "CPUInfoConfig.h"
 #include "SSE.h"
 
 namespace OCIO_NAMESPACE
