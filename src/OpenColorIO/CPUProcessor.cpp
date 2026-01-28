@@ -12,6 +12,7 @@
 #include "ops/lut1d/Lut1DOpCPU.h"
 #include "ops/matrix/MatrixOp.h"
 #include "ScanlineHelper.h"
+#include "Mutex.h"
 
 
 namespace OCIO_NAMESPACE

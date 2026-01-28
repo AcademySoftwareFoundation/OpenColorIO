@@ -12,6 +12,8 @@
 #include "ops/log/LogOpData.h"
 #include "ops/matrix/MatrixOpData.h"
 #include "ops/range/RangeOpData.h"
+#include "Mutex.h"
+
 
 namespace OCIO_NAMESPACE
 {

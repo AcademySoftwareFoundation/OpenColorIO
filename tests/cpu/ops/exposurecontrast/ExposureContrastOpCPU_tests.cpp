@@ -8,6 +8,8 @@
 #include <vector>
 #include <memory>
 
+#include <OpenColorIO/OpenColorIO.h>
+
 #include "ops/exposurecontrast/ExposureContrastOpCPU.cpp"
 #include "BitDepthUtils.h"
 

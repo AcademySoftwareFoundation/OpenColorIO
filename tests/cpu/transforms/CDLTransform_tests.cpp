@@ -7,6 +7,8 @@
 #include <cstring>
 #include <algorithm>
 
+#include <OpenColorIO/OpenColorIO.h>
+
 #include "ops/exponent/ExponentOp.h"
 #include "ops/matrix/MatrixOpData.h"
 #include "transforms/CDLTransform.cpp"

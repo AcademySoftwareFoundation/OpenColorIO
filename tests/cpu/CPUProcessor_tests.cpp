@@ -8,6 +8,10 @@
 #include <vector>
 #include <cstddef>
 
+#include <OpenColorIO/OpenColorIO.h>
+
+#include "BitDepthUtils.h"
+
 #include "CPUProcessor.cpp"
 
 #include "testutils/UnitTest.h"

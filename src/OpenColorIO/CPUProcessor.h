@@ -9,6 +9,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
+#include "Mutex.h"
 
 
 namespace OCIO_NAMESPACE

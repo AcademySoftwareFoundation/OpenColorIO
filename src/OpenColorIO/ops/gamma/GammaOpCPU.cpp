@@ -10,6 +10,7 @@
 #include "ops/gamma/GammaOpCPU.h"
 #include "ops/gamma/GammaOpUtils.h"
 
+#include "CPUInfoConfig.h"
 #include "SSE.h"
 
 #if OCIO_USE_SSE2 == 0

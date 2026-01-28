@@ -6,6 +6,8 @@
 #include <vector>
 #include <cmath>
 
+#include <OpenColorIO/OpenColorIO.h>
+
 #include <pystring.h>
 
 #include "ConfigUtils.h"

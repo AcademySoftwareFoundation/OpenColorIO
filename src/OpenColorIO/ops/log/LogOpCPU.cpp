@@ -6,6 +6,9 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+
+#include "CPUInfoConfig.h"
+
 #if OCIO_USE_SSE2 == 0
 #include <tuple>
 #endif

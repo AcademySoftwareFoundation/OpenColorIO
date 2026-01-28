@@ -6,6 +6,8 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/gradinghuecurve/GradingHueCurveOpData.h"
+#include "Mutex.h"
+
 
 namespace OCIO_NAMESPACE
 {

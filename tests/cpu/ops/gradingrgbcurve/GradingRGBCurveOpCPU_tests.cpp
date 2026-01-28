@@ -6,8 +6,11 @@
 #include <memory>
 #include <string>
 
+#include <OpenColorIO/OpenColorIO.h>
+
 #include "ops/gradingrgbcurve/GradingRGBCurveOpCPU.cpp"
 
+#include "CPUInfoConfig.h"
 #include "testutils/UnitTest.h"
 #include "utils/StringUtils.h"
 #include "MathUtils.h"

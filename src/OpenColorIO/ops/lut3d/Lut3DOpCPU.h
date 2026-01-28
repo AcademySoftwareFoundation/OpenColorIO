@@ -4,8 +4,7 @@
 #ifndef INCLUDED_OCIO_LUT3DOP_CPU_H
 #define INCLUDED_OCIO_LUT3DOP_CPU_H
 
-#include <OpenColorIO/OpenColorIO.h>
-
+#include "OpenColorABI.h"
 #include "Op.h"
 #include "ops/lut3d/Lut3DOpData.h"
 

@@ -39,6 +39,7 @@
 #include "ViewingRules.h"
 #include "SystemMonitor.h"
 
+
 namespace OCIO_NAMESPACE
 {
 

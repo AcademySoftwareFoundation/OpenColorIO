@@ -17,6 +17,7 @@
 #include "TransformBuilder.h"
 #include "utils/StringUtils.h"
 #include "PrivateTypes.h"
+#include "Mutex.h"
 
 
 namespace OCIO_NAMESPACE

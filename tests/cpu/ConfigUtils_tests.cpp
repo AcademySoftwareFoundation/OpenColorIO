@@ -5,6 +5,8 @@
 #include <sstream>
 #include <vector>
 
+#include <OpenColorIO/OpenColorIO.h>
+
 #include "ConfigUtils.h"
 #include "testutils/UnitTest.h"
 

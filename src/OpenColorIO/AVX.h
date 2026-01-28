@@ -6,6 +6,7 @@
 #define INCLUDED_OCIO_AVX_H
 
 #include "CPUInfo.h"
+
 #if OCIO_USE_AVX
 
 #include <immintrin.h>
@@ -14,7 +15,7 @@
 #include <Imath/half.h>
 #endif
 
-#include <OpenColorIO/OpenColorIO.h>
+#include "OpenColorABI.h"
 #include "BitDepthUtils.h"
 
 // Macros for alignment declarations

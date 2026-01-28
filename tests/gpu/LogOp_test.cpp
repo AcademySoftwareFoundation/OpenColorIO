@@ -5,6 +5,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "CPUInfoConfig.h"
 #include "GPUUnitTest.h"
 
 namespace OCIO = OCIO_NAMESPACE;

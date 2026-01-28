@@ -6,6 +6,9 @@
 #include <string>
 #include <cstring>
 #include <exception>
+#include <memory>
+
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "BitDepthUtils.h"
 #include "fileformats/ctf/CTFReaderHelper.h"
@@ -13,6 +16,7 @@
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "Logging.h"
 #include "MathUtils.h"
+#include "DynamicProperty.h"
 #include "ops/log/LogUtils.h"
 #include "Platform.h"
 #include "utils/StringUtils.h"

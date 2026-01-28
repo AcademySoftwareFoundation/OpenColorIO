@@ -11,6 +11,8 @@
 #include "ops/lut3d/Lut3DOpData.h"
 #include "ops/OpTools.h"
 #include "ops/range/RangeOpData.h"
+#include "Mutex.h"
+
 
 namespace OCIO_NAMESPACE
 {

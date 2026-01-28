@@ -6,7 +6,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "CPUInfo.h"
+#include "CPUInfoConfig.h"
 
 typedef void (Lut1DOpCPUApplyFunc)(const float *, const float *, const float *, int, const void *, void *, long);
 

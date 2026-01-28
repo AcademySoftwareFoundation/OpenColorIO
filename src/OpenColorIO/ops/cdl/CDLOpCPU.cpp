@@ -7,6 +7,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "CPUInfoConfig.h"
 #include "CDLOpCPU.h"
 #include "SSE.h"
 

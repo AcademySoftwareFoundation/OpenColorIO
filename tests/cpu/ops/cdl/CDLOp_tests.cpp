@@ -5,10 +5,15 @@
 #include <limits>
 #include <sstream>
 
+#include <OpenColorIO/OpenColorIO.h>
+
+#include "CPUInfoConfig.h"
+
 #include "ops/cdl/CDLOp.cpp"
 
 #include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
+
 
 namespace OCIO = OCIO_NAMESPACE;
 

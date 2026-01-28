@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#include "OpenColorABI.h"
+
 #include "CPUInfo.h"
 
 namespace OCIO = OCIO_NAMESPACE;

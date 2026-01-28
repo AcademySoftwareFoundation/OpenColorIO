@@ -10,6 +10,8 @@
 
 #include <Imath/half.h>
 
+#include <OpenColorIO/OpenColorIO.h>
+
 #include "BitDepthUtils.h"
 #include "fileformats/FileFormatCTF.cpp"
 #include "ops/fixedfunction/FixedFunctionOp.h"
