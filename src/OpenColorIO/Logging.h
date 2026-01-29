@@ -5,7 +5,7 @@
 #ifndef INCLUDED_OCIO_LOGGING_H
 #define INCLUDED_OCIO_LOGGING_H
 
-#include <OpenColorIO/OpenColorIO.h>
+#include "OpenColorABI.h"
 
 #include <string>
 
