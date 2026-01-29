@@ -382,7 +382,7 @@ int main (int argc, const char* argv[])
             }
             else
             {
-                std::ofstream f(outputfile.c_str());
+                std::ofstream f(outputfile);
                 if(f.fail())
                 {
                     std::cerr << "ERROR: Non-writable file path " << outputfile << " specified.\n";

@@ -138,7 +138,7 @@ Each item is a tuple containing format name and format extension.
              DOC(Baker, setCubeSize))
         .def("bake", [](BakerRcPtr & self, const std::string & fileName) 
             {
-                std::ofstream f(fileName.c_str());
+                std::ofstream f(fileName);
                 self->bake(f);
                 f.close();
             }, 

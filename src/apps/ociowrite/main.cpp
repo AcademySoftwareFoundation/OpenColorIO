@@ -242,7 +242,7 @@ int main(int argc, const char **argv)
                 }
             }
 
-            std::ofstream outfs(filepath.c_str(), std::ios::out | std::ios::trunc);
+            std::ofstream outfs(filepath, std::ios::out | std::ios::trunc);
             if (outfs)
             {
                 const auto group = processor->createGroupTransform();

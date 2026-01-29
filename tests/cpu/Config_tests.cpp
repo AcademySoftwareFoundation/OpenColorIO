@@ -8,6 +8,8 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <memory>
+#include <ios>
 
 #include <pystring.h>
 
@@ -62,19 +64,19 @@ OCIO_ADD_TEST(Config, test_searchpath_filesystem)
     mkdir(two_dir.c_str(), 0777);
 
     std::string lut1(one_dir+"somelut1.lut");
-    std::ofstream somelut1(lut1.c_str());
+    std::ofstream somelut1(lut1);
     somelut1.close();
 
     std::string lut2(two_dir+"somelut2.lut");
-    std::ofstream somelut2(lut2.c_str());
+    std::ofstream somelut2(lut2);
     somelut2.close();
 
     std::string lut3(two_dir+"somelut3.lut");
-    std::ofstream somelut3(lut3.c_str());
+    std::ofstream somelut3(lut3);
     somelut3.close();
 
     std::string lutdotdot(OCIO_TEST_AREA+"/lutdotdot.lut");
-    std::ofstream somelutdotdot(lutdotdot.c_str());
+    std::ofstream somelutdotdot(lutdotdot);
     somelutdotdot.close();
 
     // basic search test
@@ -10115,7 +10117,7 @@ OCIO_ADD_TEST(Config, create_from_config_io_proxy)
                 );
 
                 // Check if the file is present.
-                std::ifstream f(OCIO::Platform::filenameToUTF(lutPath).c_str(), std::ios_base::in);
+                std::ifstream f(OCIO::Platform::filenameToUTF(lutPath), std::ios_base::in);
                 if (f.good())
                 {
                     // This is a bad hash, simply using the filename as the hash for simplicity and 
