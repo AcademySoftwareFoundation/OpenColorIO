@@ -117,7 +117,6 @@ public:
         NoOpType
     };
 
-public:
     OpData();
     OpData(const OpData & rhs);
     OpData(OpData && rhs) = delete;
