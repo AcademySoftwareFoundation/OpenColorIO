@@ -109,7 +109,7 @@ void bindPyGroupTransform(py::module & m)
                 {
                     throw Exception("A config is required.");
                 }
-                std::ofstream f(fileName.c_str());
+                std::ofstream f(fileName);
                 self->write(config, formatName.c_str(), f);
                 f.close();
             }, 

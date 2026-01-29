@@ -257,7 +257,7 @@ void bindPyConfig(py::module & m)
              DOC(Config, setDescription))
         .def("serialize", [](ConfigRcPtr & self, const std::string & fileName) 
             {
-                std::ofstream f(fileName.c_str());
+                std::ofstream f(fileName);
                 self->serialize(f);
                 f.close();
             }, 
