@@ -23,7 +23,8 @@ void Generic<Type>::PackRGBAFromImageDesc(const GenericImageDesc & srcImg,
                                           Type * inBitDepthBuffer,
                                           float * outputBuffer,
                                           int outputBufferSize,
-                                          long imagePixelStartIndex)
+                                          long imagePixelStartIndex,
+                                          BitDepth outputBitDepth)
 {
     if(outputBuffer==nullptr)
     {
@@ -62,15 +63,21 @@ void Generic<Type>::PackRGBAFromImageDesc(const GenericImageDesc & srcImg,
         aPtr = reinterpret_cast<Type*>(aRow + xStrideBytes*xIndex);
     }
 
+    float maxValue = static_cast<float>(GetBitDepthMaxValue(outputBitDepth));
+    if (maxValue <= 0)
+    {
+        throw Exception("Invalid bit depth max value.");
+    }
+
     // Process one single, complete scanline.
     int pixelsCopied = 0;
     while(pixelsCopied < outputBufferSize)
-    {
+    {     
         // Reorder channels from arbitrary channel ordering to RGBA 32-bit float.
         inBitDepthBuffer[4*pixelsCopied+0] = *rPtr;
         inBitDepthBuffer[4*pixelsCopied+1] = *gPtr;
         inBitDepthBuffer[4*pixelsCopied+2] = *bPtr;
-        inBitDepthBuffer[4*pixelsCopied+3] = aPtr ? *aPtr : (Type)1.0f;
+        inBitDepthBuffer[4 * pixelsCopied + 3] = aPtr ? *aPtr : (Type)(maxValue);
 
         pixelsCopied++;
         xIndex++;
@@ -93,7 +100,8 @@ void Generic<float>::PackRGBAFromImageDesc(const GenericImageDesc & srcImg,
                                            float * /*inBitDepthBuffer*/,
                                            float * outputBuffer,
                                            int outputBufferSize,
-                                           long imagePixelStartIndex)
+                                           long imagePixelStartIndex,
+                                           BitDepth outputBitDepth)
 {
     if(outputBuffer==nullptr)
     {
@@ -132,6 +140,12 @@ void Generic<float>::PackRGBAFromImageDesc(const GenericImageDesc & srcImg,
         aPtr = reinterpret_cast<float*>(aRow + xStrideBytes*xIndex);
     }
 
+    double maxValue = GetBitDepthMaxValue(outputBitDepth); 
+    if (maxValue <= 0)
+    {
+        throw Exception("Invalid bit depth max value.");
+    }
+
     // Process one single, complete scanline.
     int pixelsCopied = 0;
     while(pixelsCopied < outputBufferSize)
@@ -140,7 +154,7 @@ void Generic<float>::PackRGBAFromImageDesc(const GenericImageDesc & srcImg,
         outputBuffer[4*pixelsCopied+0] = *rPtr;
         outputBuffer[4*pixelsCopied+1] = *gPtr;
         outputBuffer[4*pixelsCopied+2] = *bPtr;
-        outputBuffer[4*pixelsCopied+3] = aPtr ? *aPtr : 1.0f;
+        outputBuffer[4*pixelsCopied+3] = aPtr ? *aPtr : (float)maxValue; 
 
         pixelsCopied++;
         xIndex++;
