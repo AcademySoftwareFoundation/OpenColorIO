@@ -4729,6 +4729,121 @@ OCIO_ADD_TEST(Config, grading_rgbcurve_serialization)
     }
 }
 
+OCIO_ADD_TEST(Config, grading_huecurve_serialization)
+{
+    {
+        const std::string strEnd =
+            "    from_scene_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<GradingHueCurveTransform> {style: log}\n"
+            "        - !<GradingHueCurveTransform> {style: log, direction: inverse}\n"
+            "        - !<GradingHueCurveTransform> {style: linear}\n"
+            "        - !<GradingHueCurveTransform> {style: linear, direction: inverse}\n"
+            "        - !<GradingHueCurveTransform> {name: test, style: video}\n"
+            "        - !<GradingHueCurveTransform> {style: video, direction: inverse}\n";
+
+        const std::string str = PROFILE_START_V<2, 5>() + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Write the config.
+
+        std::stringstream ss;
+        OCIO_CHECK_NO_THROW(ss << *config.get());
+        OCIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_scene_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<GradingHueCurveTransform>\n"
+            "          style: log\n"
+            "          hue_hue: {control_points: [0, 0.15, 0.5, 0.5, 1, 1.123456]}\n"
+            "        - !<GradingHueCurveTransform>\n"
+            "          style: log\n"
+            "          hue_sat: {control_points: [0, 0, 0.5, 0.5, 1, 1.5]}\n"
+            "          lum_lum: {control_points: [-1, -1, 0, 0.1, 0.5, 0.6, 1, 1.1]}\n"
+            "          direction: inverse\n"
+            "        - !<GradingHueCurveTransform>\n"
+            "          style: linear\n"
+            "          hsy_transform: none\n"
+            "          sat_sat: {control_points: [0, 0, 0.1, 0.2, 0.5, 0.5, 0.7, 0.6, 1, 1.5]}\n"
+            "          lum_lum: {control_points: [-1, -1, 0, 0.1, 0.5, 0.6, 1, 1.1]}\n"
+            "        - !<GradingHueCurveTransform>\n"
+            "          style: video\n"
+            "          hue_hue: {control_points: [0.02, -0.1, 0.5, 0.5, 0.9, 0.8]}\n"
+            "          hue_lum: {control_points: [0, 0, 0.2, 0.5, 1, 1.5]}\n"
+            "          lum_sat: {control_points: [0, 0, 0.1, 0.5, 1, 1.5], slopes: [0, 1, 1.1]}\n"
+            "          sat_lum: {control_points: [-1, -1, 0, 0.1, 0.5, 0.6, 1, 1.1]}\n"
+            "          direction: inverse\n";
+
+        const std::string str = PROFILE_START_V<2, 5>() + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OCIO_CHECK_NO_THROW(config->validate());
+
+        // Write the config.
+
+        std::stringstream ss;
+        OCIO_CHECK_NO_THROW(ss << *config.get());
+        OCIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<GradingHueCurveTransform> {style: log}\n";
+        const std::string str = PROFILE_START_V<2, 4>() + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "Only config version 2.5 (or higher) can have GradingHueCurveTransform");
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<GradingHueCurveTransform>\n"
+            "          style: log\n"
+            "          sat_sat: {control_points: [0, 0, 0.1, 0.5, 1, 1.5], slopes: [0, 1, 1.1, 1]}\n";
+        const std::string str = PROFILE_START_V<2, 5>() + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "Number of slopes must match number of control points");
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<GradingHueCurveTransform> {style: linear, hsy_transform: hsy1}\n";
+        const std::string str = PROFILE_START_V<2, 5>() + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                              "Unknown hsy_transform value");
+    }
+}
+
 OCIO_ADD_TEST(Config, grading_tone_serialization)
 {
     {
@@ -5372,6 +5487,44 @@ R"([OpenColorIO Warning]: FixedFunction style is experimental and may be removed
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
             "FixedFunctionTransform validation failed: Parameter 100.5 (peak_luminance) cannot include any fractional component");
+    }
+
+    {
+        const std::string strEnd =
+            "    from_scene_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<FixedFunctionTransform> {style: RGB_TO_HSY_LOG}\n"
+            "        - !<FixedFunctionTransform> {style: RGB_TO_HSY_LOG, direction: inverse}\n"
+            "        - !<FixedFunctionTransform> {style: RGB_TO_HSY_LIN}\n"
+            "        - !<FixedFunctionTransform> {style: RGB_TO_HSY_LIN, direction: inverse}\n"
+            "        - !<FixedFunctionTransform> {style: RGB_TO_HSY_VID}\n"
+            "        - !<FixedFunctionTransform> {style: RGB_TO_HSY_VID, direction: inverse}\n";
+
+        {
+            const std::string str = PROFILE_START_V<2, 4>() + strEnd;
+
+            std::istringstream is;
+            is.str(str);
+
+            OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                "Only config version 2.5 (or higher) can have FixedFunctionTransform style 'RGB_TO_HSY_LOG'.");
+        }
+
+        {
+            const std::string str = PROFILE_START_V<2, 5>() + strEnd;
+
+            std::istringstream is;
+            is.str(str);
+
+            OCIO::ConstConfigRcPtr config;
+            OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+            OCIO_CHECK_NO_THROW(config->validate());
+
+            // Write the config.
+            std::stringstream ss;
+            OCIO_CHECK_NO_THROW(ss << *config.get());
+            OCIO_CHECK_EQUAL(ss.str(), str);
+        }
     }
 }
 

@@ -47,6 +47,8 @@ class ContextTest(unittest.TestCase):
         cont['TEST1'] = 'foobar'
         self.assertEqual(len(cont), 2)
         self.assertEqual('/foo/foobar/bar', cont.resolveStringVar('/foo/${TEST1}/bar'))
+        cont.setStringVar('foo', 'bar')
+        self.assertEqual(len(cont), 3)
         cont.clearStringVars()
         self.assertEqual(len(cont), 0)
         self.assertEqual(OCIO.ENV_ENVIRONMENT_LOAD_PREDEFINED, cont.getEnvironmentMode())

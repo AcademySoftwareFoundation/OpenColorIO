@@ -140,6 +140,10 @@ std::ostream& operator<< (std::ostream & os, const GradingRGBCurveTransform & t)
     os << "direction=" << TransformDirectionToString(t.getDirection());
     os << ", style=" << GradingStyleToString(t.getStyle());
     os << ", values=" << *t.getValue();
+    if (t.getBypassLinToLog())
+    {
+        os << ", bypass_lintolog";
+    }
     if (t.isDynamic())
     {
         os << ", dynamic";
@@ -160,7 +164,15 @@ std::ostream & operator<<(std::ostream & os, const GradingBSplineCurve & bspline
     const auto numPoints = bspline.getNumControlPoints();
     for (size_t i = 0; i < numPoints; ++i)
     {
-        os << bspline.getControlPoint(i);
+        if (bspline.slopesAreDefault())
+        {
+            os << bspline.getControlPoint(i);
+        }
+        else
+        {
+            const GradingControlPoint cp = bspline.getControlPoint(i);
+            os << "<x=" << cp.m_x << ", y=" << cp.m_y << ", slp=" << bspline.getSlope(i) << ">";
+        }
     }
     os << "]>";
     return os;

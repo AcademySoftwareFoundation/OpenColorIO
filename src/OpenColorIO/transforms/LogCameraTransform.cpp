@@ -158,18 +158,18 @@ std::ostream & operator<< (std::ostream & os, const LogCameraTransform & t)
     os << ", base=" << t.getBase();
     double values[3];
     t.getLogSideSlopeValue(values);
-    os << ", logSideSlope=" << values[0] << " " << values[1] << " " << values[2];
+    os << ", logSideSlope=[" << values[0] << ", " << values[1] << ", " << values[2] << "]";
     t.getLogSideOffsetValue(values);
-    os << ", logSideOffset=" << values[0] << " " << values[1] << " " << values[2];
+    os << ", logSideOffset=[" << values[0] << ", " << values[1] << ", " << values[2] << "]";
     t.getLinSideSlopeValue(values);
-    os << ", linSideSlope=" << values[0] << " " << values[1] << " " << values[2];
+    os << ", linSideSlope=[" << values[0] << ", " << values[1] << ", " << values[2] << "]";
     t.getLinSideOffsetValue(values);
-    os << ", linSideOffset=" << values[0] << " " << values[1] << " " << values[2];
+    os << ", linSideOffset=[" << values[0] << ", " << values[1] << ", " << values[2] << "]";
     t.getLinSideBreakValue(values);
-    os << ", linSideBreak=" << values[0] << " " << values[1] << " " << values[2];
+    os << ", linSideBreak=[" << values[0] << ", " << values[1] << ", " << values[2] << "]";
     if (t.getLinearSlopeValue(values))
     {
-        os << ", linearSlope=" << values[0] << " " << values[1] << " " << values[2];
+        os << ", linearSlope=[" << values[0] << ", " << values[1] << ", " << values[2] << "]";
     }
     os << ">";
 

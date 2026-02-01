@@ -8,6 +8,10 @@
 
 namespace OCIO = OCIO_NAMESPACE;
 
+//
+// Please see DynamicProperty_tests.cpp for tests of the actual spline fitting.
+//
+
 OCIO_ADD_TEST(GradingBSplineCurve, basic)
 {
     auto curve = OCIO::GradingBSplineCurve::Create(3);
@@ -48,9 +52,9 @@ OCIO_ADD_TEST(GradingBSplineCurve, basic)
     OCIO_CHECK_EQUAL(1.f, curve->getControlPoint(3).m_y);
 
     OCIO_CHECK_THROW_WHAT(curve->getControlPoint(42), OCIO::Exception,
-                          "There are '4' control points. '42' is invalid.");
+                          "There are '4' control points. '42' is out of bounds.");
     OCIO_CHECK_THROW_WHAT(curve->setSlope(42, 0.2f), OCIO::Exception,
-                          "There are '4' control points. '42' is invalid.");
+                          "There are '4' control points. '42' is out of bounds.");
 
     std::ostringstream oss;
     oss << *curve;
@@ -67,10 +71,33 @@ OCIO_ADD_TEST(GradingBSplineCurve, validate)
     curve = OCIO::GradingBSplineCurve::Create({ { 0.f,0.f },{ 0.7f,0.3f },
                                                 { 0.5f,0.7f },{ 1.f,1.f } });
     OCIO_CHECK_THROW_WHAT(curve->validate(), OCIO::Exception,
-                          "has a x coordinate '0.5' that is less from previous control "
-                          "point x cooordinate '0.7'.");
+                          "has a x coordinate '0.5' that is less than previous control "
+                          "point x coordinate '0.7'.");
 
     curve->getControlPoint(1).m_x = 0.3f;
     OCIO_CHECK_NO_THROW(curve->validate());
 }
 
+OCIO_ADD_TEST(GradingBSplineCurve, equals)
+{
+    // Identical curves.
+    auto curve1 = OCIO::GradingBSplineCurve::Create({ {0.f,0.f},{0.2f,0.3f},{0.5f,0.7f},{1.f,1.f} });
+    auto curve2 = OCIO::GradingBSplineCurve::Create({ {0.f,0.f},{0.2f,0.3f},{0.5f,0.7f},{1.f,1.f} });
+    OCIO_CHECK_ASSERT(*curve1 == *curve2);
+
+    // Curve has different spline type.
+    auto curve3 = OCIO::GradingBSplineCurve::Create({ {0.f,0.f},{0.2f,0.3f},{0.5f,0.7f},{1.f,1.f} }, 
+        OCIO::DIAGONAL_B_SPLINE);
+    OCIO_CHECK_ASSERT(!(*curve1 == *curve3));
+
+    // Curve has different slopes.
+    curve2->setSlope(3, 0.9f);
+    OCIO_CHECK_NO_THROW(curve2->validate());
+    OCIO_CHECK_ASSERT(!(*curve1 == *curve2));
+
+    // Curve has a different control point value.
+    auto curve4 = OCIO::GradingBSplineCurve::Create({ {0.f,0.f},{0.2f,0.3f},{0.5f,0.7f},{1.f,1.f} });
+    OCIO_CHECK_ASSERT(*curve1 == *curve4);
+    curve4->getControlPoint(2).m_y = 0.9f;
+    OCIO_CHECK_ASSERT(!(*curve1 == *curve4));
+}

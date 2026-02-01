@@ -39,10 +39,8 @@ endif()
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     set(_expat_REQUIRED_VARS expat_LIBRARY)
 
-    if(NOT DEFINED expat_ROOT)
-        # Search for expat-config.cmake
-        find_package(expat ${expat_FIND_VERSION} CONFIG QUIET)
-    endif()
+    # Search for expat-config.cmake
+    find_package(expat ${expat_FIND_VERSION} CONFIG QUIET)
 
     if(expat_FOUND)
         if (TARGET expat::libexpat)

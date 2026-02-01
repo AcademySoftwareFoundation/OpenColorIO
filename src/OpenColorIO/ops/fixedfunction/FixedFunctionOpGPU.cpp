@@ -507,7 +507,7 @@ std::string _Add_Reach_table(
     unsigned resourceIndex,
     const ACES2::Table1D & table)
 {
-    // Reserve name
+    // Reserve name.
     std::ostringstream resName;
     resName << shaderCreator->getResourcePrefix()
             << std::string("_")
@@ -518,7 +518,7 @@ std::string _Add_Reach_table(
     std::string name(resName.str());
     StringUtils::ReplaceInPlace(name, "__", "_");
 
-    // Register texture
+    // Determine texture dimensions.
     GpuShaderDesc::TextureDimensions dimensions = GpuShaderDesc::TEXTURE_1D;
     if (shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_1_0
         || shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_3_0
@@ -527,7 +527,8 @@ std::string _Add_Reach_table(
         dimensions = GpuShaderDesc::TEXTURE_2D;
     }
 
-    shaderCreator->addTexture(
+    // Copy the LUT into the shaderCreator as a Texture object.
+    const unsigned textureShaderBindingIndex = shaderCreator->addTexture(
         name.c_str(),
         GpuShaderText::getSamplerName(name).c_str(),
         table.total_size,
@@ -535,23 +536,26 @@ std::string _Add_Reach_table(
         GpuShaderCreator::TEXTURE_RED_CHANNEL,
         dimensions,
         INTERP_NEAREST,
-        &(table[0]));
+        &(table[0])
+    );
 
-
+    // Create the texture declaration.
     if (dimensions == GpuShaderDesc::TEXTURE_1D)
     {
         GpuShaderText ss(shaderCreator->getLanguage());
-        ss.declareTex1D(name);
-        shaderCreator->addToDeclareShaderCode(ss.string().c_str());
+        ss.declareTex1D(name, shaderCreator->getDescriptorSetIndex(), 
+                        textureShaderBindingIndex);
+        shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
     else
     {
         GpuShaderText ss(shaderCreator->getLanguage());
-        ss.declareTex2D(name);
-        shaderCreator->addToDeclareShaderCode(ss.string().c_str());
+        ss.declareTex2D(name, shaderCreator->getDescriptorSetIndex(), 
+                        textureShaderBindingIndex);
+        shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
 
-    // Sampler function
+    // Sampler function.
     GpuShaderText ss(shaderCreator->getLanguage());
 
     ss.newLine() << ss.floatKeyword() << " " << name << "_sample(float h)";
@@ -805,7 +809,7 @@ std::string _Add_Cusp_table(
     unsigned resourceIndex,
     const ACES2::GamutCompressParams & g)
 {
-    // Reserve name
+    // Reserve name.
     std::ostringstream resName;
     resName << shaderCreator->getResourcePrefix()
             << std::string("_")
@@ -816,7 +820,7 @@ std::string _Add_Cusp_table(
     std::string name(resName.str());
     StringUtils::ReplaceInPlace(name, "__", "_");
 
-    // Register texture
+    // Determine texture dimensions.
     GpuShaderDesc::TextureDimensions dimensions = GpuShaderDesc::TEXTURE_1D;
     if (shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_1_0
         || shaderCreator->getLanguage() == GPU_LANGUAGE_GLSL_ES_3_0
@@ -825,7 +829,8 @@ std::string _Add_Cusp_table(
         dimensions = GpuShaderDesc::TEXTURE_2D;
     }
 
-    shaderCreator->addTexture(
+    // Copy the LUT into the shaderCreator as a Texture object.
+    const unsigned textureShaderBindingIndex = shaderCreator->addTexture(
         name.c_str(),
         GpuShaderText::getSamplerName(name).c_str(),
         g.gamut_cusp_table.total_size,
@@ -833,22 +838,26 @@ std::string _Add_Cusp_table(
         GpuShaderCreator::TEXTURE_RGB_CHANNEL,
         dimensions,
         INTERP_NEAREST,
-        &(g.gamut_cusp_table[0][0]));
+        &(g.gamut_cusp_table[0][0])
+    );
 
+    // Create the texture declaration.
     if (dimensions == GpuShaderDesc::TEXTURE_1D)
     {
         GpuShaderText ss(shaderCreator->getLanguage());
-        ss.declareTex1D(name);
-        shaderCreator->addToDeclareShaderCode(ss.string().c_str());
+        ss.declareTex1D(name, shaderCreator->getDescriptorSetIndex(), 
+                        textureShaderBindingIndex);
+        shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
     else
     {
         GpuShaderText ss(shaderCreator->getLanguage());
-        ss.declareTex2D(name);
-        shaderCreator->addToDeclareShaderCode(ss.string().c_str());
+        ss.declareTex2D(name, shaderCreator->getDescriptorSetIndex(), 
+                        textureShaderBindingIndex);
+        shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
 
-    // Sampler function
+    // Sampler function.
     GpuShaderText ss(shaderCreator->getLanguage());
 
     const std::string hues_array_name = name + "_hues_array";
@@ -1692,6 +1701,134 @@ void Add_RGB_TO_HSV(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
     ss.newLine() << pxl << ".rgb = " << ss.float3Const("hue * 1./6.", "sat", "val") << ";";
 }
 
+void Add_RGB_TO_HSY(GpuShaderCreatorRcPtr & shaderCreator, 
+                    GpuShaderText & ss, 
+                    FixedFunctionOpData::Style funcStyle)
+{
+    const std::string pxl(shaderCreator->getPixelName());
+
+    ss.newLine() << ss.float3Decl("lumaWeights") << " = " << ss.float3Const(0.2126f,  0.7152f, 0.0722f) << ";";
+    ss.newLine() << ss.float3Decl("ones") << " = " << ss.float3Const(1.f, 1.f, 1.f) << ";";
+    ss.newLine() << "float luma = dot(" << pxl << ".rgb, lumaWeights);";
+    ss.newLine() << "float minRGB =  min( " << pxl << ".x, min( " << pxl << ".y, " << pxl << ".z ) );";
+    ss.newLine() << "float maxRGB =  max( " << pxl << ".x, max( " << pxl << ".y, " << pxl << ".z ) );";
+    ss.newLine() << ss.float3Decl("RGBm") << " = " << pxl << ".rgb - luma;";
+    ss.newLine() << "float distRGB  = dot( abs(RGBm), ones );";
+    if (funcStyle == FixedFunctionOpData::RGB_TO_HSY_LIN)
+    {
+        ss.newLine() << "float sumRGB  = dot( " << pxl << ".rgb, ones );";
+        ss.newLine() << "float sat_hi  = distRGB / max(0.07 * distRGB + 1e-6, 0.15 + sumRGB);";
+        ss.newLine() << "float sat_lo  = distRGB * 5.;";
+        ss.newLine() << "float alpha  = clamp( (luma - 0.001) / (0.01 - 0.001), 0., 1.);";
+
+        ss.newLine() << "float sat = sat_lo + alpha * (sat_hi - sat_lo);";
+        ss.newLine() << "sat *= 1.4;";
+    }
+    else if (funcStyle == FixedFunctionOpData::RGB_TO_HSY_LOG)
+    {
+        ss.newLine() << "float sat = distRGB * 4.;";
+    }
+    else  // RGB_TO_HSY_VID
+    {
+        ss.newLine() << "float sat = distRGB * 1.25;";
+    }
+    // NB: Unlike typical HSV, HSY maps magenta rather than red to a hue of zero.
+    // (This allows for better placement of red when manipulating curves in a UI.)
+    ss.newLine() << "float hue = 0.0;";
+    ss.newLine() << "if (minRGB != maxRGB) {";
+    ss.newLine() << "   float OneOverMaxMinusMin = 1.0 / (maxRGB - minRGB);";
+    ss.newLine() << "   if ( maxRGB == " << pxl << ".r ) hue = 1.0 + (" << pxl << ".g - " << pxl << ".b) * OneOverMaxMinusMin;";
+    ss.newLine() << "   else if ( maxRGB == " << pxl << ".g ) hue = 3.0 + (" << pxl << ".b - " << pxl << ".r) * OneOverMaxMinusMin;";
+    ss.newLine() << "   else hue = 5.0 + (" << pxl << ".r - " << pxl << ".g) * OneOverMaxMinusMin;";
+    ss.newLine() << "}";
+    ss.newLine() << "" << pxl << ".r = hue * 1./6.; " << pxl << ".g = sat; " << pxl << ".b = luma;";
+}
+
+void Add_HSY_TO_RGB(GpuShaderCreatorRcPtr & shaderCreator, 
+                    GpuShaderText & ss, 
+                    FixedFunctionOpData::Style funcStyle)
+{
+    const std::string pxl(shaderCreator->getPixelName());
+
+    ss.newLine() << "float luma = " << pxl << ".z;";
+    ss.newLine() << "float Hue = " << pxl << ".x - 1./6.;";
+    ss.newLine() << "Hue = (luma < 0.) ? Hue + 0.5 : Hue;";
+    ss.newLine() << "Hue = ( Hue - floor( Hue ) ) * 6.0;";
+    ss.newLine() << "float R = abs(Hue - 3.0) - 1.0;";
+    ss.newLine() << "float G = 2.0 - abs(Hue - 2.0);";
+    ss.newLine() << "float B = 2.0 - abs(Hue - 4.0);";
+    ss.newLine() << ss.float3Decl("RGB0") << " = " << ss.float3Const("R", "G", "B") << ";";
+    ss.newLine() << "RGB0 = clamp( RGB0, 0., 1. );";
+
+    ss.newLine() << ss.float3Decl("lumaWeights") << " = " << ss.float3Const(0.2126f, 0.7152f, 0.0722f ) << ";";
+    ss.newLine() << ss.float3Decl("ones") << " = " << ss.float3Const(1.f, 1.f, 1.f ) << ";";
+    ss.newLine() << "float currY = dot(RGB0, lumaWeights);";
+    ss.newLine() << "RGB0 *= luma / currY;";
+
+    ss.newLine() << "float sat = " << pxl << ".y;";
+    ss.newLine() << "float distRGB = dot( abs(RGB0 - luma), ones );";
+    if (funcStyle == FixedFunctionOpData::HSY_LIN_TO_RGB)
+    {
+        ss.newLine() << "float sumRGB  = dot( RGB0, ones );";
+        ss.newLine() << "float k = 0.15;";
+        ss.newLine() << "float lo_gain = 5.;";
+        ss.newLine() << "sat /= 1.4;";
+        ss.newLine() << "float tmp = -sat * sumRGB + sat * 3. * luma + distRGB;";
+        ss.newLine() << "tmp = max(1e-6, tmp);";
+        ss.newLine() << "float s1 = sat * (k + 3. * luma) / tmp;";
+        ss.newLine() << "s1 = min(s1, 50.);";
+        ss.newLine() << "float s0 = sat / max(1e-10, distRGB * lo_gain);";
+        ss.newLine() << "float alpha  = clamp( (luma - 0.001) / (0.01 - 0.001), 0., 1.);";
+        ss.newLine() << "float a = distRGB * lo_gain * (1. - alpha) * (sumRGB - 3. * luma);";
+        ss.newLine() << "float b = distRGB * lo_gain * (1. - alpha) * (k + 3. * luma) + distRGB * alpha - sat * (sumRGB - 3. * luma);";
+        ss.newLine() << "float c = -sat * (k + 3. * luma);";
+        ss.newLine() << "float discrim = sqrt( b * b - 4. * a * c );";
+        ss.newLine() << "float denom = -discrim - b;";
+        ss.newLine() << "float sm = (2. * c) / denom;";
+        ss.newLine() << "sm = (sm >= 0.) ? sm : (2. * c) / (denom + discrim * 2.);";
+        ss.newLine() << "float gainS = (alpha == 1.) ? s1 : (alpha == 0.) ? s0 : sm;";
+    }
+    else if (funcStyle == FixedFunctionOpData::HSY_LOG_TO_RGB)
+    {
+        ss.newLine() << "float gainS = sat / max(1e-10, distRGB * 4.);";
+    }
+    else  // HSY_VID_TO_RGB
+    {
+        ss.newLine() << "float gainS = sat / max(1e-10, distRGB * 1.25);";
+    }
+    ss.newLine() << "" << pxl << ".rgb = luma + gainS * (RGB0 - luma);";
+}
+
+void Add_RGB_TO_HSY_LOG(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
+{
+    Add_RGB_TO_HSY(shaderCreator, ss, FixedFunctionOpData::RGB_TO_HSY_LOG);
+}
+
+void Add_RGB_TO_HSY_LIN(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
+{
+    Add_RGB_TO_HSY(shaderCreator, ss, FixedFunctionOpData::RGB_TO_HSY_LIN);
+}
+
+void Add_RGB_TO_HSY_VID(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
+{
+    Add_RGB_TO_HSY(shaderCreator, ss, FixedFunctionOpData::RGB_TO_HSY_VID);
+}
+
+void Add_HSY_LOG_TO_RGB(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
+{
+    Add_HSY_TO_RGB(shaderCreator, ss, FixedFunctionOpData::HSY_LOG_TO_RGB);
+}
+
+void Add_HSY_LIN_TO_RGB(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
+{
+    Add_HSY_TO_RGB(shaderCreator, ss, FixedFunctionOpData::HSY_LIN_TO_RGB);
+}
+
+void Add_HSY_VID_TO_RGB(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
+{
+    Add_HSY_TO_RGB(shaderCreator, ss, FixedFunctionOpData::HSY_VID_TO_RGB);
+}
+
 void Add_HSV_TO_RGB(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & ss)
 {
     const std::string pxl(shaderCreator->getPixelName());
@@ -2089,6 +2226,14 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
                                       ConstFixedFunctionOpDataRcPtr & func)
 {
     GpuShaderText ss(shaderCreator->getLanguage());
+    GetFixedFunctionGPUProcessingText(shaderCreator, ss, func);
+    shaderCreator->addToFunctionShaderCode(ss.string().c_str());
+}
+
+void GetFixedFunctionGPUProcessingText(GpuShaderCreatorRcPtr & shaderCreator,
+                                       GpuShaderText & ss,
+                                       ConstFixedFunctionOpDataRcPtr & func)
+{
     ss.indent();
 
     ss.newLine() << "";
@@ -2241,6 +2386,36 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
             Add_RGB_TO_HSV(shaderCreator, ss);
             break;
         }
+        case FixedFunctionOpData::RGB_TO_HSY_LOG:
+        {
+            Add_RGB_TO_HSY_LOG(shaderCreator, ss);
+            break;
+        }
+        case FixedFunctionOpData::RGB_TO_HSY_LIN:
+        {
+            Add_RGB_TO_HSY_LIN(shaderCreator, ss);
+            break;
+        }
+        case FixedFunctionOpData::RGB_TO_HSY_VID:
+        {
+            Add_RGB_TO_HSY_VID(shaderCreator, ss);
+            break;
+        }
+        case FixedFunctionOpData::HSY_LOG_TO_RGB:
+        {
+            Add_HSY_LOG_TO_RGB(shaderCreator, ss);
+            break;
+        }
+        case FixedFunctionOpData::HSY_LIN_TO_RGB:
+        {
+            Add_HSY_LIN_TO_RGB(shaderCreator, ss);
+            break;
+        }
+        case FixedFunctionOpData::HSY_VID_TO_RGB:
+        {
+            Add_HSY_VID_TO_RGB(shaderCreator, ss);
+            break;
+        }
         case FixedFunctionOpData::HSV_TO_RGB:
         {
             Add_HSV_TO_RGB(shaderCreator, ss);
@@ -2313,7 +2488,6 @@ void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     ss.newLine() << "}";
 
     ss.dedent();
-    shaderCreator->addToFunctionShaderCode(ss.string().c_str());
 }
 
 } // OCIO_NAMESPACE

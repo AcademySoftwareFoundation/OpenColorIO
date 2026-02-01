@@ -14,7 +14,8 @@ namespace OCIO_NAMESPACE
 class LogGuard
 {
 public:
-    LogGuard();
+    LogGuard();     // Temporarily sets the level to LOGGING_LEVEL_DEBUG
+    LogGuard(LoggingLevel level);
     LogGuard(const LogGuard &) = delete;
     LogGuard & operator=(const LogGuard &) = delete;
     ~LogGuard();
@@ -47,6 +48,9 @@ bool checkAndMuteAcesInterchangeRoleError(LogGuard & logGuard);
 bool checkAndMuteDisplayInterchangeRoleError(LogGuard & logGuard);
 
 void muteInactiveColorspaceInfo(LogGuard & logGuard);
+
+bool checkAndMuteWarning(LogGuard & logGuard, const std::string str);
+bool checkAndMuteError(LogGuard & logGuard, const std::string str);
 
 } // namespace OCIO_NAMESPACE
 

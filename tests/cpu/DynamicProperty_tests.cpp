@@ -257,7 +257,56 @@ OCIO_ADD_TEST(DynamicPropertyImpl, equal_grading_rgb_curve)
     OCIO_CHECK_ASSERT(!(*dp0 == *dpImplDouble));
 }
 
-OCIO_ADD_TEST(DynamicPropertyImpl, grading_rgb_curve_knots)
+OCIO_ADD_TEST(DynamicPropertyImpl, setter_validation)
+{
+    // Make an identity dynamic transform.
+    OCIO::GradingHueCurveTransformRcPtr gct = OCIO::GradingHueCurveTransform::Create(OCIO::GRADING_LOG);
+    gct->makeDynamic();
+
+    // Apply it on CPU.
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    OCIO::ConstProcessorRcPtr processor = config->getProcessor(gct);
+    OCIO::ConstCPUProcessorRcPtr cpuProcessor = processor->getDefaultCPUProcessor();
+
+    float pixel[3] = { 0.4f, 0.3f, 0.2f };
+    cpuProcessor->applyRGB(pixel);
+
+    const float error = 1e-5f;
+    OCIO_CHECK_CLOSE(pixel[0], pixel[0], error);
+    OCIO_CHECK_CLOSE(pixel[1], pixel[1], error);
+    OCIO_CHECK_CLOSE(pixel[2], pixel[2], error);
+
+    // Get a handle to the dynamic property.
+    OCIO::DynamicPropertyRcPtr dp;
+    OCIO_CHECK_NO_THROW(dp = cpuProcessor->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GRADING_HUECURVE));
+    auto dpVal = OCIO::DynamicPropertyValue::AsGradingHueCurve(dp);
+    OCIO_REQUIRE_ASSERT(dpVal);
+
+    // Set a non-identity value.
+    OCIO::GradingHueCurveRcPtr hueCurve = dpVal->getValue()->createEditableCopy();
+    OCIO::GradingBSplineCurveRcPtr huehue = hueCurve->getCurve(OCIO::HUE_HUE);
+    huehue->setNumControlPoints(3);
+    huehue->getControlPoint(0) = OCIO::GradingControlPoint(0.f, -0.1f);
+    huehue->getControlPoint(1) = OCIO::GradingControlPoint(0.5f, 0.5f);
+    huehue->getControlPoint(2) = OCIO::GradingControlPoint(0.8f, 0.8f);
+    dpVal->setValue(hueCurve);
+    cpuProcessor->applyRGB(pixel);
+
+    OCIO_CHECK_CLOSE(pixel[0], 0.4385873675f, error);
+    OCIO_CHECK_CLOSE(pixel[1], 0.2829087377f, error);
+    OCIO_CHECK_CLOSE(pixel[2], 0.2556785941f, error);
+
+    // Ensure that validation of control points is happening as expected. Set the last point
+    // so that it is no longer monotonic with respect to the first point. Because it is periodic,
+    // the last point Y value becomes -0.05 when wrapped around to an X value of -0.2.
+    huehue->getControlPoint(2) = OCIO::GradingControlPoint(0.8f, 0.95f);
+    OCIO_CHECK_THROW_WHAT(dpVal->setValue(hueCurve),
+                          OCIO::Exception,
+                          "GradingHueCurve validation failed for 'hue_hue' curve with: Control point at index 0 "
+                          "has a y coordinate '-0.1' that is less than previous control point y coordinate '-0.05'.");
+}
+
+OCIO_ADD_TEST(DynamicPropertyImpl, grading_rgb_curve_knots_coefs)
 {
     auto curve11 = OCIO::GradingBSplineCurve::Create({ { 0.f, 10.f },{ 2.f, 10.f },{ 3.f, 10.f },
     { 5.f, 10.f },{ 6.f, 10.f },{ 8.f, 10.f },{ 9.f, 10.5f },{ 11.f, 15.f },{ 12.f, 50.f },
@@ -397,6 +446,190 @@ OCIO_ADD_TEST(DynamicPropertyImpl, grading_rgb_curve_knots)
     OCIO_CHECK_EQUAL(dp2->getNumKnots(), dp->getNumKnots());
     auto dpPointerAfterSet = dp.get();
     OCIO_CHECK_EQUAL(dpPointer, dpPointerAfterSet);
+}
+
+void checkKnotsAndCoefs(
+    OCIO::DynamicPropertyGradingHueCurveImplRcPtr & dp,
+    int set,
+    const float * true_knots,
+    const float * true_coefsA,
+    const float * true_coefsB,
+    const float * true_coefsC,
+    unsigned line)
+{
+    const int * knotsOffsets = dp->getKnotsOffsetsArray();
+    const int * coefsOffsets = dp->getCoefsOffsetsArray();
+    const float * knots = dp->getKnotsArray();
+    const float * coefs = dp->getCoefsArray();
+
+    const int numKnots = knotsOffsets[set*2 + 1];
+    for (int i = 0; i < numKnots; i++)
+    {
+        const int offset = knotsOffsets[set*2];
+        OCIO_CHECK_CLOSE_FROM(knots[offset + i], true_knots[i], 1e-6, line);
+    }
+    const int numCoefSets = coefsOffsets[set*2 + 1] / 3;
+    for (int i = 0; i < numCoefSets; i++)
+    {
+        const int offset = coefsOffsets[set*2];
+        OCIO_CHECK_CLOSE_FROM(coefs[offset + i], true_coefsA[i], 3e-4, line);
+        OCIO_CHECK_CLOSE_FROM(coefs[offset + numCoefSets + i], true_coefsB[i], 1e-5, line);
+        OCIO_CHECK_CLOSE_FROM(coefs[offset + 2*numCoefSets + i], true_coefsC[i], 1e-5, line);
+    }
+}
+
+OCIO_ADD_TEST(DynamicPropertyImpl, grading_hue_curve_knots_coefs)
+{
+     auto hh = OCIO::GradingBSplineCurve::Create(
+        { {0.1f, 0.05f}, {0.2f, 0.3f}, {0.5f, 0.4f}, {0.8f, 0.7f}, {0.9f, 0.75f}, {1.0f, 0.9f} },
+        OCIO::HUE_HUE);
+    auto hs = OCIO::GradingBSplineCurve::Create(
+        { {-0.15f, 1.25f}, {0.f, 0.8f}, {0.2f, 0.9f}, {0.4f, 1.8f}, {0.6f, 1.4f}, {0.8f, 1.3f}, {0.9f, 1.1f}, {1.1f, 0.7f} },
+        OCIO::HUE_SAT);
+    auto hl = OCIO::GradingBSplineCurve::Create(
+        { {0.f, 0.f}, {0.22f, 0.077f}, {0.36f, 0.092f}, {0.51f, 0.27f}, {0.67f, 0.f}, {0.83f, 0.f} },
+        OCIO::HUE_LUM);
+    // The rest are identities, but not the default curves.
+    auto ls = OCIO::GradingBSplineCurve::Create(
+        { {0.f, 1.f}, {1.f, 1.f} }, 
+        OCIO::LUM_SAT);
+    auto ss = OCIO::GradingBSplineCurve::Create(
+        { {0.f, 0.f}, {0.25f, 0.25f}, {1.f, 1.f} },
+        OCIO::SAT_SAT);
+    auto ll = OCIO::GradingBSplineCurve::Create(
+        { {0.f, 0.f}, {0.25f, 0.25f}, {0.5f, 0.5f}, {1.f, 1.f} },
+        OCIO::LUM_LUM);
+    auto sl = OCIO::GradingBSplineCurve::Create(
+        { {0.f, 1.f}, {0.25f, 1.f}, {0.5f, 1.f}, {1.f, 1.f} },
+        OCIO::SAT_LUM);
+    auto hfx = OCIO::GradingBSplineCurve::Create(
+        { {0.f, 0.f}, {0.1f, 0.f}, {0.2f, 0.f}, {0.4f, 0.f}, {0.6f, 0.f}, {0.8f, 0.f} },
+        OCIO::HUE_FX);
+
+    auto curves = OCIO::GradingHueCurve::Create(hh, hs, hl, ls, ss, ll, sl, hfx);
+
+    {
+        // Fit the polynomials.
+        OCIO::DynamicPropertyGradingHueCurveImplRcPtr dp =
+            std::make_shared<OCIO::DynamicPropertyGradingHueCurveImpl>(curves, false);
+
+        OCIO_CHECK_EQUAL(46, dp->getNumKnots());
+        OCIO_CHECK_EQUAL(129, dp->getNumCoefs());
+
+        const int * coefsOffsets = dp->getCoefsOffsetsArray();
+        const int * knotsOffsets = dp->getKnotsOffsetsArray();
+
+        // These are offset0, count0, offset1, count1, offset2, count2, ...
+        const int true_knotsOffsets[] = {0, 15, 15, 19, 34, 12, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0};
+        const int true_coefsOffsets[] = {0, 42, 42, 54, 96, 33, -1, 0, -1, 0, -1, 0, -1, 0, -1, 0};
+        OCIO_CHECK_EQUAL(16, dp->GetNumOffsetValues());
+        for (int i=0; i < dp->GetNumOffsetValues(); i++)
+        {
+            OCIO_CHECK_EQUAL(knotsOffsets[i], true_knotsOffsets[i]);
+            OCIO_CHECK_EQUAL(coefsOffsets[i], true_coefsOffsets[i]);
+        }
+    }
+
+    // Repeat the test in DrawCurveOnly mode. This will yield identity knots and coefs for the
+    // curves that are identities.
+
+    curves->setDrawCurveOnly(true);
+
+    OCIO::DynamicPropertyGradingHueCurveImplRcPtr dp =
+        std::make_shared<OCIO::DynamicPropertyGradingHueCurveImpl>(curves, false);
+
+    OCIO_CHECK_EQUAL(56, dp->getNumKnots());
+    OCIO_CHECK_EQUAL(144, dp->getNumCoefs());
+
+    const int * coefsOffsets = dp->getCoefsOffsetsArray();
+    const int * knotsOffsets = dp->getKnotsOffsetsArray();
+
+    const int true_knotsOffsets[] = {0, 15, 15, 19, 34, 12, 46, 2, 48, 2, 50, 2, 52, 2, 54, 2};
+    const int true_coefsOffsets[] = {0, 42, 42, 54, 96, 33, 129, 3, 132, 3, 135, 3, 138, 3, 141, 3};
+    for (int i=0; i < dp->GetNumOffsetValues(); i++)
+    {
+        OCIO_CHECK_EQUAL(knotsOffsets[i], true_knotsOffsets[i]);
+        OCIO_CHECK_EQUAL(coefsOffsets[i], true_coefsOffsets[i]);
+    }
+
+    {
+        // Hue-Hue
+        const float true_knots[15] = {-0.1f, -0.06928571f, 0.0f, 0.05642857f, 0.1f, 0.17549634f, 0.2f, 0.33714286f,
+                                       0.5f,  0.62499860f, 0.8f, 0.85261905f, 0.9f, 0.93071429f, 1.f };
+
+        // Quadratic coefs.
+        const float true_coefsA[14] = { 15.95930233f, -1.66237113f, -1.44778481f, 6.17827869f, 10.39930009f,
+                                       -58.70626575f, -1.54375789f,  1.03834397f, 3.7077401f,  -2.12344738f,
+                                        -3.54260935f,  4.81365159f, 15.95930233f,-1.66237113f };
+        // Linear coefs.
+        const float true_coefsB[14] = { 0.75f, 1.73035714f, 1.5f, 1.33660714f, 1.875f, 3.44521825f, 0.56818182f,
+                                        0.14475108f, 0.48295455f, 1.40987919f, 0.66666667f, 0.29384921f, 0.75f, 1.73035714f };
+
+        // Constant coefs.
+        const float true_coefsC[14] = { -0.25f, -0.2119088f, -0.1f, -0.01996716f, 0.05f, 0.25082851f, 0.3f, 
+                                         0.34888683f, 0.4f, 0.51830078f, 0.7f, 0.72527072f, 0.75f, 0.7880912f };
+
+        checkKnotsAndCoefs(dp, 0, true_knots, true_coefsA, true_coefsB, true_coefsC, __LINE__);
+    }
+    {
+        // Hue-Sat
+
+        const float true_knots[19] = { -0.1f, -0.03071429f, 0.f, 0.0625f, 0.1f, 0.13333333f, 0.2f, 0.34913793f, 0.4f, 
+                                        0.46896552f, 0.6f, 0.69f, 0.8f, 0.82770833f,  0.85f, 0.86535714f, 0.9f, 0.96928571f, 1.f };
+        const float true_coefsA[18] = { -3.32474227f, 31.91860465f, 3.5f, 14.16666667f, 32.30769231f, 4.61538462f,
+                                        13.9662072f, -68.17470665f, -25.2f, 10.21052632f, 2.92592593f, -1.78787879f,
+                                        -5.32581454f, -12.07165109f, -63.8372093f, 6.64948454f, -3.32474227f, 31.91860465f };
+        const float true_coefsB[18] = { -3.f, -3.46071429f, -1.5f, -1.0625f, 0.f, 2.15384615f, 2.76923077f, 6.93501326f, 0.f, -3.47586207f, 
+                                        -0.8f, -0.27333333f, -0.66666667f, -0.96180556f, -1.5f, -3.46071429f, -3.f, -3.46071429f };
+        const float true_coefsC[18] = { 1.1f, 0.8761824f, 0.8f, 0.71992187f, 0.7f, 0.73589744f, 0.9f, 1.62363544f, 1.8f, 
+                                        1.68014269f, 1.4f, 1.3517f, 1.3f, 1.27743887f, 1.25f, 1.2119088f, 1.1f, 0.8761824f };
+
+        checkKnotsAndCoefs(dp, 1, true_knots, true_coefsA, true_coefsB, true_coefsC, __LINE__);
+    }
+    {
+        // Hue-Lum
+        // Test for the "Adjust slopes that are not shape-preserving" path in EstimateHueSlopes.
+
+        const float true_knots[12] = { -0.17f, 0.f, 0.07049104f, 0.22f, 0.29691485f, 0.36f, 0.435f, 0.51f, 0.59f, 0.67f, 0.83f, 1.f };
+
+        const float true_coefsA[11] = { 0.f, 4.21997107f, -1.47264319f, -0.70657119f, 1.10402357f, 13.97025263f, 
+                                       -15.20489902f, -21.09375f, 21.09375f, 0.f, 0.f };
+        const float true_coefsB[11] = { 0.f, 0.f, 0.59494032f, 0.15459362f, 0.04590198f, 0.18519696f, 2.28073485f, 
+                                        0.f, -3.375f, 0.f, 0.f };
+        const float true_coefsC[11] = { 0.f, 0.f, 0.02096898f, 0.077f, 0.08471054f, 0.092f, 0.18447244f, 0.27f, 
+                                        0.135f, 0.f, 0.f };
+
+        checkKnotsAndCoefs(dp, 2, true_knots, true_coefsA, true_coefsB, true_coefsC, __LINE__);
+    }
+    {
+        // Horizontal identities
+
+        const float true_knots[2] = { 0.f, 1.f };
+        const float true_coefsA[1] = { 0.f };
+        const float true_coefsB[1] = { 0.f };
+        const float true_coefsC[1] = { 1.f };
+        const float true_coefsCfx[1] = { 0.f };
+
+        // Lum-Sat
+        checkKnotsAndCoefs(dp, 3, true_knots, true_coefsA, true_coefsB, true_coefsC, __LINE__);
+        // Sat-Lum
+        checkKnotsAndCoefs(dp, 6, true_knots, true_coefsA, true_coefsB, true_coefsC, __LINE__);
+        // Hue-Fx
+        checkKnotsAndCoefs(dp, 7, true_knots, true_coefsA, true_coefsB, true_coefsCfx, __LINE__);
+    }
+    {
+        // Diagonal identities
+
+        const float true_knots[2] = { 0.f, 1.f };
+        const float true_coefsA[1] = { 0.f };
+        const float true_coefsB[1] = { 1.f };
+        const float true_coefsC[1] = { 0.f };
+
+        // Sat-Sat
+        checkKnotsAndCoefs(dp, 4, true_knots, true_coefsA, true_coefsB, true_coefsC, __LINE__);
+        // Lum-Lum
+        checkKnotsAndCoefs(dp, 5, true_knots, true_coefsA, true_coefsB, true_coefsC, __LINE__);
+    }
 }
 
 OCIO_ADD_TEST(DynamicPropertyImpl, get_as)

@@ -15,7 +15,6 @@
 #include "ops/gamma/GammaOp.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/matrix/MatrixOp.h"
-#include "ops/range/RangeOp.h"
 #include "Platform.h"
 #include "transforms/FileTransform.h"
 
@@ -794,13 +793,23 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         }
     }
 
-    // The matrix/TRC transform in the ICC profile converts display device code values to the
-    // CIE XYZ based version of the ICC profile connection space (PCS).
-    // However, in OCIO the most common use of an ICC monitor profile is as a display color space,
-    // and in that usage it is more natural for the XYZ to display code value transform to be called
-    // the forward direction.
+    // The matrix/TRC transform in the ICC profile converts display device code
+    // values to the CIE XYZ based version of the ICC profile connection space
+    // (PCS). However, in OCIO the most common use of an ICC monitor profile is
+    // as a display color space, and in that usage it is more natural for the
+    // XYZ to display code value transform to be called the forward direction.
 
-    // Curves / ParaCurves operates in the range 0.0 to 1.0 as per ICC specifications.
+    // The ICC spec states that the TRC tags should clamp to [0,1]. For curves
+    // that are implemented in the ICC profile as LUTs and most parametric
+    // curves (which become LUTs in OCIO), this is the case. However, as
+    // floating-point and HDR workflows become more common, the clamping has
+    // become a critical roadblock. For example, it is now common to have ICC
+    // profiles for linear color spaces that need to pass values outside [0,1].
+    // Therefore, OCIO now implements single entry 'curv' tags and type 0 'para'
+    // tags without clamping using an ExponentTransform which extends above 1
+    // and mirrors below 0. (Note that gamma values of 1 do not need to be
+    // tested for here since they will be omitted as no-ops later by the
+    // optimizer.)
 
     switch (newDir)
     {
@@ -817,17 +826,11 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
             const GammaOpData::Params greenParams = { cachedFile->mGammaRGB[1] };
             const GammaOpData::Params blueParams  = { cachedFile->mGammaRGB[2] };
             const GammaOpData::Params alphaParams = { cachedFile->mGammaRGB[3] };
-            auto gamma = std::make_shared<GammaOpData>(GammaOpData::BASIC_FWD, 
+            auto gamma = std::make_shared<GammaOpData>(GammaOpData::BASIC_MIRROR_FWD,
                                                        redParams,
                                                        greenParams,
                                                        blueParams,
                                                        alphaParams);
-
-            // GammaOp will clamp at 0 so we don't do it in the RangeOp.
-            CreateRangeOp(ops,
-                          RangeOpData::EmptyValue(), 1,
-                          RangeOpData::EmptyValue(), 1,
-                          TRANSFORM_DIR_FORWARD);
 
             CreateGammaOp(ops, gamma, TRANSFORM_DIR_FORWARD);
         }
@@ -859,18 +862,13 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
             const GammaOpData::Params greenParams = { cachedFile->mGammaRGB[1] };
             const GammaOpData::Params blueParams  = { cachedFile->mGammaRGB[2] };
             const GammaOpData::Params alphaParams = { cachedFile->mGammaRGB[3] };
-            auto gamma = std::make_shared<GammaOpData>(GammaOpData::BASIC_REV,
+            auto gamma = std::make_shared<GammaOpData>(GammaOpData::BASIC_MIRROR_REV,
                                                        redParams,
                                                        greenParams,
                                                        blueParams,
                                                        alphaParams);
 
             CreateGammaOp(ops, gamma, TRANSFORM_DIR_FORWARD);
-
-            CreateRangeOp(ops,
-                          RangeOpData::EmptyValue(), 1,
-                          RangeOpData::EmptyValue(), 1,
-                          TRANSFORM_DIR_FORWARD);
         }
         break;
     }

@@ -41,15 +41,18 @@ public:
     bool addUniform(const char * name, const Float3Getter & getter) override;
     bool addUniform(const char * name,
                     const SizeGetter & getSize,
-                    const VectorFloatGetter & getVectorFloat) override;
+                    const VectorFloatGetter & getVectorFloat,
+                    const unsigned maxSize) override;
     bool addUniform(const char * name,
                     const SizeGetter & getSize,
-                    const VectorIntGetter & getVectorInt) override;
+                    const VectorIntGetter & getVectorInt,
+                    const unsigned maxSize) override;
+    std::size_t getUniformBufferSize() const noexcept override;
 
     // Accessors to the 1D & 2D textures built from 1D LUT
     //
     unsigned getNumTextures() const noexcept override;
-    void addTexture(const char * textureName,
+    unsigned addTexture(const char * textureName,
                     const char * samplerName,
                     unsigned width, unsigned height,
                     TextureType channel,
@@ -64,11 +67,12 @@ public:
                     TextureDimensions & dimensions,
                     Interpolation & interpolation) const override;
     void getTextureValues(unsigned index, const float *& values) const override;
+    unsigned getTextureShaderBindingIndex(unsigned index) const override;
 
     // Accessors to the 3D textures built from 3D LUT
     //
     unsigned getNum3DTextures() const noexcept override;
-    void add3DTexture(const char * textureName,
+    unsigned add3DTexture(const char * textureName,
                       const char * samplerName,
                       unsigned edgelen,
                       Interpolation interpolation,
@@ -79,6 +83,7 @@ public:
                       unsigned & edgelen,
                       Interpolation & interpolation) const override;
     void get3DTextureValues(unsigned index, const float *& value) const override;
+    unsigned get3DTextureShaderBindingIndex(unsigned index) const override;
 
 private:
 

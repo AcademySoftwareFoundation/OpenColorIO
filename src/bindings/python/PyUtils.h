@@ -89,6 +89,9 @@ unsigned long getBufferLut3DGridSize(const py::buffer_info & info);
 // Throw if vector size is not divisible by channel count
 void checkVectorDivisible(const std::vector<float> & pixel, size_t numChannels);
 
+// Throw if array is not C-contiguous
+void checkCContiguousArray(const py::buffer_info & info);
+
 } // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_PYUTILS_H

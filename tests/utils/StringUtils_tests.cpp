@@ -218,4 +218,10 @@ OCIO_ADD_TEST(StringUtils, remove_contain)
         OCIO_CHECK_EQUAL(res.size(), 5);
         OCIO_CHECK_ASSERT(!StringUtils::Contain(res, "3"));
     }
+    {
+        // Validate that Contain requires a full-match, not just a partial match.
+        static const StringUtils::StringVec values{"2 ", " 2 ", " 2", "2,", "2\n"};
+        OCIO_CHECK_ASSERT(StringUtils::Contain(values, " 2 "));
+        OCIO_CHECK_ASSERT(!StringUtils::Contain(values, "2"));
+    }
 }

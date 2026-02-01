@@ -36,7 +36,7 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
 
         OCIO_CHECK_NO_THROW(shaderDesc->finalize());
         const std::string id(shaderDesc->getCacheID());
-        OCIO_CHECK_EQUAL(id, std::string("glsl_1.3 1sd234_ res_1sd234_ pxl_1sd234_ 0 "
+        OCIO_CHECK_EQUAL(id, std::string("glsl_1.3 1sd234_ res_1sd234_ pxl_1sd234_ 0 0 1 "
                                          "6001c324468d497f99aa06d3014798d8"));
         OCIO_CHECK_NO_THROW(shaderDesc->setResourcePrefix("res_1"));
         OCIO_CHECK_NO_THROW(shaderDesc->finalize());
@@ -53,15 +53,18 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
                 0.1f, 0.2f, 0.3f,  0.4f, 0.5f, 0.6f,  0.7f, 0.8f, 0.9f };
 
         OCIO_CHECK_EQUAL(shaderDesc->getNumTextures(), 0U);
-        OCIO_CHECK_NO_THROW(shaderDesc->addTexture("lut1",
-                                                   "lut1Sampler",
-                                                   width, height,
-                                                   OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL,
-                                                   OCIO::GpuShaderDesc::TEXTURE_2D,
-                                                   OCIO::INTERP_TETRAHEDRAL,
-                                                   &values[0]));
+        unsigned textureShaderBindingIndex = 0U;
+        OCIO_CHECK_NO_THROW(
+            textureShaderBindingIndex = shaderDesc->addTexture("lut1", "lut1Sampler",
+                                                               width, height,
+                                                               OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL,
+                                                               OCIO::GpuShaderDesc::TEXTURE_2D,
+                                                               OCIO::INTERP_TETRAHEDRAL,
+                                                               &values[0])
+        );
 
         OCIO_CHECK_EQUAL(shaderDesc->getNumTextures(), 1U);
+        OCIO_CHECK_EQUAL(textureShaderBindingIndex, 1U);
 
         const char * textureName = nullptr;
         const char * samplerName = nullptr;
@@ -98,13 +101,15 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
 
         // Support several 1D LUTs
 
-        OCIO_CHECK_NO_THROW(shaderDesc->addTexture("lut2", "lut2Sampler", width, height,
-                                                   OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL,
-                                                   d,
-                                                   OCIO::INTERP_TETRAHEDRAL,
-                                                   &values[0]));
-
+        OCIO_CHECK_NO_THROW(
+            textureShaderBindingIndex = shaderDesc->addTexture("lut2", "lut2Sampler",
+                                                               width, height,
+                                                               OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL,
+                                                               d, OCIO::INTERP_TETRAHEDRAL,
+                                                               &values[0])
+        );
         OCIO_CHECK_EQUAL(shaderDesc->getNumTextures(), 2U);
+        OCIO_CHECK_EQUAL(textureShaderBindingIndex, 2U);
 
         OCIO_CHECK_NO_THROW(shaderDesc->getTextureValues(0, vals));
         OCIO_CHECK_NO_THROW(shaderDesc->getTextureValues(1, vals));
@@ -121,11 +126,14 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
                 0.1f, 0.2f, 0.3f,  0.4f, 0.5f, 0.6f,  0.7f, 0.8f, 0.9f,  0.7f, 0.8f, 0.9f, };
 
         OCIO_CHECK_EQUAL(shaderDesc->getNum3DTextures(), 0U);
-        OCIO_CHECK_NO_THROW(shaderDesc->add3DTexture("lut1", "lut1Sampler", edgelen,
-                                                     OCIO::INTERP_TETRAHEDRAL,
-                                                     &values[0]));
-
+        unsigned textureShaderBindingIndex = 0U;
+        OCIO_CHECK_NO_THROW(
+            textureShaderBindingIndex = shaderDesc->add3DTexture("lut1", "lut1Sampler", edgelen,
+                                                                 OCIO::INTERP_TETRAHEDRAL,
+                                                                 &values[0])
+        );
         OCIO_CHECK_EQUAL(shaderDesc->getNum3DTextures(), 1U);
+        OCIO_CHECK_EQUAL(textureShaderBindingIndex, 3U);
 
         const char * textureName = nullptr;
         const char * samplerName = nullptr;
@@ -157,11 +165,13 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
 
         // Supports several 3D LUTs
 
-        OCIO_CHECK_NO_THROW(shaderDesc->add3DTexture("lut1", "lut1Sampler", edgelen,
-                                                     OCIO::INTERP_TETRAHEDRAL,
-                                                     &values[0]));
-
+        OCIO_CHECK_NO_THROW(
+            textureShaderBindingIndex = shaderDesc->add3DTexture("lut2", "lut2Sampler", edgelen,
+                                                                 OCIO::INTERP_TETRAHEDRAL,
+                                                                 &values[0])
+        );
         OCIO_CHECK_EQUAL(shaderDesc->getNum3DTextures(), 2U);
+        OCIO_CHECK_EQUAL(textureShaderBindingIndex, 4U);
 
         // Check the 3D LUT limit
 
@@ -172,7 +182,7 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
     }
 
     {
-        OCIO_CHECK_NO_THROW(shaderDesc->addToDeclareShaderCode("vec2 coords;\n"));
+        OCIO_CHECK_NO_THROW(shaderDesc->addToParameterDeclareShaderCode("vec2 coords;\n"));
         OCIO_CHECK_NO_THROW(shaderDesc->addToHelperShaderCode("vec2 helpers() {}\n\n"));
         OCIO_CHECK_NO_THROW(shaderDesc->addToFunctionHeaderShaderCode("void func() {\n"));
         OCIO_CHECK_NO_THROW(shaderDesc->addToFunctionShaderCode("  int i;\n"));
@@ -194,6 +204,51 @@ OCIO_ADD_TEST(GpuShader, generic_shader)
         fragText += "}\n";
 
         OCIO_CHECK_EQUAL(fragText, shaderDesc->getShaderText());
+    }
+
+    {
+        OCIO_CHECK_NE(shaderDesc->getLanguage(), OCIO::GPU_LANGUAGE_GLSL_VK_4_6);
+        OCIO_CHECK_NO_THROW(shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_VK_4_6));
+        OCIO_CHECK_EQUAL(shaderDesc->getLanguage(), OCIO::GPU_LANGUAGE_GLSL_VK_4_6);
+
+        OCIO_CHECK_THROW_WHAT(shaderDesc->setDescriptorSetIndex(123, 0),OCIO::Exception, "Texture binding start index must be greater than 0.");
+        OCIO_CHECK_NO_THROW(shaderDesc->setDescriptorSetIndex(123, 456));
+        OCIO_CHECK_EQUAL(shaderDesc->getDescriptorSetIndex(), 123);
+        OCIO_CHECK_EQUAL(shaderDesc->getTextureBindingStart(), 456);
+
+        auto getSize = []() -> int { return 2; }; //simulate only 2 elements in the array
+        auto getArray = []() -> const float* { return nullptr; };
+        const unsigned maxSize = 3;
+        OCIO_CHECK_NO_THROW(shaderDesc->addUniform("array", getSize, getArray, maxSize));
+        OCIO_CHECK_EQUAL(shaderDesc->getUniformBufferSize(), 16 * maxSize);
+
+        OCIO_CHECK_NO_THROW(shaderDesc->addToTextureDeclareShaderCode("layout(set=123, binding = 456) uniform sampler2D samplerName; \n"));
+
+        OCIO_CHECK_NO_THROW(shaderDesc->finalize());
+
+        std::string fragText;
+        fragText += "layout (set = 123, binding = 0) uniform 1sd234__Parameters\n";
+        fragText += "{\n";
+        fragText += "\n";
+        fragText += "// Declaration of all variables\n";
+        fragText += "\n";
+        fragText += "vec2 coords;\n";
+        fragText += "\n";
+        fragText += "};\n";
+        fragText += "\n";
+        fragText += "// Declaration of all textures\n";
+        fragText += "\n";
+        fragText += "layout(set=123, binding = 456) uniform sampler2D samplerName; \n";
+        fragText += "\n";
+        fragText += "// Declaration of all helper methods\n";
+        fragText += "\n";
+        fragText += "vec2 helpers() {}\n\n";
+        fragText += "void func() {\n";
+        fragText += "  int i;\n";
+        fragText += "}\n";
+
+        OCIO_CHECK_EQUAL(fragText, shaderDesc->getShaderText());
+
     }
 }
 
@@ -260,6 +315,7 @@ ocioDisplay(
 )
 {
 }
+
 
 
 // Declaration of the OCIO shader function
@@ -349,6 +405,7 @@ ocioDisplay(
 )
 {
 }
+
 
 
 // Declaration of the OCIO shader function
@@ -441,7 +498,8 @@ ocioMyMethodName(
 }
 
 
-// Declaration of all variables
+
+// Declaration of all textures
 
 texture1d<float> ocio_lut1d_0;
 sampler ocio_lut1d_0Sampler;
@@ -549,7 +607,8 @@ ocioMyMethodName(
 }
 
 
-// Declaration of all variables
+
+// Declaration of all textures
 
 texture3d<float> ocio_lut3d_0;
 sampler ocio_lut3d_0Sampler;
@@ -651,7 +710,8 @@ ocioOCIOMain(
 }
 
 
-// Declaration of all variables
+
+// Declaration of all textures
 
 texture2d<float> ocio_lut1d_0;
 sampler ocio_lut1d_0Sampler;
@@ -780,7 +840,8 @@ ocioOCIOMain(
 }
 
 
-// Declaration of all variables
+
+// Declaration of all textures
 
 texture1d<float> ocio_lut1d_0;
 sampler ocio_lut1d_0Sampler;
@@ -928,6 +989,7 @@ ocioOCIOMain(
 float ocio_exposure_contrast_exposureVal;
 float ocio_exposure_contrast_gammaVal;
 
+
 // Declaration of the OCIO shader function
 
 float4 OCIOMain(float4 inPixel)
@@ -1029,6 +1091,7 @@ ocioOCIOMain(
 }
 
 
+
 // Declaration of all helper methods
 
 
@@ -1037,7 +1100,7 @@ constant constexpr static float ocio_grading_rgbcurve_knots_0[5] = {0., 0.333333
 constant constexpr static int ocio_grading_rgbcurve_coefsOffsets_0[8] = {0, 12, -1, 0, -1, 0, -1, 0};
 constant constexpr static float ocio_grading_rgbcurve_coefs_0[12] = {0.0982520878, 0.393008381, 0.347727984, 0.08693178, 0.934498608, 1., 1.13100278, 1.246912, 0., 0.322416425, 0.5, 0.698159397};
 
-float ocio_grading_rgbcurve_evalBSplineCurve_0(int curveIdx, float x)
+float ocio_grading_rgbcurve_evalBSplineCurve_0(int curveIdx, float x, float identity_x)
 {
   int knotsOffs = ocio_grading_rgbcurve_knotsOffsets_0[curveIdx * 2];
   int knotsCnt = ocio_grading_rgbcurve_knotsOffsets_0[curveIdx * 2 + 1];
@@ -1046,7 +1109,7 @@ float ocio_grading_rgbcurve_evalBSplineCurve_0(int curveIdx, float x)
   int coefsSets = coefsCnt / 3;
   if (coefsSets == 0)
   {
-    return x;
+    return identity_x;
   }
   float knStart = ocio_grading_rgbcurve_knots_0[knotsOffs];
   float knEnd = ocio_grading_rgbcurve_knots_0[knotsOffs + knotsCnt - 1];
@@ -1092,12 +1155,12 @@ float4 OCIOMain(float4 inPixel)
   // Add GradingRGBCurve 'log' forward processing
   
   {
-    outColor.rgb.r = ocio_grading_rgbcurve_evalBSplineCurve_0(0, outColor.rgb.r);
-    outColor.rgb.g = ocio_grading_rgbcurve_evalBSplineCurve_0(1, outColor.rgb.g);
-    outColor.rgb.b = ocio_grading_rgbcurve_evalBSplineCurve_0(2, outColor.rgb.b);
-    outColor.rgb.r = ocio_grading_rgbcurve_evalBSplineCurve_0(3, outColor.rgb.r);
-    outColor.rgb.g = ocio_grading_rgbcurve_evalBSplineCurve_0(3, outColor.rgb.g);
-    outColor.rgb.b = ocio_grading_rgbcurve_evalBSplineCurve_0(3, outColor.rgb.b);
+    outColor.rgb.r = ocio_grading_rgbcurve_evalBSplineCurve_0(0, outColor.rgb.r, outColor.rgb.r);
+    outColor.rgb.g = ocio_grading_rgbcurve_evalBSplineCurve_0(1, outColor.rgb.g, outColor.rgb.g);
+    outColor.rgb.b = ocio_grading_rgbcurve_evalBSplineCurve_0(2, outColor.rgb.b, outColor.rgb.b);
+    outColor.rgb.r = ocio_grading_rgbcurve_evalBSplineCurve_0(3, outColor.rgb.r, outColor.rgb.r);
+    outColor.rgb.g = ocio_grading_rgbcurve_evalBSplineCurve_0(3, outColor.rgb.g, outColor.rgb.g);
+    outColor.rgb.b = ocio_grading_rgbcurve_evalBSplineCurve_0(3, outColor.rgb.b, outColor.rgb.b);
   }
 
   return outColor;
@@ -1143,11 +1206,11 @@ struct ocioOCIOMain
 ocioOCIOMain(
   constant int ocio_grading_rgbcurve_knotsOffsets[8]
   , int ocio_grading_rgbcurve_knotsOffsets_count
-  , constant float ocio_grading_rgbcurve_knots[60]
+  , constant float ocio_grading_rgbcurve_knots[120]
   , int ocio_grading_rgbcurve_knots_count
   , constant int ocio_grading_rgbcurve_coefsOffsets[8]
   , int ocio_grading_rgbcurve_coefsOffsets_count
-  , constant float ocio_grading_rgbcurve_coefs[180]
+  , constant float ocio_grading_rgbcurve_coefs[360]
   , int ocio_grading_rgbcurve_coefs_count
   , bool ocio_grading_rgbcurve_localBypass
 )
@@ -1164,7 +1227,7 @@ ocioOCIOMain(
   {
     this->ocio_grading_rgbcurve_knots[i] = ocio_grading_rgbcurve_knots[i];
   }
-  for(int i = ocio_grading_rgbcurve_knots_count; i < 60; ++i)
+  for(int i = ocio_grading_rgbcurve_knots_count; i < 120; ++i)
   {
     this->ocio_grading_rgbcurve_knots[i] = 0;
   }
@@ -1180,7 +1243,7 @@ ocioOCIOMain(
   {
     this->ocio_grading_rgbcurve_coefs[i] = ocio_grading_rgbcurve_coefs[i];
   }
-  for(int i = ocio_grading_rgbcurve_coefs_count; i < 180; ++i)
+  for(int i = ocio_grading_rgbcurve_coefs_count; i < 360; ++i)
   {
     this->ocio_grading_rgbcurve_coefs[i] = 0;
   }
@@ -1191,15 +1254,16 @@ ocioOCIOMain(
 // Declaration of all variables
 
 int ocio_grading_rgbcurve_knotsOffsets[8];
-float ocio_grading_rgbcurve_knots[60];
+float ocio_grading_rgbcurve_knots[120];
 int ocio_grading_rgbcurve_coefsOffsets[8];
-float ocio_grading_rgbcurve_coefs[180];
+float ocio_grading_rgbcurve_coefs[360];
 bool ocio_grading_rgbcurve_localBypass;
+
 
 // Declaration of all helper methods
 
 
-float ocio_grading_rgbcurve_evalBSplineCurve(int curveIdx, float x)
+float ocio_grading_rgbcurve_evalBSplineCurve(int curveIdx, float x, float identity_x)
 {
   int knotsOffs = ocio_grading_rgbcurve_knotsOffsets[curveIdx * 2];
   int knotsCnt = ocio_grading_rgbcurve_knotsOffsets[curveIdx * 2 + 1];
@@ -1208,7 +1272,7 @@ float ocio_grading_rgbcurve_evalBSplineCurve(int curveIdx, float x)
   int coefsSets = coefsCnt / 3;
   if (coefsSets == 0)
   {
-    return x;
+    return identity_x;
   }
   float knStart = ocio_grading_rgbcurve_knots[knotsOffs];
   float knEnd = ocio_grading_rgbcurve_knots[knotsOffs + knotsCnt - 1];
@@ -1256,12 +1320,12 @@ float4 OCIOMain(float4 inPixel)
   {
     if (!ocio_grading_rgbcurve_localBypass)
     {
-      outColor.rgb.r = ocio_grading_rgbcurve_evalBSplineCurve(0, outColor.rgb.r);
-      outColor.rgb.g = ocio_grading_rgbcurve_evalBSplineCurve(1, outColor.rgb.g);
-      outColor.rgb.b = ocio_grading_rgbcurve_evalBSplineCurve(2, outColor.rgb.b);
-      outColor.rgb.r = ocio_grading_rgbcurve_evalBSplineCurve(3, outColor.rgb.r);
-      outColor.rgb.g = ocio_grading_rgbcurve_evalBSplineCurve(3, outColor.rgb.g);
-      outColor.rgb.b = ocio_grading_rgbcurve_evalBSplineCurve(3, outColor.rgb.b);
+      outColor.rgb.r = ocio_grading_rgbcurve_evalBSplineCurve(0, outColor.rgb.r, outColor.rgb.r);
+      outColor.rgb.g = ocio_grading_rgbcurve_evalBSplineCurve(1, outColor.rgb.g, outColor.rgb.g);
+      outColor.rgb.b = ocio_grading_rgbcurve_evalBSplineCurve(2, outColor.rgb.b, outColor.rgb.b);
+      outColor.rgb.r = ocio_grading_rgbcurve_evalBSplineCurve(3, outColor.rgb.r, outColor.rgb.r);
+      outColor.rgb.g = ocio_grading_rgbcurve_evalBSplineCurve(3, outColor.rgb.g, outColor.rgb.g);
+      outColor.rgb.b = ocio_grading_rgbcurve_evalBSplineCurve(3, outColor.rgb.b, outColor.rgb.b);
     }
   }
 
@@ -1275,11 +1339,11 @@ float4 OCIOMain(float4 inPixel)
 float4 OCIOMain(
   constant int ocio_grading_rgbcurve_knotsOffsets[8]
   , int ocio_grading_rgbcurve_knotsOffsets_count
-  , constant float ocio_grading_rgbcurve_knots[60]
+  , constant float ocio_grading_rgbcurve_knots[120]
   , int ocio_grading_rgbcurve_knots_count
   , constant int ocio_grading_rgbcurve_coefsOffsets[8]
   , int ocio_grading_rgbcurve_coefsOffsets_count
-  , constant float ocio_grading_rgbcurve_coefs[180]
+  , constant float ocio_grading_rgbcurve_coefs[360]
   , int ocio_grading_rgbcurve_coefs_count
   , bool ocio_grading_rgbcurve_localBypass
   , float4 inPixel)
@@ -1298,5 +1362,170 @@ float4 OCIOMain(
 }
 )" };
     
+    OCIO_CHECK_EQUAL(expected, text);
+}
+
+OCIO_ADD_TEST(GpuShader, VulkanSupport)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    auto ft = OCIO::FileTransform::Create();
+    std::vector<std::string> paths = { 
+        std::string(OCIO::GetTestFilesDir()),
+        std::string("clf"),
+        std::string("lut1d_lut3d_lut1d.clf")
+    }; 
+    const std::string filePath = pystring::os::path::normpath(
+        pystring::os::path::join(paths)
+    );
+    ft->setSrc(filePath.c_str());
+
+    auto processor = config->getProcessor(ft);
+    auto gpuProcessor = processor->getOptimizedGPUProcessor(OCIO::OPTIMIZATION_NONE);
+
+    auto shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+    OCIO_CHECK_NO_THROW(shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_VK_4_6));
+    OCIO_CHECK_NO_THROW(shaderDesc->setDescriptorSetIndex(2, 10));
+
+    gpuProcessor->extractGpuShaderInfo(shaderDesc);
+
+    OCIO_CHECK_EQUAL(shaderDesc->getDescriptorSetIndex(), 2U);
+    OCIO_CHECK_EQUAL(shaderDesc->getNumTextures(), 2U);
+    OCIO_CHECK_EQUAL(shaderDesc->getNum3DTextures(), 1U);
+
+    // Check Lut1D textures.
+    {
+        const char * textureName = nullptr;
+        const char * samplerName = nullptr;
+        unsigned w = 0;
+        unsigned h = 0;
+        OCIO::GpuShaderDesc::TextureType t = OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL;
+        OCIO::GpuShaderDesc::TextureDimensions d = OCIO::GpuShaderDesc::TEXTURE_2D;
+        OCIO::Interpolation i = OCIO::INTERP_UNKNOWN;
+
+        const unsigned index = 0;
+        OCIO_CHECK_NO_THROW(shaderDesc->getTexture(index, textureName, samplerName, w, h, t, d, i));
+
+        OCIO_CHECK_EQUAL(std::string(textureName), "ocio_lut1d_0");
+        OCIO_CHECK_EQUAL(std::string(samplerName), "ocio_lut1d_0Sampler");
+        OCIO_CHECK_EQUAL(w, 65);
+        OCIO_CHECK_EQUAL(h, 1);
+        OCIO_CHECK_EQUAL(OCIO::GpuShaderDesc::TEXTURE_RED_CHANNEL, t);
+        OCIO_CHECK_EQUAL(OCIO::GpuShaderDesc::TEXTURE_1D, d);
+        OCIO_CHECK_EQUAL(OCIO::INTERP_LINEAR, i);
+
+        OCIO_CHECK_EQUAL(shaderDesc->getTextureShaderBindingIndex(index), 10U);
+    }
+    {
+        const char * textureName = nullptr;
+        const char * samplerName = nullptr;
+        unsigned w = 0;
+        unsigned h = 0;
+        OCIO::GpuShaderDesc::TextureType t = OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL;
+        OCIO::GpuShaderDesc::TextureDimensions d = OCIO::GpuShaderDesc::TEXTURE_1D;
+        OCIO::Interpolation i = OCIO::INTERP_UNKNOWN;
+
+        const unsigned index = 1;
+        OCIO_CHECK_NO_THROW(shaderDesc->getTexture(index, textureName, samplerName, w, h, t, d, i));
+
+        OCIO_CHECK_EQUAL(std::string(textureName), "ocio_lut1d_2");
+        OCIO_CHECK_EQUAL(std::string(samplerName), "ocio_lut1d_2Sampler");
+        OCIO_CHECK_EQUAL(w, 4096);
+        OCIO_CHECK_EQUAL(h, 17);
+        OCIO_CHECK_EQUAL(OCIO::GpuShaderDesc::TEXTURE_RED_CHANNEL, t);
+        OCIO_CHECK_EQUAL(OCIO::GpuShaderDesc::TEXTURE_2D, d);
+        OCIO_CHECK_EQUAL(OCIO::INTERP_LINEAR, i);
+
+        OCIO_CHECK_EQUAL(shaderDesc->getTextureShaderBindingIndex(index), 12U);
+    }
+    // Check Lut3D textures.
+    {
+        const char * textureName = nullptr;
+        const char * samplerName = nullptr;
+        unsigned edgelen = 0;
+        OCIO::Interpolation i = OCIO::INTERP_UNKNOWN;
+
+        const unsigned index = 0;
+        OCIO_CHECK_NO_THROW(shaderDesc->get3DTexture(index, textureName, samplerName, edgelen, i));
+
+        OCIO_CHECK_EQUAL(std::string(textureName), "ocio_lut3d_1");
+        OCIO_CHECK_EQUAL(std::string(samplerName), "ocio_lut3d_1Sampler");
+        OCIO_CHECK_EQUAL(edgelen, 3);
+        OCIO_CHECK_EQUAL(OCIO::INTERP_LINEAR, i);
+
+        OCIO_CHECK_EQUAL(shaderDesc->get3DTextureShaderBindingIndex(index), 11U);
+    }
+
+    const std::string text(shaderDesc->getShaderText());
+
+    // Note that the binding index increments properly for the three LUTs.
+
+    static constexpr char expected[] = { R"(
+// Declaration of all textures
+
+layout(set=2, binding = 10) uniform sampler1D ocio_lut1d_0Sampler; 
+layout(set=2, binding = 11) uniform sampler3D ocio_lut3d_1Sampler; 
+layout(set=2, binding = 12) uniform sampler2D ocio_lut1d_2Sampler; 
+
+// Declaration of all helper methods
+
+vec2 ocio_lut1d_2_computePos(float f)
+{
+  float dep;
+  float abs_f = abs(f);
+  if (abs_f > 6.10351562e-05)
+  {
+    vec3 fComp = vec3(15., 15., 15.);
+    float absarr = min( abs_f, 65504.);
+    fComp.x = floor( log2( absarr ) );
+    float lower = pow( 2.0, fComp.x );
+    fComp.y = ( absarr - lower ) / lower;
+    vec3 scale = vec3(1024., 1024., 1024.);
+    dep = dot( fComp, scale );
+  }
+  else
+  {
+    dep = abs_f * 16777216.;
+  }
+  dep += (f < 0.) ? 32768.0 : 0.0;
+  vec2 retVal;
+  retVal.y = floor(dep / 4095.);
+  retVal.x = dep - retVal.y * 4095.;
+  retVal.x = (retVal.x + 0.5) / 4096.;
+  retVal.y = (retVal.y + 0.5) / 17.;
+  return retVal;
+}
+
+// Declaration of the OCIO shader function
+
+vec4 OCIOMain(vec4 inPixel)
+{
+  vec4 outColor = inPixel;
+  
+  // Add LUT 1D processing for ocio_lut1d_0
+  
+  {
+    vec3 ocio_lut1d_0_coords = (outColor.rgb * vec3(64., 64., 64.) + vec3(0.5, 0.5, 0.5) ) / vec3(65., 65., 65.);
+    outColor.r = texture(ocio_lut1d_0Sampler, ocio_lut1d_0_coords.r).r;
+    outColor.g = texture(ocio_lut1d_0Sampler, ocio_lut1d_0_coords.g).r;
+    outColor.b = texture(ocio_lut1d_0Sampler, ocio_lut1d_0_coords.b).r;
+  }
+  
+  // Add LUT 3D processing for ocio_lut3d_1
+  
+  vec3 ocio_lut3d_1_coords = (outColor.zyx * vec3(2., 2., 2.) + vec3(0.5, 0.5, 0.5)) / vec3(3., 3., 3.);
+  outColor.rgb = texture(ocio_lut3d_1Sampler, ocio_lut3d_1_coords).rgb;
+  
+  // Add LUT 1D processing for ocio_lut1d_2
+  
+  {
+    outColor.r = texture(ocio_lut1d_2Sampler, ocio_lut1d_2_computePos(outColor.r)).r;
+    outColor.g = texture(ocio_lut1d_2Sampler, ocio_lut1d_2_computePos(outColor.g)).r;
+    outColor.b = texture(ocio_lut1d_2Sampler, ocio_lut1d_2_computePos(outColor.b)).r;
+  }
+
+  return outColor;
+}
+)" };
+
     OCIO_CHECK_EQUAL(expected, text);
 }

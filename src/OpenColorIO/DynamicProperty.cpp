@@ -8,6 +8,7 @@
 #include "ops/gradingprimary/GradingPrimaryOpData.h"
 #include "ops/gradingrgbcurve/GradingRGBCurve.h"
 #include "ops/gradingtone/GradingToneOpData.h"
+#include "ops/gradinghuecurve/GradingHueCurve.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -31,6 +32,12 @@ DynamicPropertyGradingRGBCurveRcPtr AsGradingRGBCurve(DynamicPropertyRcPtr & pro
     auto res = OCIO_DYNAMIC_POINTER_CAST<DynamicPropertyGradingRGBCurve>(prop);
     if (res) return res;
     throw Exception("Dynamic property value is not a grading RGB curve.");
+}
+DynamicPropertyGradingHueCurveRcPtr AsGradingHueCurve(DynamicPropertyRcPtr & prop)
+{
+    auto res = OCIO_DYNAMIC_POINTER_CAST<DynamicPropertyGradingHueCurve>(prop);
+    if (res) return res;
+    throw Exception("Dynamic property value is not a grading hue curve.");
 }
 DynamicPropertyGradingToneRcPtr AsGradingTone(DynamicPropertyRcPtr & prop)
 {
@@ -96,6 +103,11 @@ bool DynamicPropertyImpl::equals(const DynamicPropertyImpl & rhs) const
                 auto rhst = dynamic_cast<const DynamicPropertyGradingTone *>(&rhs);
                 return lhst && rhst && (lhst->getValue() == rhst->getValue());
             }
+            case DYNAMIC_PROPERTY_GRADING_HUECURVE:
+            {
+                auto lhst = dynamic_cast<const DynamicPropertyGradingHueCurve *>(this);
+                auto rhst = dynamic_cast<const DynamicPropertyGradingHueCurve *>(&rhs);
+                return lhst && rhst && (*lhst->getValue() == *rhst->getValue());}
             }
             // Different values.
             return false;
@@ -124,6 +136,8 @@ DynamicPropertyDoubleImplRcPtr DynamicPropertyDoubleImpl::createEditableCopy() c
 {
     return std::make_shared<DynamicPropertyDoubleImpl>(getType(), getValue(), isDynamic());
 }
+
+//========================================================================================
 
 DynamicPropertyGradingPrimaryImpl::DynamicPropertyGradingPrimaryImpl(GradingStyle style,
                                                                      TransformDirection dir,
@@ -183,6 +197,8 @@ void DynamicPropertyGradingPrimaryImpl::setDirection(TransformDirection dir) noe
     }
 }
 
+//========================================================================================
+
 DynamicPropertyGradingRGBCurveImpl::DynamicPropertyGradingRGBCurveImpl(
     const ConstGradingRGBCurveRcPtr & value, bool dynamic)
     : DynamicPropertyImpl(DYNAMIC_PROPERTY_GRADING_RGBCURVE, dynamic)
@@ -213,12 +229,12 @@ bool DynamicPropertyGradingRGBCurveImpl::getLocalBypass() const
 
 int DynamicPropertyGradingRGBCurveImpl::getNumKnots() const
 {
-    return static_cast<int>(m_knotsCoefs.m_knotsArray.size());
+    return static_cast<int>(m_knotsCoefs.m_numKnots);
 }
 
 int DynamicPropertyGradingRGBCurveImpl::getNumCoefs() const
 {
-    return static_cast<int>(m_knotsCoefs.m_coefsArray.size());
+    return static_cast<int>(m_knotsCoefs.m_numCoefs);
 }
 
 const int * DynamicPropertyGradingRGBCurveImpl::getKnotsOffsetsArray() const
@@ -254,8 +270,8 @@ unsigned int DynamicPropertyGradingRGBCurveImpl::GetMaxCoefs()
 void DynamicPropertyGradingRGBCurveImpl::precompute()
 {
     m_knotsCoefs.m_localBypass = false;
-    m_knotsCoefs.m_knotsArray.resize(0);
-    m_knotsCoefs.m_coefsArray.resize(0);
+    m_knotsCoefs.m_numCoefs = 0;
+    m_knotsCoefs.m_numKnots = 0;
 
     // Compute knots and coefficients for each control point and pack all knots and coefs of
     // all curves in one knots array and one coef array, using an offset array to find specific
@@ -264,9 +280,9 @@ void DynamicPropertyGradingRGBCurveImpl::precompute()
     {
         ConstGradingBSplineCurveRcPtr curve = m_gradingRGBCurve->getCurve(c);
         auto curveImpl = dynamic_cast<const GradingBSplineCurveImpl *>(curve.get());
-        curveImpl->computeKnotsAndCoefs(m_knotsCoefs, static_cast<int>(c));
+        curveImpl->computeKnotsAndCoefs(m_knotsCoefs, static_cast<int>(c), false);
     }
-    if (m_knotsCoefs.m_knotsArray.empty()) m_knotsCoefs.m_localBypass = true;
+    if (m_knotsCoefs.m_numKnots <= 0) m_knotsCoefs.m_localBypass = true;
 }
 
 DynamicPropertyGradingRGBCurveImplRcPtr DynamicPropertyGradingRGBCurveImpl::createEditableCopy() const
@@ -275,6 +291,104 @@ DynamicPropertyGradingRGBCurveImplRcPtr DynamicPropertyGradingRGBCurveImpl::crea
     res->m_knotsCoefs = m_knotsCoefs;
     return res;
 }
+
+//========================================================================================
+
+DynamicPropertyGradingHueCurveImpl::DynamicPropertyGradingHueCurveImpl(
+    const ConstGradingHueCurveRcPtr & value, bool dynamic)
+    : DynamicPropertyImpl(DYNAMIC_PROPERTY_GRADING_HUECURVE, dynamic)
+{
+    m_gradingHueCurve = GradingHueCurve::Create(value);
+    // Convert control points from the UI into knots and coefficients for the apply.
+    precompute();
+}
+
+const ConstGradingHueCurveRcPtr & DynamicPropertyGradingHueCurveImpl::getValue() const
+{
+    return m_gradingHueCurve;
+}
+
+void DynamicPropertyGradingHueCurveImpl::setValue(const ConstGradingHueCurveRcPtr & value)
+{
+    value->validate();
+
+    m_gradingHueCurve = value->createEditableCopy();
+    // Convert control points from the UI into knots and coefficients for the apply.
+    precompute();
+}
+
+bool DynamicPropertyGradingHueCurveImpl::getLocalBypass() const
+{
+    return m_knotsCoefs.m_localBypass;
+}
+
+int DynamicPropertyGradingHueCurveImpl::getNumKnots() const
+{
+    return static_cast<int>(m_knotsCoefs.m_numKnots);
+}
+
+int DynamicPropertyGradingHueCurveImpl::getNumCoefs() const
+{
+    return static_cast<int>(m_knotsCoefs.m_numCoefs);
+}
+
+const int * DynamicPropertyGradingHueCurveImpl::getKnotsOffsetsArray() const
+{
+    return m_knotsCoefs.m_knotsOffsetsArray.data();
+}
+
+const int * DynamicPropertyGradingHueCurveImpl::getCoefsOffsetsArray() const
+{
+    return m_knotsCoefs.m_coefsOffsetsArray.data();
+}
+
+const float * DynamicPropertyGradingHueCurveImpl::getKnotsArray() const
+{
+    return m_knotsCoefs.m_knotsArray.data();
+}
+
+const float * DynamicPropertyGradingHueCurveImpl::getCoefsArray() const
+{
+    return m_knotsCoefs.m_coefsArray.data();
+}
+
+unsigned int DynamicPropertyGradingHueCurveImpl::GetMaxKnots()
+{
+    return GradingBSplineCurveImpl::KnotsCoefs::MAX_NUM_KNOTS;
+}
+
+unsigned int DynamicPropertyGradingHueCurveImpl::GetMaxCoefs()
+{
+    return GradingBSplineCurveImpl::KnotsCoefs::MAX_NUM_COEFS;
+}
+
+void DynamicPropertyGradingHueCurveImpl::precompute()
+{
+    m_knotsCoefs.m_localBypass = false;
+    m_knotsCoefs.m_numCoefs = 0;
+    m_knotsCoefs.m_numKnots = 0;
+
+    // Compute knots and coefficients for each control point and pack all knots and coefs of
+    // all curves in one knots array and one coef array, using an offset array to find specific
+    // curve data.
+    for (const auto c : { HUE_HUE, HUE_SAT, HUE_LUM, LUM_SAT, SAT_SAT, LUM_LUM, SAT_LUM, HUE_FX })
+    {
+        ConstGradingBSplineCurveRcPtr curve = m_gradingHueCurve->getCurve(c);
+        auto curveImpl = dynamic_cast<const GradingBSplineCurveImpl *>(curve.get());
+        curveImpl->computeKnotsAndCoefs(m_knotsCoefs, static_cast<int>(c),
+                                        m_gradingHueCurve->getDrawCurveOnly());
+    }
+    if (m_knotsCoefs.m_numKnots <= 0) m_knotsCoefs.m_localBypass = true;
+}
+
+DynamicPropertyGradingHueCurveImplRcPtr DynamicPropertyGradingHueCurveImpl::createEditableCopy() const
+{
+    auto res = std::make_shared<DynamicPropertyGradingHueCurveImpl>(getValue(), isDynamic());
+    res->m_knotsCoefs = m_knotsCoefs;
+    return res;
+}
+
+//========================================================================================
 
 DynamicPropertyGradingToneImpl::DynamicPropertyGradingToneImpl(const GradingTone & value,
                                                                GradingStyle style,

@@ -120,6 +120,8 @@ A View Transform may use the following keys:
 * ``description``: A description of the ViewTransform.
 * ``family``: A family string (similar to ColorSpace).
 * ``categories``: The categories used for menu filtering (similar to ColorSpace).
+* ``amf_transform_ids``: The ACES transform IDs to be used with AMF files. Note this 
+  is a sub-key under the ``interchange`` key.
 * ``from_scene_reference``: The transform from the scene-referred reference space
   to the display-referred reference space.
 * ``to_scene_reference``: The transform from the display-referred reference space
@@ -138,6 +140,10 @@ Optional.  Defines the default view transform.
 The default view transform is the view transform that is used if a ColorSpaceTransform
 needs to convert between a scene-referred and display-referred colorspace.  If this
 key is missing, the first view transform in the config is used.
+
+Please note that this is *not* the default view for the config. The default view is the 
+first view in the ``active_views`` list and should be obtained using the ``getDefaultView``
+API function.
 
 .. code-block:: yaml
 

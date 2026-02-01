@@ -153,7 +153,7 @@ jobs:
                 -Dpystring_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -Dyaml-cpp_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -Dyaml-cpp_STATIC_LIBRARY=ON \
-                -Dyaml-cpp_VERSION=0.7.0 \
+                -Dyaml-cpp_VERSION=0.8.0 \
                 -DZLIB_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -DZLIB_STATIC_LIBRARY=ON \
                 -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist \
@@ -187,14 +187,14 @@ jobs:
             build-shared: ON
             cxx-standard: 23
             enable-sanitizer: OFF
-            python-version: '3.11'
+            python-version: '3.13'
           - build: 2
             build-python: OFF
             build-type: Debug
             build-shared: ON
             cxx-standard: 23
             enable-sanitizer: ON
-            python-version: '3.11'
+            python-version: '3.9'
     steps:
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -266,7 +266,7 @@ jobs:
                 -Dpystring_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -Dyaml-cpp_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -Dyaml-cpp_STATIC_LIBRARY=ON \
-                -Dyaml-cpp_VERSION=0.7.0 \
+                -Dyaml-cpp_VERSION=0.8.0 \
                 -DZLIB_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -DZLIB_STATIC_LIBRARY=ON \
                 -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist \
@@ -298,14 +298,14 @@ jobs:
             build-python: ON
             build-type: Release
             build-shared: ON
-            cxx-standard: 23
-            python-version: '3.11'
+            cxx-standard: 20
+            python-version: '3.13'
           - build: 2
             build-python: ON
             build-type: Debug
             build-shared: ON
-            cxx-standard: 23
-            python-version: '3.11'
+            cxx-standard: 20
+            python-version: '3.9'
     steps:
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -351,10 +351,6 @@ jobs:
       - name: Test
         run: ctest -V -C ${{ matrix.build-type }}
         shell: bash
-        # See below issue for context:
-        # https://github.com/AcademySoftwareFoundation/OpenColorIO/issues/2040
-        env:
-          OCIO_PYTHON_LOAD_DLLS_FROM_PATH: "0"
         working-directory: _build
       - name: Test CMake Consumer with shared OCIO
         if: matrix.build-shared == 'ON'
@@ -387,7 +383,7 @@ jobs:
                 -Dpystring_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -Dyaml-cpp_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -Dyaml-cpp_STATIC_LIBRARY=ON \
-                -Dyaml-cpp_VERSION=0.7.0 \
+                -Dyaml-cpp_VERSION=0.8.0 \
                 -DZLIB_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -DZLIB_STATIC_LIBRARY=ON \
                 -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist \

@@ -1079,6 +1079,14 @@ CTFReaderOpEltRcPtr CTFReaderOpElt::GetReader(CTFReaderOpElt::Type type,
         }
         break;
     }
+    case CTFReaderOpElt::GradingHueCurveType:
+    {
+        if (!isCLF)
+        {
+            ADD_READER_FOR_VERSIONS_STARTING_AT(CTFReaderGradingHueCurveElt, 2_5);
+        }
+        break;
+    }
     case CTFReaderOpElt::GradingPrimaryType:
     {
         if (!isCLF)
@@ -1634,6 +1642,19 @@ void CTFReaderDynamicParamElt::start(const char ** atts)
                 }
 
                 GradingRGBCurveOpDataRcPtr pGCOp = pGC->getGradingRGBCurve();
+                pGCOp->getDynamicPropertyInternal()->makeDynamic();
+            }
+            else if (0 == Platform::Strcasecmp(TAG_DYN_PROP_HUECURVE, atts[i + 1]))
+            {
+                CTFReaderGradingHueCurveElt* pGC =
+                    dynamic_cast<CTFReaderGradingHueCurveElt*>(container.get());
+                if (!pGC)
+                {
+                    ThrowM(*this, "Dynamic parameter '", atts[i + 1],
+                           "' is not supported in '", container->getName().c_str(), "'.");
+                }
+
+                GradingHueCurveOpDataRcPtr pGCOp = pGC->getGradingHueCurve();
                 pGCOp->getDynamicPropertyInternal()->makeDynamic();
             }
             else if (0 == Platform::Strcasecmp(TAG_DYN_PROP_TONE, atts[i + 1]))
@@ -2635,6 +2656,85 @@ const OpDataRcPtr CTFReaderGradingRGBCurveElt::getOp() const
 
 //////////////////////////////////////////////////////////
 
+CTFReaderGradingHueCurveElt::CTFReaderGradingHueCurveElt()
+    : m_gradingHueCurve(std::make_shared<GradingHueCurveOpData>(GRADING_LOG))
+{
+}
+
+bool CTFReaderGradingHueCurveElt::isOpParameterValid(const char * att) const noexcept
+{
+    return CTFReaderOpElt::isOpParameterValid(att) ||
+           0 == Platform::Strcasecmp(ATTR_STYLE, att) ||
+           0 == Platform::Strcasecmp(ATTR_RGB_TO_HSY, att);
+}
+
+void CTFReaderGradingHueCurveElt::start(const char ** atts)
+{
+    CTFReaderOpElt::start(atts);
+
+    bool isStyleFound = false;
+
+    unsigned i = 0;
+    while (atts[i])
+    {
+        if (0 == Platform::Strcasecmp(ATTR_STYLE, atts[i]))
+        {
+            try
+            {
+                GradingStyle style;
+                TransformDirection dir;
+                ConvertStringToGradingStyleAndDir(atts[i + 1], style, dir);
+                m_gradingHueCurve->setStyle(style);
+                m_gradingHueCurve->setDirection(dir);
+
+                // Initialize loading curve with corresponding style.
+                m_loadingHueCurve = GradingHueCurve::Create(style);
+            }
+            catch (Exception &)
+            {
+                ThrowM(*this, "Required attribute 'style' '", atts[i + 1], "' is invalid.");
+            }
+            isStyleFound = true;
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_RGB_TO_HSY, atts[i]))
+        {
+            if (0 != Platform::Strcasecmp("none", atts[i + 1]))
+            {
+                std::ostringstream oss;
+                oss << "Unknown hsyTransform value: '" << atts[i + 1];
+                oss << "' while parsing HueCurve.";
+                throwMessage(oss.str());
+            }
+
+            m_gradingHueCurve->setRGBToHSY(HSYTransformStyle::HSY_TRANSFORM_NONE);
+        }
+
+        i += 2;
+    }
+
+    if (!isStyleFound)
+    {
+        ThrowM(*this, "Required attribute 'style' is missing.");
+    }
+}
+
+void CTFReaderGradingHueCurveElt::end()
+{
+    CTFReaderOpElt::end();
+
+    // Set the loaded data.
+    m_gradingHueCurve->setValue(m_loadingHueCurve);
+    // Validate the end result.
+    m_gradingHueCurve->validate();
+}
+
+const OpDataRcPtr CTFReaderGradingHueCurveElt::getOp() const
+{
+    return m_gradingHueCurve;
+}
+
+//////////////////////////////////////////////////////////
+
 CTFReaderGradingCurveElt::CTFReaderGradingCurveElt(const std::string & name,
                                                    ContainerEltRcPtr pParent,
                                                    unsigned int xmlLineNumber,
@@ -2649,6 +2749,32 @@ CTFReaderGradingCurveElt::~CTFReaderGradingCurveElt()
 
 namespace
 {
+
+bool IsRGBCurveType(const std::string & name)
+{
+    if (0 == Platform::Strcasecmp(TAG_RGB_CURVE_RED, name.c_str())   ||
+        0 == Platform::Strcasecmp(TAG_RGB_CURVE_GREEN, name.c_str()) ||
+        0 == Platform::Strcasecmp(TAG_RGB_CURVE_BLUE, name.c_str())  ||
+        0 == Platform::Strcasecmp(TAG_RGB_CURVE_MASTER, name.c_str()))
+    {
+        return true;
+    }
+    else if (0 == Platform::Strcasecmp(TAG_HUE_CURVE_HUE_HUE, name.c_str()) ||
+             0 == Platform::Strcasecmp(TAG_HUE_CURVE_HUE_SAT, name.c_str()) ||
+             0 == Platform::Strcasecmp(TAG_HUE_CURVE_HUE_LUM, name.c_str()) ||
+             0 == Platform::Strcasecmp(TAG_HUE_CURVE_LUM_SAT, name.c_str()) ||
+             0 == Platform::Strcasecmp(TAG_HUE_CURVE_SAT_SAT, name.c_str()) ||
+             0 == Platform::Strcasecmp(TAG_HUE_CURVE_LUM_LUM, name.c_str()) ||
+             0 == Platform::Strcasecmp(TAG_HUE_CURVE_SAT_LUM, name.c_str()) ||
+             0 == Platform::Strcasecmp(TAG_HUE_CURVE_HUE_FX, name.c_str()))
+    {
+        return false;
+    }
+    std::ostringstream err;
+    err << "Illegal grading curve name '" << name << "'.";
+    throw Exception(err.str().c_str());
+}
+
 RGBCurveType GetRGBCurveType(const std::string & name)
 {
     if (0 == Platform::Strcasecmp(TAG_RGB_CURVE_RED, name.c_str()))
@@ -2668,18 +2794,67 @@ RGBCurveType GetRGBCurveType(const std::string & name)
         return RGB_MASTER;
     }
     std::ostringstream err;
-    err << "Invalid curve name '" << name << "'.";
+    err << "Illegal grading curve name '" << name << "'.";
     throw Exception(err.str().c_str());
 }
+
+HueCurveType GetHueCurveType(const std::string & name)
+{
+    if (0 == Platform::Strcasecmp(TAG_HUE_CURVE_HUE_HUE, name.c_str()))
+    {
+        return HUE_HUE;
+    }
+    else if (0 == Platform::Strcasecmp(TAG_HUE_CURVE_HUE_SAT, name.c_str()))
+    {
+        return HUE_SAT;
+    }
+    else if (0 == Platform::Strcasecmp(TAG_HUE_CURVE_HUE_LUM, name.c_str()))
+    {
+        return HUE_LUM;
+    }
+    else if (0 == Platform::Strcasecmp(TAG_HUE_CURVE_LUM_SAT, name.c_str()))
+    {
+        return LUM_SAT;
+    }
+    else if (0 == Platform::Strcasecmp(TAG_HUE_CURVE_SAT_SAT, name.c_str()))
+    {
+        return SAT_SAT;
+    }
+    else if (0 == Platform::Strcasecmp(TAG_HUE_CURVE_LUM_LUM, name.c_str()))
+    {
+        return LUM_LUM;
+    }
+    else if (0 == Platform::Strcasecmp(TAG_HUE_CURVE_SAT_LUM, name.c_str()))
+    {
+        return SAT_LUM;
+    }
+    else if (0 == Platform::Strcasecmp(TAG_HUE_CURVE_HUE_FX, name.c_str()))
+    {
+        return HUE_FX;
+    }
+    std::ostringstream err;
+    err << "Illegal grading curve name '" << name << "'.";
+    throw Exception(err.str().c_str());
 }
+
+} // anon
 
 void CTFReaderGradingCurveElt::start(const char ** /* atts */)
 {
     try
     {
-        const RGBCurveType type = GetRGBCurveType(getName());
-        auto pRGBCurveElt = dynamic_cast<CTFReaderGradingRGBCurveElt*>(getParent().get());
-        m_curve = pRGBCurveElt->getLoadingRGBCurve()->getCurve(type);
+        if (IsRGBCurveType(getName()))
+        {
+            const RGBCurveType type = GetRGBCurveType(getName());
+            auto pRGBCurveElt = dynamic_cast<CTFReaderGradingRGBCurveElt*>(getParent().get());
+            m_curve = pRGBCurveElt->getLoadingRGBCurve()->getCurve(type);
+        }
+        else
+        {
+            const HueCurveType type = GetHueCurveType(getName());
+            auto pHueCurveElt = dynamic_cast<CTFReaderGradingHueCurveElt*>(getParent().get());
+            m_curve = pHueCurveElt->getLoadingHueCurve()->getCurve(type);
+        }
     }
     catch (Exception& ce)
     {
