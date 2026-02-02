@@ -1,4 +1,4 @@
-colour-science @ git+https://github.com/colour-science/colour.git
+colour-science
 colour-visuals @ git+https://github.com/colour-science/colour-visuals.git
 imageio
 networkx
@@ -10,4 +10,3 @@ PyOpenGL
 PySide6
 QtAwesome
 scipy
-wgpu
