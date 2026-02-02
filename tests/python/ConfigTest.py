@@ -1001,14 +1001,14 @@ colorspaces:
             self.assertEqual(len(builtinCfgC.getColorSpaceNames()), numberOfExpectedColorspaces)
 
         uriPrefix = OCIO.OCIO_BUILTIN_URI_PREFIX;
-        cgConfigName = "cg-config-v2.2.0_aces-v1.3_ocio-v2.4"
-        studioConfigName = "studio-config-v2.2.0_aces-v1.3_ocio-v2.4"
+        cgConfigName = "cg-config-v4.0.0_aces-v2.0_ocio-v2.5"
+        studioConfigName = "studio-config-v4.0.0_aces-v2.0_ocio-v2.5"
         defaultName = "default"
         latestCGName = "cg-config-latest"
         latestStudioName = "studio-config-latest"
 
-        nbOfColorspacesForCGConfig = 23
-        nbOfColorspacesForStudioConfig = 54
+        nbOfColorspacesForCGConfig = 25
+        nbOfColorspacesForStudioConfig = 55
 
         # Test that CreateFromFile does not work without ocio:// prefix for built-in config.
         with self.assertRaises(OCIO.Exception) as cm:
@@ -1276,9 +1276,9 @@ colorspaces:
         OCIO.ClearAllCaches()
 
     def test_resolve_config(self):
-        defaultBuiltinConfig = "ocio://cg-config-v2.2.0_aces-v1.3_ocio-v2.4"
-        cgLatestBuiltinConfig = "ocio://cg-config-v2.2.0_aces-v1.3_ocio-v2.4"
-        studioLatestBuiltinConfig = "ocio://studio-config-v2.2.0_aces-v1.3_ocio-v2.4"
+        defaultBuiltinConfig = "ocio://cg-config-v4.0.0_aces-v2.0_ocio-v2.5"
+        cgLatestBuiltinConfig = "ocio://cg-config-v4.0.0_aces-v2.0_ocio-v2.5"
+        studioLatestBuiltinConfig = "ocio://studio-config-v4.0.0_aces-v2.0_ocio-v2.5"
 
         # Testing just a few built-in config path.
         self.assertEqual(
@@ -1380,6 +1380,72 @@ colorspaces:
 
       # Test the new value of the role color_picking.
       self.assertEqual(config.getRoleColorSpace("color_picking"), "ACEScct")
+
+    def test_active__displayview_lists(self):
+        config = OCIO.Config.CreateRaw()
+
+        # Test add.
+        self.assertEqual(len(config.getActiveDisplays()), 0)
+        self.assertEqual(len(config.getActiveViews()), 0)
+        config.addActiveDisplay("sRGB")
+        config.addActiveDisplay("Display P3")
+        config.addActiveView("v1")
+        config.addActiveView("v2")
+
+        # Test getters.
+        self.assertEqual(len(config.getActiveDisplays()), 2)
+        self.assertEqual(config.getActiveDisplays()[0], "sRGB")
+        self.assertEqual(config.getActiveDisplays()[1], "Display P3")
+        self.assertEqual(len(config.getActiveViews()), 2)
+        self.assertEqual(config.getActiveViews()[0], "v1")
+        self.assertEqual(config.getActiveViews()[1], "v2")
+
+        # Test that add doesn't throw on dupes.
+        config.addActiveDisplay("sRGB")
+        self.assertEqual(config.getNumActiveDisplays(), 2)
+        config.addActiveView("v1")
+        self.assertEqual(config.getNumActiveViews(), 2)
+
+        # Test commas may be used.
+        config.setActiveDisplays(displays='sRGB:01, "Name, with comma", "Quoted name"')
+        self.assertEqual(config.getNumActiveDisplays(), 3)
+        self.assertEqual(config.getActiveDisplays()[0], "sRGB:01")
+        self.assertEqual(config.getActiveDisplays()[1], "Name, with comma")
+        config.setActiveViews(views='v:01, "View, with comma", "Quoted view"')
+        self.assertEqual(config.getNumActiveViews(), 3)
+        self.assertEqual(config.getActiveViews()[0], "v:01")
+        self.assertEqual(config.getActiveViews()[1], "View, with comma")
+
+        # Test remove.
+        config.removeActiveDisplay(display="Name, with comma")
+        self.assertEqual(config.getActiveDisplays()[1], "Quoted name")
+        self.assertEqual(config.getNumActiveDisplays(), 2)
+        config.removeActiveView(view="View, with comma")
+        self.assertEqual(config.getActiveViews()[1], "Quoted view")
+        self.assertEqual(config.getNumActiveViews(), 2)
+
+        # Test clear.
+        config.clearActiveDisplays()
+        self.assertEqual(config.getNumActiveDisplays(), 0)
+        config.clearActiveViews()
+        self.assertEqual(config.getNumActiveViews(), 0)
+
+        # Trying to remove one that doesn't exist throws.
+        with self.assertRaises(OCIO.Exception):
+            config.removeActiveDisplay("not found")
+        with self.assertRaises(OCIO.Exception):
+            config.removeActiveView("not found")
+
+        # Test setting an empty string behaves as expected.
+        config.setActiveDisplays("")
+        self.assertEqual(config.getNumActiveDisplays(), 0)
+        config.addActiveDisplay(display="sRGB")
+        self.assertEqual(config.getNumActiveDisplays(), 1)
+        config.setActiveViews("")
+        self.assertEqual(config.getNumActiveViews(), 0)
+        config.addActiveView(view="v1")
+        self.assertEqual(config.getNumActiveViews(), 1)
+
 
 class ConfigVirtualWithActiveDisplayTest(unittest.TestCase):
     def setUp(self):
@@ -1590,3 +1656,12 @@ class ConfigVirtualDisplayTest(unittest.TestCase):
                          "Display 'virtual_display' has a view 'Raw1' that " +
                          "refers to a color space or a named transform, " +
                          "'raw1', which is not defined.")
+
+    def test_temporary_display(self):
+        """
+        Test the ability to get and set the temporary display status.
+        """
+
+        self.assertFalse(self.cfg.isDisplayTemporary('sRGB'))
+        self.cfg.setDisplayTemporary('sRGB', True)
+        self.assertTrue(self.cfg.isDisplayTemporary('sRGB'))

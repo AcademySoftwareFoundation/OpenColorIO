@@ -79,6 +79,20 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
 
     set(_OpenEXR_LIB_VER "${_OpenEXR_VERSION_MAJOR}_${_OpenEXR_VERSION_MINOR}")
 
+    # Specify which OpenJPH version to use as we need to know the library name
+    # for the Windows library. OpenEXR 3.4.0 would install 0.22.0 by default,
+    # here we request the latest version at release time including build fixes.
+    set(openjph_VERSION_MAJOR 0)
+    set(openjph_VERSION_MINOR 23)
+    set(openjph_VERSION_PATCH 1)
+    set(openjph_VERSION "${openjph_VERSION_MAJOR}.${openjph_VERSION_MINOR}.${openjph_VERSION_PATCH}")
+
+    if (MSVC)
+        set(openjph_LIBRARY "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}openjph.${openjph_VERSION_MAJOR}.${openjph_VERSION_MINOR}${_OpenEXR_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    else()
+        set(openjph_LIBRARY "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}openjph${_OpenEXR_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    endif()
+
     set_target_location(Iex)
     set_target_location(IlmThread)
     set_target_location(OpenEXR)
@@ -110,7 +124,11 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
             -DBUILD_SHARED_LIBS=OFF
             -DBUILD_TESTING=OFF
             -DOPENEXR_INSTALL_EXAMPLES=OFF
+            -DOPENEXR_BUILD_EXAMPLES=OFF
             -DOPENEXR_BUILD_TOOLS=OFF
+            -DOPENEXR_FORCE_INTERNAL_DEFLATE=ON
+            -DOPENEXR_FORCE_INTERNAL_OPENJPH=ON
+            -DOPENEXR_OPENJPH_TAG=${openjph_VERSION}
             # Try to use in-source built Imath first, if available.
             -DCMAKE_PREFIX_PATH=${_EXT_DIST_ROOT}
         )
@@ -148,6 +166,7 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
             GIT_SHALLOW TRUE
             PREFIX "${_EXT_BUILD_ROOT}/openexr"
             BUILD_BYPRODUCTS
+                ${openjph_LIBRARY}
                 ${Iex_LIBRARY}
                 ${IlmThread_LIBRARY}
                 ${OpenEXR_LIBRARY}
@@ -166,6 +185,7 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
 
         # Additional targets. ALIAS to UNKNOWN imported target is only possible
         # from CMake 3.15, so we explicitly define targets as STATIC here.
+        add_library(OpenEXR::openjph STATIC IMPORTED GLOBAL)
         add_library(OpenEXR::Iex STATIC IMPORTED GLOBAL)
         add_library(OpenEXR::IexConfig INTERFACE IMPORTED GLOBAL)
         add_library(OpenEXR::IlmThread STATIC IMPORTED GLOBAL)
@@ -176,6 +196,13 @@ if(NOT OpenEXR_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACK
         add_library(OpenEXR::OpenEXRUtil STATIC IMPORTED GLOBAL)
 
         add_dependencies(OpenEXR::OpenEXR openexr_install)
+
+        # When building Imath ourselves, make sure it has been built first
+        # so that OpenEXR can find it. Otherwise OpenEXR will build its
+        # own copy of Imath which might result in version conflicts.
+        if (TARGET imath_install)
+            add_dependencies(openexr_install imath_install)
+        endif()
 
         if(OCIO_VERBOSE)
             message(STATUS "Installing OpenEXR: ${OpenEXR_LIBRARY} (version \"${OpenEXR_VERSION}\")")
@@ -188,11 +215,17 @@ endif()
 
 if(_OpenEXR_TARGET_CREATE)
     file(MAKE_DIRECTORY ${OpenEXR_INCLUDE_DIR}/OpenEXR)
+    file(MAKE_DIRECTORY ${OpenEXR_INCLUDE_DIR}/openjph)
 
+    set_target_properties(OpenEXR::openjph PROPERTIES
+        IMPORTED_LOCATION ${openjph_LIBRARY}
+        INTERFACE_COMPILE_DEFINITIONS "_FILE_OFFSET_BITS=64"
+        INTERFACE_INCLUDE_DIRECTORIES "${OpenEXR_INCLUDE_DIR}/openjph"
+    )
     set_target_properties(OpenEXR::Iex PROPERTIES
         IMPORTED_LOCATION ${Iex_LIBRARY}
         INTERFACE_INCLUDE_DIRECTORIES "${OpenEXR_INCLUDE_DIR}"
-        INTERFACE_LINK_LIBRARIES "OpenEXR::IlmThreadConfig;OpenEXR::IlmThreadConfig"
+        INTERFACE_LINK_LIBRARIES "OpenEXR::OpenEXRConfig;OpenEXR::OpenEXRConfig"
     )
     set_target_properties(OpenEXR::IexConfig PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES "${OpenEXR_INCLUDE_DIR};${OpenEXR_INCLUDE_DIR}/OpenEXR"
@@ -200,7 +233,7 @@ if(_OpenEXR_TARGET_CREATE)
     set_target_properties(OpenEXR::IlmThread PROPERTIES
         IMPORTED_LOCATION ${IlmThread_LIBRARY}
         INTERFACE_INCLUDE_DIRECTORIES "${OpenEXR_INCLUDE_DIR}"
-        INTERFACE_LINK_LIBRARIES "OpenEXR::IlmThreadConfig;OpenEXR::IlmThreadConfig;OpenEXR::Iex;Threads::Threads"
+        INTERFACE_LINK_LIBRARIES "OpenEXR::OpenEXRConfig;OpenEXR::OpenEXRConfig;OpenEXR::Iex;Threads::Threads"
         STATIC_LIBRARY_OPTIONS "-no_warning_for_no_symbols"
     )
     set_target_properties(OpenEXR::IlmThreadConfig PROPERTIES
@@ -209,7 +242,7 @@ if(_OpenEXR_TARGET_CREATE)
     set_target_properties(OpenEXR::OpenEXR PROPERTIES
         IMPORTED_LOCATION ${OpenEXR_LIBRARY}
         INTERFACE_INCLUDE_DIRECTORIES "${OpenEXR_INCLUDE_DIR}"
-        INTERFACE_LINK_LIBRARIES "OpenEXR::IlmThreadConfig;Imath::Imath;OpenEXR::IlmThreadConfig;OpenEXR::Iex;OpenEXR::IlmThread;ZLIB::ZLIB"
+        INTERFACE_LINK_LIBRARIES "OpenEXR::OpenEXRConfig;Imath::Imath;OpenEXR::OpenEXRConfig;OpenEXR::Iex;OpenEXR::IlmThread;OpenEXR::OpenEXRCore"
     )
     set_target_properties(OpenEXR::OpenEXRConfig PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES "${OpenEXR_INCLUDE_DIR};${OpenEXR_INCLUDE_DIR}/OpenEXR"
@@ -217,13 +250,13 @@ if(_OpenEXR_TARGET_CREATE)
     set_target_properties(OpenEXR::OpenEXRCore PROPERTIES
         IMPORTED_LOCATION ${OpenEXRCore_LIBRARY}
         INTERFACE_INCLUDE_DIRECTORIES "${OpenEXR_INCLUDE_DIR}"
-        INTERFACE_LINK_LIBRARIES "OpenEXR::IlmThreadConfig;ZLIB::ZLIB;\$<LINK_ONLY:Imath::ImathConfig>"
+        INTERFACE_LINK_LIBRARIES "OpenEXR::OpenEXRConfig;Imath::Imath;OpenEXR::openjph"
         STATIC_LIBRARY_OPTIONS "-no_warning_for_no_symbols"
     )
     set_target_properties(OpenEXR::OpenEXRUtil PROPERTIES
         IMPORTED_LOCATION ${OpenEXRUtil_LIBRARY}
         INTERFACE_INCLUDE_DIRECTORIES "${OpenEXR_INCLUDE_DIR}"
-        INTERFACE_LINK_LIBRARIES "OpenEXR::IlmThreadConfig;OpenEXR::OpenEXR"
+        INTERFACE_LINK_LIBRARIES "OpenEXR::OpenEXRConfig;OpenEXR::OpenEXR;OpenEXR::OpenEXRCore"
     )
 
     mark_as_advanced(OpenEXR_INCLUDE_DIR OpenEXR_LIBRARY OpenEXR_VERSION)

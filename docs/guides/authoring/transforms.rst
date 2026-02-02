@@ -186,7 +186,7 @@ Keys:
 ``GradingRGBCurveTransform``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Applies a spline-based curve.
+Applies a spline-based curve on the red, green, and blue channels.
 
 Keys:
 
@@ -196,6 +196,27 @@ Keys:
 * ``blue``
 * ``master``
 * ``lintolog_bypass``
+* ``name``
+* ``direction``
+
+
+``GradingHueCurveTransform``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Applies a spline-based curve controlling hue, saturation, and luma.
+
+Keys:
+
+* ``style``
+* ``hue_hue``
+* ``hue_sat``
+* ``hue_lum``
+* ``lum_sat``
+* ``sat_sat``
+* ``lum_lum``
+* ``sat_lum``
+* ``hue_fx``
+* ``rgb2hsy_bypass``
 * ``name``
 * ``direction``
 

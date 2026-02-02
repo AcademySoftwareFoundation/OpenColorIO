@@ -38,8 +38,6 @@ class ViewingRule
 {
 public:
 
-    using CustomKeys = std::map<std::string, std::string>;
-
     ViewingRule() = delete;
     ViewingRule(const ViewingRule &) = delete;
     ViewingRule & operator=(const ViewingRule &) = delete;
@@ -93,7 +91,7 @@ public:
                 os << "The rule '" << m_name << "' ";
                 os << "refers to encoding '" << std::string(encName);
                 os << "' that is not used by any of the color spaces.";
-                LogWarning(os.str());
+                LogInfo(os.str());
             }
         }
         if (numCS + numEnc == 0)

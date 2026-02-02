@@ -6,7 +6,7 @@ set -ex
 
 BOOST_VERSION="$1"
 
-if [ "$BOOST_VERSION" == "latest" ]; then
+if [ "$BOOST_VERSION" = "latest" ]; then
     brew install boost
 else
     brew install boost@${BOOST_VERSION}

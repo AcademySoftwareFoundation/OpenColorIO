@@ -4,6 +4,7 @@
 #include <cstring>
 #include <sstream>
 #include <vector>
+#include <map>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -12,6 +13,13 @@
 #include "PrivateTypes.h"
 #include "utils/StringUtils.h"
 
+
+namespace
+{
+const std::array<const std::string, 2> knownInterchangeNames = {
+    "amf_transform_ids",
+    "icc_profile_name" };
+}
 
 namespace OCIO_NAMESPACE
 {
@@ -24,7 +32,9 @@ public:
     std::string m_equalityGroup;
     std::string m_description;
     std::string m_encoding;
+    std::string m_interopID;
     StringUtils::StringVec m_aliases;
+    std::map<std::string, std::string> m_interchangeAttribs;
 
     BitDepth m_bitDepth{ BIT_DEPTH_UNKNOWN };
     bool m_isData{ false };
@@ -62,6 +72,8 @@ public:
             m_equalityGroup = rhs.m_equalityGroup;
             m_description = rhs.m_description;
             m_encoding = rhs.m_encoding;
+            m_interopID = rhs.m_interopID;
+            m_interchangeAttribs= rhs.m_interchangeAttribs;
             m_bitDepth = rhs.m_bitDepth;
             m_isData = rhs.m_isData;
             m_referenceSpaceType = rhs.m_referenceSpaceType;
@@ -195,7 +207,7 @@ const char * ColorSpace::getFamily() const noexcept
 
 void ColorSpace::setFamily(const char * family)
 {
-    getImpl()->m_family = family;
+    getImpl()->m_family = family ? family : "";
 }
 
 const char * ColorSpace::getEqualityGroup() const noexcept
@@ -205,7 +217,7 @@ const char * ColorSpace::getEqualityGroup() const noexcept
 
 void ColorSpace::setEqualityGroup(const char * equalityGroup)
 {
-    getImpl()->m_equalityGroup = equalityGroup;
+    getImpl()->m_equalityGroup = equalityGroup ? equalityGroup : "";
 }
 
 const char * ColorSpace::getDescription() const noexcept
@@ -215,7 +227,125 @@ const char * ColorSpace::getDescription() const noexcept
 
 void ColorSpace::setDescription(const char * description)
 {
-    getImpl()->m_description = description;
+    getImpl()->m_description = description ? description : "";
+}
+
+const char * ColorSpace::getInteropID() const noexcept
+{
+    return getImpl()->m_interopID.c_str();
+}
+
+void ColorSpace::setInteropID(const char * interopID)
+{
+    std::string id = interopID ? interopID : "";
+    
+    if (!id.empty())
+    {
+        // check if it only uses ASCII characters: 0-9, a-z, and the following characters (no spaces):
+        // . - _ ~ / * # % ^ + ( ) [ ] |
+        auto allowed = [](char c)
+        {
+            return  (c >= '0' && c <= '9')||
+                    (c >= 'a' && c <= 'z')||
+                    c=='.'||c=='-'||c=='_'||c=='~'||c=='/'||c=='*'||c=='#'||c=='%'||
+                    c=='^'||c=='+'||c=='('||c==')'||c=='['||c==']'||c=='|'||c==':';
+        };
+
+        if (!std::all_of(id.begin(), id.end(), allowed)) 
+        {
+            std::ostringstream oss;
+            oss << "InteropID '" << id << "' contains invalid characters. "
+                "Only lowercase a-z, 0-9 and . - _ ~ / * # % ^ + ( ) [ ] | are allowed." << 
+                std::endl;
+            throw Exception(oss.str().c_str());
+        }
+
+        // Check if has a namespace.
+        size_t pos = id.find(':');
+        if (pos != std::string::npos) 
+        {
+            // Namespace found, split into namespace and color space.
+            std::string ns = id.substr(0, pos);
+            std::string cs = id.substr(pos+1);
+        
+            // both should be non-empty
+            if (ns.empty() || cs.empty()) 
+            {
+                std::ostringstream oss;
+                oss << "InteropID '" << id << "' is not valid. "
+                    "If ':' is used, both the namespace and the color space parts must be non-empty." <<
+                    std::endl;
+                throw Exception(oss.str().c_str());
+            }
+
+            // More than one ':' is an error.
+            if (cs.find(':') != std::string::npos) 
+            {
+                std::ostringstream oss;
+                oss << "ERROR: InteropID '" << id << "' is not valid. "
+                    "Only one ':' is allowed to separate the namespace and the color space." << 
+                    std::endl;
+                throw Exception(oss.str().c_str());
+            }
+        }
+    }
+    
+    getImpl()->m_interopID = id;
+}
+
+const char * ColorSpace::getInterchangeAttribute(const char* attrName) const
+{
+    std::string name = attrName ? attrName : "";
+
+    for (auto& key : knownInterchangeNames)
+    {
+        // do case-insensitive comparison.
+        if (StringUtils::Compare(key, name))
+        {
+            auto it = m_impl->m_interchangeAttribs.find(key);
+            if (it != m_impl->m_interchangeAttribs.end())
+            {
+                return it->second.c_str();
+            }
+            return "";
+        }
+    }
+
+    std::ostringstream oss;
+    oss << "Unknown attribute name '" << name << "'.";
+    throw Exception(oss.str().c_str());
+}
+
+void ColorSpace::setInterchangeAttribute(const char* attrName, const char* value)
+{
+    std::string name = attrName ? attrName : "";
+
+    for (auto& key : knownInterchangeNames)
+    {
+        // Do case-insensitive comparison.
+        if (StringUtils::Compare(key, name))
+        {
+            // use key instead of name for storing in correct capitalization.
+            if (!value || !*value)
+            {
+                m_impl->m_interchangeAttribs.erase(key);
+            } 
+            else
+            {
+                m_impl->m_interchangeAttribs[key] = value;
+            }
+            return;
+        }
+    }
+
+    std::ostringstream oss;
+    oss << "Unknown attribute name '" << name << "'.";
+    throw Exception(oss.str().c_str());
+}
+
+std::map<std::string, std::string> ColorSpace::getInterchangeAttributes() const noexcept
+{
+    return m_impl->m_interchangeAttribs;
 }
 
 BitDepth ColorSpace::getBitDepth() const noexcept
@@ -265,7 +395,7 @@ const char * ColorSpace::getEncoding() const noexcept
 
 void ColorSpace::setEncoding(const char * encoding)
 {
-    getImpl()->m_encoding = encoding;
+    getImpl()->m_encoding = encoding ? encoding : "";
 }
 
 bool ColorSpace::isData() const noexcept
@@ -371,7 +501,6 @@ std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
         break;
     }
     os << "name=" << cs.getName() << ", ";
-    std::string str{ cs.getFamily() };
     const auto numAliases = cs.getNumAliases();
     if (numAliases == 1)
     {
@@ -386,6 +515,15 @@ std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
         }
         os << "], ";
     }
+
+    std::string str;
+    
+    str = cs.getInteropID();
+    if (!str.empty())
+    {
+        os << "interop_id=" << str << ", ";
+    }
+    str = cs.getFamily();
     if (!str.empty())
     {
         os << "family=" << str << ", ";
@@ -428,6 +566,10 @@ std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
     if (!str.empty())
     {
         os << ", description=" << str;
+    }
+    for (const auto& attr : cs.getInterchangeAttributes())
+    {
+        os << ", " << attr.first << "=" << attr.second;
     }
     if(cs.getTransform(COLORSPACE_DIR_TO_REFERENCE))
     {

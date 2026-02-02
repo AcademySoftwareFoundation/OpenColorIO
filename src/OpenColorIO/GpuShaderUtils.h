@@ -171,11 +171,11 @@ public:
     static std::string getSamplerName(const std::string& textureName);
 
     // Declare the global texture and sampler information for a 1D texture.
-    void declareTex1D(const std::string& textureName);
+    void declareTex1D(const std::string& textureName, unsigned descriptorSetIndex, unsigned textureIndex);
     // Declare the global texture and sampler information for a 2D texture.
-    void declareTex2D(const std::string& textureName);
+    void declareTex2D(const std::string& textureName, unsigned descriptorSetIndex, unsigned textureIndex);
     // Declare the global texture and sampler information for a 3D texture.
-    void declareTex3D(const std::string& textureName);
+    void declareTex3D(const std::string& textureName, unsigned descriptorSetIndex, unsigned textureIndex);
 
     // Get the texture lookup call for a 1D texture.
     std::string sampleTex1D(const std::string& textureName, const std::string& coords) const;
@@ -231,6 +231,12 @@ public:
     // Get the string for taking the sign of a vector.
     std::string sign(const std::string & v) const;
 
+
+    //Add a cast to bool for shading languages that don't support implicit casts from int to bool.
+    //It is required to use this function when doing boolean operations on a bool uniform to be
+    //compatible with all shading languages.
+    std::string castToBool(const std::string& v) const;
+
     friend class GpuShaderLine;
 
 private:
@@ -269,8 +275,13 @@ std::string BuildResourceName(GpuShaderCreatorRcPtr & shaderCreator, const std::
 
 // Convert scene-linear values to "grading log".
 void AddLinToLogShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st);
+
+void AddLinToLogShaderChannelBlue(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st);
+
 // Convert "grading log" values to scene-linear.
 void AddLogToLinShader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st);
+
+void AddLogToLinShaderChannelBlue(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText & st);
 
 } // namespace OCIO_NAMESPACE
 

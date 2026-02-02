@@ -35,7 +35,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
             sampleicc::sampleicc
             unittest_data
             utils::strings
-            ${YAML_CPP_LIBRARIES}
+            yaml-cpp::yaml-cpp
             testutils
             MINIZIP::minizip-ng
             xxHash
@@ -123,6 +123,8 @@ endfunction(add_ocio_test)
 # but for now, we will maintain the status quo and copy all from the
 # OpenColorIO target
 set(SOURCES
+    apphelpers/mergeconfigs/OCIOMYaml.cpp
+    apphelpers/mergeconfigs/SectionMerger.cpp
     builtinconfigs/CGConfig.cpp
     builtinconfigs/StudioConfig.cpp
     ConfigUtils.cpp
@@ -151,6 +153,7 @@ set(SOURCES
     ops/fixedfunction/ACES2/Transform.cpp
     ops/fixedfunction/FixedFunctionOpGPU.cpp
     ops/gamma/GammaOpGPU.cpp
+    ops/gradinghuecurve/GradingHueCurveOpGPU.cpp
     ops/gradingprimary/GradingPrimaryOpGPU.cpp
     ops/gradingrgbcurve/GradingRGBCurveOpGPU.cpp
     ops/gradingtone/GradingToneOpGPU.cpp
@@ -187,6 +190,7 @@ set(TESTS
     apphelpers/ColorSpaceHelpers_tests.cpp
     apphelpers/DisplayViewHelpers_tests.cpp
     apphelpers/LegacyViewingPipeline_tests.cpp
+    apphelpers/MergeConfigsHelpers_tests.cpp
     apphelpers/MixingHelpers_tests.cpp
     Baker_tests.cpp
     BitDepthUtils_tests.cpp
@@ -195,6 +199,7 @@ set(TESTS
     ColorSpace_tests.cpp
     ColorSpaceSet_tests.cpp
     Config_tests.cpp
+    ConfigUtils_tests.cpp
     Context_tests.cpp
     ContextVariableUtils_tests.cpp
     CPUProcessor_tests.cpp
@@ -253,6 +258,10 @@ set(TESTS
     ops/gradingprimary/GradingPrimaryOpData_tests.cpp
     ops/gradingprimary/GradingPrimaryOp_tests.cpp
     ops/gradingrgbcurve/GradingBSplineCurve_tests.cpp
+    ops/gradinghuecurve/GradingHueCurve_tests.cpp
+    ops/gradinghuecurve/GradingHueCurveOpCPU_tests.cpp
+    ops/gradinghuecurve/GradingHueCurveOpData_tests.cpp
+    ops/gradinghuecurve/GradingHueCurveOp_tests.cpp
     ops/gradingrgbcurve/GradingRGBCurve_tests.cpp
     ops/gradingrgbcurve/GradingRGBCurveOpCPU_tests.cpp
     ops/gradingrgbcurve/GradingRGBCurveOpData_tests.cpp
@@ -301,6 +310,7 @@ set(TESTS
     transforms/ExposureContrastTransform_tests.cpp
     transforms/FileTransform_tests.cpp
     transforms/FixedFunctionTransform_tests.cpp
+    transforms/GradingHueCurveTransform_tests.cpp
     transforms/GradingPrimaryTransform_tests.cpp
     transforms/GradingRGBCurveTransform_tests.cpp
     transforms/GradingToneTransform_tests.cpp

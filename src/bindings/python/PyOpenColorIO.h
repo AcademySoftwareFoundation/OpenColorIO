@@ -56,6 +56,7 @@ void bindPyTransform(py::module & m);
 
 // OpenColorIOAppHelpers
 void bindPyColorSpaceMenuHelpers(py::module & m);
+void bindPyConfigMergingHelpers(py::module & m);
 void bindPyDisplayViewHelpers(py::module & m);
 void bindPyLegacyViewingPipeline(py::module & m);
 void bindPyMixingHelpers(py::module & m);
@@ -115,7 +116,7 @@ struct polymorphic_type_hook<OCIO::Transform> {
             {
                 type = &typeid(OCIO::AllocationTransform);
             }
-            if(dynamic_cast<const OCIO::BuiltinTransform*>(src))
+            else if(dynamic_cast<const OCIO::BuiltinTransform*>(src))
             {
                 type = &typeid(OCIO::BuiltinTransform);
             }
@@ -159,7 +160,11 @@ struct polymorphic_type_hook<OCIO::Transform> {
             {
                 type = &typeid(OCIO::GradingRGBCurveTransform);
             }
-            if(dynamic_cast<const OCIO::GradingToneTransform*>(src))
+            else if (dynamic_cast<const OCIO::GradingHueCurveTransform*>(src))
+            {
+                type = &typeid(OCIO::GradingHueCurveTransform);
+            }
+            else if(dynamic_cast<const OCIO::GradingToneTransform*>(src))
             {
                 type = &typeid(OCIO::GradingToneTransform);
             }

@@ -37,6 +37,13 @@ LogGuard::LogGuard()
     SetLoggingFunction(&CustomLoggingFunction);
 }
 
+LogGuard::LogGuard(LoggingLevel level)
+    :   m_logLevel(GetLoggingLevel())
+{
+    SetLoggingLevel(level);
+    SetLoggingFunction(&CustomLoggingFunction);
+}
+
 LogGuard::~LogGuard()
 {
     ResetToDefaultLoggingFunction();
@@ -148,8 +155,20 @@ bool checkAndMuteDisplayInterchangeRoleError(LogGuard & logGuard)
 void muteInactiveColorspaceInfo(LogGuard & logGuard)
 {
     const std::string str = "- Display' is neither a color space nor a named transform.";
-    const std::string pattern = R"(^\[OpenColorIO Info\]: Inactive.*)" + str + R"([\r\n]+)";
+    const std::string pattern = R"(\[OpenColorIO Info\]: Inactive.*)" + str + R"([\r\n]+)";
     logGuard.findAllAndRemove(pattern);
+}
+
+bool checkAndMuteWarning(LogGuard & logGuard, const std::string str)
+{
+    const std::string pattern = R"(\[OpenColorIO Warning\]: )" + str + R"([\.\r\n]+)";
+    return logGuard.findAllAndRemove(pattern);
+}
+
+bool checkAndMuteError(LogGuard & logGuard, const std::string str)
+{
+    const std::string pattern = R"(\[OpenColorIO Error\]: )" + str + R"([\r\n]+)";
+    return logGuard.findAllAndRemove(pattern);
 }
 
 } // namespace OCIO_NAMESPACE

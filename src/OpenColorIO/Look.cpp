@@ -9,7 +9,13 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ContextVariableUtils.h"
+#include "utils/StringUtils.h"
 
+namespace
+{
+const std::array<const std::string, 1> knownInterchangeNames = {
+    "amf_transform_ids" };
+}
 
 namespace OCIO_NAMESPACE
 {
@@ -29,6 +35,7 @@ public:
     std::string m_name;
     std::string m_processSpace;
     std::string m_description;
+    std::map<std::string, std::string> m_interchangeAttribs;
     TransformRcPtr m_transform;
     TransformRcPtr m_inverseTransform;
 
@@ -47,6 +54,8 @@ public:
             m_name = rhs.m_name;
             m_processSpace = rhs.m_processSpace;
             m_description = rhs.m_description;
+
+            m_interchangeAttribs = rhs.m_interchangeAttribs;
 
             m_transform = rhs.m_transform?
                 rhs.m_transform->createEditableCopy() : rhs.m_transform;
@@ -86,7 +95,7 @@ const char * Look::getName() const
 
 void Look::setName(const char * name)
 {
-    getImpl()->m_name = name;
+    getImpl()->m_name = name ? name : "";
 }
 
 const char * Look::getProcessSpace() const
@@ -96,7 +105,7 @@ const char * Look::getProcessSpace() const
 
 void Look::setProcessSpace(const char * processSpace)
 {
-    getImpl()->m_processSpace = processSpace;
+    getImpl()->m_processSpace = processSpace ? processSpace : "";
 }
 
 ConstTransformRcPtr Look::getTransform() const
@@ -126,8 +135,65 @@ const char * Look::getDescription() const
 
 void Look::setDescription(const char * description)
 {
-    getImpl()->m_description = description;
+    getImpl()->m_description = description ? description : "";
 }
+
+const char * Look::getInterchangeAttribute(const char* attrName) const
+{
+    std::string name = attrName ? attrName : "";
+
+    for (auto& key : knownInterchangeNames)
+    {
+        // do case-insensitive comparison.
+        if (StringUtils::Compare(key, name))
+        {
+            auto it = m_impl->m_interchangeAttribs.find(key);
+            if (it != m_impl->m_interchangeAttribs.end())
+            {
+                return it->second.c_str();
+            }
+            return "";
+        }
+    }
+
+    std::ostringstream oss;
+    oss << "Unknown attribute name '" << name << "'.";
+    throw Exception(oss.str().c_str());
+}
+
+void Look::setInterchangeAttribute(const char* attrName, const char* value)
+{
+    std::string name = attrName ? attrName : "";
+
+    for (auto& key : knownInterchangeNames)
+    {
+        // Do case-insensitive comparison.
+        if (StringUtils::Compare(key, name))
+        {
+            // Use key instead of name for storing in correct capitalization.
+            if (!value || !*value)
+            {
+                m_impl->m_interchangeAttribs.erase(key);
+            } 
+            else
+            {
+                m_impl->m_interchangeAttribs[key] = value;
+            }
+            return;
+        }
+    }
+
+    std::ostringstream oss;
+    oss << "Unknown attribute name '" << name << "'.";
+    throw Exception(oss.str().c_str());
+}
+
+std::map<std::string, std::string> Look::getInterchangeAttributes() const noexcept
+{
+    return m_impl->m_interchangeAttribs;
+}
+
+
 
 bool CollectContextVariables(const Config & config,
                              const Context & context,
@@ -214,6 +280,11 @@ std::ostream& operator<< (std::ostream& os, const Look& look)
     if (!desc.empty())
     {
         os << ", description=" << desc;
+    }
+
+    for (const auto& attr : look.getInterchangeAttributes())
+    {
+        os << ", " << attr.first << "=" << attr.second;
     }
 
     if(look.getTransform())

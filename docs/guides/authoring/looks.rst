@@ -33,7 +33,7 @@ in the correct colorspace (by converting from the input colorspace to
 the process space, applies the look's transform, and converts the
 image to the output colorspace)
 
-Here is a simple ``looks:`` section, which defines two looks:
+Here is a simple ``looks:`` section, which defines three looks:
 
 .. code-block:: yaml
 
@@ -49,6 +49,15 @@ Here is a simple ``looks:`` section, which defines two looks:
         transform: !<FileTransform> {src: 'neutral-${SHOT}-${SEQ}.csp', interpolation: linear }
         inverse_transform: !<FileTransform> {src: 'neutral-${SHOT}-${SEQ}-reverse.csp', interpolation: linear }
 
+      - !<Look>
+        name: ACES 1.3 Reference Gamut Compression
+        process_space: ACES2065-1
+        description: LMT (applied in ACES2065-1) to compress scene-referred values from common cameras into the AP1 gamut
+        interchange:
+          amf_transform_ids: |
+            urn:ampas:aces:transformId:v2.0:InvLook.Academy.ReferenceGamutCompress.a2.v1
+            urn:ampas:aces:transformId:v2.0:Look.Academy.ReferenceGamutCompress.a2.v1
+        transform: !<BuiltinTransform> {style: ACES-LMT - ACES 1.3 Reference Gamut Compression
 
 Here, the "beauty" look applies a simple, static ASC CDL grade, making
 the image very green (for some artistic reason!). The beauty look is

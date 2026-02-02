@@ -643,25 +643,25 @@ OCIO_ADD_TEST(Lut1DRenderer, bit_depth_support)
 
         cpuOp->apply(&uint8_inImg[0], &outImg[0], NB_PIXELS);
 
-        OCIO_CHECK_EQUAL(outImg[ 0], 0.0f);
-        OCIO_CHECK_EQUAL(outImg[ 1], 0.0f);
-        OCIO_CHECK_EQUAL(outImg[ 2], 0.0f);
-        OCIO_CHECK_EQUAL(outImg[ 3], 0.0f);
+        OCIO_CHECK_EQUAL((float)outImg[ 0], 0.0f);
+        OCIO_CHECK_EQUAL((float)outImg[ 1], 0.0f);
+        OCIO_CHECK_EQUAL((float)outImg[ 2], 0.0f);
+        OCIO_CHECK_EQUAL((float)outImg[ 3], 0.0f);
 
-        OCIO_CHECK_CLOSE(outImg[ 4], 0.066650390625f, 1e-6f);
-        OCIO_CHECK_CLOSE(outImg[ 5], 0.070617675781f, 1e-6f);
-        OCIO_CHECK_CLOSE(outImg[ 6], 0.070617675781f, 1e-6f);
-        OCIO_CHECK_EQUAL(outImg[ 7], 1.0f);
+        OCIO_CHECK_CLOSE((float)outImg[ 4], 0.066650390625f, 1e-6f);
+        OCIO_CHECK_CLOSE((float)outImg[ 5], 0.070617675781f, 1e-6f);
+        OCIO_CHECK_CLOSE((float)outImg[ 6], 0.070617675781f, 1e-6f);
+        OCIO_CHECK_EQUAL((float)outImg[ 7], 1.0f);
 
-        OCIO_CHECK_CLOSE(outImg[ 8], 0.7138671875f, 1e-6f);
-        OCIO_CHECK_CLOSE(outImg[ 9], 0.7255859375f, 1e-6f);
-        OCIO_CHECK_CLOSE(outImg[10], 0.7373046875f, 1e-6f);
-        OCIO_CHECK_EQUAL(outImg[11], 0.0f);
+        OCIO_CHECK_CLOSE((float)outImg[ 8], 0.7138671875f, 1e-6f);
+        OCIO_CHECK_CLOSE((float)outImg[ 9], 0.7255859375f, 1e-6f);
+        OCIO_CHECK_CLOSE((float)outImg[10], 0.7373046875f, 1e-6f);
+        OCIO_CHECK_EQUAL((float)outImg[11], 0.0f);
 
-        OCIO_CHECK_EQUAL(outImg[12], 1.0f);
-        OCIO_CHECK_EQUAL(outImg[13], 1.0f);
-        OCIO_CHECK_EQUAL(outImg[14], 1.0f);
-        OCIO_CHECK_EQUAL(outImg[15], 1.0f);
+        OCIO_CHECK_EQUAL((float)outImg[12], 1.0f);
+        OCIO_CHECK_EQUAL((float)outImg[13], 1.0f);
+        OCIO_CHECK_EQUAL((float)outImg[14], 1.0f);
+        OCIO_CHECK_EQUAL((float)outImg[15], 1.0f);
     }
 
     // Processing from UINT8 to F32.
@@ -878,15 +878,15 @@ OCIO_ADD_TEST(Lut1DRenderer, half)
     std::vector<float> outImg(2 * 4, -1.f);
     cpuOp->apply(&inImg[0], &outImg[0], 2);
 
-    OCIO_CHECK_EQUAL(outImg[0], inImg[0]);
-    OCIO_CHECK_EQUAL(outImg[1], inImg[1]);
-    OCIO_CHECK_EQUAL(outImg[2], inImg[2]);
-    OCIO_CHECK_EQUAL(outImg[3], inImg[3]);
+    OCIO_CHECK_EQUAL(outImg[0], (float)inImg[0]);
+    OCIO_CHECK_EQUAL(outImg[1], (float)inImg[1]);
+    OCIO_CHECK_EQUAL(outImg[2], (float)inImg[2]);
+    OCIO_CHECK_EQUAL(outImg[3], (float)inImg[3]);
 
-    OCIO_CHECK_EQUAL(outImg[4], inImg[4]);
-    OCIO_CHECK_EQUAL(outImg[5], inImg[5]);
+    OCIO_CHECK_EQUAL(outImg[4], (float)inImg[4]);
+    OCIO_CHECK_EQUAL(outImg[5], (float)inImg[5]);
     OCIO_CHECK_CLOSE(outImg[6], arbitraryVal, 1e-5f);
-    OCIO_CHECK_EQUAL(outImg[7], inImg[7]);
+    OCIO_CHECK_EQUAL(outImg[7], (float)inImg[7]);
 }
 
 OCIO_ADD_TEST(Lut1DRenderer, nan)
@@ -1594,9 +1594,9 @@ OCIO_ADD_TEST(Lut1DRenderer, lut_1d_identity_half)
         }
         else
         {
-            OCIO_CHECK_EQUAL(outImg[imgCntr + 0], hVal);
-            OCIO_CHECK_EQUAL(outImg[imgCntr + 1], hVal);
-            OCIO_CHECK_EQUAL(outImg[imgCntr + 2], hVal);
+            OCIO_CHECK_EQUAL(outImg[imgCntr + 0].bits(), hVal.bits());
+            OCIO_CHECK_EQUAL(outImg[imgCntr + 1].bits(), hVal.bits());
+            OCIO_CHECK_EQUAL(outImg[imgCntr + 2].bits(), hVal.bits());
             OCIO_CHECK_EQUAL((float)outImg[imgCntr + 3], 1.f);
         }
     }

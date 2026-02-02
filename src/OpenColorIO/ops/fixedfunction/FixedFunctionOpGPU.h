@@ -15,6 +15,10 @@ namespace OCIO_NAMESPACE
 void GetFixedFunctionGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
                                       ConstFixedFunctionOpDataRcPtr & func);
 
+void GetFixedFunctionGPUProcessingText(GpuShaderCreatorRcPtr & shaderCreator,
+                                       GpuShaderText & shaderText,
+                                       ConstFixedFunctionOpDataRcPtr & func);
+
 } // namespace OCIO_NAMESPACE
 
 #endif

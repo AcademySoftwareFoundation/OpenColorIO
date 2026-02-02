@@ -40,8 +40,8 @@ OCIO_ADD_TEST(NamedTransform, basic)
     OCIO_CHECK_NO_THROW(oss << *namedTransform);
     OCIO_CHECK_EQUAL(oss.str(), "<NamedTransform name=NewName,\n    forward=\n        "
                                 "<MatrixTransform direction=forward, fileindepth=unknown, "
-                                "fileoutdepth=unknown, matrix=1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1, "
-                                "offset=0 0 0 0>>");
+                                "fileoutdepth=unknown, matrix=[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1], "
+                                "offset=[0, 0, 0, 0]>>");
 
     // Test faulty cases.
 

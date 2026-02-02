@@ -49,6 +49,7 @@ bool HasEncoding(const T & elt, const std::string & encoding)
 
 ColorSpaceVec GetColorSpaces(ConstConfigRcPtr config,
                              bool includeColorSpaces,
+                             bool treatNoCategoryAsAny,
                              SearchReferenceSpaceType colorSpaceType,
                              const Categories & categories,
                              const Encodings & encodings)
@@ -62,11 +63,13 @@ ColorSpaceVec GetColorSpaces(ConstConfigRcPtr config,
             auto cs = config->getColorSpace(config->getColorSpaceNameByIndex(colorSpaceType,
                                                                              COLORSPACE_ACTIVE,
                                                                              idx));
+            
+            const bool ignoreCategory = treatNoCategoryAsAny && cs->getNumCategories() == 0;
             for (const auto & cat : categories)
             {
                 for (const auto & enc : encodings)
                 {
-                    if (HasCategory(cs, cat) && HasEncoding(cs, enc))
+                    if ((ignoreCategory || HasCategory(cs, cat)) && HasEncoding(cs, enc))
                     {
                         AddElement(css, cs.get());
                     }
@@ -79,6 +82,7 @@ ColorSpaceVec GetColorSpaces(ConstConfigRcPtr config,
 
 ColorSpaceVec GetColorSpaces(ConstConfigRcPtr config,
                              bool includeColorSpaces,
+                             bool treatNoCategoryAsAny,
                              SearchReferenceSpaceType colorSpaceType,
                              const Categories & categories)
 {
@@ -91,9 +95,11 @@ ColorSpaceVec GetColorSpaces(ConstConfigRcPtr config,
             auto cs = config->getColorSpace(config->getColorSpaceNameByIndex(colorSpaceType,
                                                                              COLORSPACE_ACTIVE,
                                                                              idx));
+            
+            const bool ignoreCategory = treatNoCategoryAsAny && cs->getNumCategories() == 0;
             for (const auto & cat : categories)
             {
-                if (HasCategory(cs, cat))
+                if (ignoreCategory || HasCategory(cs, cat))
                 {
                     AddElement(css, cs.get());
                 }
@@ -133,6 +139,7 @@ typedef std::vector<const NamedTransform *> NamedTransformVec;
 
 NamedTransformVec GetNamedTransforms(ConstConfigRcPtr config,
                                      bool includeNamedTransforms,
+                                     bool treatNoCategoryAsAny,
                                      const Categories & categories,
                                      const Encodings & encodings)
 {
@@ -142,11 +149,13 @@ NamedTransformVec GetNamedTransforms(ConstConfigRcPtr config,
         for (int idx = 0; idx < config->getNumNamedTransforms(); ++idx)
         {
             auto nt = config->getNamedTransform(config->getNamedTransformNameByIndex(idx));
+
+            const bool ignoreCategory = treatNoCategoryAsAny && nt->getNumCategories() == 0;
             for (const auto & cat : categories)
             {
                 for (const auto & enc : encodings)
                 {
-                    if (HasCategory(nt, cat) && HasEncoding(nt, enc))
+                    if ((ignoreCategory || HasCategory(nt, cat)) && HasEncoding(nt, enc))
                     {
                         AddElement(nts, nt.get());
                     }
@@ -159,6 +168,7 @@ NamedTransformVec GetNamedTransforms(ConstConfigRcPtr config,
 
 NamedTransformVec GetNamedTransforms(ConstConfigRcPtr config,
                                      bool includeNamedTransforms,
+                                     bool treatNoCategoryAsAny,
                                      const Categories & categories)
 {
     NamedTransformVec nts;
@@ -167,9 +177,11 @@ NamedTransformVec GetNamedTransforms(ConstConfigRcPtr config,
         for (int idx = 0; idx < config->getNumNamedTransforms(); ++idx)
         {
             auto nt = config->getNamedTransform(config->getNamedTransformNameByIndex(idx));
+
+            const bool ignoreCategory = treatNoCategoryAsAny && nt->getNumCategories() == 0;
             for (const auto & cat : categories)
             {
-                if (HasCategory(nt, cat))
+                if (ignoreCategory || HasCategory(nt, cat))
                 {
                     AddElement(nts, nt.get());
                 }
@@ -267,7 +279,7 @@ StringUtils::StringVec ExtractItems(const char * strings)
 
 ColorSpaceNames FindColorSpaceNames(ConstConfigRcPtr config, const Categories & categories)
 {
-    ColorSpaceVec allCS = GetColorSpaces(config, true, SEARCH_REFERENCE_SPACE_ALL, categories);
+    ColorSpaceVec allCS = GetColorSpaces(config, true, false, SEARCH_REFERENCE_SPACE_ALL, categories);
     return GetNames(allCS);
 }
 
@@ -338,6 +350,7 @@ Infos FindColorSpaceInfos(ConstConfigRcPtr config,
                           const Categories & userCategories,
                           bool includeColorSpaces,
                           bool includeNamedTransforms,
+                          bool treatNoCategoryAsAny,
                           const Encodings & encodings,
                           SearchReferenceSpaceType colorSpaceType)
 {
@@ -369,10 +382,10 @@ Infos FindColorSpaceInfos(ConstConfigRcPtr config,
 
             if (!encsIgnored)
             {
-                appCS = GetColorSpaces(config, includeColorSpaces, colorSpaceType,
+                appCS = GetColorSpaces(config, includeColorSpaces, treatNoCategoryAsAny, colorSpaceType,
                                        appCategories, encodings);
-                appNT = GetNamedTransforms(config, includeNamedTransforms, appCategories,
-                                           encodings);
+                appNT = GetNamedTransforms(config, includeNamedTransforms, treatNoCategoryAsAny,
+                                           appCategories, encodings);
                 appSize = appCS.size() + appNT.size();
             }
 
@@ -381,8 +394,11 @@ Infos FindColorSpaceInfos(ConstConfigRcPtr config,
             {
                 encsIgnored = true;
                 log.m_ignoreEncodings = !encodings.empty();
-                appCS = GetColorSpaces(config, includeColorSpaces, colorSpaceType, appCategories);
-                appNT = GetNamedTransforms(config, includeNamedTransforms, appCategories);
+                appCS = GetColorSpaces(config, includeColorSpaces, treatNoCategoryAsAny, colorSpaceType, 
+                                       appCategories);
+                
+                appNT = GetNamedTransforms(config, includeNamedTransforms, treatNoCategoryAsAny,
+                                           appCategories);
                 appSize = appCS.size() + appNT.size();
 
                 // Keep these results in case we need them later.
@@ -424,8 +440,10 @@ Infos FindColorSpaceInfos(ConstConfigRcPtr config,
         {
             // 3b) Items using user categories.
 
-            userCS = GetColorSpaces(config, includeColorSpaces, colorSpaceType, userCategories);
-            userNT = GetNamedTransforms(config, includeNamedTransforms, userCategories);
+            userCS = GetColorSpaces(config, includeColorSpaces, treatNoCategoryAsAny, colorSpaceType, 
+                                    userCategories);
+            userNT = GetNamedTransforms(config, includeNamedTransforms, treatNoCategoryAsAny,
+                                        userCategories);
             userSize = userCS.size() + userNT.size();
             if (userSize == 0)
             {
@@ -464,10 +482,10 @@ Infos FindColorSpaceInfos(ConstConfigRcPtr config,
                     {
                         // If not already computed, compute list with app categories and no
                         // encodings.
-                        appCSNoEncodings = GetColorSpaces(config, includeColorSpaces,
+                        appCSNoEncodings = GetColorSpaces(config, includeColorSpaces, treatNoCategoryAsAny,
                                                           colorSpaceType, appCategories);
                         appNTNoEncodings = GetNamedTransforms(config, includeNamedTransforms,
-                                                              appCategories);
+                                                              treatNoCategoryAsAny, appCategories);
                     }
                     appCSTest = &appCSNoEncodings;
                     appNTTest = &appNTNoEncodings;

@@ -47,9 +47,9 @@ jobs:
       - name:  Install sonar-scanner and build-wrapper
         uses: sonarsource/sonarcloud-github-c-cpp@v2
       - name: Install docs env
-        run: share/ci/scripts/linux/yum/install_docs_env.sh
+        run: share/ci/scripts/linux/dnf/install_docs_env.sh
       - name: Install tests env
-        run: share/ci/scripts/linux/yum/install_tests_env.sh
+        run: share/ci/scripts/linux/dnf/install_tests_env.sh
       - name: Create build directories
         run: |
           mkdir _install
@@ -59,7 +59,7 @@ jobs:
           cmake ../. \
                 -DCMAKE_INSTALL_PREFIX=../_install \
                 -DCMAKE_BUILD_TYPE=Release \
-                -DCMAKE_CXX_STANDARD=14 \
+                -DCMAKE_CXX_STANDARD=17 \
                 -DCMAKE_CXX_FLAGS="-g -O0 -fprofile-arcs -ftest-coverage" \
                 -DCMAKE_CXX_OUTPUT_EXTENSION_REPLACE=ON \
                 -DCMAKE_EXE_LINKER_FLAGS="-lgcov" \

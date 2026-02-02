@@ -6,7 +6,6 @@
 #include <cmath>
 #include <cstring>
 #include <iomanip>
-#include <iostream>
 #include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -437,24 +436,34 @@ namespace
         size_t idxDiff = invalidIndex;
         size_t idxNan = invalidIndex;
         size_t idxInf = invalidIndex;
+        constexpr float huge = std::numeric_limits<float>::max();
+        float minVals[4] = {huge, huge, huge, huge};
+        float maxVals[4] = {-huge, -huge, -huge, -huge};
         const bool relativeTest = test->getRelativeComparison();
         for(size_t idx=0; idx<(width*height); ++idx)
         {
-            DiffComponent(cpuImage, gpuImage, 4 * idx + 0, relativeTest, expectMinValue,
-                          diff, idxDiff, idxInf, idxNan);
-            DiffComponent(cpuImage, gpuImage, 4 * idx + 1, relativeTest, expectMinValue,
-                          diff, idxDiff, idxInf, idxNan);
-            DiffComponent(cpuImage, gpuImage, 4 * idx + 2, relativeTest, expectMinValue,
-                          diff, idxDiff, idxInf, idxNan);
-            DiffComponent(cpuImage, gpuImage, 4 * idx + 3, relativeTest, expectMinValue,
-                          diff, idxDiff, idxInf, idxNan);
+            for(size_t chan=0; chan<4; ++chan)
+            {
+                DiffComponent(cpuImage, gpuImage, 4 * idx + chan, relativeTest, expectMinValue,
+                              diff, idxDiff, idxInf, idxNan);
+                minVals[chan] = std::min(minVals[chan], 
+                                std::isinf(gpuImage[4 * idx + chan]) ? huge: gpuImage[4 * idx + chan]);
+                maxVals[chan] = std::max(maxVals[chan], 
+                                std::isinf(gpuImage[4 * idx + chan]) ? -huge: gpuImage[4 * idx + chan]);
+            }
         }
 
         size_t componentIdx = idxDiff % 4;
         size_t pixelIdx = idxDiff / 4;
-        if (diff > epsilon || idxInf != invalidIndex || idxNan != invalidIndex)
+        if (diff > epsilon || idxInf != invalidIndex || idxNan != invalidIndex || test->isPrintMinMax())
         {
             std::stringstream err;
+            err << std::setprecision(10);
+            err << "\n\nGPU max vals = {" 
+                << maxVals[0] << ", " << maxVals[1] << ", " << maxVals[2] << ", " << maxVals[3] << "}\n"
+                << "GPU min vals = {" 
+                << minVals[0] << ", " << minVals[1] << ", " << minVals[2] << ", " << minVals[3] << "}\n";
+
             err << std::setprecision(10)
                 << "\nMaximum error: " << diff << " at pixel: " << pixelIdx
                 << " on component " << componentIdx;
