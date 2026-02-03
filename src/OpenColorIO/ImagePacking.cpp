@@ -148,7 +148,7 @@ void Generic<float>::PackRGBAFromImageDesc(const GenericImageDesc & srcImg,
         outputBuffer[4*pixelsCopied+0] = *rPtr;
         outputBuffer[4*pixelsCopied+1] = *gPtr;
         outputBuffer[4*pixelsCopied+2] = *bPtr;
-        outputBuffer[4*pixelsCopied+3] = aPtr ? *aPtr : (float)1.0f;
+        outputBuffer[4*pixelsCopied+3] = aPtr ? *aPtr : 1.0f;
 
         pixelsCopied++;
         xIndex++;
