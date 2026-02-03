@@ -101,7 +101,7 @@ void Generic<float>::PackRGBAFromImageDesc(const GenericImageDesc & srcImg,
                                            float * outputBuffer,
                                            int outputBufferSize,
                                            long imagePixelStartIndex,
-                                           BitDepth inputBitDepth)
+                                           BitDepth /*inputBitDepth*/)
 {
     if(outputBuffer==nullptr)
     {
