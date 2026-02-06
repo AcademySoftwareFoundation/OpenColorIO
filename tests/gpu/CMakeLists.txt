@@ -52,11 +52,11 @@ if(MSVC AND BUILD_SHARED_LIBS)
 	set(dll_dirs_expr "$<JOIN:$<TARGET_RUNTIME_DLL_DIRS:test_gpu_exec>,;>")
 
 	# Add folders for glut and glew DLLs.
-	set(extra_dirs "${GLUT_INCLUDE_DIR}/../bin;${GLEW_INCLUDE_DIRS}/../bin")
+	set(extra_dirs "${GLUT_INCLUDE_DIR}/../bin\\;${GLEW_INCLUDE_DIRS}/../bin\\")
 
 	# Tell CTest to use this PATH while launching test_gpu_exec
 	set_tests_properties(test_gpu PROPERTIES
-		ENVIRONMENT "PATH=${dll_dirs_expr};${extra_dirs};$ENV{PATH}"
+		ENVIRONMENT "PATH=${dll_dirs_expr}\\;${extra_dirs}"
 	)
 
 	# Also set the debugger environment so that you can launch 
