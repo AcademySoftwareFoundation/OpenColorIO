@@ -517,7 +517,7 @@ jobs:
             python-version: '3.9'
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
@@ -643,7 +643,7 @@ jobs:
             python-version: '3.12'
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
@@ -791,7 +791,7 @@ jobs:
             python-version: '3.9'
     steps:
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Checkout
