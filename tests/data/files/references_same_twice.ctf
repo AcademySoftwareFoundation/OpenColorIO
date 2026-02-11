@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ProcessList id="empty" version="1.7">
-   <Reference id="uuid" name="name" inBitDepth="32f" outBitDepth="32f" path="clf/matrix_example.clf" basePath="Shared"/>
-   <Reference id="uuid" name="name" inBitDepth="32f" outBitDepth="32f" path="clf/matrix_example.clf"/>
+   <Reference id="uuid" name="name" inBitDepth="32f" outBitDepth="32f" path="clf/pre-smpte_only/matrix_example.clf" basePath="Shared"/>
+   <Reference id="uuid" name="name" inBitDepth="32f" outBitDepth="32f" path="clf/pre-smpte_only/matrix_example.clf"/>
 </ProcessList>

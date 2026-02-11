@@ -20,7 +20,7 @@ class CDLParser
 {
 public:
     explicit CDLParser(const std::string& xmlFile);
-    virtual ~CDLParser();
+    ~CDLParser();
 
     void parse(std::istream & istream) const;
 

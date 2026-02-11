@@ -288,6 +288,7 @@ public:
 
     void start(const char ** /* atts */) override
     {
+        // TODO: collect language attr.
         m_description.resize(0);
         m_changed = false;
     }

@@ -729,7 +729,7 @@ OCIO_ADD_TEST(OpOptimizers, lut1d_identity_replacement_order)
         OCIO::OpRcPtrVec optOps = fwd_inv_ops.clone();
         OCIO_CHECK_NO_THROW(optOps.finalize());
         OCIO_CHECK_NO_THROW(optOps.optimize(OCIO::OPTIMIZATION_DEFAULT));
-        OCIO_CHECK_EQUAL(optOps.size(), 1);
+        OCIO_REQUIRE_EQUAL(optOps.size(), 1);
         OCIO_CHECK_EQUAL(optOps[0]->getInfo(), "<RangeOp>");
 
         // Compare renders.
@@ -748,7 +748,7 @@ OCIO_ADD_TEST(OpOptimizers, lut1d_identity_replacement_order)
         OCIO::OpRcPtrVec optOps = inv_fwd_ops.clone();
         OCIO_CHECK_NO_THROW(optOps.finalize());
         OCIO_CHECK_NO_THROW(optOps.optimize(OCIO::OPTIMIZATION_DEFAULT));
-        OCIO_CHECK_EQUAL(optOps.size(), 1);
+        OCIO_REQUIRE_EQUAL(optOps.size(), 1);
         OCIO_CHECK_EQUAL(optOps[0]->getInfo(), "<RangeOp>");
 
         // Compare renders.
@@ -1052,7 +1052,7 @@ OCIO_ADD_TEST(OpOptimizers, gamma_comp)
     OCIO_CHECK_NO_THROW(optOps_noComp.finalize());
     OCIO_CHECK_NO_THROW(optOps_noComp.optimize(AllBut(OCIO::OPTIMIZATION_COMP_GAMMA)));
     // Identity matrix is removed but gamma are not combined.
-    OCIO_CHECK_EQUAL(optOps_noComp.size(), 3);
+    OCIO_REQUIRE_EQUAL(optOps_noComp.size(), 3);
     OCIO_CHECK_EQUAL(optOps_noComp[0]->getInfo(), "<GammaOp>");
     OCIO_CHECK_EQUAL(optOps_noComp[1]->getInfo(), "<GammaOp>");
     OCIO_CHECK_EQUAL(optOps_noComp[2]->getInfo(), "<GammaOp>");
@@ -1100,7 +1100,7 @@ OCIO_ADD_TEST(OpOptimizers, gamma_comp_test2)
     OCIO_CHECK_NO_THROW(optOps_noComp.finalize());
     // NB: The op->apply function used here hard-codes OPTIMIZATION_FAST_LOG_EXP_POW to off.
     OCIO_CHECK_NO_THROW(optOps_noComp.optimize(AllBut(OCIO::OPTIMIZATION_COMP_GAMMA)));
-    OCIO_CHECK_EQUAL(optOps_noComp.size(), 2);
+    OCIO_REQUIRE_EQUAL(optOps_noComp.size(), 2);
     OCIO_CHECK_EQUAL(optOps_noComp[0]->getInfo(), "<GammaOp>");
     OCIO_CHECK_EQUAL(optOps_noComp[1]->getInfo(), "<GammaOp>");
 

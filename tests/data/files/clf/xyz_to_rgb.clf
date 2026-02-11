@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ProcessList id="1d399a07-1936-49b8-9225-e6824790358c" xmlns="urn:AMPAS:CLF:v3.0" compCLFversion="3.0">
+<ProcessList id="1d399a07-1936-49b8-9225-e6824790358c" xmlns="http://www.smpte-ra.org/ns/2136-1/2024" compCLFversion="3.0">
     <Description>Example with a Matrix and Lut1D</Description>
     <Matrix id="72f85641-8c80-4bd6-b96b-a2f67ccb948a" inBitDepth="32f" outBitDepth="32f">
         <Description>XYZ to sRGB matrix</Description>

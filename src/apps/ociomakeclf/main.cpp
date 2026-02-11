@@ -31,7 +31,7 @@ static int parse_end_args(int argc, const char * argv[])
     return 0;
 }
 
-void CreateOutputLutFile(const std::string & outLutFilepath, OCIO::ConstGroupTransformRcPtr transform)
+void CreateOutputLutFile(const std::string & outLutFilepath, OCIO::ConstGroupTransformRcPtr transform, bool generateId)
 {
     // Get the processor.
 
@@ -55,7 +55,15 @@ void CreateOutputLutFile(const std::string & outLutFilepath, OCIO::ConstGroupTra
         try
         {
             const auto group = optProcessor->createGroupTransform();
-            group->write(config, "Academy/ASC Common LUT Format", outfs);
+
+            if(generateId)
+            {
+                std::ostringstream ss;
+                ss << "urn:uuid:" << optProcessor->getCacheID();
+                group->getFormatMetadata().addChildElement("Id", ss.str().c_str());
+            }
+
+            group->write(config, "Academy/ASC Common LUT Format", outfs); 
         }
         catch (const OCIO::Exception &)
         {
@@ -79,7 +87,11 @@ void CreateOutputLutFile(const std::string & outLutFilepath, OCIO::ConstGroupTra
 
 int main(int argc, const char ** argv)
 {
-    bool help = false, verbose = false, measure = false, listCSCColorSpaces = false;
+    bool help = false;
+    bool verbose = false;
+    bool measure = false;
+    bool listCSCColorSpaces = false;
+    bool generateId = false;
     std::string cscColorSpace;
 
     ArgParse ap;
@@ -96,6 +108,7 @@ int main(int argc, const char ** argv)
                "--measure",   &measure,            "Measure (in ms) the CLF write",
                "--list",      &listCSCColorSpaces, "List of the supported CSC color spaces",
                "--csc %s",    &cscColorSpace,      "The color space that the input LUT expects and produces",
+               "--generateid",&generateId,         "Generates an id based on content and writes in SMPTE Id element format",
                nullptr);
 
     if (ap.parse(argc, argv) < 0)
@@ -266,12 +279,12 @@ int main(int argc, const char ** argv)
             m.resume();
 
             // Create the CLF file.
-            CreateOutputLutFile(outLutFilepath, grp);
+            CreateOutputLutFile(outLutFilepath, grp, generateId);
         }
         else
         {
             // Create the CLF file.
-            CreateOutputLutFile(outLutFilepath, grp);
+            CreateOutputLutFile(outLutFilepath, grp, generateId);
         }
     }
     catch (OCIO::Exception & ex)

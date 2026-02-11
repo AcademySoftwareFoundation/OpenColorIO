@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ProcessList xmlns="urn:AMPAS:CLF:v3.0" id="lut1_32f" name="transform example lut1d 32f" compCLFversion="3.0">
+<ProcessList xmlns="http://www.smpte-ra.org/ns/2136-1/2024" id="lut1_32f" name="transform example lut1d 32f" compCLFversion="3.0">
 <Description> Basic Lut1D example, formula: 1.25 - 1.5 * x^2.2</Description>
 <LUT1D id="lut-32" interpolation="linear" inBitDepth="32f" outBitDepth="32f">
 <Description> 1D LUT </Description>

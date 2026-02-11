@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ProcessList compCLFversion="3.0" id="info test" inverseOf="none" xmlns="urn:AMPAS:CLF:v3.0">
+<ProcessList compCLFversion="3.0" id="info test" inverseOf="none" xmlns="http://www.smpte-ra.org/ns/2136-1/2024">
     <Description>Example of using the Info element</Description>
+    <Description>A second description</Description>
     <InputDescriptor>input desc</InputDescriptor>
     <OutputDescriptor>output desc</OutputDescriptor>
-    <Description>A second description</Description>
 
     <Info>
         <!-- Elements from the spec -->

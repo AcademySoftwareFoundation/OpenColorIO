@@ -19,6 +19,9 @@ const char * METADATA_INFO = "Info";
 const char * METADATA_INPUT_DESCRIPTOR = "InputDescriptor";
 const char * METADATA_OUTPUT_DESCRIPTOR = "OutputDescriptor";
 
+// CLF XML elements described in ST2136-1
+const char * METADATA_ID_ELEMENT = "Id";
+
 // NAME and ID are CLF XML attributes described in S-2014-006.
 const char * METADATA_NAME = "name";
 const char * METADATA_ID = "id";

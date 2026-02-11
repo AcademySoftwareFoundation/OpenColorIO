@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ProcessList id="e0a0ae4b-adc2-4c25-ad70-fa6f31ba219d" xmlns="urn:NATAS:ASC:LUT:v0.95" compCLFversion="3.0">
+<ProcessList id="e0a0ae4b-adc2-4c25-ad70-fa6f31ba219d" xmlns="http://www.smpte-ra.org/ns/2136-1/2024" compCLFversion="3.0">
     <Description>Starting in CLF v3, a Range may not be empty</Description>
     <Range inBitDepth="16f" outBitDepth="32f">
     </Range>

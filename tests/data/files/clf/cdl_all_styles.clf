@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ProcessList compCLFversion="3.0" id="b5cc7aed-d405-4d8b-b64b" name="all styles" xmlns="urn:AMPAS:CLF:v3.0">
+<ProcessList compCLFversion="3.0" id="b5cc7aed-d405-4d8b-b64b" name="all styles" xmlns="http://www.smpte-ra.org/ns/2136-1/2024">
     <Description>Test all CDL style values</Description>
     <ASC_CDL id="clf/ctf asc1.2 fwd" inBitDepth="16f" outBitDepth="10i" style="Fwd">
         <SOPNode>

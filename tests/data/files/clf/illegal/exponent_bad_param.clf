@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ProcessList compCLFversion="3.0" id="bad param" xmlns="urn:AMPAS:CLF:v3.0">
+<ProcessList compCLFversion="3.0" id="bad param" xmlns="http://www.smpte-ra.org/ns/2136-1/2024">
     <Description>The basic styles may not use the offset param</Description>
     <Exponent inBitDepth="16f" outBitDepth="8i" style="basicFwd">
         <ExponentParams exponent="2.2" offset="0.1" />

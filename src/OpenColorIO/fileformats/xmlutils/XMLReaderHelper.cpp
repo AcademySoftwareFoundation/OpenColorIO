@@ -102,6 +102,8 @@ void XmlReaderDescriptionElt::end()
         // Note: eXpat automatically replaces escaped characters with 
         //       their original values.
         getParent()->appendMetadata(getIdentifier(), m_description);
+
+        // TODO: set the language attribute.
     }
 }
 
