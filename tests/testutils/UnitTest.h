@@ -63,8 +63,6 @@ typedef std::vector<OCIOTestRcPtr> UnitTests;
 
 UnitTests & GetUnitTests();
 
-extern int unit_test_failures;
-
 struct AddTest
 {
     explicit AddTest(const OCIOTestRcPtr & test)
