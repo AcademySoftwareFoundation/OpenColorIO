@@ -832,6 +832,15 @@ extern OCIOEXPORT const char * OCIO_INACTIVE_COLORSPACES_ENVVAR;
 extern OCIOEXPORT const char * OCIO_OPTIMIZATION_FLAGS_ENVVAR;
 
 /**
+ * The envvar 'OCIO_OPTIMIZATION_FLAGS' provides a way to force a given
+ * optimization level. Remove the variable or set the value to empty to
+ * not use it. Set the value of the variable to the desired optimization
+ * level as either an integer or hexadecimal value.
+ * Ex: OCIO_OPTIMIZATION_FLAGS="1" or "0x01" for ARCHIVE_FLAGS_MINIMAL.
+ */
+extern OCIOEXPORT const char * OCIO_ARCHIVE_FLAGS_ENVVAR;
+
+/**
  * The envvar 'OCIO_USER_CATEGORIES' allows the end-user to filter color spaces shown by
  * applications.  Only color spaces that include at least one of the supplied categories will be
  * shown in application menus.  Note that applications may also impose their own category filtering
@@ -1011,6 +1020,28 @@ extern OCIOEXPORT const char * OCIO_DISABLE_CACHE_FALLBACK;
 extern OCIOEXPORT const char * OCIO_CONFIG_DEFAULT_NAME;
 extern OCIOEXPORT const char * OCIO_CONFIG_DEFAULT_FILE_EXT;
 extern OCIOEXPORT const char * OCIO_CONFIG_ARCHIVE_FILE_EXT;
+
+//!cpp:type:: Enum to control the behavior of archiving a :cpp:class:`Config`.
+//
+// TODO: extend docs
+// TODO: Python bindings
+// TODO: environment variable?
+//
+enum ArchiveFlags : unsigned long
+{
+    ARCHIVE_FLAGS_NONE                   = 0x0000,
+
+    ARCHIVE_FLAGS_FAST_COMPRESSION       = 0x02, // Compression level
+    ARCHIVE_FLAGS_NORMAL_COMPRESSION     = 0x06, // Compression level
+    ARCHIVE_FLAGS_BEST_COMPRESSION       = 0x09, // Compression level
+    ARCHIVE_FLAGS_COMPRESSION_MASK       = 0x0F, // Compression level mask
+
+    ARCHIVE_FLAGS_MINIMAL                = 0x0100, // Generate a Minimal Archive
+
+    ARCHIVE_FLAGS_DEFAULT = (ARCHIVE_FLAGS_NONE | ARCHIVE_FLAGS_BEST_COMPRESSION),
+
+    ARCHIVE_FLAGS_SAFEST = (ARCHIVE_FLAGS_NONE | ARCHIVE_FLAGS_BEST_COMPRESSION) // TODO: name is poor
+};
 
 // Built-in config feature
 // URI Prefix

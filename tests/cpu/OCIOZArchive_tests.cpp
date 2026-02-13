@@ -116,6 +116,7 @@ OCIO_ADD_TEST(OCIOZArchive, is_config_archivable)
 
     std::istringstream iss;
     iss.str(CONFIG);
+    const bool minimal = false;
 
     OCIO::ConfigRcPtr cfg;
     OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(iss)->createEditableCopy());
@@ -138,39 +139,39 @@ OCIO_ADD_TEST(OCIOZArchive, is_config_archivable)
         
         // Valid search path.
         cfg->setSearchPath("luts");
-        OCIO_CHECK_EQUAL(true, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(true, cfg->isArchivable(minimal));
 
         cfg->setSearchPath(R"(luts/myluts1)");
-        OCIO_CHECK_EQUAL(true, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(true, cfg->isArchivable(minimal));
 
         cfg->setSearchPath(R"(luts\myluts1)");
-        OCIO_CHECK_EQUAL(true, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(true, cfg->isArchivable(minimal));
 
         // Valid Search path starting with "./" or ".\".
         cfg->setSearchPath(R"(./myLuts)");
-        OCIO_CHECK_EQUAL(true, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(true, cfg->isArchivable(minimal));
 
         cfg->setSearchPath(R"(.\myLuts)");
-        OCIO_CHECK_EQUAL(true, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(true, cfg->isArchivable(minimal));
 
         // Valid search path starting with "./" or ".\" and a context variable.
         cfg->setSearchPath(R"(./$SHOT/myluts)");
-        OCIO_CHECK_EQUAL(true, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(true, cfg->isArchivable(minimal));
 
         cfg->setSearchPath(R"(.\$SHOT\myluts)");
-        OCIO_CHECK_EQUAL(true, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(true, cfg->isArchivable(minimal));
 
         cfg->setSearchPath(R"(luts/$SHOT)");
-        OCIO_CHECK_EQUAL(true, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(true, cfg->isArchivable(minimal));
 
         cfg->setSearchPath(R"(luts/$SHOT/luts1)");
-        OCIO_CHECK_EQUAL(true, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(true, cfg->isArchivable(minimal));
 
         cfg->setSearchPath(R"(luts\$SHOT)");
-        OCIO_CHECK_EQUAL(true, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(true, cfg->isArchivable(minimal));
 
         cfg->setSearchPath(R"(luts\$SHOT\luts1)");
-        OCIO_CHECK_EQUAL(true, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(true, cfg->isArchivable(minimal));
 
         /*
          * Illegal scenarios
@@ -178,34 +179,34 @@ OCIO_ADD_TEST(OCIOZArchive, is_config_archivable)
 
         // Illegal search path starting with "..".
         cfg->setSearchPath(R"(luts:../luts)");
-        OCIO_CHECK_EQUAL(false, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(false, cfg->isArchivable(minimal));
 
         cfg->setSearchPath(R"(luts:..\myLuts)");
-        OCIO_CHECK_EQUAL(false, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(false, cfg->isArchivable(minimal));
 
         // Illegal search path starting with a context variable.
         cfg->setSearchPath(R"(luts:$SHOT)");
-        OCIO_CHECK_EQUAL(false, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(false, cfg->isArchivable(minimal));
 
         // Illegal search path with absolute path.
         cfg->setSearchPath(R"(luts:/luts)");
-        OCIO_CHECK_EQUAL(false, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(false, cfg->isArchivable(minimal));
 
         cfg->setSearchPath(R"(luts:/$SHOT)");
-        OCIO_CHECK_EQUAL(false, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(false, cfg->isArchivable(minimal));
 
 #ifdef _WIN32
         cfg->clearSearchPaths();
         cfg->addSearchPath(R"(C:\luts)");
-        OCIO_CHECK_EQUAL(false, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(false, cfg->isArchivable(minimal));
 
         cfg->clearSearchPaths();
         cfg->addSearchPath(R"(C:\)");
-        OCIO_CHECK_EQUAL(false, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(false, cfg->isArchivable(minimal));
 
         cfg->clearSearchPaths();
         cfg->addSearchPath(R"(C:\$SHOT)");
-        OCIO_CHECK_EQUAL(false, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(false, cfg->isArchivable(minimal));
 #endif
     }
 
@@ -213,7 +214,7 @@ OCIO_ADD_TEST(OCIOZArchive, is_config_archivable)
     cfg->clearSearchPaths();
 
     // Lambda function to facilitate adding a new FileTransform to a config.
-    auto addFTAndTestIsArchivable = [&cfg](const std::string & path, bool isArchivable)
+    auto addFTAndTestIsArchivable = [&cfg](const std::string & path, bool isArchivable, bool minimal)
     {
         std::string fullPath = pystring::os::path::join(path, "fake_lut.clf");
         auto ft = OCIO::FileTransform::Create();
@@ -224,7 +225,7 @@ OCIO_ADD_TEST(OCIOZArchive, is_config_archivable)
         cs->setTransform(ft, OCIO::COLORSPACE_DIR_TO_REFERENCE);
         cfg->addColorSpace(cs);
 
-        OCIO_CHECK_EQUAL(isArchivable, cfg->isArchivable());
+        OCIO_CHECK_EQUAL(isArchivable, cfg->isArchivable(minimal));
 
         cfg->removeColorSpace("csTest");
     };
@@ -236,41 +237,41 @@ OCIO_ADD_TEST(OCIOZArchive, is_config_archivable)
          */
 
         // Valid FileTransform path.
-        addFTAndTestIsArchivable("luts", true);
-        addFTAndTestIsArchivable(R"(luts/myluts1)", true);
-        addFTAndTestIsArchivable(R"(luts\myluts1)", true);
+        addFTAndTestIsArchivable("luts", true, false);
+        addFTAndTestIsArchivable(R"(luts/myluts1)", true, false);
+        addFTAndTestIsArchivable(R"(luts\myluts1)", true, false);
 
         // Valid Search path starting with "./" or ".\".
-        addFTAndTestIsArchivable(R"(./myLuts)", true);
-        addFTAndTestIsArchivable(R"(.\myLuts)", true);
+        addFTAndTestIsArchivable(R"(./myLuts)", true, false);
+        addFTAndTestIsArchivable(R"(.\myLuts)", true, false);
 
         // Valid search path starting with "./" or ".\" and a context variable.
-        addFTAndTestIsArchivable(R"(./$SHOT/myluts)", true);
-        addFTAndTestIsArchivable(R"(.\$SHOT\myluts)", true);
-        addFTAndTestIsArchivable(R"(luts/$SHOT)", true);
-        addFTAndTestIsArchivable(R"(luts/$SHOT/luts1)", true);
-        addFTAndTestIsArchivable(R"(luts\$SHOT)", true);
-        addFTAndTestIsArchivable(R"(luts\$SHOT\luts1)", true);
+        addFTAndTestIsArchivable(R"(./$SHOT/myluts)", true, false);
+        addFTAndTestIsArchivable(R"(.\$SHOT\myluts)", true, false);
+        addFTAndTestIsArchivable(R"(luts/$SHOT)", true, false);
+        addFTAndTestIsArchivable(R"(luts/$SHOT/luts1)", true, false);
+        addFTAndTestIsArchivable(R"(luts\$SHOT)", true, false);
+        addFTAndTestIsArchivable(R"(luts\$SHOT\luts1)", true, false);
 
         /*
          * Illegal scenarios
          */
 
         // Illegal search path starting with "..".
-        addFTAndTestIsArchivable(R"(../luts)", false);
-        addFTAndTestIsArchivable(R"(..\myLuts)", false);
+        addFTAndTestIsArchivable(R"(../luts)", false, false);
+        addFTAndTestIsArchivable(R"(..\myLuts)", false, false);
 
         // Illegal search path starting with a context variable.
-        addFTAndTestIsArchivable(R"($SHOT)", false);
+        addFTAndTestIsArchivable(R"($SHOT)", false, false);
 
         // Illegal search path with absolute path.
-        addFTAndTestIsArchivable(R"(/luts)", false);
-        addFTAndTestIsArchivable(R"(/$SHOT)", false);
+        addFTAndTestIsArchivable(R"(/luts)", false, false);
+        addFTAndTestIsArchivable(R"(/$SHOT)", false, false);
 
 #ifdef _WIN32
-        addFTAndTestIsArchivable(R"(C:\luts)", false);
-        addFTAndTestIsArchivable(R"(C:\)", false);
-        addFTAndTestIsArchivable(R"(\$SHOT)", false);
+        addFTAndTestIsArchivable(R"(C:\luts)", false, false);
+        addFTAndTestIsArchivable(R"(C:\)", false, false);
+        addFTAndTestIsArchivable(R"(\$SHOT)", false, false);
 #endif
     }
 }
@@ -498,7 +499,7 @@ OCIO_ADD_TEST(OCIOZArchive, archive_config_and_compare_to_original)
 
         // 2 - Archive the config of step 1.
         std::ostringstream ostringStream;
-        OCIO_CHECK_NO_THROW(configFromOcioFile->archive(ostringStream));
+        OCIO_CHECK_NO_THROW(configFromOcioFile->archive(ostringStream, OCIO::ARCHIVE_FLAGS_DEFAULT));
 
         // 3 - Verify that the binary data starts with "PK".
         OCIO_CHECK_EQUAL('P', ostringStream.str()[0]);

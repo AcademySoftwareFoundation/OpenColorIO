@@ -14,6 +14,7 @@
 #include <vector>
 #include <cstdint>
 #include <map>
+#include <set>
 
 #include "OpenColorABI.h"
 #include "OpenColorTypes.h"
@@ -1624,7 +1625,7 @@ public:
      * 
      * \return bool Archivable if true.
      */
-    bool isArchivable() const;
+    bool isArchivable(bool minimal) const;
 
     /**
      * \brief Archive the config and its LUTs into the specified output stream.
@@ -1642,6 +1643,8 @@ public:
      * trying to resolve all the FileTransforms in the Config to specific files is because of the
      * goal to allow context variables to continue to work.
      * 
+     * Archiving a minimal Config will try resolve these file references using the current context.
+     *
      * If a Config is created with CreateFromStream, CreateFromFile with an OCIOZ archive, or 
      * CreateFromConfigIOProxy, it cannot be archived unless the working directory is manually set 
      * to a directory that contains any necessary LUT files. 
@@ -1649,8 +1652,12 @@ public:
      * The provided output stream must be closed by the caller, if necessary (e.g., an ofstream).
      *
      * \param ostream The output stream to write to.
+     * \param flags Flags top control archive creation
      */
-    void archive(std::ostream & ostream) const;
+    void archive(std::ostream & ostream, const ArchiveFlags & flags) const;
+
+    //TODO: document
+    void GetAllFileReferences(std::set<std::string> & files) const;
 
     Config(const Config &) = delete;
     Config& operator= (const Config &) = delete;
