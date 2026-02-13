@@ -96,6 +96,8 @@ int main(int argc, const char ** argv)
 
     ArgParse ap;
     ap.options("ociomakeclf -- Convert a LUT into CLF format and optionally add conversions from/to ACES2065-1 to make it an LMT.\n"
+               "               The generated file should be compatible with both SMPTE ST 2136-1 as well as the previous\n" 
+               "               Academy/ASC v3 version.\n"
                "               If the csc argument is used, the CLF will contain the transforms:\n"
                "               [ACES2065-1 to CSC space] [the LUT] [CSC space to ACES2065-1].\n\n"
                "usage: ociomakeclf inLutFilepath outLutFilepath --csc cscColorSpace\n"

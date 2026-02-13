@@ -132,6 +132,9 @@ int UnitTestMain(int argc, const char ** argv);
 
 #define OCIO_CHECK_EQUAL(x,y) OCIO_CHECK_EQUAL_FROM(x,y,__LINE__)
 
+#define OCIO_CHECK_EQUAL_STR(x,y)                                       \
+    OCIO_CHECK_EQUAL_FROM(std::string_view((x)), std::string_view((y)),__LINE__)
+
 // When using OCIO_CHECK_EQUAL in an helper method used by one or more
 // unit tests, the error message indicates the helper method line number
 // and not the unit test line number.

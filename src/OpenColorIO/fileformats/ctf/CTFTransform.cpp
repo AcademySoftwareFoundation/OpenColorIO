@@ -443,7 +443,6 @@ const char * GetFirstElementValue(const FormatMetadataImpl::Elements & elements,
     return "";
 }
 
-[[maybe_unused]]
 const char * GetLastElementValue(const FormatMetadataImpl::Elements & elements, const std::string & name)
 {
     for (auto it = elements.rbegin(); it != elements.rend(); ++it)
@@ -455,51 +454,16 @@ const char * GetLastElementValue(const FormatMetadataImpl::Elements & elements, 
     }
     return "";
 }
-}
 
-// This method copies the metadata from the argument into the transform object.
-// Only attributes and elements that are expected parts of the CLF spec are
-// preserved. This corresponds to the top level metadata in the CLF ProcessList,
-// note that any metadata in the individual process nodes are stored separately
-// in their opData.  Here is what is preserved:
-// -- ProcessList attributes "name", "id", and "inverseOf". Other attributes are ignored.
-// -- ProcessList sub-element "Id". If more than one is found, the contents are
-//    concatenated into one element.
-// -- ProcessList sub-elements "InputDescriptor" and "OutputDescriptor". The value
-//    of these elements is preserved but no additional attributes or sub-elements.
-//    Only the first InputDescriptor and last OutputDescriptor in the metadata is preserved.
-// -- ProcessList "Description" sub-elements. All of these elements are preserved,
-//    but only their value strings, no attributes or sub-elements.
-// -- ProcessList "Info" sub-elements. If there is more than one, they are merged into
-//    a single Info element. All attributes and sub-elements are preserved.
-// -- Any other sub-elements or attributes are ignored.
-void CTFReaderTransform::fromMetadata(const FormatMetadataImpl & metadata)
+void CopyNonEmptyAttribute(FormatMetadataImpl& dest,const FormatMetadataImpl& source, const char * attrname)
 {
-    // Name & id handled as attributes of the root metadata.
-    m_name = metadata.getAttributeValueString(METADATA_NAME);
-    m_id = metadata.getAttributeValueString(METADATA_ID);
-    m_inverseOfId = metadata.getAttributeValueString(ATTR_INVERSE_OF);
-
-
-    // Elements
-    m_id_element = GetFirstElementValue(metadata.getChildrenElements(), METADATA_ID_ELEMENT);
-    // Preserve first InputDescriptor, last OutputDescriptor, and all Descriptions.
-    GetElementsValues(metadata.getChildrenElements(), METADATA_INPUT_DESCRIPTOR, m_inDescriptors);
-    GetElementsValues(metadata.getChildrenElements(), METADATA_OUTPUT_DESCRIPTOR, m_outDescriptors);
-    GetElementsValues(metadata.getChildrenElements(), METADATA_DESCRIPTION, m_descriptions);
-
-    // Combine all Info elements.
-    for (auto elt : metadata.getChildrenElements())
+    const std::string value = source.getAttributeValueString(attrname);
+    if (!value.empty())
     {
-        if (0 == Platform::Strcasecmp(elt.getElementName(), METADATA_INFO))
-        {
-            m_infoMetadata.combine(elt);
-        }
+        dest.addAttribute(attrname, value.c_str());
     }
 }
 
-namespace
-{
 void AddNonEmptyElement(FormatMetadataImpl & metadata, const char * name, const std::string & value)
 {
     if (!value.empty())
@@ -515,33 +479,117 @@ void AddNonEmptyAttribute(FormatMetadataImpl & metadata, const char * name, cons
         metadata.addAttribute(name, value.c_str());
     }
 }
+} // namespace
+
+// This method copies the metadata from the argument into the transform object.
+// Only attributes and elements that are expected parts of the CLF spec are
+// preserved. This corresponds to the top level metadata in the CLF ProcessList,
+// note that any metadata in the individual process nodes are stored separately
+// in their opData.  Here is what is preserved:
+// -- ProcessList attributes "name", "id", and "inverseOf". Other attributes are ignored.
+// -- ProcessList sub-element "Id".
+// -- ProcessList sub-elements "InputDescriptor" and "OutputDescriptor". The value
+//    of these elements is preserved with the language attrib, but no sub-elements.
+// -- ProcessList "Description" sub-elements. All of these elements are preserved,
+//    but only their value strings and language attributes.
+// -- ProcessList "Info" sub-elements. If there is more than one, they are merged into
+//    a single Info element. All attributes and sub-elements are preserved.
+// -- Any other sub-elements or attributes are ignored.
+void CTFReaderTransform::fromMetadata(const FormatMetadataImpl & metadata)
+{
+    // Attributes
+    CopyNonEmptyAttribute(m_formatMetadata, metadata, METADATA_ID);
+    CopyNonEmptyAttribute(m_formatMetadata, metadata, METADATA_NAME);
+    CopyNonEmptyAttribute(m_formatMetadata, metadata, ATTR_INVERSE_OF);
+
+    // all "xmlns:*" attributes needs to be copied too.
+    for (int i = 0; i < metadata.getNumAttributes(); ++i)
+    {
+        const std::string attrName = metadata.getAttributeName(i);
+        if (StringUtils::StartsWith(attrName.c_str(), "xmlns:"))
+        {
+            CopyNonEmptyAttribute(m_formatMetadata, metadata, attrName.c_str());
+        }
+    }
+
+    // Id Element
+    AddNonEmptyElement(m_formatMetadata, METADATA_ID_ELEMENT, 
+        GetLastElementValue(metadata.getChildrenElements(), METADATA_ID_ELEMENT));
+
+    // Description, input and output descriptors
+    auto copyDescs = [&](const char * elementName)
+    {
+        for ( auto & desc : metadata.getChildrenElements(elementName))
+        {
+            FormatMetadataImpl newEl(desc.getElementName(), desc.getElementValue());
+            auto lang = desc.getAttributeValueString("language");
+            if (!lang.empty()) 
+            {
+                newEl.addAttribute("language", lang.c_str());
+            }
+            m_formatMetadata.getChildrenElements().push_back(newEl);
+        }
+    };
+
+    copyDescs(METADATA_DESCRIPTION);
+    copyDescs(METADATA_INPUT_DESCRIPTOR);
+    copyDescs(METADATA_OUTPUT_DESCRIPTOR);
+
+    // Combine all Info elements.
+    for (auto elt : metadata.getChildrenElements())
+    {
+        if (0 == Platform::Strcasecmp(elt.getElementName(), METADATA_INFO))
+        {
+            m_infoMetadata.combine(elt);
+        }
+    }
 }
+
+
 
 void CTFReaderTransform::toMetadata(FormatMetadataImpl & metadata) const
 {
     // Put CTF processList information into the FormatMetadata.
 
     // Attributes
-    AddNonEmptyAttribute(metadata, METADATA_NAME, getName());
-    AddNonEmptyAttribute(metadata, METADATA_ID, getID());
-    AddNonEmptyAttribute(metadata, ATTR_INVERSE_OF, getInverseOfId());
+    CopyNonEmptyAttribute(metadata, m_formatMetadata, METADATA_ID);
+    CopyNonEmptyAttribute(metadata, m_formatMetadata, METADATA_NAME);
+    CopyNonEmptyAttribute(metadata, m_formatMetadata, ATTR_INVERSE_OF);
+
+    // all "xmlns:*" attributes needs to be copied too.
+    for (int i = 0; i < m_formatMetadata.getNumAttributes(); ++i)
+    {
+        const std::string attrName = m_formatMetadata.getAttributeName(i);
+        if (StringUtils::StartsWith(attrName.c_str(), "xmlns:"))
+        {
+            CopyNonEmptyAttribute(metadata, m_formatMetadata, attrName.c_str());
+        }
+    }
 
     // Child Elements
-    AddNonEmptyElement(metadata, METADATA_ID_ELEMENT, getIDElement());
+    AddNonEmptyElement(metadata, METADATA_ID_ELEMENT, 
+        GetLastElementValue(m_formatMetadata.getChildrenElements(), METADATA_ID_ELEMENT));
     
-    for (auto & desc : m_descriptions)
+    // Description, Input and Output Descriptor Elements.
+    auto copyDescs = [&](const char * elementName)
     {
-        metadata.addChildElement(METADATA_DESCRIPTION, desc.c_str());
-    }
-    for (auto & desc : m_inDescriptors)
-    {
-        metadata.addChildElement(METADATA_INPUT_DESCRIPTOR, desc.c_str());
-    }
-    for (auto & desc : m_outDescriptors)
-    {
-        metadata.addChildElement(METADATA_OUTPUT_DESCRIPTOR, desc.c_str());
-    }
+        for ( auto & desc : m_formatMetadata.getChildrenElements(elementName))
+        {
+            FormatMetadataImpl newEl(desc.getElementName(), desc.getElementValue());
+            auto lang = desc.getAttributeValueString("language");
+            if (!lang.empty()) 
+            {
+                newEl.addAttribute("language", lang.c_str());
+            }
+            metadata.getChildrenElements().push_back(newEl);
+        }
+    };
 
+    copyDescs(METADATA_DESCRIPTION);
+    copyDescs(METADATA_INPUT_DESCRIPTOR);
+    copyDescs(METADATA_OUTPUT_DESCRIPTOR);
+
+    // Info Metadata.
     const std::string infoValue(m_infoMetadata.getElementValue());
     if (m_infoMetadata.getNumAttributes() || m_infoMetadata.getNumChildrenElements() ||
         !infoValue.empty())
@@ -560,6 +608,15 @@ void WriteTagStringVec(XmlFormatter & fmt, const char * tag, const StringUtils::
     for (auto & it : strVec)
     {
         fmt.writeContentTag(tag, it);
+    }
+}
+
+// Writes the given list of elements along with their attributes.
+void WriteTagElementVec(XmlFormatter & fmt, const FormatMetadataImpl::Elements & elVec)
+{
+    for (auto & el : elVec)
+    {
+        fmt.writeContentTag(el.getElementName(), el.getAttributes(), el.getElementValue());
     }
 }
 
@@ -2608,6 +2665,8 @@ void TransformWriter::write() const
                 ATTR_VERSION, fversion.str()));
           break;
     }
+
+    auto & metada = m_transform->getFormatMetadata();
   
     // Id attribute
     std::string id = m_transform->getID();
@@ -2615,19 +2674,35 @@ void TransformWriter::write() const
     {
         throw Exception("Internal error; at this point the transform should have an id");
     }
-
     attributes.push_back(XmlFormatter::Attribute(ATTR_ID, id));
     
+    // Name attribute
     const std::string& name = m_transform->getName();
     if (!name.empty())
     {
         attributes.push_back(XmlFormatter::Attribute(ATTR_NAME, name));
     }
 
-    const std::string & inverseOfId = m_transform->getInverseOfId();
-    if (!inverseOfId.empty())
+    // inverseOf attribute
+    const char * inverseOf = metada.getAttributeValue(ATTR_INVERSE_OF);
+    if (inverseOf && *inverseOf)
     {
-        attributes.push_back(XmlFormatter::Attribute(ATTR_INVERSE_OF, inverseOfId));
+        attributes.push_back(XmlFormatter::Attribute(
+            ATTR_INVERSE_OF, inverseOf));
+    }
+
+    // Non-default namespace attributes.
+    for (int i = 0; i < metada.getNumAttributes(); ++i)
+    {
+        const char * attrName = metada.getAttributeName(i);
+        if (attrName && StringUtils::StartsWith(attrName, "xmlns:"))
+        {
+            const char * attrValue = metada.getAttributeValue(i);
+            if (attrValue && *attrValue)
+            {
+                attributes.push_back(XmlFormatter::Attribute(attrName, attrValue));
+            }
+        }
     }
 
     m_formatter.writeStartTag(processListTag, attributes);
@@ -2636,21 +2711,43 @@ void TransformWriter::write() const
         
         // Id element, won't generate if not provided but the format is
         // enforced.
-        std::string idEl = m_transform->getIDElement();
-        if (!idEl.empty())
+        auto idIdx = m_transform->getFormatMetadata()
+                .getFirstChildIndex(METADATA_ID_ELEMENT);
+        if(idIdx>=0)
         {
-            if (m_subFormat == SubFormat::FORMAT_CLF && !ValidateSMPTEId(idEl))
+            const char * idVal = m_transform->getFormatMetadata().getChildElement(idIdx).getElementValue();
+            if (idVal && *idVal)
             {
-                std::ostringstream ss;
-                ss << "'" << idEl << "' is not a SMPTE ST 2136-1 compliant Id value.";
-                throw Exception(ss.str().c_str());
+                if (m_subFormat == SubFormat::FORMAT_CLF && !ValidateSMPTEId(idVal))
+                {
+                    std::ostringstream ss;
+                    ss << "'" << idVal << "' is not a SMPTE ST 2136-1 compliant Id value.";
+                    throw Exception(ss.str().c_str());
+                }
+                m_formatter.writeContentTag(TAG_ID, idVal);
             }
-            m_formatter.writeContentTag(TAG_ID, idEl);
         }
 
-        WriteTagStringVec(m_formatter, TAG_DESCRIPTION, m_transform->getDescriptions());
-        WriteTagStringVec(m_formatter, METADATA_INPUT_DESCRIPTOR, m_transform->getInputDescriptors());
-        WriteTagStringVec(m_formatter, METADATA_OUTPUT_DESCRIPTOR, m_transform->getOutputDescriptors());
+        // Descriptions.
+        {
+            auto & desc = m_transform->getFormatMetadata()
+                .getChildrenElements(METADATA_DESCRIPTION);
+            WriteTagElementVec(m_formatter, desc);
+        }
+
+        // Input Descriptors.
+        {
+            auto & desc = m_transform->getFormatMetadata()
+                .getChildrenElements(METADATA_INPUT_DESCRIPTOR);
+            WriteTagElementVec(m_formatter, desc);
+        }
+
+        // Output Descriptors.
+        {
+           auto & desc = m_transform->getFormatMetadata()
+                .getChildrenElements(METADATA_OUTPUT_DESCRIPTOR);
+            WriteTagElementVec(m_formatter, desc);
+        }
 
         const FormatMetadataImpl & info = m_transform->getInfoMetadata();
         {

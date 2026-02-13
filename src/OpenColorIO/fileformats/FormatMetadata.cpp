@@ -219,6 +219,20 @@ int FormatMetadataImpl::getFirstChildIndex(const std::string & name) const noexc
     return -1;
 }
 
+FormatMetadataImpl::Elements FormatMetadataImpl::getChildrenElements(
+    const std::string & name) const noexcept
+{
+    Elements subElements;
+    for (auto & it : m_elements)
+    {
+        if (0 == Platform::Strcasecmp(name.c_str(), it.getElementName()))
+        {
+            subElements.push_back(it);
+        }
+    }
+    return subElements;
+}
+
 int FormatMetadataImpl::findNamedAttribute(const std::string & name) const noexcept
 {
     int i = 0;

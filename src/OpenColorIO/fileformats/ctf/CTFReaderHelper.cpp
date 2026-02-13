@@ -74,7 +74,7 @@ void CTFReaderTransformElt::start(const char ** atts)
                 throwMessage("Attribute 'id' does not have a value.");
             }
 
-            m_transform->setID(atts[i + 1]);
+            m_transform->getFormatMetadata().addAttribute(ATTR_ID, atts[i + 1]);
             isIdFound = true;
         }
         else if (0 == Platform::Strcasecmp(ATTR_XMLNS, atts[i]))
@@ -112,7 +112,7 @@ void CTFReaderTransformElt::start(const char ** atts)
                 throwMessage("If the attribute 'name' is present, it must have a value.");
             }
 
-            m_transform->setName(atts[i + 1]);
+            m_transform->getFormatMetadata().addAttribute(ATTR_NAME, atts[i + 1]);
         }
         else if (0 == Platform::Strcasecmp(ATTR_INVERSE_OF, atts[i]))
         {
@@ -121,7 +121,7 @@ void CTFReaderTransformElt::start(const char ** atts)
                 throwMessage("If the attribute 'inverseOf' is present, it must have a value.");
             }
 
-            m_transform->setInverseOfId(atts[i + 1]);
+            m_transform->getFormatMetadata().addAttribute(ATTR_INVERSE_OF, atts[i + 1]);
         }
         else if (0 == Platform::Strcasecmp(ATTR_VERSION, atts[i]))
         {
@@ -210,10 +210,12 @@ void CTFReaderTransformElt::start(const char ** atts)
         }
         else if(StringUtils::StartsWith(std::string(atts[i]),"xmlns:"))
         {
-            // TODO: Once the CTFReaderTransform class gets a FormatMetada
-            // member, push this as an attribute. Until then just ignore with a
-            // reminder warning.
-            logParameterWarning(atts[i]);
+            // push as metadata attribute.
+            if (!atts[i + 1] || !*atts[i + 1])
+            {
+                throwMessage("If the attribute 'xmlns:*' is present, it must have a value.");
+            }
+            m_transform->getFormatMetadata().addAttribute(atts[i], atts[i + 1]);
         }
         else
         {
@@ -251,9 +253,9 @@ void CTFReaderTransformElt::end()
 {
 }
 
-void CTFReaderTransformElt::appendMetadata(const std::string & /*name*/, const std::string & value)
+void CTFReaderTransformElt::appendMetadata(FormatMetadataImpl& metadata)
 {
-    getTransform()->getDescriptions().push_back(value);
+    getTransform()->getFormatMetadata().getChildrenElements().push_back(metadata);
 }
 
 const CTFReaderTransformPtr & CTFReaderTransformElt::getTransform() const
@@ -265,10 +267,6 @@ const char * CTFReaderTransformElt::getTypeName() const
 {
     static const std::string n(TAG_PROCESS_LIST);
     return n.c_str();
-}
-void CTFReaderTransformElt::setIDElement(const std::string& idStr)
-{
-    getTransform()->setIDElement(idStr.c_str());
 }
 
 void CTFReaderTransformElt::setVersion(const CTFVersion & ver)
@@ -312,10 +310,10 @@ void CTFReaderIdElt::end()
         LogWarning(ss.str().c_str());   
     }
 
-    auto* pTransformnElt = dynamic_cast<CTFReaderTransformElt*>(getParent().get());
-    if (pTransformnElt)
+    if(!m_id.empty()) 
     {
-        pTransformnElt->setIDElement(m_id);
+        FormatMetadataImpl metadata(getName(), m_id);
+        getParent()->appendMetadata(metadata);
     }
 }
 
@@ -858,6 +856,45 @@ void CTFReaderInfoElt::end()
 
 //////////////////////////////////////////////////////////
 
+void CTFReaderDescElt::start(const char **  atttributes )
+{
+    m_desc = {};
+    m_language = {};
+
+    unsigned i = 0;
+
+    const char ** attr = atttributes;
+    while (*attr)
+    {
+        if (0 == Platform::Strcasecmp(ATTR_LANGUAGE, *attr))
+        {
+            if (!attr || !(attr + 1))
+            {
+                throwMessage("Attribute 'language' does not have a value.");
+            }
+
+            m_language = *(attr + 1);
+        }
+
+        attr += 2;
+    }
+}
+
+void CTFReaderDescElt::end() 
+{
+    FormatMetadataImpl metadata(getName(), m_desc);
+    if(!m_language.empty())
+    {
+        metadata.addAttribute(ATTR_LANGUAGE, m_language.c_str());
+    }
+    getParent()->appendMetadata(metadata);
+}
+
+//////////////////////////////////////////////////////////
+
+
+
+
 CTFReaderOpElt::CTFReaderOpElt()
     : XmlReaderContainerElt("", 0, "")
 {
@@ -887,10 +924,9 @@ const std::string & CTFReaderOpElt::getIdentifier() const
     return getOp()->getID();
 }
 
-void CTFReaderOpElt::appendMetadata(const std::string & name, const std::string & value)
+void CTFReaderOpElt::appendMetadata(FormatMetadataImpl& metadata)
 {
-    FormatMetadataImpl item(name, value);
-    getOp()->getFormatMetadata().getChildrenElements().push_back(item);
+    getOp()->getFormatMetadata().getChildrenElements().push_back(metadata);
 }
 
 void CTFReaderOpElt::start(const char ** atts)

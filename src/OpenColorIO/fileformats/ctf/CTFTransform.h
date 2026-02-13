@@ -166,36 +166,22 @@ public:
 
     const std::string & getID() const
     {
-        return m_id;
+        return m_formatMetadata.getAttributeValueString(METADATA_ID);
     }
     void setID(const char * id)
     {
-        m_id = id;
+        m_formatMetadata.addAttribute(METADATA_ID, id);
     }
-    const std::string & getIDElement() const
-    {
-        return m_id_element;
-    }
-    void setIDElement(const char * id)
-    {
-        m_id_element = id;
-    }
+
     const std::string & getName() const
     {
-        return m_name;
+        return m_formatMetadata.getAttributeValueString(METADATA_NAME);
     }
     void setName(const char * name)
     {
-        m_name = name;
+        m_formatMetadata.addAttribute(METADATA_NAME, name);
     }
-    const std::string & getInverseOfId() const
-    {
-        return m_inverseOfId;
-    }
-    void setInverseOfId(const char * id)
-    {
-        m_inverseOfId = id;
-    }
+
     FormatMetadataImpl & getInfoMetadata()
     {
         return m_infoMetadata;
@@ -204,6 +190,16 @@ public:
     {
         return m_infoMetadata;
     }
+
+    FormatMetadataImpl & getFormatMetadata()
+    {
+        return m_formatMetadata;
+    }
+    const FormatMetadataImpl & getFormatMetadata() const
+    {
+        return m_formatMetadata;
+    }
+
     const ConstOpDataVec & getOpDataVec() const
     {
         return m_ops;
@@ -211,34 +207,6 @@ public:
     ConstOpDataVec & getOpDataVec()
     {
         return m_ops;
-    }
-    const StringUtils::StringVec & getDescriptions() const
-    {
-        return m_descriptions;
-    }
-    StringUtils::StringVec & getDescriptions()
-    {
-        return m_descriptions;
-    }
-
-    const StringUtils::StringVec & getInputDescriptors() const
-    {
-        return m_inDescriptors;
-    }
-
-    StringUtils::StringVec & getInputDescriptors() 
-    {
-        return m_inDescriptors;
-    }
-
-    const StringUtils::StringVec & getOutputDescriptors() const
-    {
-        return m_outDescriptors;
-    }
-
-    StringUtils::StringVec & getOutputDescriptors() 
-    {
-        return m_outDescriptors;
     }
 
     void setCTFVersion(const CTFVersion & ver);
@@ -262,16 +230,10 @@ public:
     }
 
 private:
-    std::string m_id;         // id attribute
-    std::string m_id_element; // id element
-    std::string m_name;
-    std::string m_inverseOfId;
     FormatMetadataImpl m_infoMetadata;
+    FormatMetadataImpl m_formatMetadata;
 
     ConstOpDataVec m_ops;
-    StringUtils::StringVec m_descriptions;
-    StringUtils::StringVec m_inDescriptors;
-    StringUtils::StringVec m_outDescriptors;
 
     // CTF version used even for CLF files.
     // CLF versions <= 2.0 are interpreted as CTF version 1.7.

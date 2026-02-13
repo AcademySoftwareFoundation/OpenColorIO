@@ -27,6 +27,27 @@ OCIO::LocalCachedFileRcPtr LoadCLFFile(const std::string & fileName)
     return OCIO::LoadTestFile<OCIO::LocalFileFormat, OCIO::LocalCachedFile>(
         fileName, std::ios_base::in);
 }
+
+const OCIO::FormatMetadataImpl::Elements getChildrenMetadata(
+    const OCIO::CTFReaderTransformPtr transform, 
+    const char* elementName)
+{
+    return transform->getFormatMetadata().getChildrenElements(elementName);
+}
+
+OCIO::LocalCachedFileRcPtr ParseString(const std::string & str)
+{
+    std::istringstream ctf;
+    ctf.str(str);
+
+    // Parse stream.
+    std::string emptyString;
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr file = tester.read(ctf, emptyString, OCIO::INTERP_DEFAULT);
+
+    return OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
+}
+
 }
 
 OCIO_ADD_TEST(FileFormatCTF, missing_file)
@@ -49,8 +70,9 @@ OCIO_ADD_TEST(FileFormatCTF, clf_examples)
         OCIO_CHECK_EQUAL(cachedFile->m_transform->getName(),
                          "transform example lut1d");
         OCIO_CHECK_EQUAL(cachedFile->m_transform->getID(), "exlut1");
-        OCIO_CHECK_EQUAL(cachedFile->m_transform->getDescriptions().size(), 1);
-        OCIO_CHECK_EQUAL(cachedFile->m_transform->getDescriptions()[0],
+        auto descriptions = getChildrenMetadata(cachedFile->m_transform, OCIO::METADATA_DESCRIPTION);
+        OCIO_REQUIRE_EQUAL(descriptions.size(), 1);
+        OCIO_CHECK_EQUAL_STR(descriptions[0].getElementValue(), 
                          "1D LUT with legal out of range values");
         const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOpDataVec();
         OCIO_REQUIRE_EQUAL(opList.size(), 1);
@@ -75,9 +97,9 @@ OCIO_ADD_TEST(FileFormatCTF, clf_examples)
         OCIO_CHECK_EQUAL(cachedFile->m_transform->getName(),
                          "transform example lut3d");
         OCIO_CHECK_EQUAL(cachedFile->m_transform->getID(), "exlut2");
-        OCIO_REQUIRE_EQUAL(cachedFile->m_transform->getDescriptions().size(), 1);
-        OCIO_CHECK_EQUAL(cachedFile->m_transform->getDescriptions()[0],
-                         " 3D LUT example ");
+        auto descriptions = getChildrenMetadata(cachedFile->m_transform, OCIO::METADATA_DESCRIPTION);
+        OCIO_REQUIRE_EQUAL(descriptions.size(), 1);
+        OCIO_CHECK_EQUAL_STR(descriptions[0].getElementValue(), " 3D LUT example ");
         const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOpDataVec();
         OCIO_REQUIRE_EQUAL(opList.size(), 1);
         OCIO_CHECK_EQUAL(opList[0]->getName(), "identity");
@@ -100,11 +122,14 @@ OCIO_ADD_TEST(FileFormatCTF, clf_examples)
         OCIO_CHECK_EQUAL(cachedFile->m_transform->getName(),
                          "transform example matrix");
         OCIO_CHECK_EQUAL(cachedFile->m_transform->getID(), "exmat1");
-        OCIO_REQUIRE_EQUAL(cachedFile->m_transform->getDescriptions().size(), 2);
-        OCIO_CHECK_EQUAL(cachedFile->m_transform->getDescriptions()[0],
-                         " Matrix example ");
-        OCIO_CHECK_EQUAL(cachedFile->m_transform->getDescriptions()[1],
-                         " Used by unit tests ");
+
+        auto & md = cachedFile->m_transform->getFormatMetadata();
+        OCIO_REQUIRE_EQUAL(md.getNumChildrenElements(), 2);
+        OCIO_CHECK_EQUAL_STR(md.getChildElement(0).getElementName(), "Description");
+        OCIO_CHECK_EQUAL_STR(md.getChildElement(0).getElementValue(), " Matrix example ");
+        OCIO_CHECK_EQUAL_STR(md.getChildElement(1).getElementName(), "Description");
+        OCIO_CHECK_EQUAL_STR(md.getChildElement(1).getElementValue(), " Used by unit tests ");
+
         const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOpDataVec();
         OCIO_REQUIRE_EQUAL(opList.size(), 1);
         OCIO_CHECK_EQUAL(opList[0]->getName(), "colorspace conversion");
@@ -167,9 +192,14 @@ OCIO_ADD_TEST(FileFormatCTF, clf_examples)
         OCIO_CHECK_EQUAL(cachedFile->m_transform->getName(),
                          "transform example lut IndexMap");
         OCIO_CHECK_EQUAL(cachedFile->m_transform->getID(), "exlut3");
-        OCIO_REQUIRE_EQUAL(cachedFile->m_transform->getDescriptions().size(), 1);
-        OCIO_CHECK_EQUAL(cachedFile->m_transform->getDescriptions()[0],
-                         " IndexMap LUT example from spec ");
+
+        auto & md = cachedFile->m_transform->getFormatMetadata();
+        OCIO_REQUIRE_EQUAL(md.getNumChildrenElements(), 1);
+        OCIO_CHECK_EQUAL_STR(md.getChildElement(0).getElementName(), 
+            "Description");
+        OCIO_CHECK_EQUAL_STR(md.getChildElement(0).getElementValue(), 
+            " IndexMap LUT example from spec ");
+
         const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOpDataVec();
         OCIO_REQUIRE_EQUAL(opList.size(), 2);
         auto pR = std::dynamic_pointer_cast<const OCIO::RangeOpData>(opList[0]);
@@ -210,11 +240,13 @@ OCIO_ADD_TEST(FileFormatCTF, matrix4x4)
     auto pMatrix = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pMatrix);
 
-    OCIO_REQUIRE_ASSERT(cachedFile->m_transform->getInputDescriptors().size() == 1);
-    OCIO_CHECK_ASSERT(cachedFile->m_transform->getInputDescriptors()[0] == "XYZ");
-
-    OCIO_REQUIRE_ASSERT(cachedFile->m_transform->getOutputDescriptors().size() == 1);
-    OCIO_CHECK_ASSERT(cachedFile->m_transform->getOutputDescriptors()[0] == "RGB");
+    auto inDescs = getChildrenMetadata(cachedFile->m_transform, OCIO::METADATA_INPUT_DESCRIPTOR);
+    OCIO_CHECK_EQUAL(inDescs.size(), 1);
+    OCIO_CHECK_EQUAL_STR(inDescs[0].getElementValue(), "XYZ");
+    
+    auto outDescs = getChildrenMetadata(cachedFile->m_transform, OCIO::METADATA_OUTPUT_DESCRIPTOR);
+    OCIO_CHECK_EQUAL(outDescs.size(), 1);
+    OCIO_CHECK_EQUAL_STR(outDescs[0].getElementValue(), "RGB");
 
     OCIO_CHECK_EQUAL(pMatrix->getFileInputBitDepth(), OCIO::BIT_DEPTH_F32);
     OCIO_CHECK_EQUAL(pMatrix->getFileOutputBitDepth(), OCIO::BIT_DEPTH_F32);
@@ -332,11 +364,13 @@ OCIO_ADD_TEST(FileFormatCTF, matrix_1_3_3x3)
     auto pMatrix = std::dynamic_pointer_cast<const OCIO::MatrixOpData>(opList[0]);
     OCIO_REQUIRE_ASSERT(pMatrix);
 
-    OCIO_REQUIRE_ASSERT(cachedFile->m_transform->getInputDescriptors().size() == 1);
-    OCIO_CHECK_ASSERT(cachedFile->m_transform->getInputDescriptors()[0] == "XYZ");
-
-    OCIO_REQUIRE_ASSERT(cachedFile->m_transform->getOutputDescriptors().size() == 1);
-    OCIO_CHECK_ASSERT(cachedFile->m_transform->getOutputDescriptors()[0] == "RGB");
+    auto inDescs = getChildrenMetadata(cachedFile->m_transform, OCIO::METADATA_INPUT_DESCRIPTOR);
+    OCIO_CHECK_EQUAL(inDescs.size(), 1);
+    OCIO_CHECK_EQUAL_STR(inDescs[0].getElementValue(), "XYZ");
+    
+    auto outDescs = getChildrenMetadata(cachedFile->m_transform, OCIO::METADATA_OUTPUT_DESCRIPTOR);
+    OCIO_CHECK_EQUAL(outDescs.size(), 1);
+    OCIO_CHECK_EQUAL_STR(outDescs[0].getElementValue(), "RGB");
 
     OCIO_CHECK_EQUAL(pMatrix->getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
     OCIO_CHECK_EQUAL(pMatrix->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT10);
@@ -646,15 +680,23 @@ OCIO_ADD_TEST(FileFormatCTF, lut_1d)
         OCIO_CHECK_EQUAL(cachedFile->m_transform->getName(), "1d-lut example");
         OCIO_CHECK_EQUAL(cachedFile->m_transform->getID(),
                          "9843a859-e41e-40a8-a51c-840889c3774e");
-        OCIO_REQUIRE_EQUAL(cachedFile->m_transform->getDescriptions().size(), 1);
-        OCIO_CHECK_EQUAL(cachedFile->m_transform->getDescriptions()[0],
-                         "Apply a 1/2.2 gamma.");
 
-        OCIO_REQUIRE_ASSERT(cachedFile->m_transform->getInputDescriptors().size() == 1);
-        OCIO_CHECK_EQUAL(cachedFile->m_transform->getInputDescriptors()[0], "RGB");
+        auto & md = cachedFile->m_transform->getFormatMetadata();
+        OCIO_REQUIRE_EQUAL(md.getNumChildrenElements(), 3);
+        OCIO_CHECK_EQUAL_STR(md.getChildElement(0).getElementName(), "Description");
+        OCIO_CHECK_EQUAL_STR(md.getChildElement(0).getElementValue(),"Apply a 1/2.2 gamma.");
+        OCIO_CHECK_EQUAL_STR(md.getChildElement(1).getElementName(), "InputDescriptor");
+        OCIO_CHECK_EQUAL_STR(md.getChildElement(1).getElementValue(),"RGB");
+        OCIO_CHECK_EQUAL_STR(md.getChildElement(2).getElementName(), "OutputDescriptor");
+        OCIO_CHECK_EQUAL_STR(md.getChildElement(2).getElementValue(),"RGB");
 
-        OCIO_REQUIRE_ASSERT(cachedFile->m_transform->getOutputDescriptors().size() == 1);
-        OCIO_CHECK_EQUAL(cachedFile->m_transform->getOutputDescriptors()[0], "RGB");
+        auto inDescs = getChildrenMetadata(cachedFile->m_transform, OCIO::METADATA_INPUT_DESCRIPTOR);
+        OCIO_CHECK_EQUAL(inDescs.size(), 1);
+        OCIO_CHECK_EQUAL_STR(inDescs[0].getElementValue(), "RGB");
+    
+        auto outDescs = getChildrenMetadata(cachedFile->m_transform, OCIO::METADATA_OUTPUT_DESCRIPTOR);
+        OCIO_CHECK_EQUAL(outDescs.size(), 1);
+        OCIO_CHECK_EQUAL_STR(outDescs[0].getElementValue(), "RGB");
 
         const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOpDataVec();
         OCIO_REQUIRE_EQUAL(opList.size(), 1);
@@ -1003,22 +1045,6 @@ OCIO_ADD_TEST(FileFormatCTF, lut1d_inv_scaling)
     OCIO_CHECK_CLOSE(a2.getValues()[31743 * 3], 0.84031434f, error);
 }
 
-namespace
-{
-OCIO::LocalCachedFileRcPtr ParseString(const std::string & str)
-{
-    std::istringstream ctf;
-    ctf.str(str);
-
-    // Parse stream.
-    std::string emptyString;
-    OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr file = tester.read(ctf, emptyString, OCIO::INTERP_DEFAULT);
-
-    return OCIO_DYNAMIC_POINTER_CAST<OCIO::LocalCachedFile>(file);
-}
-}
-
 OCIO_ADD_TEST(FileFormatCTF, invlut1d_clf)
 {
     const std::string clf{ R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -1267,11 +1293,21 @@ OCIO_ADD_TEST(FileFormatCTF, smpte_id_element)
     OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
     OCIO_REQUIRE_ASSERT((bool)cachedFile);
     OCIO_CHECK_EQUAL(cachedFile->m_transform->getID(), "urn:uuid:9d768121-0cf9-40a3-a8e3-7b49f79858a7");
-    OCIO_REQUIRE_EQUAL(cachedFile->m_transform->getDescriptions().size(), 2);
-    OCIO_CHECK_EQUAL(cachedFile->m_transform->getDescriptions()[0],
-                        "Identity transform illustrating Array bit depth scaling");
-    OCIO_CHECK_EQUAL(cachedFile->m_transform->getDescriptions()[1],
-                        "Can be loaded by either SMPTE or CLF v3 parsers");
+
+    auto & md = cachedFile->m_transform->getFormatMetadata();
+    OCIO_REQUIRE_EQUAL(md.getNumChildrenElements(), 3);
+    OCIO_CHECK_EQUAL_STR(md.getChildElement(0).getElementName(), 
+        "Id");
+    OCIO_CHECK_EQUAL_STR(md.getChildElement(0).getElementValue(), 
+        "urn:uuid:9d768121-0cf9-40a3-a8e3-7b49f79858a7");
+    OCIO_CHECK_EQUAL_STR(md.getChildElement(1).getElementName(), 
+        "Description");
+    OCIO_CHECK_EQUAL_STR(md.getChildElement(1).getElementValue(), 
+        "Identity transform illustrating Array bit depth scaling");
+    OCIO_CHECK_EQUAL_STR(md.getChildElement(2).getElementName(), 
+        "Description");
+    OCIO_CHECK_EQUAL_STR(md.getChildElement(2).getElementValue(), 
+        "Can be loaded by either SMPTE or CLF v3 parsers");
 
     // Check the ops.
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOpDataVec();
@@ -1308,8 +1344,8 @@ OCIO_ADD_TEST(FileFormatCTF, smpte_id_element)
     auto& meta = processor->getFormatMetadata();
     OCIO_REQUIRE_ASSERT(meta.getNumChildrenElements() == 3);
     auto& idElement = meta.getChildElement(0);
-    OCIO_CHECK_EQUAL(std::string(idElement.getElementName()), "Id");
-    OCIO_CHECK_EQUAL(std::string(idElement.getElementValue()), "urn:uuid:9d768121-0cf9-40a3-a8e3-7b49f79858a7");
+    OCIO_CHECK_EQUAL_STR(idElement.getElementName(), "Id");
+    OCIO_CHECK_EQUAL_STR(idElement.getElementValue(), "urn:uuid:9d768121-0cf9-40a3-a8e3-7b49f79858a7");
 }
 
 OCIO_ADD_TEST(FileFormatCTF, smpte_id_bad_value)
@@ -1338,19 +1374,16 @@ OCIO_ADD_TEST(FileFormatCTF, info_example)
     OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
     OCIO_REQUIRE_ASSERT((bool)cachedFile);
 
-    OCIO_CHECK_EQUAL(cachedFile->m_transform->getDescriptions().size(), 2);
-    OCIO_CHECK_EQUAL(cachedFile->m_transform->getDescriptions()[0],
-                     "Example of using the Info element");
-    OCIO_CHECK_EQUAL(cachedFile->m_transform->getDescriptions()[1],
-                     "A second description");
-
-    OCIO_REQUIRE_ASSERT(cachedFile->m_transform->getInputDescriptors().size() == 1)
-    OCIO_CHECK_EQUAL(cachedFile->m_transform->getInputDescriptors()[0],
-                     "input desc");
-
-    OCIO_REQUIRE_ASSERT(cachedFile->m_transform->getOutputDescriptors().size() == 1)
-    OCIO_CHECK_EQUAL(cachedFile->m_transform->getOutputDescriptors()[0],
-                     "output desc");
+    auto & md = cachedFile->m_transform->getFormatMetadata();
+    OCIO_REQUIRE_EQUAL(md.getNumChildrenElements(), 4);
+    OCIO_CHECK_EQUAL_STR(md.getChildElement(0).getElementName(), "Description");
+    OCIO_CHECK_EQUAL_STR(md.getChildElement(0).getElementValue(), "Example of using the Info element");
+    OCIO_CHECK_EQUAL_STR(md.getChildElement(1).getElementName(), "Description");
+    OCIO_CHECK_EQUAL_STR(md.getChildElement(1).getElementValue(), "A second description");
+    OCIO_CHECK_EQUAL_STR(md.getChildElement(2).getElementName(), "InputDescriptor");
+    OCIO_CHECK_EQUAL_STR(md.getChildElement(2).getElementValue(), "input desc");
+    OCIO_CHECK_EQUAL_STR(md.getChildElement(3).getElementName(), "OutputDescriptor");
+    OCIO_CHECK_EQUAL_STR(md.getChildElement(3).getElementValue(), "output desc");
 
     // Ensure ops were not affected by metadata parsing.
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOpDataVec();
@@ -1368,45 +1401,45 @@ OCIO_ADD_TEST(FileFormatCTF, info_example)
 
     // Check element values.
     //
-    OCIO_CHECK_EQUAL(std::string(info.getElementName()), OCIO::METADATA_INFO);
+    OCIO_CHECK_EQUAL_STR(info.getElementName(), OCIO::METADATA_INFO);
     auto items = info.getChildrenElements();
     OCIO_REQUIRE_EQUAL(items.size(), 6);
-    OCIO_CHECK_EQUAL(std::string(items[0].getElementName()), "Copyright");
-    OCIO_CHECK_EQUAL(std::string(items[0].getElementValue()),
+    OCIO_CHECK_EQUAL_STR(items[0].getElementName(), "Copyright");
+    OCIO_CHECK_EQUAL_STR(items[0].getElementValue(),
                      "Copyright Contributors to the OpenColorIO Project.");
-    OCIO_CHECK_EQUAL(std::string(items[1].getElementName()), "AppRelease");
-    OCIO_CHECK_EQUAL(std::string(items[1].getElementValue()), "2020.0.63");
-    OCIO_CHECK_EQUAL(std::string(items[2].getElementName()), "Revision");
-    OCIO_CHECK_EQUAL(std::string(items[2].getElementValue()), "1");
+    OCIO_CHECK_EQUAL_STR(items[1].getElementName(), "AppRelease");
+    OCIO_CHECK_EQUAL_STR(items[1].getElementValue(), "2020.0.63");
+    OCIO_CHECK_EQUAL_STR(items[2].getElementName(), "Revision");
+    OCIO_CHECK_EQUAL_STR(items[2].getElementValue(), "1");
 
-    OCIO_CHECK_EQUAL(std::string(items[3].getElementName()), "Category");
-    OCIO_CHECK_EQUAL(std::string(items[3].getElementValue()), "");
+    OCIO_CHECK_EQUAL_STR(items[3].getElementName(), "Category");
+    OCIO_CHECK_EQUAL_STR(items[3].getElementValue(), "");
     auto catItems = items[3].getChildrenElements();
     OCIO_REQUIRE_EQUAL(catItems.size(), 1);
-    OCIO_CHECK_EQUAL(std::string(catItems[0].getElementName()), "Tags");
+    OCIO_CHECK_EQUAL_STR(catItems[0].getElementName(), "Tags");
     auto tagsItems = catItems[0].getChildrenElements();
     OCIO_REQUIRE_EQUAL(tagsItems.size(), 2);
-    OCIO_CHECK_EQUAL(std::string(tagsItems[0].getElementName()), "SceneLinearWorkingSpace");
-    OCIO_CHECK_EQUAL(std::string(tagsItems[0].getElementValue()), "");
-    OCIO_CHECK_EQUAL(std::string(tagsItems[1].getElementName()), "Input");
-    OCIO_CHECK_EQUAL(std::string(tagsItems[1].getElementValue()), "");
+    OCIO_CHECK_EQUAL_STR(tagsItems[0].getElementName(), "SceneLinearWorkingSpace");
+    OCIO_CHECK_EQUAL_STR(tagsItems[0].getElementValue(), "");
+    OCIO_CHECK_EQUAL_STR(tagsItems[1].getElementName(), "Input");
+    OCIO_CHECK_EQUAL_STR(tagsItems[1].getElementValue(), "");
 
-    OCIO_CHECK_EQUAL(std::string(items[4].getElementName()), "InputColorSpace");
-    OCIO_CHECK_EQUAL(std::string(items[4].getElementValue()), "");
+    OCIO_CHECK_EQUAL_STR(items[4].getElementName(), "InputColorSpace");
+    OCIO_CHECK_EQUAL_STR(items[4].getElementValue(), "");
     auto icItems = items[4].getChildrenElements();
     OCIO_REQUIRE_EQUAL(icItems.size(), 4);
-    OCIO_CHECK_EQUAL(std::string(icItems[0].getElementName()), OCIO::METADATA_DESCRIPTION);
-    OCIO_CHECK_EQUAL(std::string(icItems[0].getElementValue()), "Input color space description");
-    OCIO_CHECK_EQUAL(std::string(icItems[1].getElementName()), "ImageState");
-    OCIO_CHECK_EQUAL(std::string(icItems[1].getElementValue()), "video");
-    OCIO_CHECK_EQUAL(std::string(icItems[2].getElementName()), "ShortName");
-    OCIO_CHECK_EQUAL(std::string(icItems[2].getElementValue()), "no_version");
-    OCIO_CHECK_EQUAL(std::string(icItems[3].getElementName()), "ID");
-    OCIO_CHECK_EQUAL(std::string(icItems[3].getElementValue()),
+    OCIO_CHECK_EQUAL_STR(icItems[0].getElementName(), OCIO::METADATA_DESCRIPTION);
+    OCIO_CHECK_EQUAL_STR(icItems[0].getElementValue(), "Input color space description");
+    OCIO_CHECK_EQUAL_STR(icItems[1].getElementName(), "ImageState");
+    OCIO_CHECK_EQUAL_STR(icItems[1].getElementValue(), "video");
+    OCIO_CHECK_EQUAL_STR(icItems[2].getElementName(), "ShortName");
+    OCIO_CHECK_EQUAL_STR(icItems[2].getElementValue(), "no_version");
+    OCIO_CHECK_EQUAL_STR(icItems[3].getElementName(), "ID");
+    OCIO_CHECK_EQUAL_STR(icItems[3].getElementValue(),
                      "387b23d1-f1ce-3f69-8544-e5601f45f78b");
 
-    OCIO_CHECK_EQUAL(std::string(items[5].getElementName()), "OutputColorSpace");
-    OCIO_CHECK_EQUAL(std::string(items[5].getElementValue()), "");
+    OCIO_CHECK_EQUAL_STR(items[5].getElementName(), "OutputColorSpace");
+    OCIO_CHECK_EQUAL_STR(items[5].getElementValue(), "");
     auto ocItems = items[5].getChildrenElements();
     OCIO_REQUIRE_EQUAL(ocItems.size(), 3);
     auto attribs = items[5].getAttributes();
@@ -1415,116 +1448,164 @@ OCIO_ADD_TEST(FileFormatCTF, info_example)
     OCIO_CHECK_EQUAL(attribs[0].second, "test1");
     OCIO_CHECK_EQUAL(attribs[1].first, "att2");
     OCIO_CHECK_EQUAL(attribs[1].second, "test2");
-    OCIO_CHECK_EQUAL(std::string(ocItems[0].getElementName()), "ImageState");
-    OCIO_CHECK_EQUAL(std::string(ocItems[0].getElementValue()), "scene");
-    OCIO_CHECK_EQUAL(std::string(ocItems[1].getElementName()), "ShortName");
-    OCIO_CHECK_EQUAL(std::string(ocItems[1].getElementValue()), "ACES");
-    OCIO_CHECK_EQUAL(std::string(ocItems[2].getElementName()), "ID");
-    OCIO_CHECK_EQUAL(std::string(ocItems[2].getElementValue()), "1");
+    OCIO_CHECK_EQUAL_STR(ocItems[0].getElementName(), "ImageState");
+    OCIO_CHECK_EQUAL_STR(ocItems[0].getElementValue(), "scene");
+    OCIO_CHECK_EQUAL_STR(ocItems[1].getElementName(), "ShortName");
+    OCIO_CHECK_EQUAL_STR(ocItems[1].getElementValue(), "ACES");
+    OCIO_CHECK_EQUAL_STR(ocItems[2].getElementName(), "ID");
+    OCIO_CHECK_EQUAL_STR(ocItems[2].getElementValue(), "1");
 }
 
 OCIO_ADD_TEST(FileFormatCTF, smpte_all_metadata)
 {
+    // Function to check children elements and their attributes.
+    auto checkCommonMetadata = [](const OCIO::FormatMetadataImpl& md)
+    {
+        auto & items = md.getChildrenElements();
+        OCIO_REQUIRE_EQUAL(items.size(), 9); 
+        OCIO_CHECK_EQUAL_STR(items[0].getElementName(),  "Id");
+        OCIO_CHECK_EQUAL_STR(items[0].getElementValue(), "urn:uuid:a8f91bfa-b79f-5d4d-b750-a411c476bb47");
+
+        OCIO_CHECK_EQUAL_STR(items[1].getElementName(),  "Description");
+        OCIO_CHECK_EQUAL_STR(items[1].getElementValue(), "Demo Advanced LUT with dummy values");
+        OCIO_CHECK_EQUAL_STR(items[1].getAttributeValue("language"),  "en");
+
+        OCIO_CHECK_EQUAL_STR(items[2].getElementName(),  "Description");
+        OCIO_CHECK_EQUAL_STR(items[2].getElementValue(), "Démonstration d'une LUT avancée avec des valeurs factices");
+        OCIO_CHECK_EQUAL_STR(items[2].getAttributeValue("language"),  "fr");
+
+        OCIO_CHECK_EQUAL_STR(items[3].getElementName(),  "Description");
+        OCIO_CHECK_EQUAL_STR(items[3].getElementValue(), "Demo Erweiterte LUT mit Dummy-Werten");
+        OCIO_CHECK_EQUAL_STR(items[3].getAttributeValue("language"),  "de");
+
+        OCIO_CHECK_EQUAL_STR(items[4].getElementName(),  "InputDescriptor");
+        OCIO_CHECK_EQUAL_STR(items[4].getElementValue(), "ITU-R BT.709");
+        OCIO_CHECK_EQUAL_STR(items[4].getAttributeValue("language"),  "en-GB");
+
+        OCIO_CHECK_EQUAL_STR(items[5].getElementName(),  "OutputDescriptor");
+        OCIO_CHECK_EQUAL_STR(items[5].getElementValue(), "Same as Input");
+        OCIO_CHECK_EQUAL_STR(items[5].getAttributeValue("language"),  "en-US");
+   
+        OCIO_CHECK_EQUAL_STR(items[6].getElementName(),  "OutputDescriptor");
+        OCIO_CHECK_EQUAL_STR(items[6].getElementValue(), "Identique à l'entrée");
+        OCIO_CHECK_EQUAL_STR(items[6].getAttributeValue("language"),  "fr");
+
+        OCIO_CHECK_EQUAL_STR(items[7].getElementName(),  "OutputDescriptor");
+        OCIO_CHECK_EQUAL_STR(items[7].getElementValue(), "Gleiches wie Eingabe");
+        OCIO_CHECK_EQUAL_STR(items[7].getAttributeValue("language"),  "de");
+    
+        OCIO_CHECK_EQUAL_STR(items[8].getElementName(),  "Info");
+        OCIO_CHECK_EQUAL_STR(items[8].getElementValue(), "");
+
+        // Info block (name spaces are retained)
+        auto & info = items[8].getChildrenElements();
+        OCIO_REQUIRE_EQUAL(info.size(), 9);
+        OCIO_CHECK_EQUAL_STR(info[0].getElementName(),  "Profile");
+        OCIO_CHECK_EQUAL_STR(info[0].getElementValue(), "http://www.smpte-ra.org/ns/2136-10/2026#Live_Broadcast_LUT33");
+
+        OCIO_CHECK_EQUAL_STR(info[1].getElementName(),  "AppRelease");
+        OCIO_CHECK_EQUAL_STR(info[1].getElementValue(), "SMPTE_2136-10_Example");
+
+        OCIO_CHECK_EQUAL_STR(info[2].getElementName(),  "Copyright");
+        OCIO_CHECK_EQUAL_STR(info[2].getElementValue(), "OCIO contributors");
+
+        OCIO_CHECK_EQUAL_STR(info[3].getElementName(),  "Revision");
+        OCIO_CHECK_EQUAL_STR(info[3].getElementValue(), "1.0");
+
+        OCIO_CHECK_EQUAL_STR(info[4].getElementName(),  "clfbp:InputCharacteristics");
+        OCIO_CHECK_EQUAL_STR(info[4].getElementValue(), "");
+    
+        OCIO_CHECK_EQUAL_STR(info[5].getElementName(),  "clfbp:OutputCharacteristics");
+        OCIO_CHECK_EQUAL_STR(info[5].getElementValue(), "");
+    
+        OCIO_CHECK_EQUAL_STR(info[6].getElementName(),  "clfbp:OutputVideoSignalClipping");
+        OCIO_CHECK_EQUAL_STR(info[6].getElementValue(), "sdiClip");
+    
+        OCIO_CHECK_EQUAL_STR(info[7].getElementName(),  "Keywords");
+        OCIO_CHECK_EQUAL_STR(info[7].getElementValue(), "Test, Display-light");
+    
+        OCIO_CHECK_EQUAL_STR(info[8].getElementName(),  "clfbp:ContactEmail");
+        OCIO_CHECK_EQUAL_STR(info[8].getElementValue(), "fake-email@ocio.org");
+
+        // Info / InputCharacteristics
+        auto & input = info[4].getChildrenElements();
+        OCIO_REQUIRE_EQUAL(input.size(), 3);
+        OCIO_CHECK_EQUAL_STR(input[0].getElementName(),  "clfbp:ColorPrimaries");
+        OCIO_CHECK_EQUAL_STR(input[0].getElementValue(), "ColorPrimaries_ITU709");
+
+        OCIO_CHECK_EQUAL_STR(input[1].getElementName(),  "clfbp:TransferCharacteristic");
+        OCIO_CHECK_EQUAL_STR(input[1].getElementValue(), "TransferCharacteristic_ITU709");
+    
+        OCIO_CHECK_EQUAL_STR(input[2].getElementName(),  "clfbp:CodingEquations");
+        OCIO_CHECK_EQUAL_STR(input[2].getElementValue(), "CodingEquations_ITU709");
+
+        // Info / OutputCharacteristics
+        auto & output = info[5].getChildrenElements();
+        OCIO_REQUIRE_EQUAL(output.size(), 3);
+        OCIO_CHECK_EQUAL_STR(output[0].getElementName(),  "clfbp:ColorPrimaries");
+        OCIO_CHECK_EQUAL_STR(output[0].getElementValue(), "ColorPrimaries_ITU2020");
+
+        OCIO_CHECK_EQUAL_STR(output[1].getElementName(),  "clfbp:TransferCharacteristic");
+        OCIO_CHECK_EQUAL_STR(output[1].getElementValue(), "TransferCharacteristic_SMPTEST2084");
+    
+        OCIO_CHECK_EQUAL_STR(output[2].getElementName(),  "clfbp:CodingEquations");
+        OCIO_CHECK_EQUAL_STR(output[2].getElementValue(), "CodingEquations_ITU2100_ICtCp");
+    };
+
+    // Read the file and check the metadata content.
     const std::string ctfFile("clf/smpte_only/broadcast_profile_lut33.clf");
     OCIO::ConstProcessorRcPtr processor;
     OCIO_CHECK_NO_THROW(processor = OCIO::GetFileTransformProcessor(ctfFile));
     OCIO_REQUIRE_ASSERT(processor);
 
-    const auto & md = dynamic_cast<const OCIO::FormatMetadataImpl&>
-        (processor->getFormatMetadata());
-    OCIO_REQUIRE_EQUAL(md.getNumAttributes(), 1);
+    // Check the metadata
+    {
+        const auto& md1 = dynamic_cast<const OCIO::FormatMetadataImpl&>(
+            processor->getFormatMetadata());
+
+        // Root attributes.
+        OCIO_REQUIRE_EQUAL(md1.getNumAttributes(), 2);
+
+        OCIO_CHECK_EQUAL_STR(md1.getAttributeName(0), "name");
+        OCIO_CHECK_EQUAL_STR(md1.getAttributeValue(0),"SMPTE Example Live Broadcast LUT33 Profile");
+
+        OCIO_CHECK_EQUAL_STR(md1.getAttributeName(1), "xmlns:clfbp");
+        OCIO_CHECK_EQUAL_STR(md1.getAttributeValue(1),"http://www.smpte-ra.org/ns/2136-10/2026");
+
+        // Child nodes.
+        checkCommonMetadata(md1);
+    }
     
-    // Attributes (xmlns:clfbp is ignored, xmlns becomes version)
-    OCIO_CHECK_EQUAL(std::string(md.getAttributeName(0)),  "name");
-    OCIO_CHECK_EQUAL(std::string(md.getAttributeValue(0)), "SMPTE Example Live Broadcast LUT33 Profile");
+    // Write, read back and check if metadata survives the roundtrip.
+    {
+        std::ostringstream oss;
+        const auto group = processor->createGroupTransform();
+        OCIO::ConstConfigRcPtr config = OCIO::Config::CreateRaw();
+        OCIO_CHECK_NO_THROW(group->write(config, "Academy/ASC Common LUT Format", oss));
+        auto str = oss.str();
 
-    // TODO: Also needs to have xmlns:clfbp in the attr list.
+        OCIO::LocalCachedFileRcPtr cachedFile;
+        OCIO_CHECK_NO_THROW(cachedFile = ParseString(str));
 
-    // Child elements (language attributes are currently ignored)
-    auto & items = md.getChildrenElements();
-    OCIO_REQUIRE_EQUAL(items.size(), 9); 
-    OCIO_CHECK_EQUAL(std::string(items[0].getElementName()),  "Id");
-    OCIO_CHECK_EQUAL(std::string(items[0].getElementValue()), "urn:uuid:a8f91bfa-b79f-5d4d-b750-a411c476bb47");
+        // Get the combined metadata from the the transform.
+        OCIO::FormatMetadataImpl md2;
+        cachedFile->m_transform->toMetadata(md2);
 
-    OCIO_CHECK_EQUAL(std::string(items[1].getElementName()),  "Description");
-    OCIO_CHECK_EQUAL(std::string(items[1].getElementValue()), "Demo Advanced LUT with dummy values");
+        // Root Attributes (will be different as id is added)
+        OCIO_REQUIRE_EQUAL(md2.getNumAttributes(), 3);
 
-    OCIO_CHECK_EQUAL(std::string(items[2].getElementName()),  "Description");
-    OCIO_CHECK_EQUAL(std::string(items[2].getElementValue()), "Démonstration d'une LUT avancée avec des valeurs factices");
+        OCIO_CHECK_EQUAL_STR(md2.getAttributeName(0), "id");
+        OCIO_CHECK_EQUAL_STR(md2.getAttributeValue(0), "urn:uuid:9656a363-bf0a-c5f9-debe-8a083b88107f");
+        
+        OCIO_CHECK_EQUAL_STR(md2.getAttributeName(1), "name");
+        OCIO_CHECK_EQUAL_STR(md2.getAttributeValue(1), "SMPTE Example Live Broadcast LUT33 Profile");
 
-    OCIO_CHECK_EQUAL(std::string(items[3].getElementName()),  "Description");
-    OCIO_CHECK_EQUAL(std::string(items[3].getElementValue()), "Demo Erweiterte LUT mit Dummy-Werten");
+        OCIO_CHECK_EQUAL_STR(md2.getAttributeName(2), "xmlns:clfbp");
+        OCIO_CHECK_EQUAL_STR(md2.getAttributeValue(2), "http://www.smpte-ra.org/ns/2136-10/2026");
 
-    OCIO_CHECK_EQUAL(std::string(items[4].getElementName()),  "InputDescriptor");
-    OCIO_CHECK_EQUAL(std::string(items[4].getElementValue()), "ITU-R BT.709");
-
-    OCIO_CHECK_EQUAL(std::string(items[5].getElementName()),  "OutputDescriptor");
-    OCIO_CHECK_EQUAL(std::string(items[5].getElementValue()), "Same as Input");
-   
-    OCIO_CHECK_EQUAL(std::string(items[6].getElementName()),  "OutputDescriptor");
-    OCIO_CHECK_EQUAL(std::string(items[6].getElementValue()), "Identique à l'entrée");
-
-    OCIO_CHECK_EQUAL(std::string(items[7].getElementName()),  "OutputDescriptor");
-    OCIO_CHECK_EQUAL(std::string(items[7].getElementValue()), "Gleiches wie Eingabe");
-    
-    OCIO_CHECK_EQUAL(std::string(items[8].getElementName()),  "Info");
-    OCIO_CHECK_EQUAL(std::string(items[8].getElementValue()), "");
-
-    // Info block (name spaces are retained)
-    auto & info = items[8].getChildrenElements();
-    OCIO_REQUIRE_EQUAL(info.size(), 9);
-    OCIO_CHECK_EQUAL(std::string(info[0].getElementName()),  "Profile");
-    OCIO_CHECK_EQUAL(std::string(info[0].getElementValue()), "http://www.smpte-ra.org/ns/2136-10/2026#Live_Broadcast_LUT33");
-
-    OCIO_CHECK_EQUAL(std::string(info[1].getElementName()),  "AppRelease");
-    OCIO_CHECK_EQUAL(std::string(info[1].getElementValue()), "SMPTE_2136-10_Example");
-
-    OCIO_CHECK_EQUAL(std::string(info[2].getElementName()),  "Copyright");
-    OCIO_CHECK_EQUAL(std::string(info[2].getElementValue()), "OCIO contributors");
-
-    OCIO_CHECK_EQUAL(std::string(info[3].getElementName()),  "Revision");
-    OCIO_CHECK_EQUAL(std::string(info[3].getElementValue()), "1.0");
-
-    OCIO_CHECK_EQUAL(std::string(info[4].getElementName()),  "clfbp:InputCharacteristics");
-    OCIO_CHECK_EQUAL(std::string(info[4].getElementValue()), "");
-    
-    OCIO_CHECK_EQUAL(std::string(info[5].getElementName()),  "clfbp:OutputCharacteristics");
-    OCIO_CHECK_EQUAL(std::string(info[5].getElementValue()), "");
-    
-    OCIO_CHECK_EQUAL(std::string(info[6].getElementName()),  "clfbp:OutputVideoSignalClipping");
-    OCIO_CHECK_EQUAL(std::string(info[6].getElementValue()), "sdiClip");
-    
-    OCIO_CHECK_EQUAL(std::string(info[7].getElementName()),  "Keywords");
-    OCIO_CHECK_EQUAL(std::string(info[7].getElementValue()), "Test, Display-light");
-    
-    OCIO_CHECK_EQUAL(std::string(info[8].getElementName()),  "clfbp:ContactEmail");
-    OCIO_CHECK_EQUAL(std::string(info[8].getElementValue()), "fake-email@ocio.org");
-
-    // Info / InputCharacteristics
-    auto & input = info[4].getChildrenElements();
-    OCIO_REQUIRE_EQUAL(input.size(), 3);
-    OCIO_CHECK_EQUAL(std::string(input[0].getElementName()),  "clfbp:ColorPrimaries");
-    OCIO_CHECK_EQUAL(std::string(input[0].getElementValue()), "ColorPrimaries_ITU709");
-
-    OCIO_CHECK_EQUAL(std::string(input[1].getElementName()),  "clfbp:TransferCharacteristic");
-    OCIO_CHECK_EQUAL(std::string(input[1].getElementValue()), "TransferCharacteristic_ITU709");
-    
-    OCIO_CHECK_EQUAL(std::string(input[2].getElementName()),  "clfbp:CodingEquations");
-    OCIO_CHECK_EQUAL(std::string(input[2].getElementValue()), "CodingEquations_ITU709");
-
-    // Info / OutputCharacteristics
-    auto & output = info[5].getChildrenElements();
-    OCIO_REQUIRE_EQUAL(output.size(), 3);
-    OCIO_CHECK_EQUAL(std::string(output[0].getElementName()),  "clfbp:ColorPrimaries");
-    OCIO_CHECK_EQUAL(std::string(output[0].getElementValue()), "ColorPrimaries_ITU2020");
-
-    OCIO_CHECK_EQUAL(std::string(output[1].getElementName()),  "clfbp:TransferCharacteristic");
-    OCIO_CHECK_EQUAL(std::string(output[1].getElementValue()), "TransferCharacteristic_SMPTEST2084");
-    
-    OCIO_CHECK_EQUAL(std::string(output[2].getElementName()),  "clfbp:CodingEquations");
-    OCIO_CHECK_EQUAL(std::string(output[2].getElementValue()), "CodingEquations_ITU2100_ICtCp");
-
-    // TODO: Check writing retains the name spaces and attributes.
+        // Child nodes should be identical.
+        checkCommonMetadata(md2);
+    }
 }
 
 OCIO_ADD_TEST(FileFormatCTF, smpte_namespaces)
@@ -1548,18 +1629,19 @@ OCIO_ADD_TEST(FileFormatCTF, smpte_namespaces)
     const auto& md = processor->getFormatMetadata();
 
     // Attributes.
-    OCIO_REQUIRE_EQUAL(md.getNumAttributes(), 1);
-    OCIO_CHECK_EQUAL(std::string(md.getAttributeName(0)), "id");
-    OCIO_CHECK_EQUAL(std::string(md.getAttributeValue(0)),"pl1");
+    OCIO_REQUIRE_EQUAL(md.getNumAttributes(), 3);
+    OCIO_CHECK_EQUAL_STR(md.getAttributeName(0), "id");
+    OCIO_CHECK_EQUAL_STR(md.getAttributeValue(0),"pl1");
+    OCIO_CHECK_EQUAL_STR(md.getAttributeName(1), "xmlns:clf");
+    OCIO_CHECK_EQUAL_STR(md.getAttributeValue(1),"http://www.smpte-ra.org/ns/2136-1/2024");
+    OCIO_CHECK_EQUAL_STR(md.getAttributeName(2), "xmlns:ds");
+    OCIO_CHECK_EQUAL_STR(md.getAttributeValue(2),"http://www.w3.org/2000/09/xmldsig#");
 
     // Name-spaced description will be available without the namespace prefix.
     OCIO_REQUIRE_EQUAL(md.getNumChildrenElements(), 1);
     const auto& desc = md.getChildElement(0);
-    OCIO_CHECK_EQUAL(std::string(desc.getElementName()), "Description");
-    OCIO_CHECK_EQUAL(std::string(desc.getElementValue()),"Example CLF file using namespaces.");
-
-    // TODO: this test generates warnings for non-defaults xmlns attribs. Those
-    // will be collected as attributes in the future.
+    OCIO_CHECK_EQUAL_STR(desc.getElementName(), "Description");
+    OCIO_CHECK_EQUAL_STR(desc.getElementValue(),"Example CLF file using namespaces.");
 }
 
 OCIO_ADD_TEST(FileFormatCTF, difficult_syntax)
@@ -1589,18 +1671,23 @@ OCIO_ADD_TEST(FileFormatCTF, difficult_syntax)
 
     OCIO_CHECK_EQUAL(cachedFile->m_transform->getID(), "id1");
 
-    OCIO_REQUIRE_EQUAL(cachedFile->m_transform->getDescriptions().size(), 2);
-    OCIO_CHECK_EQUAL(cachedFile->m_transform->getDescriptions()[0],
-                     "This is the ProcessList description.");
-    OCIO_CHECK_EQUAL(cachedFile->m_transform->getDescriptions()[1],
-                     "yet 'another' \"valid\" desc");
+    auto & md = cachedFile->m_transform->getFormatMetadata();
+    OCIO_REQUIRE_EQUAL(md.getNumChildrenElements(), 2);
+    OCIO_CHECK_EQUAL_STR(md.getChildElement(0).getElementName(), 
+        "Description");
+    OCIO_CHECK_EQUAL_STR(md.getChildElement(0).getElementValue(), 
+        "This is the ProcessList description.");
+    OCIO_CHECK_EQUAL_STR(md.getChildElement(1).getElementName(), 
+        "Description");
+    OCIO_CHECK_EQUAL_STR(md.getChildElement(1).getElementValue(), 
+        "yet 'another' \"valid\" desc");
 
     const OCIO::FormatMetadataImpl & info = cachedFile->m_transform->getInfoMetadata();
-    OCIO_CHECK_EQUAL(std::string(info.getElementName()), OCIO::METADATA_INFO);
+    OCIO_CHECK_EQUAL_STR(info.getElementName(), OCIO::METADATA_INFO);
     auto items = info.getChildrenElements();
     OCIO_REQUIRE_EQUAL(items.size(), 1);
-    OCIO_CHECK_EQUAL(std::string(items[0].getElementName()), "Stuff");
-    OCIO_CHECK_EQUAL(std::string(items[0].getElementValue()),
+    OCIO_CHECK_EQUAL_STR(items[0].getElementName(), "Stuff");
+    OCIO_CHECK_EQUAL_STR(items[0].getElementValue(),
                      "This is a \"difficult\" but 'legal' color transform file.");
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOpDataVec();
@@ -2187,8 +2274,11 @@ OCIO_ADD_TEST(FileFormatCTF, inverse_of_id_test)
     OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
     OCIO_REQUIRE_ASSERT((bool)cachedFile);
 
-    OCIO_CHECK_ASSERT(cachedFile->m_transform->getInverseOfId() ==
-                      "inverseOfIdTest");
+
+    auto& meta = cachedFile->m_transform->getFormatMetadata();
+
+    OCIO_CHECK_EQUAL_STR(meta.getAttributeValue("inverseOf"),
+                         "inverseOfIdTest");
 }
 
 OCIO_ADD_TEST(FileFormatCTF, range_default)
@@ -2438,8 +2528,10 @@ OCIO_ADD_TEST(FileFormatCTF, gamma_test1)
 
     OCIO_CHECK_EQUAL(cachedFile->m_transform->getID(), "id");
 
-    OCIO_CHECK_EQUAL(cachedFile->m_transform->getDescriptions().size(), 1);
-    OCIO_CHECK_EQUAL(cachedFile->m_transform->getDescriptions()[0], "2.4 gamma");
+    auto & md = cachedFile->m_transform->getFormatMetadata();
+    OCIO_REQUIRE_EQUAL(md.getNumChildrenElements(), 1);
+    OCIO_CHECK_EQUAL_STR(md.getChildElement(0).getElementName(), "Description");
+    OCIO_CHECK_EQUAL_STR(md.getChildElement(0).getElementValue(),"2.4 gamma");
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOpDataVec();
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
@@ -2985,13 +3077,13 @@ OCIO_ADD_TEST(FileFormatCTF, cdl_clamp_fwd)
 
     const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOpDataVec();
 
-    OCIO_REQUIRE_ASSERT(cachedFile->m_transform->getInputDescriptors().size() == 1);
-    OCIO_CHECK_EQUAL(cachedFile->m_transform->getInputDescriptors()[0],
-                     "inputDesc");
-
-    OCIO_REQUIRE_ASSERT(cachedFile->m_transform->getOutputDescriptors().size() == 1);
-    OCIO_CHECK_EQUAL(cachedFile->m_transform->getOutputDescriptors()[0],
-                     "outputDesc");
+    auto inDescs = getChildrenMetadata(cachedFile->m_transform, OCIO::METADATA_INPUT_DESCRIPTOR);
+    OCIO_CHECK_EQUAL(inDescs.size(), 1);
+    OCIO_CHECK_EQUAL_STR(inDescs[0].getElementValue(), "inputDesc");
+    
+    auto outDescs = getChildrenMetadata(cachedFile->m_transform, OCIO::METADATA_OUTPUT_DESCRIPTOR);
+    OCIO_CHECK_EQUAL(outDescs.size(), 1);
+    OCIO_CHECK_EQUAL_STR(outDescs[0].getElementValue(), "outputDesc");
 
     OCIO_REQUIRE_EQUAL(opList.size(), 1);
     auto pCDL = std::dynamic_pointer_cast<const OCIO::CDLOpData>(opList[0]);
@@ -5318,18 +5410,18 @@ OCIO_ADD_TEST(CTFTransform, load_edit_save_matrix)
     OCIO_REQUIRE_ASSERT(mat);
     const auto & md = mat->getFormatMetadata();
     OCIO_REQUIRE_EQUAL(md.getNumAttributes(), 2);
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_ID), md.getAttributeName(0));
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_NAME), md.getAttributeName(1));
+    OCIO_CHECK_EQUAL_STR(OCIO::METADATA_ID, md.getAttributeName(0));
+    OCIO_CHECK_EQUAL_STR(OCIO::METADATA_NAME, md.getAttributeName(1));
     OCIO_CHECK_EQUAL(shortName, md.getAttributeValue(1));
     OCIO_REQUIRE_EQUAL(md.getNumChildrenElements(), 4);
     const auto & desc0 = md.getChildElement(0);
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_DESCRIPTION), desc0.getElementName());
-    OCIO_CHECK_EQUAL(std::string(R"(Legacy matrix)"), desc0.getElementValue());
+    OCIO_CHECK_EQUAL_STR(OCIO::METADATA_DESCRIPTION, desc0.getElementName());
+    OCIO_CHECK_EQUAL_STR("Legacy matrix", desc0.getElementValue());
     const auto & desc1 = md.getChildElement(2);
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_DESCRIPTION), desc1.getElementName());
+    OCIO_CHECK_EQUAL_STR(OCIO::METADATA_DESCRIPTION, desc1.getElementName());
     OCIO_CHECK_EQUAL(description1, desc1.getElementValue());
     const auto & desc2 = md.getChildElement(3);
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_DESCRIPTION), desc2.getElementName());
+    OCIO_CHECK_EQUAL_STR(OCIO::METADATA_DESCRIPTION, desc2.getElementName());
     OCIO_CHECK_EQUAL(description2, desc2.getElementValue());
 }
 
@@ -5403,21 +5495,21 @@ OCIO_ADD_TEST(CTFTransform, save_cdl)
     OCIO_CHECK_EQUAL(cdl->getID(), "test-cdl-1");
     const auto & metadata = cdl->getFormatMetadata();
     OCIO_REQUIRE_EQUAL(metadata.getNumChildrenElements(), 8);
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_DESCRIPTION),
+    OCIO_CHECK_EQUAL_STR(OCIO::METADATA_DESCRIPTION,
                      metadata.getChildElement(0).getElementName());
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_DESCRIPTION),
+    OCIO_CHECK_EQUAL_STR(OCIO::METADATA_DESCRIPTION,
                      metadata.getChildElement(1).getElementName());
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_INPUT_DESCRIPTION),
+    OCIO_CHECK_EQUAL_STR(OCIO::METADATA_INPUT_DESCRIPTION,
                      metadata.getChildElement(2).getElementName());
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_VIEWING_DESCRIPTION),
+    OCIO_CHECK_EQUAL_STR(OCIO::METADATA_VIEWING_DESCRIPTION,
                      metadata.getChildElement(3).getElementName());
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_SOP_DESCRIPTION),
+    OCIO_CHECK_EQUAL_STR(OCIO::METADATA_SOP_DESCRIPTION,
                      metadata.getChildElement(4).getElementName());
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_SOP_DESCRIPTION),
+    OCIO_CHECK_EQUAL_STR(OCIO::METADATA_SOP_DESCRIPTION,
                      metadata.getChildElement(5).getElementName());
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_SAT_DESCRIPTION),
+    OCIO_CHECK_EQUAL_STR(OCIO::METADATA_SAT_DESCRIPTION,
                      metadata.getChildElement(6).getElementName());
-    OCIO_CHECK_EQUAL(std::string(OCIO::METADATA_SAT_DESCRIPTION),
+    OCIO_CHECK_EQUAL_STR(OCIO::METADATA_SAT_DESCRIPTION,
                      metadata.getChildElement(7).getElementName());
     auto params = cdl->getSlopeParams();
     OCIO_CHECK_EQUAL(params[0], slope[0]);

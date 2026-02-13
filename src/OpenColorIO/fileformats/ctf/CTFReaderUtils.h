@@ -116,6 +116,7 @@ static constexpr char ATTR_HUE_ADJUST[] = "hueAdjust";
 static constexpr char ATTR_INTERPOLATION[] = "interpolation";
 static constexpr char ATTR_INVERSE_OF[] = "inverseOf";
 static constexpr char ATTR_IS_INVERTED[] = "inverted";
+static constexpr char ATTR_LANGUAGE[] = "language";
 static constexpr char ATTR_LINEARSLOPE[] = "linearSlope";
 static constexpr char ATTR_LINSIDEBREAK[] = "linSideBreak";
 static constexpr char ATTR_LINSIDESLOPE[] = "linSideSlope";

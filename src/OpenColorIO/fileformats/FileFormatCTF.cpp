@@ -736,8 +736,8 @@ private:
                          SupportedElement(name, pElt, METADATA_VIEWING_DESCRIPTION, TAG_CDL, recognizedName))
                 {
                     pImpl->m_elms.push_back(
-                        std::make_shared<XmlReaderDescriptionElt>(
-                            name,
+                        std::make_shared<CTFReaderDescElt>(
+                            name, 
                             pContainer,
                             pImpl->getXmLineNumber(),
                             pImpl->getXmlFilename()));
@@ -838,7 +838,7 @@ private:
                                           TAG_PROCESS_LIST, recognizedName))
                 {
                     pImpl->m_elms.push_back(
-                        std::make_shared<CTFReaderInputDescriptorElt>(
+                        std::make_shared<CTFReaderDescElt>(
                             name,
                             pContainer,
                             pImpl->getXmLineNumber(),
@@ -875,7 +875,7 @@ private:
                                           TAG_PROCESS_LIST, recognizedName))
                 {
                     pImpl->m_elms.push_back(
-                        std::make_shared<CTFReaderOutputDescriptorElt>(
+                        std::make_shared<CTFReaderDescElt>(
                             name,
                             pContainer,
                             pImpl->getXmLineNumber(),
@@ -1137,15 +1137,29 @@ private:
             pImpl->throwMessage(oss.str());
         }
 
-        auto pDescriptionElt =
-            std::dynamic_pointer_cast<XmlReaderDescriptionElt>(pElt);
-        if (pDescriptionElt)
+        // TODO: Fix this special case handling where description elements want
+        // leading and trailing white space retained.
+        if (auto pDescriptionElt = std::dynamic_pointer_cast<XmlReaderDescriptionElt>(pElt))
         {
             pDescriptionElt->setRawData(s, len, pImpl->getXmLineNumber());
+        }
+        if (auto pDescElt = std::dynamic_pointer_cast<CTFReaderDescElt>(pElt))
+        {
+            pDescElt->setRawData(s, len, pImpl->getXmLineNumber());
         }
         else
         {
             // Strip white spaces.
+           
+            // TODO: Need to change this. CharacterDataHandler() may be called
+            // multiple times for a single element, and we may end up stripping
+            // white spaces that are actually part of the data. Other parts of
+            // the code already anticipate partial text reception, this part is
+            // not handling that possibility. White space removal should be done by
+            // the element handlers at the end. Also the special case handling
+            // doesn't belong here. This part is dispatching the strings to the
+            // elements, it shouldn't know the identities of the handlers and
+            // should not change the behavior accordingly.
             size_t start = 0;
             size_t end = len;
             FindSubString(s, len, start, end);

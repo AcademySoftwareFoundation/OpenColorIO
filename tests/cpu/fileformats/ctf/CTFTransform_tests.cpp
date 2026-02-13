@@ -219,8 +219,10 @@ OCIO_ADD_TEST(CTFVersion, version_write)
 OCIO_ADD_TEST(CTFReaderTransform, accessors)
 {
     OCIO::CTFReaderTransform t;
+    OCIO::FormatMetadataImpl & meta = t.getInfoMetadata();
     {
         const OCIO::CTFReaderTransform & ct = t;
+        const OCIO::FormatMetadataImpl & cmeta = t.getInfoMetadata();
 
         OCIO::FormatMetadataImpl & info = t.getInfoMetadata();
         const OCIO::FormatMetadataImpl & cinfo = t.getInfoMetadata();
@@ -232,70 +234,61 @@ OCIO_ADD_TEST(CTFReaderTransform, accessors)
         OCIO_CHECK_EQUAL(ct.getID(), "");
         OCIO_CHECK_EQUAL(t.getName(), "");
         OCIO_CHECK_EQUAL(ct.getName(), "");
-        OCIO_CHECK_EQUAL(t.getInverseOfId(), "");
-        OCIO_CHECK_EQUAL(ct.getInverseOfId(), "");
-
-        OCIO_CHECK_EQUAL(ct.getIDElement(), "");
+        OCIO_CHECK_EQUAL_STR(meta.getAttributeValue("inverseOf"), "");
+        OCIO_CHECK_EQUAL_STR(cmeta.getAttributeValue("inverseOf"), "");
 
         OCIO_CHECK_ASSERT(t.getOpDataVec().empty());
         OCIO_CHECK_ASSERT(ct.getOpDataVec().empty());
 
-        OCIO_CHECK_ASSERT(t.getDescriptions().empty());
-        OCIO_CHECK_ASSERT(ct.getDescriptions().empty());
-        OCIO_CHECK_ASSERT(t.getInputDescriptors().empty());
-        OCIO_CHECK_ASSERT(ct.getInputDescriptors().empty());
-        OCIO_CHECK_ASSERT(t.getOutputDescriptors().empty());
-        OCIO_CHECK_ASSERT(ct.getOutputDescriptors().empty());
+        OCIO_REQUIRE_EQUAL(meta.getNumChildrenElements(), 0);
+        OCIO_REQUIRE_EQUAL(cmeta.getNumChildrenElements(), 0);
     }
     t.setName("Name");
     t.setID("123");
-    t.setInverseOfId("654");
-
-    t.setIDElement("urn:uuid:123e4567-e89b-12d3-a456-426655440000");
+    meta.addAttribute(OCIO::ATTR_INVERSE_OF, "654");
+    meta.addChildElement(OCIO::METADATA_ID_ELEMENT, "urn:uuid:123e4567-e89b-12d3-a456-426655440000");
 
     auto matrixOp = std::make_shared<OCIO::MatrixOpData>();
     t.getOpDataVec().push_back(matrixOp);
 
-    t.getDescriptions().push_back("One");
-    t.getDescriptions().push_back("Two");
-    t.getInputDescriptors().push_back("input 1");
-    t.getInputDescriptors().push_back("input 2");
-    t.getOutputDescriptors().push_back("output 1");
-    t.getOutputDescriptors().push_back("output 2");
+    meta.addChildElement(OCIO::METADATA_DESCRIPTION, "One");
+    meta.addChildElement(OCIO::METADATA_DESCRIPTION, "Two");
+    meta.addChildElement(OCIO::METADATA_INPUT_DESCRIPTOR, "input 1");
+    meta.addChildElement(OCIO::METADATA_INPUT_DESCRIPTOR, "input 2");
+    meta.addChildElement(OCIO::METADATA_OUTPUT_DESCRIPTOR, "output 1");
+    meta.addChildElement(OCIO::METADATA_OUTPUT_DESCRIPTOR, "output 2");
+    auto & outDesc2 = meta.getChildElement(meta.getNumChildrenElements()-1);
+    outDesc2.addAttribute(OCIO::ATTR_LANGUAGE, "tr");
 
     {
         const OCIO::CTFReaderTransform & ct = t;
+        const OCIO::FormatMetadataImpl & cmeta = t.getInfoMetadata();
 
         OCIO_CHECK_EQUAL(t.getID(), "123");
         OCIO_CHECK_EQUAL(ct.getID(), "123");
         OCIO_CHECK_EQUAL(t.getName(), "Name");
         OCIO_CHECK_EQUAL(ct.getName(), "Name");
-        OCIO_CHECK_EQUAL(t.getInverseOfId(), "654");
-        OCIO_CHECK_EQUAL(ct.getInverseOfId(), "654");
-
-        OCIO_CHECK_EQUAL(t.getIDElement(), "urn:uuid:123e4567-e89b-12d3-a456-426655440000");
-        OCIO_CHECK_EQUAL(ct.getIDElement(), "urn:uuid:123e4567-e89b-12d3-a456-426655440000");
+        OCIO_CHECK_EQUAL_STR(meta.getAttributeValue("inverseOf"), "654");
+        OCIO_CHECK_EQUAL_STR(cmeta.getAttributeValue("inverseOf"), "654");
 
         OCIO_CHECK_EQUAL(t.getOpDataVec().size(), 1);
         OCIO_CHECK_EQUAL(ct.getOpDataVec().size(), 1);
 
-        // TODO: add language attribute set/get tests when implemented.
-
-        OCIO_REQUIRE_EQUAL(t.getDescriptions().size(), 2);
-        OCIO_REQUIRE_EQUAL(ct.getDescriptions().size(), 2);
-        OCIO_CHECK_EQUAL(t.getDescriptions()[0], "One");
-        OCIO_CHECK_EQUAL(ct.getDescriptions()[0], "One");
-        OCIO_CHECK_EQUAL(t.getDescriptions()[1], "Two");
-        OCIO_CHECK_EQUAL(ct.getDescriptions()[1], "Two");
-
-        OCIO_REQUIRE_EQUAL(t.getInputDescriptors().size(), 2);
-        OCIO_REQUIRE_EQUAL(ct.getInputDescriptors().size(), 2);
-        OCIO_CHECK_EQUAL(t.getInputDescriptors()[0], "input 1");
-        OCIO_CHECK_EQUAL(ct.getInputDescriptors()[1], "input 2");
-
-        OCIO_REQUIRE_EQUAL(t.getOutputDescriptors().size(), 2);
-        OCIO_REQUIRE_EQUAL(ct.getOutputDescriptors().size(), 2);
-        OCIO_CHECK_EQUAL(t.getOutputDescriptors()[0], "output 1");
-        OCIO_CHECK_EQUAL(ct.getOutputDescriptors()[1], "output 2");
+        OCIO_REQUIRE_EQUAL(meta.getNumChildrenElements(), 7);
+        OCIO_CHECK_EQUAL_STR(meta.getChildElement(0).getElementName(), "Id");
+        OCIO_CHECK_EQUAL_STR(meta.getChildElement(0).getElementValue(), "urn:uuid:123e4567-e89b-12d3-a456-426655440000");
+        OCIO_CHECK_EQUAL_STR(meta.getChildElement(1).getElementName(), "Description");
+        OCIO_CHECK_EQUAL_STR(meta.getChildElement(1).getElementValue(), "One");
+        OCIO_CHECK_EQUAL_STR(meta.getChildElement(2).getElementName(), "Description");
+        OCIO_CHECK_EQUAL_STR(meta.getChildElement(2).getElementValue(), "Two");
+        OCIO_CHECK_EQUAL_STR(meta.getChildElement(3).getElementName(), "InputDescriptor");
+        OCIO_CHECK_EQUAL_STR(meta.getChildElement(3).getElementValue(), "input 1");
+        OCIO_CHECK_EQUAL_STR(meta.getChildElement(4).getElementName(), "InputDescriptor");
+        OCIO_CHECK_EQUAL_STR(meta.getChildElement(4).getElementValue(), "input 2");
+        OCIO_CHECK_EQUAL_STR(meta.getChildElement(5).getElementName(), "OutputDescriptor");
+        OCIO_CHECK_EQUAL_STR(meta.getChildElement(5).getElementValue(), "output 1");
+        OCIO_CHECK_EQUAL_STR(meta.getChildElement(6).getElementName(), "OutputDescriptor");
+        OCIO_CHECK_EQUAL_STR(meta.getChildElement(6).getElementValue(), "output 2");
+        OCIO_CHECK_EQUAL_STR(meta.getChildElement(6).getAttributeValue("language"), "tr");
     }
 }
