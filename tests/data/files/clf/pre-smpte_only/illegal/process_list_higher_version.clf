@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ProcessList compCLFversion="3.2" id="version test" inverseOf="none" xmlns="urn:AMPAS:CLF:v3.0">
-    <Description>Versions higher than current version must be rejected</Description>
+    <Description>Versions higher than the supported version must be rejected.</Description>
     <Matrix id="c61daf06-539f-4254-81fc-9800e6d02a37" inBitDepth="32f" outBitDepth="32f">
         <Array dim="3 3">
  3.24000 -1.53700 -0.49850

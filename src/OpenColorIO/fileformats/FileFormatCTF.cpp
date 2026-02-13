@@ -28,6 +28,7 @@
 #include "TransformBuilder.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
+#include "HashUtils.h"
 
 
 /*
@@ -40,7 +41,14 @@ to agree on a common LUT format for this industry.  Support for CLF is a
 requirement in order to obtain ACES Logo Certification from the Academy (in
 several product categories).  CLF files are expressed using XML.  The spec,
 AMPAS S-2014-006, is available from:
-<https://acescentral.com/t/aces-documentation/53>
+<https://docs.acescentral.com/clf/introduction/>
+
+In 2026, SMPTE will publish ST 2136-1 to standardize the Academy/ASC format. 
+The main change is how versions are declared. The SMPTE spec sets the xmlns
+attribute of the ProcessList to a specific value rather than using the
+compCLFversion attribute. Since the differences are so minimal, OCIO writes 
+both the xmlns and compCLFversion in order to maximize compatibility with 
+different readers.
 
 The Autodesk CTF format is based on the Academy/ASC CLF format and adds several
 operators that allow higher quality results by avoiding the need to bake
@@ -146,27 +154,36 @@ public:
 
 void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 {
-    FormatInfo info;
-    info.name = FILEFORMAT_CLF;
-    info.extension = "clf";
-    info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ |
-                                              FORMAT_CAPABILITY_BAKE |
-                                              FORMAT_CAPABILITY_WRITE);
-    info.bake_capabilities = FormatBakeFlags(FORMAT_BAKE_CAPABILITY_3DLUT |
-                                             FORMAT_BAKE_CAPABILITY_1DLUT |
-                                             FORMAT_BAKE_CAPABILITY_1D_3D_LUT);
-    formatInfoVec.push_back(info);
+    // CLF - Academy/ASC & SMPTE uses the same format
+    {
+        FormatInfo info;
+        info.name = FILEFORMAT_CLF;
+        info.extension = "clf";
+        info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ |
+                                                  FORMAT_CAPABILITY_BAKE |
+                                                  FORMAT_CAPABILITY_WRITE);
+        
+        info.bake_capabilities = FormatBakeFlags( FORMAT_BAKE_CAPABILITY_3DLUT |
+                                                  FORMAT_BAKE_CAPABILITY_1DLUT |
+                                                  FORMAT_BAKE_CAPABILITY_1D_3D_LUT);
+        formatInfoVec.push_back(info);
+    }
 
-    FormatInfo info2;
-    info2.name = FILEFORMAT_CTF;
-    info2.extension = "ctf";
-    info2.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ |
-                                               FORMAT_CAPABILITY_BAKE |
-                                               FORMAT_CAPABILITY_WRITE);
-    info.bake_capabilities = FormatBakeFlags(FORMAT_BAKE_CAPABILITY_3DLUT |
-                                             FORMAT_BAKE_CAPABILITY_1DLUT |
-                                             FORMAT_BAKE_CAPABILITY_1D_3D_LUT);
-    formatInfoVec.push_back(info2);
+    // CTF
+    {
+        FormatInfo info;
+        info.name = FILEFORMAT_CTF;
+        info.extension = "ctf";
+        info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ |
+                                                  FORMAT_CAPABILITY_BAKE |
+                                                  FORMAT_CAPABILITY_WRITE);
+
+        info.bake_capabilities = FormatBakeFlags( FORMAT_BAKE_CAPABILITY_3DLUT |
+                                                  FORMAT_BAKE_CAPABILITY_1DLUT |
+                                                  FORMAT_BAKE_CAPABILITY_1D_3D_LUT);
+
+        formatInfoVec.push_back(info);
+    }
 }
 
 class XMLParserHelper
@@ -227,7 +244,7 @@ public:
             throwMessage(error);
         }
 
-        if (pT->getOps().empty())
+        if (pT->getOpDataVec().empty())
         {
             static const std::string error(
                 "CTF/CLF parsing error: No color operator in file.");
@@ -420,7 +437,7 @@ private:
 
     // Start the parsing of one element.
     static void StartElementHandler(void * userData,
-                                    const XML_Char * name,
+                                    const XML_Char * name_full,
                                     const XML_Char ** atts)
     {
         static const std::vector<const char *> rangeSubElements = {
@@ -478,7 +495,7 @@ private:
 
         XMLParserHelper * pImpl = (XMLParserHelper*)userData;
 
-        if (!pImpl || !name || !*name)
+        if (!pImpl || !name_full || !*name_full)
         {
             if (!pImpl)
             {
@@ -490,6 +507,14 @@ private:
             }
         }
 
+        // Strip the name spaces
+        const char *name = name_full;
+        if (pImpl->m_keepNamespaces <= 0) 
+        {
+            name = strrchr(name_full, ':');
+            name = name ? (name+1) : name_full;        
+        }
+        
         if (!pImpl->m_elms.empty())
         {
             // Check if we are still processing a metadata structure.
@@ -711,12 +736,22 @@ private:
                          SupportedElement(name, pElt, METADATA_VIEWING_DESCRIPTION, TAG_CDL, recognizedName))
                 {
                     pImpl->m_elms.push_back(
-                        std::make_shared<XmlReaderDescriptionElt>(
+                        std::make_shared<CTFReaderDescElt>(
+                            name, 
+                            pContainer,
+                            pImpl->getXmLineNumber(),
+                            pImpl->getXmlFilename()));
+                }
+                else if (SupportedElement(name, pElt, TAG_ID, "", recognizedName)) 
+                {
+                    pImpl->m_elms.push_back(
+                        std::make_shared<CTFReaderIdElt>(
                             name,
                             pContainer,
                             pImpl->getXmLineNumber(),
                             pImpl->getXmlFilename()));
                 }
+
                 // Dynamic Property is valid under any operator parent. First
                 // test if the tag is supported to set the recognizedName 
                 // accordingly, without testing for parents. Test for the
@@ -790,6 +825,8 @@ private:
                 else if (SupportedElement(name, pElt, TAG_INFO, 
                                           TAG_PROCESS_LIST, recognizedName))
                 {
+                    pImpl->m_keepNamespaces++;
+
                     pImpl->m_elms.push_back(
                         std::make_shared<CTFReaderInfoElt>(
                             name,
@@ -801,7 +838,7 @@ private:
                                           TAG_PROCESS_LIST, recognizedName))
                 {
                     pImpl->m_elms.push_back(
-                        std::make_shared<CTFReaderInputDescriptorElt>(
+                        std::make_shared<CTFReaderDescElt>(
                             name,
                             pContainer,
                             pImpl->getXmLineNumber(),
@@ -838,7 +875,7 @@ private:
                                           TAG_PROCESS_LIST, recognizedName))
                 {
                     pImpl->m_elms.push_back(
-                        std::make_shared<CTFReaderOutputDescriptorElt>(
+                        std::make_shared<CTFReaderDescElt>(
                             name,
                             pContainer,
                             pImpl->getXmLineNumber(),
@@ -992,12 +1029,20 @@ private:
 
     // End the parsing of one element.
     static void EndElementHandler(void * userData,
-                                  const XML_Char * name)
+                                  const XML_Char * name_full)
     {
         XMLParserHelper * pImpl = (XMLParserHelper*)userData;
-        if (!pImpl || !name || !*name)
+        if (!pImpl || !name_full || !*name_full)
         {
             throw Exception("CTF/CLF internal parsing error.");
+        }
+
+        // Strip the name spaces
+        const char *name = name_full;
+        if (pImpl->m_keepNamespaces <= 0) 
+        {
+            name = strrchr(name_full, ':');
+            name = name ? (name+1) : name_full;
         }
 
         // Is the expected element present?
@@ -1054,6 +1099,12 @@ private:
             }
         }
 
+        // Exiting the info element; decrease keep namespace counter.
+        if(std::dynamic_pointer_cast<CTFReaderInfoElt>(pElt))
+        {
+            pImpl->m_keepNamespaces--;
+        }
+
         pElt->end();
     }
 
@@ -1086,15 +1137,29 @@ private:
             pImpl->throwMessage(oss.str());
         }
 
-        auto pDescriptionElt =
-            std::dynamic_pointer_cast<XmlReaderDescriptionElt>(pElt);
-        if (pDescriptionElt)
+        // TODO: Fix this special case handling where description elements want
+        // leading and trailing white space retained.
+        if (auto pDescriptionElt = std::dynamic_pointer_cast<XmlReaderDescriptionElt>(pElt))
         {
             pDescriptionElt->setRawData(s, len, pImpl->getXmLineNumber());
+        }
+        if (auto pDescElt = std::dynamic_pointer_cast<CTFReaderDescElt>(pElt))
+        {
+            pDescElt->setRawData(s, len, pImpl->getXmLineNumber());
         }
         else
         {
             // Strip white spaces.
+           
+            // TODO: Need to change this. CharacterDataHandler() may be called
+            // multiple times for a single element, and we may end up stripping
+            // white spaces that are actually part of the data. Other parts of
+            // the code already anticipate partial text reception, this part is
+            // not handling that possibility. White space removal should be done by
+            // the element handlers at the end. Also the special case handling
+            // doesn't belong here. This part is dispatching the strings to the
+            // elements, it shouldn't know the identities of the handlers and
+            // should not change the behavior accordingly.
             size_t start = 0;
             size_t end = len;
             FindSubString(s, len, start, end);
@@ -1160,6 +1225,7 @@ private:
     bool m_isCLF;
     XmlReaderElementStack m_elms; // Parsing stack
     CTFReaderTransformPtr m_transform;
+    int m_keepNamespaces = 0; // if >0, name spaces will be preserved
 
 };
 
@@ -1167,8 +1233,10 @@ bool isLoadableCTF(std::istream & istream)
 {
     std::streampos curPos = istream.tellg();
 
-    const unsigned limit(5 * 1024); // 5 kilobytes.
-    const char *pattern = "<ProcessList";
+    constexpr unsigned limit(5 * 1024); // 5 kilobytes.
+    constexpr const char *pattern1 = "<ProcessList";
+    constexpr const char *pattern2 = ":ProcessList";
+
     bool foundPattern = false;
     unsigned sizeProcessed(0);
     char line[limit + 1];
@@ -1180,7 +1248,14 @@ bool isLoadableCTF(std::istream & istream)
         while (istream.good() && !foundPattern && (sizeProcessed < limit))
         {
             istream.getline(line, limit);
-            if (strstr(line, pattern)) foundPattern = true;
+            if (strstr(line, pattern1)) 
+            {
+                foundPattern = true;
+            }
+            else if (strstr(line, pattern2)) 
+            {
+                foundPattern = true;
+            }
             sizeProcessed += (unsigned)strlen(line);
         }
     }
@@ -1308,7 +1383,7 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     cachedFile->m_transform->toMetadata(processorData);
 
     // Resolve reference path using context and load referenced files.
-    const ConstOpDataVec & opDataVec = cachedFile->m_transform->getOps();
+    const ConstOpDataVec & opDataVec = cachedFile->m_transform->getOpDataVec();
 
     // Try to use the FileTransform interpolation for any Lut1D or Lut3D that does not specify
     // an interpolation in the CTF itself.  If the interpolation can not be used, ignore it.
@@ -1558,14 +1633,19 @@ void LocalFileFormat::write(const ConstConfigRcPtr & config,
                             const std::string & formatName,
                             std::ostream & ostream) const
 {
-    bool isCLF = false;
+    
+    TransformWriter::SubFormat subFormat{TransformWriter::SubFormat::FORMAT_UNKNOWN};
+    
     if (Platform::Strcasecmp(formatName.c_str(), FILEFORMAT_CLF) == 0)
     {
-        isCLF = true;
-    }
-    else if (Platform::Strcasecmp(formatName.c_str(), FILEFORMAT_CTF) != 0)
+        subFormat = TransformWriter::SubFormat::FORMAT_CLF;
+    } 
+    else if (Platform::Strcasecmp(formatName.c_str(), FILEFORMAT_CTF) == 0) 
     {
-        // Neither a clf nor a ctf.
+        subFormat = TransformWriter::SubFormat::FORMAT_CTF;
+    } 
+    else 
+    {
         std::ostringstream os;
         os << "Error: CLF/CTF writer does not also write format " << formatName << ".";
         throw Exception(os.str().c_str());
@@ -1583,11 +1663,21 @@ void LocalFileFormat::write(const ConstConfigRcPtr & config,
     const FormatMetadataImpl & metadata = group.getFormatMetadata();
     CTFReaderTransformPtr transform = std::make_shared<CTFReaderTransform>(ops, metadata);
 
+    // It it doesn't have an id, create one based on the op list.
+    if (transform->getID().empty())
+    {
+        std::string opId = ops.getCacheID();
+
+        std::ostringstream ss;
+        ss << "urn:uuid:" << CacheIDHashUUID(opId.c_str(), opId.size());
+        transform->setID(ss.str().c_str());
+    }
+
     // Write XML Header.
     ostream << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl;
     XmlFormatter fmt(ostream);
 
-    TransformWriter writer(fmt, transform, isCLF);
+    TransformWriter writer(fmt, transform, subFormat);
     writer.write();
 }
 

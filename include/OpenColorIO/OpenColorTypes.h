@@ -977,6 +977,13 @@ extern OCIOEXPORT const char * METADATA_NAME;
  */
 extern OCIOEXPORT const char * METADATA_ID;
 
+/**
+ * An ID when stored as an XML element rather than as an attribute. This is the
+ * preferred mechanism in the SMPTE ST 2036-1 version of the CLF format. If
+ * present, it is only available from the top-level FormatMetadata.
+ */
+ extern OCIOEXPORT const char * METADATA_ID_ELEMENT;
+
 /*!rst::
 Caches
 ******

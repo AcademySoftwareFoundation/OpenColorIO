@@ -162,7 +162,7 @@ class GroupTransformTest(unittest.TestCase, TransformsBaseTest):
 
         self.assertEqual(grp.write(formatName='Academy/ASC Common LUT Format', config=config),
                          """<?xml version="1.0" encoding="UTF-8"?>
-<ProcessList compCLFversion="3" id="clfID">
+<ProcessList compCLFversion="3" xmlns="http://www.smpte-ra.org/ns/2136-1/2024" id="clfID">
     <Description>Sample clf file.</Description>
     <Matrix id="matID" name="matName" inBitDepth="32f" outBitDepth="32f">
         <Description>Sample matrix.</Description>

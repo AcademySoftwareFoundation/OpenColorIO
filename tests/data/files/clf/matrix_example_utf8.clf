@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ProcessList id="42" name="matrix example" xmlns="urn:AMPAS:CLF:v3.0" compCLFversion="3.0">
+<ProcessList id="42" name="matrix example" xmlns="http://www.smpte-ra.org/ns/2136-1/2024" compCLFversion="3.0">
     <Description>Test utf8 character encoding support.</Description>
     <Matrix id="mat42" inBitDepth="32f" outBitDepth="32f">
         <Description>標準萬國碼</Description>

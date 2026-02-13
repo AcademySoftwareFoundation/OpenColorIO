@@ -330,15 +330,9 @@ const char * Processor::Impl::getCacheID() const
 
     if(!m_cacheID.empty()) return m_cacheID.c_str();
 
-    if(m_ops.empty())
-    {
-        m_cacheID = "<NOOP>";
-    }
-    else
-    {
-        const std::string fullstr = m_ops.getCacheID();
-        m_cacheID = CacheIDHash(fullstr.c_str(), fullstr.size());
-    }
+    // Note: empty ops vector will also create a UUID.
+    const std::string fullstr = m_ops.getCacheID();
+    m_cacheID = CacheIDHashUUID(fullstr.c_str(), fullstr.size());
 
     return m_cacheID.c_str();
 }

@@ -50,7 +50,7 @@ class ProcessorTest(unittest.TestCase):
         # Make the transform dynamic.
         ec.makeContrastDynamic()
         p = cfg.getProcessor(ec)
-        self.assertEqual(p.getCacheID(), '818420192074e6466468d59c9ea38667')
+        self.assertEqual(p.getCacheID(), '6468d59c-9ea3-8667-8184-20192074e646')
 
     def test_create_group_transform(self):
         # Test createGroupTransform() function.

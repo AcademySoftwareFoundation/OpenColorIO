@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ProcessList id="9843a859-e41e-40a8-a51c-840889c3774e" compCLFversion="3.0">
+<ProcessList id="9843a859-e41e-40a8-a51c-840889c3774e" compCLFversion="3.0" xmlns="http://www.smpte-ra.org/ns/2136-1/2024">
     <Description>If there is only a min or only a max, the InValue must equal OutValue.</Description>
     <Description>Since the bit-depths are different, they are not actually the same here.</Description>
     <Range inBitDepth="10i" outBitDepth="16i">

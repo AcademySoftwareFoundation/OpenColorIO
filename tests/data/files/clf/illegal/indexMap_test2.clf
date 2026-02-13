@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ProcessList id="none" compCLFversion="3.0">
+<ProcessList id="none" compCLFversion="3.0" xmlns="http://www.smpte-ra.org/ns/2136-1/2024">
     <Description>Index map was only allowed up to CLF v2</Description>
     <LUT3D inBitDepth="32f" outBitDepth="10i">
         <Array dim="2 2 2 3">
