@@ -5,6 +5,7 @@
 #include "ops/exposurecontrast/ExposureContrastOpData.cpp"
 
 #include "testutils/UnitTest.h"
+#include "Platform.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 

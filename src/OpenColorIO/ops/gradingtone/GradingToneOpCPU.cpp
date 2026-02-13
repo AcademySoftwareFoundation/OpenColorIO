@@ -7,9 +7,9 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "BitDepthUtils.h"
 #include "MathUtils.h"
 #include "ops/gradingtone/GradingToneOpCPU.h"
+#include "CPUInfoConfig.h"
 #include "SSE.h"
 
 namespace OCIO_NAMESPACE

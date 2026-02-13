@@ -2,8 +2,9 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <cstring>
-#include <iostream>
+#include <ostream>
 #include <map>
+#include <utility>
 #include <sstream>
 #include <string>
 
@@ -14,9 +15,7 @@
 #include "ContextVariableUtils.h"
 #include "HashUtils.h"
 #include "Mutex.h"
-#include "OCIOZArchive.h"
 #include "PathUtils.h"
-#include "PrivateTypes.h"
 #include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE

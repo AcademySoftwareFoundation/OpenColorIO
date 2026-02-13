@@ -5,6 +5,10 @@
 #ifndef INCLUDED_OCIO_ALLOCATIONOP_H
 #define INCLUDED_OCIO_ALLOCATIONOP_H
 
+#include <iosfwd>
+#include <vector>
+#include <string>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"

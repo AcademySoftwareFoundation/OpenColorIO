@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <sstream>
+#include <string>
 
 #include "fileformats/cdl/CDLWriter.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "fileformats/xmlutils/XMLWriterUtils.h"
 #include "ParseUtils.h"
 #include "transforms/CDLTransform.h"
-#include "transforms/FileTransform.h"
+#include "Platform.h"
 
 namespace OCIO_NAMESPACE
 {

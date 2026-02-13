@@ -4,11 +4,13 @@
 #ifndef INCLUDED_OCIO_LUT3DOP_CPU_AVX512_H
 #define INCLUDED_OCIO_LUT3DOP_CPU_AVX512_H
 
-#include <OpenColorIO/OpenColorIO.h>
-
-#include "CPUInfo.h"
+#include "CPUInfoConfig.h"
 
 #if OCIO_USE_AVX512
+
+#include "OpenColorABI.h"
+
+
 namespace OCIO_NAMESPACE
 {
 

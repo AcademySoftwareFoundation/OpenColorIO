@@ -2,22 +2,22 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <algorithm>
-#include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <string>
 #include <sstream>
-#include <iostream>
+#include <istream>
+#include <memory>
 
 #include <pystring.h>
+
+#include <Imath/half.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "BitDepthUtils.h"
 #include "fileformats/FileFormatUtils.h"
-#include "MathUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
-#include "ops/lut3d/Lut3DOp.h"
-#include "ParseUtils.h"
 #include "Platform.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"

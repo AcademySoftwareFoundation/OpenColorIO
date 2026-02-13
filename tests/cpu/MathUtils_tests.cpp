@@ -3,6 +3,9 @@
 
 
 #include <limits>
+#include <sstream>
+
+#include <Imath/half.h>
 
 #include "MathUtils.cpp"
 

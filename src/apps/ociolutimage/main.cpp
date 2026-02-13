@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <exception>
 
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
@@ -165,7 +166,7 @@ int main(int argc, const char* argv[])
 
     if (ap.parse(argc, argv) < 0)
     {
-        std::cout << ap.geterror() << std::endl;
+        std::cout << ap.geterror() << "\n";
         ap.usage();
         std::cout << "\n";
         return 1;
@@ -191,7 +192,7 @@ int main(int argc, const char* argv[])
         }
         catch (const std::exception & e)
         {
-            std::cerr << "Error generating image: " << e.what() << std::endl;
+            std::cerr << "Error generating image: " << e.what() << "\n";
             exit(1);
         }
         catch (...)
@@ -211,7 +212,7 @@ int main(int argc, const char* argv[])
         }
         catch (const std::exception & e)
         {
-            std::cerr << "Error extracting LUT: " << e.what() << std::endl;
+            std::cerr << "Error extracting LUT: " << e.what() << "\n";
             exit(1);
         }
         catch (...)

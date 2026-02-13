@@ -2,7 +2,15 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <cstring>
+#include <string>
+#include <limits>
+#include <sstream>
+#include <iostream>
+#include <utility>
+#include <exception>
+#include <vector>
 #include <unordered_set>
+#include <map>
 
 #include <pystring.h>
 
@@ -14,11 +22,8 @@
 #include "MathUtils.h"
 #include "OCIOYaml.h"
 #include "ops/exposurecontrast/ExposureContrastOpData.h"
-#include "ops/gradingprimary/GradingPrimaryOpData.h"
 #include "ops/gradingrgbcurve/GradingRGBCurve.h"
 #include "ops/gradinghuecurve/GradingHueCurve.h"
-#include "ops/gradingtone/GradingToneOpData.h"
-#include "ops/log/LogUtils.h"
 #include "ParseUtils.h"
 #include "PathUtils.h"
 #include "Platform.h"
@@ -3352,67 +3357,67 @@ void load(const YAML::Node& node, TransformRcPtr& t)
 
 void save(YAML::Emitter& out, ConstTransformRcPtr t, unsigned int majorVersion)
 {
-    if(ConstAllocationTransformRcPtr Allocation_tran = \
+    if(ConstAllocationTransformRcPtr Allocation_tran =
         DynamicPtrCast<const AllocationTransform>(t))
         save(out, Allocation_tran);
-    else if (ConstBuiltinTransformRcPtr builtin_tran = \
+    else if (ConstBuiltinTransformRcPtr builtin_tran =
         DynamicPtrCast<const BuiltinTransform>(t))
         save(out, builtin_tran);
-    else if(ConstCDLTransformRcPtr CDL_tran = \
+    else if(ConstCDLTransformRcPtr CDL_tran =
         DynamicPtrCast<const CDLTransform>(t))
         save(out, CDL_tran, majorVersion);
-    else if(ConstColorSpaceTransformRcPtr ColorSpace_tran = \
+    else if(ConstColorSpaceTransformRcPtr ColorSpace_tran =
         DynamicPtrCast<const ColorSpaceTransform>(t))
         save(out, ColorSpace_tran);
-    else if (ConstDisplayViewTransformRcPtr Display_tran = \
+    else if (ConstDisplayViewTransformRcPtr Display_tran =
         DynamicPtrCast<const DisplayViewTransform>(t))
         save(out, Display_tran);
-    else if(ConstExponentTransformRcPtr Exponent_tran = \
+    else if(ConstExponentTransformRcPtr Exponent_tran =
         DynamicPtrCast<const ExponentTransform>(t))
         save(out, Exponent_tran, majorVersion);
-    else if (ConstExponentWithLinearTransformRcPtr ExpLinear_tran = \
+    else if (ConstExponentWithLinearTransformRcPtr ExpLinear_tran =
         DynamicPtrCast<const ExponentWithLinearTransform>(t))
         save(out, ExpLinear_tran);
-    else if(ConstFileTransformRcPtr File_tran = \
+    else if(ConstFileTransformRcPtr File_tran =
         DynamicPtrCast<const FileTransform>(t))
         save(out, File_tran, majorVersion);
-    else if (ConstExposureContrastTransformRcPtr File_tran = \
+    else if (ConstExposureContrastTransformRcPtr File_tran =
         DynamicPtrCast<const ExposureContrastTransform>(t))
         save(out, File_tran);
-    else if(ConstFixedFunctionTransformRcPtr Func_tran = \
+    else if(ConstFixedFunctionTransformRcPtr Func_tran =
         DynamicPtrCast<const FixedFunctionTransform>(t))
         save(out, Func_tran);
-    else if (ConstGradingPrimaryTransformRcPtr GP_tran = \
+    else if (ConstGradingPrimaryTransformRcPtr GP_tran =
         DynamicPtrCast<const GradingPrimaryTransform>(t))
         save(out, GP_tran);
-    else if (ConstGradingRGBCurveTransformRcPtr GC_tran = \
+    else if (ConstGradingRGBCurveTransformRcPtr GC_tran =
         DynamicPtrCast<const GradingRGBCurveTransform>(t))
         save(out, GC_tran);
-    else if (ConstGradingHueCurveTransformRcPtr GC_tran = \
+    else if (ConstGradingHueCurveTransformRcPtr GC_tran =
         DynamicPtrCast<const GradingHueCurveTransform>(t))
         save(out, GC_tran);
-    else if (ConstGradingToneTransformRcPtr GT_tran = \
+    else if (ConstGradingToneTransformRcPtr GT_tran =
         DynamicPtrCast<const GradingToneTransform>(t))
         save(out, GT_tran);
-    else if(ConstGroupTransformRcPtr Group_tran = \
+    else if(ConstGroupTransformRcPtr Group_tran =
         DynamicPtrCast<const GroupTransform>(t))
         save(out, Group_tran, majorVersion);
-    else if(ConstLogAffineTransformRcPtr Log_tran = \
+    else if(ConstLogAffineTransformRcPtr Log_tran =
         DynamicPtrCast<const LogAffineTransform>(t))
         save(out, Log_tran);
-    else if (ConstLogCameraTransformRcPtr Log_tran = \
+    else if (ConstLogCameraTransformRcPtr Log_tran =
         DynamicPtrCast<const LogCameraTransform>(t))
         save(out, Log_tran);
-    else if(ConstLogTransformRcPtr Log_tran = \
+    else if(ConstLogTransformRcPtr Log_tran =
         DynamicPtrCast<const LogTransform>(t))
         save(out, Log_tran, majorVersion);
-    else if(ConstLookTransformRcPtr Look_tran = \
+    else if(ConstLookTransformRcPtr Look_tran =
         DynamicPtrCast<const LookTransform>(t))
         save(out, Look_tran);
-    else if(ConstMatrixTransformRcPtr Matrix_tran = \
+    else if(ConstMatrixTransformRcPtr Matrix_tran =
         DynamicPtrCast<const MatrixTransform>(t))
         save(out, Matrix_tran, majorVersion);
-    else if(ConstRangeTransformRcPtr Range_tran = \
+    else if(ConstRangeTransformRcPtr Range_tran =
         DynamicPtrCast<const RangeTransform>(t))
         save(out, Range_tran);
     else
@@ -4460,9 +4465,9 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
             << "." << profile_minor_version
             << ". ";
 
-        os << "This version of the OpenColorIO library (" << GetVersion() << ") ";
-        os << "is not able to load that config version.";
-        os << std::endl << ex.what();
+        os << "This version of the OpenColorIO library (" << GetVersion() << ") "
+              "is not able to load that config version.\n";
+        os << ex.what();
 
         throw Exception(os.str().c_str());
     }

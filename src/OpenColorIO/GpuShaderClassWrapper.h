@@ -5,8 +5,7 @@
 #define INCLUDED_OCIO_GPUSHADERCLASSWRAPPER_H
 
 #include <memory>
-#include <sstream>
-#include <utility>
+#include <string>
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>

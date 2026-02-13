@@ -10,7 +10,6 @@
 #include "CategoryHelpers.h"
 #include "ColorSpaceHelpers.h"
 #include "MixingHelpers.h"
-#include "utils/StringUtils.h"
 
 
 namespace OCIO_NAMESPACE

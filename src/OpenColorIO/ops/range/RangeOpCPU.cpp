@@ -3,12 +3,15 @@
 
 
 #include <algorithm>
+#include <memory>
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "Op.h"
 #include "MathUtils.h"
-#include "ops/matrix/MatrixOpCPU.h"
 #include "ops/range/RangeOpCPU.h"
+#include "ops/range/RangeOpData.h"
+
 
 namespace OCIO_NAMESPACE
 {

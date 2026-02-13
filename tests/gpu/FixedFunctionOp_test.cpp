@@ -2,10 +2,14 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <cmath>
+#include <vector>
+
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "CPUInfoConfig.h"
 #include "GPUUnitTest.h"
-#include <cmath>
+
 
 namespace OCIO = OCIO_NAMESPACE;
 

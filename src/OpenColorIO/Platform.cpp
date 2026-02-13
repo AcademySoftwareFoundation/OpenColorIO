@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <codecvt>
-#include <locale>
-#include <random>
 #include <sstream>
 #include <sys/stat.h>
-#include <vector>
+#include <fstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -14,6 +11,7 @@
 
 #ifndef _WIN32
 #include <strings.h>
+#include <random>
 #endif
 
 
@@ -200,6 +198,7 @@ void AlignedFree(void* memBlock)
 #endif
 }
 
+#ifndef _WIN32
 namespace
 {
 
@@ -214,6 +213,7 @@ int GenerateRandomNumber()
 }
 
 }
+#endif
 
 std::string CreateTempFilename(const std::string & filenameExt)
 {

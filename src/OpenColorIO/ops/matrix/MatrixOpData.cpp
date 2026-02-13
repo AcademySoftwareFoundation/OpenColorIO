@@ -9,7 +9,8 @@
 #include "HashUtils.h"
 #include "MathUtils.h"
 #include "ops/matrix/MatrixOpData.h"
-#include "Platform.h"
+#include "Mutex.h"
+
 
 namespace OCIO_NAMESPACE
 {

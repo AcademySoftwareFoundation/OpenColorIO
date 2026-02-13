@@ -39,6 +39,9 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <memory>
+#include <exception>
+#include <stdexcept>
 
 extern int unit_test_failures;
 

@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <algorithm>
-#include <cstring>
+#include <cstddef>
 #include <iterator>
 #include <sstream>
 
@@ -17,6 +16,9 @@
 #include "Processor.h"
 #include "TransformBuilder.h"
 #include "utils/StringUtils.h"
+#include "PrivateTypes.h"
+#include "Mutex.h"
+
 
 namespace OCIO_NAMESPACE
 {

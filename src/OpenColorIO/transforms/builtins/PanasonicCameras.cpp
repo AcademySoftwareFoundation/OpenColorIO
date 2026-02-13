@@ -2,8 +2,6 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <cmath>
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/matrix/MatrixOp.h"
@@ -11,7 +9,6 @@
 #include "transforms/builtins/ACES.h"
 #include "transforms/builtins/BuiltinTransformRegistry.h"
 #include "transforms/builtins/ColorMatrixHelpers.h"
-#include "transforms/builtins/OpHelpers.h"
 #include "transforms/builtins/PanasonicCameras.h"
 
 

@@ -2,7 +2,16 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <limits>
+#include <algorithm>
+#include <cmath>
+#include <vector>
+#include <memory>
+
+#include <OpenColorIO/OpenColorIO.h>
+
 #include "ops/exposurecontrast/ExposureContrastOpCPU.cpp"
+#include "BitDepthUtils.h"
 
 #include "testutils/UnitTest.h"
 

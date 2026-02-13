@@ -2,9 +2,24 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <fstream>
+#include <string>
 #include <sstream>
+#include <vector>
 
+#include <OpenColorIO/OpenColorIO.h>
+
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+#include "PyOpenColorIO.h"
 #include "PyTransform.h"
+#include "PyUtils.h"
+#include "docstrings.h"
+
+
+namespace py = pybind11;
+using namespace pybind11::literals;
+
 
 namespace OCIO_NAMESPACE
 {
@@ -94,7 +109,7 @@ void bindPyGroupTransform(py::module & m)
                 {
                     throw Exception("A config is required.");
                 }
-                std::ofstream f(fileName.c_str());
+                std::ofstream f(fileName);
                 self->write(config, formatName.c_str(), f);
                 f.close();
             }, 

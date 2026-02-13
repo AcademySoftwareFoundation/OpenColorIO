@@ -2,17 +2,27 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <cstddef>
 #include <cmath>
+#include <memory>
+#include <algorithm>
+#include <vector>
+#include <string>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include <Imath/half.h>
-
+#include "Op.h"
 #include "ops/fixedfunction/FixedFunctionOp.h"
+#include "ops/fixedfunction/FixedFunctionOpData.h"
 #include "ops/gradingrgbcurve/GradingRGBCurveOp.h"
+#include "ops/gradingrgbcurve/GradingRGBCurveOpData.h"
 #include "ops/log/LogOp.h"
+#include "ops/log/LogOpData.h"
 #include "ops/matrix/MatrixOp.h"
+#include "ops/matrix/MatrixOpData.h"
 #include "ops/range/RangeOp.h"
+#include "ops/range/RangeOpData.h"
+#include "transforms/builtins/ColorMatrixHelpers.h"
 #include "transforms/builtins/ACES.h"
 #include "transforms/builtins/BuiltinTransformRegistry.h"
 #include "transforms/builtins/OpHelpers.h"

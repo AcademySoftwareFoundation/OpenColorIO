@@ -4,8 +4,6 @@
 #ifndef INCLUDED_OCIO_GRADINGRGBCURVE_CPU_H
 #define INCLUDED_OCIO_GRADINGRGBCURVE_CPU_H
 
-#include <vector>
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"

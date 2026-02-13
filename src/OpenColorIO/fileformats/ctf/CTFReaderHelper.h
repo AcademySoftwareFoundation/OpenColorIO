@@ -4,6 +4,12 @@
 #ifndef INCLUDED_OCIO_FILEFORMATS_CTF_CTFREADERHELPER_H
 #define INCLUDED_OCIO_FILEFORMATS_CTF_CTFREADERHELPER_H
 
+#include <cstddef>
+#include <string>
+#include <vector>
+
+#include <OpenColorIO/OpenColorIO.h>
+
 #include "fileformats/xmlutils/XMLReaderHelper.h"
 #include "fileformats/ctf/CTFTransform.h"
 #include "fileformats/ctf/IndexMapping.h"
@@ -23,6 +29,8 @@
 #include "ops/lut3d/Lut3DOpData.h"
 #include "ops/range/RangeOpData.h"
 #include "ops/reference/ReferenceOpData.h"
+#include "ops/matrix/MatrixOpData.h"
+
 
 namespace OCIO_NAMESPACE
 {

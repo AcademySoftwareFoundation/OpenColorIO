@@ -5,13 +5,14 @@
 #define INCLUDED_OCIO_FILEFORMATS_XMLUTILS_XMLREADERHELPER_H
 
 
-#include <string.h>
+#include <cstring>
+#include <sstream>
+#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "ops/cdl/CDLOpData.h"
-#include "PrivateTypes.h"
 #include "transforms/CDLTransform.h"
 #include "utils/StringUtils.h"
 

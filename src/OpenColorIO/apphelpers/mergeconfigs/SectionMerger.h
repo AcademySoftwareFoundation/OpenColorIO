@@ -6,14 +6,14 @@
 #define INCLUDED_OCIO_MERGE_CONFIG_SECTION_MERGER_H
 
 #include <string>
-#include <unordered_map>
 #include <vector>
+#include <functional>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ConfigUtils.h"
-#include "utils/StringUtils.h"
 #include "Logging.h"
+#include "utils/StringUtils.h"
 
 
 namespace OCIO_NAMESPACE

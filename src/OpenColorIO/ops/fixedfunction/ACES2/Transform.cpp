@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include "Transform.h"
-
 #include <array>
 #include <algorithm>
 #include <cmath>
 #include <limits>
+
+#include "Transform.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -193,7 +194,7 @@ f3 Aab_to_JMh(const f3 &Aab, const JMhParams &p)
         return {0.f, 0.f, 0.f};
     }
     const float J = Achromatic_n_to_J(Aab[0], p.cz);
-    const float M = sqrt(Aab[1] * Aab[1] + Aab[2] * Aab[2]);
+    const float M = std::sqrt(Aab[1] * Aab[1] + Aab[2] * Aab[2]);
     const float h_rad = std::atan2(Aab[2], Aab[1]);
     float h = _from_radians(h_rad); // Call to unwrapped hue version due to atan2 limits
 
@@ -222,8 +223,8 @@ f3 JMh_to_Aab(const f3 &JMh, const JMhParams &p)
 {
     const float h = JMh[2];
     const float h_rad = to_radians(h);
-    const float cos_hr = cos(h_rad);
-    const float sin_hr = sin(h_rad);
+    const float cos_hr = std::cos(h_rad);
+    const float sin_hr = std::sin(h_rad);
 
     return JMh_to_Aab(JMh, cos_hr, sin_hr, p);
 }
@@ -340,12 +341,12 @@ inline float toe_fwd( float x, float limit, float k1_in, float k2_in)
     }
 
     const float k2 = std::max(k2_in, 0.001f);
-    const float k1 = sqrt(k1_in * k1_in + k2 * k2);
+    const float k1 = std::sqrt(k1_in * k1_in + k2 * k2);
     const float k3 = (limit + k1) / (limit + k2);
 
     const float minus_b = k3 * x - k1;
     const float minus_ac = k2 * k3 * x; // a is 1.0
-    return 0.5f * (minus_b + sqrt(minus_b * minus_b + 4.f * minus_ac)); // a is 1.0, mins_b squared == b^2
+    return 0.5f * (minus_b + std::sqrt(minus_b * minus_b + 4.f * minus_ac)); // a is 1.0, mins_b squared == b^2
 }
 
 inline float toe_inv( float x, float limit, float k1_in, float k2_in)
@@ -356,7 +357,7 @@ inline float toe_inv( float x, float limit, float k1_in, float k2_in)
     }
 
     const float k2 = std::max(k2_in, 0.001f);
-    const float k1 = sqrt(k1_in * k1_in + k2 * k2);
+    const float k1 = std::sqrt(k1_in * k1_in + k2 * k2);
     const float k3 = (limit + k1) / (limit + k2);
     return (x * x + k1 * x) / (k3 * (x + k2));
 }
@@ -368,7 +369,7 @@ inline float aces_tonescale(const float Y_in, const ToneScaleParams &pt)
     {
         const float Y_ts_norm = Y_in / reference_luminance; // TODO
         const float Z = std::max(0.f, std::min(pt.inverse_limit, Y_ts_norm)); // TODO: could eliminate max in the context of the full tonescale
-        const float f = (Z + sqrt(Z * (4.f * pt.t_1 + Z))) / 2.f;
+        const float f = (Z + std::sqrt(Z * (4.f * pt.t_1 + Z))) / 2.f;
         const float Y = pt.s_2 / (powf((pt.m_2 / f), (1.f / pt.g)) - 1.f); // TODO: investigate precomputing reciprocal m_2  and a negative power? may swap a division for a multiply? powf(pt.m_2_recip * f, (-1.f / pt.g))
         return Y;
     }
@@ -430,7 +431,7 @@ f3 chroma_compress_fwd(const f3 &JMh, const float J_ts, const float Mnorm, const
 
         M_cp = M * powf(J_ts / J, pr.model_gamma_inv);
         M_cp = M_cp / Mnorm;
-        M_cp = limit - toe_fwd(limit - M_cp, limit - 0.001f, snJ * pc.sat, sqrt(nJ * nJ + pc.sat_thr));
+        M_cp = limit - toe_fwd(limit - M_cp, limit - 0.001f, snJ * pc.sat, std::sqrt(nJ * nJ + pc.sat_thr));
         M_cp = toe_fwd(M_cp, limit, nJ * pc.compr, snJ);
         M_cp = M_cp * Mnorm;
     }
@@ -453,7 +454,7 @@ f3 chroma_compress_inv(const f3 &JMh, const float J, const float Mnorm, const Re
 
         M = M_cp / Mnorm;
         M = toe_inv(M, limit, nJ * pc.compr, snJ);
-        M = limit - toe_inv(limit - M, limit - 0.001f, snJ * pc.sat, sqrt(nJ * nJ + pc.sat_thr));
+        M = limit - toe_inv(limit - M, limit - 0.001f, snJ * pc.sat, std::sqrt(nJ * nJ + pc.sat_thr));
         M = M * Mnorm;
         M = M * powf(J_ts / J, -pr.model_gamma_inv);
     }
@@ -464,7 +465,7 @@ f3 chroma_compress_inv(const f3 &JMh, const float J, const float Mnorm, const Re
 inline float model_gamma(void)
 {
     // c * z nonlinearity
-    return surround[1] * (1.48f + sqrt(Y_b / reference_luminance));
+    return surround[1] * (1.48f + std::sqrt(Y_b / reference_luminance));
 }
 
 JMhParams init_JMhParams(const Primaries &prims)
@@ -921,7 +922,7 @@ inline float get_focus_gain(float J, float analytical_threshold, float limit_J_m
     if (J > analytical_threshold)
     {
         // Approximate inverse required above threshold due to the introduction of J in the calculation
-        float gain_adjustment = log10((limit_J_max - analytical_threshold) / std::max(0.0001f, limit_J_max - J));
+        float gain_adjustment = std::log10((limit_J_max - analytical_threshold) / std::max(0.0001f, limit_J_max - J));
         //gain = powf(gain, focus_adjust_gain_inv) + 1.f;
         gain_adjustment = gain_adjustment * gain_adjustment + 1.f;
         gain = gain * gain_adjustment;
@@ -939,7 +940,7 @@ float solve_J_intersect(float J, float M, float focusJ, float maxJ, float slope_
         const float b = 1.f - M_scaled;
         const float c = -J;
         const float det = b * b - 4.f * a * c;
-        const float root = sqrt(det);
+        const float root = std::sqrt(det);
         return -2.f * c / (b + root);
     }
     else
@@ -947,7 +948,7 @@ float solve_J_intersect(float J, float M, float focusJ, float maxJ, float slope_
         const float b = -(1.f + M_scaled + maxJ * a);
         const float c = maxJ * M_scaled + J;
         const float det = b * b - 4.f * a * c;
-        const float root = sqrt(det);
+        const float root = std::sqrt(det);
         return -2.f * c / (b - root);
     }
 }
@@ -1280,14 +1281,14 @@ ToneScaleParams init_ToneScaleParams(float peakLuminance)
     // Calculate output constants
     // TODO: factor these calculations into well named functions
     // TODO: ensure correct use of n_r vs n vs reference_luminance vs 100.f etc
-    const float r_hit = r_hit_min + (r_hit_max - r_hit_min) * (log(n/n_r)/log(10000.f/100.f));
+    const float r_hit = r_hit_min + (r_hit_max - r_hit_min) * (std::log(n/n_r)/std::log(10000.f/100.f));
     const float m_0 = (n / n_r);
-    const float m_1 = 0.5f * (m_0 + sqrt(m_0 * (m_0 + 4.f * t_1)));
+    const float m_1 = 0.5f * (m_0 + std::sqrt(m_0 * (m_0 + 4.f * t_1)));
     const float u = powf((r_hit/m_1)/((r_hit/m_1)+1.f),g);
     const float m = m_1 / u;
-    const float w_i = log(n/100.f)/log(2.f);
+    const float w_i = std::log(n/100.f)/std::log(2.f);
     const float c_t = c_d/n_r * (1.f + w_i * w_g);
-    const float g_ip = 0.5f * (c_t + sqrt(c_t * (c_t + 4.f * t_1)));
+    const float g_ip = 0.5f * (c_t + std::sqrt(c_t * (c_t + 4.f * t_1)));
     const float g_ipp2 = -(m_1 * powf((g_ip/m),(1.f/g))) / (powf(g_ip/m , 1.f/g)-1.f);
     const float w_2 = c / g_ipp2;
     const float s_2 = w_2 * m_1 * reference_luminance;
@@ -1295,7 +1296,7 @@ ToneScaleParams init_ToneScaleParams(float peakLuminance)
     const float m_2 = m_1 / u_2;
     const float inverse_limit = n / (u_2 * n_r);
     const float forward_limit = 8.0f * r_hit;
-    const float log_peak = log10( n / n_r);
+    const float log_peak = std::log10( n / n_r);
 
     ToneScaleParams TonescaleParams = {
         n,

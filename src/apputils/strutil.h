@@ -42,8 +42,6 @@
 
 #include <cstdarg>
 #include <string>
-#include <cstring>
-#include <map>
 
 
 #ifndef OPENCOLORIO_PRINTF_ARGS

@@ -2,20 +2,20 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 #include <memory>
-#include <stdint.h>
+#include <cstdint>
+
+#include <Imath/half.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "BitDepthUtils.h"
 #include "MathUtils.h"
 #include "ops/lut1d/Lut1DOpCPU.h"
-#include "ops/OpTools.h"
-#include "Platform.h"
+#include "CPUInfo.h"
 #include "SSE.h"
 
-#include "CPUInfo.h"
 #include "Lut1DOpCPU_SSE2.h"
 #include "Lut1DOpCPU_AVX.h"
 #include "Lut1DOpCPU_AVX2.h"

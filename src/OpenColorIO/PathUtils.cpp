@@ -2,8 +2,9 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <iostream>
+#include <string>
 #include <map>
+#include <memory>
 
 #include <pystring.h>
 
@@ -13,9 +14,10 @@
 #include "PathUtils.h"
 #include "Platform.h"
 #include "utils/StringUtils.h"
-#include "OCIOZArchive.h"
+
 
 #if !defined(_WIN32)
+#include <vector>
 #include <sys/param.h>
 #include <unistd.h>
 #else

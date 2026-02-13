@@ -2,10 +2,16 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <limits>
+
+#include <OpenColorIO/OpenColorIO.h>
+
 #include "ops/gradingprimary/GradingPrimaryOpCPU.cpp"
 
+#include "CPUInfoConfig.h"
 #include "testutils/UnitTest.h"
 #include "utils/StringUtils.h"
+#include "MathUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 

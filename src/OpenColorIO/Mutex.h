@@ -7,9 +7,11 @@
 
 
 #include <mutex> 
-#include <thread>
-#include <assert.h>
+#include <cassert>
 
+#ifndef NDEBUG
+#include <thread>
+#endif
 
 /** For internal use only */
 

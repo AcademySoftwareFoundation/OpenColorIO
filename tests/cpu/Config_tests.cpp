@@ -3,6 +3,13 @@
 
 
 #include <sys/stat.h>
+#include <fstream>
+#include <cstring>
+#include <string>
+#include <sstream>
+#include <vector>
+#include <memory>
+#include <ios>
 
 #include <pystring.h>
 
@@ -57,19 +64,19 @@ OCIO_ADD_TEST(Config, test_searchpath_filesystem)
     mkdir(two_dir.c_str(), 0777);
 
     std::string lut1(one_dir+"somelut1.lut");
-    std::ofstream somelut1(lut1.c_str());
+    std::ofstream somelut1(lut1);
     somelut1.close();
 
     std::string lut2(two_dir+"somelut2.lut");
-    std::ofstream somelut2(lut2.c_str());
+    std::ofstream somelut2(lut2);
     somelut2.close();
 
     std::string lut3(two_dir+"somelut3.lut");
-    std::ofstream somelut3(lut3.c_str());
+    std::ofstream somelut3(lut3);
     somelut3.close();
 
     std::string lutdotdot(OCIO_TEST_AREA+"/lutdotdot.lut");
-    std::ofstream somelutdotdot(lutdotdot.c_str());
+    std::ofstream somelutdotdot(lutdotdot);
     somelutdotdot.close();
 
     // basic search test
@@ -410,7 +417,7 @@ OCIO_ADD_TEST(Config, required_roles_for_version_2_2)
         OCIO_CHECK_ASSERT(
             StringUtils::Contain(
             svec, 
-            "[OpenColorIO Error]: The scene_linear role is required for a config version 2.2 or"\
+            "[OpenColorIO Error]: The scene_linear role is required for a config version 2.2 or"
             " higher.")
         );
 
@@ -3425,7 +3432,7 @@ OCIO_ADD_TEST(Config, display)
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_THROW_WHAT(config->validate(),
                               OCIO::Exception,
-                              "The content of the env. variable for the list of active displays"\
+                              "The content of the env. variable for the list of active displays"
                               " [sRGB_2, sRGB_1, ABCDEF] contains invalid display name(s).");
     }
 
@@ -3473,7 +3480,7 @@ OCIO_ADD_TEST(Config, display)
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_THROW_WHAT(config->validate(),
                               OCIO::Exception,
-                              "The list of active displays [sRGB_2, sRGB_1, ABCDEF] "\
+                              "The list of active displays [sRGB_2, sRGB_1, ABCDEF] "
                               "from the config file contains invalid display name(s)");
     }
 }
@@ -5633,12 +5640,12 @@ OCIO_ADD_TEST(Config, matrix_serialization)
         "    from_reference: !<GroupTransform>\n"
         "      children:\n"
                  // Check the value serialization.
-        "        - !<MatrixTransform> {matrix: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],"\
+        "        - !<MatrixTransform> {matrix: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],"
                                      " offset: [-1, -2, -3, -4]}\n"
                  // Check the value precision.
         "        - !<MatrixTransform> {offset: [0.123456789876, 1.23456789876, 12.3456789876, 123.456789876]}\n"
-        "        - !<MatrixTransform> {matrix: [0.123456789876, 1.23456789876, 12.3456789876, 123.456789876, "\
-                                                "1234.56789876, 12345.6789876, 123456.789876, 1234567.89876, "\
+        "        - !<MatrixTransform> {matrix: [0.123456789876, 1.23456789876, 12.3456789876, 123.456789876, "
+                                                "1234.56789876, 12345.6789876, 123456.789876, 1234567.89876, "
                                                 "0, 0, 1, 0, 0, 0, 0, 1]}\n";
 
     const std::string str = PROFILE_V1 + SIMPLE_PROFILE_A + SIMPLE_PROFILE_B_V1 + strEnd;
@@ -5895,7 +5902,7 @@ OCIO_ADD_TEST(Config, remove_color_space)
     // As discussed only validation traps the issue.
     OCIO_CHECK_THROW_WHAT(config->validate(),
                           OCIO::Exception,
-                          "Config failed role validation. The role 'default' refers to"\
+                          "Config failed role validation. The role 'default' refers to"
                           " a color space, 'raw', which is not defined.");
 }
 
@@ -9954,8 +9961,8 @@ OCIO_ADD_TEST(Config, create_from_archive)
         OCIO_CHECK_THROW_WHAT(
             OCIO::Config::CreateFromFile(archivePath.c_str()),
             OCIO::Exception,
-            "Loading the OCIO profile failed. At line 0, '' parsing failed: The specified OCIO "\
-            "configuration file from Archive/ConfigIOProxy does not appear to have a valid version"\
+            "Loading the OCIO profile failed. At line 0, '' parsing failed: The specified OCIO "
+            "configuration file from Archive/ConfigIOProxy does not appear to have a valid version"
             " <null>"
         );
     }
@@ -9976,8 +9983,8 @@ OCIO_ADD_TEST(Config, create_from_archive)
         OCIO_CHECK_THROW_WHAT(
             OCIO::Config::CreateFromFile(archivePath.c_str()),
             OCIO::Exception,
-            "Loading the OCIO profile failed. At line 0, '' parsing failed: The specified OCIO "\
-            "configuration file from Archive/ConfigIOProxy does not appear to have a valid version"\
+            "Loading the OCIO profile failed. At line 0, '' parsing failed: The specified OCIO "
+            "configuration file from Archive/ConfigIOProxy does not appear to have a valid version"
             " <null>"
         );
     }
@@ -10011,16 +10018,16 @@ OCIO_ADD_TEST(Config, create_from_archive)
         OCIO_CHECK_THROW_WHAT(
             config->getProcessor("plain_lut11_cs", "shot1_lut11_cs"),
             OCIO::Exception,
-            "The specified file reference 'lut11.clf' could not be located. The following "\
-            "attempts were made: 'shot4\\lut11.clf' : 'shot1\\lut11.clf' : 'shot2\\lut11.clf' : "\
+            "The specified file reference 'lut11.clf' could not be located. The following "
+            "attempts were made: 'shot4\\lut11.clf' : 'shot1\\lut11.clf' : 'shot2\\lut11.clf' : "
             "'shot3\\lut11.clf' : 'shot3\\subdir\\lut11.clf' : '.\\lut11.clf'."
         );
 #else
         OCIO_CHECK_THROW_WHAT(
             config->getProcessor("plain_lut11_cs", "shot1_lut11_cs"),
             OCIO::Exception,
-            "The specified file reference 'lut11.clf' could not be located. The following "\
-            "attempts were made: 'shot4/lut11.clf' : 'shot1/lut11.clf' : 'shot2/lut11.clf' : "\
+            "The specified file reference 'lut11.clf' could not be located. The following "
+            "attempts were made: 'shot4/lut11.clf' : 'shot1/lut11.clf' : 'shot2/lut11.clf' : "
             "'shot3/lut11.clf' : 'shot3/subdir/lut11.clf' : './lut11.clf'."
         );
 #endif
@@ -10110,7 +10117,7 @@ OCIO_ADD_TEST(Config, create_from_config_io_proxy)
                 );
 
                 // Check if the file is present.
-                std::ifstream f(OCIO::Platform::filenameToUTF(lutPath).c_str(), std::ios_base::in);
+                std::ifstream f(OCIO::Platform::filenameToUTF(lutPath), std::ios_base::in);
                 if (f.good())
                 {
                     // This is a bad hash, simply using the filename as the hash for simplicity and 

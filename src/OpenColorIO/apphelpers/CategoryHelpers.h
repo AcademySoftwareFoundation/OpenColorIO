@@ -5,7 +5,6 @@
 #ifndef INCLUDED_OCIO_CATEGORY_HELPERS_H
 #define INCLUDED_OCIO_CATEGORY_HELPERS_H
 
-#include <string>
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>

@@ -3,12 +3,17 @@
 
 
 #include <cstring>
+#include <sstream>
 
 #include "ops/fixedfunction/FixedFunctionOpCPU.cpp"
 
 #include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
 #include "ops/lut3d/Lut3DOp.h"
+
+#if DUMP_RESULT
+#include <iostream>
+#endif
 
 namespace OCIO = OCIO_NAMESPACE;
 

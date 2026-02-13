@@ -2,12 +2,12 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <cstring>
+#include <string>
 #include <sstream>
-#include <vector>
+#include <ostream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "utils/StringUtils.h"
 #include "LegacyViewingPipeline.h"
 
 namespace OCIO_NAMESPACE

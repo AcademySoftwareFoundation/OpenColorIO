@@ -4,11 +4,12 @@
 #ifndef INCLUDED_OCIO_LUT3DOP_CPU_AVX2_H
 #define INCLUDED_OCIO_LUT3DOP_CPU_AVX2_H
 
-#include <OpenColorIO/OpenColorIO.h>
-
-#include "CPUInfo.h"
+#include "CPUInfoConfig.h"
 
 #if OCIO_USE_AVX2
+
+#include "OpenColorABI.h"
+
 namespace OCIO_NAMESPACE
 {
 

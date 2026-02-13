@@ -4,11 +4,14 @@
 
 #include <cstring>
 #include <cstdlib>
+#include <limits>
 #ifndef _WIN32
 #include <sys/time.h>
 #endif
 
-#include "BitDepthUtils.h"
+#include <OpenColorIO/OpenColorIO.h>
+
+#include "ops/matrix/MatrixOp.h"
 #include "OpBuilders.h"
 #include "ops/lut3d/Lut3DOp.cpp"
 #include "testutils/UnitTest.h"

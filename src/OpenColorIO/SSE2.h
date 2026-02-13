@@ -5,8 +5,11 @@
 #ifndef INCLUDED_OCIO_SSE2_H
 #define INCLUDED_OCIO_SSE2_H
 
-#include "CPUInfo.h"
+#include "CPUInfoConfig.h"
+
 #if OCIO_USE_SSE2
+
+#include <Imath/half.h>
 
 // Include the appropriate SIMD intrinsics header based on the architecture (Intel vs. ARM).
 #if !defined(__aarch64__) && !defined(_M_ARM64)
@@ -45,7 +48,7 @@
     #endif
 #endif
 
-#include <OpenColorIO/OpenColorIO.h>
+#include "OpenColorABI.h"
 #include "BitDepthUtils.h"
 
 // Macros for alignment declarations

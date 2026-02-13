@@ -2,7 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <fstream>
+#include <sstream>
 
 #include "fileformats/FileFormatVF.cpp"
 

@@ -18,19 +18,16 @@
 
 */
 
-#include <algorithm>
-#include <cmath>
-#include <cstdio>
 #include <iostream>
-#include <iterator>
 #include <map>
 #include <string>
 #include <vector>
+#include <sstream>
+#include <system_error>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "fileformats/FileFormatUtils.h"
-#include "MathUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ops/matrix/MatrixOp.h"

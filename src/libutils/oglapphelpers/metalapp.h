@@ -5,6 +5,7 @@
 #ifndef INCLUDED_OCIO_METALAPP_H
 #define INCLUDED_OCIO_METALAPP_H
 
+#include <memory>
 
 #include <OpenColorIO/OpenColorIO.h>
 

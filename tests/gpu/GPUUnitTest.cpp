@@ -4,9 +4,13 @@
 
 #include <algorithm>
 #include <cmath>
-#include <cstring>
+#include <cstddef>
 #include <iomanip>
+#include <iostream>
+#include <string>
 #include <sstream>
+#include <limits>
+#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -556,7 +560,7 @@ int main(int argc, const char ** argv)
 
     if (ap.parse(argc, argv) < 0)
     {
-        std::cerr << ap.geterror() << std::endl;
+        std::cerr << ap.geterror() << "\n";
         ap.usage();
         return 1;
     }
@@ -579,7 +583,7 @@ int main(int argc, const char ** argv)
 
                 if (results.size() >= 3)
                 {
-                    std::cerr << "Invalid value for the argument '--run_only'." << std::endl;
+                    std::cerr << "Invalid value for the argument '--run_only'.\n";
                     ap.usage();
                     return 1;
                 }
@@ -597,7 +601,7 @@ int main(int argc, const char ** argv)
 #if __APPLE__
             app = OCIO::MetalApp::CreateMetalGlApp("GPU tests - Metal", 10, 10);
 #else
-            std::cerr << std::endl << "'GPU tests - Metal' is not supported" << std::endl;
+            std::cerr << "\n'GPU tests - Metal' is not supported\n";
             return 1;
 #endif
         }
@@ -608,7 +612,7 @@ int main(int argc, const char ** argv)
     }
     catch (const OCIO::Exception & e)
     {
-        std::cerr << std::endl << e.what() << std::endl;
+        std::cerr << "\n" << e.what() << "\n";
         return 1;
     }
 
@@ -721,17 +725,17 @@ int main(int argc, const char ** argv)
         catch(OCIO::Exception & ex)
         {
             ++failures;
-            std::cerr << "FAILED - " << ex.what() << std::endl;
+            std::cerr << "FAILED - " << ex.what() << "\n";
         }
         catch(...)
         {
             ++failures;
-            std::cerr << "FAILED - Unexpected error" << std::endl;
+            std::cerr << "FAILED - Unexpected error\n";
         }
 
         if (!enabledTest)
         {
-            std::cout << "DISABLED" << std::endl;
+            std::cout << "DISABLED\n" << std::flush;
         }
         else if(curr_failures==failures && test->isValid())
         {
@@ -741,18 +745,18 @@ int main(int argc, const char ** argv)
 
             std::cout << "PASSED - (MaxDiff: " << test->getMaxDiff()
                       << " at pix[" << pixelIdx
-                      << "][" << componentIdx << "])" << std::endl;
+                      << "][" << componentIdx << "])\n" << std::flush;
         }
         else if(!test->isValid())
         {
             ++failures;
-            std::cerr << "FAILED - Invalid test" << std::endl;
+            std::cerr << "FAILED - Invalid test\n";
         }
 
         // Get rid of the test.
         tests[idx] = nullptr;
     }
 
-    std::cout << std::endl << failures << " tests failed" << std::endl << std::endl;
+    std::cout << "\n" << failures << " tests failed\n\n" << std::flush;
     return failures;
 }

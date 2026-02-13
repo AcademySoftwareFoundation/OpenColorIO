@@ -135,7 +135,7 @@ Example:
    }
    catch(OCIO::Exception & exception)
    {
-      std::cerr << "OpenColorIO Error: " << exception.what() << std::endl;
+      std::cerr << "OpenColorIO Error: " << exception.what() << "\n";
    }
 
 

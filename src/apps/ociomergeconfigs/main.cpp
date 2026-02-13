@@ -4,11 +4,13 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <string>
+#include <sstream>
+#include <exception>
 
 #include <pystring.h>
 
 #include <OpenColorIO/OpenColorIO.h>
-#include "utils/StringUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -105,13 +107,13 @@ int main(int argc, const char **argv)
 
     if (ap.parse(argc, argv) < 0)
     {
-        std::cerr << ap.geterror() << std::endl;
+        std::cerr << ap.geterror() << "\n";
         ap.usage();
         exit(1);
     }
     else if (args.size() != 1)
     {
-        std::cerr << "ERROR: Expecting 1 arguments, found " << args.size() << "." << std::endl;
+        std::cerr << "ERROR: Expecting 1 arguments, found " << args.size() << ".\n";
         ap.usage();
         exit(1);
     }
@@ -132,7 +134,7 @@ int main(int argc, const char **argv)
     } 
     catch (OCIO::Exception & e)
     {
-        std::cout << e.what() << std::endl;
+        std::cout << e.what() << "\n";
         exit(1);
     }
 
@@ -148,20 +150,19 @@ int main(int argc, const char **argv)
             }
             catch (OCIO::Exception & exception)
             {
-                std::cout << exception.what() << std::endl;
+                std::cout << exception.what() << "\n";
                 exit(1);
             }
         }
 
         if (displayParams)
         {
-            std::cout << "********************" << std::endl;
-            std::cout << "Merger options" << std::endl;
-            std::cout << "********************" << std::endl;
+            std::cout << "********************\n"
+                         "Merger options\n"
+                         "********************\n";
             std::ostringstream os;
             newMerger->serialize(os);
-            std::cout << os.str() << std::endl;
-            std::cout << std::endl;
+            std::cout << os.str() << "\n\n";
         }
 
         // "Show-all" option take priority over the "show" option.
@@ -169,23 +170,23 @@ int main(int argc, const char **argv)
         {
             for (int i = 0; i < merger->getNumConfigMergingParameters(); i++)
             {
-                std::cout << "*********************" << std::endl;
-                std::cout << "Merged Config " << i << std::endl;
-                std::cout << "*********************" << std::endl;
+                std::cout << "*********************\n"
+                             "Merged Config " << i << "\n"
+                             "*********************\n";
                 std::ostringstream os;
                 newMerger->getMergedConfig(i)->serialize(os);
-                std::cout << os.str() << std::endl;
+                std::cout << os.str() << "\n";
             }
         }
 
         if (displayConfig && !displayAllConfig)
         {
-            std::cout << "********************" << std::endl;
-            std::cout << "Last Merged Config" << std::endl;
-            std::cout << "********************" << std::endl;
+            std::cout << "********************\n"
+                         "Last Merged Config\n"
+                         "********************\n";
             std::ostringstream os;
             newMerger->getMergedConfig()->serialize(os);
-            std::cout << os.str() << std::endl;
+            std::cout << os.str() << "\n";
         }
 
         if (!outputFile.empty())

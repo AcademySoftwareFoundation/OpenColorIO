@@ -2,19 +2,20 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <iostream>
-#include <cstring>
-#include <map>
-#include <mutex>
+#include <cstddef>
+
+#include <string>
 #include <sstream>
-#include <vector>
+#include <exception>
+#include <fstream>
 
 #include <pystring.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "MergeConfigsHelpers.h"
-#include "Logging.h"
-#include "ParseUtils.h"
+#include "SectionMerger.h"
+
 #include "Platform.h"
 #include "OCIOMYaml.h"
 #include "utils/StringUtils.h"

@@ -2,10 +2,15 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include "BitDepthUtils.h"
-#include "ops/matrix/MatrixOp.h"
+#include <string>
+#include <memory>
 
+#include <OpenColorIO/OpenColorIO.h>
+
+#include "Op.h"
 #include "ops/range/RangeOp.cpp"
+#include "fileformats/FormatMetadata.h"
+#include "ops/matrix/MatrixOpData.h"
 
 #include "testutils/UnitTest.h"
 

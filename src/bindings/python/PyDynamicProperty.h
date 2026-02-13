@@ -4,8 +4,8 @@
 #ifndef INCLUDED_OCIO_PYDYNAMICPROPERTY_H
 #define INCLUDED_OCIO_PYDYNAMICPROPERTY_H
 
-#include "PyOpenColorIO.h"
-#include "PyUtils.h"
+#include <OpenColorIO/OpenColorIO.h>
+
 
 namespace OCIO_NAMESPACE
 {
@@ -31,7 +31,7 @@ struct OCIOHIDDEN PyDynamicProperty
         {
             return propDouble->getValue();
         }
-        throw OCIO::Exception("Invalid dynamic property type (doesn't hold a double).");
+        throw Exception("Invalid dynamic property type (doesn't hold a double).");
     }
 
     void setDouble(double v)
@@ -41,7 +41,7 @@ struct OCIOHIDDEN PyDynamicProperty
         {
             return propDouble->setValue(v);
         }
-        throw OCIO::Exception("Invalid dynamic property type (doesn't accept a double).");
+        throw Exception("Invalid dynamic property type (doesn't accept a double).");
     }
 
     const GradingPrimary & getGradingPrimary()
@@ -51,7 +51,7 @@ struct OCIOHIDDEN PyDynamicProperty
         {
             return propGP->getValue();
         }
-        throw OCIO::Exception("Invalid dynamic property type (doesn't hold a GradingPrimary).");
+        throw Exception("Invalid dynamic property type (doesn't hold a GradingPrimary).");
     }
 
     void setGradingPrimary(const GradingPrimary & v)
@@ -61,7 +61,7 @@ struct OCIOHIDDEN PyDynamicProperty
         {
             return propGP->setValue(v);
         }
-        throw OCIO::Exception("Invalid dynamic property type (doesn't accept a GradingPrimary).");
+        throw Exception("Invalid dynamic property type (doesn't accept a GradingPrimary).");
     }
 
     const ConstGradingRGBCurveRcPtr & getGradingRGBCurve()
@@ -71,7 +71,7 @@ struct OCIOHIDDEN PyDynamicProperty
         {
             return propGC->getValue();
         }
-        throw OCIO::Exception("Invalid dynamic property type (doesn't hold a GradingRGBCurve).");
+        throw Exception("Invalid dynamic property type (doesn't hold a GradingRGBCurve).");
     }
 
     void setGradingRGBCurve(const ConstGradingRGBCurveRcPtr & v)
@@ -81,7 +81,7 @@ struct OCIOHIDDEN PyDynamicProperty
         {
             return propGC->setValue(v);
         }
-        throw OCIO::Exception("Invalid dynamic property type (doesn't accept a GradingRGBCurve).");
+        throw Exception("Invalid dynamic property type (doesn't accept a GradingRGBCurve).");
     }
 
     const ConstGradingHueCurveRcPtr & getGradingHueCurve()
@@ -91,7 +91,7 @@ struct OCIOHIDDEN PyDynamicProperty
         {
             return propGC->getValue();
         }
-        throw OCIO::Exception("Invalid dynamic property type (doesn't hold a GradingHueCurve).");
+        throw Exception("Invalid dynamic property type (doesn't hold a GradingHueCurve).");
     }
 
     void setGradingHueCurve(const ConstGradingHueCurveRcPtr & v)
@@ -101,7 +101,7 @@ struct OCIOHIDDEN PyDynamicProperty
         {
             return propGC->setValue(v);
         }
-        throw OCIO::Exception("Invalid dynamic property type (doesn't accept a GradingHueCurve).");
+        throw Exception("Invalid dynamic property type (doesn't accept a GradingHueCurve).");
     }
 
     const GradingTone & getGradingTone()
@@ -111,7 +111,7 @@ struct OCIOHIDDEN PyDynamicProperty
         {
             return propGT->getValue();
         }
-        throw OCIO::Exception("Invalid dynamic property type (doesn't hold a GradingTone).");
+        throw Exception("Invalid dynamic property type (doesn't hold a GradingTone).");
     }
 
     void setGradingTone(const GradingTone & v)
@@ -121,7 +121,7 @@ struct OCIOHIDDEN PyDynamicProperty
         {
             return propGT->setValue(v);
         }
-        throw OCIO::Exception("Invalid dynamic property type (doesn't accept a GradingTone).");
+        throw Exception("Invalid dynamic property type (doesn't accept a GradingTone).");
     }
 
 private:

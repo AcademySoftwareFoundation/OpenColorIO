@@ -3,13 +3,16 @@
 
 #include <cstring>
 #include <unordered_set>
+#include <unordered_map>
 #include <iostream>
+#include <string>
+#include <sstream>
+#include <exception>
 
 #include <pystring.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Logging.h"
 #include "OCIOMYaml.h"
 #include "ParseUtils.h"
 #include "PathUtils.h"
@@ -300,7 +303,7 @@ void OCIOMYaml::loadParams(const YAML::Node & node, ConfigMergingParametersRcPtr
         else
         {
             // Handle unsupported property or use default handler.
-            std::cout << "Unsupported property : " << key << std::endl;
+            std::cout << "Unsupported property : " << key << "\n";
         }
     }
 }

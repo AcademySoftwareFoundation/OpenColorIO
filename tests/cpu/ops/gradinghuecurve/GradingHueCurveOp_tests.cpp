@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <OpenColorIO/OpenColorIO.h>
+
 #include "OpBuilders.h"
 
 #include "ops/gradinghuecurve/GradingHueCurveOp.cpp"

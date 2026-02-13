@@ -11,12 +11,13 @@
 #include <vector>
 #include <regex>
 #include <functional>
+#include <algorithm>
+#include <exception>
 
 #include <pystring.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "builtinconfigs/BuiltinConfigRegistry.h"
 #include "ConfigUtils.h"
 #include "ContextVariableUtils.h"
 #include "Display.h"
@@ -27,19 +28,17 @@
 #include "LookParse.h"
 #include "MathUtils.h"
 #include "Mutex.h"
-#include "NamedTransform.h"
 #include "OCIOYaml.h"
 #include "OCIOZArchive.h"
-#include "OpBuilders.h"
 #include "ParseUtils.h"
 #include "PathUtils.h"
 #include "Platform.h"
 #include "PrivateTypes.h"
 #include "Processor.h"
-#include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
 #include "ViewingRules.h"
 #include "SystemMonitor.h"
+
 
 namespace OCIO_NAMESPACE
 {
@@ -155,7 +154,7 @@ void GetFileReferences(std::set<std::string> & files, const ConstTransformRcPtr 
 {
     if(!transform) return;
 
-    if(ConstGroupTransformRcPtr groupTransform = \
+    if(ConstGroupTransformRcPtr groupTransform =
         DynamicPtrCast<const GroupTransform>(transform))
     {
         for(int i=0; i<groupTransform->getNumTransforms(); ++i)
@@ -163,7 +162,7 @@ void GetFileReferences(std::set<std::string> & files, const ConstTransformRcPtr 
             GetFileReferences(files, groupTransform->getTransform(i));
         }
     }
-    else if(ConstFileTransformRcPtr fileTransform = \
+    else if(ConstFileTransformRcPtr fileTransform =
         DynamicPtrCast<const FileTransform>(transform))
     {
         files.insert(fileTransform->getSrc());
@@ -179,7 +178,7 @@ void GetColorSpaceReferences(std::set<std::string> & colorSpaceNames,
 {
     if(!transform) return;
 
-    if(ConstGroupTransformRcPtr groupTransform = \
+    if(ConstGroupTransformRcPtr groupTransform =
         DynamicPtrCast<const GroupTransform>(transform))
     {
         for(int i=0; i<groupTransform->getNumTransforms(); ++i)
@@ -187,18 +186,18 @@ void GetColorSpaceReferences(std::set<std::string> & colorSpaceNames,
             GetColorSpaceReferences(colorSpaceNames, groupTransform->getTransform(i), context);
         }
     }
-    else if(ConstColorSpaceTransformRcPtr colorSpaceTransform = \
+    else if(ConstColorSpaceTransformRcPtr colorSpaceTransform =
         DynamicPtrCast<const ColorSpaceTransform>(transform))
     {
         colorSpaceNames.insert(context->resolveStringVar(colorSpaceTransform->getSrc()));
         colorSpaceNames.insert(context->resolveStringVar(colorSpaceTransform->getDst()));
     }
-    else if(ConstDisplayViewTransformRcPtr displayViewTransform = \
+    else if(ConstDisplayViewTransformRcPtr displayViewTransform =
         DynamicPtrCast<const DisplayViewTransform>(transform))
     {
         colorSpaceNames.insert(displayViewTransform->getSrc());
     }
-    else if(ConstLookTransformRcPtr lookTransform = \
+    else if(ConstLookTransformRcPtr lookTransform =
         DynamicPtrCast<const LookTransform>(transform))
     {
         colorSpaceNames.insert(lookTransform->getSrc());

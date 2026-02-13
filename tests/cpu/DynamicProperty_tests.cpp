@@ -2,8 +2,6 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <sstream>
-
 #include "DynamicProperty.cpp"
 
 #include "testutils/UnitTest.h"

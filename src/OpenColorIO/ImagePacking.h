@@ -5,6 +5,8 @@
 #ifndef INCLUDED_OCIO_IMAGEPACKING_H
 #define INCLUDED_OCIO_IMAGEPACKING_H
 
+#include <cstddef>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"

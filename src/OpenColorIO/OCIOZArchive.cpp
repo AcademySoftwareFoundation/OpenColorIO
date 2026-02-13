@@ -2,17 +2,17 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <sstream>
+#include <ostream>
 #include <fstream>
 #include <vector>
 #include <map>
-#include <set>
-#include <limits>
+#include <cstring>
+#include <utility>
 
 #include <pystring.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Mutex.h"
 #include "Platform.h"
 #include "utils/StringUtils.h"
 #include "transforms/FileTransform.h"

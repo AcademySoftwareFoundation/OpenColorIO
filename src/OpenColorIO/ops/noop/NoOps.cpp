@@ -3,13 +3,15 @@
 
 
 #include <sstream>
-#include <string.h>
+#include <cstring>
+#include <string>
+#include <memory>
+#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/allocation/AllocationOp.h"
 #include "NoOps.h"
-#include "OpBuilders.h"
 #include "Op.h"
 #include "ops/lut3d/Lut3DOp.h"
 

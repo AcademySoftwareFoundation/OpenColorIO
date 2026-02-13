@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <cstdio>
+#include <cstddef>
 #include <iostream>
-#include <fstream>
+#include <string>
 #include <sstream>
+#include <cstring>
+#include <algorithm>
 
 #include <pystring.h>
 
@@ -14,7 +16,6 @@
 #include "fileformats/ctf/CTFTransform.h"
 #include "fileformats/ctf/CTFReaderHelper.h"
 #include "fileformats/ctf/CTFReaderUtils.h"
-#include "fileformats/FileFormatUtils.h"
 #include "fileformats/xmlutils/XMLReaderHelper.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "fileformats/xmlutils/XMLWriterUtils.h"
@@ -23,9 +24,8 @@
 #include "ops/range/RangeOp.h"
 #include "BakingUtils.h"
 #include "OpBuilders.h"
-#include "ops/noop/NoOps.h"
-#include "Platform.h"
 #include "TransformBuilder.h"
+#include "Platform.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
 
@@ -1584,7 +1584,7 @@ void LocalFileFormat::write(const ConstConfigRcPtr & config,
     CTFReaderTransformPtr transform = std::make_shared<CTFReaderTransform>(ops, metadata);
 
     // Write XML Header.
-    ostream << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl;
+    ostream << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
     XmlFormatter fmt(ostream);
 
     TransformWriter writer(fmt, transform, isCLF);

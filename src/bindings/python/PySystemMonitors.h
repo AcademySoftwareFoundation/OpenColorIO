@@ -4,7 +4,8 @@
 #ifndef INCLUDED_OCIO_PYSYSTEMMONITORS_H
 #define INCLUDED_OCIO_PYSYSTEMMONITORS_H
 
-#include "PyOpenColorIO.h"
+#include <OpenColorIO/OpenColorIO.h>
+
 
 namespace OCIO_NAMESPACE
 {

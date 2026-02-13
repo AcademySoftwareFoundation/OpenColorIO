@@ -2,6 +2,16 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <limits>
+#include <sstream>
+#include <algorithm>
+#include <memory>
+#include <vector>
+
+#include <Imath/half.h>
+
+#include "MathHalfUtils.h"
+
 #include "ops/lut1d/Lut1DOpCPU.cpp"
 
 #include "testutils/UnitTest.h"

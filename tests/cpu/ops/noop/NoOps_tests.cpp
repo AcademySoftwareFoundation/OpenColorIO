@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <memory>
+
 #include "ops/noop/NoOps.cpp"
 
 #include "ops/lut1d/Lut1DOp.h"
@@ -243,12 +245,12 @@ OCIO_ADD_TEST(NoOps, partition_gpu_ops)
                                                   gpuLatticeOps,
                                                   gpuPostOps) );
     /*
-    std::cerr << "gpuPreOps" << std::endl;
-    std::cerr << SerializeOpVec(gpuPreOps, 4) << std::endl;
-    std::cerr << "gpuLatticeOps" << std::endl;
-    std::cerr << SerializeOpVec(gpuLatticeOps, 4) << std::endl;
-    std::cerr << "gpuPostOps" << std::endl;
-    std::cerr << SerializeOpVec(gpuPostOps, 4) << std::endl;
+    std::cerr << "gpuPreOps" << "\n";
+    std::cerr << SerializeOpVec(gpuPreOps, 4) << "\n";
+    std::cerr << "gpuLatticeOps" << "\n";
+    std::cerr << SerializeOpVec(gpuLatticeOps, 4) << "\n";
+    std::cerr << "gpuPostOps" << "\n";
+    std::cerr << SerializeOpVec(gpuPostOps, 4) << "\n";
     */
     }
 } // PartitionGPUOps

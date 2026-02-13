@@ -2,11 +2,10 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "BitDepthUtils.h"
 #include "ops/gamma/GammaOpUtils.h"
 
 namespace OCIO_NAMESPACE

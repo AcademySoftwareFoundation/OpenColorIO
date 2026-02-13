@@ -8,7 +8,6 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
-#include "PrivateTypes.h"
 
 
 namespace OCIO_NAMESPACE

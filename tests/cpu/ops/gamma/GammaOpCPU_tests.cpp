@@ -2,10 +2,15 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <limits>
+#include <sstream>
+
+#include <OpenColorIO/OpenColorIO.h>
+
 #include "ops/gamma/GammaOpCPU.cpp"
 
+#include "CPUInfoConfig.h"
 #include "MathUtils.h"
-#include "ParseUtils.h"
 #include "ops/gamma/GammaOp.h"
 #include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"

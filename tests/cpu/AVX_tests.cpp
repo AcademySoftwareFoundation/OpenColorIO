@@ -2,12 +2,18 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include "CPUInfo.h"
+#include "CPUInfoConfig.h"
+
 #if OCIO_USE_AVX
 
+#include <string>
 #include <sstream>
+#include <limits>
+#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
+
+#include <Imath/half.h>
 
 #include <immintrin.h>
 #include "MathUtils.h"

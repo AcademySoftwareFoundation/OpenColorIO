@@ -205,14 +205,14 @@ void OglApp::setShader(GpuShaderDescRcPtr & shaderDesc)
     m_oglBuilder->allocateAllTextures(1);
 
     std::ostringstream main;
-    main << std::endl
-         << "uniform sampler2D img;" << std::endl
-         << std::endl
-         << "void main()" << std::endl
-         << "{" << std::endl
-         << "    vec4 col = texture2D(img, gl_TexCoord[0].st);" << std::endl
-         << "    gl_FragColor = " << shaderDesc->getFunctionName() << "(col);" << std::endl
-         << "}" << std::endl;
+    main << "\n"
+            "uniform sampler2D img;\n"
+            "\n"
+            "void main()\n"
+            "{\n"
+            "    vec4 col = texture2D(img, gl_TexCoord[0].st);\n"
+            "    gl_FragColor = " << shaderDesc->getFunctionName() << "(col);\n"
+            "}\n";
 
     // Build the fragment shader program.
     m_oglBuilder->buildProgram(main.str().c_str(), false);
@@ -229,11 +229,11 @@ void OglApp::setShader(GpuShaderDescRcPtr & shaderDesc)
 
 void OglApp::printGLInfo() const noexcept
 {
-    std::cout << std::endl
-              << "GL Vendor:    " << glGetString(GL_VENDOR) << std::endl
-              << "GL Renderer:  " << glGetString(GL_RENDERER) << std::endl
-              << "GL Version:   " << glGetString(GL_VERSION) << std::endl
-              << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+    std::cout << "\n"
+              << "GL Vendor:    " << glGetString(GL_VENDOR) << "\n"
+              << "GL Renderer:  " << glGetString(GL_RENDERER) << "\n"
+              << "GL Version:   " << glGetString(GL_VERSION) << "\n"
+              << "GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
 }
 
 void OglApp::setupCommon()
@@ -374,9 +374,9 @@ void HeadlessApp::printGLInfo() const noexcept
 
 void HeadlessApp::printEGLInfo() const noexcept
 {
-    std::cout << std::endl
-              << "EGL Vendor:   " << eglQueryString(m_eglDisplay, EGL_VENDOR) << std::endl
-              << "EGL Version:  " << eglQueryString(m_eglDisplay, EGL_VERSION) << std::endl;
+    std::cout << "\n"
+              << "EGL Vendor:   " << eglQueryString(m_eglDisplay, EGL_VENDOR) << "\n"
+              << "EGL Version:  " << eglQueryString(m_eglDisplay, EGL_VERSION) << "\n";
 }
 
 void HeadlessApp::redisplay()

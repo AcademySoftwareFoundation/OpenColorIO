@@ -2,12 +2,12 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <string>
 #include <sstream>
 #include <fstream>
-#include <vector>
+#include <exception>
 
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
@@ -116,7 +116,7 @@ int main (int argc, const char* argv[])
 
     if (ap.parse(argc, argv) < 0)
     {
-        std::cout << ap.geterror() << std::endl;
+        std::cout << ap.geterror() << "\n";
         ap.usage();
         std::cout << "\n";
         return 1;
@@ -146,21 +146,21 @@ int main (int argc, const char* argv[])
     }
     catch(const OCIO::Exception & e)
     {
-        std::cerr << "\nERROR: " << e.what() << std::endl;
-        std::cerr << "See --help for more info." << std::endl;
+        std::cerr << "\nERROR: " << e.what() << "\n";
+        std::cerr << "See --help for more info.\n";
         return 1;
     }
     catch(...)
     {
-        std::cerr << "\nERROR: An unknown error occurred in parse_luts" << std::endl;
-        std::cerr << "See --help for more info." << std::endl;
+        std::cerr << "\nERROR: An unknown error occurred in parse_luts\n";
+        std::cerr << "See --help for more info.\n";
         return 1;
     }
 
     if(!groupTransform)
     {
-        std::cerr << "\nERROR: parse_luts returned null transform" << std::endl;
-        std::cerr << "See --help for more info." << std::endl;
+        std::cerr << "\nERROR: parse_luts returned null transform\n";
+        std::cerr << "See --help for more info.\n";
         return 1;
     }
 
@@ -171,31 +171,31 @@ int main (int argc, const char* argv[])
         if(!inputspace.empty())
         {
             std::cerr << "\nERROR: --inputspace is not allowed when using --lut\n\n";
-            std::cerr << "See --help for more info." << std::endl;
+            std::cerr << "See --help for more info.\n";
             return 1;
         }
         if(!outputspace.empty())
         {
             std::cerr << "\nERROR: --outputspace is not allowed when using --lut\n\n";
-            std::cerr << "See --help for more info." << std::endl;
+            std::cerr << "See --help for more info.\n";
             return 1;
         }
         if(!looks.empty())
         {
             std::cerr << "\nERROR: --looks is not allowed when using --lut\n\n";
-            std::cerr << "See --help for more info." << std::endl;
+            std::cerr << "See --help for more info.\n";
             return 1;
         }
         if(!shaperspace.empty())
         {
             std::cerr << "\nERROR: --shaperspace is not allowed when using --lut\n\n";
-            std::cerr << "See --help for more info." << std::endl;
+            std::cerr << "See --help for more info.\n";
             return 1;
         }
         if(!display.empty() || !view.empty())
         {
             std::cerr << "\nERROR: --displayview is not allowed when using --lut\n\n";
-            std::cerr << "See --help for more info." << std::endl;
+            std::cerr << "See --help for more info.\n";
             return 1;
         }
 
@@ -229,35 +229,35 @@ int main (int argc, const char* argv[])
         if(inputspace.empty())
         {
             std::cerr << "\nERROR: You must specify the --inputspace.\n\n";
-            std::cerr << "See --help for more info." << std::endl;
+            std::cerr << "See --help for more info.\n";
             return 1;
         }
 
         if(outputspace.empty() && (display.empty() && view.empty()))
         {
             std::cerr << "\nERROR: You must specify either --outputspace or --displayview.\n\n";
-            std::cerr << "See --help for more info." << std::endl;
+            std::cerr << "See --help for more info.\n";
             return 1;
         }
 
         if(display.empty() ^ view.empty())
         {
             std::cerr << "\nERROR: You must specify both display and view with --displayview.\n\n";
-            std::cerr << "See --help for more info." << std::endl;
+            std::cerr << "See --help for more info.\n";
             return 1;
         }
 
         if(format.empty())
         {
             std::cerr << "\nERROR: You must specify the LUT format using --format.\n\n";
-            std::cerr << "See --help for more info." << std::endl;
+            std::cerr << "See --help for more info.\n";
             return 1;
         }
 
         if(!inputconfig.empty())
         {
             if(!usestdout && verbose)
-                std::cout << "[OpenColorIO INFO]: Loading " << inputconfig << std::endl;
+                std::cout << "[OpenColorIO INFO]: Loading " << inputconfig << "\n";
             config = OCIO::Config::CreateFromFile(inputconfig.c_str());
         }
         else if(OCIO::GetEnvVariable("OCIO"))
@@ -265,7 +265,7 @@ int main (int argc, const char* argv[])
             if(!usestdout && verbose)
             {
                 std::cout << "[OpenColorIO INFO]: Loading $OCIO " 
-                          << OCIO::GetEnvVariable("OCIO") << std::endl;
+                          << OCIO::GetEnvVariable("OCIO") << "\n";
             }
             config = OCIO::Config::CreateFromEnv();
         }
@@ -281,7 +281,7 @@ int main (int argc, const char* argv[])
     if(outputfile.empty() && !usestdout)
     {
         std::cerr << "\nERROR: You must specify the outputfile or --stdout.\n\n";
-        std::cerr << "See --help for more info." << std::endl;
+        std::cerr << "See --help for more info.\n";
         return 1;
     }
 
@@ -295,20 +295,20 @@ int main (int argc, const char* argv[])
             {
                 description = outputfile;
                 if(verbose)
-                    std::cout << "[OpenColorIO INFO]: \"--description\" set to default value of filename.icc: " << outputfile << "" << std::endl;
+                    std::cout << "[OpenColorIO INFO]: \"--description\" set to default value of filename.icc: " << outputfile << "\n";
             }
 
             if(usestdout)
             {
                 std::cerr << "\nERROR: --stdout not supported when writing ICC profiles.\n\n";
-                std::cerr << "See --help for more info." << std::endl;
+                std::cerr << "See --help for more info.\n";
                 return 1;
             }
 
             if(outputfile.empty())
             {
                 std::cerr << "ERROR: you need to specify a output ICC path\n";
-                std::cerr << "See --help for more info." << std::endl;
+                std::cerr << "See --help for more info.\n";
                 return 1;
             }
 
@@ -374,7 +374,7 @@ int main (int argc, const char* argv[])
             std::ostringstream output;
 
             if(!usestdout && verbose)
-                std::cout << "[OpenColorIO INFO]: Baking '" << format << "' LUT" << std::endl;
+                std::cout << "[OpenColorIO INFO]: Baking '" << format << "' LUT\n";
 
             if(usestdout)
             {
@@ -382,34 +382,34 @@ int main (int argc, const char* argv[])
             }
             else
             {
-                std::ofstream f(outputfile.c_str());
+                std::ofstream f(outputfile);
                 if(f.fail())
                 {
-                    std::cerr << "ERROR: Non-writable file path " << outputfile << " specified." << std::endl;
+                    std::cerr << "ERROR: Non-writable file path " << outputfile << " specified.\n";
                     return 1;
                 }
                 baker->bake(f);
                 if(verbose)
-                    std::cout << "[OpenColorIO INFO]: Wrote '" << outputfile << "'" << std::endl;
+                    std::cout << "[OpenColorIO INFO]: Wrote '" << outputfile << "'\n";
             }
         }
     }
     catch(OCIO::Exception & exception)
     {
-        std::cerr << "OCIO Error: " << exception.what() << std::endl;
-        std::cerr << "See --help for more info." << std::endl;
+        std::cerr << "OCIO Error: " << exception.what() << "\n";
+        std::cerr << "See --help for more info.\n";
         return 1;
     }
     catch (std::exception& exception)
     {
         std::cerr << "Error: " << exception.what() << "\n";
-        std::cerr << "See --help for more info." << std::endl;
+        std::cerr << "See --help for more info.\n";
         return 1;
     }
     catch(...)
     {
-        std::cerr << "Unknown OCIO error encountered." << std::endl;
-        std::cerr << "See --help for more info." << std::endl;
+        std::cerr << "Unknown OCIO error encountered.\n";
+        std::cerr << "See --help for more info.\n";
         return 1;
     }
 

@@ -10,7 +10,11 @@
 
 #include <immintrin.h>
 
-#include <OpenColorIO/OpenColorIO.h>
+#if OCIO_USE_F16C
+#include <Imath/half.h>
+#endif
+
+#include "OpenColorABI.h"
 #include "BitDepthUtils.h"
 
 // Macros for alignment declarations

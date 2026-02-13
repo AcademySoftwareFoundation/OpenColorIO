@@ -5,6 +5,10 @@
 #ifndef INCLUDED_OCIO_OPS_LOG_LOGOPDATA_H
 #define INCLUDED_OCIO_OPS_LOG_LOGOPDATA_H
 
+#include <string>
+#include <vector>
+#include <ios>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"

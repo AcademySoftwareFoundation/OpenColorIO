@@ -6,6 +6,7 @@
 #include "utils/NumberUtils.h"
 
 #include <limits>
+#include <system_error>
 
 namespace OCIO = OCIO_NAMESPACE;
 

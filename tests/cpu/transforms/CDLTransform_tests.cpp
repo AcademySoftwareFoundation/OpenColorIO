@@ -3,6 +3,11 @@
 
 
 #include <cstdio>
+#include <fstream>
+#include <cstring>
+#include <algorithm>
+
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/exponent/ExponentOp.h"
 #include "ops/matrix/MatrixOpData.h"
@@ -13,6 +18,7 @@
 #include "UnitTestUtils.h"
 
 #include "Platform.h"
+#include "OpBuilders.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 

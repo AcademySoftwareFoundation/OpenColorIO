@@ -2,6 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include "ops/log/LogUtils.h"
 #include "ops/log/LogOpData.cpp"
 
 #include "testutils/UnitTest.h"

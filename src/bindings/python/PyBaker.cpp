@@ -2,10 +2,21 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <fstream>
+#include <string>
 #include <sstream>
+
+#include <OpenColorIO/OpenColorIO.h>
+
+#include <pybind11/pybind11.h>
 
 #include "PyOpenColorIO.h"
 #include "PyUtils.h"
+#include "docstrings.h"
+
+
+namespace py = pybind11;
+using namespace pybind11::literals;
+
 
 namespace OCIO_NAMESPACE
 {
@@ -127,7 +138,7 @@ Each item is a tuple containing format name and format extension.
              DOC(Baker, setCubeSize))
         .def("bake", [](BakerRcPtr & self, const std::string & fileName) 
             {
-                std::ofstream f(fileName.c_str());
+                std::ofstream f(fileName);
                 self->bake(f);
                 f.close();
             }, 

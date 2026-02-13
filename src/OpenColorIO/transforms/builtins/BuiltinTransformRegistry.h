@@ -7,6 +7,9 @@
 
 
 #include <vector>
+#include <functional>
+#include <utility>
+#include <string>
 
 #include <OpenColorIO/OpenColorIO.h>
 

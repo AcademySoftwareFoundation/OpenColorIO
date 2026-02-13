@@ -3,6 +3,9 @@
 
 #include <algorithm>
 #include <iterator>
+#include <sstream>
+
+#include <Imath/half.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 

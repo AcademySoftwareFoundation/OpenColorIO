@@ -4,10 +4,8 @@
 
 #include "ops/fixedfunction/FixedFunctionOp.cpp"
 
-#include "MathUtils.h"
 #include "utils/StringUtils.h"
 #include "testutils/UnitTest.h"
-#include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 

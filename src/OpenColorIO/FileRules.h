@@ -5,7 +5,7 @@
 #ifndef INCLUDED_OCIO_FILERULES_H
 #define INCLUDED_OCIO_FILERULES_H
 
-#include <functional>
+#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 

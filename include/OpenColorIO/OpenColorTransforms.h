@@ -6,7 +6,6 @@
 #define INCLUDED_OCIO_OPENCOLORTRANSFORMS_H
 
 #include <initializer_list>
-#include <limits>
 
 #include "OpenColorTypes.h"
 

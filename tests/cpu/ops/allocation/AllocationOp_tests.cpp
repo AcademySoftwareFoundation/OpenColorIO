@@ -2,9 +2,12 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <cstring>
+
 #include "ops/allocation/AllocationOp.cpp"
 
 #include "testutils/UnitTest.h"
+#include "CPUInfoConfig.h"
 #include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
