@@ -861,8 +861,6 @@ void CTFReaderDescElt::start(const char **  atttributes )
     m_desc = {};
     m_language = {};
 
-    unsigned i = 0;
-
     const char ** attr = atttributes;
     while (*attr)
     {

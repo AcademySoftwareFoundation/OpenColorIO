@@ -519,7 +519,7 @@ void CTFReaderTransform::fromMetadata(const FormatMetadataImpl & metadata)
     // Description, input and output descriptors
     auto copyDescs = [&](const char * elementName)
     {
-        for ( auto & desc : metadata.getChildrenElements(elementName))
+        for (auto desc : metadata.getChildrenElements(elementName))
         {
             FormatMetadataImpl newEl(desc.getElementName(), desc.getElementValue());
             auto lang = desc.getAttributeValueString("language");
@@ -536,7 +536,7 @@ void CTFReaderTransform::fromMetadata(const FormatMetadataImpl & metadata)
     copyDescs(METADATA_OUTPUT_DESCRIPTOR);
 
     // Combine all Info elements.
-    for (auto elt : metadata.getChildrenElements())
+    for (auto & elt : metadata.getChildrenElements())
     {
         if (0 == Platform::Strcasecmp(elt.getElementName(), METADATA_INFO))
         {
@@ -573,7 +573,7 @@ void CTFReaderTransform::toMetadata(FormatMetadataImpl & metadata) const
     // Description, Input and Output Descriptor Elements.
     auto copyDescs = [&](const char * elementName)
     {
-        for ( auto & desc : m_formatMetadata.getChildrenElements(elementName))
+        for (auto desc : m_formatMetadata.getChildrenElements(elementName))
         {
             FormatMetadataImpl newEl(desc.getElementName(), desc.getElementValue());
             auto lang = desc.getAttributeValueString("language");
@@ -2730,21 +2730,21 @@ void TransformWriter::write() const
 
         // Descriptions.
         {
-            auto & desc = m_transform->getFormatMetadata()
+            auto desc = m_transform->getFormatMetadata()
                 .getChildrenElements(METADATA_DESCRIPTION);
             WriteTagElementVec(m_formatter, desc);
         }
 
         // Input Descriptors.
         {
-            auto & desc = m_transform->getFormatMetadata()
+            auto desc = m_transform->getFormatMetadata()
                 .getChildrenElements(METADATA_INPUT_DESCRIPTOR);
             WriteTagElementVec(m_formatter, desc);
         }
 
         // Output Descriptors.
         {
-           auto & desc = m_transform->getFormatMetadata()
+           auto desc = m_transform->getFormatMetadata()
                 .getChildrenElements(METADATA_OUTPUT_DESCRIPTOR);
             WriteTagElementVec(m_formatter, desc);
         }
@@ -2780,7 +2780,7 @@ void TransformWriter::writeProcessListMetadata(const FormatMetadataImpl& m) cons
             m_formatter.writeContent(m.getElementValue());
         }
 
-        const auto items = m.getChildrenElements();
+        const auto & items = m.getChildrenElements();
         for (auto it = items.begin(), end = items.end(); it != end; ++it)
         {
             XmlScopeIndent scopeIndent(m_formatter);
