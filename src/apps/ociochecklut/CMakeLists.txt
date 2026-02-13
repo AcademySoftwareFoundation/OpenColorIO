@@ -36,3 +36,7 @@ ocio_strip_binary(ociochecklut)
 install(TARGETS ociochecklut
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+
+# Set the debugger environment so that the executable can be launched
+# directly within IDE (e.g. Visual Studio).
+set_debugger_env(ociochecklut NEEDS_GL)
