@@ -431,18 +431,6 @@ CTFVersion GetMinimumVersion(const ConstCTFReaderTransformPtr & transform)
     return minimumVersion;
 }
 
-const char * GetFirstElementValue(const FormatMetadataImpl::Elements & elements, const std::string & name)
-{
-    for (auto & it : elements)
-    {
-        if (0 == Platform::Strcasecmp(name.c_str(), it.getElementName()))
-        {
-            return it.getElementValue();
-        }
-    }
-    return "";
-}
-
 const char * GetLastElementValue(const FormatMetadataImpl::Elements & elements, const std::string & name)
 {
     for (auto it = elements.rbegin(); it != elements.rend(); ++it)
@@ -472,13 +460,6 @@ void AddNonEmptyElement(FormatMetadataImpl & metadata, const char * name, const 
     }
 }
 
-void AddNonEmptyAttribute(FormatMetadataImpl & metadata, const char * name, const std::string & value)
-{
-    if (!value.empty())
-    {
-        metadata.addAttribute(name, value.c_str());
-    }
-}
 } // namespace
 
 // This method copies the metadata from the argument into the transform object.
