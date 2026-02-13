@@ -211,7 +211,7 @@ class XmlReaderDummyElt : public XmlReaderPlainElt
         {
         }
 
-        void appendMetadata(FormatMetadataImpl& metadata) override
+        void appendMetadata(FormatMetadataImpl& /*metadata*/) override
         {
         }
 
