@@ -19,6 +19,9 @@ const char * METADATA_INFO = "Info";
 const char * METADATA_INPUT_DESCRIPTOR = "InputDescriptor";
 const char * METADATA_OUTPUT_DESCRIPTOR = "OutputDescriptor";
 
+// CLF XML elements described in ST2136-1
+const char * METADATA_ID_ELEMENT = "Id";
+
 // NAME and ID are CLF XML attributes described in S-2014-006.
 const char * METADATA_NAME = "name";
 const char * METADATA_ID = "id";
@@ -214,6 +217,20 @@ int FormatMetadataImpl::getFirstChildIndex(const std::string & name) const noexc
         ++i;
     }
     return -1;
+}
+
+FormatMetadataImpl::Elements FormatMetadataImpl::getChildrenElements(
+    const std::string & name) const noexcept
+{
+    Elements subElements;
+    for (auto & it : m_elements)
+    {
+        if (0 == Platform::Strcasecmp(name.c_str(), it.getElementName()))
+        {
+            subElements.push_back(it);
+        }
+    }
+    return subElements;
 }
 
 int FormatMetadataImpl::findNamedAttribute(const std::string & name) const noexcept

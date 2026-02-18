@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<clf:ProcessList
+    xmlns:clf="http://www.smpte-ra.org/ns/2136-1/2024"
+    xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+    id="pl1"
+    compCLFversion="ST2136-1:2024">
+
+  <clf:Description>Example CLF file using namespaces.</clf:Description>
+
+  <clf:LUT1D id="lut1" name="ExampleLUT1D" inBitDepth="16f" outBitDepth="16f">
+    <clf:Description>A tiny 2-sample RGB LUT1D.</clf:Description>
+    <clf:Array dim="2 3">0 0 0  1 1 1</clf:Array>
+  </clf:LUT1D>
+</clf:ProcessList>

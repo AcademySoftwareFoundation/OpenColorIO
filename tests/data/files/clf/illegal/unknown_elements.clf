@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ProcessList id="1d399a07-1936-49b8-9225-e6824790358c" xmlns="urn:NATAS:ASC:LUT:v0.95" compCLFversion="3.0">
+<ProcessList id="1d399a07-1936-49b8-9225-e6824790358c" xmlns="http://www.smpte-ra.org/ns/2136-1/2024" compCLFversion="3.0">
     <Description>This example contains unknown elements</Description>
     <Description>See section 5.4 of the spec: Unrecognized elements that are not children of the Info element 
                  should either raise an error or at least provide a warning message</Description>
     <Matrix id="72f85641-8c80-4bd6-b96b-a2f67ccb948a" inBitDepth="32f" outBitDepth="32f">
-        <Array dim="3 3 3">
+        <Array dim="3 3">
  3.24000 -1.53700 -0.49850
 -0.96930  1.87600  0.04156
  0.05560 -0.20400  1.05730

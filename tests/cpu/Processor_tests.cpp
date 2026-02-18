@@ -19,7 +19,7 @@ OCIO_ADD_TEST(Processor, basic_cache)
 
     auto processorEmptyGroup = config->getProcessor(group);
     OCIO_CHECK_EQUAL(processorEmptyGroup->getNumTransforms(), 0);
-    OCIO_CHECK_EQUAL(std::string(processorEmptyGroup->getCacheID()), "<NOOP>");
+    OCIO_CHECK_EQUAL(std::string(processorEmptyGroup->getCacheID()), "99aa06d3-0147-98d8-6001-c324468d497f");
 
     auto mat = OCIO::MatrixTransform::Create();
     double matrix[16]{
@@ -34,26 +34,26 @@ OCIO_ADD_TEST(Processor, basic_cache)
 
     auto processorMat = config->getProcessor(mat);
     OCIO_CHECK_EQUAL(processorMat->getNumTransforms(), 1);
-    OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "1b1880136f7669351adb0dcae0f4f9fd");
+    OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "1adb0dca-e0f4-f9fd-1b18-80136f766935");
 
     // Check behaviour of the cacheID
 
     offset[0] = 0.0;
     mat->setOffset(offset);
     processorMat = config->getProcessor(mat);
-    OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "675ca29c0f7d28fbdc865818c8cf5c4c");
+    OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "dc865818-c8cf-5c4c-675c-a29c0f7d28fb");
 
     matrix[0] = 2.0;
     mat->setMatrix(matrix);
     processorMat = config->getProcessor(mat);
-    OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "1ebac7d1c2d833943e1d1d3c26a7eb18");
+    OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "3e1d1d3c-26a7-eb18-1eba-c7d1c2d83394");
 
     offset[0] = 0.1;
     matrix[0] = 1.0;
     mat->setOffset(offset);
     mat->setMatrix(matrix);
     processorMat = config->getProcessor(mat);
-    OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "1b1880136f7669351adb0dcae0f4f9fd");
+    OCIO_CHECK_EQUAL(std::string(processorMat->getCacheID()), "1adb0dca-e0f4-f9fd-1b18-80136f766935");
 }
 
 OCIO_ADD_TEST(Processor, basic_cache_lut)
@@ -63,7 +63,7 @@ OCIO_ADD_TEST(Processor, basic_cache_lut)
 
     auto processorEmptyGroup = config->getProcessor(group);
     OCIO_CHECK_EQUAL(processorEmptyGroup->getNumTransforms(), 0);
-    OCIO_CHECK_EQUAL(std::string(processorEmptyGroup->getCacheID()), "<NOOP>");
+    OCIO_CHECK_EQUAL(std::string(processorEmptyGroup->getCacheID()), "99aa06d3-0147-98d8-6001-c324468d497f");
 
     auto lut = OCIO::Lut3DTransform::Create(3);
     // Make sure it's not an identity.
@@ -71,19 +71,19 @@ OCIO_ADD_TEST(Processor, basic_cache_lut)
 
     auto processorLut = config->getProcessor(lut);
     OCIO_CHECK_EQUAL(processorLut->getNumTransforms(), 1);
-    OCIO_CHECK_EQUAL(std::string(processorLut->getCacheID()), "2b26d0097cdcf8f141fe3b3d6e21b5ec");
+    OCIO_CHECK_EQUAL(std::string(processorLut->getCacheID()), "41fe3b3d-6e21-b5ec-2b26-d0097cdcf8f1");
 
     // Check behaviour of the cacheID
 
     // Change a value and check that the cacheID changes.
     lut->setValue(2, 2, 2, 1.f, 3.f, 4.f);
     processorLut = config->getProcessor(lut);
-    OCIO_CHECK_EQUAL(std::string(processorLut->getCacheID()), "288ec8ea132adaca5b5aed24a296a1a2");
+    OCIO_CHECK_EQUAL(std::string(processorLut->getCacheID()), "5b5aed24-a296-a1a2-288e-c8ea132adaca");
 
     // Restore the original value, check that the cache ID matches what it used to be.
     lut->setValue(2, 2, 2, 2.f, 3.f, 4.f);
     processorLut = config->getProcessor(lut);
-    OCIO_CHECK_EQUAL(std::string(processorLut->getCacheID()), "2b26d0097cdcf8f141fe3b3d6e21b5ec");
+    OCIO_CHECK_EQUAL(std::string(processorLut->getCacheID()), "41fe3b3d-6e21-b5ec-2b26-d0097cdcf8f1");
 }
 
 OCIO_ADD_TEST(Processor, unique_dynamic_properties)

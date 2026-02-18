@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ProcessList id="1" name="cdl bad power" compCLFversion="3.0">
+<ProcessList id="1" name="cdl bad power" compCLFversion="3.0" xmlns="http://www.smpte-ra.org/ns/2136-1/2024">
    <Description>CDL power must be > 0</Description>
    <ASC_CDL id="look 1" name="cdl" inBitDepth="32f" outBitDepth="16f" style="Fwd">
       <SOPNode>

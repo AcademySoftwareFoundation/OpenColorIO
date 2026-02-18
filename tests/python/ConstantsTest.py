@@ -47,6 +47,7 @@ class ConstantsTest(unittest.TestCase):
         self.assertEqual(OCIO.METADATA_OUTPUT_DESCRIPTOR, 'OutputDescriptor')
         self.assertEqual(OCIO.METADATA_NAME, 'name')
         self.assertEqual(OCIO.METADATA_ID, 'id')
+        self.assertEqual(OCIO.METADATA_ID_ELEMENT, 'Id')
 
         # FileRules.
         self.assertEqual(OCIO.DEFAULT_RULE_NAME, 'Default')

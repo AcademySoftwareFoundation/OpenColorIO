@@ -22,16 +22,20 @@ namespace OCIO_NAMESPACE
 class CTFVersion
 {
 public:
+    enum StringFormat
+    {
+        VERSION_NUMERIC     = 0,     // Numeric version is always accepted.
+        VERSION_SMPTE_XMLNS = 1 << 1,
+        VERSION_SMPTE_CLF   = 1 << 2
+    };
+    
     // Will throw if versionString is not formatted like a version.
-    static void ReadVersion(const std::string & versionString,
-                            CTFVersion & versionOut);
+    explicit CTFVersion(const std::string & versionString, StringFormat acceptedFormat = VERSION_NUMERIC);
 
     CTFVersion()
-        : m_major(0)
-        , m_minor(0)
-        , m_revision(0)
     {
     }
+
     CTFVersion(unsigned int major, unsigned int minor, unsigned int revision)
         : m_major(major)
         , m_minor(minor)
@@ -41,7 +45,6 @@ public:
     CTFVersion(unsigned int major, unsigned int minor)
         : m_major(major)
         , m_minor(minor)
-        , m_revision(0)
     {
     }
 
@@ -49,6 +52,7 @@ public:
         : m_major(otherVersion.m_major)
         , m_minor(otherVersion.m_minor)
         , m_revision(otherVersion.m_revision)
+        , m_version_string(otherVersion.m_version_string)
     {
     }
 
@@ -65,22 +69,33 @@ public:
     friend std::ostream & operator<< (std::ostream & stream,
                                       const CTFVersion & rhs)
     {
-        stream << rhs.m_major;
-        if (rhs.m_minor != 0 || rhs.m_revision != 0)
+        if (!rhs.m_version_string.empty())
         {
-            stream << "." << rhs.m_minor;
-            if (rhs.m_revision != 0)
+            stream << rhs.m_version_string;
+        } 
+        else
+        {
+            stream << rhs.m_major;
+            if (rhs.m_minor != 0 || rhs.m_revision != 0)
             {
-                stream << "." << rhs.m_revision;
+                stream << "." << rhs.m_minor;
+                if (rhs.m_revision != 0)
+                {
+                    stream << "." << rhs.m_revision;
+                }
             }
         }
         return stream;
     }
 
 private:
-    unsigned int m_major;
-    unsigned int m_minor;
-    unsigned int m_revision;
+    // CTF and Academy/ASC CLF uses the numeric version system.
+    unsigned int m_major = 0;
+    unsigned int m_minor = 0;
+    unsigned int m_revision = 0;
+
+    // SMPTE CLF uses a non-numeric xmlns version system.
+    std::string m_version_string; 
 };
 
 //
@@ -151,28 +166,22 @@ public:
 
     const std::string & getID() const
     {
-        return m_id;
+        return m_formatMetadata.getAttributeValueString(METADATA_ID);
     }
     void setID(const char * id)
     {
-        m_id = id;
+        m_formatMetadata.addAttribute(METADATA_ID, id);
     }
+
     const std::string & getName() const
     {
-        return m_name;
+        return m_formatMetadata.getAttributeValueString(METADATA_NAME);
     }
     void setName(const char * name)
     {
-        m_name = name;
+        m_formatMetadata.addAttribute(METADATA_NAME, name);
     }
-    const std::string & getInverseOfId() const
-    {
-        return m_inverseOfId;
-    }
-    void setInverseOfId(const char * id)
-    {
-        m_inverseOfId = id;
-    }
+
     FormatMetadataImpl & getInfoMetadata()
     {
         return m_infoMetadata;
@@ -181,41 +190,23 @@ public:
     {
         return m_infoMetadata;
     }
-    const ConstOpDataVec & getOps() const
+
+    FormatMetadataImpl & getFormatMetadata()
+    {
+        return m_formatMetadata;
+    }
+    const FormatMetadataImpl & getFormatMetadata() const
+    {
+        return m_formatMetadata;
+    }
+
+    const ConstOpDataVec & getOpDataVec() const
     {
         return m_ops;
     }
-    ConstOpDataVec & getOps()
+    ConstOpDataVec & getOpDataVec()
     {
         return m_ops;
-    }
-    const StringUtils::StringVec & getDescriptions() const
-    {
-        return m_descriptions;
-    }
-    StringUtils::StringVec & getDescriptions()
-    {
-        return m_descriptions;
-    }
-
-    const std::string & getInputDescriptor() const
-    {
-        return m_inDescriptor;
-    }
-
-    void setInputDescriptor(const std::string & in)
-    {
-        m_inDescriptor = in;
-    }
-
-    const std::string & getOutputDescriptor() const
-    {
-        return m_outDescriptor;
-    }
-
-    void setOutputDescriptor(const std::string & out)
-    {
-        m_outDescriptor = out;
     }
 
     void setCTFVersion(const CTFVersion & ver);
@@ -239,15 +230,10 @@ public:
     }
 
 private:
-    std::string m_id;
-    std::string m_name;
-    std::string m_inverseOfId;
-    std::string m_inDescriptor;
-    std::string m_outDescriptor;
     FormatMetadataImpl m_infoMetadata;
+    FormatMetadataImpl m_formatMetadata;
 
     ConstOpDataVec m_ops;
-    StringUtils::StringVec m_descriptions;
 
     // CTF version used even for CLF files.
     // CLF versions <= 2.0 are interpreted as CTF version 1.7.
@@ -265,14 +251,22 @@ typedef OCIO_SHARED_PTR<const CTFReaderTransform> ConstCTFReaderTransformPtr;
 
 class TransformWriter : public XmlElementWriter
 {
-public:
+ public:
+     enum class SubFormat : uint8_t
+     {
+         FORMAT_UNKNOWN,
+         FORMAT_CLF, 
+         FORMAT_CTF
+     };
+
+ public:
     TransformWriter() = delete;
     TransformWriter(const TransformWriter &) = delete;
     TransformWriter& operator=(const TransformWriter &) = delete;
 
     TransformWriter(XmlFormatter & formatter,
                     ConstCTFReaderTransformPtr transform,
-                    bool isCLF);
+                    SubFormat SubFormat);
 
     virtual ~TransformWriter();
 
@@ -284,8 +278,8 @@ private:
     void writeOps(const CTFVersion & version) const;
 
 private:
-    ConstCTFReaderTransformPtr m_transform;
-    bool                       m_isCLF;
+    ConstCTFReaderTransformPtr  m_transform;
+    SubFormat                   m_subFormat = SubFormat::FORMAT_UNKNOWN;
 };
 
 

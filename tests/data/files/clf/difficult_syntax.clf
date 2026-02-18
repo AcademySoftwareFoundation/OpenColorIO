@@ -5,7 +5,11 @@
 
 
 <!-- Comment -->
-    <ProcessList compCLFversion="3" id="id1">
+    <ProcessList compCLFversion="3" id="id1" xmlns="http://www.smpte-ra.org/ns/2136-1/2024">
+
+    <Description>This is the ProcessList description.</Description>
+    <Description>yet &apos;another&apos; &quot;valid&quot; desc</Description>
+
 <Info>
     <Stuff>
 This is a "difficult" but 'legal' color transform file.
@@ -20,7 +24,7 @@ third array dim value is ignored
 
 
 </Description>
-        <Array dim="3 3 3">
+        <Array dim="3 3">
  3.24000 -1.53700 -0.49850
 -0.96930  1.87600  +0.04156
  0.05560 -0.20400  0.105730e+1
@@ -29,12 +33,19 @@ third array dim value is ignored
 
     </Matrix>
 
-    <Description>This is the ProcessList description.</Description>
-
     <LUT1D id="4ed2af07-9319-430a-b18a-43368163c808" inBitDepth="32f" outBitDepth="32f"
            name='a multi-line
- name'>
+ name' unknown="attr">
         <Description>the n&#8211;dash description</Description>
+
+    <Description>another valid 
+description 
+<!-- Comment <this is legal> -->element
+    </Description>
+
+
+    <Description>&amp; another &lt;valid&gt; desc</Description>
+
 		<Array dim="128 3">
 
 
@@ -168,16 +179,8 @@ only tabs used to separate next few triplets
  1.00000  0.95000  0.90000
         </Array>
 
-    <Description>another valid 
-description 
-<!-- Comment <this is legal> -->element
-    </Description>
-
-
-    <Description>&amp; another &lt;valid&gt; desc</Description>
 
     </LUT1D>
-    <Description>yet &apos;another&apos; &quot;valid&quot; desc</Description>
 </ProcessList>
 
 <!-- Comment -->

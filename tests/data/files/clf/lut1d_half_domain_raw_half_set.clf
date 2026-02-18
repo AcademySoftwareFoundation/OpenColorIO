@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ProcessList id="9843a859-e41e-40a8-a51c-840889c3774e" name="1d-lut example" xmlns="urn:AMPAS:CLF:v3.0" compCLFversion="3.0">
+<ProcessList id="9843a859-e41e-40a8-a51c-840889c3774e" name="1d-lut example" xmlns="http://www.smpte-ra.org/ns/2136-1/2024" compCLFversion="3.0">
+    <Description>Lut1D testing half-domain layout and raw-halfs value encoding</Description>
+    <Description>Function is sign(x)*(abs(x)^0.45) - 0.1</Description>
     <Info version="2.0">
         <Copyright>None</Copyright>
     </Info>
-    <Description>Lut1D testing half-domain layout and raw-halfs value encoding</Description>
-    <Description>Function is sign(x)*(abs(x)^0.45) - 0.1</Description>
     <LUT1D halfDomain="true" inBitDepth="16f" outBitDepth="16f" rawHalfs="true">
         <Array dim="65536 1">
 44646

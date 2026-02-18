@@ -54,9 +54,9 @@ public:
         return m_parsingInfo;
     }
 
-    void appendMetadata(const std::string & name, const std::string & value) override
+    void appendMetadata(FormatMetadataImpl& metadata) override
     {
-        m_parsingInfo->m_metadata.addChildElement(name.c_str(), value.c_str());
+        m_parsingInfo->m_metadata.getChildrenElements().push_back(metadata);
     }
 
     const FormatMetadataImpl & getMetadata() const
@@ -89,9 +89,9 @@ public:
     {
     }
 
-    void appendMetadata(const std::string & name, const std::string & value) override
+    void appendMetadata(FormatMetadataImpl& metadata) override
     {
-        m_metadata.addChildElement(name.c_str(), value.c_str());
+        m_metadata.getChildrenElements().push_back(metadata);
     }
 
 
@@ -138,9 +138,9 @@ public:
         return m_parsingInfo;
     }
 
-    void appendMetadata(const std::string & name, const std::string & value) override
+    void appendMetadata(FormatMetadataImpl& metadata) override
     {
-        m_parsingInfo->m_metadata.addChildElement(name.c_str(), value.c_str());
+        m_parsingInfo->m_metadata.getChildrenElements().push_back(metadata);
     }
 
     const FormatMetadataImpl & getMetadata() const
@@ -169,7 +169,7 @@ public:
 
     void setCDLParsingInfo(const CDLParsingInfoRcPtr & parsingInfo);
 
-    void appendMetadata(const std::string & name, const std::string & value) override;
+    void appendMetadata(FormatMetadataImpl& metadata) override;
 
 private:
     CDLParsingInfoRcPtr m_parsingInfo;

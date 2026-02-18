@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="3" id="ns test" xmlns="urn:AMPAS:CLF:v3.0">
+    <Description>Uses the v3 namespace.</Description>
+    <Matrix inBitDepth="32f" outBitDepth="32f">
+        <Array dim="3 3">
+ 3.24000 -1.53700 -0.49850
+-0.96930  1.87600  0.04156
+ 0.05560 -0.20400  1.05730
+        </Array>
+    </Matrix>
+</ProcessList>

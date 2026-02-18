@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ProcessList compCLFversion="2.0" id="log bad version" xmlns="urn:AMPAS:CLF:v3.0">
+<ProcessList compCLFversion="2.0" id="log bad version">
    <Description>Version is too low to support Log.</Description>
    <InputDescriptor>inputDesc</InputDescriptor>
    <OutputDescriptor>outputDesc</OutputDescriptor>

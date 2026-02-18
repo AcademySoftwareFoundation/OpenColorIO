@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ProcessList id="exlut1" name="transform example lut1d" compCLFversion="3.0">
+<ProcessList id="exlut1" name="transform example lut1d" compCLFversion="3.0" xmlns="http://www.smpte-ra.org/ns/2136-1/2024">
     <Description>1D LUT with legal out of range values</Description>
     <LUT1D id="lut-23" name="65valueLut" inBitDepth="8i" outBitDepth="12i">
         <Description>Note that the bit-depth does not constrain the legal range of values.</Description>

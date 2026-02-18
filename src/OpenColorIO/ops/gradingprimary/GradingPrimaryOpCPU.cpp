@@ -190,7 +190,7 @@ inline void ApplyLinContrast(float * pix, const float * contrast, const float pi
     pix[2] = std::pow(std::abs(pix[2] / pivot), contrast[2]) * std::copysign(pivot, pix[2]);
 }
 
-// Apply the slope component to the the pixel's values
+// Apply the slope component to the pixel's values
 inline void ApplySlope(float * pix, const float * slope)
 {
     pix[0] = pix[0] * slope[0];
@@ -198,7 +198,7 @@ inline void ApplySlope(float * pix, const float * slope)
     pix[2] = pix[2] * slope[2];
 }
 
-// Apply the offset component to the the pixel's values.
+// Apply the offset component to the pixel's values.
 inline void ApplyOffset(float * pix, const float * m_offset)
 {
     pix[0] = pix[0] + m_offset[0];
@@ -216,7 +216,7 @@ inline void ApplyGamma(float * pix, const float * gamma, float blackPivot, float
              std::copysign(1.f, pix[2] - blackPivot) * (whitePivot - blackPivot) + blackPivot;
 }
 
-// Apply the saturation component to the the pixel's values.
+// Apply the saturation component to the pixel's values.
 inline void ApplySaturation(float * pix, const float m_saturation)
 {
     if (m_saturation != 1.f)

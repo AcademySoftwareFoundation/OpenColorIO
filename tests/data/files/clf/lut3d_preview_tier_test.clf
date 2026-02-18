@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ProcessList compCLFversion="3" id="00001" name="Preview-tier Lut3D test">
+<ProcessList compCLFversion="3" id="00001" name="Preview-tier Lut3D test" xmlns="http://www.smpte-ra.org/ns/2136-1/2024">
     <Description>Test LUT for Preview-tier CLF validation test suite</Description>
     <InputDescriptor>ACEScct</InputDescriptor>
     <OutputDescriptor>Rec.1886 / Rec.709 video</OutputDescriptor>

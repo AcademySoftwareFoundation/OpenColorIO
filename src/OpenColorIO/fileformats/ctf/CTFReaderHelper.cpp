@@ -60,6 +60,7 @@ void CTFReaderTransformElt::start(const char ** atts)
     bool isIdFound = false;
     bool isVersionFound = false;
     bool isCLFVersionFound = false;
+    bool isSMPTEVersionFound = false;
     CTFVersion requestedVersion(0, 0);
     CTFVersion requestedCLFVersion(0, 0);
 
@@ -70,11 +71,39 @@ void CTFReaderTransformElt::start(const char ** atts)
         {
             if (!atts[i + 1] || !*atts[i + 1])
             {
-                throwMessage("Required attribute 'id' does not have a value.");
+                throwMessage("Attribute 'id' does not have a value.");
             }
 
-            m_transform->setID(atts[i + 1]);
+            m_transform->getFormatMetadata().addAttribute(ATTR_ID, atts[i + 1]);
             isIdFound = true;
+        }
+        else if (0 == Platform::Strcasecmp(ATTR_XMLNS, atts[i]))
+        {
+            if (!atts[i + 1] || !*atts[i + 1])
+            {
+                throwMessage("Attribute 'xmlns' does not have a value.");
+            }
+
+            // Check if xmlns atrribute holds a SMPTE version string.
+            try
+            {
+                auto version = CTFVersion(atts[i + 1], CTFVersion::StringFormat::VERSION_SMPTE_XMLNS);
+                requestedVersion = CTF_PROCESS_LIST_VERSION_2_0;
+                requestedCLFVersion = version;
+                isSMPTEVersionFound = true;
+                m_isCLF = true;
+            }
+            catch (Exception& /*e*/)
+            {
+                // Ignore other xmlns attribute strings.
+            }
+                
+            // Disallow Version and version-holding xmlns appering togather.
+            // Note that compCLFversion can appear together with xmlns.
+            if (isVersionFound && isSMPTEVersionFound)
+            {
+                throwMessage("SMPTE 'xmlns' version and 'Version' attribute cannot both be present.");
+            }
         }
         else if (0 == Platform::Strcasecmp(ATTR_NAME, atts[i]))
         {
@@ -83,7 +112,7 @@ void CTFReaderTransformElt::start(const char ** atts)
                 throwMessage("If the attribute 'name' is present, it must have a value.");
             }
 
-            m_transform->setName(atts[i + 1]);
+            m_transform->getFormatMetadata().addAttribute(ATTR_NAME, atts[i + 1]);
         }
         else if (0 == Platform::Strcasecmp(ATTR_INVERSE_OF, atts[i]))
         {
@@ -92,13 +121,17 @@ void CTFReaderTransformElt::start(const char ** atts)
                 throwMessage("If the attribute 'inverseOf' is present, it must have a value.");
             }
 
-            m_transform->setInverseOfId(atts[i + 1]);
+            m_transform->getFormatMetadata().addAttribute(ATTR_INVERSE_OF, atts[i + 1]);
         }
         else if (0 == Platform::Strcasecmp(ATTR_VERSION, atts[i]))
         {
             if (isCLFVersionFound)
             {
                 throwMessage("'compCLFversion' and 'Version' cannot both be present.");
+            }
+            if (isSMPTEVersionFound)
+            {
+                throwMessage("SMPTE 'xmlns' version and 'Version' attribute cannot both be present.");
             }
             if (isVersionFound)
             {
@@ -114,7 +147,7 @@ void CTFReaderTransformElt::start(const char ** atts)
             try
             {
                 const std::string verString(pVer);
-                CTFVersion::ReadVersion(verString, requestedVersion);
+                requestedVersion = CTFVersion(verString);
             }
             catch (Exception& ce)
             {
@@ -134,6 +167,9 @@ void CTFReaderTransformElt::start(const char ** atts)
                 throwMessage("'compCLFversion' and 'Version' cannot be both present.");
             }
 
+            // Note: compCLFversion can appear together with xmlns for SMPTE CLF
+            // files.
+
             const char* pVer = atts[i + 1];
             if (!pVer || !*pVer)
             {
@@ -143,7 +179,7 @@ void CTFReaderTransformElt::start(const char ** atts)
             try
             {
                 std::string verString(pVer);
-                CTFVersion::ReadVersion(verString, requestedCLFVersion);
+                requestedCLFVersion = CTFVersion(verString, CTFVersion::StringFormat::VERSION_SMPTE_CLF);
             }
             catch (Exception& ce)
             {
@@ -168,14 +204,18 @@ void CTFReaderTransformElt::start(const char ** atts)
                 requestedVersion = CTF_PROCESS_LIST_VERSION_2_0;
             }
 
-            isVersionFound = true;
             isCLFVersionFound = true;
             // Handle as CLF.
             m_isCLF = true;
         }
-        else if (0 == Platform::Strcasecmp("xmlns", atts[i]))
+        else if(StringUtils::StartsWith(std::string(atts[i]),"xmlns:"))
         {
-            // Ignore.
+            // push as metadata attribute.
+            if (!atts[i + 1] || !*atts[i + 1])
+            {
+                throwMessage("If the attribute 'xmlns:*' is present, it must have a value.");
+            }
+            m_transform->getFormatMetadata().addAttribute(atts[i], atts[i + 1]);
         }
         else
         {
@@ -185,29 +225,27 @@ void CTFReaderTransformElt::start(const char ** atts)
         i += 2;
     }
 
-    // Check mandatory elements.
-    if (!isIdFound)
+    // Check mandatory id keyword for non-SMPTE variants.
+    if (!isIdFound && !isSMPTEVersionFound)
     {
         throwMessage("Required attribute 'id' is missing.");
     }
 
     // Transform file format with no version means that
     // the CTF format is 1.2.
-    if (!isVersionFound)
+    if (!(isVersionFound || isCLFVersionFound || isSMPTEVersionFound ))
     {
-        if (m_isCLF && !isCLFVersionFound)
+        if (m_isCLF)
         {
-            throwMessage("Required attribute 'compCLFversion' is missing.");
+            throwMessage("No valid 'version', 'compCLFversion', or 'xmlns' attributes were found; "
+                "at least one of them is required.");
         }
         setVersion(CTF_PROCESS_LIST_VERSION_1_2);
     }
     else
     {
         setVersion(requestedVersion);
-        if (m_isCLF)
-        {
-            setCLFVersion(requestedCLFVersion);
-        }
+        setCLFVersion(requestedCLFVersion);
     }
 }
 
@@ -215,9 +253,9 @@ void CTFReaderTransformElt::end()
 {
 }
 
-void CTFReaderTransformElt::appendMetadata(const std::string & /*name*/, const std::string & value)
+void CTFReaderTransformElt::appendMetadata(FormatMetadataImpl& metadata)
 {
-    getTransform()->getDescriptions().push_back(value);
+    getTransform()->getFormatMetadata().getChildrenElements().push_back(metadata);
 }
 
 const CTFReaderTransformPtr & CTFReaderTransformElt::getTransform() const
@@ -258,6 +296,25 @@ const CTFVersion & CTFReaderTransformElt::getCLFVersion() const
 bool CTFReaderTransformElt::isCLF() const
 {
     return getTransform()->isCLF();
+}
+
+//////////////////////////////////////////////////////////
+void CTFReaderIdElt::end() 
+{
+    if(!ValidateSMPTEId(m_id))
+    {
+        // We allow non-compliant Id values with a warning.
+        std::ostringstream ss;
+        ss << getXmlFile().c_str() << "(" << getXmlLineNumber() << "): ";
+        ss << "'" << m_id << "' is not a SMPTE ST 2136-1 compliant Id value.";
+        LogWarning(ss.str().c_str());   
+    }
+
+    if(!m_id.empty()) 
+    {
+        FormatMetadataImpl metadata(getName(), m_id);
+        getParent()->appendMetadata(metadata);
+    }
 }
 
 //////////////////////////////////////////////////////////
@@ -799,6 +856,43 @@ void CTFReaderInfoElt::end()
 
 //////////////////////////////////////////////////////////
 
+void CTFReaderDescElt::start(const char **  atttributes )
+{
+    m_desc = {};
+    m_language = {};
+
+    const char ** attr = atttributes;
+    while (*attr)
+    {
+        if (0 == Platform::Strcasecmp(ATTR_LANGUAGE, *attr))
+        {
+            if (!attr || !(attr + 1))
+            {
+                throwMessage("Attribute 'language' does not have a value.");
+            }
+
+            m_language = *(attr + 1);
+        }
+
+        attr += 2;
+    }
+}
+
+void CTFReaderDescElt::end() 
+{
+    FormatMetadataImpl metadata(getName(), m_desc);
+    if(!m_language.empty())
+    {
+        metadata.addAttribute(ATTR_LANGUAGE, m_language.c_str());
+    }
+    getParent()->appendMetadata(metadata);
+}
+
+//////////////////////////////////////////////////////////
+
+
+
+
 CTFReaderOpElt::CTFReaderOpElt()
     : XmlReaderContainerElt("", 0, "")
 {
@@ -828,10 +922,9 @@ const std::string & CTFReaderOpElt::getIdentifier() const
     return getOp()->getID();
 }
 
-void CTFReaderOpElt::appendMetadata(const std::string & name, const std::string & value)
+void CTFReaderOpElt::appendMetadata(FormatMetadataImpl& metadata)
 {
-    FormatMetadataImpl item(name, value);
-    getOp()->getFormatMetadata().getChildrenElements().push_back(item);
+    getOp()->getFormatMetadata().getChildrenElements().push_back(metadata);
 }
 
 void CTFReaderOpElt::start(const char ** atts)
@@ -844,7 +937,7 @@ void CTFReaderOpElt::start(const char ** atts)
     // Add a pointer to an empty op of the appropriate child class to the
     // end of the opvec.  No data is copied since the parameters of the op
     // have not been filled in yet.
-    m_transform->getOps().push_back(getOp());
+    m_transform->getOpDataVec().push_back(getOp());
 
     enum BitDepthFlags
     {
@@ -4363,9 +4456,9 @@ void CTFReaderLut1DElt_1_7::end()
         // This code assumes that the current LUT is at the end of the opList.
         // In other words, that this LUT's end() method will be called before
         // any other Op's start().
-        const size_t len = m_transform->getOps().size();
+        const size_t len = m_transform->getOpDataVec().size();
         const size_t pos = len - 1;
-        m_transform->getOps().insert(m_transform->getOps().begin() + pos, pRng);
+        m_transform->getOpDataVec().insert(m_transform->getOpDataVec().begin() + pos, pRng);
     }
 }
 
@@ -4530,9 +4623,9 @@ void CTFReaderLut3DElt_1_7::end()
         // This code assumes that the current LUT is at the end of the opList.
         // In other words, that this LUT's end() method will be called before
         // any other Op's start().
-        const unsigned long len = (unsigned long)m_transform->getOps().size();
+        const unsigned long len = (unsigned long)m_transform->getOpDataVec().size();
         const unsigned long pos = len - 1;
-        m_transform->getOps().insert(m_transform->getOps().begin() + pos, pRng);
+        m_transform->getOpDataVec().insert(m_transform->getOpDataVec().begin() + pos, pRng);
     }
 }
 
@@ -4908,12 +5001,12 @@ void CTFReaderRangeElt_1_7::end()
         // This code assumes that the current Range is at the end of the opList.
         // In other words, that this Op's end() method will be called before
         // any other Op's start().
-        const size_t len = m_transform->getOps().size();
+        const size_t len = m_transform->getOpDataVec().size();
         const size_t pos = len - 1;
 
         // Replace the range appended to m_transform in OpElt::start
         // with the matrix.
-        m_transform->getOps()[pos].swap(pMtx);
+        m_transform->getOpDataVec()[pos].swap(pMtx);
     }
 }
 

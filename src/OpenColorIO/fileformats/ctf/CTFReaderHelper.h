@@ -47,7 +47,7 @@ public:
 
     void end() override;
 
-    void appendMetadata(const std::string & name, const std::string & value) override;
+    void appendMetadata(FormatMetadataImpl& metadata) override;
 
     // Get its parent which is a Transform.
     const CTFReaderTransformPtr & getTransform() const;
@@ -71,11 +71,48 @@ private:
     // The associated Transform.
     CTFReaderTransformPtr m_transform;
     // Is it a clf file? Or is a clf parser requested.
-    bool m_isCLF;
+    bool m_isCLF = false;
+};
+
+// Class for the Id element.
+class CTFReaderIdElt : public XmlReaderPlainElt
+{
+public:
+    CTFReaderIdElt() = delete;
+    CTFReaderIdElt(const std::string & name,
+                   ContainerEltRcPtr & pParent,
+                   unsigned int xmlLocation,
+                   const std::string & xmlFile)
+        : XmlReaderPlainElt(name, pParent, xmlLocation, xmlFile)
+    {
+    }
+
+    ~CTFReaderIdElt()
+    {
+    }
+
+    void start(const char ** /* atts */) override
+    {
+        m_id = {};
+    }
+
+    void end() override;
+
+    void setRawData(const char * str, size_t len, unsigned int /* xmlLine */) override
+    {
+        // This function can receive the text in small pieces, so keep adding to
+        // the string.
+        m_id += std::string(str, len);
+    }
+
+private:
+    std::string m_id;
 };
 
 typedef OCIO_SHARED_PTR<CTFReaderTransformElt> CTFReaderTransformEltRcPtr;
 
+// Note: This class is used only for adding metadata to other info metadata
+// elements, not to the transform.
 class CTFReaderMetadataElt : public XmlReaderComplexElt
 {
 public:
@@ -117,76 +154,37 @@ public:
     void end() override;
 };
 
-class CTFReaderInputDescriptorElt : public XmlReaderPlainElt
+// This class is used for collecting descriptions, input descriptors and output
+// descriptors. It also collects the language attribute for those if provided.
+// Appends the found elements to the format metadata of the transform.
+class CTFReaderDescElt : public XmlReaderPlainElt
 {
 public:
-    CTFReaderInputDescriptorElt() = delete;
-    CTFReaderInputDescriptorElt(const std::string & name,
-                                ContainerEltRcPtr pParent,
-                                unsigned int xmlLineNumber,
-                                const std::string & xmlFile)
+    CTFReaderDescElt() = delete;
+    CTFReaderDescElt(const std::string & name,
+                     ContainerEltRcPtr pParent,
+                     unsigned int xmlLineNumber,
+                     const std::string & xmlFile)
         : XmlReaderPlainElt(name, pParent, xmlLineNumber, xmlFile)
     {
     }
 
-    ~CTFReaderInputDescriptorElt()
+    ~CTFReaderDescElt()
     {
     }
 
-    void start(const char ** /* atts */) override
-    {
-    }
-
-    void end() override
-    {
-    }
+    void start(const char **  atts ) override;
+    void end() override;
 
     void setRawData(const char * str, size_t len, unsigned int /*xmlLine*/) override
     {
-        CTFReaderTransformElt* pTransform
-            = dynamic_cast<CTFReaderTransformElt*>(getParent().get());
-
-        std::string s = pTransform->getTransform()->getInputDescriptor();
-        s += std::string(str, len);
-
-        pTransform->getTransform()->setInputDescriptor(s);
+        // This function may receive the text in small pieces, so keep adding to
+        // the string.
+        m_desc += std::string(str, len);
     }
-};
-
-class CTFReaderOutputDescriptorElt : public XmlReaderPlainElt
-{
-public:
-    CTFReaderOutputDescriptorElt() = delete;
-    CTFReaderOutputDescriptorElt(const std::string & name,
-                                 ContainerEltRcPtr pParent,
-                                 unsigned int xmlLineNumber,
-                                 const std::string & xmlFile)
-        : XmlReaderPlainElt(name, pParent, xmlLineNumber, xmlFile)
-    {
-    }
-
-    ~CTFReaderOutputDescriptorElt()
-    {
-    }
-
-    void start(const char ** /* atts */) override
-    {
-    }
-
-    void end() override
-    {
-    }
-
-    void setRawData(const char* str, size_t len, unsigned int /* xmlLine */) override
-    {
-        CTFReaderTransformElt* pTransform
-            = dynamic_cast<CTFReaderTransformElt*>(getParent().get());
-
-        std::string s = pTransform->getTransform()->getOutputDescriptor();
-        s += std::string(str, len);
-
-        pTransform->getTransform()->setOutputDescriptor(s);
-    }
+private:
+    std::string m_desc;
+    std::string m_language;
 };
 
 class CTFReaderArrayElt : public XmlReaderPlainElt
@@ -348,7 +346,7 @@ public:
 
     virtual const OpDataRcPtr getOp() const = 0;
 
-    void appendMetadata(const std::string & name, const std::string & value) override;
+    void appendMetadata(FormatMetadataImpl& metadata) override;
 
     void start(const char ** atts) override;
 
