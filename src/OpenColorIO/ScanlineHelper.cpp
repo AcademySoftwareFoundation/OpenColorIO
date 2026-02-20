@@ -143,7 +143,8 @@ void GenericScanlineHelper<InType, OutType>::prepRGBAScanline(float** buffer, lo
                                                &m_inBitDepthBuffer[0],
                                                *buffer,
                                                m_dstImg.m_width,
-                                               m_yIndex * m_dstImg.m_width);
+                                               m_yIndex * m_dstImg.m_width, 
+                                               m_inputBitDepth);
     }
 
     numPixels = m_dstImg.m_width;
