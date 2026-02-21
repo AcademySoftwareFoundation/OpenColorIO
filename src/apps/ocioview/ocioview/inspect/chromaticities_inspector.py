@@ -100,13 +100,31 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
             ".QLabel { font-size: 10pt;qproperty-alignment: AlignCenter;}"
         )
 
-        self._chromaticities_color_spaces_label = QtWidgets.QLabel(
+        self._chromaticities_color_space_label = QtWidgets.QLabel(
             "Chromaticities Color Space"
         )
-        self._chromaticities_color_spaces_combobox = QtWidgets.QComboBox()
-        self._chromaticities_color_spaces_combobox.setToolTip(
-            "Chromaticities Color Space"
+        self._chromaticities_color_space_combobox = QtWidgets.QComboBox()
+        self._chromaticities_color_space_combobox.setToolTip(
+            "Chromaticities color space"
         )
+
+        self._clamp_negative_chromaticities_pushbutton = QtWidgets.QPushButton()
+        self._clamp_negative_chromaticities_pushbutton.setIcon(
+            get_glyph_icon("mdi.chevron-left")
+        )
+        self._clamp_negative_chromaticities_pushbutton.setToolTip(
+            "Whether to clamp chromaticities negative values"
+        )
+        self._clamp_negative_chromaticities_pushbutton.setCheckable(True)
+
+        self._clamp_above_one_chromaticities_pushbutton = QtWidgets.QPushButton()
+        self._clamp_above_one_chromaticities_pushbutton.setIcon(
+            get_glyph_icon("mdi.chevron-right")
+        )
+        self._clamp_above_one_chromaticities_pushbutton.setToolTip(
+            "Whether to clamp chromaticities above one"
+        )
+        self._clamp_above_one_chromaticities_pushbutton.setCheckable(True)
 
         self._method_label = get_glyph_icon("mdi.grid", as_widget=True)
         self._method_label.setToolTip("Method")
@@ -122,7 +140,7 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
         )
         self._draw_input_color_space_pushbutton.setCheckable(True)
         self._draw_input_color_space_pushbutton.setToolTip(
-            "Draw Input Color Space"
+            "Whether to draw the input color space"
         )
 
         self._draw_chromaticities_color_space_pushbutton = (
@@ -133,7 +151,7 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
         )
         self._draw_chromaticities_color_space_pushbutton.setCheckable(True)
         self._draw_chromaticities_color_space_pushbutton.setToolTip(
-            "Draw Chromaticities Color Space"
+            "Whether to draw the chromaticities color space"
         )
 
         self._use_3d_visuals_pushbutton = QtWidgets.QPushButton()
@@ -141,7 +159,9 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
             get_glyph_icon("mdi.cube-outline")
         )
         self._use_3d_visuals_pushbutton.setCheckable(True)
-        self._use_3d_visuals_pushbutton.setToolTip("Use 3D Visuals")
+        self._use_3d_visuals_pushbutton.setToolTip(
+            "Whether to show the 3D Visuals"
+        )
 
         self._use_orthographic_projection_pushbutton = QtWidgets.QPushButton()
         self._use_orthographic_projection_pushbutton.setIcon(
@@ -149,12 +169,14 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
         )
         self._use_orthographic_projection_pushbutton.setCheckable(True)
         self._use_orthographic_projection_pushbutton.setToolTip(
-            "Orthographic Projection"
+            "Toggle orthographic projection"
         )
 
         self._reset_camera_pushbutton = QtWidgets.QPushButton()
         self._reset_camera_pushbutton.setIcon(get_glyph_icon("mdi.restart"))
-        self._reset_camera_pushbutton.setToolTip("Reset Camera")
+        self._reset_camera_pushbutton.setToolTip(
+            "Reset the camera transformation"
+        )
 
         # Layout
         vbox_layout = QtWidgets.QVBoxLayout()
@@ -169,9 +191,12 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
         self._wgpu_viewer.setLayout(vbox_layout)
 
         hbox_layout = QtWidgets.QHBoxLayout()
-        hbox_layout.addWidget(self._chromaticities_color_spaces_label)
-        hbox_layout.addWidget(self._chromaticities_color_spaces_combobox)
+        hbox_layout.addWidget(self._chromaticities_color_space_label)
+        hbox_layout.addWidget(self._chromaticities_color_space_combobox)
         hbox_layout.setStretch(1, 1)
+
+        hbox_layout.addWidget(self._clamp_negative_chromaticities_pushbutton)
+        hbox_layout.addWidget(self._clamp_above_one_chromaticities_pushbutton)
 
         hbox_layout.addWidget(self._method_label)
         hbox_layout.addWidget(self._method_combobox)
@@ -286,10 +311,10 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
         )
 
         self._visuals["rgb_color_space_input_2d"].visible = (
-            not use_3d_visuals
-        ) * draw_input_color_space
+                                                                not use_3d_visuals
+                                                            ) * draw_input_color_space
         self._visuals["rgb_color_space_input_3d"].visible = (
-            use_3d_visuals * draw_input_color_space
+                use_3d_visuals * draw_input_color_space
         )
 
         self._wgpu_viewer.render()
@@ -303,16 +328,16 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
         )
 
         self._visuals["rgb_color_space_chromaticities_2d"].visible = (
-            not use_3d_visuals
-        ) * draw_chromaticities_color_space
+                                                                         not use_3d_visuals
+                                                                     ) * draw_chromaticities_color_space
         self._visuals["rgb_color_space_chromaticities_3d"].visible = (
-            use_3d_visuals * draw_chromaticities_color_space
+                use_3d_visuals * draw_chromaticities_color_space
         )
 
         self._wgpu_viewer.render()
 
     def _on_draw_input_color_space_pushbutton_clicked(
-        self, state: bool
+            self, state: bool
     ) -> None:
         """
         Slot triggered when the `draw_input_color_space_pushbutton` widget
@@ -322,7 +347,7 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
         self._set_rgb_color_space_input_visuals_visibility()
 
     def _on_draw_chromaticities_color_space_pushbutton_clicked(
-        self, state: bool
+            self, state: bool
     ) -> None:
         """
         Slot triggered when the `draw_chromaticities_color_space_pushbutton`
@@ -340,7 +365,7 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
         self._set_rgb_color_space_chromaticities_visuals_visibility()
 
     def _on_use_orthographic_projection_pushbutton_clicked(
-        self, state: bool
+            self, state: bool
     ) -> None:
         """
         Slot triggered when the `use_orthographic_projection_pushbutton` widget
@@ -354,6 +379,8 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
     def _setup_widgets(self) -> None:
         """Setup the widgets initial state."""
 
+        self._clamp_negative_chromaticities_pushbutton.setChecked(True)
+        self._clamp_above_one_chromaticities_pushbutton.setChecked(True)
         self._draw_input_color_space_pushbutton.setChecked(True)
         self._draw_chromaticities_color_space_pushbutton.setChecked(True)
         self._use_3d_visuals_pushbutton.setChecked(False)
@@ -371,9 +398,9 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
         )
         self._visuals["rgb_color_space_input_3d"].visible = False
         self._visuals["rgb_color_space_chromaticities_2d"].visible = False
-        self._visuals[
-            "rgb_color_space_chromaticities_2d"
-        ].local.position = np.array([0, 0, 0.00005])
+        self._visuals["rgb_color_space_chromaticities_2d"].local.position = (
+            np.array([0, 0, 0.00005])
+        )
         self._visuals["rgb_color_space_chromaticities_3d"].visible = False
         self._visuals["rgb_scatter_3d"].visible = False
 
@@ -384,7 +411,13 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
     def _setup_notifications(self) -> None:
         """Setup the widgets notifications, i.e., signals and slots."""
 
-        self._chromaticities_color_spaces_combobox.textActivated.connect(
+        self._chromaticities_color_space_combobox.textActivated.connect(
+            self._update_visuals
+        )
+        self._clamp_negative_chromaticities_pushbutton.clicked.connect(
+            self._update_visuals
+        )
+        self._clamp_above_one_chromaticities_pushbutton.clicked.connect(
             self._update_visuals
         )
         self._method_combobox.textActivated.connect(self._update_visuals)
@@ -409,13 +442,13 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
         color_space_names = ConfigCache.get_color_space_names()
 
         items = [
-            self._chromaticities_color_spaces_combobox.itemText(i)
-            for i in range(self._chromaticities_color_spaces_combobox.count())
+            self._chromaticities_color_space_combobox.itemText(i)
+            for i in range(self._chromaticities_color_space_combobox.count())
         ]
 
         if items != color_space_names:
-            self._chromaticities_color_spaces_combobox.clear()
-            self._chromaticities_color_spaces_combobox.addItems(
+            self._chromaticities_color_space_combobox.clear()
+            self._chromaticities_color_space_combobox.addItems(
                 color_space_names
             )
 
@@ -423,7 +456,7 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
         has_role_interchange_display = config.hasRole(
             ocio.ROLE_INTERCHANGE_DISPLAY
         )
-        self._chromaticities_color_spaces_combobox.setEnabled(
+        self._chromaticities_color_space_combobox.setEnabled(
             has_role_interchange_display
         )
 
@@ -451,7 +484,7 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
 
     @QtCore.Slot(ocio.CPUProcessor)
     def _on_processor_ready(
-        self, proc_context: ProcessorContext, cpu_proc: ocio.CPUProcessor
+            self, proc_context: ProcessorContext, cpu_proc: ocio.CPUProcessor
     ) -> None:
         """
         Slot triggered when the *OCIO* processor is ready.
@@ -479,8 +512,8 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
             )
         )
         self._image_array = image_array[
-            ::sub_sampling_factor, ::sub_sampling_factor
-        ]
+                            ::sub_sampling_factor, ::sub_sampling_factor
+                            ]
 
         self._visuals["rgb_scatter_3d"].visible = True
 
@@ -510,25 +543,30 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
             )
 
             if rgb_colourspace is not None:
-                self._visuals[
-                    "rgb_color_space_input_2d"
-                ].colourspace = rgb_colourspace
-                self._visuals[
-                    "rgb_color_space_input_3d"
-                ].colourspace = rgb_colourspace
+                self._visuals["rgb_color_space_input_2d"].colourspace = (
+                    rgb_colourspace
+                )
+                self._visuals["rgb_color_space_input_3d"].colourspace = (
+                    rgb_colourspace
+                )
             self._processor.applyRGB(image_array)
+
+            low_limit = 0 if self._clamp_negative_chromaticities_pushbutton.isChecked() else -np.inf
+            high_limit = 1 if self._clamp_above_one_chromaticities_pushbutton.isChecked() else np.inf
+
+            image_array = np.clip(image_array, low_limit, high_limit)
 
         # 2. Convert from chromaticities input space to "CIE-XYZ-D65" interchange
         config = ocio.GetCurrentConfig()
         input_color_space = (
-            self._chromaticities_color_spaces_combobox.currentText()
+            self._chromaticities_color_space_combobox.currentText()
         )
         if (
-            config.hasRole(ocio.ROLE_INTERCHANGE_DISPLAY)
-            and input_color_space in ConfigCache.get_color_space_names()
+                config.hasRole(ocio.ROLE_INTERCHANGE_DISPLAY)
+                and input_color_space in ConfigCache.get_color_space_names()
         ):
             chromaticities_colorspace = (
-                self._chromaticities_color_spaces_combobox.currentText()
+                self._chromaticities_color_space_combobox.currentText()
             )
             conversion_chain += [
                 chromaticities_colorspace,
@@ -565,11 +603,15 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
             image_array = XYZ_to_RGB(
                 image_array,
                 self._working_space,
-                illuminant=self._working_whitepoint,
+                illuminant=CCS_ILLUMINANTS[
+                    "CIE 1931 2 Degree Standard Observer"
+                ]["D65"],
             )
 
         conversion_chain = [
-            color_space for color_space, _group in groupby(conversion_chain)
+            color_space
+            for color_space, _group in groupby(conversion_chain)
+            if color_space is not None
         ]
 
         if len(conversion_chain) == 1:
