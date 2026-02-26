@@ -49,6 +49,7 @@ const char * OCIO_ACTIVE_DISPLAYS_ENVVAR      = "OCIO_ACTIVE_DISPLAYS";
 const char * OCIO_ACTIVE_VIEWS_ENVVAR         = "OCIO_ACTIVE_VIEWS";
 const char * OCIO_INACTIVE_COLORSPACES_ENVVAR = "OCIO_INACTIVE_COLORSPACES";
 const char * OCIO_OPTIMIZATION_FLAGS_ENVVAR   = "OCIO_OPTIMIZATION_FLAGS";
+const char * OCIO_ARCHIVE_FLAGS_ENVVAR        = "OCIO_ARCHIVE_FLAGS";
 const char * OCIO_USER_CATEGORIES_ENVVAR      = "OCIO_USER_CATEGORIES";
 
 // Default filename (with extension) of a config and archived config.
@@ -1104,6 +1105,16 @@ public:
         // That should never happen.
         return -1;
     }
+
+    void GetAllFileReferences(std::set<std::string> & files) const
+    {
+        ConstTransformVec allTransforms;
+        this->getAllInternalTransforms(allTransforms);
+        for(const auto & transform : allTransforms)
+        {
+            GetFileReferences(files, transform);
+        }
+    }
 };
 
 
@@ -1974,14 +1985,8 @@ void Config::validate() const
     ///// Resolve all file Transforms using context variables.
 
     {
-        ConstTransformVec allTransforms;
-        getImpl()->getAllInternalTransforms(allTransforms);
-
         std::set<std::string> files;
-        for (const auto & transform : allTransforms)
-        {
-            GetFileReferences(files, transform);
-        }
+        getImpl()->GetAllFileReferences(files);
 
         // Check that at least one of the search paths can be resolved into a valid path.
         // Note that a search path without context variable(s) always correctly resolves.
@@ -5268,14 +5273,8 @@ const char * Config::getCacheID(const ConstContextRcPtr & context) const
     {
         std::ostringstream filehash;
 
-        ConstTransformVec allTransforms;
-        getImpl()->getAllInternalTransforms(allTransforms);
-
         std::set<std::string> files;
-        for(const auto & transform : allTransforms)
-        {
-            GetFileReferences(files, transform);
-        }
+        getImpl()->GetAllFileReferences(files);
 
         for(const auto & iter : files)
         {
@@ -5997,7 +5996,7 @@ ConfigIOProxyRcPtr Config::getConfigIOProxy() const
     return getImpl()->m_context->getConfigIOProxy();
 }
 
-bool Config::isArchivable() const
+bool Config::isArchivable(bool minimal) const
 {
     ConstContextRcPtr context = getCurrentContext();
 
@@ -6010,7 +6009,7 @@ bool Config::isArchivable() const
     }
 
     // Utility lambda to check the following criteria.
-    auto validatePathForArchiving = [](const std::string & path) 
+    auto validatePathForArchiving = [&minimal](const std::string & path) 
     {
         // Using the normalized path.
         const std::string normPath = pystring::os::path::normpath(path);
@@ -6020,9 +6019,10 @@ bool Config::isArchivable() const
                 // 2) Path may not start with double dot ".." (going above working directory).
                 pystring::startswith(normPath, "..") ||
                 // 3) A context variable may not be located at the start of the path.
-                (ContainsContextVariables(path) && 
-                (StringUtils::Find(path, "$") == 0 || 
-                 StringUtils::Find(path, "%") == 0)))
+                (ContainsContextVariables(path) && //TODO: if we can resolve context, do so and validate path to file
+                (!minimal &&
+                  (StringUtils::Find(path, "$") == 0 || 
+                   StringUtils::Find(path, "%") == 0))))
         {
             return false;
         }
@@ -6049,14 +6049,8 @@ bool Config::isArchivable() const
     /////////////////////////////////
     // FileTransform verification. //
     /////////////////////////////////
-    ConstTransformVec allTransforms;
-    getImpl()->getAllInternalTransforms(allTransforms);
-
     std::set<std::string> files;
-    for(const auto & transform : allTransforms)
-    {
-        GetFileReferences(files, transform);
-    }
+    getImpl()->GetAllFileReferences(files);
 
     // Check that FileTransform sources are not absolute nor have context variables outside of 
     // config working directory.
@@ -6072,10 +6066,15 @@ bool Config::isArchivable() const
     return true;
 }
 
-void Config::archive(std::ostream & ostream) const
+void Config::archive(std::ostream & ostream, const ArchiveFlags & flags) const
 {
     // Using utility functions in OCIOZArchive.cpp.
-    archiveConfig(ostream, *this, getCurrentContext()->getWorkingDir());
+    archiveConfig(ostream, *this, getCurrentContext()->getWorkingDir(), flags);
+}
+
+void Config::GetAllFileReferences(std::set<std::string> & files) const
+{
+    return getImpl()->GetAllFileReferences(files);
 }
 
 } // namespace OCIO_NAMESPACE
