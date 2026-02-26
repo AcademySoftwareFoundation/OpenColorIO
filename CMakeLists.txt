@@ -350,6 +350,11 @@ endif()
 include(CompilerFlags)
 
 ###############################################################################
+# Include utility functions for setting debugging environments
+
+include(DebuggerEnvironment)
+
+###############################################################################
 # External linking options
 
 # Supported options

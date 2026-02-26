@@ -19,10 +19,28 @@ macro(add_ocio_test_variant NAME BINARY)
     endif()
 endmacro()
 
-function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
+function(prepend var prefix)
+    set(new "")
+    foreach(f ${ARGN})
+        list(APPEND new "${prefix}${f}")
+    endforeach(f)
+    set(${var} "${new}" PARENT_SCOPE)
+endfunction(prepend)
+
+function(add_ocio_test NAME SOURCES TESTS PRIVATE_INCLUDES)
     set(TEST_BINARY "test_${NAME}_exec")
     set(TEST_NAME "test_${NAME}")
-    add_executable(${TEST_BINARY} ${SOURCES})
+
+    prepend(SOURCES "${PROJECT_SOURCE_DIR}/src/OpenColorIO/" ${SOURCES})
+    set(SOURCES_ALL ${SOURCES})
+    list(APPEND SOURCES_ALL ${TESTS})
+
+    add_executable(${TEST_BINARY} ${SOURCES_ALL})
+
+    # Group the source files to replicate the source tree structure in the IDEs.
+    source_group(TREE "${PROJECT_SOURCE_DIR}/src/OpenColorIO/" PREFIX "OpenColorIO Library" FILES ${SOURCES})
+    source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" PREFIX "Tests" FILES ${TESTS})
+
     target_compile_definitions(${TEST_BINARY}
         PRIVATE
             OpenColorIO_SKIP_IMPORTS
@@ -331,18 +349,6 @@ set(TESTS
     ViewTransform_tests.cpp
 )
 
-function(prepend var prefix)
-    set(new "")
-    foreach(f ${ARGN})
-        list(APPEND new "${prefix}${f}")
-    endforeach(f)
-    set(${var} "${new}" PARENT_SCOPE)
-endfunction(prepend)
-
-prepend(SOURCES "${PROJECT_SOURCE_DIR}/src/OpenColorIO/" ${SOURCES})
-
-list(APPEND SOURCES ${TESTS})
-
 if(OCIO_USE_SIMD AND (OCIO_ARCH_X86 OR OCIO_USE_SSE2NEON))
     # Note that these files are gated by preprocessors to remove them based on the OCIO_USE_* vars.
     set_property(SOURCE "${CMAKE_SOURCE_DIR}/src/OpenColorIO/ops/lut1d/Lut1DOpCPU_SSE2.cpp" APPEND PROPERTY COMPILE_OPTIONS ${OCIO_SSE2_ARGS})
@@ -359,4 +365,4 @@ if(OCIO_USE_SIMD AND (OCIO_ARCH_X86 OR OCIO_USE_SSE2NEON))
     set_property(SOURCE "AVX512_tests.cpp" APPEND PROPERTY COMPILE_OPTIONS ${OCIO_AVX512_ARGS})
 endif()
 
-add_ocio_test(cpu "${SOURCES}" TRUE)
+add_ocio_test(cpu "${SOURCES}" "${TESTS}" TRUE)
