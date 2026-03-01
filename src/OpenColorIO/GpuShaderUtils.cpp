@@ -482,7 +482,8 @@ std::string GpuShaderText::declareVarStr(const std::string & name, float v)
 std::string GpuShaderText::vectorCompareExpression(const std::string& lhs, const std::string& op, const std::string& rhs)
 {
     std::string ret = lhs + " " + op + " " + rhs;
-    if(m_lang == GPU_LANGUAGE_MSL_2_0)
+    // MSL and HLSL do not allow vector bool in if-conditions: wrap with any().
+    if(m_lang == GPU_LANGUAGE_MSL_2_0 || m_lang == GPU_LANGUAGE_HLSL_SM_5_0)
     {
         ret = "any( " + ret + " )";
     }
