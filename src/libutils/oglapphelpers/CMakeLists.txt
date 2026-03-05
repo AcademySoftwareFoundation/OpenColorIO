@@ -31,6 +31,21 @@ if(APPLE)
 
 endif()
 
+if(OCIO_VULKAN_ENABLED)
+
+    find_package(Vulkan REQUIRED)
+    find_package(glslang REQUIRED)
+
+    list(APPEND SOURCES
+        vulkanapp.cpp
+    )
+
+    list(APPEND INCLUDES
+        vulkanapp.h
+    )
+
+endif()
+
 add_library(oglapphelpers STATIC ${SOURCES})
 set_target_properties(oglapphelpers PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(oglapphelpers PROPERTIES OUTPUT_NAME OpenColorIOoglapphelpers)
@@ -108,6 +123,24 @@ if(APPLE)
             "-framework IOKit"
             "-framework Metal"
             "-framework CoreVideo"
+    )
+endif()
+
+if(OCIO_VULKAN_ENABLED)
+    target_include_directories(oglapphelpers
+        PUBLIC
+            ${Vulkan_INCLUDE_DIRS}
+    )
+    target_link_libraries(oglapphelpers
+        PUBLIC
+            Vulkan::Vulkan
+            glslang::glslang
+            glslang::glslang-default-resource-limits
+            glslang::SPIRV
+    )
+    target_compile_definitions(oglapphelpers
+        PUBLIC
+            OCIO_VULKAN_ENABLED
     )
 endif()
 
