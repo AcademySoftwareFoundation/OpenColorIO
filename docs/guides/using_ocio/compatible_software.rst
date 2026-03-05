@@ -491,6 +491,19 @@ Documentation :
 - `Autodesk VRED 2025.3 <https://help.autodesk.com/view/VREDPRODUCTS/2025/ENU/?guid=color-vred-20253>`__
 
 
+vvvv gamma
+**********
+
+vvvv gamma is a visual live-programming environment for .NET that supports OpenColorIO for real-time GPU color transforms with builtin ACES 2.0 and 1.3 configurations, custom configs from file, live-switchable at runtime, and HDR color grading workflows.
+
+Website: `<https://vvvv.org/>`__
+
+Documentation:
+
+- `VL.OCIO announcement and documentation <https://forum.vvvv.org/t/vl-ocio-for-aces-color-management-and-hdr-color-grading/25012>`__
+
+- `VL.OCIO Source <https://github.com/tebjan/VL.OCIO>`__
+
 
 Apps w/icc or luts
 ******************
