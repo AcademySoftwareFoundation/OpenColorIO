@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ProcessList id="b5cc7aed-d405-4d8b-b64b-382b2341a378" name="matrix example" xmlns="urn:AMPAS:CLF:v3.0" compCLFversion="3.0">
+<ProcessList id="b5cc7aed-d405-4d8b-b64b-382b2341a378" name="old array dims example" compCLFversion="2">
     <Description>Basic matrix example using CLF v2 dim syntax</Description>
     <InputDescriptor>RGB</InputDescriptor>
     <OutputDescriptor>XYZ</OutputDescriptor>

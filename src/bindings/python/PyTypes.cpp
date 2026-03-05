@@ -971,6 +971,7 @@ void bindPyTypes(py::module & m)
     m.attr("METADATA_OUTPUT_DESCRIPTOR") = METADATA_OUTPUT_DESCRIPTOR;
     m.attr("METADATA_NAME") = METADATA_NAME;
     m.attr("METADATA_ID") = METADATA_ID;
+    m.attr("METADATA_ID_ELEMENT") = METADATA_ID_ELEMENT;
 
     // Caches
     m.attr("OCIO_DISABLE_ALL_CACHES") = OCIO_DISABLE_ALL_CACHES;

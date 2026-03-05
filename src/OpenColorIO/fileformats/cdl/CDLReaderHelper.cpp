@@ -77,11 +77,10 @@ void CDLReaderColorCorrectionElt::setCDLParsingInfo(const CDLParsingInfoRcPtr & 
     m_parsingInfo = pTransformList;
 }
 
-void CDLReaderColorCorrectionElt::appendMetadata(const std::string & name, const std::string & value)
+void CDLReaderColorCorrectionElt::appendMetadata(FormatMetadataImpl& metadata)
 {
     // Keeps description as metadata with supplied name.
-    FormatMetadataImpl item(name, value);
-    m_transformData->getFormatMetadata().getChildrenElements().push_back(item);
+    m_transformData->getFormatMetadata().getChildrenElements().push_back(metadata);
 }
 
 } // namespace OCIO_NAMESPACE

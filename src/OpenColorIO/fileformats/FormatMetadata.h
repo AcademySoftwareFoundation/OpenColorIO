@@ -55,6 +55,9 @@ public:
     // Retrieve the vector of elements under the metadata.
     Elements & getChildrenElements() noexcept;
     const Elements & getChildrenElements() const noexcept;
+    
+    // Returns all of the children elements matching the given name.
+    Elements getChildrenElements(const std::string & name) const noexcept;
 
     // Merge rhs into this. Expected to be used on root FormatMetadataImpl for ops.
     void combine(const FormatMetadataImpl & rhs);

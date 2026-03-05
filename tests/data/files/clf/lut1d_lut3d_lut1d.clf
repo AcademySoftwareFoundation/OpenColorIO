@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ProcessList id="e0a0ae4b-adc2-4c25-ad70-fa6f31ba219d" compCLFversion="3.0" xmlns="urn:AMPAS:CLF:v3.0">
+<ProcessList id="e0a0ae4b-adc2-4c25-ad70-fa6f31ba219d" compCLFversion="3.0" xmlns="http://www.smpte-ra.org/ns/2136-1/2024">
     <Description>Lut1D + Lut3D + long Lut1D</Description>
     <Description>Tests usage of 1D, 3D, and 2D GPU textures</Description>
     <LUT1D name="lut1d_example.clf" inBitDepth="8i" outBitDepth="12i">

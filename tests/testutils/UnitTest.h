@@ -63,8 +63,6 @@ typedef std::vector<OCIOTestRcPtr> UnitTests;
 
 UnitTests & GetUnitTests();
 
-extern int unit_test_failures;
-
 struct AddTest
 {
     explicit AddTest(const OCIOTestRcPtr & test)
@@ -131,6 +129,9 @@ int UnitTestMain(int argc, const char ** argv);
     OCIO_CHECK_ASSERT_MESSAGE_FROM(x, M, __LINE__)
 
 #define OCIO_CHECK_EQUAL(x,y) OCIO_CHECK_EQUAL_FROM(x,y,__LINE__)
+
+#define OCIO_CHECK_EQUAL_STR(x,y)                                       \
+    OCIO_CHECK_EQUAL_FROM(std::string_view((x)), std::string_view((y)),__LINE__)
 
 // When using OCIO_CHECK_EQUAL in an helper method used by one or more
 // unit tests, the error message indicates the helper method line number
