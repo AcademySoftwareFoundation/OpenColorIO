@@ -132,7 +132,7 @@ inline void ApplyClamp<false>(__m128&)
 {
 }
 
-// Apply the power component to the the pixel's values.
+// Apply the power component to the pixel's values.
 // When the template argument is true, the values in pix
 // are clamped to the range [0,1] and the power operation is
 // applied. When the argument is false, the values in pix are
@@ -154,7 +154,7 @@ inline void ApplyPower<false>(__m128& pix, const __m128& power)
     pix = sseSelect(negMask, pix, pixPower);
 }
 
-// Apply the saturation component to the the pixel's values
+// Apply the saturation component to the pixel's values
 inline void ApplySaturation(__m128& pix, const __m128 saturation)
 {
     // Compute luma: dot product of pixel values and the luma weights
@@ -179,7 +179,7 @@ inline void ApplyScale(float * pix, const float scale)
     pix[2] = pix[2] * scale;
 }
 
-// Apply the slope component to the the pixel's values
+// Apply the slope component to the pixel's values
 inline void ApplySlope(float * pix, const float * slope)
 {
     pix[0] = pix[0] * slope[0];
@@ -187,7 +187,7 @@ inline void ApplySlope(float * pix, const float * slope)
     pix[2] = pix[2] * slope[2];
 }
 
-// Apply the offset component to the the pixel's values
+// Apply the offset component to the pixel's values
 inline void ApplyOffset(float * pix, const float * offset)
 {
     pix[0] = pix[0] + offset[0];
@@ -195,7 +195,7 @@ inline void ApplyOffset(float * pix, const float * offset)
     pix[2] = pix[2] + offset[2];
 }
 
-// Apply the saturation component to the the pixel's values
+// Apply the saturation component to the pixel's values
 inline void ApplySaturation(float * pix, const float saturation)
 {
     const float srcpix[3] = { pix[0], pix[1], pix[2] };
@@ -232,7 +232,7 @@ inline void ApplyClamp<false>(float *)
 {
 }
 
-// Apply the power component to the the pixel's values.
+// Apply the power component to the pixel's values.
 // When the template argument is true, the values in pix
 // are clamped to the range [0,1] and the power operation is
 // applied. When the argument is false, the values in pix are

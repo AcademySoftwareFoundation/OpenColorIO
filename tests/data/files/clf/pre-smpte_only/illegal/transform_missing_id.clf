@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="3.0" xmlns="urn:AMPAS:CLF:v3.0">
+    <Description>The ProcessList id attribute may not be missing in v3.</Description>
+   <Log inBitDepth="32f" outBitDepth="16f" style="log10" />
+</ProcessList>

@@ -2318,7 +2318,7 @@ OCIO_ADD_TEST(MergeConfigs, view_transforms_section)
 
         constexpr char PREFIX[] { "The Input config contains a value that would override the Base config: " };
 
-        // Test that an error is thrown when the the input values are different.
+        // Test that an error is thrown when the input values are different.
         {
             OCIO::MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
             checkForLogOrException(LOG_TYPE_ERROR, __LINE__,

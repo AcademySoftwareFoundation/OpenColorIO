@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ProcessList compCLFversion="3.0" id="logs" xmlns="urn:AMPAS:CLF:v3.0">
+<ProcessList compCLFversion="3.0" id="logs" xmlns="http://www.smpte-ra.org/ns/2136-1/2024">
     <Description>The camera styles must have the linSideBreak param.</Description>
     <Log inBitDepth="16f" outBitDepth="16f" style="cameraLogToLin">
         <LogParams logSideSlope="0.29325513196" logSideOffset="0.66959921799" 
