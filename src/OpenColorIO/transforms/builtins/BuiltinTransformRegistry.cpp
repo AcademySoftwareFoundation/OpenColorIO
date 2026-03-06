@@ -17,6 +17,7 @@
 #include "transforms/builtins/CanonCameras.h"
 #include "transforms/builtins/Displays.h"
 #include "transforms/builtins/PanasonicCameras.h"
+#include "transforms/builtins/ProPhotoRGB.h"
 #include "transforms/builtins/RedCameras.h"
 #include "transforms/builtins/SonyCameras.h"
 #include "utils/StringUtils.h"
@@ -116,6 +117,9 @@ void BuiltinTransformRegistryImpl::registerAll() noexcept
     CAMERA::PANASONIC::RegisterAll(*this);
     CAMERA::RED::RegisterAll(*this);
     CAMERA::SONY::RegisterAll(*this);
+
+    // ProPhoto RGB / ROMM RGB support.
+    PROPHOTO::RegisterAll(*this);
 
     // Display support.
     DISPLAY::RegisterAll(*this);
