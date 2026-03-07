@@ -24,7 +24,7 @@ typedef OCIO_SHARED_PTR<MetalApp> MetalAppRcPtr;
 class MtlTexture;
 typedef OCIO_SHARED_PTR<MtlTexture> MtlTextureRcPtr;
 
-class MetalApp : public ScreenApp
+class MetalApp : public ScreenOglApp
 {
 public:
     MetalApp() = delete;
@@ -53,7 +53,7 @@ public:
     // Process the image.
     void redisplay() override;
     
-    // Return a pointer of either ScreenApp or HeadlessApp depending on the
+    // Return a pointer of either ScreenOglApp or HeadlessOglApp depending on the
     // OCIO_HEADLESS_ENABLED preprocessor.
     static MetalAppRcPtr CreateMetalGlApp(const char * winTitle, int winWidth, int winHeight);
     

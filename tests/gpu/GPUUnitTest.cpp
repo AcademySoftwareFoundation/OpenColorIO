@@ -15,7 +15,16 @@
 #include "apputils/argparse.h"
 #include "utils/StringUtils.h"
 
+#include "graphicalapp.h"
+
+#ifdef OCIO_GL_ENABLED
 #include "oglapp.h"
+#endif
+
+#ifdef OCIO_DIRECTX_ENABLED
+#include "dxapp.h"
+#endif
+
 #if __APPLE__
 #include "metalapp.h"
 #endif
@@ -194,12 +203,12 @@ namespace
     constexpr unsigned g_winHeight  = 256;
     constexpr unsigned g_components = 4;
 
-    void AllocateImageTexture(OCIO::OglAppRcPtr & app)
+    void AllocateImageTexture(OCIO::GraphicalAppRcPtr& app)
     {
         const unsigned numEntries = g_winWidth * g_winHeight * g_components;
         OCIOGPUTest::CustomValues::Values image(numEntries, 0.0f);
 
-        app->initImage(g_winWidth, g_winHeight, OCIO::OglApp::COMPONENTS_RGBA, &image[0]);
+        app->initImage(g_winWidth, g_winHeight, OCIO::GraphicalApp::COMPONENTS_RGBA, &image[0]);
     }
 
     void SetTestValue(float * image, float val, unsigned numComponents)
@@ -214,7 +223,7 @@ namespace
         }
     }
 
-    void UpdateImageTexture(OCIO::OglAppRcPtr & app, OCIOGPUTestRcPtr & test)
+    void UpdateImageTexture(OCIO::GraphicalAppRcPtr & app, OCIOGPUTestRcPtr & test)
     {
         // Note: User-specified custom values are padded out
         // to the preferred size (g_winWidth x g_winHeight).
@@ -328,9 +337,9 @@ namespace
         app->updateImage(&values.m_inputValues[0]);
     }
 
-    void UpdateOCIOGLState(OCIO::OglAppRcPtr & app, OCIOGPUTestRcPtr & test)
+    void UpdateOCIOGPUState(OCIO::GraphicalAppRcPtr & app, OCIOGPUTestRcPtr & test)
     {
-        app->setPrintShader(test->isVerbose());
+        app->setShaderVerbose(test->isVerbose());
 
         OCIO::ConstProcessorRcPtr & processor = test->getProcessor();
         OCIO::GpuShaderDescRcPtr & shaderDesc = test->getShaderDesc();
@@ -385,7 +394,7 @@ namespace
     constexpr size_t invalidIndex = std::numeric_limits<size_t>::max();
 
     // Validate the GPU processing against the CPU one.
-    void ValidateImageTexture(OCIO::OglAppRcPtr & app, OCIOGPUTestRcPtr & test)
+    void ValidateImageTexture(OCIO::GraphicalAppRcPtr & app, OCIOGPUTestRcPtr & test)
     {
         // Each retest is rebuilding a cpu proc.
         OCIO::ConstCPUProcessorRcPtr processor = test->getProcessor()->getDefaultCPUProcessor();
@@ -536,6 +545,7 @@ int main(int argc, const char ** argv)
 
     bool printHelp = false;
     bool useMetalRenderer = false;
+    bool useDxRenderer = false;
     bool verbose = false;
     bool stopOnFirstError = false;
 
@@ -546,6 +556,9 @@ int main(int argc, const char ** argv)
     ap.options("\nCommand line arguments:\n",
                "--help",          &printHelp,        "Print help message",
                "--metal",         &useMetalRenderer, "Run the GPU unit test with Metal",
+#ifdef OCIO_DIRECTX_ENABLED
+               "--dx",            &useDxRenderer,    "Run the GPU unit test with DirectX 12",
+#endif
                "-v",              &verbose,          "Output the GPU shader program",
                "--stop_on_error", &stopOnFirstError, "Stop on the first error",
                "--run_only %s",   &filter,           "Run only some unit tests\n"
@@ -588,8 +601,8 @@ int main(int argc, const char ** argv)
     }
 
     // Step 1: Initialize the graphic library engines.
-    OCIO::OglAppRcPtr app;
-    
+    OCIO::GraphicalAppRcPtr app;
+
     try
     {
         if(useMetalRenderer)
@@ -601,9 +614,20 @@ int main(int argc, const char ** argv)
             return 1;
 #endif
         }
+#ifdef OCIO_DIRECTX_ENABLED
+        else if(useDxRenderer)
+        {
+            app = std::make_shared<OCIO::DxApp>("GPU tests - DirectX 12", 10, 10);
+        }
+#endif
         else
         {
-            app = OCIO::OglApp::CreateOglApp("GPU tests", 10, 10);
+#ifdef OCIO_GL_ENABLED
+            app = OCIO::OglApp::CreateApp("GPU tests - OpenGL", 10, 10);
+#else
+            std::cerr << std::endl << "No GPU backend available." << std::endl;
+            return 1;
+#endif
         }
     }
     catch (const OCIO::Exception & e)
@@ -612,13 +636,13 @@ int main(int argc, const char ** argv)
         return 1;
     }
 
-    app->printGLInfo();
+    app->printGraphicsInfo();
 
     // Step 2: Allocate the texture that holds the image.
     AllocateImageTexture(app);
 
     // Step 3: Create the frame buffer and render buffer.
-    app->createGLBuffers();
+    app->createBuffers();
 
     app->reshape(g_winWidth, g_winHeight);
 
@@ -661,12 +685,32 @@ int main(int argc, const char ** argv)
         // Prepare the unit test.
 
         test->setVerbose(verbose);
-        test->setShadingLanguage(
+
+        // Select the appropriate shading language based on the renderer
+        OCIO::GpuLanguage shadingLanguage;
 #if __APPLE__
-            useMetalRenderer ?
-            OCIO::GPU_LANGUAGE_MSL_2_0 :
+        if (useMetalRenderer)
+        {
+            shadingLanguage = OCIO::GPU_LANGUAGE_MSL_2_0;
+        }
+        else
 #endif
-            OCIO::GPU_LANGUAGE_GLSL_1_2);
+#ifdef OCIO_DIRECTX_ENABLED
+        if (useDxRenderer)
+        {
+            shadingLanguage = OCIO::GPU_LANGUAGE_HLSL_SM_5_0;
+        }
+        else
+#endif
+        {
+#ifdef OCIO_GL_ENABLED
+            shadingLanguage = OCIO::GPU_LANGUAGE_GLSL_1_2;
+#else
+            // This should never happen since we check for available backends earlier
+            shadingLanguage = OCIO::GPU_LANGUAGE_GLSL_1_2;
+#endif
+        }
+        test->setShadingLanguage(shadingLanguage);
 
         bool enabledTest = true;
         try
@@ -697,7 +741,7 @@ int main(int argc, const char ** argv)
                 UpdateImageTexture(app, test);
 
                 // Update the GPU shader program.
-                UpdateOCIOGLState(app, test);
+                UpdateOCIOGPUState(app, test);
 
                 const size_t numRetest = test->getNumRetests();
                 // Need to run once and for each retest.
