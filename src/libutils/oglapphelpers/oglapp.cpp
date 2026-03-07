@@ -12,10 +12,17 @@
 #include <GLUT/glut.h>
 
 #elif _WIN32
-
 #include <GL/glew.h>
-#include <GL/glut.h>
-
+#ifndef NDEBUG
+    // freeglut's header uses a #pragma comment(lib) that links freeglutd.lib in
+    // debug builds, which we don't ship. Temporarily define NDEBUG so the header
+    // selects freeglut.lib instead, then restore the original state.
+    #define NDEBUG
+    #include <GL/glut.h>
+    #undef NDEBUG
+#else
+    #include <GL/glut.h>
+#endif // !NDEBUG
 #else
 
 #include <GL/glew.h>
@@ -32,6 +39,15 @@
 
 namespace OCIO_NAMESPACE
 {
+
+GraphicalAppRcPtr OglApp::CreateApp(const char* winTitle, int winWidth, int winHeight)
+{
+#ifdef OCIO_HEADLESS_ENABLED
+    return std::make_shared<HeadlessOglApp>(winTitle, winWidth, winHeight);
+#else
+    return std::make_shared<ScreenOglApp>(winTitle, winWidth, winHeight);
+#endif
+}
 
 OglApp::OglApp(int winWidth, int winHeight)
     : m_viewportWidth(winWidth)
@@ -113,7 +129,7 @@ void OglApp::redisplay()
         pts[3] = (float)m_viewportHeight * 0.5f + imgHeightScreenSpace * 0.5f;
     }
 
-    if (m_yMirror)
+    if (isYMirror())
     {
         std::swap(pts[1], pts[3]);
     }
@@ -162,7 +178,7 @@ void OglApp::reshape(int width, int height)
     glLoadIdentity();
 }
 
-void OglApp::createGLBuffers()
+void OglApp::createBuffers()
 {
     // Create a framebuffer object, you need to delete them when program exits.
     GLuint fboId;
@@ -197,7 +213,7 @@ void OglApp::setShader(GpuShaderDescRcPtr & shaderDesc)
 {
     // Create oglBuilder using the shaderDesc.
     m_oglBuilder = OpenGLBuilder::Create(shaderDesc);
-    m_oglBuilder->setVerbose(m_printShader);
+    m_oglBuilder->setVerbose(isShaderVerbose());
 
     // Allocate & upload all the LUTs in a dedicated GPU texture.
     // Note: The start index for the texture indices is 1 as one texture
@@ -227,7 +243,7 @@ void OglApp::setShader(GpuShaderDescRcPtr & shaderDesc)
     m_oglBuilder->useAllUniforms();
 }
 
-void OglApp::printGLInfo() const noexcept
+void OglApp::printGraphicsInfo() const noexcept
 {
     std::cout << std::endl
               << "GL Vendor:    " << glGetString(GL_VENDOR) << std::endl
@@ -262,16 +278,7 @@ void OglApp::setupCommon()
     glEnable(GL_TEXTURE_2D);
 }
 
-OglAppRcPtr OglApp::CreateOglApp(const char * winTitle, int winWidth, int winHeight)
-{
-#ifdef OCIO_HEADLESS_ENABLED
-        return std::make_shared<HeadlessApp>(winTitle, winWidth, winHeight);
-#else
-        return std::make_shared<ScreenApp>(winTitle, winWidth, winHeight);
-#endif
-}
-
-ScreenApp::ScreenApp(const char * winTitle, int winWidth, int winHeight):
+ScreenOglApp::ScreenOglApp(const char * winTitle, int winWidth, int winHeight):
     OglApp(winWidth, winHeight)
 {
     int argc = 2;
@@ -288,25 +295,25 @@ ScreenApp::ScreenApp(const char * winTitle, int winWidth, int winHeight):
     setupCommon();
 }
 
-ScreenApp::~ScreenApp()
+ScreenOglApp::~ScreenOglApp()
 {
     glutDestroyWindow(m_mainWin);
 }
 
-void ScreenApp::redisplay()
+void ScreenOglApp::redisplay()
 {
     OglApp::redisplay();
     glutSwapBuffers();
 }
 
-void ScreenApp::printGLInfo() const noexcept
+void ScreenOglApp::printGraphicsInfo() const noexcept
 {
-    OglApp::printGLInfo();
+    OglApp::printGraphicsInfo();
 }
 
 #ifdef OCIO_HEADLESS_ENABLED
 
-HeadlessApp::HeadlessApp(const char * /* winTitle */, int bufWidth, int bufHeight)
+HeadlessOglApp::HeadlessOglApp(const char * /* winTitle */, int bufWidth, int bufHeight)
     : OglApp(bufWidth, bufHeight)
     , m_pixBufferWidth(bufWidth)
     , m_pixBufferHeight(bufHeight)
@@ -361,27 +368,27 @@ HeadlessApp::HeadlessApp(const char * /* winTitle */, int bufWidth, int bufHeigh
     setupCommon();
 }
 
-HeadlessApp::~HeadlessApp()
+HeadlessOglApp::~HeadlessOglApp()
 {
     eglTerminate(m_eglDisplay);
 }
 
-void HeadlessApp::printGLInfo() const noexcept
+void HeadlessOglApp::printGraphicsInfo() const noexcept
 {
-    OglApp::printGLInfo();
+    GraphicalApp::printGraphicsInfo();
     printEGLInfo();
 }
 
-void HeadlessApp::printEGLInfo() const noexcept
+void HeadlessOglApp::printEGLInfo() const noexcept
 {
     std::cout << std::endl
               << "EGL Vendor:   " << eglQueryString(m_eglDisplay, EGL_VENDOR) << std::endl
               << "EGL Version:  " << eglQueryString(m_eglDisplay, EGL_VERSION) << std::endl;
 }
 
-void HeadlessApp::redisplay()
+void HeadlessOglApp::redisplay()
 {
-    OglApp::redisplay();
+    GraphicalApp::redisplay();
     eglSwapBuffers(m_eglDisplay, m_eglSurface);
 }
 

@@ -287,6 +287,14 @@ message(STATUS "")
 message(STATUS "Checking for GPU configuration...")
 include(CheckSupportGL)
 
+# DirectX 12 is only available on Windows.
+if(WIN32)
+    option(OCIO_DIRECTX_ENABLED "Enable DirectX 12 GPU rendering support" ON)
+else()
+    set(OCIO_DIRECTX_ENABLED OFF CACHE BOOL "Enable DirectX 12 GPU rendering support" FORCE)
+endif()
+mark_as_advanced(OCIO_DIRECTX_ENABLED)
+
 
 ###############################################################################
 # Check for ARM neon here because we need to know if ARM NEON is supported

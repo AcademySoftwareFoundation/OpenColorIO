@@ -361,18 +361,18 @@ int main(int argc, const char **argv)
 
 #ifdef OCIO_GPU_ENABLED
     // Initialize GPU.
-    OCIO::OglAppRcPtr oglApp;
+    OCIO::GraphicalAppRcPtr oglApp;
 
     if (usegpu || usegpuLegacy)
     {
-        OCIO::OglApp::Components comp = OCIO::OglApp::COMPONENTS_RGBA;
+        OCIO::GraphicalApp::Components comp = OCIO::GraphicalApp::COMPONENTS_RGBA;
         if (imgInput.getNumChannels() == 4)
         {
-            comp = OCIO::OglApp::COMPONENTS_RGBA;
+            comp = OCIO::GraphicalApp::COMPONENTS_RGBA;
         }
         else if (imgInput.getNumChannels() == 3)
         {
-            comp = OCIO::OglApp::COMPONENTS_RGB;
+            comp = OCIO::GraphicalApp::COMPONENTS_RGB;
         }
         else
         {
@@ -383,7 +383,7 @@ int main(int argc, const char **argv)
 
         try
         {
-            oglApp = OCIO::OglApp::CreateOglApp("ocioconvert", 256, 20);
+            oglApp = OCIO::GraphicalApp::CreateApp("ocioconvert", 256, 20);
         }
         catch (const OCIO::Exception & e)
         {
@@ -393,14 +393,14 @@ int main(int argc, const char **argv)
 
         if (verbose)
         {
-            oglApp->printGLInfo();
+            oglApp->printGraphicsInfo();
         }
 
-        oglApp->setPrintShader(outputgpuInfo);
+        oglApp->setShaderVerbose(outputgpuInfo);
 
         oglApp->initImage(imgInput.getWidth(), imgInput.getHeight(), comp, (float *)imgInput.getData());
         
-        oglApp->createGLBuffers();
+        oglApp->createBuffers();
     }
 #endif // OCIO_GPU_ENABLED
 

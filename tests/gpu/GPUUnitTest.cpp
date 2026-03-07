@@ -15,7 +15,16 @@
 #include "apputils/argparse.h"
 #include "utils/StringUtils.h"
 
+#include "graphicalapp.h"
+
+#ifdef OCIO_GL_ENABLED
 #include "oglapp.h"
+#endif
+
+#ifdef OCIO_DIRECTX_ENABLED
+#include "dxapp.h"
+#endif
+
 #if __APPLE__
 #include "metalapp.h"
 #endif
@@ -207,23 +216,13 @@ namespace
     constexpr unsigned g_winHeight  = 256;
     constexpr unsigned g_components = 4;
 
-    void AllocateImageTexture(OCIO::OglAppRcPtr & app)
+    void AllocateImageTexture(OCIO::GraphicalAppRcPtr& app)
     {
         const unsigned numEntries = g_winWidth * g_winHeight * g_components;
         OCIOGPUTest::CustomValues::Values image(numEntries, 0.0f);
 
-        app->initImage(g_winWidth, g_winHeight, OCIO::OglApp::COMPONENTS_RGBA, &image[0]);
+        app->initImage(g_winWidth, g_winHeight, OCIO::GraphicalApp::COMPONENTS_RGBA, &image[0]);
     }
-
-#ifdef OCIO_VULKAN_ENABLED
-    void AllocateImageTexture(OCIO::VulkanAppRcPtr & app)
-    {
-        const unsigned numEntries = g_winWidth * g_winHeight * g_components;
-        OCIOGPUTest::CustomValues::Values image(numEntries, 0.0f);
-
-        app->initImage(g_winWidth, g_winHeight, OCIO::VulkanApp::COMPONENTS_RGBA, &image[0]);
-    }
-#endif
 
     void SetTestValue(float * image, float val, unsigned numComponents)
     {
@@ -342,7 +341,7 @@ namespace
         return &values.m_inputValues[0];
     }
 
-    void UpdateImageTexture(OCIO::OglAppRcPtr & app, OCIOGPUTestRcPtr & test)
+    void UpdateImageTexture(OCIO::GraphicalAppRcPtr & app, OCIOGPUTestRcPtr & test)
     {
 #if __APPLE__ && __aarch64__
         // The Apple M1 chip handles differently the Nan and Inf processing introducing
@@ -358,27 +357,9 @@ namespace
         app->updateImage(inputValues);
     }
 
-#ifdef OCIO_VULKAN_ENABLED
-    void UpdateImageTexture(OCIO::VulkanAppRcPtr & app, OCIOGPUTestRcPtr & test)
+    void UpdateOCIOGPUState(OCIO::GraphicalAppRcPtr & app, OCIOGPUTestRcPtr & test)
     {
-#if __APPLE__ && __aarch64__
-        // The Apple M1 chip handles differently the Nan and Inf processing introducing
-        // differences with CPU processing.
-        const bool testNaN = false;
-        const bool testInfinity = false;
-#else
-        const bool testNaN = test->getTestNaN();
-        const bool testInfinity = test->getTestInfinity();
-#endif
-
-        const float * inputValues = PrepareInputValues(test, testNaN, testInfinity);
-        app->updateImage(inputValues);
-    }
-#endif
-
-    void UpdateOCIOGLState(OCIO::OglAppRcPtr & app, OCIOGPUTestRcPtr & test)
-    {
-        app->setPrintShader(test->isVerbose());
+        app->setShaderVerbose(test->isVerbose());
 
         OCIO::ConstProcessorRcPtr & processor = test->getProcessor();
         OCIO::GpuShaderDescRcPtr & shaderDesc = test->getShaderDesc();
@@ -399,32 +380,6 @@ namespace
 
         app->setShader(shaderDesc);
     }
-
-#ifdef OCIO_VULKAN_ENABLED
-    void UpdateOCIOVulkanState(OCIO::VulkanAppRcPtr & app, OCIOGPUTestRcPtr & test)
-    {
-        app->setPrintShader(test->isVerbose());
-
-        OCIO::ConstProcessorRcPtr & processor = test->getProcessor();
-        OCIO::GpuShaderDescRcPtr & shaderDesc = test->getShaderDesc();
-        
-        OCIO::ConstGPUProcessorRcPtr gpu;
-        if (test->isLegacyShader())
-        {
-            gpu = processor->getOptimizedLegacyGPUProcessor(OCIO::OPTIMIZATION_DEFAULT, 
-                                                            test->getLegacyShaderLutEdge());
-        }
-        else
-        {
-            gpu = processor->getDefaultGPUProcessor();
-        }
-
-        // Collect the shader program information for a specific processor.
-        gpu->extractGpuShaderInfo(shaderDesc);
-
-        app->setShader(shaderDesc);
-    }
-#endif
 
     void DiffComponent(const std::vector<float> & cpuImage,
                        const std::vector<float> & gpuImage,
@@ -563,10 +518,8 @@ namespace
         }
     }
 
-    // Shared helper to validate GPU processing against CPU.
-    // Template function to work with both OglApp and VulkanApp.
-    template<typename AppType>
-    void ValidateImageTextureImpl(AppType & app, OCIOGPUTestRcPtr & test)
+    // Validate the GPU processing against the CPU one.
+    void ValidateImageTexture(OCIO::GraphicalAppRcPtr & app, OCIOGPUTestRcPtr & test)
     {
         // Each retest is rebuilding a cpu proc.
         OCIO::ConstCPUProcessorRcPtr processor = test->getProcessor()->getDefaultCPUProcessor();
@@ -604,20 +557,6 @@ namespace
         // Step 3: Compare the two results.
         ValidateResults(test, cpuImage, gpuImage, width, height);
     }
-
-    // Validate the GPU processing against the CPU one.
-    void ValidateImageTexture(OCIO::OglAppRcPtr & app, OCIOGPUTestRcPtr & test)
-    {
-        ValidateImageTextureImpl(app, test);
-    }
-
-#ifdef OCIO_VULKAN_ENABLED
-    // Validate the GPU processing against the CPU one for Vulkan.
-    void ValidateImageTexture(OCIO::VulkanAppRcPtr & app, OCIOGPUTestRcPtr & test)
-    {
-        ValidateImageTextureImpl(app, test);
-    }
-#endif
 };
 
 int main(int argc, const char ** argv)
@@ -631,6 +570,7 @@ int main(int argc, const char ** argv)
     bool printHelp = false;
     bool useMetalRenderer = false;
     bool useVulkanRenderer = false;
+    bool useDxRenderer = false;
     bool verbose = false;
     bool stopOnFirstError = false;
 
@@ -641,7 +581,12 @@ int main(int argc, const char ** argv)
     ap.options("\nCommand line arguments:\n",
                "--help",          &printHelp,        "Print help message",
                "--metal",         &useMetalRenderer, "Run the GPU unit test with Metal",
+#ifdef OCIO_DIRECTX_ENABLED
+               "--dx",            &useDxRenderer,    "Run the GPU unit test with DirectX 12",
+#endif
+#ifdef OCIO_VULKAN_ENABLED
                "--vulkan",        &useVulkanRenderer, "Run the GPU unit test with Vulkan",
+#endif
                "-v",              &verbose,          "Output the GPU shader program",
                "--stop_on_error", &stopOnFirstError, "Stop on the first error",
                "--run_only %s",   &filter,           "Run only some unit tests\n"
@@ -684,11 +629,8 @@ int main(int argc, const char ** argv)
     }
 
     // Step 1: Initialize the graphic library engines.
-    OCIO::OglAppRcPtr app;
-#ifdef OCIO_VULKAN_ENABLED
-    OCIO::VulkanAppRcPtr vulkanApp;
-#endif
-    
+    OCIO::GraphicalAppRcPtr app;
+
     try
     {
         if(useMetalRenderer)
@@ -700,19 +642,26 @@ int main(int argc, const char ** argv)
             return 1;
 #endif
         }
+#ifdef OCIO_DIRECTX_ENABLED
+        else if(useDxRenderer)
+        {
+            app = std::make_shared<OCIO::DxApp>("GPU tests - DirectX 12", 10, 10);
+        }
+#endif
+#ifdef OCIO_VULKAN_ENABLED
         else if(useVulkanRenderer)
         {
-#ifdef OCIO_VULKAN_ENABLED
-            vulkanApp = OCIO::VulkanApp::CreateVulkanApp(g_winWidth, g_winHeight);
-            vulkanApp->printVulkanInfo();
-#else
-            std::cerr << std::endl << "'GPU tests - Vulkan' is not supported (OCIO_VULKAN_ENABLED not defined)" << std::endl;
-            return 1;
-#endif
+            app = OCIO::VulkanApp::CreateVulkanApp(g_winWidth, g_winHeight);
         }
+#endif
         else
         {
-            app = OCIO::OglApp::CreateOglApp("GPU tests", 10, 10);
+#ifdef OCIO_GL_ENABLED
+            app = OCIO::OglApp::CreateApp("GPU tests - OpenGL", 10, 10);
+#else
+            std::cerr << std::endl << "No GPU backend available." << std::endl;
+            return 1;
+#endif
         }
     }
     catch (const OCIO::Exception & e)
@@ -726,28 +675,15 @@ int main(int argc, const char ** argv)
         return 1;
     }
 
-    if (!useVulkanRenderer)
-    {
-        app->printGLInfo();
-    }
+    app->printGraphicsInfo();
 
     // Step 2: Allocate the texture that holds the image.
-#ifdef OCIO_VULKAN_ENABLED
-    if (useVulkanRenderer)
-    {
-        AllocateImageTexture(vulkanApp);
-        vulkanApp->reshape(g_winWidth, g_winHeight);
-    }
-    else
-#endif
-    {
-        AllocateImageTexture(app);
+    AllocateImageTexture(app);
 
-        // Step 3: Create the frame buffer and render buffer.
-        app->createGLBuffers();
+    // Step 3: Create the frame buffer and render buffer.
+    app->createBuffers();
 
-        app->reshape(g_winWidth, g_winHeight);
-    }
+    app->reshape(g_winWidth, g_winHeight);
 
     // Step 4: Execute all the unit tests.
 
@@ -788,18 +724,34 @@ int main(int argc, const char ** argv)
         // Prepare the unit test.
 
         test->setVerbose(verbose);
-        OCIO::GpuLanguage gpuLang = OCIO::GPU_LANGUAGE_GLSL_1_2;
+
+        // Select the appropriate shading language based on the renderer
+        OCIO::GpuLanguage shadingLanguage = OCIO::GPU_LANGUAGE_GLSL_1_2;
 #if __APPLE__
         if (useMetalRenderer)
         {
-            gpuLang = OCIO::GPU_LANGUAGE_MSL_2_0;
+            shadingLanguage = OCIO::GPU_LANGUAGE_MSL_2_0;
         }
+        else
 #endif
+#ifdef OCIO_DIRECTX_ENABLED
+        if (useDxRenderer)
+        {
+            shadingLanguage = OCIO::GPU_LANGUAGE_HLSL_SM_5_0;
+        }
+        else
+#endif
+#ifdef OCIO_VULKAN_ENABLED
         if (useVulkanRenderer)
         {
-            gpuLang = OCIO::GPU_LANGUAGE_GLSL_VK_4_6;
+            shadingLanguage = OCIO::GPU_LANGUAGE_GLSL_VK_4_6;
         }
-        test->setShadingLanguage(gpuLang);
+        else
+#endif
+        {
+            shadingLanguage = OCIO::GPU_LANGUAGE_GLSL_1_2;
+        }
+        test->setShadingLanguage(shadingLanguage);
 
         bool enabledTest = true;
         try
@@ -826,59 +778,28 @@ int main(int argc, const char ** argv)
 
             if(test->isValid() && enabledTest)
             {
-#ifdef OCIO_VULKAN_ENABLED
-                if (useVulkanRenderer)
+                // Initialize the texture with the RGBA values to be processed.
+                UpdateImageTexture(app, test);
+
+                // Update the GPU shader program.
+                UpdateOCIOGPUState(app, test);
+
+                const size_t numRetest = test->getNumRetests();
+                // Need to run once and for each retest.
+                for (size_t idxRetest = 0; idxRetest <= numRetest; ++idxRetest)
                 {
-                    // Initialize the texture with the RGBA values to be processed.
-                    UpdateImageTexture(vulkanApp, test);
-
-                    // Update the GPU shader program.
-                    UpdateOCIOVulkanState(vulkanApp, test);
-
-                    const size_t numRetest = test->getNumRetests();
-                    // Need to run once and for each retest.
-                    for (size_t idxRetest = 0; idxRetest <= numRetest; ++idxRetest)
+                    if (idxRetest != 0) // Skip first run.
                     {
-                        if (idxRetest != 0) // Skip first run.
-                        {
-                            // Call the retest callback.
-                            test->retestSetup(idxRetest - 1);
-                        }
-
-                        // Process the image texture into the rendering buffer.
-                        vulkanApp->redisplay();
-
-                        // Compute the expected values using the CPU and compare
-                        // against the GPU values.
-                        ValidateImageTexture(vulkanApp, test);
+                        // Call the retest callback.
+                        test->retestSetup(idxRetest - 1);
                     }
-                }
-                else
-#endif
-                {
-                    // Initialize the texture with the RGBA values to be processed.
-                    UpdateImageTexture(app, test);
 
-                    // Update the GPU shader program.
-                    UpdateOCIOGLState(app, test);
+                    // Process the image texture into the rendering buffer.
+                    app->redisplay();
 
-                    const size_t numRetest = test->getNumRetests();
-                    // Need to run once and for each retest.
-                    for (size_t idxRetest = 0; idxRetest <= numRetest; ++idxRetest)
-                    {
-                        if (idxRetest != 0) // Skip first run.
-                        {
-                            // Call the retest callback.
-                            test->retestSetup(idxRetest - 1);
-                        }
-
-                        // Process the image texture into the rendering buffer.
-                        app->redisplay();
-
-                        // Compute the expected values using the CPU and compare
-                        // against the GPU values.
-                        ValidateImageTexture(app, test);
-                    }
+                    // Compute the expected values using the CPU and compare
+                    // against the GPU values.
+                    ValidateImageTexture(app, test);
                 }
             }
         }
