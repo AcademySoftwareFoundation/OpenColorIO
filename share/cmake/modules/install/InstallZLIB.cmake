@@ -53,8 +53,8 @@ if(NOT ZLIB_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGE
 
     set(ZLIB_INCLUDE_DIRS "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_INCLUDEDIR}")
 
-    # Windows need the "d" suffix at the end.
-    if(WIN32 AND BUILD_TYPE_DEBUG)
+    # Windows need the "d" suffix at the end (only for MSVC).
+    if(MSVC AND BUILD_TYPE_DEBUG)
         set(_ZLIB_LIB_SUFFIX "d")
     endif()
 
