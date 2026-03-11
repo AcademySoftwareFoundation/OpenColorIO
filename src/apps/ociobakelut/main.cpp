@@ -68,6 +68,7 @@ int main (int argc, const char* argv[])
     std::string dummystr;
     float dummyf1, dummyf2, dummyf3;
 
+    // clang-format off
     ArgParse ap;
     ap.options("ociobakelut -- create a new LUT or ICC profile from an OCIO config or LUT file(s)\n\n"
                "usage:  ociobakelut [options] <OUTPUTFILE.LUT>\n\n"
@@ -113,6 +114,7 @@ int main (int argc, const char* argv[])
                "--copyright %s", &copyright , "a copyright field added in the file (default: \"No copyright. Use freely.\")\n",
                // TODO: add --metadata option
                NULL);
+    // clang-format on
 
     if (ap.parse(argc, argv) < 0)
     {

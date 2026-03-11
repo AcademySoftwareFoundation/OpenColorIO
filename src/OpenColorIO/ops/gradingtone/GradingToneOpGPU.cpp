@@ -303,6 +303,8 @@ void Add_MidsPre_Shader(unsigned channel, std::string & channelSuffix, GpuShader
 
     std::string topPoint{ std::to_string(top) }, bottomPoint{ std::to_string(bottom) };
 
+    // clang-format off
+
     st.newLine() << st.floatKeywordConst() << " halo = 0.4;";
     st.newLine() << st.floatDecl("mid_adj") << " = clamp(" << channelValue << ", 0.01, 1.99);";
 
@@ -366,6 +368,8 @@ void Add_MidsPre_Shader(unsigned channel, std::string & channelSuffix, GpuShader
     st.newLine() << st.floatDecl("y3") << " = y2 + (m2 + m3) * (x3 - x2) * 0.5;";
     st.newLine() << st.floatDecl("y4") << " = y3 + (m3 + m4) * (x4 - x3) * 0.5;";
     st.newLine() << st.floatDecl("y5") << " = y4 + (m4 + m5) * (x5 - x4) * 0.5;";
+
+    // clang-format on
 }
 
 void Add_MidsFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
@@ -378,6 +382,8 @@ void Add_MidsFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
     Add_MidsPre_Shader(channel, channelSuffix, st, props, style);
 
     const std::string pix(shaderCreator->getPixelName());
+
+    // clang-format off
 
     if (channel != M)
     {
@@ -444,6 +450,8 @@ void Add_MidsFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.dedent();
     st.newLine() << "}";  // local scope
+
+    // clang-format on
 }
 
 void Add_MidsRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
@@ -456,6 +464,8 @@ void Add_MidsRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
     Add_MidsPre_Shader(channel, channelSuffix, st, props, style);
 
     const std::string pix(shaderCreator->getPixelName());
+
+    // clang-format off
 
     if (channel != M)
     {
@@ -622,6 +632,8 @@ void Add_MidsRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.dedent();
     st.newLine() << "}";  // local scope
+
+    // clang-format on
 }
 
 void Add_HighlightShadowPre_Shader(GpuShaderText & st,
@@ -657,6 +669,8 @@ void Add_HighlightShadowPre_Shader(GpuShaderText & st,
         channelValue = isShadow ? props.shadowsM : props.highlightsM;
     }
 
+    // clang-format off
+
     st.newLine() << "{";   // establish scope so local variable names won't conflict
     st.indent();
     if (isShadow)
@@ -680,6 +694,8 @@ void Add_HighlightShadowPre_Shader(GpuShaderText & st,
     {
         st.newLine() << "val = 2. - val;";
     }
+
+    // clang-format on
 }
 
 void Add_FauxCubicFwdEval_Shader(GpuShaderCreatorRcPtr & shaderCreator,
@@ -688,6 +704,8 @@ void Add_FauxCubicFwdEval_Shader(GpuShaderCreatorRcPtr & shaderCreator,
                                  std::string & channelSuffix)
 {
     const std::string pix(shaderCreator->getPixelName());
+
+    // clang-format off
 
     st.newLine() << st.floatKeyword() << " y1 = ( 0.5 / (x2 - x0) ) * "
                     "( (2.*y0 + m0 * (x1 - x0)) * (x2 - x1) + (2.*y2 - m2 * (x2 - x1)) * (x1 - x0) );";
@@ -732,6 +750,8 @@ void Add_FauxCubicFwdEval_Shader(GpuShaderCreatorRcPtr & shaderCreator,
         st.newLine() << "res.b = (t.b > x2) ? y2 + (t.b - x2) * m2 : res.b;";
     }
     st.newLine() << pix << "." << channelSuffix << " = res;";
+
+    // clang-format on
 }
 
 void Add_FauxCubicRevEval_Shader(GpuShaderCreatorRcPtr & shaderCreator,
@@ -740,6 +760,8 @@ void Add_FauxCubicRevEval_Shader(GpuShaderCreatorRcPtr & shaderCreator,
                                  std::string & channelSuffix)
 {
     const std::string pix(shaderCreator->getPixelName());
+
+    // clang-format off
 
     st.newLine() << st.floatKeyword() << " y1 = ( 0.5 / (x2 - x0) ) * "
                     "( (2.*y0 + m0 * (x1 - x0)) * (x2 - x1) + (2.*y2 - m2 * (x2 - x1)) * (x1 - x0) );";
@@ -790,6 +812,8 @@ void Add_FauxCubicRevEval_Shader(GpuShaderCreatorRcPtr & shaderCreator,
         st.newLine() << "res.b = (t.b > y2) ? x2 + (t.b - y2) / m2 : res.b;";
     }
     st.newLine() << pix << "." << channelSuffix << " = res;";
+
+    // clang-format on
 }
 
 void Add_HighlightShadowFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
@@ -801,6 +825,8 @@ void Add_HighlightShadowFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
     std::string channelSuffix;
     Add_HighlightShadowPre_Shader(st, channel, channelSuffix, props, isShadow);
 
+    // clang-format off
+
     st.newLine() << "if (val < 1.)";
     st.newLine() << "{";
     st.indent();
@@ -837,6 +863,8 @@ void Add_HighlightShadowFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.dedent();
     st.newLine() << "}";  // establish scope
+
+    // clang-format on
 }
 
 void Add_HighlightShadowRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
@@ -848,6 +876,8 @@ void Add_HighlightShadowRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
     std::string channelSuffix;
     Add_HighlightShadowPre_Shader(st, channel, channelSuffix, props, isShadow);
 
+    // clang-format off
+
     st.newLine() << "if (val < 1.)";
     st.newLine() << "{";
     st.indent();
@@ -883,6 +913,8 @@ void Add_HighlightShadowRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.dedent();
     st.newLine() << "}";  // establish scope
+
+    // clang-format on
 }
 
 void Add_WhiteBlackPre_Shader(GpuShaderCreatorRcPtr & shaderCreator,
@@ -918,6 +950,8 @@ void Add_WhiteBlackPre_Shader(GpuShaderCreatorRcPtr & shaderCreator,
         channelValue = isBlack ? props.blacksM : props.whitesM;
     }
 
+    // clang-format off
+
     st.newLine() << "{";   // establish scope so local variable names won't conflict
     st.indent();
     if (!isBlack)
@@ -948,10 +982,14 @@ void Add_WhiteBlackPre_Shader(GpuShaderCreatorRcPtr & shaderCreator,
     {
         st.newLine() << st.colorDecl("t") << " = " << pix << ".rgb;";
     }
+
+    // clang-format on
 }
 
 void Add_WBFwd_Shader(unsigned channel, bool linearExtrap, GpuShaderText & st)
 {
+    // clang-format off
+
     if (channel != M)
     {
         st.newLine() << st.floatKeyword() << " tlocal = (t - x0) / (x1 - x0);";
@@ -979,10 +1017,14 @@ void Add_WBFwd_Shader(unsigned channel, bool linearExtrap, GpuShaderText & st)
             st.newLine() << "res.b = (t.b > x1) ? y1 + (t.b - x1) * m1 : res.b;";
         }
     }
+
+    // clang-format on
 }
 
 void Add_WBRev_Shader(unsigned channel, bool linearExtrap, GpuShaderText & st)
 {
+    // clang-format off
+
     st.newLine() << st.floatKeyword() << " a = 0.5 * (m1 - m0) * (x1 - x0);";
     st.newLine() << st.floatKeyword() << " b = m0 * (x1 - x0);";
     if (channel != M)
@@ -1017,10 +1059,14 @@ void Add_WBRev_Shader(unsigned channel, bool linearExtrap, GpuShaderText & st)
             st.newLine() << "res.b = (t.b > y1) ? x1 + (t.b - y1) / m1 : res.b;";
         }
     }
+
+    // clang-format on
 }
 
 void Add_WBExtrapPre_Shader(GpuShaderText & st)
 {
+    // clang-format off
+
     st.newLine() << "res = (res - x0) / gain + x0;";
     // Quadratic extrapolation for better HDR control.
     st.newLine() << st.floatKeyword() << " new_y1 = (x1 - x0) / gain + x0;";
@@ -1031,6 +1077,8 @@ void Add_WBExtrapPre_Shader(GpuShaderText & st)
     st.newLine() << st.floatKeyword() << " bb = 1. / m1 - 2. * aa * x1;";
     st.newLine() << st.floatKeyword() << " cc = new_y1 - bb * x1 - aa * x1 * x1;";
     st.newLine() << "t = (t - x0) / gain + x0;";
+
+    // clang-format on
 }
 
 void Add_WhiteBlackFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
@@ -1045,6 +1093,8 @@ void Add_WhiteBlackFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
     Add_WhiteBlackPre_Shader(shaderCreator, st, channel, channelSuffix, isBlack, props);
 
     // Slope is decreasing case.
+
+    // clang-format off
 
     st.newLine() << "if (mtest < 1.)";
     st.newLine() << "{";
@@ -1129,6 +1179,8 @@ void Add_WhiteBlackFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.dedent();
     st.newLine() << "}";   // establish scope so local variable names won't conflict
+
+    // clang-format on
 }
 
 void Add_WhiteBlackRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
@@ -1139,6 +1191,8 @@ void Add_WhiteBlackRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
 {
     std::string channelSuffix;
     Add_WhiteBlackPre_Shader(shaderCreator, st, channel, channelSuffix, isBlack, props);
+
+    // clang-format off
 
     // Slope is decreasing case.
 
@@ -1235,6 +1289,8 @@ void Add_WhiteBlackRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.dedent();
     st.newLine() << "}";   // establish scope so local variable names won't conflict
+
+    // clang-format on
 }
 
 void Add_SContrastTopPre_Shader(GpuShaderCreatorRcPtr & shaderCreator,
@@ -1247,6 +1303,8 @@ void Add_SContrastTopPre_Shader(GpuShaderCreatorRcPtr & shaderCreator,
     float top{ 0.f }, topSC{ 0.f }, bottom{ 0.f }, pivot{ 0.f };
     GradingTonePreRender::FromStyle(style, top, topSC, bottom, pivot);
     const std::string topPoint{ std::to_string(topSC) };
+
+    // clang-format off
 
     st.newLine() << st.floatKeyword() << " contrast = " << props.sContrast << ";";
     st.newLine() << "if (contrast != 1.)";
@@ -1291,6 +1349,8 @@ void Add_SContrastTopPre_Shader(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << st.floatKeyword() << " y2 = y1 + (m0 + m3) * (x2 - x1) * 0.5;";
 
     // TODO: the above should not be in the GLSL (is not per-pixel)
+
+    // clang-format on
 }
 
 void Add_SContrastBottomPre_Shader(GpuShaderText & st, GradingStyle style)
@@ -1298,6 +1358,8 @@ void Add_SContrastBottomPre_Shader(GpuShaderText & st, GradingStyle style)
     float top{ 0.f }, topSC{ 0.f }, bottom{ 0.f }, pivot{ 0.f };
     GradingTonePreRender::FromStyle(style, top, topSC, bottom, pivot);
     const std::string bottomPoint{ std::to_string(bottom) };
+
+    // clang-format off
 
     // Bottom end
     st.newLine() << "{";   // establish scope so local variable names won't conflict
@@ -1327,6 +1389,8 @@ void Add_SContrastBottomPre_Shader(GpuShaderText & st, GradingStyle style)
     st.newLine() << st.floatKeyword() << " y1 = y2 - (m0 + m3) * (x2 - x1) * 0.5;";
 
     // TODO: the above should not be in the GLSL (is not per-pixel)
+
+    // clang-format on
 }
 
 void Add_SContrastFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
@@ -1337,6 +1401,8 @@ void Add_SContrastFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
     Add_SContrastTopPre_Shader(shaderCreator, st, props, style);
 
     const std::string pix(shaderCreator->getPixelName());
+
+    // clang-format off
 
     st.newLine() << pix << ".rgb = (t - pivot) * contrast + pivot;";
 
@@ -1368,6 +1434,8 @@ void Add_SContrastFwd_Shader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.dedent();
     st.newLine() << "}";  // end if contrast != 1.
+
+    // clang-format on
 }
 
 void Add_SContrastRev_Shader(GpuShaderCreatorRcPtr & shaderCreator, 
@@ -1376,6 +1444,8 @@ void Add_SContrastRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
                              GradingStyle style)
 {
     Add_SContrastTopPre_Shader(shaderCreator, st, props, style);
+
+    // clang-format off
 
     const std::string pix(shaderCreator->getPixelName());
 
@@ -1415,6 +1485,8 @@ void Add_SContrastRev_Shader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.dedent();
     st.newLine() << "}";  // end if contrast != 1.
+
+    // clang-format on
 }
 
 void AddGTForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
@@ -1554,6 +1626,8 @@ void GetGradingToneGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     GpuShaderText st(shaderCreator->getLanguage());
     st.indent();
 
+    // clang-format off
+
     st.newLine() << "";
     st.newLine() << "// Add GradingTone '"
                  << GradingStyleToString(style) << "' "
@@ -1561,6 +1635,8 @@ void GetGradingToneGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     st.newLine() << "";
     st.newLine() << "{";
     st.indent();
+
+    // clang-format on
 
     // Properties hold shader variables names and are initialized with undecorated names suitable
     // for local variables.

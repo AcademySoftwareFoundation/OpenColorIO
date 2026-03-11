@@ -95,6 +95,7 @@ int main(int argc, const char ** argv)
     std::string cscColorSpace;
 
     ArgParse ap;
+    // clang-format off
     ap.options("ociomakeclf -- Convert a LUT into CLF format and optionally add conversions from/to ACES2065-1 to make it an LMT.\n"
                "               The generated file should be compatible with both SMPTE ST 2136-1 as well as the previous\n" 
                "               Academy/ASC v3 version.\n"
@@ -112,6 +113,7 @@ int main(int argc, const char ** argv)
                "--csc %s",    &cscColorSpace,      "The color space that the input LUT expects and produces",
                "--generateid",&generateId,         "Generates an id based on content and writes in SMPTE Id element format",
                nullptr);
+    // clang-format on
 
     if (ap.parse(argc, argv) < 0)
     {

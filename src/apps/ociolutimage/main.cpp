@@ -146,6 +146,7 @@ int main(int argc, const char* argv[])
 
     // TODO: Add optional allocation transform instead of colorconvert
     ArgParse ap;
+    // clang-format off
     ap.options("ociolutimage -- Convert a 3D LUT to or from an image\n\n"
                "usage:  ociolutimage [options] <OUTPUTFILE.LUT>\n\n"
                "example:  ociolutimage --generate --output lut.exr\n"
@@ -162,6 +163,7 @@ int main(int argc, const char* argv[])
                "--config %s", &config, ".ocio configuration file (default: $OCIO)",
                "--colorconvert %s %s", &incolorspace, &outcolorspace, "Apply a color space conversion to the image.",
                NULL);
+    // clang-format on
 
     if (ap.parse(argc, argv) < 0)
     {

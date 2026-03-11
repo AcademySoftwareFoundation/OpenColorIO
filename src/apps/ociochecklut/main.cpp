@@ -198,6 +198,7 @@ int main (int argc, const char* argv[])
     bool stepInfo      = false;
 
     ArgParse ap;
+    // clang-format off
     ap.options("ociochecklut -- check any LUT file and optionally convert a pixel\n\n"
                "usage:  ociochecklut <INPUTFILE> <R G B> or <R G B A>\n",
                "%*", parse_end_args, "",
@@ -212,6 +213,7 @@ int main (int argc, const char* argv[])
                                              "instead of the CPU one (--gpu is ignored)",
                "--gpuinfo", &outputgpuInfo, "Output the OCIO shader program",
                nullptr);
+    // clang-format on
 
     if (ap.parse(argc, argv) < 0 || help || inputfile.empty())
     {

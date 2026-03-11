@@ -195,6 +195,7 @@ template bool IsM44Identity(const double * m44);
 // (We have seen IsScalarEqualToZero sensitivities here on 32-bit
 // virtual machines)
 
+// clang-format off
 bool GetM44Inverse(float* inverse_out, const float* m_)
 {
     double m[16];
@@ -298,6 +299,7 @@ void GetM44V4Product(float* vout, const float* m, const float* v_)
     vout[2] = m[ 8]*v[0] + m[ 9]*v[1] + m[10]*v[2] + m[11]*v[3];
     vout[3] = m[12]*v[0] + m[13]*v[1] + m[14]*v[2] + m[15]*v[3];
 }
+// clang-format on
 
 void GetV4Sum(float* vout, const float* v1, const float* v2)
 {
@@ -350,6 +352,8 @@ bool GetMxbInverse(float* mout, float* vout,
     return true;
 }
 
+// clang-format off
+
 //------------------------------------------------------------------------------
 //
 //  Map a floating-point number (already represented as an integer) to an ordered
@@ -394,10 +398,13 @@ bool GetMxbInverse(float* mout, float* vout,
 //      |    -NaN    | Negative floats | Negative denorms | Positive denorms | Positive floats |    NaN    |
 //      +------------+-----------------+------------------+------------------+-----------------+-----------+
 //
+// clang-format on
 inline int FloatForCompare(const unsigned floatBits)
 {
     return floatBits < 0x80000000 ? (0x80000000 + floatBits) : (0x80000000 - (floatBits & 0x7FFFFFFF));
 }
+
+// clang-format off
 
 //------------------------------------------------------------------------------
 //

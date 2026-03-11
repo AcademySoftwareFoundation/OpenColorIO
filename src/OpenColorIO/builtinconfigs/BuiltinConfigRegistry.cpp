@@ -8,8 +8,8 @@
 
 // OpenColorIO must be first - order is important.
 #include <OpenColorIO/OpenColorIO.h>
-#include "Mutex.h"
 
+#include "Mutex.h"
 #include "Platform.h"
 
 #include "builtinconfigs/BuiltinConfigRegistry.h"

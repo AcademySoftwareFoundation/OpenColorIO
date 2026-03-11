@@ -53,6 +53,7 @@ int main(int argc, const char **argv)
     mz_zip_file* file_info = NULL;
     void* reader = NULL;
 
+    // clang-format off
     ap.options("ocioarchive -- Archive a config and its LUT files or extract a config archive. \n\n"
                "    Note that any existing OCIOZ archive with the same name will be overwritten.\n"
                "    The .ocioz extension will be added to the archive name, if not provided.\n\n"
@@ -77,6 +78,7 @@ int main(int argc, const char **argv)
                "-h",            &help,                  "Display the help and exit",
                NULL
                );
+    // clang-format on
 
     if (ap.parse (argc, argv) < 0)
     {

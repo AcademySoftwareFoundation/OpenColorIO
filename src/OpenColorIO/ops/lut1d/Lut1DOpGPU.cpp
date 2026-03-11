@@ -213,6 +213,8 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
     // Add the LUT code to the OCIO shader program.
 
+    // clang-format off
+
     if (dimensions == GpuShaderDesc::TEXTURE_2D)
     {
         // In case the 1D LUT length exceeds the 1D texture maximum length,
@@ -390,7 +392,7 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
     shaderCreator->addToFunctionShaderCode(ss.string().c_str());
 
+    // clang-format on
 }
 
 } // namespace OCIO_NAMESPACE
-
