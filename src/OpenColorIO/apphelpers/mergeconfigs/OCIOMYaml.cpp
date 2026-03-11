@@ -2,8 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <cstring>
-#include <unordered_set>
 #include <iostream>
+#include <unordered_set>
 
 #include <pystring.h>
 
@@ -19,16 +19,21 @@
 namespace OCIO_NAMESPACE
 {
 
-std::unordered_map<std::string, ConfigMergingParameters::MergeStrategies> OCIOMYaml::m_mergeStrategiesMap;
+std::unordered_map<std::string, ConfigMergingParameters::MergeStrategies>
+    OCIOMYaml::m_mergeStrategiesMap;
 
 OCIOMYaml::OCIOMYaml()
 {
     if (m_mergeStrategiesMap.empty())
     {
-        m_mergeStrategiesMap["PreferInput"] = ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_INPUT;
-        m_mergeStrategiesMap["PreferBase"] = ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_BASE;
-        m_mergeStrategiesMap["InputOnly"] = ConfigMergingParameters::MergeStrategies::STRATEGY_INPUT_ONLY;
-        m_mergeStrategiesMap["BaseOnly"] = ConfigMergingParameters::MergeStrategies::STRATEGY_BASE_ONLY;
+        m_mergeStrategiesMap["PreferInput"]
+            = ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_INPUT;
+        m_mergeStrategiesMap["PreferBase"]
+            = ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_BASE;
+        m_mergeStrategiesMap["InputOnly"]
+            = ConfigMergingParameters::MergeStrategies::STRATEGY_INPUT_ONLY;
+        m_mergeStrategiesMap["BaseOnly"]
+            = ConfigMergingParameters::MergeStrategies::STRATEGY_BASE_ONLY;
         m_mergeStrategiesMap["Remove"] = ConfigMergingParameters::MergeStrategies::STRATEGY_REMOVE;
     }
 }
@@ -42,9 +47,9 @@ void OCIOMYaml::load(const YAML::Node & node, std::string & x)
     catch (const std::exception & e)
     {
         std::ostringstream os;
-        os << "At line " << (node.Mark().line + 1)
-            << ", '" << node.Tag() << "' parsing string failed "
-            << "with: " << e.what();
+        os << "At line " << (node.Mark().line + 1) << ", '" << node.Tag()
+           << "' parsing string failed "
+           << "with: " << e.what();
         throw Exception(os.str().c_str());
     }
 }
@@ -58,24 +63,24 @@ void OCIOMYaml::load(const YAML::Node & node, std::vector<std::string> & x)
     catch (const std::exception & e)
     {
         std::ostringstream os;
-        os << "At line " << (node.Mark().line + 1)
-           << ", '" << node.Tag() << "' parsing StringVec failed "
+        os << "At line " << (node.Mark().line + 1) << ", '" << node.Tag()
+           << "' parsing StringVec failed "
            << "with: " << e.what();
         throw Exception(os.str().c_str());
     }
 }
 
-void OCIOMYaml::throwValueError(const std::string & nodeName,
-                                       const YAML::Node & key,
-                                       const std::string & msg)
+void OCIOMYaml::throwValueError(
+    const std::string & nodeName,
+    const YAML::Node & key,
+    const std::string & msg)
 {
     std::string keyName;
     load(key, keyName);
 
     std::ostringstream os;
-    os << "At line " << (key.Mark().line + 1)
-        << ", the value of the property '" << keyName 
-        << "' from '" << nodeName << "' failed: " << msg;
+    os << "At line " << (key.Mark().line + 1) << ", the value of the property '" << keyName
+       << "' from '" << nodeName << "' failed: " << msg;
 
     throw Exception(os.str().c_str());
 }
@@ -101,18 +106,22 @@ void OCIOMYaml::CheckDuplicates(const YAML::Node & node)
     }
 }
 
-ConfigMergingParameters::MergeStrategies OCIOMYaml::genericStrategyHandler(const YAML::Node & pnode, const YAML::Node & node)
+ConfigMergingParameters::MergeStrategies OCIOMYaml::genericStrategyHandler(
+    const YAML::Node & pnode,
+    const YAML::Node & node)
 {
-    if(node.Type() != YAML::NodeType::Map)
+    if (node.Type() != YAML::NodeType::Map)
     {
-        throwValueError(node.Tag(), pnode,
-                        "The value type of a property 'strategy' needs to be a map.");
+        throwValueError(
+            node.Tag(),
+            pnode,
+            "The value type of a property 'strategy' needs to be a map.");
     }
-    
+
     std::string strategy;
     for (YAML::const_iterator it = node.begin(); it != node.end(); ++it)
     {
-        const std::string & prop = it->first.as<std::string>();
+        const std::string & prop  = it->first.as<std::string>();
         const std::string & value = it->second.as<std::string>();
 
         if (prop == "strategy")
@@ -145,7 +154,7 @@ void OCIOMYaml::loadOptions(const YAML::Node & node, ConfigMergingParametersRcPt
         }
         else if (key == "base_family_prefix")
         {
-           params->setBaseFamilyPrefix(it->second.as<std::string>().c_str());
+            params->setBaseFamilyPrefix(it->second.as<std::string>().c_str());
         }
         else if (key == "input_first")
         {
@@ -171,7 +180,7 @@ void OCIOMYaml::loadOptions(const YAML::Node & node, ConfigMergingParametersRcPt
         else if (key == "default_strategy")
         {
             const std::string & strategy = it->second.as<std::string>();
-            auto srategyEnum = OCIOMYaml::StrategyStringToEnum(strategy.c_str());
+            auto srategyEnum             = OCIOMYaml::StrategyStringToEnum(strategy.c_str());
             if (srategyEnum == ConfigMergingParameters::MergeStrategies::STRATEGY_UNSPECIFIED)
             {
                 std::ostringstream os;
@@ -194,7 +203,8 @@ void OCIOMYaml::loadOverrides(const YAML::Node & node, ConfigMergingParametersRc
     {
         const std::string & key = it->first.as<std::string>();
 
-        if (it->second.IsNull() || !it->second.IsDefined()) continue;
+        if (it->second.IsNull() || !it->second.IsDefined())
+            continue;
 
         if (key == "name")
         {
@@ -225,12 +235,15 @@ void OCIOMYaml::loadOverrides(const YAML::Node & node, ConfigMergingParametersRc
         }
         else if (key == "environment")
         {
-            if(it->second.Type() != YAML::NodeType::Map)
+            if (it->second.Type() != YAML::NodeType::Map)
             {
-                throwValueError(node.Tag(), it->first, 
-                                "The value type of key 'environment' needs to be a map.");
+                throwValueError(
+                    node.Tag(),
+                    it->first,
+                    "The value type of key 'environment' needs to be a map.");
             }
-            for (YAML::const_iterator itEnv = it->second.begin(); itEnv != it->second.end(); ++itEnv)
+            for (YAML::const_iterator itEnv = it->second.begin(); itEnv != it->second.end();
+                 ++itEnv)
             {
                 const std::string & k = itEnv->first.as<std::string>();
                 const std::string & v = itEnv->second.as<std::string>();
@@ -280,23 +293,23 @@ void OCIOMYaml::loadParams(const YAML::Node & node, ConfigMergingParametersRcPtr
         else if (key == "display-views")
         {
             params->setDisplayViews(genericStrategyHandler(it->first, it->second));
-        }  
+        }
         else if (key == "view_transforms")
         {
             params->setViewTransforms(genericStrategyHandler(it->first, it->second));
-        }  
+        }
         else if (key == "looks")
         {
             params->setLooks(genericStrategyHandler(it->first, it->second));
-        }              
+        }
         else if (key == "colorspaces")
         {
             params->setColorspaces(genericStrategyHandler(it->first, it->second));
-        }   
+        }
         else if (key == "named_transforms")
         {
             params->setNamedTransforms(genericStrategyHandler(it->first, it->second));
-        }                                                          
+        }
         else
         {
             // Handle unsupported property or use default handler.
@@ -305,7 +318,7 @@ void OCIOMYaml::loadParams(const YAML::Node & node, ConfigMergingParametersRcPtr
     }
 }
 
-void OCIOMYaml::load(const YAML::Node& node, ConfigMergerRcPtr & merger, const char * filename)
+void OCIOMYaml::load(const YAML::Node & node, ConfigMergerRcPtr & merger, const char * filename)
 {
     CheckDuplicates(node);
 
@@ -314,7 +327,8 @@ void OCIOMYaml::load(const YAML::Node& node, ConfigMergerRcPtr & merger, const c
     {
         const std::string & key = it->first.as<std::string>();
 
-        if (it->second.IsNull() || !it->second.IsDefined()) continue;
+        if (it->second.IsNull() || !it->second.IsDefined())
+            continue;
 
         if (key == "ociom_version")
         {
@@ -324,19 +338,20 @@ void OCIOMYaml::load(const YAML::Node& node, ConfigMergerRcPtr & merger, const c
             load(node["ociom_version"], version);
             results = StringUtils::Split(version, '.');
 
-            if(results.size() == 1)
+            if (results.size() == 1)
             {
                 merger->setVersion(std::stoi(results[0].c_str()), 0);
             }
-            else if(results.size() == 2)
+            else if (results.size() == 2)
             {
-                merger->setVersion(std::stoi(results[0].c_str()),
-                                   std::stoi(results[1].c_str()));
+                merger->setVersion(std::stoi(results[0].c_str()), std::stoi(results[1].c_str()));
             }
             if (merger->getMajorVersion() > 1u || merger->getMinorVersion() > 0u)
             {
-                throwValueError(it->second.Tag(), it->first,
-                                "The highest supported OCIOM file version is 1.0.");
+                throwValueError(
+                    it->second.Tag(),
+                    it->first,
+                    "The highest supported OCIOM file version is 1.0.");
             }
         }
         else if (key == "search_path")
@@ -359,23 +374,28 @@ void OCIOMYaml::load(const YAML::Node& node, ConfigMergerRcPtr & merger, const c
         }
         else if (key == "merge")
         {
-            if(it->second.Type() != YAML::NodeType::Map)
+            if (it->second.Type() != YAML::NodeType::Map)
             {
-                throwValueError(it->second.Tag(), it->first,
-                                "The value type of the key 'merge' needs to be a map.");
+                throwValueError(
+                    it->second.Tag(),
+                    it->first,
+                    "The value type of the key 'merge' needs to be a map.");
             }
 
             int mergesCounter = 0;
-            for (YAML::const_iterator mergeIt = it->second.begin(); mergeIt != it->second.end(); ++mergeIt)
+            for (YAML::const_iterator mergeIt = it->second.begin(); mergeIt != it->second.end();
+                 ++mergeIt)
             {
                 const std::string & mergedConfigName = mergeIt->first.as<std::string>();
-                ConfigMergingParametersRcPtr params = merger->getParams(mergesCounter);
+                ConfigMergingParametersRcPtr params  = merger->getParams(mergesCounter);
                 params->setOutputName(mergedConfigName.c_str());
 
-                for (YAML::const_iterator paramsIt = mergeIt->second.begin(); paramsIt != mergeIt->second.end(); ++paramsIt)
+                for (YAML::const_iterator paramsIt = mergeIt->second.begin();
+                     paramsIt != mergeIt->second.end();
+                     ++paramsIt)
                 {
                     const std::string & key = paramsIt->first.as<std::string>();
-                    
+
                     if (key == "base")
                     {
                         params->setBaseConfigName(paramsIt->second.as<std::string>().c_str());
@@ -404,14 +424,14 @@ void OCIOMYaml::load(const YAML::Node& node, ConfigMergerRcPtr & merger, const c
         if (filename && filename[0])
         {
             // Working directory defaults to the directory of the OCIOM file.
-            std::string realfilename = AbsPath(filename);
+            std::string realfilename  = AbsPath(filename);
             std::string configrootdir = pystring::os::path::dirname(realfilename);
             merger->setWorkingDir(configrootdir.c_str());
         }
-    }    
+    }
 }
 
-int OCIOMYaml::countMerges(const YAML::Node& node)
+int OCIOMYaml::countMerges(const YAML::Node & node)
 {
     int numOfMerges = 0;
 
@@ -422,19 +442,23 @@ int OCIOMYaml::countMerges(const YAML::Node& node)
     {
         const std::string & key = it->first.as<std::string>();
 
-        if (it->second.IsNull() || !it->second.IsDefined()) continue;
+        if (it->second.IsNull() || !it->second.IsDefined())
+            continue;
 
         if (key == "merge")
         {
-            if(it->second.Type() != YAML::NodeType::Map)
+            if (it->second.Type() != YAML::NodeType::Map)
             {
-                throwValueError(it->second.Tag(), it->first,
-                                "The value type of the key 'merge' needs to be a map.");
+                throwValueError(
+                    it->second.Tag(),
+                    it->first,
+                    "The value type of the key 'merge' needs to be a map.");
             }
 
             CheckDuplicates(it->second);
 
-            for (YAML::const_iterator mergeIt = it->second.begin(); mergeIt != it->second.end(); ++mergeIt)
+            for (YAML::const_iterator mergeIt = it->second.begin(); mergeIt != it->second.end();
+                 ++mergeIt)
             {
                 numOfMerges++;
             }
@@ -451,7 +475,7 @@ void OCIOMYaml::read(std::istream & istream, ConfigMergerRcPtr & merger, const c
         YAML::Node node = YAML::Load(istream);
         load(node, merger, filepath);
     }
-    catch(const std::exception & e)
+    catch (const std::exception & e)
     {
         std::ostringstream os;
         os << "Error: Loading the OCIOM Merge parameters ";
@@ -541,9 +565,11 @@ inline void save(YAML::Emitter & out, const ConfigMerger & merger)
         out << YAML::Key << "base_family_prefix" << YAML::Value << p->getBaseFamilyPrefix();
         out << YAML::Key << "input_first" << YAML::Value << p->isInputFirst();
         out << YAML::Key << "error_on_conflict" << YAML::Value << p->isErrorOnConflict();
-        out << YAML::Key << "default_strategy" << YAML::Value << OCIOMYaml::EnumToStrategyString(p->getDefaultStrategy());
+        out << YAML::Key << "default_strategy" << YAML::Value
+            << OCIOMYaml::EnumToStrategyString(p->getDefaultStrategy());
         out << YAML::Key << "avoid_duplicates" << YAML::Value << p->isAvoidDuplicates();
-        out << YAML::Key << "adjust_input_reference_space" << YAML::Value << p->isAdjustInputReferenceSpace();
+        out << YAML::Key << "adjust_input_reference_space" << YAML::Value
+            << p->isAdjustInputReferenceSpace();
         // End of options section.
         out << YAML::EndMap;
         out << YAML::Newline;
@@ -556,9 +582,9 @@ inline void save(YAML::Emitter & out, const ConfigMerger & merger)
 
         out << YAML::Key << "environment";
         out << YAML::Value << YAML::BeginMap;
-        for(int i = 0; i < p->getNumEnvironmentVars(); ++i)
-        {   
-            const char* name = p->getEnvironmentVar(i);
+        for (int i = 0; i < p->getNumEnvironmentVars(); ++i)
+        {
+            const char * name = p->getEnvironmentVar(i);
             out << YAML::Key << name;
             out << YAML::Value << p->getEnvironmentVarValue(i);
         }
@@ -593,44 +619,51 @@ inline void save(YAML::Emitter & out, const ConfigMerger & merger)
 
         out << YAML::Key << "roles";
         out << YAML::Value << YAML::BeginMap;
-        out << YAML::Key << "strategy" << YAML::Value << OCIOMYaml::EnumToStrategyString(p->getRoles());
+        out << YAML::Key << "strategy" << YAML::Value
+            << OCIOMYaml::EnumToStrategyString(p->getRoles());
         out << YAML::EndMap;
 
         out << YAML::Key << "file_rules";
         out << YAML::Value << YAML::BeginMap;
-        out << YAML::Key << "strategy" << YAML::Value << OCIOMYaml::EnumToStrategyString(p->getFileRules());
+        out << YAML::Key << "strategy" << YAML::Value
+            << OCIOMYaml::EnumToStrategyString(p->getFileRules());
         out << YAML::EndMap;
 
         out << YAML::Key << "display-views";
         out << YAML::Value << YAML::BeginMap;
-        out << YAML::Key << "strategy" << YAML::Value << OCIOMYaml::EnumToStrategyString(p->getDisplayViews());
+        out << YAML::Key << "strategy" << YAML::Value
+            << OCIOMYaml::EnumToStrategyString(p->getDisplayViews());
         out << YAML::EndMap;
 
         out << YAML::Key << "view_transforms";
         out << YAML::Value << YAML::BeginMap;
-        out << YAML::Key << "strategy" << YAML::Value << OCIOMYaml::EnumToStrategyString(p->getViewTransforms());
+        out << YAML::Key << "strategy" << YAML::Value
+            << OCIOMYaml::EnumToStrategyString(p->getViewTransforms());
         out << YAML::EndMap;
 
         out << YAML::Key << "looks";
         out << YAML::Value << YAML::BeginMap;
-        out << YAML::Key << "strategy" << YAML::Value << OCIOMYaml::EnumToStrategyString(p->getLooks());
+        out << YAML::Key << "strategy" << YAML::Value
+            << OCIOMYaml::EnumToStrategyString(p->getLooks());
         out << YAML::EndMap;
 
         out << YAML::Key << "colorspaces";
         out << YAML::Value << YAML::BeginMap;
-        out << YAML::Key << "strategy" << YAML::Value << OCIOMYaml::EnumToStrategyString(p->getColorspaces());
+        out << YAML::Key << "strategy" << YAML::Value
+            << OCIOMYaml::EnumToStrategyString(p->getColorspaces());
         out << YAML::EndMap;
 
         out << YAML::Key << "named_transforms";
         out << YAML::Value << YAML::BeginMap;
-        out << YAML::Key << "strategy" << YAML::Value << OCIOMYaml::EnumToStrategyString(p->getNamedTransforms());
+        out << YAML::Key << "strategy" << YAML::Value
+            << OCIOMYaml::EnumToStrategyString(p->getNamedTransforms());
         out << YAML::EndMap;
 
         // End of params section.
         out << YAML::EndMap;
 
         // End of the current merge section.
-        out << YAML::EndMap;    
+        out << YAML::EndMap;
     }
 
     // End of the merges.
@@ -639,7 +672,7 @@ inline void save(YAML::Emitter & out, const ConfigMerger & merger)
     out << YAML::EndMap;
 }
 
-} // anon.
+} // namespace
 
 void OCIOMYaml::write(std::ostream & ostream, const ConfigMerger & merger)
 {

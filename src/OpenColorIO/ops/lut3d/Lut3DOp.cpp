@@ -12,11 +12,11 @@
 #include "GpuShaderUtils.h"
 #include "HashUtils.h"
 #include "MathUtils.h"
+#include "ops/OpTools.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ops/lut3d/Lut3DOpCPU.h"
 #include "ops/lut3d/Lut3DOpGPU.h"
 #include "ops/matrix/MatrixOp.h"
-#include "ops/OpTools.h"
 #include "transforms/Lut3DTransform.h"
 
 namespace OCIO_NAMESPACE
@@ -24,7 +24,8 @@ namespace OCIO_NAMESPACE
 
 void GenerateIdentityLut3D(float * img, int edgeLen, int numChannels, Lut3DOrder lut3DOrder)
 {
-    if (!img) return;
+    if (!img)
+        return;
     if (numChannels < 3)
     {
         throw Exception("Cannot generate idenitity 3d LUT with less than 3 channels.");
@@ -34,20 +35,20 @@ void GenerateIdentityLut3D(float * img, int edgeLen, int numChannels, Lut3DOrder
 
     if (lut3DOrder == LUT3DORDER_FAST_RED)
     {
-        for (int i = 0; i < edgeLen*edgeLen*edgeLen; i++)
+        for (int i = 0; i < edgeLen * edgeLen * edgeLen; i++)
         {
-            img[numChannels*i + 0] = (float)(i%edgeLen) * c;
-            img[numChannels*i + 1] = (float)((i / edgeLen) % edgeLen) * c;
-            img[numChannels*i + 2] = (float)((i / edgeLen / edgeLen) % edgeLen) * c;
+            img[numChannels * i + 0] = (float)(i % edgeLen) * c;
+            img[numChannels * i + 1] = (float)((i / edgeLen) % edgeLen) * c;
+            img[numChannels * i + 2] = (float)((i / edgeLen / edgeLen) % edgeLen) * c;
         }
     }
     else if (lut3DOrder == LUT3DORDER_FAST_BLUE)
     {
-        for (int i = 0; i < edgeLen*edgeLen*edgeLen; i++)
+        for (int i = 0; i < edgeLen * edgeLen * edgeLen; i++)
         {
-            img[numChannels*i + 0] = (float)((i / edgeLen / edgeLen) % edgeLen) * c;
-            img[numChannels*i + 1] = (float)((i / edgeLen) % edgeLen) * c;
-            img[numChannels*i + 2] = (float)(i%edgeLen) * c;
+            img[numChannels * i + 0] = (float)((i / edgeLen / edgeLen) % edgeLen) * c;
+            img[numChannels * i + 1] = (float)((i / edgeLen) % edgeLen) * c;
+            img[numChannels * i + 2] = (float)(i % edgeLen) * c;
         }
     }
     else
@@ -60,7 +61,7 @@ int Get3DLutEdgeLenFromNumPixels(int numPixels)
 {
     int dim = static_cast<int>(roundf(powf((float)numPixels, 1.0f / 3.0f)));
 
-    if (dim*dim*dim != numPixels)
+    if (dim * dim * dim != numPixels)
     {
         std::ostringstream os;
         os << "Cannot infer 3D LUT size. ";
@@ -79,7 +80,7 @@ namespace
 class Lut3DOp : public Op
 {
 public:
-    Lut3DOp() = delete;
+    Lut3DOp()                = delete;
     Lut3DOp(const Lut3DOp &) = delete;
     explicit Lut3DOp(Lut3DOpDataRcPtr & data);
     virtual ~Lut3DOp();
@@ -101,15 +102,9 @@ public:
     void extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const override;
 
 protected:
-    ConstLut3DOpDataRcPtr lut3DData() const
-    {
-        return DynamicPtrCast<const Lut3DOpData>(data());
-    }
+    ConstLut3DOpDataRcPtr lut3DData() const { return DynamicPtrCast<const Lut3DOpData>(data()); }
 
-    Lut3DOpDataRcPtr lut3DData()
-    {
-        return DynamicPtrCast<Lut3DOpData>(data());
-    }
+    Lut3DOpDataRcPtr lut3DData() { return DynamicPtrCast<Lut3DOpData>(data()); }
 };
 
 typedef OCIO_SHARED_PTR<Lut3DOp> Lut3DOpRcPtr;
@@ -172,10 +167,10 @@ void Lut3DOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
         throw Exception("Lut3DOp: canCombineWith must be checked before calling combineWith.");
     }
     ConstLut3DOpRcPtr typedRcPtr = DynamicPtrCast<const Lut3DOp>(secondOp);
-    auto secondLut = typedRcPtr->lut3DData();
-    auto thisLut = lut3DData();
-    auto composed = Lut3DOpData::Compose(thisLut, secondLut);
-    auto composedOp = std::make_shared<Lut3DOp>(composed);
+    auto secondLut               = typedRcPtr->lut3DData();
+    auto thisLut                 = lut3DData();
+    auto composed                = Lut3DOpData::Compose(thisLut, secondLut);
+    auto composedOp              = std::make_shared<Lut3DOp>(composed);
     ops.push_back(composedOp);
 }
 
@@ -218,7 +213,7 @@ void Lut3DOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
 
     GetLut3DGPUShaderProgram(shaderCreator, lutData);
 }
-}
+} // namespace
 
 void CreateLut3DOp(OpRcPtrVec & ops, Lut3DOpDataRcPtr & lut, TransformDirection direction)
 {
@@ -239,18 +234,16 @@ void CreateLut3DTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     {
         throw Exception("CreateLut3DTransform: op has to be a Lut3DOp");
     }
-    auto lutData = DynamicPtrCast<const Lut3DOpData>(op->data());
-    auto lutTransform = Lut3DTransform::Create();
-    Lut3DOpData & data = dynamic_cast<Lut3DTransformImpl*>(lutTransform.get())->data();
+    auto lutData       = DynamicPtrCast<const Lut3DOpData>(op->data());
+    auto lutTransform  = Lut3DTransform::Create();
+    Lut3DOpData & data = dynamic_cast<Lut3DTransformImpl *>(lutTransform.get())->data();
 
     data = *lutData;
 
     group->appendTransform(lutTransform);
 }
 
-void BuildLut3DOp(OpRcPtrVec & ops,
-                  const Lut3DTransform & transform,
-                  TransformDirection dir)
+void BuildLut3DOp(OpRcPtrVec & ops, const Lut3DTransform & transform, TransformDirection dir)
 {
     const auto & data = dynamic_cast<const Lut3DTransformImpl &>(transform).data();
     data.validate();
@@ -260,4 +253,3 @@ void BuildLut3DOp(OpRcPtrVec & ops,
 }
 
 } // namespace OCIO_NAMESPACE
-

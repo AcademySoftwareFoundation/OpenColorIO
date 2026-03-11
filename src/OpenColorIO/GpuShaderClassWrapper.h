@@ -20,13 +20,13 @@ namespace OCIO_NAMESPACE
 class GpuShaderClassWrapper
 {
 public:
-
     // Factory method to blindly get the right class wrapper.
     static std::unique_ptr<GpuShaderClassWrapper> CreateClassWrapper(GpuLanguage language);
 
-    virtual void prepareClassWrapper(const std::string & resourcePrefix,
-                                     const std::string & functionName,
-                                     const std::string & originalHeader) = 0;
+    virtual void prepareClassWrapper(
+        const std::string & resourcePrefix,
+        const std::string & functionName,
+        const std::string & originalHeader)                                       = 0;
     virtual std::string getClassWrapperHeader(const std::string & originalHeader) = 0;
     virtual std::string getClassWrapperFooter(const std::string & originalFooter) = 0;
 
@@ -40,9 +40,10 @@ public:
 class NullGpuShaderClassWrapper : public GpuShaderClassWrapper
 {
 public:
-    void prepareClassWrapper(const std::string & /*resourcePrefix*/,
-                             const std::string & /*functionName*/,
-                             const std::string & /*originalHeader*/) final
+    void prepareClassWrapper(
+        const std::string & /*resourcePrefix*/,
+        const std::string & /*functionName*/,
+        const std::string & /*originalHeader*/) final
     {
     }
     std::string getClassWrapperHeader(const std::string & originalHeader) final
@@ -53,10 +54,7 @@ public:
     {
         return originalFooter;
     }
-    bool hasClassWrapperHeader() const final
-    {
-        return false;
-    }
+    bool hasClassWrapperHeader() const final { return false; }
 
     std::unique_ptr<GpuShaderClassWrapper> clone() const final;
 };
@@ -64,9 +62,10 @@ public:
 class OSLShaderClassWrapper : public GpuShaderClassWrapper
 {
 public:
-    void prepareClassWrapper(const std::string & /*resourcePrefix*/,
-                             const std::string & functionName,
-                             const std::string & /*originalHeader*/) final
+    void prepareClassWrapper(
+        const std::string & /*resourcePrefix*/,
+        const std::string & functionName,
+        const std::string & /*originalHeader*/) final
     {
         m_functionName = functionName;
     }
@@ -74,10 +73,7 @@ public:
     std::string getClassWrapperHeader(const std::string & originalHeader) final;
     std::string getClassWrapperFooter(const std::string & originalFooter) final;
 
-    bool hasClassWrapperHeader() const final
-    {
-        return true;
-    }
+    bool hasClassWrapperHeader() const final { return true; }
 
     std::unique_ptr<GpuShaderClassWrapper> clone() const final;
 
@@ -88,29 +84,27 @@ private:
 class MetalShaderClassWrapper : public GpuShaderClassWrapper
 {
 public:
-    void prepareClassWrapper(const std::string & resourcePrefix,
-                             const std::string & functionName,
-                             const std::string & originalHeader) final;
+    void prepareClassWrapper(
+        const std::string & resourcePrefix,
+        const std::string & functionName,
+        const std::string & originalHeader) final;
     std::string getClassWrapperHeader(const std::string & originalHeader) final;
     std::string getClassWrapperFooter(const std::string & originalFooter) final;
 
-    bool hasClassWrapperHeader() const final
-    {
-        return true;
-    }
+    bool hasClassWrapperHeader() const final { return true; }
 
     std::unique_ptr<GpuShaderClassWrapper> clone() const final;
-    MetalShaderClassWrapper& operator=(const MetalShaderClassWrapper& rhs);
+    MetalShaderClassWrapper & operator=(const MetalShaderClassWrapper & rhs);
 
 private:
     struct FunctionParam
     {
-        FunctionParam(const std::string& type, const std::string& name) :
-            m_type(type),
-            m_name(name)
+        FunctionParam(const std::string & type, const std::string & name)
+            : m_type(type)
+            , m_name(name)
         {
             size_t openAngledBracketPos = name.find('[');
-            m_isArray = openAngledBracketPos != std::string::npos;
+            m_isArray                   = openAngledBracketPos != std::string::npos;
         }
 
         std::string m_type;
@@ -118,10 +112,13 @@ private:
         bool m_isArray;
     };
 
-    static std::string getClassWrapperName(const std::string &resourcePrefix, const std::string &functionName);
-    void extractFunctionParameters(const std::string& declaration);
-    std::string generateClassWrapperHeader(GpuShaderText& st) const;
-    std::string generateClassWrapperFooter(GpuShaderText& st, const std::string &ocioFunctionName) const;
+    static std::string getClassWrapperName(
+        const std::string & resourcePrefix,
+        const std::string & functionName);
+    void extractFunctionParameters(const std::string & declaration);
+    std::string generateClassWrapperHeader(GpuShaderText & st) const;
+    std::string generateClassWrapperFooter(GpuShaderText & st, const std::string & ocioFunctionName)
+        const;
 
     std::string m_className;
     std::string m_functionName;

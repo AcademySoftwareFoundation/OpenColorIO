@@ -12,7 +12,6 @@
 #include "MixingHelpers.h"
 #include "utils/StringUtils.h"
 
-
 namespace OCIO_NAMESPACE
 {
 namespace
@@ -46,25 +45,25 @@ float perceptualToLinear(float percept)
         return std::pow(percept, GAMMA);
 }
 
-} // anon.
-
+} // namespace
 
 MixingSliderImpl::MixingSliderImpl(MixingColorSpaceManager & mixing)
-    :   MixingSlider()
-    ,   m_mixing(mixing)
+    : MixingSlider()
+    , m_mixing(mixing)
 {
 }
 
 void MixingSliderImpl::Deleter(MixingSlider * slider)
 {
-    delete (MixingSliderImpl*)slider;
+    delete (MixingSliderImpl *)slider;
 }
 
 float MixingSliderImpl::getSliderMinEdge() const noexcept
 {
-    return (!m_mixing.isPerceptuallyUniform()
-                ? linearToPerceptual(std::min(m_sliderMinEdge, m_sliderMaxEdge - 0.01f))
-                : m_sliderMinEdge);
+    return (
+        !m_mixing.isPerceptuallyUniform()
+            ? linearToPerceptual(std::min(m_sliderMinEdge, m_sliderMaxEdge - 0.01f))
+            : m_sliderMinEdge);
 }
 
 void MixingSliderImpl::setSliderMinEdge(float sliderMixingMinEdge) noexcept
@@ -74,9 +73,10 @@ void MixingSliderImpl::setSliderMinEdge(float sliderMixingMinEdge) noexcept
 
 float MixingSliderImpl::getSliderMaxEdge() const noexcept
 {
-    return (!m_mixing.isPerceptuallyUniform()
-                ? linearToPerceptual(std::max(m_sliderMaxEdge, m_sliderMinEdge + 0.01f))
-                : m_sliderMaxEdge);
+    return (
+        !m_mixing.isPerceptuallyUniform()
+            ? linearToPerceptual(std::max(m_sliderMaxEdge, m_sliderMinEdge + 0.01f))
+            : m_sliderMaxEdge);
 }
 
 void MixingSliderImpl::setSliderMaxEdge(float sliderMixingMaxEdge) noexcept
@@ -105,7 +105,6 @@ float MixingSliderImpl::mixingToSlider(float mixingUnits) const noexcept
     return sliderUnits;
 }
 
-
 std::ostream & operator<<(std::ostream & os, const MixingSlider & ms)
 {
     os << "minEdge: " << ms.getSliderMinEdge();
@@ -115,19 +114,20 @@ std::ostream & operator<<(std::ostream & os, const MixingSlider & ms)
 
 MixingColorSpaceManagerRcPtr MixingColorSpaceManager::Create(ConstConfigRcPtr & config)
 {
-    return std::shared_ptr<MixingColorSpaceManager>(new MixingColorSpaceManagerImpl(config),
-                                                    &MixingColorSpaceManagerImpl::Deleter);
+    return std::shared_ptr<MixingColorSpaceManager>(
+        new MixingColorSpaceManagerImpl(config),
+        &MixingColorSpaceManagerImpl::Deleter);
 }
 
 void MixingColorSpaceManagerImpl::Deleter(MixingColorSpaceManager * incs)
 {
-    delete (MixingColorSpaceManagerImpl*)incs;
+    delete (MixingColorSpaceManagerImpl *)incs;
 }
 
 MixingColorSpaceManagerImpl::MixingColorSpaceManagerImpl(ConstConfigRcPtr & config)
-    :   MixingColorSpaceManager()
-    ,   m_config(config)
-    ,   m_slider(*this)
+    : MixingColorSpaceManager()
+    , m_config(config)
+    , m_slider(*this)
 {
     refresh();
 }
@@ -155,7 +155,7 @@ void MixingColorSpaceManagerImpl::refresh()
     else
     {
         // TODO: Replace the 'Display Space' entry (i.e. the color space of the monitor)
-        // by the list of all the display color spaces from the configuration 
+        // by the list of all the display color spaces from the configuration
         // when the feature is in.
         m_mixingSpaces.push_back("Rendering Space");
         m_mixingSpaces.push_back("Display Space");
@@ -179,8 +179,7 @@ const char * MixingColorSpaceManagerImpl::getMixingSpaceUIName(size_t idx) const
     }
 
     std::stringstream ss;
-    ss << "Invalid mixing space index " << idx
-       << " where size is " << m_mixingSpaces.size() << ".";
+    ss << "Invalid mixing space index " << idx << " where size is " << m_mixingSpaces.size() << ".";
 
     throw Exception(ss.str().c_str());
 }
@@ -195,8 +194,8 @@ void MixingColorSpaceManagerImpl::setSelectedMixingSpaceIdx(size_t idx)
     if (idx >= m_mixingSpaces.size())
     {
         std::stringstream ss;
-        ss << "Invalid idx for the mixing space index " << idx
-           << " where size is " << m_mixingSpaces.size() << ".";
+        ss << "Invalid idx for the mixing space index " << idx << " where size is "
+           << m_mixingSpaces.size() << ".";
         throw Exception(ss.str().c_str());
     }
 
@@ -205,7 +204,7 @@ void MixingColorSpaceManagerImpl::setSelectedMixingSpaceIdx(size_t idx)
 
 void MixingColorSpaceManagerImpl::setSelectedMixingSpace(const char * mixingSpace)
 {
-    for (size_t idx = 0 ; idx < m_mixingSpaces.size(); ++idx)
+    for (size_t idx = 0; idx < m_mixingSpaces.size(); ++idx)
     {
         if (m_mixingSpaces[idx] == mixingSpace)
         {
@@ -225,9 +224,9 @@ bool MixingColorSpaceManagerImpl::isPerceptuallyUniform() const noexcept
     // (The limited options above allow us to hard-code for now.)
 
     // Only Display color spaces are perceptually linear.
-    // TODO: It's probably not always reasonable to assume the color_picking role is 
+    // TODO: It's probably not always reasonable to assume the color_picking role is
     // perceptually uniform.
-    return !m_colorPicker ? getSelectedMixingSpaceIdx()!=0 : true;
+    return !m_colorPicker ? getSelectedMixingSpaceIdx() != 0 : true;
 }
 
 size_t MixingColorSpaceManagerImpl::getNumMixingEncodings() const noexcept
@@ -243,8 +242,8 @@ const char * MixingColorSpaceManagerImpl::getMixingEncodingName(size_t idx) cons
     }
 
     std::stringstream ss;
-    ss << "Invalid mixing encoding index " << idx
-       << " where size is " << m_mixingEncodings.size() << ".";
+    ss << "Invalid mixing encoding index " << idx << " where size is " << m_mixingEncodings.size()
+       << ".";
 
     throw Exception(ss.str().c_str());
 }
@@ -259,8 +258,8 @@ void MixingColorSpaceManagerImpl::setSelectedMixingEncodingIdx(size_t idx)
     if (idx >= m_mixingEncodings.size())
     {
         std::stringstream ss;
-        ss << "Invalid idx for the mixing encoding index " << idx
-           << " where size is " << m_mixingEncodings.size() << ".";
+        ss << "Invalid idx for the mixing encoding index " << idx << " where size is "
+           << m_mixingEncodings.size() << ".";
         throw Exception(ss.str().c_str());
     }
 
@@ -269,7 +268,7 @@ void MixingColorSpaceManagerImpl::setSelectedMixingEncodingIdx(size_t idx)
 
 void MixingColorSpaceManagerImpl::setSelectedMixingEncoding(const char * mixingEncoding)
 {
-    for (size_t idx = 0 ; idx < m_mixingEncodings.size(); ++idx)
+    for (size_t idx = 0; idx < m_mixingEncodings.size(); ++idx)
     {
         if (m_mixingEncodings[idx] == mixingEncoding)
         {
@@ -283,11 +282,12 @@ void MixingColorSpaceManagerImpl::setSelectedMixingEncoding(const char * mixingE
     throw Exception(ss.str().c_str());
 }
 
-// Get a processor to convert from the working/rendering space to the mixing space 
+// Get a processor to convert from the working/rendering space to the mixing space
 // (using the RGB encoding rather than HSV).
-ConstProcessorRcPtr MixingColorSpaceManagerImpl::getProcessorWithoutEncoding(const char * workingName,
-                                                                             const char * displayName,
-                                                                             const char * viewName) const
+ConstProcessorRcPtr MixingColorSpaceManagerImpl::getProcessorWithoutEncoding(
+    const char * workingName,
+    const char * displayName,
+    const char * viewName) const
 {
     if (m_colorPicker)
     {
@@ -296,7 +296,7 @@ ConstProcessorRcPtr MixingColorSpaceManagerImpl::getProcessorWithoutEncoding(con
     }
     else
     {
-        if (getSelectedMixingSpaceIdx()>0)
+        if (getSelectedMixingSpaceIdx() > 0)
         {
             // Mix colors in the selected (display, view) space.
             auto dt = DisplayViewTransform::Create();
@@ -314,19 +314,19 @@ ConstProcessorRcPtr MixingColorSpaceManagerImpl::getProcessorWithoutEncoding(con
     }
 }
 
-ConstProcessorRcPtr MixingColorSpaceManagerImpl::getProcessor(const char * workingName,
-                                                              const char * displayName,
-                                                              const char * viewName,
-                                                              TransformDirection direction) const
+ConstProcessorRcPtr MixingColorSpaceManagerImpl::getProcessor(
+    const char * workingName,
+    const char * displayName,
+    const char * viewName,
+    TransformDirection direction) const
 {
     GroupTransformRcPtr group = GroupTransform::Create();
 
-    ConstProcessorRcPtr processor 
-        = getProcessorWithoutEncoding(workingName, displayName, viewName);
+    ConstProcessorRcPtr processor = getProcessorWithoutEncoding(workingName, displayName, viewName);
 
     group->appendTransform(processor->createGroupTransform());
 
-    if (getSelectedMixingEncodingIdx()==1)  // i.e. HSV
+    if (getSelectedMixingEncodingIdx() == 1) // i.e. HSV
     {
         FixedFunctionTransformRcPtr tr = FixedFunctionTransform::Create(FIXED_FUNCTION_RGB_TO_HSV);
 
@@ -341,8 +341,9 @@ MixingSlider & MixingColorSpaceManagerImpl::getSlider() noexcept
     return m_slider;
 }
 
-MixingSlider & MixingColorSpaceManagerImpl::getSlider(float sliderMixingMinEdge,
-                                                      float sliderMixingMaxEdge) noexcept
+MixingSlider & MixingColorSpaceManagerImpl::getSlider(
+    float sliderMixingMinEdge,
+    float sliderMixingMaxEdge) noexcept
 {
     m_slider.setSliderMinEdge(sliderMixingMinEdge);
     m_slider.setSliderMaxEdge(sliderMixingMaxEdge);

@@ -30,12 +30,13 @@ void OCIOProcessor::setSrcImg(OFX::Image * img)
     }
 }
 
-void OCIOProcessor::setTransform(OCIO::ContextRcPtr context,
-                                 OCIO::ConstTransformRcPtr transform,
-                                 OCIO::TransformDirection direction)
+void OCIOProcessor::setTransform(
+    OCIO::ContextRcPtr context,
+    OCIO::ConstTransformRcPtr transform,
+    OCIO::TransformDirection direction)
 {
     OCIO::ConstConfigRcPtr config = getOCIOConfig();
-    // Src and dst bit-depth always match, since 
+    // Src and dst bit-depth always match, since
     // kOfxImageEffectPropSupportsMultipleClipDepths is 0.
     OCIO::BitDepth bitDepth = getOCIOBitDepth(_srcImg->getPixelDepth());
 
@@ -44,13 +45,10 @@ void OCIOProcessor::setTransform(OCIO::ContextRcPtr context,
         // Throw if the transform is invalid
         transform->validate();
 
-        OCIO::ConstProcessorRcPtr proc = 
-            config->getProcessor(context, transform, direction);
+        OCIO::ConstProcessorRcPtr proc = config->getProcessor(context, transform, direction);
 
         // Build processor which optimizes for input and output bit-depth
-        _cpuProc = proc->getOptimizedCPUProcessor(
-            bitDepth, bitDepth, 
-            OCIO::OPTIMIZATION_DEFAULT);
+        _cpuProc = proc->getOptimizedCPUProcessor(bitDepth, bitDepth, OCIO::OPTIMIZATION_DEFAULT);
     }
     catch (const OCIO::Exception & e)
     {
@@ -64,16 +62,15 @@ void OCIOProcessor::multiThreadProcessImages(OfxRectI procWindow)
     // Inspect image buffer
     OCIO::BitDepth bitDepth = getOCIOBitDepth(_dstImg->getPixelDepth());
 
-    int numChannels = _dstImg->getPixelComponentCount();
+    int numChannels     = _dstImg->getPixelComponentCount();
     int chanStrideBytes = getChanStrideBytes(bitDepth);
-    int xStrideBytes = chanStrideBytes * numChannels;
-    int yStrideBytes = _dstImg->getRowBytes();
+    int xStrideBytes    = chanStrideBytes * numChannels;
+    int yStrideBytes    = _dstImg->getRowBytes();
 
     // Offset image address to processing window start
-    int begin = procWindow.y1 * yStrideBytes 
-              + procWindow.x1 * xStrideBytes;
-    int w = procWindow.x2 - procWindow.x1;
-    int h = procWindow.y2 - procWindow.y1;
+    int begin = procWindow.y1 * yStrideBytes + procWindow.x1 * xStrideBytes;
+    int w     = procWindow.x2 - procWindow.x1;
+    int h     = procWindow.y2 - procWindow.y1;
 
     char * srcData = static_cast<char *>(_srcImg->getPixelData());
     srcData += begin;
@@ -81,21 +78,25 @@ void OCIOProcessor::multiThreadProcessImages(OfxRectI procWindow)
     dstData += begin;
 
     // Wrap in OCIO image description, which doesn't take ownership of data
-    OCIO::PackedImageDesc srcImgDesc(srcData, 
-                                     w, h, 
-                                     numChannels, 
-                                     bitDepth,
-                                     chanStrideBytes,
-                                     xStrideBytes,
-                                     yStrideBytes);
+    OCIO::PackedImageDesc srcImgDesc(
+        srcData,
+        w,
+        h,
+        numChannels,
+        bitDepth,
+        chanStrideBytes,
+        xStrideBytes,
+        yStrideBytes);
 
-    OCIO::PackedImageDesc dstImgDesc(dstData, 
-                                     w, h, 
-                                     numChannels, 
-                                     bitDepth,
-                                     chanStrideBytes,
-                                     xStrideBytes,
-                                     yStrideBytes);
+    OCIO::PackedImageDesc dstImgDesc(
+        dstData,
+        w,
+        h,
+        numChannels,
+        bitDepth,
+        chanStrideBytes,
+        xStrideBytes,
+        yStrideBytes);
 
     // Apply processor on CPU
     _cpuProc->apply(srcImgDesc, dstImgDesc);

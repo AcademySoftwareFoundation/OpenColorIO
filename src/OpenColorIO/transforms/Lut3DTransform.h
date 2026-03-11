@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_LUT3DTRANSFORM_H
 #define INCLUDED_OCIO_LUT3DTRANSFORM_H
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/lut3d/Lut3DOpData.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -18,9 +16,9 @@ class Lut3DTransformImpl : public Lut3DTransform
 public:
     Lut3DTransformImpl();
     explicit Lut3DTransformImpl(unsigned long gridSize);
-    Lut3DTransformImpl(const Lut3DTransformImpl &) = delete;
-    Lut3DTransformImpl& operator=(const Lut3DTransformImpl &) = delete;
-    virtual ~Lut3DTransformImpl() = default;
+    Lut3DTransformImpl(const Lut3DTransformImpl &)             = delete;
+    Lut3DTransformImpl & operator=(const Lut3DTransformImpl &) = delete;
+    virtual ~Lut3DTransformImpl()                              = default;
 
     TransformRcPtr createEditableCopy() const override;
 
@@ -40,14 +38,20 @@ public:
     unsigned long getGridSize() const override;
     void setGridSize(unsigned long gridSize) override;
 
-    void getValue(unsigned long indexR,
-                  unsigned long indexG,
-                  unsigned long indexB,
-                  float & r, float & g, float & b) const override;
-    void setValue(unsigned long indexR,
-                  unsigned long indexG,
-                  unsigned long indexB,
-                  float r, float g, float b) override;
+    void getValue(
+        unsigned long indexR,
+        unsigned long indexG,
+        unsigned long indexB,
+        float & r,
+        float & g,
+        float & b) const override;
+    void setValue(
+        unsigned long indexR,
+        unsigned long indexG,
+        unsigned long indexB,
+        float r,
+        float g,
+        float b) override;
 
     Interpolation getInterpolation() const override;
     void setInterpolation(Interpolation algo) override;
@@ -61,7 +65,6 @@ private:
     Lut3DOpData m_data;
 };
 
-
 } // namespace OCIO_NAMESPACE
 
-#endif  // INCLUDED_OCIO_LUT3DTRANSFORM_H
+#endif // INCLUDED_OCIO_LUT3DTRANSFORM_H

@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_GRADINGHUECURVE_H
 #define INCLUDED_OCIO_GRADINGHUECURVE_H
-
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -29,7 +27,7 @@ public:
         ConstGradingBSplineCurveRcPtr satSat,
         ConstGradingBSplineCurveRcPtr lumLum,
         ConstGradingBSplineCurveRcPtr satLum,
-        ConstGradingBSplineCurveRcPtr hueFx );
+        ConstGradingBSplineCurveRcPtr hueFx);
     GradingHueCurveImpl(const ConstGradingHueCurveRcPtr & rhs);
 
     GradingHueCurveRcPtr createEditableCopy() const override;
@@ -52,8 +50,14 @@ public:
     static const GradingBSplineCurveImpl DefaultLumLum;
     static const GradingBSplineCurveImpl DefaultLumLumLin;
 
-    static const std::array<std::reference_wrapper<const GradingBSplineCurveImpl>, static_cast<size_t>(HUE_NUM_CURVES)> DefaultCurvesLin;
-    static const std::array<std::reference_wrapper<const GradingBSplineCurveImpl>, static_cast<size_t>(HUE_NUM_CURVES)> DefaultCurves;
+    static const std::array<
+        std::reference_wrapper<const GradingBSplineCurveImpl>,
+        static_cast<size_t>(HUE_NUM_CURVES)>
+        DefaultCurvesLin;
+    static const std::array<
+        std::reference_wrapper<const GradingBSplineCurveImpl>,
+        static_cast<size_t>(HUE_NUM_CURVES)>
+        DefaultCurves;
 
 private:
     bool isHueCurveTypeValid(HueCurveType c) const;
@@ -65,6 +69,6 @@ private:
 typedef OCIO_SHARED_PTR<const GradingHueCurveImpl> ConstHueCurveImplRcPtr;
 typedef OCIO_SHARED_PTR<GradingHueCurveImpl> HueCurveImplRcPtr;
 
-}
+} // namespace OCIO_NAMESPACE
 
-#endif //INCLUDED_OCIO_GRADINGHUECURVE_H
+#endif // INCLUDED_OCIO_GRADINGHUECURVE_H

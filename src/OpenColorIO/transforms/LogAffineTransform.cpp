@@ -17,7 +17,7 @@ LogAffineTransformRcPtr LogAffineTransform::Create()
     return LogAffineTransformRcPtr(new LogAffineTransformImpl(), &LogAffineTransformImpl::deleter);
 }
 
-void LogAffineTransformImpl::deleter(LogAffineTransform* t)
+void LogAffineTransformImpl::deleter(LogAffineTransform * t)
 {
     delete static_cast<LogAffineTransformImpl *>(t);
 }
@@ -29,8 +29,8 @@ LogAffineTransformImpl::LogAffineTransformImpl()
 
 TransformRcPtr LogAffineTransformImpl::createEditableCopy() const
 {
-    LogAffineTransformRcPtr transform = LogAffineTransform::Create();
-    dynamic_cast<LogAffineTransformImpl*>(transform.get())->data() = data();
+    LogAffineTransformRcPtr transform                               = LogAffineTransform::Create();
+    dynamic_cast<LogAffineTransformImpl *>(transform.get())->data() = data();
     return transform;
 }
 
@@ -71,8 +71,9 @@ const FormatMetadata & LogAffineTransformImpl::getFormatMetadata() const noexcep
 
 bool LogAffineTransformImpl::equals(const LogAffineTransform & other) const noexcept
 {
-    if (this == &other) return true;
-    return data() == dynamic_cast<const LogAffineTransformImpl*>(&other)->data();
+    if (this == &other)
+        return true;
+    return data() == dynamic_cast<const LogAffineTransformImpl *>(&other)->data();
 }
 
 void LogAffineTransformImpl::setBase(double base) noexcept
@@ -85,41 +86,41 @@ double LogAffineTransformImpl::getBase() const noexcept
     return data().getBase();
 }
 
-void LogAffineTransformImpl::setLogSideSlopeValue(const double(&values)[3]) noexcept
+void LogAffineTransformImpl::setLogSideSlopeValue(const double (&values)[3]) noexcept
 {
     data().setValue(LOG_SIDE_SLOPE, values);
 }
-void LogAffineTransformImpl::setLogSideOffsetValue(const double(&values)[3]) noexcept
+void LogAffineTransformImpl::setLogSideOffsetValue(const double (&values)[3]) noexcept
 {
     data().setValue(LOG_SIDE_OFFSET, values);
 }
-void LogAffineTransformImpl::setLinSideSlopeValue(const double(&values)[3]) noexcept
+void LogAffineTransformImpl::setLinSideSlopeValue(const double (&values)[3]) noexcept
 {
     data().setValue(LIN_SIDE_SLOPE, values);
 }
-void LogAffineTransformImpl::setLinSideOffsetValue(const double(&values)[3]) noexcept
+void LogAffineTransformImpl::setLinSideOffsetValue(const double (&values)[3]) noexcept
 {
     data().setValue(LIN_SIDE_OFFSET, values);
 }
 
-void LogAffineTransformImpl::getLogSideSlopeValue(double(&values)[3]) const noexcept
+void LogAffineTransformImpl::getLogSideSlopeValue(double (&values)[3]) const noexcept
 {
     data().getValue(LOG_SIDE_SLOPE, values);
 }
-void LogAffineTransformImpl::getLogSideOffsetValue(double(&values)[3]) const noexcept
+void LogAffineTransformImpl::getLogSideOffsetValue(double (&values)[3]) const noexcept
 {
     data().getValue(LOG_SIDE_OFFSET, values);
 }
-void LogAffineTransformImpl::getLinSideSlopeValue(double(&values)[3]) const noexcept
+void LogAffineTransformImpl::getLinSideSlopeValue(double (&values)[3]) const noexcept
 {
     data().getValue(LIN_SIDE_SLOPE, values);
 }
-void LogAffineTransformImpl::getLinSideOffsetValue(double(&values)[3]) const noexcept
+void LogAffineTransformImpl::getLinSideOffsetValue(double (&values)[3]) const noexcept
 {
     data().getValue(LIN_SIDE_OFFSET, values);
 }
 
-std::ostream & operator<< (std::ostream & os, const LogAffineTransform & t)
+std::ostream & operator<<(std::ostream & os, const LogAffineTransform & t)
 {
     os << "<LogAffineTransform";
     os << " direction=" << TransformDirectionToString(t.getDirection());
@@ -139,4 +140,3 @@ std::ostream & operator<< (std::ostream & os, const LogAffineTransform & t)
 }
 
 } // namespace OCIO_NAMESPACE
-

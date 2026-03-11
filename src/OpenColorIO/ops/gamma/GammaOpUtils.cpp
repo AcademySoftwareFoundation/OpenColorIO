@@ -53,8 +53,8 @@ double monCurveSlopeFwd(const GammaOpData::Params & p)
     // Slope of the linear segment.
     const double gamma  = std::max(p[0], 1. + EPS);
     const double offset = std::max(p[1], EPS);
-    const double a = (gamma - 1.) / offset;
-    const double b = offset * gamma / (( gamma - 1.) * ( 1. + offset));
+    const double a      = (gamma - 1.) / offset;
+    const double b      = offset * gamma / ((gamma - 1.) * (1. + offset));
     return a * pow(b, gamma);
 }
 
@@ -82,17 +82,17 @@ double monCurveBreakRev(const GammaOpData::Params & p)
 {
     const double gamma  = std::max(p[0], 1. + EPS);
     const double offset = std::max(p[1], EPS);
-    const double a = offset * gamma;
-    const double b = (gamma - 1.) * (1. + offset);
-    return pow( a / b, gamma );
+    const double a      = offset * gamma;
+    const double b      = (gamma - 1.) * (1. + offset);
+    return pow(a / b, gamma);
 }
 
 double monCurveSlopeRev(const GammaOpData::Params & p)
 {
     const double gamma  = std::max(p[0], 1. + EPS);
     const double offset = std::max(p[1], EPS);
-    const double a = (gamma - 1.) / offset;
-    const double b = (1. + offset) / gamma;
+    const double a      = (gamma - 1.) / offset;
+    const double b      = (1. + offset) / gamma;
     return pow(a, gamma - 1.) * pow(b, gamma);
 }
 
@@ -102,12 +102,9 @@ double monCurveScaleRev(const GammaOpData::Params & p)
     return 1. + offset;
 }
 
+}; // namespace
 
-
-};
-
-void ComputeParamsFwd(const GammaOpData::Params & gParams,
-                      RendererParams & rParams)
+void ComputeParamsFwd(const GammaOpData::Params & gParams, RendererParams & rParams)
 {
     rParams.gamma    = float(monCurveGammaFwd(gParams));
     rParams.offset   = float(monCurveOffsetFwd(gParams));
@@ -116,8 +113,7 @@ void ComputeParamsFwd(const GammaOpData::Params & gParams,
     rParams.scale    = float(monCurveScaleFwd(gParams));
 }
 
-void ComputeParamsRev(const GammaOpData::Params & gParams,
-                      RendererParams & rParams)
+void ComputeParamsRev(const GammaOpData::Params & gParams, RendererParams & rParams)
 {
     rParams.gamma    = float(monCurveGammaRev(gParams));
     rParams.offset   = float(monCurveOffsetRev(gParams));
@@ -127,4 +123,3 @@ void ComputeParamsRev(const GammaOpData::Params & gParams,
 }
 
 } // namespace OCIO_NAMESPACE
-

@@ -8,16 +8,13 @@
 
 namespace OCIO_NAMESPACE
 {
-void EvalTransform(const float * in,
-                    float * out,
-                    long numPixels,
-                    OpRcPtrVec & ops)
+void EvalTransform(const float * in, float * out, long numPixels, OpRcPtrVec & ops)
 {
     std::vector<float> tmp(numPixels * 4);
 
     // Render the LUT entries (domain) through the ops.
     const float * values = in;
-    for (long idx = 0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         tmp[4 * idx + 0] = values[0];
         tmp[4 * idx + 1] = values[1];
@@ -30,13 +27,13 @@ void EvalTransform(const float * in,
     ops.finalize();
     ops.optimize(OPTIMIZATION_NONE);
 
-    for (OpRcPtrVec::size_type i = 0, size = ops.size(); i<size; ++i)
+    for (OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
     {
         ops[i]->apply(&tmp[0], &tmp[0], numPixels);
     }
 
     float * result = out;
-    for (long idx = 0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         result[0] = tmp[4 * idx + 0];
         result[1] = tmp[4 * idx + 1];

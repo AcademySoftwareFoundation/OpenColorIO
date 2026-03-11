@@ -12,24 +12,25 @@ namespace OCIO_NAMESPACE
 
 GradingHueCurveTransformRcPtr GradingHueCurveTransform::Create(GradingStyle style)
 {
-    return GradingHueCurveTransformRcPtr(new GradingHueCurveTransformImpl(style),
-                                         &GradingHueCurveTransformImpl::deleter);
+    return GradingHueCurveTransformRcPtr(
+        new GradingHueCurveTransformImpl(style),
+        &GradingHueCurveTransformImpl::deleter);
 }
 
-GradingHueCurveTransformImpl::GradingHueCurveTransformImpl(GradingStyle style) :
-   m_data(style)
+GradingHueCurveTransformImpl::GradingHueCurveTransformImpl(GradingStyle style)
+    : m_data(style)
 {
 }
 
-void GradingHueCurveTransformImpl::deleter(GradingHueCurveTransform* t)
+void GradingHueCurveTransformImpl::deleter(GradingHueCurveTransform * t)
 {
-    delete static_cast<GradingHueCurveTransformImpl*>(t);
+    delete static_cast<GradingHueCurveTransformImpl *>(t);
 }
 
 TransformRcPtr GradingHueCurveTransformImpl::createEditableCopy() const
 {
     GradingHueCurveTransformRcPtr transform = GradingHueCurveTransform::Create(getStyle());
-    dynamic_cast<GradingHueCurveTransformImpl*>(transform.get())->data() = data();
+    dynamic_cast<GradingHueCurveTransformImpl *>(transform.get())->data() = data();
     return transform;
 }
 
@@ -50,7 +51,7 @@ void GradingHueCurveTransformImpl::validate() const
         Transform::validate();
         data().validate();
     }
-    catch(Exception & ex)
+    catch (Exception & ex)
     {
         std::string errMsg("GradingHueCurveTransform validation failed: ");
         errMsg += ex.what();
@@ -72,8 +73,9 @@ const FormatMetadata & GradingHueCurveTransformImpl::getFormatMetadata() const n
 
 bool GradingHueCurveTransformImpl::equals(const GradingHueCurveTransform & other) const noexcept
 {
-    if (this == &other) return true;
-    return data() == dynamic_cast<const GradingHueCurveTransformImpl*>(&other)->data();
+    if (this == &other)
+        return true;
+    return data() == dynamic_cast<const GradingHueCurveTransformImpl *>(&other)->data();
 }
 
 GradingStyle GradingHueCurveTransformImpl::getStyle() const noexcept
@@ -136,7 +138,7 @@ void GradingHueCurveTransformImpl::makeNonDynamic() noexcept
     data().getDynamicPropertyInternal()->makeNonDynamic();
 }
 
-std::ostream& operator<< (std::ostream & os, const GradingHueCurveTransform & t) noexcept
+std::ostream & operator<<(std::ostream & os, const GradingHueCurveTransform & t) noexcept
 {
     os << "<GradingHueCurveTransform ";
     os << "direction=" << TransformDirectionToString(t.getDirection());

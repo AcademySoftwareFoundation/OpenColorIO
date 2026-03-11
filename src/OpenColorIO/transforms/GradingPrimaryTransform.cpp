@@ -12,8 +12,9 @@ namespace OCIO_NAMESPACE
 
 GradingPrimaryTransformRcPtr GradingPrimaryTransform::Create(GradingStyle style)
 {
-    return GradingPrimaryTransformRcPtr(new GradingPrimaryTransformImpl(style),
-                                        &GradingPrimaryTransformImpl::deleter);
+    return GradingPrimaryTransformRcPtr(
+        new GradingPrimaryTransformImpl(style),
+        &GradingPrimaryTransformImpl::deleter);
 }
 
 GradingPrimaryTransformImpl::GradingPrimaryTransformImpl(GradingStyle style)
@@ -29,7 +30,7 @@ void GradingPrimaryTransformImpl::deleter(GradingPrimaryTransform * t)
 TransformRcPtr GradingPrimaryTransformImpl::createEditableCopy() const
 {
     GradingPrimaryTransformRcPtr transform = GradingPrimaryTransform::Create(getStyle());
-    dynamic_cast<GradingPrimaryTransformImpl*>(transform.get())->data() = data();
+    dynamic_cast<GradingPrimaryTransformImpl *>(transform.get())->data() = data();
     return transform;
 }
 
@@ -50,7 +51,7 @@ void GradingPrimaryTransformImpl::validate() const
         Transform::validate();
         data().validate();
     }
-    catch(Exception & ex)
+    catch (Exception & ex)
     {
         std::string errMsg("GradingPrimaryTransform validation failed: ");
         errMsg += ex.what();
@@ -68,11 +69,11 @@ const FormatMetadata & GradingPrimaryTransformImpl::getFormatMetadata() const no
     return data().getFormatMetadata();
 }
 
-
 bool GradingPrimaryTransformImpl::equals(const GradingPrimaryTransform & other) const noexcept
 {
-    if (this == &other) return true;
-    return data() == dynamic_cast<const GradingPrimaryTransformImpl*>(&other)->data();
+    if (this == &other)
+        return true;
+    return data() == dynamic_cast<const GradingPrimaryTransformImpl *>(&other)->data();
 }
 
 GradingStyle GradingPrimaryTransformImpl::getStyle() const noexcept
@@ -110,7 +111,7 @@ void GradingPrimaryTransformImpl::makeNonDynamic() noexcept
     data().getDynamicPropertyInternal()->makeNonDynamic();
 }
 
-std::ostream& operator<< (std::ostream & os, const GradingPrimaryTransform & t) noexcept
+std::ostream & operator<<(std::ostream & os, const GradingPrimaryTransform & t) noexcept
 {
     os << "<GradingPrimaryTransform ";
     os << "direction=" << TransformDirectionToString(t.getDirection());
@@ -126,25 +127,25 @@ std::ostream& operator<< (std::ostream & os, const GradingPrimaryTransform & t) 
 
 std::ostream & operator<<(std::ostream & os, const GradingRGBM & rgbm)
 {
-    os << "<r=" << rgbm.m_red << ", g=" << rgbm.m_green
-       << ", b=" << rgbm.m_blue << ", m=" << rgbm.m_master << ">";
+    os << "<r=" << rgbm.m_red << ", g=" << rgbm.m_green << ", b=" << rgbm.m_blue
+       << ", m=" << rgbm.m_master << ">";
     return os;
 }
 
 std::ostream & operator<<(std::ostream & os, const GradingPrimary & prim)
 {
-    os << "<brightness="   << prim.m_brightness;
-    os << ", contrast="     << prim.m_contrast  ;
-    os << ", gamma="        << prim.m_gamma     ;
-    os << ", offset="       << prim.m_offset    ;
-    os << ", exposure="     << prim.m_exposure  ;
-    os << ", lift="         << prim.m_lift      ;
-    os << ", gain="         << prim.m_gain      ;
-    os << ", saturation="   << prim.m_saturation;
-    os << ", pivot=<contrast=" << prim.m_pivot     ;
-    os <<         ", black="   << prim.m_pivotBlack;
-    os <<         ", white="   << prim.m_pivotWhite;
-    os <<         ">";
+    os << "<brightness=" << prim.m_brightness;
+    os << ", contrast=" << prim.m_contrast;
+    os << ", gamma=" << prim.m_gamma;
+    os << ", offset=" << prim.m_offset;
+    os << ", exposure=" << prim.m_exposure;
+    os << ", lift=" << prim.m_lift;
+    os << ", gain=" << prim.m_gain;
+    os << ", saturation=" << prim.m_saturation;
+    os << ", pivot=<contrast=" << prim.m_pivot;
+    os << ", black=" << prim.m_pivotBlack;
+    os << ", white=" << prim.m_pivotWhite;
+    os << ">";
     if (prim.m_clampBlack != GradingPrimary::NoClampBlack())
     {
         os << ", clampBlack=" << prim.m_clampBlack;

@@ -66,6 +66,9 @@ assistance.
 
 * Check if it successfully compiles and passes all unit tests
 
+* Check if your code is properly formatted using `clang-format`
+  (see :ref:`coding-style-guide` for more details)
+
 * Commit your changes. The ``-s`` option will sign-off your commit, which is 
   a requirement for contributing to OpenColorIO. Every commit MUST be 
   signed-off by someone authorized to contribute under a current ICLA or CCLA::

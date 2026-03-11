@@ -539,3 +539,71 @@ install(
     FILES "${OCIO_PROJECT_CONFIG}" "${OCIO_VERSION_CONFIG}"
     DESTINATION "${OCIO_CONFIG_INSTALL_DIR}"
 )
+
+
+###########################################################################
+# Setup clang-format custom target (based on OpenImageIO).
+# Note: skip all of this checking, setup, and cmake-format target if this
+# is being built as a subproject.
+
+if (PROJECT_IS_TOP_LEVEL)
+    set (CLANG_FORMAT_EXE_HINT "" CACHE PATH "clang-format executable's directory (will search if not specified")
+    set (CLANG_FORMAT_INCLUDES
+        "include/*.h"
+        "src/*.h"
+        "src/*.cpp"
+        # Not enabled for now, requires a lot of code annotation
+        # to protect the test cases data.
+        # "tests/*.h"
+        # "tests/*.cpp"
+        "vendor/openfx/*.h"
+        "vendor/openfx/*.cpp"
+        CACHE STRING "Glob patterns to include for clang-format"
+    )
+    set (CLANG_FORMAT_EXCLUDES
+        # clang-format complains about Objective-C
+        "msl.h"
+        # SIMD headers have unusual formating we want to preserve
+        "src/OpenColorIO/AVX.h"
+        "src/OpenColorIO/AVX2.h"
+        "src/OpenColorIO/AVX512.h"
+        "src/OpenColorIO/SSE.h"
+        "src/OpenColorIO/SSE2.h"
+        # Ignore vendored in OpenFX support library
+        "vendor/openfx/Support/*"
+        CACHE STRING "Glob patterns to exclude for clang-format"
+    )
+
+    find_program (CLANG_FORMAT_EXE
+        NAMES clang-format bin/clang-format
+        HINTS ${CLANG_FORMAT_EXE_HINT}
+        ENV CLANG_FORMAT_EXE_HINT
+        ENV LLVM_DIRECTORY
+        NO_DEFAULT_PATH
+        DOC "Path to clang-format executable"
+    )
+    find_program (CLANG_FORMAT_EXE
+        NAMES clang-format bin/clang-format
+    )
+
+    if (CLANG_FORMAT_EXE)
+        message (STATUS "clang-format found: ${CLANG_FORMAT_EXE}")
+
+        # Start with the list of files to include when formatting...
+        file (GLOB_RECURSE FILES_TO_FORMAT ${CLANG_FORMAT_INCLUDES})
+        # ... then process any list of excludes we are given
+        foreach (_pat ${CLANG_FORMAT_EXCLUDES})
+            file (GLOB_RECURSE _excl ${_pat})
+            list (REMOVE_ITEM FILES_TO_FORMAT ${_excl})
+        endforeach ()
+
+        file (COPY
+            ${CMAKE_CURRENT_SOURCE_DIR}/.clang-format
+            DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+        add_custom_target (clang-format
+            COMMAND "${CLANG_FORMAT_EXE}" --verbose -i -style=file ${FILES_TO_FORMAT} )
+    else ()
+        message (STATUS "clang-format not found.")
+    endif ()
+endif ()
