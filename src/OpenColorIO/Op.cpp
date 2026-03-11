@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <cstring>
+#include <string>
 #include <sstream>
-
-#include <pystring.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -473,16 +471,14 @@ std::ostream& operator<< (std::ostream & os, const Op & op)
 std::string SerializeOpVec(const OpRcPtrVec & ops, int indent)
 {
     std::ostringstream oss;
+    const std::string indentStr(indent, ' ');
 
-    for (OpRcPtrVec::size_type idx = 0, size = ops.size(); idx < size; ++idx)
+    OpRcPtrVec::size_type idx = 0;
+    for (const auto & op : ops)
     {
-        const OpRcPtr & op = ops[idx];
-
-        oss << pystring::mul(" ", indent);
-        oss << "Op " << idx << ": " << *op << " ";
-        oss << op->getCacheID();
-
-        oss << "\n";
+        oss << indentStr << "Op " << idx << ": " << *op << " "
+            << op->getCacheID() << "\n";
+        ++idx;
     }
 
     return oss.str();
