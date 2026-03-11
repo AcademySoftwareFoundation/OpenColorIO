@@ -2,23 +2,21 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <cstring>
+#include <map>
 #include <sstream>
 #include <vector>
-#include <map>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "TokensManager.h"
 #include "Platform.h"
 #include "PrivateTypes.h"
+#include "TokensManager.h"
 #include "utils/StringUtils.h"
-
 
 namespace
 {
-const std::array<const std::string, 2> knownInterchangeNames = {
-    "amf_transform_ids",
-    "icc_profile_name" };
+const std::array<const std::string, 2> knownInterchangeNames
+    = {"amf_transform_ids", "icc_profile_name"};
 }
 
 namespace OCIO_NAMESPACE
@@ -36,19 +34,19 @@ public:
     StringUtils::StringVec m_aliases;
     std::map<std::string, std::string> m_interchangeAttribs;
 
-    BitDepth m_bitDepth{ BIT_DEPTH_UNKNOWN };
-    bool m_isData{ false };
+    BitDepth m_bitDepth{BIT_DEPTH_UNKNOWN};
+    bool m_isData{false};
 
-    ReferenceSpaceType m_referenceSpaceType{ REFERENCE_SPACE_SCENE };
+    ReferenceSpaceType m_referenceSpaceType{REFERENCE_SPACE_SCENE};
 
-    Allocation m_allocation{ ALLOCATION_UNIFORM };
+    Allocation m_allocation{ALLOCATION_UNIFORM};
     std::vector<float> m_allocationVars;
 
     TransformRcPtr m_toRefTransform;
     TransformRcPtr m_fromRefTransform;
 
-    bool m_toRefSpecified{ false };
-    bool m_fromRefSpecified{ false };
+    bool m_toRefSpecified{false};
+    bool m_fromRefSpecified{false};
 
     TokensManager m_categories;
 
@@ -62,41 +60,38 @@ public:
 
     ~Impl() = default;
 
-    Impl& operator= (const Impl & rhs)
+    Impl & operator=(const Impl & rhs)
     {
         if (this != &rhs)
         {
-            m_name = rhs.m_name;
-            m_aliases = rhs.m_aliases;
-            m_family = rhs.m_family;
-            m_equalityGroup = rhs.m_equalityGroup;
-            m_description = rhs.m_description;
-            m_encoding = rhs.m_encoding;
-            m_interopID = rhs.m_interopID;
-            m_interchangeAttribs= rhs.m_interchangeAttribs;
-            m_bitDepth = rhs.m_bitDepth;
-            m_isData = rhs.m_isData;
+            m_name               = rhs.m_name;
+            m_aliases            = rhs.m_aliases;
+            m_family             = rhs.m_family;
+            m_equalityGroup      = rhs.m_equalityGroup;
+            m_description        = rhs.m_description;
+            m_encoding           = rhs.m_encoding;
+            m_interopID          = rhs.m_interopID;
+            m_interchangeAttribs = rhs.m_interchangeAttribs;
+            m_bitDepth           = rhs.m_bitDepth;
+            m_isData             = rhs.m_isData;
             m_referenceSpaceType = rhs.m_referenceSpaceType;
-            m_allocation = rhs.m_allocation;
-            m_allocationVars = rhs.m_allocationVars;
+            m_allocation         = rhs.m_allocation;
+            m_allocationVars     = rhs.m_allocationVars;
 
-            m_toRefTransform = rhs.m_toRefTransform?
-                rhs.m_toRefTransform->createEditableCopy()
-                : rhs.m_toRefTransform;
+            m_toRefTransform = rhs.m_toRefTransform ? rhs.m_toRefTransform->createEditableCopy()
+                                                    : rhs.m_toRefTransform;
 
-            m_fromRefTransform = rhs.m_fromRefTransform?
-                rhs.m_fromRefTransform->createEditableCopy()
-                : rhs.m_fromRefTransform;
+            m_fromRefTransform = rhs.m_fromRefTransform
+                                     ? rhs.m_fromRefTransform->createEditableCopy()
+                                     : rhs.m_fromRefTransform;
 
-            m_toRefSpecified = rhs.m_toRefSpecified;
+            m_toRefSpecified   = rhs.m_toRefSpecified;
             m_fromRefSpecified = rhs.m_fromRefSpecified;
-            m_categories = rhs.m_categories;
+            m_categories       = rhs.m_categories;
         }
         return *this;
     }
-
 };
-
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -105,7 +100,7 @@ ColorSpaceRcPtr ColorSpace::Create()
     return ColorSpaceRcPtr(new ColorSpace(REFERENCE_SPACE_SCENE), &deleter);
 }
 
-void ColorSpace::deleter(ColorSpace* c)
+void ColorSpace::deleter(ColorSpace * c)
 {
     delete c;
 }
@@ -117,7 +112,7 @@ ColorSpaceRcPtr ColorSpace::Create(ReferenceSpaceType referenceSpace)
 }
 
 ColorSpace::ColorSpace(ReferenceSpaceType referenceSpace)
-: m_impl(new ColorSpace::Impl(referenceSpace))
+    : m_impl(new ColorSpace::Impl(referenceSpace))
 {
 }
 
@@ -130,7 +125,7 @@ ColorSpace::~ColorSpace()
 ColorSpaceRcPtr ColorSpace::createEditableCopy() const
 {
     ColorSpaceRcPtr cs = ColorSpace::Create();
-    *cs->m_impl = *m_impl;
+    *cs->m_impl        = *m_impl;
     return cs;
 }
 
@@ -190,7 +185,7 @@ void ColorSpace::removeAlias(const char * name) noexcept
 {
     if (name && *name)
     {
-        const std::string alias{ name };
+        const std::string alias{name};
         StringUtils::Remove(getImpl()->m_aliases, alias);
     }
 }
@@ -238,66 +233,69 @@ const char * ColorSpace::getInteropID() const noexcept
 void ColorSpace::setInteropID(const char * interopID)
 {
     std::string id = interopID ? interopID : "";
-    
+
     if (!id.empty())
     {
-        // check if it only uses ASCII characters: 0-9, a-z, and the following characters (no spaces):
-        // . - _ ~ / * # % ^ + ( ) [ ] |
-        auto allowed = [](char c)
-        {
-            return  (c >= '0' && c <= '9')||
-                    (c >= 'a' && c <= 'z')||
-                    c=='.'||c=='-'||c=='_'||c=='~'||c=='/'||c=='*'||c=='#'||c=='%'||
-                    c=='^'||c=='+'||c=='('||c==')'||c=='['||c==']'||c=='|'||c==':';
+        // check if it only uses ASCII characters: 0-9, a-z, and the following characters (no
+        // spaces): . - _ ~ / * # % ^ + ( ) [ ] |
+        auto allowed = [](char c) {
+            return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || c == '.' || c == '-'
+                   || c == '_' || c == '~' || c == '/' || c == '*' || c == '#' || c == '%'
+                   || c == '^' || c == '+' || c == '(' || c == ')' || c == '[' || c == ']'
+                   || c == '|' || c == ':';
         };
 
-        if (!std::all_of(id.begin(), id.end(), allowed)) 
+        if (!std::all_of(id.begin(), id.end(), allowed))
         {
             std::ostringstream oss;
-            oss << "InteropID '" << id << "' contains invalid characters. "
-                "Only lowercase a-z, 0-9 and . - _ ~ / * # % ^ + ( ) [ ] | are allowed." << 
-                std::endl;
+            oss << "InteropID '" << id
+                << "' contains invalid characters. "
+                   "Only lowercase a-z, 0-9 and . - _ ~ / * # % ^ + ( ) [ ] | are allowed."
+                << std::endl;
             throw Exception(oss.str().c_str());
         }
 
         // Check if has a namespace.
         size_t pos = id.find(':');
-        if (pos != std::string::npos) 
+        if (pos != std::string::npos)
         {
             // Namespace found, split into namespace and color space.
             std::string ns = id.substr(0, pos);
-            std::string cs = id.substr(pos+1);
-        
+            std::string cs = id.substr(pos + 1);
+
             // both should be non-empty
-            if (ns.empty() || cs.empty()) 
+            if (ns.empty() || cs.empty())
             {
                 std::ostringstream oss;
-                oss << "InteropID '" << id << "' is not valid. "
-                    "If ':' is used, both the namespace and the color space parts must be non-empty." <<
-                    std::endl;
+                oss << "InteropID '" << id
+                    << "' is not valid. "
+                       "If ':' is used, both the namespace and the color space parts must be "
+                       "non-empty."
+                    << std::endl;
                 throw Exception(oss.str().c_str());
             }
 
             // More than one ':' is an error.
-            if (cs.find(':') != std::string::npos) 
+            if (cs.find(':') != std::string::npos)
             {
                 std::ostringstream oss;
-                oss << "ERROR: InteropID '" << id << "' is not valid. "
-                    "Only one ':' is allowed to separate the namespace and the color space." << 
-                    std::endl;
+                oss << "ERROR: InteropID '" << id
+                    << "' is not valid. "
+                       "Only one ':' is allowed to separate the namespace and the color space."
+                    << std::endl;
                 throw Exception(oss.str().c_str());
             }
         }
     }
-    
+
     getImpl()->m_interopID = id;
 }
 
-const char * ColorSpace::getInterchangeAttribute(const char* attrName) const
+const char * ColorSpace::getInterchangeAttribute(const char * attrName) const
 {
     std::string name = attrName ? attrName : "";
 
-    for (auto& key : knownInterchangeNames)
+    for (auto & key : knownInterchangeNames)
     {
         // do case-insensitive comparison.
         if (StringUtils::Compare(key, name))
@@ -316,11 +314,11 @@ const char * ColorSpace::getInterchangeAttribute(const char* attrName) const
     throw Exception(oss.str().c_str());
 }
 
-void ColorSpace::setInterchangeAttribute(const char* attrName, const char* value)
+void ColorSpace::setInterchangeAttribute(const char * attrName, const char * value)
 {
     std::string name = attrName ? attrName : "";
 
-    for (auto& key : knownInterchangeNames)
+    for (auto & key : knownInterchangeNames)
     {
         // Do case-insensitive comparison.
         if (StringUtils::Compare(key, name))
@@ -329,7 +327,7 @@ void ColorSpace::setInterchangeAttribute(const char* attrName, const char* value
             if (!value || !*value)
             {
                 m_impl->m_interchangeAttribs.erase(key);
-            } 
+            }
             else
             {
                 m_impl->m_interchangeAttribs[key] = value;
@@ -430,11 +428,12 @@ int ColorSpace::getAllocationNumVars() const
 
 void ColorSpace::getAllocationVars(float * vars) const
 {
-    if(!getImpl()->m_allocationVars.empty())
+    if (!getImpl()->m_allocationVars.empty())
     {
-        memcpy(vars,
+        memcpy(
+            vars,
             &getImpl()->m_allocationVars[0],
-            getImpl()->m_allocationVars.size()*sizeof(float));
+            getImpl()->m_allocationVars.size() * sizeof(float));
     }
 }
 
@@ -442,11 +441,9 @@ void ColorSpace::setAllocationVars(int numvars, const float * vars)
 {
     getImpl()->m_allocationVars.resize(numvars);
 
-    if(!getImpl()->m_allocationVars.empty())
+    if (!getImpl()->m_allocationVars.empty())
     {
-        memcpy(&getImpl()->m_allocationVars[0],
-            vars,
-            numvars*sizeof(float));
+        memcpy(&getImpl()->m_allocationVars[0], vars, numvars * sizeof(float));
     }
 }
 
@@ -454,32 +451,32 @@ ConstTransformRcPtr ColorSpace::getTransform(ColorSpaceDirection dir) const noex
 {
     switch (dir)
     {
-    case COLORSPACE_DIR_TO_REFERENCE:
-        return getImpl()->m_toRefTransform;
-    case COLORSPACE_DIR_FROM_REFERENCE:
-        return getImpl()->m_fromRefTransform;
+        case COLORSPACE_DIR_TO_REFERENCE:
+            return getImpl()->m_toRefTransform;
+        case COLORSPACE_DIR_FROM_REFERENCE:
+            return getImpl()->m_fromRefTransform;
     }
     return ConstTransformRcPtr();
 }
 
-void ColorSpace::setTransform(const ConstTransformRcPtr & transform,
-                                ColorSpaceDirection dir)
+void ColorSpace::setTransform(const ConstTransformRcPtr & transform, ColorSpaceDirection dir)
 {
     TransformRcPtr transformCopy;
-    if(transform) transformCopy = transform->createEditableCopy();
+    if (transform)
+        transformCopy = transform->createEditableCopy();
 
     switch (dir)
     {
-    case COLORSPACE_DIR_TO_REFERENCE:
-        getImpl()->m_toRefTransform = transformCopy;
-        break;
-    case COLORSPACE_DIR_FROM_REFERENCE:
-        getImpl()->m_fromRefTransform = transformCopy;
-        break;
+        case COLORSPACE_DIR_TO_REFERENCE:
+            getImpl()->m_toRefTransform = transformCopy;
+            break;
+        case COLORSPACE_DIR_FROM_REFERENCE:
+            getImpl()->m_fromRefTransform = transformCopy;
+            break;
     }
 }
 
-std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
+std::ostream & operator<<(std::ostream & os, const ColorSpace & cs)
 {
     const int numVars(cs.getAllocationNumVars());
     std::vector<float> vars(numVars);
@@ -493,12 +490,12 @@ std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
     const auto refType = cs.getReferenceSpaceType();
     switch (refType)
     {
-    case REFERENCE_SPACE_SCENE:
-        os << "scene, ";
-        break;
-    case REFERENCE_SPACE_DISPLAY:
-        os << "display, ";
-        break;
+        case REFERENCE_SPACE_SCENE:
+            os << "scene, ";
+            break;
+        case REFERENCE_SPACE_DISPLAY:
+            os << "display, ";
+            break;
     }
     os << "name=" << cs.getName() << ", ";
     const auto numAliases = cs.getNumAliases();
@@ -517,7 +514,7 @@ std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
     }
 
     std::string str;
-    
+
     str = cs.getInteropID();
     if (!str.empty())
     {
@@ -567,16 +564,16 @@ std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
     {
         os << ", description=" << str;
     }
-    for (const auto& attr : cs.getInterchangeAttributes())
+    for (const auto & attr : cs.getInterchangeAttributes())
     {
         os << ", " << attr.first << "=" << attr.second;
     }
-    if(cs.getTransform(COLORSPACE_DIR_TO_REFERENCE))
+    if (cs.getTransform(COLORSPACE_DIR_TO_REFERENCE))
     {
         os << ",\n    " << cs.getName() << " --> Reference";
         os << "\n        " << *cs.getTransform(COLORSPACE_DIR_TO_REFERENCE);
     }
-    if(cs.getTransform(COLORSPACE_DIR_FROM_REFERENCE))
+    if (cs.getTransform(COLORSPACE_DIR_FROM_REFERENCE))
     {
         os << ",\n    Reference --> " << cs.getName();
         os << "\n        " << *cs.getTransform(COLORSPACE_DIR_FROM_REFERENCE);
@@ -585,4 +582,3 @@ std::ostream & operator<< (std::ostream & os, const ColorSpace & cs)
     return os;
 }
 } // namespace OCIO_NAMESPACE
-

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <iostream>
 #include <cstring>
+#include <iostream>
 #include <map>
 #include <mutex>
 #include <sstream>
@@ -12,19 +12,19 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "MergeConfigsHelpers.h"
 #include "Logging.h"
+#include "MergeConfigsHelpers.h"
+#include "OCIOMYaml.h"
 #include "ParseUtils.h"
 #include "Platform.h"
-#include "OCIOMYaml.h"
 #include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE
 {
 
-ConfigMergingParameters::ConfigMergingParameters() : m_impl(new ConfigMergingParameters::Impl())
+ConfigMergingParameters::ConfigMergingParameters()
+    : m_impl(new ConfigMergingParameters::Impl())
 {
-
 }
 
 ConfigMergingParameters::~ConfigMergingParameters()
@@ -46,7 +46,7 @@ void ConfigMergingParameters::deleter(ConfigMergingParameters * c)
 ConfigMergingParametersRcPtr ConfigMergingParameters::createEditableCopy() const
 {
     ConfigMergingParametersRcPtr params = ConfigMergingParameters::Create();
-    *params->m_impl = *m_impl;
+    *params->m_impl                     = *m_impl;
     return params;
 }
 
@@ -339,23 +339,26 @@ std::ostream & operator<<(std::ostream & os, const ConfigMergingParameters & par
     os << "<";
     bool first = true;
 
-    auto print_str = [&](const char* label, const char* value) {
+    auto print_str = [&](const char * label, const char * value) {
         if (value && *value)
         {
-            if (!first) os << ", ";
+            if (!first)
+                os << ", ";
             os << label << ": " << value;
             first = false;
         }
     };
 
-    auto print_bool = [&](const char* label, bool value) {
-        if (!first) os << ", ";
+    auto print_bool = [&](const char * label, bool value) {
+        if (!first)
+            os << ", ";
         os << label << ": " << (value ? "true" : "false");
         first = false;
     };
 
-    auto print_enum = [&](const char* label, ConfigMergingParameters::MergeStrategies value) {
-        if (!first) os << ", ";
+    auto print_enum = [&](const char * label, ConfigMergingParameters::MergeStrategies value) {
+        if (!first)
+            os << ", ";
         os << label << ": " << OCIOMYaml::EnumToStrategyString(value);
         first = false;
     };
@@ -388,14 +391,17 @@ std::ostream & operator<<(std::ostream & os, const ConfigMergingParameters & par
     int numEnv = params.getNumEnvironmentVars();
     if (numEnv > 0)
     {
-        if (!first) os << ", ";
+        if (!first)
+            os << ", ";
         os << "environment: [";
         for (int i = 0; i < numEnv; ++i)
         {
-            if (i > 0) os << ", ";
+            if (i > 0)
+                os << ", ";
             os << params.getEnvironmentVar(i);
-            const char* val = params.getEnvironmentVarValue(i);
-            if (val && *val) os << "=" << val;
+            const char * val = params.getEnvironmentVarValue(i);
+            if (val && *val)
+                os << "=" << val;
         }
         os << "]";
     }
@@ -435,7 +441,7 @@ ConstConfigMergerRcPtr ConfigMerger::Impl::Read(std::istream & istream, const ch
         // If so, initialize them to the default strategy.
         // If there are no default, use PreferInput.
     }
-    catch(const std::exception & e)
+    catch (const std::exception & e)
     {
         std::ostringstream os;
         os << "Error: Loading the OCIOM Merge parameters ";
@@ -478,15 +484,16 @@ ConstConfigRcPtr ConfigMerger::Impl::loadConfig(const char * value) const
         {
             // Try to load the provided config using the search paths.
             // Return as soon as they find a valid path.
-            const std::string resolvedfullpath = pystring::os::path::join(searchpaths[i], 
-                                                                          value);
+            const std::string resolvedfullpath = pystring::os::path::join(searchpaths[i], value);
             return Config::CreateFromFile(resolvedfullpath.c_str());
         }
         // TODO: If the file exists but won't load, this hides the error.
         // (Tried using ExceptionMissingFile, but the implementation of that is not what I
         // expected, Config::CreateFromFile only uses that if the argument is empty, not
         // if it can't read the file.)
-        catch(...) { /* don't capture the exception */ }
+        catch (...)
+        { /* don't capture the exception */
+        }
     }
 
     // Try to load the provided base config name as a built-in config.
@@ -495,7 +502,9 @@ ConstConfigRcPtr ConfigMerger::Impl::loadConfig(const char * value) const
         // Check if the base config name is a built-in config.
         return Config::CreateFromBuiltinConfig(value);
     }
-    catch(...) { /* don't capture the exception */ }
+    catch (...)
+    { /* don't capture the exception */
+    }
 
     // Must be a reference to a config from a previous merge.
     for (size_t i = 0; i < m_mergeParams.size(); i++)
@@ -510,12 +519,11 @@ ConstConfigRcPtr ConfigMerger::Impl::loadConfig(const char * value) const
     return nullptr;
 }
 
-
 // Public
 
-ConfigMerger::ConfigMerger() : m_impl(new ConfigMerger::Impl())
+ConfigMerger::ConfigMerger()
+    : m_impl(new ConfigMerger::Impl())
 {
-
 }
 
 ConfigMerger::~ConfigMerger()
@@ -533,20 +541,18 @@ ConstConfigMergerRcPtr ConfigMerger::CreateFromFile(const char * filepath)
 {
     if (!filepath || !*filepath)
     {
-        throw ExceptionMissingFile ("The merge options filepath is missing.");
+        throw ExceptionMissingFile("The merge options filepath is missing.");
     }
 
-    std::ifstream ifstream = Platform::CreateInputFileStream(
-        filepath, 
-        std::ios_base::in | std::ios_base::binary
-    );
+    std::ifstream ifstream
+        = Platform::CreateInputFileStream(filepath, std::ios_base::in | std::ios_base::binary);
 
     if (ifstream.fail())
     {
         std::ostringstream os;
         os << "Error could not read '" << filepath;
         os << "' merge options.";
-        throw Exception (os.str().c_str());
+        throw Exception(os.str().c_str());
     }
 
     return ConfigMerger::Impl::Read(ifstream, filepath);
@@ -555,7 +561,7 @@ ConstConfigMergerRcPtr ConfigMerger::CreateFromFile(const char * filepath)
 ConfigMergerRcPtr ConfigMerger::createEditableCopy() const
 {
     ConfigMergerRcPtr merger = ConfigMerger::Create();
-    *merger->m_impl = *m_impl;
+    *merger->m_impl          = *m_impl;
     return merger;
 }
 
@@ -571,7 +577,8 @@ int ConfigMerger::getNumSearchPaths() const
 
 const char * ConfigMerger::getSearchPath(int index) const
 {
-    if (index < 0 || index >= (int)getImpl()->m_searchPaths.size()) return "";
+    if (index < 0 || index >= (int)getImpl()->m_searchPaths.size())
+        return "";
     return getImpl()->m_searchPaths[index].c_str();
 }
 
@@ -617,7 +624,7 @@ void ConfigMerger::addParams(ConfigMergingParametersRcPtr params)
     getImpl()->m_mergeParams.push_back(params);
 }
 
-void ConfigMerger::serialize(std::ostream& os) const
+void ConfigMerger::serialize(std::ostream & os) const
 {
     try
     {
@@ -680,12 +687,14 @@ ConstConfigMergerRcPtr ConfigMerger::mergeConfigs() const
     for (int i = 0; i < getNumConfigMergingParameters(); i++)
     {
         ConfigMergingParametersRcPtr params = getImpl()->m_mergeParams[i];
-        
+
         // Load base config.
-        ConstConfigRcPtr baseCfg = editableMerger->getImpl()->loadConfig(params->getBaseConfigName());
+        ConstConfigRcPtr baseCfg
+            = editableMerger->getImpl()->loadConfig(params->getBaseConfigName());
 
         // Load input config.
-        ConstConfigRcPtr inputCfg = editableMerger->getImpl()->loadConfig(params->getInputConfigName());
+        ConstConfigRcPtr inputCfg
+            = editableMerger->getImpl()->loadConfig(params->getInputConfigName());
 
         if (baseCfg && inputCfg)
         {
@@ -695,7 +704,7 @@ ConstConfigMergerRcPtr ConfigMerger::mergeConfigs() const
             // Process merge.
             try
             {
-                MergeHandlerOptions options = { baseCfg, inputCfg, params, mergedConfig };
+                MergeHandlerOptions options = {baseCfg, inputCfg, params, mergedConfig};
                 GeneralMerger(options).merge();
                 RolesMerger(options).merge();
                 FileRulesMerger(options).merge();
@@ -705,14 +714,13 @@ ConstConfigMergerRcPtr ConfigMerger::mergeConfigs() const
                 ColorspacesMerger(options).merge();
                 NamedTransformsMerger(options).merge();
             }
-            catch(const Exception & e)
+            catch (const Exception & e)
             {
                 throw(e);
             }
 
             // Add new config object to m_mergedConfigs so they can be used for following merges.
             editableMerger->getImpl()->m_mergedConfigs.push_back(mergedConfig);
-
         }
         else
         {
@@ -726,9 +734,10 @@ ConstConfigMergerRcPtr ConfigMerger::mergeConfigs() const
 namespace ConfigMergingHelpers
 {
 
-ConfigRcPtr MergeConfigs(const ConfigMergingParametersRcPtr & params,
-                         const ConstConfigRcPtr & baseConfig,
-                         const ConstConfigRcPtr & inputConfig)
+ConfigRcPtr MergeConfigs(
+    const ConfigMergingParametersRcPtr & params,
+    const ConstConfigRcPtr & baseConfig,
+    const ConstConfigRcPtr & inputConfig)
 {
     if (!baseConfig || !inputConfig)
     {
@@ -741,7 +750,7 @@ ConfigRcPtr MergeConfigs(const ConfigMergingParametersRcPtr & params,
     // Process the merge.
     try
     {
-        MergeHandlerOptions options = { baseConfig, inputConfig, params, mergedConfig };
+        MergeHandlerOptions options = {baseConfig, inputConfig, params, mergedConfig};
         GeneralMerger(options).merge();
         RolesMerger(options).merge();
         FileRulesMerger(options).merge();
@@ -751,7 +760,7 @@ ConfigRcPtr MergeConfigs(const ConfigMergingParametersRcPtr & params,
         ColorspacesMerger(options).merge();
         NamedTransformsMerger(options).merge();
     }
-    catch(const Exception & e)
+    catch (const Exception & e)
     {
         throw(e);
     }
@@ -759,9 +768,10 @@ ConfigRcPtr MergeConfigs(const ConfigMergingParametersRcPtr & params,
     return mergedConfig;
 }
 
-ConfigRcPtr MergeColorSpace(const ConfigMergingParametersRcPtr & params,
-                            const ConstConfigRcPtr & baseConfig,
-                            const ConstColorSpaceRcPtr & colorspace)
+ConfigRcPtr MergeColorSpace(
+    const ConfigMergingParametersRcPtr & params,
+    const ConstConfigRcPtr & baseConfig,
+    const ConstColorSpaceRcPtr & colorspace)
 {
     if (!baseConfig || !colorspace)
     {
@@ -783,10 +793,10 @@ ConfigRcPtr MergeColorSpace(const ConfigMergingParametersRcPtr & params,
     // Process the merge.
     try
     {
-        MergeHandlerOptions options = { baseConfig, inputConfig, eParams, mergedConfig };
+        MergeHandlerOptions options = {baseConfig, inputConfig, eParams, mergedConfig};
         ColorspacesMerger(options).merge();
     }
-    catch(const Exception & e)
+    catch (const Exception & e)
     {
         throw(e);
     }
@@ -794,6 +804,6 @@ ConfigRcPtr MergeColorSpace(const ConfigMergingParametersRcPtr & params,
     return mergedConfig;
 }
 
-} // ConfigMergingHelpers
+} // namespace ConfigMergingHelpers
 
 } // namespace OCIO_NAMESPACE

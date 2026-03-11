@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_HUECURVE_OPDATA_H
 #define INCLUDED_OCIO_HUECURVE_OPDATA_H
-
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -18,22 +15,21 @@ class GradingHueCurveOpData;
 typedef OCIO_SHARED_PTR<GradingHueCurveOpData> GradingHueCurveOpDataRcPtr;
 typedef OCIO_SHARED_PTR<const GradingHueCurveOpData> ConstGradingHueCurveOpDataRcPtr;
 
-
 class GradingHueCurveOpData : public OpData
 {
 public:
-
     GradingHueCurveOpData(GradingStyle style);
     GradingHueCurveOpData(const GradingHueCurveOpData & rhs);
-    GradingHueCurveOpData(GradingStyle style,
-       ConstGradingBSplineCurveRcPtr hueHue,
-       ConstGradingBSplineCurveRcPtr hueSat,
-       ConstGradingBSplineCurveRcPtr hueLum,
-       ConstGradingBSplineCurveRcPtr lumSat,
-       ConstGradingBSplineCurveRcPtr satSat,
-       ConstGradingBSplineCurveRcPtr lumLum,
-       ConstGradingBSplineCurveRcPtr satLum,
-       ConstGradingBSplineCurveRcPtr hueFx);
+    GradingHueCurveOpData(
+        GradingStyle style,
+        ConstGradingBSplineCurveRcPtr hueHue,
+        ConstGradingBSplineCurveRcPtr hueSat,
+        ConstGradingBSplineCurveRcPtr hueLum,
+        ConstGradingBSplineCurveRcPtr lumSat,
+        ConstGradingBSplineCurveRcPtr satSat,
+        ConstGradingBSplineCurveRcPtr lumLum,
+        ConstGradingBSplineCurveRcPtr satLum,
+        ConstGradingBSplineCurveRcPtr hueFx);
     GradingHueCurveOpData & operator=(const GradingHueCurveOpData & rhs);
     virtual ~GradingHueCurveOpData();
 
@@ -82,10 +78,10 @@ public:
     bool equals(const OpData & other) const override;
 
 private:
-    GradingStyle                            m_style;
+    GradingStyle m_style;
     DynamicPropertyGradingHueCurveImplRcPtr m_value;
-    HSYTransformStyle                       m_RGBToHSY{ HSYTransformStyle::HSY_TRANSFORM_1 };
-    TransformDirection                      m_direction{ TRANSFORM_DIR_FORWARD };
+    HSYTransformStyle m_RGBToHSY{HSYTransformStyle::HSY_TRANSFORM_1};
+    TransformDirection m_direction{TRANSFORM_DIR_FORWARD};
 };
 
 bool operator==(const GradingHueCurveOpData & lhs, const GradingHueCurveOpData & rhs);

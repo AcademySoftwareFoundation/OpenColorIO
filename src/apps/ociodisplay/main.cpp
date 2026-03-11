@@ -2,12 +2,12 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <array>
-#include <cstdlib>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <map>
 #include <sstream>
 #include <utility>
@@ -35,12 +35,12 @@ namespace OCIO = OCIO_NAMESPACE;
 // clang-format on
 
 #include "glsl.h"
-#include "oglapp.h"
 #include "imageio.h"
+#include "oglapp.h"
 
-bool g_verbose = false;
+bool g_verbose   = false;
 bool g_gpulegacy = false;
-bool g_gpuinfo = false;
+bool g_gpuinfo   = false;
 #if __APPLE__
 bool g_useMetal = false;
 #endif
@@ -55,11 +55,13 @@ std::string g_transformName;
 std::string g_look;
 OCIO::OptimizationFlags g_optimization{OCIO::OPTIMIZATION_DEFAULT};
 
-static const std::array<std::pair<const char *, OCIO::OptimizationFlags>, 5> OptmizationMenu = {{{"None", OCIO::OPTIMIZATION_NONE},
-                                                                                                 {"Lossless", OCIO::OPTIMIZATION_LOSSLESS},
-                                                                                                 {"Very good", OCIO::OPTIMIZATION_VERY_GOOD},
-                                                                                                 {"Good", OCIO::OPTIMIZATION_GOOD},
-                                                                                                 {"Draft", OCIO::OPTIMIZATION_DRAFT}}};
+static const std::array<std::pair<const char *, OCIO::OptimizationFlags>, 5> OptmizationMenu = {
+    {{"None", OCIO::OPTIMIZATION_NONE},
+     {"Lossless", OCIO::OPTIMIZATION_LOSSLESS},
+     {"Very good", OCIO::OPTIMIZATION_VERY_GOOD},
+     {"Good", OCIO::OPTIMIZATION_GOOD},
+     {"Draft", OCIO::OPTIMIZATION_DRAFT}}
+};
 
 float g_exposure_fstop{0.0f};
 float g_display_gamma{1.0f};
@@ -82,7 +84,7 @@ static void InitImageTexture(const char * filename)
         {
             img.read(filename, OCIO::BIT_DEPTH_F32);
         }
-        catch (const std::exception &e)
+        catch (const std::exception & e)
         {
             std::cerr << "ERROR: Loading file failed: " << e.what() << std::endl;
             exit(1);
@@ -100,15 +102,15 @@ static void InitImageTexture(const char * filename)
 
         img.init(512, 512, OCIO::CHANNEL_ORDERING_RGBA, OCIO::BIT_DEPTH_F32);
 
-        float * pixels = (float *)img.getData();
-        const long width = img.getWidth();
+        float * pixels      = (float *)img.getData();
+        const long width    = img.getWidth();
         const long channels = img.getNumChannels();
 
         for (int y = 0; y < img.getHeight(); ++y)
         {
             for (int x = 0; x < img.getWidth(); ++x)
             {
-                float c = (float)x / ((float)width - 1.0f);
+                float c                                = (float)x / ((float)width - 1.0f);
                 pixels[channels * (width * y + x) + 0] = c;
                 pixels[channels * (width * y + x) + 1] = c;
                 pixels[channels * (width * y + x) + 2] = c;
@@ -128,8 +130,8 @@ static void InitImageTexture(const char * filename)
     }
     else
     {
-        std::cerr << "Cannot load image with " << img.getNumChannels()
-                  << " components." << std::endl;
+        std::cerr << "Cannot load image with " << img.getNumChannels() << " components."
+                  << std::endl;
         exit(1);
     }
 
@@ -141,19 +143,16 @@ static void InitImageTexture(const char * filename)
 
     if (g_oglApp)
     {
-        g_oglApp->initImage(img.getWidth(),
-                            img.getHeight(),
-                            comp,
-                            (float *)img.getData());
+        g_oglApp->initImage(img.getWidth(), img.getHeight(), comp, (float *)img.getData());
     }
 }
 
 void InitOCIO(const char * filename)
 {
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-    g_display = config->getDefaultDisplay();
-    g_transformName = config->getDefaultView(g_display.c_str());
-    g_look = config->getDisplayViewLooks(g_display.c_str(), g_transformName.c_str());
+    g_display                     = config->getDefaultDisplay();
+    g_transformName               = config->getDefaultView(g_display.c_str());
+    g_look            = config->getDisplayViewLooks(g_display.c_str(), g_transformName.c_str());
     g_inputColorSpace = OCIO::ROLE_SCENE_LINEAR;
 
     if (filename && *filename)
@@ -167,8 +166,7 @@ void InitOCIO(const char * filename)
         else
         {
             std::cout << "colorspace: " << g_inputColorSpace
-                      << " \t(could not determine from filename, using default)"
-                      << std::endl;
+                      << " \t(could not determine from filename, using default)" << std::endl;
         }
     }
 }
@@ -266,7 +264,7 @@ static void SpecialKey(int key, int x, int y)
     else if (key == GLUT_KEY_HOME && (mod & GLUT_ACTIVE_CTRL))
     {
         g_exposure_fstop = 0.0f;
-        g_display_gamma = 1.0f;
+        g_display_gamma  = 1.0f;
     }
 
     else if (key == GLUT_KEY_UP && (mod & GLUT_ACTIVE_ALT))
@@ -280,7 +278,7 @@ static void SpecialKey(int key, int x, int y)
     else if (key == GLUT_KEY_HOME && (mod & GLUT_ACTIVE_ALT))
     {
         g_exposure_fstop = 0.0f;
-        g_display_gamma = 1.0f;
+        g_display_gamma  = 1.0f;
     }
 
     UpdateOCIOGLState();
@@ -335,18 +333,15 @@ void UpdateOCIOGLState()
         std::cout << "  with:" << std::endl;
         std::cout << "    exposure_fstop = " << g_exposure_fstop << std::endl;
         std::cout << "    display_gamma  = " << g_display_gamma << std::endl;
-        std::cout << "    channels       = "
-                  << (g_channelHot[0] ? "R" : "")
-                  << (g_channelHot[1] ? "G" : "")
-                  << (g_channelHot[2] ? "B" : "")
+        std::cout << "    channels       = " << (g_channelHot[0] ? "R" : "")
+                  << (g_channelHot[1] ? "G" : "") << (g_channelHot[2] ? "B" : "")
                   << (g_channelHot[3] ? "A" : "") << std::endl;
 
-        for (const auto &opt : OptmizationMenu)
+        for (const auto & opt : OptmizationMenu)
         {
             if (opt.second == g_optimization)
             {
-                std::cout << std::endl
-                          << "Optimization: " << opt.first << std::endl;
+                std::cout << std::endl << "Optimization: " << opt.first << std::endl;
             }
         }
     }
@@ -354,7 +349,7 @@ void UpdateOCIOGLState()
     // Add optional transforms to create a full-featured, "canonical" display pipeline
     // Fstop exposure control (in SCENE_LINEAR)
     {
-        double gain = powf(2.0f, g_exposure_fstop);
+        double gain            = powf(2.0f, g_exposure_fstop);
         const double slope4f[] = {gain, gain, gain, gain};
         double m44[16];
         double offset4[4];
@@ -380,7 +375,7 @@ void UpdateOCIOGLState()
 
     // Post-display transform gamma
     {
-        double exponent = 1.0 / std::max(1e-6, static_cast<double>(g_display_gamma));
+        double exponent            = 1.0 / std::max(1e-6, static_cast<double>(g_display_gamma));
         const double exponent4f[4] = {exponent, exponent, exponent, exponent};
         OCIO::ExponentTransformRcPtr expTransform = OCIO::ExponentTransform::Create();
         expTransform->setValue(exponent4f);
@@ -392,7 +387,7 @@ void UpdateOCIOGLState()
     {
         processor = vp->getProcessor(config, config->getCurrentContext());
     }
-    catch (const OCIO::Exception &e)
+    catch (const OCIO::Exception & e)
     {
         std::cerr << e.what() << std::endl;
         return;
@@ -413,8 +408,9 @@ void UpdateOCIOGLState()
     shaderDesc->setResourcePrefix("ocio_");
 
     // Extract the shader information.
-    OCIO::ConstGPUProcessorRcPtr gpu = g_gpulegacy ? processor->getOptimizedLegacyGPUProcessor(g_optimization, 32)
-                                                   : processor->getOptimizedGPUProcessor(g_optimization);
+    OCIO::ConstGPUProcessorRcPtr gpu
+        = g_gpulegacy ? processor->getOptimizedLegacyGPUProcessor(g_optimization, 32)
+                      : processor->getOptimizedGPUProcessor(g_optimization);
     gpu->extractGpuShaderInfo(shaderDesc);
 
     g_oglApp->setShader(shaderDesc);
@@ -428,7 +424,7 @@ void menuCallback(int /*id*/)
 void imageColorSpace_CB(int id)
 {
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-    const char * name = config->getColorSpaceNameByIndex(id);
+    const char * name             = config->getColorSpaceNameByIndex(id);
     if (!name)
     {
         return;
@@ -443,7 +439,7 @@ void imageColorSpace_CB(int id)
 void displayDevice_CB(int id)
 {
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-    const char * display = config->getDisplay(id);
+    const char * display          = config->getDisplay(id);
     if (!display)
     {
         return;
@@ -451,7 +447,8 @@ void displayDevice_CB(int id)
 
     g_display = display;
 
-    const char * csname = config->getDisplayViewColorSpaceName(g_display.c_str(), g_transformName.c_str());
+    const char * csname
+        = config->getDisplayViewColorSpaceName(g_display.c_str(), g_transformName.c_str());
     if (!csname || !*csname)
     {
         g_transformName = config->getDefaultView(g_display.c_str());
@@ -553,7 +550,7 @@ static void PopulateOCIOMenus()
         glutAddMenuEntry(config->getDisplay(i), i);
     }
 
-    g_viewsMenuID = glutCreateMenu(transform_CB);
+    g_viewsMenuID               = glutCreateMenu(transform_CB);
     const char * defaultDisplay = config->getDefaultDisplay();
     updateViewsMenu(defaultDisplay);
 
@@ -579,28 +576,29 @@ static void PopulateOCIOMenus()
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 
-const char * USAGE_TEXT = "\n"
-                         "Keys:\n"
-                         "\tCtrl+Up:   Exposure +1/4 stop (in scene linear)\n"
-                         "\tCtrl+Down: Exposure -1/4 stop (in scene linear)\n"
-                         "\tCtrl+Home: Reset Exposure + Gamma\n"
-                         "\n"
-                         "\tAlt+Up:    Gamma up (post display transform)\n"
-                         "\tAlt+Down:  Gamma down (post display transform)\n"
-                         "\tAlt+Home:  Reset Exposure + Gamma\n"
-                         "\n"
-                         "\tC:   View Color\n"
-                         "\tR:   View Red\n"
-                         "\tG:   View Green\n"
-                         "\tB:   View Blue\n"
-                         "\tA:   View Alpha\n"
-                         "\tL:   View Luma\n"
-                         "\n"
-                         "\tRight-Mouse Button:   Configure Display / Transform / ColorSpace / Looks / Optimization\n"
-                         "\n"
-                         "\tEsc: Quit\n";
+const char * USAGE_TEXT
+    = "\n"
+      "Keys:\n"
+      "\tCtrl+Up:   Exposure +1/4 stop (in scene linear)\n"
+      "\tCtrl+Down: Exposure -1/4 stop (in scene linear)\n"
+      "\tCtrl+Home: Reset Exposure + Gamma\n"
+      "\n"
+      "\tAlt+Up:    Gamma up (post display transform)\n"
+      "\tAlt+Down:  Gamma down (post display transform)\n"
+      "\tAlt+Home:  Reset Exposure + Gamma\n"
+      "\n"
+      "\tC:   View Color\n"
+      "\tR:   View Red\n"
+      "\tG:   View Green\n"
+      "\tB:   View Blue\n"
+      "\tA:   View Alpha\n"
+      "\tL:   View Luma\n"
+      "\n"
+      "\tRight-Mouse Button:   Configure Display / Transform / ColorSpace / Looks / Optimization\n"
+      "\n"
+      "\tEsc: Quit\n";
 
-void parseArguments(int argc, char **argv)
+void parseArguments(int argc, char ** argv)
 {
     for (int i = 1; i < argc; ++i)
     {
@@ -631,7 +629,8 @@ void parseArguments(int argc, char **argv)
             std::cout << "  OPTIONS:" << std::endl;
             std::cout << "     -h         :  displays the help and exit" << std::endl;
             std::cout << "     -v         :  displays the color space information" << std::endl;
-            std::cout << "     -gpulegacy :  use the legacy (i.e. baked) GPU color processing" << std::endl;
+            std::cout << "     -gpulegacy :  use the legacy (i.e. baked) GPU color processing"
+                      << std::endl;
             std::cout << "     -gpuinfo   :  output the OCIO shader program" << std::endl;
 #if __APPLE__
             std::cout << "     -metal     :  use metal OCIO shader backend " << std::endl;
@@ -646,7 +645,7 @@ void parseArguments(int argc, char **argv)
     }
 }
 
-int main(int argc, char **argv)
+int main(int argc, char ** argv)
 {
     parseArguments(argc, argv);
 
@@ -663,7 +662,7 @@ int main(int argc, char **argv)
             g_oglApp = std::make_shared<OCIO::ScreenApp>("ociodisplay", 512, 512);
         }
     }
-    catch (const OCIO::Exception &e)
+    catch (const OCIO::Exception & e)
     {
         std::cerr << e.what() << std::endl;
         return 1;
@@ -728,7 +727,7 @@ int main(int argc, char **argv)
     {
         InitOCIO(g_filename.c_str());
     }
-    catch (OCIO::Exception &e)
+    catch (OCIO::Exception & e)
     {
         std::cerr << e.what() << std::endl;
         exit(1);
@@ -740,7 +739,7 @@ int main(int argc, char **argv)
     {
         UpdateOCIOGLState();
     }
-    catch (const OCIO::Exception &e)
+    catch (const OCIO::Exception & e)
     {
         std::cerr << e.what() << std::endl;
         exit(1);

@@ -30,10 +30,10 @@ public:
     ImageIO(long width, long height, ChannelOrdering chanOrder, BitDepth bitDepth);
 
     ImageIO(const ImageIO & img) = delete;
-    ImageIO(ImageIO &&) = delete;
+    ImageIO(ImageIO &&)          = delete;
 
-    ImageIO & operator = (const ImageIO &) = delete;
-    ImageIO & operator = (ImageIO &&) = delete;
+    ImageIO & operator=(const ImageIO &) = delete;
+    ImageIO & operator=(ImageIO &&)      = delete;
 
     ~ImageIO();
 

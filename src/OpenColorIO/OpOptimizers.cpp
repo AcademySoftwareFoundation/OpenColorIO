@@ -24,37 +24,37 @@ bool IsPairInverseEnabled(OpData::Type type, OptimizationFlags flags)
 {
     switch (type)
     {
-    case OpData::CDLType:
-        return HasFlag(flags, OPTIMIZATION_PAIR_IDENTITY_CDL);
-    case OpData::ExposureContrastType:
-        return HasFlag(flags, OPTIMIZATION_PAIR_IDENTITY_EXPOSURE_CONTRAST);
-    case OpData::FixedFunctionType:
-        return HasFlag(flags, OPTIMIZATION_PAIR_IDENTITY_FIXED_FUNCTION);
-    case OpData::GammaType:
-        return HasFlag(flags, OPTIMIZATION_PAIR_IDENTITY_GAMMA);
-    case OpData::Lut1DType:
-        return HasFlag(flags, OPTIMIZATION_PAIR_IDENTITY_LUT1D);
-    case OpData::Lut3DType:
-        return HasFlag(flags, OPTIMIZATION_PAIR_IDENTITY_LUT3D);
-    case OpData::LogType:
-        return HasFlag(flags, OPTIMIZATION_PAIR_IDENTITY_LOG);
+        case OpData::CDLType:
+            return HasFlag(flags, OPTIMIZATION_PAIR_IDENTITY_CDL);
+        case OpData::ExposureContrastType:
+            return HasFlag(flags, OPTIMIZATION_PAIR_IDENTITY_EXPOSURE_CONTRAST);
+        case OpData::FixedFunctionType:
+            return HasFlag(flags, OPTIMIZATION_PAIR_IDENTITY_FIXED_FUNCTION);
+        case OpData::GammaType:
+            return HasFlag(flags, OPTIMIZATION_PAIR_IDENTITY_GAMMA);
+        case OpData::Lut1DType:
+            return HasFlag(flags, OPTIMIZATION_PAIR_IDENTITY_LUT1D);
+        case OpData::Lut3DType:
+            return HasFlag(flags, OPTIMIZATION_PAIR_IDENTITY_LUT3D);
+        case OpData::LogType:
+            return HasFlag(flags, OPTIMIZATION_PAIR_IDENTITY_LOG);
 
-    case OpData::GradingPrimaryType:
-    case OpData::GradingRGBCurveType:
-    case OpData::GradingHueCurveType:
-    case OpData::GradingToneType:
-        return HasFlag(flags, OPTIMIZATION_PAIR_IDENTITY_GRADING);
+        case OpData::GradingPrimaryType:
+        case OpData::GradingRGBCurveType:
+        case OpData::GradingHueCurveType:
+        case OpData::GradingToneType:
+            return HasFlag(flags, OPTIMIZATION_PAIR_IDENTITY_GRADING);
 
-    case OpData::ExponentType:
-    case OpData::MatrixType:
-    case OpData::RangeType:
-        return false; // Use composition to optimize.
+        case OpData::ExponentType:
+        case OpData::MatrixType:
+        case OpData::RangeType:
+            return false; // Use composition to optimize.
 
-    case OpData::ReferenceType:
-    case OpData::NoOpType:
-    default:
-        // Other types are not controlled by a flag.
-        return true;
+        case OpData::ReferenceType:
+        case OpData::NoOpType:
+        default:
+            // Other types are not controlled by a flag.
+            return true;
     }
 }
 
@@ -114,7 +114,7 @@ void RemoveDynamicProperties(OpRcPtrVec & opVec)
 
 int RemoveNoOps(OpRcPtrVec & opVec)
 {
-    int count = 0;
+    int count                       = 0;
     OpRcPtrVec::const_iterator iter = opVec.begin();
     while (iter != opVec.end())
     {
@@ -144,7 +144,7 @@ void FinalizeOps(OpRcPtrVec & opVec)
 // For instance CDL that does not use power will get replaced.
 int ReplaceOps(OpRcPtrVec & opVec)
 {
-    int count = 0;
+    int count      = 0;
     int firstindex = 0; // this must be a signed int
 
     OpRcPtrVec tmpops;
@@ -191,9 +191,9 @@ int ReplaceIdentityOps(OpRcPtrVec & opVec, OptimizationFlags oFlags)
             ConstOpRcPtr op = opVec[i];
             const auto type = op->data()->getType();
             if (type != OpData::RangeType && // Do not replace a range identity.
-                ((type == OpData::GammaType && optIdGamma) ||
-                 (type != OpData::GammaType && optIdentity)) &&
-                op->isIdentity())
+                ((type == OpData::GammaType && optIdGamma)
+                 || (type != OpData::GammaType && optIdentity))
+                && op->isIdentity())
             {
                 // Optimization flag is tested before.
                 auto replacedBy = op->getIdentityReplacement();
@@ -238,9 +238,7 @@ int RemoveInverseOps(OpRcPtrVec & opVec, OptimizationFlags oFlags)
         // ..., A, A', ...
         //
 
-        if (type1 == type2 &&
-            IsPairInverseEnabled(type1, oFlags) &&
-            op1->isInverse(op2))
+        if (type1 == type2 && IsPairInverseEnabled(type1, oFlags) && op1->isInverse(op2))
         {
             // When a pair of inverse ops is removed, we want the optimized ops to give the
             // same result as the original.  For certain ops such as Lut1D or Log this may
@@ -252,8 +250,10 @@ int RemoveInverseOps(OpRcPtrVec & opVec, OptimizationFlags oFlags)
                 // Lut1D gets special handling so that both halfs of the pair are available.
                 // Only the inverse LUT has the values needed to generate the replacement.
 
-                ConstLut1DOpDataRcPtr lut1 = OCIO_DYNAMIC_POINTER_CAST<const Lut1DOpData>(op1->data());
-                ConstLut1DOpDataRcPtr lut2 = OCIO_DYNAMIC_POINTER_CAST<const Lut1DOpData>(op2->data());
+                ConstLut1DOpDataRcPtr lut1
+                    = OCIO_DYNAMIC_POINTER_CAST<const Lut1DOpData>(op1->data());
+                ConstLut1DOpDataRcPtr lut2
+                    = OCIO_DYNAMIC_POINTER_CAST<const Lut1DOpData>(op2->data());
 
                 OpDataRcPtr opData = lut1->getPairIdentityReplacement(lut2);
 
@@ -376,7 +376,7 @@ int ReplaceInverseLuts(OpRcPtrVec & opVec)
     for (size_t i = 0; i < nbOps; ++i)
     {
         ConstOpRcPtr op = opVec[i];
-        auto opData = op->data();
+        auto opData     = op->data();
         const auto type = opData->getType();
         if (type == OpData::Lut1DType)
         {
@@ -406,17 +406,16 @@ int ReplaceInverseLuts(OpRcPtrVec & opVec)
         }
     }
     return count;
-
 }
 
 int RemoveLeadingClampIdentity(OpRcPtrVec & opVec)
 {
-    int count = 0;
+    int count                       = 0;
     OpRcPtrVec::const_iterator iter = opVec.begin();
     while (iter != opVec.end())
     {
         ConstOpRcPtr o = (*iter);
-        auto oData = o->data();
+        auto oData     = o->data();
         if (oData->getType() == OpData::RangeType && oData->isIdentity())
         {
             iter++;
@@ -437,12 +436,12 @@ int RemoveLeadingClampIdentity(OpRcPtrVec & opVec)
 
 int RemoveTrailingClampIdentity(OpRcPtrVec & opVec)
 {
-    int count = 0;
+    int count   = 0;
     int current = static_cast<int>(opVec.size()) - 1;
     while (current >= 0)
     {
         ConstOpRcPtr o = opVec[current];
-        auto oData = o->data();
+        auto oData     = o->data();
         if (oData->getType() == OpData::RangeType && oData->isIdentity())
         {
             ++count;
@@ -498,7 +497,7 @@ unsigned FindSeparablePrefix(const OpRcPtrVec & ops)
     if (prefixLen == 1)
     {
         ConstOpRcPtr constOp0 = ops[0];
-        auto opData = constOp0->data();
+        auto opData           = constOp0->data();
         if (opData->getType() == OpData::Lut1DType)
         {
             auto lutData = OCIO_DYNAMIC_POINTER_CAST<const Lut1DOpData>(opData);
@@ -559,7 +558,7 @@ void OptimizeSeparablePrefix(OpRcPtrVec & ops, BitDepth in)
         return;
     }
 
-    // TODO: Investigate whether even the F32 case could be sped up via interpolating 
+    // TODO: Investigate whether even the F32 case could be sped up via interpolating
     //       in a half-domain Lut1D (e.g. replacing a string of exponent, log, etc.).
     if (in == BIT_DEPTH_F32 || in == BIT_DEPTH_UINT32)
     {
@@ -663,16 +662,16 @@ void OpRcPtrVec::optimize(OptimizationFlags oFlags)
     // request and they may be altered by the following optimizations,
     // preserve their values.
 
-    int total_noops         = 0;
-    int total_replacedops   = 0;
-    int total_identityops   = 0;
-    int total_inverseops    = 0;
-    int total_combines      = 0;
-    int total_inverses      = 0;
-    int passes              = 0;
+    int total_noops       = 0;
+    int total_replacedops = 0;
+    int total_identityops = 0;
+    int total_inverseops  = 0;
+    int total_combines    = 0;
+    int total_inverses    = 0;
+    int passes            = 0;
 
     const bool optimizeIdentity = HasFlag(oFlags, OPTIMIZATION_IDENTITY);
-    const bool replaceOps = HasFlag(oFlags, OPTIMIZATION_SIMPLIFY_OPS);
+    const bool replaceOps       = HasFlag(oFlags, OPTIMIZATION_SIMPLIFY_OPS);
 
     const bool fastLut = HasFlag(oFlags, OPTIMIZATION_LUT_INV_FAST);
 
@@ -689,11 +688,11 @@ void OpRcPtrVec::optimize(OptimizationFlags oFlags)
         int identityops = ReplaceIdentityOps(*this, oFlags);
 
         // Remove all adjacent pairs of ops that are inverses of each other.
-        int inverseops  = RemoveInverseOps(*this, oFlags);
+        int inverseops = RemoveInverseOps(*this, oFlags);
 
         // Combine a pair of ops, for example multiply two adjacent Matrix ops.
         // (Combines at most one pair on each iteration.)
-        int combines    = CombineOps(*this, oFlags);
+        int combines = CombineOps(*this, oFlags);
 
         if (noops + identityops + inverseops + combines == 0)
         {
@@ -757,9 +756,10 @@ void OpRcPtrVec::optimize(OptimizationFlags oFlags)
     }
 }
 
-void OpRcPtrVec::optimizeForBitdepth(const BitDepth & inBitDepth,
-                                     const BitDepth & outBitDepth,
-                                     OptimizationFlags oFlags)
+void OpRcPtrVec::optimizeForBitdepth(
+    const BitDepth & inBitDepth,
+    const BitDepth & outBitDepth,
+    OptimizationFlags oFlags)
 {
     if (!empty())
     {
@@ -779,4 +779,3 @@ void OpRcPtrVec::optimizeForBitdepth(const BitDepth & inBitDepth,
 }
 
 } // namespace OCIO_NAMESPACE
-

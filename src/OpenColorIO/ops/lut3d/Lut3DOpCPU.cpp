@@ -9,23 +9,28 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "BitDepthUtils.h"
-#include "MathUtils.h"
-#include "ops/lut3d/Lut3DOpCPU.h"
-#include "ops/OpTools.h"
-#include "Platform.h"
-#include "SSE.h"
 #include "CPUInfo.h"
-#include "Lut3DOpCPU_SSE2.h"
 #include "Lut3DOpCPU_AVX.h"
 #include "Lut3DOpCPU_AVX2.h"
 #include "Lut3DOpCPU_AVX512.h"
+#include "Lut3DOpCPU_SSE2.h"
+#include "MathUtils.h"
+#include "Platform.h"
+#include "SSE.h"
+#include "ops/OpTools.h"
+#include "ops/lut3d/Lut3DOpCPU.h"
 
 namespace OCIO_NAMESPACE
 {
 namespace
 {
 
-typedef void (apply_lut_func)(const float *lut3d, int dim, const float *src, float *dst, int total_pixel_count);
+typedef void(apply_lut_func)(
+    const float * lut3d,
+    int dim,
+    const float * src,
+    float * dst,
+    int total_pixel_count);
 
 class BaseLut3DRenderer : public OpCPU
 {
@@ -38,22 +43,22 @@ protected:
 
     // Creates a LUT aligned to a 16 byte boundary with RGB and 0 for alpha
     // in order to be able to load the LUT using _mm_load_ps.
-    float* createOptLut(const Array::Values& lut) const;
+    float * createOptLut(const Array::Values & lut) const;
 
 protected:
     // Keep all these values because they are invariant during the
     // processing. So to slim the processing code, these variables
     // are computed in the constructor.
-    float*         m_optLut;
-    unsigned long  m_dim;
-    float          m_step;
-    int            m_components;
-    apply_lut_func *m_applyLutFunc;
+    float * m_optLut;
+    unsigned long m_dim;
+    float m_step;
+    int m_components;
+    apply_lut_func * m_applyLutFunc;
 
 private:
-    BaseLut3DRenderer() = delete;
-    BaseLut3DRenderer(const BaseLut3DRenderer&) = delete;
-    BaseLut3DRenderer& operator=(const BaseLut3DRenderer&) = delete;
+    BaseLut3DRenderer()                                      = delete;
+    BaseLut3DRenderer(const BaseLut3DRenderer &)             = delete;
+    BaseLut3DRenderer & operator=(const BaseLut3DRenderer &) = delete;
 };
 
 class Lut3DTetrahedralRenderer : public BaseLut3DRenderer
@@ -72,7 +77,6 @@ public:
     virtual ~Lut3DRenderer();
 
     void apply(const void * inImg, void * outImg, long numPixels) const;
-
 };
 
 class InvLut3DRenderer : public OpCPU
@@ -81,16 +85,17 @@ class InvLut3DRenderer : public OpCPU
     // A level of the RangeTree.
     struct treeLevel
     {
-        unsigned long      elems;         // number of elements on this level
-        unsigned long      chans;         // in/out channels of the LUT
-        std::vector<float> minVals;       // min LUT value for the sub-tree
-        std::vector<float> maxVals;       // max LUT value for the sub-tree
-        ulongVector        child0offsets; // offsets to the first children
-        ulongVector        numChildren;   // number of children in the subtree
+        unsigned long elems;        // number of elements on this level
+        unsigned long chans;        // in/out channels of the LUT
+        std::vector<float> minVals; // min LUT value for the sub-tree
+        std::vector<float> maxVals; // max LUT value for the sub-tree
+        ulongVector child0offsets;  // offsets to the first children
+        ulongVector numChildren;    // number of children in the subtree
 
         treeLevel()
         {
-            elems = 0;  chans = 0;
+            elems = 0;
+            chans = 0;
         }
     };
     typedef std::vector<treeLevel> TreeLevels;
@@ -98,14 +103,12 @@ class InvLut3DRenderer : public OpCPU
     // Structure that identifies the base grid for a position in the LUT.
     struct baseInd
     {
-        unsigned long inds[3] = { 0, 0, 0 }; // indices into the LUT
-        unsigned long hash = 0;              // hash for this location
+        unsigned long inds[3] = {0, 0, 0}; // indices into the LUT
+        unsigned long hash    = 0;         // hash for this location
 
-        bool operator<(const baseInd& val) const { return hash < val.hash; }
+        bool operator<(const baseInd & val) const { return hash < val.hash; }
 
-        baseInd()
-        {
-        }
+        baseInd() {}
     };
     typedef std::vector<baseInd> BaseIndsVec;
 
@@ -123,7 +126,7 @@ class InvLut3DRenderer : public OpCPU
         // Populate the tree using the LUT values.
         // - gridVector Pointer to the vectorized 3d-LUT values.
         // - gridSize The dimension of each side of the 3d-LUT.
-        void initialize(float *gridVector, unsigned long gridSize);
+        void initialize(float * gridVector, unsigned long gridSize);
 
         virtual ~RangeTree();
 
@@ -131,16 +134,16 @@ class InvLut3DRenderer : public OpCPU
         inline unsigned long getChans() const { return m_chans; }
 
         // Get the length of each side of the LUT captured by the tree.
-        inline const unsigned long* getGridSize() const { return m_gsz; }
+        inline const unsigned long * getGridSize() const { return m_gsz; }
 
         // Get the depth (number of levels) in the tree.
         inline unsigned long getDepth() const { return m_depth; }
 
         // Get the tree levels data structure.
-        inline const TreeLevels& getLevels() const { return m_levels; }
+        inline const TreeLevels & getLevels() const { return m_levels; }
 
         // Get the offsets to the base of the vectors.
-        inline const BaseIndsVec& getBaseInds() const { return m_baseInds; }
+        inline const BaseIndsVec & getBaseInds() const { return m_baseInds; }
 
         // Debugging method to print tree properties.
         // void print() const;
@@ -150,25 +153,23 @@ class InvLut3DRenderer : public OpCPU
         void initInds();
 
         // Initialize the tree with the min and max values for each LUT cube.
-        void initRanges(float *grvec);
+        void initRanges(float * grvec);
 
         void indsToHash(const unsigned long i);
 
-        void updateChildren(const ulongVector &hashes,
-                            const unsigned long level);
+        void updateChildren(const ulongVector & hashes, const unsigned long level);
 
         void updateRanges(const unsigned long level);
 
-        unsigned long   m_chans = 0;          // in/out channels of the LUT
-        unsigned long   m_gsz[4] = {0,0,0,0}; // grid size of the LUT
-        unsigned long   m_depth = 0;          // depth of the tree
-        TreeLevels      m_levels;             // tree level structure
-        BaseIndsVec     m_baseInds;           // indices for LUT base grid points
-        ulongVector     m_levelScales;        // scaling of the tree levels
+        unsigned long m_chans  = 0;            // in/out channels of the LUT
+        unsigned long m_gsz[4] = {0, 0, 0, 0}; // grid size of the LUT
+        unsigned long m_depth  = 0;            // depth of the tree
+        TreeLevels m_levels;                   // tree level structure
+        BaseIndsVec m_baseInds;                // indices for LUT base grid points
+        ulongVector m_levelScales;             // scaling of the tree levels
     };
 
 public:
-
     explicit InvLut3DRenderer(ConstLut3DOpDataRcPtr & lut);
     virtual ~InvLut3DRenderer();
 
@@ -180,19 +181,18 @@ public:
     void extrapolate3DArray(ConstLut3DOpDataRcPtr & lut);
 
 protected:
-    float              m_scale;        // output scaling for r, g and b
-                                       // components
-    long               m_dim;          // grid size of the extrapolated 3d-LUT
-    RangeTree          m_tree;         // object to allow fast range queries of
-                                       // the LUT
-    std::vector<float> m_grvec;        // extrapolated 3d-LUT values
+    float m_scale;              // output scaling for r, g and b
+                                // components
+    long m_dim;                 // grid size of the extrapolated 3d-LUT
+    RangeTree m_tree;           // object to allow fast range queries of
+                                // the LUT
+    std::vector<float> m_grvec; // extrapolated 3d-LUT values
 
 private:
-    InvLut3DRenderer() = delete;
-    InvLut3DRenderer(const InvLut3DRenderer&) = delete;
-    InvLut3DRenderer& operator=(const InvLut3DRenderer&) = delete;
+    InvLut3DRenderer()                                     = delete;
+    InvLut3DRenderer(const InvLut3DRenderer &)             = delete;
+    InvLut3DRenderer & operator=(const InvLut3DRenderer &) = delete;
 };
-
 
 #if OCIO_USE_SSE2
 
@@ -201,12 +201,13 @@ private:
 // Pixels ordered in such a way that the blue coordinate changes fastest,
 // then the green coordinate, and finally, the red coordinate changes slowest
 //
-inline __m128i GetLut3DIndices(const __m128i &idxR,
-                               const __m128i &idxG,
-                               const __m128i &idxB,
-                               const __m128i /*&sizesR*/,
-                               const __m128i &sizesG,
-                               const __m128i &sizesB)
+inline __m128i GetLut3DIndices(
+    const __m128i & idxR,
+    const __m128i & idxG,
+    const __m128i & idxB,
+    const __m128i /*&sizesR*/,
+    const __m128i & sizesG,
+    const __m128i & sizesB)
 {
     // clang-format off
 
@@ -250,16 +251,17 @@ inline __m128i GetLut3DIndices(const __m128i &idxR,
     // clang-format on
 }
 
-inline void LookupNearest4(float* optLut,
-                           const __m128i &rIndices,
-                           const __m128i &gIndices,
-                           const __m128i &bIndices,
-                           const __m128i &dim,
-                           __m128 res[4])
+inline void LookupNearest4(
+    float * optLut,
+    const __m128i & rIndices,
+    const __m128i & gIndices,
+    const __m128i & bIndices,
+    const __m128i & dim,
+    __m128 res[4])
 {
     __m128i offsets = GetLut3DIndices(rIndices, gIndices, bIndices, dim, dim, dim);
 
-    int* offsetInt = (int*)&offsets;
+    int * offsetInt = (int *)&offsets;
 
     res[0] = _mm_load_ps(optLut + offsetInt[0]);
     res[1] = _mm_load_ps(optLut + offsetInt[1]);
@@ -270,7 +272,7 @@ inline void LookupNearest4(float* optLut,
 #else
 
 // Linear
-inline void lerp_rgb(float* out, float* a, float* b, float* z)
+inline void lerp_rgb(float * out, float * a, float * b, float * z)
 {
     out[0] = (b[0] - a[0]) * z[0] + a[0];
     out[1] = (b[1] - a[1]) * z[1] + a[1];
@@ -278,8 +280,7 @@ inline void lerp_rgb(float* out, float* a, float* b, float* z)
 }
 
 // Bilinear
-inline void lerp_rgb(float* out, float* a, float* b, float* c,
-                     float* d, float* y, float* z)
+inline void lerp_rgb(float * out, float * a, float * b, float * c, float * d, float * y, float * z)
 {
     float v1[3];
     float v2[3];
@@ -290,20 +291,30 @@ inline void lerp_rgb(float* out, float* a, float* b, float* c,
 }
 
 // Trilinear
-inline void lerp_rgb(float* out, float* a, float* b, float* c, float* d,
-                     float* e, float* f, float* g, float* h,
-                     float* x, float* y, float* z)
+inline void lerp_rgb(
+    float * out,
+    float * a,
+    float * b,
+    float * c,
+    float * d,
+    float * e,
+    float * f,
+    float * g,
+    float * h,
+    float * x,
+    float * y,
+    float * z)
 {
     float v1[3];
     float v2[3];
 
-    lerp_rgb(v1, a,b,c,d,y,z);
-    lerp_rgb(v2, e,f,g,h,y,z);
+    lerp_rgb(v1, a, b, c, d, y, z);
+    lerp_rgb(v2, e, f, g, h, y, z);
     lerp_rgb(out, v1, v2, x);
 }
 #endif
 
-inline int GetLut3DIndexBlueFast(int indexR, int indexG, int indexB, long dim, int components=3)
+inline int GetLut3DIndexBlueFast(int indexR, int indexG, int indexB, long dim, int components = 3)
 {
     return components * (indexB + (int)dim * (indexG + (int)dim * indexR));
 }
@@ -347,15 +358,15 @@ void BaseLut3DRenderer::updateData(ConstLut3DOpDataRcPtr & lut)
 #if OCIO_USE_SSE2
 // Creates a LUT aligned to a 16 byte boundary with RGB and 0 for alpha
 // in order to be able to load the LUT using _mm_load_ps.
-float* BaseLut3DRenderer::createOptLut(const Array::Values& lut) const
+float * BaseLut3DRenderer::createOptLut(const Array::Values & lut) const
 {
     const long maxEntries = m_dim * m_dim * m_dim;
 
-    float *optLut =
-        (float*)Platform::AlignedMalloc(maxEntries * m_components * sizeof(float), 16);
+    float * optLut
+        = (float *)Platform::AlignedMalloc(maxEntries * m_components * sizeof(float), 16);
 
-    float* currentValue = optLut;
-    for (long idx = 0; idx<maxEntries; idx++)
+    float * currentValue = optLut;
+    for (long idx = 0; idx < maxEntries; idx++)
     {
         currentValue[0] = SanitizeFloat(lut[idx * 3]);
         currentValue[1] = SanitizeFloat(lut[idx * 3 + 1]);
@@ -367,15 +378,14 @@ float* BaseLut3DRenderer::createOptLut(const Array::Values& lut) const
     return optLut;
 }
 #else
-float* BaseLut3DRenderer::createOptLut(const Array::Values& lut) const
+float * BaseLut3DRenderer::createOptLut(const Array::Values & lut) const
 {
     const long maxEntries = m_dim * m_dim * m_dim;
 
-    float *optLut =
-        (float*)malloc(maxEntries * m_components * sizeof(float));
+    float * optLut = (float *)malloc(maxEntries * m_components * sizeof(float));
 
-    float* currentValue = optLut;
-    for (long idx = 0; idx<maxEntries; idx++)
+    float * currentValue = optLut;
+    for (long idx = 0; idx < maxEntries; idx++)
     {
         currentValue[0] = SanitizeFloat(lut[idx * 3]);
         currentValue[1] = SanitizeFloat(lut[idx * 3 + 1]);
@@ -390,33 +400,33 @@ float* BaseLut3DRenderer::createOptLut(const Array::Values& lut) const
 Lut3DTetrahedralRenderer::Lut3DTetrahedralRenderer(ConstLut3DOpDataRcPtr & lut)
     : BaseLut3DRenderer(lut)
 {
-    #if OCIO_USE_SSE2
+#if OCIO_USE_SSE2
     if (CPUInfo::instance().hasSSE2())
     {
         m_applyLutFunc = applyTetrahedralSSE2;
     }
-    #endif
+#endif
 
-    #if OCIO_USE_AVX
+#if OCIO_USE_AVX
     if (CPUInfo::instance().hasAVX() && !CPUInfo::instance().AVXSlow())
     {
         m_applyLutFunc = applyTetrahedralAVX;
     }
-    #endif
+#endif
 
-    #if OCIO_USE_AVX2
+#if OCIO_USE_AVX2
     if (CPUInfo::instance().hasAVX2() && !CPUInfo::instance().AVX2SlowGather())
     {
         m_applyLutFunc = applyTetrahedralAVX2;
     }
-    #endif
+#endif
 
-    #if OCIO_USE_AVX512
+#if OCIO_USE_AVX512
     if (CPUInfo::instance().hasAVX512())
     {
         m_applyLutFunc = applyTetrahedralAVX512;
     }
-    #endif
+#endif
 }
 
 Lut3DTetrahedralRenderer::~Lut3DTetrahedralRenderer()
@@ -426,7 +436,7 @@ Lut3DTetrahedralRenderer::~Lut3DTetrahedralRenderer()
 void Lut3DTetrahedralRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
     // clang-format off
 
@@ -643,13 +653,13 @@ Lut3DRenderer::~Lut3DRenderer()
 void Lut3DRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
 #if OCIO_USE_SSE2
 
-    __m128 step = _mm_set1_ps(m_step);
+    __m128 step   = _mm_set1_ps(m_step);
     __m128 maxIdx = _mm_set1_ps((float)(m_dim - 1));
-    __m128i dim = _mm_set1_epi32(m_dim);
+    __m128i dim   = _mm_set1_epi32(m_dim);
 
     __m128 v[8];
 
@@ -847,27 +857,25 @@ void Lut3DRenderer::apply(const void * inImg, void * outImg, long numPixels) con
 // This function tests a given grid of the LUT to see if it contains the inverse.
 // A customized matrix factorization updating technique is used to compute this
 // as efficiently as possible.
-unsigned long invert_hypercube
-(
-    unsigned long    n,
-    float*           x_out,
-    const float*     gr,
-    unsigned long*   ind2off,
-    float*           val,
-    unsigned long*   guess,
-    unsigned long    list_len,
-    long*            ops_list,
-    unsigned long*   entering_list,
-    unsigned long*   new_vert_list,
-    unsigned long*   path_list,
-    unsigned long*   path_order
-)
+unsigned long invert_hypercube(
+    unsigned long n,
+    float * x_out,
+    const float * gr,
+    unsigned long * ind2off,
+    float * val,
+    unsigned long * guess,
+    unsigned long list_len,
+    long * ops_list,
+    unsigned long * entering_list,
+    unsigned long * new_vert_list,
+    unsigned long * path_list,
+    unsigned long * path_order)
 {
     // Singularity tolerance
     const double ZERO_TOL = 1.0e-9;
     // Feasibility tolerances
     const double NEGZERO_TOL = -1.0e-9;
-    const double ONE_TOL = 1.0 + 1.0e-9;
+    const double ONE_TOL     = 1.0 + 1.0e-9;
 
     unsigned long row_perm[MAX_N], col_perm[MAX_N];
     unsigned long sweep_to[MAX_SWEEPS], sweep_from[MAX_SWEEPS];
@@ -875,8 +883,8 @@ unsigned long invert_hypercube
     double b[MAX_N], x2[MAX_N];
     double new_vert[MAX_N];
 
-    long backsub = 0;
-    unsigned long infeas = 0;
+    long backsub            = 0;
+    unsigned long infeas    = 0;
     const unsigned long nm1 = n - 1;
     const unsigned long nm2 = n - 2;
     unsigned long numsweeps = 0;
@@ -889,10 +897,11 @@ unsigned long invert_hypercube
 
     for (unsigned long i = 0; i < n; i++)
     {
-        row_perm[i] = i;  col_perm[i] = i;
+        row_perm[i]  = i;
+        col_perm[i]  = i;
         base_vert[i] = gr[base_ind + i];
-        b[i] = val[i] - base_vert[i];
-        y[i] = b[i];
+        b[i]         = val[i] - base_vert[i];
+        y[i]         = b[i];
         for (unsigned long j = 0; j < n; j++)
         {
             U[i][j] = (i == j) ? 1.0 : 0.0;
@@ -904,10 +913,13 @@ unsigned long invert_hypercube
         backsub = ops_list[i];
         if (backsub < 0)
         {
-            numsweeps = 0;  backsub = 0;
+            numsweeps = 0;
+            backsub   = 0;
             for (unsigned long j = 0; j < n; j++)
             {
-                y[j] = b[j];  row_perm[j] = j;  col_perm[j] = j;
+                y[j]        = b[j];
+                row_perm[j] = j;
+                col_perm[j] = j;
                 for (unsigned long k = 0; k < n; k++)
                 {
                     U[j][k] = (j == k) ? 1.0 : 0.0;
@@ -919,7 +931,7 @@ unsigned long invert_hypercube
         for (unsigned long j = 0; j < n; j++)
         {
             const unsigned long tmp_ind = base_ind + n * new_vert_list[i];
-            new_vert[j] = gr[tmp_ind + j] - base_vert[j];
+            new_vert[j]                 = gr[tmp_ind + j] - base_vert[j];
         }
 
         for (unsigned long j = 0; j < numsweeps; j++)
@@ -951,15 +963,16 @@ unsigned long invert_hypercube
         for (unsigned long j = leaving_nz - 1; j < nm1; j++)
         {
             const unsigned long jp1 = j + 1;
-            unsigned long piv = j;
-            unsigned long col_piv = j;
-            double abs_d = fabs(U[row_perm[j]][col_perm[j]]);
+            unsigned long piv       = j;
+            unsigned long col_piv   = j;
+            double abs_d            = fabs(U[row_perm[j]][col_perm[j]]);
             for (unsigned long k = jp1; k < n; k++)
             {
                 const double abs_n = fabs(U[row_perm[k]][col_perm[j]]);
                 if (abs_n > abs_d)
                 {
-                    abs_d = abs_n;  piv = k;
+                    abs_d = abs_n;
+                    piv   = k;
                 }
             }
 
@@ -971,23 +984,26 @@ unsigned long invert_hypercube
                     for (unsigned long k = j; k < n; k++)
                     {
                         const double abs_n = fabs(U[row_perm[k]][col_perm[h]]);
-                        if (abs_n > abs_d) {
-                            abs_d = abs_n;  piv = k;  col_piv = h;
+                        if (abs_n > abs_d)
+                        {
+                            abs_d   = abs_n;
+                            piv     = k;
+                            col_piv = h;
                         }
                     }
                     if (abs_d > ZERO_TOL)
                     {
                         const unsigned long tmp_ind = col_perm[j];
-                        col_perm[j] = col_perm[col_piv];
-                        col_perm[col_piv] = tmp_ind;
+                        col_perm[j]                 = col_perm[col_piv];
+                        col_perm[col_piv]           = tmp_ind;
                     }
                 }
             }
             if (piv != j)
             {
                 const unsigned long tmp_ind = row_perm[j];
-                row_perm[j] = row_perm[piv];
-                row_perm[piv] = tmp_ind;
+                row_perm[j]                 = row_perm[piv];
+                row_perm[piv]               = tmp_ind;
             }
 
             const double denom = U[row_perm[j]][col_perm[j]];
@@ -996,16 +1012,16 @@ unsigned long invert_hypercube
                 double num = U[row_perm[h]][col_perm[j]];
                 if (fabs(num) >= ZERO_TOL)
                 {
-                    double f = num / denom;
+                    double f                    = num / denom;
                     U[row_perm[h]][col_perm[j]] = 0.0;
                     for (unsigned long k = jp1; k < n; k++)
                     {
                         U[row_perm[h]][col_perm[k]] -= f * U[row_perm[j]][col_perm[k]];
                     }
                     y[row_perm[h]] -= f * y[row_perm[j]];
-                    sweep_to[numsweeps] = row_perm[h];
+                    sweep_to[numsweeps]   = row_perm[h];
                     sweep_from[numsweeps] = row_perm[j];
-                    sweep_f[numsweeps] = f;
+                    sweep_f[numsweeps]    = f;
                     numsweeps += 1;
                 }
             }
@@ -1026,7 +1042,7 @@ unsigned long invert_hypercube
                     }
                     else
                     {
-                        x[js] = 0.0;
+                        x[js]  = 0.0;
                         infeas = 0;
                     }
                 }
@@ -1062,12 +1078,13 @@ unsigned long invert_hypercube
                     x2[col_perm[j]] = x[j];
                 }
 
-                unsigned long tmp_ind = i * n + n - 1;
+                unsigned long tmp_ind     = i * n + n - 1;
                 x_out[path_list[tmp_ind]] = float(x2[path_order[0]]);
                 tmp_ind--;
                 for (unsigned long j = 1; j < n; j++)
                 {
-                    x_out[path_list[tmp_ind]] = float(x2[path_order[j]] + x_out[path_list[tmp_ind + 1]]);
+                    x_out[path_list[tmp_ind]]
+                        = float(x2[path_order[j]] + x_out[path_list[tmp_ind + 1]]);
                     tmp_ind--;
                 }
 
@@ -1098,10 +1115,10 @@ InvLut3DRenderer::RangeTree::~RangeTree()
 {
 }
 
-void InvLut3DRenderer::RangeTree::initRanges(float *grvec)
+void InvLut3DRenderer::RangeTree::initRanges(float * grvec)
 {
     const unsigned long depthm1 = m_depth - 1;
-    const unsigned long N = m_levels[depthm1].elems;
+    const unsigned long N       = m_levels[depthm1].elems;
     m_levels[depthm1].minVals.resize(N * m_chans);
     m_levels[depthm1].maxVals.resize(N * m_chans);
     // Our 3d-LUTs are stored with the blue chan varying most rapidly.
@@ -1139,12 +1156,13 @@ void InvLut3DRenderer::RangeTree::initRanges(float *grvec)
 
     // clang-format on
 
-    float minVal[MAX_N] = { 0.0f, 0.0f, 0.0f, 0.0f };
-    float maxVal[MAX_N] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    float minVal[MAX_N] = {0.0f, 0.0f, 0.0f, 0.0f};
+    float maxVal[MAX_N] = {0.0f, 0.0f, 0.0f, 0.0f};
     for (unsigned long i = 0; i < N; i++)
     {
-        const unsigned long baseOffset = m_baseInds[i].inds[0] * ind0scale +
-            m_baseInds[i].inds[1] * ind1scale + m_baseInds[i].inds[2];
+        const unsigned long baseOffset = m_baseInds[i].inds[0] * ind0scale
+                                         + m_baseInds[i].inds[1] * ind1scale
+                                         + m_baseInds[i].inds[2];
 
         for (unsigned long k = 0; k < m_chans; k++)
         {
@@ -1220,7 +1238,7 @@ void InvLut3DRenderer::RangeTree::initInds()
 
 void InvLut3DRenderer::RangeTree::indsToHash(const unsigned long i)
 {
-    const unsigned long pows2[4] = { 1, 2, 4, 8 };
+    const unsigned long pows2[4] = {1, 2, 4, 8};
     unsigned long keyBits[16];
     const unsigned long depthm1 = m_depth - 1;
 
@@ -1242,20 +1260,19 @@ void InvLut3DRenderer::RangeTree::indsToHash(const unsigned long i)
 }
 
 void InvLut3DRenderer::RangeTree::updateChildren(
-    const ulongVector &hashes,
-    const unsigned long level
-)
+    const ulongVector & hashes,
+    const unsigned long level)
 {
     const unsigned long levelSize = m_levels[level].elems;
     m_levels[level].child0offsets.resize(levelSize);
     m_levels[level].numChildren.resize(levelSize);
 
     const unsigned long maxChildren = 1 << m_chans;
-    const unsigned long gap = m_levelScales[level + 1] * maxChildren;
-    unsigned long cnt = 1;
+    const unsigned long gap         = m_levelScales[level + 1] * maxChildren;
+    unsigned long cnt               = 1;
 
     m_levels[level].child0offsets[0] = 0;
-    const unsigned long prevSize = static_cast<unsigned long>(hashes.size());
+    const unsigned long prevSize     = static_cast<unsigned long>(hashes.size());
     for (unsigned long i = 1; i < prevSize; i++)
     {
         if (hashes[i] - hashes[i - 1] > gap)
@@ -1267,8 +1284,8 @@ void InvLut3DRenderer::RangeTree::updateChildren(
 
     for (unsigned long i = 0; i < levelSize - 1; i++)
     {
-        m_levels[level].numChildren[i] = m_levels[level].child0offsets[i + 1] -
-                                         m_levels[level].child0offsets[i];
+        m_levels[level].numChildren[i]
+            = m_levels[level].child0offsets[i + 1] - m_levels[level].child0offsets[i];
     }
     const unsigned long tmp
         = static_cast<unsigned long>(hashes.size() - m_levels[level].child0offsets[levelSize - 1]);
@@ -1278,7 +1295,7 @@ void InvLut3DRenderer::RangeTree::updateChildren(
 void InvLut3DRenderer::RangeTree::updateRanges(const unsigned long level)
 {
     const unsigned long maxChildren = 1 << m_chans;
-    const unsigned long levelSize = m_levels[level].elems;
+    const unsigned long levelSize   = m_levels[level].elems;
 
     m_levels[level].minVals.resize(levelSize * m_chans);
     m_levels[level].maxVals.resize(levelSize * m_chans);
@@ -1288,10 +1305,10 @@ void InvLut3DRenderer::RangeTree::updateRanges(const unsigned long level)
         const unsigned long index = m_levels[level].child0offsets[i];
         for (unsigned long k = 0; k < m_chans; k++)
         {
-            m_levels[level].minVals[i * m_chans + k] =
-                m_levels[level + 1].minVals[index * m_chans + k];
-            m_levels[level].maxVals[i * m_chans + k] =
-                m_levels[level + 1].maxVals[index * m_chans + k];
+            m_levels[level].minVals[i * m_chans + k]
+                = m_levels[level + 1].minVals[index * m_chans + k];
+            m_levels[level].maxVals[i * m_chans + k]
+                = m_levels[level + 1].maxVals[index * m_chans + k];
         }
 
         // New min/max combine the min/max for all children from next lower level.
@@ -1302,13 +1319,13 @@ void InvLut3DRenderer::RangeTree::updateRanges(const unsigned long level)
                 const unsigned long ind = index + j - 1;
                 for (unsigned long k = 0; k < m_chans; k++)
                 {
-                    const float minVal = m_levels[level].minVals[i * m_chans + k];
+                    const float minVal      = m_levels[level].minVals[i * m_chans + k];
                     const float childMinVal = m_levels[level + 1].minVals[ind * m_chans + k];
                     if (childMinVal < minVal)
                     {
                         m_levels[level].minVals[i * m_chans + k] = childMinVal;
                     }
-                    const float maxVal = m_levels[level].maxVals[i * m_chans + k];
+                    const float maxVal      = m_levels[level].maxVals[i * m_chans + k];
                     const float childMaxVal = m_levels[level + 1].maxVals[ind * m_chans + k];
                     if (childMaxVal > maxVal)
                     {
@@ -1320,15 +1337,15 @@ void InvLut3DRenderer::RangeTree::updateRanges(const unsigned long level)
     }
 }
 
-void InvLut3DRenderer::RangeTree::initialize(float *grvec, unsigned long gsz)
+void InvLut3DRenderer::RangeTree::initialize(float * grvec, unsigned long gsz)
 {
-    m_chans = 3;  // only supporting Lut3D for now
+    m_chans  = 3; // only supporting Lut3D for now
     m_gsz[0] = m_gsz[1] = m_gsz[2] = gsz;
-    m_gsz[3] = 0;
+    m_gsz[3]                       = 0;
 
     // Determine depth of tree.
     float maxGsz = 0.f;
-    for (unsigned long i = 0; i<m_chans; i++)
+    for (unsigned long i = 0; i < m_chans; i++)
     {
         maxGsz = std::max(maxGsz, (float)m_gsz[i]);
     }
@@ -1357,9 +1374,9 @@ void InvLut3DRenderer::RangeTree::initialize(float *grvec, unsigned long gsz)
     for (unsigned long level = 0; level < m_depth; level++)
     {
         const unsigned long depthm1 = m_depth - 1;
-        const unsigned long shift = (m_chans + 1) * (depthm1 - level);
-        const unsigned long scale = 1 << shift;
-        m_levelScales[level] = scale;
+        const unsigned long shift   = (m_chans + 1) * (depthm1 - level);
+        const unsigned long scale   = 1 << shift;
+        m_levelScales[level]        = scale;
     }
 
     // Initialize indices into 3d-LUT.
@@ -1396,7 +1413,7 @@ void InvLut3DRenderer::RangeTree::initialize(float *grvec, unsigned long gsz)
         for (unsigned long i = 0; i < levelSize; i++)
         {
             const unsigned long index = m_levels[level].child0offsets[i];
-            hashes[i] = hashes[index];
+            hashes[i]                 = hashes[index];
         }
         hashes.resize(levelSize);
 
@@ -1417,7 +1434,8 @@ void InvLut3DRenderer::RangeTree::initialize(float *grvec, unsigned long gsz)
             std::cout << "offset / num:  ";
             for (unsigned long k = 0; k < 8; k++)
             {
-                std::cout << "  " << _levels[level].child0offsets[k] << " / " << _levels[level].numChildren[k];
+                std::cout << "  " << _levels[level].child0offsets[k] << " / " <<
+_levels[level].numChildren[k];
             }
             std::cout << "\n";
         }
@@ -1438,7 +1456,7 @@ void InvLut3DRenderer::RangeTree::initialize(float *grvec, unsigned long gsz)
     }
 }*/
 
-float* extrapolate(float RGB[3], float center, float scale)
+float * extrapolate(float RGB[3], float center, float scale)
 {
     RGB[0] = (RGB[0] - center) * scale + center;
     RGB[1] = (RGB[1] - center) * scale + center;
@@ -1455,7 +1473,7 @@ InvLut3DRenderer::InvLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
     updateData(lut);
 }
 
-InvLut3DRenderer:: ~InvLut3DRenderer()
+InvLut3DRenderer::~InvLut3DRenderer()
 {
 }
 
@@ -1463,10 +1481,10 @@ void InvLut3DRenderer::updateData(ConstLut3DOpDataRcPtr & lut)
 {
     extrapolate3DArray(lut);
 
-    m_dim = lut->getArray().getLength() + 2;  // extrapolation adds 2
+    m_dim = lut->getArray().getLength() + 2; // extrapolation adds 2
 
     m_tree.initialize(m_grvec.data(), m_dim);
-    //m_tree.print();
+    // m_tree.print();
 
     // Converts from index units to inDepth units of the original LUT.
     // (Note that inDepth of the original LUT is outDepth of the inverse LUT.)
@@ -1477,20 +1495,20 @@ void InvLut3DRenderer::updateData(ConstLut3DOpDataRcPtr & lut)
 
 void InvLut3DRenderer::extrapolate3DArray(ConstLut3DOpDataRcPtr & lut)
 {
-    const unsigned long dim = lut->getArray().getLength();
+    const unsigned long dim    = lut->getArray().getLength();
     const unsigned long newDim = dim + 2;
 
-    const Lut3DOpData::Lut3DArray& array =
-        static_cast<const Lut3DOpData::Lut3DArray&>(lut->getArray());
+    const Lut3DOpData::Lut3DArray & array
+        = static_cast<const Lut3DOpData::Lut3DArray &>(lut->getArray());
 
     Lut3DOpData::Lut3DArray newArray(newDim);
 
     // Copy center values.
-    for (unsigned long idx = 0; idx<dim; idx++)
+    for (unsigned long idx = 0; idx < dim; idx++)
     {
-        for (unsigned long jdx = 0; jdx<dim; jdx++)
+        for (unsigned long jdx = 0; jdx < dim; jdx++)
         {
-            for (unsigned long kdx = 0; kdx<dim; kdx++)
+            for (unsigned long kdx = 0; kdx < dim; kdx++)
             {
                 float RGB[3];
                 array.getRGB(idx, jdx, kdx, RGB);
@@ -1500,14 +1518,14 @@ void InvLut3DRenderer::extrapolate3DArray(ConstLut3DOpDataRcPtr & lut)
     }
 
     const float center = 0.5f;
-    const float scale = 4.f;
+    const float scale  = 4.f;
 
     // Extrapolate faces.
-    for (unsigned long idx = 0; idx<dim; idx++)
+    for (unsigned long idx = 0; idx < dim; idx++)
     {
-        for (unsigned long jdx = 0; jdx<dim; jdx++)
+        for (unsigned long jdx = 0; jdx < dim; jdx++)
         {
-            for (unsigned long kdx = 0; kdx<dim; kdx += (dim - 1))
+            for (unsigned long kdx = 0; kdx < dim; kdx += (dim - 1))
             {
                 float RGB[3];
                 const unsigned long index = kdx == 0 ? 0 : dim + 1;
@@ -1516,11 +1534,11 @@ void InvLut3DRenderer::extrapolate3DArray(ConstLut3DOpDataRcPtr & lut)
             }
         }
     }
-    for (unsigned long idx = 0; idx<dim; idx++)
+    for (unsigned long idx = 0; idx < dim; idx++)
     {
-        for (unsigned long jdx = 0; jdx<dim; jdx += (dim - 1))
+        for (unsigned long jdx = 0; jdx < dim; jdx += (dim - 1))
         {
-            for (unsigned long kdx = 0; kdx<dim; kdx++)
+            for (unsigned long kdx = 0; kdx < dim; kdx++)
             {
                 float RGB[3];
                 const unsigned long index = jdx == 0 ? 0 : dim + 1;
@@ -1529,11 +1547,11 @@ void InvLut3DRenderer::extrapolate3DArray(ConstLut3DOpDataRcPtr & lut)
             }
         }
     }
-    for (unsigned long idx = 0; idx<dim; idx += (dim - 1))
+    for (unsigned long idx = 0; idx < dim; idx += (dim - 1))
     {
-        for (unsigned long jdx = 0; jdx<dim; jdx++)
+        for (unsigned long jdx = 0; jdx < dim; jdx++)
         {
-            for (unsigned long kdx = 0; kdx<dim; kdx++)
+            for (unsigned long kdx = 0; kdx < dim; kdx++)
             {
                 float RGB[3];
                 const unsigned long index = idx == 0 ? 0 : dim + 1;
@@ -1544,11 +1562,11 @@ void InvLut3DRenderer::extrapolate3DArray(ConstLut3DOpDataRcPtr & lut)
     }
 
     // Extrapolate edges.
-    for (unsigned long idx = 0; idx<dim; idx += (dim - 1))
+    for (unsigned long idx = 0; idx < dim; idx += (dim - 1))
     {
-        for (unsigned long jdx = 0; jdx<dim; jdx += (dim - 1))
+        for (unsigned long jdx = 0; jdx < dim; jdx += (dim - 1))
         {
-            for (unsigned long kdx = 0; kdx<dim; kdx++)
+            for (unsigned long kdx = 0; kdx < dim; kdx++)
             {
                 float RGB[3];
                 const unsigned long indexi = idx == 0u ? 0u : dim + 1;
@@ -1558,11 +1576,11 @@ void InvLut3DRenderer::extrapolate3DArray(ConstLut3DOpDataRcPtr & lut)
             }
         }
     }
-    for (unsigned long idx = 0; idx<dim; idx++)
+    for (unsigned long idx = 0; idx < dim; idx++)
     {
-        for (unsigned long jdx = 0; jdx<dim; jdx += (dim - 1))
+        for (unsigned long jdx = 0; jdx < dim; jdx += (dim - 1))
         {
-            for (unsigned long kdx = 0; kdx<dim; kdx += (dim - 1))
+            for (unsigned long kdx = 0; kdx < dim; kdx += (dim - 1))
             {
                 float RGB[3];
                 const unsigned long indexk = kdx == 0 ? 0 : dim + 1;
@@ -1572,11 +1590,11 @@ void InvLut3DRenderer::extrapolate3DArray(ConstLut3DOpDataRcPtr & lut)
             }
         }
     }
-    for (unsigned long idx = 0; idx<dim; idx += (dim - 1))
+    for (unsigned long idx = 0; idx < dim; idx += (dim - 1))
     {
-        for (unsigned long jdx = 0; jdx<dim; jdx++)
+        for (unsigned long jdx = 0; jdx < dim; jdx++)
         {
-            for (unsigned long kdx = 0; kdx<dim; kdx += (dim - 1))
+            for (unsigned long kdx = 0; kdx < dim; kdx += (dim - 1))
             {
                 float RGB[3];
                 const unsigned long indexi = idx == 0 ? 0 : dim + 1;
@@ -1588,11 +1606,11 @@ void InvLut3DRenderer::extrapolate3DArray(ConstLut3DOpDataRcPtr & lut)
     }
 
     // Extrapolate corners.
-    for (unsigned long idx = 0; idx<dim; idx += (dim - 1))
+    for (unsigned long idx = 0; idx < dim; idx += (dim - 1))
     {
-        for (unsigned long jdx = 0; jdx<dim; jdx += (dim - 1))
+        for (unsigned long jdx = 0; jdx < dim; jdx += (dim - 1))
         {
-            for (unsigned long kdx = 0; kdx<dim; kdx += (dim - 1))
+            for (unsigned long kdx = 0; kdx < dim; kdx += (dim - 1))
             {
                 float RGB[3];
                 const unsigned long indexi = idx == 0 ? 0 : dim + 1;
@@ -1611,14 +1629,14 @@ void InvLut3DRenderer::extrapolate3DArray(ConstLut3DOpDataRcPtr & lut)
 
 void InvLut3DRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
-    const unsigned long* gsz = m_tree.getGridSize();
-    const float maxDim = float(gsz[0] - 3u);  // unextrapolated max
-    const unsigned long chans = m_tree.getChans();
-    const unsigned long depth = m_tree.getDepth();
-    const TreeLevels& levels = m_tree.getLevels();
-    const BaseIndsVec& baseInds = m_tree.getBaseInds();
+    const unsigned long * gsz    = m_tree.getGridSize();
+    const float maxDim           = float(gsz[0] - 3u); // unextrapolated max
+    const unsigned long chans    = m_tree.getChans();
+    const unsigned long depth    = m_tree.getDepth();
+    const TreeLevels & levels    = m_tree.getLevels();
+    const BaseIndsVec & baseInds = m_tree.getBaseInds();
 
-    unsigned long offs[3] = { gsz[2] * gsz[1], gsz[2], 1 };
+    unsigned long offs[3] = {gsz[2] * gsz[1], gsz[2], 1};
 
     // clang-format off
 
@@ -1646,14 +1664,15 @@ void InvLut3DRenderer::apply(const void * inImg, void * outImg, long numPixels) 
 
     // clang-format on
 
-    unsigned long path_order[] = { 1, 0, 2 };
+    unsigned long path_order[] = {1, 0, 2};
     unsigned long new_vert_list[8];
     for (int i = 0; i < 8; i++)
     {
-        new_vert_list[i] =  // must happen before * chans
-            new_verts[i * 3] * offs[0] + new_verts[i * 3 + 1] * offs[1] + new_verts[i * 3 + 2] * offs[2];
+        new_vert_list[i] = // must happen before * chans
+            new_verts[i * 3] * offs[0] + new_verts[i * 3 + 1] * offs[1]
+            + new_verts[i * 3 + 2] * offs[2];
     }
-    for (unsigned long i = 0; i<chans; i++)
+    for (unsigned long i = 0; i < chans; i++)
     {
         offs[i] = offs[i] * chans;
     }
@@ -1662,17 +1681,17 @@ void InvLut3DRenderer::apply(const void * inImg, void * outImg, long numPixels) 
     unsigned long currentChild[MAX_LEVELS];
     unsigned long currentNumChildren[MAX_LEVELS];
     unsigned long currentChildInd[MAX_LEVELS];
-    for (unsigned long i = 0; i<MAX_LEVELS; i++)
+    for (unsigned long i = 0; i < MAX_LEVELS; i++)
     {
-        currentChild[i] = 0;
+        currentChild[i]       = 0;
         currentNumChildren[i] = 1;
-        currentChildInd[i] = 0;
+        currentChildInd[i]    = 0;
     }
 
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for (long i = 0; i<numPixels; ++i)
+    for (long i = 0; i < numPixels; ++i)
     {
         // Although the inverse LUT has been extrapolated, it may not be enough
         // to cover an HDR float image, so need to clamp.
@@ -1680,19 +1699,19 @@ void InvLut3DRenderer::apply(const void * inImg, void * outImg, long numPixels) 
         // TODO: Should improve this based on actual LUT contents since it
         // is legal for LUT contents to exceed the typical scaling range.
         constexpr float inMax = 1.0f;
-        const float R = Clamp(in[0], 0.f, inMax);
-        const float G = Clamp(in[1], 0.f, inMax);
-        const float B = Clamp(in[2], 0.f, inMax);
+        const float R         = Clamp(in[0], 0.f, inMax);
+        const float G         = Clamp(in[1], 0.f, inMax);
+        const float B         = Clamp(in[2], 0.f, inMax);
 
-        const long depthm1 = depth - 1;
+        const long depthm1        = depth - 1;
         unsigned long baseIndx[3] = {0, 0, 0};
 
         currentNumChildren[0] = (unsigned long)levels[0].child0offsets.size();
-        currentChild[0] = 0;
-        currentChildInd[0] = 0;
+        currentChild[0]       = 0;
+        currentChildInd[0]    = 0;
 
         // For now, if no result is found, return 0.
-        float result[3] = { 0.f, 0.f, 0.f };
+        float result[3] = {0.f, 0.f, 0.f};
 
         long level = 0;
         while (level >= 0)
@@ -1718,27 +1737,37 @@ void InvLut3DRenderer::apply(const void * inImg, void * outImg, long numPixels) 
                         for (unsigned long k = 0; k < chans; k++)
                             baseIndx[k] = baseInds[node].inds[k];
 
-                        float fxval[3] = { R, G, B };
+                        float fxval[3] = {R, G, B};
 
-                        const bool valid = (invert_hypercube(3, result, m_grvec.data(),
-                                                             offs, fxval, baseIndx,
-                                                             list_len, ops_list,
-                                                             entering_list, new_vert_list,
-                                                             path_list, path_order) != 0);
+                        const bool valid
+                            = (invert_hypercube(
+                                   3,
+                                   result,
+                                   m_grvec.data(),
+                                   offs,
+                                   fxval,
+                                   baseIndx,
+                                   list_len,
+                                   ops_list,
+                                   entering_list,
+                                   new_vert_list,
+                                   path_list,
+                                   path_order)
+                               != 0);
 
                         if (valid)
                         {
-                            level = 0;  // to exit outer loop
+                            level = 0; // to exit outer loop
                             break;
                         }
                     }
                     else
                     {
-                        const int newLevel = level + 1;
+                        const int newLevel           = level + 1;
                         currentNumChildren[newLevel] = levels[level].numChildren[node];
-                        currentChildInd[newLevel] = levels[level].child0offsets[node];
-                        level = newLevel;
-                        currentChild[level] = 0;
+                        currentChildInd[newLevel]    = levels[level].child0offsets[node];
+                        level                        = newLevel;
+                        currentChild[level]          = 0;
                     }
                 }
             }
@@ -1751,7 +1780,7 @@ void InvLut3DRenderer::apply(const void * inImg, void * outImg, long numPixels) 
             out[3] = in[3];
         }
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
@@ -1769,18 +1798,18 @@ ConstOpCPURcPtr GetForwardLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
     }
 }
 
-} // anonymous namspace
+} // namespace
 
 ConstOpCPURcPtr GetLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
 {
     switch (lut->getDirection())
     {
-    case TRANSFORM_DIR_FORWARD:
-        return GetForwardLut3DRenderer(lut);
-        break;
-    case TRANSFORM_DIR_INVERSE:
-        return std::make_shared<InvLut3DRenderer>(lut);
-        break;
+        case TRANSFORM_DIR_FORWARD:
+            return GetForwardLut3DRenderer(lut);
+            break;
+        case TRANSFORM_DIR_INVERSE:
+            return std::make_shared<InvLut3DRenderer>(lut);
+            break;
     }
     throw Exception("Illegal LUT3D direction.");
 }

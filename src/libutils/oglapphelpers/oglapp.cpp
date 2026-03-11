@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <iostream>
 #include <sstream>
 #include <utility>
@@ -32,14 +31,14 @@
 
 #include "oglapp.h"
 
-
 namespace OCIO_NAMESPACE
 {
 
 OglApp::OglApp(int winWidth, int winHeight)
     : m_viewportWidth(winWidth)
     , m_viewportHeight(winHeight)
-{}
+{
+}
 
 OglApp::~OglApp()
 {
@@ -48,9 +47,9 @@ OglApp::~OglApp()
 
 void OglApp::setImageDimensions(int imgWidth, int imgHeight, Components comp)
 {
-    m_imageWidth = imgWidth;
+    m_imageWidth  = imgWidth;
     m_imageHeight = imgHeight;
-    m_components = comp;
+    m_components  = comp;
     if (m_imageHeight != 0)
     {
         m_imageAspect = (float)m_imageWidth / (float)m_imageHeight;
@@ -60,7 +59,7 @@ void OglApp::setImageDimensions(int imgWidth, int imgHeight, Components comp)
 void OglApp::initImage(int imgWidth, int imgHeight, Components comp, const float * image)
 {
     setImageDimensions(imgWidth, imgHeight, comp);
-    
+
     glGenTextures(1, &m_imageTexID);
     glActiveTexture(GL_TEXTURE0);
     updateImage(image);
@@ -79,8 +78,16 @@ void OglApp::updateImage(const float * image)
     glBindTexture(GL_TEXTURE_2D, m_imageTexID);
 
     const GLenum format = m_components == COMPONENTS_RGB ? GL_RGB : GL_RGBA;
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, m_imageWidth, m_imageHeight, 0,
-                 format, GL_FLOAT, &image[0]);
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RGBA32F_ARB,
+        m_imageWidth,
+        m_imageHeight,
+        0,
+        format,
+        GL_FLOAT,
+        &image[0]);
 }
 
 void OglApp::redisplay()
@@ -98,7 +105,7 @@ void OglApp::redisplay()
         viewportAspect = (float)m_viewportWidth / (float)m_viewportHeight;
     }
 
-    float pts[4] = { 0.0f, 0.0f, 0.0f, 0.0f }; // x0,y0,x1,y1
+    float pts[4] = {0.0f, 0.0f, 0.0f, 0.0f}; // x0,y0,x1,y1
     if (viewportAspect >= m_imageAspect)
     {
         float imgWidthScreenSpace = m_imageAspect * (float)m_viewportHeight;
@@ -110,10 +117,10 @@ void OglApp::redisplay()
     else
     {
         float imgHeightScreenSpace = (float)m_viewportWidth / m_imageAspect;
-        pts[0] = 0.0f;
-        pts[2] = (float)m_viewportWidth;
-        pts[1] = (float)m_viewportHeight * 0.5f - imgHeightScreenSpace * 0.5f;
-        pts[3] = (float)m_viewportHeight * 0.5f + imgHeightScreenSpace * 0.5f;
+        pts[0]                     = 0.0f;
+        pts[2]                     = (float)m_viewportWidth;
+        pts[1]                     = (float)m_viewportHeight * 0.5f - imgHeightScreenSpace * 0.5f;
+        pts[3]                     = (float)m_viewportHeight * 0.5f + imgHeightScreenSpace * 0.5f;
     }
 
     if (m_yMirror)
@@ -128,33 +135,32 @@ void OglApp::redisplay()
     }
 
     glEnable(GL_TEXTURE_2D);
-        glClearColor(0.2f, 0.2f, 0.2f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glColor3f(1, 1, 1);
+    glClearColor(0.2f, 0.2f, 0.2f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glColor3f(1, 1, 1);
 
-        glPushMatrix();
-            glBegin(GL_QUADS);
-                glTexCoord2f(0.0f, 1.0f);
-                glVertex2f(pts[0], pts[3]);
+    glPushMatrix();
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 1.0f);
+    glVertex2f(pts[0], pts[3]);
 
-                glTexCoord2f(0.0f, 0.0f);
-                glVertex2f(pts[0], pts[1]);
+    glTexCoord2f(0.0f, 0.0f);
+    glVertex2f(pts[0], pts[1]);
 
-                glTexCoord2f(1.0f, 0.0f);
-                glVertex2f(pts[2], pts[1]);
+    glTexCoord2f(1.0f, 0.0f);
+    glVertex2f(pts[2], pts[1]);
 
-                glTexCoord2f(1.0f, 1.0f);
-                glVertex2f(pts[2], pts[3]);
-            glEnd();
-        glPopMatrix();
+    glTexCoord2f(1.0f, 1.0f);
+    glVertex2f(pts[2], pts[3]);
+    glEnd();
+    glPopMatrix();
 
     glDisable(GL_TEXTURE_2D);
-
 }
 
 void OglApp::reshape(int width, int height)
 {
-    m_viewportWidth = width;
+    m_viewportWidth  = width;
     m_viewportHeight = height;
 
     glViewport(0, 0, m_viewportWidth, m_viewportHeight);
@@ -193,7 +199,7 @@ void OglApp::readImage(float * image)
 {
     glReadBuffer(GL_COLOR_ATTACHMENT0);
     const GLenum format = m_components == COMPONENTS_RGB ? GL_RGB : GL_RGBA;
-    glReadPixels(0, 0, m_imageWidth, m_imageHeight, format, GL_FLOAT, (GLvoid*)&image[0]);
+    glReadPixels(0, 0, m_imageWidth, m_imageHeight, format, GL_FLOAT, (GLvoid *)&image[0]);
 }
 
 void OglApp::setShader(GpuShaderDescRcPtr & shaderDesc)
@@ -254,7 +260,7 @@ void OglApp::setupCommon()
 
     // Initialize the OpenGL engine.
 
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);           // 4-byte pixel alignment
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4); // 4-byte pixel alignment
 
 #ifndef __APPLE__
     glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE);     //
@@ -268,19 +274,19 @@ void OglApp::setupCommon()
 OglAppRcPtr OglApp::CreateOglApp(const char * winTitle, int winWidth, int winHeight)
 {
 #ifdef OCIO_HEADLESS_ENABLED
-        return std::make_shared<HeadlessApp>(winTitle, winWidth, winHeight);
+    return std::make_shared<HeadlessApp>(winTitle, winWidth, winHeight);
 #else
-        return std::make_shared<ScreenApp>(winTitle, winWidth, winHeight);
+    return std::make_shared<ScreenApp>(winTitle, winWidth, winHeight);
 #endif
 }
 
-ScreenApp::ScreenApp(const char * winTitle, int winWidth, int winHeight):
-    OglApp(winWidth, winHeight)
+ScreenApp::ScreenApp(const char * winTitle, int winWidth, int winHeight)
+    : OglApp(winWidth, winHeight)
 {
-    int argc = 2;
-    const char * argv[] = { winTitle, "-glDebug" };
+    int argc            = 2;
+    const char * argv[] = {winTitle, "-glDebug"};
 
-    glutInit(&argc, const_cast<char**>(&argv[0]));
+    glutInit(&argc, const_cast<char **>(&argv[0]));
 
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
     glutInitWindowSize(m_viewportWidth, m_viewportHeight);
@@ -314,39 +320,45 @@ HeadlessApp::HeadlessApp(const char * /* winTitle */, int bufWidth, int bufHeigh
     , m_pixBufferWidth(bufWidth)
     , m_pixBufferHeight(bufHeight)
 {
-    m_configAttribs =
-    {
-        EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
-        EGL_BLUE_SIZE, 8,
-        EGL_GREEN_SIZE, 8,
-        EGL_RED_SIZE, 8,
-        EGL_DEPTH_SIZE, 8,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT,
-        EGL_NONE
-    };
+    m_configAttribs
+        = {EGL_SURFACE_TYPE,
+           EGL_PBUFFER_BIT,
+           EGL_BLUE_SIZE,
+           8,
+           EGL_GREEN_SIZE,
+           8,
+           EGL_RED_SIZE,
+           8,
+           EGL_DEPTH_SIZE,
+           8,
+           EGL_RENDERABLE_TYPE,
+           EGL_OPENGL_BIT,
+           EGL_NONE};
 
-    m_pixBufferAttribs =
-    {
-        EGL_WIDTH, m_pixBufferWidth,
-        EGL_HEIGHT, m_pixBufferHeight,
+    m_pixBufferAttribs = {
+        EGL_WIDTH,
+        m_pixBufferWidth,
+        EGL_HEIGHT,
+        m_pixBufferHeight,
         EGL_NONE,
     };
 
     m_eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    if(m_eglDisplay == EGL_NO_DISPLAY )
+    if (m_eglDisplay == EGL_NO_DISPLAY)
     {
         throw Exception("EGL could not be initialized.");
     }
 
     EGLint eglMajor, eglMinor;
-    if(eglInitialize(m_eglDisplay, &eglMajor, &eglMinor) != EGL_TRUE)
+    if (eglInitialize(m_eglDisplay, &eglMajor, &eglMinor) != EGL_TRUE)
     {
         throw Exception("EGL display connection couldn't be started.");
     }
 
     // Choose an appropriate configuration.
     EGLint numConfigs;
-    if(eglChooseConfig(m_eglDisplay, &m_configAttribs[0], &m_eglConfig, 1, &numConfigs) != EGL_TRUE)
+    if (eglChooseConfig(m_eglDisplay, &m_configAttribs[0], &m_eglConfig, 1, &numConfigs)
+        != EGL_TRUE)
     {
         throw Exception("Failed to choose EGL configuration.");
     }
@@ -356,7 +368,7 @@ HeadlessApp::HeadlessApp(const char * /* winTitle */, int bufWidth, int bufHeigh
 
     // Create a context and make it current.
     m_eglContext = eglCreateContext(m_eglDisplay, m_eglConfig, EGL_NO_CONTEXT, NULL);
-    if(eglMakeCurrent(m_eglDisplay, m_eglSurface, m_eglSurface, m_eglContext) != EGL_TRUE)
+    if (eglMakeCurrent(m_eglDisplay, m_eglSurface, m_eglSurface, m_eglContext) != EGL_TRUE)
     {
         throw Exception("Could not make EGL context current.");
     }

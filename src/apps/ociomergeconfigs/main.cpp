@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <vector>
 
 #include <pystring.h>
 
-#include <OpenColorIO/OpenColorIO.h>
 #include "utils/StringUtils.h"
+#include <OpenColorIO/OpenColorIO.h>
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -36,7 +36,8 @@ std::string GetCwd()
 #else
     current_dir.resize(1024);
 #endif
-    while (::getcwd(&current_dir[0], current_dir.size()) == NULL && errno == ERANGE) {
+    while (::getcwd(&current_dir[0], current_dir.size()) == NULL && errno == ERANGE)
+    {
         current_dir.resize(current_dir.size() + 1024);
     }
 
@@ -47,7 +48,8 @@ std::string GetCwd()
 std::string AbsPath(const std::string & path)
 {
     std::string p = path;
-    if(!pystring::os::path::isabs(p)) p = pystring::os::path::join(GetCwd(), p);
+    if (!pystring::os::path::isabs(p))
+        p = pystring::os::path::join(GetCwd(), p);
     return pystring::os::path::normpath(p);
 }
 
@@ -55,10 +57,9 @@ std::string AbsPath(const std::string & path)
 static std::vector<std::string> args;
 
 // Fill 'args' array with OpenColorIO arguments.
-static int
-parse_end_args(int argc, const char *argv[])
+static int parse_end_args(int argc, const char * argv[])
 {
-    while (argc>0)
+    while (argc > 0)
     {
         args.push_back(argv[0]);
         argc--;
@@ -68,7 +69,7 @@ parse_end_args(int argc, const char *argv[])
     return 0;
 }
 
-int main(int argc, const char **argv)
+int main(int argc, const char ** argv)
 {
     ArgParse ap;
     std::string errorMsg = "";
@@ -77,31 +78,48 @@ int main(int argc, const char **argv)
     std::string baseConfigName;
     std::string inputConfigName;
     std::string outputFile;
-    bool displayConfig = false;
+    bool displayConfig    = false;
     bool displayAllConfig = false;
-    bool displayParams = false;
-    bool validate = false;
-    bool help = false;
+    bool displayParams    = false;
+    bool validate         = false;
+    bool help             = false;
 
     OCIO::ConstConfigRcPtr baseCfg;
     OCIO::ConstConfigRcPtr inputCfg;
     OCIO::ConstConfigMergingParametersRcPtr params;
     OCIO::ConstConfigMergerRcPtr merger;
 
-    ap.options("ociomergeconfigs -- Merge configs using an OCIOM file with merge parameters\n\n"
-               "Usage:\n"
-               "    ociomergeconfigs [options] mergeFile.ociom --out mergedConfig.ocio\n",
-               "%*",             parse_end_args,    "",
-               "<SEPARATOR>",                       "Options:",
-               "--out %s",       &outputFile,       "Filepath to save the merged config",
-               "--validate",     &validate,         "Validate the final merged config",
-               "--show-last",    &displayConfig,    "Display the last merged config to screen",
-               "--show-all",     &displayAllConfig, "Display ALL merged configs to screen",
-               "--show-params",  &displayParams,    "Display merger options from OCIOM file",
-               "--help",         &help,             "Display the help and exit",
-               "-h",             &help,             "Display the help and exit",
-               NULL
-               );
+    ap.options(
+        "ociomergeconfigs -- Merge configs using an OCIOM file with merge parameters\n\n"
+        "Usage:\n"
+        "    ociomergeconfigs [options] mergeFile.ociom --out mergedConfig.ocio\n",
+        "%*",
+        parse_end_args,
+        "",
+        "<SEPARATOR>",
+        "Options:",
+        "--out %s",
+        &outputFile,
+        "Filepath to save the merged config",
+        "--validate",
+        &validate,
+        "Validate the final merged config",
+        "--show-last",
+        &displayConfig,
+        "Display the last merged config to screen",
+        "--show-all",
+        &displayAllConfig,
+        "Display ALL merged configs to screen",
+        "--show-params",
+        &displayParams,
+        "Display merger options from OCIOM file",
+        "--help",
+        &help,
+        "Display the help and exit",
+        "-h",
+        &help,
+        "Display the help and exit",
+        NULL);
 
     if (ap.parse(argc, argv) < 0)
     {
@@ -129,7 +147,7 @@ int main(int argc, const char **argv)
     try
     {
         merger = OCIO::ConfigMerger::CreateFromFile(mergeParameters.c_str());
-    } 
+    }
     catch (OCIO::Exception & e)
     {
         std::cout << e.what() << std::endl;
@@ -198,7 +216,7 @@ int main(int argc, const char **argv)
             mergedCfg.close();
         }
     }
-    catch (const std::exception& e)
+    catch (const std::exception & e)
     {
         std::cerr << e.what();
         exit(1);

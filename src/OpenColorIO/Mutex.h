@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_MUTEX_H
 #define INCLUDED_OCIO_MUTEX_H
 
-
-#include <mutex> 
-#include <thread>
 #include <assert.h>
-
+#include <mutex>
+#include <thread>
 
 /** For internal use only */
 
@@ -22,9 +19,9 @@ namespace OCIO_NAMESPACE
 class DebugLock
 {
 public:
-    DebugLock() = default;
-    DebugLock(const DebugLock &) = delete;
-    DebugLock& operator=(const DebugLock &) = delete;
+    DebugLock()                              = default;
+    DebugLock(const DebugLock &)             = delete;
+    DebugLock & operator=(const DebugLock &) = delete;
     ~DebugLock() { assert(m_owner == std::thread::id()); }
 
     void lock()
@@ -41,13 +38,13 @@ public:
     }
     bool try_lock()
     {
-      assert(m_owner != std::this_thread::get_id());
-      return m_mutex.try_lock();
+        assert(m_owner != std::this_thread::get_id());
+        return m_mutex.try_lock();
     }
 
 private:
     // An exclusive and non-recursive ownership lock.
-    std::mutex      m_mutex;
+    std::mutex m_mutex;
     std::thread::id m_owner;
 };
 

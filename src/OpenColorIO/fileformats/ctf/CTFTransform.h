@@ -1,20 +1,17 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_FILEFORMATS_CTF_CTFTRANSFORM_H
 #define INCLUDED_OCIO_FILEFORMATS_CTF_CTFTRANSFORM_H
-
 
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "Op.h"
 #include "fileformats/FormatMetadata.h"
 #include "fileformats/xmlutils/XMLWriterUtils.h"
-#include "Op.h"
 #include "utils/StringUtils.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -24,17 +21,17 @@ class CTFVersion
 public:
     enum StringFormat
     {
-        VERSION_NUMERIC     = 0,     // Numeric version is always accepted.
+        VERSION_NUMERIC     = 0, // Numeric version is always accepted.
         VERSION_SMPTE_XMLNS = 1 << 1,
         VERSION_SMPTE_CLF   = 1 << 2
     };
-    
-    // Will throw if versionString is not formatted like a version.
-    explicit CTFVersion(const std::string & versionString, StringFormat acceptedFormat = VERSION_NUMERIC);
 
-    CTFVersion()
-    {
-    }
+    // Will throw if versionString is not formatted like a version.
+    explicit CTFVersion(
+        const std::string & versionString,
+        StringFormat acceptedFormat = VERSION_NUMERIC);
+
+    CTFVersion() {}
 
     CTFVersion(unsigned int major, unsigned int minor, unsigned int revision)
         : m_major(major)
@@ -66,13 +63,12 @@ public:
 
     ~CTFVersion() {}
 
-    friend std::ostream & operator<< (std::ostream & stream,
-                                      const CTFVersion & rhs)
+    friend std::ostream & operator<<(std::ostream & stream, const CTFVersion & rhs)
     {
         if (!rhs.m_version_string.empty())
         {
             stream << rhs.m_version_string;
-        } 
+        }
         else
         {
             stream << rhs.m_major;
@@ -90,12 +86,12 @@ public:
 
 private:
     // CTF and Academy/ASC CLF uses the numeric version system.
-    unsigned int m_major = 0;
-    unsigned int m_minor = 0;
+    unsigned int m_major    = 0;
+    unsigned int m_minor    = 0;
     unsigned int m_revision = 0;
 
     // SMPTE CLF uses a non-numeric xmlns version system.
-    std::string m_version_string; 
+    std::string m_version_string;
 };
 
 //
@@ -141,7 +137,6 @@ static const CTFVersion CTF_PROCESS_LIST_VERSION_2_5 = CTFVersion(2, 5);
 // and do not forget to update the following line.
 static const CTFVersion CTF_PROCESS_LIST_VERSION = CTF_PROCESS_LIST_VERSION_2_5;
 
-
 // Version 1.0 initial Autodesk version for InfoElt.
 #define CTF_INFO_ELEMENT_VERSION_1_0 1.0f
 
@@ -153,61 +148,34 @@ static const CTFVersion CTF_PROCESS_LIST_VERSION = CTF_PROCESS_LIST_VERSION_2_5;
 
 #define CTF_INFO_ELEMENT_VERSION CTF_INFO_ELEMENT_VERSION_2_0
 
-
 class CTFReaderTransform
 {
 public:
     CTFReaderTransform();
     CTFReaderTransform(const OpRcPtrVec & ops, const FormatMetadataImpl & metadata);
 
-    ~CTFReaderTransform()
-    {
-    }
+    ~CTFReaderTransform() {}
 
     const std::string & getID() const
     {
         return m_formatMetadata.getAttributeValueString(METADATA_ID);
     }
-    void setID(const char * id)
-    {
-        m_formatMetadata.addAttribute(METADATA_ID, id);
-    }
+    void setID(const char * id) { m_formatMetadata.addAttribute(METADATA_ID, id); }
 
     const std::string & getName() const
     {
         return m_formatMetadata.getAttributeValueString(METADATA_NAME);
     }
-    void setName(const char * name)
-    {
-        m_formatMetadata.addAttribute(METADATA_NAME, name);
-    }
+    void setName(const char * name) { m_formatMetadata.addAttribute(METADATA_NAME, name); }
 
-    FormatMetadataImpl & getInfoMetadata()
-    {
-        return m_infoMetadata;
-    }
-    const FormatMetadataImpl & getInfoMetadata() const
-    {
-        return m_infoMetadata;
-    }
+    FormatMetadataImpl & getInfoMetadata() { return m_infoMetadata; }
+    const FormatMetadataImpl & getInfoMetadata() const { return m_infoMetadata; }
 
-    FormatMetadataImpl & getFormatMetadata()
-    {
-        return m_formatMetadata;
-    }
-    const FormatMetadataImpl & getFormatMetadata() const
-    {
-        return m_formatMetadata;
-    }
+    FormatMetadataImpl & getFormatMetadata() { return m_formatMetadata; }
+    const FormatMetadataImpl & getFormatMetadata() const { return m_formatMetadata; }
 
-    const ConstOpDataVec & getOpDataVec() const
-    {
-        return m_ops;
-    }
-    ConstOpDataVec & getOpDataVec()
-    {
-        return m_ops;
-    }
+    const ConstOpDataVec & getOpDataVec() const { return m_ops; }
+    ConstOpDataVec & getOpDataVec() { return m_ops; }
 
     void setCTFVersion(const CTFVersion & ver);
     void setCLFVersion(const CTFVersion & ver);
@@ -220,14 +188,8 @@ public:
     void toMetadata(FormatMetadataImpl & metadata) const;
 
     // Helper methods to keep the output bit-depth of the Op currently parsed.
-    void setPreviousOutBitDepth(BitDepth out)
-    {
-        m_prevOutBD = out;
-    }
-    BitDepth getPreviousOutBitDepth() const
-    {
-        return m_prevOutBD;
-    }
+    void setPreviousOutBitDepth(BitDepth out) { m_prevOutBD = out; }
+    BitDepth getPreviousOutBitDepth() const { return m_prevOutBD; }
 
 private:
     FormatMetadataImpl m_infoMetadata;
@@ -251,22 +213,23 @@ typedef OCIO_SHARED_PTR<const CTFReaderTransform> ConstCTFReaderTransformPtr;
 
 class TransformWriter : public XmlElementWriter
 {
- public:
-     enum class SubFormat : uint8_t
-     {
-         FORMAT_UNKNOWN,
-         FORMAT_CLF, 
-         FORMAT_CTF
-     };
+public:
+    enum class SubFormat : uint8_t
+    {
+        FORMAT_UNKNOWN,
+        FORMAT_CLF,
+        FORMAT_CTF
+    };
 
- public:
-    TransformWriter() = delete;
-    TransformWriter(const TransformWriter &) = delete;
-    TransformWriter& operator=(const TransformWriter &) = delete;
+public:
+    TransformWriter()                                    = delete;
+    TransformWriter(const TransformWriter &)             = delete;
+    TransformWriter & operator=(const TransformWriter &) = delete;
 
-    TransformWriter(XmlFormatter & formatter,
-                    ConstCTFReaderTransformPtr transform,
-                    SubFormat SubFormat);
+    TransformWriter(
+        XmlFormatter & formatter,
+        ConstCTFReaderTransformPtr transform,
+        SubFormat SubFormat);
 
     virtual ~TransformWriter();
 
@@ -278,16 +241,16 @@ private:
     void writeOps(const CTFVersion & version) const;
 
 private:
-    ConstCTFReaderTransformPtr  m_transform;
-    SubFormat                   m_subFormat = SubFormat::FORMAT_UNKNOWN;
+    ConstCTFReaderTransformPtr m_transform;
+    SubFormat m_subFormat = SubFormat::FORMAT_UNKNOWN;
 };
-
 
 // Helper function to extract the values of FormatMetadata elements with a
 // given name. Used to get Description values.
-void GetElementsValues(const FormatMetadataImpl::Elements & elements,
-                       const std::string & name, 
-                       StringUtils::StringVec & values);
+void GetElementsValues(
+    const FormatMetadataImpl::Elements & elements,
+    const std::string & name,
+    StringUtils::StringVec & values);
 
 } // namespace OCIO_NAMESPACE
 

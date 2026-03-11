@@ -16,24 +16,22 @@ namespace OCIO_NAMESPACE
 class XmlFormatter final
 {
 public:
-
     using Attribute  = std::pair<std::string, std::string>;
     using Attributes = std::vector<Attribute>;
 
 public:
-    XmlFormatter() = delete;
-    XmlFormatter(const XmlFormatter &) = delete;
-    XmlFormatter& operator=(const XmlFormatter &) = delete;
+    XmlFormatter()                                 = delete;
+    XmlFormatter(const XmlFormatter &)             = delete;
+    XmlFormatter & operator=(const XmlFormatter &) = delete;
 
-    XmlFormatter(std::ostream& stream);
+    XmlFormatter(std::ostream & stream);
     ~XmlFormatter();
 
     void incrementIndent();
     void decrementIndent();
 
     // Write a start Element on a standalone line.
-    void writeStartTag(const std::string & tagName,
-                       const Attributes & attributes);
+    void writeStartTag(const std::string & tagName, const Attributes & attributes);
 
     // Write a start Element on a standalone line.
     void writeStartTag(const std::string & tagName);
@@ -42,13 +40,13 @@ public:
     void writeEndTag(const std::string & tagName);
 
     // Write \<tagName\>content\</tagName\> on a standalone line.
-    void writeContentTag(const std::string & tagName,
-                         const std::string & content);
+    void writeContentTag(const std::string & tagName, const std::string & content);
 
     // Write \<tagName\>content\</tagName\> on a standalone line.
-    void writeContentTag(const std::string & tagName,
-                         const Attributes & attributes,
-                         const std::string & content);
+    void writeContentTag(
+        const std::string & tagName,
+        const Attributes & attributes,
+        const std::string & content);
 
     // Write the content using escaped characters if needed.
     void writeContent(const std::string & content);
@@ -56,8 +54,7 @@ public:
     // Write an empty Element on a standalone line.
     // In XML parlance, an empty Element is an Element without content
     // and without children and which does not have a separate end tag.
-    void writeEmptyTag(const std::string & tagName,
-                       const Attributes & attributes);
+    void writeEmptyTag(const std::string & tagName, const Attributes & attributes);
 
     std::ostream & getStream();
 
@@ -73,9 +70,9 @@ private:
 class XmlElementWriter
 {
 public:
-    XmlElementWriter() = delete;
-    XmlElementWriter(XmlElementWriter &) = delete;
-    XmlElementWriter& operator=(XmlElementWriter &) = delete;
+    XmlElementWriter()                               = delete;
+    XmlElementWriter(XmlElementWriter &)             = delete;
+    XmlElementWriter & operator=(XmlElementWriter &) = delete;
 
     explicit XmlElementWriter(XmlFormatter & formatter);
     virtual ~XmlElementWriter();
@@ -91,8 +88,8 @@ protected:
 class XmlScopeIndent
 {
 public:
-    XmlScopeIndent() = delete;
-    XmlScopeIndent(XmlScopeIndent &) = delete;
+    XmlScopeIndent()                             = delete;
+    XmlScopeIndent(XmlScopeIndent &)             = delete;
     XmlScopeIndent & operator=(XmlScopeIndent &) = delete;
 
     explicit XmlScopeIndent(XmlFormatter & formatter);

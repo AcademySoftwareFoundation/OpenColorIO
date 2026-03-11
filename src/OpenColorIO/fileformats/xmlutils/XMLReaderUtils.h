@@ -4,40 +4,37 @@
 #ifndef INCLUDED_OCIO_FILEFORMATS_XML_XMLREADERUTILS_H
 #define INCLUDED_OCIO_FILEFORMATS_XML_XMLREADERUTILS_H
 
-
-#include <type_traits>
-#include <string>
 #include <sstream>
+#include <string>
+#include <type_traits>
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "MathUtils.h"
-#include "utils/StringUtils.h"
-#include "utils/NumberUtils.h"
 #include "Platform.h"
-
+#include "utils/NumberUtils.h"
+#include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE
 {
 
 // Strings used by CDL and CLF parsers or writers.
 
-static constexpr const char* ATTR_ID = "id";
-static constexpr const char* ATTR_NAME = "name";
-static constexpr const char* ATTR_XMLNS = "xmlns";
+static constexpr const char * ATTR_ID    = "id";
+static constexpr const char * ATTR_NAME  = "name";
+static constexpr const char * ATTR_XMLNS = "xmlns";
 
-static constexpr const char* CDL_TAG_COLOR_CORRECTION = "ColorCorrection";
+static constexpr const char * CDL_TAG_COLOR_CORRECTION = "ColorCorrection";
 
-static constexpr const char* TAG_DESCRIPTION = "Description";
-static constexpr const char* TAG_OFFSET = "Offset";
-static constexpr const char* TAG_POWER = "Power";
-static constexpr const char* TAG_SATNODE = "SatNode";
-static constexpr const char* TAG_SATNODEALT = "SATNode";
-static constexpr const char* TAG_SATURATION = "Saturation";
-static constexpr const char* TAG_SLOPE = "Slope";
-static constexpr const char* TAG_SOPNODE = "SOPNode";
-
+static constexpr const char * TAG_DESCRIPTION = "Description";
+static constexpr const char * TAG_OFFSET      = "Offset";
+static constexpr const char * TAG_POWER       = "Power";
+static constexpr const char * TAG_SATNODE     = "SatNode";
+static constexpr const char * TAG_SATNODEALT  = "SATNode";
+static constexpr const char * TAG_SATURATION  = "Saturation";
+static constexpr const char * TAG_SLOPE       = "Slope";
+static constexpr const char * TAG_SOPNODE     = "SOPNode";
 
 // This method truncates a string (mainly used for display purpose).
 inline std::string TruncateString(const char * pStr, size_t len, size_t limit)
@@ -58,17 +55,14 @@ void Trim(std::string & s);
 // Find the first valid sub string delimited by spaces.
 // Avoid any character copy(ies) as the method is intensively used
 // when reading values of 1D & 3D luts
-void FindSubString(const char * str, size_t length,
-                   size_t & start,
-                   size_t & end);
+void FindSubString(const char * str, size_t length, size_t & start, size_t & end);
 
 // Is c a 'space' character ( '\n', '\t', ' ' ... )?
 // Note: Do not use the std::isspace which is very slow.
 inline bool IsSpace(char c)
 {
     // Note: \n is unix while \r\n is windows line feed.
-    return c == ' ' || c == '\n' || c == '\t' || c == '\r' ||
-           c == '\v' || c == '\f';
+    return c == ' ' || c == '\n' || c == '\t' || c == '\r' || c == '\v' || c == '\f';
 }
 
 // Is the character a valid number delimiter?
@@ -90,7 +84,8 @@ inline size_t FindNextTokenStart(const char * str, size_t len, size_t pos)
 
     while (IsNumberDelimiter(*ptr))
     {
-        ptr++; pos++;
+        ptr++;
+        pos++;
 
         if (pos >= len)
         {
@@ -114,7 +109,8 @@ inline size_t FindDelim(const char * str, size_t len, size_t pos)
 
     while (!IsNumberDelimiter(*ptr))
     {
-        ptr++; pos++;
+        ptr++;
+        pos++;
 
         if (pos >= len)
         {
@@ -130,16 +126,16 @@ namespace
 
 // When using an integer ParseNumber template, it is an error if the string
 // actually contains a number with a decimal part.
-template<typename T>
-bool IsValid(T value, double val)
+template <typename T> bool IsValid(T value, double val)
 {
     // Returns true, if T is the type float, double or long double.
-    if (std::is_floating_point<T>::value) return true;
+    if (std::is_floating_point<T>::value)
+        return true;
 
     return static_cast<double>(value) == val;
 }
 
-}
+} // namespace
 
 // Get first number from a string between startPos & endPos.
 // EndPos should not be greater than length of the string.
@@ -148,8 +144,7 @@ bool IsValid(T value, double val)
 // accessible (most likely str[endPos]).
 // Note: For performance reasons, this function does not copy the string
 //       unless an exception needs to be thrown.
-template<typename T>
-void ParseNumber(const char * str, size_t startPos, size_t endPos, T & value)
+template <typename T> void ParseNumber(const char * str, size_t startPos, size_t endPos, T & value)
 {
     if (endPos == startPos)
     {
@@ -161,11 +156,12 @@ void ParseNumber(const char * str, size_t startPos, size_t endPos, T & value)
     double val = 0.0f;
 
     size_t adjustedStartPos = startPos;
-    size_t adjustedEndPos = endPos;
+    size_t adjustedEndPos   = endPos;
 
     FindSubString(startParse, endPos - startPos, adjustedStartPos, adjustedEndPos);
 
-    const auto result = NumberUtils::from_chars(startParse + adjustedStartPos, startParse + adjustedEndPos, val);
+    const auto result
+        = NumberUtils::from_chars(startParse + adjustedStartPos, startParse + adjustedEndPos, val);
 
     value = (T)val;
 
@@ -174,9 +170,7 @@ void ParseNumber(const char * str, size_t startPos, size_t endPos, T & value)
         std::string fullStr(str, endPos);
         std::string parsedStr(startParse, endPos - startPos);
         std::ostringstream oss;
-        oss << "ParserNumber: Characters '"
-            << parsedStr
-            << "' can not be parsed to numbers in '"
+        oss << "ParserNumber: Characters '" << parsedStr << "' can not be parsed to numbers in '"
             << TruncateString(fullStr.c_str(), endPos, 100) << "'.";
         throw Exception(oss.str().c_str());
     }
@@ -185,9 +179,7 @@ void ParseNumber(const char * str, size_t startPos, size_t endPos, T & value)
         std::string fullStr(str, endPos);
         std::string parsedStr(startParse, endPos - startPos);
         std::ostringstream oss;
-        oss << "ParserNumber: Characters '"
-            << parsedStr
-            << "' are illegal in '"
+        oss << "ParserNumber: Characters '" << parsedStr << "' are illegal in '"
             << TruncateString(fullStr.c_str(), endPos, 100) << "'.";
         throw Exception(oss.str().c_str());
     }
@@ -197,8 +189,7 @@ void ParseNumber(const char * str, size_t startPos, size_t endPos, T & value)
         std::string fullStr(str, endPos);
         std::string parsedStr(startParse, endPos - startPos);
         std::ostringstream oss;
-        oss << "ParserNumber: '"
-            << parsedStr
+        oss << "ParserNumber: '" << parsedStr
             << "' number is followed by unexpected characters in '"
             << TruncateString(fullStr.c_str(), endPos, 100) << "'.";
         throw Exception(oss.str().c_str());
@@ -208,8 +199,7 @@ void ParseNumber(const char * str, size_t startPos, size_t endPos, T & value)
 // Extract the next number contained in the string.
 // Note that pos gets updated to the position of the next delimiter, or to
 // std::string::npos if the value returned is the last one in the string.
-template<typename T>
-void GetNextNumber(const char * s, size_t len, size_t & pos, T & num)
+template <typename T> void GetNextNumber(const char * s, size_t len, size_t & pos, T & num)
 {
     pos = FindNextTokenStart(s, len, pos);
 
@@ -228,8 +218,7 @@ void GetNextNumber(const char * s, size_t len, size_t & pos, T & num)
 
 // This method tokenizes a string like "0 1 2" of integers or floats.
 // returns the numbers extracted from the string.
-template<typename T>
-std::vector<T> GetNumbers(const char * str, size_t len)
+template <typename T> std::vector<T> GetNumbers(const char * str, size_t len)
 {
     std::vector<T> numbers;
 

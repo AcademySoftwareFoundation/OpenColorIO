@@ -1,7 +1,6 @@
 ﻿// SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_OPENCOLORAPPHELPERS_H
 #define INCLUDED_OCIO_OPENCOLORAPPHELPERS_H
 
@@ -10,7 +9,6 @@
 #ifndef OCIO_NAMESPACE
 #error This header cannot be used directly. Use <OpenColorIO/OpenColorIO.h> instead.
 #endif
-
 
 namespace OCIO_NAMESPACE
 {
@@ -57,10 +55,10 @@ namespace OCIO_NAMESPACE
  *          will check for these strings in an environment variable, or they may be passed in from
  *          the application.
  *        - TreatNoCategoryAsAny: By default, color spaces (or named transforms) that have no
- *          categories are handled as if they had any of the categories.  Config authors that want to
- *          hide color spaces without categories should either put them in the inactiveColorSpaces
- *          list or add a category that will never be searched for (e.g., "invisible" or "hidden").
- *          App developers may set this option to false to hide items without any categories.
+ *          categories are handled as if they had any of the categories.  Config authors that want
+ * to hide color spaces without categories should either put them in the inactiveColorSpaces list or
+ * add a category that will never be searched for (e.g., "invisible" or "hidden"). App developers
+ * may set this option to false to hide items without any categories.
  *
  * Basically the intent is for the filtering to return the intersection of the app categories,
  * encoding, and user categories.  However, some fall-backs are in place to ensure that the
@@ -107,25 +105,24 @@ public:
     static ColorSpaceMenuParametersRcPtr Create(ConstConfigRcPtr config);
     /// Config is required to be able to create a ColorSpaceMenuHelper.
     virtual void setConfig(ConstConfigRcPtr config) noexcept = 0;
-    virtual ConstConfigRcPtr getConfig() const noexcept = 0;
+    virtual ConstConfigRcPtr getConfig() const noexcept      = 0;
 
     /// If role is a valid role, other parameters are ignored and menu will contain only that role.
     virtual void setRole(const char * role) noexcept = 0;
-    virtual const char * getRole() const noexcept = 0;
-
+    virtual const char * getRole() const noexcept    = 0;
 
     /**
      * Include all color spaces (or not) to ColorSpaceMenuHelper. Default is to include color
      * spaces.
      */
     virtual void setIncludeColorSpaces(bool include) noexcept = 0;
-    virtual bool getIncludeColorSpaces() const noexcept = 0;
+    virtual bool getIncludeColorSpaces() const noexcept       = 0;
 
     /**
      * Can be used to restrict the search using the ReferenceSpaceType of the color spaces.
      * It has no effect on roles and named transforms.
      */
-    virtual SearchReferenceSpaceType getSearchReferenceSpaceType() const noexcept = 0;
+    virtual SearchReferenceSpaceType getSearchReferenceSpaceType() const noexcept              = 0;
     virtual void setSearchReferenceSpaceType(SearchReferenceSpaceType colorSpaceType) noexcept = 0;
 
     /**
@@ -133,7 +130,7 @@ public:
      * named transforms.
      */
     virtual void setIncludeNamedTransforms(bool include) noexcept = 0;
-    virtual bool getIncludeNamedTransforms() const noexcept = 0;
+    virtual bool getIncludeNamedTransforms() const noexcept       = 0;
 
     /**
      * When searching for color spaces using app or user categories, treat color spaces or
@@ -141,21 +138,21 @@ public:
      * Default is true.
      */
     virtual void setTreatNoCategoryAsAny(bool value) noexcept = 0;
-    virtual bool getTreatNoCategoryAsAny() const noexcept = 0;
+    virtual bool getTreatNoCategoryAsAny() const noexcept     = 0;
 
     /**
      * App categories is a comma separated list of categories. If appCategories is not NULL and
      * not empty, all color spaces that have one of the categories will be part of the menu.
      */
     virtual void setAppCategories(const char * appCategories) noexcept = 0;
-    virtual const char * getAppCategories() const noexcept = 0;
+    virtual const char * getAppCategories() const noexcept             = 0;
 
     /**
      * Encodings is a comma separated list of encodings. When not empty, is retricting the search
      * to color spaces that are using one of the encodings.
      */
     virtual void setEncodings(const char * encodings) noexcept = 0;
-    virtual const char * getEncodings() const noexcept = 0;
+    virtual const char * getEncodings() const noexcept         = 0;
 
     /**
      * User categories is a comma separated list of categories. If OCIO_USER_CATEGORIES_ENVVAR
@@ -163,15 +160,14 @@ public:
      * env. variable is used for user categories.
      */
     virtual void setUserCategories(const char * userCategories) noexcept = 0;
-    virtual const char * getUserCategories() const noexcept = 0;
-
+    virtual const char * getUserCategories() const noexcept              = 0;
 
     /**
      * Include all roles (or not) to ColorSpaceMenuHelper. Default is not to include roles.
      * Roles are added after color spaces with an single hierarchy level named "Roles".
      */
     virtual void setIncludeRoles(bool include) noexcept = 0;
-    virtual bool getIncludeRoles() const noexcept = 0;
+    virtual bool getIncludeRoles() const noexcept       = 0;
 
     /**
      * Add an additional color space (or named transform) to the menu.
@@ -188,9 +184,9 @@ public:
      */
     virtual void addColorSpace(const char * name) noexcept = 0;
 
-    virtual size_t getNumAddedColorSpaces() const noexcept = 0;
+    virtual size_t getNumAddedColorSpaces() const noexcept               = 0;
     virtual const char * getAddedColorSpace(size_t index) const noexcept = 0;
-    virtual void clearAddedColorSpaces() noexcept = 0;
+    virtual void clearAddedColorSpaces() noexcept                        = 0;
 
     /// Do not use (needed only for pybind11).
     virtual ~ColorSpaceMenuParameters() = default;
@@ -245,17 +241,17 @@ public:
      * Get the index of the element of a given name. Return (size_t)-1 name if NULL or empty, or if
      * no element with that name is found.
      */
-    virtual size_t getIndexFromName(const char * name) const noexcept = 0;
+    virtual size_t getIndexFromName(const char * name) const noexcept   = 0;
     virtual size_t getIndexFromUIName(const char * name) const noexcept = 0;
 
     virtual const char * getDescription(size_t idx) const noexcept = 0;
-    virtual const char * getFamily(size_t idx) const noexcept = 0;
+    virtual const char * getFamily(size_t idx) const noexcept      = 0;
 
     /**
      * Hierarchy levels are created from the family string. It is split into levels using the
      * 'family separator'.
      */
-    virtual size_t getNumHierarchyLevels(size_t idx) const noexcept = 0;
+    virtual size_t getNumHierarchyLevels(size_t idx) const noexcept             = 0;
     virtual const char * getHierarchyLevel(size_t idx, size_t i) const noexcept = 0;
 
     /// Get the color space name from the UI name.
@@ -263,7 +259,7 @@ public:
     /// Get the color space UI name from the name.
     virtual const char * getUINameFromName(const char * name) const noexcept = 0;
 
-    ColorSpaceMenuHelper(const ColorSpaceMenuHelper &) = delete;
+    ColorSpaceMenuHelper(const ColorSpaceMenuHelper &)             = delete;
     ColorSpaceMenuHelper & operator=(const ColorSpaceMenuHelper &) = delete;
 
     /// Do not use (needed only for pybind11).
@@ -281,16 +277,17 @@ namespace ColorSpaceHelpers
  * Add a new color space to the config instance. The output of the userTransform must be in the
  * specified connectionColorSpace.
  *
- * Note: If the config does not already use categories, we do not add them since that would 
+ * Note: If the config does not already use categories, we do not add them since that would
  * make a big change to how existing color spaces show up in menus.
  */
-extern OCIOEXPORT void AddColorSpace(ConfigRcPtr & config,
-                                     const char * name,
-                                     const char * transformFilePath,
-                                     const char * categories, // Could be null or empty.
-                                     const char * connectionColorSpaceName);
+extern OCIOEXPORT void AddColorSpace(
+    ConfigRcPtr & config,
+    const char * name,
+    const char * transformFilePath,
+    const char * categories, // Could be null or empty.
+    const char * connectionColorSpaceName);
 
-} // ColorSpaceHelpers
+} // namespace ColorSpaceHelpers
 
 namespace DisplayViewHelpers
 {
@@ -302,20 +299,22 @@ namespace DisplayViewHelpers
  * ExposureContrastTransforms to enable changing exposure, contrast, and gamma after the processor
  * has been created using dynamic properties.
  */
-extern OCIOEXPORT ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & config,
-                                                   const ConstContextRcPtr & context,
-                                                   const char * workingName,
-                                                   const char * displayName,
-                                                   const char * viewName,
-                                                   const ConstMatrixTransformRcPtr & channelView,
-                                                   TransformDirection direction);
+extern OCIOEXPORT ConstProcessorRcPtr GetProcessor(
+    const ConstConfigRcPtr & config,
+    const ConstContextRcPtr & context,
+    const char * workingName,
+    const char * displayName,
+    const char * viewName,
+    const ConstMatrixTransformRcPtr & channelView,
+    TransformDirection direction);
 
-extern OCIOEXPORT ConstProcessorRcPtr GetProcessor(const ConstConfigRcPtr & config,
-                                                   const char * workingName,
-                                                   const char * displayName,
-                                                   const char * viewName,
-                                                   const ConstMatrixTransformRcPtr & channelView,
-                                                   TransformDirection direction);
+extern OCIOEXPORT ConstProcessorRcPtr GetProcessor(
+    const ConstConfigRcPtr & config,
+    const char * workingName,
+    const char * displayName,
+    const char * viewName,
+    const ConstMatrixTransformRcPtr & channelView,
+    TransformDirection direction);
 
 /// Get an identity processor containing only the ExposureContrastTransforms.
 extern OCIOEXPORT ConstProcessorRcPtr GetIdentityProcessor(const ConstConfigRcPtr & config);
@@ -324,27 +323,26 @@ extern OCIOEXPORT ConstProcessorRcPtr GetIdentityProcessor(const ConstConfigRcPt
  * Add a new (display, view) pair and the new color space to a configuration instance.
  * The input to the userTransform must be in the specified connectionColorSpace.
  */
-extern OCIOEXPORT void AddDisplayView(ConfigRcPtr & config,
-                                      const char * displayName,
-                                      const char * viewName,
-                                      const char * lookDefinition,  // Could be empty or null
-                                      const char * colorSpaceName,  // Could be empty or null
-                                      const char * colorSpaceFamily, // Could be empty or null
-                                      const char * colorSpaceDescription, // Could be empty or null
-                                      const char * categories,      // Could be empty or null
-                                      const char * transformFilePath,
-                                      const char * connectionColorSpaceName);
+extern OCIOEXPORT void AddDisplayView(
+    ConfigRcPtr & config,
+    const char * displayName,
+    const char * viewName,
+    const char * lookDefinition,        // Could be empty or null
+    const char * colorSpaceName,        // Could be empty or null
+    const char * colorSpaceFamily,      // Could be empty or null
+    const char * colorSpaceDescription, // Could be empty or null
+    const char * categories,            // Could be empty or null
+    const char * transformFilePath,
+    const char * connectionColorSpaceName);
 
 /**
  * Remove a (display, view) pair including the associated color space (only if not used).
  * Note that the view is always removed but the display is only removed if empty.
  */
-extern OCIOEXPORT void RemoveDisplayView(ConfigRcPtr & config,
-                                         const char * displayName,
-                                         const char * viewName);
+extern OCIOEXPORT void
+RemoveDisplayView(ConfigRcPtr & config, const char * displayName, const char * viewName);
 
-} // DisplayViewHelpers
-
+} // namespace DisplayViewHelpers
 
 /**
  * Whereas the DisplayViewTransform simply applies a specific view from an OCIO display, the
@@ -377,19 +375,19 @@ class OCIOEXPORT LegacyViewingPipeline
 public:
     static LegacyViewingPipelineRcPtr Create();
 
-    virtual ConstDisplayViewTransformRcPtr getDisplayViewTransform() const noexcept = 0;
+    virtual ConstDisplayViewTransformRcPtr getDisplayViewTransform() const noexcept          = 0;
     virtual void setDisplayViewTransform(const ConstDisplayViewTransformRcPtr & dt) noexcept = 0;
 
-    virtual ConstTransformRcPtr getLinearCC() const noexcept = 0;
+    virtual ConstTransformRcPtr getLinearCC() const noexcept          = 0;
     virtual void setLinearCC(const ConstTransformRcPtr & cc) noexcept = 0;
 
-    virtual ConstTransformRcPtr getColorTimingCC() const noexcept = 0;
+    virtual ConstTransformRcPtr getColorTimingCC() const noexcept          = 0;
     virtual void setColorTimingCC(const ConstTransformRcPtr & cc) noexcept = 0;
 
-    virtual ConstTransformRcPtr getChannelView() const noexcept = 0;
+    virtual ConstTransformRcPtr getChannelView() const noexcept                 = 0;
     virtual void setChannelView(const ConstTransformRcPtr & transform) noexcept = 0;
 
-    virtual ConstTransformRcPtr getDisplayCC() const noexcept = 0;
+    virtual ConstTransformRcPtr getDisplayCC() const noexcept          = 0;
     virtual void setDisplayCC(const ConstTransformRcPtr & cc) noexcept = 0;
 
     /**
@@ -397,7 +395,7 @@ public:
      * it's often useful to override "looks" to an empty string.
      */
     virtual void setLooksOverrideEnabled(bool enable) = 0;
-    virtual bool getLooksOverrideEnabled() const = 0;
+    virtual bool getLooksOverrideEnabled() const      = 0;
 
     /**
      * A user can optionally override the looks that are,  by default, used with the expected
@@ -407,20 +405,21 @@ public:
      * default.  Thus, with this mechanism the viewing app could override to looks = "", and
      * this will allow image display to continue (though hopefully) the interface would reflect
      * this fallback option.
-     * 
+     *
      * Looks is a potentially comma (or colon) delimited list of lookNames, where +/- prefixes
      * are optionally allowed to denote forward/inverse look specification (and forward is
      * assumed in the absence of either).
      */
     virtual void setLooksOverride(const char * looks) = 0;
-    virtual const char * getLooksOverride() const = 0;
+    virtual const char * getLooksOverride() const     = 0;
 
-    virtual ConstProcessorRcPtr getProcessor(const ConstConfigRcPtr & config,
-                                             const ConstContextRcPtr & context) const = 0;
+    virtual ConstProcessorRcPtr getProcessor(
+        const ConstConfigRcPtr & config,
+        const ConstContextRcPtr & context) const = 0;
 
     virtual ConstProcessorRcPtr getProcessor(const ConstConfigRcPtr & config) const = 0;
 
-    LegacyViewingPipeline(const LegacyViewingPipeline &) = delete;
+    LegacyViewingPipeline(const LegacyViewingPipeline &)             = delete;
     LegacyViewingPipeline & operator=(const LegacyViewingPipeline &) = delete;
 
     /// Do not use (needed only for pybind11).
@@ -433,21 +432,21 @@ protected:
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const LegacyViewingPipeline &);
 
 /**
- * The MixingSlider and MixingColorSpaceManager classes are to help applications implement correct 
- * color pickers.  The term "color mixing" is used here to describe what is done in a typical 
+ * The MixingSlider and MixingColorSpaceManager classes are to help applications implement correct
+ * color pickers.  The term "color mixing" is used here to describe what is done in a typical
  * application "color picker" user interface.
- * 
- * A user may want to mix colors in different color spaces.  The two most common mixing space 
- * options are a scene-linear working space or the display space. 
- * 
- * Since scene-linear color spaces are not perceptually uniform, it is necessary to compensate UI 
+ *
+ * A user may want to mix colors in different color spaces.  The two most common mixing space
+ * options are a scene-linear working space or the display space.
+ *
+ * Since scene-linear color spaces are not perceptually uniform, it is necessary to compensate UI
  * widgets such as sliders.  For example, it is nice if mid-gray falls near the center of mixing
- * controls rather than way over near the black end.  This may be done by using a mapping from 
- * linear into an approximately perceptually uniform space. 
- * 
+ * controls rather than way over near the black end.  This may be done by using a mapping from
+ * linear into an approximately perceptually uniform space.
+ *
  * Also note that a color picking/mixing UI may want to present a given color space in several
  * different encodings.  The most common two encodings for color mixing are RGB and HSV.
- * 
+ *
  * Note that these helpers anticipate that a user may want to mix colors using values that extend
  * outside the typical [0,1] domain.
  */
@@ -472,7 +471,7 @@ public:
     /// Convert from mixing space units to distance along the slider.
     virtual float mixingToSlider(float mixingUnits) const noexcept = 0;
 
-    MixingSlider(const MixingSlider &) = delete;
+    MixingSlider(const MixingSlider &)             = delete;
     MixingSlider & operator=(const MixingSlider &) = delete;
 
     /// Do not use (needed only for pybind11).
@@ -490,38 +489,38 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const MixingSlider &
 class OCIOEXPORT MixingColorSpaceManager
 {
 public:
-
     static MixingColorSpaceManagerRcPtr Create(ConstConfigRcPtr & config);
 
     /// Access to the mixing spaces.
-    virtual size_t getNumMixingSpaces() const noexcept = 0;
-    virtual const char * getMixingSpaceUIName(size_t idx) const = 0;
-    virtual size_t getSelectedMixingSpaceIdx() const noexcept = 0;
-    virtual void setSelectedMixingSpaceIdx(size_t idx) = 0;
+    virtual size_t getNumMixingSpaces() const noexcept            = 0;
+    virtual const char * getMixingSpaceUIName(size_t idx) const   = 0;
+    virtual size_t getSelectedMixingSpaceIdx() const noexcept     = 0;
+    virtual void setSelectedMixingSpaceIdx(size_t idx)            = 0;
     virtual void setSelectedMixingSpace(const char * mixingSpace) = 0;
 
     virtual bool isPerceptuallyUniform() const noexcept = 0;
 
     /// Access to the mixing encodings.
-    virtual size_t getNumMixingEncodings() const noexcept = 0;
-    virtual const char * getMixingEncodingName(size_t idx) const = 0;
-    virtual size_t getSelectedMixingEncodingIdx() const noexcept = 0;
-    virtual void setSelectedMixingEncodingIdx(size_t idx) = 0;
+    virtual size_t getNumMixingEncodings() const noexcept               = 0;
+    virtual const char * getMixingEncodingName(size_t idx) const        = 0;
+    virtual size_t getSelectedMixingEncodingIdx() const noexcept        = 0;
+    virtual void setSelectedMixingEncodingIdx(size_t idx)               = 0;
     virtual void setSelectedMixingEncoding(const char * mixingEncoding) = 0;
 
     /// Refresh the instance (i.e. needed following a configuration change for example).
     virtual void refresh(ConstConfigRcPtr config) = 0;
 
-    virtual ConstProcessorRcPtr getProcessor(const char * workingName,
-                                             const char * displayName,
-                                             const char * viewName,
-                                             TransformDirection direction) const = 0;
+    virtual ConstProcessorRcPtr getProcessor(
+        const char * workingName,
+        const char * displayName,
+        const char * viewName,
+        TransformDirection direction) const = 0;
 
     virtual MixingSlider & getSlider() noexcept = 0;
-    virtual MixingSlider & getSlider(float sliderMixingMinEdge,
-                                     float sliderMixingMaxEdge) noexcept = 0;
+    virtual MixingSlider & getSlider(float sliderMixingMinEdge, float sliderMixingMaxEdge) noexcept
+        = 0;
 
-    MixingColorSpaceManager(const MixingColorSpaceManager &) = delete;
+    MixingColorSpaceManager(const MixingColorSpaceManager &)             = delete;
     MixingColorSpaceManager & operator=(const MixingColorSpaceManager &) = delete;
 
     /// Do not use (needed only for pybind11).
@@ -535,14 +534,13 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const MixingColorSpa
 
 /**
  * The ConfigMergingParameters class holds the options that control how a merge is done.
- * 
+ *
  * In terms of OCIOM file, it represent one of the merges in an OCIOM file.
- * 
+ *
  */
 class OCIOEXPORT ConfigMergingParameters
 {
 public:
-
     enum MergeStrategies
     {
         /// Combine elements of the base and input configs, with the input taking priority.
@@ -564,12 +562,12 @@ public:
 
     ConfigMergingParametersRcPtr createEditableCopy() const;
 
-    /// Set the file name of the base config. This is used along with the search path of 
+    /// Set the file name of the base config. This is used along with the search path of
     /// the ConfigMerger object.
     void setBaseConfigName(const char * baseConfig);
     const char * getBaseConfigName() const;
 
-    /// Set the file name of the input config. This is used along with the search path of 
+    /// Set the file name of the input config. This is used along with the search path of
     /// the ConfigMerger object.
     void setInputConfigName(const char * inputConfig);
     const char * getInputConfigName() const;
@@ -577,7 +575,7 @@ public:
     /// Set a name to use for this merger. This may be used as the input or base config name
     /// in subsequent mergers.
     void setOutputName(const char * outputName);
-    const char * getOutputName() const;   
+    const char * getOutputName() const;
 
     // Options
 
@@ -666,7 +664,7 @@ public:
 
     /// Set the merge strategy for the displays/views section.
     /// This includes shared_views, displays, viewing_rules,
-    /// virtual_display, active_display, and active_views.  
+    /// virtual_display, active_display, and active_views.
     void setDisplayViews(MergeStrategies strategy);
     MergeStrategies getDisplayViews() const;
 
@@ -674,7 +672,7 @@ public:
     /// This includes the view_transforms and default_view_transform.
     void setViewTransforms(MergeStrategies strategy);
     MergeStrategies getViewTransforms() const;
-    
+
     /// Set the merge strategy for the looks section.
     void setLooks(MergeStrategies strategy);
     MergeStrategies getLooks() const;
@@ -684,13 +682,13 @@ public:
     /// family_separator, and inactive_colorspaces.
     void setColorspaces(MergeStrategies strategy);
     MergeStrategies getColorspaces() const;
-    
+
     /// Set the merge strategy for the named_transforms section.
     void setNamedTransforms(MergeStrategies strategy);
     MergeStrategies getNamedTransforms() const;
 
-    ConfigMergingParameters(const ConfigMergingParameters &) = delete;
-    ConfigMergingParameters& operator= (const ConfigMergingParameters &) = delete;
+    ConfigMergingParameters(const ConfigMergingParameters &)             = delete;
+    ConfigMergingParameters & operator=(const ConfigMergingParameters &) = delete;
 
     /// Do not use (needed only for pybind11).
     ~ConfigMergingParameters();
@@ -710,16 +708,16 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const ConfigMergingP
 
 /**
  * The ConfigMerger class is the controller for the merging process.
- * 
+ *
  * It may be read from or serialized to an OCIOM file.
  *
  * It is controlling the search_path to find the base and input config, and the merge parameters.
- * 
- * It contains an instance of ConfigMergingParameters for each merge present under the "merge" 
+ *
+ * It contains an instance of ConfigMergingParameters for each merge present under the "merge"
  * section.
- * 
+ *
  * For example, consider the following OCIOM file contents:
- * 
+ *
  *   ociom_version: 1.0
  *   search_path:
  *     - /usr/local/configs
@@ -729,10 +727,10 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const ConfigMergingP
  *       [...]
  *     Merge_ADD_THAT:
  *       [...]
- * 
+ *
  * For this OCIOM, there would be two instances of ConfigMergingParameters.
  * One for the merge with output name "Merge_ADD_THIS" and one for "Merge_ADD_THAT".
- * 
+ *
  * Where the [...] sections have the following structure:
  *
  *    Merge_ADD_THIS:
@@ -769,7 +767,7 @@ extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const ConfigMergingP
  *          strategy: PreferInput
  *        named_transform:
  *          strategy: Remove
- * 
+ *
  * The indentation is significant and must be as shown. Default items may be omitted.
  *
  */
@@ -794,10 +792,10 @@ public:
 
     /**
      * \brief Set the home directory used to resolve relative search paths.
-     * 
+     *
      * The working directory defaults to the location of the OCIOM file. It is used to convert
      * any relative paths to absolute. If no search paths have been set, the working directory
-     * will be used as the fallback search path. 
+     * will be used as the fallback search path.
      */
     void setWorkingDir(const char * dirname);
     const char * getWorkingDir() const;
@@ -809,31 +807,31 @@ public:
 
     /**
      * \brief Execute the merge(s) based on the merger object.
-     * 
-     * Execute the merge(s) based on the merger object that was previously populated by using 
-     * ConfigMerger::CreateFromFile or created from scratch by using ConfigMerger::Create() and 
+     *
+     * Execute the merge(s) based on the merger object that was previously populated by using
+     * ConfigMerger::CreateFromFile or created from scratch by using ConfigMerger::Create() and
      * programmatically configuring it.
-     * 
+     *
      * \return a merger object (call getMergedConfig to obtain the result)
      */
     ConstConfigMergerRcPtr mergeConfigs() const;
 
     /// Get the final merged config.
     ConstConfigRcPtr getMergedConfig() const;
-    /// Get one of the merged configs (if there are a series of merges).  Returns null 
+    /// Get one of the merged configs (if there are a series of merges).  Returns null
     /// if index is out of range.
     ConstConfigRcPtr getMergedConfig(int index) const;
     int getNumMergedConfigs() const;
 
     /// Serialize to the OCIOM file format.
-    void serialize(std::ostream& os) const;
+    void serialize(std::ostream & os) const;
 
     /// Set the version of the OCIOM file format.
     void setVersion(unsigned int major, unsigned int minor);
     unsigned int getMajorVersion() const;
     unsigned int getMinorVersion() const;
-    
-    ConfigMerger(const ConfigMerger &) = delete;
+
+    ConfigMerger(const ConfigMerger &)             = delete;
     ConfigMerger & operator=(const ConfigMerger &) = delete;
 
     /// Do not use (needed only for pybind11).
@@ -857,19 +855,20 @@ namespace ConfigMergingHelpers
 
 /**
  * \brief Merge the input into the base config, using the supplied merge parameters.
- * 
+ *
  * \param params ConfigMergingParameters controlling the merger.
  * \param params The base config.
  * \param params The input config to merge.
  * \return The merged config object.
  */
-extern OCIOEXPORT ConfigRcPtr MergeConfigs(const ConfigMergingParametersRcPtr & params,
-                                           const ConstConfigRcPtr & baseConfig,
-                                           const ConstConfigRcPtr & inputConfig);
+extern OCIOEXPORT ConfigRcPtr MergeConfigs(
+    const ConfigMergingParametersRcPtr & params,
+    const ConstConfigRcPtr & baseConfig,
+    const ConstConfigRcPtr & inputConfig);
 
 /**
  * \brief Merge a single color space into the base config, using the supplied merge parameters.
- * 
+ *
  * Note that the AdjustInputReferenceSpace merge parameter will be ignored and set to false.
  * To use automatic reference space conversion, add the color space to an input config that
  * has the necessary interchange role set.
@@ -879,11 +878,12 @@ extern OCIOEXPORT ConfigRcPtr MergeConfigs(const ConfigMergingParametersRcPtr & 
  * \param params The input color space to merge.
  * \return The merged config object.
  */
-extern OCIOEXPORT ConfigRcPtr MergeColorSpace(const ConfigMergingParametersRcPtr & params,
-                                              const ConstConfigRcPtr & baseConfig,
-                                              const ConstColorSpaceRcPtr & colorspace);
+extern OCIOEXPORT ConfigRcPtr MergeColorSpace(
+    const ConfigMergingParametersRcPtr & params,
+    const ConstConfigRcPtr & baseConfig,
+    const ConstColorSpaceRcPtr & colorspace);
 
-} // ConfigMergingHelpers
+} // namespace ConfigMergingHelpers
 
 } // namespace OCIO_NAMESPACE
 

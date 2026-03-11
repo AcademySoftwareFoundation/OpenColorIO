@@ -19,13 +19,14 @@ Lut1DTransformRcPtr Lut1DTransform::Create()
 
 Lut1DTransformRcPtr Lut1DTransform::Create(unsigned long length, bool isHalfDomain)
 {
-    const auto halfFlag = isHalfDomain ? Lut1DOpData::LUT_INPUT_HALF_CODE :
-                                         Lut1DOpData::LUT_STANDARD;
-    return Lut1DTransformRcPtr(new Lut1DTransformImpl(halfFlag, length),
-                               &Lut1DTransformImpl::deleter);
+    const auto halfFlag
+        = isHalfDomain ? Lut1DOpData::LUT_INPUT_HALF_CODE : Lut1DOpData::LUT_STANDARD;
+    return Lut1DTransformRcPtr(
+        new Lut1DTransformImpl(halfFlag, length),
+        &Lut1DTransformImpl::deleter);
 }
 
-void Lut1DTransformImpl::deleter(Lut1DTransform* t)
+void Lut1DTransformImpl::deleter(Lut1DTransform * t)
 {
     delete static_cast<Lut1DTransformImpl *>(t);
 }
@@ -41,8 +42,8 @@ Lut1DTransformImpl::Lut1DTransformImpl(Lut1DOpData::HalfFlags halfFlag, unsigned
 
 TransformRcPtr Lut1DTransformImpl::createEditableCopy() const
 {
-    Lut1DTransformRcPtr transform = Lut1DTransform::Create();
-    dynamic_cast<Lut1DTransformImpl*>(transform.get())->data() = data();
+    Lut1DTransformRcPtr transform                               = Lut1DTransform::Create();
+    dynamic_cast<Lut1DTransformImpl *>(transform.get())->data() = data();
     return transform;
 }
 
@@ -94,8 +95,9 @@ const FormatMetadata & Lut1DTransformImpl::getFormatMetadata() const noexcept
 
 bool Lut1DTransformImpl::equals(const Lut1DTransform & other) const noexcept
 {
-    if (this == &other) return true;
-    return data() == dynamic_cast<const Lut1DTransformImpl*>(&other)->data();
+    if (this == &other)
+        return true;
+    return data() == dynamic_cast<const Lut1DTransformImpl *>(&other)->data();
 }
 
 void Lut1DTransformImpl::setLength(unsigned long length)
@@ -118,12 +120,12 @@ void CheckLUT1DIndex(const char * function, unsigned long index, unsigned long s
         throw Exception(oss.str().c_str());
     }
 }
-}
+} // namespace
 
 void Lut1DTransformImpl::setValue(unsigned long index, float r, float g, float b)
 {
     CheckLUT1DIndex("setValue", index, getLength());
-    data().getArray()[3 * index] = r;
+    data().getArray()[3 * index]     = r;
     data().getArray()[3 * index + 1] = g;
     data().getArray()[3 * index + 2] = b;
 }
@@ -181,7 +183,7 @@ Interpolation Lut1DTransformImpl::getInterpolation() const
     return data().getInterpolation();
 }
 
-std::ostream & operator<< (std::ostream & os, const Lut1DTransform & t)
+std::ostream & operator<<(std::ostream & os, const Lut1DTransform & t)
 {
     os << "<Lut1DTransform ";
     os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
@@ -224,4 +226,3 @@ std::ostream & operator<< (std::ostream & os, const Lut1DTransform & t)
 }
 
 } // namespace OCIO_NAMESPACE
-

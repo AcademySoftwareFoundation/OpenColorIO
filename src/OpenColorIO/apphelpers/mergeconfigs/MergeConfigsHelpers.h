@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_MERGE_CONFIG_HELPERS_H
 #define INCLUDED_OCIO_MERGE_CONFIG_HELPERS_H
 
@@ -11,9 +10,9 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "Logging.h"
 #include "SectionMerger.h"
 #include "utils/StringUtils.h"
-#include "Logging.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -50,9 +49,10 @@ public:
     MergeStrategies m_defaultStrategy;
     MergeStrategies m_roles;
     MergeStrategies m_fileRules;
-    // Includes shared_views, displays, viewing_rules, virtual_display, active_display, active_views.
+    // Includes shared_views, displays, viewing_rules, virtual_display, active_display,
+    // active_views.
     MergeStrategies m_displayViews;
-    // Includes view_transforms and default_view_transform. 
+    // Includes view_transforms and default_view_transform.
     MergeStrategies m_viewTransforms;
     MergeStrategies m_looks;
     // Includes colorspaces, environment, search_path, family_separator, and inactive_colorspaces.
@@ -61,65 +61,65 @@ public:
 
     Impl()
     {
-        m_baseConfig = "";
+        m_baseConfig  = "";
         m_inputConfig = "";
-        m_outputName = "merged";
+        m_outputName  = "merged";
 
         // Overrides
-        m_name = "";
+        m_name        = "";
         m_description = "";
         m_overrideCfg = Config::Create();
         m_overrideCfg->clearEnvironmentVars();
 
         // Options
-        m_inputFamilyPrefix  = "";
-        m_baseFamilyPrefix  = "";
-        m_inputFirst = true;
-        m_errorOnConflict = false;
-        m_avoidDuplicates = true;
+        m_inputFamilyPrefix         = "";
+        m_baseFamilyPrefix          = "";
+        m_inputFirst                = true;
+        m_errorOnConflict           = false;
+        m_avoidDuplicates           = true;
         m_adjustInputReferenceSpace = true;
-        
+
         m_defaultStrategy = STRATEGY_PREFER_INPUT;
-        m_roles = STRATEGY_UNSPECIFIED;
-        m_fileRules = STRATEGY_UNSPECIFIED;
-        m_displayViews = STRATEGY_UNSPECIFIED;
-        m_viewTransforms = STRATEGY_UNSPECIFIED;
-        m_looks = STRATEGY_UNSPECIFIED;
-        m_colorspaces = STRATEGY_UNSPECIFIED;
+        m_roles           = STRATEGY_UNSPECIFIED;
+        m_fileRules       = STRATEGY_UNSPECIFIED;
+        m_displayViews    = STRATEGY_UNSPECIFIED;
+        m_viewTransforms  = STRATEGY_UNSPECIFIED;
+        m_looks           = STRATEGY_UNSPECIFIED;
+        m_colorspaces     = STRATEGY_UNSPECIFIED;
         m_namedTransforms = STRATEGY_UNSPECIFIED;
     }
 
-    ~Impl() = default;
-    Impl(const Impl&) = delete;
+    ~Impl()            = default;
+    Impl(const Impl &) = delete;
 
-    Impl& operator= (const Impl & rhs)
+    Impl & operator=(const Impl & rhs)
     {
-        if(this!=&rhs)
+        if (this != &rhs)
         {
-            m_baseConfig = rhs.m_baseConfig;
+            m_baseConfig  = rhs.m_baseConfig;
             m_inputConfig = rhs.m_inputConfig;
-            m_outputName = rhs.m_outputName;
+            m_outputName  = rhs.m_outputName;
 
             // Overrides
-            m_name = rhs.m_name;
+            m_name        = rhs.m_name;
             m_description = rhs.m_description;
             m_overrideCfg = rhs.m_overrideCfg;
 
             // Options
-            m_inputFamilyPrefix  = rhs.m_inputFamilyPrefix;
-            m_baseFamilyPrefix  = rhs.m_baseFamilyPrefix;
-            m_inputFirst = rhs.m_inputFirst;
-            m_errorOnConflict = rhs.m_errorOnConflict;
-            m_avoidDuplicates = rhs.m_avoidDuplicates;
+            m_inputFamilyPrefix         = rhs.m_inputFamilyPrefix;
+            m_baseFamilyPrefix          = rhs.m_baseFamilyPrefix;
+            m_inputFirst                = rhs.m_inputFirst;
+            m_errorOnConflict           = rhs.m_errorOnConflict;
+            m_avoidDuplicates           = rhs.m_avoidDuplicates;
             m_adjustInputReferenceSpace = rhs.m_adjustInputReferenceSpace;
 
             m_defaultStrategy = rhs.m_defaultStrategy;
-            m_roles = rhs.m_roles;
-            m_fileRules = rhs.m_fileRules;
-            m_displayViews = rhs.m_displayViews;
-            m_viewTransforms = rhs.m_viewTransforms;
-            m_looks = rhs.m_looks;
-            m_colorspaces = rhs.m_colorspaces;
+            m_roles           = rhs.m_roles;
+            m_fileRules       = rhs.m_fileRules;
+            m_displayViews    = rhs.m_displayViews;
+            m_viewTransforms  = rhs.m_viewTransforms;
+            m_looks           = rhs.m_looks;
+            m_colorspaces     = rhs.m_colorspaces;
             m_namedTransforms = rhs.m_namedTransforms;
         }
         return *this;
@@ -133,7 +133,7 @@ public:
     // (Each of the configs has its own search path for its LUTs.)
     StringUtils::StringVec m_searchPaths;
 
-    // 
+    //
     std::string m_workingDir;
 
     // Version for the .ociom file format.
@@ -146,22 +146,20 @@ public:
     // Vector of config objects, the output of each merge.
     std::vector<ConstConfigRcPtr> m_mergedConfigs;
 
-    Impl()
-    {
-    }
+    Impl() {}
 
-    ~Impl() = default;
-    Impl(const Impl&) = delete;
+    ~Impl()            = default;
+    Impl(const Impl &) = delete;
 
-    Impl& operator= (const Impl & rhs)
+    Impl & operator=(const Impl & rhs)
     {
-        if(this != &rhs)
+        if (this != &rhs)
         {
-            m_searchPaths = rhs.m_searchPaths;
-            m_workingDir = rhs.m_workingDir;
+            m_searchPaths  = rhs.m_searchPaths;
+            m_workingDir   = rhs.m_workingDir;
             m_majorVersion = rhs.m_majorVersion;
             m_minorVersion = rhs.m_minorVersion;
-            
+
             m_mergeParams.clear();
             m_mergeParams.reserve(rhs.m_mergeParams.size());
             for (const auto & param : rhs.m_mergeParams)
@@ -183,7 +181,7 @@ public:
 
     /**
      * \brief Load the config based on the name/filepath specified.
-     * 
+     *
      * Here's the steps:
      * 1 - Try to find the config name/filepath using the search_paths.
      * 2 - If not found, try to use the name as a built-in config's name.
@@ -193,6 +191,6 @@ public:
     ConstConfigRcPtr loadConfig(const char * value) const;
 };
 
-}  // namespace OCIO_NAMESPACE
+} // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_MERGE_CONFIG_HELPERS_H

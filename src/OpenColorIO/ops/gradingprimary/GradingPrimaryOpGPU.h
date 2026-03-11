@@ -12,11 +12,10 @@
 namespace OCIO_NAMESPACE
 {
 
-void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
-                                       ConstGradingPrimaryOpDataRcPtr & gpData);
+void GetGradingPrimaryGPUShaderProgram(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstGradingPrimaryOpDataRcPtr & gpData);
 
 } // namespace OCIO_NAMESPACE
 
 #endif
-
-

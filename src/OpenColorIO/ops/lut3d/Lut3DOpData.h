@@ -9,9 +9,8 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
-#include "ops/OpArray.h"
 #include "PrivateTypes.h"
-
+#include "ops/OpArray.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -22,11 +21,10 @@ typedef OCIO_SHARED_PTR<const Lut3DOpData> ConstLut3DOpDataRcPtr;
 class Lut3DOpData : public OpData
 {
 public:
-
     // The maximum grid size supported for a 3D LUT.
     static const unsigned long maxSupportedLength;
 
-    // Use functional composition to generate a single op that 
+    // Use functional composition to generate a single op that
     // approximates the effect of the pair of ops.
     static Lut3DOpDataRcPtr Compose(ConstLut3DOpDataRcPtr & lut1, ConstLut3DOpDataRcPtr & lut2);
 
@@ -81,7 +79,7 @@ public:
 
     Lut3DOpDataRcPtr inverse() const;
 
-    bool equals(const OpData& other) const override;
+    bool equals(const OpData & other) const override;
 
     std::string getCacheID() const override;
 
@@ -101,40 +99,38 @@ public:
     public:
         Lut3DArray(unsigned long dimension);
 
-        Lut3DArray(const Lut3DArray &) = default;
-        Lut3DArray & operator= (const Lut3DArray &) = default;
+        Lut3DArray(const Lut3DArray &)             = default;
+        Lut3DArray & operator=(const Lut3DArray &) = default;
 
         ~Lut3DArray();
 
-        Lut3DArray& operator=(const Array& a);
+        Lut3DArray & operator=(const Array & a);
 
         void resize(unsigned long length, unsigned long numColorComponents) override;
 
         unsigned long getNumValues() const override;
 
-        void getRGB(long i, long j, long k, float* RGB) const;
+        void getRGB(long i, long j, long k, float * RGB) const;
 
-        void setRGB(long i, long j, long k, float* RGB);
+        void setRGB(long i, long j, long k, float * RGB);
 
         void scale(float scaleFactor);
 
     protected:
         // Fill the LUT 3D with appropriate default values.
         void fill();
-
     };
 
 private:
     Lut3DOpData() = delete;
 
-    Interpolation       m_interpolation;
-    Lut3DArray          m_array;
+    Interpolation m_interpolation;
+    Lut3DArray m_array;
 
-    TransformDirection  m_direction;
+    TransformDirection m_direction;
 
     // Out bit-depth to be used for file I/O.
     BitDepth m_fileOutBitDepth = BIT_DEPTH_UNKNOWN;
-
 };
 
 bool operator==(const Lut3DOpData & lhs, const Lut3DOpData & rhs);

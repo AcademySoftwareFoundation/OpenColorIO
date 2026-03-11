@@ -14,45 +14,35 @@ namespace OCIO_NAMESPACE
 namespace ACES2
 {
 
-using f2 = std::array<float, 2>;
-using f3 = std::array<float, 3>;
-using f4 = std::array<float, 4>;
+using f2   = std::array<float, 2>;
+using f3   = std::array<float, 3>;
+using f4   = std::array<float, 4>;
 using m33f = std::array<float, 9>;
-
 
 inline f3 f3_from_f(float v)
 {
-    return f3 {v, v, v};
+    return f3{v, v, v};
 }
 
-inline f3 add_f_f3(float v, const f3 &f3)
+inline f3 add_f_f3(float v, const f3 & f3)
 {
-    return {
-        v + f3[0],
-        v + f3[1],
-        v + f3[2]
-    };
+    return {v + f3[0], v + f3[1], v + f3[2]};
 }
 
-inline f3 mult_f_f3(float v, const f3 &f3)
+inline f3 mult_f_f3(float v, const f3 & f3)
 {
-    return {
-        v * f3[0],
-        v * f3[1],
-        v * f3[2]
-    };
+    return {v * f3[0], v * f3[1], v * f3[2]};
 }
 
-inline f3 mult_f3_f33(const f3 &f3, const m33f &mat33)
+inline f3 mult_f3_f33(const f3 & f3, const m33f & mat33)
 {
     return {
         f3[0] * mat33[0] + f3[1] * mat33[1] + f3[2] * mat33[2],
         f3[0] * mat33[3] + f3[1] * mat33[4] + f3[2] * mat33[5],
-        f3[0] * mat33[6] + f3[1] * mat33[7] + f3[2] * mat33[8]
-    };
+        f3[0] * mat33[6] + f3[1] * mat33[7] + f3[2] * mat33[8]};
 }
 
-inline m33f mult_f33_f33(const m33f &a, const m33f &b)
+inline m33f mult_f33_f33(const m33f & a, const m33f & b)
 {
     return {
         a[0] * b[0] + a[1] * b[3] + a[2] * b[6],
@@ -65,30 +55,40 @@ inline m33f mult_f33_f33(const m33f &a, const m33f &b)
 
         a[6] * b[0] + a[7] * b[3] + a[8] * b[6],
         a[6] * b[1] + a[7] * b[4] + a[8] * b[7],
-        a[6] * b[2] + a[7] * b[5] + a[8] * b[8]
-    };
+        a[6] * b[2] + a[7] * b[5] + a[8] * b[8]};
 }
 
-inline m33f scale_f33(const m33f &mat33, const f3 &scale)
+inline m33f scale_f33(const m33f & mat33, const f3 & scale)
 {
     return {
-        mat33[0] * scale[0], mat33[3], mat33[6],
-        mat33[1], mat33[4] * scale[1], mat33[7],
-        mat33[2], mat33[5], mat33[8] * scale[2]
-    };
+        mat33[0] * scale[0],
+        mat33[3],
+        mat33[6],
+        mat33[1],
+        mat33[4] * scale[1],
+        mat33[7],
+        mat33[2],
+        mat33[5],
+        mat33[8] * scale[2]};
 }
 
-inline m33f m33_from_ocio_matrix_array(const MatrixOpData::MatrixArray &array)
+inline m33f m33_from_ocio_matrix_array(const MatrixOpData::MatrixArray & array)
 {
-    const auto& v = array.getValues();
+    const auto & v = array.getValues();
     return {
-        (float) v[0], (float) v[1], (float) v[2],
-        (float) v[4], (float) v[5], (float) v[6],
-        (float) v[8], (float) v[9], (float) v[10],
+        (float)v[0],
+        (float)v[1],
+        (float)v[2],
+        (float)v[4],
+        (float)v[5],
+        (float)v[6],
+        (float)v[8],
+        (float)v[9],
+        (float)v[10],
     };
 }
 
-inline m33f invert_f33(const m33f &mat33)
+inline m33f invert_f33(const m33f & mat33)
 {
     MatrixOpData::MatrixArray array;
     MatrixOpData::MatrixArray::Values & v = array.getValues();
@@ -101,16 +101,16 @@ inline m33f invert_f33(const m33f &mat33)
     v[5] = mat33[4];
     v[6] = mat33[5];
 
-    v[8] = mat33[6];
-    v[9] = mat33[7];
+    v[8]  = mat33[6];
+    v[9]  = mat33[7];
     v[10] = mat33[8];
 
     MatrixOpData::MatrixArray inverse = *(array.inverse());
     return m33_from_ocio_matrix_array(inverse);
 }
 
-} // ACES2 namespace
+} // namespace ACES2
 
-} // OCIO namespace
+} // namespace OCIO_NAMESPACE
 
 #endif

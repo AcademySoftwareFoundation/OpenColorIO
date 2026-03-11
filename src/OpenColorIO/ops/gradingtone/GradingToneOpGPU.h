@@ -12,11 +12,10 @@
 namespace OCIO_NAMESPACE
 {
 
-void GetGradingToneGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
-                                    ConstGradingToneOpDataRcPtr & gtData);
+void GetGradingToneGPUShaderProgram(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstGradingToneOpDataRcPtr & gtData);
 
 } // namespace OCIO_NAMESPACE
 
 #endif
-
-

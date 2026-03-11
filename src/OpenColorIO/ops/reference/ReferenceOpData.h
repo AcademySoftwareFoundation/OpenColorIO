@@ -4,9 +4,9 @@
 #ifndef INCLUDED_OCIO_REFERENCEOPDATA_H
 #define INCLUDED_OCIO_REFERENCEOPDATA_H
 
+#include <OpenColorIO/OpenColorIO.h>
 #include <list>
 #include <string>
-#include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
 
@@ -42,46 +42,31 @@ public:
 
     bool hasChannelCrosstalk() const override;
 
-    bool equals(const OpData& other) const override;
+    bool equals(const OpData & other) const override;
 
     std::string getCacheID() const override;
 
-    ReferenceStyle getReferenceStyle() const
-    {
-        return m_referenceStyle;
-    }
+    ReferenceStyle getReferenceStyle() const { return m_referenceStyle; }
 
-    const std::string & getPath() const
-    {
-        return m_path;
-    }
+    const std::string & getPath() const { return m_path; }
 
     void setPath(const std::string & path)
     {
         m_referenceStyle = REF_PATH;
-        m_path = path;
+        m_path           = path;
     }
 
-    const std::string & getAlias() const
-    {
-        return m_alias;
-    }
+    const std::string & getAlias() const { return m_alias; }
 
     void setAlias(const std::string & alias)
     {
         m_referenceStyle = REF_ALIAS;
-        m_alias = alias;
+        m_alias          = alias;
     }
 
-    TransformDirection getDirection() const
-    {
-        return m_direction;
-    }
+    TransformDirection getDirection() const { return m_direction; }
 
-    void setDirection(TransformDirection dir)
-    {
-        m_direction = dir;
-    }
+    void setDirection(TransformDirection dir) { m_direction = dir; }
 
 private:
     ReferenceStyle m_referenceStyle = REF_PATH;
