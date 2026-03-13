@@ -5,7 +5,7 @@ requires = [
     "cmake>=3.14",
     "ninja; sys_platform != 'win32' and platform_machine != 'arm64'",
     # Documentation requirements (see docs/requirements.txt for details)
-    "urllib3<2",
+    "urllib3<3",
     "docutils>=0.18.1",
     "sphinx<=7.1.2",
     "six",
