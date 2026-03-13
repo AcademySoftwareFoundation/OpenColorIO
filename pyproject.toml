@@ -7,7 +7,7 @@ requires = [
     # Documentation requirements (see docs/requirements.txt for details)
     "urllib3<2",
     "docutils>=0.18.1",
-    "sphinx<=7.1.2",
+    "sphinx<=9.1.0",
     "six",
     "testresources",
     "recommonmark",
