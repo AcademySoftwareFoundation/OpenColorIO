@@ -862,11 +862,11 @@ void CTFReaderDescElt::start(const char **  atttributes )
     m_language = {};
 
     const char ** attr = atttributes;
-    while (*attr)
+    while (attr && *attr)
     {
         if (0 == Platform::Strcasecmp(ATTR_LANGUAGE, *attr))
         {
-            if (!attr || !(attr + 1))
+            if (!(attr + 1) || !*(attr + 1))
             {
                 throwMessage("Attribute 'language' does not have a value.");
             }
