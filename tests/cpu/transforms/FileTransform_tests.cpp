@@ -80,7 +80,7 @@ OCIO_ADD_TEST(FileTransform, load_file_ok)
     OCIO_CHECK_ASSERT(!proc->isNoOp());
 
     // Academy/ASC common LUT format.
-    const std::string clfMatTransform("clf/matrix_example.clf");
+    const std::string clfMatTransform("clf/pre-smpte_only/matrix_example.clf");
     OCIO_CHECK_NO_THROW(proc = OCIO::GetFileTransformProcessor(clfMatTransform));
     OCIO_CHECK_ASSERT(!proc->isNoOp());
 

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ProcessList id="e0a0ae4b-adc2-4c25-ad70-fa6f31ba219d" xmlns="urn:NATAS:ASC:LUT:v0.95" compCLFversion="3.0">
+<ProcessList id="e0a0ae4b-adc2-4c25-ad70-fa6f31ba219d" xmlns="http://www.smpte-ra.org/ns/2136-1/2024" compCLFversion="3.0">
     <Description>The noClamp style may not be used when there are only two values.</Description>
     <Range inBitDepth="32f" outBitDepth="16f" style="noClamp">
-        <minOutValue> 0.1 </minOutValue>
         <minInValue>     1e-1        </minInValue>
+        <minOutValue> 0.1 </minOutValue>
     </Range>
 </ProcessList>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ProcessList compCLFversion="three" id="Version test" name="none" xmlns="urn:AMPAS:CLF:v3.0">
-    <Description>Not a legal compCLFversion string</Description>
+    <Description>Does not contain a legal compCLFversion string.</Description>
     <Matrix id="c61daf06-539f-4254-81fc-9800e6d02a37" inBitDepth="32f" outBitDepth="32f">
         <Array dim="3 3">
  3.24000 -1.53700 -0.49850
