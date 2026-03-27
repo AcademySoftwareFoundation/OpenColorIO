@@ -10,7 +10,7 @@ void CustomLoggingFunction(const char * message)
 }
 
 LogGuard::LogGuard()
-    :   m_logLevel(OCIO::GetLoggingLevel())
+    : m_logLevel(OCIO::GetLoggingLevel())
 {
     OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_DEBUG);
     OCIO::SetLoggingFunction(&CustomLoggingFunction);

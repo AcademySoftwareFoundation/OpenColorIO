@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <algorithm>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -16,7 +15,6 @@ namespace OCIO_NAMESPACE
 class RangeOpCPU : public OpCPU
 {
 public:
-
     RangeOpCPU(ConstRangeOpDataRcPtr & range);
 
 protected:
@@ -61,13 +59,12 @@ public:
     virtual void apply(const void * inImg, void * outImg, long numPixels) const override;
 };
 
-
 RangeOpCPU::RangeOpCPU(ConstRangeOpDataRcPtr & range)
-    :   OpCPU()
-    ,   m_scale(0.0f)
-    ,   m_offset(0.0f)
-    ,   m_lowerBound(0.0f)
-    ,   m_upperBound(0.0f)
+    : OpCPU()
+    , m_scale(0.0f)
+    , m_offset(0.0f)
+    , m_lowerBound(0.0f)
+    , m_upperBound(0.0f)
 {
     m_scale      = (float)range->getScale();
     m_offset     = (float)range->getOffset();
@@ -76,20 +73,19 @@ RangeOpCPU::RangeOpCPU(ConstRangeOpDataRcPtr & range)
 }
 
 RangeScaleMinMaxRenderer::RangeScaleMinMaxRenderer(ConstRangeOpDataRcPtr & range)
-    :  RangeOpCPU(range)
+    : RangeOpCPU(range)
 {
 }
 
 void RangeScaleMinMaxRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for(long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
-        const float t[3] = { in[0] * m_scale + m_offset,
-                             in[1] * m_scale + m_offset,
-                             in[2] * m_scale + m_offset };
+        const float t[3]
+            = {in[0] * m_scale + m_offset, in[1] * m_scale + m_offset, in[2] * m_scale + m_offset};
 
         // NaNs become m_lowerBound.
         out[0] = Clamp(t[0], m_lowerBound, m_upperBound);
@@ -97,22 +93,22 @@ void RangeScaleMinMaxRenderer::apply(const void * inImg, void * outImg, long num
         out[2] = Clamp(t[2], m_lowerBound, m_upperBound);
         out[3] = in[3];
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
 
 RangeMinMaxRenderer::RangeMinMaxRenderer(ConstRangeOpDataRcPtr & range)
-    :  RangeOpCPU(range)
+    : RangeOpCPU(range)
 {
 }
 
 void RangeMinMaxRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for(long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         // NaNs become m_lowerBound.
         out[0] = Clamp(in[0], m_lowerBound, m_upperBound);
@@ -120,22 +116,22 @@ void RangeMinMaxRenderer::apply(const void * inImg, void * outImg, long numPixel
         out[2] = Clamp(in[2], m_lowerBound, m_upperBound);
         out[3] = in[3];
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
 
 RangeMinRenderer::RangeMinRenderer(ConstRangeOpDataRcPtr & range)
-    :  RangeOpCPU(range)
+    : RangeOpCPU(range)
 {
 }
 
 void RangeMinRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for(long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         // NaNs become m_lowerBound.
         out[0] = std::max(m_lowerBound, in[0]);
@@ -143,22 +139,22 @@ void RangeMinRenderer::apply(const void * inImg, void * outImg, long numPixels) 
         out[2] = std::max(m_lowerBound, in[2]);
         out[3] = in[3];
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
 
 RangeMaxRenderer::RangeMaxRenderer(ConstRangeOpDataRcPtr & range)
-    :  RangeOpCPU(range)
+    : RangeOpCPU(range)
 {
 }
 
 void RangeMaxRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for(long idx=0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         // NaNs become m_upperBound.
         out[0] = std::min(m_upperBound, in[0]);
@@ -166,11 +162,10 @@ void RangeMaxRenderer::apply(const void * inImg, void * outImg, long numPixels) 
         out[2] = std::min(m_upperBound, in[2]);
         out[3] = in[3];
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
-
 
 ConstOpCPURcPtr GetRangeRenderer(ConstRangeOpDataRcPtr & range)
 {
@@ -198,4 +193,3 @@ ConstOpCPURcPtr GetRangeRenderer(ConstRangeOpDataRcPtr & range)
 }
 
 } // namespace OCIO_NAMESPACE
-

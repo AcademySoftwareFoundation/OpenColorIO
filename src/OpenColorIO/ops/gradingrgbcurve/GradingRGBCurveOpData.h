@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_GRADINGRGBCURVE_OPDATA_H
 #define INCLUDED_OCIO_GRADINGRGBCURVE_OPDATA_H
-
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -18,17 +15,16 @@ class GradingRGBCurveOpData;
 typedef OCIO_SHARED_PTR<GradingRGBCurveOpData> GradingRGBCurveOpDataRcPtr;
 typedef OCIO_SHARED_PTR<const GradingRGBCurveOpData> ConstGradingRGBCurveOpDataRcPtr;
 
-
 class GradingRGBCurveOpData : public OpData
 {
 public:
-
     explicit GradingRGBCurveOpData(GradingStyle style);
-    GradingRGBCurveOpData(GradingStyle style,
-                          ConstGradingBSplineCurveRcPtr red,
-                          ConstGradingBSplineCurveRcPtr green,
-                          ConstGradingBSplineCurveRcPtr blue,
-                          ConstGradingBSplineCurveRcPtr master);
+    GradingRGBCurveOpData(
+        GradingStyle style,
+        ConstGradingBSplineCurveRcPtr red,
+        ConstGradingBSplineCurveRcPtr green,
+        ConstGradingBSplineCurveRcPtr blue,
+        ConstGradingBSplineCurveRcPtr master);
     GradingRGBCurveOpData() = delete;
     GradingRGBCurveOpData(const GradingRGBCurveOpData & rhs);
     GradingRGBCurveOpData & operator=(const GradingRGBCurveOpData & rhs);
@@ -79,10 +75,10 @@ public:
     bool equals(const OpData & other) const override;
 
 private:
-    GradingStyle                            m_style;
+    GradingStyle m_style;
     DynamicPropertyGradingRGBCurveImplRcPtr m_value;
-    bool                                    m_bypassLinToLog{ false };
-    TransformDirection                      m_direction{ TRANSFORM_DIR_FORWARD };
+    bool m_bypassLinToLog{false};
+    TransformDirection m_direction{TRANSFORM_DIR_FORWARD};
 };
 
 bool operator==(const GradingRGBCurveOpData & lhs, const GradingRGBCurveOpData & rhs);

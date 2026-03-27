@@ -12,13 +12,14 @@
 namespace OCIO_NAMESPACE
 {
 
-namespace {
-
-
-static inline __m512 apply_lut_avx512(const float *lut, __m512 v, const __m512& scale, const __m512& lut_max)
+namespace
 {
-    __m512 zero   = _mm512_setzero_ps();
-    __m512 one_f  = _mm512_set1_ps(1);
+
+static inline __m512
+apply_lut_avx512(const float * lut, __m512 v, const __m512 & scale, const __m512 & lut_max)
+{
+    __m512 zero  = _mm512_setzero_ps();
+    __m512 one_f = _mm512_set1_ps(1);
 
     __m512 scaled = _mm512_mul_ps(v, scale);
 
@@ -41,27 +42,36 @@ static inline __m512 apply_lut_avx512(const float *lut, __m512 v, const __m512& 
 }
 
 template <BitDepth inBD, BitDepth outBD>
-static inline void linear1D(const float *lutR, const float *lutG,const float *lutB, int dim, const void *inImg, void *outImg, long numPixels)
+static inline void linear1D(
+    const float * lutR,
+    const float * lutG,
+    const float * lutB,
+    int dim,
+    const void * inImg,
+    void * outImg,
+    long numPixels)
 {
 
     typedef typename BitDepthInfo<inBD>::Type InType;
     typedef typename BitDepthInfo<outBD>::Type OutType;
 
-    const InType *src = (const InType*)inImg;
-    OutType *dst = (OutType*)outImg;
-    __m512 r,g,b,a, alpha_scale;
+    const InType * src = (const InType *)inImg;
+    OutType * dst      = (OutType *)outImg;
+    __m512 r, g, b, a, alpha_scale;
 
-    float rgb_scale = 1.0f / (float)BitDepthInfo<inBD>::maxValue  * ((float)dim -1);
+    float rgb_scale        = 1.0f / (float)BitDepthInfo<inBD>::maxValue * ((float)dim - 1);
     const __m512 lut_scale = _mm512_set1_ps(rgb_scale);
-    const __m512 lut_max   = _mm512_set1_ps((float)dim -1);
+    const __m512 lut_max   = _mm512_set1_ps((float)dim - 1);
 
     if (inBD != outBD)
-        alpha_scale = _mm512_set1_ps((float)BitDepthInfo<outBD>::maxValue / (float)BitDepthInfo<inBD>::maxValue);
+        alpha_scale = _mm512_set1_ps(
+            (float)BitDepthInfo<outBD>::maxValue / (float)BitDepthInfo<inBD>::maxValue);
 
     int pixel_count = numPixels / 16 * 16;
-    int remainder = numPixels - pixel_count;
+    int remainder   = numPixels - pixel_count;
 
-    for (int i = 0; i < pixel_count; i += 16 ) {
+    for (int i = 0; i < pixel_count; i += 16)
+    {
         AVX512RGBAPack<inBD>::Load(src, r, g, b, a);
 
         r = apply_lut_avx512(lutR, r, lut_scale, lut_max);
@@ -77,8 +87,9 @@ static inline void linear1D(const float *lutR, const float *lutG,const float *lu
         dst += 64;
     }
 
-     // handler leftovers pixels
-    if (remainder) {
+    // handler leftovers pixels
+    if (remainder)
+    {
         AVX512RGBAPack<inBD>::LoadMasked(src, r, g, b, a, remainder);
 
         r = apply_lut_avx512(lutR, r, lut_scale, lut_max);
@@ -92,10 +103,9 @@ static inline void linear1D(const float *lutR, const float *lutG,const float *lu
     }
 }
 
-template<BitDepth inBD>
-inline Lut1DOpCPUApplyFunc * GetConvertInBitDepth(BitDepth outBD)
+template <BitDepth inBD> inline Lut1DOpCPUApplyFunc * GetConvertInBitDepth(BitDepth outBD)
 {
-    switch(outBD)
+    switch (outBD)
     {
         case BIT_DEPTH_UINT8:
             return linear1D<inBD, BIT_DEPTH_UINT8>;
@@ -125,7 +135,7 @@ Lut1DOpCPUApplyFunc * AVX512GetLut1DApplyFunc(BitDepth inBD, BitDepth outBD)
 {
 
     // Lut1DOp only uses interpolation for in float in formats
-    switch(inBD)
+    switch (inBD)
     {
         case BIT_DEPTH_UINT8:
         case BIT_DEPTH_UINT10:
@@ -145,6 +155,6 @@ Lut1DOpCPUApplyFunc * AVX512GetLut1DApplyFunc(BitDepth inBD, BitDepth outBD)
     return nullptr;
 }
 
-} // OCIO_NAMESPACE
+} // namespace OCIO_NAMESPACE
 
 #endif // OCIO_USE_AVX512

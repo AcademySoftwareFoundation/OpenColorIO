@@ -9,7 +9,6 @@
 #include "GpuShaderUtils.h"
 #include "ops/cdl/CDLOpData.h"
 
-
 namespace OCIO_NAMESPACE
 {
 

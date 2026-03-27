@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_GRADINGPRIMARY_OPDATA_H
 #define INCLUDED_OCIO_GRADINGPRIMARY_OPDATA_H
-
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -18,11 +15,9 @@ class GradingPrimaryOpData;
 typedef OCIO_SHARED_PTR<GradingPrimaryOpData> GradingPrimaryOpDataRcPtr;
 typedef OCIO_SHARED_PTR<const GradingPrimaryOpData> ConstGradingPrimaryOpDataRcPtr;
 
-
 class GradingPrimaryOpData : public OpData
 {
 public:
-
     explicit GradingPrimaryOpData(GradingStyle style);
     GradingPrimaryOpData() = delete;
     GradingPrimaryOpData(const GradingPrimaryOpData & rhs);
@@ -68,7 +63,7 @@ public:
     bool equals(const OpData & other) const override;
 
 private:
-    GradingStyle                           m_style;
+    GradingStyle m_style;
     DynamicPropertyGradingPrimaryImplRcPtr m_value;
 };
 

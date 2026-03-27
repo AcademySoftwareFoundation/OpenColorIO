@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_GRADINGPRIMARYTRANSFORM_H
 #define INCLUDED_OCIO_GRADINGPRIMARYTRANSFORM_H
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/gradingprimary/GradingPrimaryOpData.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -17,10 +15,10 @@ class GradingPrimaryTransformImpl : public GradingPrimaryTransform
 {
 public:
     explicit GradingPrimaryTransformImpl(GradingStyle style);
-    GradingPrimaryTransformImpl() = delete;
-    GradingPrimaryTransformImpl(const GradingPrimaryTransformImpl &) = delete;
-    GradingPrimaryTransformImpl& operator=(const GradingPrimaryTransformImpl &) = delete;
-    ~GradingPrimaryTransformImpl() override = default;
+    GradingPrimaryTransformImpl()                                                = delete;
+    GradingPrimaryTransformImpl(const GradingPrimaryTransformImpl &)             = delete;
+    GradingPrimaryTransformImpl & operator=(const GradingPrimaryTransformImpl &) = delete;
+    ~GradingPrimaryTransformImpl() override                                      = default;
 
     TransformRcPtr createEditableCopy() const override;
 
@@ -54,7 +52,6 @@ private:
     GradingPrimaryOpData m_data;
 };
 
-
 } // namespace OCIO_NAMESPACE
 
-#endif  // INCLUDED_OCIO_GRADINGPRIMARYTRANSFORM_H
+#endif // INCLUDED_OCIO_GRADINGPRIMARYTRANSFORM_H

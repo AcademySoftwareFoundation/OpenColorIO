@@ -14,9 +14,10 @@
 namespace OCIO_NAMESPACE
 {
 
-template<typename T>
-bool IsNan(T val) { return std::isnan(val); }
-
+template <typename T> bool IsNan(T val)
+{
+    return std::isnan(val);
+}
 
 // From Imath
 //--------------------------------------------------------------------------
@@ -26,28 +27,26 @@ bool IsNan(T val) { return std::isnan(val); }
 //
 //  Returns true if x1 is the same as x2 with an absolute error of
 //  no more than e,
-//  
+//
 //  abs (x1 - x2) <= e
 //
 // EqualWithRelError (x1, x2, e)
 //
 //  Returns true if x1 is the same as x2 with an relative error of
 //  no more than e,
-//  
+//
 //  abs (x1 - x2) <= e * x1
 //
 //--------------------------------------------------------------------------
 
-template<typename T>
-inline bool EqualWithAbsError (T x1, T x2, T e)
+template <typename T> inline bool EqualWithAbsError(T x1, T x2, T e)
 {
-    return ((x1 > x2)? x1 - x2: x2 - x1) <= e;
+    return ((x1 > x2) ? x1 - x2 : x2 - x1) <= e;
 }
 
-template<typename T>
-inline bool EqualWithRelError (T x1, T x2, T e)
+template <typename T> inline bool EqualWithRelError(T x1, T x2, T e)
 {
-    return ((x1 > x2)? x1 - x2: x2 - x1) <= e * ((x1 > 0)? x1: -x1);
+    return ((x1 > x2) ? x1 - x2 : x2 - x1) <= e * ((x1 > 0) ? x1 : -x1);
 }
 
 inline float lerpf(float a, float b, float z)
@@ -57,11 +56,10 @@ inline float lerpf(float a, float b, float z)
 
 // Clamp value a to[min, max]
 // First compare with max, then with min.
-// 
+//
 // Note: Does not validate max >= min.
 // Note: NaN values become 0.
-template<typename T>
-inline T Clamp(T a, T min, T max)
+template <typename T> inline T Clamp(T a, T min, T max)
 {
     return std::min(std::max(min, a), max);
 }
@@ -76,40 +74,34 @@ inline T Clamp(T a, T min, T max)
 float SanitizeFloat(float f);
 
 // Checks within fltmin tolerance
-template<typename T>
-bool IsScalarEqualToZero(T v);
-template<typename T>
-bool IsScalarEqualToOne(T v);
+template <typename T> bool IsScalarEqualToZero(T v);
+template <typename T> bool IsScalarEqualToOne(T v);
 
 // Are all the vector components the specified value?
-template<typename T>
-bool IsVecEqualToZero(const T * v, unsigned int size);
-template<typename T>
-bool IsVecEqualToOne(const T * v, unsigned int size);
+template <typename T> bool IsVecEqualToZero(const T * v, unsigned int size);
+template <typename T> bool IsVecEqualToOne(const T * v, unsigned int size);
 
 // Is at least one of the specified components equal to 0?
-bool VecContainsZero(const float* v, int size);
-bool VecContainsOne(const float* v, int size);
+bool VecContainsZero(const float * v, int size);
+bool VecContainsOne(const float * v, int size);
 
 // Are two vectors equal? (Same size, same values?)
-template<typename T>
-bool VecsEqualWithRelError(const T * v1, unsigned int size1,
-                           const T * v2, unsigned int size2,
-                           T e);
+template <typename T>
+bool VecsEqualWithRelError(const T * v1, unsigned int size1, const T * v2, unsigned int size2, T e);
 
 inline double GetHalfMax()
 {
-    return 65504.0;         // Largest positive half
+    return 65504.0; // Largest positive half
 }
 
 inline double GetHalfMin()
 {
-    return 5.96046448e-08;  // Smallest positive half
+    return 5.96046448e-08; // Smallest positive half
 }
 
 inline double GetHalfNormMin()
 {
-    return 6.10351562e-05;  // Smallest positive normalized half
+    return 6.10351562e-05; // Smallest positive normalized half
 }
 
 // Clamp the specified value to the valid range of normalized half.
@@ -121,7 +113,6 @@ float ConvertHalfBitsToFloat(unsigned short val);
 
 float GetSafeScalarInverse(float v, float defaultValue = 1.0);
 
-
 // All matrix / vector operations use the following sizing...
 //
 // m : 4x4 matrix
@@ -129,22 +120,24 @@ float GetSafeScalarInverse(float v, float defaultValue = 1.0);
 
 // Return the 4x4 inverse, and whether the inverse has succeeded.
 // Supports in-place operations.
-bool GetM44Inverse(float* mout, const float* m);
+bool GetM44Inverse(float * mout, const float * m);
 
 // Is an identity matrix? (with fltmin tolerance)
-template<typename T>
-bool IsM44Identity(const T * m);
+template <typename T> bool IsM44Identity(const T * m);
 
 // Combine two transforms in the mx+b form, into a single transform.
 // mout*x+vout == m2*(m1*x+v1)+v2
 // Supports in-place operations.
-void GetMxbCombine(float* mout, float* vout,
-                   const float* m1, const float* v1,
-                   const float* m2, const float* v2);
+void GetMxbCombine(
+    float * mout,
+    float * vout,
+    const float * m1,
+    const float * v1,
+    const float * m2,
+    const float * v2);
 
 // Supports in-place operations
-bool GetMxbInverse(float* mout, float* vout,
-                   const float* m, const float* v);
+bool GetMxbInverse(float * mout, float * vout, const float * m, const float * v);
 
 // Reinterpret the binary representation of a single-precision floating-point number
 //   as a 32-bit integer.
@@ -154,7 +147,8 @@ bool GetMxbInverse(float* mout, float* vout,
 // Return reinterpreted float bit representation as an integer.
 inline unsigned FloatAsInt(const float x)
 {
-    union {
+    union
+    {
         float f;
         unsigned i;
     } v;
@@ -171,7 +165,8 @@ inline unsigned FloatAsInt(const float x)
 // Return reinterpreted integer bit representation as a float.
 inline float IntAsFloat(const unsigned x)
 {
-    union {
+    union
+    {
         float f;
         unsigned i;
     } v;
@@ -189,7 +184,7 @@ inline float IntAsFloat(const unsigned x)
 // Return the original floating-point number added by the number of ULPs.
 inline float AddULP(const float f, const int ulp)
 {
-    return IntAsFloat( FloatAsInt(f) + ulp );
+    return IntAsFloat(FloatAsInt(f) + ulp);
 }
 
 // Verify if two floating-point numbers are within a tolerance given in ULPs.
@@ -198,7 +193,7 @@ inline float AddULP(const float f, const int ulp)
 //   as being equivalent to zero for comparison purposes. This is a form of relative
 //   comparison where 1 ULP is equivalent to 2^(exponent - 23) for normalized values
 //   and to 2^(-149) for denormalized numbers.
-//   One ULP on the domain [1.0, 2.0] is 2^(0-23)=1.19e-7. A correctly rounded float value 
+//   One ULP on the domain [1.0, 2.0] is 2^(0-23)=1.19e-7. A correctly rounded float value
 //   is always within 0.5 ULPs of the exact value.
 //
 // expected : reference floating-point value
@@ -210,8 +205,11 @@ inline float AddULP(const float f, const int ulp)
 // Return true if the floating-point number are different, that is, their difference is not
 //              within the acceptable tolerance, under the conditions imposed by the
 //              compressDenorms flag.
-bool FloatsDiffer(const float expected, const float actual, 
-                  const int tolerance, const bool compressDenorms);
+bool FloatsDiffer(
+    const float expected,
+    const float actual,
+    const int tolerance,
+    const bool compressDenorms);
 
 // Compares half-floats as raw integers with a tolerance (essentially in ULPs).
 // Returns true if the integer difference is strictly greater than the tolerance.

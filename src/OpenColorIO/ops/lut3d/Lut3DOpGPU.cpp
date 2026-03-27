@@ -10,22 +10,22 @@
 #include "ops/lut3d/Lut3DOpGPU.h"
 #include "utils/StringUtils.h"
 
-
 namespace OCIO_NAMESPACE
 {
 
-void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DOpDataRcPtr & lutData)
+void GetLut3DGPUShaderProgram(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstLut3DOpDataRcPtr & lutData)
 {
 
     if (shaderCreator->getLanguage() == LANGUAGE_OSL_1)
     {
-        throw Exception("The Lut3DOp is not yet supported by the 'Open Shading language (OSL)' translation");
+        throw Exception(
+            "The Lut3DOp is not yet supported by the 'Open Shading language (OSL)' translation");
     }
 
     std::ostringstream resName;
-    resName << shaderCreator->getResourcePrefix()
-            << std::string("_")
-            << std::string("lut3d_")
+    resName << shaderCreator->getResourcePrefix() << std::string("_") << std::string("lut3d_")
             << shaderCreator->getNextResourceIndex();
 
     // Note: Remove potentially problematic double underscores from GLSL resource names.
@@ -45,15 +45,12 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
         GpuShaderText::getSamplerName(name).c_str(),
         lutData->getGridSize(),
         samplerInterpolation,
-        &lutData->getArray()[0]
-    );
+        &lutData->getArray()[0]);
 
     // Create the texture declaration.
     {
         GpuShaderText ss(shaderCreator->getLanguage());
-        ss.declareTex3D(name, 
-                        shaderCreator->getDescriptorSetIndex(), 
-                        textureShaderBindingIndex);
+        ss.declareTex3D(name, shaderCreator->getDescriptorSetIndex(), textureShaderBindingIndex);
         shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
 
@@ -61,6 +58,8 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
 
     // incr = 1/dim (amount needed to increment one index in the grid)
     const float incr = 1.0f / dim;
+
+    // clang-format off
 
     {
         GpuShaderText ss(shaderCreator->getLanguage());
@@ -246,7 +245,8 @@ void GetLut3DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator, ConstLut3DO
 
         shaderCreator->addToFunctionShaderCode(ss.string().c_str());
     }
-}
 
+    // clang-format on
+}
 
 } // namespace OCIO_NAMESPACE

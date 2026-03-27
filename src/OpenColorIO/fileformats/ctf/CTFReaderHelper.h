@@ -4,18 +4,18 @@
 #ifndef INCLUDED_OCIO_FILEFORMATS_CTF_CTFREADERHELPER_H
 #define INCLUDED_OCIO_FILEFORMATS_CTF_CTFREADERHELPER_H
 
-#include "fileformats/xmlutils/XMLReaderHelper.h"
+#include "fileformats/FormatMetadata.h"
 #include "fileformats/ctf/CTFTransform.h"
 #include "fileformats/ctf/IndexMapping.h"
-#include "fileformats/FormatMetadata.h"
+#include "fileformats/xmlutils/XMLReaderHelper.h"
 #include "ops/OpArray.h"
 #include "ops/cdl/CDLOpData.h"
 #include "ops/exposurecontrast/ExposureContrastOpData.h"
 #include "ops/fixedfunction/FixedFunctionOpData.h"
 #include "ops/gamma/GammaOpData.h"
+#include "ops/gradinghuecurve/GradingHueCurveOpData.h"
 #include "ops/gradingprimary/GradingPrimaryOpData.h"
 #include "ops/gradingrgbcurve/GradingRGBCurveOpData.h"
-#include "ops/gradinghuecurve/GradingHueCurveOpData.h"
 #include "ops/gradingtone/GradingToneOpData.h"
 #include "ops/log/LogOpData.h"
 #include "ops/log/LogUtils.h"
@@ -32,14 +32,13 @@ namespace OCIO_NAMESPACE
 class CTFReaderTransformElt : public XmlReaderContainerElt
 {
 public:
-    CTFReaderTransformElt(const std::string & name,
-                          unsigned int xmlLineNumber,
-                          const std::string & xmlFile,
-                          bool isCLF);
+    CTFReaderTransformElt(
+        const std::string & name,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile,
+        bool isCLF);
 
-    ~CTFReaderTransformElt()
-    {
-    }
+    ~CTFReaderTransformElt() {}
 
     const std::string & getIdentifier() const override;
 
@@ -47,7 +46,7 @@ public:
 
     void end() override;
 
-    void appendMetadata(FormatMetadataImpl& metadata) override;
+    void appendMetadata(FormatMetadataImpl & metadata) override;
 
     // Get its parent which is a Transform.
     const CTFReaderTransformPtr & getTransform() const;
@@ -79,22 +78,18 @@ class CTFReaderIdElt : public XmlReaderPlainElt
 {
 public:
     CTFReaderIdElt() = delete;
-    CTFReaderIdElt(const std::string & name,
-                   ContainerEltRcPtr & pParent,
-                   unsigned int xmlLocation,
-                   const std::string & xmlFile)
+    CTFReaderIdElt(
+        const std::string & name,
+        ContainerEltRcPtr & pParent,
+        unsigned int xmlLocation,
+        const std::string & xmlFile)
         : XmlReaderPlainElt(name, pParent, xmlLocation, xmlFile)
     {
     }
 
-    ~CTFReaderIdElt()
-    {
-    }
+    ~CTFReaderIdElt() {}
 
-    void start(const char ** /* atts */) override
-    {
-        m_id = {};
-    }
+    void start(const char ** /* atts */) override { m_id = {}; }
 
     void end() override;
 
@@ -117,14 +112,15 @@ class CTFReaderMetadataElt : public XmlReaderComplexElt
 {
 public:
     CTFReaderMetadataElt() = delete;
-    CTFReaderMetadataElt(const std::string & name,
-                         ContainerEltRcPtr pParent,
-                         unsigned int xmlLineNumber,
-                         const std::string & xmlFile);
+    CTFReaderMetadataElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile);
 
     virtual ~CTFReaderMetadataElt();
 
-    const std::string& getIdentifier() const override;
+    const std::string & getIdentifier() const override;
 
     void start(const char ** atts) override;
 
@@ -142,10 +138,11 @@ class CTFReaderInfoElt : public CTFReaderMetadataElt
 {
 public:
     CTFReaderInfoElt() = delete;
-    CTFReaderInfoElt(const std::string & name,
-                     ContainerEltRcPtr pParent,
-                     unsigned int xmlLineNumber,
-                     const std::string & xmlFile);
+    CTFReaderInfoElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile);
 
     virtual ~CTFReaderInfoElt();
 
@@ -161,19 +158,18 @@ class CTFReaderDescElt : public XmlReaderPlainElt
 {
 public:
     CTFReaderDescElt() = delete;
-    CTFReaderDescElt(const std::string & name,
-                     ContainerEltRcPtr pParent,
-                     unsigned int xmlLineNumber,
-                     const std::string & xmlFile)
+    CTFReaderDescElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile)
         : XmlReaderPlainElt(name, pParent, xmlLineNumber, xmlFile)
     {
     }
 
-    ~CTFReaderDescElt()
-    {
-    }
+    ~CTFReaderDescElt() {}
 
-    void start(const char **  atts ) override;
+    void start(const char ** atts) override;
     void end() override;
 
     void setRawData(const char * str, size_t len, unsigned int /*xmlLine*/) override
@@ -182,6 +178,7 @@ public:
         // the string.
         m_desc += std::string(str, len);
     }
+
 private:
     std::string m_desc;
     std::string m_language;
@@ -191,10 +188,11 @@ class CTFReaderArrayElt : public XmlReaderPlainElt
 {
 public:
     CTFReaderArrayElt() = delete;
-    CTFReaderArrayElt(const std::string & name,
-                      ContainerEltRcPtr pParent,
-                      unsigned int xmlLineNumber,
-                      const std::string & xmlFile);
+    CTFReaderArrayElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile);
     ~CTFReaderArrayElt();
 
     void start(const char ** atts) override;
@@ -223,15 +221,9 @@ public:
     CTFArrayMgt();
     virtual ~CTFArrayMgt();
 
-    virtual void setCompleted(bool status)
-    {
-        m_completed = status;
-    }
+    virtual void setCompleted(bool status) { m_completed = status; }
 
-    bool isCompleted()
-    {
-        return m_completed;
-    }
+    bool isCompleted() { return m_completed; }
 
     virtual ArrayBase * updateDimension(const Dimensions & dims) = 0;
 
@@ -247,10 +239,11 @@ class CTFReaderIndexMapElt : public XmlReaderPlainElt
 {
 public:
     CTFReaderIndexMapElt() = delete;
-    CTFReaderIndexMapElt(const std::string & name,
-                         ContainerEltRcPtr pParent,
-                         unsigned xmlLineNumber,
-                         const std::string & xmlFile);
+    CTFReaderIndexMapElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned xmlLineNumber,
+        const std::string & xmlFile);
 
     ~CTFReaderIndexMapElt();
 
@@ -277,18 +270,12 @@ public:
     typedef std::vector<unsigned int> DimensionsIM;
 
 public:
-    CTFIndexMapMgt() = default;
+    CTFIndexMapMgt()          = default;
     virtual ~CTFIndexMapMgt() = default;
 
-    void setCompletedIM(bool status)
-    {
-        m_completed = status;
-    }
+    void setCompletedIM(bool status) { m_completed = status; }
 
-    bool isCompletedIM()
-    {
-        return m_completed;
-    }
+    bool isCompletedIM() { return m_completed; }
 
     virtual IndexMapping * updateDimensionIM(const DimensionsIM & dims) = 0;
 
@@ -337,16 +324,17 @@ public:
 
     ~CTFReaderOpElt();
 
-    void setContext(const std::string & name,
-                    const CTFReaderTransformPtr & pTransform,
-                    unsigned int xmlLineNumber,
-                    const std::string & xmlFile);
+    void setContext(
+        const std::string & name,
+        const CTFReaderTransformPtr & pTransform,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile);
 
     const std::string & getIdentifier() const override;
 
     virtual const OpDataRcPtr getOp() const = 0;
 
-    void appendMetadata(FormatMetadataImpl& metadata) override;
+    void appendMetadata(FormatMetadataImpl & metadata) override;
 
     void start(const char ** atts) override;
 
@@ -354,10 +342,7 @@ public:
 
     const char * getTypeName() const override;
 
-    CTFReaderTransformPtr getTransform()
-    {
-        return m_transform;
-    }
+    CTFReaderTransformPtr getTransform() { return m_transform; }
 
     // Get the right reader using its type and
     // the xml transform version.
@@ -373,8 +358,8 @@ protected:
     static BitDepth GetBitDepth(const std::string & str);
 
 protected:
-    CTFReaderTransformPtr m_transform;  // The parent
-    BitDepth m_inBitDepth = BIT_DEPTH_UNKNOWN;
+    CTFReaderTransformPtr m_transform; // The parent
+    BitDepth m_inBitDepth  = BIT_DEPTH_UNKNOWN;
     BitDepth m_outBitDepth = BIT_DEPTH_UNKNOWN;
 };
 
@@ -384,15 +369,12 @@ public:
     CTFReaderACESElt();
     ~CTFReaderACESElt();
 
-    void start(const char **atts) override;
+    void start(const char ** atts) override;
     void end() override;
 
     const OpDataRcPtr getOp() const override;
 
-    const FixedFunctionOpDataRcPtr getFixedFunction() const
-    {
-        return m_fixedFunction;
-    }
+    const FixedFunctionOpDataRcPtr getFixedFunction() const { return m_fixedFunction; }
 
 protected:
     bool isOpParameterValid(const char * att) const noexcept override;
@@ -404,18 +386,21 @@ private:
 class CTFReaderACESParamsElt : public XmlReaderPlainElt
 {
 public:
-    CTFReaderACESParamsElt(const std::string & name,
-                           ContainerEltRcPtr pParent,
-                           unsigned int xmlLineNumber,
-                           const std::string & xmlFile);
+    CTFReaderACESParamsElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile);
 
     ~CTFReaderACESParamsElt();
 
-    void start(const char **atts) override;
+    void start(const char ** atts) override;
 
     void end() override {}
 
-    void setRawData(const char * /* str */, size_t /* len */, unsigned int /* xmlLine */) override {}
+    void setRawData(const char * /* str */, size_t /* len */, unsigned int /* xmlLine */) override
+    {
+    }
 };
 
 class CTFReaderCDLElt : public CTFReaderOpElt
@@ -442,24 +427,25 @@ protected:
 class CTFReaderSatNodeElt : public XmlReaderSatNodeBaseElt
 {
 public:
-    CTFReaderSatNodeElt(const std::string & name,
-                        ContainerEltRcPtr pParent,
-                        unsigned int xmlLineNumber,
-                        const std::string & xmlFile);
+    CTFReaderSatNodeElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile);
 
     CTFReaderSatNodeElt() = delete;
 
     const CDLOpDataRcPtr & getCDL() const override;
-
 };
 
 class CTFReaderSOPNodeElt : public XmlReaderSOPNodeBaseElt
 {
 public:
-    CTFReaderSOPNodeElt(const std::string & name,
-                        ContainerEltRcPtr pParent,
-                        unsigned int xmlLocation,
-                        const std::string & xmlFile);
+    CTFReaderSOPNodeElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLocation,
+        const std::string & xmlFile);
 
     CTFReaderSOPNodeElt() = delete;
 
@@ -472,15 +458,12 @@ public:
     CTFReaderFixedFunctionElt();
     ~CTFReaderFixedFunctionElt();
 
-    void start(const char **atts) override;
+    void start(const char ** atts) override;
     void end() override;
 
     const OpDataRcPtr getOp() const override;
 
-    const FixedFunctionOpDataRcPtr getFixedFunction() const
-    {
-        return m_fixedFunction;
-    }
+    const FixedFunctionOpDataRcPtr getFixedFunction() const { return m_fixedFunction; }
 
 protected:
     bool isOpParameterValid(const char * att) const noexcept override;
@@ -495,15 +478,12 @@ public:
     CTFReaderFunctionElt();
     ~CTFReaderFunctionElt();
 
-    void start(const char **atts) override;
+    void start(const char ** atts) override;
     void end() override;
 
     const OpDataRcPtr getOp() const override;
 
-    const FixedFunctionOpDataRcPtr getFixedFunction() const
-    {
-        return m_fixedFunction;
-    }
+    const FixedFunctionOpDataRcPtr getFixedFunction() const { return m_fixedFunction; }
 
 protected:
     bool isOpParameterValid(const char * att) const noexcept override;
@@ -546,7 +526,10 @@ private:
 class CTFReaderGammaElt_1_5 : public CTFReaderGammaElt
 {
 public:
-    CTFReaderGammaElt_1_5() : CTFReaderGammaElt() {}
+    CTFReaderGammaElt_1_5()
+        : CTFReaderGammaElt()
+    {
+    }
     ~CTFReaderGammaElt_1_5() {}
 
     CTFReaderGammaParamsEltRcPtr createGammaParamsElt(
@@ -559,7 +542,10 @@ public:
 class CTFReaderGammaElt_CTF_2_0 : public CTFReaderGammaElt_1_5
 {
 public:
-    CTFReaderGammaElt_CTF_2_0() : CTFReaderGammaElt_1_5() {}
+    CTFReaderGammaElt_CTF_2_0()
+        : CTFReaderGammaElt_1_5()
+    {
+    }
     ~CTFReaderGammaElt_CTF_2_0() {}
 
 protected:
@@ -570,7 +556,10 @@ protected:
 class CTFReaderGammaElt_CLF_3_0 : public CTFReaderGammaElt_CTF_2_0
 {
 public:
-    CTFReaderGammaElt_CLF_3_0() : CTFReaderGammaElt_CTF_2_0() {}
+    CTFReaderGammaElt_CLF_3_0()
+        : CTFReaderGammaElt_CTF_2_0()
+    {
+    }
     ~CTFReaderGammaElt_CLF_3_0() {}
 
     CTFReaderGammaParamsEltRcPtr createGammaParamsElt(
@@ -583,10 +572,11 @@ public:
 class CTFReaderGammaParamsElt : public XmlReaderPlainElt
 {
 public:
-    CTFReaderGammaParamsElt(const std::string & name,
-                            ContainerEltRcPtr pParent,
-                            unsigned int xmlLineNumber,
-                            const std::string & xmlFile);
+    CTFReaderGammaParamsElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile);
 
     ~CTFReaderGammaParamsElt();
 
@@ -602,10 +592,11 @@ protected:
 class CTFReaderGammaParamsElt_1_5 : public CTFReaderGammaParamsElt
 {
 public:
-    CTFReaderGammaParamsElt_1_5(const std::string & name,
-                                ContainerEltRcPtr pParent,
-                                unsigned int xmlLineNumber,
-                                const std::string & xmlFile);
+    CTFReaderGammaParamsElt_1_5(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile);
     ~CTFReaderGammaParamsElt_1_5();
 
 protected:
@@ -623,10 +614,7 @@ public:
 
     const OpDataRcPtr getOp() const override;
 
-    const GradingPrimaryOpDataRcPtr & getGradingPrimary() const
-    {
-        return m_gradingPrimaryOpData;
-    }
+    const GradingPrimaryOpDataRcPtr & getGradingPrimary() const { return m_gradingPrimaryOpData; }
 
     GradingPrimary & getValue() { return m_gradingPrimary; }
     const GradingPrimary & getValue() const { return m_gradingPrimary; }
@@ -635,39 +623,34 @@ protected:
     bool isOpParameterValid(const char * att) const noexcept override;
 
 private:
-    GradingPrimary m_gradingPrimary{ GRADING_LOG };
+    GradingPrimary m_gradingPrimary{GRADING_LOG};
     GradingPrimaryOpDataRcPtr m_gradingPrimaryOpData;
 };
 
 class CTFReaderGradingPrimaryParamElt : public XmlReaderPlainElt
 {
 public:
-    CTFReaderGradingPrimaryParamElt(const std::string & name,
-                                    ContainerEltRcPtr pParent,
-                                    unsigned int xmlLocation,
-                                    const std::string & xmlFile);
+    CTFReaderGradingPrimaryParamElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLocation,
+        const std::string & xmlFile);
     ~CTFReaderGradingPrimaryParamElt();
 
     void start(const char ** atts);
     void end();
 
-    void setRawData(const char* str, size_t len, unsigned int xmlLine);
+    void setRawData(const char * str, size_t len, unsigned int xmlLine);
 
 private:
     void parseRGBMAttrValues(const char ** atts, GradingRGBM & rgbm) const;
 
-    void parsePivotAttrValues(const char ** atts,
-                              double & contrast,
-                              double & black,
-                              double & white) const;
+    void parsePivotAttrValues(const char ** atts, double & contrast, double & black, double & white)
+        const;
 
-    void parseBWAttrValues(const char ** atts,
-                           double & black,
-                           double & white) const;
+    void parseBWAttrValues(const char ** atts, double & black, double & white) const;
 
-    void parseScalarAttrValue(const char ** atts,
-                              const char * tag,
-                              double & value) const;
+    void parseScalarAttrValue(const char ** atts, const char * tag, double & value) const;
 };
 
 class CTFReaderGradingRGBCurveElt : public CTFReaderOpElt
@@ -681,10 +664,7 @@ public:
 
     const OpDataRcPtr getOp() const override;
 
-    const GradingRGBCurveOpDataRcPtr & getGradingRGBCurve() const
-    {
-        return m_gradingRGBCurve;
-    }
+    const GradingRGBCurveOpDataRcPtr & getGradingRGBCurve() const { return m_gradingRGBCurve; }
 
     // For sub-elements.
     GradingRGBCurveRcPtr & getLoadingRGBCurve() { return m_loadingRGBCurve; }
@@ -709,10 +689,7 @@ public:
 
     const OpDataRcPtr getOp() const override;
 
-    const GradingHueCurveOpDataRcPtr & getGradingHueCurve() const
-    {
-        return m_gradingHueCurve;
-    }
+    const GradingHueCurveOpDataRcPtr & getGradingHueCurve() const { return m_gradingHueCurve; }
 
     // For sub-elements.
     GradingHueCurveRcPtr & getLoadingHueCurve() { return m_loadingHueCurve; }
@@ -729,16 +706,18 @@ private:
 class CTFReaderGradingCurveElt : public XmlReaderComplexElt
 {
 public:
-    CTFReaderGradingCurveElt(const std::string & name,
-                             ContainerEltRcPtr pParent,
-                             unsigned int xmlLocation,
-                             const std::string & xmlFile);
+    CTFReaderGradingCurveElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLocation,
+        const std::string & xmlFile);
     ~CTFReaderGradingCurveElt();
 
     void start(const char ** atts);
     void end();
 
     GradingBSplineCurveRcPtr getCurve() { return m_curve; }
+
 private:
     GradingBSplineCurveRcPtr m_curve;
 };
@@ -746,16 +725,17 @@ private:
 class CTFReaderGradingCurvePointsElt : public XmlReaderPlainElt
 {
 public:
-    CTFReaderGradingCurvePointsElt(const std::string & name,
-                                   ContainerEltRcPtr pParent,
-                                   unsigned int xmlLocation,
-                                   const std::string & xmlFile);
+    CTFReaderGradingCurvePointsElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLocation,
+        const std::string & xmlFile);
     ~CTFReaderGradingCurvePointsElt();
 
     void start(const char ** atts);
     void end();
 
-    void setRawData(const char* str, size_t len, unsigned int xmlLine);
+    void setRawData(const char * str, size_t len, unsigned int xmlLine);
 
 private:
     std::vector<float> m_data;
@@ -764,16 +744,17 @@ private:
 class CTFReaderGradingCurveSlopesElt : public XmlReaderPlainElt
 {
 public:
-    CTFReaderGradingCurveSlopesElt(const std::string & name,
-                                   ContainerEltRcPtr pParent,
-                                   unsigned int xmlLocation,
-                                   const std::string & xmlFile);
+    CTFReaderGradingCurveSlopesElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLocation,
+        const std::string & xmlFile);
     ~CTFReaderGradingCurveSlopesElt();
 
     void start(const char ** atts);
     void end();
 
-    void setRawData(const char* str, size_t len, unsigned int xmlLine);
+    void setRawData(const char * str, size_t len, unsigned int xmlLine);
 
 private:
     std::vector<float> m_data;
@@ -790,10 +771,7 @@ public:
 
     const OpDataRcPtr getOp() const override;
 
-    const GradingToneOpDataRcPtr & getGradingTone() const
-    {
-        return m_gradingTone;
-    }
+    const GradingToneOpDataRcPtr & getGradingTone() const { return m_gradingTone; }
 
 protected:
     bool isOpParameterValid(const char * att) const noexcept override;
@@ -805,24 +783,23 @@ private:
 class CTFReaderGradingToneParamElt : public XmlReaderPlainElt
 {
 public:
-    CTFReaderGradingToneParamElt(const std::string & name,
-                                 ContainerEltRcPtr pParent,
-                                 unsigned int xmlLocation,
-                                 const std::string & xmlFile);
+    CTFReaderGradingToneParamElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLocation,
+        const std::string & xmlFile);
     ~CTFReaderGradingToneParamElt();
 
     void start(const char ** atts);
     void end();
 
-    void setRawData(const char* str, size_t len, unsigned int xmlLine);
+    void setRawData(const char * str, size_t len, unsigned int xmlLine);
 
 private:
-    void parseRGBMSWAttrValues(const char ** atts, GradingRGBMSW & rgbm,
-                               bool center, bool pivot) const;
+    void parseRGBMSWAttrValues(const char ** atts, GradingRGBMSW & rgbm, bool center, bool pivot)
+        const;
 
-    void parseScalarAttrValue(const char ** atts,
-                              const char * tag,
-                              double & value) const;
+    void parseScalarAttrValue(const char ** atts, const char * tag, double & value) const;
 };
 
 class CTFReaderInvLut1DElt : public CTFReaderOpElt, public CTFArrayMgt
@@ -875,7 +852,6 @@ private:
     Lut3DOpDataRcPtr m_invLut;
 };
 
-
 class CTFReaderLogParamsElt;
 typedef OCIO_SHARED_PTR<CTFReaderLogParamsElt> CTFReaderLogParamsEltRcPtr;
 
@@ -900,10 +876,11 @@ public:
     void setBase(double base);
     bool isBaseSet() const noexcept { return m_baseSet; }
 
-    virtual CTFReaderLogParamsEltRcPtr createLogParamsElt(const std::string & name,
-                                                          ContainerEltRcPtr pParent,
-                                                          unsigned int xmlLineNumber,
-                                                          const std::string & xmlFile) const;
+    virtual CTFReaderLogParamsEltRcPtr createLogParamsElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile) const;
 
 protected:
     bool isOpParameterValid(const char * att) const noexcept override;
@@ -917,24 +894,29 @@ private:
 class CTFReaderLogElt_2_0 : public CTFReaderLogElt
 {
 public:
-    CTFReaderLogElt_2_0() : CTFReaderLogElt() {}
+    CTFReaderLogElt_2_0()
+        : CTFReaderLogElt()
+    {
+    }
     ~CTFReaderLogElt_2_0() {}
 
     void end() override;
 
-    CTFReaderLogParamsEltRcPtr createLogParamsElt(const std::string & name,
-                                                  ContainerEltRcPtr pParent,
-                                                  unsigned int xmlLineNumber,
-                                                  const std::string & xmlFile) const override;
+    CTFReaderLogParamsEltRcPtr createLogParamsElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile) const override;
 };
 
 class CTFReaderLogParamsElt : public XmlReaderPlainElt
 {
 public:
-    CTFReaderLogParamsElt(const std::string & name,
-                          ContainerEltRcPtr pParent,
-                          unsigned int xmlLineNumber,
-                          const std::string & xmlFile);
+    CTFReaderLogParamsElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile);
 
     ~CTFReaderLogParamsElt();
 
@@ -944,21 +926,36 @@ public:
 
     void setRawData(const char * str, size_t len, unsigned int xmlLine) override;
 
-    bool parseCineon(const char ** atts, unsigned i, double & gamma, double & refWhite,
-                     double & refBlack, double & highlight, double & shadow);
+    bool parseCineon(
+        const char ** atts,
+        unsigned i,
+        double & gamma,
+        double & refWhite,
+        double & refBlack,
+        double & highlight,
+        double & shadow);
 
-    void setCineon(LogUtil::CTFParams & legacyParams, int chan, double gamma,
-                   double refWhite, double refBlack, double highlight, double shadow);
+    void setCineon(
+        LogUtil::CTFParams & legacyParams,
+        int chan,
+        double gamma,
+        double refWhite,
+        double refBlack,
+        double highlight,
+        double shadow);
 };
 
 class CTFReaderLogParamsElt_2_0 : public CTFReaderLogParamsElt
 {
 public:
-    CTFReaderLogParamsElt_2_0(const std::string & name,
-                              ContainerEltRcPtr pParent,
-                              unsigned int xmlLineNumber,
-                              const std::string & xmlFile)
-        : CTFReaderLogParamsElt(name, pParent, xmlLineNumber, xmlFile) {}
+    CTFReaderLogParamsElt_2_0(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile)
+        : CTFReaderLogParamsElt(name, pParent, xmlLineNumber, xmlFile)
+    {
+    }
     ~CTFReaderLogParamsElt_2_0() {}
 
     void start(const char ** atts) override;
@@ -976,10 +973,7 @@ public:
 
     const OpDataRcPtr getOp() const override;
 
-    const Lut1DOpDataRcPtr & getLut() const
-    {
-        return m_lut;
-    }
+    const Lut1DOpDataRcPtr & getLut() const { return m_lut; }
 
     ArrayBase * updateDimension(const Dimensions & dims) override;
 
@@ -993,17 +987,20 @@ protected:
     bool isOpParameterValid(const char * att) const noexcept override;
 
     Lut1DOpDataRcPtr m_lut;
-    IndexMapping     m_indexMapping;
+    IndexMapping m_indexMapping;
 };
 
 class CTFReaderLut1DElt_1_4 : public CTFReaderLut1DElt
 {
 public:
-    CTFReaderLut1DElt_1_4() : CTFReaderLut1DElt() {}
+    CTFReaderLut1DElt_1_4()
+        : CTFReaderLut1DElt()
+    {
+    }
 
     ~CTFReaderLut1DElt_1_4() {}
 
-    void start(const char **atts) override;
+    void start(const char ** atts) override;
 
 protected:
     bool isOpParameterValid(const char * att) const noexcept override;
@@ -1012,7 +1009,10 @@ protected:
 class CTFReaderLut1DElt_1_7 : public CTFReaderLut1DElt_1_4
 {
 public:
-    CTFReaderLut1DElt_1_7() : CTFReaderLut1DElt_1_4() {}
+    CTFReaderLut1DElt_1_7()
+        : CTFReaderLut1DElt_1_4()
+    {
+    }
 
     ~CTFReaderLut1DElt_1_7() {}
 
@@ -1032,10 +1032,7 @@ public:
 
     const OpDataRcPtr getOp() const override;
 
-    const Lut3DOpDataRcPtr & getLut() const
-    {
-        return m_lut;
-    }
+    const Lut3DOpDataRcPtr & getLut() const { return m_lut; }
 
     ArrayBase * updateDimension(const Dimensions & dims) override;
 
@@ -1049,13 +1046,16 @@ protected:
     bool isOpParameterValid(const char * att) const noexcept override;
 
     Lut3DOpDataRcPtr m_lut;
-    IndexMapping     m_indexMapping;
+    IndexMapping m_indexMapping;
 };
 
 class CTFReaderLut3DElt_1_7 : public CTFReaderLut3DElt
 {
 public:
-    CTFReaderLut3DElt_1_7() : CTFReaderLut3DElt() {}
+    CTFReaderLut3DElt_1_7()
+        : CTFReaderLut3DElt()
+    {
+    }
 
     ~CTFReaderLut3DElt_1_7() {}
 
@@ -1074,10 +1074,7 @@ public:
     const OpDataRcPtr getOp() const override;
 
     // Get the associated Matrix
-    const MatrixOpDataRcPtr & getMatrix() const
-    {
-        return m_matrix;
-    }
+    const MatrixOpDataRcPtr & getMatrix() const { return m_matrix; }
 
     ArrayBase * updateDimension(const Dimensions & dims) override;
 
@@ -1087,10 +1084,7 @@ protected:
     // Helper method to convert Matrix data from 1.2 to latest.
     void convert_1_2_to_Latest();
 
-    MatrixOpDataRcPtr & getMatrix()
-    {
-        return m_matrix;
-    }
+    MatrixOpDataRcPtr & getMatrix() { return m_matrix; }
 
 private:
     MatrixOpDataRcPtr m_matrix;
@@ -1099,7 +1093,10 @@ private:
 class CTFReaderMatrixElt_1_3 : public CTFReaderMatrixElt
 {
 public:
-    CTFReaderMatrixElt_1_3() : CTFReaderMatrixElt() {}
+    CTFReaderMatrixElt_1_3()
+        : CTFReaderMatrixElt()
+    {
+    }
 
     ~CTFReaderMatrixElt_1_3() {}
 
@@ -1119,10 +1116,7 @@ public:
 
     const OpDataRcPtr getOp() const override;
 
-    const RangeOpDataRcPtr getRange() const
-    {
-        return m_range;
-    }
+    const RangeOpDataRcPtr getRange() const { return m_range; }
 
 protected:
     RangeOpDataRcPtr m_range;
@@ -1149,10 +1143,11 @@ private:
 class CTFReaderRangeValueElt : public XmlReaderPlainElt
 {
 public:
-    CTFReaderRangeValueElt(const std::string & name,
-                           ContainerEltRcPtr pParent,
-                           unsigned int xmlLineNumber,
-                           const std::string & xmlFile);
+    CTFReaderRangeValueElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile);
 
     ~CTFReaderRangeValueElt();
 
@@ -1175,10 +1170,7 @@ public:
 
     const OpDataRcPtr getOp() const override;
 
-    const ReferenceOpDataRcPtr getReference() const
-    {
-        return m_reference;
-    }
+    const ReferenceOpDataRcPtr getReference() const { return m_reference; }
 
 protected:
     bool isOpParameterValid(const char * att) const noexcept override;
@@ -1198,10 +1190,7 @@ public:
 
     const OpDataRcPtr getOp() const override;
 
-    const ExposureContrastOpDataRcPtr getExposureContrast() const
-    {
-        return m_ec;
-    }
+    const ExposureContrastOpDataRcPtr getExposureContrast() const { return m_ec; }
 
 protected:
     bool isOpParameterValid(const char * att) const noexcept override;
@@ -1213,32 +1202,38 @@ private:
 class CTFReaderECParamsElt : public XmlReaderPlainElt
 {
 public:
-    CTFReaderECParamsElt(const std::string & name,
-                         ContainerEltRcPtr pParent,
-                         unsigned int xmlLineNumber,
-                         const std::string & xmlFile);
+    CTFReaderECParamsElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile);
 
     ~CTFReaderECParamsElt();
 
     void start(const char ** atts) override;
     void end() override {}
 
-    void setRawData(const char * /* str */, size_t /* len */, unsigned int /* xmlLine */) override {}
+    void setRawData(const char * /* str */, size_t /* len */, unsigned int /* xmlLine */) override
+    {
+    }
 };
 
 class CTFReaderDynamicParamElt : public XmlReaderPlainElt
 {
 public:
-    CTFReaderDynamicParamElt(const std::string & name,
-                             ContainerEltRcPtr pParent,
-                             unsigned int xmlLineNumber,
-                             const std::string & xmlFile);
+    CTFReaderDynamicParamElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile);
     ~CTFReaderDynamicParamElt();
 
     void start(const char ** atts) override;
     void end() override {}
 
-    void setRawData(const char * /* str */, size_t /* len */, unsigned int /* xmlLine */) override {}
+    void setRawData(const char * /* str */, size_t /* len */, unsigned int /* xmlLine */) override
+    {
+    }
 };
 
 } // namespace OCIO_NAMESPACE

@@ -13,7 +13,7 @@ namespace OCIO_NAMESPACE
 class OCIOHIDDEN PyBuiltinConfigRegistry
 {
 public:
-    PyBuiltinConfigRegistry() = default;
+    PyBuiltinConfigRegistry()  = default;
     ~PyBuiltinConfigRegistry() = default;
 
     size_t getNumBuiltinConfigs() const noexcept

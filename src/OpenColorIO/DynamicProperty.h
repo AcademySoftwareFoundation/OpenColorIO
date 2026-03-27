@@ -24,25 +24,13 @@ public:
     DynamicPropertyImpl(DynamicPropertyType type, bool dynamic);
     virtual ~DynamicPropertyImpl() = default;
 
-    DynamicPropertyType getType() const noexcept override
-    {
-        return m_type;
-    }
+    DynamicPropertyType getType() const noexcept override { return m_type; }
 
-    bool isDynamic() const noexcept
-    {
-        return m_isDynamic;
-    }
+    bool isDynamic() const noexcept { return m_isDynamic; }
 
-    void makeDynamic() noexcept
-    {
-        m_isDynamic = true;
-    }
+    void makeDynamic() noexcept { m_isDynamic = true; }
 
-    void makeNonDynamic() noexcept
-    {
-        m_isDynamic = false;
-    }
+    void makeNonDynamic() noexcept { m_isDynamic = false; }
 
     // When comparing properties for equality, the following rules apply:
     // - If neither of the objects are dynamic, simply compare the values as usual.
@@ -58,13 +46,12 @@ protected:
     DynamicPropertyImpl(DynamicPropertyType type);
 
     DynamicPropertyImpl & operator=(DynamicPropertyImpl &) = delete;
-    DynamicPropertyType m_type{ DYNAMIC_PROPERTY_EXPOSURE };
+    DynamicPropertyType m_type{DYNAMIC_PROPERTY_EXPOSURE};
 
-    bool m_isDynamic{ false };
+    bool m_isDynamic{false};
 };
 
 bool operator==(const DynamicProperty &, const DynamicProperty &);
-
 
 class DynamicPropertyDoubleImpl;
 typedef OCIO_SHARED_PTR<DynamicPropertyDoubleImpl> DynamicPropertyDoubleImplRcPtr;
@@ -92,16 +79,18 @@ class DynamicPropertyGradingPrimaryImpl : public DynamicPropertyImpl,
 {
 public:
     DynamicPropertyGradingPrimaryImpl() = delete;
-    DynamicPropertyGradingPrimaryImpl(GradingStyle style,
-                                      TransformDirection dir,
-                                      const GradingPrimary & val,
-                                      bool dynamic);
+    DynamicPropertyGradingPrimaryImpl(
+        GradingStyle style,
+        TransformDirection dir,
+        const GradingPrimary & val,
+        bool dynamic);
     // Only to create a copy.
-    DynamicPropertyGradingPrimaryImpl(GradingStyle style,
-                                      TransformDirection dir,
-                                      const GradingPrimary & value,
-                                      const GradingPrimaryPreRender & computed,
-                                      bool dynamic);
+    DynamicPropertyGradingPrimaryImpl(
+        GradingStyle style,
+        TransformDirection dir,
+        const GradingPrimary & value,
+        const GradingPrimaryPreRender & computed,
+        bool dynamic);
     ~DynamicPropertyGradingPrimaryImpl() = default;
 
     const GradingPrimary & getValue() const override { return m_value; }
@@ -128,12 +117,11 @@ public:
     DynamicPropertyGradingPrimaryImplRcPtr createEditableCopy() const;
 
 private:
-    GradingStyle m_style{ GRADING_LOG };
-    TransformDirection m_direction{ TRANSFORM_DIR_FORWARD };
+    GradingStyle m_style{GRADING_LOG};
+    TransformDirection m_direction{TRANSFORM_DIR_FORWARD};
     GradingPrimary m_value;
     GradingPrimaryPreRender m_preRenderValues;
 };
-
 
 class DynamicPropertyGradingRGBCurveImpl;
 typedef OCIO_SHARED_PTR<DynamicPropertyGradingRGBCurveImpl> DynamicPropertyGradingRGBCurveImplRcPtr;
@@ -151,7 +139,7 @@ public:
     bool getLocalBypass() const;
     int getNumKnots() const;
     int getNumCoefs() const;
-    static int GetNumOffsetValues() { return 8; }  // offset and num vals for four curves
+    static int GetNumOffsetValues() { return 8; } // offset and num vals for four curves
     const int * getKnotsOffsetsArray() const;
     const int * getCoefsOffsetsArray() const;
     const float * getKnotsArray() const;
@@ -170,7 +158,7 @@ private:
     ConstGradingRGBCurveRcPtr m_gradingRGBCurve;
 
     // Holds curve data as knots and coefs. There are 4 curves.
-    GradingBSplineCurveImpl::KnotsCoefs m_knotsCoefs{ 4 };
+    GradingBSplineCurveImpl::KnotsCoefs m_knotsCoefs{4};
 };
 
 class DynamicPropertyGradingHueCurveImpl;
@@ -189,7 +177,7 @@ public:
     bool getLocalBypass() const;
     int getNumKnots() const;
     int getNumCoefs() const;
-    static int GetNumOffsetValues() { return 16; }  // offset and num vals for eight curves
+    static int GetNumOffsetValues() { return 16; } // offset and num vals for eight curves
     const int * getKnotsOffsetsArray() const;
     const int * getCoefsOffsetsArray() const;
     const float * getKnotsArray() const;
@@ -208,22 +196,22 @@ private:
     ConstGradingHueCurveRcPtr m_gradingHueCurve;
 
     // Holds curve data as knots and coefs. There are 8 curves.
-    GradingBSplineCurveImpl::KnotsCoefs m_knotsCoefs{ 8 };
+    GradingBSplineCurveImpl::KnotsCoefs m_knotsCoefs{8};
 };
 
 class DynamicPropertyGradingToneImpl;
 typedef OCIO_SHARED_PTR<DynamicPropertyGradingToneImpl> DynamicPropertyGradingToneImplRcPtr;
 
-class DynamicPropertyGradingToneImpl : public DynamicPropertyImpl,
-                                       public DynamicPropertyGradingTone
+class DynamicPropertyGradingToneImpl : public DynamicPropertyImpl, public DynamicPropertyGradingTone
 {
 public:
     DynamicPropertyGradingToneImpl() = delete;
     DynamicPropertyGradingToneImpl(const GradingTone & value, GradingStyle style, bool dynamic);
     // Only to create a copy.
-    DynamicPropertyGradingToneImpl(const GradingTone & value,
-                                   const GradingTonePreRender & computed,
-                                   bool dynamic);
+    DynamicPropertyGradingToneImpl(
+        const GradingTone & value,
+        const GradingTonePreRender & computed,
+        bool dynamic);
     ~DynamicPropertyGradingToneImpl() = default;
 
     const GradingTone & getValue() const override { return m_value; }
@@ -237,7 +225,6 @@ public:
     DynamicPropertyGradingToneImplRcPtr createEditableCopy() const;
 
 private:
-
     GradingTone m_value;
     GradingTonePreRender m_preRenderValues;
 };

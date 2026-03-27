@@ -29,17 +29,16 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "fileformats/FileFormatUtils.h"
+#include "BakingUtils.h"
 #include "MathUtils.h"
+#include "ParseUtils.h"
+#include "fileformats/FileFormatUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ops/matrix/MatrixOp.h"
-#include "BakingUtils.h"
-#include "ParseUtils.h"
 #include "transforms/FileTransform.h"
-#include "utils/StringUtils.h"
 #include "utils/NumberUtils.h"
-
+#include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -48,26 +47,26 @@ namespace
 // HDL parser helpers
 
 // HDL headers/LUT's are shoved into these datatypes
-typedef std::map<std::string, StringUtils::StringVec > StringToStringVecMap;
-typedef std::map<std::string, std::vector<float> > StringToFloatVecMap;
+typedef std::map<std::string, StringUtils::StringVec> StringToStringVecMap;
+typedef std::map<std::string, std::vector<float>> StringToFloatVecMap;
 
-void
-readHeaders(StringToStringVecMap& headers,
-            std::istream& istream)
+void readHeaders(StringToStringVecMap & headers, std::istream & istream)
 {
     std::string line;
-    while(nextline(istream, line))
+    while (nextline(istream, line))
     {
         // Remove trailing/leading whitespace, lower-case and
         // split into words
-        StringUtils::StringVec chunks 
+        StringUtils::StringVec chunks
             = StringUtils::SplitByWhiteSpaces(StringUtils::Lower(StringUtils::Trim(line)));
 
         // Skip empty lines
-        if(chunks.empty()) continue;
+        if (chunks.empty())
+            continue;
 
         // Stop looking for headers at the "LUT:" line
-        if(chunks[0] == "lut:") break;
+        if (chunks[0] == "lut:")
+            break;
 
         // Use first index as key, and remove it from the value
         const std::string key = chunks[0];
@@ -81,17 +80,17 @@ readHeaders(StringToStringVecMap& headers,
 // exception if not found, or if number of chunks in value is
 // not between min_vals and max_vals (e.g the "length" key
 // must exist, and must have either 1 or 2 values)
-StringUtils::StringVec
-findHeaderItem(StringToStringVecMap& headers,
-                const std::string key,
-                const unsigned int min_vals,
-                const unsigned int max_vals)
+StringUtils::StringVec findHeaderItem(
+    StringToStringVecMap & headers,
+    const std::string key,
+    const unsigned int min_vals,
+    const unsigned int max_vals)
 {
     StringToStringVecMap::iterator iter;
     iter = headers.find(key);
 
     // Error if key is not found
-    if(iter == headers.end())
+    if (iter == headers.end())
     {
         std::ostringstream os;
         os << "'" << key << "' line not found";
@@ -99,14 +98,13 @@ findHeaderItem(StringToStringVecMap& headers,
     }
 
     // Error if incorrect number of values is found
-    if(iter->second.size() < min_vals ||
-        iter->second.size() > max_vals)
+    if (iter->second.size() < min_vals || iter->second.size() > max_vals)
     {
         std::ostringstream os;
         os << "Incorrect number of chunks (" << iter->second.size() << ")";
         os << " after '" << key << "' line, expected ";
 
-        if(min_vals == max_vals)
+        if (min_vals == max_vals)
         {
             os << min_vals;
         }
@@ -124,9 +122,7 @@ findHeaderItem(StringToStringVecMap& headers,
 // Simple wrapper to call findHeaderItem with a fixed number
 // of values (e.g "version" should have a single value)
 StringUtils::StringVec
-findHeaderItem(StringToStringVecMap& chunks,
-                const std::string key,
-                const unsigned int numvals)
+findHeaderItem(StringToStringVecMap & chunks, const std::string key, const unsigned int numvals)
 {
     return findHeaderItem(chunks, key, numvals, numvals);
 }
@@ -137,9 +133,7 @@ findHeaderItem(StringToStringVecMap& chunks,
 // were it could incorrectly accept broken data (like
 // "Pre{0.0\n1.0}blah"), but hopefully none where it misses
 // data
-void
-readLuts(std::istream& istream,
-            StringToFloatVecMap& lutValues)
+void readLuts(std::istream & istream, StringToFloatVecMap & lutValues)
 {
     // State variables
     bool inlut = false;
@@ -147,26 +141,26 @@ readLuts(std::istream& istream,
 
     std::string word;
 
-    while(istream >> word)
+    while (istream >> word)
     {
-        if(!inlut)
+        if (!inlut)
         {
-            if(word == "{")
+            if (word == "{")
             {
                 // Lone "{" is for a 3D
-                inlut = true;
+                inlut   = true;
                 lutname = "3d";
             }
             else
             {
                 // Named LUT, e.g "Pre {"
-                inlut = true;
+                inlut   = true;
                 lutname = StringUtils::Lower(word);
 
                 // Ensure next word is "{"
                 std::string nextword;
                 istream >> nextword;
-                if(nextword != "{")
+                if (nextword != "{")
                 {
                     std::ostringstream os;
                     os << "Malformed LUT - Unknown word '";
@@ -176,16 +170,17 @@ readLuts(std::istream& istream,
                 }
             }
         }
-        else if(word == "}")
+        else if (word == "}")
         {
             // end of LUT
-            inlut = false;
+            inlut   = false;
             lutname = "";
         }
-        else if(inlut)
+        else if (inlut)
         {
             float v{};
-            const auto result = NumberUtils::from_chars(word.c_str(), word.c_str() + word.size(), v);
+            const auto result
+                = NumberUtils::from_chars(word.c_str(), word.c_str() + word.size(), v);
 
             if (result.ec == std::errc())
             {
@@ -205,21 +200,20 @@ readLuts(std::istream& istream,
         {
             std::ostringstream os;
             os << "Unexpected word, possibly a value outside";
-            os <<" a LUT {} block. Word was '" << word << "'";
+            os << " a LUT {} block. Word was '" << word << "'";
             throw Exception(os.str().c_str());
-
         }
     }
 }
 
-} // end anonymous "HDL parser helpers" namespace
+} // namespace
 
 namespace
 {
 class CachedFileHDL : public CachedFile
 {
 public:
-    CachedFileHDL ()
+    CachedFileHDL()
         : hdlversion("unknown")
         , hdlformat("unknown")
         , hdltype("unknown")
@@ -230,7 +224,7 @@ public:
     void setLUT1D(const std::vector<float> & values, Interpolation interp)
     {
         auto lutSize = static_cast<unsigned long>(values.size());
-        lut1D = std::make_shared<Lut1DOpData>(lutSize);
+        lut1D        = std::make_shared<Lut1DOpData>(lutSize);
         if (Lut1DOpData::IsValidInterpolation(interp))
         {
             lut1D->setInterpolation(interp);
@@ -251,8 +245,8 @@ public:
     std::string hdltype;
     float from_min = 0.0f;
     float from_max = 1.0f;
-    float to_min = 0.0f;
-    float to_max = 1.0f;
+    float to_min   = 0.0f;
+    float to_max   = 1.0f;
     float hdlblack = 0.0f;
     float hdlwhite = 1.0f;
 
@@ -264,51 +258,50 @@ typedef OCIO_SHARED_PTR<CachedFileHDL> CachedFileHDLRcPtr;
 class LocalFileFormat : public FileFormat
 {
 public:
-    LocalFileFormat() = default;
+    LocalFileFormat()  = default;
     ~LocalFileFormat() = default;
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-    CachedFileRcPtr read(std::istream & istream,
-                         const std::string & fileName,
-                         Interpolation interp) const override;
+    CachedFileRcPtr read(std::istream & istream, const std::string & fileName, Interpolation interp)
+        const override;
 
-    void bake(const Baker & baker,
-                const std::string & formatName,
-                std::ostream & ostream) const override;
+    void bake(const Baker & baker, const std::string & formatName, std::ostream & ostream)
+        const override;
 
-    void buildFileOps(OpRcPtrVec & ops,
-                        const Config & config,
-                        const ConstContextRcPtr & context,
-                        CachedFileRcPtr untypedCachedFile,
-                        const FileTransform & fileTransform,
-                        TransformDirection dir) const override;
+    void buildFileOps(
+        OpRcPtrVec & ops,
+        const Config & config,
+        const ConstContextRcPtr & context,
+        CachedFileRcPtr untypedCachedFile,
+        const FileTransform & fileTransform,
+        TransformDirection dir) const override;
 };
 
 void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 {
     FormatInfo info;
-    info.name = "houdini";
-    info.extension = "lut";
-    info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
-    info.bake_capabilities = FormatBakeFlags(FORMAT_BAKE_CAPABILITY_3DLUT |
-                                             FORMAT_BAKE_CAPABILITY_1DLUT |
-                                             FORMAT_BAKE_CAPABILITY_1D_3D_LUT);
+    info.name              = "houdini";
+    info.extension         = "lut";
+    info.capabilities      = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_BAKE);
+    info.bake_capabilities = FormatBakeFlags(
+        FORMAT_BAKE_CAPABILITY_3DLUT | FORMAT_BAKE_CAPABILITY_1DLUT
+        | FORMAT_BAKE_CAPABILITY_1D_3D_LUT);
     formatInfoVec.push_back(info);
 }
 
-CachedFileRcPtr
-LocalFileFormat::read(std::istream & istream,
-                      const std::string & /* fileName unused */,
-                      Interpolation interp) const
+CachedFileRcPtr LocalFileFormat::read(
+    std::istream & istream,
+    const std::string & /* fileName unused */,
+    Interpolation interp) const
 {
 
     // this shouldn't happen
     if (!istream)
-        throw Exception ("file stream empty when trying to read Houdini LUT");
+        throw Exception("file stream empty when trying to read Houdini LUT");
 
     //
-    CachedFileHDLRcPtr cachedFile = CachedFileHDLRcPtr (new CachedFileHDL ());
+    CachedFileHDLRcPtr cachedFile = CachedFileHDLRcPtr(new CachedFileHDL());
 
     Lut3DOpDataRcPtr lut3d_ptr;
 
@@ -324,12 +317,12 @@ LocalFileFormat::read(std::istream & istream,
 
     // "Version 3" - format version (currently one version
     // number per LUT type)
-    value = findHeaderItem(header_chunks, "version", 1);
+    value                  = findHeaderItem(header_chunks, "version", 1);
     cachedFile->hdlversion = value[0];
 
     // "Format any" - bit depth of image the LUT should be
     // applied to (this is basically ignored)
-    value = findHeaderItem(header_chunks, "format", 1);
+    value                 = findHeaderItem(header_chunks, "format", 1);
     cachedFile->hdlformat = value[0];
 
     // "Type 3d" - type of LUT
@@ -343,20 +336,19 @@ LocalFileFormat::read(std::istream & istream,
     {
         float from_min = 0.0f;
         float from_max = 1.0f;
-        value = findHeaderItem(header_chunks, "from", 2);
+        value          = findHeaderItem(header_chunks, "from", 2);
 
-        if(!StringToFloat(&from_min, value[0].c_str()) ||
-            !StringToFloat(&from_max, value[1].c_str()))
+        if (!StringToFloat(&from_min, value[0].c_str())
+            || !StringToFloat(&from_max, value[1].c_str()))
         {
             std::ostringstream os;
             os << "Invalid float value(s) on 'From' line, '";
-            os << value[0] << "' and '"  << value[1] << "'";
+            os << value[0] << "' and '" << value[1] << "'";
             throw Exception(os.str().c_str());
         }
         cachedFile->from_min = from_min;
         cachedFile->from_max = from_max;
     }
-
 
     // "To 0.0 1.0" - range of values in LUT (e.g "0 255"
     // to specify values as 8-bit numbers, usually "0 1")
@@ -365,12 +357,11 @@ LocalFileFormat::read(std::istream & istream,
 
         value = findHeaderItem(header_chunks, "to", 2);
 
-        if(!StringToFloat(&to_min, value[0].c_str()) ||
-            !StringToFloat(&to_max, value[1].c_str()))
+        if (!StringToFloat(&to_min, value[0].c_str()) || !StringToFloat(&to_max, value[1].c_str()))
         {
             std::ostringstream os;
             os << "Invalid float value(s) on 'To' line, '";
-            os << value[0] << "' and '"  << value[1] << "'";
+            os << value[0] << "' and '" << value[1] << "'";
             throw Exception(os.str().c_str());
         }
         cachedFile->to_min = to_min;
@@ -385,7 +376,7 @@ LocalFileFormat::read(std::istream & istream,
 
         float black;
 
-        if(!StringToFloat(&black, value[0].c_str()))
+        if (!StringToFloat(&black, value[0].c_str()))
         {
             std::ostringstream os;
             os << "Invalid float value on 'Black' line, '";
@@ -400,7 +391,7 @@ LocalFileFormat::read(std::istream & istream,
 
         float white;
 
-        if(!StringToFloat(&white, value[0].c_str()))
+        if (!StringToFloat(&white, value[0].c_str()))
         {
             std::ostringstream os;
             os << "Invalid float value on 'White' line, '";
@@ -410,12 +401,11 @@ LocalFileFormat::read(std::istream & istream,
         cachedFile->hdlwhite = white;
     }
 
-
     // Verify type is valid and supported - used to handle
     // length sensibly, and checking the LUT later
     {
         std::string ltype = cachedFile->hdltype;
-        if(ltype != "3d" && ltype != "3d+1d" && ltype != "c")
+        if (ltype != "3d" && ltype != "3d+1d" && ltype != "c")
         {
             std::ostringstream os;
             os << "Unsupported Houdini LUT type: '" << ltype << "'";
@@ -423,21 +413,20 @@ LocalFileFormat::read(std::istream & istream,
         }
     }
 
-
     // "Length 2" or "Length 2 5" - either "[cube size]", or "[cube
     // size] [prelut size]"
-    int size_3d = -1;
+    int size_3d     = -1;
     int size_prelut = -1;
-    int size_1d = -1;
+    int size_1d     = -1;
 
     {
         std::vector<int> lut_sizes;
 
         value = findHeaderItem(header_chunks, "length", 1, 2);
-        for(unsigned int i = 0; i < value.size(); ++i)
+        for (unsigned int i = 0; i < value.size(); ++i)
         {
             int tmpsize = -1;
-            if(!StringToInt(&tmpsize, value[i].c_str()))
+            if (!StringToInt(&tmpsize, value[i].c_str()))
             {
                 std::ostringstream os;
                 os << "Invalid integer on 'Length' line: ";
@@ -447,7 +436,7 @@ LocalFileFormat::read(std::istream & istream,
             lut_sizes.push_back(tmpsize);
         }
 
-        if(cachedFile->hdltype == "3d" || cachedFile->hdltype == "3d+1d")
+        if (cachedFile->hdltype == "3d" || cachedFile->hdltype == "3d+1d")
         {
             // Set cube size
             size_3d = lut_sizes[0];
@@ -460,12 +449,12 @@ LocalFileFormat::read(std::istream & istream,
             lut3d_ptr->setFileOutputBitDepth(BIT_DEPTH_F32);
         }
 
-        if(cachedFile->hdltype == "c")
+        if (cachedFile->hdltype == "c")
         {
             size_1d = lut_sizes[0];
         }
 
-        if(cachedFile->hdltype == "3d+1d")
+        if (cachedFile->hdltype == "3d+1d")
         {
             size_prelut = lut_sizes[1];
         }
@@ -478,18 +467,18 @@ LocalFileFormat::read(std::istream & istream,
     //
     StringToFloatVecMap::iterator lut_iter;
 
-    if(cachedFile->hdltype == "3d+1d")
+    if (cachedFile->hdltype == "3d+1d")
     {
         // Read prelut, and bind onto cachedFile
         lut_iter = lut_data.find("pre");
-        if(lut_iter == lut_data.end())
+        if (lut_iter == lut_data.end())
         {
             std::ostringstream os;
             os << "3D+1D LUT should contain Pre{} LUT section";
             throw Exception(os.str().c_str());
         }
 
-        if(size_prelut != static_cast<int>(lut_iter->second.size()))
+        if (size_prelut != static_cast<int>(lut_iter->second.size()))
         {
             std::ostringstream os;
             os << "Pre{} LUT was " << lut_iter->second.size();
@@ -500,14 +489,13 @@ LocalFileFormat::read(std::istream & istream,
         cachedFile->setLUT1D(lut_iter->second, interp);
     }
 
-    if(cachedFile->hdltype == "3d" ||
-        cachedFile->hdltype == "3d+1d")
+    if (cachedFile->hdltype == "3d" || cachedFile->hdltype == "3d+1d")
     {
         // Bind 3D LUT to lut3d_ptr, along with some
         // slightly-elabourate error messages
 
         lut_iter = lut_data.find("3d");
-        if(lut_iter == lut_data.end())
+        if (lut_iter == lut_data.end())
         {
             std::ostringstream os;
             os << "3D LUT section not found";
@@ -516,16 +504,16 @@ LocalFileFormat::read(std::istream & istream,
 
         int size_3d_cubed = size_3d * size_3d * size_3d;
 
-        if(size_3d_cubed * 3 != static_cast<int>(lut_iter->second.size()))
+        if (size_3d_cubed * 3 != static_cast<int>(lut_iter->second.size()))
         {
-            int foundsize = static_cast<int>(lut_iter->second.size());
+            int foundsize  = static_cast<int>(lut_iter->second.size());
             int foundlines = foundsize / 3;
 
             std::ostringstream os;
             os << "3D LUT contains incorrect number of values. ";
             os << "Contained " << foundsize << " values ";
             os << "(" << foundlines << " lines), ";
-            os << "expected " << (size_3d_cubed*3) << " values ";
+            os << "expected " << (size_3d_cubed * 3) << " values ";
             os << "(" << size_3d_cubed << " lines)";
             throw Exception(os.str().c_str());
         }
@@ -536,18 +524,18 @@ LocalFileFormat::read(std::istream & istream,
         cachedFile->lut3D = lut3d_ptr;
     }
 
-    if(cachedFile->hdltype == "c")
+    if (cachedFile->hdltype == "c")
     {
         // Bind simple 1D RGB LUT
         lut_iter = lut_data.find("rgb");
-        if(lut_iter == lut_data.end())
+        if (lut_iter == lut_data.end())
         {
             std::ostringstream os;
             os << "3D+1D LUT should contain Pre{} LUT section";
             throw Exception(os.str().c_str());
         }
 
-        if(size_1d != static_cast<int>(lut_iter->second.size()))
+        if (size_1d != static_cast<int>(lut_iter->second.size()))
         {
             std::ostringstream os;
             os << "RGB{} LUT was " << lut_iter->second.size();
@@ -561,12 +549,13 @@ LocalFileFormat::read(std::istream & istream,
     return cachedFile;
 }
 
-void LocalFileFormat::bake(const Baker & baker,
-                           const std::string & formatName,
-                           std::ostream & ostream) const
+void LocalFileFormat::bake(
+    const Baker & baker,
+    const std::string & formatName,
+    std::ostream & ostream) const
 {
 
-    if(formatName != "houdini")
+    if (formatName != "houdini")
     {
         std::ostringstream os;
         os << "Unknown hdl format name, '";
@@ -584,25 +573,28 @@ void LocalFileFormat::bake(const Baker & baker,
     // that looks more quantised than even "nearest"
     // interpolation in OCIOFileTransform)
     const int DEFAULT_CUBE_SIZE = 64;
-    const int DEFAULT_1D_SIZE = 1024;
+    const int DEFAULT_1D_SIZE   = 1024;
 
     // Get configured sizes
-    int cubeSize = baker.getCubeSize();
+    int cubeSize   = baker.getCubeSize();
     int shaperSize = baker.getShaperSize();
-    int onedSize = baker.getCubeSize();
+    int onedSize   = baker.getCubeSize();
 
     // Check defaults and cube size
-    if(cubeSize == -1) cubeSize = DEFAULT_CUBE_SIZE;
+    if (cubeSize == -1)
+        cubeSize = DEFAULT_CUBE_SIZE;
 
     // ..and same for shaper size
-    if(shaperSize == -1) shaperSize = DEFAULT_SHAPER_SIZE;
+    if (shaperSize == -1)
+        shaperSize = DEFAULT_SHAPER_SIZE;
 
     // ..and finally, for the 1D LUT size
-    if(onedSize == -1) onedSize = DEFAULT_1D_SIZE;
+    if (onedSize == -1)
+        onedSize = DEFAULT_1D_SIZE;
 
     // Version numbers
-    const int HDL_1D = 1; // 1D LUT version number
-    const int HDL_3D = 2; // 3D LUT version number
+    const int HDL_1D   = 1; // 1D LUT version number
+    const int HDL_3D   = 2; // 3D LUT version number
     const int HDL_3D1D = 3; // 3D LUT with 1D prelut
 
     // Get spaces from baker
@@ -613,9 +605,9 @@ void LocalFileFormat::bake(const Baker & baker,
 
     ConstCPUProcessorRcPtr inputToTarget = GetInputToTargetProcessor(baker);
 
-    if(inputToTarget->hasChannelCrosstalk())
+    if (inputToTarget->hasChannelCrosstalk())
     {
-        if(shaperSpace.empty())
+        if (shaperSpace.empty())
         {
             // Has crosstalk, but no prelut, so need 3D LUT
             required_lut = HDL_3D;
@@ -632,28 +624,26 @@ void LocalFileFormat::bake(const Baker & baker,
         required_lut = HDL_1D;
     }
 
-    if(required_lut == -1)
+    if (required_lut == -1)
     {
         // Unnecessary paranoia
-        throw Exception(
-            "Internal logic error, LUT type was not determined");
+        throw Exception("Internal logic error, LUT type was not determined");
     }
 
     // Make prelut
     std::vector<float> prelutData;
 
     float fromInStart = 0.0f;
-    float fromInEnd = 1.0f;
+    float fromInEnd   = 1.0f;
 
-    if(required_lut == HDL_3D1D)
+    if (required_lut == HDL_3D1D)
     {
         GetShaperRange(baker, fromInStart, fromInEnd);
 
         // Generate the identity prelut values, then apply the transform.
         // Prelut is linearly sampled from fromInStart to fromInEnd
-        prelutData.resize(shaperSize*3);
-        GenerateLinearScaleLut1D(
-            prelutData.data(), shaperSize, 3, fromInStart, fromInEnd);
+        prelutData.resize(shaperSize * 3);
+        GenerateLinearScaleLut1D(prelutData.data(), shaperSize, 3, fromInStart, fromInEnd);
 
         PackedImageDesc prelutImg(&prelutData[0], shaperSize, 1, 3);
         ConstCPUProcessorRcPtr inputToShaper = GetInputToShaperProcessor(baker);
@@ -664,15 +654,15 @@ void LocalFileFormat::bake(const Baker & baker,
 
     // Make 3D LUT
     std::vector<float> cubeData;
-    if(required_lut == HDL_3D || required_lut == HDL_3D1D)
+    if (required_lut == HDL_3D || required_lut == HDL_3D1D)
     {
-        cubeData.resize(cubeSize*cubeSize*cubeSize*3);
+        cubeData.resize(cubeSize * cubeSize * cubeSize * 3);
 
         GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_RED);
-        PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
+        PackedImageDesc cubeImg(&cubeData[0], cubeSize * cubeSize * cubeSize, 1, 3);
 
         ConstCPUProcessorRcPtr cubeProc;
-        if(required_lut == HDL_3D1D)
+        if (required_lut == HDL_3D1D)
         {
             cubeProc = GetShaperToTargetProcessor(baker);
         }
@@ -685,11 +675,10 @@ void LocalFileFormat::bake(const Baker & baker,
         cubeProc->apply(cubeImg);
     }
 
-
     // Make 1D LUT
     std::vector<float> onedData;
 
-    if(required_lut == HDL_1D)
+    if (required_lut == HDL_1D)
     {
         onedData.resize(onedSize * 3);
 
@@ -707,17 +696,16 @@ void LocalFileFormat::bake(const Baker & baker,
         inputToTarget->apply(onedImg);
     }
 
-
     // Write the file contents
     ostream << "Version\t\t" << required_lut << "\n";
     ostream << "Format\t\t" << "any" << "\n";
 
     ostream << "Type\t\t";
-    if(required_lut == HDL_1D)
+    if (required_lut == HDL_1D)
         ostream << "RGB";
-    if(required_lut == HDL_3D)
+    if (required_lut == HDL_3D)
         ostream << "3D";
-    if(required_lut == HDL_3D1D)
+    if (required_lut == HDL_3D1D)
         ostream << "3D+1D";
     ostream << "\n";
 
@@ -726,50 +714,50 @@ void LocalFileFormat::bake(const Baker & baker,
     ostream << "Black\t\t" << 0.0f << "\n";
     ostream << "White\t\t" << 1.0f << "\n";
 
-    if(required_lut == HDL_3D1D)
+    if (required_lut == HDL_3D1D)
         ostream << "Length\t\t" << cubeSize << " " << shaperSize << "\n";
-    if(required_lut == HDL_3D)
+    if (required_lut == HDL_3D)
         ostream << "Length\t\t" << cubeSize << "\n";
-    if(required_lut == HDL_1D)
+    if (required_lut == HDL_1D)
         ostream << "Length\t\t" << onedSize << "\n";
 
     ostream << "LUT:\n";
 
     // Write prelut
-    if(required_lut == HDL_3D1D)
+    if (required_lut == HDL_3D1D)
     {
         ostream << "Pre {\n";
-        for(int i=0; i < shaperSize; ++i)
+        for (int i = 0; i < shaperSize; ++i)
         {
             // Grab green channel from RGB prelut
-            ostream << "\t" << prelutData[i*3+1] << "\n";
+            ostream << "\t" << prelutData[i * 3 + 1] << "\n";
         }
         ostream << "}\n";
     }
 
     // Write "3D {" part of output of 3D+1D LUT
-    if(required_lut == HDL_3D1D)
+    if (required_lut == HDL_3D1D)
     {
         ostream << "3D {\n";
     }
 
     // Write the slightly-different "{" without line for the 3D-only LUT
-    if(required_lut == HDL_3D)
+    if (required_lut == HDL_3D)
     {
         ostream << " {\n";
     }
 
     // Write the cube data after the "{"
-    if(required_lut == HDL_3D || required_lut == HDL_3D1D)
+    if (required_lut == HDL_3D || required_lut == HDL_3D1D)
     {
-        for(int i=0; i < cubeSize*cubeSize*cubeSize; ++i)
+        for (int i = 0; i < cubeSize * cubeSize * cubeSize; ++i)
         {
             // TODO: Original baker code clamped values to
             // 1.0, was this necessary/desirable?
 
-            ostream << "\t" << cubeData[3*i+0];
-            ostream << " "  << cubeData[3*i+1];
-            ostream << " "  << cubeData[3*i+2] << "\n";
+            ostream << "\t" << cubeData[3 * i + 0];
+            ostream << " " << cubeData[3 * i + 1];
+            ostream << " " << cubeData[3 * i + 2] << "\n";
         }
 
         // Write closing "}"
@@ -777,38 +765,38 @@ void LocalFileFormat::bake(const Baker & baker,
     }
 
     // Write out channels for 1D LUT
-    if(required_lut == HDL_1D)
+    if (required_lut == HDL_1D)
     {
         ostream << "R {\n";
-        for(int i=0; i < onedSize; ++i)
-            ostream << "\t" << onedData[i*3+0] << "\n";
+        for (int i = 0; i < onedSize; ++i)
+            ostream << "\t" << onedData[i * 3 + 0] << "\n";
         ostream << "}\n";
 
         ostream << "G {\n";
-        for(int i=0; i < onedSize; ++i)
-            ostream << "\t" << onedData[i*3+1] << "\n";
+        for (int i = 0; i < onedSize; ++i)
+            ostream << "\t" << onedData[i * 3 + 1] << "\n";
         ostream << "}\n";
 
         ostream << "B {\n";
-        for(int i=0; i < onedSize; ++i)
-            ostream << "\t" << onedData[i*3+2] << "\n";
+        for (int i = 0; i < onedSize; ++i)
+            ostream << "\t" << onedData[i * 3 + 2] << "\n";
         ostream << "}\n";
     }
 }
 
-void
-LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
-                            const Config & /*config*/,
-                            const ConstContextRcPtr & /*context*/,
-                            CachedFileRcPtr untypedCachedFile,
-                            const FileTransform & fileTransform,
-                            TransformDirection dir) const
+void LocalFileFormat::buildFileOps(
+    OpRcPtrVec & ops,
+    const Config & /*config*/,
+    const ConstContextRcPtr & /*context*/,
+    CachedFileRcPtr untypedCachedFile,
+    const FileTransform & fileTransform,
+    TransformDirection dir) const
 {
 
     CachedFileHDLRcPtr cachedFile = DynamicPtrCast<CachedFileHDL>(untypedCachedFile);
 
     // This should never happen.
-    if(!cachedFile || (!cachedFile->lut1D && !cachedFile->lut3D))
+    if (!cachedFile || (!cachedFile->lut1D && !cachedFile->lut3D))
     {
         std::ostringstream os;
         os << "Cannot build Houdini Op. Invalid cache type.";
@@ -820,8 +808,8 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     const auto fileInterp = fileTransform.getInterpolation();
 
     bool fileInterpUsed = false;
-    auto lut1D = HandleLUT1D(cachedFile->lut1D, fileInterp, fileInterpUsed);
-    auto lut3D = HandleLUT3D(cachedFile->lut3D, fileInterp, fileInterpUsed);
+    auto lut1D          = HandleLUT1D(cachedFile->lut1D, fileInterp, fileInterpUsed);
+    auto lut3D          = HandleLUT3D(cachedFile->lut3D, fileInterp, fileInterpUsed);
 
     if (!fileInterpUsed)
     {
@@ -830,55 +818,55 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 
     switch (newDir)
     {
-    case TRANSFORM_DIR_FORWARD:
-    {
-        if (cachedFile->hdltype == "c")
+        case TRANSFORM_DIR_FORWARD:
         {
-            CreateMinMaxOp(ops, cachedFile->from_min, cachedFile->from_max, newDir);
-            CreateLut1DOp(ops, lut1D, newDir);
+            if (cachedFile->hdltype == "c")
+            {
+                CreateMinMaxOp(ops, cachedFile->from_min, cachedFile->from_max, newDir);
+                CreateLut1DOp(ops, lut1D, newDir);
+            }
+            else if (cachedFile->hdltype == "3d")
+            {
+                CreateLut3DOp(ops, lut3D, newDir);
+            }
+            else if (cachedFile->hdltype == "3d+1d")
+            {
+                CreateMinMaxOp(ops, cachedFile->from_min, cachedFile->from_max, newDir);
+                CreateLut1DOp(ops, lut1D, newDir);
+                CreateLut3DOp(ops, lut3D, newDir);
+            }
+            else
+            {
+                throw Exception("Unhandled hdltype while creating forward ops");
+            }
+            break;
         }
-        else if (cachedFile->hdltype == "3d")
+        case TRANSFORM_DIR_INVERSE:
         {
-            CreateLut3DOp(ops, lut3D, newDir);
+            if (cachedFile->hdltype == "c")
+            {
+                CreateLut1DOp(ops, lut1D, newDir);
+                CreateMinMaxOp(ops, cachedFile->from_min, cachedFile->from_max, newDir);
+            }
+            else if (cachedFile->hdltype == "3d")
+            {
+                CreateLut3DOp(ops, lut3D, newDir);
+            }
+            else if (cachedFile->hdltype == "3d+1d")
+            {
+                CreateLut3DOp(ops, lut3D, newDir);
+                CreateLut1DOp(ops, lut1D, newDir);
+                CreateMinMaxOp(ops, cachedFile->from_min, cachedFile->from_max, newDir);
+            }
+            else
+            {
+                throw Exception("Unhandled hdltype while creating reverse ops");
+            }
+            break;
         }
-        else if (cachedFile->hdltype == "3d+1d")
-        {
-            CreateMinMaxOp(ops, cachedFile->from_min, cachedFile->from_max, newDir);
-            CreateLut1DOp(ops, lut1D, newDir);
-            CreateLut3DOp(ops, lut3D, newDir);
-        }
-        else
-        {
-            throw Exception("Unhandled hdltype while creating forward ops");
-        }
-        break;
-    }
-    case TRANSFORM_DIR_INVERSE:
-    {
-        if (cachedFile->hdltype == "c")
-        {
-            CreateLut1DOp(ops, lut1D, newDir);
-            CreateMinMaxOp(ops, cachedFile->from_min, cachedFile->from_max, newDir);
-        }
-        else if (cachedFile->hdltype == "3d")
-        {
-            CreateLut3DOp(ops, lut3D, newDir);
-        }
-        else if (cachedFile->hdltype == "3d+1d")
-        {
-            CreateLut3DOp(ops, lut3D, newDir);
-            CreateLut1DOp(ops, lut1D, newDir);
-            CreateMinMaxOp(ops, cachedFile->from_min, cachedFile->from_max, newDir);
-        }
-        else
-        {
-            throw Exception("Unhandled hdltype while creating reverse ops");
-        }
-        break;
-    }
     }
 }
-}
+} // namespace
 
 FileFormat * CreateFileFormatHDL()
 {

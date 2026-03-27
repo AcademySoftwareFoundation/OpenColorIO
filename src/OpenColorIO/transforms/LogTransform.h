@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_LOGTRANSFORM_H
 #define INCLUDED_OCIO_LOGTRANSFORM_H
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/log/LogOpData.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -17,9 +15,9 @@ class LogTransformImpl : public LogTransform
 {
 public:
     LogTransformImpl();
-    LogTransformImpl(const LogTransformImpl &) = delete;
+    LogTransformImpl(const LogTransformImpl &)             = delete;
     LogTransformImpl & operator=(const LogTransformImpl &) = delete;
-    virtual ~LogTransformImpl() = default;
+    virtual ~LogTransformImpl()                            = default;
 
     TransformRcPtr createEditableCopy() const override;
 
@@ -45,7 +43,6 @@ private:
     LogOpData m_data;
 };
 
-
 } // namespace OCIO_NAMESPACE
 
-#endif  // INCLUDED_OCIO_LOGTRANSFORM_H
+#endif // INCLUDED_OCIO_LOGTRANSFORM_H

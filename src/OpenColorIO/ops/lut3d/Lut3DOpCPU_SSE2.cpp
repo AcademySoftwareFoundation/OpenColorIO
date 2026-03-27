@@ -9,31 +9,34 @@
 
 namespace OCIO_NAMESPACE
 {
-namespace {
+namespace
+{
 
-struct Lut3DContextSSE2 {
-    const float *lut;
+struct Lut3DContextSSE2
+{
+    const float * lut;
     __m128 lutmax;
     __m128 lutsize;
     __m128 lutsize2;
 };
 
-struct rgbavec_sse2 {
+struct rgbavec_sse2
+{
     __m128 r, g, b, a;
 };
 
-#define gather_rgb_sse2(src, idx)             \
-    _mm_store_si128((__m128i *)indices, idx); \
-    row0 = _mm_loadu_ps(src + indices[0]);    \
-    row1 = _mm_loadu_ps(src + indices[1]);    \
-    row2 = _mm_loadu_ps(src + indices[2]);    \
-    row3 = _mm_loadu_ps(src + indices[3]);    \
-    tmp0 = _mm_unpacklo_ps(row0, row1);       \
-    tmp2 = _mm_unpacklo_ps(row2, row3);       \
-    tmp1 = _mm_unpackhi_ps(row0, row1);       \
-    tmp3 = _mm_unpackhi_ps(row2, row3);       \
-    sample_r = _mm_movelh_ps(tmp0, tmp2);     \
-    sample_g = _mm_movehl_ps(tmp2, tmp0);     \
+#define gather_rgb_sse2(src, idx)                                                                  \
+    _mm_store_si128((__m128i *)indices, idx);                                                      \
+    row0     = _mm_loadu_ps(src + indices[0]);                                                     \
+    row1     = _mm_loadu_ps(src + indices[1]);                                                     \
+    row2     = _mm_loadu_ps(src + indices[2]);                                                     \
+    row3     = _mm_loadu_ps(src + indices[3]);                                                     \
+    tmp0     = _mm_unpacklo_ps(row0, row1);                                                        \
+    tmp2     = _mm_unpacklo_ps(row2, row3);                                                        \
+    tmp1     = _mm_unpackhi_ps(row0, row1);                                                        \
+    tmp3     = _mm_unpackhi_ps(row2, row3);                                                        \
+    sample_r = _mm_movelh_ps(tmp0, tmp2);                                                          \
+    sample_g = _mm_movehl_ps(tmp2, tmp0);                                                          \
     sample_b = _mm_movelh_ps(tmp1, tmp3)
 
 static inline __m128 floor_ps_sse2(__m128 v)
@@ -59,14 +62,14 @@ static inline __m128 fmadd_ps_sse2(__m128 a, __m128 b, __m128 c)
 {
 #if OCIO_USE_SSE2NEON
     return vreinterpretq_m128_f32(
-        vfmaq_f32(vreinterpretq_f32_m128(c), vreinterpretq_f32_m128(a), vreinterpretq_f32_m128(b))
-    );
+        vfmaq_f32(vreinterpretq_f32_m128(c), vreinterpretq_f32_m128(a), vreinterpretq_f32_m128(b)));
 #else
-    return  _mm_add_ps(_mm_mul_ps(a, b), c);
+    return _mm_add_ps(_mm_mul_ps(a, b), c);
 #endif
 }
 
-static inline rgbavec_sse2 interp_tetrahedral_sse2(const Lut3DContextSSE2 &ctx, __m128 r, __m128 g, __m128 b, __m128 a)
+static inline rgbavec_sse2
+interp_tetrahedral_sse2(const Lut3DContextSSE2 & ctx, __m128 r, __m128 g, __m128 b, __m128 a)
 {
     SSE2_ALIGN(uint32_t indices[4]);
 
@@ -85,8 +88,8 @@ static inline rgbavec_sse2 interp_tetrahedral_sse2(const Lut3DContextSSE2 &ctx, 
     __m128 lutsize  = ctx.lutsize;
     __m128 lutsize2 = ctx.lutsize2;
 
-    __m128 one_f   = _mm_set1_ps(1.0f);
-    __m128 four_f  = _mm_set1_ps(4.0f);
+    __m128 one_f  = _mm_set1_ps(1.0f);
+    __m128 four_f = _mm_set1_ps(4.0f);
 
     __m128 prev_r = floor_ps_sse2(r);
     __m128 prev_g = floor_ps_sse2(g);
@@ -114,9 +117,9 @@ static inline rgbavec_sse2 interp_tetrahedral_sse2(const Lut3DContextSSE2 &ctx, 
     // This is the tetrahedral blend equation
     // red = (1-x0) * c000.r + (x0-x1) * cxxxa.r + (x1-x2) * cxxxb.r + x2 * c111.r;
     // The x values are the rgb delta values sorted, x0 >= x1 >= x2
-    // c### are samples from the lut, which are indices made with prev_(r,g,b) and next_(r,g,b) values
-    // 0 = use prev, 1 = use next
-    // c### = (prev_r or next_r) * (lutsize * lutsize) + (prev_g or next_g) * lutsize + (prev_b or next_b)
+    // c### are samples from the lut, which are indices made with prev_(r,g,b) and next_(r,g,b)
+    // values 0 = use prev, 1 = use next c### = (prev_r or next_r) * (lutsize * lutsize) + (prev_g
+    // or next_g) * lutsize + (prev_b or next_b)
 
     // cxxxa
     // always uses 1 next and 2 prev and next is largest delta
@@ -190,7 +193,7 @@ static inline rgbavec_sse2 interp_tetrahedral_sse2(const Lut3DContextSSE2 &ctx, 
     gather_rgb_sse2(ctx.lut, cxxxa_idx);
 
     // (x0-x1) * cxxxa
-    v = _mm_sub_ps(x0, x1);
+    v        = _mm_sub_ps(x0, x1);
     result.r = fmadd_ps_sse2(v, sample_r, result.r);
     result.g = fmadd_ps_sse2(v, sample_g, result.g);
     result.b = fmadd_ps_sse2(v, sample_b, result.b);
@@ -198,7 +201,7 @@ static inline rgbavec_sse2 interp_tetrahedral_sse2(const Lut3DContextSSE2 &ctx, 
     gather_rgb_sse2(ctx.lut, cxxxb_idx);
 
     // (x1-x2) * cxxxb
-    v = _mm_sub_ps(x1, x2);
+    v        = _mm_sub_ps(x1, x2);
     result.r = fmadd_ps_sse2(v, sample_r, result.r);
     result.g = fmadd_ps_sse2(v, sample_g, result.g);
     result.b = fmadd_ps_sse2(v, sample_b, result.b);
@@ -215,8 +218,13 @@ static inline rgbavec_sse2 interp_tetrahedral_sse2(const Lut3DContextSSE2 &ctx, 
     return result;
 }
 
-template<BitDepth inBD, BitDepth outBD>
-static inline void applyTetrahedralSSE2Func(const float *lut3d, int dim, const float *src, float *dst, int total_pixel_count)
+template <BitDepth inBD, BitDepth outBD>
+static inline void applyTetrahedralSSE2Func(
+    const float * lut3d,
+    int dim,
+    const float * src,
+    float * dst,
+    int total_pixel_count)
 {
     typedef typename BitDepthInfo<inBD>::Type InType;
     typedef typename BitDepthInfo<outBD>::Type OutType;
@@ -227,21 +235,21 @@ static inline void applyTetrahedralSSE2Func(const float *lut3d, int dim, const f
 
     Lut3DContextSSE2 ctx;
 
-    float lutmax = (float)dim - 1;
+    float lutmax   = (float)dim - 1;
     __m128 scale_r = _mm_set1_ps(lutmax);
     __m128 scale_g = _mm_set1_ps(lutmax);
     __m128 scale_b = _mm_set1_ps(lutmax);
     __m128 zero    = _mm_setzero_ps();
 
-    ctx.lut      =  lut3d;
+    ctx.lut      = lut3d;
     ctx.lutmax   = _mm_set1_ps(lutmax);
     ctx.lutsize  = _mm_set1_ps((float)dim * 4);
     ctx.lutsize2 = _mm_set1_ps((float)dim * dim * 4);
 
     int pixel_count = total_pixel_count / 4 * 4;
-    int remainder = total_pixel_count - pixel_count;
+    int remainder   = total_pixel_count - pixel_count;
 
-    for (int i = 0; i < pixel_count; i += 4 )
+    for (int i = 0; i < pixel_count; i += 4)
     {
         SSE2RGBAPack<inBD>::Load(src, r, g, b, a);
 
@@ -267,17 +275,18 @@ static inline void applyTetrahedralSSE2Func(const float *lut3d, int dim, const f
     }
 
     // handler leftovers pixels
-    if (remainder) {
+    if (remainder)
+    {
         InType in_buf[16] = {};
         OutType out_buf[16];
 
-        for (int i = 0; i < remainder*4; i+=4)
+        for (int i = 0; i < remainder * 4; i += 4)
         {
             in_buf[i + 0] = src[0];
             in_buf[i + 1] = src[1];
             in_buf[i + 2] = src[2];
             in_buf[i + 3] = src[3];
-            src+=4;
+            src += 4;
         }
 
         SSE2RGBAPack<inBD>::Load(in_buf, r, g, b, a);
@@ -299,23 +308,28 @@ static inline void applyTetrahedralSSE2Func(const float *lut3d, int dim, const f
 
         SSE2RGBAPack<outBD>::Store(out_buf, c.r, c.g, c.b, c.a);
 
-        for (int i = 0; i < remainder*4; i+=4)
+        for (int i = 0; i < remainder * 4; i += 4)
         {
             dst[0] = out_buf[i + 0];
             dst[1] = out_buf[i + 1];
             dst[2] = out_buf[i + 2];
             dst[3] = out_buf[i + 3];
-            dst+=4;
+            dst += 4;
         }
     }
 }
 } // anonymous namespace
 
-void applyTetrahedralSSE2(const float *lut3d, int dim, const float *src, float *dst, int total_pixel_count)
+void applyTetrahedralSSE2(
+    const float * lut3d,
+    int dim,
+    const float * src,
+    float * dst,
+    int total_pixel_count)
 {
     applyTetrahedralSSE2Func<BIT_DEPTH_F32, BIT_DEPTH_F32>(lut3d, dim, src, dst, total_pixel_count);
 }
 
-} // OCIO_NAMESPACE
+} // namespace OCIO_NAMESPACE
 
 #endif // OCIO_USE_SSE2

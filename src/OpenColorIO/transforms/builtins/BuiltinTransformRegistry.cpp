@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <memory>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Mutex.h"
-#include "ops/matrix/MatrixOp.h"
 #include "OpBuilders.h"
 #include "Platform.h"
+#include "ops/matrix/MatrixOp.h"
 #include "transforms/builtins/ACES.h"
 #include "transforms/builtins/AppleCameras.h"
 #include "transforms/builtins/ArriCameras.h"
@@ -21,7 +20,6 @@
 #include "transforms/builtins/SonyCameras.h"
 #include "utils/StringUtils.h"
 
-
 namespace OCIO_NAMESPACE
 {
 
@@ -31,7 +29,7 @@ namespace
 static BuiltinTransformRegistryRcPtr globalRegistry;
 static Mutex globalRegistryMutex;
 
-} // anon.
+} // namespace
 
 ConstBuiltinTransformRegistryRcPtr BuiltinTransformRegistry::Get() noexcept
 {
@@ -46,13 +44,16 @@ ConstBuiltinTransformRegistryRcPtr BuiltinTransformRegistry::Get() noexcept
     return globalRegistry;
 }
 
-void BuiltinTransformRegistryImpl::addBuiltin(const char * style, const char * description, OpCreator creator)
+void BuiltinTransformRegistryImpl::addBuiltin(
+    const char * style,
+    const char * description,
+    OpCreator creator)
 {
-    BuiltinData data{ style, description ? description : "", creator };
+    BuiltinData data{style, description ? description : "", creator};
 
     for (auto & builtin : m_builtins)
     {
-        if (0==Platform::Strcasecmp(data.m_style.c_str(), builtin.m_style.c_str()))
+        if (0 == Platform::Strcasecmp(data.m_style.c_str(), builtin.m_style.c_str()))
         {
             builtin = data;
             return;
@@ -93,7 +94,7 @@ void BuiltinTransformRegistryImpl::createOps(size_t index, OpRcPtrVec & ops) con
     {
         throw Exception("Invalid index.");
     }
-    
+
     m_builtins[index].m_creator(ops);
 }
 
@@ -101,10 +102,8 @@ void BuiltinTransformRegistryImpl::registerAll() noexcept
 {
     m_builtins.clear();
 
-    m_builtins.push_back({"IDENTITY", "", [](OpRcPtrVec & ops) -> void
-                                            {
-                                                CreateIdentityMatrixOp(ops);
-                                            } } );
+    m_builtins.push_back(
+        {"IDENTITY", "", [](OpRcPtrVec & ops) -> void { CreateIdentityMatrixOp(ops); }});
 
     // ACES support.
     ACES::RegisterAll(*this);
@@ -121,7 +120,6 @@ void BuiltinTransformRegistryImpl::registerAll() noexcept
     DISPLAY::RegisterAll(*this);
 }
 
-
 void CreateBuiltinTransformOps(OpRcPtrVec & ops, size_t nameIndex, TransformDirection direction)
 {
     if (nameIndex > BuiltinTransformRegistry::Get()->getNumBuiltins())
@@ -134,22 +132,21 @@ void CreateBuiltinTransformOps(OpRcPtrVec & ops, size_t nameIndex, TransformDire
 
     switch (direction)
     {
-    case TRANSFORM_DIR_FORWARD:
-    {
-        registry->createOps(nameIndex, ops);
-        break;
-    }
-    case TRANSFORM_DIR_INVERSE:
-    {
-        OpRcPtrVec tmp;
-        registry->createOps(nameIndex, tmp);
+        case TRANSFORM_DIR_FORWARD:
+        {
+            registry->createOps(nameIndex, ops);
+            break;
+        }
+        case TRANSFORM_DIR_INVERSE:
+        {
+            OpRcPtrVec tmp;
+            registry->createOps(nameIndex, tmp);
 
-        OpRcPtrVec t = tmp.invert();
-        ops.insert(ops.end(), t.begin(), t.end());
-        break;
-    }
+            OpRcPtrVec t = tmp.invert();
+            ops.insert(ops.end(), t.begin(), t.end());
+            break;
+        }
     }
 }
-
 
 } // namespace OCIO_NAMESPACE

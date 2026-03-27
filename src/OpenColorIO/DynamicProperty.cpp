@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "DynamicProperty.h"
+#include "ops/gradinghuecurve/GradingHueCurve.h"
 #include "ops/gradingprimary/GradingPrimaryOpData.h"
 #include "ops/gradingrgbcurve/GradingRGBCurve.h"
 #include "ops/gradingtone/GradingToneOpData.h"
-#include "ops/gradinghuecurve/GradingHueCurve.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -18,41 +17,47 @@ namespace DynamicPropertyValue
 DynamicPropertyDoubleRcPtr AsDouble(DynamicPropertyRcPtr & prop)
 {
     auto res = OCIO_DYNAMIC_POINTER_CAST<DynamicPropertyDouble>(prop);
-    if (res) return res;
+    if (res)
+        return res;
     throw Exception("Dynamic property value is not a double.");
 }
 DynamicPropertyGradingPrimaryRcPtr AsGradingPrimary(DynamicPropertyRcPtr & prop)
 {
     auto res = OCIO_DYNAMIC_POINTER_CAST<DynamicPropertyGradingPrimary>(prop);
-    if (res) return res;
+    if (res)
+        return res;
     throw Exception("Dynamic property value is not a grading primary.");
 }
 DynamicPropertyGradingRGBCurveRcPtr AsGradingRGBCurve(DynamicPropertyRcPtr & prop)
 {
     auto res = OCIO_DYNAMIC_POINTER_CAST<DynamicPropertyGradingRGBCurve>(prop);
-    if (res) return res;
+    if (res)
+        return res;
     throw Exception("Dynamic property value is not a grading RGB curve.");
 }
 DynamicPropertyGradingHueCurveRcPtr AsGradingHueCurve(DynamicPropertyRcPtr & prop)
 {
     auto res = OCIO_DYNAMIC_POINTER_CAST<DynamicPropertyGradingHueCurve>(prop);
-    if (res) return res;
+    if (res)
+        return res;
     throw Exception("Dynamic property value is not a grading hue curve.");
 }
 DynamicPropertyGradingToneRcPtr AsGradingTone(DynamicPropertyRcPtr & prop)
 {
     auto res = OCIO_DYNAMIC_POINTER_CAST<DynamicPropertyGradingTone>(prop);
-    if (res) return res;
+    if (res)
+        return res;
     throw Exception("Dynamic property value is not a grading tone.");
 }
-}
+} // namespace DynamicPropertyValue
 
-bool operator==(const DynamicProperty &lhs, const DynamicProperty &rhs)
+bool operator==(const DynamicProperty & lhs, const DynamicProperty & rhs)
 {
-    if (lhs.getType() != rhs.getType()) return false;
+    if (lhs.getType() != rhs.getType())
+        return false;
 
-    DynamicPropertyImpl const * plhs = dynamic_cast<DynamicPropertyImpl const*>(&lhs);
-    DynamicPropertyImpl const * prhs = dynamic_cast<DynamicPropertyImpl const*>(&rhs);
+    DynamicPropertyImpl const * plhs = dynamic_cast<DynamicPropertyImpl const *>(&lhs);
+    DynamicPropertyImpl const * prhs = dynamic_cast<DynamicPropertyImpl const *>(&rhs);
     if (plhs && prhs)
     {
         return plhs->equals(*prhs);
@@ -68,7 +73,8 @@ DynamicPropertyImpl::DynamicPropertyImpl(DynamicPropertyType type, bool dynamic)
 
 bool DynamicPropertyImpl::equals(const DynamicPropertyImpl & rhs) const
 {
-    if (this == &rhs) return true;
+    if (this == &rhs)
+        return true;
 
     if (m_isDynamic == rhs.m_isDynamic && m_type == rhs.m_type)
     {
@@ -77,37 +83,38 @@ bool DynamicPropertyImpl::equals(const DynamicPropertyImpl & rhs) const
             // Both not dynamic, same value or not.
             switch (getType())
             {
-            case DYNAMIC_PROPERTY_CONTRAST:
-            case DYNAMIC_PROPERTY_EXPOSURE:
-            case DYNAMIC_PROPERTY_GAMMA:
-            {
-                auto lhst = dynamic_cast<const DynamicPropertyDouble *>(this);
-                auto rhst = dynamic_cast<const DynamicPropertyDouble *>(&rhs);
-                return lhst && rhst && (lhst->getValue() == rhst->getValue());
-            }
-            case DYNAMIC_PROPERTY_GRADING_PRIMARY:
-            {
-                auto lhst = dynamic_cast<const DynamicPropertyGradingPrimary *>(this);
-                auto rhst = dynamic_cast<const DynamicPropertyGradingPrimary *>(&rhs);
-                return lhst && rhst && (lhst->getValue() == rhst->getValue());
-            }
-            case DYNAMIC_PROPERTY_GRADING_RGBCURVE:
-            {
-                auto lhst = dynamic_cast<const DynamicPropertyGradingRGBCurve *>(this);
-                auto rhst = dynamic_cast<const DynamicPropertyGradingRGBCurve *>(&rhs);
-                return lhst && rhst && (*lhst->getValue() == *rhst->getValue());
-            }
-            case DYNAMIC_PROPERTY_GRADING_TONE:
-            {
-                auto lhst = dynamic_cast<const DynamicPropertyGradingTone *>(this);
-                auto rhst = dynamic_cast<const DynamicPropertyGradingTone *>(&rhs);
-                return lhst && rhst && (lhst->getValue() == rhst->getValue());
-            }
-            case DYNAMIC_PROPERTY_GRADING_HUECURVE:
-            {
-                auto lhst = dynamic_cast<const DynamicPropertyGradingHueCurve *>(this);
-                auto rhst = dynamic_cast<const DynamicPropertyGradingHueCurve *>(&rhs);
-                return lhst && rhst && (*lhst->getValue() == *rhst->getValue());}
+                case DYNAMIC_PROPERTY_CONTRAST:
+                case DYNAMIC_PROPERTY_EXPOSURE:
+                case DYNAMIC_PROPERTY_GAMMA:
+                {
+                    auto lhst = dynamic_cast<const DynamicPropertyDouble *>(this);
+                    auto rhst = dynamic_cast<const DynamicPropertyDouble *>(&rhs);
+                    return lhst && rhst && (lhst->getValue() == rhst->getValue());
+                }
+                case DYNAMIC_PROPERTY_GRADING_PRIMARY:
+                {
+                    auto lhst = dynamic_cast<const DynamicPropertyGradingPrimary *>(this);
+                    auto rhst = dynamic_cast<const DynamicPropertyGradingPrimary *>(&rhs);
+                    return lhst && rhst && (lhst->getValue() == rhst->getValue());
+                }
+                case DYNAMIC_PROPERTY_GRADING_RGBCURVE:
+                {
+                    auto lhst = dynamic_cast<const DynamicPropertyGradingRGBCurve *>(this);
+                    auto rhst = dynamic_cast<const DynamicPropertyGradingRGBCurve *>(&rhs);
+                    return lhst && rhst && (*lhst->getValue() == *rhst->getValue());
+                }
+                case DYNAMIC_PROPERTY_GRADING_TONE:
+                {
+                    auto lhst = dynamic_cast<const DynamicPropertyGradingTone *>(this);
+                    auto rhst = dynamic_cast<const DynamicPropertyGradingTone *>(&rhs);
+                    return lhst && rhst && (lhst->getValue() == rhst->getValue());
+                }
+                case DYNAMIC_PROPERTY_GRADING_HUECURVE:
+                {
+                    auto lhst = dynamic_cast<const DynamicPropertyGradingHueCurve *>(this);
+                    auto rhst = dynamic_cast<const DynamicPropertyGradingHueCurve *>(&rhs);
+                    return lhst && rhst && (*lhst->getValue() == *rhst->getValue());
+                }
             }
             // Different values.
             return false;
@@ -124,9 +131,10 @@ bool DynamicPropertyImpl::equals(const DynamicPropertyImpl & rhs) const
     return false;
 }
 
-DynamicPropertyDoubleImpl::DynamicPropertyDoubleImpl(DynamicPropertyType type,
-                                                     double value,
-                                                     bool dynamic)
+DynamicPropertyDoubleImpl::DynamicPropertyDoubleImpl(
+    DynamicPropertyType type,
+    double value,
+    bool dynamic)
     : DynamicPropertyImpl(type, dynamic)
     , m_value(value)
 {
@@ -139,10 +147,11 @@ DynamicPropertyDoubleImplRcPtr DynamicPropertyDoubleImpl::createEditableCopy() c
 
 //========================================================================================
 
-DynamicPropertyGradingPrimaryImpl::DynamicPropertyGradingPrimaryImpl(GradingStyle style,
-                                                                     TransformDirection dir,
-                                                                     const GradingPrimary & value,
-                                                                     bool dynamic)
+DynamicPropertyGradingPrimaryImpl::DynamicPropertyGradingPrimaryImpl(
+    GradingStyle style,
+    TransformDirection dir,
+    const GradingPrimary & value,
+    bool dynamic)
     : DynamicPropertyImpl(DYNAMIC_PROPERTY_GRADING_PRIMARY, dynamic)
     , m_style(style)
     , m_direction(dir)
@@ -151,9 +160,10 @@ DynamicPropertyGradingPrimaryImpl::DynamicPropertyGradingPrimaryImpl(GradingStyl
     m_preRenderValues.update(m_style, m_direction, m_value);
 }
 
-DynamicPropertyGradingPrimaryImpl::DynamicPropertyGradingPrimaryImpl(GradingStyle style,
-                                                                     TransformDirection dir,
-                                                                     const GradingPrimary & value,
+DynamicPropertyGradingPrimaryImpl::DynamicPropertyGradingPrimaryImpl(
+    GradingStyle style,
+    TransformDirection dir,
+    const GradingPrimary & value,
     const GradingPrimaryPreRender & comp,
     bool dynamic)
     : DynamicPropertyImpl(DYNAMIC_PROPERTY_GRADING_PRIMARY, dynamic)
@@ -166,11 +176,12 @@ DynamicPropertyGradingPrimaryImpl::DynamicPropertyGradingPrimaryImpl(GradingStyl
 
 DynamicPropertyGradingPrimaryImplRcPtr DynamicPropertyGradingPrimaryImpl::createEditableCopy() const
 {
-    return std::make_shared<DynamicPropertyGradingPrimaryImpl>(m_style,
-                                                               m_direction,
-                                                               m_value,
-                                                               m_preRenderValues,
-                                                               isDynamic());
+    return std::make_shared<DynamicPropertyGradingPrimaryImpl>(
+        m_style,
+        m_direction,
+        m_value,
+        m_preRenderValues,
+        isDynamic());
 }
 
 void DynamicPropertyGradingPrimaryImpl::setValue(const GradingPrimary & value)
@@ -200,7 +211,8 @@ void DynamicPropertyGradingPrimaryImpl::setDirection(TransformDirection dir) noe
 //========================================================================================
 
 DynamicPropertyGradingRGBCurveImpl::DynamicPropertyGradingRGBCurveImpl(
-    const ConstGradingRGBCurveRcPtr & value, bool dynamic)
+    const ConstGradingRGBCurveRcPtr & value,
+    bool dynamic)
     : DynamicPropertyImpl(DYNAMIC_PROPERTY_GRADING_RGBCURVE, dynamic)
 {
     m_gradingRGBCurve = GradingRGBCurve::Create(value);
@@ -270,22 +282,24 @@ unsigned int DynamicPropertyGradingRGBCurveImpl::GetMaxCoefs()
 void DynamicPropertyGradingRGBCurveImpl::precompute()
 {
     m_knotsCoefs.m_localBypass = false;
-    m_knotsCoefs.m_numCoefs = 0;
-    m_knotsCoefs.m_numKnots = 0;
+    m_knotsCoefs.m_numCoefs    = 0;
+    m_knotsCoefs.m_numKnots    = 0;
 
     // Compute knots and coefficients for each control point and pack all knots and coefs of
     // all curves in one knots array and one coef array, using an offset array to find specific
     // curve data.
-    for (const auto c : { RGB_RED, RGB_GREEN, RGB_BLUE, RGB_MASTER })
+    for (const auto c : {RGB_RED, RGB_GREEN, RGB_BLUE, RGB_MASTER})
     {
         ConstGradingBSplineCurveRcPtr curve = m_gradingRGBCurve->getCurve(c);
         auto curveImpl = dynamic_cast<const GradingBSplineCurveImpl *>(curve.get());
         curveImpl->computeKnotsAndCoefs(m_knotsCoefs, static_cast<int>(c), false);
     }
-    if (m_knotsCoefs.m_numKnots <= 0) m_knotsCoefs.m_localBypass = true;
+    if (m_knotsCoefs.m_numKnots <= 0)
+        m_knotsCoefs.m_localBypass = true;
 }
 
-DynamicPropertyGradingRGBCurveImplRcPtr DynamicPropertyGradingRGBCurveImpl::createEditableCopy() const
+DynamicPropertyGradingRGBCurveImplRcPtr DynamicPropertyGradingRGBCurveImpl::createEditableCopy()
+    const
 {
     auto res = std::make_shared<DynamicPropertyGradingRGBCurveImpl>(getValue(), isDynamic());
     res->m_knotsCoefs = m_knotsCoefs;
@@ -295,7 +309,8 @@ DynamicPropertyGradingRGBCurveImplRcPtr DynamicPropertyGradingRGBCurveImpl::crea
 //========================================================================================
 
 DynamicPropertyGradingHueCurveImpl::DynamicPropertyGradingHueCurveImpl(
-    const ConstGradingHueCurveRcPtr & value, bool dynamic)
+    const ConstGradingHueCurveRcPtr & value,
+    bool dynamic)
     : DynamicPropertyImpl(DYNAMIC_PROPERTY_GRADING_HUECURVE, dynamic)
 {
     m_gradingHueCurve = GradingHueCurve::Create(value);
@@ -365,23 +380,27 @@ unsigned int DynamicPropertyGradingHueCurveImpl::GetMaxCoefs()
 void DynamicPropertyGradingHueCurveImpl::precompute()
 {
     m_knotsCoefs.m_localBypass = false;
-    m_knotsCoefs.m_numCoefs = 0;
-    m_knotsCoefs.m_numKnots = 0;
+    m_knotsCoefs.m_numCoefs    = 0;
+    m_knotsCoefs.m_numKnots    = 0;
 
     // Compute knots and coefficients for each control point and pack all knots and coefs of
     // all curves in one knots array and one coef array, using an offset array to find specific
     // curve data.
-    for (const auto c : { HUE_HUE, HUE_SAT, HUE_LUM, LUM_SAT, SAT_SAT, LUM_LUM, SAT_LUM, HUE_FX })
+    for (const auto c : {HUE_HUE, HUE_SAT, HUE_LUM, LUM_SAT, SAT_SAT, LUM_LUM, SAT_LUM, HUE_FX})
     {
         ConstGradingBSplineCurveRcPtr curve = m_gradingHueCurve->getCurve(c);
         auto curveImpl = dynamic_cast<const GradingBSplineCurveImpl *>(curve.get());
-        curveImpl->computeKnotsAndCoefs(m_knotsCoefs, static_cast<int>(c),
-                                        m_gradingHueCurve->getDrawCurveOnly());
+        curveImpl->computeKnotsAndCoefs(
+            m_knotsCoefs,
+            static_cast<int>(c),
+            m_gradingHueCurve->getDrawCurveOnly());
     }
-    if (m_knotsCoefs.m_numKnots <= 0) m_knotsCoefs.m_localBypass = true;
+    if (m_knotsCoefs.m_numKnots <= 0)
+        m_knotsCoefs.m_localBypass = true;
 }
 
-DynamicPropertyGradingHueCurveImplRcPtr DynamicPropertyGradingHueCurveImpl::createEditableCopy() const
+DynamicPropertyGradingHueCurveImplRcPtr DynamicPropertyGradingHueCurveImpl::createEditableCopy()
+    const
 {
     auto res = std::make_shared<DynamicPropertyGradingHueCurveImpl>(getValue(), isDynamic());
     res->m_knotsCoefs = m_knotsCoefs;
@@ -390,9 +409,10 @@ DynamicPropertyGradingHueCurveImplRcPtr DynamicPropertyGradingHueCurveImpl::crea
 
 //========================================================================================
 
-DynamicPropertyGradingToneImpl::DynamicPropertyGradingToneImpl(const GradingTone & value,
-                                                               GradingStyle style,
-                                                               bool dynamic)
+DynamicPropertyGradingToneImpl::DynamicPropertyGradingToneImpl(
+    const GradingTone & value,
+    GradingStyle style,
+    bool dynamic)
     : DynamicPropertyImpl(DYNAMIC_PROPERTY_GRADING_TONE, dynamic)
     , m_value(value)
     , m_preRenderValues(style)
@@ -400,9 +420,10 @@ DynamicPropertyGradingToneImpl::DynamicPropertyGradingToneImpl(const GradingTone
     m_preRenderValues.update(m_value);
 }
 
-DynamicPropertyGradingToneImpl::DynamicPropertyGradingToneImpl(const GradingTone & value,
-                                                               const GradingTonePreRender & comp,
-                                                               bool dynamic)
+DynamicPropertyGradingToneImpl::DynamicPropertyGradingToneImpl(
+    const GradingTone & value,
+    const GradingTonePreRender & comp,
+    bool dynamic)
     : DynamicPropertyImpl(DYNAMIC_PROPERTY_GRADING_TONE, dynamic)
     , m_value(value)
     , m_preRenderValues(comp)
@@ -411,7 +432,10 @@ DynamicPropertyGradingToneImpl::DynamicPropertyGradingToneImpl(const GradingTone
 
 DynamicPropertyGradingToneImplRcPtr DynamicPropertyGradingToneImpl::createEditableCopy() const
 {
-    return std::make_shared<DynamicPropertyGradingToneImpl>(m_value, m_preRenderValues, isDynamic());
+    return std::make_shared<DynamicPropertyGradingToneImpl>(
+        m_value,
+        m_preRenderValues,
+        isDynamic());
 }
 
 void DynamicPropertyGradingToneImpl::setValue(const GradingTone & value)

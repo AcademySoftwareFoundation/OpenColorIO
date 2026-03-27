@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <iostream>
 #include <cstring>
+#include <iostream>
 #include <map>
 #include <mutex>
 #include <sstream>
@@ -37,8 +37,9 @@ void splitActiveList(const char * list, StringUtils::StringVec & result)
     }
 }
 
-void mergeStringsWithoutDuplicates(StringUtils::StringVec & inputVec,
-                                   StringUtils::StringVec & mergedVec)
+void mergeStringsWithoutDuplicates(
+    StringUtils::StringVec & inputVec,
+    StringUtils::StringVec & mergedVec)
 {
     // Note that Contain requires a full exact match, not a partial match.
     // Hence it's important that the items in mergedVec be trimmed as well.
@@ -57,7 +58,7 @@ void mergeStringsWithoutDuplicates(StringUtils::StringVec & inputVec,
     }
 }
 
-} // anon.
+} // namespace
 
 void SectionMerger::notify(std::string s, bool mustThrow) const
 {
@@ -83,11 +84,12 @@ void SectionMerger::notify(std::string s, bool mustThrow) const
 namespace
 {
 
-void setMergedConfigVersion(ConfigRcPtr & config,
-                            unsigned int inputMajor,
-                            unsigned int inputMinor,
-                            unsigned int baseMajor,
-                            unsigned int baseMinor)
+void setMergedConfigVersion(
+    ConfigRcPtr & config,
+    unsigned int inputMajor,
+    unsigned int inputMinor,
+    unsigned int baseMajor,
+    unsigned int baseMinor)
 {
     unsigned int major = baseMajor;
     unsigned int minor = baseMinor;
@@ -112,8 +114,7 @@ void setMergedConfigVersion(ConfigRcPtr & config,
     config->setVersion(major, minor);
 }
 
-} // anon.
-
+} // namespace
 
 void GeneralMerger::handlePreferInput()
 {
@@ -144,11 +145,12 @@ void GeneralMerger::handlePreferInput()
     }
 
     // Use the higher value for ocio_profile_version.
-    setMergedConfigVersion(m_mergedConfig,
-                           m_inputConfig->getMajorVersion(),
-                           m_inputConfig->getMinorVersion(),
-                           m_baseConfig->getMajorVersion(),
-                           m_baseConfig->getMinorVersion());
+    setMergedConfigVersion(
+        m_mergedConfig,
+        m_inputConfig->getMajorVersion(),
+        m_inputConfig->getMinorVersion(),
+        m_baseConfig->getMajorVersion(),
+        m_baseConfig->getMinorVersion());
 
     double rgb[3];
     m_inputConfig->getDefaultLumaCoefs(rgb);
@@ -184,11 +186,12 @@ void GeneralMerger::handlePreferBase()
     }
 
     // Use the higher value for ocio_profile_version.
-    setMergedConfigVersion(m_mergedConfig,
-                           m_inputConfig->getMajorVersion(),
-                           m_inputConfig->getMinorVersion(),
-                           m_baseConfig->getMajorVersion(),
-                           m_baseConfig->getMinorVersion());
+    setMergedConfigVersion(
+        m_mergedConfig,
+        m_inputConfig->getMajorVersion(),
+        m_inputConfig->getMinorVersion(),
+        m_baseConfig->getMajorVersion(),
+        m_baseConfig->getMinorVersion());
 
     double rgb[3];
     m_baseConfig->getDefaultLumaCoefs(rgb);
@@ -225,11 +228,12 @@ void GeneralMerger::handleInputOnly()
     // Note that the default strategy is used for the GeneralMerger but other strategies
     // may be used for other sections of the config and so always use the higher of the
     // two config versions.
-    setMergedConfigVersion(m_mergedConfig,
-                           m_inputConfig->getMajorVersion(),
-                           m_inputConfig->getMinorVersion(),
-                           m_baseConfig->getMajorVersion(),
-                           m_baseConfig->getMinorVersion());
+    setMergedConfigVersion(
+        m_mergedConfig,
+        m_inputConfig->getMajorVersion(),
+        m_inputConfig->getMinorVersion(),
+        m_baseConfig->getMajorVersion(),
+        m_baseConfig->getMinorVersion());
 
     double rgb[3];
     m_inputConfig->getDefaultLumaCoefs(rgb);
@@ -266,11 +270,12 @@ void GeneralMerger::handleBaseOnly()
     // Note that the default strategy is used for the GeneralMerger but other strategies
     // may be used for other sections of the config and so always use the higher of the
     // two config versions.
-    setMergedConfigVersion(m_mergedConfig,
-                           m_inputConfig->getMajorVersion(),
-                           m_inputConfig->getMinorVersion(),
-                           m_baseConfig->getMajorVersion(),
-                           m_baseConfig->getMinorVersion());
+    setMergedConfigVersion(
+        m_mergedConfig,
+        m_inputConfig->getMajorVersion(),
+        m_inputConfig->getMinorVersion(),
+        m_baseConfig->getMajorVersion(),
+        m_baseConfig->getMinorVersion());
 
     double rgb[3];
     m_baseConfig->getDefaultLumaCoefs(rgb);
@@ -286,7 +291,7 @@ void RolesMerger::mergeInputRoles()
     // Insert roles from input config.
     for (int i = 0; i < m_inputConfig->getNumRoles(); i++)
     {
-        const char * name = m_inputConfig->getRoleName(i);
+        const char * name               = m_inputConfig->getRoleName(i);
         const char * roleColorSpaceName = m_inputConfig->getRoleColorSpace(name);
 
         if (m_mergedConfig->hasRole(name))
@@ -299,7 +304,7 @@ void RolesMerger::mergeInputRoles()
             {
                 // The color spaces are different. Replace based on the strategy.
                 if (strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_INPUT
-                 || strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_INPUT_ONLY)
+                    || strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_INPUT_ONLY)
                 {
                     m_mergedConfig->setRole(name, roleColorSpaceName);
                 }
@@ -324,12 +329,14 @@ void RolesMerger::mergeInputRoles()
             std::ostringstream os;
             if (Platform::Strcasecmp(existingCS->getName(), name) == 0)
             {
-                os << "The Input config contains a role '" << name << "' that would override Base config color space '";
+                os << "The Input config contains a role '" << name
+                   << "' that would override Base config color space '";
                 os << existingCS->getName() << "'.";
             }
             else if (existingCS->hasAlias(name))
             {
-                os << "The Input config contains a role '" << name << "' that would override an alias of Base config color space '";
+                os << "The Input config contains a role '" << name
+                   << "' that would override an alias of Base config color space '";
                 os << existingCS->getName() << "'.";
             }
             else // (Should never happen.)
@@ -351,12 +358,14 @@ void RolesMerger::mergeInputRoles()
             std::ostringstream os;
             if (Platform::Strcasecmp(existingNT->getName(), name) == 0)
             {
-                os << "The Input config contains a role '" << name << "' that would override Base config named transform: '";
+                os << "The Input config contains a role '" << name
+                   << "' that would override Base config named transform: '";
                 os << existingNT->getName() << "'.";
             }
             else if (existingNT->hasAlias(name))
             {
-                os << "The Input config contains a role '" << name << "' that would override an alias of Base config named transform: '";
+                os << "The Input config contains a role '" << name
+                   << "' that would override an alias of Base config named transform: '";
                 os << existingNT->getName() << "'.";
             }
             else // (Should never happen.)
@@ -422,19 +431,20 @@ void RolesMerger::handleRemove()
 namespace
 {
 
-bool fileRulesAreEqual(const ConstFileRulesRcPtr & f1,
-                       size_t f1Idx,
-                       const ConstFileRulesRcPtr & f2,
-                       size_t f2Idx)
+bool fileRulesAreEqual(
+    const ConstFileRulesRcPtr & f1,
+    size_t f1Idx,
+    const ConstFileRulesRcPtr & f2,
+    size_t f2Idx)
 {
     // NB: No need to compare the name of the rules, that should be done in the caller.
 
     // Compare color space name, pattern, extension, and regex strings.
 
-    if (Platform::Strcasecmp(f1->getColorSpace(f1Idx), f2->getColorSpace(f2Idx)) != 0 ||
-        Platform::Strcasecmp(f1->getPattern(f1Idx), f2->getPattern(f2Idx)) != 0 ||
-        Platform::Strcasecmp(f1->getRegex(f1Idx), f2->getRegex(f2Idx)) != 0 ||
-        Platform::Strcasecmp(f1->getExtension(f1Idx), f2->getExtension(f2Idx)) != 0)
+    if (Platform::Strcasecmp(f1->getColorSpace(f1Idx), f2->getColorSpace(f2Idx)) != 0
+        || Platform::Strcasecmp(f1->getPattern(f1Idx), f2->getPattern(f2Idx)) != 0
+        || Platform::Strcasecmp(f1->getRegex(f1Idx), f2->getRegex(f2Idx)) != 0
+        || Platform::Strcasecmp(f1->getExtension(f1Idx), f2->getExtension(f2Idx)) != 0)
     {
         return false;
     }
@@ -460,8 +470,10 @@ bool fileRulesAreEqual(const ConstFileRulesRcPtr & f1,
         }
         else
         {
-            if (Platform::Strcasecmp(f1CustomKeys.getValueForKey(f2->getCustomKeyName(f2Idx, m)),
-                                     f2->getCustomKeyValue(f2Idx, m)) != 0)
+            if (Platform::Strcasecmp(
+                    f1CustomKeys.getValueForKey(f2->getCustomKeyName(f2Idx, m)),
+                    f2->getCustomKeyValue(f2Idx, m))
+                != 0)
             {
                 return false;
             }
@@ -471,10 +483,11 @@ bool fileRulesAreEqual(const ConstFileRulesRcPtr & f1,
     return true;
 }
 
-void copyRule(const ConstFileRulesRcPtr & input,   // rule source
-              size_t inputRuleIdx,                 // rule source index
-              FileRulesRcPtr & merged,             // rule dest
-              size_t mergedRuleIdx)                // rule dest index
+void copyRule(
+    const ConstFileRulesRcPtr & input, // rule source
+    size_t inputRuleIdx,               // rule source index
+    FileRulesRcPtr & merged,           // rule dest
+    size_t mergedRuleIdx)              // rule dest index
 {
     // Handle case where the rule is ColorSpaceNamePathSearch.
 
@@ -491,37 +504,37 @@ void copyRule(const ConstFileRulesRcPtr & input,   // rule source
     if (!regex || !*regex)
     {
         // The regex is empty --> handle it as a pattern & extension type rule.
-        const char * pattern = input->getPattern(inputRuleIdx);
+        const char * pattern   = input->getPattern(inputRuleIdx);
         const char * extension = input->getExtension(inputRuleIdx);
-        merged->insertRule(mergedRuleIdx,
-                           name,
-                           input->getColorSpace(inputRuleIdx),
-                           (!pattern || !*pattern) ? "*" : pattern,
-                           (!extension || !*extension) ? "*" : extension);
+        merged->insertRule(
+            mergedRuleIdx,
+            name,
+            input->getColorSpace(inputRuleIdx),
+            (!pattern || !*pattern) ? "*" : pattern,
+            (!extension || !*extension) ? "*" : extension);
     }
     else
     {
         // Handle it as a regex type rule.
-        merged->insertRule(mergedRuleIdx,
-                           name,
-                           input->getColorSpace(inputRuleIdx),
-                           regex);
+        merged->insertRule(mergedRuleIdx, name, input->getColorSpace(inputRuleIdx), regex);
     }
 
     // Copy over any custom keys.
 
     for (size_t k = 0; k < input->getNumCustomKeys(inputRuleIdx); k++)
     {
-        merged->setCustomKey(mergedRuleIdx,
-                             input->getCustomKeyName(inputRuleIdx, k),
-                             input->getCustomKeyValue(inputRuleIdx, k));
+        merged->setCustomKey(
+            mergedRuleIdx,
+            input->getCustomKeyName(inputRuleIdx, k),
+            input->getCustomKeyValue(inputRuleIdx, k));
     }
 }
 
-} // anon.
+} // namespace
 
-void FileRulesMerger::addRulesIfNotPresent(const ConstFileRulesRcPtr & input,
-                                           FileRulesRcPtr & merged) const
+void FileRulesMerger::addRulesIfNotPresent(
+    const ConstFileRulesRcPtr & input,
+    FileRulesRcPtr & merged) const
 {
     for (size_t inputRuleIdx = 0; inputRuleIdx < input->getNumEntries(); inputRuleIdx++)
     {
@@ -548,7 +561,7 @@ void FileRulesMerger::addRulesIfNotPresent(const ConstFileRulesRcPtr & input,
                 throw Exception(os.str().c_str());
             }
         }
-        catch(const Exception & e)
+        catch (const Exception & e)
         {
             if (hasConflict)
             {
@@ -558,15 +571,17 @@ void FileRulesMerger::addRulesIfNotPresent(const ConstFileRulesRcPtr & input,
             else
             {
                 // File rule does not exist, add it in the penultimate positon, before the default.
-                // (Note that a default rule is always present, so will never get here in that case.)
+                // (Note that a default rule is always present, so will never get here in that
+                // case.)
                 copyRule(input, inputRuleIdx, merged, merged->getNumEntries() - 1);
             }
         }
     }
 }
 
-void FileRulesMerger::addRulesAndOverwrite(const ConstFileRulesRcPtr & input,
-                                           FileRulesRcPtr & merged) const
+void FileRulesMerger::addRulesAndOverwrite(
+    const ConstFileRulesRcPtr & input,
+    FileRulesRcPtr & merged) const
 {
     for (size_t inputRuleIdx = 0; inputRuleIdx < input->getNumEntries(); inputRuleIdx++)
     {
@@ -599,7 +614,7 @@ void FileRulesMerger::addRulesAndOverwrite(const ConstFileRulesRcPtr & input,
                 throw Exception(os.str().c_str());
             }
         }
-        catch(const Exception & e)
+        catch (const Exception & e)
         {
             if (hasConflict)
             {
@@ -608,7 +623,8 @@ void FileRulesMerger::addRulesAndOverwrite(const ConstFileRulesRcPtr & input,
             else
             {
                 // File rule does not exist, add it in the penultimate positon, before the default.
-                // (Note that a default rule is always present, so will never get here in that case.)
+                // (Note that a default rule is always present, so will never get here in that
+                // case.)
                 copyRule(input, inputRuleIdx, merged, merged->getNumEntries() - 1);
             }
         }
@@ -617,7 +633,7 @@ void FileRulesMerger::addRulesAndOverwrite(const ConstFileRulesRcPtr & input,
 
 void FileRulesMerger::handlePreferInput()
 {
-    ConstFileRulesRcPtr baseFr = m_baseConfig->getFileRules();
+    ConstFileRulesRcPtr baseFr  = m_baseConfig->getFileRules();
     ConstFileRulesRcPtr inputFr = m_inputConfig->getFileRules();
 
     // Handle strictparsing.
@@ -647,7 +663,7 @@ void FileRulesMerger::handlePreferInput()
 
 void FileRulesMerger::handlePreferBase()
 {
-    ConstFileRulesRcPtr baseFr = m_baseConfig->getFileRules();
+    ConstFileRulesRcPtr baseFr  = m_baseConfig->getFileRules();
     ConstFileRulesRcPtr inputFr = m_inputConfig->getFileRules();
 
     // Handle strictparsing.
@@ -691,7 +707,7 @@ void FileRulesMerger::handleBaseOnly()
 
 void FileRulesMerger::handleRemove()
 {
-    ConstFileRulesRcPtr inputFr = m_inputConfig->getFileRules();
+    ConstFileRulesRcPtr inputFr    = m_inputConfig->getFileRules();
     FileRulesRcPtr mergedFileRules = m_baseConfig->getFileRules()->createEditableCopy();
 
     for (size_t f = 0; f < inputFr->getNumEntries(); f++)
@@ -713,7 +729,7 @@ void FileRulesMerger::handleRemove()
             // Remove the rule (regardless of whether the content matches the base config).
             mergedFileRules->removeRule(idx);
         }
-        catch(...)
+        catch (...)
         {
             // Do nothing if it is not present.
         }
@@ -728,10 +744,11 @@ void FileRulesMerger::handleRemove()
 namespace
 {
 
-bool viewingRulesAreEqual(const ConstViewingRulesRcPtr & r1,
-                          size_t r1Idx,
-                          const ConstViewingRulesRcPtr & r2,
-                          size_t r2Idx)
+bool viewingRulesAreEqual(
+    const ConstViewingRulesRcPtr & r1,
+    size_t r1Idx,
+    const ConstViewingRulesRcPtr & r2,
+    size_t r2Idx)
 {
     // NB: No need to compare the name of the rules, that should be done in the caller.
 
@@ -771,7 +788,7 @@ bool viewingRulesAreEqual(const ConstViewingRulesRcPtr & r1,
 
     for (size_t m = 0; m < r2->getNumEncodings(r2Idx); m++)
     {
-        if(!r1Encodings.hasToken(r2->getEncoding(r2Idx, m)))
+        if (!r1Encodings.hasToken(r2->getEncoding(r2Idx, m)))
         {
             return false;
         }
@@ -798,8 +815,10 @@ bool viewingRulesAreEqual(const ConstViewingRulesRcPtr & r1,
         }
         else
         {
-            if (Platform::Strcasecmp(r1CustomKeys.getValueForKey(r2->getCustomKeyName(r2Idx, m)),
-                                     r2->getCustomKeyValue(r2Idx, m)) != 0)
+            if (Platform::Strcasecmp(
+                    r1CustomKeys.getValueForKey(r2->getCustomKeyName(r2Idx, m)),
+                    r2->getCustomKeyValue(r2Idx, m))
+                != 0)
             {
                 return false;
             }
@@ -809,10 +828,11 @@ bool viewingRulesAreEqual(const ConstViewingRulesRcPtr & r1,
     return true;
 }
 
-void copyViewingRule(const ConstViewingRulesRcPtr & src,
-                     size_t srcIdx,
-                     size_t dstIdx,
-                     ViewingRulesRcPtr & rules)
+void copyViewingRule(
+    const ConstViewingRulesRcPtr & src,
+    size_t srcIdx,
+    size_t dstIdx,
+    ViewingRulesRcPtr & rules)
 {
     try
     {
@@ -830,18 +850,20 @@ void copyViewingRule(const ConstViewingRulesRcPtr & src,
 
         for (int l = 0; l < static_cast<int>(src->getNumCustomKeys(srcIdx)); l++)
         {
-            rules->setCustomKey(dstIdx, src->getCustomKeyName(srcIdx, l), src->getCustomKeyValue(srcIdx, l));
+            rules->setCustomKey(
+                dstIdx,
+                src->getCustomKeyName(srcIdx, l),
+                src->getCustomKeyValue(srcIdx, l));
         }
     }
-    catch(...)
+    catch (...)
     {
         // Don't add it if any errors.
         // Continue.
     }
 }
 
-void addUniqueViewingRules(const ConstViewingRulesRcPtr & rules,
-                           ViewingRulesRcPtr & mergedRules)
+void addUniqueViewingRules(const ConstViewingRulesRcPtr & rules, ViewingRulesRcPtr & mergedRules)
 {
     for (size_t i = 0; i < rules->getNumEntries(); i++)
     {
@@ -851,7 +873,7 @@ void addUniqueViewingRules(const ConstViewingRulesRcPtr & rules,
         {
             mergedRules->getIndexForRule(name);
         }
-        catch(...)
+        catch (...)
         {
             // Rule does not exist in merged rules.
             // Add it.
@@ -860,7 +882,7 @@ void addUniqueViewingRules(const ConstViewingRulesRcPtr & rules,
     }
 }
 
-} // anon.
+} // namespace
 
 void DisplayViewMerger::addUniqueDisplays(const ConstConfigRcPtr & cfg)
 {
@@ -882,13 +904,14 @@ void DisplayViewMerger::addUniqueDisplays(const ConstConfigRcPtr & cfg)
             if (displayDefinedView && *displayDefinedView && !dispDefinedExists)
             {
                 // (Note this works for either the new or old style of view.)
-                m_mergedConfig->addDisplayView(dispName,
-                                               displayDefinedView,
-                                               cfg->getDisplayViewTransformName(dispName, displayDefinedView),
-                                               cfg->getDisplayViewColorSpaceName(dispName, displayDefinedView),
-                                               cfg->getDisplayViewLooks(dispName, displayDefinedView),
-                                               cfg->getDisplayViewRule(dispName, displayDefinedView),
-                                               cfg->getDisplayViewDescription(dispName, displayDefinedView));
+                m_mergedConfig->addDisplayView(
+                    dispName,
+                    displayDefinedView,
+                    cfg->getDisplayViewTransformName(dispName, displayDefinedView),
+                    cfg->getDisplayViewColorSpaceName(dispName, displayDefinedView),
+                    cfg->getDisplayViewLooks(dispName, displayDefinedView),
+                    cfg->getDisplayViewRule(dispName, displayDefinedView),
+                    cfg->getDisplayViewDescription(dispName, displayDefinedView));
             }
         }
 
@@ -913,15 +936,16 @@ void DisplayViewMerger::addUniqueVirtualViews(const ConstConfigRcPtr & cfg)
     for (int v = 0; v < cfg->getVirtualDisplayNumViews(VIEW_DISPLAY_DEFINED); v++)
     {
         const char * displayDefinedView = cfg->getVirtualDisplayView(VIEW_DISPLAY_DEFINED, v);
-        const bool dispDefinedExists = m_mergedConfig->hasVirtualView(displayDefinedView);
+        const bool dispDefinedExists    = m_mergedConfig->hasVirtualView(displayDefinedView);
         if (displayDefinedView && *displayDefinedView && !dispDefinedExists)
         {
-            m_mergedConfig->addVirtualDisplayView(displayDefinedView,
-                                                  cfg->getVirtualDisplayViewTransformName(displayDefinedView),
-                                                  cfg->getVirtualDisplayViewColorSpaceName(displayDefinedView),
-                                                  cfg->getVirtualDisplayViewLooks(displayDefinedView),
-                                                  cfg->getVirtualDisplayViewRule(displayDefinedView),
-                                                  cfg->getVirtualDisplayViewDescription(displayDefinedView));
+            m_mergedConfig->addVirtualDisplayView(
+                displayDefinedView,
+                cfg->getVirtualDisplayViewTransformName(displayDefinedView),
+                cfg->getVirtualDisplayViewColorSpaceName(displayDefinedView),
+                cfg->getVirtualDisplayViewLooks(displayDefinedView),
+                cfg->getVirtualDisplayViewRule(displayDefinedView),
+                cfg->getVirtualDisplayViewDescription(displayDefinedView));
         }
     }
 
@@ -937,9 +961,10 @@ void DisplayViewMerger::addUniqueVirtualViews(const ConstConfigRcPtr & cfg)
     }
 }
 
-void DisplayViewMerger::processDisplays(const ConstConfigRcPtr & first,
-                                        const ConstConfigRcPtr & second,
-                                        bool preferSecond)
+void DisplayViewMerger::processDisplays(
+    const ConstConfigRcPtr & first,
+    const ConstConfigRcPtr & second,
+    bool preferSecond)
 {
     // Iterate over the first config's displays.
 
@@ -960,12 +985,14 @@ void DisplayViewMerger::processDisplays(const ConstConfigRcPtr & first,
                 // This check will return true if it exists in either form.
                 const bool existsInSecond = second->hasView(dispName, displayDefinedView);
 
-                if (existsInSecond && !Config::AreViewsEqual(first, second, dispName, displayDefinedView))
+                if (existsInSecond
+                    && !Config::AreViewsEqual(first, second, dispName, displayDefinedView))
                 {
                     // Throw or log on conflict.
                     std::ostringstream os;
                     os << "The Input config contains a value that would override ";
-                    os << "the Base config: display: " << dispName << ", view: " << displayDefinedView;
+                    os << "the Base config: display: " << dispName
+                       << ", view: " << displayDefinedView;
                     notify(os.str(), m_params->isErrorOnConflict());
                 }
 
@@ -984,26 +1011,28 @@ void DisplayViewMerger::processDisplays(const ConstConfigRcPtr & first,
                     }
                     else
                     {
-                        m_mergedConfig->addDisplayView(dispName,
-                                                       displayDefinedView,
-                                                       second->getDisplayViewTransformName(dispName, displayDefinedView),
-                                                       second->getDisplayViewColorSpaceName(dispName, displayDefinedView),
-                                                       second->getDisplayViewLooks(dispName, displayDefinedView),
-                                                       second->getDisplayViewRule(dispName, displayDefinedView),
-                                                       second->getDisplayViewDescription(dispName, displayDefinedView));
+                        m_mergedConfig->addDisplayView(
+                            dispName,
+                            displayDefinedView,
+                            second->getDisplayViewTransformName(dispName, displayDefinedView),
+                            second->getDisplayViewColorSpaceName(dispName, displayDefinedView),
+                            second->getDisplayViewLooks(dispName, displayDefinedView),
+                            second->getDisplayViewRule(dispName, displayDefinedView),
+                            second->getDisplayViewDescription(dispName, displayDefinedView));
                     }
                 }
                 else
                 {
                     // Take the view from the first config (where it is display-defined).
                     // (Note this works for either the new or old style of view.)
-                    m_mergedConfig->addDisplayView(dispName,
-                                                   displayDefinedView,
-                                                   first->getDisplayViewTransformName(dispName, displayDefinedView),
-                                                   first->getDisplayViewColorSpaceName(dispName, displayDefinedView),
-                                                   first->getDisplayViewLooks(dispName, displayDefinedView),
-                                                   first->getDisplayViewRule(dispName, displayDefinedView),
-                                                   first->getDisplayViewDescription(dispName, displayDefinedView));
+                    m_mergedConfig->addDisplayView(
+                        dispName,
+                        displayDefinedView,
+                        first->getDisplayViewTransformName(dispName, displayDefinedView),
+                        first->getDisplayViewColorSpaceName(dispName, displayDefinedView),
+                        first->getDisplayViewLooks(dispName, displayDefinedView),
+                        first->getDisplayViewRule(dispName, displayDefinedView),
+                        first->getDisplayViewDescription(dispName, displayDefinedView));
                 }
             }
         }
@@ -1033,16 +1062,18 @@ void DisplayViewMerger::processDisplays(const ConstConfigRcPtr & first,
                             // Throw or log on conflict.
                             std::ostringstream os;
                             os << "The Input config contains a value that would override ";
-                            os << "the Base config: display: " << dispName << ", view: " << sharedViewName;
+                            os << "the Base config: display: " << dispName
+                               << ", view: " << sharedViewName;
                             notify(os.str(), m_params->isErrorOnConflict());
                         }
-                        m_mergedConfig->addDisplayView(dispName,
-                                                       sharedViewName,
-                                                       second->getDisplayViewTransformName(dispName, sharedViewName),
-                                                       second->getDisplayViewColorSpaceName(dispName, sharedViewName),
-                                                       second->getDisplayViewLooks(dispName, sharedViewName),
-                                                       second->getDisplayViewRule(dispName, sharedViewName),
-                                                       second->getDisplayViewDescription(dispName, sharedViewName));
+                        m_mergedConfig->addDisplayView(
+                            dispName,
+                            sharedViewName,
+                            second->getDisplayViewTransformName(dispName, sharedViewName),
+                            second->getDisplayViewColorSpaceName(dispName, sharedViewName),
+                            second->getDisplayViewLooks(dispName, sharedViewName),
+                            second->getDisplayViewRule(dispName, sharedViewName),
+                            second->getDisplayViewDescription(dispName, sharedViewName));
                     }
                 }
                 else
@@ -1061,9 +1092,10 @@ void DisplayViewMerger::processDisplays(const ConstConfigRcPtr & first,
     addUniqueDisplays(second);
 }
 
-void DisplayViewMerger::processVirtualDisplay(const ConstConfigRcPtr & first,
-                                              const ConstConfigRcPtr & second,
-                                              bool preferSecond)
+void DisplayViewMerger::processVirtualDisplay(
+    const ConstConfigRcPtr & first,
+    const ConstConfigRcPtr & second,
+    bool preferSecond)
 {
     for (int v = 0; v < first->getVirtualDisplayNumViews(VIEW_DISPLAY_DEFINED); v++)
     {
@@ -1096,24 +1128,26 @@ void DisplayViewMerger::processVirtualDisplay(const ConstConfigRcPtr & first,
                 }
                 else
                 {
-                    m_mergedConfig->addVirtualDisplayView(displayDefinedView,
-                                                          second->getVirtualDisplayViewTransformName(displayDefinedView),
-                                                          second->getVirtualDisplayViewColorSpaceName(displayDefinedView),
-                                                          second->getVirtualDisplayViewLooks(displayDefinedView),
-                                                          second->getVirtualDisplayViewRule(displayDefinedView),
-                                                          second->getVirtualDisplayViewDescription(displayDefinedView));
+                    m_mergedConfig->addVirtualDisplayView(
+                        displayDefinedView,
+                        second->getVirtualDisplayViewTransformName(displayDefinedView),
+                        second->getVirtualDisplayViewColorSpaceName(displayDefinedView),
+                        second->getVirtualDisplayViewLooks(displayDefinedView),
+                        second->getVirtualDisplayViewRule(displayDefinedView),
+                        second->getVirtualDisplayViewDescription(displayDefinedView));
                 }
             }
             else
             {
                 // Take the view from the first config (where it is display-defined).
                 // (Note this works for either the new or old style of view.)
-                m_mergedConfig->addVirtualDisplayView(displayDefinedView,
-                                                      first->getVirtualDisplayViewTransformName(displayDefinedView),
-                                                      first->getVirtualDisplayViewColorSpaceName(displayDefinedView),
-                                                      first->getVirtualDisplayViewLooks(displayDefinedView),
-                                                      first->getVirtualDisplayViewRule(displayDefinedView),
-                                                      first->getVirtualDisplayViewDescription(displayDefinedView));
+                m_mergedConfig->addVirtualDisplayView(
+                    displayDefinedView,
+                    first->getVirtualDisplayViewTransformName(displayDefinedView),
+                    first->getVirtualDisplayViewColorSpaceName(displayDefinedView),
+                    first->getVirtualDisplayViewLooks(displayDefinedView),
+                    first->getVirtualDisplayViewRule(displayDefinedView),
+                    first->getVirtualDisplayViewDescription(displayDefinedView));
             }
         }
     }
@@ -1146,12 +1180,13 @@ void DisplayViewMerger::processVirtualDisplay(const ConstConfigRcPtr & first,
                         os << "the Base config: virtual_display: " << sharedViewName;
                         notify(os.str(), m_params->isErrorOnConflict());
                     }
-                    m_mergedConfig->addVirtualDisplayView(sharedViewName,
-                                                          second->getVirtualDisplayViewTransformName(sharedViewName),
-                                                          second->getVirtualDisplayViewColorSpaceName(sharedViewName),
-                                                          second->getVirtualDisplayViewLooks(sharedViewName),
-                                                          second->getVirtualDisplayViewRule(sharedViewName),
-                                                          second->getVirtualDisplayViewDescription(sharedViewName));
+                    m_mergedConfig->addVirtualDisplayView(
+                        sharedViewName,
+                        second->getVirtualDisplayViewTransformName(sharedViewName),
+                        second->getVirtualDisplayViewColorSpaceName(sharedViewName),
+                        second->getVirtualDisplayViewLooks(sharedViewName),
+                        second->getVirtualDisplayViewRule(sharedViewName),
+                        second->getVirtualDisplayViewDescription(sharedViewName));
                 }
             }
             else
@@ -1181,19 +1216,21 @@ void DisplayViewMerger::addUniqueSharedViews(const ConstConfigRcPtr & cfg)
 
         if (sharedViewName && *sharedViewName && !sharedViewExists)
         {
-            m_mergedConfig->addSharedView(sharedViewName,
-                                          cfg->getDisplayViewTransformName(nullptr, sharedViewName),
-                                          cfg->getDisplayViewColorSpaceName(nullptr, sharedViewName),
-                                          cfg->getDisplayViewLooks(nullptr, sharedViewName),
-                                          cfg->getDisplayViewRule(nullptr, sharedViewName),
-                                          cfg->getDisplayViewDescription(nullptr, sharedViewName));
+            m_mergedConfig->addSharedView(
+                sharedViewName,
+                cfg->getDisplayViewTransformName(nullptr, sharedViewName),
+                cfg->getDisplayViewColorSpaceName(nullptr, sharedViewName),
+                cfg->getDisplayViewLooks(nullptr, sharedViewName),
+                cfg->getDisplayViewRule(nullptr, sharedViewName),
+                cfg->getDisplayViewDescription(nullptr, sharedViewName));
         }
     }
 }
 
-void DisplayViewMerger::processSharedViews(const ConstConfigRcPtr & first,
-                                           const ConstConfigRcPtr & second,
-                                           bool preferSecond)
+void DisplayViewMerger::processSharedViews(
+    const ConstConfigRcPtr & first,
+    const ConstConfigRcPtr & second,
+    bool preferSecond)
 {
     // Iterate over all shared views in the first config.
     for (int v = 0; v < first->getNumViews(VIEW_SHARED, nullptr); v++)
@@ -1218,22 +1255,24 @@ void DisplayViewMerger::processSharedViews(const ConstConfigRcPtr & first,
             {
                 // Take the shared view from the second config.
                 // (Note this works for either the new or old style of view.)
-                m_mergedConfig->addSharedView(sharedViewName,
-                                              second->getDisplayViewTransformName(nullptr, sharedViewName),
-                                              second->getDisplayViewColorSpaceName(nullptr, sharedViewName),
-                                              second->getDisplayViewLooks(nullptr, sharedViewName),
-                                              second->getDisplayViewRule(nullptr, sharedViewName),
-                                              second->getDisplayViewDescription(nullptr, sharedViewName));
+                m_mergedConfig->addSharedView(
+                    sharedViewName,
+                    second->getDisplayViewTransformName(nullptr, sharedViewName),
+                    second->getDisplayViewColorSpaceName(nullptr, sharedViewName),
+                    second->getDisplayViewLooks(nullptr, sharedViewName),
+                    second->getDisplayViewRule(nullptr, sharedViewName),
+                    second->getDisplayViewDescription(nullptr, sharedViewName));
             }
             else
             {
                 // Take the shared view from the first config.
-                m_mergedConfig->addSharedView(sharedViewName,
-                                              first->getDisplayViewTransformName(nullptr, sharedViewName),
-                                              first->getDisplayViewColorSpaceName(nullptr, sharedViewName),
-                                              first->getDisplayViewLooks(nullptr, sharedViewName),
-                                              first->getDisplayViewRule(nullptr, sharedViewName),
-                                              first->getDisplayViewDescription(nullptr, sharedViewName));
+                m_mergedConfig->addSharedView(
+                    sharedViewName,
+                    first->getDisplayViewTransformName(nullptr, sharedViewName),
+                    first->getDisplayViewColorSpaceName(nullptr, sharedViewName),
+                    first->getDisplayViewLooks(nullptr, sharedViewName),
+                    first->getDisplayViewRule(nullptr, sharedViewName),
+                    first->getDisplayViewDescription(nullptr, sharedViewName));
             }
         }
     }
@@ -1311,13 +1350,14 @@ void DisplayViewMerger::processActiveLists()
     }
 }
 
-void DisplayViewMerger::processViewingRules(const ConstConfigRcPtr & first,
-                                            const ConstConfigRcPtr & second,
-                                            bool preferSecond) const
+void DisplayViewMerger::processViewingRules(
+    const ConstConfigRcPtr & first,
+    const ConstConfigRcPtr & second,
+    bool preferSecond) const
 {
     ViewingRulesRcPtr mergedRules = ViewingRules::Create();
 
-    ConstViewingRulesRcPtr firstRules = first->getViewingRules();
+    ConstViewingRulesRcPtr firstRules  = first->getViewingRules();
     ConstViewingRulesRcPtr secondRules = second->getViewingRules();
 
     for (size_t i = 0; i < firstRules->getNumEntries(); i++)
@@ -1350,9 +1390,8 @@ void DisplayViewMerger::processViewingRules(const ConstConfigRcPtr & first,
                 os << "the Base config: viewing_rules: " << name;
                 throw Exception(os.str().c_str());
             }
-
         }
-        catch(const Exception & e)
+        catch (const Exception & e)
         {
             if (hasConflict)
             {
@@ -1537,15 +1576,15 @@ void DisplayViewMerger::handleRemove()
     {
         // Add shared views that are present in the base config and NOT present in the input config.
         const char * sharedViewName = m_baseConfig->getView(VIEW_SHARED, nullptr, v);
-        if (sharedViewName && *sharedViewName
-            && !m_inputConfig->hasView(nullptr, sharedViewName))
+        if (sharedViewName && *sharedViewName && !m_inputConfig->hasView(nullptr, sharedViewName))
         {
-            m_mergedConfig->addSharedView(sharedViewName,
-                                          m_baseConfig->getDisplayViewTransformName(nullptr, sharedViewName),
-                                          m_baseConfig->getDisplayViewColorSpaceName(nullptr, sharedViewName),
-                                          m_baseConfig->getDisplayViewLooks(nullptr, sharedViewName),
-                                          m_baseConfig->getDisplayViewRule(nullptr, sharedViewName),
-                                          m_baseConfig->getDisplayViewDescription(nullptr, sharedViewName));
+            m_mergedConfig->addSharedView(
+                sharedViewName,
+                m_baseConfig->getDisplayViewTransformName(nullptr, sharedViewName),
+                m_baseConfig->getDisplayViewColorSpaceName(nullptr, sharedViewName),
+                m_baseConfig->getDisplayViewLooks(nullptr, sharedViewName),
+                m_baseConfig->getDisplayViewRule(nullptr, sharedViewName),
+                m_baseConfig->getDisplayViewDescription(nullptr, sharedViewName));
         }
     }
 
@@ -1561,18 +1600,20 @@ void DisplayViewMerger::handleRemove()
         const char * dispName = m_baseConfig->getDisplayAll(i);
         for (int v = 0; v < m_baseConfig->getNumViews(VIEW_DISPLAY_DEFINED, dispName); v++)
         {
-            const char * displayDefinedView = m_baseConfig->getView(VIEW_DISPLAY_DEFINED, dispName, v);
+            const char * displayDefinedView
+                = m_baseConfig->getView(VIEW_DISPLAY_DEFINED, dispName, v);
             // Check if the view is not present in the input config.
             if (displayDefinedView && *displayDefinedView
                 && !m_inputConfig->hasView(dispName, displayDefinedView))
             {
-                m_mergedConfig->addDisplayView(dispName,
-                                               displayDefinedView,
-                                               m_baseConfig->getDisplayViewTransformName(dispName, displayDefinedView),
-                                               m_baseConfig->getDisplayViewColorSpaceName(dispName, displayDefinedView),
-                                               m_baseConfig->getDisplayViewLooks(dispName, displayDefinedView),
-                                               m_baseConfig->getDisplayViewRule(dispName, displayDefinedView),
-                                               m_baseConfig->getDisplayViewDescription(dispName, displayDefinedView));
+                m_mergedConfig->addDisplayView(
+                    dispName,
+                    displayDefinedView,
+                    m_baseConfig->getDisplayViewTransformName(dispName, displayDefinedView),
+                    m_baseConfig->getDisplayViewColorSpaceName(dispName, displayDefinedView),
+                    m_baseConfig->getDisplayViewLooks(dispName, displayDefinedView),
+                    m_baseConfig->getDisplayViewRule(dispName, displayDefinedView),
+                    m_baseConfig->getDisplayViewDescription(dispName, displayDefinedView));
             }
         }
 
@@ -1594,23 +1635,26 @@ void DisplayViewMerger::handleRemove()
     m_mergedConfig->clearVirtualDisplay();
 
     {
-        // Add virtual views that are present in the base config and NOT present in the input config.
+        // Add virtual views that are present in the base config and NOT present in the input
+        // config.
 
         // Display-defined views.
         for (int v = 0; v < m_baseConfig->getVirtualDisplayNumViews(VIEW_DISPLAY_DEFINED); v++)
         {
-            const char * displayDefinedView = m_baseConfig->getVirtualDisplayView(VIEW_DISPLAY_DEFINED, v);
+            const char * displayDefinedView
+                = m_baseConfig->getVirtualDisplayView(VIEW_DISPLAY_DEFINED, v);
             // Check if the view is not present in the input config.
             if (displayDefinedView && *displayDefinedView
                 && !m_inputConfig->hasVirtualView(displayDefinedView))
             {
                 // Add the display defined view
-                m_mergedConfig->addVirtualDisplayView(displayDefinedView,
-                                                      m_baseConfig->getVirtualDisplayViewTransformName(displayDefinedView),
-                                                      m_baseConfig->getVirtualDisplayViewColorSpaceName(displayDefinedView),
-                                                      m_baseConfig->getVirtualDisplayViewLooks(displayDefinedView),
-                                                      m_baseConfig->getVirtualDisplayViewRule(displayDefinedView),
-                                                      m_baseConfig->getVirtualDisplayViewDescription(displayDefinedView));
+                m_mergedConfig->addVirtualDisplayView(
+                    displayDefinedView,
+                    m_baseConfig->getVirtualDisplayViewTransformName(displayDefinedView),
+                    m_baseConfig->getVirtualDisplayViewColorSpaceName(displayDefinedView),
+                    m_baseConfig->getVirtualDisplayViewLooks(displayDefinedView),
+                    m_baseConfig->getVirtualDisplayViewRule(displayDefinedView),
+                    m_baseConfig->getVirtualDisplayViewDescription(displayDefinedView));
             }
         }
 
@@ -1619,8 +1663,7 @@ void DisplayViewMerger::handleRemove()
         {
             const char * sharedViewName = m_baseConfig->getVirtualDisplayView(VIEW_SHARED, v);
             // Check if the view is not present in the input config.
-            if (sharedViewName && *sharedViewName
-                && !m_inputConfig->hasVirtualView(sharedViewName))
+            if (sharedViewName && *sharedViewName && !m_inputConfig->hasVirtualView(sharedViewName))
             {
                 // Add the shared view
                 m_mergedConfig->addVirtualDisplaySharedView(sharedViewName);
@@ -1654,9 +1697,9 @@ void DisplayViewMerger::handleRemove()
 
     // Handle viewing_rules.
 
-    ViewingRulesRcPtr mergedRules = ViewingRules::Create();
+    ViewingRulesRcPtr mergedRules     = ViewingRules::Create();
     ConstViewingRulesRcPtr inputRules = m_inputConfig->getViewingRules();
-    ConstViewingRulesRcPtr baseRules = m_baseConfig->getViewingRules();
+    ConstViewingRulesRcPtr baseRules  = m_baseConfig->getViewingRules();
 
     for (size_t i = 0; i < baseRules->getNumEntries(); i++)
     {
@@ -1666,7 +1709,7 @@ void DisplayViewMerger::handleRemove()
             // Throws if the input doesn't have the base rule.
             inputRules->getIndexForRule(name);
         }
-        catch(...)
+        catch (...)
         {
             // Keep any base rules that aren't in the input.
             copyViewingRule(baseRules, i, mergedRules->getNumEntries(), mergedRules);
@@ -1683,9 +1726,10 @@ void DisplayViewMerger::handleRemove()
 namespace
 {
 
-bool viewTransformsAreEqual(const ConstConfigRcPtr & first,
-                            const ConstConfigRcPtr & second,
-                            const char * name)
+bool viewTransformsAreEqual(
+    const ConstConfigRcPtr & first,
+    const ConstConfigRcPtr & second,
+    const char * name)
 {
     ConstViewTransformRcPtr vt1 = first->getViewTransform(name);
     ConstViewTransformRcPtr vt2 = second->getViewTransform(name);
@@ -1705,7 +1749,7 @@ bool viewTransformsAreEqual(const ConstConfigRcPtr & first,
         ConstTransformRcPtr t2_to = vt2->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE);
         if (t1_to || t2_to)
         {
-            if (!t1_to || !t2_to)  // one of them has a transform but the other does not
+            if (!t1_to || !t2_to) // one of them has a transform but the other does not
             {
                 return false;
             }
@@ -1726,7 +1770,7 @@ bool viewTransformsAreEqual(const ConstConfigRcPtr & first,
         ConstTransformRcPtr t2_from = vt2->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE);
         if (t1_from || t2_from)
         {
-            if (!t1_from || !t2_from)  // one of them has a transform but the other does not
+            if (!t1_from || !t2_from) // one of them has a transform but the other does not
             {
                 return false;
             }
@@ -1748,14 +1792,16 @@ bool viewTransformsAreEqual(const ConstConfigRcPtr & first,
     return false;
 }
 
-} // anon.
+} // namespace
 
-void ViewTransformsMerger::addViewTransform(const ConstConfigRcPtr & cfg,
-                                            const char * name, 
-                                            bool isInput)
+void ViewTransformsMerger::addViewTransform(
+    const ConstConfigRcPtr & cfg,
+    const char * name,
+    bool isInput)
 {
     ConstViewTransformRcPtr vt = cfg->getViewTransform(name);
-    if (!vt) return;
+    if (!vt)
+        return;
 
     if (!isInput || !m_params->isAdjustInputReferenceSpace())
     {
@@ -1783,10 +1829,11 @@ void ViewTransformsMerger::addUniqueViewTransforms(const ConstConfigRcPtr & cfg,
     }
 }
 
-void ViewTransformsMerger::processViewTransforms(const ConstConfigRcPtr & first,
-                                                 const ConstConfigRcPtr & second,
-                                                 bool preferSecond,
-                                                 bool secondIsInput)
+void ViewTransformsMerger::processViewTransforms(
+    const ConstConfigRcPtr & first,
+    const ConstConfigRcPtr & second,
+    bool preferSecond,
+    bool secondIsInput)
 {
     for (int i = 0; i < first->getNumViewTransforms(); i++)
     {
@@ -1832,12 +1879,15 @@ void ViewTransformsMerger::handlePreferInput()
     }
 
     // Merge default_view_transform.
-    const char * baseName = m_baseConfig->getDefaultViewTransformName();
+    const char * baseName  = m_baseConfig->getDefaultViewTransformName();
     const char * inputName = m_inputConfig->getDefaultViewTransformName();
     if (!(Platform::Strcasecmp(baseName, inputName) == 0))
     {
-        notify("The Input config contains a value that would override the Base config: "\
-               "default_view_transform: " + std::string(inputName), m_params->isErrorOnConflict());
+        notify(
+            "The Input config contains a value that would override the Base config: "
+            "default_view_transform: "
+                + std::string(inputName),
+            m_params->isErrorOnConflict());
     }
     // If the input config does not specify a default, keep the one from the base.
     if (inputName && *inputName)
@@ -1860,12 +1910,15 @@ void ViewTransformsMerger::handlePreferBase()
     }
 
     // Merge default_view_transform.
-    const char * baseName = m_baseConfig->getDefaultViewTransformName();
+    const char * baseName  = m_baseConfig->getDefaultViewTransformName();
     const char * inputName = m_inputConfig->getDefaultViewTransformName();
     if (!(Platform::Strcasecmp(baseName, inputName) == 0))
     {
-        notify("The Input config contains a value that would override the Base config: "\
-               "default_view_transform: " + std::string(inputName), m_params->isErrorOnConflict());
+        notify(
+            "The Input config contains a value that would override the Base config: "
+            "default_view_transform: "
+                + std::string(inputName),
+            m_params->isErrorOnConflict());
     }
     // Only use the input if the base is missing.
     if (!baseName || !*baseName)
@@ -1923,13 +1976,13 @@ void LooksMerger::handlePreferInput()
     if (m_params->isInputFirst())
     {
         // Add the Looks from the input config.
-        for(int i = 0; i < m_inputConfig->getNumLooks(); ++i)
+        for (int i = 0; i < m_inputConfig->getNumLooks(); ++i)
         {
             m_mergedConfig->addLook(m_inputConfig->getLook(m_inputConfig->getLookNameByIndex(i)));
         }
 
         // Add the Looks from the base config if it does not exist in the merged config.
-        for(int i = 0; i < m_baseConfig->getNumLooks(); ++i)
+        for (int i = 0; i < m_baseConfig->getNumLooks(); ++i)
         {
             if (m_mergedConfig->getLook(m_baseConfig->getLookNameByIndex(i)) == nullptr)
             {
@@ -1941,13 +1994,13 @@ void LooksMerger::handlePreferInput()
     {
         // PreferInput, InputFirst = false
         // Add the looks from the base config.
-        for(int i = 0; i < m_baseConfig->getNumLooks(); ++i)
+        for (int i = 0; i < m_baseConfig->getNumLooks(); ++i)
         {
             m_mergedConfig->addLook(m_baseConfig->getLook(m_baseConfig->getLookNameByIndex(i)));
         }
 
         // Add the Looks from the input config and overwrite look if the name is the same.
-        for(int i = 0; i < m_inputConfig->getNumLooks(); ++i)
+        for (int i = 0; i < m_inputConfig->getNumLooks(); ++i)
         {
             m_mergedConfig->addLook(m_inputConfig->getLook(m_inputConfig->getLookNameByIndex(i)));
         }
@@ -1961,13 +2014,13 @@ void LooksMerger::handlePreferBase()
     if (m_params->isInputFirst())
     {
         // Add the Looks from the input config.
-        for(int i = 0; i < m_inputConfig->getNumLooks(); ++i)
+        for (int i = 0; i < m_inputConfig->getNumLooks(); ++i)
         {
             m_mergedConfig->addLook(m_inputConfig->getLook(m_inputConfig->getLookNameByIndex(i)));
         }
 
         // Add the Looks from the input config and overwrite look if the name is the same.
-        for(int i = 0; i < m_baseConfig->getNumLooks(); ++i)
+        for (int i = 0; i < m_baseConfig->getNumLooks(); ++i)
         {
             m_mergedConfig->addLook(m_baseConfig->getLook(m_baseConfig->getLookNameByIndex(i)));
         }
@@ -1976,17 +2029,18 @@ void LooksMerger::handlePreferBase()
     {
         // PreferBase, InputFirst = false
         // Add the looks from the base config.
-        for(int i = 0; i < m_baseConfig->getNumLooks(); ++i)
+        for (int i = 0; i < m_baseConfig->getNumLooks(); ++i)
         {
             m_mergedConfig->addLook(m_baseConfig->getLook(m_baseConfig->getLookNameByIndex(i)));
         }
 
         // Add the Looks from the input config if it does not exist in the merged config.
-        for(int i = 0; i < m_inputConfig->getNumLooks(); ++i)
+        for (int i = 0; i < m_inputConfig->getNumLooks(); ++i)
         {
             if (m_mergedConfig->getLook(m_inputConfig->getLookNameByIndex(i)) == nullptr)
             {
-                m_mergedConfig->addLook(m_inputConfig->getLook(m_inputConfig->getLookNameByIndex(i)));
+                m_mergedConfig->addLook(
+                    m_inputConfig->getLook(m_inputConfig->getLookNameByIndex(i)));
             }
         }
     }
@@ -1996,7 +2050,7 @@ void LooksMerger::handleInputOnly()
 {
     m_mergedConfig->clearLooks();
     // Add the Looks from the input config.
-    for(int i = 0; i < m_inputConfig->getNumLooks(); ++i)
+    for (int i = 0; i < m_inputConfig->getNumLooks(); ++i)
     {
         m_mergedConfig->addLook(m_inputConfig->getLook(m_inputConfig->getLookNameByIndex(i)));
     }
@@ -2011,7 +2065,7 @@ void LooksMerger::handleRemove()
 {
     m_mergedConfig->clearLooks();
     // Add the looks from the base config if they do not exist in the INPUT config.
-    for(int i = 0; i < m_baseConfig->getNumLooks(); ++i)
+    for (int i = 0; i < m_baseConfig->getNumLooks(); ++i)
     {
         const char * baseName = m_baseConfig->getLookNameByIndex(i);
         if (m_inputConfig->getLook(baseName) == nullptr)
@@ -2046,8 +2100,8 @@ void cleanUpInactiveList(ConfigRcPtr & mergeConfig)
     splitActiveList(mergeConfig->getInactiveColorSpaces(), originalList);
     for (auto & item : originalList)
     {
-        const std::string name = StringUtils::Trim(item);
-        ConstColorSpaceRcPtr existingCS = mergeConfig->getColorSpace(name.c_str());
+        const std::string name              = StringUtils::Trim(item);
+        ConstColorSpaceRcPtr existingCS     = mergeConfig->getColorSpace(name.c_str());
         ConstNamedTransformRcPtr existingNT = mergeConfig->getNamedTransform(name.c_str());
 
         if (existingCS)
@@ -2077,7 +2131,7 @@ std::string replaceSeparator(std::string str, char inSep, char outSep)
     return updatedStr;
 }
 
-} // anon.
+} // namespace
 
 void ColorspacesMerger::processSearchPaths() const
 {
@@ -2091,12 +2145,13 @@ void ColorspacesMerger::processSearchPaths() const
 
     // Ignoring isInputFirst for the ordering of search paths because it seems that it
     // really should be driven by the strategy. E.g., if both base and input have a "luts"
-    // directory, want to be looking in the right one.  
+    // directory, want to be looking in the right one.
 
     // TODO: More work is needed here.  Absolute paths should be set up for input since
     // the working dir is from the base config.
 
-    if (m_params->getColorspaces() == ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_INPUT)
+    if (m_params->getColorspaces()
+        == ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_INPUT)
     {
         m_mergedConfig->clearSearchPaths();
         // Add all from input config.
@@ -2133,39 +2188,60 @@ void ColorspacesMerger::updateFamily(std::string & family, bool fromBase) const
     // Note that if a prefix is present, it is always added, even if the CS did not have a family.
 
     std::string updatedPrefix = "";
-    if (m_params->getColorspaces() == ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_INPUT)
+    if (m_params->getColorspaces()
+        == ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_INPUT)
     {
         if (fromBase)
         {
             // If the color space is from the base config, need to update its family separator.
             if (!family.empty())
             {
-                family = replaceSeparator(family, m_baseConfig->getFamilySeparator(), m_mergedConfig->getFamilySeparator());
+                family = replaceSeparator(
+                    family,
+                    m_baseConfig->getFamilySeparator(),
+                    m_mergedConfig->getFamilySeparator());
             }
             // Note: The family prefix argument must always use the default slash separator.
             // TODO: Should do this just once in the initializer.
-            updatedPrefix = replaceSeparator(m_params->getBaseFamilyPrefix(), '/', m_mergedConfig->getFamilySeparator());
+            updatedPrefix = replaceSeparator(
+                m_params->getBaseFamilyPrefix(),
+                '/',
+                m_mergedConfig->getFamilySeparator());
         }
         else
         {
-            updatedPrefix = replaceSeparator(m_params->getInputFamilyPrefix(), '/', m_mergedConfig->getFamilySeparator());
+            updatedPrefix = replaceSeparator(
+                m_params->getInputFamilyPrefix(),
+                '/',
+                m_mergedConfig->getFamilySeparator());
         }
     }
-    else if (m_params->getColorspaces() == ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_BASE)
+    else if (
+        m_params->getColorspaces()
+        == ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_BASE)
     {
         if (fromBase)
         {
             // TODO: Should do this just once in the initializer.
-            updatedPrefix = replaceSeparator(m_params->getBaseFamilyPrefix(), '/', m_mergedConfig->getFamilySeparator());
+            updatedPrefix = replaceSeparator(
+                m_params->getBaseFamilyPrefix(),
+                '/',
+                m_mergedConfig->getFamilySeparator());
         }
         else
         {
             // If the color space is from the input config, need to update its family separator.
             if (!family.empty())
             {
-                family = replaceSeparator(family, m_inputConfig->getFamilySeparator(), m_mergedConfig->getFamilySeparator());
+                family = replaceSeparator(
+                    family,
+                    m_inputConfig->getFamilySeparator(),
+                    m_mergedConfig->getFamilySeparator());
             }
-            updatedPrefix = replaceSeparator(m_params->getInputFamilyPrefix(), '/', m_mergedConfig->getFamilySeparator());
+            updatedPrefix = replaceSeparator(
+                m_params->getInputFamilyPrefix(),
+                '/',
+                m_mergedConfig->getFamilySeparator());
         }
     }
     // Append the prefix to the family.
@@ -2173,10 +2249,11 @@ void ColorspacesMerger::updateFamily(std::string & family, bool fromBase) const
     family = updatedPrefix + family;
 }
 
-void ColorspacesMerger::attemptToAddAlias(const ConstConfigRcPtr & mergeConfig,
-                                          ColorSpaceRcPtr & dupeCS,
-                                          const ConstColorSpaceRcPtr & inputCS,
-                                          const char * aliasName)
+void ColorspacesMerger::attemptToAddAlias(
+    const ConstConfigRcPtr & mergeConfig,
+    ColorSpaceRcPtr & dupeCS,
+    const ConstColorSpaceRcPtr & inputCS,
+    const char * aliasName)
 {
     // It is assumed that the base and input configs start out in a legal state,
     // however, when adding anything from one config to another, must always
@@ -2185,8 +2262,7 @@ void ColorspacesMerger::attemptToAddAlias(const ConstConfigRcPtr & mergeConfig,
     // It is assumed that the strategy is prefer_base when this function is called.
 
     // It's OK if aliasName is used in the duplicate color space itself.
-    if ((Platform::Strcasecmp(dupeCS->getName(), aliasName) == 0)
-        || dupeCS->hasAlias(aliasName))
+    if ((Platform::Strcasecmp(dupeCS->getName(), aliasName) == 0) || dupeCS->hasAlias(aliasName))
     {
         // It's already present, no need to add anything.
         return;
@@ -2217,10 +2293,11 @@ void ColorspacesMerger::attemptToAddAlias(const ConstConfigRcPtr & mergeConfig,
     dupeCS->addAlias(aliasName);
 }
 
-bool ColorspacesMerger::handleAvoidDuplicatesOption(ConfigUtils::ColorSpaceFingerprints & fingerprints,
-                                                    ConfigRcPtr & eBase,
-                                                    const ConstConfigRcPtr & inputConfig,
-                                                    ColorSpaceRcPtr & inputCS)
+bool ColorspacesMerger::handleAvoidDuplicatesOption(
+    ConfigUtils::ColorSpaceFingerprints & fingerprints,
+    ConfigRcPtr & eBase,
+    const ConstConfigRcPtr & inputConfig,
+    ColorSpaceRcPtr & inputCS)
 {
     bool notDuplicate = true;
 
@@ -2245,13 +2322,11 @@ bool ColorspacesMerger::handleAvoidDuplicatesOption(ConfigUtils::ColorSpaceFinge
     // names of the duplicates.
     //
     // Note: By design, inactive color spaces are included in the search for equivalents
-    // (e.g., consider the CIE-XYZ-D65 space, which is typically inactive). However, 
+    // (e.g., consider the CIE-XYZ-D65 space, which is typically inactive). However,
     // when the inactive list is regenerated to avoid listing removed color spaces,
     // some color spaces that were inactive may become active.
-    const char * duplicateInBase = ConfigUtils::findEquivalentColorspace(
-        fingerprints,
-        inputConfig, inputCS
-    );
+    const char * duplicateInBase
+        = ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, inputCS);
 
     const ConfigMergingParameters::MergeStrategies strategy = m_params->getColorspaces();
     if (duplicateInBase && *duplicateInBase)
@@ -2265,7 +2340,7 @@ bool ColorspacesMerger::handleAvoidDuplicatesOption(ConfigUtils::ColorSpaceFinge
             // spaces in the input config, but these will be handled as the spaces get added
             // to the merged config by the calling function.
             //
-            // If the base config has more than one color space equivalent to inputCS, only 
+            // If the base config has more than one color space equivalent to inputCS, only
             // the first is replaced.
 
             ConstColorSpaceRcPtr dupeCS = eBase->getColorSpace(duplicateInBase);
@@ -2347,8 +2422,9 @@ bool ColorspacesMerger::handleAvoidDuplicatesOption(ConfigUtils::ColorSpaceFinge
     return notDuplicate;
 }
 
-bool ColorspacesMerger::colorSpaceMayBeMerged(const ConstConfigRcPtr & mergeConfig, 
-                                              const ConstColorSpaceRcPtr & inputCS) const
+bool ColorspacesMerger::colorSpaceMayBeMerged(
+    const ConstConfigRcPtr & mergeConfig,
+    const ConstColorSpaceRcPtr & inputCS) const
 {
     // This should only be called on color spaces from the input config.
 
@@ -2394,9 +2470,9 @@ bool ColorspacesMerger::colorSpaceMayBeMerged(const ConstConfigRcPtr & mergeConf
         // Whether to allow the merge is based on the merge strategy.
 
         if (strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_INPUT
-         || strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_INPUT_ONLY)
+            || strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_INPUT_ONLY)
         {
-            // Allow the merger. 
+            // Allow the merger.
 
             std::ostringstream os;
             os << "Color space '" << name << "' will replace a color space in the base config.";
@@ -2409,7 +2485,8 @@ bool ColorspacesMerger::colorSpaceMayBeMerged(const ConstConfigRcPtr & mergeConf
             // Don't merge since it would replace a color space from the base config.
 
             std::ostringstream os;
-            os << "Color space '" << name << "' was not merged as it's already present in the base config.";
+            os << "Color space '" << name
+               << "' was not merged as it's already present in the base config.";
             notify(os.str(), m_params->isErrorOnConflict());
 
             return false;
@@ -2421,9 +2498,9 @@ bool ColorspacesMerger::colorSpaceMayBeMerged(const ConstConfigRcPtr & mergeConf
         // Whether to allow the merge is based on the merge strategy.
 
         if (strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_INPUT
-         || strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_INPUT_ONLY)
+            || strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_INPUT_ONLY)
         {
-            // Allow the merger. 
+            // Allow the merger.
 
             std::ostringstream os;
             os << "The name of merged color space '" << name << "'";
@@ -2447,23 +2524,24 @@ bool ColorspacesMerger::colorSpaceMayBeMerged(const ConstConfigRcPtr & mergeConf
     }
 }
 
-void ColorspacesMerger::mergeColorSpace(ConfigRcPtr & mergeConfig, 
-                                        ColorSpaceRcPtr & eInputCS,
-                                        std::vector<std::string> & addedInputColorSpaces)
+void ColorspacesMerger::mergeColorSpace(
+    ConfigRcPtr & mergeConfig,
+    ColorSpaceRcPtr & eInputCS,
+    std::vector<std::string> & addedInputColorSpaces)
 {
     // NB: This routine assumes all NamedTransforms have been removed from the mergeConfig.
     // Not trying to handle name conflicts with NamedTransforms, color spaces have precedence.
 
     // Check if mergeConfig already has a color space with the same name as the input CS.
 
-    const char * name = eInputCS->getName();
+    const char * name               = eInputCS->getName();
     ConstColorSpaceRcPtr originalCS = mergeConfig->getColorSpace(name);
 
     if (originalCS)
     {
-        // Note that the color space which gets discarded and the color space being added below may not
-        // have the same reference space type (i.e., scene vs. display). This is currently allowed
-        // but log a warning.
+        // Note that the color space which gets discarded and the color space being added below may
+        // not have the same reference space type (i.e., scene vs. display). This is currently
+        // allowed but log a warning.
         if (eInputCS->getReferenceSpaceType() != originalCS->getReferenceSpaceType())
         {
             std::ostringstream os;
@@ -2547,7 +2625,7 @@ void ColorspacesMerger::mergeColorSpace(ConfigRcPtr & mergeConfig,
                 os << conflictingCS->getName() << "'.";
 
                 if (strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_INPUT
-                 || strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_INPUT_ONLY)
+                    || strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_INPUT_ONLY)
                 {
                     // Remove that base color space.
                     mergeConfig->removeColorSpace(conflictingCS->getName());
@@ -2568,7 +2646,7 @@ void ColorspacesMerger::mergeColorSpace(ConfigRcPtr & mergeConfig,
                 os << conflictingCS->getName() << "'.";
 
                 if (strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_INPUT
-                 || strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_INPUT_ONLY)
+                    || strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_INPUT_ONLY)
                 {
                     // Remove the alias from that base color space.
                     auto eConflictingCS = conflictingCS->createEditableCopy();
@@ -2603,7 +2681,7 @@ void ColorspacesMerger::mergeColorSpace(ConfigRcPtr & mergeConfig,
         }
     }
 
-    // Add the color space. This will throw if a problem is found. 
+    // Add the color space. This will throw if a problem is found.
     // (But all name conflicts should have been handled already.)
     mergeConfig->addColorSpace(eInputCS);
 
@@ -2641,28 +2719,33 @@ void ColorspacesMerger::addColorSpaces()
         ConfigUtils::initializeColorSpaceFingerprints(fingerprints, m_baseConfig);
     }
 
-    for (int i = 0; i < m_inputConfig->getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL); ++i)
+    for (int i = 0;
+         i < m_inputConfig->getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL);
+         ++i)
     {
-        const char * name = m_inputConfig->getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL,
-                                                                    COLORSPACE_ALL,
-                                                                    i);
+        const char * name = m_inputConfig->getColorSpaceNameByIndex(
+            SEARCH_REFERENCE_SPACE_ALL,
+            COLORSPACE_ALL,
+            i);
         ConstColorSpaceRcPtr cs = m_inputConfig->getColorSpace(name);
-        if (!cs) continue;
+        if (!cs)
+            continue;
 
         ColorSpaceRcPtr eCS = cs->createEditableCopy();
 
-            if (m_params->isAdjustInputReferenceSpace())
-            {
-                if (eCS->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
-                    ConfigUtils::updateReferenceColorspace(eCS, m_inputToBaseGtDisplay);
-                else
-                    ConfigUtils::updateReferenceColorspace(eCS, m_inputToBaseGtScene);
-            }
+        if (m_params->isAdjustInputReferenceSpace())
+        {
+            if (eCS->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
+                ConfigUtils::updateReferenceColorspace(eCS, m_inputToBaseGtDisplay);
+            else
+                ConfigUtils::updateReferenceColorspace(eCS, m_inputToBaseGtScene);
+        }
 
         // Doing this against the mergedConfig rather than the base config so that the most
         // recent state of any aliases that get added or color spaces that are removed are
         // considered by the duplicate consolidation process.
-        const bool notDuplicate = handleAvoidDuplicatesOption(fingerprints, mergeConfig, m_inputConfig, eCS);
+        const bool notDuplicate
+            = handleAvoidDuplicatesOption(fingerprints, mergeConfig, m_inputConfig, eCS);
 
         if (notDuplicate && colorSpaceMayBeMerged(mergeConfig, eCS))
         {
@@ -2688,7 +2771,7 @@ void ColorspacesMerger::addColorSpaces()
 
                 // Add family prefix.
                 const bool fromBase = false;
-                std::string family = eInputCS->getFamily();
+                std::string family  = eInputCS->getFamily();
                 updateFamily(family, fromBase);
                 eInputCS->setFamily(family.c_str());
 
@@ -2699,14 +2782,18 @@ void ColorspacesMerger::addColorSpaces()
         }
 
         // Add color spaces from the base config.
-        for (int i = 0; i < mergeConfig->getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL); ++i)
+        for (int i = 0;
+             i < mergeConfig->getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL);
+             ++i)
         {
             // Note that during the merge process, some of the color spaces from the base config may
-            // be replaced if their aliases are edited. This should not change their order in the config,
-            // but may want to account for this, if that ever changes and they get moved to the end.
-            const char * name = mergeConfig->getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL,
-                                                                      COLORSPACE_ALL,
-                                                                      i);
+            // be replaced if their aliases are edited. This should not change their order in the
+            // config, but may want to account for this, if that ever changes and they get moved to
+            // the end.
+            const char * name = mergeConfig->getColorSpaceNameByIndex(
+                SEARCH_REFERENCE_SPACE_ALL,
+                COLORSPACE_ALL,
+                i);
             ConstColorSpaceRcPtr baseCS = mergeConfig->getColorSpace(name);
             if (baseCS)
             {
@@ -2714,7 +2801,7 @@ void ColorspacesMerger::addColorSpaces()
 
                 // Add family prefix.
                 const bool fromBase = true;
-                std::string family = eBaseCS->getFamily();
+                std::string family  = eBaseCS->getFamily();
                 updateFamily(family, fromBase);
                 eBaseCS->setFamily(family.c_str());
 
@@ -2726,15 +2813,18 @@ void ColorspacesMerger::addColorSpaces()
     {
         // The color spaces should already be in the correct order.
         // Copy them into the real merged config and add family prefix.
-        for (int i = 0; i < mergeConfig->getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL); ++i)
+        for (int i = 0;
+             i < mergeConfig->getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL);
+             ++i)
         {
-            const char * name = mergeConfig->getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL,
-                                                                      COLORSPACE_ALL,
-                                                                      i);
+            const char * name = mergeConfig->getColorSpaceNameByIndex(
+                SEARCH_REFERENCE_SPACE_ALL,
+                COLORSPACE_ALL,
+                i);
             ConstColorSpaceRcPtr cs = mergeConfig->getColorSpace(name);
             if (cs)
             {
-                auto eCS = cs->createEditableCopy();
+                auto eCS      = cs->createEditableCopy();
                 bool fromBase = true;
 
                 // Add family prefix.
@@ -2752,11 +2842,11 @@ void ColorspacesMerger::addColorSpaces()
         }
     }
 
-    // (Not cleaning up the inactive list here, it would remove named transforms, wait until after NT.)
+    // (Not cleaning up the inactive list here, it would remove named transforms, wait until after
+    // NT.)
 
     // TODO: What if the environment contains a color space that was removed?
 }
-
 
 void ColorspacesMerger::handlePreferInput()
 {
@@ -2769,8 +2859,9 @@ void ColorspacesMerger::handlePreferInput()
         m_mergedConfig->clearEnvironmentVars();
         for (int i = 0; i < m_params->getNumEnvironmentVars(); i++)
         {
-            m_mergedConfig->addEnvironmentVar(m_params->getEnvironmentVar(i),
-                                              m_params->getEnvironmentVarValue(i));
+            m_mergedConfig->addEnvironmentVar(
+                m_params->getEnvironmentVar(i),
+                m_params->getEnvironmentVarValue(i));
         }
     }
     else
@@ -2780,8 +2871,9 @@ void ColorspacesMerger::handlePreferInput()
         {
             const std::string & name = m_inputConfig->getEnvironmentVarNameByIndex(i);
             // Overwrite any existing env. variable with the same name.
-            m_mergedConfig->addEnvironmentVar(name.c_str(),
-                                              m_inputConfig->getEnvironmentVarDefault(name.c_str()));
+            m_mergedConfig->addEnvironmentVar(
+                name.c_str(),
+                m_inputConfig->getEnvironmentVarDefault(name.c_str()));
         }
     }
 
@@ -2837,8 +2929,9 @@ void ColorspacesMerger::handlePreferBase()
         m_mergedConfig->clearEnvironmentVars();
         for (int i = 0; i < m_params->getNumEnvironmentVars(); i++)
         {
-            m_mergedConfig->addEnvironmentVar(m_params->getEnvironmentVar(i),
-                                              m_params->getEnvironmentVarValue(i));
+            m_mergedConfig->addEnvironmentVar(
+                m_params->getEnvironmentVar(i),
+                m_params->getEnvironmentVarValue(i));
         }
     }
     else
@@ -2848,11 +2941,13 @@ void ColorspacesMerger::handlePreferBase()
         {
             const std::string & name = m_inputConfig->getEnvironmentVarNameByIndex(i);
             // If the var's default value is empty, it doesn't exist, so nothing to overwrite.
-            const bool varDoesNotExist = std::string(m_mergedConfig->getEnvironmentVarDefault(name.c_str())).empty();
+            const bool varDoesNotExist
+                = std::string(m_mergedConfig->getEnvironmentVarDefault(name.c_str())).empty();
             if (varDoesNotExist)
             {
-                m_mergedConfig->addEnvironmentVar(name.c_str(),
-                                                  m_inputConfig->getEnvironmentVarDefault(name.c_str()));
+                m_mergedConfig->addEnvironmentVar(
+                    name.c_str(),
+                    m_inputConfig->getEnvironmentVarDefault(name.c_str()));
             }
         }
     }
@@ -2907,8 +3002,9 @@ void ColorspacesMerger::handleInputOnly()
         m_mergedConfig->clearEnvironmentVars();
         for (int i = 0; i < m_params->getNumEnvironmentVars(); i++)
         {
-            m_mergedConfig->addEnvironmentVar(m_params->getEnvironmentVar(i),
-                                              m_params->getEnvironmentVarValue(i));
+            m_mergedConfig->addEnvironmentVar(
+                m_params->getEnvironmentVar(i),
+                m_params->getEnvironmentVarValue(i));
         }
     }
     else
@@ -2918,8 +3014,9 @@ void ColorspacesMerger::handleInputOnly()
         for (int i = 0; i < m_inputConfig->getNumEnvironmentVars(); i++)
         {
             const std::string & name = m_inputConfig->getEnvironmentVarNameByIndex(i);
-            m_mergedConfig->addEnvironmentVar(name.c_str(),
-                                              m_inputConfig->getEnvironmentVarDefault(name.c_str()));
+            m_mergedConfig->addEnvironmentVar(
+                name.c_str(),
+                m_inputConfig->getEnvironmentVarDefault(name.c_str()));
         }
     }
 
@@ -2961,12 +3058,14 @@ void ColorspacesMerger::handleInputOnly()
     m_mergedConfig->clearNamedTransforms();
 
     // Merge the color spaces.
-    const size_t numCS = m_inputConfig->getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL);
+    const size_t numCS
+        = m_inputConfig->getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL);
     for (unsigned long i = 0; i < numCS; ++i)
     {
-        const char * name = m_inputConfig->getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL,
-                                                                    COLORSPACE_ALL,
-                                                                    i);
+        const char * name = m_inputConfig->getColorSpaceNameByIndex(
+            SEARCH_REFERENCE_SPACE_ALL,
+            COLORSPACE_ALL,
+            i);
         ConstColorSpaceRcPtr cs = m_inputConfig->getColorSpace(name);
         m_mergedConfig->addColorSpace(cs);
     }
@@ -2992,8 +3091,9 @@ void ColorspacesMerger::handleBaseOnly()
         m_mergedConfig->clearEnvironmentVars();
         for (int i = 0; i < m_params->getNumEnvironmentVars(); i++)
         {
-            m_mergedConfig->addEnvironmentVar(m_params->getEnvironmentVar(i),
-                                              m_params->getEnvironmentVarValue(i));
+            m_mergedConfig->addEnvironmentVar(
+                m_params->getEnvironmentVar(i),
+                m_params->getEnvironmentVarValue(i));
         }
     }
 
@@ -3029,7 +3129,8 @@ void ColorspacesMerger::handleRemove()
     m_mergedConfig->clearSearchPaths();
     for (int i = 0; i < m_baseConfig->getNumSearchPaths(); i++)
     {
-        size_t found = StringUtils::Find(m_inputConfig->getSearchPath(), m_baseConfig->getSearchPath(i));
+        size_t found
+            = StringUtils::Find(m_inputConfig->getSearchPath(), m_baseConfig->getSearchPath(i));
         if (found == std::string::npos)
         {
             m_mergedConfig->addSearchPath(m_baseConfig->getSearchPath(i));
@@ -3060,12 +3161,14 @@ void ColorspacesMerger::handleRemove()
     //   This could obviously break any other part of the base config that references the
     //   removed color space, so it is up to the user to know what they are doing.
 
-    const size_t numCS = m_inputConfig->getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL);
+    const size_t numCS
+        = m_inputConfig->getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL);
     for (unsigned long i = 0; i < numCS; ++i)
     {
-        const char * name = m_inputConfig->getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL,
-                                                                    COLORSPACE_ALL,
-                                                                    i);
+        const char * name = m_inputConfig->getColorSpaceNameByIndex(
+            SEARCH_REFERENCE_SPACE_ALL,
+            COLORSPACE_ALL,
+            i);
         // Note: The remove does nothing if the color space is not present.
         m_mergedConfig->removeColorSpace(name);
     }
@@ -3079,40 +3182,61 @@ void NamedTransformsMerger::updateFamily(std::string & family, bool fromBase) co
 {
     // Note that if a prefix is present, it is always added, even if the CS did not have a family.
 
-        std::string updatedPrefix = "";
-    if (m_params->getColorspaces() == ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_INPUT)
+    std::string updatedPrefix = "";
+    if (m_params->getColorspaces()
+        == ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_INPUT)
     {
         if (fromBase)
         {
             // If the color space is from the base config, need to update its family separator.
             if (!family.empty())
             {
-                family = replaceSeparator(family, m_baseConfig->getFamilySeparator(), m_mergedConfig->getFamilySeparator());
+                family = replaceSeparator(
+                    family,
+                    m_baseConfig->getFamilySeparator(),
+                    m_mergedConfig->getFamilySeparator());
             }
             // Note: The family prefix argument must always use the default slash separator.
             // TODO: Should do this just once in the initializer.
-            updatedPrefix = replaceSeparator(m_params->getBaseFamilyPrefix(), '/', m_mergedConfig->getFamilySeparator());
+            updatedPrefix = replaceSeparator(
+                m_params->getBaseFamilyPrefix(),
+                '/',
+                m_mergedConfig->getFamilySeparator());
         }
         else
         {
-            updatedPrefix = replaceSeparator(m_params->getInputFamilyPrefix(), '/', m_mergedConfig->getFamilySeparator());
+            updatedPrefix = replaceSeparator(
+                m_params->getInputFamilyPrefix(),
+                '/',
+                m_mergedConfig->getFamilySeparator());
         }
     }
-    else if (m_params->getColorspaces() == ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_BASE)
+    else if (
+        m_params->getColorspaces()
+        == ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_BASE)
     {
         if (fromBase)
         {
             // TODO: Should do this just once in the initializer.
-            updatedPrefix = replaceSeparator(m_params->getBaseFamilyPrefix(), '/', m_mergedConfig->getFamilySeparator());
+            updatedPrefix = replaceSeparator(
+                m_params->getBaseFamilyPrefix(),
+                '/',
+                m_mergedConfig->getFamilySeparator());
         }
         else
         {
             // If the color space is from the input config, need to update its family separator.
             if (!family.empty())
             {
-                family = replaceSeparator(family, m_inputConfig->getFamilySeparator(), m_mergedConfig->getFamilySeparator());
+                family = replaceSeparator(
+                    family,
+                    m_inputConfig->getFamilySeparator(),
+                    m_mergedConfig->getFamilySeparator());
             }
-            updatedPrefix = replaceSeparator(m_params->getInputFamilyPrefix(), '/', m_mergedConfig->getFamilySeparator());
+            updatedPrefix = replaceSeparator(
+                m_params->getInputFamilyPrefix(),
+                '/',
+                m_mergedConfig->getFamilySeparator());
         }
     }
     // Append the prefix to the family.
@@ -3120,9 +3244,10 @@ void NamedTransformsMerger::updateFamily(std::string & family, bool fromBase) co
     family = updatedPrefix + family;
 }
 
-bool NamedTransformsMerger::namedTransformMayBeMerged(const ConstConfigRcPtr & mergeConfig, 
-                                                      const ConstNamedTransformRcPtr & nt,
-                                                      bool fromBase) const
+bool NamedTransformsMerger::namedTransformMayBeMerged(
+    const ConstConfigRcPtr & mergeConfig,
+    const ConstNamedTransformRcPtr & nt,
+    bool fromBase) const
 {
     if (!nt)
     {
@@ -3166,7 +3291,8 @@ bool NamedTransformsMerger::namedTransformMayBeMerged(const ConstConfigRcPtr & m
             // The name matches a color space name in the mergeConfig.
             // Don't merge it, color spaces always have precedence.
             std::ostringstream os;
-            os << "Named transform '" << name << "' was not merged as there's a color space with that name.";
+            os << "Named transform '" << name
+               << "' was not merged as there's a color space with that name.";
             notify(os.str(), m_params->isErrorOnConflict());
 
             return false;
@@ -3176,7 +3302,8 @@ bool NamedTransformsMerger::namedTransformMayBeMerged(const ConstConfigRcPtr & m
             // The name conflicts with an alias of a color space.
             // Don't merge it, color spaces always have precedence.
             std::ostringstream os;
-            os << "Named transform '" << name << "' was not merged as there's a color space alias with that name.";
+            os << "Named transform '" << name
+               << "' was not merged as there's a color space alias with that name.";
             notify(os.str(), m_params->isErrorOnConflict());
 
             return false;
@@ -3189,7 +3316,8 @@ bool NamedTransformsMerger::namedTransformMayBeMerged(const ConstConfigRcPtr & m
         {
             // Should not happen if the base config was legal.
             std::ostringstream os;
-            os << "Named transform '" << name << "' was not merged as there's more than one with that name in the base config.";
+            os << "Named transform '" << name
+               << "' was not merged as there's more than one with that name in the base config.";
             notify(os.str(), m_params->isErrorOnConflict());
 
             return false;
@@ -3205,12 +3333,13 @@ bool NamedTransformsMerger::namedTransformMayBeMerged(const ConstConfigRcPtr & m
             // Whether to allow the merge is based on the merge strategy.
 
             if (strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_INPUT
-             || strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_INPUT_ONLY)
+                || strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_INPUT_ONLY)
             {
                 // Allow the merger.
 
                 std::ostringstream os;
-                os << "Named transform '" << name << "' will replace a named transform in the base config.";
+                os << "Named transform '" << name
+                   << "' will replace a named transform in the base config.";
                 notify(os.str(), m_params->isErrorOnConflict());
 
                 return true;
@@ -3220,7 +3349,8 @@ bool NamedTransformsMerger::namedTransformMayBeMerged(const ConstConfigRcPtr & m
                 // Don't merge it if it would replace a named transform from the base config.
 
                 std::ostringstream os;
-                os << "Named transform '" << name << "' was not merged as it's already present in the base config.";
+                os << "Named transform '" << name
+                   << "' was not merged as it's already present in the base config.";
                 notify(os.str(), m_params->isErrorOnConflict());
 
                 return false;
@@ -3232,9 +3362,9 @@ bool NamedTransformsMerger::namedTransformMayBeMerged(const ConstConfigRcPtr & m
             // Whether to allow the merge is based on the merge strategy.
 
             if (strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_INPUT
-             || strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_INPUT_ONLY)
+                || strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_INPUT_ONLY)
             {
-                // Allow the merger. 
+                // Allow the merger.
 
                 std::ostringstream os;
                 os << "The name of merged named transform '" << name << "'";
@@ -3249,7 +3379,8 @@ bool NamedTransformsMerger::namedTransformMayBeMerged(const ConstConfigRcPtr & m
                 // Don't merge it if it would replace an alias from the base config.
 
                 std::ostringstream os;
-                os << "Named transform '" << name << "' was not merged as it conflicts with an alias ";
+                os << "Named transform '" << name
+                   << "' was not merged as it conflicts with an alias ";
                 os << "in named transform '" << existingNT->getName() << "'.";
                 notify(os.str(), m_params->isErrorOnConflict());
 
@@ -3260,17 +3391,18 @@ bool NamedTransformsMerger::namedTransformMayBeMerged(const ConstConfigRcPtr & m
     return false;
 }
 
-void NamedTransformsMerger::mergeNamedTransform(ConfigRcPtr & mergeConfig, 
-                                                NamedTransformRcPtr & eNT,
-                                                bool fromBase,
-                                                std::vector<std::string> & addedInputNamedTransforms)
+void NamedTransformsMerger::mergeNamedTransform(
+    ConfigRcPtr & mergeConfig,
+    NamedTransformRcPtr & eNT,
+    bool fromBase,
+    std::vector<std::string> & addedInputNamedTransforms)
 {
     // NB: This routine assumes all NamedTransforms have been removed from the mergeConfig.
     // Not trying to handle name conflicts with NamedTransforms, color spaces have precedence.
 
     // Check if mergeConfig already has a color space with the same name as the input CS.
 
-    const char * name = eNT->getName();
+    const char * name                   = eNT->getName();
     ConstNamedTransformRcPtr originalNT = mergeConfig->getNamedTransform(name);
 
     if (originalNT)
@@ -3409,7 +3541,7 @@ void NamedTransformsMerger::mergeNamedTransform(ConfigRcPtr & mergeConfig,
                 os << conflictingNT->getName() << "'.";
 
                 if (strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_INPUT
-                 || strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_INPUT_ONLY)
+                    || strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_INPUT_ONLY)
                 {
                     // Remove that base named transform.
                     mergeConfig->removeNamedTransform(conflictingNT->getName());
@@ -3430,7 +3562,7 @@ void NamedTransformsMerger::mergeNamedTransform(ConfigRcPtr & mergeConfig,
                 os << conflictingNT->getName() << "'.";
 
                 if (strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_PREFER_INPUT
-                 || strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_INPUT_ONLY)
+                    || strategy == ConfigMergingParameters::MergeStrategies::STRATEGY_INPUT_ONLY)
                 {
                     // Remove the alias from that base named transform.
                     auto eConflictingNT = conflictingNT->createEditableCopy();
@@ -3456,7 +3588,7 @@ void NamedTransformsMerger::mergeNamedTransform(ConfigRcPtr & mergeConfig,
         }
     }
 
-    // Add the named transform. This will throw if a problem is found. 
+    // Add the named transform. This will throw if a problem is found.
     // (But all name conflicts should have been handled already.)
     mergeConfig->addNamedTransform(eNT);
 
@@ -3554,7 +3686,7 @@ void NamedTransformsMerger::addNamedTransforms()
 
                 // Add family prefix.
                 const bool fromBase = false;
-                std::string family = eInputNT->getFamily();
+                std::string family  = eInputNT->getFamily();
                 updateFamily(family, fromBase);
                 eInputNT->setFamily(family.c_str());
 
@@ -3568,8 +3700,9 @@ void NamedTransformsMerger::addNamedTransforms()
         for (int i = 0; i < mergeConfig->getNumNamedTransforms(NAMEDTRANSFORM_ALL); ++i)
         {
             // Note that during the merge process, some of the color spaces from the base config may
-            // be replaced if their aliases are edited. This should not change their order in the config,
-            // but may want to account for this, if that ever changes and they get moved to the end.
+            // be replaced if their aliases are edited. This should not change their order in the
+            // config, but may want to account for this, if that ever changes and they get moved to
+            // the end.
             const char * name = mergeConfig->getNamedTransformNameByIndex(NAMEDTRANSFORM_ALL, i);
 
             ConstNamedTransformRcPtr baseNT = mergeConfig->getNamedTransform(name);
@@ -3579,7 +3712,7 @@ void NamedTransformsMerger::addNamedTransforms()
 
                 // Add family prefix.
                 const bool fromBase = true;
-                std::string family = eBaseNT->getFamily();
+                std::string family  = eBaseNT->getFamily();
                 updateFamily(family, fromBase);
                 eBaseNT->setFamily(family.c_str());
 
@@ -3598,11 +3731,14 @@ void NamedTransformsMerger::addNamedTransforms()
             ConstNamedTransformRcPtr nt = mergeConfig->getNamedTransform(name);
             if (nt)
             {
-                auto eNT = nt->createEditableCopy();
+                auto eNT      = nt->createEditableCopy();
                 bool fromBase = true;
 
                 // Add family prefix.
-                if (std::find(addedInputNamedTransforms.begin(), addedInputNamedTransforms.end(), name)
+                if (std::find(
+                        addedInputNamedTransforms.begin(),
+                        addedInputNamedTransforms.end(),
+                        name)
                     != addedInputNamedTransforms.end())
                 {
                     fromBase = false;
@@ -3638,7 +3774,7 @@ void NamedTransformsMerger::handleInputOnly()
     m_mergedConfig->clearNamedTransforms();
 
     // Add the NamedTransforms from the input config.
-    for(int i = 0; i < m_inputConfig->getNumNamedTransforms(NAMEDTRANSFORM_ALL); ++i)
+    for (int i = 0; i < m_inputConfig->getNumNamedTransforms(NAMEDTRANSFORM_ALL); ++i)
     {
         const char * name = m_inputConfig->getNamedTransformNameByIndex(NAMEDTRANSFORM_ALL, i);
 
@@ -3699,7 +3835,7 @@ void NamedTransformsMerger::handleRemove()
 {
     m_mergedConfig->clearNamedTransforms();
     // Add the NamedTransforms from the base config if they do not exist in the INPUT config.
-    for(int i = 0; i < m_baseConfig->getNumNamedTransforms(NAMEDTRANSFORM_ALL); ++i)
+    for (int i = 0; i < m_baseConfig->getNumNamedTransforms(NAMEDTRANSFORM_ALL); ++i)
     {
         const char * name = m_baseConfig->getNamedTransformNameByIndex(NAMEDTRANSFORM_ALL, i);
         if (m_inputConfig->getNamedTransform(name) == nullptr)
