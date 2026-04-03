@@ -21,11 +21,14 @@ using GradingControlPointIterator = PyIterator<GradingBSplineCurveRcPtr, IT_CONT
 
 void CopyGradingBSpline(GradingBSplineCurveRcPtr to, const ConstGradingBSplineCurveRcPtr from)
 {
+    to->setSplineType(from->getSplineType());
+
     const size_t numPt = from->getNumControlPoints();
     to->setNumControlPoints(numPt);
     for (size_t pt = 0; pt < numPt; ++pt)
     {
         to->getControlPoint(pt) = from->getControlPoint(pt);
+        to->setSlope(pt, from->getSlope(pt));
     }
 }
 
