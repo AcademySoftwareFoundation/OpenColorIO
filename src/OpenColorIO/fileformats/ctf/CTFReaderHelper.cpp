@@ -856,25 +856,25 @@ void CTFReaderInfoElt::end()
 
 //////////////////////////////////////////////////////////
 
-void CTFReaderDescElt::start(const char **  atttributes )
+void CTFReaderDescElt::start(const char **  atts )
 {
     m_desc = {};
     m_language = {};
 
-    const char ** attr = atttributes;
-    while (*attr)
+    unsigned i = 0;
+    while (atts[i] && *atts[i])
     {
-        if (0 == Platform::Strcasecmp(ATTR_LANGUAGE, *attr))
+        if (0 == Platform::Strcasecmp(ATTR_LANGUAGE, *atts))
         {
-            if (!attr || !(attr + 1))
+            if (!atts[i + 1] || !*atts[i + 1])
             {
                 throwMessage("Attribute 'language' does not have a value.");
             }
 
-            m_language = *(attr + 1);
+            m_language = atts[i + 1];
         }
 
-        attr += 2;
+        i += 2;
     }
 }
 

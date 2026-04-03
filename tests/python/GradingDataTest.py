@@ -368,6 +368,29 @@ class GradingDataTest(unittest.TestCase):
         assertEqualBSpline(self, hcrv.lum_sat, ls)
         self.assertEqual(hcrv.lum_sat, ls)
 
+        # Check that setting the hue curve preserves the spline type.
+        hcrv.hue_sat = ls
+        ls2 = hcrv.hue_sat
+        # Spline type is now different than what hue_sat normally uses (PERIODIC_1_B_SPLINE).
+        self.assertEqual(ls2.getSplineType(), OCIO.HORIZONTAL1_B_SPLINE)
+        self.assertEqual(hcrv.hue_sat, ls)
+        self.assertEqual(ls2, ls)
+
+        # Check that setting the hue curve preserves the slopes.
+        self.assertEqual(ls.slopesAreDefault(), True)
+        slopes = ls.getSlopes()
+        slopes[1] = 0.5
+        ls.setSlopes(slopes)
+        self.assertEqual(ls.slopesAreDefault(), False)
+        hcrv.hue_sat = ls
+        ls2 = hcrv.hue_sat
+        self.assertEqual(ls2.slopesAreDefault(), False)
+        slopes2 = ls2.getSlopes()
+        self.assertEqual(slopes2[1], 0.5)
+        self.assertEqual(slopes2, slopes)
+        self.assertEqual(hcrv.hue_sat, ls)
+        self.assertEqual(ls2, ls)
+
     def test_rgbmsw(self):
         """
         Test the GradingRGBMSW struct.
