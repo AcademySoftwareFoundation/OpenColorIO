@@ -375,7 +375,7 @@ HeadlessOglApp::~HeadlessOglApp()
 
 void HeadlessOglApp::printGraphicsInfo() const noexcept
 {
-    GraphicalApp::printGraphicsInfo();
+    OglApp::printGraphicsInfo();
     printEGLInfo();
 }
 

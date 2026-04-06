@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-if(NOT OCIO_GL_ENABLED AND NOT (WIN32 AND OCIO_DIRECTX_ENABLED))
-    message(WARNING "GL or DirectX component missing. Skipping the GPU unit tests.")
+if(NOT OCIO_GL_ENABLED AND NOT (WIN32 AND OCIO_DIRECTX_ENABLED) AND NOT OCIO_VULKAN_ENABLED)
+    message(WARNING "GL, DirectX, and Vulkan components all missing. Skipping the GPU unit tests.")
     return()
 endif()
 
@@ -49,6 +49,9 @@ if(APPLE)
 endif()
 if(WIN32 AND OCIO_DIRECTX_ENABLED)
 	add_test(NAME test_dx COMMAND test_gpu_exec --dx)
+endif()
+if(OCIO_VULKAN_ENABLED)
+	add_test(NAME test_vulkan COMMAND test_gpu_exec --vulkan)
 endif()
 
 # Copy dxcompiler.dll and dxil.dll to the test output directory.
