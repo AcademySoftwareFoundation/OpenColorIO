@@ -7,7 +7,7 @@
 
 namespace OCIO_NAMESPACE
 {
-// Forward declaration  of GraphicalApp.
+// Forward declaration of GraphicalApp.
 class GraphicalApp;
 typedef OCIO_SHARED_PTR<GraphicalApp> GraphicalAppRcPtr;
 
@@ -65,7 +65,7 @@ public:
     virtual void readImage(float* imageBuffer) = 0;
 
     // Helper to print graphics info.
-    void virtual printGraphicsInfo() const noexcept = 0;
+    virtual void printGraphicsInfo() const noexcept = 0;
 
     // Factory: returns a platform-appropriate GraphicalApp (OGL or DX).
     static GraphicalAppRcPtr CreateApp(const char * winTitle, int winWidth, int winHeight);

@@ -737,6 +737,8 @@ int main(int argc, const char ** argv)
 #ifdef OCIO_DIRECTX_ENABLED
         if (useDxRenderer)
         {
+            // SM_5_0 controls OCIO shader code generation syntax; DxApp always
+            // compiles to SM 6.0 via DXC regardless of this enum value.
             shadingLanguage = OCIO::GPU_LANGUAGE_HLSL_SM_5_0;
         }
         else

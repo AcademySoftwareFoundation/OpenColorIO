@@ -14,6 +14,9 @@
 namespace OCIO_NAMESPACE
 {
 
+// Factory for windowed backends (OGL, DX). For headless Vulkan use
+// VulkanApp::CreateVulkanApp(). Metal is always paired with OGL (MetalApp
+// inherits ScreenOglApp) and is covered by the OCIO_GL_ENABLED branch.
 GraphicalAppRcPtr GraphicalApp::CreateApp(const char * winTitle, int winWidth, int winHeight)
 {
 #ifdef OCIO_GL_ENABLED

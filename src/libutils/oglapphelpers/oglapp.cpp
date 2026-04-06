@@ -388,7 +388,7 @@ void HeadlessOglApp::printEGLInfo() const noexcept
 
 void HeadlessOglApp::redisplay()
 {
-    GraphicalApp::redisplay();
+    OglApp::redisplay();
     eglSwapBuffers(m_eglDisplay, m_eglSurface);
 }
 
