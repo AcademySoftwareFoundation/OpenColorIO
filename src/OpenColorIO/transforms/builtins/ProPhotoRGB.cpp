@@ -82,36 +82,6 @@ namespace OCIO_NAMESPACE
 	} // namespace ROMM_RGB_GAMMA_18
 
 
-	// ProPhoto RGB with sRGB gamma curve.
-	// This is a common variant used by Adobe and other applications.
-	// Uses the sRGB transfer function (gamma 2.4, offset 0.055) instead of
-	// the standard ROMM RGB gamma 1.8 curve.
-	namespace ROMM_RGB_SRGB_GAMMA
-	{
-
-		void GenerateLinearToEncodedOps(OpRcPtrVec& ops)
-		{
-			// sRGB gamma encoding: gamma=2.4, offset=0.055
-			// This uses the MONCURVE model which is efficient for sRGB-style curves.
-			const GammaOpData::Params rgbParams = { 2.4, 0.055 };
-			const GammaOpData::Params alphaParams = { 1.0, 0.0 };
-			auto gammaData = std::make_shared<GammaOpData>(GammaOpData::MONCURVE_FWD,
-				rgbParams, rgbParams, rgbParams, alphaParams);
-			CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
-		}
-
-		void GenerateEncodedToLinearOps(OpRcPtrVec& ops)
-		{
-			// sRGB gamma decoding: gamma=2.4, offset=0.055
-			const GammaOpData::Params rgbParams = { 2.4, 0.055 };
-			const GammaOpData::Params alphaParams = { 1.0, 0.0 };
-			auto gammaData = std::make_shared<GammaOpData>(GammaOpData::MONCURVE_REV,
-				rgbParams, rgbParams, rgbParams, alphaParams);
-			CreateGammaOp(ops, gammaData, TRANSFORM_DIR_FORWARD);
-		}
-
-	} // namespace ROMM_RGB_SRGB_GAMMA
-
 
 	namespace PROPHOTO
 	{
@@ -153,26 +123,6 @@ namespace OCIO_NAMESPACE
 				registry.addBuiltin("ROMM_to_CIE-XYZ-D65_BFD",
 					"Convert ProPhoto RGB (gamma 1.8 encoded) to ACES2065-1",
 					ROMM_to_CIE_XYZ_D65_BFD_Functor);
-			}
-
-			// ProPhoto RGB with sRGB gamma to ACES2065-1.
-			{
-				auto ROMM_RGB_SRGB_to_ACES2065_1_Functor = [](OpRcPtrVec& ops)
-					{
-						// 1. Decode sRGB gamma to linear.
-						ROMM_RGB_SRGB_GAMMA::GenerateEncodedToLinearOps(ops);
-
-						// 2. Convert color space from ROMM RGB (D50) to ACES AP0 (D60).
-						MatrixOpData::MatrixArrayPtr matrix
-							= build_conversion_matrix(ROMM_RGB::primaries,
-								ACES_AP0::primaries,
-								ADAPTATION_BRADFORD);
-						CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
-					};
-
-				registry.addBuiltin("PROPHOTO-RGB-SRGB-GAMMA_to_ACES2065-1",
-					"Convert ProPhoto RGB (sRGB gamma encoded) to ACES2065-1",
-					ROMM_RGB_SRGB_to_ACES2065_1_Functor);
 			}
 
 		}

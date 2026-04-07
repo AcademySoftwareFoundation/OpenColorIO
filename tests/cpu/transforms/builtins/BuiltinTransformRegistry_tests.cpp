@@ -407,5 +407,4 @@ OCIO_ADD_TEST(Builtins, version_2_3_validation)
     // ProPhotoRGB / ROMM RGB builtin transforms.
     TestStyle("ROMM_to_CIE-XYZ-D65_BFD");
     TestStyle("LINEAR-RIMM_to_ACES2065-1_BFD");
-    //TestStyle("PROPHOTO-RGB-SRGB-GAMMA_to_ACES2065-1");
 }
