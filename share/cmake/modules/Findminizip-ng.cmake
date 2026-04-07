@@ -45,10 +45,8 @@ if(CMAKE_BUILD_TYPE MATCHES "[Dd][Ee][Bb][Uu][Gg]")
 endif()
 
 if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
-    if(NOT DEFINED minizip-ng_ROOT)
-        # Search for minizip-ng-config.cmake
-        find_package(minizip-ng ${minizip-ng_FIND_VERSION} CONFIG QUIET)
-    endif()
+    # Search for minizip-ng-config.cmake
+    find_package(minizip-ng ${minizip-ng_FIND_VERSION} CONFIG QUIET)
     
     if (minizip-ng_FOUND)
         get_target_property(minizip-ng_INCLUDE_DIR MINIZIP::minizip-ng INTERFACE_INCLUDE_DIRECTORIES)

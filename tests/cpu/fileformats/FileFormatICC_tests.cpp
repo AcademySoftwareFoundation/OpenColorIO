@@ -244,6 +244,8 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
 {
     OCIO::ContextRcPtr context = OCIO::Context::Create();
     {
+        // This test uses a profile where the TRC is a 1024 element LUT.
+
         static const std::string iccFileName("icc-test-3.icm");
         OCIO::OpRcPtrVec ops;
         OCIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context, OCIO::TRANSFORM_DIR_INVERSE));
@@ -287,7 +289,8 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
             op->apply(srcImage, 3);
         }
 
-        // Values outside [0.0, 1.0] are clamped and won't round-trip.
+        // Currently the LUT-based TRC's clamp the values outside 
+        // [0.0, 1.0], thus those values won't round-trip.
         static constexpr float bckImage[] = {
             0.0f, 0.0f, 0.3f, 0.0f,
             0.4f, 0.5f, 0.6f, 0.5f,
@@ -301,26 +304,35 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
     }
 
     {
+        // This test uses a profile where the TRC is 
+        // a parametric curve of type 0 (basic gamma) with
+        // gamma values {2.174, 2.174, 2.174, 1.0}.
+
         static const std::string iccFileName("icc-test-2.pf");
         OCIO::OpRcPtrVec ops;
         OCIO_CHECK_NO_THROW(BuildOpsTest(ops, iccFileName, context, OCIO::TRANSFORM_DIR_INVERSE));
         OCIO_CHECK_NO_THROW(ops.finalize());
         OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_LOSSLESS));
+        OCIO_REQUIRE_EQUAL(2, ops.size());
+        OCIO_CHECK_EQUAL("<GammaOp>",        ops[0]->getInfo());
+        OCIO_CHECK_EQUAL("<MatrixOffsetOp>", ops[1]->getInfo());
 
         // apply ops
-        float srcImage[] = {
+        const std::array<float, 12> srcImage{
             -0.1f, 0.0f, 0.3f, 0.0f,
              0.4f, 0.5f, 0.6f, 0.5f,
              0.7f, 1.0f, 1.9f, 1.0f };
 
-        const float dstImage[] = {
-            0.012437f, 0.004702f, 0.070333f, 0.0f,
+        const std::array<float, 12> dstImage{
+            0.009241f, 0.003003f, 0.070198f, 0.0f,
             0.188392f, 0.206965f, 0.343595f, 0.5f,
-            0.693246f, 0.863199f, 1.07867f , 1.0f };
+            1.210462f, 1.058761f, 4.003706f, 1.0f };
+
+        std::array<float, 12> testImage = srcImage;
 
         for (const auto & op : ops)
         {
-            op->apply(srcImage, 3);
+            op->apply(testImage.data(), 3);
         }
 
         // Compare results
@@ -328,7 +340,7 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
 
         for (unsigned int i = 0; i<12; ++i)
         {
-            OCIO_CHECK_CLOSE(srcImage[i], dstImage[i], error);
+            OCIO_CHECK_CLOSE(testImage[i], dstImage[i], error);
         }
 
         // Invert the processing.
@@ -337,24 +349,22 @@ OCIO_ADD_TEST(FileFormatICC, test_apply)
         OCIO_CHECK_NO_THROW(BuildOpsTest(opsInv, iccFileName, context, OCIO::TRANSFORM_DIR_FORWARD));
         OCIO_CHECK_NO_THROW(opsInv.finalize());
         OCIO_CHECK_NO_THROW(opsInv.optimize(OCIO::OPTIMIZATION_LOSSLESS));
+        OCIO_REQUIRE_EQUAL(2, opsInv.size());
+        OCIO_CHECK_EQUAL("<MatrixOffsetOp>", opsInv[0]->getInfo());
+        OCIO_CHECK_EQUAL("<GammaOp>",        opsInv[1]->getInfo());
 
         for (const auto & op : opsInv)
         {
-            op->apply(srcImage, 3);
+            op->apply(testImage.data(), 3);
         }
 
-        // Values outside [0.0, 1.0] are clamped and won't round-trip.
-        const float bckImage[] = {
-            0.0f, 0.0f, 0.3f, 0.0f,
-            0.4f, 0.5f, 0.6f, 0.5f,
-            0.7f, 1.0f, 1.0f, 1.0f };
-
-        // Compare results
+        // For pure-gamma TRCs, values outside [0.0, 1.0] are NOT clamped
+        // thus those values should round-trip correctly.
         const float error2 = 2e-4f;
 
         for (unsigned int i = 0; i<12; ++i)
         {
-            OCIO_CHECK_CLOSE(srcImage[i], bckImage[i], error2);
+            OCIO_CHECK_CLOSE(testImage[i], srcImage[i], error2);
         }
     }
 

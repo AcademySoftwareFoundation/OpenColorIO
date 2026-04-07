@@ -18,6 +18,7 @@ void ConvertStringToGradingStyleAndDir(const char * str,
                                        TransformDirection & dir);
 const char * ConvertGradingStyleAndDirToString(GradingStyle style, TransformDirection dir);
 
+bool ValidateSMPTEId(const std::string& id);
 
 static constexpr char TAG_ACES[] = "ACES";
 static constexpr char TAG_ACES_PARAMS[] = "ACESParams";
@@ -42,6 +43,7 @@ static constexpr char TAG_FIXED_FUNCTION[] = "FixedFunction";
 static constexpr char TAG_FUNCTION[] = "Function";
 static constexpr char TAG_GAMMA[] = "Gamma";
 static constexpr char TAG_GAMMA_PARAMS[] = "GammaParams";
+static constexpr char TAG_ID[] = "Id"; 
 static constexpr char TAG_INDEX_MAP[] = "IndexMap";
 static constexpr char TAG_INFO[] = "Info";
 static constexpr char TAG_INVLUT1D[] = "InverseLUT1D";
@@ -114,6 +116,7 @@ static constexpr char ATTR_HUE_ADJUST[] = "hueAdjust";
 static constexpr char ATTR_INTERPOLATION[] = "interpolation";
 static constexpr char ATTR_INVERSE_OF[] = "inverseOf";
 static constexpr char ATTR_IS_INVERTED[] = "inverted";
+static constexpr char ATTR_LANGUAGE[] = "language";
 static constexpr char ATTR_LINEARSLOPE[] = "linearSlope";
 static constexpr char ATTR_LINSIDEBREAK[] = "linSideBreak";
 static constexpr char ATTR_LINSIDESLOPE[] = "linSideSlope";

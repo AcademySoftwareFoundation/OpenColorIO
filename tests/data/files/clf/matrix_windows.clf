@@ -1,4 +1,4 @@
-<ProcessList id="42" name="matrix example" compCLFversion="3.0">
+<ProcessList id="42" name="matrix example" compCLFversion="3.0" xmlns="http://www.smpte-ra.org/ns/2136-1/2024">
     <Description>This file has Windows line-endings.</Description>
     <Description>Also, the file does not start with a ?xml header.</Description>
     <Matrix name="identity matrix" inBitDepth="16f" outBitDepth="12i">

@@ -67,6 +67,7 @@ public:
                     TextureDimensions & dimensions,
                     Interpolation & interpolation) const override;
     void getTextureValues(unsigned index, const float *& values) const override;
+    unsigned getTextureShaderBindingIndex(unsigned index) const override;
 
     // Accessors to the 3D textures built from 3D LUT
     //
@@ -82,6 +83,7 @@ public:
                       unsigned & edgelen,
                       Interpolation & interpolation) const override;
     void get3DTextureValues(unsigned index, const float *& value) const override;
+    unsigned get3DTextureShaderBindingIndex(unsigned index) const override;
 
 private:
 

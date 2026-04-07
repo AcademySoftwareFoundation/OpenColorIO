@@ -143,7 +143,7 @@ languageCode = "en-us"
 contentDir = "content/english"
 weight = 1
 home = "Home"
-copyright = "copyright &copy; 2020 OpenColorIO Contributors"
+copyright = "Copyright © OpenColorIO a Series of LF Projects, LLC. For web site terms of use, trademark policy and other project policies please see https://lfprojects.org/."
 
 ################################ France Language ########################
 [Languages.fr]
@@ -152,4 +152,4 @@ languageCode = "fr-fr"
 contentDir = "content/french"
 weight = 2
 home = "Accueil"
-copyright = "copyright &copy; 2020 [gethugothemes](https://gethugothemes.com) tous droits réservés"
+copyright = "Copyright © OpenColorIO, a Series of LF Projects, LLC. Pour les conditions d'utilisation du site Web, la politique sur les marques et autres politiques de projet, voir https://lfprojects.org/."

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ProcessList id="9843a859-e41e-40a8-a51c-840889c3774e" compCLFversion="3.0">
+<ProcessList id="9843a859-e41e-40a8-a51c-840889c3774e" compCLFversion="3.0" xmlns="http://www.smpte-ra.org/ns/2136-1/2024">
     <Description>Basic range example with no style attribute</Description>
     <InputDescriptor>RGB</InputDescriptor>
     <OutputDescriptor>RGB</OutputDescriptor>

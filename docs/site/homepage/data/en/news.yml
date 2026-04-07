@@ -2,26 +2,26 @@
 news:
   enable : true
   image : images/disney_insideout.jpeg
-  title : OCIO v2 is here!
+  title : OCIO v2.5.0 is here!
   content : "Check out our [guides](https://opencolorio.readthedocs.io/en/latest/releases/_index.html#releases) for upgrading. Here are just a few highlights of new features:"
   caption: "Image courtesy of Disney (c)"
   feature_item : 
       # feature item loop
-    - title : New GPU Renderer
-      icon : ti-world # themify icon pack : https://themify.me/themify-icons
-      content : The GPU renderer now matches the CPU and may be used to render final frames!
+    - title : Config Merging 
+      icon : ti-files # themify icon pack : https://themify.me/themify-icons
+      content : This much-anticipated feature is now in Preview. Please provide feedback on use cases and workflows. Merging enables user and application control over things like name and alias conflicts, color space duplication, and much more.
       
       # feature item loop
-    - title : Better User Experience
-      icon : ti-brush # themify icon pack : https://themify.me/themify-icons
-      content : Config authors have new tools to organize color spaces by category, hide color spaces, and define hierarchical menus.  New File and Viewing Rules allow more powerful default behaviors.
+    - title : Vulkan GPU Support
+      icon : ti-image # themify icon pack : https://themify.me/themify-icons
+      content : Support has been added for the Khronos Vulkan graphics API standard. The OCIO GPU renderer may now be used within applications that use Vulkan to get the most out of the latest GPUs.
 
       # feature item loop
-    - title : Improved ACES Support
-      icon : ti-stats-up # themify icon pack : https://themify.me/themify-icons
-      content : ACES Output Transforms no longer use 3d-LUTs and are accurate even for extreme exposure values.  There is also full read and write support for the Academy/ASC Common LUT Format (CLF).
+    - title : Full ACES 2.0 Support
+      icon : ti-brush # themify icon pack : https://themify.me/themify-icons
+      content : With the inclusion of ACES 2.0 Built-In configs, our ACES 2.0 support is now feature complete. This allows use of the ACES 2.0 Output Transforms as OCIO views.
       
       # feature item loop
-    - title : Analysis Tools
+    - title : New Color Space Attributes
       icon : ti-panel # themify icon pack : https://themify.me/themify-icons
-      content : There are new command line tools for evaluating LUTs, converting to CLF, serializing OCIO Processors, and more!
+      content : OCIO now supports the Color Interop ID developed by the Color Interop Forum, as well as attributes for ICC and AMF. Please see the latest config release for example usage.

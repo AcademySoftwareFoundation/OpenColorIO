@@ -70,6 +70,7 @@ public:
                 GpuShaderDesc::TextureType channel,
                 unsigned dimensions,
                 Interpolation interpolation,
+                unsigned textureShaderBindingIndex,
                 const float * v)
             :   m_textureName(textureName)
             ,   m_samplerName(samplerName)
@@ -79,6 +80,7 @@ public:
             ,   m_type(channel)
             ,   m_dimensions(dimensions)
             ,   m_interp(interpolation)
+            ,   m_textureShaderBindingIndex(textureShaderBindingIndex)
         {
             if (!textureName || !*textureName)
             {
@@ -113,6 +115,7 @@ public:
         GpuShaderDesc::TextureType m_type;
         unsigned m_dimensions;
         Interpolation m_interp;
+        unsigned m_textureShaderBindingIndex;
 
         std::vector<float> m_values;
 
@@ -214,11 +217,13 @@ public:
                 << width << " > " << get1dLutMaxWidth();
             throw Exception(ss.str().c_str());
         }
-        unsigned textureIndex = static_cast<unsigned>(m_textures.size());
+        unsigned textureShaderBindingIndex = static_cast<unsigned>(m_textures.size())
+                                           + static_cast<unsigned>(m_textures3D.size());
         unsigned numDimensions = static_cast<unsigned>(dimensions);
-        Texture t(textureName, samplerName, width, height, 1, channel, numDimensions, interpolation, values);
+        Texture t(textureName, samplerName, width, height, 1, channel, numDimensions, interpolation,
+                  textureShaderBindingIndex, values);
         m_textures.push_back(t);
-        return textureIndex;
+        return textureShaderBindingIndex;
     }
 
     void getTexture(unsigned index,
@@ -268,6 +273,20 @@ public:
         values   = &t.m_values[0];
     }
 
+    unsigned getTextureShaderBindingIndex(unsigned index) const
+    {
+        if(index >= m_textures.size())
+        {
+            std::ostringstream ss;
+            ss << "1D LUT access error: index = " << index
+               << " where size = " << m_textures.size();
+            throw Exception(ss.str().c_str());
+        }
+
+        const Texture & t = m_textures[index];
+        return t.m_textureShaderBindingIndex;
+    }
+
     unsigned add3DTexture(const char * textureName,
                           const char * samplerName,
                           unsigned edgelen,
@@ -282,12 +301,13 @@ public:
             throw Exception(ss.str().c_str());
         }
 
-        unsigned textureIndex = static_cast<unsigned>(m_textures3D.size());
+        unsigned textureShaderBindingIndex = static_cast<unsigned>(m_textures.size())
+                                           + static_cast<unsigned>(m_textures3D.size());
         Texture t(textureName, samplerName, edgelen, edgelen, edgelen,
                   GpuShaderDesc::TEXTURE_RGB_CHANNEL, 3,
-                  interpolation, values);
+                  interpolation, textureShaderBindingIndex, values);
         m_textures3D.push_back(t);
-        return textureIndex;
+        return textureShaderBindingIndex;
     }
 
     void get3DTexture(unsigned index,
@@ -323,6 +343,20 @@ public:
 
         const Texture & t = m_textures3D[index];
         values = &t.m_values[0];
+    }
+
+    unsigned get3DTextureShaderBindingIndex(unsigned index) const
+    {
+        if(index >= m_textures3D.size())
+        {
+            std::ostringstream ss;
+            ss << "3D LUT access error: index = " << index
+               << " where size = " << m_textures3D.size();
+            throw Exception(ss.str().c_str());
+        }
+
+        const Texture & t = m_textures3D[index];
+        return t.m_textureShaderBindingIndex;
     }
 
     unsigned getNumUniforms() const
@@ -544,7 +578,9 @@ unsigned GenericGpuShaderDesc::addTexture(const char * textureName,
                                           Interpolation interpolation,
                                           const float * values)
 {
-    return getImplGeneric()->addTexture(textureName, samplerName, width, height, channel, dimensions, interpolation, values);
+    return getImplGeneric()->addTexture(textureName, samplerName, width, height, channel, 
+                                        dimensions, interpolation, values)
+                             + getTextureBindingStart();
 }
 
 void GenericGpuShaderDesc::getTexture(unsigned index,
@@ -555,12 +591,18 @@ void GenericGpuShaderDesc::getTexture(unsigned index,
                                       TextureDimensions & dimensions,
                                       Interpolation & interpolation) const
 {
-    getImplGeneric()->getTexture(index, textureName, samplerName, width, height, channel, dimensions, interpolation);
+    getImplGeneric()->getTexture(index, textureName, samplerName, width, height, channel,
+                                 dimensions, interpolation);
 }
 
 void GenericGpuShaderDesc::getTextureValues(unsigned index, const float *& values) const
 {
     getImplGeneric()->getTextureValues(index, values);
+}
+
+unsigned GenericGpuShaderDesc::getTextureShaderBindingIndex(unsigned index) const
+{
+    return getImplGeneric()->getTextureShaderBindingIndex(index) + getTextureBindingStart();
 }
 
 unsigned GenericGpuShaderDesc::getNum3DTextures() const noexcept
@@ -574,7 +616,8 @@ unsigned GenericGpuShaderDesc::add3DTexture(const char * textureName,
                                             Interpolation interpolation,
                                             const float * values)
 {
-    return getImplGeneric()->add3DTexture(textureName, samplerName, edgelen, interpolation, values);
+    return getImplGeneric()->add3DTexture(textureName, samplerName, edgelen, interpolation, values)
+           + getTextureBindingStart();
 }
 
 void GenericGpuShaderDesc::get3DTexture(unsigned index,
@@ -589,6 +632,11 @@ void GenericGpuShaderDesc::get3DTexture(unsigned index,
 void GenericGpuShaderDesc::get3DTextureValues(unsigned index, const float *& values) const
 {
     getImplGeneric()->get3DTextureValues(index, values);
+}
+
+unsigned GenericGpuShaderDesc::get3DTextureShaderBindingIndex(unsigned index) const
+{
+    return getImplGeneric()->get3DTextureShaderBindingIndex(index) + getTextureBindingStart();
 }
 
 void GenericGpuShaderDesc::Deleter(GenericGpuShaderDesc* c)

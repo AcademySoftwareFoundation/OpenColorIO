@@ -730,8 +730,9 @@ void build_hue_table(Table1D &hue_table, const std::array<float, max_sorted_corn
     // BUG: could break if we are unlucky with samples all being used up by this point
     build_hue_sample_interval(hue_table.nominal_size - total_samples, sorted_hues[i - 1], hue_limit, hue_table, total_samples + 1);
 
-    hue_table[hue_table.lower_wrap_index] = hue_table[hue_table.last_nominal_index] - hue_limit;
-    hue_table[hue_table.upper_wrap_index] = hue_table[hue_table.first_nominal_index] + hue_limit;
+    hue_table[hue_table.lower_wrap_index]     = hue_table[hue_table.last_nominal_index] - hue_limit;
+    hue_table[hue_table.upper_wrap_index]     = hue_table[hue_table.first_nominal_index] + hue_limit;
+    hue_table[hue_table.upper_wrap_index + 1] = hue_table[hue_table.first_nominal_index + 1] + hue_limit;
 }
 
 std::array<float, 2> find_display_cusp_for_hue(float hue, const std::array<f3, totalCornerCount>& RGB_corners, const std::array<f3, totalCornerCount>& JMh_corners,
@@ -820,12 +821,15 @@ Table3D build_cusp_table(const Table1D& hue_table, const std::array<f3, totalCor
     }
 
     // Copy extra entries to ease the code to handle hues wrapping around
-    output_table[output_table.lower_wrap_index][0] = output_table[output_table.last_nominal_index][0];
-    output_table[output_table.lower_wrap_index][1] = output_table[output_table.last_nominal_index][1];
-    output_table[output_table.lower_wrap_index][2] = hue_table[hue_table.lower_wrap_index];
-    output_table[output_table.upper_wrap_index][0] = output_table[output_table.first_nominal_index][0];
-    output_table[output_table.upper_wrap_index][1] = output_table[output_table.first_nominal_index][1];
-    output_table[output_table.upper_wrap_index][2] = hue_table[hue_table.upper_wrap_index];
+    output_table[output_table.lower_wrap_index][0]     = output_table[output_table.last_nominal_index][0];
+    output_table[output_table.lower_wrap_index][1]     = output_table[output_table.last_nominal_index][1];
+    output_table[output_table.lower_wrap_index][2]     = hue_table[hue_table.lower_wrap_index];
+    output_table[output_table.upper_wrap_index][0]     = output_table[output_table.first_nominal_index][0];
+    output_table[output_table.upper_wrap_index][1]     = output_table[output_table.first_nominal_index][1];
+    output_table[output_table.upper_wrap_index][2]     = hue_table[hue_table.upper_wrap_index];
+    output_table[output_table.upper_wrap_index + 1][0] = output_table[output_table.first_nominal_index + 1][0];
+    output_table[output_table.upper_wrap_index + 1][1] = output_table[output_table.first_nominal_index + 1][1];
+    output_table[output_table.upper_wrap_index + 1][2] = hue_table[hue_table.upper_wrap_index + 1];
     return output_table;
 }
 
@@ -898,8 +902,9 @@ Table1D make_reach_m_table(const JMhParams &params, const float limit_J_max)
 
         gamutReachTable[i + gamutReachTable.base_index] = high;
     }
-    gamutReachTable[gamutReachTable.lower_wrap_index] = gamutReachTable[gamutReachTable.last_nominal_index];
-    gamutReachTable[gamutReachTable.upper_wrap_index] = gamutReachTable[gamutReachTable.first_nominal_index];
+    gamutReachTable[gamutReachTable.lower_wrap_index]     = gamutReachTable[gamutReachTable.last_nominal_index];
+    gamutReachTable[gamutReachTable.upper_wrap_index]     = gamutReachTable[gamutReachTable.first_nominal_index];
+    gamutReachTable[gamutReachTable.upper_wrap_index + 1] = gamutReachTable[gamutReachTable.first_nominal_index + 1];
 
     return gamutReachTable;
 }
@@ -1252,8 +1257,9 @@ void make_upper_hull_gamma(
     }
 
     // Copy last populated entries to empty spot 'wrapping' entries
-    gamutCuspTable[gamutCuspTable.lower_wrap_index][2] = gamutCuspTable[gamutCuspTable.last_nominal_index][2];
-    gamutCuspTable[gamutCuspTable.upper_wrap_index][2] = gamutCuspTable[gamutCuspTable.first_nominal_index][2];
+    gamutCuspTable[gamutCuspTable.lower_wrap_index][2]     = gamutCuspTable[gamutCuspTable.last_nominal_index][2];
+    gamutCuspTable[gamutCuspTable.upper_wrap_index][2]     = gamutCuspTable[gamutCuspTable.first_nominal_index][2];
+    gamutCuspTable[gamutCuspTable.upper_wrap_index + 1][2] = gamutCuspTable[gamutCuspTable.first_nominal_index + 1][2];
 }
 
 // Tonescale pre-calculations

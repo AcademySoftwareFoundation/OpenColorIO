@@ -482,7 +482,8 @@ std::string GpuShaderText::declareVarStr(const std::string & name, float v)
 std::string GpuShaderText::vectorCompareExpression(const std::string& lhs, const std::string& op, const std::string& rhs)
 {
     std::string ret = lhs + " " + op + " " + rhs;
-    if(m_lang == GPU_LANGUAGE_MSL_2_0)
+    // MSL and HLSL do not allow vector bool in if-conditions: wrap with any().
+    if(m_lang == GPU_LANGUAGE_MSL_2_0 || m_lang == GPU_LANGUAGE_HLSL_SM_5_0)
     {
         ret = "any( " + ret + " )";
     }
@@ -845,11 +846,11 @@ std::string GpuShaderText::getSamplerName(const std::string& textureName)
 
 void GpuShaderText::declareTex1D(const std::string & textureName,
                                  unsigned descriptorSetIndex, 
-                                 unsigned textureIndex, unsigned textureBindingStart)
+                                 unsigned textureIndex)
 {
     std::string textureDecl, samplerDecl;
     getTexDecl<1>(m_lang, textureName, getSamplerName(textureName), textureDecl, samplerDecl,
-                  descriptorSetIndex, textureIndex + textureBindingStart);
+                  descriptorSetIndex, textureIndex);
 
     if (!textureDecl.empty())
     {
@@ -864,11 +865,11 @@ void GpuShaderText::declareTex1D(const std::string & textureName,
 
 void GpuShaderText::declareTex2D(const std::string & textureName,
                                  unsigned descriptorSetIndex,
-                                 unsigned textureIndex, unsigned textureBindingStart)
+                                 unsigned textureIndex)
 {
     std::string textureDecl, samplerDecl;
     getTexDecl<2>(m_lang, textureName, getSamplerName(textureName), textureDecl, samplerDecl,
-                  descriptorSetIndex, textureIndex + textureBindingStart);
+                  descriptorSetIndex, textureIndex);
 
     if (!textureDecl.empty())
     {
@@ -883,11 +884,11 @@ void GpuShaderText::declareTex2D(const std::string & textureName,
 
 void GpuShaderText::declareTex3D(const std::string& textureName,
                                  unsigned descriptorSetIndex,
-                                 unsigned textureIndex, unsigned textureBindingStart)
+                                 unsigned textureIndex)
 {
     std::string textureDecl, samplerDecl;
     getTexDecl<3>(m_lang, textureName, getSamplerName(textureName), textureDecl, samplerDecl,
-                  descriptorSetIndex, textureIndex + textureBindingStart);
+                  descriptorSetIndex, textureIndex);
 
     if (!textureDecl.empty())
     {

@@ -198,16 +198,18 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         dimensions = GpuShaderDesc::TEXTURE_2D;
     }
 
-    // (Using CacheID here to potentially allow reuse of existing textures.)
-    const unsigned textureIndex = shaderCreator->addTexture(name.c_str(),
-                                                  GpuShaderText::getSamplerName(name).c_str(),
-                                                  width,
-                                                  height,
-                                                  singleChannel ? GpuShaderCreator::TEXTURE_RED_CHANNEL
-                                                                : GpuShaderCreator::TEXTURE_RGB_CHANNEL,
-                                                  dimensions,
-                                                  lutData->getConcreteInterpolation(),
-                                                  &values[0]);
+    // Copy the LUT into the shaderCreator as a Texture object.
+    const unsigned textureShaderBindingIndex = shaderCreator->addTexture(
+        name.c_str(),
+        GpuShaderText::getSamplerName(name).c_str(),
+        width,
+        height,
+        singleChannel ? GpuShaderCreator::TEXTURE_RED_CHANNEL
+                      : GpuShaderCreator::TEXTURE_RGB_CHANNEL,
+        dimensions,
+        lutData->getConcreteInterpolation(),
+        &values[0]
+    );
 
     // Add the LUT code to the OCIO shader program.
 
@@ -217,12 +219,14 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         // or the language doesn't support 1D textures,
         // a 2D texture is used.
 
+        // Create a 2D texture declaration.
         {
             GpuShaderText ss(shaderCreator->getLanguage());
-            ss.declareTex2D(name, shaderCreator->getDescriptorSetIndex(), textureIndex, shaderCreator->getTextureBindingStart());
+            ss.declareTex2D(name, shaderCreator->getDescriptorSetIndex(), 
+                            textureShaderBindingIndex);
             shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
         }
-
+        // Create the helper function to deal with 2D array lookups.
         {
             GpuShaderText ss(shaderCreator->getLanguage());
 
@@ -302,8 +306,10 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     }
     else
     {
+        // Create a 1D texture declaration.
         GpuShaderText ss(shaderCreator->getLanguage());
-        ss.declareTex1D(name, shaderCreator->getDescriptorSetIndex(), textureIndex, shaderCreator->getTextureBindingStart());
+        ss.declareTex1D(name, shaderCreator->getDescriptorSetIndex(), 
+                        textureShaderBindingIndex);
         shaderCreator->addToTextureDeclareShaderCode(ss.string().c_str());
     }
 

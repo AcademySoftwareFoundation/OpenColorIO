@@ -28,7 +28,7 @@ const char * DESC_STRING = "\n\n"
 "that has been manually edited, using the '-o' option.\n";
 
 
-// returns true if the interopID is valid
+// Returns true if the interopID is valid.
 bool isValidInteropID(const std::string& id)
 {
     // See https://github.com/AcademySoftwareFoundation/ColorInterop for the details.
@@ -56,7 +56,7 @@ bool isValidInteropID(const std::string& id)
         "srgb_rec709_display",
         "g24_rec709_display",
         "srgb_p3d65_display",
-        "srgbx_p3d65_display",
+        "srgbe_p3d65_display",
         "pq_p3d65_display",
         "pq_rec2020_display",
         "hlg_rec2020_display",
@@ -70,15 +70,15 @@ bool isValidInteropID(const std::string& id)
     if (id.empty()) 
         return true;
 
-    // Check if has a namespace.
+    // Check if the ID has a namespace.
     size_t pos = id.find(':');
     if (pos == std::string::npos) 
     {
-        // No namespace, so id must be in the Color Interop Forum ID list.
+        // No namespace, so the ID must be in the Color Interop Forum ID list.
         if (cifTextureIDs.count(id) == 0 && cifDisplayIDs.count(id)==0)
         {
-            std::cout << "ERROR: InteropID '" << id << "' is not valid. "
-                "It should either be one of Color Interop Forum standard IDs or "
+            std::cout << "WARNING: InteropID '" << id << "' is not valid. "
+                "It should either be one of the Color Interop Forum standard IDs or "
                 "it must contain a namespace followed by ':', e.g. 'mycompany:mycolorspace'." << 
                 std::endl;
             return false;
@@ -86,21 +86,21 @@ bool isValidInteropID(const std::string& id)
     }
     else
     {
-        // Namespace found, split into namespace and id.
+        // Namespace found, split into namespace and ID.
         std::string ns = id.substr(0, pos);
         std::string cs = id.substr(pos+1);
 
-        // Id should not be in the Color Interop Forum ID list.
+        // The ID should not be in the Color Interop Forum ID list.
         if (cifTextureIDs.count(cs) > 0 || cifDisplayIDs.count(cs)> 0) 
         {
-            std::cout << "ERROR: InteropID '" << id << "' is not valid. "
-                "The ID part must not be one of the Color Interop Forum standard IDs when a namespace is used." << 
-                std::endl;
+            std::cout << "WARNING: InteropID '" << id << "' is not valid. "
+                "The ID part must not be one of the Color Interop Forum standard IDs "
+                "when a namespace is used." << std::endl;
             return false;
         }
     }
 
-    // all clear.
+    // All clear.
     return true;
 }
 
@@ -108,6 +108,7 @@ int main(int argc, const char **argv)
 {
     bool help = false;
     int errorcount = 0;
+    int warningcount = 0;
     std::string inputconfig;
     std::string outputconfig;
 
@@ -357,6 +358,7 @@ int main(int argc, const char **argv)
                 if(!cs)
                 {
                     std::cout << "WARNING: NOT DEFINED (" << role << ")" << std::endl;
+                    warningcount += 1;
                 }
             }
         }
@@ -368,6 +370,9 @@ int main(int argc, const char **argv)
             const int numCS = config->getNumColorSpaces(
                 OCIO::SEARCH_REFERENCE_SPACE_ALL,   // Iterate over scene & display color spaces.
                 OCIO::COLORSPACE_ALL);              // Iterate over active & inactive color spaces.
+
+            bool foundCategory = false;
+            bool foundNoCategory = false;
 
             for(int i=0; i<numCS; ++i)
             {
@@ -381,8 +386,14 @@ int main(int argc, const char **argv)
                 {
                     if (!isValidInteropID(interopID))
                     {
-                        errorcount += 1;
+                        warningcount += 1;
                     }
+                }
+
+                if(!config->isInactiveColorSpace(cs->getName()))
+                {
+                    if(cs->getNumCategories() > 0) foundCategory = true;
+                    else foundNoCategory = true;
                 }
 
                 // Try to load the transform for the to_ref direction -- this will load any LUTs.
@@ -440,6 +451,14 @@ int main(int argc, const char **argv)
                     std::cout << cs->getName() << std::endl;
                 }
             }
+
+            if(foundCategory && foundNoCategory)
+            {
+                // Categories should either be missing in all, or present in all active items.
+                std::cout << "\nWARNING: The config has some color spaces "
+                             "where the categories are not set.\n";
+                warningcount += 1;
+            }
         }
 
         {
@@ -453,10 +472,19 @@ int main(int argc, const char **argv)
                 std::cout << "no named transforms defined" << std::endl;
             }
 
+            bool foundCategory = false;
+            bool foundNoCategory = false;
+
             for(int i = 0; i<numNT; ++i)
             {
                 OCIO::ConstNamedTransformRcPtr nt = config->getNamedTransform(
                     config->getNamedTransformNameByIndex(OCIO::NAMEDTRANSFORM_ALL, i));
+
+                if(!config->isInactiveColorSpace(nt->getName()))
+                {
+                    if(nt->getNumCategories() > 0) foundCategory = true;
+                    else foundNoCategory = true;
+                }
 
                 // Try to load the transform -- this will load any LUTs.
                 bool fwdOK = true;
@@ -512,6 +540,14 @@ int main(int argc, const char **argv)
                     // The named transform's transforms load ok.
                     std::cout << nt->getName() << std::endl;
                 }
+            }
+
+            if(foundCategory && foundNoCategory)
+            {
+                // Categories should either be missing in all, or present in all active items.
+                std::cout << "\nWARNING: The config has some named transforms "
+                             "where the categories are not set.\n";
+                warningcount += 1;
             }
         }
 
@@ -605,11 +641,11 @@ int main(int argc, const char **argv)
             StringUtils::StringVec svec = StringUtils::SplitByLines(logGuard.output());
             if (!StringUtils::Contain(svec, "[OpenColorIO Error]"))
             {
-                std::cout << "passed" << std::endl;
+                std::cout << "Validation: passed" << std::endl;
             }
             else
             {
-                std::cout << "failed" << std::endl;
+                std::cout << "Validation: failed" << std::endl;
                 errorcount += 1;
             }
         }
@@ -618,7 +654,7 @@ int main(int argc, const char **argv)
             std::cout << "ERROR:" << std::endl;
             errorcount += 1;
             std::cout << exception.what() << std::endl;
-            std::cout << "failed" << std::endl;
+            std::cout << "Validation: failed" << std::endl;
         }
 
         std::cout << std::endl;
@@ -655,6 +691,11 @@ int main(int argc, const char **argv)
     {
         std::cout << "Unknown error encountered." << std::endl;
         return 1;
+    }
+
+    if(warningcount > 0)
+    {
+        std::cout << "\nWarnings encountered: " << warningcount << std::endl;
     }
 
     std::cout << std::endl;

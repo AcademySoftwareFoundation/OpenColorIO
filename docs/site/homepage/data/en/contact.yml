@@ -9,8 +9,8 @@ contact:
   contact_list:
     - icon : ti-comment # themify icon pack : https://themify.me/themify-icons
       name: "Slack:"
-      info : "OpenColorIO"
-      link: "http://slack.opencolorio.org"
+      info : "#OpenColorIO"
+      link: "https://academysoftwarefdn.slack.com"
       
     - icon : ti-email # themify icon pack : https://themify.me/themify-icons
       name: "OCIO-User:"

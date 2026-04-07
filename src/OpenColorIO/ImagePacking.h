@@ -53,7 +53,8 @@ struct Generic
                                       Type * inBitDepthBuffer,
                                       float * outputBuffer,
                                       int outputBufferSize,
-                                      long imagePixelStartIndex);
+                                      long imagePixelStartIndex,
+                                      BitDepth inputBitDepth);
 
     static void UnpackRGBAToImageDesc(GenericImageDesc & dstImg,
                                       float * inputBuffer,

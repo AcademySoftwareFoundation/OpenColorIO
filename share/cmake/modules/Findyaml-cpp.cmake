@@ -44,9 +44,7 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
     set(_yaml-cpp_REQUIRED_VARS yaml-cpp_LIBRARY)
 
     # Search for yaml-cpp-config.cmake
-    if(NOT DEFINED yaml-cpp_ROOT)
-        find_package(yaml-cpp ${yaml-cpp_FIND_VERSION} CONFIG ${quiet})
-    endif()
+    find_package(yaml-cpp ${yaml-cpp_FIND_VERSION} CONFIG ${quiet})
 
     if(yaml-cpp_FOUND)
         # Alias target for yaml-cpp < 0.8 compatibility
