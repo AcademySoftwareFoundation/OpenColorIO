@@ -180,6 +180,7 @@ set(SOURCES
     transforms/builtins/Displays.cpp
     transforms/builtins/OpHelpers.cpp
     transforms/builtins/PanasonicCameras.cpp
+    transforms/builtins/ProPhotoRGB.cpp
     transforms/builtins/RedCameras.cpp
     transforms/builtins/SonyCameras.cpp
     SystemMonitor.cpp
