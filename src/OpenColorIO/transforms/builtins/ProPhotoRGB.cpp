@@ -106,14 +106,14 @@ namespace OCIO_NAMESPACE
 					LINEAR_RIMM_to_ACES2065_1_BFD_Functor);
 			}
 
-			// Encoded ProPhoto RGB (gamma 1.8) to ACES2065-1.
+			// Encoded ProPhoto RGB (gamma 1.8) to CIE XYZ D65.
 			{
 				auto ROMM_to_CIE_XYZ_D65_BFD_Functor = [](OpRcPtrVec& ops)
 					{
 						// 1. Decode gamma 1.8 to linear.
 						ROMM_RGB_GAMMA_18::GenerateEncodedToLinearOps(ops);
 
-						// 2. Convert color space from ROMM RGB (D50) to ACES AP0 (D60).
+						// 2. Convert color space from ROMM RGB (D50) to CIE XYZ D65.
 						MatrixOpData::MatrixArrayPtr matrix
 							= build_conversion_matrix_to_XYZ_D65(ROMM_RGB::primaries,
 								ADAPTATION_BRADFORD);
@@ -121,7 +121,7 @@ namespace OCIO_NAMESPACE
 					};
 
 				registry.addBuiltin("ROMM_to_CIE-XYZ-D65_BFD",
-					"Convert ProPhoto RGB (gamma 1.8 encoded) to ACES2065-1",
+					"Convert ProPhoto RGB (gamma 1.8 encoded) to CIE XYZ D65",
 					ROMM_to_CIE_XYZ_D65_BFD_Functor);
 			}
 
