@@ -901,7 +901,7 @@ std::string _Add_Cusp_table(
 
     if (dimensions == GpuShaderDesc::TEXTURE_1D)
     {
-        ss.newLine() << ss.float3Decl("lo") << " = " << ss.sampleTex1D(name, std::string("(" + ss.floatKeyword() + "(i_hi) - 1 + 0.5) / ") + ss.floatKeyword() + "(" + std::to_string(g.gamut_cusp_table.total_size) + ")") << ".rgb;";
+        ss.newLine() << ss.float3Decl("lo") << " = " << ss.sampleTex1D(name, std::string("(" + ss.floatKeyword() + "(i_hi) - 1.0 + 0.5) / ") + ss.floatKeyword() + "(" + std::to_string(g.gamut_cusp_table.total_size) + ")") << ".rgb;";
         ss.newLine() << ss.float3Decl("hi") << " = " << ss.sampleTex1D(name, std::string("(" + ss.floatKeyword() + "(i_hi) + 0.5) / ") + ss.floatKeyword() + "(" + std::to_string(g.gamut_cusp_table.total_size) + ")") << ".rgb;";
     }
     else
