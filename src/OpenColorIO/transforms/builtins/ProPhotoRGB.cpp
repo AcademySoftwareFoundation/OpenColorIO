@@ -32,6 +32,20 @@ namespace OCIO_NAMESPACE
 
 		const Primaries primaries(red_xy, grn_xy, blu_xy, wht_xy);
 
+		static constexpr double RGB_to_XYZ_D50[4 * 4]
+		{
+			0.7977, 0.1352, 0.0313, 0.,
+			0.2880, 0.7119, 0.0001, 0.,
+			0.0000, 0.0000, 0.8249, 0.,
+			0.,     0.,     0.,     1.
+		};
+
+		static const MatrixOpData::Offsets white_D50_XYZ(
+			0.3457 / 0.3585,
+			1.,
+			(1.0 - 0.3457 - 0.3585) / 0.3585,
+			0.);
+
 	} // namespace ROMM_RGB
 
 
@@ -113,9 +127,13 @@ namespace OCIO_NAMESPACE
 						// 1. Decode gamma 1.8 to linear.
 						ROMM_RGB_GAMMA_18::GenerateEncodedToLinearOps(ops);
 
-						// 2. Convert color space from ROMM RGB (D50) to CIE XYZ D65.
+						// 2. Convert from the published ROMM RGB to XYZ(D50) matrix.
+						CreateMatrixOp(ops, &ROMM_RGB::RGB_to_XYZ_D50[0], TRANSFORM_DIR_FORWARD);
+
+						// 3. Adapt XYZ from D50 to D65 using Bradford.
 						MatrixOpData::MatrixArrayPtr matrix
-							= build_conversion_matrix_to_XYZ_D65(ROMM_RGB::primaries,
+							= build_vonkries_adapt(ROMM_RGB::white_D50_XYZ,
+								WHITEPOINT::D65_XYZ,
 								ADAPTATION_BRADFORD);
 						CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
 					};
