@@ -317,7 +317,7 @@ jobs:
   # ---------------------------------------------------------------------------
 
   macos:
-    name: 'macOS 13
+    name: 'macOS 15 intel
       <AppleClang 
        arch=${{ matrix.arch-type }},
        config=${{ matrix.build-type }}, 
@@ -334,19 +334,8 @@ jobs:
     runs-on: macos-15-intel
     strategy:
       matrix:
-        build: [1, 2, 3, 4, 5]
+        build: [3, 4]
         include:
-          - build: 5
-            arch-type: "x86_64"
-            build-type: Release
-            build-shared: 'ON'
-            build-docs: 'OFF'
-            build-openfx: 'ON'
-            use-simd: 'ON'
-            use-oiio: 'ON'
-            cxx-standard: 20
-            python-version: '3.13'
-          # Keeping one universal build
           - build: 4
             arch-type: "x86_64;arm64"
             build-type: Release
@@ -359,34 +348,14 @@ jobs:
             python-version: '3.12'
           - build: 3
             arch-type: "x86_64"
-            build-type: Release
-            build-shared: 'ON'
-            build-docs: 'ON'
-            build-openfx: 'OFF'
-            use-simd: 'OFF'
-            use-oiio: 'OFF'
-            cxx-standard: 17
-            python-version: '3.11'
-          - build: 2
-            arch-type: "x86_64"
             build-type: Debug
-            build-shared: 'ON'
-            build-docs: 'OFF'
-            build-openfx: 'ON'
-            use-simd: 'ON'
-            use-oiio: 'OFF'
-            cxx-standard: 17
-            python-version: '3.10'
-          - build: 1
-            arch-type: "x86_64"
-            build-type: Release
             build-shared: 'OFF'
             build-docs: 'OFF'
             build-openfx: 'ON'
-            use-simd: 'ON'
+            use-simd: 'OFF'
             use-oiio: 'OFF'
             cxx-standard: 17
-            python-version: '3.9'
+            python-version: '3.10'
     steps:
       - name: Setup Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
@@ -496,10 +465,10 @@ jobs:
             test-rosetta: "OFF"
             build-type: Release
             build-shared: 'ON'
-            build-docs: 'OFF'
+            build-docs: 'ON'
             build-openfx: 'OFF'
             use-simd: 'ON'
-            use-oiio: 'OFF'
+            use-oiio: 'ON'
             cxx-standard: 20
             python-version: '3.13'
           - build: 2
@@ -660,7 +629,7 @@ jobs:
             use-simd: 'ON'
             use-oiio: 'OFF'
             cxx-standard: 17
-            python-version: '3.9'
+            python-version: '3.10'
     steps:
       - name: Setup Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
