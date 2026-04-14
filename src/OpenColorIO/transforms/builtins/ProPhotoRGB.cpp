@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <cmath>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -13,7 +12,6 @@
 #include "transforms/builtins/ColorMatrixHelpers.h"
 #include "transforms/builtins/OpHelpers.h"
 #include "transforms/builtins/ProPhotoRGB.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -28,26 +26,17 @@ namespace OCIO_NAMESPACE
 		static const Chromaticities red_xy(0.7347, 0.2653);
 		static const Chromaticities grn_xy(0.1596, 0.8404);
 		static const Chromaticities blu_xy(0.0366, 0.0001);
-		static const Chromaticities wht_xy(0.3457, 0.3585);  // D50
+		static const Chromaticities wht_xy(0.3457, 0.3585); // D50
 
 		const Primaries primaries(red_xy, grn_xy, blu_xy, wht_xy);
 
-		static constexpr double RGB_to_XYZ_D50[4 * 4]
-		{
-			0.7977, 0.1352, 0.0313, 0.,
-			0.2880, 0.7119, 0.0001, 0.,
-			0.0000, 0.0000, 0.8249, 0.,
-			0.,     0.,     0.,     1.
-		};
-
-		static const MatrixOpData::Offsets white_D50_XYZ(
-			0.3457 / 0.3585,
-			1.,
-			(1.0 - 0.3457 - 0.3585) / 0.3585,
-			0.);
+		static constexpr double RGB_to_XYZ_D65[4 * 4]{
+			0.7555287932957933, 0.11273621650716224, 0.0820865579632326, 0.,
+			0.26824815751179243, 0.7151801391921419, 0.016570112476870784, 0.,
+			0.003916686659314376, -0.012934540726208194, 1.0978022304574562, 0.,
+			0., 0., 0., 1.};
 
 	} // namespace ROMM_RGB
-
 
 	// ROMM RGB uses a piecewise gamma function with gamma 1.8.
 	//
@@ -67,82 +56,73 @@ namespace OCIO_NAMESPACE
 	{
 
 		static constexpr double gamma = 1.8;
-		static constexpr double slope = 16.0;				// Slope of linear segment.
-		static constexpr double breakEnc = 1.0 / 32.0;		// Encoded breakpoint
+		static constexpr double slope = 16.0;		   // Slope of linear segment.
+		static constexpr double breakEnc = 1.0 / 32.0; // Encoded breakpoint
 
-		void GenerateEncodedToLinearOps(OpRcPtrVec& ops)
+		void GenerateEncodedToLinearOps(OpRcPtrVec &ops)
 		{
 			// Encoded gamma 1.8 to linear curve using LUT for accuracy.
 			auto GenerateLutValues = [](double in) -> float
+			{
+				const double absIn = std::abs(in);
+				double out = 0.0;
+
+				if (absIn < breakEnc)
 				{
-					const double absIn = std::abs(in);
-					double out = 0.0;
+					out = absIn / slope;
+				}
+				else
+				{
+					out = std::pow(absIn, gamma);
+				}
 
-					if (absIn < breakEnc)
-					{
-						out = absIn / slope;
-					}
-					else
-					{
-						out = std::pow(absIn, gamma);
-					}
-
-					return float(std::copysign(out, in));
-				};
+				return float(std::copysign(out, in));
+			};
 
 			CreateHalfLut(ops, GenerateLutValues);
 		}
 
 	} // namespace ROMM_RGB_GAMMA_18
 
-
-
 	namespace PROPHOTO
 	{
 
-		void RegisterAll(BuiltinTransformRegistryImpl& registry) noexcept
+		void RegisterAll(BuiltinTransformRegistryImpl &registry) noexcept
 		{
 			// Linear ProPhoto RGB to ACES2065-1.
 			{
-				auto LINEAR_RIMM_to_ACES2065_1_BFD_Functor = [](OpRcPtrVec& ops)
-					{
-						// Convert from ROMM RGB (D50) to ACES AP0 (D60).
-						// Uses Bradford chromatic adaptation.
-						MatrixOpData::MatrixArrayPtr matrix
-							= build_conversion_matrix(ROMM_RGB::primaries,
-								ACES_AP0::primaries,
-								ADAPTATION_BRADFORD);
-						CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
-					};
+				auto LINEAR_RIMM_to_ACES2065_1_BFD_Functor = [](OpRcPtrVec &ops)
+				{
+					// Convert from ROMM RGB (D50) to ACES AP0 (D60).
+					// Uses Bradford chromatic adaptation.
+					MatrixOpData::MatrixArrayPtr matrix = build_conversion_matrix(ROMM_RGB::primaries,
+																				  ACES_AP0::primaries,
+																				  ADAPTATION_BRADFORD);
+					CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
+				};
 
 				registry.addBuiltin("LINEAR-RIMM_to_ACES2065-1_BFD",
-					"Convert ProPhoto RGB (linear) to ACES2065-1",
-					LINEAR_RIMM_to_ACES2065_1_BFD_Functor);
+									"Convert ProPhoto RGB (linear) to ACES2065-1",
+									LINEAR_RIMM_to_ACES2065_1_BFD_Functor);
 			}
 
 			// Encoded ProPhoto RGB (gamma 1.8) to CIE XYZ D65.
 			{
-				auto ROMM_to_CIE_XYZ_D65_BFD_Functor = [](OpRcPtrVec& ops)
-					{
-						// 1. Decode gamma 1.8 to linear.
-						ROMM_RGB_GAMMA_18::GenerateEncodedToLinearOps(ops);
+				auto ROMM_to_CIE_XYZ_D65_BFD_Functor = [](OpRcPtrVec &ops)
+				{
+					// 1. Decode gamma 1.8 to linear.
+					ROMM_RGB_GAMMA_18::GenerateEncodedToLinearOps(ops);
 
-						// 2. Convert from the published ROMM RGB to XYZ(D50) matrix.
-						CreateMatrixOp(ops, &ROMM_RGB::RGB_to_XYZ_D50[0], TRANSFORM_DIR_FORWARD);
-
-						// 3. Adapt XYZ from D50 to D65 using Bradford.
-						MatrixOpData::MatrixArrayPtr matrix
-							= build_vonkries_adapt(ROMM_RGB::white_D50_XYZ,
-								WHITEPOINT::D65_XYZ,
-								ADAPTATION_BRADFORD);
-						CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
-					};
+					// 2. Convert from ROMM RGB to CIE XYZ D65 using the
+					// published ROMM RGB to XYZ(D50) matrix combined with
+					// Bradford adaptation from D50 to D65.
+					CreateMatrixOp(ops, &ROMM_RGB::RGB_to_XYZ_D65[0], TRANSFORM_DIR_FORWARD);
+				};
 
 				registry.addBuiltin("ROMM_to_CIE-XYZ-D65_BFD",
-					"Convert ProPhoto RGB (gamma 1.8 encoded) to CIE XYZ D65",
-					ROMM_to_CIE_XYZ_D65_BFD_Functor);
+									"Convert ProPhoto RGB (gamma 1.8 encoded) to CIE XYZ D65",
+									ROMM_to_CIE_XYZ_D65_BFD_Functor);
 			}
-
 		}
 
 	} // namespace PROPHOTO
