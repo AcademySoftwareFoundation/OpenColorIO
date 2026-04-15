@@ -172,12 +172,12 @@ jobs:
             build-docs: 'ON'
             build-openfx: 'ON'
             cxx-standard: 20
-            python-version: '3.13'
+            python-version: '3.14'
           - build: 2
             build-docs: 'ON'
             build-openfx: 'ON'
             cxx-standard: 17
-            python-version: '3.9'
+            python-version: '3.10'
     steps:
       - name: Setup Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
@@ -269,13 +269,13 @@ jobs:
             build-docs: 'ON'
             build-openfx: 'ON'
             cxx-standard: 20
-            python-version: '3.13'
+            python-version: '3.14'
             use-oiio: 'ON'
           - build: 2
             build-docs: 'ON'
             build-openfx: 'ON'
             cxx-standard: 17
-            python-version: '3.9'
+            python-version: '3.10'
             use-oiio: 'OFF'
     steps:
       - name: Setup Python
