@@ -30,12 +30,6 @@ namespace OCIO_NAMESPACE
 
 		const Primaries primaries(red_xy, grn_xy, blu_xy, wht_xy);
 
-		static constexpr double RGB_to_XYZ_D65[4 * 4]{
-			0.7555287932957933, 0.11273621650716224, 0.0820865579632326, 0.,
-			0.26824815751179243, 0.7151801391921419, 0.016570112476870784, 0.,
-			0.003916686659314376, -0.012934540726208194, 1.0978022304574562, 0.,
-			0., 0., 0., 1.};
-
 	} // namespace ROMM_RGB
 
 	// ROMM RGB uses a piecewise gamma function with gamma 1.8.
@@ -110,13 +104,10 @@ namespace OCIO_NAMESPACE
 			{
 				auto ROMM_to_CIE_XYZ_D65_BFD_Functor = [](OpRcPtrVec &ops)
 				{
-					// 1. Decode gamma 1.8 to linear.
 					ROMM_RGB_GAMMA_18::GenerateEncodedToLinearOps(ops);
 
-					// 2. Convert from ROMM RGB to CIE XYZ D65 using the
-					// published ROMM RGB to XYZ(D50) matrix combined with
-					// Bradford adaptation from D50 to D65.
-					CreateMatrixOp(ops, &ROMM_RGB::RGB_to_XYZ_D65[0], TRANSFORM_DIR_FORWARD);
+					MatrixOpData::MatrixArrayPtr matrix = build_conversion_matrix_to_XYZ_D65(ROMM_RGB::primaries, ADAPTATION_BRADFORD);
+					CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
 				};
 
 				registry.addBuiltin("ROMM_to_CIE-XYZ-D65_BFD",
