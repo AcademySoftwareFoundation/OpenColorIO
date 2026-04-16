@@ -9,14 +9,14 @@
 namespace OCIO_NAMESPACE
 {
 
-	class BuiltinTransformRegistryImpl;
+class BuiltinTransformRegistryImpl;
 
-	namespace PROPHOTO
-	{
+namespace PROPHOTO
+{
 
-		void RegisterAll(BuiltinTransformRegistryImpl& registry) noexcept;
+void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept;
 
-	} // namespace PROPHOTO
+} // namespace PROPHOTO
 
 } // namespace OCIO_NAMESPACE
 

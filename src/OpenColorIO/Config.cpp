@@ -5647,14 +5647,22 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
                         || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020-D60-in-REC2020-D65_2.0")
                         || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-REC2020-D60-in-REC2020-D65_2.0")
                         || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020-D60-in-REC2020-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ROMM_to_CIE-XYZ-D65_BFD")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "LINEAR-RIMM_to_ACES2065-1_BFD")
                         // NB: This one was added in OCIO 2.4.1.
                         || 0 == Platform::Strcasecmp(blt->getStyle(), "DISPLAY - CIE-XYZ-D65_to_DisplayP3-HDR") )
                 )
             {
                 std::ostringstream os;
                 os << "Only config version 2.4 (or higher) can have BuiltinTransform style '"
+                   << blt->getStyle() << "'.";
+                throw Exception(os.str().c_str());
+            }
+            if (m_majorVersion == 2 && m_minorVersion < 6
+                    && (   0 == Platform::Strcasecmp(blt->getStyle(), "ROMM_to_CIE-XYZ-D65_BFD")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "LINEAR-RIMM_to_ACES2065-1_BFD")
+                )
+            {
+                std::ostringstream os;
+                os << "Only config version 2.6 (or higher) can have BuiltinTransform style '"
                    << blt->getStyle() << "'.";
                 throw Exception(os.str().c_str());
             }
