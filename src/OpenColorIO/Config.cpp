@@ -5659,7 +5659,7 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
             if (m_majorVersion == 2 && m_minorVersion < 6
                     && (   0 == Platform::Strcasecmp(blt->getStyle(), "ROMM_to_CIE-XYZ-D65_BFD")
                         || 0 == Platform::Strcasecmp(blt->getStyle(), "LINEAR-RIMM_to_ACES2065-1_BFD")
-                )
+                ))
             {
                 std::ostringstream os;
                 os << "Only config version 2.6 (or higher) can have BuiltinTransform style '"
