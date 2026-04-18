@@ -135,9 +135,9 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                 char fromMinS[64] = "";
                 char fromMaxS[64] = "";
 #ifdef _WIN32
-                if (sscanf_s(lineBuffer, "From %s %s", fromMinS, 64, fromMaxS, 64) != 2)
+                if (sscanf_s(lineBuffer, "From %63s %63s", fromMinS, 64, fromMaxS, 64) != 2)
 #else
-                if (sscanf(lineBuffer, "From %s %s", fromMinS, fromMaxS) != 2)
+                if (sscanf(lineBuffer, "From %63s %63s", fromMinS, fromMaxS) != 2)
 #endif
                 {
                     ThrowErrorMessage("Invalid 'From' Tag", currentLine, headerLine);
@@ -219,11 +219,11 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 
                 char inputLUT[4][64] = {"", "", "", ""};
 #ifdef _WIN32
-                if (sscanf_s(lineBuffer, "%s %s %s %63s", inputLUT[0], 64,
+                if (sscanf_s(lineBuffer, "%63s %63s %63s %63s", inputLUT[0], 64,
                            inputLUT[1], 64, inputLUT[2], 64, inputLUT[3],
                            64) != components)
 #else
-                if (sscanf(lineBuffer, "%s %s %s %63s", inputLUT[0],
+                if (sscanf(lineBuffer, "%63s %63s %63s %63s", inputLUT[0],
                            inputLUT[1], inputLUT[2], inputLUT[3]) != components)
 #endif
                 {

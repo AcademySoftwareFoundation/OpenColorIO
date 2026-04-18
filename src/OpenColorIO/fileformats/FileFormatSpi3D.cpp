@@ -153,14 +153,13 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
         char blueValueS[64] = "";
 
 #ifdef _WIN32
-        if (sscanf(lineBuffer,
-            "%d %d %d %s %s %s",
+        if (sscanf_s(lineBuffer, "%d %d %d %63s %63s %63s",
             &rIndex, &gIndex, &bIndex,
             redValueS, 64,
             greenValueS, 64,
             blueValueS, 64) == 6)
 #else
-        if (sscanf(lineBuffer, "%d %d %d %s %s %s",
+        if (sscanf(lineBuffer, "%d %d %d %63s %63s %63s",
             &rIndex, &gIndex, &bIndex,
             redValueS, greenValueS, blueValueS) == 6)
 #endif
