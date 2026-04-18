@@ -336,6 +336,14 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                         line);
                 }
 
+                if (size1d < 2 || size1d > 300000)
+                {
+                    ThrowErrorMessage(
+                        "LUT_1D_SIZE must be between 2 and 300000.",
+                        fileName,
+                        lineNumber,
+                        line);
+                }
                 raw1d.reserve(3*size1d);
                 has1d = true;
             }
@@ -359,6 +367,14 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                         line);
                 }
 
+                if (size3d < 2 || size3d > 129)
+                {
+                    ThrowErrorMessage(
+                        "LUT_3D_SIZE must be between 2 and 129.",
+                        fileName,
+                        lineNumber,
+                        line);
+                }
                 raw3d.reserve(3*size3d*size3d*size3d);
                 has3d = true;
             }
@@ -410,6 +426,14 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                     }
                     else
                     {
+                        if (raw3d.size() >= (size_t)(129 * 129 * 129 * 3))
+                        {
+                            ThrowErrorMessage(
+                                "Too many 3D LUT entries.",
+                                fileName,
+                                lineNumber,
+                                line);
+                        }
                         raw3d.push_back(tmpfloats[i]);
                     }
                 }

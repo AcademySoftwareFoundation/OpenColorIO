@@ -408,6 +408,13 @@ std::vector<uint8_t> getFileBufferByPath(void * reader, mz_zip_file & info, std:
     {
         // Initialize the buffer for the file.
         int32_t buf_size = (int32_t)mz_zip_reader_entry_save_buffer_length(reader);
+        // Reject negative values (minizip error codes) and implausibly large entries.
+        // 256 MB is well above any realistic individual OCIO config or LUT file size.
+        const int32_t MAX_ENTRY_SIZE = 256 * 1024 * 1024;
+        if (buf_size <= 0 || buf_size > MAX_ENTRY_SIZE)
+        {
+            throw Exception("OCIOZ archive entry size is invalid or exceeds maximum allowed size.");
+        }
         buffer.resize(buf_size);
         // Read the content of the file and return it as buffer.
         mz_zip_reader_entry_save_buffer(reader, &buffer[0], buf_size);
@@ -435,6 +442,13 @@ std::vector<uint8_t> getFileBufferByExtension(void * reader, mz_zip_file & info,
     if (Platform::Strcasecmp(extension.c_str(), ext.c_str()) == 0)
     {
         int32_t buf_size = (int32_t)mz_zip_reader_entry_save_buffer_length(reader);
+        // Reject negative values (minizip error codes) and implausibly large entries.
+        // 256 MB is well above any realistic individual OCIO config or LUT file size.
+        const int32_t MAX_ENTRY_SIZE = 256 * 1024 * 1024;
+        if (buf_size <= 0 || buf_size > MAX_ENTRY_SIZE)
+        {
+            throw Exception("OCIOZ archive entry size is invalid or exceeds maximum allowed size.");
+        }
         buffer.resize(buf_size);
         mz_zip_reader_entry_save_buffer(reader, &buffer[0], buf_size);
     }

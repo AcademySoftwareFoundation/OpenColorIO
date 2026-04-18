@@ -275,15 +275,13 @@ bool Lut1dUtils::IMLutAlloc(IMLutStruct **plut, int num, int length)
     // targetBitDepth will be set appropriately for conversion LUTs in IMLutGet
     lut->targetBitDepth = IMLutTableSizeToBitDepth(length);
 
-    lut->tables = (unsigned short **)malloc(4 * sizeof(unsigned short *));
+    lut->tables = (unsigned short **)calloc(4, sizeof(unsigned short *));
     if (lut->tables == NULL)
     {
         delete lut;
         lut = 0;
         return false;
     }
-    for (i = 0; i < num; i++)
-        lut->tables[i] = NULL;
     for (i = 0; i < num; i++)
     {
         lut->tables[i] = (unsigned short *)malloc(length * sizeof(unsigned short));
@@ -324,7 +322,15 @@ static int tableLoad(
 
         if (isdigit(*InString))
         {
-            ptable[Count++] = (unsigned short)std::stoi(InString);
+            try
+            {
+                ptable[Count++] = (unsigned short)std::stoi(InString);
+            }
+            catch (const std::exception &)
+            {
+                errorLine = InString;
+                return Lut1dUtils::IMLUT_ERR_SYNTAX;
+            }
             if (Count >= length)
                 break;
         }
@@ -404,22 +410,34 @@ int Lut1dUtils::IMLutGet(
         }
 
         // Load first table value.
-        (lut->tables[0])[0] = (unsigned short)std::stoi(InString);
+        try
+        {
+            (lut->tables[0])[0] = (unsigned short)std::stoi(InString);
+        }
+        catch (const std::exception &)
+        {
+            errorLine = InString;
+            status = IMLUT_ERR_SYNTAX;
+            IMLutFree(&lut);
+            *plut = 0;
+            goto load_abort;
+        }
         tablestart = 1;
     }
     else
     {
         char dstDepthS[16] = "";
 #ifdef _WIN32
-        const int nummatched = sscanf(InString, "%*s %d %d %s", &numtables, &length, dstDepthS, 16);
+        const int nummatched = sscanf_s(InString, "%*s %d %d %15s", &numtables, &length, dstDepthS, 16);
 #else
-        const int nummatched = sscanf(InString, "%*s %d %d %s", &numtables, &length, dstDepthS);
+        const int nummatched = sscanf(InString, "%*s %d %d %15s", &numtables, &length, dstDepthS);
 #endif
         std::string subStr(InString, 5);
         if (nummatched < 2 ||
             StringUtils::Lower(subStr) != "lut: " ||
             (numtables != 1 && numtables != 3 && numtables != 4) ||
-            length <= 0)
+            length <= 0 ||
+            length > 65536)
         {
             errorLine = InString;
             status = IMLUT_ERR_SYNTAX;

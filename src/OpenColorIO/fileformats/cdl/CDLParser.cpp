@@ -368,7 +368,6 @@ void CDLParser::Impl::reset()
     m_elms.clear();
 
     m_lineNumber = 0;
-    m_fileName = "";
     m_isCC = false;
     m_isCCC = false;
 }
@@ -896,6 +895,11 @@ void CDLParser::Impl::CharacterDataHandler(void *userData,
     }
     // Parsing a single new line. This is valid.
     if (len == 1 && s[0] == '\n') return;
+
+    if (pImpl->m_elms.empty())
+    {
+        pImpl->throwMessage("Unexpected character data before root element");
+    }
 
     ElementRcPtr pElt = pImpl->m_elms.back();
     if (!pElt)

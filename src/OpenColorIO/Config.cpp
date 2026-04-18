@@ -4337,7 +4337,7 @@ int Config::getNumDisplaysAll() const noexcept
 
 const char * Config::getDisplayAll(int index) const noexcept
 {
-    if (index >= 0 || index < static_cast<int>(getImpl()->m_displays.size()))
+    if (index >= 0 && index < static_cast<int>(getImpl()->m_displays.size()))
     {
         return getImpl()->m_displays[index].first.c_str();
     }
@@ -4365,7 +4365,7 @@ int Config::getDisplayAllByName(const char * name) const noexcept
 
 bool Config::isDisplayTemporary(int index) const noexcept
 {
-    if (index >= 0 || index < static_cast<int>(getImpl()->m_displays.size()))
+    if (index >= 0 && index < static_cast<int>(getImpl()->m_displays.size()))
     {
         return getImpl()->m_displays[index].second.m_temporary;
     }
@@ -4375,7 +4375,7 @@ bool Config::isDisplayTemporary(int index) const noexcept
 
 void Config::setDisplayTemporary(int index, bool isTemporary) noexcept
 {
-    if (index >= 0 || index < static_cast<int>(getImpl()->m_displays.size()))
+    if (index >= 0 && index < static_cast<int>(getImpl()->m_displays.size()))
     {
         getImpl()->m_displays[index].second.m_temporary = isTemporary;
 
@@ -4410,7 +4410,7 @@ const char * Config::getView(ViewType type, const char * display, int index) con
 {
     if (!display || !*display)
     {
-        if (index >= 0 || index < static_cast<int>(getImpl()->m_sharedViews.size()))
+        if (index >= 0 && index < static_cast<int>(getImpl()->m_sharedViews.size()))
         {
             return getImpl()->m_sharedViews[index].m_name.c_str();
         }
@@ -4449,11 +4449,16 @@ const char * Config::getView(ViewType type, const char * display, int index) con
 
 void Config::getDefaultLumaCoefs(double * c3) const
 {
+    if (!c3) return;
     memcpy(c3, &getImpl()->m_defaultLumaCoefs[0], 3*sizeof(double));
 }
 
 void Config::setDefaultLumaCoefs(const double * c3)
 {
+    if (!c3)
+    {
+        throw Exception("setDefaultLumaCoefs: c3 must not be null.");
+    }
     memcpy(&getImpl()->m_defaultLumaCoefs[0], c3, 3*sizeof(double));
 
     AutoMutex lock(getImpl()->m_cacheidMutex);

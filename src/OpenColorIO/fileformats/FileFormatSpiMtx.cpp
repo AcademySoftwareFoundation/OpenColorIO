@@ -68,23 +68,23 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                                       Interpolation /*interp*/) const
 {
 
-    // Read the entire file.
-    std::ostringstream fileStream;
-
+    // Read the entire file (capped: a valid spimtx file contains exactly 12 floats).
+    const int MAX_FILE_SIZE = 8192;
+    char fileBuf[MAX_FILE_SIZE];
+    istream.read(fileBuf, MAX_FILE_SIZE);
+    const std::streamsize bytesRead = istream.gcount();
+    if (!istream.eof())
     {
-        const int MAX_LINE_SIZE = 4096;
-        char lineBuffer[MAX_LINE_SIZE];
-
-        while (istream.good())
-        {
-            istream.getline(lineBuffer, MAX_LINE_SIZE);
-            fileStream << std::string(lineBuffer) << " ";
-        }
+        std::ostringstream os;
+        os << "Error parsing .spimtx file (";
+        os << fileName << "). ";
+        os << "File is too large to be a valid .spimtx file.";
+        throw Exception(os.str().c_str());
     }
 
     // Turn it into parts
-    const StringUtils::StringVec lineParts 
-        = StringUtils::SplitByWhiteSpaces(StringUtils::Trim(fileStream.str()));
+    const StringUtils::StringVec lineParts
+        = StringUtils::SplitByWhiteSpaces(StringUtils::Trim(std::string(fileBuf, bytesRead)));
 
     if(lineParts.size() != 12)
     {

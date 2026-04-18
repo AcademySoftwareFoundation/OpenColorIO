@@ -189,6 +189,13 @@ readLuts(std::istream& istream,
 
             if (result.ec == std::errc())
             {
+                // Cap per-LUT entry count: max is 129^3 * 3 for a 3D LUT.
+                if (lutValues[lutname].size() >= (size_t)(129 * 129 * 129 * 3))
+                {
+                    std::ostringstream os;
+                    os << "Too many values in " << lutname << " LUT block";
+                    throw Exception(os.str().c_str());
+                }
                 lutValues[lutname].push_back(v);
             }
             else
@@ -452,6 +459,13 @@ LocalFileFormat::read(std::istream & istream,
             // Set cube size
             size_3d = lut_sizes[0];
 
+            if(size_3d < 2 || size_3d > 129)
+            {
+                std::ostringstream os;
+                os << "3D LUT cube size must be between 2 and 129, found: " << size_3d;
+                throw Exception(os.str().c_str());
+            }
+
             lut3d_ptr = std::make_shared<Lut3DOpData>(lut_sizes[0]);
             if (Lut3DOpData::IsValidInterpolation(interp))
             {
@@ -463,11 +477,23 @@ LocalFileFormat::read(std::istream & istream,
         if(cachedFile->hdltype == "c")
         {
             size_1d = lut_sizes[0];
+            if(size_1d < 2 || size_1d > 300000)
+            {
+                std::ostringstream os;
+                os << "1D LUT size must be between 2 and 300000, found: " << size_1d;
+                throw Exception(os.str().c_str());
+            }
         }
 
         if(cachedFile->hdltype == "3d+1d")
         {
             size_prelut = lut_sizes[1];
+            if(size_prelut < 2 || size_prelut > 300000)
+            {
+                std::ostringstream os;
+                os << "Prelut size must be between 2 and 300000, found: " << size_prelut;
+                throw Exception(os.str().c_str());
+            }
         }
     }
 

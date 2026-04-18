@@ -156,6 +156,14 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                         lineNumber,
                         line);
                 }
+                if (inval < 8 || inval > 129*129*129)
+                {
+                    ThrowErrorMessage(
+                        "'in' value must be between 8 and 2146689 (129^3).",
+                        fileName,
+                        lineNumber,
+                        line);
+                }
                 raw3d.reserve(inval*3);
                 lutEdgeLen = Get3DLutEdgeLenFromNumPixels(inval);
             }
@@ -208,6 +216,15 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                 {
                     ThrowErrorMessage(
                         "Expected to find 4 integers.",
+                        fileName,
+                        lineNumber,
+                        line);
+                }
+
+                if (raw3d.size() >= (size_t)(129 * 129 * 129 * 3))
+                {
+                    ThrowErrorMessage(
+                        "Too many 3D LUT entries.",
                         fileName,
                         lineNumber,
                         line);

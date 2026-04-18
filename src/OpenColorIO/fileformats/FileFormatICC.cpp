@@ -180,9 +180,13 @@ LocalCachedFileRcPtr LocalFileFormat::ReadInfo(std::istream & istream,
         ThrowErrorMessage("Error loading number of tags.", fileName);
     }
 
+    if (count > 100)
+    {
+        ThrowErrorMessage("Too many tags in ICC profile.", fileName);
+    }
     icc.mTags.resize(count);
 
-    // Read Tag offset table. 
+    // Read Tag offset table.
     for (i = 0; i<count; i++)
     {
         if (!SampleICC::Read32(istream, &icc.mTags[i].mTagInfo.sig, 1)

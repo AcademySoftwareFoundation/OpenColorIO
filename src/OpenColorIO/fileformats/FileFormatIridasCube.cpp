@@ -205,6 +205,15 @@ LocalFileFormat::read(std::istream & istream,
                         line);
                 }
 
+                if (size1d < 2 || size1d > 300000)
+                {
+                    ThrowErrorMessage(
+                        "'LUT_1D_SIZE' must be between 2 and 300000.",
+                        fileName,
+                        lineNumber,
+                        line);
+                }
+
                 raw.reserve(3*size1d);
                 in1d = true;
             }
@@ -231,6 +240,15 @@ LocalFileFormat::read(std::istream & istream,
                         line);
                 }
 
+                if (size3d < 2 || size3d > 129)
+                {
+                    ThrowErrorMessage(
+                        "'LUT_3D_SIZE' must be between 2 and 129.",
+                        fileName,
+                        lineNumber,
+                        line);
+                }
+
                 raw.reserve(3*size3d*size3d*size3d);
                 in3d = true;
             }
@@ -241,9 +259,9 @@ LocalFileFormat::read(std::istream & istream,
                 char domainMinB[64] = "";
 
 #ifdef _WIN32
-                if (sscanf_s(line.c_str(), "domain_min %s %s %s %c", domainMinR, 64, domainMinG, 64, domainMinB, 64, &endTok, 1) != 3)
+                if (sscanf_s(line.c_str(), "domain_min %63s %63s %63s %c", domainMinR, 64, domainMinG, 64, domainMinB, 64, &endTok, 1) != 3)
 #else
-                if (sscanf(line.c_str(), "domain_min %s %s %s %c", domainMinR, domainMinG, domainMinB, &endTok) != 3)
+                if (sscanf(line.c_str(), "domain_min %63s %63s %63s %c", domainMinR, domainMinG, domainMinB, &endTok) != 3)
 #endif
                 {
                     ThrowErrorMessage(
@@ -275,9 +293,9 @@ LocalFileFormat::read(std::istream & istream,
                 char domainMaxB[64] = "";
 
 #ifdef _WIN32
-                if (sscanf_s(line.c_str(), "domain_max %s %s %s %c", domainMaxR, 64, domainMaxG, 64, domainMaxB, 64, &endTok, 1) != 3)
+                if (sscanf_s(line.c_str(), "domain_max %63s %63s %63s %c", domainMaxR, 64, domainMaxG, 64, domainMaxB, 64, &endTok, 1) != 3)
 #else
-                if (sscanf(line.c_str(), "domain_max %s %s %s %c", domainMaxR, domainMaxG, domainMaxB, &endTok) != 3)
+                if (sscanf(line.c_str(), "domain_max %63s %63s %63s %c", domainMaxR, domainMaxG, domainMaxB, &endTok) != 3)
 #endif
                 {
                     ThrowErrorMessage(
@@ -322,9 +340,9 @@ LocalFileFormat::read(std::istream & istream,
             char valB[64] = "";
 
 #ifdef _WIN32
-            if (sscanf_s(line.c_str(), "%s %s %s %c", valR, 64, valG, 64, valB, 64, &endTok, 1) != 3)
+            if (sscanf_s(line.c_str(), "%63s %63s %63s %c", valR, 64, valG, 64, valB, 64, &endTok, 1) != 3)
 #else
-            if (sscanf(line.c_str(), "%s %s %s %c", valR, valG, valB, &endTok) != 3)
+            if (sscanf(line.c_str(), "%63s %63s %63s %c", valR, valG, valB, &endTok) != 3)
 #endif
             {
                 // It must be a float triple!

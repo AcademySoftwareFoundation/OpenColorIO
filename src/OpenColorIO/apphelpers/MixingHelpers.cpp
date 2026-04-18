@@ -205,6 +205,11 @@ void MixingColorSpaceManagerImpl::setSelectedMixingSpaceIdx(size_t idx)
 
 void MixingColorSpaceManagerImpl::setSelectedMixingSpace(const char * mixingSpace)
 {
+    if (!mixingSpace)
+    {
+        throw Exception("Invalid null mixing space name.");
+    }
+
     for (size_t idx = 0 ; idx < m_mixingSpaces.size(); ++idx)
     {
         if (m_mixingSpaces[idx] == mixingSpace)
@@ -269,6 +274,11 @@ void MixingColorSpaceManagerImpl::setSelectedMixingEncodingIdx(size_t idx)
 
 void MixingColorSpaceManagerImpl::setSelectedMixingEncoding(const char * mixingEncoding)
 {
+    if (!mixingEncoding)
+    {
+        throw Exception("Invalid null mixing encoding name.");
+    }
+
     for (size_t idx = 0 ; idx < m_mixingEncodings.size(); ++idx)
     {
         if (m_mixingEncodings[idx] == mixingEncoding)

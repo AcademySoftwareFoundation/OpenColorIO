@@ -180,6 +180,7 @@ public:
 
     void remove(const char * csName)
     {
+        if (!csName || !*csName) return;
         const std::string name = StringUtils::Lower(csName);
         if (name.empty()) return;
 

@@ -124,7 +124,7 @@ void BuiltinTransformRegistryImpl::registerAll() noexcept
 
 void CreateBuiltinTransformOps(OpRcPtrVec & ops, size_t nameIndex, TransformDirection direction)
 {
-    if (nameIndex > BuiltinTransformRegistry::Get()->getNumBuiltins())
+    if (nameIndex >= BuiltinTransformRegistry::Get()->getNumBuiltins())
     {
         throw Exception("Invalid built-in transform name.");
     }

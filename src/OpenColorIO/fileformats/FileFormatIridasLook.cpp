@@ -429,6 +429,13 @@ private:
                 os << "'. Expected quoted integer";
                 pImpl->Throw(os.str().c_str());
             }
+            if (size_3d < 2 || size_3d > 129)
+            {
+                std::ostringstream os;
+                os << "Invalid LUT size value: '" << size_raw;
+                os << "'. Expected value between 2 and 129";
+                pImpl->Throw(os.str().c_str());
+            }
             pImpl->m_lutSize = static_cast<int>(size_3d);
         }
         else if (pImpl->m_data)
@@ -441,7 +448,11 @@ private:
             StringUtils::ReplaceInPlace(what, "\"", "");
             StringUtils::ReplaceInPlace(what, "'", "");
             StringUtils::ReplaceInPlace(what, "\n", "");
-            // Append to lut string
+            // Append to lut string (cap at max possible: 129^3 entries * 3 floats * 8 hex chars)
+            if (pImpl->m_lutString.size() + what.size() > (size_t)(129 * 129 * 129 * 3 * 8))
+            {
+                pImpl->Throw("Too many characters in 'data' block");
+            }
             pImpl->m_lutString += what;
         }
     }

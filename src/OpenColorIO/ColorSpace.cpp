@@ -162,6 +162,7 @@ const char * ColorSpace::getAlias(size_t idx) const noexcept
 
 bool ColorSpace::hasAlias(const char * alias) const noexcept
 {
+    if (!alias) return false;
     for (size_t idx = 0; idx < getImpl()->m_aliases.size(); ++idx)
     {
         if (0 == Platform::Strcasecmp(getImpl()->m_aliases[idx].c_str(), alias))
@@ -430,6 +431,7 @@ int ColorSpace::getAllocationNumVars() const
 
 void ColorSpace::getAllocationVars(float * vars) const
 {
+    if(!vars) return;
     if(!getImpl()->m_allocationVars.empty())
     {
         memcpy(vars,
@@ -440,6 +442,15 @@ void ColorSpace::getAllocationVars(float * vars) const
 
 void ColorSpace::setAllocationVars(int numvars, const float * vars)
 {
+    if (numvars < 0)
+    {
+        throw Exception("setAllocationVars: numvars must not be negative.");
+    }
+    if (numvars > 0 && !vars)
+    {
+        throw Exception("setAllocationVars: vars must not be null when numvars is positive.");
+    }
+
     getImpl()->m_allocationVars.resize(numvars);
 
     if(!getImpl()->m_allocationVars.empty())

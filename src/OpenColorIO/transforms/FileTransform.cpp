@@ -110,7 +110,7 @@ const char * FileTransform::getSrc() const
 
 void FileTransform::setSrc(const char * src)
 {
-    getImpl()->m_src = src;
+    getImpl()->m_src = src ? src : "";
 }
 
 const char * FileTransform::getCCCId() const
@@ -120,7 +120,7 @@ const char * FileTransform::getCCCId() const
 
 void FileTransform::setCCCId(const char * cccid)
 {
-    getImpl()->m_cccid = cccid;
+    getImpl()->m_cccid = cccid ? cccid : "";
 }
 
 CDLStyle FileTransform::getCDLStyle() const
