@@ -56,24 +56,9 @@ endif()
 
 # Copy dxcompiler.dll and dxil.dll to the test output directory.
 # These are required at runtime when DXC (IDxcCompiler3) is used for SM6.0 shader compilation.
-# The Redist/D3D path is the stable, version-independent redistribution location.
 if(WIN32 AND OCIO_DIRECTX_ENABLED)
-    find_file(DXCOMPILER_DLL
-        NAMES dxcompiler.dll
-        PATHS
-            # Note: x64 hardcoded; update if ARM64 Windows support is needed.
-            "$ENV{WindowsSdkDir}Redist/D3D/x64"
-            "C:/Program Files (x86)/Windows Kits/10/Redist/D3D/x64"
-        NO_DEFAULT_PATH
-        DOC "Path to dxcompiler.dll from Windows SDK"
-    )
+    include(LocateDXCompilerRuntime)
     if(DXCOMPILER_DLL)
-        get_filename_component(_dxc_dll_dir "${DXCOMPILER_DLL}" DIRECTORY)
-        find_file(DXIL_DLL
-            NAMES dxil.dll
-            HINTS "${_dxc_dll_dir}"
-            NO_DEFAULT_PATH
-        )
         add_custom_command(TARGET test_gpu_exec POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 "${DXCOMPILER_DLL}" "$<TARGET_FILE_DIR:test_gpu_exec>"
@@ -86,14 +71,6 @@ if(WIN32 AND OCIO_DIRECTX_ENABLED)
                 COMMENT "Copying dxil.dll to test output directory"
             )
         endif()
-    else()
-        message(WARNING
-            "OCIO_DIRECTX_ENABLED is ON but dxcompiler.dll was not found in the "
-            "Windows SDK Redist/D3D path. test_dx will fail at runtime unless "
-            "dxcompiler.dll and dxil.dll are on PATH. Install the Windows SDK "
-            "redistributable components, or set -DOCIO_DIRECTX_ENABLED=OFF to "
-            "disable the DirectX 12 backend."
-        )
     endif()
 endif()
 
