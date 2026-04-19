@@ -163,7 +163,11 @@ if(OCIO_GL_ENABLED)
 endif()
 
 if(WIN32 AND OCIO_DIRECTX_ENABLED)
-    include(InstallDirectXHeaders)
+    include(ocio_handle_dependency)
+    ocio_handle_dependency(DirectX-Headers REQUIRED ALLOW_INSTALL
+                           MIN_VERSION 1.606.0
+                           RECOMMENDED_VERSION 1.619.1
+                           RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
     target_compile_definitions(oglapphelpers
         PUBLIC
             OCIO_DIRECTX_ENABLED

@@ -17,3 +17,11 @@ FetchContent_Declare(DirectX-Headers
 )
 
 FetchContent_MakeAvailable(DirectX-Headers)
+
+# Signal success to ocio_install_dependency so ocio_handle_dependency does not
+# abort at the next required-check. FetchContent_MakeAvailable has just created
+# the Microsoft::DirectX-Headers target via the upstream CMakeLists.
+if(TARGET Microsoft::DirectX-Headers)
+    set(DirectX-Headers_FOUND TRUE)
+    set(DirectX-Headers_VERSION "1.619.1")
+endif()
