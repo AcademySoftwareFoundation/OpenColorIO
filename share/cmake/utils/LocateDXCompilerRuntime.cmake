@@ -7,13 +7,12 @@
 # Inputs:
 #   OCIO_DXCOMPILER_DLL  - Optional user-supplied path to dxcompiler.dll.
 #                          When set, overrides the Windows SDK Redist/D3D
-#                          search. Useful when the SDK-bundled DLL is too old
-#                          (a known cause of crashes on stuck Windows 10 hosts).
+#                          search. Useful when the SDK-bundled DLL is too old.
 #
 # Outputs:
 #   DXCOMPILER_DLL       - Path to dxcompiler.dll (cache variable).
 #   DXIL_DLL             - Path to the adjacent dxil.dll (cache variable, may
-#                          be unset if not found next to dxcompiler.dll).
+#                          be left unset if not found next to dxcompiler.dll).
 
 set(OCIO_DXCOMPILER_DLL "" CACHE FILEPATH
     "Optional explicit path to dxcompiler.dll (e.g. from a newer DirectX Shader Compiler release). \
