@@ -295,6 +295,11 @@ else()
 endif()
 mark_as_advanced(OCIO_DIRECTX_ENABLED)
 
+# Vulkan is cross-platform but requires an external SDK, so it is off by
+# default; enable explicitly with -DOCIO_VULKAN_ENABLED=ON.
+option(OCIO_VULKAN_ENABLED "Enable Vulkan GPU rendering support" OFF)
+mark_as_advanced(OCIO_VULKAN_ENABLED)
+
 
 ###############################################################################
 # Check for ARM neon here because we need to know if ARM NEON is supported

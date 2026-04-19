@@ -42,7 +42,7 @@ target_link_libraries(test_gpu_exec
 )
 
 if(OCIO_GL_ENABLED)
-    add_test(NAME test_gpu COMMAND test_gpu_exec)
+    add_test(NAME test_opengl COMMAND test_gpu_exec)
 endif()
 if(APPLE)
 	add_test(NAME test_metal COMMAND test_gpu_exec -metal)
@@ -87,9 +87,12 @@ if(WIN32 AND OCIO_DIRECTX_ENABLED)
             )
         endif()
     else()
-        message(STATUS
-            "dxcompiler.dll not found in Windows SDK Redist/D3D. "
-            "Add its directory to PATH before running test_dx."
+        message(WARNING
+            "OCIO_DIRECTX_ENABLED is ON but dxcompiler.dll was not found in the "
+            "Windows SDK Redist/D3D path. test_dx will fail at runtime unless "
+            "dxcompiler.dll and dxil.dll are on PATH. Install the Windows SDK "
+            "redistributable components, or set -DOCIO_DIRECTX_ENABLED=OFF to "
+            "disable the DirectX 12 backend."
         )
     endif()
 endif()
@@ -104,12 +107,17 @@ if(MSVC AND BUILD_SHARED_LIBS)
 
 	# Tell CTest to use this PATH while launching test_gpu_exec
 	if(OCIO_GL_ENABLED)
-		set_tests_properties(test_gpu PROPERTIES
+		set_tests_properties(test_opengl PROPERTIES
 			ENVIRONMENT "PATH=${dll_dirs_expr}\\;${extra_dirs}"
 		)
 	endif()
 	if(WIN32 AND OCIO_DIRECTX_ENABLED)
 		set_tests_properties(test_dx PROPERTIES
+			ENVIRONMENT "PATH=${dll_dirs_expr}\\;${extra_dirs}"
+		)
+	endif()
+	if(OCIO_VULKAN_ENABLED)
+		set_tests_properties(test_vulkan PROPERTIES
 			ENVIRONMENT "PATH=${dll_dirs_expr}\\;${extra_dirs}"
 		)
 	endif()

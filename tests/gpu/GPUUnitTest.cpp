@@ -569,8 +569,12 @@ int main(int argc, const char ** argv)
 
     bool printHelp = false;
     bool useMetalRenderer = false;
+#ifdef OCIO_VULKAN_ENABLED
     bool useVulkanRenderer = false;
+#endif
+#ifdef OCIO_DIRECTX_ENABLED
     bool useDxRenderer = false;
+#endif
     bool verbose = false;
     bool stopOnFirstError = false;
 
