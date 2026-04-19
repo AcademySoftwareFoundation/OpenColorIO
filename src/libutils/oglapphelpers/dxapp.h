@@ -11,6 +11,10 @@
 
 #include <dxgi1_6.h>
 
+struct IDxcUtils;
+struct IDxcCompiler3;
+struct IDxcBlob;
+
 using Microsoft::WRL::ComPtr;
 
 namespace OCIO_NAMESPACE
@@ -45,6 +49,10 @@ public:
 
 private:
     void waitForPreviousFrame();
+
+    // Compile the (constant) full-screen-triangle vertex shader once and cache
+    // the blob. Called lazily from setShader().
+    void ensureVertexShaderCompiled();
 
     static const UINT FrameCount = 2;
 
@@ -99,6 +107,14 @@ private:
     // Window handle and class name for cleanup.
     HWND m_hwnd{ nullptr };
     std::string m_windowClassName;
+
+    // DXC compiler — created once and reused across every setShader() call.
+    ComPtr<IDxcUtils>     m_dxcUtils;
+    ComPtr<IDxcCompiler3> m_dxcCompiler;
+
+    // Full-screen-triangle vertex shader blob — the VS source is identical for
+    // every test, so compile it once and reuse the bytecode.
+    ComPtr<IDxcBlob>      m_vertexShaderBlob;
 };
 
 }

@@ -531,48 +531,25 @@ void DxApp::setShader(GpuShaderDescRcPtr& shaderDesc)
         std::cout << std::endl;
     }
 
-    // Compile shaders with DXC (DirectX Shader Compiler) for SM 6.0
-    ComPtr<IDxcUtils> dxcUtils;
-    ComPtr<IDxcCompiler3> dxcCompiler;
-    ThrowIfFailed(DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils)));
-    ThrowIfFailed(DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler)));
+    // The DXC compiler instances and the full-screen-triangle VS bytecode are
+    // cached across tests — both are invariant.
+    ensureVertexShaderCompiled();
 
     // Create a source blob from the shader string
     ComPtr<IDxcBlobEncoding> sourceBlob;
-    ThrowIfFailed(dxcUtils->CreateBlobFromPinned(
+    ThrowIfFailed(m_dxcUtils->CreateBlobFromPinned(
         fullShader.c_str(), static_cast<UINT32>(fullShader.size()),
         DXC_CP_UTF8, &sourceBlob));
 
     DxcBuffer sourceBuffer;
     sourceBuffer.Ptr      = sourceBlob->GetBufferPointer();
     sourceBuffer.Size     = sourceBlob->GetBufferSize();
-    sourceBuffer.Encoding = DXC_CP_ACP;
-
-    // Compile vertex shader (vs_6_0)
-    LPCWSTR vsArgs[] = { L"-T", L"vs_6_0", L"-E", L"VSMain" };
-    ComPtr<IDxcResult> vsResult;
-    ThrowIfFailed(dxcCompiler->Compile(&sourceBuffer, vsArgs, _countof(vsArgs),
-                                        nullptr, IID_PPV_ARGS(&vsResult)));
-    HRESULT vsHr;
-    vsResult->GetStatus(&vsHr);
-    if (FAILED(vsHr))
-    {
-        ComPtr<IDxcBlobUtf8> errors;
-        vsResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr);
-        std::ostringstream oss;
-        oss << "Vertex shader compilation failed (" << HrToString(vsHr) << ")";
-        if (errors && errors->GetStringLength())
-            oss << ":\n" << errors->GetStringPointer();
-        std::cerr << oss.str() << std::endl;
-        throw Exception(oss.str().c_str());
-    }
-    ComPtr<IDxcBlob> vertexShaderBlob;
-    ThrowIfFailed(vsResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&vertexShaderBlob), nullptr));
+    sourceBuffer.Encoding = DXC_CP_UTF8;
 
     // Compile pixel shader (ps_6_0).
     LPCWSTR psArgs[] = { L"-T", L"ps_6_0", L"-E", L"PSMain" };
     ComPtr<IDxcResult> psResult;
-    ThrowIfFailed(dxcCompiler->Compile(&sourceBuffer, psArgs, _countof(psArgs),
+    ThrowIfFailed(m_dxcCompiler->Compile(&sourceBuffer, psArgs, _countof(psArgs),
                                         nullptr, IID_PPV_ARGS(&psResult)));
     HRESULT psHr;
     psResult->GetStatus(&psHr);
@@ -662,7 +639,7 @@ void DxApp::setShader(GpuShaderDescRcPtr& shaderDesc)
     D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
     psoDesc.InputLayout = { nullptr, 0 };  // No vertex input layout (using SV_VertexID)
     psoDesc.pRootSignature = m_rootSignature.Get();
-    psoDesc.VS = { vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize() };
+    psoDesc.VS = { m_vertexShaderBlob->GetBufferPointer(), m_vertexShaderBlob->GetBufferSize() };
     psoDesc.PS = { pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize() };
     psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
     psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
@@ -917,7 +894,10 @@ void DxApp::redisplay()
     ID3D12CommandList* ppCommandLists[] = { m_commandList.Get() };
     m_commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
-    ThrowIfFailed(m_swapChain->Present(1, 0));
+    // SyncInterval = 0: no VSync. Tests render to an off-screen float RT and
+    // read back from it; the swap chain back buffer is never used as a source
+    // of truth, so there is no reason to wait for a vblank.
+    ThrowIfFailed(m_swapChain->Present(0, 0));
 
     waitForPreviousFrame();
 }
@@ -1018,6 +998,59 @@ void DxApp::printGraphicsInfo() const noexcept
     {
         // Silently ignore any exceptions
     }
+}
+
+void DxApp::ensureVertexShaderCompiled()
+{
+    if (m_vertexShaderBlob)
+        return;
+
+    ThrowIfFailed(DxcCreateInstance(CLSID_DxcUtils,    IID_PPV_ARGS(&m_dxcUtils)));
+    ThrowIfFailed(DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&m_dxcCompiler)));
+
+    // Full-screen triangle using SV_VertexID — no vertex buffer, no bindings,
+    // identical across every test. Kept inline here so the VS source is
+    // self-contained and does not depend on the OCIO-generated fragment.
+    static const char * kVsSource =
+        "struct VSOutput {\n"
+        "    float4 position : SV_Position;\n"
+        "    float2 texcoord : TEXCOORD0;\n"
+        "};\n"
+        "VSOutput VSMain(uint vertexID : SV_VertexID) {\n"
+        "    VSOutput output;\n"
+        "    float2 texcoord = float2((vertexID << 1) & 2, vertexID & 2);\n"
+        "    output.position = float4(texcoord * float2(2, -2) + float2(-1, 1), 0, 1);\n"
+        "    output.texcoord = texcoord;\n"
+        "    return output;\n"
+        "}\n";
+
+    const UINT32 vsLen = static_cast<UINT32>(strlen(kVsSource));
+    ComPtr<IDxcBlobEncoding> vsSourceBlob;
+    ThrowIfFailed(m_dxcUtils->CreateBlobFromPinned(kVsSource, vsLen, DXC_CP_UTF8, &vsSourceBlob));
+
+    DxcBuffer vsBuffer;
+    vsBuffer.Ptr      = vsSourceBlob->GetBufferPointer();
+    vsBuffer.Size     = vsSourceBlob->GetBufferSize();
+    vsBuffer.Encoding = DXC_CP_UTF8;
+
+    LPCWSTR vsArgs[] = { L"-T", L"vs_6_0", L"-E", L"VSMain" };
+    ComPtr<IDxcResult> vsResult;
+    ThrowIfFailed(m_dxcCompiler->Compile(&vsBuffer, vsArgs, _countof(vsArgs),
+                                         nullptr, IID_PPV_ARGS(&vsResult)));
+    HRESULT vsHr;
+    vsResult->GetStatus(&vsHr);
+    if (FAILED(vsHr))
+    {
+        ComPtr<IDxcBlobUtf8> errors;
+        vsResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr);
+        std::ostringstream oss;
+        oss << "Vertex shader compilation failed (" << HrToString(vsHr) << ")";
+        if (errors && errors->GetStringLength())
+            oss << ":\n" << errors->GetStringPointer();
+        std::cerr << oss.str() << std::endl;
+        throw Exception(oss.str().c_str());
+    }
+    ThrowIfFailed(vsResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&m_vertexShaderBlob), nullptr));
 }
 
 void DxApp::waitForPreviousFrame()
