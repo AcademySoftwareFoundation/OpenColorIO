@@ -6,7 +6,7 @@ requires = [
     "ninja; sys_platform != 'win32' and platform_machine != 'arm64'",
     # Documentation requirements (see docs/requirements.txt for details)
     "urllib3<2",
-    "docutils>=0.18.1",
+    "docutils>=0.22.4",
     "sphinx<=7.1.2",
     "six",
     "testresources",
