@@ -1,12 +1,12 @@
 [build-system]
 requires = [
-    "setuptools>=42",
+    "setuptools>=82.0.1",
     "wheel",
     "cmake>=3.14",
     "ninja; sys_platform != 'win32' and platform_machine != 'arm64'",
     # Documentation requirements (see docs/requirements.txt for details)
     "urllib3<3",
-    "docutils>=0.18.1",
+    "docutils>=0.22.4",
     "sphinx<=7.1.2",
     "six",
     "testresources",
