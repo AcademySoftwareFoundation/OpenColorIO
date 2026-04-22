@@ -190,7 +190,7 @@ readLuts(std::istream& istream,
             if (result.ec == std::errc())
             {
                 // Cap per-LUT entry count: max is 129^3 * 3 for a 3D LUT.
-                if (lutValues[lutname].size() >= (size_t)(129 * 129 * 129 * 3))
+                if (lutValues[lutname].size() > (size_t)(129 * 129 * 129 * 3))
                 {
                     std::ostringstream os;
                     os << "Too many values in " << lutname << " LUT block";

@@ -221,7 +221,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                         line);
                 }
 
-                if (raw3d.size() >= (size_t)(129 * 129 * 129 * 3))
+                if (raw3d.size() > (size_t)(129 * 129 * 129 * 3))
                 {
                     ThrowErrorMessage(
                         "Too many 3D LUT entries.",

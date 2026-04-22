@@ -26,7 +26,10 @@ FixedFunctionTransformRcPtr FixedFunctionTransform::Create(FixedFunctionStyle st
         throw Exception("FixedFunctionTransform::Create: params pointer must not be null.");
     }
     FixedFunctionOpData::Params p(num);
-    std::copy(params, params + num, p.begin());
+    if (num > 0)
+    {
+        std::copy(params, params + num, p.begin());
+    }
 
     return FixedFunctionTransformRcPtr(new FixedFunctionTransformImpl(style, p),
                                        &FixedFunctionTransformImpl::deleter);
@@ -134,7 +137,10 @@ void FixedFunctionTransformImpl::setParams(const double * params, size_t num)
         throw Exception("FixedFunctionTransform::setParams: params pointer must not be null.");
     }
     FixedFunctionOpData::Params p(num);
-    std::copy(params, params+num, p.begin());
+    if (num > 0)
+    {
+        std::copy(params, params + num, p.begin());
+    }
     data().setParams(p);
 }
 

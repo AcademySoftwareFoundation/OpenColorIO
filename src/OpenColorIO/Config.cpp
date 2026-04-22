@@ -4449,7 +4449,10 @@ const char * Config::getView(ViewType type, const char * display, int index) con
 
 void Config::getDefaultLumaCoefs(double * c3) const
 {
-    if (!c3) return;
+    if (!c3)
+    {
+        throw Exception("getDefaultLumaCoefs: c3 must not be null.");
+    }
     memcpy(c3, &getImpl()->m_defaultLumaCoefs[0], 3*sizeof(double));
 }
 

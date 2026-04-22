@@ -453,7 +453,7 @@ int Lut1dUtils::IMLutGet(
             int dstDepth = 0;
             char floatC = ' ';
 #ifdef _WIN32
-            sscanf(dstDepthS, "%d%c", &dstDepth, &floatC, 1);
+            sscanf_s(dstDepthS, "%d%c", &dstDepth, &floatC, 1);
 #else
             sscanf(dstDepthS, "%d%c", &dstDepth, &floatC);
 #endif

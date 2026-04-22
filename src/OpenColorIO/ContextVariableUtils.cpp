@@ -101,12 +101,12 @@ void LoadEnvironment(EnvMap & map, bool update)
 
         const std::string env_str = (char*)*env;
 #endif
-        const int pos = static_cast<int>(env_str.find_first_of('='));
+        const auto pos = env_str.find_first_of('=');
 
-        if (pos < 0) continue;
+        if (pos == std::string::npos) continue;
 
         const std::string name  = env_str.substr(0, pos);
-        const std::string value = env_str.substr(pos+1, env_str.length());
+        const std::string value = env_str.substr(pos+1);
 
         if (update)
         {

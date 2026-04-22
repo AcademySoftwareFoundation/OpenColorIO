@@ -197,7 +197,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                 {
                     if(in1d)
                     {
-                        if (raw1d.size() >= (size_t)(300000 * 3))
+                        if (raw1d.size() > (size_t)(300000 * 3))
                         {
                             throw Exception("Too many 1D LUT entries in Truelight .cub LUT.");
                         }
@@ -207,7 +207,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                     }
                     else if(in3d)
                     {
-                        if (raw3d.size() >= (size_t)(129 * 129 * 129 * 3))
+                        if (raw3d.size() > (size_t)(129 * 129 * 129 * 3))
                         {
                             throw Exception("Too many 3D LUT entries in Truelight .cub LUT.");
                         }
