@@ -50,19 +50,18 @@ jobs:
       github.repository == 'AcademySoftwareFoundation/OpenColorIO'
 
     steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-    - uses: actions/checkout@v4
+      - name: Build SDist
+        run: pipx run build --sdist
 
-    - name: Build SDist
-      run: pipx run build --sdist
+      - name: Check metadata
+        run: pipx run twine check dist/*
 
-    - name: Check metadata
-      run: pipx run twine check dist/*
-
-    - uses: actions/upload-artifact@v4
-      with:
-        name: cibw-sdist
-        path: dist/*.tar.gz
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: cibw-sdist
+          path: dist/*.tar.gz
 
   # ---------------------------------------------------------------------------
   # Linux Wheels
@@ -81,10 +80,6 @@ jobs:
           # -------------------------------------------------------------------
           # CPython 64 bits manylinux_2_28
           # -------------------------------------------------------------------
-          - build: CPython 3.9 64 bits manylinux_2_28
-            manylinux: manylinux_2_28
-            python: cp39-manylinux_x86_64
-            arch: x86_64
           - build: CPython 3.10 64 bits manylinux_2_28
             manylinux: manylinux_2_28
             python: cp310-manylinux_x86_64
@@ -108,10 +103,6 @@ jobs:
           # -------------------------------------------------------------------
           # CPython 64 bits manylinux2014
           # -------------------------------------------------------------------
-          - build: CPython 3.9 64 bits manylinux2014
-            manylinux: manylinux2014
-            python: cp39-manylinux_x86_64
-            arch: x86_64
           - build: CPython 3.10 64 bits manylinux2014
             manylinux: manylinux2014
             python: cp310-manylinux_x86_64
@@ -134,22 +125,22 @@ jobs:
             arch: x86_64
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         name: Install Python
         with:
           python-version: '3.11'
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.3.0
+        uses: pypa/cibuildwheel@ee02a1537ce3071a004a6b08c41e72f0fdc42d9a # v3.4.0
         env:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux }}
           CIBW_BEFORE_BUILD: "pip install sphinx-press-theme"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: cibw-wheels-${{ matrix.python }}-${{ matrix.manylinux }}
           path: ./wheelhouse/*.whl
@@ -171,10 +162,6 @@ jobs:
           # -------------------------------------------------------------------
           # CPython ARM 64 bits manylinux2014
           # -------------------------------------------------------------------
-          - build: CPython 3.9 ARM 64 bits manylinux2014
-            manylinux: manylinux2014
-            python: cp39-manylinux_aarch64
-            arch: aarch64
           - build: CPython 3.10 ARM 64 bits manylinux2014
             manylinux: manylinux2014
             python: cp310-manylinux_aarch64
@@ -197,22 +184,22 @@ jobs:
             arch: aarch64
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         name: Install Python
         with:
           python-version: '3.11'
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.3.0
+        uses: pypa/cibuildwheel@ee02a1537ce3071a004a6b08c41e72f0fdc42d9a # v3.4.0
         env:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux }}
           CIBW_BEFORE_BUILD: "pip install sphinx-press-theme"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: cibw-wheels-${{ matrix.python }}-${{ matrix.manylinux }}
           path: ./wheelhouse/*.whl
@@ -234,9 +221,6 @@ jobs:
           # -------------------------------------------------------------------
           # CPython 64 bits
           # -------------------------------------------------------------------
-          - build: CPython 3.9 64 bits
-            python: cp39-macosx_x86_64
-            arch: x86_64
           - build: CPython 3.10 64 bits
             python: cp310-macosx_x86_64
             arch: x86_64
@@ -254,9 +238,9 @@ jobs:
             arch: x86_64
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         name: Install Python
         with:
           python-version: '3.11'
@@ -266,13 +250,13 @@ jobs:
           brew uninstall --ignore-dependencies openexr imath || true
             
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.3.0
+        uses: pypa/cibuildwheel@ee02a1537ce3071a004a6b08c41e72f0fdc42d9a # v3.4.0
         env:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_BEFORE_BUILD: "pip install sphinx-press-theme"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: cibw-wheels-${{ matrix.python }}
           path: ./wheelhouse/*.whl
@@ -294,9 +278,6 @@ jobs:
           # -------------------------------------------------------------------
           # CPython ARM 64 bits
           # -------------------------------------------------------------------
-          - build: CPython 3.9 ARM 64 bits
-            python: cp39-macosx_arm64
-            arch: arm64
           - build: CPython 3.10 ARM 64 bits
             python: cp310-macosx_arm64
             arch: arm64
@@ -314,21 +295,21 @@ jobs:
             arch: arm64
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         name: Install Python
         with:
           python-version: '3.11'
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.3.0
+        uses: pypa/cibuildwheel@ee02a1537ce3071a004a6b08c41e72f0fdc42d9a # v3.4.0
         env:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_BEFORE_BUILD: "pip install sphinx-press-theme"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: cibw-wheels-${{ matrix.python }}
           path: ./wheelhouse/*.whl
@@ -350,9 +331,6 @@ jobs:
           # -------------------------------------------------------------------
           # CPython 64 bits
           # -------------------------------------------------------------------
-          - build: CPython 3.9 64 bits
-            python: cp39-win_amd64
-            arch: AMD64
           - build: CPython 3.10 64 bits
             python: cp310-win_amd64
             arch: AMD64
@@ -370,40 +348,43 @@ jobs:
             arch: AMD64
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         name: Install Python
         with:
           python-version: '3.11'
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.3.0
+        uses: pypa/cibuildwheel@ee02a1537ce3071a004a6b08c41e72f0fdc42d9a # v3.4.0
         env:
           CIBW_BUILD: ${{ matrix.python }}
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_BEFORE_BUILD: "pip install sphinx-press-theme"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: cibw-wheels-${{ matrix.python }}
           path: ./wheelhouse/*.whl
 
+  # ---------------------------------------------------------------------------
+  # Upload
+  # ---------------------------------------------------------------------------
 
   upload_pypi:
     needs: [sdist, linux, linux-arm, macos, macos-arm, windows]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     steps:
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           pattern: cibw-*
           path: dist
           merge-multiple: true
 
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
