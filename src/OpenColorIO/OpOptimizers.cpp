@@ -615,13 +615,12 @@ void OpRcPtrVec::optimize(OptimizationFlags oFlags)
         return;
     }
 
-    if (IsDebugLoggingEnabled())
+    const bool debugLoggingEnabled = IsDebugLoggingEnabled();
+    if (debugLoggingEnabled)
     {
         std::ostringstream oss;
-        oss << std::endl
-            << "**" << std::endl
-            << "Optimizing Op Vec..." << std::endl
-            << SerializeOpVec(*this, 4) << std::endl;
+        oss << "\n**\nOptimizing Op Vec...\n"
+            << SerializeOpVec(*this, 4) << "\n";
 
         LogDebug(oss.str());
     }
@@ -633,16 +632,15 @@ void OpRcPtrVec::optimize(OptimizationFlags oFlags)
 
     if (oFlags == OPTIMIZATION_NONE)
     {
-        if (IsDebugLoggingEnabled())
+        if (debugLoggingEnabled)
         {
             OpRcPtrVec::size_type finalSize = size();
 
             std::ostringstream os;
-            os << "**" << std::endl;
-            os << "Optimized ";
-            os << originalSize << "->" << finalSize << ", 1 pass, ";
-            os << total_nooptype << " no-op types removed\n";
-            os << SerializeOpVec(*this, 4);
+            os << "**\nOptimized "
+               << originalSize << "->" << finalSize << ", 1 pass, "
+               << total_nooptype << " no-op types removed\n"
+               << SerializeOpVec(*this, 4);
             LogDebug(os.str());
         }
 
@@ -678,20 +676,30 @@ void OpRcPtrVec::optimize(OptimizationFlags oFlags)
     {
         // Remove all ops for which isNoOp is true, including identity matrices.
         int noops = optimizeIdentity ? RemoveNoOps(*this) : 0;
+        if (debugLoggingEnabled)
+            LogDebug(std::string("RemoveNoOps\n") + SerializeOpVec(*this, 4));
 
         // Replace all complex ops with simpler ops (e.g., a CDL which only scales with a matrix).
         // Note this might increase the number of ops.
         int replacedOps = replaceOps ? ReplaceOps(*this) : 0;
+        if (debugLoggingEnabled)
+            LogDebug(std::string("ReplaceOps\n") + SerializeOpVec(*this, 4));
 
         // Replace all complex identities with simpler ops (e.g., an identity Lut1D with a range).
         int identityops = ReplaceIdentityOps(*this, oFlags);
+        if (debugLoggingEnabled)
+            LogDebug(std::string("ReplaceIdentityOps\n") + SerializeOpVec(*this, 4));
 
         // Remove all adjacent pairs of ops that are inverses of each other.
         int inverseops  = RemoveInverseOps(*this, oFlags);
+        if (debugLoggingEnabled)
+            LogDebug(std::string("RemoveInverseOps\n") + SerializeOpVec(*this, 4));
 
         // Combine a pair of ops, for example multiply two adjacent Matrix ops.
         // (Combines at most one pair on each iteration.)
         int combines    = CombineOps(*this, oFlags);
+        if (debugLoggingEnabled)
+            LogDebug(std::string("CombineOps\n") + SerializeOpVec(*this, 4));
 
         if (noops + identityops + inverseops + combines == 0)
         {
@@ -701,6 +709,10 @@ void OpRcPtrVec::optimize(OptimizationFlags oFlags)
             if (fastLut)
             {
                 const int inverses = ReplaceInverseLuts(*this);
+                if (debugLoggingEnabled)
+                    LogDebug(std::string("ReplaceInverseLuts\n")
+                             + SerializeOpVec(*this, 4));
+
                 if (inverses == 0)
                 {
                     break;
@@ -723,34 +735,33 @@ void OpRcPtrVec::optimize(OptimizationFlags oFlags)
         ++passes;
     }
 
-    if (passes == MAX_OPTIMIZATION_PASSES)
+    if (debugLoggingEnabled && (passes == MAX_OPTIMIZATION_PASSES))
     {
         std::ostringstream os;
-        os << "The max number of passes, " << passes << ", ";
-        os << "was reached during optimization. This is likely a sign ";
-        os << "that either the complexity of the color transform is ";
-        os << "very high, or that some internal optimizers are in conflict ";
-        os << "(undo-ing / redo-ing the other's results).";
+        os << "The max number of passes, " << passes << ", "
+              "was reached during optimization. This is likely a sign "
+              "that either the complexity of the color transform is "
+              "very high, or that some internal optimizers are in conflict "
+              "(undo-ing / redo-ing the other's results).";
         LogDebug(os.str());
     }
 
-    if (IsDebugLoggingEnabled())
+    if (debugLoggingEnabled)
     {
         OpRcPtrVec::size_type finalSize = size();
 
         std::ostringstream os;
-        os << "**" << std::endl;
-        os << "Optimized ";
-        os << originalSize << "->" << finalSize << ", ";
-        os << passes << " passes, ";
-        os << total_nooptype << " no-op types removed, ";
-        os << total_noops << " no-ops removed, ";
-        os << total_replacedops << " ops replaced, ";
-        os << total_identityops << " identity ops replaced, ";
-        os << total_inverseops << " inverse op pairs removed, ";
-        os << total_combines << " ops combined, ";
-        os << total_inverses << " ops inverted\n";
-        os << SerializeOpVec(*this, 4);
+        os << "**\nOptimized "
+           << originalSize << "->" << finalSize << ", "
+           << passes << " passes, "
+           << total_nooptype << " no-op types removed, "
+           << total_noops << " no-ops removed, "
+           << total_replacedops << " ops replaced, "
+           << total_identityops << " identity ops replaced, "
+           << total_inverseops << " inverse op pairs removed, "
+           << total_combines << " ops combined, "
+           << total_inverses << " ops inverted\n"
+           << SerializeOpVec(*this, 4);
         LogDebug(os.str());
     }
 }

@@ -5,7 +5,6 @@
 #ifndef INCLUDED_OCIO_OP_H
 #define INCLUDED_OCIO_OP_H
 
-#include <sstream>
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
