@@ -798,7 +798,7 @@ public:
         }
 
         const ViewVec & views = searchShared ? m_sharedViews : iter->second.m_views;
-        const auto & viewIt = FindView(views, view);
+        const auto viewIt = FindView(views, view);
 
         if (viewIt != views.end())
         {

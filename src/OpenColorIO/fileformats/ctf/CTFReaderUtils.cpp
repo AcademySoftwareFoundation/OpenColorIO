@@ -3,6 +3,7 @@
 
 #include <cstring>
 #include <sstream>
+#include <regex>
 
 #include "fileformats/ctf/CTFReaderUtils.h"
 #include "Platform.h"
@@ -173,4 +174,19 @@ const char * ConvertGradingStyleAndDirToString(GradingStyle style, TransformDire
 
     throw Exception(os.str().c_str());
 }
+
+bool ValidateSMPTEId(const std::string& id)
+{
+    static const std::regex clf_id_regex(
+        "^urn:uuid:"
+        "[0-9a-fA-F]{8}-"
+        "[0-9a-fA-F]{4}-"
+        "[0-9a-fA-F]{4}-"
+        "[0-9a-fA-F]{4}-"
+        "[0-9a-fA-F]{12}$");
+
+    return std::regex_match(id, clf_id_regex);
+}
+
+
 } // namespace OCIO_NAMESPACE

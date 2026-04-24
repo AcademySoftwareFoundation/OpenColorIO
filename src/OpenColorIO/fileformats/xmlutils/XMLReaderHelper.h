@@ -34,9 +34,6 @@ public:
     // End the parsing of the element.
     virtual void end() = 0;
 
-    // Is it a container which means if it can hold other elements.
-    virtual bool isContainer() const = 0;
-
     const std::string & getName() const
     {
         return m_name;
@@ -64,6 +61,9 @@ public:
     {
         return false;
     }
+    
+    // Is it a container which means if it can hold other elements.
+    virtual bool isContainer() const = 0;
 
     void throwMessage(const std::string & error) const;
 
@@ -135,7 +135,7 @@ public:
         return true;
     }
 
-    virtual void appendMetadata(const std::string & name, const std::string & value) = 0;
+    virtual void appendMetadata(FormatMetadataImpl& metadata) = 0;
 
 private:
     XmlReaderContainerElt() = delete;
@@ -211,7 +211,7 @@ class XmlReaderDummyElt : public XmlReaderPlainElt
         {
         }
 
-        void appendMetadata(const std::string & /*name*/, const std::string & /*value*/) override
+        void appendMetadata(FormatMetadataImpl& /*metadata*/) override
         {
         }
 
@@ -288,6 +288,7 @@ public:
 
     void start(const char ** /* atts */) override
     {
+        // TODO: collect language attr.
         m_description.resize(0);
         m_changed = false;
     }
@@ -339,7 +340,7 @@ public:
         return getName().c_str();
     }
 
-    void appendMetadata(const std::string & /*name*/, const std::string & /*value*/) override
+    void appendMetadata(FormatMetadataImpl& /*metadata*/) override
     {
     }
 
@@ -392,11 +393,11 @@ public:
     void setIsOffsetInit(bool status) { m_isOffsetInit = status; }
     void setIsPowerInit(bool status) { m_isPowerInit = status; }
 
-    void appendMetadata(const std::string & /* name */, const std::string & value) override
+    void appendMetadata(FormatMetadataImpl& metadata) override
     {
         // Add description to parent and override name.
-        FormatMetadataImpl item(METADATA_SOP_DESCRIPTION, value);
-        getCDL()->getFormatMetadata().getChildrenElements().push_back(item);
+        metadata.setElementName(METADATA_SOP_DESCRIPTION);
+        getCDL()->getFormatMetadata().getChildrenElements().push_back(metadata);
     }
 
 private:
@@ -452,11 +453,11 @@ public:
 
     virtual const CDLOpDataRcPtr & getCDL() const = 0;
 
-    void appendMetadata(const std::string & /* name */, const std::string & value) override
+    void appendMetadata(FormatMetadataImpl& metadata) override
     {
         // Add description to parent and override name.
-        FormatMetadataImpl item(METADATA_SAT_DESCRIPTION, value);
-        getCDL()->getFormatMetadata().getChildrenElements().push_back(item);
+        metadata.setElementName(METADATA_SAT_DESCRIPTION);
+        getCDL()->getFormatMetadata().getChildrenElements().push_back(metadata);
     }
 
 
