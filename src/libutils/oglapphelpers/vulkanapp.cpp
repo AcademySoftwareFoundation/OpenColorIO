@@ -344,11 +344,11 @@ void VulkanApp::initImage(int imageWidth, int imageHeight, Components comp, cons
     m_imageHeight = imageHeight;
     m_components = comp;
 
-    createBuffers();
+    createVulkanBuffers();
     updateImage(imageBuffer);
 }
 
-void VulkanApp::createBuffers()
+void VulkanApp::createVulkanBuffers()
 {
     const int numComponents = (m_components == COMPONENTS_RGB) ? 3 : 4;
     const VkDeviceSize bufferSize = m_imageWidth * m_imageHeight * numComponents * sizeof(float);
@@ -399,7 +399,7 @@ void VulkanApp::setShader(GpuShaderDescRcPtr & shaderDesc)
     m_vulkanBuilder->allocateAllTextures(shaderDesc);
     m_vulkanBuilder->buildShader(shaderDesc);
 
-    if (m_printShader)
+    if (isShaderVerbose())
     {
         std::cout << "Vulkan Compute Shader:\n" << m_vulkanBuilder->getShaderSource() << std::endl;
     }

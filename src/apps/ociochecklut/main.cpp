@@ -52,18 +52,18 @@ public:
         m_gpu = gpu;
         if (!m_oglApp)
         {
-            m_oglApp = OCIO::OglApp::CreateOglApp("ociochecklut", 256, 20);
+            m_oglApp = OCIO::GraphicalApp::CreateApp("ociochecklut", 256, 20);
 
             if (m_verbose)
             {
-                m_oglApp->printGLInfo();
+                m_oglApp->printGraphicsInfo();
             }
         }
 
-        m_oglApp->setPrintShader(m_verbose);
+        m_oglApp->setShaderVerbose(m_verbose);
         float image[4]{ 0.f, 0.f, 0.f, 0.f };
-        m_oglApp->initImage(1, 1, OCIO::OglApp::COMPONENTS_RGBA, image);
-        m_oglApp->createGLBuffers();
+        m_oglApp->initImage(1, 1, OCIO::GraphicalApp::COMPONENTS_RGBA, image);
+        m_oglApp->createBuffers();
         OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
         shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_2);
         m_gpu->extractGpuShaderInfo(shaderDesc);
@@ -98,7 +98,7 @@ private:
         m_oglApp->redisplay();
         m_oglApp->readImage(pixel.data());
     }
-    OCIO::OglAppRcPtr m_oglApp;
+    OCIO::GraphicalAppRcPtr m_oglApp;
 #else
     void applyGPU(std::vector<float> &)
     {

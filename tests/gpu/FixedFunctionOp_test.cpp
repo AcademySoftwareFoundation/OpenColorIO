@@ -303,6 +303,7 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces_gamutcomp13_inv)
     };
     test.setCustomValues(values);
 
+    // 3e-5 accommodates GPU pow() precision at large output values (~3.08) on DirectX.
     test.setErrorThreshold(3e-5f);
 }
 
@@ -618,8 +619,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_1000nit_p3_rndtrip)
 
     // TODO: Investigate why this is not closer.
     // Setting the CPUProcessor to OPTIMIZATION_NONE helps slightly, but is not the main
-    // cause of the error.
-    test.setErrorThreshold(0.012f);
+    // cause of the error. 0.014 accommodates DirectX floating point differences.
+    test.setErrorThreshold(0.014f);
 }
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_1000nit_p3_inv)
@@ -692,8 +693,8 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_4000nit_rec2020_rndtrip)
     GenerateIdentityLut3D(values, lut_size, lum_scale);
     test.setCustomValues(values);
 
-    // TODO: Investigate why this is not closer.
-    test.setErrorThreshold(0.032f);
+    // TODO: Investigate why this is not closer. 0.034 accommodates DirectX floating point differences.
+    test.setErrorThreshold(0.034f);
 }
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_4000nit_rec2020_inv)

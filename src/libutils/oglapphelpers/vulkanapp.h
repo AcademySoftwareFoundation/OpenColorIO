@@ -15,6 +15,8 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "graphicalapp.h"
+
 namespace OCIO_NAMESPACE
 {
 
@@ -26,7 +28,7 @@ typedef OCIO_SHARED_PTR<VulkanApp> VulkanAppRcPtr;
 
 // VulkanApp provides headless Vulkan rendering for GPU unit testing.
 // This class is designed to process images using OCIO GPU shaders via Vulkan compute pipelines.
-class VulkanApp
+class VulkanApp : public GraphicalApp
 {
 public:
     VulkanApp() = delete;
@@ -38,38 +40,35 @@ public:
 
     virtual ~VulkanApp();
 
-    enum Components
-    {
-        COMPONENTS_RGB = 0,
-        COMPONENTS_RGBA
-    };
-
     // Initialize the image buffer.
-    void initImage(int imageWidth, int imageHeight, Components comp, const float * imageBuffer);
+    void initImage(int imageWidth, int imageHeight, Components comp, const float * imageBuffer) override;
 
     // Update the image if it changes.
-    void updateImage(const float * imageBuffer);
+    void updateImage(const float * imageBuffer) override;
+
+    // No-op: Vulkan buffers are created during initImage().
+    void createBuffers() override {}
 
     // Set the shader code from OCIO GpuShaderDesc.
-    void setShader(GpuShaderDescRcPtr & shaderDesc);
+    void setShader(GpuShaderDescRcPtr & shaderDesc) override;
 
     // Update the size of the buffer used to process the image.
-    void reshape(int width, int height);
+    void reshape(int width, int height) override;
 
     // Process the image using the Vulkan compute pipeline.
-    void redisplay();
+    void redisplay() override;
 
     // Read the processed image from the GPU buffer.
-    void readImage(float * imageBuffer);
+    void readImage(float * imageBuffer) override;
 
     // Print Vulkan device and instance info.
     void printVulkanInfo() const noexcept;
 
+    // Implements GraphicalApp::printGraphicsInfo().
+    void printGraphicsInfo() const noexcept override { printVulkanInfo(); }
+
     // Factory method to create a VulkanApp instance.
     static VulkanAppRcPtr CreateVulkanApp(int bufWidth, int bufHeight);
-
-    // Shader code will be printed when generated.
-    void setPrintShader(bool print) { m_printShader = print; }
 
 protected:
     // Initialize Vulkan instance, device, and queues.
@@ -78,8 +77,8 @@ protected:
     // Create Vulkan compute pipeline for shader processing.
     void createComputePipeline();
 
-    // Create buffers for image data.
-    void createBuffers();
+    // Create Vulkan buffers for image data (called internally from initImage).
+    void createVulkanBuffers();
 
     // Clean up Vulkan resources.
     void cleanup();
@@ -130,13 +129,12 @@ private:
     int m_imageHeight{ 0 };
     int m_bufferWidth{ 0 };
     int m_bufferHeight{ 0 };
-    Components m_components{ COMPONENTS_RGBA };
+    Components m_components{ GraphicalApp::COMPONENTS_RGBA };
 
     // Shader builder
     VulkanBuilderRcPtr m_vulkanBuilder;
 
     // Debug and configuration
-    bool m_printShader{ false };
     bool m_initialized{ false };
 
     // Validation layers (debug builds)
