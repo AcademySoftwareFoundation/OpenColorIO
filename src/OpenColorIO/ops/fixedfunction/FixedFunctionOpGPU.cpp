@@ -563,18 +563,18 @@ std::string _Add_Reach_table(
     ss.indent();
 
     ss.newLine() << ss.floatDecl("i_base") << " = floor(h);";
-    ss.newLine() << ss.floatDecl("i_lo") << " = i_base + " << table.base_index << ";";
-    ss.newLine() << ss.floatDecl("i_hi") << " = i_lo + 1;";
+    ss.newLine() << ss.floatDecl("i_lo") << " = i_base + " << ss.floatKeyword() << "(" << table.base_index << ");";
+    ss.newLine() << ss.floatDecl("i_hi") << " = i_lo + 1.0;";
 
     if (dimensions == GpuShaderDesc::TEXTURE_1D)
     {
-        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex1D(name, "(i_lo + 0.5) / " + std::to_string(table.total_size)) << ".r;";
-        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex1D(name, "(i_hi + 0.5) / " + std::to_string(table.total_size)) << ".r;";
+        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex1D(name, "(i_lo + 0.5) / " + ss.floatKeyword() + " (" + std::to_string(table.total_size) + ")") << ".r;";
+        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex1D(name, "(i_hi + 0.5) / " + ss.floatKeyword() + " (" + std::to_string(table.total_size) + ")") << ".r;";
     }
     else
     {
-        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex2D(name, ss.float2Const("(i_lo + 0.5) / " + std::to_string(table.total_size), "0.0")) << ".r;";
-        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex2D(name, ss.float2Const("(i_hi + 0.5) / " + std::to_string(table.total_size), "0.5")) << ".r;";
+        ss.newLine() << ss.floatDecl("lo") << " = " << ss.sampleTex2D(name, ss.float2Const("(i_lo + 0.5) / " + ss.floatKeyword() + " (" + std::to_string(table.total_size) + ")", "0.0")) << ".r;";
+        ss.newLine() << ss.floatDecl("hi") << " = " << ss.sampleTex2D(name, ss.float2Const("(i_hi + 0.5) / " + ss.floatKeyword() + " (" + std::to_string(table.total_size) + ")", "0.5")) << ".r;";
     }
 
     ss.newLine() << ss.floatDecl("t") << " = h - i_base;"; // Hardcoded single degree spacing
@@ -901,13 +901,13 @@ std::string _Add_Cusp_table(
 
     if (dimensions == GpuShaderDesc::TEXTURE_1D)
     {
-        ss.newLine() << ss.float3Decl("lo") << " = " << ss.sampleTex1D(name, std::string("(i_hi - 1 + 0.5) / ") + std::to_string(g.gamut_cusp_table.total_size)) << ".rgb;";
-        ss.newLine() << ss.float3Decl("hi") << " = " << ss.sampleTex1D(name, std::string("(i_hi + 0.5) / ") + std::to_string(g.gamut_cusp_table.total_size)) << ".rgb;";
+        ss.newLine() << ss.float3Decl("lo") << " = " << ss.sampleTex1D(name, std::string("(" + ss.floatKeyword() + "(i_hi) - 1.0 + 0.5) / ") + ss.floatKeyword() + "(" + std::to_string(g.gamut_cusp_table.total_size) + ")") << ".rgb;";
+        ss.newLine() << ss.float3Decl("hi") << " = " << ss.sampleTex1D(name, std::string("(" + ss.floatKeyword() + "(i_hi) + 0.5) / ") + ss.floatKeyword() + "(" + std::to_string(g.gamut_cusp_table.total_size) + ")") << ".rgb;";
     }
     else
     {
-        ss.newLine() << ss.float3Decl("lo") << " = " << ss.sampleTex2D(name, ss.float2Const(std::string("(i_hi - 1 + 0.5) / ") + std::to_string(g.gamut_cusp_table.total_size), "0.5")) << ".rgb;";
-        ss.newLine() << ss.float3Decl("hi") << " = " << ss.sampleTex2D(name, ss.float2Const(std::string("(i_hi + 0.5) / ") + std::to_string(g.gamut_cusp_table.total_size), "0.5")) << ".rgb;";
+        ss.newLine() << ss.float3Decl("lo") << " = " << ss.sampleTex2D(name, ss.float2Const(std::string("(" + ss.floatKeyword() + "(i_hi) - 1.0 + 0.5) / ") + ss.floatKeyword() + "(" + std::to_string(g.gamut_cusp_table.total_size) + ")", "0.5")) << ".rgb;";
+        ss.newLine() << ss.float3Decl("hi") << " = " << ss.sampleTex2D(name, ss.float2Const(std::string("(" + ss.floatKeyword() + "(i_hi) + 0.5) / ") + ss.floatKeyword() + "(" + std::to_string(g.gamut_cusp_table.total_size) + ")", "0.5")) << ".rgb;";
     }
 
     ss.newLine() << ss.floatDecl("t") << " = (h - " << hues_array_name << "[i_hi - 1]) / "
