@@ -24,9 +24,6 @@ class Lut3DOpData : public OpData
 {
 public:
 
-    // The maximum grid size supported for a 3D LUT.
-    static const unsigned long maxSupportedLength;
-
     // Use functional composition to generate a single op that 
     // approximates the effect of the pair of ops.
     static Lut3DOpDataRcPtr Compose(ConstLut3DOpDataRcPtr & lut1, ConstLut3DOpDataRcPtr & lut2);

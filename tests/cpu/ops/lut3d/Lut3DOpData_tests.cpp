@@ -67,8 +67,8 @@ OCIO_ADD_TEST(Lut3DOpData, clone)
 
 OCIO_ADD_TEST(Lut3DOpData, not_supported_length)
 {
-    OCIO_CHECK_NO_THROW(OCIO::Lut3DOpData{ OCIO::Lut3DOpData::maxSupportedLength });
-    OCIO_CHECK_THROW_WHAT(OCIO::Lut3DOpData{ OCIO::Lut3DOpData::maxSupportedLength + 1 },
+    OCIO_CHECK_NO_THROW(OCIO::Lut3DOpData{ OCIO::Max3DLUTLength });
+    OCIO_CHECK_THROW_WHAT(OCIO::Lut3DOpData{ OCIO::Max3DLUTLength + 1 },
                           OCIO::Exception, "must not be greater");
 }
 
