@@ -710,7 +710,7 @@ int main(int argc, const char ** argv)
             vulkanApp = OCIO::VulkanApp::CreateVulkanApp(g_winWidth, g_winHeight);
             vulkanApp->printVulkanInfo();
 #else
-            std::cerr << std::endl << "'GPU tests - Vulkan' is not supported (OCIO_VULKAN_ENABLED not defined)" << std::endl;
+            std::cerr << "\n'GPU tests - Vulkan' is not supported (OCIO_VULKAN_ENABLED not defined)\n";
             return 1;
 #endif
         }
@@ -726,7 +726,7 @@ int main(int argc, const char ** argv)
     }
     catch (const std::exception & e)
     {
-        std::cerr << std::endl << e.what() << std::endl;
+        std::cerr << "\n" << e.what() << "\n";
         return 1;
     }
 
@@ -894,7 +894,7 @@ int main(int argc, const char ** argv)
         catch(const std::exception & ex)
         {
             ++failures;
-            std::cerr << "FAILED - std::exception: " << ex.what() << std::endl;
+            std::cerr << "FAILED - std::exception: " << ex.what() << "\n";
         }
         catch(...)
         {

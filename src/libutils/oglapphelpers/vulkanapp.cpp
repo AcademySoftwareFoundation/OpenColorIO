@@ -5,9 +5,13 @@
 
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <stdexcept>
 #include <cstring>
-#include <fstream>
+#include <vector>
+#include <memory>
+
+#include <OpenColorIO/OpenColorIO.h>
 
 #include <glslang/Public/ShaderLang.h>
 #include <glslang/Public/ResourceLimits.h>
@@ -119,8 +123,8 @@ void VulkanApp::initVulkan()
     // Print GPU information for diagnostics
     VkPhysicalDeviceProperties deviceProperties;
     vkGetPhysicalDeviceProperties(m_physicalDevice, &deviceProperties);
-    std::cout << "Vulkan GPU: " << deviceProperties.deviceName << std::endl;
-    std::cout << "  Device Type: ";
+    std::cout << "Vulkan GPU: " << deviceProperties.deviceName << "\n"
+                 "  Device Type: ";
     switch (deviceProperties.deviceType)
     {
         case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:   std::cout << "Discrete GPU"; break;
@@ -131,10 +135,9 @@ void VulkanApp::initVulkan()
         case VK_PHYSICAL_DEVICE_TYPE_MAX_ENUM:
         default:                                     std::cout << "Other"; break;
     }
-    std::cout << std::endl;
-    std::cout << "  API Version: " << VK_VERSION_MAJOR(deviceProperties.apiVersion) << "."
+    std::cout << "\n  API Version: " << VK_VERSION_MAJOR(deviceProperties.apiVersion) << "."
               << VK_VERSION_MINOR(deviceProperties.apiVersion) << "."
-              << VK_VERSION_PATCH(deviceProperties.apiVersion) << std::endl;
+              << VK_VERSION_PATCH(deviceProperties.apiVersion) << "\n";
 
     // Create logical device
     float queuePriority = 1.0f;
@@ -401,7 +404,7 @@ void VulkanApp::setShader(GpuShaderDescRcPtr & shaderDesc)
 
     if (m_printShader)
     {
-        std::cout << "Vulkan Compute Shader:\n" << m_vulkanBuilder->getShaderSource() << std::endl;
+        std::cout << "Vulkan Compute Shader:\n" << m_vulkanBuilder->getShaderSource() << "\n";
     }
 
     createComputePipeline();
@@ -577,19 +580,19 @@ void VulkanApp::printVulkanInfo() const noexcept
 {
     if (m_physicalDevice == VK_NULL_HANDLE)
     {
-        std::cout << "Vulkan not initialized" << std::endl;
+        std::cout << "Vulkan not initialized\n";
         return;
     }
 
     VkPhysicalDeviceProperties properties;
     vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
 
-    std::cout << "Vulkan Device: " << properties.deviceName << std::endl;
+    std::cout << "Vulkan Device: " << properties.deviceName << "\n";
     std::cout << "Vulkan API Version: "
               << VK_VERSION_MAJOR(properties.apiVersion) << "."
               << VK_VERSION_MINOR(properties.apiVersion) << "."
-              << VK_VERSION_PATCH(properties.apiVersion) << std::endl;
-    std::cout << "Driver Version: " << properties.driverVersion << std::endl;
+              << VK_VERSION_PATCH(properties.apiVersion) << "\n";
+    std::cout << "Driver Version: " << properties.driverVersion << "\n";
 }
 
 VulkanAppRcPtr VulkanApp::CreateVulkanApp(int bufWidth, int bufHeight)
@@ -940,7 +943,7 @@ void VulkanBuilder::createUniformBuffer(GpuShaderDescRcPtr & shaderDesc)
         }
         else
         {
-            std::cerr << "Warning: Unknown uniform type for '" << name << "'" << std::endl;
+            std::cerr << "Warning: Unknown uniform type for '" << name << "'\n";
             continue;
         }
         
