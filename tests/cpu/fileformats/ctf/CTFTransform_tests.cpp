@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <sstream>
+
 #include "fileformats/ctf/CTFTransform.cpp"
 
 #include "ops/matrix/MatrixOpData.h"

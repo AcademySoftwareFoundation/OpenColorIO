@@ -4,8 +4,11 @@
 #ifndef INCLUDED_OCIO_PYIMAGEDESC_H
 #define INCLUDED_OCIO_PYIMAGEDESC_H
 
-#include "PyOpenColorIO.h"
-#include "PyUtils.h"
+#include <cstddef>
+
+#include <OpenColorIO/OpenColorIO.h>
+
+#include <pybind11/pybind11.h>
 
 namespace OCIO_NAMESPACE
 {
@@ -15,8 +18,8 @@ using PlanarImageDescRcPtr = OCIO_SHARED_PTR<PlanarImageDesc>;
 
 // ImageDesc does NOT claim ownership of its pixels or copy image data. This is problematic in 
 // Python when image data passed to the constructor only exists in the function call's scope. 
-// The py::buffer is garbage collected immediately following initialization, leaving a dangling 
-// pointer in the ImageDesc. Consider this scenario:
+// The pybind11::buffer is garbage collected immediately following initialization, leaving a
+// dangling pointer in the ImageDesc. Consider this scenario:
 //
 //   >>> img1 = OCIO.PackedImageDesc(np.array(0.18, ...), ...)
 //   >>> img1.getData()
@@ -28,7 +31,7 @@ using PlanarImageDescRcPtr = OCIO_SHARED_PTR<PlanarImageDesc>;
 //   np.array(0.05, ...)  # img1 and img2 are pointing to the same memory
 //
 // To get around this, ImageDesc and its subclasses are wrapped in a container struct which owns 
-// persistent copies of the initializing py::buffer object(s).
+// persistent copies of the initializing pybind11::buffer object(s).
 
 struct OCIOHIDDEN PyImageDesc
 {
@@ -58,7 +61,7 @@ struct OCIOHIDDEN PyImageDescImpl : public PyImageDesc
 
     OCIO_SHARED_PTR<T> getImg() const { return OCIO_DYNAMIC_POINTER_CAST<T>(m_img); }
 
-    py::buffer m_data[N];
+    pybind11::buffer m_data[N];
 
 private:
     PyImageDescImpl(const PyImageDescImpl &) = delete;
@@ -68,8 +71,8 @@ private:
 using PyPackedImageDesc = PyImageDescImpl<PackedImageDesc, 1>;
 using PyPlanarImageDesc = PyImageDescImpl<PlanarImageDesc, 4>;
 
-void bindPyPackedImageDesc(py::module & m);
-void bindPyPlanarImageDesc(py::module & m);
+void bindPyPackedImageDesc(pybind11::module & m);
+void bindPyPlanarImageDesc(pybind11::module & m);
 
 } // namespace OCIO_NAMESPACE
 

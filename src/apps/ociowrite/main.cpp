@@ -6,9 +6,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
-#include <set>
 #include <sstream>
-#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
@@ -65,7 +63,7 @@ int main(int argc, const char **argv)
 
     if (argc <= 1 || ap.parse(argc, argv) < 0)
     {
-        std::cerr << ap.geterror() << std::endl;
+        std::cerr << ap.geterror() << "\n";
         ap.usage();
         exit(1);
     }
@@ -78,17 +76,15 @@ int main(int argc, const char **argv)
 
     if (verbose)
     {
-        std::cout << std::endl;
-        std::cout << "OCIO Version: " << OCIO::GetVersion() << std::endl;
+        std::cout << "\nOCIO Version: " << OCIO::GetVersion() << "\n";
         const char * env = OCIO::GetEnvVariable("OCIO");
         if (env && *env)
         {
             try
             {
-                std::cout << std::endl;
-                std::cout << "OCIO Configuration: '" << env << "'" << std::endl;
+                std::cout << "\nOCIO Configuration: '" << env << "'\n";
                 OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-                std::cout << "OCIO search_path:    " << config->getSearchPath() << std::endl;
+                std::cout << "OCIO search_path:    " << config->getSearchPath() << "\n";
             }
             catch(...)
             {
@@ -100,8 +96,7 @@ int main(int argc, const char **argv)
 
     if (filepath.empty())
     {
-        std::cerr << std::endl;
-        std::cerr << "The output transform filepath is missing." << std::endl;
+        std::cerr << "\nThe output transform filepath is missing.\n";
         exit(1);
     }
 
@@ -124,18 +119,16 @@ int main(int argc, const char **argv)
 
     if (transformFileFormat.empty())
     {
-        std::cerr << std::endl;
-        std::cerr << "Could not find a valid format from the extension of: '";
-        std::cerr << filepath << "'. " << formats.str() << std::endl;
+        std::cerr << "\nCould not find a valid format from the extension of: '";
+        std::cerr << filepath << "'. " << formats.str() << "\n";
         exit(1);
     }
     else if (verbose)
     {
-        std::cout << std::endl;
-        std::cout << "File format being used: " << transformFileFormat << std::endl;
+        std::cout << "\nFile format being used: " << transformFileFormat << "\n";
     }
 
-    std::cout << std::endl;
+    std::cout << "\n";
 
     // Process transform.
     try
@@ -152,18 +145,14 @@ int main(int argc, const char **argv)
             {
                 if (verbose)
                 {
-                    std::cout << std::endl;
                     std::string inputStr = !inputColorSpace.empty() ?  inputColorSpace : "(" + display + ", " + view + ")";
                     std::string outputStr = !outputColorSpace.empty() ?  outputColorSpace : "(" + display + ", " + view + ")";
-                    std::cout << "Processing from '" 
-                              << inputStr << "' to '"
-                              << outputStr << "'" << std::endl;
+                    std::cout << "\nProcessing from '" << inputStr << "' to '" << outputStr << "'\n";
                 }
             }
             else
             {
-                std::cerr << std::endl;
-                std::cerr << "Missing the ${OCIO} env. variable." << std::endl;
+                std::cerr << "\nMissing the ${OCIO} env. variable.\n";
                 exit(1);
             }
 
@@ -171,15 +160,14 @@ int main(int argc, const char **argv)
 
             if (verbose)
             {
-                std::cout << std::endl;
-                std::cout << "Config: " << config->getDescription()
+                std::cout << "\nConfig: " << config->getDescription()
                           << " - version: " << config->getMajorVersion();
                 const auto minor = config->getMinorVersion();
                 if (minor)
                 {
                     std::cout << "." << minor;
                 }
-                std::cout << std::endl;
+                std::cout << "\n";
             }
 
             // --colorspaces
@@ -195,8 +183,7 @@ int main(int argc, const char **argv)
                     (useDisplayview && !useColorspaces && !useInvertview) ||
                     (useInvertview && !useColorspaces && !useDisplayview)))
             {
-                std::cerr << std::endl;
-                std::cerr << "Any combinations of --colorspaces, --view or --invertview is invalid." << std::endl;
+                std::cerr << "\nAny combinations of --colorspaces, --view or --invertview is invalid.\n";
                 exit(1);
             } 
 
@@ -212,8 +199,7 @@ int main(int argc, const char **argv)
                 }
                 else
                 {
-                    std::cerr << std::endl;
-                    std::cerr << "Missing output color spaces for --colorspaces." << std::endl;
+                    std::cerr << "\nMissing output color spaces for --colorspaces.\n";
                     exit(1);
                 }
             } 
@@ -232,8 +218,7 @@ int main(int argc, const char **argv)
                 }
                 else
                 {
-                    std::cerr << std::endl;
-                    std::cerr << "Missing output (display,view) pair for --view." << std::endl;
+                    std::cerr << "\nMissing output (display,view) pair for --view.\n";
                     exit(1);
                 }
             }
@@ -252,13 +237,12 @@ int main(int argc, const char **argv)
                 }
                 else
                 {
-                    std::cerr << std::endl;
-                    std::cerr << "Missing output colorspaces for --invertview." << std::endl;
+                    std::cerr << "\nMissing output colorspaces for --invertview.\n";
                     exit(1);
                 }
             }
 
-            std::ofstream outfs(filepath.c_str(), std::ios::out | std::ios::trunc);
+            std::ofstream outfs(filepath, std::ios::out | std::ios::trunc);
             if (outfs)
             {
                 const auto group = processor->createGroupTransform();
@@ -267,26 +251,24 @@ int main(int argc, const char **argv)
             }
             else
             {
-                std::cerr << std::endl;
-                std::cerr << "Could not open file: " << filepath << std::endl;
+                std::cerr << "\nCould not open file: " << filepath << "\n";
                 exit(1);
             }
         }
         else
         {
-            std::cerr << std::endl;
-            std::cerr << "Colorspaces or (display,view) pair must be specified as source." << std::endl;
+            std::cerr << "\nColorspaces or (display,view) pair must be specified as source.\n";
             exit(1);
         }
     }
     catch(OCIO::Exception & exception)
     {
-        std::cerr << "OCIO Error: " << exception.what() << std::endl;
+        std::cerr << "OCIO Error: " << exception.what() << "\n";
         exit(1);
     }
     catch(...)
     {
-        std::cerr << "Unknown OCIO error encountered." << std::endl;
+        std::cerr << "Unknown OCIO error encountered.\n";
         exit(1);
     }
 

@@ -2,10 +2,14 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <OpenColorIO/OpenColorIO.h>
+
 #include "ops/log/LogOp.cpp"
 
+#include "CPUInfoConfig.h"
 #include "testutils/UnitTest.h"
 #include "UnitTestUtils.h"
+
 
 namespace OCIO = OCIO_NAMESPACE;
 

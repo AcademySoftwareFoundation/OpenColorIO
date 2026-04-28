@@ -2,9 +2,23 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <cmath>
+#include <string>
 #include <sstream>
+#include <vector>
+#include <algorithm>
+#include <stdexcept>
+#include <cstddef>
 
-#include "PyUtils.h"
+#include <OpenColorIO/OpenColorIO.h>
+
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+
+#include "PyBufferUtils.h"
+
+
+namespace py = pybind11;
+
 
 namespace OCIO_NAMESPACE
 {

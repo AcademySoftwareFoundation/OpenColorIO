@@ -78,11 +78,11 @@ OCIODisplay::OCIODisplay(Node *n) : DD::Image::PixelIop(n)
     }
     catch(OCIO::Exception& e)
     {
-        std::cerr << "OCIODisplay: " << e.what() << std::endl;
+        std::cerr << "OCIODisplay: " << e.what() << "\n";
     }
     catch(...)
     {
-        std::cerr << "OCIODisplay: Unknown exception during OCIO setup." << std::endl;
+        std::cerr << "OCIODisplay: Unknown exception during OCIO setup.\n";
     }
     
     // Build the cstr vectors on our second pass
@@ -104,7 +104,7 @@ OCIODisplay::OCIODisplay(Node *n) : DD::Image::PixelIop(n)
     
     if(!m_hasLists)
     {
-        std::cerr << "OCIODisplay: Missing one or more of colorspaces, display devices, or display transforms." << std::endl;
+        std::cerr << "OCIODisplay: Missing one or more of colorspaces, display devices, or display transforms.\n";
     }
 }
 

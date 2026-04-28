@@ -2,10 +2,25 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <fstream>
+#include <string>
 #include <sstream>
+#include <tuple>
+#include <array>
+
+#include <OpenColorIO/OpenColorIO.h>
+
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 #include "PyOpenColorIO.h"
 #include "PyUtils.h"
+#include "utils/StringUtils.h"
+#include "docstrings.h"
+
+
+namespace py = pybind11;
+using namespace pybind11::literals;
+
 
 namespace OCIO_NAMESPACE
 {
@@ -242,7 +257,7 @@ void bindPyConfig(py::module & m)
              DOC(Config, setDescription))
         .def("serialize", [](ConfigRcPtr & self, const std::string & fileName) 
             {
-                std::ofstream f(fileName.c_str());
+                std::ofstream f(fileName);
                 self->serialize(f);
                 f.close();
             }, 

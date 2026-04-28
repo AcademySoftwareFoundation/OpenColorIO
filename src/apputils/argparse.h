@@ -90,7 +90,7 @@ class ArgOption;   // Forward declaration
 ///            NULL);
 ///
 ///    if (ap.parse (argc, argv) < 0) {
-///        std::cerr << ap.geterror() << std::endl;
+///        std::cerr << ap.geterror() << "\n";
 ///        ap.usage ();
 ///        return EXIT_FAILURE;
 ///    }

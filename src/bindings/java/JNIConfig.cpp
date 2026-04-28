@@ -3,7 +3,6 @@
 
 #include <string>
 #include <sstream>
-#include <vector>
 
 #include "OpenColorIO/OpenColorIO.h"
 #include "OpenColorIOJNI.h"

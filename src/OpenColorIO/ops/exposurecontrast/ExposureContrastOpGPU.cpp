@@ -8,7 +8,6 @@
 
 #include "Logging.h"
 #include "ops/exposurecontrast/ExposureContrastOpGPU.h"
-#include "utils/StringUtils.h"
 
 
 namespace OCIO_NAMESPACE
@@ -66,7 +65,7 @@ std::string AddProperty(GpuShaderCreatorRcPtr & shaderCreator,
 
         if (shaderCreator->getLanguage() == LANGUAGE_OSL_1 && prop->isDynamic())
         {
-            std::string msg("The dynamic properties are not yet supported by the 'Open Shading language"\
+            std::string msg("The dynamic properties are not yet supported by the 'Open Shading language"
                             " (OSL)' translation: The '");
             msg += name;
             msg += "' dynamic property is replaced by a local variable.";

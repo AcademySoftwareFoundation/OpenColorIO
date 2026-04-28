@@ -2,9 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <algorithm>
-#include <cstdio>
-#include <cstring>
-#include <iterator>
+#include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -14,8 +12,6 @@
 #include "ops/matrix/MatrixOp.h"
 #include "BakingUtils.h"
 #include "ParseUtils.h"
-#include "MathUtils.h"
-#include "Logging.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
 

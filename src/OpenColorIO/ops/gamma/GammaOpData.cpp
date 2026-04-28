@@ -6,12 +6,11 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "BitDepthUtils.h"
 #include "ops/gamma/GammaOpData.h"
-#include "ops/matrix/MatrixOp.h"
 #include "ops/range/RangeOpData.h"
-#include "ParseUtils.h"
 #include "Platform.h"
+#include "Mutex.h"
+
 
 namespace OCIO_NAMESPACE
 {

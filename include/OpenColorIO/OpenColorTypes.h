@@ -12,7 +12,6 @@
 #endif
 
 #include <array>
-#include <limits>
 #include <string>
 #include <functional>
 

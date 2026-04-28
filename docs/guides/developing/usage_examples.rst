@@ -80,7 +80,7 @@ C++
    }
    catch(OCIO::Exception & exception)
    {
-      std::cerr << "OpenColorIO Error: " << exception.what() << std::endl;
+      std::cerr << "OpenColorIO Error: " << exception.what() << "\n";
    }
 
 .. _usage_applybasic_python:
@@ -149,7 +149,7 @@ C++
    }
    catch(OCIO::Exception & exception)
    {
-      std::cerr << "OpenColorIO Error: " << exception.what() << std::endl;
+      std::cerr << "OpenColorIO Error: " << exception.what() << "\n";
    }
 
 Python

@@ -36,7 +36,6 @@
 #include <cstdlib>
 #include <iostream>
 #include <cstdarg>
-#include <iterator>
 #include <algorithm>
 
 #include "strutil.h"

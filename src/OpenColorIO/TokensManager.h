@@ -5,12 +5,10 @@
 #ifndef INCLUDED_OCIO_TOKENS_MANAGER_H
 #define INCLUDED_OCIO_TOKENS_MANAGER_H
 
-#include <cstring>
-#include <vector>
+#include <string>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "PrivateTypes.h"
 #include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE

@@ -9,7 +9,6 @@
 
 #include "Op.h"
 #include "LookParse.h"
-#include "PrivateTypes.h"
 
 namespace OCIO_NAMESPACE
 {

@@ -3,11 +3,11 @@
 
 #include <algorithm>
 #include <cmath>
-#include <string.h>
+#include <cstring>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "BitDepthUtils.h"
+#include "CPUInfoConfig.h"
 #include "CDLOpCPU.h"
 #include "SSE.h"
 

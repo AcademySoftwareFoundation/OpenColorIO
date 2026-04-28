@@ -2,11 +2,14 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <cstring>
+#include <cstddef>
 #include <map>
 #include <mutex>
+#include <string>
 #include <sstream>
-#include <vector>
+#include <ostream>
+#include <memory>
+#include <functional>
 
 #include <OpenColorIO/OpenColorIO.h>
 

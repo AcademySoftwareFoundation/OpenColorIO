@@ -2,11 +2,20 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <limits>
+#include <string>
+#include <ios>
+#include <sstream>
+#include <memory>
+
+#include <Imath/half.h>
+
+#include <OpenColorIO/OpenColorIO.h>
+
 #include "BitDepthUtils.h"
 #include "fileformats/FileFormatCTF.cpp"
 #include "ops/fixedfunction/FixedFunctionOp.h"
 #include "ops/gradingrgbcurve/GradingRGBCurve.h"
-#include "ops/gradinghuecurve/GradingHueCurve.h"
 #include "testutils/UnitTest.h"
 #include "UnitTestLogUtils.h"
 #include "UnitTestUtils.h"

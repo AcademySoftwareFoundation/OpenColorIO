@@ -6,8 +6,6 @@
 #define INCLUDED_OCIO_FILEFORMATS_CTF_CTFTRANSFORM_H
 
 
-#include <vector>
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "fileformats/FormatMetadata.h"

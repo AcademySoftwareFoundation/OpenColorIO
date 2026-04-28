@@ -2,10 +2,13 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <string>
+#include <sstream>
+#include <algorithm>
+
 #include "fileformats/FileFormatHDL.cpp"
 
 #include "testutils/UnitTest.h"
-#include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -162,8 +165,8 @@ OCIO_ADD_TEST(FileFormatHDL, bake_1d)
     std::ostringstream output;
     baker->bake(output);
 
-    //std::cerr << "The LUT: " << std::endl << output.str() << std::endl;
-    //std::cerr << "Expected:" << std::endl << bout << std::endl;
+    //std::cerr << "The LUT: " << "\n" << output.str() << "\n";
+    //std::cerr << "Expected:" << "\n" << bout << "\n";
 
     //
     const StringUtils::StringVec osvec  = StringUtils::SplitByLines(output.str());
@@ -489,8 +492,8 @@ OCIO_ADD_TEST(FileFormatHDL, bake_3d)
     std::ostringstream output;
     baker->bake(output);
 
-    //std::cerr << "The LUT: " << std::endl << output.str() << std::endl;
-    //std::cerr << "Expected:" << std::endl << bout << std::endl;
+    //std::cerr << "The LUT: " << "\n" << output.str() << "\n";
+    //std::cerr << "Expected:" << "\n" << bout << "\n";
 
     //
     const StringUtils::StringVec osvec  = StringUtils::SplitByLines(output.str());
@@ -705,8 +708,8 @@ OCIO_ADD_TEST(FileFormatHDL, bake_3d_1d)
     std::ostringstream output;
     baker->bake(output);
 
-    //std::cerr << "The LUT: " << std::endl << output.str() << std::endl;
-    //std::cerr << "Expected:" << std::endl << bout << std::endl;
+    //std::cerr << "The LUT: " << "\n" << output.str() << "\n";
+    //std::cerr << "Expected:" << "\n" << bout << "\n";
 
     //
     const StringUtils::StringVec osvec  = StringUtils::SplitByLines(output.str());
@@ -844,8 +847,8 @@ OCIO_ADD_TEST(FileFormatHDL, look_test)
     std::ostringstream output;
     baker->bake(output);
 
-    //std::cerr << "The LUT: " << std::endl << output.str() << std::endl;
-    //std::cerr << "Expected:" << std::endl << bout << std::endl;
+    //std::cerr << "The LUT: " << "\n" << output.str() << "\n";
+    //std::cerr << "Expected:" << "\n" << bout << "\n";
 
     //
     const StringUtils::StringVec osvec  = StringUtils::SplitByLines(output.str());

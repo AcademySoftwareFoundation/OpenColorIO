@@ -31,7 +31,7 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
 
         OCIO_CHECK_EQUAL(
             std::string(registry.getBuiltinConfigUIName(cfgidx)), 
-            std::string("Academy Color Encoding System - CG Config [COLORSPACES v1.0.0] "\
+            std::string("Academy Color Encoding System - CG Config [COLORSPACES v1.0.0] "
             "[ACES v1.3] [OCIO v2.1]")
         );
 
@@ -60,7 +60,7 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
 
         OCIO_CHECK_EQUAL(
             std::string(registry.getBuiltinConfigUIName(cfgidx)), 
-            std::string("Academy Color Encoding System - CG Config [COLORSPACES v2.0.0] "\
+            std::string("Academy Color Encoding System - CG Config [COLORSPACES v2.0.0] "
             "[ACES v1.3] [OCIO v2.3]")
         );
 
@@ -89,7 +89,7 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
 
         OCIO_CHECK_EQUAL(
             std::string(registry.getBuiltinConfigUIName(cfgidx)),
-            std::string("Academy Color Encoding System - CG Config [COLORSPACES v2.2.0] "\
+            std::string("Academy Color Encoding System - CG Config [COLORSPACES v2.2.0] "
                 "[ACES v1.3] [OCIO v2.4]")
         );
 
@@ -118,7 +118,7 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
 
         OCIO_CHECK_EQUAL(
             std::string(registry.getBuiltinConfigUIName(cfgidx)),
-            std::string("Academy Color Encoding System - CG Config [COLORSPACES v4.0.0] "\
+            std::string("Academy Color Encoding System - CG Config [COLORSPACES v4.0.0] "
                 "[ACES v2.0] [OCIO v2.5]")
         );
 
@@ -147,7 +147,7 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
 
         OCIO_CHECK_EQUAL(
             std::string(registry.getBuiltinConfigUIName(cfgidx)), 
-            std::string("Academy Color Encoding System - Studio Config [COLORSPACES v1.0.0] "\
+            std::string("Academy Color Encoding System - Studio Config [COLORSPACES v1.0.0] "
             "[ACES v1.3] [OCIO v2.1]")
         );
 
@@ -176,7 +176,7 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
 
         OCIO_CHECK_EQUAL(
             std::string(registry.getBuiltinConfigUIName(cfgidx)), 
-            std::string("Academy Color Encoding System - Studio Config [COLORSPACES v2.0.0] "\
+            std::string("Academy Color Encoding System - Studio Config [COLORSPACES v2.0.0] "
             "[ACES v1.3] [OCIO v2.3]")
         );
 
@@ -205,7 +205,7 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
 
         OCIO_CHECK_EQUAL(
             std::string(registry.getBuiltinConfigUIName(cfgidx)), 
-            std::string("Academy Color Encoding System - Studio Config [COLORSPACES v2.2.0] "\
+            std::string("Academy Color Encoding System - Studio Config [COLORSPACES v2.2.0] "
             "[ACES v1.3] [OCIO v2.4]")
         );
 
@@ -234,7 +234,7 @@ OCIO_ADD_TEST(BuiltinConfigs, basic)
 
         OCIO_CHECK_EQUAL(
             std::string(registry.getBuiltinConfigUIName(cfgidx)), 
-            std::string("Academy Color Encoding System - Studio Config [COLORSPACES v4.0.0] "\
+            std::string("Academy Color Encoding System - Studio Config [COLORSPACES v4.0.0] "
             "[ACES v2.0] [OCIO v2.5]")
         );
 

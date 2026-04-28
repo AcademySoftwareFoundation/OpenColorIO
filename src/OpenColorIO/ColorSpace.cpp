@@ -3,14 +3,16 @@
 
 #include <cstring>
 #include <sstream>
+#include <ostream>
 #include <vector>
+#include <array>
 #include <map>
+#include <algorithm>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "TokensManager.h"
 #include "Platform.h"
-#include "PrivateTypes.h"
 #include "utils/StringUtils.h"
 
 
@@ -255,8 +257,7 @@ void ColorSpace::setInteropID(const char * interopID)
         {
             std::ostringstream oss;
             oss << "InteropID '" << id << "' contains invalid characters. "
-                "Only lowercase a-z, 0-9 and . - _ ~ / * # % ^ + ( ) [ ] | are allowed." << 
-                std::endl;
+                "Only lowercase a-z, 0-9 and . - _ ~ / * # % ^ + ( ) [ ] | are allowed.\n";
             throw Exception(oss.str().c_str());
         }
 
@@ -273,8 +274,7 @@ void ColorSpace::setInteropID(const char * interopID)
             {
                 std::ostringstream oss;
                 oss << "InteropID '" << id << "' is not valid. "
-                    "If ':' is used, both the namespace and the color space parts must be non-empty." <<
-                    std::endl;
+                    "If ':' is used, both the namespace and the color space parts must be non-empty.\n";
                 throw Exception(oss.str().c_str());
             }
 
@@ -283,8 +283,7 @@ void ColorSpace::setInteropID(const char * interopID)
             {
                 std::ostringstream oss;
                 oss << "ERROR: InteropID '" << id << "' is not valid. "
-                    "Only one ':' is allowed to separate the namespace and the color space." << 
-                    std::endl;
+                    "Only one ':' is allowed to separate the namespace and the color space.\n";
                 throw Exception(oss.str().c_str());
             }
         }

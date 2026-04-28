@@ -63,11 +63,11 @@ OCIOColorSpace::OCIOColorSpace(Node *n) : DD::Image::PixelIop(n)
     }
     catch (OCIO::Exception& e)
     {
-        std::cerr << "OCIOColorSpace: " << e.what() << std::endl;
+        std::cerr << "OCIOColorSpace: " << e.what() << "\n";
     }
     catch (...)
     {
-        std::cerr << "OCIOColorSpace: Unknown exception during OCIO setup." << std::endl;
+        std::cerr << "OCIOColorSpace: Unknown exception during OCIO setup.\n";
     }
     
     // Then, create a cstr array for passing to Nuke
@@ -86,8 +86,7 @@ OCIOColorSpace::OCIOColorSpace(Node *n) : DD::Image::PixelIop(n)
     
     if(!m_hasColorSpaces)
     {
-        std::cerr << "OCIOColorSpace: No color spaces available for input and/or output." << std::endl;
-    }
+        std::cerr << "OCIOColorSpace: No color spaces available for input and/or output.\n"
 }
 
 OCIOColorSpace::~OCIOColorSpace()

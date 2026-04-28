@@ -2,11 +2,14 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <string>
+#include <sstream>
+#include <vector>
+
 #include "Baker.cpp"
 
 #include "testutils/UnitTest.h"
 #include "ParseUtils.h"
-#include "UnitTestUtils.h"
 #include "utils/StringUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;

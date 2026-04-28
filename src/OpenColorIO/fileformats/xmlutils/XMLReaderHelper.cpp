@@ -2,12 +2,12 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <sstream>
+#include <cstring>
 
 #include "fileformats/xmlutils/XMLReaderHelper.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "Logging.h"
-#include "ParseUtils.h"
-#include "Platform.h"
+
 
 namespace OCIO_NAMESPACE
 {

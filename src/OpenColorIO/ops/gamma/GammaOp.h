@@ -6,8 +6,6 @@
 #define INCLUDED_OCIO_GAMMA_H
 
 
-#include <vector>
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"

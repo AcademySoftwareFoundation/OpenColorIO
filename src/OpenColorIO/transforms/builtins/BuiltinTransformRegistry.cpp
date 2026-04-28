@@ -8,7 +8,6 @@
 
 #include "Mutex.h"
 #include "ops/matrix/MatrixOp.h"
-#include "OpBuilders.h"
 #include "Platform.h"
 #include "transforms/builtins/ACES.h"
 #include "transforms/builtins/AppleCameras.h"
@@ -19,7 +18,6 @@
 #include "transforms/builtins/PanasonicCameras.h"
 #include "transforms/builtins/RedCameras.h"
 #include "transforms/builtins/SonyCameras.h"
-#include "utils/StringUtils.h"
 
 
 namespace OCIO_NAMESPACE

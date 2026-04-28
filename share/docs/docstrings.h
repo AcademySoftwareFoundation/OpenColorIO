@@ -38,6 +38,8 @@
 
   -----------------------------------------------------------------------------
  */
+#ifndef INCLUDED_OCIO_DOCSTRINGS_H
+#define INCLUDED_OCIO_DOCSTRINGS_H
 
 #define DOC(...) __doc_none
 
@@ -50,4 +52,6 @@ static const char *__doc_none = R"doc()doc";
 
 #if defined(__GNUG__)
 #pragma GCC diagnostic pop
+#endif
+
 #endif

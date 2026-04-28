@@ -8,6 +8,7 @@
 
 #include "ops/fixedfunction/FixedFunctionOpData.h"
 #include "Platform.h"
+#include "Mutex.h"
 
 namespace OCIO_NAMESPACE
 {

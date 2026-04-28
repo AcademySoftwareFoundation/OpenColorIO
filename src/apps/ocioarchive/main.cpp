@@ -4,6 +4,8 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <string>
+#include <exception>
 
 #include <OpenColorIO/OpenColorIO.h>
 #include "utils/StringUtils.h"
@@ -80,7 +82,7 @@ int main(int argc, const char **argv)
 
     if (ap.parse (argc, argv) < 0)
     {
-        std::cerr << ap.geterror() << std::endl;
+        std::cerr << ap.geterror() << "\n";
         exit(1);
     }
 
@@ -96,7 +98,7 @@ int main(int argc, const char **argv)
     {
         if (args.size() != 1)
         {
-            std::cerr << "ERROR: Missing the name of the archive to create." << std::endl;
+            std::cerr << "ERROR: Missing the name of the archive to create.\n";
             exit(1);
         }
 
@@ -115,7 +117,7 @@ int main(int argc, const char **argv)
                 catch (...)
                 {
                     // Capture any errors and display a custom message.
-                    std::cerr << "ERROR: Could not load config: " << configFilename << std::endl;
+                    std::cerr << "ERROR: Could not load config: " << configFilename << "\n";
                     exit(1);
                 }
                 
@@ -123,7 +125,7 @@ int main(int argc, const char **argv)
             else if (ocioEnv && *ocioEnv)
             {
                 // Archive a config from the environment variable.
-                std::cout << "Archiving $OCIO=" << ocioEnv << std::endl;
+                std::cout << "Archiving $OCIO=" << ocioEnv << "\n";
                 try
                 {
                     config = OCIO::Config::CreateFromEnv();
@@ -132,13 +134,13 @@ int main(int argc, const char **argv)
                 {
                     // Capture any errors and display a custom message.
                     std::cerr << "ERROR: Could not load config from $OCIO variable: " 
-                              << ocioEnv << std::endl;
+                              << ocioEnv << "\n";
                     exit(1);
                 }
             }
             else
             {
-                std::cerr << "ERROR: You must specify an input OCIO configuration." << std::endl;
+                std::cerr << "ERROR: You must specify an input OCIO configuration.\n";
                 exit(1);
             }
 
@@ -163,29 +165,29 @@ int main(int argc, const char **argv)
                 {
                     std::cerr << "Could not open output stream for: " 
                               << archiveName + std::string(OCIO::OCIO_CONFIG_ARCHIVE_FILE_EXT)
-                              << std::endl;
+                              << "\n";
                     exit(1);
                 }
             }
             catch (OCIO::Exception & e)
             {
-                std::cerr << e.what() << std::endl;
+                std::cerr << e.what() << "\n";
                 exit(1);
             } 
         }
         catch (OCIO::Exception & exception)
         {
-            std::cerr << "ERROR: " << exception.what() << std::endl;
+            std::cerr << "ERROR: " << exception.what() << "\n";
             exit(1);
         } 
         catch (std::exception& exception)
         {
-            std::cerr << "ERROR: " << exception.what() << std::endl;
+            std::cerr << "ERROR: " << exception.what() << "\n";
             exit(1);
         }
         catch (...)
         {
-            std::cerr << "ERROR: Unknown problem encountered." << std::endl;
+            std::cerr << "ERROR: Unknown problem encountered.\n";
             exit(1);
         }
     }
@@ -196,7 +198,7 @@ int main(int argc, const char **argv)
     {
         if (args.size() != 1)
         {
-            std::cerr << "ERROR: Missing the name of the archive to extract." << std::endl;
+            std::cerr << "ERROR: Missing the name of the archive to extract.\n";
             exit(1);
         }
 
@@ -215,11 +217,11 @@ int main(int argc, const char **argv)
             }
 
             OCIO::ExtractOCIOZArchive(archiveName.c_str(), extractDestination.c_str());
-            std::cout << archiveName << " has been extracted." << std::endl;
+            std::cout << archiveName << " has been extracted.\n";
         }
         catch (OCIO::Exception & e)
         {
-            std::cerr << e.what() << std::endl;
+            std::cerr << e.what() << "\n";
             exit(1);
         }
     }
@@ -230,7 +232,7 @@ int main(int argc, const char **argv)
     {
         if (args.size() < 1)
         {
-            std::cerr << "ERROR: Missing the name of the archive to list." << std::endl;
+            std::cerr << "ERROR: Missing the name of the archive to list.\n";
             exit(1);
         }
 
@@ -245,34 +247,34 @@ int main(int argc, const char **argv)
         err = mz_zip_reader_open_file(reader, path.c_str());
         if (err != MZ_OK)
         {
-            std::cerr << "ERROR: File not found: " << path << std::endl;
+            std::cerr << "ERROR: File not found: " << path << "\n";
             exit(1);
         }
 
         err = mz_zip_reader_goto_first_entry(reader);
         if (err != MZ_OK)
         {
-            std::cerr << "ERROR: Could not find the first entry in the archive." << std::endl;
+            std::cerr << "ERROR: Could not find the first entry in the archive.\n";
             exit(1);
         }
 
-        std::cout << "\nThe archive contains the following files:\n" << std::endl;
-        std::cout << "      Date     Time  CRC-32     Name" << std::endl;
-        std::cout << "      ----     ----  ------     ----" << std::endl;
+        std::cout << "\nThe archive contains the following files:\n\n";
+        std::cout << "      Date     Time  CRC-32     Name\n";
+        std::cout << "      ----     ----  ------     ----\n" << std::flush;
         do
         {
             err = mz_zip_reader_entry_get_info(reader, &file_info);
             if (err != MZ_OK)
             {
                 std::cerr << "ERROR: Could not get information from entry: " << file_info->filename 
-                          << std::endl;
+                          << "\n";
                 exit(1);
             }
 
             mz_zip_time_t_to_tm(file_info->modified_date, &tmu_date);
 
             // Print entry information.
-            printf("      %2.2" PRIu32 "-%2.2" PRIu32 "-%2.2" PRIu32 " %2.2" PRIu32 \
+            printf("      %2.2" PRIu32 "-%2.2" PRIu32 "-%2.2" PRIu32 " %2.2" PRIu32
                     ":%2.2" PRIu32 " %8.8" PRIx32 "   %s\n",
                     (uint32_t)tmu_date.tm_mon + 1, (uint32_t)tmu_date.tm_mday,
                     (uint32_t)tmu_date.tm_year % 100,
@@ -288,7 +290,7 @@ int main(int argc, const char **argv)
     else
     {
         std::cerr << "Archive, extract, and/or list functions "
-                     "may not be used at the same time." << std::endl;
+                     "may not be used at the same time.\n";
         exit(1);
     }
 }

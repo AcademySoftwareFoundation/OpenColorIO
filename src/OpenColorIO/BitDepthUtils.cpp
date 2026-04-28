@@ -2,6 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <string>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "BitDepthUtils.h"

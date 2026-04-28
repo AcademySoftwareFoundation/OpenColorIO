@@ -10,7 +10,6 @@
 #include "Caching.h"
 #include "Mutex.h"
 #include "Op.h"
-#include "PrivateTypes.h"
 
 
 namespace OCIO_NAMESPACE

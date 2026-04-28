@@ -123,9 +123,9 @@ OCIO_ADD_GPU_TEST(Config, arbitrary_generic_shader)
         "        - !<FileTransform> {src: lut1d_1.spi1d, interpolation: linear}\n"
         "        - !<FileTransform> {src: lut1d_2.spi1d, interpolation: linear}\n"
         "        - !<LogTransform> {base: 10}\n"
-        "        - !<MatrixTransform> {matrix: [0.075573, 0.022197,  0.00223,  0, "\
-                                               "0.005901, 0.096928, -0.002829, 0, "\
-                                               "0.016134, 0.007406,  0.07646,  0, "\
+        "        - !<MatrixTransform> {matrix: [0.075573, 0.022197,  0.00223,  0, "
+                                               "0.005901, 0.096928, -0.002829, 0, "
+                                               "0.016134, 0.007406,  0.07646,  0, "
                                                "0,        0,         0,        1]}\n";
 
     std::istringstream is;
@@ -194,9 +194,9 @@ OCIO_ADD_GPU_TEST(Config, with_underscores)
         "    allocationvars: [0, 1]\n"
         "    from_reference: !<GroupTransform>\n"
         "      children:\n"
-        "        - !<MatrixTransform> {matrix: [0.075573, 0.022197,  0.00223,  0, "\
-                                               "0.005901, 0.096928, -0.002829, 0, "\
-                                               "0.016134, 0.007406,  0.07646,  0, "\
+        "        - !<MatrixTransform> {matrix: [0.075573, 0.022197,  0.00223,  0, "
+                                               "0.005901, 0.096928, -0.002829, 0, "
+                                               "0.016134, 0.007406,  0.07646,  0, "
                                                "0,        0,         0,        1]}\n"
         "        - !<FileTransform> {src: lut1d_3.spi1d, interpolation: linear}\n";
 

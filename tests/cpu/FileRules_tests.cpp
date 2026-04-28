@@ -2,7 +2,9 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <fstream>
+#include <cstring>
+#include <string>
+#include <sstream>
 
 #include "FileRules.cpp"
 
@@ -1585,7 +1587,7 @@ colorspaces:
                 cfg->upgradeToLatestVersion();
                 
                 OCIO_CHECK_EQUAL(
-                    std::string("[OpenColorIO Warning]: The default rule creation falls back to the"\
+                    std::string("[OpenColorIO Warning]: The default rule creation falls back to the"
                                 " first color space because no suitable color space exists.\n"), 
                     l.output());
             }
@@ -1798,7 +1800,7 @@ OCIO_ADD_TEST(FileRules, config_v1_to_v2_from_memory)
             OCIO_CHECK_ASSERT(
                 StringUtils::Contain(
                     svec, 
-                    "[OpenColorIO Warning]: The default rule creation falls back to the"\
+                    "[OpenColorIO Warning]: The default rule creation falls back to the"
                     " first color space because no suitable color space exists."
                 )
             );
@@ -1862,7 +1864,7 @@ colorspaces:
         OCIO_CHECK_THROW_WHAT(
             cfg->validate(),
             OCIO::Exception,
-            "Config failed role validation. The role 'default' refers to a color space, 'cs2', "\
+            "Config failed role validation. The role 'default' refers to a color space, 'cs2', "
             "which is not defined."
         );
     }
@@ -1897,7 +1899,7 @@ colorspaces:
         OCIO_CHECK_THROW_WHAT(
             cfg->validate(),
             OCIO::Exception,
-            "File rules: rule named 'Default' is referencing 'cs2' that is neither "\
+            "File rules: rule named 'Default' is referencing 'cs2' that is neither "
             "a color space nor a named transform."
         );
     }

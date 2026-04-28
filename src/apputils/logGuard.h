@@ -4,8 +4,10 @@
 #ifndef INCLUDED_LOG_GUARD_H
 #define INCLUDED_LOG_GUARD_H
 
+#include <string>
+
 #include <OpenColorIO/OpenColorIO.h>
-namespace OCIO = OCIO_NAMESPACE;
+
 
 // Trap any log message while preserving the original logging settings.
 // Note that the mechanism is not thread-safe.
@@ -24,7 +26,7 @@ public:
     bool empty() const;
 
 private:
-    OCIO::LoggingLevel m_logLevel;
+    OCIO_NAMESPACE::LoggingLevel m_logLevel;
 };
 
 #endif

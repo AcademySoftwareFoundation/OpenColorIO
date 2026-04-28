@@ -2,9 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <cstring>
 #include <sstream>
-#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -78,7 +76,7 @@ Look::Look()
 Look::~Look()
 {
     delete m_impl;
-    m_impl = NULL;
+    m_impl = nullptr;
 }
 
 LookRcPtr Look::createEditableCopy() const

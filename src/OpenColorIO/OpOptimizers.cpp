@@ -2,7 +2,6 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <algorithm>
-#include <iterator>
 #include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -13,6 +12,8 @@
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ops/range/RangeOp.h"
+#include "ops/matrix/MatrixOp.h"
+#include "ops/matrix/MatrixOpData.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -618,10 +619,8 @@ void OpRcPtrVec::optimize(OptimizationFlags oFlags)
     if (IsDebugLoggingEnabled())
     {
         std::ostringstream oss;
-        oss << std::endl
-            << "**" << std::endl
-            << "Optimizing Op Vec..." << std::endl
-            << SerializeOpVec(*this, 4) << std::endl;
+        oss << "\n**\nOptimizing Op Vec...\n"
+            << SerializeOpVec(*this, 4) << "\n";
 
         LogDebug(oss.str());
     }
@@ -638,8 +637,7 @@ void OpRcPtrVec::optimize(OptimizationFlags oFlags)
             OpRcPtrVec::size_type finalSize = size();
 
             std::ostringstream os;
-            os << "**" << std::endl;
-            os << "Optimized ";
+            os << "**\nOptimized ";
             os << originalSize << "->" << finalSize << ", 1 pass, ";
             os << total_nooptype << " no-op types removed\n";
             os << SerializeOpVec(*this, 4);
@@ -726,11 +724,11 @@ void OpRcPtrVec::optimize(OptimizationFlags oFlags)
     if (passes == MAX_OPTIMIZATION_PASSES)
     {
         std::ostringstream os;
-        os << "The max number of passes, " << passes << ", ";
-        os << "was reached during optimization. This is likely a sign ";
-        os << "that either the complexity of the color transform is ";
-        os << "very high, or that some internal optimizers are in conflict ";
-        os << "(undo-ing / redo-ing the other's results).";
+        os << "The max number of passes, " << passes << ", "
+              "was reached during optimization. This is likely a sign "
+              "that either the complexity of the color transform is "
+              "very high, or that some internal optimizers are in conflict "
+              "(undo-ing / redo-ing the other's results).";
         LogDebug(os.str());
     }
 
@@ -739,8 +737,7 @@ void OpRcPtrVec::optimize(OptimizationFlags oFlags)
         OpRcPtrVec::size_type finalSize = size();
 
         std::ostringstream os;
-        os << "**" << std::endl;
-        os << "Optimized ";
+        os << "**\nOptimized ";
         os << originalSize << "->" << finalSize << ", ";
         os << passes << " passes, ";
         os << total_nooptype << " no-op types removed, ";

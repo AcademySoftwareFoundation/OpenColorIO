@@ -3,13 +3,15 @@
 
 
 #include <cmath>
+#include <algorithm>
+#include <functional>
+#include <memory>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/fixedfunction/FixedFunctionOp.h"
 #include "ops/gamma/GammaOp.h"
 #include "ops/matrix/MatrixOp.h"
-#include "ops/range/RangeOp.h"
 #include "transforms/builtins/BuiltinTransformRegistry.h"
 #include "transforms/builtins/ColorMatrixHelpers.h"
 #include "transforms/builtins/Displays.h"

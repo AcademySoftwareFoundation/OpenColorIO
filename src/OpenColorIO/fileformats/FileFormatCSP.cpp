@@ -3,12 +3,10 @@
 
 #include <algorithm>
 #include <cassert>
-#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
-#include <iterator>
 #include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -21,7 +19,6 @@
 #include "BakingUtils.h"
 #include "ParseUtils.h"
 #include "transforms/FileTransform.h"
-#include "Platform.h"
 #include "utils/StringUtils.h"
 
 

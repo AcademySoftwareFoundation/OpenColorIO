@@ -173,8 +173,8 @@ public:
         if (m_data.size() != getNumValues())
         {
             std::ostringstream os;
-            os << "Array contains: " << m_data.size() << " values, ";
-            os << "but " << getNumValues() << " are expected.";
+            os << "Array contains: " << m_data.size() << " values, "
+                  "but " << getNumValues() << " are expected.";
             throw Exception(os.str().c_str());
         }
     }

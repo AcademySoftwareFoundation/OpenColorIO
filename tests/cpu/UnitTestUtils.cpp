@@ -2,9 +2,11 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <sstream>
+#include <cstring>
+
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Logging.h"
 #include "OpBuilders.h"
 #include "UnitTestUtils.h"
 #include "utils/StringUtils.h"

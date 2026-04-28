@@ -10,6 +10,8 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <cstdint>
+#include <cstddef>
 
 #include <vulkan/vulkan.h>
 

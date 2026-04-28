@@ -2,6 +2,10 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <vector>
+#include <string>
+#include <memory>
+
 #include "OpOptimizers.cpp"
 
 #include "ops/cdl/CDLOp.h"
@@ -13,7 +17,6 @@
 #include "ops/matrix/MatrixOp.h"
 #include "ops/range/RangeOp.h"
 #include "testutils/UnitTest.h"
-#include "transforms/FileTransform.h"
 #include "UnitTestUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;

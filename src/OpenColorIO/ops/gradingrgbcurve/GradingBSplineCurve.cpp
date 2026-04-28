@@ -2,8 +2,13 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <algorithm>
+#include <utility>
 #include <cmath>
 #include <sstream>
+#include <limits>
+#include <vector>
+#include <memory>
+#include <initializer_list>
 
 #include <OpenColorIO/OpenColorIO.h>
 #include "OpenColorIO/DynamicProperty.h"

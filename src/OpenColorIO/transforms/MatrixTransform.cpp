@@ -2,6 +2,10 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <cstring>
+#include <string>
+#include <sstream>
+#include <ostream>
+#include <type_traits>
 
 #include <OpenColorIO/OpenColorIO.h>
 

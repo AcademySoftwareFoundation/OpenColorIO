@@ -2,11 +2,14 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <cstring>
+#include <memory>
+
 #include "Op.cpp"
 
 #include "ops/noop/NoOps.h"
 #include "testutils/UnitTest.h"
-#include "UnitTestUtils.h"
+#include "ops/matrix/MatrixOp.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 

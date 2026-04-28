@@ -10,10 +10,10 @@
 #include <limits>
 #include <stdexcept>
 #include <string>
-#include <fstream>
 #include <vector>
 #include <cstdint>
 #include <map>
+#include <functional>
 
 #include "OpenColorABI.h"
 #include "OpenColorTypes.h"
@@ -53,7 +53,7 @@ C++ API
    }
    catch(OCIO::Exception & exception)
    {
-       std::cerr << "OpenColorIO Error: " << exception.what() << std::endl;
+       std::cerr << "OpenColorIO Error: " << exception.what() << "\n";
    }
 
 */

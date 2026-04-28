@@ -2,10 +2,14 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <cstdio>
+#include <cstddef>
 #include <iostream>
 #include <fstream>
-#include <string.h>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <cstring>
+#include <exception>
 
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
@@ -79,8 +83,7 @@ void CreateOutputLutFile(const std::string & outLutFilepath, OCIO::ConstGroupTra
         std::ostringstream oss;
         oss << "Could not open the file '"
             << outLutFilepath
-            << "'."
-            << std::endl;
+            << "'.\n";
         throw OCIO::Exception(oss.str().c_str());
     }
 }
@@ -115,7 +118,7 @@ int main(int argc, const char ** argv)
 
     if (ap.parse(argc, argv) < 0)
     {
-        std::cerr << std::endl << ap.geterror() << std::endl << std::endl;
+        std::cerr << "\n" << ap.geterror() << "\n\n";
         ap.usage();
         return 1;
     }
@@ -141,17 +144,17 @@ int main(int argc, const char ** argv)
             if (StringUtils::EndsWith(cscName, BuiltinSuffix))
             {
                 cscName.resize(cscName.size() - strlen(BuiltinSuffix));
-                std::cout << std::endl << "\t" << cscName;
+                std::cout << "\n\t" << cscName;
             }
         }
-        std::cout << std::endl << std::endl;
+        std::cout << "\n\n";
 
         return 0;
     }
 
     if (args.size() != 2)
     {
-        std::cerr << "ERROR: Expecting 2 arguments, found " << args.size() << "." << std::endl;
+        std::cerr << "ERROR: Expecting 2 arguments, found " << args.size() << ".\n";
         ap.usage();
         return 1;
     }
@@ -183,15 +186,14 @@ int main(int argc, const char ** argv)
         {
             std::cerr << "ERROR: The LUT color space name '"
                       << originalCSC
-                      << "' is not supported."
-                      << std::endl;
+                      << "' is not supported.\n";
             return 1;
         }
     }
 
     if (outLutFilepath.empty())
     {
-        std::cerr << "ERROR: The output file path is missing." << std::endl;
+        std::cerr << "ERROR: The output file path is missing.\n";
         return 1;
     }
     else
@@ -201,22 +203,21 @@ int main(int argc, const char ** argv)
         {
             std::cerr << "ERROR: The output LUT file path '"
                       << outLutFilepath
-                      << "' must have a .clf extension."
-                      << std::endl;
+                      << "' must have a .clf extension.\n";
             return 1;
         }
     }
 
     if (verbose)
     {
-        std::cout << "OCIO Version: " << OCIO::GetVersion() << std::endl;
+        std::cout << "OCIO Version: " << OCIO::GetVersion() << "\n";
     }
 
     try
     {
         if (verbose)
         {
-            std::cout << "Building the transformation." << std::endl;
+            std::cout << "Building the transformation.\n";
         }
 
         OCIO::GroupTransformRcPtr grp = OCIO::GroupTransform::Create();
@@ -272,7 +273,7 @@ int main(int argc, const char ** argv)
 
         if (verbose && !measure)
         {
-            std::cout << Msg << "." << std::endl;
+            std::cout << Msg << ".\n";
         }
 
         if (measure)
@@ -291,17 +292,17 @@ int main(int argc, const char ** argv)
     }
     catch (OCIO::Exception & ex)
     {
-        std::cerr << "OCIO ERROR: " << ex.what() << std::endl;
+        std::cerr << "OCIO ERROR: " << ex.what() << "\n";
         return 1;
     }
     catch (std::exception & ex)
     {
-        std::cerr << "ERROR:  " << ex.what() << std::endl;
+        std::cerr << "ERROR:  " << ex.what() << "\n";
         return 1;
     }
     catch (...)
     {
-        std::cerr << "ERROR: Unknown error encountered." << std::endl;
+        std::cerr << "ERROR: Unknown error encountered.\n";
         return 1;
     }
 

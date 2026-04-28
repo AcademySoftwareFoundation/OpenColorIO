@@ -5,8 +5,8 @@
 #ifndef INCLUDED_OCIO_GRADINGBSPLINECURVE_H
 #define INCLUDED_OCIO_GRADINGBSPLINECURVE_H
 
-#include <array>
 #include <vector>
+#include <string>
 
 #include <OpenColorIO/OpenColorIO.h>
 

@@ -1,7 +1,19 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <string>
+
+#include <OpenColorIO/OpenColorIO.h>
+
+#include <pybind11/pybind11.h>
+
 #include "PyOpenColorIO.h"
+#include "docstrings.h"
+
+
+namespace py = pybind11;
+using namespace pybind11::literals;
+
 
 namespace OCIO_NAMESPACE
 {

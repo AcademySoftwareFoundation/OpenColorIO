@@ -2,6 +2,9 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <sstream>
+#include <string>
+#include <cstring>
+#include <memory>
 
 #include "expat.h"
 #include "fileformats/cdl/CDLParser.h"
@@ -9,7 +12,6 @@
 #include "fileformats/xmlutils/XMLReaderHelper.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "transforms/CDLTransform.h"
-#include "Platform.h"
 
 namespace OCIO_NAMESPACE
 {

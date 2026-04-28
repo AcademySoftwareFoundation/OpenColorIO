@@ -3,7 +3,11 @@
 
 
 #include "CPUInfo.h"
-#include <string.h>
+#include <cstring>
+
+#if defined(__aarch64__) || defined(_M_ARM64) // ARM 64-bit processor (multiple platforms)
+#include <stdio.h>
+#endif
 
 #if _WIN32
 #include <limits.h>
@@ -11,7 +15,7 @@
 typedef unsigned __int32  uint32_t;
 typedef __int64  int64_t;
 #else
-#include <stdint.h>
+#include <cstdint>
 #endif
 
 namespace OCIO_NAMESPACE

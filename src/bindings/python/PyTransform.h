@@ -4,38 +4,38 @@
 #ifndef INCLUDED_OCIO_PYTRANSFORM_H
 #define INCLUDED_OCIO_PYTRANSFORM_H
 
-#include <typeinfo>
+#include "OpenColorABI.h"
 
-#include "PyOpenColorIO.h"
-#include "PyUtils.h"
+#include <pybind11/pybind11.h>
+
 
 namespace OCIO_NAMESPACE
 {
     
 // Subclasses
-void bindPyAllocationTransform(py::module & m);
-void bindPyBuiltinTransform(py::module & m);
-void bindPyCDLTransform(py::module & m);
-void bindPyColorSpaceTransform(py::module & m);
-void bindPyDisplayViewTransform(py::module & m);
-void bindPyExponentTransform(py::module & m);
-void bindPyExponentWithLinearTransform(py::module & m);
-void bindPyExposureContrastTransform(py::module & m);
-void bindPyFileTransform(py::module & m);
-void bindPyFixedFunctionTransform(py::module & m);
-void bindPyGradingPrimaryTransform(py::module & m);
-void bindPyGradingRGBCurveTransform(py::module & m);
-void bindPyGradingHueCurveTransform(py::module & m);
-void bindPyGradingToneTransform(py::module & m);
-void bindPyGroupTransform(py::module & m);
-void bindPyLogAffineTransform(py::module & m);
-void bindPyLogCameraTransform(py::module & m);
-void bindPyLogTransform(py::module & m);
-void bindPyLookTransform(py::module & m);
-void bindPyLut1DTransform(py::module & m);
-void bindPyLut3DTransform(py::module & m);
-void bindPyMatrixTransform(py::module & m);
-void bindPyRangeTransform(py::module & m);
+void bindPyAllocationTransform(pybind11::module & m);
+void bindPyBuiltinTransform(pybind11::module & m);
+void bindPyCDLTransform(pybind11::module & m);
+void bindPyColorSpaceTransform(pybind11::module & m);
+void bindPyDisplayViewTransform(pybind11::module & m);
+void bindPyExponentTransform(pybind11::module & m);
+void bindPyExponentWithLinearTransform(pybind11::module & m);
+void bindPyExposureContrastTransform(pybind11::module & m);
+void bindPyFileTransform(pybind11::module & m);
+void bindPyFixedFunctionTransform(pybind11::module & m);
+void bindPyGradingPrimaryTransform(pybind11::module & m);
+void bindPyGradingRGBCurveTransform(pybind11::module & m);
+void bindPyGradingHueCurveTransform(pybind11::module & m);
+void bindPyGradingToneTransform(pybind11::module & m);
+void bindPyGroupTransform(pybind11::module & m);
+void bindPyLogAffineTransform(pybind11::module & m);
+void bindPyLogCameraTransform(pybind11::module & m);
+void bindPyLogTransform(pybind11::module & m);
+void bindPyLookTransform(pybind11::module & m);
+void bindPyLut1DTransform(pybind11::module & m);
+void bindPyLut3DTransform(pybind11::module & m);
+void bindPyMatrixTransform(pybind11::module & m);
+void bindPyRangeTransform(pybind11::module & m);
 
 } // namespace OCIO_NAMESPACE
 

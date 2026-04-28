@@ -2,17 +2,17 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <sstream>
+#include <algorithm>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "BitDepthUtils.h"
 #include "HashUtils.h"
-#include "MathUtils.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ops/lut3d/Lut3DOpData.h"
 #include "ops/OpTools.h"
 #include "ops/range/RangeOpData.h"
-#include "Platform.h"
+#include "Mutex.h"
+
 
 namespace OCIO_NAMESPACE
 {

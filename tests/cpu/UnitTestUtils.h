@@ -5,6 +5,8 @@
 #define INCLUDED_OCIO_UNITTESTUTILS_H
 
 
+#include <utility>
+#include <string>
 #include <fstream>
 
 #ifdef __has_include
@@ -59,7 +61,8 @@ OCIO_SHARED_PTR<LocalCachedFile> LoadTestFile(
         throw Exception("Error opening test file.");
     }
 
-    std::string root, extension, name;
+    std::string root;
+    std::string extension;
     pystring::os::path::splitext(root, extension, filePath);
 
     // Read file
@@ -120,7 +123,7 @@ struct EnvironmentVariableGuard
         }
     }
 
-    EnvironmentVariableGuard(const std::string & name) : m_name(name)
+    explicit EnvironmentVariableGuard(std::string name) : m_name(std::move(name))
     {
     }
 

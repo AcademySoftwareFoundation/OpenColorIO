@@ -2,13 +2,15 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
-#include <iostream>
+#include <ostream>
+#include <sstream>
+#include <string>
+#include <exception>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "transforms/FileTransform.h"
 #include "BakingUtils.h"
-#include "MathUtils.h"
 
 
 namespace OCIO_NAMESPACE

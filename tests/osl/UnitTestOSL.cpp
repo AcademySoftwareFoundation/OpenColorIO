@@ -2,6 +2,12 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <string>
+#include <sstream>
+#include <algorithm>
+#include <memory>
+#include <stdexcept>
+
 #include "UnitTestOSL.h"
 
 #include <OSL/oslexec.h>

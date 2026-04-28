@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <cmath>
-#include <cstring>
 #include <cstdlib>
 #include <iostream>
-#include <sstream>
-#include <vector>
 #include <algorithm>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -215,7 +211,7 @@ void SaveICCProfileToFile(const std::string & outputfile,
     // Write
     //
     if(verbose)
-        std::cout << "[OpenColorIO INFO]: Writing " << outputfile << std::endl;
+        std::cout << "[OpenColorIO INFO]: Writing " << outputfile << "\n";
     cmsSaveProfileToFile(hProfile, outputfile.c_str());
     cmsCloseProfile(hProfile);
 

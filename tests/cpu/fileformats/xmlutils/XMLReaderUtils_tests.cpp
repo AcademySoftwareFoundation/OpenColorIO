@@ -3,6 +3,7 @@
 
 
 #include <cstring>
+#include <limits>
 
 #include "fileformats/xmlutils/XMLReaderUtils.cpp"
 

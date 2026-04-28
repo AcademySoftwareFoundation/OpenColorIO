@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <OpenColorIO/OpenColorIO.h>
+
 #include "logGuard.h"
+
+namespace OCIO = OCIO_NAMESPACE;
 
 static std::string g_output;
 void CustomLoggingFunction(const char * message)

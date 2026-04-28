@@ -39,6 +39,10 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <exception>
+#include <stdexcept>
+#include <utility>
+
 
 extern int unit_test_failures;
 
@@ -48,8 +52,8 @@ using OCIOTestFuncCallback = std::function<void(void)>;
 
 struct OCIOTest
 {
-    OCIOTest(const std::string & testgroup, const std::string & testname, const OCIOTestFuncCallback & test)
-        :    group(testgroup), name(testname), function(test)
+    OCIOTest(std::string testgroup, std::string testname, OCIOTestFuncCallback test)
+        :    group(std::move(testgroup)), name(std::move(testname)), function(std::move(test))
     { };
 
     std::string group, name;
@@ -58,8 +62,8 @@ struct OCIOTest
 
 class SkipException : public std::exception {};
 
-typedef std::shared_ptr<OCIOTest> OCIOTestRcPtr;
-typedef std::vector<OCIOTestRcPtr> UnitTests;
+using OCIOTestRcPtr = std::shared_ptr<OCIOTest>;
+using UnitTests = std::vector<OCIOTestRcPtr>;
 
 UnitTests & GetUnitTests();
 
@@ -92,6 +96,8 @@ int UnitTestMain(int argc, const char ** argv);
     #error Unexpected defined macro 'OCIO_CHECK_ASSERT'
 #endif
 
+// NOLINTBEGIN(*)
+
 /// OCIO_CHECK_* macros checks if the conditions is met, and if not,
 /// prints an error message indicating the module and line where the
 /// error occurred, but does NOT abort.  This is helpful for unit tests
@@ -105,7 +111,7 @@ int UnitTestMain(int argc, const char ** argv);
 #define OCIO_CHECK_ASSERT_FROM(x, line)                                 \
     ((x) ? ((void)0)                                                    \
          : ((std::cout << __FILE__ << ":" << line << ":\n"              \
-                       << "FAILED: " << FIELD_STR(x) << "\n"),          \
+                          "FAILED: " << FIELD_STR(x) << "\n"),          \
             (void)++unit_test_failures))
 
 #define OCIO_CHECK_ASSERT(x) OCIO_CHECK_ASSERT_FROM(x, __LINE__)
@@ -114,7 +120,7 @@ int UnitTestMain(int argc, const char ** argv);
     if(!(x)) {                                                          \
         std::stringstream ss;                                           \
         ss <<  __FILE__ << ":" << line << ":\n"                         \
-           << "FAILED: " << FIELD_STR(x) << "\n";                       \
+              "FAILED: " << FIELD_STR(x) << "\n";                       \
         throw std::runtime_error(ss.str()); }
 
 #define OCIO_REQUIRE_ASSERT(x) OCIO_REQUIRE_ASSERT_FROM(x, __LINE__)
@@ -122,7 +128,7 @@ int UnitTestMain(int argc, const char ** argv);
 #define OCIO_CHECK_ASSERT_MESSAGE_FROM(x, M, line)                      \
     ((x) ? ((void)0)                                                    \
          : ((std::cout << __FILE__ << ":" << line << ":\n"              \
-                       << "FAILED: " << M << "\n"),                     \
+                          "FAILED: " << M << "\n"),                     \
             (void)++unit_test_failures))
 
 #define OCIO_CHECK_ASSERT_MESSAGE(x, M)                                 \
@@ -140,56 +146,56 @@ int UnitTestMain(int argc, const char ** argv);
 // Use OCIO_CHECK_EQUAL_FROM to propagate the right line number
 // to the error message.
 //
-#define OCIO_CHECK_EQUAL_FROM(x,y,line)                                 \
-    (((x) == (y)) ? ((void)0)                                           \
-         : ((std::cout << __FILE__ << ":" << line << ":\n"              \
-             << "FAILED: " << FIELD_STR(x) << " == " << FIELD_STR(y) << "\n" \
-             << "\tvalues were '" << (x) << "' and '" << (y) << "'\n"), \
+#define OCIO_CHECK_EQUAL_FROM(x,y,line)                                   \
+    (((x) == (y)) ? ((void)0)                                             \
+         : ((std::cout << __FILE__ << ":" << line << ":\n"                \
+             "FAILED: " << FIELD_STR(x) << " == " << FIELD_STR(y) << "\n" \
+             "\tvalues were '" << (x) << "' and '" << (y) << "'\n"),      \
             (void)++unit_test_failures))
 
 #define OCIO_REQUIRE_EQUAL_FROM(x,y, line)                              \
     if((x)!=(y)) {                                                      \
         std::stringstream ss;                                           \
         ss <<  __FILE__ << ":" << line << ":\n"                         \
-           << "FAILED: " << FIELD_STR(x) << " == " << FIELD_STR(y) << "\n" \
-           << "\tvalues were '" << (x) << "' and '" << (y) << "'\n";    \
+           "FAILED: " << FIELD_STR(x) << " == " << FIELD_STR(y) << "\n" \
+           "\tvalues were '" << (x) << "' and '" << (y) << "'\n";       \
         throw std::runtime_error(ss.str()); }
 
 #define OCIO_REQUIRE_EQUAL(x,y) OCIO_REQUIRE_EQUAL_FROM(x,y, __LINE__)
 
-#define OCIO_CHECK_NE(x,y)                                              \
-    (((x) != (y)) ? ((void)0)                                           \
-         : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"          \
-             << "FAILED: " << FIELD_STR(x) << " != " << FIELD_STR(y) << "\n" \
-             << "\tvalues were '" << (x) << "' and '" << (y) << "'\n"), \
+#define OCIO_CHECK_NE(x,y)                                                \
+    (((x) != (y)) ? ((void)0)                                             \
+         : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"            \
+             "FAILED: " << FIELD_STR(x) << " != " << FIELD_STR(y) << "\n" \
+             "\tvalues were '" << (x) << "' and '" << (y) << "'\n"),      \
             (void)++unit_test_failures))
 
-#define OCIO_CHECK_LT(x,y)                                              \
-    (((x) < (y)) ? ((void)0)                                            \
-         : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"          \
-             << "FAILED: " << FIELD_STR(x) << " < " << FIELD_STR(y) << "\n" \
-             << "\tvalues were '" << (x) << "' and '" << (y) << "'\n"), \
+#define OCIO_CHECK_LT(x,y)                                               \
+    (((x) < (y)) ? ((void)0)                                             \
+         : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"           \
+             "FAILED: " << FIELD_STR(x) << " < " << FIELD_STR(y) << "\n" \
+             "\tvalues were '" << (x) << "' and '" << (y) << "'\n"),     \
             (void)++unit_test_failures))
 
-#define OCIO_CHECK_GT(x,y)                                              \
-    (((x) > (y)) ? ((void)0)                                            \
-         : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"          \
-             << "FAILED: " << FIELD_STR(x) << " > " << FIELD_STR(y) << "\n" \
-             << "\tvalues were '" << (x) << "' and '" << (y) << "'\n"), \
+#define OCIO_CHECK_GT(x,y)                                               \
+    (((x) > (y)) ? ((void)0)                                             \
+         : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"           \
+             "FAILED: " << FIELD_STR(x) << " > " << FIELD_STR(y) << "\n" \
+             "\tvalues were '" << (x) << "' and '" << (y) << "'\n"),     \
             (void)++unit_test_failures))
 
-#define OCIO_CHECK_LE(x,y)                                              \
-    (((x) <= (y)) ? ((void)0)                                           \
-         : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"          \
-             << "FAILED: " << FIELD_STR(x) << " <= " << FIELD_STR(y) << "\n" \
-             << "\tvalues were '" << (x) << "' and '" << (y) << "'\n"), \
+#define OCIO_CHECK_LE(x,y)                                                \
+    (((x) <= (y)) ? ((void)0)                                             \
+         : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"            \
+             "FAILED: " << FIELD_STR(x) << " <= " << FIELD_STR(y) << "\n" \
+             "\tvalues were '" << (x) << "' and '" << (y) << "'\n"),      \
             (void)++unit_test_failures))
 
-#define OCIO_CHECK_GE(x,y)                                              \
-    (((x) >= (y)) ? ((void)0)                                           \
-         : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"          \
-             << "FAILED: " << FIELD_STR(x) << " >= " << FIELD_STR(y) << "\n" \
-             << "\tvalues were '" << (x) << "' and '" << (y) << "'\n"), \
+#define OCIO_CHECK_GE(x,y)                                                \
+    (((x) >= (y)) ? ((void)0)                                             \
+         : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"            \
+             "FAILED: " << FIELD_STR(x) << " >= " << FIELD_STR(y) << "\n" \
+             "\tvalues were '" << (x) << "' and '" << (y) << "'\n"),      \
             (void)++unit_test_failures))
 
 #define OCIO_CHECK_CLOSE(x,y,tol) OCIO_CHECK_CLOSE_FROM(x,y,tol,__LINE__)
@@ -209,25 +215,25 @@ int UnitTestMain(int argc, const char ** argv);
                                << FIELD_STR(y) << ") < "                \
                                << FIELD_STR(tol)                        \
              << "\n"                                                    \
-             << "\tvalues were '" << (x) << "', '" << (y) << "' and '"  \
+                "\tvalues were '" << (x) << "', '" << (y) << "' and '"  \
              << (tol) << "'\n"), (void)++unit_test_failures))
 
 #define OCIO_CHECK_THROW(S, E)                                          \
     try { S; throw "throwanything"; } catch( E const& ) { }             \
     catch (...) {                                                       \
         std::cout << __FILE__ << ":" << __LINE__ << ":\n"               \
-                  << "FAILED: " << FIELD_STR(E)                         \
+                     "FAILED: " << FIELD_STR(E)                         \
                   << " is expected to be thrown\n";                     \
         ++unit_test_failures;                                           \
     }
 
 bool StringFloatVecClose(std::string value, std::string expected, float eps);
 
-#define OCIO_CHECK_STR_FLOAT_VEC_CLOSE_FROM(x,y,tol,line)                    \
-    (StringFloatVecClose(x,y,tol)) ? ((void)0)                         \
-         : ((std::cout << __FILE__ << ":" << line << ":\n"                   \
-             << "FAILED: " << FIELD_STR(x) << " == " << FIELD_STR(y) << "\n" \
-             << "\tvalues were '" << (x) << "' and '" << (y) << "'\n"),      \
+#define OCIO_CHECK_STR_FLOAT_VEC_CLOSE_FROM(x,y,tol,line)                 \
+    (StringFloatVecClose(x,y,tol)) ? ((void)0)                            \
+         : ((std::cout << __FILE__ << ":" << line << ":\n"                \
+             "FAILED: " << FIELD_STR(x) << " == " << FIELD_STR(y) << "\n" \
+             "\tvalues were '" << (x) << "' and '" << (y) << "'\n"),      \
             (void)++unit_test_failures)
 
 #define OCIO_CHECK_STR_FLOAT_VEC_CLOSE(x,y,tol) OCIO_CHECK_STR_FLOAT_VEC_CLOSE_FROM(x,y,tol,__LINE__)
@@ -273,5 +279,7 @@ bool StringFloatVecClose(std::string value, std::string expected, float eps);
                                    ociotest_##group##_##name));         \
     /* @SuppressWarnings('all') */                                      \
     static void ociotest_##group##_##name()
+
+// NOLINTEND(*)
 
 #endif /* INCLUDED_OCIO_UNITTEST_H */

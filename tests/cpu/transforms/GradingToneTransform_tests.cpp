@@ -2,6 +2,9 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <limits>
+#include <sstream>
+
 #include "transforms/GradingToneTransform.cpp"
 
 #include "testutils/UnitTest.h"
@@ -63,11 +66,11 @@ OCIO_ADD_TEST(GradingToneTransform, serialization)
     tone->setValue(data);
 
     static constexpr char TONE_STR[]
-        = "<GradingToneTransform direction=forward, style=linear, values=<"\
-          "blacks=<red=1.321 green=1 blue=1 master=1 start=0.1 width=4> "\
-          "shadows=<red=1 green=1 blue=1 master=1 start=2 width=-7> "\
-          "midtones=<red=1 green=1 blue=1 master=1 start=0 width=8> "\
-          "highlights=<red=1 green=1 blue=1 master=1 start=-2 width=9> "\
+        = "<GradingToneTransform direction=forward, style=linear, values=<"
+          "blacks=<red=1.321 green=1 blue=1 master=1 start=0.1 width=4> "
+          "shadows=<red=1 green=1 blue=1 master=1 start=2 width=-7> "
+          "midtones=<red=1 green=1 blue=1 master=1 start=0 width=8> "
+          "highlights=<red=1 green=1 blue=1 master=1 start=-2 width=9> "
           "whites=<red=1 green=1 blue=1 master=1 start=0 width=8> s_contrast=1.123>>";
 
     {

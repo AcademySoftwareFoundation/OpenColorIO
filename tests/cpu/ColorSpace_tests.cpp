@@ -4,8 +4,6 @@
 
 #include <sstream>
 
-#include <pystring.h>
-
 #include "ColorSpace.cpp"
 
 #include "testutils/UnitTest.h"

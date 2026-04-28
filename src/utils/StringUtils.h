@@ -5,7 +5,7 @@
 #define INCLUDED_STRINGUTILS_H
 
 #include <algorithm>
-#include <cctype>
+#include <utility>
 #include <iterator>
 #include <sstream>
 #include <string>

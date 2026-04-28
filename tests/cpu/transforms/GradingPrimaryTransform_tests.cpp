@@ -2,6 +2,9 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 
+#include <limits>
+#include <sstream>
+
 #include "MathUtils.h"
 
 #include "transforms/GradingPrimaryTransform.cpp"
@@ -344,10 +347,10 @@ OCIO_ADD_TEST(GradingPrimaryTransform, serialization)
     primary->setValue(data);
 
     static constexpr char PRIMARY_STR[]
-        = "<GradingPrimaryTransform direction=forward, style=log, "\
-          "values=<brightness=<r=0, g=0, b=0, m=0>, contrast=<r=1, g=1, b=1, m=1>, "\
-          "gamma=<r=1.1, g=1.2, b=1.3, m=1>, offset=<r=0, g=0, b=0, m=0>, "\
-          "exposure=<r=0, g=0, b=0, m=0>, lift=<r=0, g=0, b=0, m=0>, "\
+        = "<GradingPrimaryTransform direction=forward, style=log, "
+          "values=<brightness=<r=0, g=0, b=0, m=0>, contrast=<r=1, g=1, b=1, m=1>, "
+          "gamma=<r=1.1, g=1.2, b=1.3, m=1>, offset=<r=0, g=0, b=0, m=0>, "
+          "exposure=<r=0, g=0, b=0, m=0>, lift=<r=0, g=0, b=0, m=0>, "
           "gain=<r=1, g=1, b=1, m=1>, saturation=1, pivot=<contrast=-0.2, black=0, white=1>>>";
 
     {

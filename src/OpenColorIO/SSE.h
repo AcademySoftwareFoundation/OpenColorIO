@@ -6,6 +6,7 @@
 #define INCLUDED_OCIO_SSE_H
 
 #include "CPUInfoConfig.h"
+
 #if OCIO_USE_SSE2
 
 // Include the appropriate SIMD intrinsics header based on the architecture (Intel vs. ARM).

@@ -2,22 +2,15 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <algorithm>
-#include <cmath>
-#include <iostream>
 #include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "BitDepthUtils.h"
-#include "HashUtils.h"
-#include "GpuShaderUtils.h"
+
 #include "MathUtils.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut1d/Lut1DOpCPU.h"
 #include "ops/lut1d/Lut1DOpGPU.h"
-#include "ops/matrix/MatrixOp.h"
-#include "ops/OpTools.h"
-#include "SSE.h"
 #include "transforms/Lut1DTransform.h"
 
 namespace OCIO_NAMESPACE

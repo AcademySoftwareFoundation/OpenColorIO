@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include "Lut1DOpCPU_AVX512.h"
+#include "CPUInfoConfig.h"
+
 #if OCIO_USE_AVX512
 
 #include <immintrin.h>
-#include <string.h>
 
+#include "OpenColorABI.h"
 #include "AVX512.h"
+#include "BitDepthUtils.h"
+
+#include "Lut1DOpCPU_AVX512.h"
 
 namespace OCIO_NAMESPACE
 {
