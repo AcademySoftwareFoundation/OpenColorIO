@@ -10,7 +10,6 @@
 #include <exception>
 
 #include <OpenColorIO/OpenColorIO.h>
-namespace OCIO = OCIO_NAMESPACE;
 
 #include "apputils/argparse.h"
 #include "ocioicc.h"
