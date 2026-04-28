@@ -8,6 +8,7 @@
 #include <Imath/half.h>
 
 #include "ImagePacking.h"
+#include "BitDepthUtils.h"
 
 
 namespace OCIO_NAMESPACE
