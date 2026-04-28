@@ -95,8 +95,8 @@ OCIO_ADD_TEST(Builtins, read_write)
     // The unit test validates the read/write and the processor creation for all the existing
     // builtin transforms.
 
-    static constexpr char CONFIG_BUILTIN_TRANSFORMS[] {
-R"(ocio_profile_version: 2.4
+static constexpr char CONFIG_BUILTIN_TRANSFORMS[] {
+R"(ocio_profile_version: 2.6
 
 environment:
   {}
@@ -359,6 +359,53 @@ colorspaces:
                           errMsg);
 }
 
+void TestStyle26(const std::string & style)
+{
+    static constexpr char BASE[] {
+R"(ocio_profile_version: 2.5
+
+environment:
+  {}
+search_path: ""
+strictparsing: true
+luma: [0.2126, 0.7152, 0.0722]
+
+roles:
+  default: ref
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+displays:
+  Disp1:
+    - !<View> {name: View1, colorspace: test}
+
+active_displays: []
+active_views: []
+
+colorspaces:
+  - !<ColorSpace>
+    name: ref
+
+  - !<ColorSpace>
+    name: test
+    from_scene_reference: !<BuiltinTransform> {style: )" };
+
+    std::string CONFIG(BASE);
+    CONFIG += style;
+    CONFIG += "}";
+
+    std::istringstream iss;
+    iss.str(CONFIG);
+
+    const std::string errMsg =
+        "Only config version 2.6 (or higher) can have BuiltinTransform style '" + style + "'.";
+
+    OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(iss),
+                          OCIO::Exception,
+                          errMsg);
+}
+
 }  // end anon
 
 OCIO_ADD_TEST(Builtins, version_2_3_validation)
@@ -403,4 +450,14 @@ OCIO_ADD_TEST(Builtins, version_2_3_validation)
     TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020-D60-in-REC2020-D65_2.0");
     TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-REC2020-D60-in-REC2020-D65_2.0");
     TestStyle("ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020-D60-in-REC2020-D65_2.0");
+
+}
+
+OCIO_ADD_TEST(Builtins, version_2_5_validation)
+{
+    // The unit test validates that the config reader checkVersionConsistency check throws for
+    // version 2.5 configs containing a Builtin Transform with the new 2.6 ROMM styles.
+
+    TestStyle26("ROMM_to_CIE-XYZ-D65_BFD");
+    TestStyle26("LINEAR-RIMM_to_ACES2065-1_BFD");
 }

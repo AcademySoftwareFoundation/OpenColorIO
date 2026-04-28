@@ -247,7 +247,7 @@ static constexpr unsigned LastSupportedMajorVersion = OCIO_VERSION_MAJOR;
 
 // For each major version keep the most recent minor.
 static const unsigned int LastSupportedMinorVersion[] = {0, // Version 1
-                                                         5  // Version 2
+                                                         6  // Version 2
                                                          };
 
 } // namespace
@@ -5653,6 +5653,16 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
             {
                 std::ostringstream os;
                 os << "Only config version 2.4 (or higher) can have BuiltinTransform style '"
+                   << blt->getStyle() << "'.";
+                throw Exception(os.str().c_str());
+            }
+            if (m_majorVersion == 2 && m_minorVersion < 6
+                    && (   0 == Platform::Strcasecmp(blt->getStyle(), "ROMM_to_CIE-XYZ-D65_BFD")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "LINEAR-RIMM_to_ACES2065-1_BFD")
+                ))
+            {
+                std::ostringstream os;
+                os << "Only config version 2.6 (or higher) can have BuiltinTransform style '"
                    << blt->getStyle() << "'.";
                 throw Exception(os.str().c_str());
             }
