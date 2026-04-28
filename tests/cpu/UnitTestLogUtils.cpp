@@ -154,7 +154,7 @@ void muteInactiveColorspaceInfo(LogGuard & logGuard)
 {
     const std::string str = "- Display' is neither a color space nor a named transform.";
     const std::string pattern = R"(\[OpenColorIO Info\]: Inactive.*)" + str + R"([\r\n]+)";
-    logGuard.findAllAndRemove(pattern);
+    [[maybe_unused]] auto unused = logGuard.findAllAndRemove(pattern);
 }
 
 bool checkAndMuteWarning(LogGuard & logGuard, const std::string str)

@@ -4,7 +4,9 @@
 #ifndef INCLUDED_OCIO_UNITTEST_LOGUTILS_H
 #define INCLUDED_OCIO_UNITTEST_LOGUTILS_H
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <string>
+
+#include "OpenColorABI.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -15,19 +17,19 @@ class LogGuard
 {
 public:
     LogGuard();     // Temporarily sets the level to LOGGING_LEVEL_DEBUG
-    LogGuard(LoggingLevel level);
+    explicit LogGuard(LoggingLevel level);
     LogGuard(const LogGuard &) = delete;
     LogGuard & operator=(const LogGuard &) = delete;
     ~LogGuard();
 
     // Return the output message or null.
-    const std::string & output() const;
+    [[nodiscard]] const std::string & output() const;
 
     void clear();
-    bool empty() const;
+    [[nodiscard]] bool empty() const;
 
-    bool findAndRemove(const std::string & str) const;
-    bool findAllAndRemove(const std::string & sPattern) const;
+    [[nodiscard]] bool findAndRemove(const std::string & str) const;
+    [[nodiscard]] bool findAllAndRemove(const std::string & sPattern) const;
     void print();
 private:
     LoggingLevel m_logLevel;
