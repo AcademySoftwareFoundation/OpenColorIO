@@ -314,7 +314,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
             // If we've found 3 ints, add it to our 3D LUT.
             else if(tmpData.size() == 3)
             {
-                if (raw3d.size() > (size_t)(129 * 129 * 129 * 3))
+                if (raw3d.size() > Max3DLUTLength * Max3DLUTLength * Max3DLUTLength * 3)
                 {
                     std::ostringstream os;
                     os << "Error parsing .3dl file. ";

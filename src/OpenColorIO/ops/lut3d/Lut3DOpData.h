@@ -8,6 +8,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "LutLimits.h"
 #include "Op.h"
 #include "ops/OpArray.h"
 #include "PrivateTypes.h"

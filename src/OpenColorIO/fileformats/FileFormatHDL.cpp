@@ -189,8 +189,8 @@ readLuts(std::istream& istream,
 
             if (result.ec == std::errc())
             {
-                // Cap per-LUT entry count: max is 129^3 * 3 for a 3D LUT.
-                if (lutValues[lutname].size() > (size_t)(129 * 129 * 129 * 3))
+                // Cap per-LUT entry count: max is Max3DLUTLength^3 * 3 for a 3D LUT.
+                if (lutValues[lutname].size() > Max3DLUTLength * Max3DLUTLength * Max3DLUTLength * 3)
                 {
                     std::ostringstream os;
                     os << "Too many values in " << lutname << " LUT block";
@@ -459,10 +459,10 @@ LocalFileFormat::read(std::istream & istream,
             // Set cube size
             size_3d = lut_sizes[0];
 
-            if(size_3d < 2 || size_3d > 129)
+            if(size_3d < 2 || size_3d > (long)Max3DLUTLength)
             {
                 std::ostringstream os;
-                os << "3D LUT cube size must be between 2 and 129, found: " << size_3d;
+                os << "3D LUT cube size must be between 2 and " << Max3DLUTLength << ", found: " << size_3d;
                 throw Exception(os.str().c_str());
             }
 
@@ -477,10 +477,10 @@ LocalFileFormat::read(std::istream & istream,
         if(cachedFile->hdltype == "c")
         {
             size_1d = lut_sizes[0];
-            if(size_1d < 2 || size_1d > 300000)
+            if(size_1d < 2 || size_1d > (long)Max1DLUTLength)
             {
                 std::ostringstream os;
-                os << "1D LUT size must be between 2 and 300000, found: " << size_1d;
+                os << "1D LUT size must be between 2 and " << Max1DLUTLength << ", found: " << size_1d;
                 throw Exception(os.str().c_str());
             }
         }
@@ -488,10 +488,10 @@ LocalFileFormat::read(std::istream & istream,
         if(cachedFile->hdltype == "3d+1d")
         {
             size_prelut = lut_sizes[1];
-            if(size_prelut < 2 || size_prelut > 300000)
+            if(size_prelut < 2 || size_prelut > (long)Max1DLUTLength)
             {
                 std::ostringstream os;
-                os << "Prelut size must be between 2 and 300000, found: " << size_prelut;
+                os << "Prelut size must be between 2 and " << Max1DLUTLength << ", found: " << size_prelut;
                 throw Exception(os.str().c_str());
             }
         }

@@ -185,8 +185,8 @@ void * AlignedMalloc(size_t size, size_t alignment)
 #ifdef _WIN32
     void * memBlock = _aligned_malloc(size, alignment);
 #else
-    void* memBlock = 0x0;
-    if (posix_memalign(&memBlock, alignment, size)) memBlock = 0x0;
+    void* memBlock = nullptr;
+    if (posix_memalign(&memBlock, alignment, size)) memBlock = nullptr;
 #endif
     if (!memBlock)
     {

@@ -3458,7 +3458,7 @@ ArrayBase * CTFReaderInvLut1DElt::updateDimension(const Dimensions & dims)
         return nullptr;
     }
 
-    if (dims[0] < 2 || dims[0] > 300000)
+    if (dims[0] < 2 || dims[0] > Max1DLUTLength)
     {
         return nullptr;
     }
@@ -3601,7 +3601,7 @@ ArrayBase * CTFReaderInvLut3DElt::updateDimension(const Dimensions & dims)
         return nullptr;
     }
 
-    if (dims[0] < 2 || dims[0] > 129)
+    if (dims[0] < 2 || dims[0] > Max3DLUTLength)
     {
         return nullptr;
     }
@@ -4281,7 +4281,7 @@ ArrayBase * CTFReaderLut1DElt::updateDimension(const Dimensions & dims)
         return nullptr;
     }
 
-    if (dims[0] < 2 || dims[0] > 300000)
+    if (dims[0] < 2 || dims[0] > Max1DLUTLength)
     {
         return nullptr;
     }
@@ -4347,7 +4347,7 @@ IndexMapping * CTFReaderLut1DElt::updateDimensionIM(const DimensionsIM & dims)
 
     const unsigned int numComponents = dims[0];
 
-    if (dims[0] < 2 || dims[0] > 300000)
+    if (dims[0] < 2 || dims[0] > Max1DLUTLength)
     {
         return nullptr;
     }
@@ -4558,7 +4558,7 @@ ArrayBase * CTFReaderLut3DElt::updateDimension(const Dimensions & dims)
         return nullptr;
     }
 
-    if (dims[0] < 2 || dims[0] > 129)
+    if (dims[0] < 2 || dims[0] > Max3DLUTLength)
     {
         return nullptr;
     }
@@ -4593,7 +4593,7 @@ IndexMapping * CTFReaderLut3DElt::updateDimensionIM(const DimensionsIM & dims)
 
     const unsigned numComponents = dims[0];
 
-    if (dims[0] < 2 || dims[0] > 129)
+    if (dims[0] < 2 || dims[0] > Max3DLUTLength)
     {
         return nullptr;
     }

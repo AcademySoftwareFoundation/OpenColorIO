@@ -165,10 +165,11 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                         lineNumber,
                         line);
                 }
-                if (size < 2 || size > 129)
+                if (size < 2 || size > (long)Max3DLUTLength)
                 {
                     ThrowErrorMessage(
-                        "LUT_3D_SIZE must be between 2 and 129.",
+                        ("LUT_3D_SIZE must be between 2 and "
+                         + std::to_string(Max3DLUTLength) + ".").c_str(),
                         fileName,
                         lineNumber,
                         line);
@@ -192,7 +193,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                         line);
                 }
 
-                if (raw.size() > (size_t)(129 * 129 * 129 * 3))
+                if (raw.size() > Max3DLUTLength * Max3DLUTLength * Max3DLUTLength * 3)
                 {
                     ThrowErrorMessage(
                         "Too many 3D LUT entries.",

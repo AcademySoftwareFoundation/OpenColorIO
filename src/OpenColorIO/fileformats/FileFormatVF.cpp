@@ -158,10 +158,11 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                             fileName, lineNumber, line);
                     }
 
-                    if (size3d[0] < 2 || size3d[0] > 129)
+                    if (size3d[0] < 2 || size3d[0] > (long)Max3DLUTLength)
                     {
                         ThrowErrorMessage(
-                            "Grid size must be between 2 and 129.",
+                            ("Grid size must be between 2 and "
+                             + std::to_string(Max3DLUTLength) + ".").c_str(),
                             fileName, lineNumber, line);
                     }
 
@@ -197,7 +198,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
             {
                 if(StringVecToFloatVec(tmpfloats, parts) && (tmpfloats.size() == 3))
                 {
-                    if (raw3d.size() > (size_t)(129 * 129 * 129 * 3))
+                    if (raw3d.size() > Max3DLUTLength * Max3DLUTLength * Max3DLUTLength * 3)
                     {
                         ThrowErrorMessage(
                             "Too many 3D LUT entries.",

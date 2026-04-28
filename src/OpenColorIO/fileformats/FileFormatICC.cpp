@@ -180,7 +180,8 @@ LocalCachedFileRcPtr LocalFileFormat::ReadInfo(std::istream & istream,
         ThrowErrorMessage("Error loading number of tags.", fileName);
     }
 
-    if (count > 100)
+    constexpr icUInt32Number MaxNumICCTags = 100;
+    if (count > MaxNumICCTags)
     {
         ThrowErrorMessage("Too many tags in ICC profile.", fileName);
     }

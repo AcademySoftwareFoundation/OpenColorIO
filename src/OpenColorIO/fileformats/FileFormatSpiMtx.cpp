@@ -69,7 +69,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
 {
 
     // Read the entire file (capped: a valid spimtx file contains exactly 12 floats).
-    const int MAX_FILE_SIZE = 8192;
+    constexpr size_t MAX_FILE_SIZE = 1024;
     char fileBuf[MAX_FILE_SIZE];
     istream.read(fileBuf, MAX_FILE_SIZE);
     const std::streamsize bytesRead = istream.gcount();

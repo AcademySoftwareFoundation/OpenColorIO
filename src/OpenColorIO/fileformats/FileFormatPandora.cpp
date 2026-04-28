@@ -156,10 +156,12 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                         lineNumber,
                         line);
                 }
-                if (inval < 8 || inval > 129*129*129)
+                if (inval < 8 || inval > (long)(Max3DLUTLength * Max3DLUTLength * Max3DLUTLength))
                 {
                     ThrowErrorMessage(
-                        "'in' value must be between 8 and 2146689 (129^3).",
+                        ("'in' value must be between 8 and "
+                         + std::to_string(Max3DLUTLength * Max3DLUTLength * Max3DLUTLength)
+                         + " (" + std::to_string(Max3DLUTLength) + "^3).").c_str(),
                         fileName,
                         lineNumber,
                         line);
@@ -221,7 +223,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                         line);
                 }
 
-                if (raw3d.size() > (size_t)(129 * 129 * 129 * 3))
+                if (raw3d.size() > Max3DLUTLength * Max3DLUTLength * Max3DLUTLength * 3)
                 {
                     ThrowErrorMessage(
                         "Too many 3D LUT entries.",

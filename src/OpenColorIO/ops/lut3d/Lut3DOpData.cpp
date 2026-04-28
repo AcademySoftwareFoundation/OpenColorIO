@@ -58,8 +58,7 @@ Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut)
     return result;
 }
 
-// 129 allows for a MESH dimension of 7 in the 3dl file format.
-const unsigned long Lut3DOpData::maxSupportedLength = 129;
+const unsigned long Lut3DOpData::maxSupportedLength = Max3DLUTLength;
 
 // Functional composition is a concept from mathematics where two functions
 // are combined into a single function.  This idea may be applied to ops
