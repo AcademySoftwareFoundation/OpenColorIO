@@ -55,7 +55,7 @@ struct ArchiveOptions {
     uint8_t     overwrite       = 0;
     uint8_t     append          = 0;
     int64_t     disk_size       = 0;
-    uint8_t     follow_links    = 0;
+    uint8_t     follow_links    = 1;
     uint8_t     store_links     = 0;
     uint8_t     zip_cd          = 0;
     int32_t     encoding        = 0;
@@ -318,6 +318,8 @@ void archiveConfig(std::ostream & ostream, const Config & config, const char * c
     mz_zip_writer_set_compress_method(archiver, options.compress_method);
     // Compress level.
     mz_zip_writer_set_compress_level(archiver, options.compress_level);
+
+    mz_zip_writer_set_follow_links(archiver, options.follow_links);
 
     MinizipNgMemStreamGuard memStreamGuard(write_mem_stream);
     MinizipNgHandlerGuard archiverGuard(archiver, true, true);

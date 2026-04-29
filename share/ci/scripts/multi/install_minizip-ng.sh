@@ -36,6 +36,7 @@ cmake -DCMAKE_BUILD_TYPE=Release \
       -DMZ_COMPAT=OFF \
       -DMZ_BZIP2=OFF \
       -DMZ_LZMA=OFF \
+      -DMZ_PPMD=OFF \
       -DMZ_LIBCOMP=OFF \
       -DMZ_ZSTD=OFF \
       -DMZ_PKCRYPT=OFF \
