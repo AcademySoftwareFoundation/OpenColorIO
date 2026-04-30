@@ -8,9 +8,13 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "quarterly"
+    # Only do security updates rather than all version updates.
+    open-pull-requests-limit: 0
 
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "quarterly"
+    # Only do security updates rather than all version updates.
+    open-pull-requests-limit: 0
