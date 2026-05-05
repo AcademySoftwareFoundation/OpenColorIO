@@ -118,6 +118,53 @@ GradingRGBCurve
       .. doxygentypedef:: ${OCIO_NAMESPACE}::ConstGradingRGBCurveRcPtr
       .. doxygentypedef:: ${OCIO_NAMESPACE}::GradingRGBCurveRcPtr
 
+GradingHueCurveTransform
+************************
+
+.. tabs::
+
+   .. group-tab:: Python
+
+      .. autoclass:: PyOpenColorIO.GradingHueCurveTransform
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :inherited-members:
+
+   .. group-tab:: C++
+
+      .. doxygenclass:: ${OCIO_NAMESPACE}::GradingHueCurveTransform
+         :members:
+         :undoc-members:
+
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::operator<<(std::ostream&, const GradingHueCurveTransform&) noexcept
+
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::ConstGradingHueCurveTransformRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::GradingHueCurveTransformRcPtr
+
+GradingHueCurve
+^^^^^^^^^^^^^^^
+
+.. tabs::
+
+   .. group-tab:: Python
+
+      .. autoclass:: PyOpenColorIO.GradingHueCurve
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+
+   .. group-tab:: C++
+
+      .. doxygenclass:: ${OCIO_NAMESPACE}::GradingHueCurve
+         :members:
+         :undoc-members:
+
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::operator<<(std::ostream&, const GradingHueCurve&)
+
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::ConstGradingHueCurveRcPtr
+      .. doxygentypedef:: ${OCIO_NAMESPACE}::GradingHueCurveRcPtr
+
 GradingControlPoint
 ^^^^^^^^^^^^^^^^^^^
 
