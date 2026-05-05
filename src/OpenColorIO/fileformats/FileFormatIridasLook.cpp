@@ -429,7 +429,7 @@ private:
                 os << "'. Expected quoted integer";
                 pImpl->Throw(os.str().c_str());
             }
-            if (size_3d < 2 || size_3d > (long)Max3DLUTLength)
+            if (size_3d < 2 || size_3d > static_cast<long>(Max3DLUTLength))
             {
                 std::ostringstream os;
                 os << "Invalid LUT size value: '" << size_raw;

@@ -156,7 +156,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                         lineNumber,
                         line);
                 }
-                if (inval < 8 || inval > (long)(Max3DLUTLength * Max3DLUTLength * Max3DLUTLength))
+                if (inval < 8 || inval > static_cast<long>(Max3DLUTLength * Max3DLUTLength * Max3DLUTLength))
                 {
                     ThrowErrorMessage(
                         ("'in' value must be between 8 and "

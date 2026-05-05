@@ -205,7 +205,7 @@ LocalFileFormat::read(std::istream & istream,
                         line);
                 }
 
-                if (size1d < 2 || size1d > (long)Max1DLUTLength)
+                if (size1d < 2 || size1d > static_cast<long>(Max1DLUTLength))
                 {
                     ThrowErrorMessage(
                         ("'LUT_1D_SIZE' must be between 2 and "
@@ -241,7 +241,7 @@ LocalFileFormat::read(std::istream & istream,
                         line);
                 }
 
-                if (size3d < 2 || size3d > (long)Max3DLUTLength)
+                if (size3d < 2 || size3d > static_cast<long>(Max3DLUTLength))
                 {
                     ThrowErrorMessage(
                         ("'LUT_3D_SIZE' must be between 2 and "

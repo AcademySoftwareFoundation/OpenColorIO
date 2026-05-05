@@ -179,7 +179,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
     {
         ThrowErrorMessage("Could not find 'Length' Tag", -1, "");
     }
-    if (lut_size < 2 || lut_size > (long)Max1DLUTLength)
+    if (lut_size < 2 || lut_size > static_cast<long>(Max1DLUTLength))
     {
         ThrowErrorMessage(
             ("'Length' must be between 2 and " + std::to_string(Max1DLUTLength)).c_str(),

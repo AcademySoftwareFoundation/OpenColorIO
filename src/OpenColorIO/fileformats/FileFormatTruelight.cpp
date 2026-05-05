@@ -149,7 +149,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                         throw Exception(os.str().c_str());
                     }
 
-                    if (size3d[0] < 2 || size3d[0] > (long)Max3DLUTLength)
+                    if (size3d[0] < 2 || size3d[0] > static_cast<long>(Max3DLUTLength))
                     {
                         throw Exception(("Truelight .cub LUT grid size must be between 2 and "
                                          + std::to_string(Max3DLUTLength) + ".").c_str());
@@ -164,7 +164,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                     {
                         throw Exception("Malformed lutlength tag in Truelight .cub LUT.");
                     }
-                    if (size1d < 2 || size1d > (long)Max1DLUTLength)
+                    if (size1d < 2 || size1d > static_cast<long>(Max1DLUTLength))
                     {
                         throw Exception(("Truelight .cub LUT lutlength must be between 2 and "
                                          + std::to_string(Max1DLUTLength) + ".").c_str());

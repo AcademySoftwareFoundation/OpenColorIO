@@ -165,7 +165,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                         lineNumber,
                         line);
                 }
-                if (size < 2 || size > (long)Max3DLUTLength)
+                if (size < 2 || size > static_cast<long>(Max3DLUTLength))
                 {
                     ThrowErrorMessage(
                         ("LUT_3D_SIZE must be between 2 and "

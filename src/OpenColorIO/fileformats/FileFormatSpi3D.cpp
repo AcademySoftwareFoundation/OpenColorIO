@@ -128,7 +128,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
         throw Exception(os.str().c_str());
     }
 
-    if (rSize < 2 || rSize > (long)Max3DLUTLength)
+    if (rSize < 2 || rSize > static_cast<long>(Max3DLUTLength))
     {
         std::ostringstream os;
         os << "Error parsing .spi3d file (";

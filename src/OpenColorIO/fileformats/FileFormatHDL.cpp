@@ -459,7 +459,7 @@ LocalFileFormat::read(std::istream & istream,
             // Set cube size
             size_3d = lut_sizes[0];
 
-            if(size_3d < 2 || size_3d > (long)Max3DLUTLength)
+            if(size_3d < 2 || size_3d > static_cast<long>(Max3DLUTLength))
             {
                 std::ostringstream os;
                 os << "3D LUT cube size must be between 2 and " << Max3DLUTLength << ", found: " << size_3d;
@@ -477,7 +477,7 @@ LocalFileFormat::read(std::istream & istream,
         if(cachedFile->hdltype == "c")
         {
             size_1d = lut_sizes[0];
-            if(size_1d < 2 || size_1d > (long)Max1DLUTLength)
+            if(size_1d < 2 || size_1d > static_cast<long>(Max1DLUTLength))
             {
                 std::ostringstream os;
                 os << "1D LUT size must be between 2 and " << Max1DLUTLength << ", found: " << size_1d;
@@ -488,7 +488,7 @@ LocalFileFormat::read(std::istream & istream,
         if(cachedFile->hdltype == "3d+1d")
         {
             size_prelut = lut_sizes[1];
-            if(size_prelut < 2 || size_prelut > (long)Max1DLUTLength)
+            if(size_prelut < 2 || size_prelut > static_cast<long>(Max1DLUTLength))
             {
                 std::ostringstream os;
                 os << "Prelut size must be between 2 and " << Max1DLUTLength << ", found: " << size_prelut;

@@ -158,7 +158,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                             fileName, lineNumber, line);
                     }
 
-                    if (size3d[0] < 2 || size3d[0] > (long)Max3DLUTLength)
+                    if (size3d[0] < 2 || size3d[0] > static_cast<long>(Max3DLUTLength))
                     {
                         ThrowErrorMessage(
                             ("Grid size must be between 2 and "
