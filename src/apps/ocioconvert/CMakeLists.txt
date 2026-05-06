@@ -40,3 +40,7 @@ ocio_strip_binary(ocioconvert)
 install(TARGETS ocioconvert
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+
+# Set the debugger environment so that the executable can be launched
+# directly within IDE (e.g. Visual Studio).
+set_debugger_env(ocioconvert NEEDS_GL)

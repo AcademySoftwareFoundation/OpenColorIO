@@ -48,16 +48,20 @@ endif()
 
 # Note: To avoid changing PATH from outside the cmake files.
 if(MSVC AND BUILD_SHARED_LIBS)
+	# Build time list of runtime dll dirs for the exe target.
+	set(dll_dirs_expr "$<JOIN:$<TARGET_RUNTIME_DLL_DIRS:test_gpu_exec>,;>")
 
-    if (MSVC_IDE)
-        # Note: By default Microsoft Visual Studio editor happens the build type to the build directory.
-        set(BUILD_TYPE ${CMAKE_BUILD_TYPE})
-    endif()
+	# Add folders for glut and glew DLLs.
+	set(extra_dirs "${GLUT_INCLUDE_DIR}/../bin\\;${GLEW_INCLUDE_DIRS}/../bin\\")
 
-    set(NEW_PATH "${PROJECT_BINARY_DIR}/src/OpenColorIO/${BUILD_TYPE}")
-    set(NEW_PATH "${NEW_PATH}\\\;${GLUT_INCLUDE_DIR}/../bin")
-    set(NEW_PATH "${NEW_PATH}\\\;${GLEW_INCLUDE_DIRS}/../bin")
+	# Tell CTest to use this PATH while launching test_gpu_exec
+	set_tests_properties(test_gpu PROPERTIES
+		ENVIRONMENT "PATH=${dll_dirs_expr}\\;${extra_dirs}"
+	)
 
-    set_tests_properties(test_gpu PROPERTIES ENVIRONMENT PATH=${NEW_PATH})
-
+	# Also set the debugger environment so that you can launch 
+	# test_gpu_exec directly within Visual Studio.
+	set_property(TARGET test_gpu_exec PROPERTY
+		VS_DEBUGGER_ENVIRONMENT "PATH=${dll_dirs_expr};${extra_dirs};%PATH%"
+	)
 endif()
