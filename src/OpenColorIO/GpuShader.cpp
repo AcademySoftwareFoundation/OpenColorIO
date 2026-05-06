@@ -11,7 +11,7 @@
 
 #include "DynamicProperty.h"
 #include "GpuShader.h"
-#include "ops/lut3d/Lut3DOpData.h"
+#include "LutLimits.h"
 #include "Platform.h"
 
 namespace OCIO_NAMESPACE
@@ -194,7 +194,7 @@ public:
 
     virtual ~PrivateImpl() {}
 
-    inline unsigned get3dLutMaxLength() const { return Lut3DOpData::maxSupportedLength; }
+    inline unsigned get3dLutMaxLength() const { return Max3DLUTLength; }
 
     inline unsigned get1dLutMaxWidth() const { return m_max1DLUTWidth; }
     inline void set1dLutMaxWidth(unsigned maxWidth) { m_max1DLUTWidth = maxWidth; }

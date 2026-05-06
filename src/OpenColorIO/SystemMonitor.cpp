@@ -8,6 +8,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "Logging.h"
 #include "Mutex.h"
 #include "SystemMonitor.h"
 
@@ -62,7 +63,14 @@ ConstSystemMonitorsRcPtr SystemMonitors::Get() noexcept
     if (!monitors)
     {
         SystemMonitorsRcPtr m = std::make_shared<SystemMonitorsImpl>();
-        DynamicPtrCast<SystemMonitorsImpl>(m)->getAllMonitors();
+        try
+        {
+            DynamicPtrCast<SystemMonitorsImpl>(m)->getAllMonitors();
+        }
+        catch (const std::exception & ex)
+        {
+            LogDebug(ex.what());
+        }
         monitors = m;
     }
 

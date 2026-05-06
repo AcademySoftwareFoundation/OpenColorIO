@@ -51,6 +51,7 @@ public:
 
     void addToken(const char * token)
     {
+        if (!token || !*token) return;
         if (findToken(token) == m_tokens.end())
         {
             m_tokens.push_back(StringUtils::Trim(token));

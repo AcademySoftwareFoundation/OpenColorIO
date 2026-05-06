@@ -586,6 +586,10 @@ namespace SampleICC
             if (!Read32(istream, &sizeData, 1))
                 return false;
 
+            // ICC curve entries are indexed by 16-bit values; 65536 is the maximum.
+            if (sizeData > 65536)
+                return false;
+
             mCurve.resize(sizeData);
 
             if (sizeData)

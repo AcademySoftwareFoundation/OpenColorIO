@@ -387,6 +387,21 @@ void ExtractOCIOZArchive(const char * archivePath, const char * destination)
     mz_zip_reader_delete(&extracter);
 }
 
+std::vector<uint8_t> readEntryBuffer(void * reader)
+{
+    int32_t buf_size = (int32_t)mz_zip_reader_entry_save_buffer_length(reader);
+    // Reject negative values (minizip error codes) and implausibly large entries.
+    // 256 MB is well above any realistic individual OCIO config or LUT file size.
+    static constexpr size_t MAX_ENTRY_SIZE = 256 * 1024 * 1024;
+    if (buf_size <= 0 || (size_t)buf_size > MAX_ENTRY_SIZE)
+    {
+        throw Exception("OCIOZ archive entry size is invalid or exceeds maximum allowed size.");
+    }
+    std::vector<uint8_t> buffer(buf_size);
+    mz_zip_reader_entry_save_buffer(reader, &buffer[0], buf_size);
+    return buffer;
+}
+
 /**
  * \brief Callback function for getFileStringFromArchiveStream in order to get the contents of a
  *        file inside an OCIOZ archive as a buffer. 
@@ -406,11 +421,7 @@ std::vector<uint8_t> getFileBufferByPath(void * reader, mz_zip_file & info, std:
     std::vector<uint8_t> buffer;
     if (mz_path_compare_wc(filepath.c_str(), info.filename, 1) == MZ_OK)
     {
-        // Initialize the buffer for the file.
-        int32_t buf_size = (int32_t)mz_zip_reader_entry_save_buffer_length(reader);
-        buffer.resize(buf_size);
-        // Read the content of the file and return it as buffer.
-        mz_zip_reader_entry_save_buffer(reader, &buffer[0], buf_size);
+        buffer = readEntryBuffer(reader);
     }
     return buffer;
 }
@@ -434,9 +445,7 @@ std::vector<uint8_t> getFileBufferByExtension(void * reader, mz_zip_file & info,
     pystring::os::path::splitext(root, ext, info.filename);
     if (Platform::Strcasecmp(extension.c_str(), ext.c_str()) == 0)
     {
-        int32_t buf_size = (int32_t)mz_zip_reader_entry_save_buffer_length(reader);
-        buffer.resize(buf_size);
-        mz_zip_reader_entry_save_buffer(reader, &buffer[0], buf_size);
+        buffer = readEntryBuffer(reader);
     }
     return buffer;
 }

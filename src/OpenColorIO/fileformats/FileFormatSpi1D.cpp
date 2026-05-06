@@ -179,6 +179,12 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
     {
         ThrowErrorMessage("Could not find 'Length' Tag", -1, "");
     }
+    if (lut_size < 2 || lut_size > static_cast<long>(Max1DLUTLength))
+    {
+        ThrowErrorMessage(
+            ("'Length' must be between 2 and " + std::to_string(Max1DLUTLength)).c_str(),
+            -1, "");
+    }
     if (components == -1)
     {
         ThrowErrorMessage("Could not find 'Components' Tag", -1, "");

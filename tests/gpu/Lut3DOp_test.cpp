@@ -8,6 +8,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "GPUUnitTest.h"
+#include "LutLimits.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -241,7 +242,7 @@ OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_biggest_supported)
 {
     // Linear interpolation
     OCIO::Lut3DTransformRcPtr lut = OCIO::Lut3DTransform::Create();
-    lut->setGridSize(129); // Lut3DOpData::maxSupportedLength.
+    lut->setGridSize(OCIO::Max3DLUTLength);
 
     test.setProcessor(lut);
 

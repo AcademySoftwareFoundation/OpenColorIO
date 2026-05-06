@@ -165,6 +165,15 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                         lineNumber,
                         line);
                 }
+                if (size < 2 || size > static_cast<long>(Max3DLUTLength))
+                {
+                    ThrowErrorMessage(
+                        ("LUT_3D_SIZE must be between 2 and "
+                         + std::to_string(Max3DLUTLength) + ".").c_str(),
+                        fileName,
+                        lineNumber,
+                        line);
+                }
                 size3d = size;
 
                 raw.reserve(3*size3d * size3d * size3d);
@@ -179,6 +188,15 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                 {
                     ThrowErrorMessage(
                         "Malformed color triples specified.",
+                        fileName,
+                        lineNumber,
+                        line);
+                }
+
+                if (raw.size() > Max3DLUTLength * Max3DLUTLength * Max3DLUTLength * 3)
+                {
+                    ThrowErrorMessage(
+                        "Too many 3D LUT entries.",
                         fileName,
                         lineNumber,
                         line);

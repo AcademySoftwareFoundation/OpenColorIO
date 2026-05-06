@@ -4413,17 +4413,24 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
 
         results = StringUtils::Split(version, '.');
 
-        if(results.size()==1)
+        try
         {
-            profile_major_version = std::stoi(results[0].c_str());
-            profile_minor_version = 0;
+            if(results.size()==1)
+            {
+                profile_major_version = std::stoi(results[0].c_str());
+                profile_minor_version = 0;
+            }
+            else if(results.size()==2)
+            {
+                profile_major_version = std::stoi(results[0].c_str());
+                profile_minor_version = std::stoi(results[1].c_str());
+            }
+            else
+            {
+                faulty_version = true;
+            }
         }
-        else if(results.size()==2)
-        {
-            profile_major_version = std::stoi(results[0].c_str());
-            profile_minor_version = std::stoi(results[1].c_str());
-        }
-        else
+        catch (const std::exception &)
         {
             faulty_version = true;
         }

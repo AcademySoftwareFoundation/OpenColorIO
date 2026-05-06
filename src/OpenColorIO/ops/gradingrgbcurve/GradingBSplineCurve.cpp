@@ -1155,7 +1155,12 @@ void GradingBSplineCurveImpl::AddShaderEvalRev(GpuShaderText & st,
     st.newLine() << "float kn = " << knots << "[knotsOffs + i];";
     st.newLine() << "float C0 = C - x;";
     st.newLine() << "float discrim = sqrt(B * B - 4. * A * C0);";
-    st.newLine() << "return kn + (-2. * C0) / (discrim + B);";
+    st.newLine() << "float denom = discrim + B;";
+    st.newLine() << "if (abs(denom) < 1e-5)";
+    st.newLine() << "{";
+    st.newLine() << "  return abs(B) < 1e-5 ? kn : kn + (-C0 / B);";
+    st.newLine() << "}";
+    st.newLine() << "return kn + (-2. * C0) / denom;";
 }
 
 //------------------------------------------------------------------------------------------------
@@ -1229,7 +1234,12 @@ void GradingBSplineCurveImpl::AddShaderEvalRevHue(GpuShaderText & st,
     st.newLine() << "}";
     st.newLine() << "float C0 = C - x;";
     st.newLine() << "float discrim = sqrt(B * B - 4. * A * C0);";
-    st.newLine() << "return kn + (-2. * C0) / (discrim + B);";
+    st.newLine() << "float denom = discrim + B;";
+    st.newLine() << "if (abs(denom) < 1e-5)";
+    st.newLine() << "{";
+    st.newLine() << "  return abs(B) < 1e-5 ? kn : kn + (-C0 / B);";
+    st.newLine() << "}";
+    st.newLine() << "return kn + (-2. * C0) / denom;";
 }
 
 //------------------------------------------------------------------------------------------------
@@ -1360,7 +1370,13 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRev(int c, float y) const
         const float kn = m_knotsArray[knotsOffs + i];
         const float C0 = C - y;
         const float discrim = sqrt(B * B - 4.f * A * C0);
-        return kn + (-2.f * C0) / (discrim + B);
+        const float denom = discrim + B;
+        if (std::fabs(denom) < 1e-5f)
+        {
+            // A~=0, B<0: linear segment with negative slope; use linear inverse.
+            return std::fabs(B) < 1e-5f ? kn : kn + (-C0 / B);
+        }
+        return kn + (-2.f * C0) / denom;
     }
 }
 
@@ -1432,7 +1448,13 @@ float GradingBSplineCurveImpl::KnotsCoefs::evalCurveRevHue(int c, float y) const
     }
     const float C0 = C - y;
     const float discrim = sqrt(B * B - 4.f * A * C0);
-    return kn + (-2.f * C0) / (discrim + B);
+    const float denom = discrim + B;
+    if (std::fabs(denom) < 1e-5f)
+    {
+        // A~=0, B<0: linear segment with negative slope; use linear inverse.
+        return std::fabs(B) < 1e-5f ? kn : kn + (-C0 / B);
+    }
+    return kn + (-2.f * C0) / denom;
     // Note: The caller should wrap to ensure the output is a hue on [0,1).
 }
 
