@@ -1107,6 +1107,74 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_gamut_compress_inv)
     test.setErrorThreshold(4e-4f);
 }
 
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_gamut_compress_no1dlut)
+{
+    // Test the 2D TEXTURE path used for Reach and Cusp table sampling
+    // OpenGL tests would otherwise not use it and prefer 1D TEXTURE
+
+    const double data[9] = {
+        // Peak luminance
+        1000.f,
+        // P3D65 gamut
+        0.680, 0.320, 0.265, 0.690, 0.150, 0.060, 0.3127, 0.3290
+    };
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20, &data[0], 9);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    test.setProcessor(func);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues =
+    {
+        // ACEScg primaries and secondaries scaled by 4
+        110.702453613f, 211.251770020f, 25.025110245f, 1.0f,
+        168.016815186f, 129.796249390f, 106.183448792f, 1.0f,
+        140.814849854f, 193.459213257f, 147.056488037f, 1.0f,
+        156.429519653f, 110.938514709f, 192.204727173f, 1.0f,
+        80.456542969f, 98.490524292f, 268.442108154f, 1.0f,
+        135.172195435f, 175.559280396f, 341.715240479f, 1.0f,
+        // OCIO test values
+        18.187314987f, 33.819175720f, 4.173158169f, 0.5f,
+        80.413116455f, 21.309329987f, 332.159759521f, 1.0f,
+        83.447891235f, 37.852291107f, 182.925750732f, 0.0f,
+        // ColorChecker24 (SMPTE 2065-1 2021)
+        27.411964417f, 13.382769585f, 38.146659851f, 1.0f,
+        59.987670898f, 14.391894341f, 39.841842651f, 1.0f,
+        43.298923492f, 12.199877739f, 249.107116699f, 1.0f,
+        31.489658356f, 14.075142860f, 128.878036499f, 1.0f,
+        50.749198914f, 12.731814384f, 285.658966064f, 1.0f,
+        64.728637695f, 18.593795776f, 179.324264526f, 1.0f,
+        53.399448395f, 37.394428253f, 50.924011230f, 1.0f,
+        34.719596863f, 21.616765976f, 271.008331299f, 1.0f,
+        43.910713196f, 36.788166046f, 13.975610733f, 1.0f,
+        23.196525574f, 15.118354797f, 317.544281006f, 1.0f,
+        63.348674774f, 33.283493042f, 119.145133972f, 1.0f,
+        64.908889771f, 35.371044159f, 70.842193604f, 1.0f,
+        24.876911163f, 23.143159866f, 273.228973389f, 1.0f,
+        44.203376770f, 28.918329239f, 144.154159546f, 1.0f,
+        32.824356079f, 43.447875977f, 17.892261505f, 1.0f,
+        75.830871582f, 39.872474670f, 90.752044678f, 1.0f,
+        45.823116302f, 34.652069092f, 348.832092285f, 1.0f,
+        43.597240448f, 23.079078674f, 218.454376221f, 1.0f,
+        96.212783813f, 0.322624743f, 108.271926880f, 1.0f,
+        78.222122192f, 0.094044082f, 33.296318054f, 1.0f,
+        60.364795685f, 0.031291425f, 291.004058838f, 1.0f,
+        43.659111023f, 0.038717352f, 297.386047363f, 1.0f,
+        26.623359680f, 0.269155562f, 234.276382446f, 1.0f,
+        12.961384773f, 0.366550505f, 255.025634766f, 1.0f,
+        // Spectrally non-selective 18 % reflecting diffuser
+        40.609165192f, 0.000000000f, 299.357757568f, 1.0f,
+        // Perfect reflecting diffuser
+        101.899215698f, 0.000068110f, 5.640549183f, 1.0f,
+    };
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(1e-4f);
+
+    test.getShaderDesc()->setAllowTexture1D(false);
+}
+
 // The next four tests run into a problem on some graphics cards where 0.0 * Inf = 0.0,
 // rather than the correct value of NaN.  Therefore turning off TestInfinity for these tests.
 
