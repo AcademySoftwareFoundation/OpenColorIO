@@ -114,11 +114,17 @@ void SetLoggingLevel(LoggingLevel level)
 
 void SetLoggingFunction(LoggingFunction logFunction)
 {
+    if (!logFunction)
+    {
+        throw Exception("SetLoggingFunction: logFunction must not be null.");
+    }
+    AutoMutex lock(g_logmutex);
     g_loggingFunction = logFunction;
 }
 
 void ResetToDefaultLoggingFunction()
 {
+    AutoMutex lock(g_logmutex);
     g_loggingFunction = DefaultLoggingFunction;
 }
 

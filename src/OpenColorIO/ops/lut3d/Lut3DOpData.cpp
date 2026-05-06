@@ -58,9 +58,6 @@ Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut)
     return result;
 }
 
-// 129 allows for a MESH dimension of 7 in the 3dl file format.
-const unsigned long Lut3DOpData::maxSupportedLength = 129;
-
 // Functional composition is a concept from mathematics where two functions
 // are combined into a single function.  This idea may be applied to ops
 // where we generate a single op that has the same (or similar) effect as
@@ -196,11 +193,11 @@ void Lut3DOpData::Lut3DArray::fill()
 
 void Lut3DOpData::Lut3DArray::resize(unsigned long length, unsigned long numColorComponents)
 {
-    if (length > maxSupportedLength)
+    if (length > Max3DLUTLength)
     {
         std::ostringstream oss;
         oss << "LUT 3D: Grid size '" << length
-            << "' must not be greater than '" << maxSupportedLength << "'.";
+            << "' must not be greater than '" << Max3DLUTLength << "'.";
         throw Exception(oss.str().c_str());
     }
     Array::resize(length, numColorComponents);
@@ -389,7 +386,7 @@ void Lut3DOpData::validate() const
         throw Exception("Lut3D has an incorrect number of color components. ");
     }
 
-    if (getArray().getLength()>maxSupportedLength)
+    if (getArray().getLength()>Max3DLUTLength)
     {
         // This should never happen. Enforced by resize.
         std::ostringstream oss;

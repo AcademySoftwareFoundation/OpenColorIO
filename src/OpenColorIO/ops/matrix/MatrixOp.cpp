@@ -304,7 +304,12 @@ void CreateMinMaxOp(OpRcPtrVec & ops,
     bool somethingToDo = false;
     for (int i = 0; i < 3; ++i)
     {
-        scale4[i] = 1.0 / (from_max3[i] - from_min3[i]);
+        const double range = from_max3[i] - from_min3[i];
+        if (range == 0.0)
+        {
+            throw Exception("CreateMinMaxOp: from_min and from_max must not be equal.");
+        }
+        scale4[i] = 1.0 / range;
         offset4[i] = -from_min3[i] * scale4[i];
         somethingToDo |= (scale4[i] != 1.0 || offset4[i] != 0.0);
     }

@@ -61,14 +61,24 @@ public:
 
     bool hasKey(const char * key)
     {
-        std::string s = key;
-        return m_customKeys.count(s) > 0;
+        if (!key || !*key) return false;
+        return m_customKeys.count(key) > 0;
     }
 
     const char * getValueForKey(const char * key)
     {
-        // NB: Will throw if the map doesn't have the key.
-        return m_customKeys[key].c_str();
+        if (!key || !*key)
+        {
+            throw Exception("Key has to be a non-empty string.");
+        }
+        auto it = m_customKeys.find(key);
+        if (it == m_customKeys.end())
+        {
+            std::ostringstream oss;
+            oss << "Key '" << key << "' not found.";
+            throw Exception(oss.str().c_str());
+        }
+        return it->second.c_str();
     }
 
 private:

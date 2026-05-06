@@ -67,6 +67,7 @@ const char * NamedTransformImpl::getAlias(size_t idx) const noexcept
 
 bool NamedTransformImpl::hasAlias(const char * alias) const noexcept
 {
+    if (!alias || !*alias) return false;
     for (size_t idx = 0; idx < m_aliases.size(); ++idx)
     {
         if (0 == Platform::Strcasecmp(m_aliases[idx].c_str(), alias))

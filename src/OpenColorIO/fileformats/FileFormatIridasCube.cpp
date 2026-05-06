@@ -205,6 +205,16 @@ LocalFileFormat::read(std::istream & istream,
                         line);
                 }
 
+                if (size1d < 2 || size1d > static_cast<long>(Max1DLUTLength))
+                {
+                    ThrowErrorMessage(
+                        ("'LUT_1D_SIZE' must be between 2 and "
+                         + std::to_string(Max1DLUTLength) + ".").c_str(),
+                        fileName,
+                        lineNumber,
+                        line);
+                }
+
                 raw.reserve(3*size1d);
                 in1d = true;
             }
@@ -226,6 +236,16 @@ LocalFileFormat::read(std::istream & istream,
                 {
                     ThrowErrorMessage(
                         "Malformed 'LUT_3D_SIZE' tag.",
+                        fileName,
+                        lineNumber,
+                        line);
+                }
+
+                if (size3d < 2 || size3d > static_cast<long>(Max3DLUTLength))
+                {
+                    ThrowErrorMessage(
+                        ("'LUT_3D_SIZE' must be between 2 and "
+                         + std::to_string(Max3DLUTLength) + ".").c_str(),
                         fileName,
                         lineNumber,
                         line);
@@ -322,9 +342,9 @@ LocalFileFormat::read(std::istream & istream,
             char valB[64] = "";
 
 #ifdef _WIN32
-            if (sscanf_s(line.c_str(), "%s %s %s %c", valR, 64, valG, 64, valB, 64, &endTok, 1) != 3)
+            if (sscanf_s(line.c_str(), "%63s %63s %63s %c", valR, 64, valG, 64, valB, 64, &endTok, 1) != 3)
 #else
-            if (sscanf(line.c_str(), "%s %s %s %c", valR, valG, valB, &endTok) != 3)
+            if (sscanf(line.c_str(), "%63s %63s %63s %c", valR, valG, valB, &endTok) != 3)
 #endif
             {
                 // It must be a float triple!

@@ -201,9 +201,9 @@ std::ostream & operator<< (std::ostream & os, const Lut3DTransform & t)
                     rMin = std::min(rMin, rv);
                     gMin = std::min(gMin, gv);
                     bMin = std::min(bMin, bv);
-                    rMax = std::max(rMin, rv);
-                    gMax = std::max(gMin, gv);
-                    bMax = std::max(bMin, bv);
+                    rMax = std::max(rMax, rv);
+                    gMax = std::max(gMax, gv);
+                    bMax = std::max(bMax, bv);
                 }
             }
         }

@@ -477,16 +477,19 @@ ConstConfigRcPtr ConfigMerger::Impl::loadConfig(const char * value) const
         try
         {
             // Try to load the provided config using the search paths.
-            // Return as soon as they find a valid path.
-            const std::string resolvedfullpath = pystring::os::path::join(searchpaths[i], 
-                                                                          value);
+            // Return as soon as a valid path is found.
+            // Normalize the path to prevent directory traversal via '../' sequences.
+            const std::string resolvedfullpath = pystring::os::path::normpath(
+                pystring::os::path::join(searchpaths[i], value));
             return Config::CreateFromFile(resolvedfullpath.c_str());
         }
         // TODO: If the file exists but won't load, this hides the error.
         // (Tried using ExceptionMissingFile, but the implementation of that is not what I
         // expected, Config::CreateFromFile only uses that if the argument is empty, not
         // if it can't read the file.)
-        catch(...) { /* don't capture the exception */ }
+        // There is no need to log a warning here, since this is simply trying the various
+        // locations on the path that might contain the config.
+        catch(...) { }
     }
 
     // Try to load the provided base config name as a built-in config.
@@ -495,7 +498,9 @@ ConstConfigRcPtr ConfigMerger::Impl::loadConfig(const char * value) const
         // Check if the base config name is a built-in config.
         return Config::CreateFromBuiltinConfig(value);
     }
-    catch(...) { /* don't capture the exception */ }
+    // There is no need to log a warning here, since this is simply trying the various
+    // possible sources for the named config.
+    catch(...) { }
 
     // Must be a reference to a config from a previous merge.
     for (size_t i = 0; i < m_mergeParams.size(); i++)

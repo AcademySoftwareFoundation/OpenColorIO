@@ -501,9 +501,10 @@ void AddGPVideoInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     st.newLine() << pxl << ".rgb = ( " << pxl << ".rgb - " << props.pivotBlack << " ) * "<< props.slope
                                 <<" + " << props.pivotBlack << ";";
-    st.newLine() << pxl << ".rgb += " << props.offset << " );";
+    st.newLine() << pxl << ".rgb += " << props.offset << ";";
 }
-}
+
+} // namespace
 
 void GetGradingPrimaryGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
                                        ConstGradingPrimaryOpDataRcPtr & gpData)

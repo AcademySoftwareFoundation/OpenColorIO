@@ -52,7 +52,7 @@ void AddView(ViewVec & views, const char * name, const char * viewTransform,
              const char * displayColorSpace, const char * looks,
              const char * rule, const char * description)
 {
-    if (0 == Platform::Strcasecmp(displayColorSpace, OCIO_VIEW_USE_DISPLAY_NAME))
+    if (displayColorSpace && 0 == Platform::Strcasecmp(displayColorSpace, OCIO_VIEW_USE_DISPLAY_NAME))
     {
         displayColorSpace = OCIO_VIEW_USE_DISPLAY_NAME;
     }

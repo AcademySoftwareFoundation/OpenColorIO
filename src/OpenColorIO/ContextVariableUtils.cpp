@@ -101,10 +101,12 @@ void LoadEnvironment(EnvMap & map, bool update)
 
         const std::string env_str = (char*)*env;
 #endif
-        const int pos = static_cast<int>(env_str.find_first_of('='));
+        const auto pos = env_str.find_first_of('=');
+
+        if (pos == std::string::npos) continue;
 
         const std::string name  = env_str.substr(0, pos);
-        const std::string value = env_str.substr(pos+1, env_str.length());
+        const std::string value = env_str.substr(pos+1);
 
         if (update)
         {
@@ -122,8 +124,12 @@ void LoadEnvironment(EnvMap & map, bool update)
     }
 }
 
-std::string ResolveContextVariables(const std::string & str, const EnvMap & map, UsedEnvs & used)
+static std::string ResolveContextVariablesImpl(const std::string & str, const EnvMap & map,
+                                               UsedEnvs & used, int depth)
 {
+    // Guard against infinite recursion from cyclic variable references.
+    if (depth > 32) return str;
+
     // Early exit if no reserved tokens are found.
     if (!ContainsContextVariables(str))
     {
@@ -159,10 +165,15 @@ std::string ResolveContextVariables(const std::string & str, const EnvMap & map,
     // recursively call till string doesn't expand anymore
     if(newstr != orig)
     {
-        return ResolveContextVariables(newstr, map, used);
+        return ResolveContextVariablesImpl(newstr, map, used, depth + 1);
     }
 
     return orig;
+}
+
+std::string ResolveContextVariables(const std::string & str, const EnvMap & map, UsedEnvs & used)
+{
+    return ResolveContextVariablesImpl(str, map, used, 0);
 }
 
 bool CollectContextVariables(const Config & config, 
