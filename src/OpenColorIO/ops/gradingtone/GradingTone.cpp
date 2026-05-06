@@ -60,7 +60,7 @@ void GradingTone::validate() const
     static constexpr double MinSHTol  = MinSH - Error;
     static constexpr double MaxSHTol  = MaxSH + Error;
     static constexpr double MinWSCTol = MinWSC - Error;
-    static constexpr double MaxSCTol  = MaxSC - Error;
+    static constexpr double MaxSCTol  = MaxSC + Error;
 
     {
         const auto & bd = m_blacks;
