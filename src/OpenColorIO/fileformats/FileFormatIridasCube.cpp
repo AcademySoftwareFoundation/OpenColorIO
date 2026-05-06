@@ -241,9 +241,9 @@ LocalFileFormat::read(std::istream & istream,
                 char domainMinB[64] = "";
 
 #ifdef _WIN32
-                if (sscanf_s(line.c_str(), "domain_min %s %s %s %c", domainMinR, 64, domainMinG, 64, domainMinB, 64, &endTok, 1) != 3)
+                if (sscanf_s(line.c_str(), "domain_min %63s %63s %63s %c", domainMinR, 64, domainMinG, 64, domainMinB, 64, &endTok, 1) != 3)
 #else
-                if (sscanf(line.c_str(), "domain_min %s %s %s %c", domainMinR, domainMinG, domainMinB, &endTok) != 3)
+                if (sscanf(line.c_str(), "domain_min %63s %63s %63s %c", domainMinR, domainMinG, domainMinB, &endTok) != 3)
 #endif
                 {
                     ThrowErrorMessage(
@@ -275,9 +275,9 @@ LocalFileFormat::read(std::istream & istream,
                 char domainMaxB[64] = "";
 
 #ifdef _WIN32
-                if (sscanf_s(line.c_str(), "domain_max %s %s %s %c", domainMaxR, 64, domainMaxG, 64, domainMaxB, 64, &endTok, 1) != 3)
+                if (sscanf_s(line.c_str(), "domain_max %63s %63s %63s %c", domainMaxR, 64, domainMaxG, 64, domainMaxB, 64, &endTok, 1) != 3)
 #else
-                if (sscanf(line.c_str(), "domain_max %s %s %s %c", domainMaxR, domainMaxG, domainMaxB, &endTok) != 3)
+                if (sscanf(line.c_str(), "domain_max %63s %63s %63s %c", domainMaxR, domainMaxG, domainMaxB, &endTok) != 3)
 #endif
                 {
                     ThrowErrorMessage(

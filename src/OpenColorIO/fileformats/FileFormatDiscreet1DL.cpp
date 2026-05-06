@@ -411,9 +411,9 @@ int Lut1dUtils::IMLutGet(
     {
         char dstDepthS[16] = "";
 #ifdef _WIN32
-        const int nummatched = sscanf(InString, "%*s %d %d %s", &numtables, &length, dstDepthS, 16);
+        const int nummatched = sscanf_s(InString, "%*s %d %d %15s", &numtables, &length, dstDepthS, 16);
 #else
-        const int nummatched = sscanf(InString, "%*s %d %d %s", &numtables, &length, dstDepthS);
+        const int nummatched = sscanf(InString, "%*s %d %d %15s", &numtables, &length, dstDepthS);
 #endif
         std::string subStr(InString, 5);
         if (nummatched < 2 ||
