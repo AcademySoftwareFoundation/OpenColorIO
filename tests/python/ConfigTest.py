@@ -1011,7 +1011,7 @@ colorspaces:
         nbOfColorspacesForStudioConfig = 55
 
         # Test that CreateFromFile does not work without ocio:// prefix for built-in config.
-        with self.assertRaises(OCIO.Exception) as cm:
+        with self.assertRaises(OCIO.ExceptionMissingFile) as cm:
             OCIO.Config.CreateFromFile(cgConfigName)
 
         # Test CG config.
