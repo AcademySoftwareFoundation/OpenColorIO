@@ -1170,7 +1170,7 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
     if (!FileExists(filename))
     {
         std::ostringstream oss;
-        oss << filename << " does not exists.";
+        oss << "'" << filename << "' does not exist.";
         throw ExceptionMissingFile(oss.str().c_str());
     }
 
