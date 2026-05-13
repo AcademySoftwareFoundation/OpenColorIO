@@ -23,10 +23,6 @@ Include detailed steps to reproduce the issue, and any other information that
 could aid an investigation. Someone will assess the report and make every
 effort to respond within 14 days.
 
-## History of CVE Fixes
-
-None
-
 ## File Format Expectations
 
 Attempting to read an OCIO config (YAML) file will:
@@ -60,3 +56,7 @@ set of behaviors as with file loading.
 It is a bug if calling a function with well-formed arguments causes the 
 library to crash. It is a security issue if calling a function with 
 well-formed arguments causes arbitrary code execution.
+
+## History of CVE Fixes
+
+CVE-2026-42450 -- Stack buffer overflow in sscanf. (Fixed in OCIO 2.5.2)
