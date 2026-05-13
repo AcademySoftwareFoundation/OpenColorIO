@@ -262,6 +262,7 @@ T Intersection(const T & list0, const T & list1)
 
 StringUtils::StringVec ExtractItems(const char * strings)
 {
+    if (!strings) return {};
     StringUtils::StringVec tmp = StringUtils::Split(StringUtils::Lower(strings), ',');
     StringUtils::StringVec all;
 

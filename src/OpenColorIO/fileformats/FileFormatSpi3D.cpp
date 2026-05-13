@@ -128,6 +128,17 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
         throw Exception(os.str().c_str());
     }
 
+    if (rSize < 2 || rSize > static_cast<long>(Max3DLUTLength))
+    {
+        std::ostringstream os;
+        os << "Error parsing .spi3d file (";
+        os << fileName;
+        os << "). ";
+        os << "LUT size must be between 2 and " << Max3DLUTLength << ". Found: '";
+        os << lineBuffer << "'.";
+        throw Exception(os.str().c_str());
+    }
+
     Lut3DOpDataRcPtr lut3d = std::make_shared<Lut3DOpData>((unsigned long)rSize);
     if (Lut3DOpData::IsValidInterpolation(interp))
     {
@@ -153,14 +164,13 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
         char blueValueS[64] = "";
 
 #ifdef _WIN32
-        if (sscanf(lineBuffer,
-            "%d %d %d %s %s %s",
+        if (sscanf_s(lineBuffer, "%d %d %d %63s %63s %63s",
             &rIndex, &gIndex, &bIndex,
             redValueS, 64,
             greenValueS, 64,
             blueValueS, 64) == 6)
 #else
-        if (sscanf(lineBuffer, "%d %d %d %s %s %s",
+        if (sscanf(lineBuffer, "%d %d %d %63s %63s %63s",
             &rIndex, &gIndex, &bIndex,
             redValueS, greenValueS, blueValueS) == 6)
 #endif

@@ -406,7 +406,7 @@ void AddDisplayView(ConfigRcPtr & config,
         {
             std::string errMsg;
             errMsg += "Connection color space name '";
-            errMsg += connectionColorSpaceName;
+            errMsg += connectionColorSpaceName ? connectionColorSpaceName : "(null)";
             errMsg += "' does not exist.";
 
             throw Exception(errMsg.c_str());
@@ -502,6 +502,8 @@ void AddDisplayView(ConfigRcPtr & config,
 
 void RemoveDisplayView(ConfigRcPtr & config, const char * displayName, const char * viewName)
 {
+    if (!displayName || !viewName) return;
+
     const std::string name{ config->getDisplayViewColorSpaceName(displayName, viewName) };
     const std::string csName{ name.empty() ? displayName : name };
     if (csName.empty())

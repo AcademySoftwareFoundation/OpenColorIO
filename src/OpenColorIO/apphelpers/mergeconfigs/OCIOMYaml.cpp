@@ -299,8 +299,7 @@ void OCIOMYaml::loadParams(const YAML::Node & node, ConfigMergingParametersRcPtr
         }                                                          
         else
         {
-            // Handle unsupported property or use default handler.
-            std::cout << "Unsupported property : " << key << std::endl;
+            LogWarning("Unsupported property in merge params: " + key);
         }
     }
 }
@@ -324,15 +323,34 @@ void OCIOMYaml::load(const YAML::Node& node, ConfigMergerRcPtr & merger, const c
             load(node["ociom_version"], version);
             results = StringUtils::Split(version, '.');
 
-            if(results.size() == 1)
+            bool faulty_version = false;
+            try
             {
-                merger->setVersion(std::stoi(results[0].c_str()), 0);
+                if(results.size() == 1)
+                {
+                    merger->setVersion(std::stoi(results[0].c_str()), 0);
+                }
+                else if(results.size() == 2)
+                {
+                    merger->setVersion(std::stoi(results[0].c_str()),
+                                       std::stoi(results[1].c_str()));
+                }
+                else
+                {
+                    faulty_version = true;
+                }
             }
-            else if(results.size() == 2)
+            catch (const std::exception &)
             {
-                merger->setVersion(std::stoi(results[0].c_str()),
-                                   std::stoi(results[1].c_str()));
+                faulty_version = true;
             }
+
+            if (faulty_version)
+            {
+                throwValueError(it->second.Tag(), it->first,
+                                "The value '" + version + "' is not a valid OCIOM version.");
+            }
+
             if (merger->getMajorVersion() > 1u || merger->getMinorVersion() > 0u)
             {
                 throwValueError(it->second.Tag(), it->first,

@@ -149,6 +149,12 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                         throw Exception(os.str().c_str());
                     }
 
+                    if (size3d[0] < 2 || size3d[0] > static_cast<long>(Max3DLUTLength))
+                    {
+                        throw Exception(("Truelight .cub LUT grid size must be between 2 and "
+                                         + std::to_string(Max3DLUTLength) + ".").c_str());
+                    }
+
                     raw3d.reserve(3*size3d[0]*size3d[1]*size3d[2]);
                 }
                 else if(parts[1] == "lutlength")
@@ -158,6 +164,12 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                     {
                         throw Exception("Malformed lutlength tag in Truelight .cub LUT.");
                     }
+                    if (size1d < 2 || size1d > static_cast<long>(Max1DLUTLength))
+                    {
+                        throw Exception(("Truelight .cub LUT lutlength must be between 2 and "
+                                         + std::to_string(Max1DLUTLength) + ".").c_str());
+                    }
+
                     raw1d.reserve(3*size1d);
                 }
                 else if(parts[1] == "inputlut")
@@ -187,12 +199,20 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                 {
                     if(in1d)
                     {
+                        if (raw1d.size() > Max1DLUTLength * 3)
+                        {
+                            throw Exception("Too many 1D LUT entries in Truelight .cub LUT.");
+                        }
                         raw1d.push_back(tmpfloats[0]);
                         raw1d.push_back(tmpfloats[1]);
                         raw1d.push_back(tmpfloats[2]);
                     }
                     else if(in3d)
                     {
+                        if (raw3d.size() > Max3DLUTLength * Max3DLUTLength * Max3DLUTLength * 3)
+                        {
+                            throw Exception("Too many 3D LUT entries in Truelight .cub LUT.");
+                        }
                         raw3d.push_back(tmpfloats[0]);
                         raw3d.push_back(tmpfloats[1]);
                         raw3d.push_back(tmpfloats[2]);

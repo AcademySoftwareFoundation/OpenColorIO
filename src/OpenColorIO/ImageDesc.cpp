@@ -260,6 +260,7 @@ struct PackedImageDesc::Impl
         {
             // Confirm xStrideBytes is a pure packing
             // (I.e., it will divide evenly)
+            if (m_chanStrideBytes == 0) return false;
             const div_t result = div((int)m_xStrideBytes, (int)m_chanStrideBytes);
             if(result.rem != 0) return false;
 

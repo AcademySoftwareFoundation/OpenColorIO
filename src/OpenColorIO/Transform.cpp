@@ -373,9 +373,10 @@ void CreateTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     }
     else
     {
+        const auto & ref = *op;
         std::ostringstream error;
         error << "CreateTransform from op. Missing implementation for: "
-                <<  typeid(op).name();
+              << typeid(ref).name();
 
         throw Exception(error.str().c_str());
     }

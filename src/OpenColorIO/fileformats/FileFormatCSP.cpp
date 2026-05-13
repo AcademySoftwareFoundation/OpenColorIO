@@ -487,9 +487,16 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
     {
         // How many 1D LUT points do we have.
         nextline (istream, line);
-        int points1D = std::stoi(line.c_str());
+        int points1D = 0;
+        if (!StringToInt(&points1D, line.c_str()))
+        {
+            std::ostringstream os;
+            os << "A csp 1D LUT with invalid number of entries (";
+            os << line << ") in " << fileName << ".";
+            throw Exception(os.str().c_str());
+        }
 
-        if (points1D <= 0)
+        if (points1D <= 0 || points1D > static_cast<long>(Max1DLUTLength))
         {
             std::ostringstream os;
             os << "A csp 1D LUT with invalid number of entries (";
@@ -563,7 +570,7 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
             throw Exception(os.str().c_str());
         }
 
-        if (lutSize <= 0)
+        if (lutSize <= 0 || lutSize > static_cast<long>(Max3DLUTLength))
         {
             std::ostringstream os;
             os << "A csp 3D LUT with invalid cube size (";

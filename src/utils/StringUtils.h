@@ -252,6 +252,8 @@ inline std::string::size_type ReverseFind(const std::string & subject, const std
 // In place replace the 'search' substring by the 'replace' string in 'str'.
 inline bool ReplaceInPlace(std::string & subject, const std::string & search, const std::string & replace)
 {
+    if (search.empty()) return false;
+
     bool changed = false;
 
     size_t pos =  0;

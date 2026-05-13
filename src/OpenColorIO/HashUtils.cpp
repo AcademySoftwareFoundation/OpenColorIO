@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <iomanip>
 #include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -21,7 +22,9 @@ std::string CacheIDHash(const char * array, std::size_t size)
     XXH128_hash_t hash = XXH3_128bits(array, size);
 
     std::stringstream oss;
-    oss << std::hex << hash.low64 << hash.high64;
+    oss << std::hex << std::setfill('0');
+    oss << std::setw(16) << hash.low64;
+    oss << std::setw(16) << hash.high64;
     return oss.str();
 }
 

@@ -39,6 +39,15 @@ For Developers
 
 * Please see the section below about version updates to required third-party dependencies.
 
+Library Version
++++++++++++++++
+
+* The 2.5.1 release is not ABI compatible with 2.5.0 for clients that use the GPU renderer
+  API due to a change made to correct an issue with the Vulkan support introduced in 2.5.0.
+  Because the SOVERSION of both libraries remains "2.5", applications using the GPU API that
+  were compiled with the 2.5.0 release must be recompiled to use the 2.5.1 library. Any
+  further releases in the 2.5.x series will be ABI-compatible with 2.5.1.
+
 
 New Feature Guide
 =================
