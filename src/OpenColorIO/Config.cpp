@@ -1155,7 +1155,7 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
 {
     if (!filename || !*filename)
     {
-        throw ExceptionMissingFile ("The config filepath is missing.");
+        throw ExceptionMissingFile("The config filepath is missing.");
     }
 
     // Check for URI Pattern: ocio://<config name>
@@ -1165,6 +1165,13 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
     if (std::regex_search(uri, match, uriPattern))
     {
         return CreateFromBuiltinConfig(uri.c_str());
+    }
+
+    if (!FileExists(filename))
+    {
+        std::ostringstream oss;
+        oss << filename << " does not exists.";
+        throw ExceptionMissingFile(oss.str().c_str());
     }
 
     std::ifstream ifstream = Platform::CreateInputFileStream(
@@ -6012,7 +6019,7 @@ bool Config::isArchivable() const
     // Current archive implementation needs a working directory to look for LUT files and 
     // working directory must be an absolute path.
     const char * workingDirectory = getWorkingDir();
-    if ((workingDirectory && !workingDirectory[0]) || !pystring::os::path::isabs(workingDirectory))
+    if ((workingDirectory && !workingDirectory[0]) || !IsPathAbs(workingDirectory))
     {
         return false;
     }
@@ -6021,10 +6028,10 @@ bool Config::isArchivable() const
     auto validatePathForArchiving = [](const std::string & path) 
     {
         // Using the normalized path.
-        const std::string normPath = pystring::os::path::normpath(path);
+        const std::string normPath = NormalizePath(path, false);
         if (    
                 // 1) Path may not be absolute.
-                pystring::os::path::isabs(normPath)  || 
+                IsPathAbs(normPath)  || 
                 // 2) Path may not start with double dot ".." (going above working directory).
                 pystring::startswith(normPath, "..") ||
                 // 3) A context variable may not be located at the start of the path.

@@ -16,9 +16,12 @@ namespace OCIO_NAMESPACE
 // So let's define it locally for now
 
 std::string AbsPath(const std::string & path);
+bool IsPathAbs(const std::string & path);
+std::string NormalizePath(const std::string & path, bool canonical);
 
 // Check if a file exists
 bool FileExists(const std::string & filename, const Context & context);
+bool FileExists(const std::string & filename);
 
 // Get a fast hash for a file, without reading all the contents.
 // Currently, this checks the mtime and the inode number.
