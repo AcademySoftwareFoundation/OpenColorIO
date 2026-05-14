@@ -447,7 +447,7 @@ OCIO_ADD_TEST(BuiltinConfigs, create_builtin_config)
     OCIO_CHECK_THROW_WHAT(
         OCIO::Config::CreateFromFile("cg-config-v1.0.0_aces-v1.3_ocio-v2.1"),
         OCIO::ExceptionMissingFile,
-        "'cg-config-v1.0.0_aces-v1.3_ocio-v2.1' does not exist."
+        "'cg-config-v1.0.0_aces-v1.3_ocio-v2.1' file does not exist."
     );    
 
     {

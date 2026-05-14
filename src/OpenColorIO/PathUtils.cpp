@@ -121,11 +121,6 @@ bool FileExists(const std::string & filename, const Context & context)
     return (!hash.empty());
 }
 
-bool FileExists(const std::string & filename)
-{
-    return std::filesystem::exists(filename);
-}
-
 void ClearPathCaches()
 {
     AutoMutex lock(g_fastFileHashCache_mutex);
@@ -161,30 +156,6 @@ std::string AbsPath(const std::string & path)
     std::string p = path;
     if(!pystring::os::path::isabs(p)) p = pystring::os::path::join(GetCwd(), p);
     return pystring::os::path::normpath(p);
-}
-
-bool IsPathAbs(const std::string & path)
-{
-    std::string p = path;
-    return std::filesystem::path(p).is_absolute();
-}
-
-std::string NormalizePath(const std::string & path, bool canonical)
-{
-    std::filesystem::path p;
-    // Fall back to lexically_normal() if path does not exists
-    if (canonical && FileExists(path))
-    {
-        p = std::filesystem::canonical(path);
-    }
-    else
-    {
-        p = std::filesystem::path(path).lexically_normal();
-    }
-    if (p.has_relative_path() && !p.has_filename()) {
-        p = p.parent_path();
-    }
-    return p.generic_string();
 }
 
 namespace

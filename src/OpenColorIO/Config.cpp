@@ -11,6 +11,7 @@
 #include <vector>
 #include <regex>
 #include <functional>
+#include <filesystem>
 
 #include <pystring.h>
 
@@ -1167,10 +1168,10 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
         return CreateFromBuiltinConfig(uri.c_str());
     }
 
-    if (!FileExists(filename))
+    if (!std::filesystem::exists(filename))
     {
         std::ostringstream oss;
-        oss << "'" << filename << "' does not exist.";
+        oss << "'" << filename << "' file does not exist.";
         throw ExceptionMissingFile(oss.str().c_str());
     }
 
@@ -6019,7 +6020,7 @@ bool Config::isArchivable() const
     // Current archive implementation needs a working directory to look for LUT files and 
     // working directory must be an absolute path.
     const char * workingDirectory = getWorkingDir();
-    if ((workingDirectory && !workingDirectory[0]) || !IsPathAbs(workingDirectory))
+    if ((workingDirectory && !workingDirectory[0]) || !pystring::os::path::isabs(workingDirectory))
     {
         return false;
     }
@@ -6028,10 +6029,10 @@ bool Config::isArchivable() const
     auto validatePathForArchiving = [](const std::string & path) 
     {
         // Using the normalized path.
-        const std::string normPath = NormalizePath(path, false);
+        const std::string normPath = pystring::os::path::normpath(path);
         if (    
                 // 1) Path may not be absolute.
-                IsPathAbs(normPath)  || 
+                pystring::os::path::isabs(normPath)  || 
                 // 2) Path may not start with double dot ".." (going above working directory).
                 pystring::startswith(normPath, "..") ||
                 // 3) A context variable may not be located at the start of the path.
