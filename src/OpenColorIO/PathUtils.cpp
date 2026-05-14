@@ -4,7 +4,6 @@
 
 #include <iostream>
 #include <map>
-#include <filesystem>
 
 #include <pystring.h>
 
