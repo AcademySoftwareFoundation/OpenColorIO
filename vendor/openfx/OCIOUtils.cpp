@@ -2,6 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include "OCIOUtils.h"
+#include "utils/StringUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -37,13 +38,13 @@ ContextMap deserializeContextStore(const std::string & contextStoreRaw)
 
     // Format: key0:value0;key1:value1;...
     std::vector<std::string> contextPairsRaw;
-    pystring::split(contextStoreRaw, contextPairsRaw, ";");
+    contextPairsRaw = StringUtils::Split(contextStoreRaw, ";");
 
     for (size_t i = 0; i < contextPairsRaw.size(); i++)
     {
         std::vector<std::string> contextPair;
-        pystring::split(contextPairsRaw[i], contextPair, ":");
-        
+        contextPair = StringUtils::Split(contextPairsRaw[i], ":");
+
         if (contextPair.size() == 2)
         {
             contextMap[contextPair[0]] = contextPair[1];
@@ -437,7 +438,7 @@ void contextParamChanged(OFX::ImageEffect & instance,
                          const std::string & paramName)
 {
     // Is changed param a context variable?
-    if (!pystring::startswith(paramName, "context_") 
+    if (!StringUtils::StartsWith(paramName, "context_") 
             || paramName == "context_store")
     {
         return;
@@ -513,7 +514,7 @@ void choiceParamChanged(OFX::ImageEffect & instance,
                         const std::string & paramName)
 {
     // Ignore sibling *_store params
-    if (pystring::endswith(paramName, "_store"))
+    if (StringUtils::EndsWith(paramName, "_store"))
     {
         return;
     }
