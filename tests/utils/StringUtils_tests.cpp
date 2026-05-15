@@ -186,19 +186,19 @@ OCIO_ADD_TEST(StringUtils, replace)
 
     // Test a not existing subbstring.
     ref = StringUtils::Replace(ref, "ZY", "TO");
-    OCIO_CHECK_EQUAL(ref, "lO12ABC& ctfG");
+    OCIO_CHECK_EQUAL(ref, "lO12ABC&&^ ctfG");
 
     ref = StringUtils::Replace(ref, "hEllo", "TO", 1);
-    OCIO_CHECK_EQUAL(ref, "lO12ABC& ctfG");
+    OCIO_CHECK_EQUAL(ref, "lO12ABC&&^ ctfG");
 
     OCIO_CHECK_ASSERT(StringUtils::ReplaceInPlace(ref, "ct", "TO"));
-    OCIO_CHECK_EQUAL(ref, "lO12ABC& TOfG");
+    OCIO_CHECK_EQUAL(ref, "lO12ABC&&^ ctfG");
 
     OCIO_CHECK_ASSERT(!StringUtils::ReplaceInPlace(ref, "12345", "TO"));
-    OCIO_CHECK_EQUAL(ref, "lO12ABC& TOfG");
+    OCIO_CHECK_EQUAL(ref, "lO12ABC&&^ ctfG");
 
     OCIO_CHECK_ASSERT(!StringUtils::ReplaceInPlace(ref, "hEllo", "TO", 1));
-    OCIO_CHECK_EQUAL(ref, "lO12ABC& TOfG");
+    OCIO_CHECK_EQUAL(ref, "lO12ABC&&^ ctfG");
 }
 
 OCIO_ADD_TEST(StringUtils, split_whitespaces)
