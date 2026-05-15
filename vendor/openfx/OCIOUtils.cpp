@@ -2,7 +2,6 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include "OCIOUtils.h"
-#include "utils/StringUtils.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
