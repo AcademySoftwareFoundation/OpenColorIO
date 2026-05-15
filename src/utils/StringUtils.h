@@ -270,7 +270,7 @@ inline std::string::size_type ReverseFind(const std::string & subject, const std
     return subject.rfind(search);
 }
 
-// In place replace the 'search' substring by the 'replace' string in 'subject'.
+// In place replace the 'search' substring by the 'replace' string in 'subject'. Limited by 'count'.
 inline bool ReplaceInPlace(std::string & subject, const std::string & search, const std::string & replace, int count)
 {
     if (search.empty()) return false;
@@ -291,12 +291,13 @@ inline bool ReplaceInPlace(std::string & subject, const std::string & search, co
     return changed;
 }
 
+// In place replace the 'search' substring by the 'replace' string in 'subject'.
 inline bool ReplaceInPlace(std::string & subject, const std::string & search, const std::string & replace)
 {
     return ReplaceInPlace(subject, search, replace, -1);
 }
 
-// Replace the 'search' substring by the 'replace' string in 'subject'.
+// Replace the 'search' substring by the 'replace' string in 'subject'. Limited by 'count'.
 inline std::string Replace(const std::string & subject, const std::string & search, const std::string & replace, int count)
 {
     std::string str{subject};
@@ -304,6 +305,7 @@ inline std::string Replace(const std::string & subject, const std::string & sear
     return str;
 }
 
+// Replace the 'search' substring by the 'replace' string in 'subject'.
 inline std::string Replace(const std::string & subject, const std::string & search, const std::string & replace)
 {
     return Replace(subject, search, replace, -1);
@@ -338,6 +340,7 @@ inline bool Remove(StringVec & list, const std::string & entry)
     return false;
 }
 
+// Repeat the 'str' by the 'n' value.
 inline std::string Multiply(const std::string & str, int n)
 {
     // Early exits
