@@ -176,13 +176,13 @@ OCIO_ADD_TEST(StringUtils, replace)
     OCIO_CHECK_EQUAL(ref, "lO12ABC& ctfG");
 
     ref = StringUtils::Replace(ref, "&", "^^^", 0);
-    OCIO_CHECK_EQUAL(ref, "lO12ABC& ctfG")
+    OCIO_CHECK_EQUAL(ref, "lO12ABC& ctfG");
 
     ref = StringUtils::Replace(ref, "&", "^^^", 1);
-    OCIO_CHECK_EQUAL(ref, "lO12ABC^^^ ctfG")
+    OCIO_CHECK_EQUAL(ref, "lO12ABC^^^ ctfG");
 
     ref = StringUtils::Replace(ref, "^", "&", 2);
-    OCIO_CHECK_EQUAL(ref, "lO12ABC&&^ ctfG")
+    OCIO_CHECK_EQUAL(ref, "lO12ABC&&^ ctfG");
 
     // Test a not existing subbstring.
     ref = StringUtils::Replace(ref, "ZY", "TO");
