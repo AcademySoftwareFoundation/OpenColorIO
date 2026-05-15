@@ -270,39 +270,52 @@ inline std::string::size_type ReverseFind(const std::string & subject, const std
     return subject.rfind(search);
 }
 
-// In place replace the 'search' substring by the 'replace' string in 'str'.
-inline bool ReplaceInPlace(std::string & subject, const std::string & search, const std::string & replace)
+// In place replace the 'search' substring by the 'replace' string in 'subject'.
+inline bool ReplaceInPlace(std::string & subject, const std::string & search, const std::string & replace, int count)
 {
     if (search.empty()) return false;
 
     bool changed = false;
 
-    size_t pos =  0;
+    size_t pos = 0;
+    int iter = 0;
     while ((pos = subject.find(search, pos)) != std::string::npos)
     {
+        if ( count > -1 && iter >= count ) { break; }
         subject.replace(pos, search.length(), replace);
         pos += replace.length();
         changed = true;
+        ++iter;
     }
 
     return changed;
 }
 
-// Replace the 'search' substring by the 'replace' string in 'str'.
-inline std::string Replace(const std::string & subject, const std::string & search, const std::string & replace)
+inline bool ReplaceInPlace(std::string & subject, const std::string & search, const std::string & replace)
+{
+    return ReplaceInPlace(subject, search, replace, -1);
+}
+
+// Replace the 'search' substring by the 'replace' string in 'subject'.
+inline std::string Replace(const std::string & subject, const std::string & search, const std::string & replace, int count)
 {
     std::string str{subject};
-    ReplaceInPlace(str, search, replace);
+    ReplaceInPlace(str, search, replace, count);
     return str;
+}
+
+inline std::string Replace(const std::string & subject, const std::string & search, const std::string & replace)
+{
+    return Replace(subject, search, replace, -1);
 }
 
 // Check if the 'entry' is in the 'list' using a case insensitive comparison.
 inline bool Contain(const StringVec & list, const std::string & entry)
 {
-    const auto it = std::find_if(list.begin(), list.end(), 
-                                 [entry](const std::string & ent) 
-                                 { 
-                                    return Compare(ent.c_str(), entry.c_str()); 
+    const auto it = std::find_if(list.begin(), list.end(),
+                                 [entry](const std::string & ent)
+                                 {
+                                    return Compare(ent.c_str(), entry.c_str());
                                  });
     return it!=list.end();
 }
@@ -311,10 +324,10 @@ inline bool Contain(const StringVec & list, const std::string & entry)
 // It returns true if found.
 inline bool Remove(StringVec & list, const std::string & entry)
 {
-    const auto it = std::find_if(list.begin(), list.end(), 
-                                 [entry](const std::string & ent) 
-                                 { 
-                                    return Compare(ent.c_str(), entry.c_str()); 
+    const auto it = std::find_if(list.begin(), list.end(),
+                                 [entry](const std::string & ent)
+                                 {
+                                    return Compare(ent.c_str(), entry.c_str());
                                  });
     if (it!=list.end())
     {
@@ -323,6 +336,17 @@ inline bool Remove(StringVec & list, const std::string & entry)
     }
 
     return false;
+}
+
+inline std::string Multiply(const std::string & str, int n)
+{
+    // Early exits
+    if (n <= 0) return "";
+    if (n == 1) return str;
+
+    std::ostringstream os;
+    for(int i = 0; i < n; ++i) { os << str; }
+    return os.str();
 }
 
 } // namespace StringUtils
