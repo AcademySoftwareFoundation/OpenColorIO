@@ -37,12 +37,12 @@ ContextMap deserializeContextStore(const std::string & contextStoreRaw)
 
     // Format: key0:value0;key1:value1;...
     std::vector<std::string> contextPairsRaw;
-    contextPairsRaw = StringUtils::Split(contextStoreRaw, ";");
+    contextPairsRaw = StringUtils::Split(contextStoreRaw, ';');
 
     for (size_t i = 0; i < contextPairsRaw.size(); i++)
     {
         std::vector<std::string> contextPair;
-        contextPair = StringUtils::Split(contextPairsRaw[i], ":");
+        contextPair = StringUtils::Split(contextPairsRaw[i], ':');
 
         if (contextPair.size() == 2)
         {
