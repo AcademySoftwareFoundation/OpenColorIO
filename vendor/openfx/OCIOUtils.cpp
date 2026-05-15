@@ -8,8 +8,6 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <sstream>
 #include <vector>
 
-#include <pystring.h>
-
 #include "ofxsLog.h"
 
 namespace
@@ -67,7 +65,7 @@ std::string serializeContextStore(const ContextMap & contextMap)
 
     contextStoreRaw = os.str();
 
-    return pystring::rstrip(contextStoreRaw, ";");
+    return StringUtils::RightTrim(contextStoreRaw, ";");
 }
 
 } // namespace

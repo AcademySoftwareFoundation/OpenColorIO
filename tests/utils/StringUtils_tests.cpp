@@ -40,15 +40,38 @@ OCIO_ADD_TEST(StringUtils, trim)
         const std::string str = StringUtils::LeftTrim(ref);
         OCIO_CHECK_EQUAL(str, "lOwEr 1*& ctfG \n\n ");
     }
+    {
+        consst std::string str = StringUtils::LeftTrim(ref, ' ');
+        OCIO_CHECK_EQUAL(str, "\t\n lOwEr 1*& ctfG \n\n ");
+    }
+    // Test to validate the former pystring::lstrip() behavior.
+    {
+        consst std::string str = StringUtils::LeftTrim(ref, " \t\n ");
+        OCIO_CHECK_EQUAL(str, "lOwEr 1*& ctfG \n\n ");
+    }
 
     {
         const std::string str = StringUtils::RightTrim(ref);
+        OCIO_CHECK_EQUAL(str, " \t\n lOwEr 1*& ctfG");
+    }
+    {
+        consst std::string str = StringUtils::RightTrim(ref, ' ');
+        OCIO_CHECK_EQUAL(str, " \t\n lOwEr 1*& ctfG \n\n");
+    }
+    // Test to validate the former pystring::rstrip() behavior.
+    {
+        consst std::string str = StringUtils::RightTrim(ref, " \n\n ");
         OCIO_CHECK_EQUAL(str, " \t\n lOwEr 1*& ctfG");
     }
 
     {
         const std::string str = StringUtils::Trim(ref);
         OCIO_CHECK_EQUAL(str, "lOwEr 1*& ctfG");
+    }
+    // Test to validate the former pystring::strip() behavior.
+    {
+        const std::string str = StringUtils::Trim(ref, " ");
+        OCIO_CHECK_EQUAL(str, "\t\n lOwEr 1*& ctfG \n\n");
     }
 
     {

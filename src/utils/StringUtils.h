@@ -110,6 +110,14 @@ inline bool StartsWith(const std::string& str, char prefix)
 }
 
 // Starting from the left, trim the character.
+inline std::string LeftTrim(std::string str, const std::string & prefix)
+{
+    size_t first_good_char = str.find_first_not_of(prefix);
+    if (first_good_char == std::string::npos) { return str; }
+    str.erase(0, first_good_char);
+    return str;
+}
+
 inline std::string LeftTrim(std::string str, char c)
 {
     const auto it = std::find_if(str.begin(), str.end(), [&c](char ch) { return c!=ch; });
@@ -126,6 +134,14 @@ inline std::string LeftTrim(std::string str)
 }
 
 // Starting from the right, trim the character.
+inline std::string RightTrim(std::string str, const std::string & suffix)
+{
+    size_t last_good_char = str.find_last_not_of(suffix);
+    if (last_good_char == std::string::npos) { return str; }
+    str.erase(last_good_char + 1);
+    return str;
+}
+
 inline std::string RightTrim(std::string str, char c)
 {
     const auto it = std::find_if(str.rbegin(), str.rend(), [&c](char ch) { return c!=ch; });
@@ -149,6 +165,11 @@ inline std::string Trim(std::string str, char c)
 }
 
 // From the left and right, trim all the space characters i.e. space, tabulation, etc.
+inline std::string Trim(std::string str, const std::string & chars)
+{
+    return LeftTrim(RightTrim(str, chars), chars);
+}
+
 inline std::string Trim(std::string str)
 {
     return LeftTrim(RightTrim(str));
