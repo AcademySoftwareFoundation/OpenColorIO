@@ -169,6 +169,7 @@ OCIO_ADD_TEST(StringUtils, replace)
 {
     std::string ref{"lOwEr 1*& ctfG"};
 
+    // Test Replace.
     ref = StringUtils::Replace(ref, "wEr", "12345");
     OCIO_CHECK_EQUAL(ref, "lO12345 1*& ctfG");
 
@@ -184,21 +185,32 @@ OCIO_ADD_TEST(StringUtils, replace)
     ref = StringUtils::Replace(ref, "^", "&", 2);
     OCIO_CHECK_EQUAL(ref, "lO12ABC&&^ ctfG");
 
-    // Test a not existing subbstring.
+    // Test Replace with non-existing subbstring.
     ref = StringUtils::Replace(ref, "ZY", "TO");
     OCIO_CHECK_EQUAL(ref, "lO12ABC&&^ ctfG");
 
     ref = StringUtils::Replace(ref, "hEllo", "TO", 1);
     OCIO_CHECK_EQUAL(ref, "lO12ABC&&^ ctfG");
 
+    // Test ReplaceInPlace.
     OCIO_CHECK_ASSERT(StringUtils::ReplaceInPlace(ref, "ct", "TO"));
-    OCIO_CHECK_EQUAL(ref, "lO12ABC&&^ ctfG");
+    OCIO_CHECK_EQUAL(ref, "lO12ABC&&^ TOfG");
 
+    OCIO_CHECK_ASSERT(StringUtils::ReplaceInPlace(ref, "ct", "TO", 0));
+    OCIO_CHECK_EQUAL(ref, "lO12ABC&&^ TOfG");
+
+    OCIO_CHECK_ASSERT(!StringUtils::ReplaceInPlace(ref, "O", "P", 1));
+    OCIO_CHECK_EQUAL(ref, "lP12ABC&&^ TOfG");
+
+    // Test ReplaceInPlace with non-existing subbstring.
     OCIO_CHECK_ASSERT(!StringUtils::ReplaceInPlace(ref, "12345", "TO"));
-    OCIO_CHECK_EQUAL(ref, "lO12ABC&&^ ctfG");
+    OCIO_CHECK_EQUAL(ref, "lP12ABC&&^ TOfG");
+
+    OCIO_CHECK_ASSERT(!StringUtils::ReplaceInPlace(ref, "hEllo", "TO", 0));
+    OCIO_CHECK_EQUAL(ref, "lP12ABC&&^ TOfG");
 
     OCIO_CHECK_ASSERT(!StringUtils::ReplaceInPlace(ref, "hEllo", "TO", 1));
-    OCIO_CHECK_EQUAL(ref, "lO12ABC&&^ ctfG");
+    OCIO_CHECK_EQUAL(ref, "lP12ABC&&^ TOfG");
 }
 
 OCIO_ADD_TEST(StringUtils, split_whitespaces)
