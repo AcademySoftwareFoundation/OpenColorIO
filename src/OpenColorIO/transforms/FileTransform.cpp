@@ -613,7 +613,7 @@ void LoadFileUncached(FileFormat * & returnFormat,
     std::string root, extension;
     pystring::os::path::splitext(root, extension, filepath);
     // remove the leading '.'
-    extension = pystring::replace(extension,".","",1);
+    extension = StringUtils::Replace(extension, "." , "", 1);
 
     FormatRegistry & formatRegistry = FormatRegistry::GetInstance();
 
