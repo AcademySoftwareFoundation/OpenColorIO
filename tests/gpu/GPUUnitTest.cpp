@@ -730,13 +730,13 @@ int main(int argc, const char ** argv)
         test->setVerbose(verbose);
 
         // Select the appropriate shading language based on the renderer
+        // (default GLSL 1.2 is used when none of the alternate backends match).
         OCIO::GpuLanguage shadingLanguage = OCIO::GPU_LANGUAGE_GLSL_1_2;
 #if __APPLE__
         if (useMetalRenderer)
         {
             shadingLanguage = OCIO::GPU_LANGUAGE_MSL_2_0;
         }
-        else
 #endif
 #ifdef OCIO_DIRECTX_ENABLED
         if (useDxRenderer)
@@ -745,18 +745,13 @@ int main(int argc, const char ** argv)
             // compiles to SM 6.0 via DXC regardless of this enum value.
             shadingLanguage = OCIO::GPU_LANGUAGE_HLSL_SM_5_0;
         }
-        else
 #endif
 #ifdef OCIO_VULKAN_ENABLED
         if (useVulkanRenderer)
         {
             shadingLanguage = OCIO::GPU_LANGUAGE_GLSL_VK_4_6;
         }
-        else
 #endif
-        {
-            shadingLanguage = OCIO::GPU_LANGUAGE_GLSL_1_2;
-        }
         test->setShadingLanguage(shadingLanguage);
 
         bool enabledTest = true;

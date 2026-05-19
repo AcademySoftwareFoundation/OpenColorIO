@@ -98,8 +98,11 @@ DxApp::DxApp(const char* winTitle, int winWidth, int winHeight)
     windowClass.hInstance = NULL;
     windowClass.hCursor = LoadCursor(NULL, IDC_ARROW);
     windowClass.lpszClassName = winTitle;
-    RegisterClassExA(&windowClass);
-    m_windowClassName = winTitle;
+    // Only record the class name for cleanup if we actually registered it.
+    if (RegisterClassExA(&windowClass))
+    {
+        m_windowClassName = winTitle;
+    }
 
     RECT windowRect = { 0, 0, static_cast<LONG>(m_viewportWidth), static_cast<LONG>(m_viewportHeight) };
     AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
@@ -220,11 +223,16 @@ DxApp::DxApp(const char* winTitle, int winWidth, int winHeight)
 
 DxApp::~DxApp()
 {
-    // Ensure that the GPU is no longer referencing resources that are about to be
-    // cleaned up by the destructor.
-    waitForPreviousFrame();
+    // Skip the GPU wait if sync objects were never created (constructor threw early).
+    if (m_commandQueue && m_fence && m_fenceEvent)
+    {
+        waitForPreviousFrame();
+    }
 
-    CloseHandle(m_fenceEvent);
+    if (m_fenceEvent)
+    {
+        CloseHandle(m_fenceEvent);
+    }
 
     if (m_hwnd)
     {
@@ -251,7 +259,7 @@ void DxApp::initImage(int imageWidth, int imageHeight, Components comp, const fl
     if (!m_cbvSrvHeap)
     {
         D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-        srvHeapDesc.NumDescriptors = 16;  // Slot 0 for image, remaining for LUT textures
+        srvHeapDesc.NumDescriptors = CbvSrvHeapSize;
         srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         ThrowIfFailed(m_device->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_cbvSrvHeap)));
@@ -446,6 +454,20 @@ void DxApp::setShader(GpuShaderDescRcPtr& shaderDesc)
 
     // Store shader desc so redisplay() can update uniform values each frame.
     m_currentShaderDesc = shaderDesc;
+
+    // Guard against shaders that need more SRV slots than the heap holds.
+    {
+        const UINT requiredSRVs
+            = 1 + shaderDesc->getNumTextures() + shaderDesc->getNum3DTextures();
+        if (requiredSRVs > CbvSrvHeapSize)
+        {
+            std::ostringstream oss;
+            oss << "DxApp: shader needs " << requiredSRVs
+                << " SRV descriptors but the CBV/SRV heap only has "
+                << CbvSrvHeapSize << " slots.";
+            throw Exception(oss.str().c_str());
+        }
+    }
 
     // Create HLSLBuilder to allocate all LUT textures.
     // Each texture is placed at the descriptor heap slot matching its HLSL register
@@ -838,6 +860,7 @@ void DxApp::redisplay()
                         memcpy(dst, f3.data(), 3 * sizeof(float));
                     }
                     break;
+                // HLSL constant-buffer array entries (float or int) occupy a full float4 (16-byte) slot.
                 case UNIFORM_VECTOR_FLOAT:
                     if (data.m_vectorFloat.m_getSize && data.m_vectorFloat.m_getVector)
                     {

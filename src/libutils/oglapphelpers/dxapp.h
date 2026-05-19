@@ -56,6 +56,9 @@ private:
 
     static const UINT FrameCount = 2;
 
+    // Slot 0 for the input image; remaining slots for OCIO LUT textures.
+    static const UINT CbvSrvHeapSize = 16;
+
     int m_viewportWidth{ 0 };
     int m_viewportHeight{ 0 };
 
@@ -77,9 +80,9 @@ private:
     UINT m_cbvSrvDescriptorSize;
 
     // Synchronization objects.
-    HANDLE m_fenceEvent;
+    HANDLE m_fenceEvent{ nullptr };
     ComPtr<ID3D12Fence> m_fence;
-    UINT64 m_fenceValue;
+    UINT64 m_fenceValue{ 0 };
 
     // Image texture and upload resources.
     ComPtr<ID3D12Resource> m_imageTexture;
