@@ -275,3 +275,16 @@ OCIO_ADD_TEST(StringUtils, remove_contain)
         OCIO_CHECK_ASSERT(!StringUtils::Contain(values, "2"));
     }
 }
+
+OCIO_ADD_TEST(StringUtils, multiply)
+{
+    constexpr char ref[]{"10.0 9. 1 er\t1e-5f"};
+
+    OCIO_CHECK_EQUAL(StringUtils::Multiply(ref, 0), "");
+    OCIO_CHECK_EQUAL(StringUtils::Multiply(ref, 1), "10.0 9. 1 er\t1e-5f");
+    OCIO_CHECK_EQUAL(StringUtils::Multiply(ref, 2), "10.0 9. 1 er\t1e-5f10.0 9. 1 er\t1e-5f");
+
+    OCIO_CHECK_EQUAL(StringUtils::Multiply(" ", 0), "");
+    OCIO_CHECK_EQUAL(StringUtils::Multiply(" ", 1), " ");
+    OCIO_CHECK_EQUAL(StringUtils::Multiply(" ", 2), "  ");
+}
