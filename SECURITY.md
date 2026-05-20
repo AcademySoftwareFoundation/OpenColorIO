@@ -14,22 +14,14 @@ would be naive to say our code is immune to every exploit.
 
 ## Reporting Vulnerabilities
 
-Quickly resolving security related issues is a priority. If you think
-you've found a potential vulnerability in OpenColorIO, please report it by
-emailing security@opencolorio.org. Only TSC members and ASWF project
-management have access to these messages.
+Quickly resolving security related issues is a priority. The best way to report a 
+vulnerability is to file a GitHub security advisory. If that is not possible, it 
+is also fine to email your report to security@opencolorio.org. Only the project 
+administrators have access to these reports.
 
 Include detailed steps to reproduce the issue, and any other information that
 could aid an investigation. Someone will assess the report and make every
 effort to respond within 14 days.
-
-## Outstanding Security Issues
-
-None
-
-## Addressed Security Issues
-
-None
 
 ## File Format Expectations
 
@@ -65,5 +57,6 @@ It is a bug if calling a function with well-formed arguments causes the
 library to crash. It is a security issue if calling a function with 
 well-formed arguments causes arbitrary code execution.
 
-We do not consider this as severe as file format issues because in most 
-deployments the parameter space is not exposed to potential attackers.
+## History of CVE Fixes
+
+CVE-2026-42450 -- Stack buffer overflow in sscanf. (Fixed in OCIO 2.5.2)

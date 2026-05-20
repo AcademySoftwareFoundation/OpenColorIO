@@ -3458,6 +3458,11 @@ ArrayBase * CTFReaderInvLut1DElt::updateDimension(const Dimensions & dims)
         return nullptr;
     }
 
+    if (dims[0] < 2 || dims[0] > Max1DLUTLength)
+    {
+        return nullptr;
+    }
+
     Array * pArray = &m_invLut->getArray();
     pArray->resize(dims[0], numColorComponents);
     return pArray;
@@ -3592,6 +3597,11 @@ ArrayBase * CTFReaderInvLut3DElt::updateDimension(const Dimensions & dims)
     const unsigned int numColorComponents = dims[max];
 
     if (dims[3] != 3 || dims[1] != dims[0] || dims[2] != dims[0])
+    {
+        return nullptr;
+    }
+
+    if (dims[0] < 2 || dims[0] > Max3DLUTLength)
     {
         return nullptr;
     }
@@ -4271,6 +4281,11 @@ ArrayBase * CTFReaderLut1DElt::updateDimension(const Dimensions & dims)
         return nullptr;
     }
 
+    if (dims[0] < 2 || dims[0] > Max1DLUTLength)
+    {
+        return nullptr;
+    }
+
     Array * pArray = &m_lut->getArray();
     pArray->resize(dims[0], numColorComponents);
     return pArray;
@@ -4332,7 +4347,7 @@ IndexMapping * CTFReaderLut1DElt::updateDimensionIM(const DimensionsIM & dims)
 
     const unsigned int numComponents = dims[0];
 
-    if (dims[0] == 0)
+    if (dims[0] < 2 || dims[0] > Max1DLUTLength)
     {
         return nullptr;
     }
@@ -4543,6 +4558,11 @@ ArrayBase * CTFReaderLut3DElt::updateDimension(const Dimensions & dims)
         return nullptr;
     }
 
+    if (dims[0] < 2 || dims[0] > Max3DLUTLength)
+    {
+        return nullptr;
+    }
+
     Array* pArray = &m_lut->getArray();
     pArray->resize(dims[0], numColorComponents);
 
@@ -4573,7 +4593,7 @@ IndexMapping * CTFReaderLut3DElt::updateDimensionIM(const DimensionsIM & dims)
 
     const unsigned numComponents = dims[0];
 
-    if (dims[0] == 0)
+    if (dims[0] < 2 || dims[0] > Max3DLUTLength)
     {
         return nullptr;
     }
@@ -4673,6 +4693,11 @@ ArrayBase * CTFReaderMatrixElt::updateDimension(const Dimensions & dims)
     const unsigned int size = dims[0];
 
     if (size != dims[1] || numColorComponents != 3)
+    {
+        return nullptr;
+    }
+
+    if (size < 3 || size > 4)
     {
         return nullptr;
     }

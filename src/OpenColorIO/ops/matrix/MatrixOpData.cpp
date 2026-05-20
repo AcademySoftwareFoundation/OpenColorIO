@@ -373,6 +373,10 @@ void MatrixOpData::MatrixArray::expandFrom3x3To4x4()
 
 void MatrixOpData::MatrixArray::setRGBA(const float * values)
 {
+    if (!values)
+    {
+        throw Exception("Matrix: setRGBA NULL pointer.");
+    }
     Values & v = getValues();
 
     v[0] = values[0];
@@ -398,6 +402,10 @@ void MatrixOpData::MatrixArray::setRGBA(const float * values)
 
 void MatrixOpData::MatrixArray::setRGBA(const double * values)
 {
+    if (!values)
+    {
+        throw Exception("Matrix: setRGBA NULL pointer.");
+    }
     Values & v = getValues();
     std::memcpy(&v[0], values, 16 * sizeof(double));
 }

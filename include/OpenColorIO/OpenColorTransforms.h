@@ -1367,10 +1367,10 @@ public:
     virtual HSYTransformStyle getRGBToHSY() const = 0;
     virtual void setRGBToHSY(HSYTransformStyle style) = 0;
 
-    ///**
-    // * Parameters can be made dynamic so the values can be changed through the CPU or GPU processor,
-    // * but if there are several GradingHueCurveTransform only one can have dynamic parameters.
-    // */
+    /**
+     * Parameters can be made dynamic so the values can be changed through the CPU or GPU processor,
+     * but if there are several GradingHueCurveTransform only one can have dynamic parameters.
+     */
     virtual bool isDynamic() const noexcept = 0;
     virtual void makeDynamic() noexcept = 0;
     virtual void makeNonDynamic() noexcept = 0;

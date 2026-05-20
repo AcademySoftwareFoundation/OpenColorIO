@@ -22,7 +22,7 @@ namespace OCIO_NAMESPACE
 
 const char * GetEnvVariable(const char * name)
 {
-    static std::string value;
+    thread_local std::string value;
     Platform::Getenv(name, value);
     return value.c_str();
 }
@@ -183,12 +183,16 @@ int Strncasecmp(const char * str1, const char * str2, size_t n)
 void * AlignedMalloc(size_t size, size_t alignment)
 {
 #ifdef _WIN32
-    return _aligned_malloc(size, alignment);
+    void * memBlock = _aligned_malloc(size, alignment);
 #else
-    void* memBlock = 0x0;
-    if (!posix_memalign(&memBlock, alignment, size)) return memBlock;
-    return 0x0;
+    void* memBlock = nullptr;
+    if (posix_memalign(&memBlock, alignment, size)) memBlock = nullptr;
 #endif
+    if (!memBlock)
+    {
+        throw Exception("AlignedMalloc: memory allocation failure.");
+    }
+    return memBlock;
 }
 
 void AlignedFree(void* memBlock)

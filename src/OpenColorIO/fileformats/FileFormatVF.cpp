@@ -158,6 +158,14 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
                             fileName, lineNumber, line);
                     }
 
+                    if (size3d[0] < 2 || size3d[0] > static_cast<long>(Max3DLUTLength))
+                    {
+                        ThrowErrorMessage(
+                            ("Grid size must be between 2 and "
+                             + std::to_string(Max3DLUTLength) + ".").c_str(),
+                            fileName, lineNumber, line);
+                    }
+
                     raw3d.reserve(3*size3d[0]*size3d[1]*size3d[2]);
                 }
                 else if(parts[0] == "global_transform")
@@ -190,6 +198,12 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
             {
                 if(StringVecToFloatVec(tmpfloats, parts) && (tmpfloats.size() == 3))
                 {
+                    if (raw3d.size() > Max3DLUTLength * Max3DLUTLength * Max3DLUTLength * 3)
+                    {
+                        ThrowErrorMessage(
+                            "Too many 3D LUT entries.",
+                            fileName, lineNumber, line);
+                    }
                     raw3d.push_back(tmpfloats[0]);
                     raw3d.push_back(tmpfloats[1]);
                     raw3d.push_back(tmpfloats[2]);
