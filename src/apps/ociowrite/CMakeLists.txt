@@ -24,3 +24,7 @@ ocio_strip_binary(ociowrite)
 install(TARGETS ociowrite
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+
+# Set the debugger environment so that the executable can be launched
+# directly within IDE (e.g. Visual Studio).
+set_debugger_env(ociowrite)

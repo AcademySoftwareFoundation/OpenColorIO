@@ -41,6 +41,10 @@ ExponentOpData::ExponentOpData(const ExponentOpData & rhs)
 ExponentOpData::ExponentOpData(const double * exp4)
     :   OpData()
 {
+    if (!exp4)
+    {
+        throw Exception("ExponentOpData: exp4 must not be null.");
+    }
     memcpy(m_exp4, exp4, 4*sizeof(double));
 }
 

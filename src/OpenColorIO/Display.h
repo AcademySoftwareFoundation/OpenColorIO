@@ -37,7 +37,7 @@ struct View
          const char * looks,
          const char * rule,
          const char * description)
-        : m_name(name)
+        : m_name(name ? name : "")
         , m_viewTransform(viewTransform ? viewTransform : "")
         , m_colorspace(colorspace ? colorspace : "")
         , m_looks(looks ? looks : "")

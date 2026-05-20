@@ -34,6 +34,8 @@ namespace OCIO_NAMESPACE
 // Note that this function does not require initializing the built-in config registry.
 const char * ResolveConfigPath(const char * originalPath) noexcept
 {
+    if (!originalPath) return "";
+
     static const std::regex uriPattern(R"(ocio:\/\/([^\s]+))");
     std::smatch match;
     const std::string uri = originalPath;

@@ -142,8 +142,8 @@ Optional OCIO functionality also depends on:
 - Doxygen (for the docs)
 - NumPy (optionally used in the Python test suite)
 - \*pybind11 >= 2.9.2 (for the Python binding)
-- Python >= 3.9 (for the Python binding only)
-- Python 3.9+ (for building the documentation)
+- Python >= 3.10 (for the Python binding only)
+- Python 3.10+ (for building the documentation)
 
 Building the documentation requires the following packages, available via PyPI:
 

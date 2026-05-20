@@ -29,7 +29,7 @@ endif()
 # Project definition.
 
 project(OpenColorIO 
-    VERSION 2.5.0
+    VERSION 2.6.0
     DESCRIPTION "OpenColorIO (OCIO) is a complete color management solution"
     HOMEPAGE_URL https://github.com/AcademySoftwareFoundation/OpenColorIO
     LANGUAGES CXX C)
@@ -350,6 +350,11 @@ endif()
 include(CompilerFlags)
 
 ###############################################################################
+# Include utility functions for setting debugging environments
+
+include(DebuggerEnvironment)
+
+###############################################################################
 # External linking options
 
 # Supported options
@@ -396,9 +401,7 @@ if(NOT DEFINED OCIO_NAMESPACE)
 elseif(OCIO_NAMESPACE STREQUAL "")
     message(FATAL_ERROR "A namespace cannot be empty.")
 else()
-    set(OCIO_NAMESPACE "OpenColorIO_${OCIO_NAMESPACE}_v${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}${OpenColorIO_VERSION_RELEASE_TYPE}" CACHE STRING 
-        "Specify the main OCIO C++ namespace: Options include OpenColorIO OpenColorIO_<YOURFACILITY> etc.")
-    message(STATUS "Setting namespace to '${OCIO_NAMESPACE}' as none was specified.")
+    message(STATUS "Setting namespace to '${OCIO_NAMESPACE}'.")
 endif()
 
 

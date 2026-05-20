@@ -133,7 +133,7 @@ OCIO_ADD_GPU_TEST(GradingPrimary, style_lin_rev_dynamic)
 
 namespace GPTest3
 {
-static constexpr OCIO::GradingStyle style = OCIO::GRADING_LIN;
+static constexpr OCIO::GradingStyle style = OCIO::GRADING_VIDEO;
 static const OCIO::GradingRGBM lift{ 0.05, -0.04, 0.02, 0.05 };
 static const OCIO::GradingRGBM gamma{ 0.9,   1.4,  0.7,  0.75 };
 static const OCIO::GradingRGBM gain{ 1.2,   1.1,  1.25, 0.8 };

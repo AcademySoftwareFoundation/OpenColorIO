@@ -146,6 +146,10 @@ void AllocationTransform::setVars(int numvars, const float * vars)
 
     if(!getImpl()->m_vars.empty())
     {
+        if (!vars)
+        {
+            throw Exception("AllocationTransform::setVars: vars pointer must not be null.");
+        }
         memcpy(&getImpl()->m_vars[0],
             vars,
             numvars*sizeof(float));

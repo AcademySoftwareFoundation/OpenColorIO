@@ -289,6 +289,10 @@ int Processor::Impl::getNumTransforms() const
 
 const FormatMetadata & Processor::Impl::getTransformFormatMetadata(int index) const
 {
+    if (index < 0 || index >= static_cast<int>(m_ops.size()))
+    {
+        throw Exception("Processor::getTransformFormatMetadata: index out of range.");
+    }
     auto op = OCIO_DYNAMIC_POINTER_CAST<const Op>(m_ops[index]);
     return op->data()->getFormatMetadata();
 }
@@ -346,8 +350,19 @@ OptimizationFlags EnvironmentOverride(OptimizationFlags oFlags)
     const std::string envFlag = GetEnvVariable(OCIO_OPTIMIZATION_FLAGS_ENVVAR);
     if (!envFlag.empty())
     {
-        // Use 0 to allow base to be determined by the format.
-        oFlags = static_cast<OptimizationFlags>(std::stoul(envFlag, nullptr, 0));
+        try
+        {
+            // Use 0 to allow base to be determined by the format.
+            oFlags = static_cast<OptimizationFlags>(std::stoul(envFlag, nullptr, 0));
+        }
+        catch (const std::exception & e)
+        {
+            std::string msg("Illegal value for ");
+            msg += OCIO_OPTIMIZATION_FLAGS_ENVVAR;
+            msg += ": ";
+            msg += e.what();
+            throw Exception(msg.c_str());
+        }
     }
     return oFlags;
 }

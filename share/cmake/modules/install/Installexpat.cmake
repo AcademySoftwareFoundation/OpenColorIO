@@ -46,9 +46,11 @@ if(NOT expat_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAG
         if(BUILD_TYPE_DEBUG)
             set(_expat_LIB_SUFFIX "d")
         endif()
-        # Static Linking, Multi-threaded Dll naming (>=2.2.8):
-        #   https://github.com/libexpat/libexpat/blob/R_2_2_8/expat/win32/README.txt
-        set(_expat_LIB_SUFFIX "${_expat_LIB_SUFFIX}MD")
+        if (MSVC)
+            # Static Linking, Multi-threaded Dll naming (>=2.2.8):
+            #   https://github.com/libexpat/libexpat/blob/R_2_2_8/expat/win32/README.txt
+            set(_expat_LIB_SUFFIX "${_expat_LIB_SUFFIX}MD")
+        endif()
     endif()
 
     # Expat use a hardcoded lib prefix instead of CMAKE_STATIC_LIBRARY_PREFIX

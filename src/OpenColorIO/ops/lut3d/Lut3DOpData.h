@@ -8,6 +8,7 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "LutLimits.h"
 #include "Op.h"
 #include "ops/OpArray.h"
 #include "PrivateTypes.h"
@@ -22,9 +23,6 @@ typedef OCIO_SHARED_PTR<const Lut3DOpData> ConstLut3DOpDataRcPtr;
 class Lut3DOpData : public OpData
 {
 public:
-
-    // The maximum grid size supported for a 3D LUT.
-    static const unsigned long maxSupportedLength;
 
     // Use functional composition to generate a single op that 
     // approximates the effect of the pair of ops.
