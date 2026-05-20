@@ -1154,9 +1154,11 @@ ConstConfigRcPtr Config::CreateFromEnv()
 
 ConstConfigRcPtr Config::CreateFromFile(const char * filename)
 {
+    // Specifically check if a config filepath is provided.
+    // TODO: Consider raising a different exception for this?
     if (!filename || !*filename)
     {
-        throw ExceptionMissingFile("The config filepath is missing.");
+        throw Exception("The config filepath is missing.");
     }
 
     // Check for URI Pattern: ocio://<config name>
@@ -1168,6 +1170,7 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
         return CreateFromBuiltinConfig(uri.c_str());
     }
 
+    // Specifically check if the provided non-builtin config filepath exists.
     if (!std::filesystem::exists(filename))
     {
         std::ostringstream oss;
