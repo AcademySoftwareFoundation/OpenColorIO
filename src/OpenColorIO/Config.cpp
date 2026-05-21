@@ -1155,7 +1155,6 @@ ConstConfigRcPtr Config::CreateFromEnv()
 ConstConfigRcPtr Config::CreateFromFile(const char * filename)
 {
     // Specifically check if a config filepath is provided.
-    // TODO: Consider raising a different exception for this?
     if (!filename || !*filename)
     {
         throw Exception("The config filepath is missing.");
