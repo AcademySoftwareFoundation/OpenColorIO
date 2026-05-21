@@ -61,8 +61,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # build: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-        build: [1, 2, 4, 5, 7, 8, 10, 11, 12]
+        build: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
         include:
           # -------------------------------------------------------------------
           # VFX CY2026 (Python 3.13)
@@ -109,19 +108,19 @@ jobs:
           # -------------------------------------------------------------------
           # VFX CY2025 (Python 3.11)
           # -------------------------------------------------------------------
-          # - build: 9
-          #   build-type: Debug
-          #   build-shared: 'ON'
-          #   build-docs: 'OFF'
-          #   build-openfx: 'ON'
-          #   use-simd: 'ON'
-          #   use-oiio: 'ON'
-          #   cxx-standard: 20
-          #   cxx-compiler: clang++
-          #   cc-compiler: clang
-          #   compiler-desc: Clang
-          #   vfx-cy: 2025
-          #   install-ext-packages: MISSING
+          - build: 9
+            build-type: Debug
+            build-shared: 'ON'
+            build-docs: 'OFF'
+            build-openfx: 'ON'
+            use-simd: 'ON'
+            use-oiio: 'ON'
+            cxx-standard: 20
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang
+            vfx-cy: 2025
+            install-ext-packages: MISSING
           - build: 8
             build-type: Release
             build-shared: 'ON'
@@ -151,19 +150,19 @@ jobs:
           # -------------------------------------------------------------------
           # VFX CY2024 (Python 3.11)
           # -------------------------------------------------------------------
-          # - build: 6
-          #   build-type: Debug
-          #   build-shared: 'ON'
-          #   build-docs: 'OFF'
-          #   build-openfx: 'ON'
-          #   use-simd: 'ON'
-          #   use-oiio: 'ON'
-          #   cxx-standard: 20
-          #   cxx-compiler: clang++
-          #   cc-compiler: clang
-          #   compiler-desc: Clang
-          #   vfx-cy: 2024
-          #   install-ext-packages: MISSING
+          - build: 6
+            build-type: Debug
+            build-shared: 'ON'
+            build-docs: 'OFF'
+            build-openfx: 'ON'
+            use-simd: 'ON'
+            use-oiio: 'ON'
+            cxx-standard: 20
+            cxx-compiler: clang++
+            cc-compiler: clang
+            compiler-desc: Clang
+            vfx-cy: 2024
+            install-ext-packages: MISSING
           - build: 5
             build-type: Release
             build-shared: 'ON'
