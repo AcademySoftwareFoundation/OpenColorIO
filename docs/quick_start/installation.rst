@@ -287,6 +287,8 @@ Here are the most common OCIO-specific CMake options (the default values are sho
 - ``-DOCIO_BUILD_TESTS=ON`` (Set to OFF to not build the unit tests)
 - ``-DOCIO_BUILD_GPU_TESTS=ON`` (Set to OFF to not build the GPU unit tests)
 - ``-DOCIO_USE_HEADLESS=OFF`` (Set to ON to do headless GPU rendering)
+- ``-DOCIO_DIRECTX_ENABLED=ON`` (Windows only; set to OFF to disable the DirectX 12 GPU rendering backend used by ``test_dx``. Forced OFF on non-Windows platforms.)
+- ``-DOCIO_VULKAN_ENABLED=OFF`` (Set to ON to enable the Vulkan GPU rendering backend used by ``test_vulkan``. Requires the Vulkan SDK to be installed and findable by CMake.)
 - ``-DOCIO_WARNING_AS_ERROR=ON`` (Set to OFF to turn off warnings as errors)
 - ``-DOCIO_BUILD_DOCS=OFF`` (Set to ON to build the documentation)
 
