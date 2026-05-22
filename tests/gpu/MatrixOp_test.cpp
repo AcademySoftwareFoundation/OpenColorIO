@@ -9,7 +9,8 @@
 namespace OCIO = OCIO_NAMESPACE;
 
 
-const float g_epsilon = 5e-7f;
+// 1e-6 accommodates 1-2 ULP FMA rounding with DirectX tests (matrix output values ~7).
+const float g_epsilon = 1e-6f;
 
 
 // Helper method to build unit tests
