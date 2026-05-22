@@ -57,9 +57,9 @@ jobs:
     container:
       # DockerHub: https://hub.docker.com/u/aswf
       # Source: https://github.com/AcademySoftwareFoundation/aswf-docker
-      image: aswf/ci-ocio:${{ matrix.vfx-cy }}
+      image: aswf/ci-ocio:${{ matrix.container-tag || matrix.vfx-cy }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         build: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
         include:
@@ -204,6 +204,7 @@ jobs:
             cc-compiler: clang
             compiler-desc: Clang
             vfx-cy: 2023
+            container-tag: 2023.2
             install-ext-packages: MISSING
           - build: 2
             build-type: Release
@@ -217,6 +218,7 @@ jobs:
             cc-compiler: gcc
             compiler-desc: GCC
             vfx-cy: 2023
+            container-tag: 2023.2
             install-ext-packages: ALL
           - build: 1
             build-type: Release
@@ -230,6 +232,7 @@ jobs:
             cc-compiler: gcc
             compiler-desc: GCC
             vfx-cy: 2023
+            container-tag: 2023.2
             install-ext-packages: ALL
     env:
       CXX: ${{ matrix.cxx-compiler }}
