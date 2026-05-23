@@ -13,6 +13,11 @@
 #include "SSE.h"
 
 
+// powf() throws a domain error if the base is negative and the exponent non-integer.
+// This is a safer call to powf() that avoids a negative base.
+#define POW_NON_NEG(B, E) \
+    std::pow((B) < 0.0f ? 0.0f : (B), (E))
+
 namespace OCIO_NAMESPACE
 {
 
@@ -540,10 +545,10 @@ void GammaMoncurveOpCPUFwd::apply(const void * inImg, void * outImg, long numPix
     {
         const float pixel[4] = { in[0], in[1], in[2], in[3] };
 
-        const float data[4] = { std::pow(pixel[0] * red[0] + red[1], red[2]),
-                                std::pow(pixel[1] * grn[0] + grn[1], grn[2]),
-                                std::pow(pixel[2] * blu[0] + blu[1], blu[2]),
-                                std::pow(pixel[3] * alp[0] + alp[1], alp[2]) };
+        const float data[4] = { POW_NON_NEG(pixel[0] * red[0] + red[1], red[2]),
+                                POW_NON_NEG(pixel[1] * grn[0] + grn[1], grn[2]),
+                                POW_NON_NEG(pixel[2] * blu[0] + blu[1], blu[2]),
+                                POW_NON_NEG(pixel[3] * alp[0] + alp[1], alp[2]) };
 
         out[0] = pixel[0]<=red[3] ? pixel[0] * red[4] : data[0];
         out[1] = pixel[1]<=grn[3] ? pixel[1] * grn[4] : data[1];
@@ -629,10 +634,10 @@ void GammaMoncurveOpCPURev::apply(const void * inImg, void * outImg, long numPix
     {
         const float pixel[4] = { in[0], in[1], in[2], in[3] };
 
-        const float data[4] = { std::pow(pixel[0], red[0]) * red[1] - red[2],
-                                std::pow(pixel[1], grn[0]) * grn[1] - grn[2],
-                                std::pow(pixel[2], blu[0]) * blu[1] - blu[2],
-                                std::pow(pixel[3], alp[0]) * alp[1] - alp[2] };
+        const float data[4] = { POW_NON_NEG(pixel[0], red[0]) * red[1] - red[2],
+                                POW_NON_NEG(pixel[1], grn[0]) * grn[1] - grn[2],
+                                POW_NON_NEG(pixel[2], blu[0]) * blu[1] - blu[2],
+                                POW_NON_NEG(pixel[3], alp[0]) * alp[1] - alp[2] };
 
         out[0] = pixel[0]<=red[3] ? pixel[0] * red[4] : data[0];
         out[1] = pixel[1]<=grn[3] ? pixel[1] * grn[4] : data[1];
