@@ -166,6 +166,7 @@ set(SOURCES
     transforms/builtins/CanonCameras.cpp
     transforms/builtins/Displays.cpp
     transforms/builtins/PanasonicCameras.cpp
+    transforms/builtins/ProPhotoRGB.cpp
     transforms/builtins/RedCameras.cpp
     transforms/builtins/SonyCameras.cpp
     transforms/BuiltinTransform.cpp

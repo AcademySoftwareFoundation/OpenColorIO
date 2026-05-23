@@ -2093,12 +2093,12 @@ OCIO_ADD_TEST(Config, version)
     {
         OCIO_CHECK_THROW_WHAT(config->setVersion(2, 9), OCIO::Exception,
                               "The minor version 9 is not supported for major version 2. "
-                              "Maximum minor version is 5");
+                              "Maximum minor version is 6");
 
         OCIO_CHECK_NO_THROW(config->setMajorVersion(2));
         OCIO_CHECK_THROW_WHAT(config->setMinorVersion(9), OCIO::Exception,
                               "The minor version 9 is not supported for major version 2. "
-                              "Maximum minor version is 5");
+                              "Maximum minor version is 6");
     }
 
     {
@@ -10415,4 +10415,3 @@ view_transforms:
         config->setVersion(2, 5);
     }
 }
-
