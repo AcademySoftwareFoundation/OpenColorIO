@@ -47,6 +47,7 @@ def setup_env() -> None:
         ocio.OCIO_INACTIVE_COLORSPACES_ENVVAR,
         ocio.OCIO_OPTIMIZATION_FLAGS_ENVVAR,
         ocio.OCIO_USER_CATEGORIES_ENVVAR,
+        ocio.OCIO_ARCHIVE_FLAGS_ENVVAR,
     ):
         if env_var in os.environ:
             del os.environ[env_var]

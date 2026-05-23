@@ -16,6 +16,7 @@ class ConstantsTest(unittest.TestCase):
         self.assertEqual(OCIO.OCIO_ACTIVE_VIEWS_ENVVAR, 'OCIO_ACTIVE_VIEWS')
         self.assertEqual(OCIO.OCIO_INACTIVE_COLORSPACES_ENVVAR, 'OCIO_INACTIVE_COLORSPACES')
         self.assertEqual(OCIO.OCIO_OPTIMIZATION_FLAGS_ENVVAR, 'OCIO_OPTIMIZATION_FLAGS')
+        self.assertEqual(OCIO.OCIO_ARCHIVE_FLAGS_ENVVAR, 'OCIO_ARCHIVE_FLAGS')
         self.assertEqual(OCIO.OCIO_USER_CATEGORIES_ENVVAR, 'OCIO_USER_CATEGORIES')
 
         # Cache (env. variables).

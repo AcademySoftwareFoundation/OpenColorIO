@@ -47,6 +47,14 @@ These environmental variables are used by the OpenColorIO library
          Ex: OCIO_OPTIMIZATION_FLAGS="20479" or "0x4FFF" for 
          OPTIMIZATION_LOSSLESS.
 
+      .. data:: PyOpenColorIO.OCIO_ARCHIVE_FLAGS_ENVVAR
+
+         The envvar 'OCIO_ARCHIVE_FLAGS' provides a way to modify the parameters
+         used to create an ocioz archive. Remove the variable or set the value
+         to empty to not use it. Set the value of the variable to the desired
+         parameters as either an integer or hexadecimal value.
+         Ex: OCIO_ARCHIVE_FLAGS="256" or "0x0100" for ARCHIVE_FLAGS_MINIMAL.
+
    .. group-tab:: C++
 
       .. doxygengroup:: VarsEnvvar
