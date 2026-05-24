@@ -176,11 +176,26 @@ std::string ResolveContextVariables(const std::string & str, const EnvMap & map,
     return ResolveContextVariablesImpl(str, map, used, 0);
 }
 
-bool CollectContextVariables(const Config & config, 
+bool CollectContextVariables(const Config & config,
                              const Context & context,
                              ConstTransformRcPtr transform,
                              ContextRcPtr & usedContextVars)
 {
+    // Guard against infinite recursion from cyclic color space / look / view transform
+    // references in malicious configs (e.g. a ColorSpace whose from_reference is a
+    // ColorSpaceTransform pointing back to itself).
+    static thread_local int depth = 0;
+    if (depth > 32)
+    {
+        throw Exception("Cycle detected while collecting context variables.");
+    }
+    struct DepthGuard
+    {
+        int & d;
+        DepthGuard(int & d_) : d(d_) { ++d; }
+        ~DepthGuard() { --d; }
+    } guard(depth);
+
     if(ConstColorSpaceTransformRcPtr tr = DynamicPtrCast<const ColorSpaceTransform>(transform))
     {
         if (CollectContextVariables(config, context, *tr, usedContextVars)) return true;

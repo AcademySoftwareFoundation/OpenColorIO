@@ -10416,3 +10416,124 @@ view_transforms:
     }
 }
 
+OCIO_ADD_TEST(Config, cyclic_color_space_transform)
+{
+    // Regression test for a stack overflow triggered by a self-referential
+    // ColorSpaceTransform (a ColorSpace whose from_reference is a ColorSpaceTransform
+    // that points back to itself). getProcessor() must throw a clean exception
+    // rather than recursing until the stack guard page is hit.
+
+    constexpr char CYCLIC_PROFILE[] =
+        "ocio_profile_version: 2\n"
+        "roles:\n"
+        "  default: cs0\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs0\n"
+        "    isdata: true\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs1\n"
+        "    from_scene_reference: !<ColorSpaceTransform> {src: cs0, dst: cs1}\n";
+
+    std::istringstream is;
+    is.str(CYCLIC_PROFILE);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+
+    OCIO_CHECK_THROW_WHAT(config->getProcessor("cs0", "cs1"),
+                          OCIO::Exception,
+                          "Cycle detected");
+}
+
+OCIO_ADD_TEST(Config, cyclic_color_space_two_step)
+{
+    // Two-step cycle: cs1 -> cs2 -> cs1. Verify the depth guard catches indirect cycles too.
+
+    constexpr char CYCLIC_PROFILE[] =
+        "ocio_profile_version: 2\n"
+        "roles:\n"
+        "  default: cs0\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs0\n"
+        "    isdata: true\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs1\n"
+        "    from_scene_reference: !<ColorSpaceTransform> {src: cs0, dst: cs2}\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs2\n"
+        "    from_scene_reference: !<ColorSpaceTransform> {src: cs0, dst: cs1}\n";
+
+    std::istringstream is;
+    is.str(CYCLIC_PROFILE);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+
+    OCIO_CHECK_THROW_WHAT(config->getProcessor("cs0", "cs1"),
+                          OCIO::Exception,
+                          "Cycle detected");
+}
+
+OCIO_ADD_TEST(Config, cyclic_look_transform)
+{
+    // Regression test: a Look whose transform is a LookTransform that references the
+    // same look must not crash via stack overflow on getProcessor(). Triggered here
+    // by a ColorSpace whose from_scene_reference is a LookTransform invoking lookA,
+    // whose own transform is another LookTransform invoking lookA.
+
+    constexpr char CYCLIC_PROFILE[] =
+        "ocio_profile_version: 2\n"
+        "roles:\n"
+        "  default: cs0\n"
+        "looks:\n"
+        "  - !<Look>\n"
+        "    name: lookA\n"
+        "    process_space: cs0\n"
+        "    transform: !<LookTransform> {src: cs0, dst: cs0, looks: lookA}\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs0\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs1\n"
+        "    from_scene_reference: !<LookTransform> {src: cs0, dst: cs0, looks: lookA}\n";
+
+    std::istringstream is;
+    is.str(CYCLIC_PROFILE);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+
+    OCIO_CHECK_THROW_WHAT(config->getProcessor("cs0", "cs1"),
+                          OCIO::Exception,
+                          "Cycle detected");
+}
+
+OCIO_ADD_TEST(Config, cyclic_display_view_transform)
+{
+    // Regression test: a ColorSpace whose from_scene_reference is a DisplayViewTransform
+    // that ultimately points back to the same ColorSpace (via the view's color space)
+    // must not crash via stack overflow on getProcessor().
+
+    constexpr char CYCLIC_PROFILE[] =
+        "ocio_profile_version: 2\n"
+        "roles:\n"
+        "  default: cs0\n"
+        "displays:\n"
+        "  D1:\n"
+        "    - !<View> {name: V1, colorspace: cs_loop}\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs0\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs_loop\n"
+        "    from_scene_reference: !<DisplayViewTransform> {src: cs0, display: D1, view: V1}\n";
+
+    std::istringstream is;
+    is.str(CYCLIC_PROFILE);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+
+    OCIO_CHECK_THROW_WHAT(config->getProcessor("cs0", "cs_loop"),
+                          OCIO::Exception,
+                          "Cycle detected");
+}
+

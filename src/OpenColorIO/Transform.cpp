@@ -49,6 +49,21 @@ void BuildOps(OpRcPtrVec & ops,
     if(!transform)
         return;
 
+    // Guard against infinite recursion from cyclic color space / look / view transform
+    // references in malicious configs (e.g. a ColorSpace whose from_reference is a
+    // ColorSpaceTransform pointing back to itself).
+    static thread_local int depth = 0;
+    if (depth > 32)
+    {
+        throw Exception("Cycle detected while building ops from transform.");
+    }
+    struct DepthGuard
+    {
+        int & d;
+        DepthGuard(int & d_) : d(d_) { ++d; }
+        ~DepthGuard() { --d; }
+    } guard(depth);
+
     if(ConstAllocationTransformRcPtr allocationTransform = \
         DynamicPtrCast<const AllocationTransform>(transform))
     {

@@ -1446,6 +1446,27 @@ colorspaces:
         config.addActiveView(view="v1")
         self.assertEqual(config.getNumActiveViews(), 1)
 
+    def test_cyclic_color_space_transform(self):
+        """
+        Regression test: a ColorSpace whose from_scene_reference is a
+        ColorSpaceTransform pointing back to itself must not crash the
+        process via stack overflow on getProcessor().
+        """
+        CYCLIC_PROFILE = """ocio_profile_version: 2
+roles:
+  default: cs0
+colorspaces:
+  - !<ColorSpace>
+    name: cs0
+    isdata: true
+  - !<ColorSpace>
+    name: cs1
+    from_scene_reference: !<ColorSpaceTransform> {src: cs0, dst: cs1}
+"""
+        cfg = OCIO.Config.CreateFromStream(CYCLIC_PROFILE)
+        with self.assertRaises(OCIO.Exception):
+            cfg.getProcessor("cs0", "cs1")
+
 
 class ConfigVirtualWithActiveDisplayTest(unittest.TestCase):
     def setUp(self):
