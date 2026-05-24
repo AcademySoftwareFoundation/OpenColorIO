@@ -64,7 +64,7 @@ float g_display_gamma{1.0f};
 int g_channelHot[4]{1, 1, 1, 1}; // show rgb
 int g_viewsMenuID;
 
-OCIO::OglAppRcPtr g_oglApp;
+OCIO::GraphicalAppRcPtr g_oglApp;
 
 void UpdateOCIOGLState();
 
@@ -115,14 +115,14 @@ static void InitImageTexture(const char * filename)
         }
     }
 
-    OCIO::OglApp::Components comp = OCIO::OglApp::COMPONENTS_RGBA;
+    OCIO::GraphicalApp::Components comp = OCIO::GraphicalApp::COMPONENTS_RGBA;
     if (img.getNumChannels() == 4)
     {
-        comp = OCIO::OglApp::COMPONENTS_RGBA;
+        comp = OCIO::GraphicalApp::COMPONENTS_RGBA;
     }
     else if (img.getNumChannels() == 3)
     {
-        comp = OCIO::OglApp::COMPONENTS_RGB;
+        comp = OCIO::GraphicalApp::COMPONENTS_RGB;
     }
     else
     {
@@ -658,7 +658,7 @@ int main(int argc, char **argv)
         else
 #endif
         {
-            g_oglApp = std::make_shared<OCIO::ScreenApp>("ociodisplay", 512, 512);
+            g_oglApp = std::make_shared<OCIO::ScreenOglApp>("ociodisplay", 512, 512);
         }
     }
     catch (const OCIO::Exception &e)
@@ -669,11 +669,11 @@ int main(int argc, char **argv)
 
     if (g_verbose)
     {
-        g_oglApp->printGLInfo();
+        g_oglApp->printGraphicsInfo();
     }
 
     g_oglApp->setYMirror();
-    g_oglApp->setPrintShader(g_gpuinfo);
+    g_oglApp->setShaderVerbose(g_gpuinfo);
 
     glutReshapeFunc(Reshape);
     glutKeyboardFunc(Key);

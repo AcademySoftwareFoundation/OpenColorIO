@@ -43,7 +43,7 @@ struct GraphicsContext
 };
 
 MetalApp::MetalApp(const char * winTitle, int winWidth, int winHeight)
-    : ScreenApp(winTitle, winWidth, winHeight)
+    : ScreenOglApp(winTitle, winWidth, winHeight)
 {
     initContext();
 }
@@ -346,7 +346,7 @@ vertex VertexOut ColorCorrectionVS(unsigned int vId [[ vertex_id ]])
         throw Exception("Metal renderer can only consume MSL shaders");
     }
     
-    if(printShader())
+    if(isShaderVerbose())
     {
         std::cout << std::endl;
         std::cout << "GPU Shader Program:" << std::endl;
@@ -380,7 +380,7 @@ void MetalApp::redisplay()
         prepareAndBindOpenGLState();
     }
     
-    ScreenApp::redisplay();
+    ScreenOglApp::redisplay();
 }
 
 MetalAppRcPtr MetalApp::CreateMetalGlApp(const char * winTitle, int winWidth, int winHeight)

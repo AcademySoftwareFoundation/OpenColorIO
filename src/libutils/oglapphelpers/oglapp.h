@@ -9,29 +9,30 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "glsl.h"
+#include "graphicalapp.h"
 
 namespace OCIO_NAMESPACE
 {
 
 // Here is some sample code to demonstrate how to use this in a simple app that wants to process
 // using the GPU and OpenGL.  Processed image is expected to have the same size as the input image.
-// For an interactive application, OglApp can be used, but other OGL code is required.
+// For an interactive application, GraphicalApp can be used, but other OGL code is required.
 //
 // See ociodisplay for an example of an interactive app that displays an image in the UI and
 // ocioconvert and ociochecklut for examples of non-interactive apps that just process values with
 // the GPU.
 
 /*
-// Create and initialize OglAppRcPtr by creating a shared pointer to ScreenApp. You have to
-// specify the name of the window and its size. OglAppRcPtr that points to HeadlessApp object
+// Create and initialize OglAppRcPtr by creating a shared pointer to ScreenOglApp. You have to
+// specify the name of the window and its size. OglAppRcPtr that points to HeadlessOglApp object
 // can be created and used in the same way.
-OglAppRcPtr scrApp = std::make_shared<ScreenApp>("Window Name", windowWidth, windowHeight);
+OglAppRcPtr scrApp = std::make_shared<ScreenOglApp>("Window Name", windowWidth, windowHeight);
 
 float * imageBuffer = GetImageBuffer();
 int imageWidth = GetImageWidth();
 int imageHeight = GetImageHeight();
-scrApp->initImage(imagewidth, imageheight, OglApp::COMPONENTS_RGB, imageBuffer);
-scrApp->createGLBuffers();
+scrApp->initImage(imagewidth, imageheight, GraphicalApp::COMPONENTS_RGB, imageBuffer);
+scrApp->createBuffers();
 
 // Set (or change) shader.
 GpuShaderDescRcPtr shader = GpuShaderDesc::CreateShaderDesc();
@@ -51,73 +52,49 @@ scrApp->readImage(imageBufferOut.data());
 
 */
 
-// Forward declaration  of OglApp.
-class OglApp;
-typedef OCIO_SHARED_PTR<OglApp> OglAppRcPtr;
-
-class OglApp
+class OglApp : public GraphicalApp
 {
 public:
     OglApp() = delete;
-    OglApp(const OglApp &) = delete;
-    OglApp & operator=(const OglApp &) = delete;
+    OglApp(const OglApp&) = delete;
+    OglApp& operator=(const OglApp&) = delete;
 
     // Initialize the app with given window name & client rect size.
     OglApp(int winWidth, int winHeight);
 
     virtual ~OglApp();
 
-    // When displaying the processed image in a window this needs to be done.
-    // In that case, when image is read, the result will be mirrored on Y.
-    void setYMirror()
-    {
-        m_yMirror = true;
-    }
-
-    // Shader code will be printed when generated.
-    void setPrintShader(bool print)
-    {
-        m_printShader = print;
-    }
-
-    enum Components
-    {
-        COMPONENTS_RGB = 0,
-        COMPONENTS_RGBA
-    };
-
-    // Initialize the image.
     virtual void initImage(int imageWidth, int imageHeight,
-                           Components comp, const float * imageBuffer);
-    // Update the image if it changes.
-    virtual void updateImage(const float * imageBuffer);
+        Components comp, const float* imageBuffer) override;
 
-    // Create GL frame and rendering buffers. Needed if readImage will be used.
-    void createGLBuffers();
+    virtual void updateImage(const float* imageBuffer) override;
+
+    // Create frame and rendering buffers. Needed if readImage will be used.
+    void createBuffers() override;
 
     // Set the shader code.
-    virtual void setShader(GpuShaderDescRcPtr & shaderDesc);
+    virtual void setShader(GpuShaderDescRcPtr& shaderDesc) override;
 
     // Update the size of the buffer of the OpenGL viewport that will be used to process the image
     // (it does not modify the UI).  To be called at least one time. Use image size if we want to
     // read back the processed image.  To process another image with the same size or using a
     // different shader, reshape does not need to be called again. In case of an interactive
     // application it should be called by the glutReshapeFunc callback using the windows size.
-    void reshape(int width, int height);
+    void reshape(int width, int height) override;
 
     // Process the image.
-    void virtual redisplay();
+    void virtual redisplay() override;
 
     // Read the image from the rendering buffer. It is not meant to be used by interactive
     // applications used to display the image.
-    virtual void readImage(float * imageBuffer);
+    virtual void readImage(float* imageBuffer) override;
 
-    // Helper to print GL info.
-    void virtual printGLInfo() const noexcept;
+    // Helper to print graphics info.
+    void virtual printGraphicsInfo() const noexcept override;
 
-    // Return a pointer of either ScreenApp or HeadlessApp depending on the
+    // Return a pointer of either ScreenOglApp or HeadlessOglApp depending on the
     // OCIO_HEADLESS_ENABLED preprocessor.
-    static OglAppRcPtr CreateOglApp(const char * winTitle, int winWidth, int winHeight);
+    static GraphicalAppRcPtr CreateApp(const char* winTitle, int winWidth, int winHeight);
 
 protected:
     // Window or output image size (set using reshape).
@@ -133,8 +110,6 @@ protected:
     
     void setImageDimensions(int imgWidth, int imgHeight, Components comp);
     Components getImageComponents() const { return m_components; }
-
-    bool printShader() const { return m_printShader; }
     
     OpenGLBuilderRcPtr m_oglBuilder;
     
@@ -142,32 +117,27 @@ private:
     // Keep track of the original image ratio.
     float m_imageAspect{ 1.0f };
 
-    // For interactive application displaying the processed image, this needs to be true.
-    bool m_yMirror{ false };
-
-    // Will shader code be outputed when setShader is called.
-    bool m_printShader{ false };
-
     // Image information.
     int m_imageWidth{ 0 };
     int m_imageHeight{ 0 };
     Components m_components{ COMPONENTS_RGBA };
+
     unsigned int m_imageTexID;
 };
 
-class ScreenApp: public OglApp
+class ScreenOglApp: public OglApp
 {
 public:
-    ScreenApp() = delete;
-    ScreenApp(const ScreenApp &) = delete;
-    ScreenApp & operator=(const ScreenApp &) = delete;
+    ScreenOglApp() = delete;
+    ScreenOglApp(const ScreenOglApp &) = delete;
+    ScreenOglApp & operator=(const ScreenOglApp &) = delete;
 
-    ScreenApp(const char * winTitle, int winWidth, int winHeight);
+    ScreenOglApp(const char * winTitle, int winWidth, int winHeight);
 
-    ~ScreenApp();
+    ~ScreenOglApp();
 
     void redisplay() override;
-    void printGLInfo() const noexcept override;
+    void printGraphicsInfo() const noexcept override;
 
 private:
     // Window identifier returned by glutCreateWindow.
@@ -178,16 +148,16 @@ private:
 
 #include <EGL/egl.h>
 
-class HeadlessApp: public OglApp
+class HeadlessOglApp: public OglApp
 {
 public:
-    HeadlessApp() = delete;
+    HeadlessOglApp() = delete;
 
-    HeadlessApp(const char * winTitle, int bufWidth, int bufHeight);
+    HeadlessOglApp(const char * winTitle, int bufWidth, int bufHeight);
 
-    ~HeadlessApp();
+    ~HeadlessOglApp();
 
-    void printGLInfo() const noexcept override;
+    void printGraphicsInfo() const noexcept override;
     void redisplay() override;
 
 protected:
