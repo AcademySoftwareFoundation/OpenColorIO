@@ -49,6 +49,27 @@ void BuildOps(OpRcPtrVec & ops,
     if(!transform)
         return;
 
+    // Guard against infinite recursion through cycles in the color space / look / view
+    // transform reference graph (e.g. a ColorSpace whose from_reference is a
+    // ColorSpaceTransform pointing back to itself). A matching guard in
+    // CollectContextVariables() catches the same cycles during the earlier context-variable
+    // scan; this one protects the op-builder traversal. Both are independent from the
+    // string-level depth check in ResolveContextVariablesImpl, which guards cyclic
+    // context-variable substitution within a single string. Having the extra guard here
+    // is necessary for any situations where CollectContextVariables is not called, for
+    // example, see Config_tests.cpp/cyclic_color_space_linearity_check.
+    static thread_local int depth = 0;
+    if (depth > 32)
+    {
+        throw Exception("Cycle detected while building ops from transform.");
+    }
+    struct DepthGuard
+    {
+        int & d;
+        DepthGuard(int & d_) : d(d_) { ++d; }
+        ~DepthGuard() { --d; }
+    } guard(depth);
+
     if(ConstAllocationTransformRcPtr allocationTransform = \
         DynamicPtrCast<const AllocationTransform>(transform))
     {
