@@ -127,7 +127,10 @@ void LoadEnvironment(EnvMap & map, bool update)
 static std::string ResolveContextVariablesImpl(const std::string & str, const EnvMap & map,
                                                UsedEnvs & used, int depth)
 {
-    // Guard against infinite recursion from cyclic variable references.
+    // Guard against infinite recursion at the string substitution level (e.g. $A expands
+    // to $B which expands to $A). This is independent from the graph-level guards in
+    // CollectContextVariables() and Transform.cpp's BuildOps(), which protect against cycles 
+    // in the color space / look / view transform reference graph.
     if (depth > 32) return str;
 
     // Early exit if no reserved tokens are found.
@@ -181,9 +184,13 @@ bool CollectContextVariables(const Config & config,
                              ConstTransformRcPtr transform,
                              ContextRcPtr & usedContextVars)
 {
-    // Guard against infinite recursion from cyclic color space / look / view transform
-    // references in malicious configs (e.g. a ColorSpace whose from_reference is a
-    // ColorSpaceTransform pointing back to itself).
+    // Guard against infinite recursion through cycles in the color space / look / view
+    // transform reference graph (e.g. a ColorSpace whose from_reference is a
+    // ColorSpaceTransform pointing back to itself). Distinct from the string-level depth
+    // check in ResolveContextVariablesImpl, which only guards cyclic context-variable
+    // substitution within a single string; that check fires once per finite resolveStringVar
+    // call here and never observes this outer graph traversal. A matching guard exists in
+    // BuildOps() for the op-builder traversal that runs after this one.
     static thread_local int depth = 0;
     if (depth > 32)
     {

@@ -10507,6 +10507,35 @@ OCIO_ADD_TEST(Config, cyclic_look_transform)
                           "Cycle detected");
 }
 
+OCIO_ADD_TEST(Config, cyclic_color_space_linearity_check)
+{
+    // Regression test for the BuildOps depth guard. Config::isColorSpaceLinear() reaches
+    // the op-builder via Config::Impl::getProcessorWithoutCaching(), which does NOT call
+    // CollectContextVariables() first. So even with the CollectContextVariables guard,
+    // this path will still infinite-recurse on a cyclic color space unless BuildOps
+    // independently guards against it.
+
+    constexpr char CYCLIC_PROFILE[] =
+        "ocio_profile_version: 2\n"
+        "roles:\n"
+        "  default: cs0\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs0\n"
+        "  - !<ColorSpace>\n"
+        "    name: cs1\n"
+        "    from_scene_reference: !<ColorSpaceTransform> {src: cs0, dst: cs1}\n";
+
+    std::istringstream is;
+    is.str(CYCLIC_PROFILE);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+
+    OCIO_CHECK_THROW_WHAT(config->isColorSpaceLinear("cs1", OCIO::REFERENCE_SPACE_SCENE),
+                          OCIO::Exception,
+                          "Cycle detected");
+}
+
 OCIO_ADD_TEST(Config, cyclic_display_view_transform)
 {
     // Regression test: a ColorSpace whose from_scene_reference is a DisplayViewTransform
