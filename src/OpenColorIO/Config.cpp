@@ -11,6 +11,7 @@
 #include <vector>
 #include <regex>
 #include <functional>
+#include <filesystem>
 
 #include <pystring.h>
 
@@ -1153,9 +1154,10 @@ ConstConfigRcPtr Config::CreateFromEnv()
 
 ConstConfigRcPtr Config::CreateFromFile(const char * filename)
 {
+    // Specifically check if a config filepath is provided.
     if (!filename || !*filename)
     {
-        throw ExceptionMissingFile ("The config filepath is missing.");
+        throw Exception("The config filepath is missing.");
     }
 
     // Check for URI Pattern: ocio://<config name>
@@ -1165,6 +1167,14 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
     if (std::regex_search(uri, match, uriPattern))
     {
         return CreateFromBuiltinConfig(uri.c_str());
+    }
+
+    // Specifically check if the provided non-builtin config filepath exists.
+    if (!std::filesystem::exists(filename))
+    {
+        std::ostringstream oss;
+        oss << "'" << filename << "' file does not exist.";
+        throw ExceptionMissingFile(oss.str().c_str());
     }
 
     std::ifstream ifstream = Platform::CreateInputFileStream(
