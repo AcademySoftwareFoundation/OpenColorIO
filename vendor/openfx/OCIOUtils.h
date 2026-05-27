@@ -9,6 +9,8 @@
 
 #include "ofxsImageEffect.h"
 
+#include "utils/StringUtils.h"
+
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 

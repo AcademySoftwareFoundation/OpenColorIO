@@ -416,7 +416,7 @@ private:
         if (pImpl->m_size)
         {
             std::string size_raw = std::string(s, len);
-            std::string size_clean = pystring::strip(size_raw, "'\" "); // strip quotes and space
+            std::string size_clean = StringUtils::Trim(size_raw, "'\" "); // strip quotes and space
 
             long int size_3d{};
             

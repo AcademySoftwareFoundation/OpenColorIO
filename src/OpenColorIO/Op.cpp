@@ -4,8 +4,6 @@
 #include <cstring>
 #include <sstream>
 
-#include <pystring.h>
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Logging.h"
@@ -23,6 +21,7 @@
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ops/range/RangeOp.h"
+#include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -478,7 +477,7 @@ std::string SerializeOpVec(const OpRcPtrVec & ops, int indent)
     {
         const OpRcPtr & op = ops[idx];
 
-        oss << pystring::mul(" ", indent);
+        oss << StringUtils::Multiply(" ", indent);
         oss << "Op " << idx << ": " << *op << " ";
         oss << op->getCacheID();
 

@@ -40,15 +40,38 @@ OCIO_ADD_TEST(StringUtils, trim)
         const std::string str = StringUtils::LeftTrim(ref);
         OCIO_CHECK_EQUAL(str, "lOwEr 1*& ctfG \n\n ");
     }
+    {
+        const std::string str = StringUtils::LeftTrim(ref, ' ');
+        OCIO_CHECK_EQUAL(str, "\t\n lOwEr 1*& ctfG \n\n ");
+    }
+    // Test to validate the former pystring::lstrip() behavior.
+    {
+        const std::string str = StringUtils::LeftTrim(ref, " \t\n ");
+        OCIO_CHECK_EQUAL(str, "lOwEr 1*& ctfG \n\n ");
+    }
 
     {
         const std::string str = StringUtils::RightTrim(ref);
+        OCIO_CHECK_EQUAL(str, " \t\n lOwEr 1*& ctfG");
+    }
+    {
+        const std::string str = StringUtils::RightTrim(ref, ' ');
+        OCIO_CHECK_EQUAL(str, " \t\n lOwEr 1*& ctfG \n\n");
+    }
+    // Test to validate the former pystring::rstrip() behavior.
+    {
+        const std::string str = StringUtils::RightTrim(ref, " \n\n ");
         OCIO_CHECK_EQUAL(str, " \t\n lOwEr 1*& ctfG");
     }
 
     {
         const std::string str = StringUtils::Trim(ref);
         OCIO_CHECK_EQUAL(str, "lOwEr 1*& ctfG");
+    }
+    // Test to validate the former pystring::strip() behavior.
+    {
+        const std::string str = StringUtils::Trim(ref, " ");
+        OCIO_CHECK_EQUAL(str, "\t\n lOwEr 1*& ctfG \n\n");
     }
 
     {
@@ -146,21 +169,48 @@ OCIO_ADD_TEST(StringUtils, replace)
 {
     std::string ref{"lOwEr 1*& ctfG"};
 
+    // Test Replace.
     ref = StringUtils::Replace(ref, "wEr", "12345");
     OCIO_CHECK_EQUAL(ref, "lO12345 1*& ctfG");
 
     ref = StringUtils::Replace(ref, "345 1*", "ABC");
     OCIO_CHECK_EQUAL(ref, "lO12ABC& ctfG");
 
-    // Test a not existing subbstring.
-    ref = StringUtils::Replace(ref, "ZY", "TO");
+    ref = StringUtils::Replace(ref, "&", "^^^", 0);
     OCIO_CHECK_EQUAL(ref, "lO12ABC& ctfG");
 
-    OCIO_CHECK_ASSERT(StringUtils::ReplaceInPlace(ref, "ct", "TO"));
-    OCIO_CHECK_EQUAL(ref, "lO12ABC& TOfG");
+    ref = StringUtils::Replace(ref, "&", "^^^", 1);
+    OCIO_CHECK_EQUAL(ref, "lO12ABC^^^ ctfG");
 
+    ref = StringUtils::Replace(ref, "^", "&", 2);
+    OCIO_CHECK_EQUAL(ref, "lO12ABC&&^ ctfG");
+
+    // Test Replace with non-existing subbstring.
+    ref = StringUtils::Replace(ref, "ZY", "TO");
+    OCIO_CHECK_EQUAL(ref, "lO12ABC&&^ ctfG");
+
+    ref = StringUtils::Replace(ref, "hEllo", "TO", 1);
+    OCIO_CHECK_EQUAL(ref, "lO12ABC&&^ ctfG");
+
+    // Test ReplaceInPlace.
+    OCIO_CHECK_ASSERT(StringUtils::ReplaceInPlace(ref, "ct", "TO"));
+    OCIO_CHECK_EQUAL(ref, "lO12ABC&&^ TOfG");
+
+    OCIO_CHECK_ASSERT(!StringUtils::ReplaceInPlace(ref, "TO", "ct", 0));
+    OCIO_CHECK_EQUAL(ref, "lO12ABC&&^ TOfG");
+
+    OCIO_CHECK_ASSERT(StringUtils::ReplaceInPlace(ref, "O", "P", 1));
+    OCIO_CHECK_EQUAL(ref, "lP12ABC&&^ TOfG");
+
+    // Test ReplaceInPlace with non-existing subbstring.
     OCIO_CHECK_ASSERT(!StringUtils::ReplaceInPlace(ref, "12345", "TO"));
-    OCIO_CHECK_EQUAL(ref, "lO12ABC& TOfG");
+    OCIO_CHECK_EQUAL(ref, "lP12ABC&&^ TOfG");
+
+    OCIO_CHECK_ASSERT(!StringUtils::ReplaceInPlace(ref, "hEllo", "TO", 0));
+    OCIO_CHECK_EQUAL(ref, "lP12ABC&&^ TOfG");
+
+    OCIO_CHECK_ASSERT(!StringUtils::ReplaceInPlace(ref, "hEllo", "TO", 1));
+    OCIO_CHECK_EQUAL(ref, "lP12ABC&&^ TOfG");
 }
 
 OCIO_ADD_TEST(StringUtils, split_whitespaces)
@@ -224,4 +274,17 @@ OCIO_ADD_TEST(StringUtils, remove_contain)
         OCIO_CHECK_ASSERT(StringUtils::Contain(values, " 2 "));
         OCIO_CHECK_ASSERT(!StringUtils::Contain(values, "2"));
     }
+}
+
+OCIO_ADD_TEST(StringUtils, multiply)
+{
+    constexpr char ref[]{"10.0 9. 1 er\t1e-5f"};
+
+    OCIO_CHECK_EQUAL(StringUtils::Multiply(ref, 0), "");
+    OCIO_CHECK_EQUAL(StringUtils::Multiply(ref, 1), "10.0 9. 1 er\t1e-5f");
+    OCIO_CHECK_EQUAL(StringUtils::Multiply(ref, 2), "10.0 9. 1 er\t1e-5f10.0 9. 1 er\t1e-5f");
+
+    OCIO_CHECK_EQUAL(StringUtils::Multiply(" ", 0), "");
+    OCIO_CHECK_EQUAL(StringUtils::Multiply(" ", 1), " ");
+    OCIO_CHECK_EQUAL(StringUtils::Multiply(" ", 2), "  ");
 }

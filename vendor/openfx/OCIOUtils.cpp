@@ -8,8 +8,6 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <sstream>
 #include <vector>
 
-#include <pystring.h>
-
 #include "ofxsLog.h"
 
 namespace
@@ -37,13 +35,13 @@ ContextMap deserializeContextStore(const std::string & contextStoreRaw)
 
     // Format: key0:value0;key1:value1;...
     std::vector<std::string> contextPairsRaw;
-    pystring::split(contextStoreRaw, contextPairsRaw, ";");
+    contextPairsRaw = StringUtils::Split(contextStoreRaw, ';');
 
     for (size_t i = 0; i < contextPairsRaw.size(); i++)
     {
         std::vector<std::string> contextPair;
-        pystring::split(contextPairsRaw[i], contextPair, ":");
-        
+        contextPair = StringUtils::Split(contextPairsRaw[i], ':');
+
         if (contextPair.size() == 2)
         {
             contextMap[contextPair[0]] = contextPair[1];
@@ -67,7 +65,7 @@ std::string serializeContextStore(const ContextMap & contextMap)
 
     contextStoreRaw = os.str();
 
-    return pystring::rstrip(contextStoreRaw, ";");
+    return StringUtils::RightTrim(contextStoreRaw, ";");
 }
 
 } // namespace
@@ -437,7 +435,7 @@ void contextParamChanged(OFX::ImageEffect & instance,
                          const std::string & paramName)
 {
     // Is changed param a context variable?
-    if (!pystring::startswith(paramName, "context_") 
+    if (!StringUtils::StartsWith(paramName, "context_") 
             || paramName == "context_store")
     {
         return;
@@ -513,7 +511,7 @@ void choiceParamChanged(OFX::ImageEffect & instance,
                         const std::string & paramName)
 {
     // Ignore sibling *_store params
-    if (pystring::endswith(paramName, "_store"))
+    if (StringUtils::EndsWith(paramName, "_store"))
     {
         return;
     }

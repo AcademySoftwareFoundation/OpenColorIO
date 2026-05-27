@@ -2561,7 +2561,8 @@ const char * Config::getInactiveColorSpaces() const
 bool Config::isInactiveColorSpace(const char * colorspace) const noexcept
 {
     StringUtils::StringVec svec;
-    pystring::split(getImpl()->m_inactiveColorSpaceNamesConf.c_str(), svec, ", ");
+    svec = StringUtils::Split(getImpl()->m_inactiveColorSpaceNamesConf.c_str(), ',');
+    StringUtils::Trim(svec);
 
     for (size_t i = 0; i < svec.size(); i++)
     {
@@ -6026,7 +6027,7 @@ bool Config::isArchivable() const
                 // 1) Path may not be absolute.
                 pystring::os::path::isabs(normPath)  || 
                 // 2) Path may not start with double dot ".." (going above working directory).
-                pystring::startswith(normPath, "..") ||
+                StringUtils::StartsWith(normPath, "..") ||
                 // 3) A context variable may not be located at the start of the path.
                 (ContainsContextVariables(path) && 
                 (StringUtils::Find(path, "$") == 0 || 
