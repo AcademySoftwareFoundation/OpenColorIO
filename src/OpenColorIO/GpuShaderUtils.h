@@ -76,6 +76,8 @@ public:
     std::string intKeyword() const;
     std::string intKeywordConst() const;
     std::string intDecl(const std::string& name) const;
+    // Cast a float expression to int using language-appropriate syntax.
+    std::string intCast(const std::string& expr) const;
 
     std::string colorDecl(const std::string& name) const;
     
