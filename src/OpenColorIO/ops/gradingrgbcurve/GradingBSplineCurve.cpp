@@ -1190,6 +1190,8 @@ void GradingBSplineCurveImpl::AddShaderEvalRevHue(GpuShaderText & st,
     st.newLine() << "float knStart = " << knots << "[knotsOffs];";
     st.newLine() << "float knEnd = " << knots << "[knotsOffs + knotsCnt - 1];";
     st.newLine() << "float knStartY = " << coefs << "[coefsOffs + coefsSets * 2];";
+    // HUE-FX (curve 7): offset start Y bound by its knot, matching CPU evalRevHue.
+    st.newLine() << "knStartY = (curveIdx == 7) ? knStartY + knStart : knStartY;";
     st.newLine() << "float knEndY;";
     st.newLine() << "{";
     st.newLine() << "  float A = " << coefs << "[coefsOffs + coefsSets - 1];";
@@ -1198,7 +1200,6 @@ void GradingBSplineCurveImpl::AddShaderEvalRevHue(GpuShaderText & st,
     st.newLine() << "  float kn = " << knots << "[knotsOffs + knotsCnt - 2];";
     st.newLine() << "  float t = knEnd - kn;";
     st.newLine() << "  knEndY = ( A * t + B ) * t + C;";
-    // The HUE-FX curve is index 7 and requires special handling.
     st.newLine() << "  knEndY = (curveIdx == 7) ? knEndY + knEnd : knEndY;";
     st.newLine() << "}";
 
