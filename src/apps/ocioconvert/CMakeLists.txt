@@ -30,8 +30,8 @@ target_link_libraries(ocioconvert
     PRIVATE
         ${OCIO_GL_LIB}
         apputils
-        OpenColorIO
         imageioapphelpers
+        OpenColorIO
 )
 
 include(StripUtils)
