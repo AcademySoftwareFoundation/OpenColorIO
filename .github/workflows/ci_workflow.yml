@@ -504,12 +504,19 @@ jobs:
         if: matrix.build-docs == 'ON'
       - name: Install tests env
         run: share/ci/scripts/macos/install_tests_env.sh
+      - name: Install OIIO
+        if: matrix.use-oiio == 'ON'
+        run: time share/ci/scripts/macos/install_oiio.sh
       - name: Create build directories
         run: |
           mkdir _install
           mkdir _build
       - name: Configure
         run: |
+          OIIO_CMAKE_ARGS=()
+          if [ "${{ matrix.use-oiio }}" = "ON" ]; then
+            OIIO_CMAKE_ARGS+=(-DOpenImageIO_ROOT=$(brew --prefix openimageio))
+          fi
           cmake ../. \
                 -DCMAKE_INSTALL_PREFIX=../_install \
                 -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
@@ -523,7 +530,8 @@ jobs:
                 -DOCIO_INSTALL_EXT_PACKAGES=ALL \
                 -DOCIO_WARNING_AS_ERROR=ON \
                 -DPython_EXECUTABLE=$(which python) \
-                -DCMAKE_OSX_ARCHITECTURES="${{ matrix.arch-type }}"
+                -DCMAKE_OSX_ARCHITECTURES="${{ matrix.arch-type }}" \
+                "${OIIO_CMAKE_ARGS[@]}"
         working-directory: _build
       - name: Build
         run: |
