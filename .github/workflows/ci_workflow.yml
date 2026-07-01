@@ -198,13 +198,12 @@ jobs:
             build-docs: 'OFF'
             build-openfx: 'ON'
             use-simd: 'ON'
-            use-oiio: 'ON'
+            use-oiio: 'OFF'
             cxx-standard: 20
             cxx-compiler: clang++
             cc-compiler: clang
             compiler-desc: Clang
             vfx-cy: 2023
-            container-tag: 2023.2
             install-ext-packages: MISSING
           - build: 2
             build-type: Release
@@ -218,7 +217,6 @@ jobs:
             cc-compiler: gcc
             compiler-desc: GCC
             vfx-cy: 2023
-            container-tag: 2023.2
             install-ext-packages: ALL
           - build: 1
             build-type: Release
@@ -232,7 +230,6 @@ jobs:
             cc-compiler: gcc
             compiler-desc: GCC
             vfx-cy: 2023
-            container-tag: 2023.2
             install-ext-packages: ALL
     env:
       CXX: ${{ matrix.cxx-compiler }}
