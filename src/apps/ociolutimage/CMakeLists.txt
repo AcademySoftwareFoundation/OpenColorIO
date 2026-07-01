@@ -22,8 +22,8 @@ endif()
 target_link_libraries(ociolutimage
 	PRIVATE
 		apputils
-		imageioapphelpers
 		OpenColorIO
+		imageioapphelpers
 		utils::strings
 )
 

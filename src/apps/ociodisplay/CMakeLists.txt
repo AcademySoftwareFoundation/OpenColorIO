@@ -42,9 +42,9 @@ target_link_libraries(ociodisplay
         ${GLUT_LIBRARIES}
         ${OPENGL_LIBRARIES}
         apputils
+        OpenColorIO
         imageioapphelpers
         oglapphelpers
-        OpenColorIO
 )
 
 include(StripUtils)
