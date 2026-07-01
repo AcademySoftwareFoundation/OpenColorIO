@@ -73,6 +73,7 @@ jobs:
             build-openfx: 'ON'
             use-simd: 'ON'
             use-oiio: 'ON'
+            aswf-ocio-version: 2.5.2
             cxx-standard: 20
             cxx-compiler: clang++
             cc-compiler: clang
@@ -115,6 +116,7 @@ jobs:
             build-openfx: 'ON'
             use-simd: 'ON'
             use-oiio: 'ON'
+            aswf-ocio-version: 2.4.2
             cxx-standard: 20
             cxx-compiler: clang++
             cc-compiler: clang
@@ -157,6 +159,7 @@ jobs:
             build-openfx: 'ON'
             use-simd: 'ON'
             use-oiio: 'ON'
+            aswf-ocio-version: 2.3.2
             cxx-standard: 20
             cxx-compiler: clang++
             cc-compiler: clang
@@ -242,6 +245,13 @@ jobs:
         if: matrix.build-docs == 'ON'
       - name: Install tests env
         run: share/ci/scripts/linux/dnf/install_tests_env.sh
+      - name: Install ASWF OpenColorIO for OpenImageIO
+        # The container's prebuilt OpenImageIO is linked against a specific
+        # OpenColorIO release that the container does not ship (it's built
+        # from source here instead). Fetch that release from the ASWF Conan
+        # remote so OpenImageIO's dependency resolves at link/run time.
+        if: matrix.use-oiio == 'ON'
+        run: share/ci/scripts/linux/dnf/install_aswf_opencolorio.sh ${{ matrix.aswf-ocio-version }} ${{ matrix.vfx-cy }}
       - name: Create build directories
         run: |
           mkdir _install
