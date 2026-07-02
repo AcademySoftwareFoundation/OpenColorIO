@@ -115,10 +115,7 @@ private:
 // naming the exact (dim, numPixels) combination instead of an unexplained crash.
 OCIO_ADD_TEST(Lut3DRenderer, avx512_tetrahedral_bounds)
 {
-    if (!OCIO::CPUInfo::instance().hasAVX512())
-    {
-        return;
-    }
+    if (!OCIO::CPUInfo::instance().hasAVX512()) throw SkipException();
 
     for (int dim : { 2, 32 })
     {
