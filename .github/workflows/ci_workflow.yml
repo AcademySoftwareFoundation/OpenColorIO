@@ -201,7 +201,8 @@ jobs:
             build-docs: 'OFF'
             build-openfx: 'ON'
             use-simd: 'ON'
-            use-oiio: 'OFF'
+            use-oiio: 'ON'
+            aswf-ocio-version: 2.2.1
             cxx-standard: 20
             cxx-compiler: clang++
             cc-compiler: clang
@@ -323,7 +324,7 @@ jobs:
         working-directory: _build/tests/cmake-consumer-dist
 
   # ---------------------------------------------------------------------------
-  # macOS
+  # macOS Intel
   # ---------------------------------------------------------------------------
 
   macos:
@@ -617,7 +618,8 @@ jobs:
             build-docs: 'OFF'
             build-openfx: 'ON'
             use-simd: 'OFF'
-            use-oiio: 'ON'
+            # NB: OIIO is not currently set up for Windows CI builds
+            use-oiio: 'OFF'
             cxx-standard: 20
             python-version: '3.13'
           - build: 3
