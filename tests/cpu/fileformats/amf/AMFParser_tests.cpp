@@ -8,153 +8,101 @@
 
 namespace OCIO_NAMESPACE
 {
-    OCIO_ADD_TEST(AMFParser, CreateFromAMF_slogtopq)
+
+namespace
+{
+// Canonical ACES AMF sample files (copied from the aces-amf library's
+// Generated_Samples_AMF/valid_AMFs corpus) that use ACES 2.0 transform IDs and
+// therefore resolve against the ACES 2 studio builtin config. See
+// tests/data/files/amf/README.md.
+static const std::vector<std::string> kValidAces2Samples =
+{
+    "01_minimal.amf",
+    "02_idt_only_vfx_pull.amf",
+    "03_idt_odt_viewing_pipeline.amf",
+    "04_basic_grading_single_lmt.amf",
+    "05_complex_grading_multiple_lmts.amf",
+    "06_cdl_in_acescct.amf",
+    "07_lut_based_look.amf",
+    "08_mixed_cdl_and_lut.amf",
+    "09_applied_non_applied_sequence.amf",
+    "10_clip_specific_metadata.amf",
+    "11_multi_author.amf",
+    "12_primary_with_archived_looks.amf",
+    "13_url_encoded_filenames.amf",
+    "14_complex_metadata.amf",
+    "15_hdr_pipeline_p3_st2084.amf",
+    "16_gamut_compress_lmt.amf",
+    "24_aces_2_0_basic.amf",
+    "25_aces_2_0_with_lmt.amf",
+    "30_cdl_reference_from_ccc.amf",
+    "35_aces_2_0_full_grading.amf",
+    "36_aces_2_0_hdr_p3.amf",
+    "37_aces_2_0_multiple_outputs.amf",
+};
+} // anonymous namespace
+
+OCIO_ADD_TEST(AMFParser, CreateFromAMF_canonical_aces2_samples)
+{
+    for (const auto & sample : kValidAces2Samples)
     {
+        const std::string amfFilePath(GetTestFilesDir() + "/amf/" + sample);
+
         AMFInfoRcPtr amfInfoObject = AMFInfo::Create();
-        std::string amfFilePath(GetTestFilesDir() + "/amf/slogtopq.amf");
-        ConstConfigRcPtr amfConfig = CreateFromAMF(amfInfoObject, amfFilePath.c_str());
-
-        int numRoles = amfConfig->getNumRoles();
-        OCIO_REQUIRE_ASSERT(numRoles > 0);
-
-        for (int i = 0; i < numRoles; i++)
-        {
-            std::string roleName = amfConfig->getRoleName(i);
-            if (roleName.find("amf_clip_") == 0)
-            {
-                std::string srcColorSpace = amfConfig->getRoleColorSpace(i);
-                std::string activeDisplays = amfConfig->getActiveDisplays();
-                std::vector<std::string> listActiveDisplays;
-                std::stringstream ss(activeDisplays);
-                std::string token;
-                while (std::getline(ss, token, ','))
-                {
-                    listActiveDisplays.push_back(token);
-                }
-                OCIO_REQUIRE_ASSERT(listActiveDisplays.size() == 1);
-
-                std::string activeDisplay = listActiveDisplays.at(0);
-                std::string activeViews = amfConfig->getActiveViews();
-                std::vector<std::string> listActiveViews;
-                ss.clear();
-                ss.str(activeViews);
-                while (std::getline(ss, token, ','))
-                {
-                    listActiveViews.push_back(token);
-                }
-                OCIO_REQUIRE_ASSERT(listActiveViews.size() == 1);
-
-                std::string activeView = listActiveViews.at(0);
-                OCIO_REQUIRE_ASSERT(activeDisplay.compare(srcColorSpace) != 0);
-
-                DisplayViewTransformRcPtr transform = DisplayViewTransform::Create();
-                transform->setSrc(srcColorSpace.c_str());
-                transform->setDisplay(activeDisplay.c_str());
-                transform->setView(activeView.c_str());
-                transform->validate();
-
-                ConstProcessorRcPtr processor = amfConfig->getProcessor(transform);
-                OCIO_CHECK_ASSERT(processor);
-
-                return;
-            }
-
-        }
-        OCIO_REQUIRE_ASSERT(true);
-    }
-
-    OCIO_ADD_TEST(AMFParser, CreateFromAMF_slogtopq_wlook)
-    {
-        AMFInfoRcPtr amfInfoObject = AMFInfo::Create();
-        std::string amfFilePath(GetTestFilesDir() + "/amf/slogtopq_wlook.amf");
-        ConstConfigRcPtr amfConfig = CreateFromAMF(amfInfoObject, amfFilePath.c_str());
-
-        int numRoles = amfConfig->getNumRoles();
-        OCIO_REQUIRE_ASSERT(numRoles > 0);
-
-        for (int i = 0; i < numRoles; i++)
-        {
-            std::string roleName = amfConfig->getRoleName(i);
-            if (roleName.find("amf_clip_") == 0)
-            {
-                std::string srcColorSpace = amfConfig->getRoleColorSpace(i);
-                std::string activeDisplays = amfConfig->getActiveDisplays();
-                std::vector<std::string> listActiveDisplays;
-                std::stringstream ss(activeDisplays);
-                std::string token;
-                while (std::getline(ss, token, ','))
-                {
-                    listActiveDisplays.push_back(token);
-                }
-                OCIO_REQUIRE_ASSERT(listActiveDisplays.size() == 1);
-
-                std::string activeDisplay = listActiveDisplays.at(0);
-                std::string activeViews = amfConfig->getActiveViews();
-                std::vector<std::string> listActiveViews;
-                ss.clear();
-                ss.str(activeViews);
-                while (std::getline(ss, token, ','))
-                {
-                    listActiveViews.push_back(token);
-                }
-                OCIO_REQUIRE_ASSERT(listActiveViews.size() == 1);
-
-                std::string activeView = listActiveViews.at(0);
-                OCIO_REQUIRE_ASSERT(activeDisplay.compare(srcColorSpace) != 0);
-
-                DisplayViewTransformRcPtr transform = DisplayViewTransform::Create();
-                transform->setSrc(srcColorSpace.c_str());
-                transform->setDisplay(activeDisplay.c_str());
-                transform->setView(activeView.c_str());
-                transform->validate();
-
-                ConstProcessorRcPtr processor = amfConfig->getProcessor(transform);
-                OCIO_CHECK_ASSERT(processor);
-
-                return;
-            }
-
-        }
-        OCIO_REQUIRE_ASSERT(true);
-    }
-
-    OCIO_ADD_TEST(AMFParser, CreateFromAMF_aces2_slog3_to_p3d65)
-    {
-        // An AMF that references ACES 2.0 (v2.0) transform IDs must auto-select
-        // an ACES 2 reference config and resolve every transform through the
-        // "amf_transform_ids" interchange attribute.
-        AMFInfoRcPtr amfInfoObject = AMFInfo::Create();
-        std::string amfFilePath(GetTestFilesDir() + "/amf/aces2_slog3_to_p3d65.amf");
-        // Exercise the idiomatic Config::CreateFromAMF factory (Phase 4 API).
-        ConstConfigRcPtr amfConfig = Config::CreateFromAMF(amfInfoObject, amfFilePath.c_str());
-
+        ConstConfigRcPtr amfConfig;
+        OCIO_CHECK_NO_THROW_FROM(
+            amfConfig = Config::CreateFromAMF(amfInfoObject, amfFilePath.c_str()), sample);
         OCIO_REQUIRE_ASSERT(amfConfig);
 
-        // The auto-selected ACES 2 studio config is profile version 2.5+.
-        OCIO_CHECK_ASSERT(amfConfig->getMajorVersion() > 2 ||
-                          (amfConfig->getMajorVersion() == 2 && amfConfig->getMinorVersion() >= 5));
+        // The generated config must validate, and the input transform must
+        // resolve to a color space.
+        OCIO_CHECK_NO_THROW_FROM(amfConfig->validate(), sample);
+        OCIO_CHECK_ASSERT_MESSAGE(std::strlen(amfInfoObject->getInputColorSpaceName()) > 0, sample);
 
-        // The input transform (S-Log3) must have resolved to a color space.
-        OCIO_REQUIRE_ASSERT(std::strlen(amfInfoObject->getInputColorSpaceName()) > 0);
+        // AMFInfo reports the resolved display/view; the pipeline must build a
+        // processor end to end.
+        const std::string display = amfInfoObject->getDisplayName();
+        const std::string view    = amfInfoObject->getViewName();
+        OCIO_CHECK_ASSERT_MESSAGE(!display.empty(), sample);
+        OCIO_CHECK_ASSERT_MESSAGE(!view.empty(), sample);
 
-        // The output transform must have produced an active display and view.
-        std::string activeDisplay = amfConfig->getActiveDisplays();
-        std::string activeView    = amfConfig->getActiveViews();
-        OCIO_CHECK_ASSERT(!activeDisplay.empty());
-        OCIO_CHECK_ASSERT(!activeView.empty());
+        // Samples 01/02 have no output transform, so their display/view
+        // legitimately fall back to the config's default ("None"/"Raw"). Every
+        // other sample must resolve a real output display -- assert it is not
+        // the fallback, so a regression that drops output-transform resolution
+        // (silently falling back) is caught.
+        const bool outputLess =
+            (sample == "01_minimal.amf" || sample == "02_idt_only_vfx_pull.amf");
+        if (!outputLess)
+            OCIO_CHECK_ASSERT_MESSAGE(display != "None", sample);
 
-        // Both look transforms (Reference Gamut Compress + a CDL) resolved.
-        OCIO_CHECK_ASSERT(amfConfig->getNumLooks() >= 2);
-
-        // The resolved pipeline must be usable end to end.
         DisplayViewTransformRcPtr transform = DisplayViewTransform::Create();
         transform->setSrc(amfInfoObject->getInputColorSpaceName());
-        transform->setDisplay(activeDisplay.c_str());
-        transform->setView(activeView.c_str());
-        transform->validate();
+        transform->setDisplay(display.c_str());
+        transform->setView(view.c_str());
+        OCIO_CHECK_NO_THROW_FROM(transform->validate(), sample);
 
-        ConstProcessorRcPtr processor = amfConfig->getProcessor(transform);
-        OCIO_CHECK_ASSERT(processor);
+        ConstProcessorRcPtr processor;
+        OCIO_CHECK_NO_THROW_FROM(processor = amfConfig->getProcessor(transform), sample);
+        OCIO_CHECK_ASSERT_MESSAGE(processor.get() != nullptr, sample);
     }
+}
+
+OCIO_ADD_TEST(AMFParser, CreateFromAMF_rejects_amf_v1_schema)
+{
+    // Only AMF schema v2.0+ is supported; a v1.0 document is rejected.
+    const std::string amfFilePath(GetTestFilesDir() + "/amf/negative_v1_schema.amf");
+    AMFInfoRcPtr amfInfoObject = AMFInfo::Create();
+    OCIO_CHECK_THROW(Config::CreateFromAMF(amfInfoObject, amfFilePath.c_str()), Exception);
+}
+
+OCIO_ADD_TEST(AMFParser, CreateFromAMF_rejects_aces1_transforms)
+{
+    // ACES 1.x transform IDs are not present in the ACES 2 builtin config, so a
+    // valid v2.0-schema AMF that references them must fail to load.
+    const std::string amfFilePath(GetTestFilesDir() + "/amf/26_aces_1_3_explicit.amf");
+    AMFInfoRcPtr amfInfoObject = AMFInfo::Create();
+    OCIO_CHECK_THROW(Config::CreateFromAMF(amfInfoObject, amfFilePath.c_str()), Exception);
+}
 
 } // namespace OCIO_NAMESPACE

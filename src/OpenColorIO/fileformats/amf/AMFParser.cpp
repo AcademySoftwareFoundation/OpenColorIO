@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <stack>
 #include <regex>
+#include <cstdlib>
 #include <cstring>
 
 #include "fileformats/amf/AMFParser.h"
@@ -32,20 +33,21 @@ namespace OCIO_NAMESPACE
 //     AMFInputTransform / AMFOutputTransform structures and the m_input /
 //     m_output / m_look / m_clipId members (the library exposes its own
 //     AMF object model).
-//   * Ad-hoc file/format validation: checkLutPath(), the file-open check in
-//     parse(), extractThreeFloats(), getCCCId(), getFileDescription() -- the
-//     library provides schema + semantic validation and typed accessors.
-//   * mustApply() and amfReferencesAces2Transforms(), which would read the
-//     'applied' attribute / transform IDs from the library's object model.
+//   * Ad-hoc file/format validation: checkRootElement() (the AMF v2.0 schema
+//     gate), checkLutPath(), the file-open check in parse(), extractThreeFloats(),
+//     getCCCId(), getFileDescription() -- the library provides schema + semantic
+//     validation and typed accessors.
+//   * mustApply(), which would read the 'applied' attribute from the library's
+//     object model.
 //
 // The library would NOT replace (OCIO-specific AMF -> Config mapping; stays):
 //   * initAMFConfig(), processInputTransform(), processOutputTransform(),
 //     processOutputTransformId(), processLookTransforms()/processLookTransform(),
 //     loadCdlWsTransform(), handleWorkingLocation(), determineClipColorSpace().
 //   * Reference config selection + transform-ID resolution against the OCIO
-//     config: loadACESRefConfig(), searchColorSpaces()/searchViewTransforms()/
-//     searchLookTransforms(), ElementMatchesTransformId(), refRoleColorSpace(),
-//     clearCopiedInteropIds().
+//     config: loadACESRefConfig(), searchColorSpaces(), resolveDisplayView(),
+//     searchLookTransforms(), GetElementTransformIds()/ElementMatchesTransformId(),
+//     refRoleColorSpace(), clearCopiedInteropIds().
 //
 // Integration boundary: feed the library's parsed AMF object model into the
 // process*() methods in place of the m_input/m_output/m_look/m_clipId members.
@@ -59,12 +61,11 @@ namespace OCIO_NAMESPACE
 // .transform_id; clip_id.clip_name; plus a working-location helper. A C++ port
 // is expected to mirror this shape.
 //
-// Tradeoff to weigh before adopting: the official library is currently AMF
-// v2.0-only and strictly validates the schema and required fields (e.g. it
-// rejects AMFs missing amfInfo/pipelineInfo/clipId uuid or dateTime, and does
-// not read amf:v1.0 documents). This expat-based reader is intentionally more
-// permissive and also handles v1.0. Adopting the library would tighten
-// validation (a feature) but would reject looser/older AMFs this reader accepts.
+// Like the official library, this reader is AMF v2.0-only (checkRootElement
+// rejects amf:v1.0 documents) and resolves transforms against the ACES 2
+// reference config. It is, however, looser on required fields (it does not
+// enforce that amfInfo/pipelineInfo/clipId carry uuid/dateTime). Adopting the
+// library would add that schema + required-field validation.
 // ----------------------------------------------------------------------------
 
 static constexpr char ACES[] = "ACES2065-1";
@@ -104,6 +105,10 @@ static constexpr char AMF_TAG_ASCSAT[] = "cdl:ASC_SAT";
 static constexpr char AMF_TAG_SAT[] = "cdl:Saturation";
 
 static constexpr char AMF_TAG_PIPELINE[] = "aces:pipeline";
+
+// AMF schema namespace prefix; the trailing "vN.N" is the schema version. Only
+// AMF v2.0+ is supported (ACES 1.x / AMF v1.x support was removed for OCIO 2.6).
+static constexpr char AMF_ACES_NS_PREFIX[] = "urn:ampas:aces:amf:v";
 
 static constexpr char AMF_NO_WORKING_LOCATION[] = "";
 static constexpr char AMF_PRE_WORKING_LOCATION[] = "Pre-working-location";
@@ -150,38 +155,33 @@ std::vector<std::string> SplitAmfTransformIds(const char* ids)
     return result;
 }
 
+// The list of ACES Transform IDs a config element (color space, view transform
+// or look) implements, read from the dedicated "amf_transform_ids" interchange
+// attribute. This is the single place the reader gets a transform URN off a
+// config element; the reference config must populate this metadata (the ACES 2
+// studio builtin config does). ACES 1.x support was removed for OCIO 2.6, so
+// there is no legacy description-text fallback: a user who wants a different
+// config must populate its amf_transform_ids fields.
+template <typename ElementRcPtr>
+std::vector<std::string> GetElementTransformIds(const ElementRcPtr & element)
+{
+    return SplitAmfTransformIds(element->getInterchangeAttribute("amf_transform_ids"));
+}
+
 // NOTE(aces-amf): this resolves an AMF Transform ID against the *OCIO config*
 // and therefore stays OCIO-specific even if the ACES AMF library is adopted.
-// The library (and the official ACES Transform ID Registry) could still be used
-// upstream of this to canonicalize IDs (e.g. resolve v1.5 <-> v2.0 equivalents)
-// before they reach this matcher.
-//
-// Determine whether a config element (color space, view transform or look)
-// corresponds to the supplied ACES Transform ID.
-//
-// For OCIO 2.5+ configs (useAmfIds == true) the match is done against the
-// dedicated "amf_transform_ids" interchange attribute, which holds the exact
-// list of Transform IDs the element implements.  For older configs the ID is
-// matched as a substring of the element description (the legacy heuristic).
+// Determine whether a config element corresponds to the supplied ACES Transform
+// ID by exact membership in its amf_transform_ids.
 template <typename ElementRcPtr>
-bool ElementMatchesTransformId(const ElementRcPtr & element,
-                               const std::string & acesId,
-                               bool useAmfIds)
+bool ElementMatchesTransformId(const ElementRcPtr & element, const std::string & acesId)
 {
-    if (useAmfIds)
+    const std::vector<std::string> ids = GetElementTransformIds(element);
+    for (const auto & id : ids)
     {
-        const std::vector<std::string> ids =
-            SplitAmfTransformIds(element->getInterchangeAttribute("amf_transform_ids"));
-        for (const auto & id : ids)
-        {
-            if (id == acesId)
-                return true;
-        }
-        return false;
+        if (id == acesId)
+            return true;
     }
-
-    const std::string desc = element->getDescription();
-    return desc.find(acesId) != std::string::npos;
+    return false;
 }
 
 } // anonymous namespace
@@ -397,7 +397,7 @@ public:
         , m_isInsideClipId(false)
         , m_isInsidePipeline(false)
         , m_numLooksBeforeWorkingLocation(-1)
-        , m_useAmfIds(false) {};
+        , m_rootChecked(false) {};
 
     ~Impl()
     {
@@ -413,6 +413,9 @@ private:
     void parse(const std::string & buffer, bool lastLine);
 
     static void StartElementHandler(void* userData, const XML_Char* name, const XML_Char** atts);
+    // Validate the root aces:acesMetadataFile element declares an AMF v2.0+
+    // schema namespace; throw otherwise. Only AMF v2.0+ is supported.
+    void checkRootElement(const XML_Char* name, const XML_Char** atts);
     static bool HandleInputTransformStartElement(AMFParser::Impl* pImpl, const XML_Char* name, const XML_Char** atts);
     static bool HandleOutputTransformStartElement(AMFParser::Impl* pImpl, const XML_Char* name, const XML_Char** atts);
     static bool HandleLookTransformStartElement(AMFParser::Impl* pImpl, const XML_Char* name, const XML_Char** atts);
@@ -438,9 +441,6 @@ private:
     void loadACESRefConfig(const char* configFilePath = nullptr);
     void initAMFConfig();
 
-    // Returns true if the parsed AMF references any ACES v2.0 transform IDs,
-    // used to auto-select an ACES 2 reference config when none is supplied.
-    bool amfReferencesAces2Transforms() const;
     // Name of the reference config color space assigned to the given role,
     // or the supplied fallback when the role is not defined.
     std::string refRoleColorSpace(const char* role, const char* fallback) const;
@@ -453,8 +453,20 @@ private:
     // Returns true if the transform ID resolved to a display color space and
     // view transform in the reference config, false otherwise.
     bool processOutputTransformId(const char* transformId, TransformDirection tDirection);
+    // A config that exposes a display color space must also declare a view
+    // transform, because initAMFConfig adds the display-referred CIE-XYZ-D65
+    // interchange space. File-based (LUT) output/input transforms create a
+    // display via addDisplayView but do not resolve a view transform, so add
+    // the reference config's Un-tone-mapped view transform to keep the config
+    // valid (matching the missing-output and transform-ID paths).
+    void addDefaultViewTransform();
     void addInactiveCS(const char* csName);
-    ConstViewTransformRcPtr searchViewTransforms(std::string acesId);
+    // Resolve an ACES Output Transform ID to the single (display, view) pair in
+    // the reference config: the display whose display color space carries the
+    // ID, then the view under that display whose view transform carries the ID.
+    // Returns false if no display or no matching view is found.
+    bool resolveDisplayView(const char* transformId, std::string& display,
+                            std::string& view, std::string& viewTransform);
 
     bool processLookTransform(AMFTransform& look, int index, std::string workingLocation);
     void loadCdlWsTransform(AMFTransform& amft, bool isTo, TransformRcPtr& t);
@@ -493,10 +505,9 @@ private:
     // "< 0" checks below).
     long m_numLooksBeforeWorkingLocation;
 
-    // Whether the reference config exposes the "amf_transform_ids" interchange
-    // attribute (OCIO 2.5+). When false, transform IDs are matched against the
-    // color space / view transform / look description text instead.
-    bool m_useAmfIds;
+    // Set once the root aces:acesMetadataFile element has been validated to be
+    // an AMF v2.0+ document (see StartElementHandler).
+    bool m_rootChecked;
 };
 
 void AMFParser::Impl::reset()
@@ -516,7 +527,7 @@ void AMFParser::Impl::reset()
     m_currentElement.clear();
     m_clipName.clear();
     m_numLooksBeforeWorkingLocation = -1;
-    m_useAmfIds = false;
+    m_rootChecked = false;
 }
 
 ConstConfigRcPtr AMFParser::Impl::parse(AMFInfoRcPtr amfInfoObject, const char* amfFilePath, const char* configFilePath)
@@ -551,9 +562,8 @@ ConstConfigRcPtr AMFParser::Impl::parse(AMFInfoRcPtr amfInfoObject, const char* 
         parse(line, !m_xmlStream.good());
     }
 
-    // The reference config is selected only after parsing, so that the AMF's
-    // own transform IDs can drive the choice between an ACES 1.x and an ACES 2
-    // reference config when the caller did not supply one explicitly.
+    // Load the reference config used to resolve transform IDs: the caller's
+    // config if supplied, otherwise the ACES 2 studio builtin config.
     loadACESRefConfig(configFilePath);
 
     initAMFConfig();
@@ -565,8 +575,14 @@ ConstConfigRcPtr AMFParser::Impl::parse(AMFInfoRcPtr amfInfoObject, const char* 
 
     handleWorkingLocation();
 
-    m_amfInfoObject->setDisplayName(m_amfConfig->getDisplay(0));
-    m_amfInfoObject->setViewName(m_amfConfig->getView(m_amfInfoObject->getDisplayName(), 0));
+    // The transform-ID output path sets these to the resolved (display, view)
+    // pair directly. Only fall back to the config's first display/view for
+    // paths that don't (e.g. file-based outputs, which set up a display via
+    // addDisplayView but don't populate AMFInfo).
+    if (0 == std::strlen(m_amfInfoObject->getDisplayName()))
+        m_amfInfoObject->setDisplayName(m_amfConfig->getDisplay(0));
+    if (0 == std::strlen(m_amfInfoObject->getViewName()))
+        m_amfInfoObject->setViewName(m_amfConfig->getView(m_amfInfoObject->getDisplayName(), 0));
     determineClipColorSpace();
 
     std::regex nonAlnum("[^0-9a-zA-Z_]");
@@ -609,6 +625,11 @@ void AMFParser::Impl::StartElementHandler(void* userData, const XML_Char* name, 
     AMFParser::Impl* pImpl = (AMFParser::Impl*)userData;
     if (IsValidElement(pImpl, name))
     {
+        // The very first element must be the AMF root; validate its schema
+        // version (v2.0+) before processing anything else.
+        if (!pImpl->m_rootChecked)
+            pImpl->checkRootElement(name, atts);
+
         if (HandleClipIdStartElement(pImpl, name, atts))
         {
         }
@@ -624,6 +645,63 @@ void AMFParser::Impl::StartElementHandler(void* userData, const XML_Char* name, 
             {
             }
         }
+    }
+}
+
+void AMFParser::Impl::checkRootElement(const XML_Char* name, const XML_Char** atts)
+{
+    m_rootChecked = true;
+
+    // Match the root by local name, tolerating any namespace prefix.
+    const char* rootLocal = std::strchr(name, ':');
+    rootLocal = rootLocal ? rootLocal + 1 : name;
+    if (0 != Platform::Strcasecmp(rootLocal, "acesMetadataFile"))
+    {
+        throwMessage("Not an ACES Metadata File: the root element must be acesMetadataFile.");
+    }
+
+    // Find the namespace declaration that binds the AMF schema URI, and the
+    // prefix it binds it to. Expat runs in non-namespace mode, so xmlns
+    // declarations arrive as ordinary attributes on the root element.
+    const size_t prefixLen = std::strlen(AMF_ACES_NS_PREFIX);
+    const char* ns = nullptr;
+    std::string boundPrefix;
+    for (int i = 0; atts && atts[i]; i += 2)
+    {
+        const std::string attrName(atts[i]);
+        const char* attrValue = atts[i + 1];
+        if (attrName != "xmlns" && attrName.rfind("xmlns:", 0) != 0)
+            continue;
+        if (attrValue && 0 == std::strncmp(attrValue, AMF_ACES_NS_PREFIX, prefixLen))
+        {
+            ns = attrValue;
+            boundPrefix = (attrName == "xmlns") ? "" : attrName.substr(std::strlen("xmlns:"));
+            break;
+        }
+    }
+
+    if (!ns)
+    {
+        throwMessage("Missing ACES namespace; expected an "
+                     "'urn:ampas:aces:amf:vN.N' declaration on the root element.");
+    }
+
+    // Only AMF v2.0+ is supported. Parse the major version from the "vN.N"
+    // suffix of the namespace URN.
+    const std::string version = std::string(ns).substr(prefixLen);
+    if (std::atoi(version.c_str()) < 2)
+    {
+        throwMessage("Unsupported AMF schema version '" + version +
+                     "'; only AMF v2.0 and later are supported.");
+    }
+
+    // The reader matches elements by the 'aces:' prefix, so the ACES namespace
+    // must be bound to that prefix. Supporting an arbitrary prefix (or the
+    // default namespace) would require namespace-aware XML parsing (future work).
+    if (boundPrefix != "aces")
+    {
+        throwMessage("The ACES namespace must be bound to the 'aces' prefix; "
+                     "prefix '" + boundPrefix + "' is not supported.");
     }
 }
 
@@ -990,6 +1068,8 @@ void AMFParser::Impl::processInputTransform()
                     std::string viewName = name;
                     std::string dispName;
                     getFileDescription(m_input, dispName);
+                    if (dispName.empty())
+                        dispName = "AMF Input -- " + m_clipName;
                     std::string family = "AMF/" + m_clipName;
                     ColorSpaceRcPtr cs = ColorSpace::Create();
                     cs->setName(name.c_str());
@@ -1006,6 +1086,7 @@ void AMFParser::Impl::processInputTransform()
                     m_amfConfig->setActiveDisplays(dispName.c_str());
                     m_amfConfig->setActiveViews(viewName.c_str());
                     m_amfConfig->addColorSpace(cs);
+                    addDefaultViewTransform();
                     m_amfInfoObject->setInputColorSpaceName(m_amfConfig->getColorSpace(cs->getName())->getName());
                 }
             }
@@ -1042,9 +1123,7 @@ void AMFParser::Impl::processOutputTransform()
     if (m_output.empty())
     {
         m_amfConfig->addDisplayView("None", "Raw", "Raw", nullptr);
-        /* A config with a display color space must have a view transform.
-        Either need to remove 'CIE-XYZ-D65' or add a view transform. */
-        m_amfConfig->addViewTransform(m_refConfig->getViewTransform("Un-tone-mapped"));
+        addDefaultViewTransform();
         return;
     }
 
@@ -1069,6 +1148,8 @@ void AMFParser::Impl::processOutputTransform()
             std::string viewName = name;
             std::string dispName;
             getFileDescription(m_output, dispName);
+            if (dispName.empty())
+                dispName = "AMF Output -- " + m_clipName;
             std::string family = "AMF/" + m_clipName;
             ColorSpaceRcPtr cs = ColorSpace::Create();
             cs->setName(name.c_str());
@@ -1082,6 +1163,7 @@ void AMFParser::Impl::processOutputTransform()
             m_amfConfig->setActiveViews(viewName.c_str());
 
             m_amfConfig->addColorSpace(cs);
+            addDefaultViewTransform();
             return;
         }
     }
@@ -1133,6 +1215,8 @@ void AMFParser::Impl::processOutputTransform()
                     std::string viewName = name;
                     std::string dispName;
                     getFileDescription(m_output, dispName);
+                    if (dispName.empty())
+                        dispName = "AMF Output -- " + m_clipName;
                     std::string family = "AMF/" + m_clipName;
                     ColorSpaceRcPtr cs = ColorSpace::Create();
                     cs->setName(name.c_str());
@@ -1149,6 +1233,7 @@ void AMFParser::Impl::processOutputTransform()
                     m_amfConfig->setActiveDisplays(dispName.c_str());
                     m_amfConfig->setActiveViews(viewName.c_str());
                     m_amfConfig->addColorSpace(cs);
+                    addDefaultViewTransform();
                 }
             }
         }
@@ -1229,33 +1314,6 @@ void AMFParser::Impl::processClipId()
     }
 }
 
-bool AMFParser::Impl::amfReferencesAces2Transforms() const
-{
-    auto scan = [](const std::vector<std::pair<std::string, std::string>> & elems) -> bool
-    {
-        for (const auto & elem : elems)
-        {
-            if (0 == Platform::Strcasecmp(elem.first.c_str(), AMF_TAG_TRANSFORMID) &&
-                elem.second.find(":v2.0:") != std::string::npos)
-            {
-                return true;
-            }
-        }
-        return false;
-    };
-
-    if (scan(m_input.m_tldElements) || scan(m_input.m_subElements) ||
-        scan(m_output.m_tldElements) || scan(m_output.m_subElements))
-    {
-        return true;
-    }
-    for (const auto & look : m_look)
-    {
-        if (scan(look->m_subElements))
-            return true;
-    }
-    return false;
-}
 
 std::string AMFParser::Impl::refRoleColorSpace(const char* role, const char* fallback) const
 {
@@ -1299,20 +1357,13 @@ void AMFParser::Impl::loadACESRefConfig(const char* configFilePath)
     }
     else
     {
-        // Auto-select a builtin reference config based on the ACES version of
-        // the transforms referenced by the AMF. ACES 2 output transforms require
-        // OCIO 2.4+ builtins, which the running library provides.
-        const char* builtinConfig = amfReferencesAces2Transforms()
-            ? "studio-config-latest"
-            : "studio-config-v2.1.0_aces-v1.3_ocio-v2.3";
-        m_refConfig = Config::CreateFromBuiltinConfig(builtinConfig);
+        // OCIO 2.6 targets ACES 2 by default. Always use the latest ACES 2
+        // studio builtin config, which carries the "amf_transform_ids"
+        // interchange metadata the reader resolves transform IDs against. An
+        // ACES 1.x pipeline must supply its own config with that metadata
+        // populated (ACES 1.x is no longer supported via a builtin config).
+        m_refConfig = Config::CreateFromBuiltinConfig("studio-config-latest");
     }
-
-    // Configs at profile version 2.5+ carry the "amf_transform_ids" interchange
-    // attribute, which allows resolving AMF Transform IDs precisely.  Older
-    // configs only have the IDs embedded in the color space descriptions.
-    m_useAmfIds = (m_refConfig->getMajorVersion() > 2) ||
-                  (m_refConfig->getMajorVersion() == 2 && m_refConfig->getMinorVersion() >= 5);
 }
 
 void AMFParser::Impl::initAMFConfig()
@@ -1380,51 +1431,69 @@ void AMFParser::Impl::initAMFConfig()
 
 bool AMFParser::Impl::processOutputTransformId(const char* transformId, TransformDirection tDirection)
 {
-    ConstColorSpaceRcPtr dcs = searchColorSpaces(transformId);
-    ConstViewTransformRcPtr vt = searchViewTransforms(transformId);
+    std::string display, view, viewTransform;
+    if (!resolveDisplayView(transformId, display, view, viewTransform))
+        return false;
 
-    if (dcs && vt)
+    ConstColorSpaceRcPtr dcs = m_refConfig->getColorSpace(display.c_str());
+    ConstViewTransformRcPtr vt = m_refConfig->getViewTransform(viewTransform.c_str());
+
+    m_amfConfig->addColorSpace(dcs);
+    m_amfConfig->addViewTransform(vt);
+
+    // Reproduce the reference config's (display, view) pairing in the built
+    // config, using the real view name resolved from the reference config.
+    m_amfConfig->addSharedView(view.c_str(), viewTransform.c_str(), "<USE_DISPLAY_NAME>", ACES_LOOK_NAME, "", "");
+    int numViews = m_amfConfig->getNumViews(display.c_str());
+    bool bViewExists = false;
+    for (int i = 0; i < numViews; i++)
+        if (0 == Platform::Strcasecmp(m_amfConfig->getView(display.c_str(), i), view.c_str()))
+            bViewExists = true;
+    if (!bViewExists)
+        m_amfConfig->addDisplaySharedView(display.c_str(), view.c_str());
+
+    if (tDirection == TRANSFORM_DIR_INVERSE)
     {
-        m_amfConfig->addColorSpace(dcs);
-        m_amfConfig->addViewTransform(vt);
+        DisplayViewTransformRcPtr dvt = DisplayViewTransform::Create();
+        dvt->setSrc(ACES);
+        dvt->setDisplay(display.c_str());
+        dvt->setView(view.c_str());
+        dvt->setDirection(tDirection);
+        dvt->setLooksBypass(true);
 
-        m_amfConfig->addSharedView(vt->getName(), vt->getName(), "<USE_DISPLAY_NAME>", ACES_LOOK_NAME, "", "");
-        int numViews = m_amfConfig->getNumViews(dcs->getName());
-        bool bViewExists = false;
-        for (int i = 0; i < numViews; i++)
-            if (0 == Platform::Strcasecmp(m_amfConfig->getView(dcs->getName(), i), vt->getName()))
-                bViewExists = true;
-        if (!bViewExists)
-            m_amfConfig->addDisplaySharedView(dcs->getName(), vt->getName());
+        std::string name = "AMF Input Transform -- " + m_clipName;
+        std::string family = "AMF/" + m_clipName;
+        ColorSpaceRcPtr cs = ColorSpace::Create();
+        cs->setName(name.c_str());
+        cs->setTransform(dvt, COLORSPACE_DIR_TO_REFERENCE);
+        cs->setFamily(family.c_str());
+        cs->addCategory("file-io");
 
-        if (tDirection == TRANSFORM_DIR_INVERSE)
-        {
-            DisplayViewTransformRcPtr dvt = DisplayViewTransform::Create();
-            dvt->setSrc(ACES);
-            dvt->setDisplay(dcs->getName());
-            dvt->setView(vt->getName());
-            dvt->setDirection(tDirection);
-            dvt->setLooksBypass(true);
-
-            std::string name = "AMF Input Transform -- " + m_clipName;
-            std::string family = "AMF/" + m_clipName;
-            ColorSpaceRcPtr cs = ColorSpace::Create();
-            cs->setName(name.c_str());
-            cs->setTransform(dvt, COLORSPACE_DIR_TO_REFERENCE);
-            cs->setFamily(family.c_str());
-            cs->addCategory("file-io");
-
-            m_amfConfig->addColorSpace(cs);
-            m_amfInfoObject->setInputColorSpaceName(m_amfConfig->getColorSpace(cs->getName())->getName());
-        }
-        else
-        {
-            m_amfConfig->setActiveDisplays(dcs->getName());
-            m_amfConfig->setActiveViews(vt->getName());
-        }
-        return true;
+        m_amfConfig->addColorSpace(cs);
+        m_amfInfoObject->setInputColorSpaceName(m_amfConfig->getColorSpace(cs->getName())->getName());
     }
-    return false;
+    else
+    {
+        m_amfConfig->setActiveDisplays(display.c_str());
+        m_amfConfig->setActiveViews(view.c_str());
+        m_amfInfoObject->setDisplayName(display.c_str());
+        m_amfInfoObject->setViewName(view.c_str());
+    }
+    return true;
+}
+
+void AMFParser::Impl::addDefaultViewTransform()
+{
+    // WORKAROUND: this exists only to satisfy config validation. initAMFConfig
+    // injects the display-referred CIE-XYZ-D65 interchange space, and OCIO
+    // requires a config with any display-referred color space to declare at
+    // least one view transform. A file-based (LUT) output has no resolvable
+    // view transform, so we add the reference config's "Un-tone-mapped" view
+    // transform even though it is unrelated to the AMF's actual pipeline.
+    // The file-based ODT workflow needs further validation (whether a
+    // colorspace-view-only config is the right model, or whether CIE-XYZ-D65
+    // should be injected at all) -- kept as-is for now; revisit separately.
+    m_amfConfig->addViewTransform(m_refConfig->getViewTransform("Un-tone-mapped"));
 }
 
 void AMFParser::Impl::addInactiveCS(const char* csName)
@@ -1434,16 +1503,42 @@ void AMFParser::Impl::addInactiveCS(const char* csName)
     m_amfConfig->setInactiveColorSpaces(spaces.c_str());
 }
 
-ConstViewTransformRcPtr AMFParser::Impl::searchViewTransforms(std::string acesId)
+bool AMFParser::Impl::resolveDisplayView(const char* transformId, std::string& display,
+                                         std::string& view, std::string& viewTransform)
 {
-    auto numViewTransforms = m_refConfig->getNumViewTransforms();
-    for (auto index = 0; index < numViewTransforms; index++)
+    const std::string urn(transformId);
+
+    // Find the (display, view) pair carrying the transform ID: a display whose
+    // display color space lists the ID, and a view under it whose view
+    // transform lists the ID. If a matching display has no matching view, keep
+    // scanning the remaining displays so the pair is found wherever it lives in
+    // the config, rather than committing to the first display.
+    const int numDisplays = m_refConfig->getNumDisplays();
+    for (int d = 0; d < numDisplays; d++)
     {
-        ConstViewTransformRcPtr vt = m_refConfig->getViewTransform(m_refConfig->getViewTransformNameByIndex(index));
-        if (ElementMatchesTransformId(vt, acesId, m_useAmfIds))
-            return vt;
+        const char* displayName = m_refConfig->getDisplay(d);
+        ConstColorSpaceRcPtr dcs = m_refConfig->getColorSpace(displayName);
+        if (!dcs || !ElementMatchesTransformId(dcs, urn))
+            continue;
+
+        const int numViews = m_refConfig->getNumViews(displayName);
+        for (int v = 0; v < numViews; v++)
+        {
+            const char* viewName = m_refConfig->getView(displayName, v);
+            const char* vtName = m_refConfig->getDisplayViewTransformName(displayName, viewName);
+            if (!vtName || !*vtName)
+                continue;
+            ConstViewTransformRcPtr vt = m_refConfig->getViewTransform(vtName);
+            if (vt && ElementMatchesTransformId(vt, urn))
+            {
+                display = displayName;
+                view = viewName;
+                viewTransform = vtName;
+                return true;
+            }
+        }
     }
-    return nullptr;
+    return false;
 }
 
 bool AMFParser::Impl::processLookTransform(AMFTransform& look, int index, std::string workingLocation)
@@ -1472,6 +1567,11 @@ bool AMFParser::Impl::processLookTransform(AMFTransform& look, int index, std::s
     {
         if (0 == Platform::Strcasecmp(it->first.c_str(), AMF_TAG_TRANSFORMID))
         {
+            // NOTE: the sub-elements are flattened, so this transformId is not
+            // necessarily the look's own transform -- a CDL look carries its
+            // cdlWorkingSpace CSC transformId here too. Only consume it when it
+            // resolves to an actual look; otherwise fall through to the CDL /
+            // file handling below (do not hard-fail on a non-look id).
             LookRcPtr lk = searchLookTransforms(it->second.c_str());
             if (lk != nullptr)
             {
@@ -1751,7 +1851,7 @@ LookRcPtr AMFParser::Impl::searchLookTransforms(std::string acesId)
     for (auto index = 0; index < numLooks; index++)
     {
         ConstLookRcPtr lk = m_refConfig->getLook(m_refConfig->getLookNameByIndex(index));
-        if (ElementMatchesTransformId(lk, acesId, m_useAmfIds))
+        if (ElementMatchesTransformId(lk, acesId))
             return lk->createEditableCopy();
     }
     return nullptr;
@@ -1763,7 +1863,7 @@ ConstColorSpaceRcPtr AMFParser::Impl::searchColorSpaces(std::string acesId)
     for (auto index = 0; index < numColorSpaces; index++)
     {
         ConstColorSpaceRcPtr cs = m_refConfig->getColorSpace(m_refConfig->getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL, index));
-        if (ElementMatchesTransformId(cs, acesId, m_useAmfIds))
+        if (ElementMatchesTransformId(cs, acesId))
             return cs;
     }
     return nullptr;

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!-- Negative fixture: an AMF v1.0 schema document. The OCIO AMF reader supports
+     only AMF v2.0 and later, so CreateFromAMF must reject this at the root
+     element (see AMFParser checkRootElement). -->
+<aces:acesMetadataFile xmlns:aces="urn:ampas:aces:amf:v1.0" xmlns:cdl="urn:ASC:CDL:v1.01" version="1.0">
+    <aces:amfInfo>
+        <aces:description>AMF v1.0 document (unsupported)</aces:description>
+    </aces:amfInfo>
+    <aces:pipeline>
+        <aces:inputTransform applied="false">
+            <aces:transformId>urn:ampas:aces:transformId:v1.5:IDT.Sony.SLog3_SGamut3.a1.v1</aces:transformId>
+        </aces:inputTransform>
+    </aces:pipeline>
+</aces:acesMetadataFile>
