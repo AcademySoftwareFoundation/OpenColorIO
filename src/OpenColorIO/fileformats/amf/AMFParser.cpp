@@ -1667,7 +1667,7 @@ LookRcPtr AMFParser::Impl::searchLookTransforms(std::string acesId)
 
 ConstColorSpaceRcPtr AMFParser::Impl::searchColorSpaces(std::string acesId)
 {
-    auto numColorSpaces = m_refConfig->getNumColorSpaces();
+    auto numColorSpaces = m_refConfig->getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL);
     for (auto index = 0; index < numColorSpaces; index++)
     {
         ConstColorSpaceRcPtr cs = m_refConfig->getColorSpace(m_refConfig->getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL, index));
