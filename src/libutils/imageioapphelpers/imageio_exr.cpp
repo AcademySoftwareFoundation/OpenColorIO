@@ -4,17 +4,16 @@
 #include <sstream>
 
 #include <ImfArray.h>
-#include <ImfFrameBuffer.h>
 #include <ImfChannelList.h>
-#include <ImfPixelType.h>
+#include <ImfFloatAttribute.h>
+#include <ImfFrameBuffer.h>
 #include <ImfHeader.h>
 #include <ImfInputFile.h>
-#include <ImfOutputFile.h>
-#include <ImfFloatAttribute.h>
 #include <ImfIntAttribute.h>
 #include <ImfMatrixAttribute.h>
+#include <ImfOutputFile.h>
+#include <ImfPixelType.h>
 #include <ImfStringAttribute.h>
-
 
 namespace OCIO_NAMESPACE
 {
@@ -26,8 +25,10 @@ BitDepth BitDepthFromPixelType(Imf::PixelType type)
 {
     switch (type)
     {
-        case Imf::HALF:  return BIT_DEPTH_F16;
-        case Imf::FLOAT: return BIT_DEPTH_F32;
+        case Imf::HALF:
+            return BIT_DEPTH_F16;
+        case Imf::FLOAT:
+            return BIT_DEPTH_F32;
         case Imf::UINT:
         case Imf::NUM_PIXELTYPES:
         default:
@@ -43,8 +44,10 @@ Imf::PixelType BitDepthToPixelType(BitDepth bitdepth)
 {
     switch (bitdepth)
     {
-        case BIT_DEPTH_F16:     return Imf::HALF;
-        case BIT_DEPTH_F32:     return Imf::FLOAT;
+        case BIT_DEPTH_F16:
+            return Imf::HALF;
+        case BIT_DEPTH_F32:
+            return Imf::FLOAT;
         case BIT_DEPTH_UNKNOWN:
         case BIT_DEPTH_UINT8:
         case BIT_DEPTH_UINT10:
@@ -79,10 +82,10 @@ public:
     Impl() = default;
 
     Impl(const Impl &) = delete;
-    Impl(Impl &&) = delete;
+    Impl(Impl &&)      = delete;
 
-    Impl& operator= (const Impl & rhs) = delete;
-    Impl& operator= (Impl && rhs) = delete;
+    Impl & operator=(const Impl & rhs) = delete;
+    Impl & operator=(Impl && rhs)      = delete;
 
     ~Impl() = default;
 
@@ -119,26 +122,19 @@ public:
     ImageDescRcPtr getImageDesc() const
     {
         return std::make_shared<PackedImageDesc>(
-            (void*) getData(),
+            (void *)getData(),
             getWidth(),
             getHeight(),
             getChannelOrder(),
             getBitDepth(),
             getChanStrideBytes(),
             getXStrideBytes(),
-            getYStrideBytes()
-        );
+            getYStrideBytes());
     }
 
-    uint8_t * getData()
-    {
-        return m_data.data();
-    }
+    uint8_t * getData() { return m_data.data(); }
 
-    const uint8_t * getData() const
-    {
-        return m_data.data();
-    }
+    const uint8_t * getData() const { return m_data.data(); }
 
     long getWidth() const
     {
@@ -167,7 +163,7 @@ public:
 
     long getNumChannels() const
     {
-        long channel_count = 0;
+        long channel_count                = 0;
         const Imf::ChannelList & channels = m_header.channels();
         for (auto it = channels.begin(); it != channels.end(); ++it)
         {
@@ -193,25 +189,13 @@ public:
         return GetChannelNames(getChannelOrder());
     }
 
-    ptrdiff_t getChanStrideBytes() const
-    {
-        return GetChannelSizeInBytes(getBitDepth());
-    }
+    ptrdiff_t getChanStrideBytes() const { return GetChannelSizeInBytes(getBitDepth()); }
 
-    ptrdiff_t getXStrideBytes() const
-    {
-        return getNumChannels() * getChanStrideBytes();
-    }
+    ptrdiff_t getXStrideBytes() const { return getNumChannels() * getChanStrideBytes(); }
 
-    ptrdiff_t getYStrideBytes() const
-    {
-        return getWidth() * getXStrideBytes();
-    }
+    ptrdiff_t getYStrideBytes() const { return getWidth() * getXStrideBytes(); }
 
-    ptrdiff_t getImageBytes() const
-    {
-        return getYStrideBytes() * getHeight();
-    }
+    ptrdiff_t getImageBytes() const { return getYStrideBytes() * getHeight(); }
 
     void attribute(const std::string & name, const std::string & value)
     {
@@ -232,10 +216,10 @@ public:
     {
         bitDepth = bitDepth == BIT_DEPTH_UNKNOWN ? img.getBitDepth() : bitDepth;
 
-        const size_t numChans = img.getNumChannels();
+        const size_t numChans      = img.getNumChannels();
         const size_t bitDepthBytes = GetChannelSizeInBytes(bitDepth);
-        const size_t imgSizeInBytes =
-            bitDepthBytes * numChans * (size_t)(img.getWidth() * img.getHeight());
+        const size_t imgSizeInBytes
+            = bitDepthBytes * numChans * (size_t)(img.getWidth() * img.getHeight());
 
         m_data.resize(imgSizeInBytes, 0);
 
@@ -252,8 +236,8 @@ public:
 
     void init(long width, long height, ChannelOrdering chanOrder, BitDepth bitDepth)
     {
-        const size_t numChans = GetNumChannels(chanOrder);
-        const size_t bitDepthBytes = GetChannelSizeInBytes(bitDepth);
+        const size_t numChans       = GetNumChannels(chanOrder);
+        const size_t bitDepthBytes  = GetChannelSizeInBytes(bitDepth);
         const size_t imgSizeInBytes = bitDepthBytes * numChans * (size_t)(width * height);
 
         m_data.resize(imgSizeInBytes, 0);
@@ -318,8 +302,8 @@ public:
 
         // Allocate buffer for image data
         const Imath::Box2i & dw = file.header().dataWindow();
-        const long width  = (long)(dw.max.x - dw.min.x + 1);
-        const long height = (long)(dw.max.y - dw.min.y + 1);
+        const long width        = (long)(dw.max.x - dw.min.x + 1);
+        const long height       = (long)(dw.max.y - dw.min.y + 1);
         init(width, height, chanOrder, BitDepthFromPixelType(pixelType));
 
         // Copy existing attributes, except for channels which we force to
@@ -351,13 +335,13 @@ public:
                 chanNames[i],
                 Imf::Slice(
                     pixelType,
-                    (char *)(getData() - x*xStride - y*yStride + i*chanStride),
-                    xStride, yStride,
-                    1, 1,
+                    (char *)(getData() - x * xStride - y * yStride + i * chanStride),
+                    xStride,
+                    yStride,
+                    1,
+                    1,
                     // RGB default to 0.0, A default to 1.0
-                    (i == 3 ? 1.0 : 0.0)
-                )
-            );
+                    (i == 3 ? 1.0 : 0.0)));
         }
 
         file.setFrameBuffer(frameBuffer);
@@ -398,19 +382,18 @@ public:
                 chanNames[i],
                 Imf::Slice(
                     pixelType,
-                    (char *)(getData() - x*xStride - y*yStride + i*chanStride),
-                    xStride, yStride,
-                    1, 1,
+                    (char *)(getData() - x * xStride - y * yStride + i * chanStride),
+                    xStride,
+                    yStride,
+                    1,
+                    1,
                     // RGB default to 0.0, A default to 1.0
-                    (i == 3 ? 1.0 : 0.0)
-                )
-            );
+                    (i == 3 ? 1.0 : 0.0)));
         }
 
         file.setFrameBuffer(frameBuffer);
         file.writePixels(getHeight());
     }
-
 };
 
 } // namespace OCIO_NAMESPACE

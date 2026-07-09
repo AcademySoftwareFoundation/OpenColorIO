@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <algorithm>
 #include <cmath>
-#include <cstring>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <algorithm>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -19,10 +19,9 @@
 namespace OCIO_NAMESPACE
 {
 
-
 namespace
 {
-void ErrorHandler(cmsContext /*ContextID*/, cmsUInt32Number /*ErrorCode*/, const char *Text)
+void ErrorHandler(cmsContext /*ContextID*/, cmsUInt32Number /*ErrorCode*/, const char * Text)
 {
     std::cerr << "OCIO Error: " << Text << "\n";
     return;
@@ -32,14 +31,14 @@ typedef struct
 {
     cmsHTRANSFORM to_PCS16;
     cmsHTRANSFORM from_PCS16;
-    //OCIO::ConstProcessorRcPtr shaper_processor;
+    // OCIO::ConstProcessorRcPtr shaper_processor;
     OCIO::ConstCPUProcessorRcPtr processor;
 } SamplerData;
 
-static void Add3GammaCurves(cmsPipeline* lut, cmsFloat64Number Curve)
+static void Add3GammaCurves(cmsPipeline * lut, cmsFloat64Number Curve)
 {
-    cmsToneCurve* id = cmsBuildGamma(NULL, Curve);
-    cmsToneCurve* id3[3];
+    cmsToneCurve * id = cmsBuildGamma(NULL, Curve);
+    cmsToneCurve * id3[3];
     id3[0] = id;
     id3[1] = id;
     id3[2] = id;
@@ -47,23 +46,21 @@ static void Add3GammaCurves(cmsPipeline* lut, cmsFloat64Number Curve)
     cmsFreeToneCurve(id);
 }
 
-static void AddIdentityMatrix(cmsPipeline* lut)
+static void AddIdentityMatrix(cmsPipeline * lut)
 {
-    const cmsFloat64Number Identity[] = {
-        1, 0, 0,
-        0, 1, 0, 
-        0, 0, 1, 
-        0, 0, 0 };
+    const cmsFloat64Number Identity[] = {1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0};
     cmsPipelineInsertStage(lut, cmsAT_END, cmsStageAllocMatrix(NULL, 3, 3, Identity, NULL));
 }
 
-static cmsInt32Number Display2PCS_Sampler16(const cmsUInt16Number in[], cmsUInt16Number out[], void* userdata)
+static cmsInt32Number
+Display2PCS_Sampler16(const cmsUInt16Number in[], cmsUInt16Number out[], void * userdata)
 {
-    //std::cout << "r" << in[0] << " g" << in[1] << " b" << in[2] << "\n";
-    SamplerData* data = (SamplerData*) userdata;
-    cmsFloat32Number pix[3] = { static_cast<float>(in[0])/65535.f,
-                                static_cast<float>(in[1])/65535.f,
-                                static_cast<float>(in[2])/65535.f};
+    // std::cout << "r" << in[0] << " g" << in[1] << " b" << in[2] << "\n";
+    SamplerData * data = (SamplerData *)userdata;
+    cmsFloat32Number pix[3]
+        = {static_cast<float>(in[0]) / 65535.f,
+           static_cast<float>(in[1]) / 65535.f,
+           static_cast<float>(in[2]) / 65535.f};
     data->processor->applyRGB(pix);
     out[0] = (cmsUInt16Number)std::max(std::min(pix[0] * 65535.f, 65535.f), 0.f);
     out[1] = (cmsUInt16Number)std::max(std::min(pix[1] * 65535.f, 65535.f), 0.f);
@@ -72,25 +69,26 @@ static cmsInt32Number Display2PCS_Sampler16(const cmsUInt16Number in[], cmsUInt1
     return 1;
 }
 
-static cmsInt32Number PCS2Display_Sampler16(const cmsUInt16Number in[], cmsUInt16Number out[], void* userdata)
+static cmsInt32Number
+PCS2Display_Sampler16(const cmsUInt16Number in[], cmsUInt16Number out[], void * userdata)
 {
-    //std::cout << "r" << in[0] << " g" << in[1] << " b" << in[2] << "\n";
-    SamplerData* data = (SamplerData*) userdata;
+    // std::cout << "r" << in[0] << " g" << in[1] << " b" << in[2] << "\n";
+    SamplerData * data = (SamplerData *)userdata;
     cmsDoTransform(data->from_PCS16, in, out, 1);
     // we don't have a reverse Lab -> Display transform
     return 1;
 }
-}  // anon namespace
+} // namespace
 
-
-void SaveICCProfileToFile(const std::string & outputfile,
-                          ConstCPUProcessorRcPtr & processor,
-                          int cubesize,
-                          int whitepointtemp,
-                          const std::string & displayicc,
-                          const std::string & description,
-                          const std::string & copyright,
-                          bool verbose)
+void SaveICCProfileToFile(
+    const std::string & outputfile,
+    ConstCPUProcessorRcPtr & processor,
+    int cubesize,
+    int whitepointtemp,
+    const std::string & displayicc,
+    const std::string & description,
+    const std::string & copyright,
+    bool verbose)
 {
 
     // Create the ICC Profile
@@ -107,13 +105,15 @@ void SaveICCProfileToFile(const std::string & outputfile,
 
     // Display (OCIO sRGB cube -> LAB)
     cmsHPROFILE DisplayProfile;
-    if(displayicc != "") DisplayProfile = cmsOpenProfileFromFile(displayicc.c_str(), "r");
-    else DisplayProfile = cmsCreate_sRGBProfileTHR(NULL);
+    if (displayicc != "")
+        DisplayProfile = cmsOpenProfileFromFile(displayicc.c_str(), "r");
+    else
+        DisplayProfile = cmsCreate_sRGBProfileTHR(NULL);
 
     // Create an empty RGB Profile
     cmsHPROFILE hProfile = cmsCreateRGBProfileTHR(NULL, &whitePoint, NULL, NULL);
 
-    if(verbose)
+    if (verbose)
         std::cout << "[OpenColorIO INFO]: Setting up Profile: " << outputfile << "\n";
 
     // Added Header fields
@@ -124,8 +124,8 @@ void SaveICCProfileToFile(const std::string & outputfile,
     cmsSetHeaderRenderingIntent(hProfile, INTENT_PERCEPTUAL);
 
     //
-    cmsMLU* DescriptionMLU = cmsMLUalloc(NULL, 1);
-    cmsMLU* CopyrightMLU = cmsMLUalloc(NULL, 1);
+    cmsMLU * DescriptionMLU = cmsMLUalloc(NULL, 1);
+    cmsMLU * CopyrightMLU   = cmsMLUalloc(NULL, 1);
     cmsMLUsetASCII(DescriptionMLU, "en", "US", description.c_str());
     cmsMLUsetASCII(CopyrightMLU, "en", "US", copyright.c_str());
     cmsWriteTag(hProfile, cmsSigProfileDescriptionTag, DescriptionMLU);
@@ -136,10 +136,20 @@ void SaveICCProfileToFile(const std::string & outputfile,
     data.processor = processor;
 
     // 16Bit
-    data.to_PCS16 = cmsCreateTransform(DisplayProfile, TYPE_RGB_16, labProfile, TYPE_LabV2_16,
-                                       INTENT_PERCEPTUAL, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_NOCACHE);
-    data.from_PCS16 = cmsCreateTransform(labProfile, TYPE_LabV2_16, DisplayProfile, TYPE_RGB_16,
-                                         INTENT_PERCEPTUAL, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_NOCACHE);
+    data.to_PCS16 = cmsCreateTransform(
+        DisplayProfile,
+        TYPE_RGB_16,
+        labProfile,
+        TYPE_LabV2_16,
+        INTENT_PERCEPTUAL,
+        cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE);
+    data.from_PCS16 = cmsCreateTransform(
+        labProfile,
+        TYPE_LabV2_16,
+        DisplayProfile,
+        TYPE_RGB_16,
+        INTENT_PERCEPTUAL,
+        cmsFLAGS_NOOPTIMIZE | cmsFLAGS_NOCACHE);
 
     //
     // AToB0Tag - Device to PCS (16-bit) intent of 0 (perceptual)
@@ -151,16 +161,16 @@ void SaveICCProfileToFile(const std::string & outputfile,
     //    `- cmsSigCurveSetElemType
     //
 
-    if(verbose)
+    if (verbose)
         std::cout << "[OpenColorIO INFO]: Adding AToB0Tag\n";
-    cmsPipeline* AToB0Tag = cmsPipelineAlloc(NULL, 3, 3);
+    cmsPipeline * AToB0Tag = cmsPipelineAlloc(NULL, 3, 3);
 
     Add3GammaCurves(AToB0Tag, 1.f); // cmsSigCurveSetElemType
 
     // cmsSigCLutElemType
-    cmsStage* AToB0Clut = cmsStageAllocCLut16bit(NULL, cubesize, 3, 3, NULL);
+    cmsStage * AToB0Clut = cmsStageAllocCLut16bit(NULL, cubesize, 3, 3, NULL);
 
-    if(verbose)
+    if (verbose)
         std::cout << "[OpenColorIO INFO]: Sampling AToB0 CLUT from Display to Lab\n";
     cmsStageSampleCLut16bit(AToB0Clut, Display2PCS_Sampler16, &data, 0);
     cmsPipelineInsertStage(AToB0Tag, cmsAT_END, AToB0Clut);
@@ -179,20 +189,20 @@ void SaveICCProfileToFile(const std::string & outputfile,
     // cmsSigCurveSetElemType
     // `- cmsSigMatrixElemType
     //  `- cmsSigCurveSetElemType
-    //   `- cmsSigCLutElemType 
+    //   `- cmsSigCLutElemType
     //    `- cmsSigCurveSetElemType
     //
-    if(verbose)
+    if (verbose)
         std::cout << "[OpenColorIO INFO]: Adding BToA0Tag\n";
-    cmsPipeline* BToA0Tag = cmsPipelineAlloc(NULL, 3, 3);
+    cmsPipeline * BToA0Tag = cmsPipelineAlloc(NULL, 3, 3);
 
     Add3GammaCurves(BToA0Tag, 1.f); // cmsSigCurveSetElemType
     AddIdentityMatrix(BToA0Tag);    // cmsSigMatrixElemType
     Add3GammaCurves(BToA0Tag, 1.f); // cmsSigCurveSetElemType
 
     // cmsSigCLutElemType
-    cmsStage* BToA0Clut = cmsStageAllocCLut16bit(NULL, cubesize, 3, 3, NULL);
-    if(verbose)
+    cmsStage * BToA0Clut = cmsStageAllocCLut16bit(NULL, cubesize, 3, 3, NULL);
+    if (verbose)
         std::cout << "[OpenColorIO INFO]: Sampling BToA0 CLUT from Lab to Display\n";
     cmsStageSampleCLut16bit(BToA0Clut, PCS2Display_Sampler16, &data, 0);
     cmsPipelineInsertStage(BToA0Tag, cmsAT_END, BToA0Clut);
@@ -214,12 +224,12 @@ void SaveICCProfileToFile(const std::string & outputfile,
     //
     // Write
     //
-    if(verbose)
+    if (verbose)
         std::cout << "[OpenColorIO INFO]: Writing " << outputfile << std::endl;
     cmsSaveProfileToFile(hProfile, outputfile.c_str());
     cmsCloseProfile(hProfile);
 
-    if(verbose)
+    if (verbose)
         std::cout << "[OpenColorIO INFO]: Finished\n";
 }
 

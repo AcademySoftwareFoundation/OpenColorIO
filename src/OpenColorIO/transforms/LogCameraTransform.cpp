@@ -12,18 +12,19 @@
 
 namespace OCIO_NAMESPACE
 {
-LogCameraTransformRcPtr LogCameraTransform::Create(const double(&linSideBreakValues)[3])
+LogCameraTransformRcPtr LogCameraTransform::Create(const double (&linSideBreakValues)[3])
 {
-    return LogCameraTransformRcPtr(new LogCameraTransformImpl(linSideBreakValues),
-                                   &LogCameraTransformImpl::deleter);
+    return LogCameraTransformRcPtr(
+        new LogCameraTransformImpl(linSideBreakValues),
+        &LogCameraTransformImpl::deleter);
 }
 
-void LogCameraTransformImpl::deleter(LogCameraTransform* t)
+void LogCameraTransformImpl::deleter(LogCameraTransform * t)
 {
     delete static_cast<LogCameraTransformImpl *>(t);
 }
 
-LogCameraTransformImpl::LogCameraTransformImpl(const double(&linSideBreakValues)[3])
+LogCameraTransformImpl::LogCameraTransformImpl(const double (&linSideBreakValues)[3])
     : m_data(2.0f, TRANSFORM_DIR_FORWARD)
 {
     data().setValue(LIN_SIDE_BREAK, linSideBreakValues);
@@ -31,9 +32,9 @@ LogCameraTransformImpl::LogCameraTransformImpl(const double(&linSideBreakValues)
 
 TransformRcPtr LogCameraTransformImpl::createEditableCopy() const
 {
-    static constexpr double LIN_SB[]{ 0.1, 0.1, 0.1 };
+    static constexpr double LIN_SB[]{0.1, 0.1, 0.1};
     LogCameraTransformRcPtr transform = LogCameraTransform::Create(LIN_SB);
-    dynamic_cast<LogCameraTransformImpl*>(transform.get())->data() = data();
+    dynamic_cast<LogCameraTransformImpl *>(transform.get())->data() = data();
     return transform;
 }
 
@@ -78,8 +79,9 @@ const FormatMetadata & LogCameraTransformImpl::getFormatMetadata() const noexcep
 
 bool LogCameraTransformImpl::equals(const LogCameraTransform & other) const noexcept
 {
-    if (this == &other) return true;
-    return data() == dynamic_cast<const LogCameraTransformImpl*>(&other)->data();
+    if (this == &other)
+        return true;
+    return data() == dynamic_cast<const LogCameraTransformImpl *>(&other)->data();
 }
 
 void LogCameraTransformImpl::setBase(double base) noexcept
@@ -92,46 +94,46 @@ double LogCameraTransformImpl::getBase() const noexcept
     return data().getBase();
 }
 
-void LogCameraTransformImpl::setLogSideSlopeValue(const double(&values)[3]) noexcept
+void LogCameraTransformImpl::setLogSideSlopeValue(const double (&values)[3]) noexcept
 {
     data().setValue(LOG_SIDE_SLOPE, values);
 }
-void LogCameraTransformImpl::setLogSideOffsetValue(const double(&values)[3]) noexcept
+void LogCameraTransformImpl::setLogSideOffsetValue(const double (&values)[3]) noexcept
 {
     data().setValue(LOG_SIDE_OFFSET, values);
 }
-void LogCameraTransformImpl::setLinSideSlopeValue(const double(&values)[3]) noexcept
+void LogCameraTransformImpl::setLinSideSlopeValue(const double (&values)[3]) noexcept
 {
     data().setValue(LIN_SIDE_SLOPE, values);
 }
-void LogCameraTransformImpl::setLinSideOffsetValue(const double(&values)[3]) noexcept
+void LogCameraTransformImpl::setLinSideOffsetValue(const double (&values)[3]) noexcept
 {
     data().setValue(LIN_SIDE_OFFSET, values);
 }
 
-void LogCameraTransformImpl::getLogSideSlopeValue(double(&values)[3]) const noexcept
+void LogCameraTransformImpl::getLogSideSlopeValue(double (&values)[3]) const noexcept
 {
     data().getValue(LOG_SIDE_SLOPE, values);
 }
-void LogCameraTransformImpl::getLogSideOffsetValue(double(&values)[3]) const noexcept
+void LogCameraTransformImpl::getLogSideOffsetValue(double (&values)[3]) const noexcept
 {
     data().getValue(LOG_SIDE_OFFSET, values);
 }
-void LogCameraTransformImpl::getLinSideSlopeValue(double(&values)[3]) const noexcept
+void LogCameraTransformImpl::getLinSideSlopeValue(double (&values)[3]) const noexcept
 {
     data().getValue(LIN_SIDE_SLOPE, values);
 }
-void LogCameraTransformImpl::getLinSideOffsetValue(double(&values)[3]) const noexcept
+void LogCameraTransformImpl::getLinSideOffsetValue(double (&values)[3]) const noexcept
 {
     data().getValue(LIN_SIDE_OFFSET, values);
 }
 
-void LogCameraTransformImpl::setLinSideBreakValue(const double(&values)[3]) noexcept
+void LogCameraTransformImpl::setLinSideBreakValue(const double (&values)[3]) noexcept
 {
     data().setValue(LIN_SIDE_BREAK, values);
 }
 
-void LogCameraTransformImpl::setLinearSlopeValue(const double(&values)[3])
+void LogCameraTransformImpl::setLinearSlopeValue(const double (&values)[3])
 {
     data().setValue(LINEAR_SLOPE, values);
 }
@@ -141,17 +143,17 @@ void LogCameraTransformImpl::unsetLinearSlopeValue()
     data().unsetLinearSlope();
 }
 
-void LogCameraTransformImpl::getLinSideBreakValue(double(&values)[3]) const noexcept
+void LogCameraTransformImpl::getLinSideBreakValue(double (&values)[3]) const noexcept
 {
     data().getValue(LIN_SIDE_BREAK, values);
 }
 
-bool LogCameraTransformImpl::getLinearSlopeValue(double(&values)[3]) const
+bool LogCameraTransformImpl::getLinearSlopeValue(double (&values)[3]) const
 {
     return data().getValue(LINEAR_SLOPE, values);
 }
 
-std::ostream & operator<< (std::ostream & os, const LogCameraTransform & t)
+std::ostream & operator<<(std::ostream & os, const LogCameraTransform & t)
 {
     os << "<LogCameraTransform";
     os << " direction=" << TransformDirectionToString(t.getDirection());
@@ -177,4 +179,3 @@ std::ostream & operator<< (std::ostream & os, const LogCameraTransform & t)
 }
 
 } // namespace OCIO_NAMESPACE
-

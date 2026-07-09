@@ -13,9 +13,9 @@ namespace OCIO_NAMESPACE
 {
 
 // The class represents the index mapping for a LUT
-// This class defines a list that is the new mapping of input 
+// This class defines a list that is the new mapping of input
 // code values (inValues) to index positions (n) in a LUT.
-// 
+//
 // TODO: This is an initial implementation to just do the minimal
 //       required for CLF support.  We may add more later.
 //
@@ -26,7 +26,7 @@ namespace OCIO_NAMESPACE
 class IndexMapping
 {
 public:
-    typedef std::pair<float,float> Data;
+    typedef std::pair<float, float> Data;
     typedef std::vector<Data> ComponentData;
 
     // Type definition of the three component colors.
@@ -55,14 +55,12 @@ public:
     bool operator==(const IndexMapping & other) const;
 
 private:
-
     void validateIndex(size_t index) const;
 
-    size_t   m_dimension; // Dimension
-    Indices  m_indices;   // All values
+    size_t m_dimension; // Dimension
+    Indices m_indices;  // All values
 };
 
 } // namespace OCIO_NAMESPACE
-
 
 #endif

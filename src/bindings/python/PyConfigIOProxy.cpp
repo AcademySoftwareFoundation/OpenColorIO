@@ -7,9 +7,9 @@
 #include "PyOpenColorIO.h"
 #include "PyUtils.h"
 
+#include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
-#include <pybind11/pytypes.h>
 
 PYBIND11_MAKE_OPAQUE(std::vector<uint8_t>);
 
@@ -22,29 +22,29 @@ struct PyConfigIOProxy : ConfigIOProxy
     std::vector<uint8_t> getLutData(const char * filepath) const override
     {
         PYBIND11_OVERRIDE_PURE(
-            std::vector<uint8_t>,           // Return type.
-            ConfigIOProxy,                  // Parent class.
-            getLutData,                     // Name of function in C++ (must match Python name).
-            filepath                        // Argument.
+            std::vector<uint8_t>, // Return type.
+            ConfigIOProxy,        // Parent class.
+            getLutData,           // Name of function in C++ (must match Python name).
+            filepath              // Argument.
         );
     }
 
     std::string getConfigData() const override
     {
         PYBIND11_OVERRIDE_PURE(
-            std::string,                    // Return type.
-            ConfigIOProxy,                  // Parent class.
-            getConfigData,                  // Name of function in C++ (must match Python name).
+            std::string,   // Return type.
+            ConfigIOProxy, // Parent class.
+            getConfigData, // Name of function in C++ (must match Python name).
         );
     }
 
     std::string getFastLutFileHash(const char * filepath) const override
     {
         PYBIND11_OVERRIDE_PURE(
-            std::string,                    // Return type.
-            ConfigIOProxy,                  // Parent class.
-            getFastLutFileHash,             // Name of function in C++ (must match Python name).
-            filepath                        // Argument.
+            std::string,        // Return type.
+            ConfigIOProxy,      // Parent class.
+            getFastLutFileHash, // Name of function in C++ (must match Python name).
+            filepath            // Argument.
         );
     }
 };
@@ -62,4 +62,4 @@ void bindPyConfigIOProxy(py::module & m)
         .def("getFastLutFileHash", &ConfigIOProxy::getFastLutFileHash);
 }
 
-}
+} // namespace OCIO_NAMESPACE

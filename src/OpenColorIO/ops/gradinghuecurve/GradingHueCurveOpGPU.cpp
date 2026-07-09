@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Logging.h"
-#include "ops/gradinghuecurve/GradingHueCurveOpGPU.h"
-#include "ops/fixedfunction/FixedFunctionOpGPU.h"
 #include "ops/fixedfunction/FixedFunctionOpData.h"
+#include "ops/fixedfunction/FixedFunctionOpGPU.h"
+#include "ops/gradinghuecurve/GradingHueCurveOpGPU.h"
 #include "utils/StringUtils.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -73,21 +71,22 @@ namespace
 {
 struct GCProperties
 {
-    std::string m_knotsOffsets{ "knotsOffsets" };
-    std::string m_knots{ "knots" };
-    std::string m_coefsOffsets{ "coefsOffsets" };
-    std::string m_coefs{ "coefs" };
-    std::string m_localBypass{ "localBypass" };
-    std::string m_eval{ "evalBSplineCurve" };
-    std::string m_evalRev{ "evalBSplineCurveRev" };
-    std::string m_evalRevHue{ "evalBSplineCurveRevHue" };
+    std::string m_knotsOffsets{"knotsOffsets"};
+    std::string m_knots{"knots"};
+    std::string m_coefsOffsets{"coefsOffsets"};
+    std::string m_coefs{"coefs"};
+    std::string m_localBypass{"localBypass"};
+    std::string m_eval{"evalBSplineCurve"};
+    std::string m_evalRev{"evalBSplineCurveRev"};
+    std::string m_evalRevHue{"evalBSplineCurveRevHue"};
 };
 
-void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
-                const GpuShaderCreator::SizeGetter & getSize,
-                const GpuShaderCreator::VectorFloatGetter & getVector,
-                unsigned int maxSize,
-                const std::string & name)
+void AddUniform(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    const GpuShaderCreator::SizeGetter & getSize,
+    const GpuShaderCreator::VectorFloatGetter & getVector,
+    unsigned int maxSize,
+    const std::string & name)
 {
     // Add the uniform if it does not already exist.
     if (shaderCreator->addUniform(name.c_str(), getSize, getVector, maxSize))
@@ -99,10 +98,11 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
     }
 }
 
-void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
-                const GpuShaderCreator::SizeGetter & getSize,
-                const GpuShaderCreator::VectorIntGetter & getVector,
-                const std::string & name)
+void AddUniform(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    const GpuShaderCreator::SizeGetter & getSize,
+    const GpuShaderCreator::VectorIntGetter & getVector,
+    const std::string & name)
 {
     // 8 curves x 2 values (count and offset).
     static constexpr unsigned arrayLen = HueCurveType::HUE_NUM_CURVES * 2;
@@ -118,9 +118,10 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
     }
 }
 
-void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
-                const GpuShaderCreator::BoolGetter & getBool,
-                const std::string & name)
+void AddUniform(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    const GpuShaderCreator::BoolGetter & getBool,
+    const std::string & name)
 {
     // Add the uniform if it does not already exist.
     if (shaderCreator->addUniform(name.c_str(), getBool))
@@ -132,10 +133,13 @@ void AddUniform(GpuShaderCreatorRcPtr & shaderCreator,
     }
 }
 
-std::string BuildResourceNameIndexed(GpuShaderCreatorRcPtr & shaderCreator, const std::string & prefix,
-                                     const std::string & base, unsigned int index)
+std::string BuildResourceNameIndexed(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    const std::string & prefix,
+    const std::string & base,
+    unsigned int index)
 {
-    std::string name{ BuildResourceName(shaderCreator, prefix, base) };
+    std::string name{BuildResourceName(shaderCreator, prefix, base)};
     name += "_";
     name += std::to_string(index);
     // Note: Remove potentially problematic double underscores from GLSL resource names.
@@ -143,23 +147,23 @@ std::string BuildResourceNameIndexed(GpuShaderCreatorRcPtr & shaderCreator, cons
     return name;
 }
 
-static const std::string opPrefix{ "grading_huecurve" };
+static const std::string opPrefix{"grading_huecurve"};
 
 void SetGCProperties(GpuShaderCreatorRcPtr & shaderCreator, bool dynamic, GCProperties & propNames)
 {
     if (dynamic)
     {
         // If there are several dynamic ops, they will use the same names for uniforms.
-        propNames.m_knotsOffsets = BuildResourceName(shaderCreator, opPrefix,
-                                                     propNames.m_knotsOffsets);
+        propNames.m_knotsOffsets
+            = BuildResourceName(shaderCreator, opPrefix, propNames.m_knotsOffsets);
         propNames.m_knots = BuildResourceName(shaderCreator, opPrefix, propNames.m_knots);
-        propNames.m_coefsOffsets = BuildResourceName(shaderCreator, opPrefix,
-                                                     propNames.m_coefsOffsets);
+        propNames.m_coefsOffsets
+            = BuildResourceName(shaderCreator, opPrefix, propNames.m_coefsOffsets);
         propNames.m_coefs = BuildResourceName(shaderCreator, opPrefix, propNames.m_coefs);
-        propNames.m_localBypass = BuildResourceName(shaderCreator, opPrefix,
-                                                    propNames.m_localBypass);
-        propNames.m_eval = BuildResourceName(shaderCreator, opPrefix, propNames.m_eval);
-        propNames.m_evalRev = BuildResourceName(shaderCreator, opPrefix, propNames.m_evalRev);
+        propNames.m_localBypass
+            = BuildResourceName(shaderCreator, opPrefix, propNames.m_localBypass);
+        propNames.m_eval       = BuildResourceName(shaderCreator, opPrefix, propNames.m_eval);
+        propNames.m_evalRev    = BuildResourceName(shaderCreator, opPrefix, propNames.m_evalRev);
         propNames.m_evalRevHue = BuildResourceName(shaderCreator, opPrefix, propNames.m_evalRevHue);
     }
     else
@@ -167,27 +171,28 @@ void SetGCProperties(GpuShaderCreatorRcPtr & shaderCreator, bool dynamic, GCProp
         // Non-dynamic ops need a helper function for each op.
         const auto resIndex = shaderCreator->getNextResourceIndex();
 
-        propNames.m_knotsOffsets = BuildResourceNameIndexed(shaderCreator, opPrefix,
-                                                            propNames.m_knotsOffsets, resIndex);
-        propNames.m_knots = BuildResourceNameIndexed(shaderCreator, opPrefix,
-                                                     propNames.m_knots, resIndex);
-        propNames.m_coefsOffsets = BuildResourceNameIndexed(shaderCreator, opPrefix,
-                                                            propNames.m_coefsOffsets, resIndex);
-        propNames.m_coefs = BuildResourceNameIndexed(shaderCreator, opPrefix,
-                                                     propNames.m_coefs, resIndex);
-        propNames.m_eval = BuildResourceNameIndexed(shaderCreator, opPrefix,
-                                                    propNames.m_eval, resIndex);
-        propNames.m_evalRev = BuildResourceNameIndexed(shaderCreator, opPrefix,
-                                                       propNames.m_evalRev, resIndex);
-        propNames.m_evalRevHue = BuildResourceNameIndexed(shaderCreator, opPrefix,
-                                                          propNames.m_evalRevHue, resIndex);
+        propNames.m_knotsOffsets
+            = BuildResourceNameIndexed(shaderCreator, opPrefix, propNames.m_knotsOffsets, resIndex);
+        propNames.m_knots
+            = BuildResourceNameIndexed(shaderCreator, opPrefix, propNames.m_knots, resIndex);
+        propNames.m_coefsOffsets
+            = BuildResourceNameIndexed(shaderCreator, opPrefix, propNames.m_coefsOffsets, resIndex);
+        propNames.m_coefs
+            = BuildResourceNameIndexed(shaderCreator, opPrefix, propNames.m_coefs, resIndex);
+        propNames.m_eval
+            = BuildResourceNameIndexed(shaderCreator, opPrefix, propNames.m_eval, resIndex);
+        propNames.m_evalRev
+            = BuildResourceNameIndexed(shaderCreator, opPrefix, propNames.m_evalRev, resIndex);
+        propNames.m_evalRevHue
+            = BuildResourceNameIndexed(shaderCreator, opPrefix, propNames.m_evalRevHue, resIndex);
     }
 }
 
 // Only called once for dynamic ops.
-void AddGCPropertiesUniforms(GpuShaderCreatorRcPtr & shaderCreator,
-                             DynamicPropertyGradingHueCurveImplRcPtr & shaderProp,
-                             const GCProperties & propNames)
+void AddGCPropertiesUniforms(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    DynamicPropertyGradingHueCurveImplRcPtr & shaderProp,
+    const GCProperties & propNames)
 {
     // Use the shader dynamic property to bind the uniforms.
     auto curveProp = shaderProp.get();
@@ -196,39 +201,52 @@ void AddGCPropertiesUniforms(GpuShaderCreatorRcPtr & shaderCreator,
     // are unique.
 
     auto getNK = std::bind(&DynamicPropertyGradingHueCurveImpl::getNumKnots, curveProp);
-    auto getKO = std::bind(&DynamicPropertyGradingHueCurveImpl::getKnotsOffsetsArray,
-                           curveProp);
-    auto getK = std::bind(&DynamicPropertyGradingHueCurveImpl::getKnotsArray, curveProp);
+    auto getKO = std::bind(&DynamicPropertyGradingHueCurveImpl::getKnotsOffsetsArray, curveProp);
+    auto getK  = std::bind(&DynamicPropertyGradingHueCurveImpl::getKnotsArray, curveProp);
     auto getNC = std::bind(&DynamicPropertyGradingHueCurveImpl::getNumCoefs, curveProp);
-    auto getCO = std::bind(&DynamicPropertyGradingHueCurveImpl::getCoefsOffsetsArray,
-                           curveProp);
-    auto getC = std::bind(&DynamicPropertyGradingHueCurveImpl::getCoefsArray, curveProp);
+    auto getCO = std::bind(&DynamicPropertyGradingHueCurveImpl::getCoefsOffsetsArray, curveProp);
+    auto getC  = std::bind(&DynamicPropertyGradingHueCurveImpl::getCoefsArray, curveProp);
     auto getLB = std::bind(&DynamicPropertyGradingHueCurveImpl::getLocalBypass, curveProp);
     // Uniforms are added if they are not already there (added by another op).
-    AddUniform(shaderCreator, DynamicPropertyGradingHueCurveImpl::GetNumOffsetValues,
-               getKO, propNames.m_knotsOffsets);
-    AddUniform(shaderCreator, getNK, getK,
-               DynamicPropertyGradingHueCurveImpl::GetMaxKnots(),
-               propNames.m_knots);
-    AddUniform(shaderCreator, DynamicPropertyGradingHueCurveImpl::GetNumOffsetValues,
-               getCO, propNames.m_coefsOffsets);
-    AddUniform(shaderCreator, getNC, getC,
-               DynamicPropertyGradingHueCurveImpl::GetMaxCoefs(),
-               propNames.m_coefs);
+    AddUniform(
+        shaderCreator,
+        DynamicPropertyGradingHueCurveImpl::GetNumOffsetValues,
+        getKO,
+        propNames.m_knotsOffsets);
+    AddUniform(
+        shaderCreator,
+        getNK,
+        getK,
+        DynamicPropertyGradingHueCurveImpl::GetMaxKnots(),
+        propNames.m_knots);
+    AddUniform(
+        shaderCreator,
+        DynamicPropertyGradingHueCurveImpl::GetNumOffsetValues,
+        getCO,
+        propNames.m_coefsOffsets);
+    AddUniform(
+        shaderCreator,
+        getNC,
+        getC,
+        DynamicPropertyGradingHueCurveImpl::GetMaxCoefs(),
+        propNames.m_coefs);
     AddUniform(shaderCreator, getLB, propNames.m_localBypass);
 }
 
-void AddCurveFunctionName(GpuShaderCreatorRcPtr & shaderCreator,
-                          GpuShaderText & st,
-                          const std::string & funcName,
-                          bool isFwd)
+void AddCurveFunctionName(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    const std::string & funcName,
+    bool isFwd)
 {
     st.newLine() << "";
-    if (shaderCreator->getLanguage() == LANGUAGE_OSL_1 || shaderCreator->getLanguage() == GPU_LANGUAGE_MSL_2_0)
+    if (shaderCreator->getLanguage() == LANGUAGE_OSL_1
+        || shaderCreator->getLanguage() == GPU_LANGUAGE_MSL_2_0)
     {
         if (isFwd)
         {
-            st.newLine() << st.floatKeyword() << " " << funcName << "(int curveIdx, float x, float identity_x)";
+            st.newLine() << st.floatKeyword() << " " << funcName
+                         << "(int curveIdx, float x, float identity_x)";
         }
         else
         {
@@ -239,7 +257,8 @@ void AddCurveFunctionName(GpuShaderCreatorRcPtr & shaderCreator,
     {
         if (isFwd)
         {
-            st.newLine() << st.floatKeyword() << " " << funcName << "(in int curveIdx, in float x, in float identity_x)";
+            st.newLine() << st.floatKeyword() << " " << funcName
+                         << "(in int curveIdx, in float x, in float identity_x)";
         }
         else
         {
@@ -248,10 +267,11 @@ void AddCurveFunctionName(GpuShaderCreatorRcPtr & shaderCreator,
     }
 }
 
-void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
-                                           ConstGradingHueCurveOpDataRcPtr & gcData,
-                                           const GCProperties & props,
-                                           bool dyn)
+void AddCurveEvalMethodTextToShaderProgram(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstGradingHueCurveOpDataRcPtr & gcData,
+    const GCProperties & props,
+    bool dyn)
 {
     GpuShaderText st(shaderCreator->getLanguage());
 
@@ -259,7 +279,7 @@ void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator
     // variables in the op specific helper function.
     if (!dyn)
     {
-        auto propGC = gcData->getDynamicPropertyInternal();
+        auto propGC          = gcData->getDynamicPropertyInternal();
         const int numOffsets = propGC->GetNumOffsetValues();
 
         // 2 ints for each curve.
@@ -276,8 +296,12 @@ void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator
 
     st.newLine() << "{";
     st.indent();
-    GradingBSplineCurveImpl::AddShaderEvalFwd(st, props.m_knotsOffsets, props.m_coefsOffsets,
-                                              props.m_knots, props.m_coefs);
+    GradingBSplineCurveImpl::AddShaderEvalFwd(
+        st,
+        props.m_knotsOffsets,
+        props.m_coefsOffsets,
+        props.m_knots,
+        props.m_coefs);
     st.dedent();
     st.newLine() << "}";
 
@@ -288,8 +312,12 @@ void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator
 
         st.newLine() << "{";
         st.indent();
-        GradingBSplineCurveImpl::AddShaderEvalRev(st, props.m_knotsOffsets, props.m_coefsOffsets,
-                                                  props.m_knots, props.m_coefs);
+        GradingBSplineCurveImpl::AddShaderEvalRev(
+            st,
+            props.m_knotsOffsets,
+            props.m_coefsOffsets,
+            props.m_knots,
+            props.m_coefs);
         st.dedent();
         st.newLine() << "}";
 
@@ -298,8 +326,12 @@ void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator
 
         st.newLine() << "{";
         st.indent();
-        GradingBSplineCurveImpl::AddShaderEvalRevHue(st, props.m_knotsOffsets, props.m_coefsOffsets,
-                                                     props.m_knots, props.m_coefs);
+        GradingBSplineCurveImpl::AddShaderEvalRevHue(
+            st,
+            props.m_knotsOffsets,
+            props.m_coefsOffsets,
+            props.m_knots,
+            props.m_coefs);
         st.dedent();
         st.newLine() << "}";
     }
@@ -307,14 +339,15 @@ void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator
     shaderCreator->addToHelperShaderCode(st.string().c_str());
 }
 
-void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
-                        GpuShaderText & st,
-                        const GCProperties & props,
-                        bool dyn,
-                        bool doLinToLog,
-                        bool doRGBToHSY,
-                        bool drawCurveOnly,
-                        GradingStyle style)
+void AddGCForwardShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    const GCProperties & props,
+    bool dyn,
+    bool doLinToLog,
+    bool doRGBToHSY,
+    bool drawCurveOnly,
+    GradingStyle style)
 {
     const std::string pix(shaderCreator->getPixelName());
     if (drawCurveOnly)
@@ -333,7 +366,7 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
         st.newLine() << "if (!" << st.castToBool(props.m_localBypass) << ")";
         st.newLine() << "{";
         st.indent();
-    }    
+    }
 
     // Add the conversion from RGB to HSY.
     if (doRGBToHSY)
@@ -341,18 +374,18 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
         FixedFunctionOpData::Style hsyStyle = FixedFunctionOpData::RGB_TO_HSY_LIN;
         switch (style)
         {
-        case GRADING_LIN:
-            hsyStyle = FixedFunctionOpData::RGB_TO_HSY_LIN;
-            break;
-        case GRADING_LOG:
-            hsyStyle = FixedFunctionOpData::RGB_TO_HSY_LOG;
-            break;
-        case GRADING_VIDEO:
-            hsyStyle = FixedFunctionOpData::RGB_TO_HSY_VID;
-            break;
+            case GRADING_LIN:
+                hsyStyle = FixedFunctionOpData::RGB_TO_HSY_LIN;
+                break;
+            case GRADING_LOG:
+                hsyStyle = FixedFunctionOpData::RGB_TO_HSY_LOG;
+                break;
+            case GRADING_VIDEO:
+                hsyStyle = FixedFunctionOpData::RGB_TO_HSY_VID;
+                break;
         }
 
-        st.newLine() << "{";   // establish scope so local variable names won't conflict
+        st.newLine() << "{"; // establish scope so local variable names won't conflict
         st.indent();
         ConstFixedFunctionOpDataRcPtr funcOpData = std::make_shared<FixedFunctionOpData>(hsyStyle);
         GetFixedFunctionGPUProcessingText(shaderCreator, st, funcOpData);
@@ -381,7 +414,8 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
     // HUE-HUE
     st.newLine() << pix << ".r = " << props.m_eval << "(0, " << pix << ".r, " << pix << ".r);";
     // SAT-SAT
-    st.newLine() << "" << pix << ".g = max(0., " << props.m_eval << "(4, " << pix << ".g, " << pix << ".g));";
+    st.newLine() << "" << pix << ".g = max(0., " << props.m_eval << "(4, " << pix << ".g, " << pix
+                 << ".g));";
     // LUM-SAT
     st.newLine() << "float lumSatGain = max(0., " << props.m_eval << "(3, " << pix << ".b, 1.));";
     // SAT-LUM
@@ -424,15 +458,15 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
         FixedFunctionOpData::Style hsyStyle = FixedFunctionOpData::RGB_TO_HSY_LIN;
         switch (style)
         {
-        case GRADING_LIN:
-            hsyStyle = FixedFunctionOpData::HSY_LIN_TO_RGB;
-            break;
-        case GRADING_LOG:
-            hsyStyle = FixedFunctionOpData::HSY_LOG_TO_RGB;
-            break;
-        case GRADING_VIDEO:
-            hsyStyle = FixedFunctionOpData::HSY_VID_TO_RGB;
-            break;
+            case GRADING_LIN:
+                hsyStyle = FixedFunctionOpData::HSY_LIN_TO_RGB;
+                break;
+            case GRADING_LOG:
+                hsyStyle = FixedFunctionOpData::HSY_LOG_TO_RGB;
+                break;
+            case GRADING_VIDEO:
+                hsyStyle = FixedFunctionOpData::HSY_VID_TO_RGB;
+                break;
         }
         st.newLine() << "{";
         st.indent();
@@ -449,14 +483,15 @@ void AddGCForwardShader(GpuShaderCreatorRcPtr & shaderCreator,
     }
 }
 
-void AddGCInverseShader(GpuShaderCreatorRcPtr & shaderCreator, 
-                       GpuShaderText & st,
-                       const GCProperties & props,
-                       bool dyn,
-                       bool doLinToLog,
-                       bool doRGBToHSY,
-                       bool drawCurveOnly,
-                       GradingStyle style)
+void AddGCInverseShader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & st,
+    const GCProperties & props,
+    bool dyn,
+    bool doLinToLog,
+    bool doRGBToHSY,
+    bool drawCurveOnly,
+    GradingStyle style)
 {
     const std::string pix(shaderCreator->getPixelName());
 
@@ -484,18 +519,18 @@ void AddGCInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
         FixedFunctionOpData::Style hsyStyle = FixedFunctionOpData::RGB_TO_HSY_LIN;
         switch (style)
         {
-        case GRADING_LIN:
-            hsyStyle = FixedFunctionOpData::RGB_TO_HSY_LIN;
-            break;
-        case GRADING_LOG:
-            hsyStyle = FixedFunctionOpData::RGB_TO_HSY_LOG;
-            break;
-        case GRADING_VIDEO:
-            hsyStyle = FixedFunctionOpData::RGB_TO_HSY_VID;
-            break;
+            case GRADING_LIN:
+                hsyStyle = FixedFunctionOpData::RGB_TO_HSY_LIN;
+                break;
+            case GRADING_LOG:
+                hsyStyle = FixedFunctionOpData::RGB_TO_HSY_LOG;
+                break;
+            case GRADING_VIDEO:
+                hsyStyle = FixedFunctionOpData::RGB_TO_HSY_VID;
+                break;
         }
 
-        st.newLine() << "{";   // establish scope so local variable names won't conflict
+        st.newLine() << "{"; // establish scope so local variable names won't conflict
         st.indent();
         ConstFixedFunctionOpDataRcPtr funcOpData = std::make_shared<FixedFunctionOpData>(hsyStyle);
         GetFixedFunctionGPUProcessingText(shaderCreator, st, funcOpData);
@@ -571,15 +606,15 @@ void AddGCInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
         FixedFunctionOpData::Style hsyStyle = FixedFunctionOpData::RGB_TO_HSY_LIN;
         switch (style)
         {
-        case GRADING_LIN:
-            hsyStyle = FixedFunctionOpData::HSY_LIN_TO_RGB;
-            break;
-        case GRADING_LOG:
-            hsyStyle = FixedFunctionOpData::HSY_LOG_TO_RGB;
-            break;
-        case GRADING_VIDEO:
-            hsyStyle = FixedFunctionOpData::HSY_VID_TO_RGB;
-            break;
+            case GRADING_LIN:
+                hsyStyle = FixedFunctionOpData::HSY_LIN_TO_RGB;
+                break;
+            case GRADING_LOG:
+                hsyStyle = FixedFunctionOpData::HSY_LOG_TO_RGB;
+                break;
+            case GRADING_VIDEO:
+                hsyStyle = FixedFunctionOpData::HSY_VID_TO_RGB;
+                break;
         }
         st.newLine() << "{";
         st.indent();
@@ -589,19 +624,20 @@ void AddGCInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
         st.newLine() << "}";
     }
 
-   if (dyn)
-   {
-       st.dedent();
-       st.newLine() << "}";
-   }
+    if (dyn)
+    {
+        st.dedent();
+        st.newLine() << "}";
+    }
 }
 
-} // anon
+} // namespace
 
-void GetGradingHueCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
-                                        ConstGradingHueCurveOpDataRcPtr & gcData)
+void GetGradingHueCurveGPUShaderProgram(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstGradingHueCurveOpDataRcPtr & gcData)
 {
-    const bool dyn = gcData->isDynamic() &&  shaderCreator->getLanguage() != LANGUAGE_OSL_1;
+    const bool dyn = gcData->isDynamic() && shaderCreator->getLanguage() != LANGUAGE_OSL_1;
     if (!dyn)
     {
         auto propGC = gcData->getDynamicPropertyInternal();
@@ -613,23 +649,23 @@ void GetGradingHueCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
     if (gcData->isDynamic() && shaderCreator->getLanguage() == LANGUAGE_OSL_1)
     {
-        std::string msg("The dynamic properties are not yet supported by the 'Open Shading language"\
-                        " (OSL)' translation: The '");
+        std::string msg(
+            "The dynamic properties are not yet supported by the 'Open Shading language"
+            " (OSL)' translation: The '");
         msg += opPrefix;
         msg += "' dynamic property is replaced by a local variable.";
 
         LogWarning(msg);
     }
 
-    const GradingStyle style = gcData->getStyle();
+    const GradingStyle style     = gcData->getStyle();
     const TransformDirection dir = gcData->getDirection();
 
     GpuShaderText st(shaderCreator->getLanguage());
     st.indent();
 
     st.newLine() << "";
-    st.newLine() << "// Add GradingHueCurve "
-                 << TransformDirectionToString(dir) << " processing";
+    st.newLine() << "// Add GradingHueCurve " << TransformDirectionToString(dir) << " processing";
     st.newLine() << "";
     st.newLine() << "{";
     st.indent();
@@ -644,7 +680,7 @@ void GetGradingHueCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
         // Add the dynamic property to the shader creator.
 
         // Property is decoupled.
-        auto shaderProp = dynProp->createEditableCopy();
+        auto shaderProp              = dynProp->createEditableCopy();
         DynamicPropertyRcPtr newProp = shaderProp;
         shaderCreator->addDynamicProperty(newProp);
 
@@ -664,14 +700,28 @@ void GetGradingHueCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     const bool doRGBToHSY = gcData->getRGBToHSY() == HSY_TRANSFORM_1;
     switch (dir)
     {
-    case TRANSFORM_DIR_FORWARD:
-        AddGCForwardShader(shaderCreator, st, properties, dyn, doLinToLog, doRGBToHSY,
-                           dynProp->getValue()->getDrawCurveOnly(), style);
-        break;
-    case TRANSFORM_DIR_INVERSE:
-        AddGCInverseShader(shaderCreator, st, properties, dyn, doLinToLog, doRGBToHSY,
-                           dynProp->getValue()->getDrawCurveOnly(), style);
-        break;
+        case TRANSFORM_DIR_FORWARD:
+            AddGCForwardShader(
+                shaderCreator,
+                st,
+                properties,
+                dyn,
+                doLinToLog,
+                doRGBToHSY,
+                dynProp->getValue()->getDrawCurveOnly(),
+                style);
+            break;
+        case TRANSFORM_DIR_INVERSE:
+            AddGCInverseShader(
+                shaderCreator,
+                st,
+                properties,
+                dyn,
+                doLinToLog,
+                doRGBToHSY,
+                dynProp->getValue()->getDrawCurveOnly(),
+                style);
+            break;
     }
 
     st.dedent();
@@ -681,4 +731,4 @@ void GetGradingHueCurveGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
     shaderCreator->addToFunctionShaderCode(st.string().c_str());
 }
 
-} // OCIO_NAMESPACE
+} // namespace OCIO_NAMESPACE

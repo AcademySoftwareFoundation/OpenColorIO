@@ -9,8 +9,7 @@
 
 namespace
 {
-const std::array<const std::string, 1> knownInterchangeNames = {
-    "amf_transform_ids" };
+const std::array<const std::string, 1> knownInterchangeNames = {"amf_transform_ids"};
 }
 
 namespace OCIO_NAMESPACE
@@ -22,7 +21,7 @@ public:
     std::string m_name;
     std::string m_family;
     std::string m_description;
-    ReferenceSpaceType m_referenceSpaceType{ REFERENCE_SPACE_SCENE };
+    ReferenceSpaceType m_referenceSpaceType{REFERENCE_SPACE_SCENE};
     std::map<std::string, std::string> m_interchangeAttribs;
 
     TransformRcPtr m_toRefTransform;
@@ -37,9 +36,9 @@ public:
     }
 
     Impl(const Impl &) = delete;
-    ~Impl() = default;
+    ~Impl()            = default;
 
-    Impl & operator= (const Impl & rhs)
+    Impl & operator=(const Impl & rhs)
     {
         if (this != &rhs)
         {
@@ -50,19 +49,18 @@ public:
             m_referenceSpaceType = rhs.m_referenceSpaceType;
             m_interchangeAttribs = rhs.m_interchangeAttribs;
 
-            m_toRefTransform = rhs.m_toRefTransform ? rhs.m_toRefTransform->createEditableCopy() :
-                                                      rhs.m_toRefTransform;
+            m_toRefTransform = rhs.m_toRefTransform ? rhs.m_toRefTransform->createEditableCopy()
+                                                    : rhs.m_toRefTransform;
 
-            m_fromRefTransform = rhs.m_fromRefTransform ?
-                                 rhs.m_fromRefTransform->createEditableCopy() :
-                                 rhs.m_fromRefTransform;
+            m_fromRefTransform = rhs.m_fromRefTransform
+                                     ? rhs.m_fromRefTransform->createEditableCopy()
+                                     : rhs.m_fromRefTransform;
 
             m_categories = rhs.m_categories;
         }
         return *this;
     }
 };
-
 
 ViewTransformRcPtr ViewTransform::Create(ReferenceSpaceType referenceSpace)
 {
@@ -77,7 +75,7 @@ void ViewTransform::deleter(ViewTransform * v)
 ViewTransformRcPtr ViewTransform::createEditableCopy() const
 {
     ViewTransformRcPtr cs = ViewTransform::Create(getImpl()->m_referenceSpaceType);
-    *cs->m_impl = *m_impl;
+    *cs->m_impl           = *m_impl;
     return cs;
 }
 
@@ -122,11 +120,11 @@ void ViewTransform::setDescription(const char * description)
     getImpl()->m_description = description ? description : "";
 }
 
-const char * ViewTransform::getInterchangeAttribute(const char* attrName) const
+const char * ViewTransform::getInterchangeAttribute(const char * attrName) const
 {
     std::string name = attrName ? attrName : "";
 
-    for (auto& key : knownInterchangeNames)
+    for (auto & key : knownInterchangeNames)
     {
         // do case-insensitive comparison.
         if (StringUtils::Compare(key, name))
@@ -145,11 +143,11 @@ const char * ViewTransform::getInterchangeAttribute(const char* attrName) const
     throw Exception(oss.str().c_str());
 }
 
-void ViewTransform::setInterchangeAttribute(const char* attrName, const char* value)
+void ViewTransform::setInterchangeAttribute(const char * attrName, const char * value)
 {
     std::string name = attrName ? attrName : "";
 
-    for (auto& key : knownInterchangeNames)
+    for (auto & key : knownInterchangeNames)
     {
         // Do case-insensitive comparison.
         if (StringUtils::Compare(key, name))
@@ -158,7 +156,7 @@ void ViewTransform::setInterchangeAttribute(const char* attrName, const char* va
             if (!value || !*value)
             {
                 m_impl->m_interchangeAttribs.erase(key);
-            } 
+            }
             else
             {
                 m_impl->m_interchangeAttribs[key] = value;
@@ -176,7 +174,6 @@ std::map<std::string, std::string> ViewTransform::getInterchangeAttributes() con
 {
     return m_impl->m_interchangeAttribs;
 }
-
 
 bool ViewTransform::hasCategory(const char * category) const
 {
@@ -207,7 +204,6 @@ void ViewTransform::clearCategories()
     getImpl()->m_categories.clearTokens();
 }
 
-
 ReferenceSpaceType ViewTransform::getReferenceSpaceType() const noexcept
 {
     return getImpl()->m_referenceSpaceType;
@@ -217,10 +213,10 @@ ConstTransformRcPtr ViewTransform::getTransform(ViewTransformDirection dir) cons
 {
     switch (dir)
     {
-    case VIEWTRANSFORM_DIR_TO_REFERENCE:
-        return getImpl()->m_toRefTransform;
-    case VIEWTRANSFORM_DIR_FROM_REFERENCE:
-        return getImpl()->m_fromRefTransform;
+        case VIEWTRANSFORM_DIR_TO_REFERENCE:
+            return getImpl()->m_toRefTransform;
+        case VIEWTRANSFORM_DIR_FROM_REFERENCE:
+            return getImpl()->m_fromRefTransform;
     }
     return ConstTransformRcPtr();
 }
@@ -235,47 +231,48 @@ void ViewTransform::setTransform(const ConstTransformRcPtr & transform, ViewTran
 
     switch (dir)
     {
-    case VIEWTRANSFORM_DIR_TO_REFERENCE:
-        getImpl()->m_toRefTransform = transformCopy; 
-        break;
-    case VIEWTRANSFORM_DIR_FROM_REFERENCE:
-        getImpl()->m_fromRefTransform = transformCopy; 
-        break;
+        case VIEWTRANSFORM_DIR_TO_REFERENCE:
+            getImpl()->m_toRefTransform = transformCopy;
+            break;
+        case VIEWTRANSFORM_DIR_FROM_REFERENCE:
+            getImpl()->m_fromRefTransform = transformCopy;
+            break;
     }
 }
 
-
 namespace
 {
-static constexpr char REFERENCE_SPACE_SCENE_STR[]{ "scene" };
-static constexpr char REFERENCE_SPACE_DISPLAY_STR[]{ "display" };
+static constexpr char REFERENCE_SPACE_SCENE_STR[]{"scene"};
+static constexpr char REFERENCE_SPACE_DISPLAY_STR[]{"display"};
 
 const char * ReferenceSpaceTypeToString(ReferenceSpaceType reference)
 {
     switch (reference)
     {
-    case REFERENCE_SPACE_SCENE:   return REFERENCE_SPACE_SCENE_STR;
-    case REFERENCE_SPACE_DISPLAY: return REFERENCE_SPACE_DISPLAY_STR;
+        case REFERENCE_SPACE_SCENE:
+            return REFERENCE_SPACE_SCENE_STR;
+        case REFERENCE_SPACE_DISPLAY:
+            return REFERENCE_SPACE_DISPLAY_STR;
     }
 
     // Default type is meaningless.
     throw Exception("Unknown reference type");
 }
-}
+} // namespace
 
-std::ostream & operator<< (std::ostream & os, const ViewTransform & vt)
+std::ostream & operator<<(std::ostream & os, const ViewTransform & vt)
 {
     os << "<ViewTransform ";
     os << "name=" << vt.getName() << ", ";
     os << "family=" << vt.getFamily() << ", ";
     os << "referenceSpaceType=" << ReferenceSpaceTypeToString(vt.getReferenceSpaceType());
-    const std::string desc{ vt.getDescription() };
+    const std::string desc{vt.getDescription()};
     if (!desc.empty())
     {
         os << ", description=" << desc;
     }
 
-    for (const auto& attr : vt.getInterchangeAttributes())
+    for (const auto & attr : vt.getInterchangeAttributes())
     {
         os << ", " << attr.first << "=" << attr.second;
     }
@@ -295,4 +292,3 @@ std::ostream & operator<< (std::ostream & os, const ViewTransform & vt)
 }
 
 } // namespace OCIO_NAMESPACE
-

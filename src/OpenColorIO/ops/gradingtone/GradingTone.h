@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_GRADINGTONE_H
 #define INCLUDED_OCIO_GRADINGTONE_H
 
-
 #include <OpenColorIO/OpenColorIO.h>
-
 
 namespace OCIO_NAMESPACE
 {
@@ -29,20 +26,20 @@ bool IsIdentity(const GradingTone & value);
 struct GradingTonePreRender
 {
     GradingTonePreRender & operator=(const GradingTonePreRender &) = default;
-    GradingTonePreRender(const GradingTonePreRender &) = default;
+    GradingTonePreRender(const GradingTonePreRender &)             = default;
 
     explicit GradingTonePreRender(GradingStyle style);
     ~GradingTonePreRender() = default;
 
     // These values are used by CPU & GPU.
-    double m_shadowsStart{ 0. };     // Pre computed shadow start
-    double m_shadowsWidth{ 0. };     // Pre computed shadow width
-    double m_highlightsStart{ 0. };  // Pre computed highlight start
-    double m_highlightsWidth{ 0. };  // Pre computed highlight width
-    double m_blacksStart{ 0. };      // Pre computed blacks start
-    double m_blacksWidth{ 0. };      // Pre computed blacks width
-    double m_whitesStart{ 0. };      // Pre computed whites start
-    double m_whitesWidth{ 0. };      // Pre computed whites width
+    double m_shadowsStart{0.};    // Pre computed shadow start
+    double m_shadowsWidth{0.};    // Pre computed shadow width
+    double m_highlightsStart{0.}; // Pre computed highlight start
+    double m_highlightsWidth{0.}; // Pre computed highlight width
+    double m_blacksStart{0.};     // Pre computed blacks start
+    double m_blacksWidth{0.};     // Pre computed blacks width
+    double m_whitesStart{0.};     // Pre computed whites start
+    double m_whitesWidth{0.};     // Pre computed whites width
 
     void setStyle(GradingStyle style);
     void update(const GradingTone & v);
@@ -66,19 +63,19 @@ struct GradingTonePreRender
     float m_scM[2][2]{{0.f}}; // m0 & m3
 
     // These values are changing with the style.
-    float m_top{ 1.f };
-    float m_topSC{ 1.f };
-    float m_bottom{ 0.f };
-    float m_pivot{ 0.4f };
+    float m_top{1.f};
+    float m_topSC{1.f};
+    float m_bottom{0.f};
+    float m_pivot{0.4f};
 
-    static void FromStyle(GradingStyle style, float & top, float & topSC,
-                          float & bottom, float & pivot);
+    static void
+    FromStyle(GradingStyle style, float & top, float & topSC, float & bottom, float & pivot);
 
     // Do not apply the op if all params are identity.
-    bool m_localBypass{ false };
+    bool m_localBypass{false};
 
 private:
-    GradingStyle m_style{ GRADING_LOG };
+    GradingStyle m_style{GRADING_LOG};
 
     void mids_precompute(const GradingTone & v, float top, float bottom);
     void highlightShadow_precompute(const GradingTone & v);

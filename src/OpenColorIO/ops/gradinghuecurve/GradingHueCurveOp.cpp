@@ -7,9 +7,9 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "GpuShaderUtils.h"
+#include "ops/gradinghuecurve/GradingHueCurveOp.h"
 #include "ops/gradinghuecurve/GradingHueCurveOpCPU.h"
 #include "ops/gradinghuecurve/GradingHueCurveOpGPU.h"
-#include "ops/gradinghuecurve/GradingHueCurveOp.h"
 #include "transforms/GradingHueCurveTransform.h"
 
 namespace OCIO_NAMESPACE
@@ -25,7 +25,7 @@ typedef OCIO_SHARED_PTR<const GradingHueCurveOp> ConstGradingHueCurveOpRcPtr;
 class GradingHueCurveOp : public Op
 {
 public:
-    GradingHueCurveOp() = delete;
+    GradingHueCurveOp()                          = delete;
     GradingHueCurveOp(const GradingHueCurveOp &) = delete;
     explicit GradingHueCurveOp(GradingHueCurveOpDataRcPtr & data);
 
@@ -46,8 +46,9 @@ public:
     bool isDynamic() const override;
     bool hasDynamicProperty(DynamicPropertyType type) const override;
     DynamicPropertyRcPtr getDynamicProperty(DynamicPropertyType type) const override;
-    void replaceDynamicProperty(DynamicPropertyType type,
-                                DynamicPropertyGradingHueCurveImplRcPtr & prop) override;
+    void replaceDynamicProperty(
+        DynamicPropertyType type,
+        DynamicPropertyGradingHueCurveImplRcPtr & prop) override;
     void removeDynamicProperties() override;
 
     ConstOpCPURcPtr getCPUOp(bool fastLogExpPow) const override;
@@ -73,8 +74,8 @@ GradingHueCurveOp::GradingHueCurveOp(GradingHueCurveOpDataRcPtr & hueCurveData)
 
 OpRcPtr GradingHueCurveOp::clone() const
 {
-   GradingHueCurveOpDataRcPtr p = hueCurveData()->clone();
-   return std::make_shared<GradingHueCurveOp>(p);
+    GradingHueCurveOpDataRcPtr p = hueCurveData()->clone();
+    return std::make_shared<GradingHueCurveOp>(p);
 }
 
 GradingHueCurveOp::~GradingHueCurveOp()
@@ -100,7 +101,8 @@ bool GradingHueCurveOp::isSameType(ConstOpRcPtr & op) const
 bool GradingHueCurveOp::isInverse(ConstOpRcPtr & op) const
 {
     ConstGradingHueCurveOpRcPtr typedRcPtr = DynamicPtrCast<const GradingHueCurveOp>(op);
-    if (!typedRcPtr) return false;
+    if (!typedRcPtr)
+        return false;
 
     ConstGradingHueCurveOpDataRcPtr hueOpData = typedRcPtr->hueCurveData();
     return hueCurveData()->isInverse(hueOpData);
@@ -115,8 +117,9 @@ void GradingHueCurveOp::combineWith(OpRcPtrVec & /*ops*/, ConstOpRcPtr & secondO
 {
     if (!canCombineWith(secondOp))
     {
-        throw Exception("GradingHueCurveOp: canCombineWith must be checked "
-                        "before calling combineWith.");
+        throw Exception(
+            "GradingHueCurveOp: canCombineWith must be checked "
+            "before calling combineWith.");
     }
 }
 
@@ -160,8 +163,9 @@ DynamicPropertyRcPtr GradingHueCurveOp::getDynamicProperty(DynamicPropertyType t
     return hueCurveData()->getDynamicProperty();
 }
 
-void GradingHueCurveOp::replaceDynamicProperty(DynamicPropertyType type,
-                                               DynamicPropertyGradingHueCurveImplRcPtr & prop)
+void GradingHueCurveOp::replaceDynamicProperty(
+    DynamicPropertyType type,
+    DynamicPropertyGradingHueCurveImplRcPtr & prop)
 {
     if (type != DYNAMIC_PROPERTY_GRADING_HUECURVE)
     {
@@ -197,13 +201,14 @@ void GradingHueCurveOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreat
     GetGradingHueCurveGPUShaderProgram(shaderCreator, data);
 }
 
-}  // Anon namespace
+} // namespace
 
 ///////////////////////////////////////////////////////////////////////////
 
-void CreateGradingHueCurveOp(OpRcPtrVec & ops,
-                             GradingHueCurveOpDataRcPtr & curveData,
-                             TransformDirection direction)
+void CreateGradingHueCurveOp(
+    OpRcPtrVec & ops,
+    GradingHueCurveOpDataRcPtr & curveData,
+    TransformDirection direction)
 {
     auto curve = curveData;
     if (direction == TRANSFORM_DIR_INVERSE)
@@ -223,19 +228,20 @@ void CreateGradingHueCurveTransform(GroupTransformRcPtr & group, ConstOpRcPtr & 
     {
         throw Exception("CreateGradingHueCurveTransform: op has to be a GradingHueCurveOp.");
     }
-    auto gcData = DynamicPtrCast<const GradingHueCurveOpData>(op->data());
+    auto gcData      = DynamicPtrCast<const GradingHueCurveOpData>(op->data());
     auto gcTransform = GradingHueCurveTransform::Create(gcData->getStyle());
-    auto & data = dynamic_cast<GradingHueCurveTransformImpl *>(gcTransform.get())->data();
-    data = *gcData;
+    auto & data      = dynamic_cast<GradingHueCurveTransformImpl *>(gcTransform.get())->data();
+    data             = *gcData;
 
     group->appendTransform(gcTransform);
 }
 
-void BuildGradingHueCurveOp(OpRcPtrVec & ops,
-                            const Config & /*config*/,
-                            const ConstContextRcPtr & /*context*/,
-                            const GradingHueCurveTransform & transform,
-                            TransformDirection dir)
+void BuildGradingHueCurveOp(
+    OpRcPtrVec & ops,
+    const Config & /*config*/,
+    const ConstContextRcPtr & /*context*/,
+    const GradingHueCurveTransform & transform,
+    TransformDirection dir)
 {
     const auto & data = dynamic_cast<const GradingHueCurveTransformImpl &>(transform).data();
     data.validate();
@@ -245,4 +251,3 @@ void BuildGradingHueCurveOp(OpRcPtrVec & ops,
 }
 
 } // namespace OCIO_NAMESPACE
-

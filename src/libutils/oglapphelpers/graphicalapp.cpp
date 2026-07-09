@@ -24,7 +24,9 @@ GraphicalAppRcPtr GraphicalApp::CreateApp(const char * winTitle, int winWidth, i
 #elif defined(OCIO_DIRECTX_ENABLED)
     return std::make_shared<DxApp>(winTitle, winWidth, winHeight);
 #else
-    (void)winTitle; (void)winWidth; (void)winHeight;
+    (void)winTitle;
+    (void)winWidth;
+    (void)winHeight;
     throw Exception("No suitable GPU backend available for GraphicalApp::CreateApp");
 #endif
 }

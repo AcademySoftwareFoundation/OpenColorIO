@@ -13,7 +13,7 @@ namespace OCIO_NAMESPACE
 class OCIOHIDDEN PyBuiltinTransformRegistry
 {
 public:
-    PyBuiltinTransformRegistry() = default;
+    PyBuiltinTransformRegistry()  = default;
     ~PyBuiltinTransformRegistry() = default;
 
     size_t getNumBuiltins() const noexcept

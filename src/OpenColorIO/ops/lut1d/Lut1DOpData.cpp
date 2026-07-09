@@ -9,10 +9,10 @@
 #include "BitDepthUtils.h"
 #include "HashUtils.h"
 #include "MathUtils.h"
+#include "ops/OpTools.h"
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut1d/Lut1DOpData.h"
 #include "ops/matrix/MatrixOp.h"
-#include "ops/OpTools.h"
 #include "ops/range/RangeOpData.h"
 
 namespace OCIO_NAMESPACE
@@ -20,10 +20,11 @@ namespace OCIO_NAMESPACE
 // Number of possible values for the Half domain.
 static const unsigned long HALF_DOMAIN_REQUIRED_ENTRIES = 65536;
 
-Lut1DOpData::Lut3by1DArray::Lut3by1DArray(HalfFlags halfFlags,
-                                          unsigned long numChannels,
-                                          unsigned long length,
-                                          bool filterNANs)
+Lut1DOpData::Lut3by1DArray::Lut3by1DArray(
+    HalfFlags halfFlags,
+    unsigned long numChannels,
+    unsigned long length,
+    bool filterNANs)
 {
     if (length < 2)
     {
@@ -47,12 +48,13 @@ void Lut1DOpData::Lut3by1DArray::fill(HalfFlags halfFlags, bool filterNANs)
     const unsigned long dim         = getLength();
     const unsigned long maxChannels = getNumColorComponents();
 
-    Array::Values& values = getValues();
+    Array::Values & values = getValues();
     if (Lut1DOpData::IsInputHalfDomain(halfFlags))
     {
-        for (unsigned long idx = 0; idx<dim; ++idx)
+        for (unsigned long idx = 0; idx < dim; ++idx)
         {
-            half htemp; htemp.setBits((unsigned short)idx);
+            half htemp;
+            htemp.setBits((unsigned short)idx);
             float ftemp = static_cast<float>(htemp);
             if (IsNan(ftemp) && filterNANs)
             {
@@ -60,23 +62,22 @@ void Lut1DOpData::Lut3by1DArray::fill(HalfFlags halfFlags, bool filterNANs)
             }
 
             const unsigned long row = maxChannels * idx;
-            for (unsigned long channel = 0; channel<maxChannels; ++channel)
+            for (unsigned long channel = 0; channel < maxChannels; ++channel)
             {
                 values[channel + row] = ftemp;
             }
         }
-
     }
     else
     {
         const float stepValue = 1.0f / ((float)dim - 1.0f);
 
-        for (unsigned long idx = 0; idx<dim; ++idx)
+        for (unsigned long idx = 0; idx < dim; ++idx)
         {
             const float ftemp = (float)idx * stepValue;
 
             const unsigned long row = maxChannels * idx;
-            for (unsigned long channel = 0; channel<maxChannels; ++channel)
+            for (unsigned long channel = 0; channel < maxChannels; ++channel)
             {
                 values[channel + row] = ftemp;
             }
@@ -93,8 +94,7 @@ void Lut1DOpData::Lut3by1DArray::resize(unsigned long length, unsigned long numC
     else if (length > 1024 * 1024)
     {
         std::ostringstream oss;
-        oss << "LUT 1D: Length '" << length
-            << "' must not be greater than 1024x1024 (1048576).";
+        oss << "LUT 1D: Length '" << length << "' must not be greater than 1024x1024 (1048576).";
         throw Exception(oss.str().c_str());
     }
     Array::resize(length, numColorComponents);
@@ -116,18 +116,18 @@ bool Lut1DOpData::Lut3by1DArray::isIdentity(HalfFlags halfFlags) const
     // most LUTs, we'll return false after only a few iterations of the loop.
     // So for now we've remove the member to store the result of this computation.
     //
-    const unsigned long dim = getLength();
-    const Array::Values& values = getValues();
+    const unsigned long dim         = getLength();
+    const Array::Values & values    = getValues();
     const unsigned long maxChannels = getMaxColorComponents();
 
     if (Lut1DOpData::IsInputHalfDomain(halfFlags))
     {
-        for (unsigned long idx = 0; idx<dim; ++idx)
+        for (unsigned long idx = 0; idx < dim; ++idx)
         {
             half aimHalf;
             aimHalf.setBits((unsigned short)idx);
             const unsigned long row = maxChannels * idx;
-            for (unsigned long channel = 0; channel<maxChannels; ++channel)
+            for (unsigned long channel = 0; channel < maxChannels; ++channel)
             {
                 const half valHalf = values[channel + row];
                 // Must be different by at least two ULPs to not be an identity.
@@ -157,14 +157,14 @@ bool Lut1DOpData::Lut3by1DArray::isIdentity(HalfFlags halfFlags) const
         // too sensitive near zero and too loose at the high end.
         //
         constexpr float abs_tol = 1e-5f;
-        const float stepValue = 1.0f / ((float)dim - 1.0f);
+        const float stepValue   = 1.0f / ((float)dim - 1.0f);
 
-        for (unsigned long idx = 0; idx<dim; ++idx)
+        for (unsigned long idx = 0; idx < dim; ++idx)
         {
             const float aim = (float)idx * stepValue;
 
             const unsigned long row = maxChannels * idx;
-            for (unsigned long channel = 0; channel<maxChannels; ++channel)
+            for (unsigned long channel = 0; channel < maxChannels; ++channel)
             {
                 const float err = values[channel + row] - aim;
 
@@ -299,10 +299,9 @@ OpDataRcPtr Lut1DOpData::getPairIdentityReplacement(ConstLut1DOpDataRcPtr & lut2
         // Therefore, the first and last LUT entries are the extreme values and
         // the ComponentProperties has been initialized, but only for the op
         // whose direction is INVERSE.
-        const Lut1DOpData * invLut = (m_direction == TRANSFORM_DIR_INVERSE)
-            ? this: lut2.get();
+        const Lut1DOpData * invLut = (m_direction == TRANSFORM_DIR_INVERSE) ? this : lut2.get();
         const ComponentProperties & redProperties = invLut->getRedProperties();
-        const unsigned long length = invLut->getArray().getLength();
+        const unsigned long length                = invLut->getArray().getLength();
 
         // If the start or end of the LUT contains a flat region, that will cause
         // a round-trip to be limited.
@@ -311,82 +310,79 @@ OpDataRcPtr Lut1DOpData::getPairIdentityReplacement(ConstLut1DOpDataRcPtr & lut2
         double maxValue = 1.;
         switch (m_direction)
         {
-        case TRANSFORM_DIR_FORWARD: // Fwd Lut1D -> Inv Lut1D
-        {
-            // A round-trip in this order will impose at least a clamp to [0,1]
-            // based on what happens entering the first Fwd Lut1D.  However, the
-            // clamping may be to an even narrower range if there are flat regions.
-            //
-            // The flat region limitation is imposed based on the where it falls
-            // relative to the [0,1] input domain.
+            case TRANSFORM_DIR_FORWARD: // Fwd Lut1D -> Inv Lut1D
+            {
+                // A round-trip in this order will impose at least a clamp to [0,1]
+                // based on what happens entering the first Fwd Lut1D.  However, the
+                // clamping may be to an even narrower range if there are flat regions.
+                //
+                // The flat region limitation is imposed based on the where it falls
+                // relative to the [0,1] input domain.
 
-            // TODO: A RangeOp has one min & max for all channels, whereas a Lut1D may 
-            // have three independent channels.  Potentially could look at all chans
-            // and take the extrema of each?  For now, just using the first channel.
-            const unsigned long minIndex = redProperties.startDomain;
-            const unsigned long maxIndex = redProperties.endDomain;
+                // TODO: A RangeOp has one min & max for all channels, whereas a Lut1D may
+                // have three independent channels.  Potentially could look at all chans
+                // and take the extrema of each?  For now, just using the first channel.
+                const unsigned long minIndex = redProperties.startDomain;
+                const unsigned long maxIndex = redProperties.endDomain;
 
-            minValue = (double)minIndex / (length - 1);
-            maxValue = (double)maxIndex / (length - 1);
-            break;
+                minValue = (double)minIndex / (length - 1);
+                maxValue = (double)maxIndex / (length - 1);
+                break;
+            }
+            case TRANSFORM_DIR_INVERSE: // Inv Lut1D -> Fwd Lut1D
+            {
+                // A round-trip in this order will impose a clamp, but it may be to
+                // bounds outside of [0,1] since the Fwd LUT may contain values outside
+                // [0,1] and so the Inv LUT will accept inputs on that extended range.
+                //
+                // The flat region limitation is imposed based on the output range.
+
+                const bool isIncreasing          = redProperties.isIncreasing;
+                const unsigned long maxChannels  = invLut->getArray().getMaxColorComponents();
+                const unsigned long lastValIndex = (length - 1) * maxChannels;
+                // Note that the array for the invLut has had initializeFromForward()
+                // done and so any reversals have been converted to flat regions and
+                // the extrema are at the beginning & end of the LUT.
+                const Array::Values & lutValues = invLut->getArray().getValues();
+
+                // TODO: Currently only basing this on the red channel.
+                minValue = isIncreasing ? lutValues[0] : lutValues[lastValIndex];
+                maxValue = isIncreasing ? lutValues[lastValIndex] : lutValues[0];
+                break;
+            }
         }
-        case TRANSFORM_DIR_INVERSE: // Inv Lut1D -> Fwd Lut1D
-        {
-            // A round-trip in this order will impose a clamp, but it may be to
-            // bounds outside of [0,1] since the Fwd LUT may contain values outside
-            // [0,1] and so the Inv LUT will accept inputs on that extended range.
-            //
-            // The flat region limitation is imposed based on the output range.
 
-            const bool isIncreasing = redProperties.isIncreasing;
-            const unsigned long maxChannels = invLut->getArray().getMaxColorComponents();
-            const unsigned long lastValIndex = (length - 1) * maxChannels;
-            // Note that the array for the invLut has had initializeFromForward()
-            // done and so any reversals have been converted to flat regions and
-            // the extrema are at the beginning & end of the LUT.
-            const Array::Values & lutValues = invLut->getArray().getValues();
-
-            // TODO: Currently only basing this on the red channel.
-            minValue = isIncreasing ? lutValues[0] : lutValues[lastValIndex];
-            maxValue = isIncreasing ? lutValues[lastValIndex] : lutValues[0];
-            break;
-        }
-        }
-
-        res = std::make_shared<RangeOpData>(minValue, maxValue,
-                                            minValue, maxValue);
+        res = std::make_shared<RangeOpData>(minValue, maxValue, minValue, maxValue);
     }
     return res;
 }
 
 void Lut1DOpData::setInputHalfDomain(bool isHalfDomain) noexcept
 {
-    m_halfFlags = (isHalfDomain) ?
-        ((HalfFlags)(m_halfFlags | LUT_INPUT_HALF_CODE)) :
-        ((HalfFlags)(m_halfFlags & ~LUT_INPUT_HALF_CODE));
+    m_halfFlags = (isHalfDomain) ? ((HalfFlags)(m_halfFlags | LUT_INPUT_HALF_CODE))
+                                 : ((HalfFlags)(m_halfFlags & ~LUT_INPUT_HALF_CODE));
 }
 
 void Lut1DOpData::setOutputRawHalfs(bool isRawHalfs) noexcept
 {
-    m_halfFlags = (isRawHalfs) ?
-        ((HalfFlags)(m_halfFlags | LUT_OUTPUT_HALF_CODE)) :
-        ((HalfFlags)(m_halfFlags & ~LUT_OUTPUT_HALF_CODE));
+    m_halfFlags = (isRawHalfs) ? ((HalfFlags)(m_halfFlags | LUT_OUTPUT_HALF_CODE))
+                               : ((HalfFlags)(m_halfFlags & ~LUT_OUTPUT_HALF_CODE));
 }
 
 bool Lut1DOpData::IsValidInterpolation(Interpolation interpolation)
 {
     switch (interpolation)
     {
-    case INTERP_BEST:
-    case INTERP_DEFAULT:
-    case INTERP_LINEAR:
-    case INTERP_NEAREST:
-        return true;
-    case INTERP_CUBIC:
-    case INTERP_TETRAHEDRAL:
-    case INTERP_UNKNOWN:
-    default:
-        return false;
+        case INTERP_BEST:
+        case INTERP_DEFAULT:
+        case INTERP_LINEAR:
+        case INTERP_NEAREST:
+            return true;
+        case INTERP_CUBIC:
+        case INTERP_TETRAHEDRAL:
+        case INTERP_UNKNOWN:
+        default:
+            return false;
     }
 }
 
@@ -410,7 +406,7 @@ void Lut1DOpData::validate() const
     {
         getArray().validate();
     }
-    catch (const Exception& e)
+    catch (const Exception & e)
     {
         std::ostringstream oss;
         oss << "1D LUT content array issue: ";
@@ -420,8 +416,7 @@ void Lut1DOpData::validate() const
     }
 
     // If isHalfDomain is set, we need to make sure we have 65536 entries.
-    if (isInputHalfDomain() && getArray().getLength()
-        != HALF_DOMAIN_REQUIRED_ENTRIES)
+    if (isInputHalfDomain() && getArray().getLength() != HALF_DOMAIN_REQUIRED_ENTRIES)
     {
         std::ostringstream oss;
         oss << "1D LUT: ";
@@ -443,33 +438,31 @@ unsigned long Lut1DOpData::GetLutIdealSize(BitDepth incomingBitDepth)
 
     switch (incomingBitDepth)
     {
-    case BIT_DEPTH_UINT8:
-    case BIT_DEPTH_UINT10:
-    case BIT_DEPTH_UINT12:
-    case BIT_DEPTH_UINT14:
-    case BIT_DEPTH_UINT16:
-        return (unsigned long)(GetBitDepthMaxValue(incomingBitDepth) + 1);
+        case BIT_DEPTH_UINT8:
+        case BIT_DEPTH_UINT10:
+        case BIT_DEPTH_UINT12:
+        case BIT_DEPTH_UINT14:
+        case BIT_DEPTH_UINT16:
+            return (unsigned long)(GetBitDepthMaxValue(incomingBitDepth) + 1);
 
-    case BIT_DEPTH_F16:
-    case BIT_DEPTH_F32:
-        break;
+        case BIT_DEPTH_F16:
+        case BIT_DEPTH_F32:
+            break;
 
-    case BIT_DEPTH_UNKNOWN:
-    case BIT_DEPTH_UINT32:
-    default:
-    {
-        std::string err("Bit-depth is not supported: ");
-        err += BitDepthToString(incomingBitDepth);
-        throw Exception(err.c_str());
-    }
-
+        case BIT_DEPTH_UNKNOWN:
+        case BIT_DEPTH_UINT32:
+        default:
+        {
+            std::string err("Bit-depth is not supported: ");
+            err += BitDepthToString(incomingBitDepth);
+            throw Exception(err.c_str());
+        }
     }
 
     return 65536;
 }
 
-unsigned long Lut1DOpData::GetLutIdealSize(BitDepth inputBitDepth,
-                                           HalfFlags halfFlags)
+unsigned long Lut1DOpData::GetLutIdealSize(BitDepth inputBitDepth, HalfFlags halfFlags)
 {
     // Returns the number of entries that fill() expects in order to make
     // an identity LUT.
@@ -494,12 +487,11 @@ bool Lut1DOpData::mayLookup(BitDepth incomingDepth) const
     {
         return incomingDepth == BIT_DEPTH_F16;
     }
-    else  // not a half-domain LUT
+    else // not a half-domain LUT
     {
         if (!IsFloatBitDepth(incomingDepth))
         {
-            return m_array.getLength()
-                == (GetBitDepthMaxValue(incomingDepth) + 1);
+            return m_array.getLength() == (GetBitDepthMaxValue(incomingDepth) + 1);
         }
     }
     return false;
@@ -528,20 +520,20 @@ Lut1DOpDataRcPtr Lut1DOpData::MakeLookupDomain(BitDepth incomingDepth)
 bool Lut1DOpData::haveEqualBasics(const Lut1DOpData & other) const
 {
     // Question:  Should interpolation style be considered?
-    return m_halfFlags == other.m_halfFlags &&
-           m_hueAdjust == other.m_hueAdjust &&
-           m_array     == other.m_array;
+    return m_halfFlags == other.m_halfFlags && m_hueAdjust == other.m_hueAdjust
+           && m_array == other.m_array;
 }
 
 bool Lut1DOpData::equals(const OpData & other) const
 {
-    if (!OpData::equals(other)) return false;
+    if (!OpData::equals(other))
+        return false;
 
-    const Lut1DOpData* lop = static_cast<const Lut1DOpData*>(&other);
+    const Lut1DOpData * lop = static_cast<const Lut1DOpData *>(&other);
 
     // NB: The m_invQuality is not currently included.
-    if (m_direction != lop->m_direction ||
-        getConcreteInterpolation() != lop->getConcreteInterpolation())
+    if (m_direction != lop->m_direction
+        || getConcreteInterpolation() != lop->getConcreteInterpolation())
     {
         return false;
     }
@@ -569,10 +561,8 @@ Lut1DOpDataRcPtr Lut1DOpData::clone() const
 
 bool Lut1DOpData::isInverse(ConstLut1DOpDataRcPtr & other) const
 {
-    if ((m_direction == TRANSFORM_DIR_FORWARD &&
-         other->m_direction == TRANSFORM_DIR_INVERSE) ||
-        (m_direction == TRANSFORM_DIR_INVERSE &&
-         other->m_direction == TRANSFORM_DIR_FORWARD))
+    if ((m_direction == TRANSFORM_DIR_FORWARD && other->m_direction == TRANSFORM_DIR_INVERSE)
+        || (m_direction == TRANSFORM_DIR_INVERSE && other->m_direction == TRANSFORM_DIR_FORWARD))
     {
         // Note: The inverse LUT 1D finalize modifies the array to make it
         // monotonic, hence, this could return false in unexpected cases.
@@ -592,8 +582,8 @@ Lut1DOpDataRcPtr Lut1DOpData::inverse() const
 {
     Lut1DOpDataRcPtr invLut = clone();
 
-    invLut->m_direction = (m_direction == TRANSFORM_DIR_FORWARD) ?
-                          TRANSFORM_DIR_INVERSE : TRANSFORM_DIR_FORWARD;
+    invLut->m_direction
+        = (m_direction == TRANSFORM_DIR_FORWARD) ? TRANSFORM_DIR_INVERSE : TRANSFORM_DIR_FORWARD;
 
     // Note that any existing metadata could become stale at this point but
     // trying to update it is also challenging since inverse() is sometimes
@@ -603,27 +593,27 @@ Lut1DOpDataRcPtr Lut1DOpData::inverse() const
 
 namespace
 {
-const char* GetHueAdjustName(Lut1DHueAdjust algo)
+const char * GetHueAdjustName(Lut1DHueAdjust algo)
 {
     switch (algo)
     {
-    case HUE_DW3:
-    {
-        return "dw3";
-    }
-    case HUE_NONE:
-    {
-        return "none";
-    }
-    case HUE_WYPN:
-    {
-        throw Exception("1D LUT HUE_WYPN hue adjust style is not implemented.");
-    }
+        case HUE_DW3:
+        {
+            return "dw3";
+        }
+        case HUE_NONE:
+        {
+            return "none";
+        }
+        case HUE_WYPN:
+        {
+            throw Exception("1D LUT HUE_WYPN hue adjust style is not implemented.");
+        }
     }
     throw Exception("1D LUT has an invalid hue adjust style.");
 }
 
-}
+} // namespace
 
 std::string Lut1DOpData::getCacheID() const
 {
@@ -637,12 +627,13 @@ std::string Lut1DOpData::getCacheID() const
         cacheIDStream << getID() << " ";
     }
 
-    cacheIDStream << CacheIDHash(reinterpret_cast<const char*>(&values[0]), 
-                                 values.size() * sizeof(values[0]))
+    cacheIDStream << CacheIDHash(
+        reinterpret_cast<const char *>(&values[0]),
+        values.size() * sizeof(values[0]))
                   << " ";
 
-    cacheIDStream << TransformDirectionToString(m_direction)                   << " ";
-    cacheIDStream << InterpolationToString(m_interpolation)                    << " ";
+    cacheIDStream << TransformDirectionToString(m_direction) << " ";
+    cacheIDStream << InterpolationToString(m_interpolation) << " ";
     cacheIDStream << (isInputHalfDomain() ? "half domain" : "standard domain") << " ";
     cacheIDStream << GetHueAdjustName(m_hueAdjust);
 
@@ -663,7 +654,6 @@ std::string Lut1DOpData::getCacheID() const
 // needs to render values through the ops.  In some cases the domain of
 // the first op is sufficient, in other cases we need to create a new more
 // finely sampled domain to try and make the result less lossy.
-
 
 //-----------------------------------------------------------------------------
 // Calculate a new LUT by evaluating a new domain (lut) through a set of ops.
@@ -698,10 +688,7 @@ void Lut1DOpData::ComposeVec(Lut1DOpDataRcPtr & lut, OpRcPtrVec & ops)
     // Evaluate the transforms at 32f.
     // Note: If any ops are bypassed, that will be respected here.
 
-    EvalTransform((const float*)(&inValues[0]),
-                  (float*)(&inValues[0]),
-                  numPixels,
-                  ops);
+    EvalTransform((const float *)(&inValues[0]), (float *)(&inValues[0]), numPixels, ops);
 }
 
 // Compose two Lut1DOpData.
@@ -712,17 +699,19 @@ void Lut1DOpData::ComposeVec(Lut1DOpDataRcPtr & lut, OpRcPtrVec & ops)
 // table for the hue adjust renderer.  We could potentially do a lock object in
 // that renderer to over-ride the hue adjust temporarily like in invLut1d.
 // But for now, put the burdon on the caller to use Lut1DOpData::mayCompose first.
-Lut1DOpDataRcPtr Lut1DOpData::Compose(ConstLut1DOpDataRcPtr & lutc1,
-                                      ConstLut1DOpDataRcPtr & lutc2,
-                                      ComposeMethod compFlag)
+Lut1DOpDataRcPtr Lut1DOpData::Compose(
+    ConstLut1DOpDataRcPtr & lutc1,
+    ConstLut1DOpDataRcPtr & lutc2,
+    ComposeMethod compFlag)
 {
-    // We need a non-const version of luts to create the op and temporaly change the direction if needed.
-    // Op will not be modified (except by finalize, but that should have been done already).
+    // We need a non-const version of luts to create the op and temporaly change the direction if
+    // needed. Op will not be modified (except by finalize, but that should have been done already).
 
     Lut1DOpDataRcPtr lut1 = std::const_pointer_cast<Lut1DOpData>(lutc1);
     Lut1DOpDataRcPtr lut2 = std::const_pointer_cast<Lut1DOpData>(lutc2);
-    bool restoreInverse = false;
-    if (lut1->getDirection() == TRANSFORM_DIR_INVERSE && lut2->getDirection() == TRANSFORM_DIR_INVERSE)
+    bool restoreInverse   = false;
+    if (lut1->getDirection() == TRANSFORM_DIR_INVERSE
+        && lut2->getDirection() == TRANSFORM_DIR_INVERSE)
     {
         // Using the fact that: inv(l2 x l1) = inv(l1) x inv(l2).
         // Compute l2 x l1 and invert the result.
@@ -736,29 +725,29 @@ Lut1DOpDataRcPtr Lut1DOpData::Compose(ConstLut1DOpDataRcPtr & lutc1,
     OpRcPtrVec ops;
 
     unsigned long minSize = 0;
-    bool needHalfDomain = false;
+    bool needHalfDomain   = false;
 
     switch (compFlag)
     {
-    case COMPOSE_RESAMPLE_NO:
-    {
-        minSize = 0;
-        break;
-    }
-    case COMPOSE_RESAMPLE_BIG:
-    {
-        minSize = 65536;
-        break;
-    }
-    case COMPOSE_RESAMPLE_HD:
-    {
-        minSize = 65536;
-        needHalfDomain = true;
-        break;
-    }
+        case COMPOSE_RESAMPLE_NO:
+        {
+            minSize = 0;
+            break;
+        }
+        case COMPOSE_RESAMPLE_BIG:
+        {
+            minSize = 65536;
+            break;
+        }
+        case COMPOSE_RESAMPLE_HD:
+        {
+            minSize        = 65536;
+            needHalfDomain = true;
+            break;
+        }
 
-    // TODO: May want to add another style which is the maximum of lut2
-    //       size (careful of half domain), and in-depth ideal size.
+            // TODO: May want to add another style which is the maximum of lut2
+            //       size (careful of half domain), and in-depth ideal size.
     }
 
     const unsigned long lut1Size = lutc1->getArray().getLength();
@@ -785,15 +774,15 @@ Lut1DOpDataRcPtr Lut1DOpData::Compose(ConstLut1DOpDataRcPtr & lutc1,
         }
         else
         {
-            result = std::make_shared<Lut1DOpData>(needHalfDomain ? Lut1DOpData::LUT_INPUT_HALF_CODE :
-                                                                    Lut1DOpData::LUT_STANDARD,
-                                                   minSize, true);
+            result = std::make_shared<Lut1DOpData>(
+                needHalfDomain ? Lut1DOpData::LUT_INPUT_HALF_CODE : Lut1DOpData::LUT_STANDARD,
+                minSize,
+                true);
         }
-
 
         result->setInterpolation(lut1->getInterpolation());
 
-        auto metadata = lut1->getFormatMetadata();
+        auto metadata               = lut1->getFormatMetadata();
         result->getFormatMetadata() = metadata;
     }
     else
@@ -888,14 +877,15 @@ bool Lut1DOpData::hasExtendedRange() const
     // LUT has a half domain but outputs integers within [0,65535] so the
     // inverse actually wants a normal 16i domain.
 
-    const Array::Values& values = getArray().getValues();
+    const Array::Values & values = getArray().getValues();
 
     constexpr float normalMin = 0.0f - 1e-5f;
     constexpr float normalMax = 1.0f + 1e-5f;
 
     for (auto & val : values)
     {
-        if (IsNan(val)) continue;
+        if (IsNan(val))
+            continue;
         if (val < normalMin)
         {
             return true;
@@ -929,7 +919,7 @@ void Lut1DOpData::initializeFromForward()
     // NB: The file reader must call setFileOutputBitDepth since some methods
     // need to know the original scaling of the LUT.
 
-    // NB: The half domain includes pos/neg infinity and NaNs.  
+    // NB: The half domain includes pos/neg infinity and NaNs.
     // InitializeFromForward makes the LUT monotonic to ensure a unique inverse and
     // determines an effective domain to handle flat spots at the ends nicely.
     // It's not clear how the NaN part of the domain should be included in the
@@ -938,17 +928,17 @@ void Lut1DOpData::initializeFromForward()
     // the pre-processing ignore the NaN part of the domain.
 
     // Note: Data allocated for the array is length*getMaxColorComponents().
-    const unsigned long length = getArray().getLength();
-    const unsigned long maxChannels = getArray().getMaxColorComponents();
+    const unsigned long length         = getArray().getLength();
+    const unsigned long maxChannels    = getArray().getMaxColorComponents();
     const unsigned long activeChannels = getArray().getNumColorComponents();
-    Array::Values& values = getArray().getValues();
+    Array::Values & values             = getArray().getValues();
 
     for (unsigned long c = 0; c < activeChannels; ++c)
     {
         // Determine if the LUT is overall increasing or decreasing.
         // The heuristic used is to compare first and last entries.
         // (Note flat LUTs (arbitrarily) have isIncreasing == false.)
-        unsigned long lowInd = c;
+        unsigned long lowInd  = c;
         unsigned long highInd = (length - 1) * maxChannels + c;
         if (isInputHalfDomain())
         {
@@ -956,8 +946,8 @@ void Lut1DOpData::initializeFromForward()
             // correctly populate the whole domain, so using -HALF_MAX and
             // +HALF_MAX could potentially give unreliable results.
             // Just using 0 and 1 for now.
-            lowInd = 0u * maxChannels + c;       // 0.0
-            highInd = 15360u * maxChannels + c;  // 15360 == 1.0
+            lowInd  = 0u * maxChannels + c;     // 0.0
+            highInd = 15360u * maxChannels + c; // 15360 == 1.0
         }
 
         {
@@ -973,8 +963,7 @@ void Lut1DOpData::initializeFromForward()
             if (!isInputHalfDomain())
             {
                 float prevValue = values[c];
-                for (unsigned long idx = c + maxChannels;
-                     idx < length * maxChannels;
+                for (unsigned long idx = c + maxChannels; idx < length * maxChannels;
                      idx += maxChannels)
                 {
                     if (isIncreasing != (values[idx] > prevValue))
@@ -991,11 +980,9 @@ void Lut1DOpData::initializeFromForward()
             {
                 // Do positive numbers.
                 unsigned long startInd = 0u * maxChannels + c; // 0 == +zero
-                unsigned long endInd = 31744u * maxChannels;   // 31744 == +infinity
-                float prevValue = values[startInd];
-                for (unsigned long idx = startInd + maxChannels;
-                     idx <= endInd;
-                     idx += maxChannels)
+                unsigned long endInd   = 31744u * maxChannels; // 31744 == +infinity
+                float prevValue        = values[startInd];
+                for (unsigned long idx = startInd + maxChannels; idx <= endInd; idx += maxChannels)
                 {
                     if (isIncreasing != (values[idx] > prevValue))
                     {
@@ -1009,9 +996,9 @@ void Lut1DOpData::initializeFromForward()
 
                 // Do negative numbers.
                 isIncreasing = !isIncreasing;
-                startInd = 32768u * maxChannels + c;      // 32768 == -zero
-                endInd = 64512u * maxChannels;            // 64512 == -infinity
-                prevValue = values[c];  // prev value for -0 is +0 (disallow overlaps)
+                startInd     = 32768u * maxChannels + c; // 32768 == -zero
+                endInd       = 64512u * maxChannels;     // 64512 == -infinity
+                prevValue    = values[c]; // prev value for -0 is +0 (disallow overlaps)
                 for (unsigned long idx = startInd; idx <= endInd; idx += maxChannels)
                 {
                     if (isIncreasing != (values[idx] > prevValue))
@@ -1034,25 +1021,24 @@ void Lut1DOpData::initializeFromForward()
             if (!isInputHalfDomain())
             {
                 unsigned long endDomain = length - 1;
-                const float endValue = values[endDomain * maxChannels + c];
-                while (endDomain > 0
-                    && values[(endDomain - 1) * maxChannels + c] == endValue)
+                const float endValue    = values[endDomain * maxChannels + c];
+                while (endDomain > 0 && values[(endDomain - 1) * maxChannels + c] == endValue)
                 {
                     --endDomain;
                 }
 
                 unsigned long startDomain = 0;
-                const float startValue = values[startDomain * maxChannels + c];
+                const float startValue    = values[startDomain * maxChannels + c];
                 // Note that this works for both increasing and decreasing LUTs
                 // since there is no reqmt that startValue < endValue.
                 while (startDomain < endDomain
-                    &&  values[(startDomain + 1) * maxChannels + c] == startValue)
+                       && values[(startDomain + 1) * maxChannels + c] == startValue)
                 {
                     ++startDomain;
                 }
 
                 m_componentProperties[c].startDomain = startDomain;
-                m_componentProperties[c].endDomain = endDomain;
+                m_componentProperties[c].endDomain   = endDomain;
             }
             else
             {
@@ -1067,46 +1053,45 @@ void Lut1DOpData::initializeFromForward()
                 // LUT and these seem to make the value for both inf and 65504
                 // a NaN. Limiting the effective domain allows 65504 to invert
                 // correctly.
-                unsigned long endDomain = 31743u;    // +65504 = largest half value < inf
-                const float endValue = values[endDomain * maxChannels + c];
-                while (endDomain > 0
-                    && values[(endDomain - 1) * maxChannels + c] == endValue)
+                unsigned long endDomain = 31743u; // +65504 = largest half value < inf
+                const float endValue    = values[endDomain * maxChannels + c];
+                while (endDomain > 0 && values[(endDomain - 1) * maxChannels + c] == endValue)
                 {
                     --endDomain;
                 }
 
-                unsigned long startDomain = 0;       // positive zero
-                const float startValue = values[startDomain * maxChannels + c];
+                unsigned long startDomain = 0; // positive zero
+                const float startValue    = values[startDomain * maxChannels + c];
                 // Note that this works for both increasing and decreasing LUTs
                 // since there is no reqmt that startValue < endValue.
                 while (startDomain < endDomain
-                    &&  values[(startDomain + 1) * maxChannels + c] == startValue)
+                       && values[(startDomain + 1) * maxChannels + c] == startValue)
                 {
                     ++startDomain;
                 }
 
                 m_componentProperties[c].startDomain = startDomain;
-                m_componentProperties[c].endDomain = endDomain;
+                m_componentProperties[c].endDomain   = endDomain;
 
                 // Negative half of domain has its own start/end.
-                unsigned long negEndDomain = 64511u;  // -65504 = last value before neg inf
-                const float negEndValue = values[negEndDomain * maxChannels + c];
-                while (negEndDomain > 32768u     // negative zero
-                    && values[(negEndDomain - 1) * maxChannels + c] == negEndValue)
+                unsigned long negEndDomain = 64511u; // -65504 = last value before neg inf
+                const float negEndValue    = values[negEndDomain * maxChannels + c];
+                while (negEndDomain > 32768u // negative zero
+                       && values[(negEndDomain - 1) * maxChannels + c] == negEndValue)
                 {
                     --negEndDomain;
                 }
 
                 unsigned long negStartDomain = 32768u; // negative zero
-                const float negStartValue = values[negStartDomain * maxChannels + c];
+                const float negStartValue    = values[negStartDomain * maxChannels + c];
                 while (negStartDomain < negEndDomain
-                    && values[(negStartDomain + 1) * maxChannels + c] == negStartValue)
+                       && values[(negStartDomain + 1) * maxChannels + c] == negStartValue)
                 {
                     ++negStartDomain;
                 }
 
                 m_componentProperties[c].negStartDomain = negStartDomain;
-                m_componentProperties[c].negEndDomain = negEndDomain;
+                m_componentProperties[c].negEndDomain   = negEndDomain;
             }
         }
     }

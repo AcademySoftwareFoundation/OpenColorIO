@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_FIXEDFUNCTIONTRANSFORM_H
 #define INCLUDED_OCIO_FIXEDFUNCTIONTRANSFORM_H
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/fixedfunction/FixedFunctionOpData.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -19,9 +17,9 @@ public:
     FixedFunctionTransformImpl() = delete;
     FixedFunctionTransformImpl(FixedFunctionStyle style);
     FixedFunctionTransformImpl(FixedFunctionStyle style, const FixedFunctionOpData::Params & p);
-    FixedFunctionTransformImpl(const FixedFunctionTransformImpl &) = delete;
+    FixedFunctionTransformImpl(const FixedFunctionTransformImpl &)             = delete;
     FixedFunctionTransformImpl & operator=(const FixedFunctionTransformImpl &) = delete;
-    virtual ~FixedFunctionTransformImpl() = default;
+    virtual ~FixedFunctionTransformImpl()                                      = default;
 
     TransformRcPtr createEditableCopy() const override;
 
@@ -51,7 +49,6 @@ private:
     FixedFunctionOpData m_data;
 };
 
-
 } // namespace OCIO_NAMESPACE
 
-#endif  // INCLUDED_OCIO_FIXEDFUNCTIONTRANSFORM_H
+#endif // INCLUDED_OCIO_FIXEDFUNCTIONTRANSFORM_H

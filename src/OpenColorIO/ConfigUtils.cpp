@@ -4,9 +4,9 @@
 #include <pystring.h>
 
 #include "ConfigUtils.h"
+#include "Logging.h"
 #include "MathUtils.h"
 #include "utils/StringUtils.h"
-#include "Logging.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -28,18 +28,15 @@ const char * getSRGBColorSpaceName()
     return srgbColorSpaceName;
 }
 
-// Define the set of candidate built-in default config reference linear color spaces that 
-// will be used when searching through the source config. If the source config scene-referred 
-// reference space is the equivalent of one of these spaces, it should be possible to identify 
+// Define the set of candidate built-in default config reference linear color spaces that
+// will be used when searching through the source config. If the source config scene-referred
+// reference space is the equivalent of one of these spaces, it should be possible to identify
 // it with the following heuristics.
 //
 const char * getBuiltinLinearSpaceName(int index)
 {
-    constexpr const char * builtinLinearSpaces[] = { "ACES2065-1", 
-                                                     "ACEScg", 
-                                                     "Linear Rec.709 (sRGB)", 
-                                                     "Linear P3-D65",
-                                                     "Linear Rec.2020" };
+    constexpr const char * builtinLinearSpaces[]
+        = {"ACES2065-1", "ACEScg", "Linear Rec.709 (sRGB)", "Linear P3-D65", "Linear Rec.2020"};
     return builtinLinearSpaces[Clamp(index, 0, 4)];
 }
 
@@ -75,13 +72,14 @@ inline int getNumberOfbuiltinLinearSpaces()
 // dstName -- Name of the color space to be converted from the destination config.
 // Returns True if the necessary interchange roles were found.
 //
-bool GetInterchangeRolesForColorSpaceConversion(const char ** srcInterchangeCSName,
-                                                const char ** dstInterchangeCSName,
-                                                ReferenceSpaceType & interchangeType,
-                                                const ConstConfigRcPtr & srcConfig,
-                                                const char * srcName,
-                                                const ConstConfigRcPtr & dstConfig,
-                                                const char * dstName)
+bool GetInterchangeRolesForColorSpaceConversion(
+    const char ** srcInterchangeCSName,
+    const char ** dstInterchangeCSName,
+    ReferenceSpaceType & interchangeType,
+    const ConstConfigRcPtr & srcConfig,
+    const char * srcName,
+    const ConstConfigRcPtr & dstConfig,
+    const char * dstName)
 {
     ConstColorSpaceRcPtr dstColorSpace = dstConfig->getColorSpace(dstName);
     if (!dstColorSpace)
@@ -114,7 +112,7 @@ bool GetInterchangeRolesForColorSpaceConversion(const char ** srcInterchangeCSNa
             throw Exception(os.str().c_str());
         }
 
-        // Only use the display-referred reference space if both color spaces are 
+        // Only use the display-referred reference space if both color spaces are
         // display-referred.  If only one of the spaces is display-referred, it's
         // better to use the scene-referred space since the conversion to scene-
         // referred will happen within the config that has the display-referred
@@ -123,15 +121,16 @@ bool GetInterchangeRolesForColorSpaceConversion(const char ** srcInterchangeCSNa
         // that this function always use the same reference space even if the order
         // of src & dst is swapped, so the result is the inverse (which it might
         // not be if the view transform in the opposite config is used).
-        if (srcColorSpace->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY  &&
-            dstColorSpace->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
+        if (srcColorSpace->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY
+            && dstColorSpace->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
         {
             interchangeType = REFERENCE_SPACE_DISPLAY;
         }
     }
 
     const char * interchangeRoleName = (interchangeType == REFERENCE_SPACE_SCENE)
-                                       ? ROLE_INTERCHANGE_SCENE : ROLE_INTERCHANGE_DISPLAY;
+                                           ? ROLE_INTERCHANGE_SCENE
+                                           : ROLE_INTERCHANGE_DISPLAY;
 
     if (!srcConfig->hasRole(interchangeRoleName))
     {
@@ -188,7 +187,7 @@ bool containsSRGB(const ConstColorSpaceRcPtr & cs)
     return false;
 }
 
-// Find a color space where isData is false and it has neither a to_ref or from_ref 
+// Find a color space where isData is false and it has neither a to_ref or from_ref
 // transform.  Currently only selecting scene-referred spaces.  Note: this returns
 // the first reference space found, even if it is inactive.  Returns empty if none
 // are found.
@@ -201,9 +200,8 @@ const char * getRefSpaceName(const ConstConfigRcPtr & cfg)
 
     for (int i = 0; i < nbCs; i++)
     {
-        const char * csname = cfg->getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_SCENE, 
-                                                            COLORSPACE_ALL, 
-                                                            i);
+        const char * csname
+            = cfg->getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_SCENE, COLORSPACE_ALL, i);
         ConstColorSpaceRcPtr cs = cfg->getColorSpace(csname);
 
         if (cs->isData())
@@ -216,7 +214,7 @@ const char * getRefSpaceName(const ConstConfigRcPtr & cfg)
             continue;
         }
         t = cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
-        if (t != nullptr) 
+        if (t != nullptr)
         {
             continue;
         }
@@ -234,9 +232,8 @@ const char * getDataSpaceName(const ConstConfigRcPtr & cfg)
 
     for (int i = 0; i < nbCs; i++)
     {
-        const char * csname = cfg->getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_SCENE, 
-                                                            COLORSPACE_ALL, 
-                                                            i);
+        const char * csname
+            = cfg->getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_SCENE, COLORSPACE_ALL, i);
         ConstColorSpaceRcPtr cs = cfg->getColorSpace(csname);
 
         if (cs->isData())
@@ -250,16 +247,17 @@ const char * getDataSpaceName(const ConstConfigRcPtr & cfg)
 // Return false if the supplied Processor modifies any of the supplied float values
 // by more than the supplied absolute tolerance amount.
 //
-bool isIdentityTransform(const ConstProcessorRcPtr & proc, 
-                         std::vector<float> & RGBAvals, 
-                         float absTolerance)
+bool isIdentityTransform(
+    const ConstProcessorRcPtr & proc,
+    std::vector<float> & RGBAvals,
+    float absTolerance)
 {
     std::vector<float> out(RGBAvals.size(), 0.f);
 
-    PackedImageDesc desc( &RGBAvals[0], (long) RGBAvals.size() / 4, 1, CHANNEL_ORDERING_RGBA );
-    PackedImageDesc descDst( &out[0], (long) RGBAvals.size() / 4, 1, CHANNEL_ORDERING_RGBA );
+    PackedImageDesc desc(&RGBAvals[0], (long)RGBAvals.size() / 4, 1, CHANNEL_ORDERING_RGBA);
+    PackedImageDesc descDst(&out[0], (long)RGBAvals.size() / 4, 1, CHANNEL_ORDERING_RGBA);
 
-    ConstCPUProcessorRcPtr cpu  = proc->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
+    ConstCPUProcessorRcPtr cpu = proc->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
     cpu->apply(desc, descDst);
 
     for (size_t i = 0; i < out.size(); i++)
@@ -292,9 +290,9 @@ bool hasNonTrivialMatrixTransform(const ConstProcessorRcPtr & proc)
             ConstMatrixTransformRcPtr mtx = DynamicPtrCast<const MatrixTransform>(transform);
             double values[16];
             mtx->getMatrix(values);
-            for (int j = 0; j < 3 ; ++j)      // only checking rgb, not alpha
+            for (int j = 0; j < 3; ++j) // only checking rgb, not alpha
             {
-                for (int k = 0; k < 3 ; ++k)  // only checking rgb, not alpha
+                for (int k = 0; k < 3; ++k) // only checking rgb, not alpha
                 {
                     if (j != k)
                     {
@@ -334,7 +332,7 @@ bool containsBlockedTransform(const ConstTransformRcPtr & transform)
     else if (transform->getTransformType() == TRANSFORM_TYPE_FILE)
     {
         ConstFileTransformRcPtr ft = DynamicPtrCast<const FileTransform>(transform);
-        std::string filepath = ft->getSrc();
+        std::string filepath       = ft->getSrc();
         std::string root, extension;
         pystring::os::path::splitext(root, extension, filepath);
         extension = StringUtils::Lower(extension);
@@ -345,9 +343,10 @@ bool containsBlockedTransform(const ConstTransformRcPtr & transform)
     }
 
     // Prevent transforms that may be hiding a FileTransform.
-    else if (transform->getTransformType() == TRANSFORM_TYPE_COLORSPACE
-     || transform->getTransformType() == TRANSFORM_TYPE_DISPLAY_VIEW
-     || transform->getTransformType() == TRANSFORM_TYPE_LOOK)
+    else if (
+        transform->getTransformType() == TRANSFORM_TYPE_COLORSPACE
+        || transform->getTransformType() == TRANSFORM_TYPE_DISPLAY_VIEW
+        || transform->getTransformType() == TRANSFORM_TYPE_LOOK)
     {
         return true;
     }
@@ -369,16 +368,17 @@ bool containsBlockedTransform(const ConstTransformRcPtr & transform)
 // expensive to fully check.
 //
 // Because this check is done before a processor is built, it is inexpensive but it may
-// be inaccurate.  In other words, it's possible that this check will exclude some 
+// be inaccurate.  In other words, it's possible that this check will exclude some
 // reasonable color spaces, but that's better than trying to invert 3d-LUTs, etc.
 //
 // cs -- Color space object to check.
 // refSpaceType -- Exclude if the color space is not of the same reference space type.
 // blockRefSpaces -- Exclude the color space if it does not have any transforms.
 //
-bool excludeColorSpaceFromHeuristics(const ConstColorSpaceRcPtr & cs, 
-                                     ReferenceSpaceType refSpaceType,
-                                     bool blockRefSpaces)
+bool excludeColorSpaceFromHeuristics(
+    const ConstColorSpaceRcPtr & cs,
+    ReferenceSpaceType refSpaceType,
+    bool blockRefSpaces)
 {
     if (cs->isData())
     {
@@ -423,18 +423,21 @@ bool excludeColorSpaceFromHeuristics(const ConstColorSpaceRcPtr & cs,
 // builtinConfig -- The built-in config object.
 // Returns the index into the list of built-in linear spaces.
 //
-int getReferenceSpaceFromLinearSpace(const ConstConfigRcPtr & srcConfig, 
-                                     const char * srcRefName,
-                                     const ConstColorSpaceRcPtr & cs,
-                                     const ConstConfigRcPtr & builtinConfig)
+int getReferenceSpaceFromLinearSpace(
+    const ConstConfigRcPtr & srcConfig,
+    const char * srcRefName,
+    const ConstColorSpaceRcPtr & cs,
+    const ConstConfigRcPtr & builtinConfig)
 {
-    // Define a set of (somewhat arbitrary) RGB values to test whether the combined transform is 
+    // Define a set of (somewhat arbitrary) RGB values to test whether the combined transform is
     // enough of an identity.
+    // clang-format off
     std::vector<float> vals = { 0.7f,  0.4f,  0.02f, 0.f,
                                 0.02f, 0.6f, -0.2f,  0.f,
                                 0.3f,  0.02f, 1.5f,  0.f,
                                 0.f,   0.f,   0.f,   0.f,
                                 1.f,   1.f,   1.f,   0.f };
+    // clang-format on
 
     // Test the transform from the test color space to its reference space against all combinations
     // of the built-in linear color spaces.  If one of them results in an identity, that identifies
@@ -470,8 +473,8 @@ int getReferenceSpaceFromLinearSpace(const ConstConfigRcPtr & srcConfig,
 
 // Test the supplied color space against a set of color spaces in the built-in config
 // to see if it matches an sRGB texture color space with one of a set of known primaries
-// used as its reference space.  If a match is found, it indicates what reference space 
-// is used by the config.  Return the index into the list of built-in linear spaces, 
+// used as its reference space.  If a match is found, it indicates what reference space
+// is used by the config.  Return the index into the list of built-in linear spaces,
 // or -1 if not found.
 //
 // srcConfig -- Source config object.
@@ -480,15 +483,16 @@ int getReferenceSpaceFromLinearSpace(const ConstConfigRcPtr & srcConfig,
 // builtinConfig -- The built-in config object.
 // Returns the index into the list of built-in linear spaces.
 //
-int getReferenceSpaceFromSRGBSpace(const ConstConfigRcPtr & srcConfig, 
-                                   const char * srcRefName,
-                                   const ConstColorSpaceRcPtr & cs,
-                                   const ConstConfigRcPtr & builtinConfig)
+int getReferenceSpaceFromSRGBSpace(
+    const ConstConfigRcPtr & srcConfig,
+    const char * srcRefName,
+    const ConstColorSpaceRcPtr & cs,
+    const ConstConfigRcPtr & builtinConfig)
 {
     // Get a transform in the to-reference direction.
     ConstTransformRcPtr toRefTransform;
     ConstTransformRcPtr ctransform = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
-    if (ctransform) 
+    if (ctransform)
     {
         toRefTransform = ctransform;
     }
@@ -508,11 +512,12 @@ int getReferenceSpaceFromSRGBSpace(const ConstConfigRcPtr & srcConfig,
         }
     }
 
-    // First check if it has the right non-linearity. The objective is to fail quickly on color 
-    // spaces that are definitely not sRGB before proceeding to the longer test of guessing the 
+    // First check if it has the right non-linearity. The objective is to fail quickly on color
+    // spaces that are definitely not sRGB before proceeding to the longer test of guessing the
     // reference space primaries.
 
     // Break point is at 0.039286, so include at least one value below this.
+    // clang-format off
     std::vector<float> vals =
     {
         0.5f,  0.5f,  0.5f, 
@@ -522,26 +527,27 @@ int getReferenceSpaceFromSRGBSpace(const ConstConfigRcPtr & srcConfig,
         0.f,   0.f,   0.f, 
         1.f,   1.f ,  1.f
     };
+    // clang-format on
     std::vector<float> out(vals.size(), 0.f);
 
-    PackedImageDesc desc( &vals[0], (long) vals.size() / 3, 1, CHANNEL_ORDERING_RGB );
-    PackedImageDesc descDst( &out[0], (long) vals.size() / 3, 1, CHANNEL_ORDERING_RGB );
+    PackedImageDesc desc(&vals[0], (long)vals.size() / 3, 1, CHANNEL_ORDERING_RGB);
+    PackedImageDesc descDst(&out[0], (long)vals.size() / 3, 1, CHANNEL_ORDERING_RGB);
 
     ConstProcessorRcPtr proc = srcConfig->getProcessor(toRefTransform, TRANSFORM_DIR_FORWARD);
 
     // Ensure that the color space is not only an sRGB curve, it needs to have a color matrix
     // too or else the last step below could succeed by pairing the built-in sRGB space with
     // a linear space that cancels out the matrix in the built-in sRGB space.
-        // NB: This is being done after the getProcessor call rather than simply looking at
-        // the raw color space transform contents since once it becomes a processor, the complex
-        // transforms (e.g. File, ColorSpace, Builtins) that could be hiding a matrix are 
-        // converted into ops.
+    // NB: This is being done after the getProcessor call rather than simply looking at
+    // the raw color space transform contents since once it becomes a processor, the complex
+    // transforms (e.g. File, ColorSpace, Builtins) that could be hiding a matrix are
+    // converted into ops.
     if (!hasNonTrivialMatrixTransform(proc))
     {
         return -1;
     }
 
-    ConstCPUProcessorRcPtr cpu  = proc->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
+    ConstCPUProcessorRcPtr cpu = proc->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
     // Convert the non-linear values to linear.
     cpu->apply(desc, descDst);
 
@@ -563,32 +569,35 @@ int getReferenceSpaceFromSRGBSpace(const ConstConfigRcPtr & srcConfig,
         {
             return -1;
         }
-    } 
+    }
 
-    // Define a (somewhat arbitrary) set of RGB values to test whether the transform is in fact 
-    // converting sRGB texture values to the candidate reference space. It includes 0.02 which is 
+    // Define a (somewhat arbitrary) set of RGB values to test whether the transform is in fact
+    // converting sRGB texture values to the candidate reference space. It includes 0.02 which is
     // on the sRGB linear segment, color values, and neutral values.
+    // clang-format off
     vals = { 0.7f,  0.4f,  0.02f, 0.f,
              0.02f, 0.6f,  0.2f,  0.f,
              0.3f,  0.02f, 0.5f,  0.f,
              0.f,   0.f,   0.f,   0.f,
              1.f,   1.f,   1.f,   0.f, };
+    // clang-format on
 
-    // The color space has the sRGB non-linearity. Now try combining the transform with a 
-    // transform from the Built-in config that goes from a variety of reference spaces to an 
+    // The color space has the sRGB non-linearity. Now try combining the transform with a
+    // transform from the Built-in config that goes from a variety of reference spaces to an
     // sRGB texture space. If the result is an identity, then that tells what the source config
     // reference space is.
 
-    // At this point, cs has the expected non-linearity and a non-trivial matrix to its reference space.
-    // Now try to identify the matrix.
+    // At this point, cs has the expected non-linearity and a non-trivial matrix to its reference
+    // space. Now try to identify the matrix.
     for (int i = 0; i < getNumberOfbuiltinLinearSpaces(); i++)
     {
-        ConstProcessorRcPtr proc = Config::GetProcessorFromConfigs(srcConfig,
-                                                                   cs->getName(),
-                                                                   srcRefName,
-                                                                   builtinConfig,
-                                                                   getSRGBColorSpaceName(),
-                                                                   getBuiltinLinearSpaceName(i));
+        ConstProcessorRcPtr proc = Config::GetProcessorFromConfigs(
+            srcConfig,
+            cs->getName(),
+            srcRefName,
+            builtinConfig,
+            getSRGBColorSpaceName(),
+            getBuiltinLinearSpaceName(i));
         if (isIdentityTransform(proc, vals, 1e-3f))
         {
             return i;
@@ -611,40 +620,45 @@ int getReferenceSpaceFromSRGBSpace(const ConstConfigRcPtr & srcConfig,
 //
 // Throws an exception if an interchange space cannot be found.
 //
-void IdentifyInterchangeSpace(const char ** srcInterchange, 
-                              const char ** builtinInterchange,
-                              const ConstConfigRcPtr & srcConfig,
-                              const char * srcColorSpaceName, 
-                              const ConstConfigRcPtr & builtinConfig,
-                              const char * builtinColorSpaceName)
+void IdentifyInterchangeSpace(
+    const char ** srcInterchange,
+    const char ** builtinInterchange,
+    const ConstConfigRcPtr & srcConfig,
+    const char * srcColorSpaceName,
+    const ConstConfigRcPtr & builtinConfig,
+    const char * builtinColorSpaceName)
 {
     // Before resorting to heuristics, check if the configs already have the interchange
-    // roles defined. 
+    // roles defined.
     //
-    // Note that this is the only place that srcColorSpaceName and builtinColorSpaceName 
-    // are used, in order to determine whether the scene- or display-referred interchange 
+    // Note that this is the only place that srcColorSpaceName and builtinColorSpaceName
+    // are used, in order to determine whether the scene- or display-referred interchange
     // role is most appropriate.  These color spaces are not used below for the heuristics.
 
     ReferenceSpaceType interchangeType;
-    if ( GetInterchangeRolesForColorSpaceConversion(srcInterchange, builtinInterchange, 
-                                                    interchangeType,
-                                                    srcConfig, srcColorSpaceName, 
-                                                    builtinConfig, builtinColorSpaceName) )
+    if (GetInterchangeRolesForColorSpaceConversion(
+            srcInterchange,
+            builtinInterchange,
+            interchangeType,
+            srcConfig,
+            srcColorSpaceName,
+            builtinConfig,
+            builtinColorSpaceName))
     {
         // No need for the heuristics.
         return;
     }
 
-    // Use heuristics to try and find a color space in the source config that matches 
+    // Use heuristics to try and find a color space in the source config that matches
     // a color space in the Built-in config.
 
     // Currently only handling scene-referred spaces in the heuristics.
-    if (builtinConfig->getColorSpace(builtinColorSpaceName)->getReferenceSpaceType() 
+    if (builtinConfig->getColorSpace(builtinColorSpaceName)->getReferenceSpaceType()
         == REFERENCE_SPACE_DISPLAY)
     {
         std::ostringstream os;
-        os  << "The heuristics currently only support scene-referred color spaces. "
-            << "Please set the interchange roles.";
+        os << "The heuristics currently only support scene-referred color spaces. "
+           << "Please set the interchange roles.";
         throw Exception(os.str().c_str());
     }
 
@@ -653,7 +667,7 @@ void IdentifyInterchangeSpace(const char ** srcInterchange,
     if (!**srcInterchange)
     {
         std::ostringstream os;
-        os  << "The supplied config does not have a color space for the reference.";
+        os << "The supplied config does not have a color space for the reference.";
         throw Exception(os.str().c_str());
     }
 
@@ -666,7 +680,7 @@ void IdentifyInterchangeSpace(const char ** srcInterchange,
 
     // Check for an sRGB texture space.
     int refColorSpacePrimsIndex = -1;
-    int nbCs = srcConfig->getNumColorSpaces();
+    int nbCs                    = srcConfig->getNumColorSpaces();
     for (int i = 0; i < nbCs; i++)
     {
         ConstColorSpaceRcPtr cs = srcConfig->getColorSpace(srcConfig->getColorSpaceNameByIndex(i));
@@ -680,12 +694,11 @@ void IdentifyInterchangeSpace(const char ** srcInterchange,
                 continue;
             }
 
-            refColorSpacePrimsIndex = getReferenceSpaceFromSRGBSpace(srcConfig, 
-                                                                     *srcInterchange,
-                                                                     cs, 
-                                                                     builtinConfig);
+            refColorSpacePrimsIndex
+                = getReferenceSpaceFromSRGBSpace(srcConfig, *srcInterchange, cs, builtinConfig);
             // Break out when a match is found.
-            if (refColorSpacePrimsIndex > -1) break; 
+            if (refColorSpacePrimsIndex > -1)
+                break;
         }
     }
 
@@ -695,7 +708,8 @@ void IdentifyInterchangeSpace(const char ** srcInterchange,
         nbCs = srcConfig->getNumColorSpaces();
         for (int i = 0; i < nbCs; i++)
         {
-            ConstColorSpaceRcPtr cs = srcConfig->getColorSpace(srcConfig->getColorSpaceNameByIndex(i));
+            ConstColorSpaceRcPtr cs
+                = srcConfig->getColorSpace(srcConfig->getColorSpaceNameByIndex(i));
 
             // Exclude color spaces that may be too expensive to test or otherwise inappropriate.
             // Currently only handling scene-referred spaces in the heuristics.
@@ -706,12 +720,14 @@ void IdentifyInterchangeSpace(const char ** srcInterchange,
 
             if (srcConfig->isColorSpaceLinear(cs->getName(), REFERENCE_SPACE_SCENE))
             {
-                refColorSpacePrimsIndex = getReferenceSpaceFromLinearSpace(srcConfig,
-                                                                           *srcInterchange,
-                                                                           cs, 
-                                                                           builtinConfig);
+                refColorSpacePrimsIndex = getReferenceSpaceFromLinearSpace(
+                    srcConfig,
+                    *srcInterchange,
+                    cs,
+                    builtinConfig);
                 // Break out when a match is found.
-                if (refColorSpacePrimsIndex > -1) break; 
+                if (refColorSpacePrimsIndex > -1)
+                    break;
             }
         }
     }
@@ -723,14 +739,14 @@ void IdentifyInterchangeSpace(const char ** srcInterchange,
     else
     {
         std::ostringstream os;
-        os  << "Heuristics were not able to find a known color space in the provided config. "
-            << "Please set the interchange roles.";
+        os << "Heuristics were not able to find a known color space in the provided config. "
+           << "Please set the interchange roles.";
         throw Exception(os.str().c_str());
     }
 }
 
 // Try to find the name of a color space in the source config that is equivalent to the
-// specified color space from the provided built-in config.  Only active color spaces 
+// specified color space from the provided built-in config.  Only active color spaces
 // are searched.
 //
 // srcConfig -- The source config object to search.
@@ -740,9 +756,10 @@ void IdentifyInterchangeSpace(const char ** srcInterchange,
 //
 // \throw Exception if an interchange space cannot be found or the equivalent space cannot be found.
 //
-const char * IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
-                                       const ConstConfigRcPtr & builtinConfig,
-                                       const char * builtinColorSpaceName)
+const char * IdentifyBuiltinColorSpace(
+    const ConstConfigRcPtr & srcConfig,
+    const ConstConfigRcPtr & builtinConfig,
+    const char * builtinColorSpaceName)
 {
     // Note: Technically, the built-in config could be any config, if the interchange
     // roles are set in both configs, and the supplied built-in config supports the list
@@ -752,8 +769,8 @@ const char * IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
     if (!builtinColorSpace)
     {
         std::ostringstream os;
-        os  << "Built-in config does not contain the requested color space: " 
-            << builtinColorSpaceName << ".";
+        os << "Built-in config does not contain the requested color space: "
+           << builtinColorSpaceName << ".";
         throw Exception(os.str().c_str());
     }
 
@@ -763,7 +780,8 @@ const char * IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
         if (!*dataName)
         {
             std::ostringstream os;
-            os  << "The requested space is a data space but the supplied config does not have a data space.";
+            os << "The requested space is a data space but the supplied config does not have a "
+                  "data space.";
             throw Exception(os.str().c_str());
         }
         return dataName;
@@ -776,14 +794,15 @@ const char * IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
     // space type of the interchange role.  Will throw if the space cannot be found.
     // Only color spaces in the srcConfig that have the same reference type as the
     // builtinColorSpace will be searched by the heuristics below.
-    const char * srcInterchangeName = nullptr;
+    const char * srcInterchangeName     = nullptr;
     const char * builtinInterchangeName = nullptr;
-    IdentifyInterchangeSpace(&srcInterchangeName, 
-                             &builtinInterchangeName, 
-                             srcConfig, 
-                             "", 
-                             builtinConfig,
-                             builtinColorSpaceName);
+    IdentifyInterchangeSpace(
+        &srcInterchangeName,
+        &builtinInterchangeName,
+        srcConfig,
+        "",
+        builtinConfig,
+        builtinColorSpaceName);
 
     // The heuristics need to create a lot of Processors and send RGB values through
     // them to try and identify a known color space.  Turn off the Processor cache in
@@ -794,11 +813,13 @@ const char * IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
 
     if (*builtinInterchangeName)
     {
+        // clang-format off
         std::vector<float> vals = { 0.7f,  0.4f,  0.02f, 0.f,
                                     0.02f, 0.6f,  0.2f,  0.f,
                                     0.3f,  0.02f, 0.5f,  0.f,
                                     0.f,   0.f,   0.f,   0.f,
                                     1.f,   1.f,   1.f,   0.f };
+        // clang-format on
 
         // Loop over the active, non-excluded, color spaces in the source config and test if the
         // conversion to the specified space in the built-in config is an identity.
@@ -812,19 +833,21 @@ const char * IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
         int nbCs = srcConfig->getNumColorSpaces();
         for (int i = 0; i < nbCs; i++)
         {
-            ConstColorSpaceRcPtr cs = srcConfig->getColorSpace(srcConfig->getColorSpaceNameByIndex(i));
+            ConstColorSpaceRcPtr cs
+                = srcConfig->getColorSpace(srcConfig->getColorSpaceNameByIndex(i));
 
             if (excludeColorSpaceFromHeuristics(cs, builtinRefSpaceType, false))
             {
                 continue;
             }
 
-            ConstProcessorRcPtr proc = Config::GetProcessorFromConfigs(srcConfig,
-                                                                       cs->getName(),
-                                                                       srcInterchangeName,
-                                                                       builtinConfig,
-                                                                       builtinColorSpaceName,
-                                                                       builtinInterchangeName);
+            ConstProcessorRcPtr proc = Config::GetProcessorFromConfigs(
+                srcConfig,
+                cs->getName(),
+                srcInterchangeName,
+                builtinConfig,
+                builtinColorSpaceName,
+                builtinInterchangeName);
             // Tolerance is just loose enough to accept both bfd and cat02 adaptation.
             if (isIdentityTransform(proc, vals, 5e-3f))
             {
@@ -834,8 +857,8 @@ const char * IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
     }
 
     std::ostringstream os;
-    os  << "Heuristics were not able to find an equivalent to the requested color space: "
-        << builtinColorSpaceName << ".";
+    os << "Heuristics were not able to find an equivalent to the requested color space: "
+       << builtinColorSpaceName << ".";
     throw Exception(os.str().c_str());
 }
 
@@ -843,9 +866,9 @@ const char * IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
 //
 ConstTransformRcPtr simplifyTransform(const ConstGroupTransformRcPtr & gt)
 {
-    ConstConfigRcPtr config = Config::CreateRaw();
-    ConstProcessorRcPtr p = config->getProcessor(gt);
-    ConstProcessorRcPtr opt = p->getOptimizedProcessor(OPTIMIZATION_DEFAULT);
+    ConstConfigRcPtr config     = Config::CreateRaw();
+    ConstProcessorRcPtr p       = config->getProcessor(gt);
+    ConstProcessorRcPtr opt     = p->getOptimizedProcessor(OPTIMIZATION_DEFAULT);
     GroupTransformRcPtr finalGt = opt->createGroupTransform();
     if (finalGt->getNumTransforms() == 1)
     {
@@ -873,13 +896,13 @@ ConstTransformRcPtr getTransformForDir(const ConstColorSpaceRcPtr & cs, ColorSpa
     }
 
     ConstTransformRcPtr t = cs->getTransform(dir);
-    if (t) 
+    if (t)
     {
         return t;
     }
 
     ConstTransformRcPtr tOther = cs->getTransform(otherDir);
-    if (tOther) 
+    if (tOther)
     {
         return invertTransform(tOther);
     }
@@ -899,15 +922,15 @@ ConstTransformRcPtr getTransformForDir(const ConstColorSpaceRcPtr & cs, ColorSpa
 // destination config reference space.  The ref_space_type specifies whether
 // to work with the scene-referred or display-referred reference space.
 //
-ConstTransformRcPtr getRefSpaceConverter(const ConstConfigRcPtr & srcConfig, 
-                                         const ConstConfigRcPtr & dstConfig, 
-                                         ReferenceSpaceType refSpaceType)
+ConstTransformRcPtr getRefSpaceConverter(
+    const ConstConfigRcPtr & srcConfig,
+    const ConstConfigRcPtr & dstConfig,
+    ReferenceSpaceType refSpaceType)
 {
     ConstConfigRcPtr builtinConfig = Config::CreateFromBuiltinConfig("ocio://cg-config-latest");
 
-    auto getColorspaceOfRefType = [](const ConstConfigRcPtr & config, 
-                                     ReferenceSpaceType refType) -> const char *
-    {
+    auto getColorspaceOfRefType
+        = [](const ConstConfigRcPtr & config, ReferenceSpaceType refType) -> const char * {
         // Just return the first one, doesn't matter if it's inactive or a data space.
         // All that matters is the reference space type.
         // Casting to SearchReferenceSpaceType since they have the same values.
@@ -919,7 +942,8 @@ ConstTransformRcPtr getRefSpaceConverter(const ConstConfigRcPtr & srcConfig,
             return cs->getName();
         }
 
-        throw Exception("Config is lacking any color spaces of the requested reference space type.");
+        throw Exception(
+            "Config is lacking any color spaces of the requested reference space type.");
     };
 
     // Identify an interchange space for the src config.
@@ -928,35 +952,38 @@ ConstTransformRcPtr getRefSpaceConverter(const ConstConfigRcPtr & srcConfig,
     //  a color space for the reference space.
     // TODO: IdentifyInterchangeSpace will fail in the display-referred case if the
     //  config does not have the cie_xyz_d65_interchange role.
-    const char * srcInterchange = nullptr;
+    const char * srcInterchange        = nullptr;
     const char * srcBuiltinInterchange = nullptr;
-    Config::IdentifyInterchangeSpace(&srcInterchange,
-                                     &srcBuiltinInterchange,
-                                     srcConfig,
-                                     getColorspaceOfRefType(srcConfig, refSpaceType),
-                                     builtinConfig,
-                                     getColorspaceOfRefType(builtinConfig, refSpaceType));
+    Config::IdentifyInterchangeSpace(
+        &srcInterchange,
+        &srcBuiltinInterchange,
+        srcConfig,
+        getColorspaceOfRefType(srcConfig, refSpaceType),
+        builtinConfig,
+        getColorspaceOfRefType(builtinConfig, refSpaceType));
 
     // Identify an interchange space for the dst config.
     // Note that the interchange space will always be a linear color space.
-    const char * dstInterchange = nullptr;
+    const char * dstInterchange        = nullptr;
     const char * dstBuiltinInterchange = nullptr;
-    Config::IdentifyInterchangeSpace(&dstInterchange,
-                                     &dstBuiltinInterchange,
-                                     dstConfig,
-                                     getColorspaceOfRefType(dstConfig, refSpaceType),
-                                     builtinConfig,
-                                     getColorspaceOfRefType(builtinConfig, refSpaceType));
+    Config::IdentifyInterchangeSpace(
+        &dstInterchange,
+        &dstBuiltinInterchange,
+        dstConfig,
+        getColorspaceOfRefType(dstConfig, refSpaceType),
+        builtinConfig,
+        getColorspaceOfRefType(builtinConfig, refSpaceType));
 
     // Get the from_ref transform from the srcInterchange space.
-    ConstTransformRcPtr srcFromRef = getTransformForDir(srcConfig->getColorSpace(srcInterchange), 
-                                                        COLORSPACE_DIR_FROM_REFERENCE);
+    ConstTransformRcPtr srcFromRef = getTransformForDir(
+        srcConfig->getColorSpace(srcInterchange),
+        COLORSPACE_DIR_FROM_REFERENCE);
 
     // Get a conversion from one builtin interchange to another
     ColorSpaceTransformRcPtr cst = ColorSpaceTransform::Create();
     GroupTransformRcPtr srcBuiltinToDstBuiltin;
-    if (srcBuiltinInterchange && *srcBuiltinInterchange &&
-        dstBuiltinInterchange && *dstBuiltinInterchange)
+    if (srcBuiltinInterchange && *srcBuiltinInterchange && dstBuiltinInterchange
+        && *dstBuiltinInterchange)
     {
         // srcBuiltinInterchange and dstBuiltinInterchange are not empty.
         cst->setSrc(srcBuiltinInterchange);
@@ -966,8 +993,8 @@ ConstTransformRcPtr getRefSpaceConverter(const ConstConfigRcPtr & srcConfig,
     }
 
     // Append to_ref transform from the dstInterchange space.
-    ConstTransformRcPtr dstToRef = getTransformForDir(dstConfig->getColorSpace(dstInterchange), 
-                                                      COLORSPACE_DIR_TO_REFERENCE);
+    ConstTransformRcPtr dstToRef
+        = getTransformForDir(dstConfig->getColorSpace(dstInterchange), COLORSPACE_DIR_TO_REFERENCE);
 
     // Combine into a group transform.
     // Note: Some of these pieces may be identities but the whole thing needs to get
@@ -1002,8 +1029,9 @@ bool transformIsEmpty(const ConstTransformRcPtr & tr)
 // Update the reference space used by a color space's transforms.
 // The argument is a group transform that converts from the current to the new ref. space.
 //
-void updateReferenceColorspace(ColorSpaceRcPtr & cs, 
-                               const ConstTransformRcPtr & toNewReferenceTransform)
+void updateReferenceColorspace(
+    ColorSpaceRcPtr & cs,
+    const ConstTransformRcPtr & toNewReferenceTransform)
 {
     if (!toNewReferenceTransform || !cs)
     {
@@ -1037,7 +1065,7 @@ void updateReferenceColorspace(ColorSpaceRcPtr & cs,
     if (transformFrom)
     {
         ConstTransformRcPtr inv = invertTransform(toNewReferenceTransform);
-        GroupTransformRcPtr gt = GroupTransform::Create();
+        GroupTransformRcPtr gt  = GroupTransform::Create();
         gt->appendTransform(inv->createEditableCopy());
         gt->appendTransform(transformFrom->createEditableCopy());
         cs->setTransform(gt, COLORSPACE_DIR_FROM_REFERENCE);
@@ -1055,22 +1083,25 @@ void updateReferenceColorspace(ColorSpaceRcPtr & cs,
 // Note that the from_ref transform converts from the scene-referred reference space to
 // the display-referred reference space.
 //
-void updateReferenceView(ViewTransformRcPtr & vt, 
-                         const ConstTransformRcPtr & toNewSceneReferenceTransform,
-                         const ConstTransformRcPtr & toNewDisplayReferenceTransform)
+void updateReferenceView(
+    ViewTransformRcPtr & vt,
+    const ConstTransformRcPtr & toNewSceneReferenceTransform,
+    const ConstTransformRcPtr & toNewDisplayReferenceTransform)
 {
     if (!toNewSceneReferenceTransform || !toNewDisplayReferenceTransform || !vt)
     {
         std::ostringstream os;
-        os << "Could not update view transform reference spaces, converter transforms were not initialized.";
+        os << "Could not update view transform reference spaces, converter transforms were not "
+              "initialized.";
         throw Exception(os.str().c_str());
     }
     // TODO: Is any more error checking needed here for robustness?
 
-    const bool emptySceneSide = transformIsEmpty(toNewSceneReferenceTransform);
+    const bool emptySceneSide   = transformIsEmpty(toNewSceneReferenceTransform);
     const bool emptyDisplaySide = transformIsEmpty(toNewDisplayReferenceTransform);
 
-    if (emptySceneSide && emptyDisplaySide) return;
+    if (emptySceneSide && emptyDisplaySide)
+        return;
 
     ConstTransformRcPtr transformTo = vt->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE);
     if (transformTo)
@@ -1120,7 +1151,7 @@ void updateReferenceView(ViewTransformRcPtr & vt,
         {
             if (!emptySceneSide)
             {
-                ConstTransformRcPtr inv = invertTransform(toNewSceneReferenceTransform); 
+                ConstTransformRcPtr inv = invertTransform(toNewSceneReferenceTransform);
                 gt->appendTransform(inv->createEditableCopy());
             }
         }
@@ -1134,7 +1165,7 @@ void updateReferenceView(ViewTransformRcPtr & vt,
         vt->setTransform(gt, VIEWTRANSFORM_DIR_FROM_REFERENCE);
     }
 
-    // Note that Config::addViewTransform prevents creating a view transform that 
+    // Note that Config::addViewTransform prevents creating a view transform that
     // has no transforms, so at least one direction will be present.
 }
 
@@ -1148,21 +1179,18 @@ bool hasColorSpaceRefType(const ConstConfigRcPtr & config, ReferenceSpaceType re
 // Initialize the transforms that will be added to color spaces and view transforms to
 // convert the reference space from one config to another.
 //
-void initializeRefSpaceConverters(ConstTransformRcPtr & inputToBaseGtScene,
-                                  ConstTransformRcPtr & inputToBaseGtDisplay,
-                                  const ConstConfigRcPtr & baseConfig,
-                                  const ConstConfigRcPtr & inputConfig)
+void initializeRefSpaceConverters(
+    ConstTransformRcPtr & inputToBaseGtScene,
+    ConstTransformRcPtr & inputToBaseGtDisplay,
+    const ConstConfigRcPtr & baseConfig,
+    const ConstConfigRcPtr & inputConfig)
 {
     // Note: The base config reference space is always used, regardless of strategy.
 
-    if (hasColorSpaceRefType(baseConfig, REFERENCE_SPACE_SCENE) &&
-        hasColorSpaceRefType(inputConfig, REFERENCE_SPACE_SCENE))
+    if (hasColorSpaceRefType(baseConfig, REFERENCE_SPACE_SCENE)
+        && hasColorSpaceRefType(inputConfig, REFERENCE_SPACE_SCENE))
     {
-        inputToBaseGtScene = getRefSpaceConverter(
-            inputConfig,
-            baseConfig,
-            REFERENCE_SPACE_SCENE
-        );
+        inputToBaseGtScene = getRefSpaceConverter(inputConfig, baseConfig, REFERENCE_SPACE_SCENE);
     }
     else
     {
@@ -1173,14 +1201,11 @@ void initializeRefSpaceConverters(ConstTransformRcPtr & inputToBaseGtScene,
     // Only attempt to build the converter if the input config has this type of
     // reference space. Using the input config for this determination since it is
     // only input config color spaces whose reference space is converted.
-    if (hasColorSpaceRefType(baseConfig, REFERENCE_SPACE_DISPLAY) &&
-        hasColorSpaceRefType(inputConfig, REFERENCE_SPACE_DISPLAY))
+    if (hasColorSpaceRefType(baseConfig, REFERENCE_SPACE_DISPLAY)
+        && hasColorSpaceRefType(inputConfig, REFERENCE_SPACE_DISPLAY))
     {
-        inputToBaseGtDisplay = getRefSpaceConverter(
-            inputConfig,
-            baseConfig,
-            REFERENCE_SPACE_DISPLAY
-        );
+        inputToBaseGtDisplay
+            = getRefSpaceConverter(inputConfig, baseConfig, REFERENCE_SPACE_DISPLAY);
     }
     else
     {
@@ -1192,10 +1217,11 @@ void initializeRefSpaceConverters(ConstTransformRcPtr & inputToBaseGtScene,
 // Send the test vals through the color space and store the result in fingerprintVals.
 // Returns true if the color space should not be considered.
 //
-bool calcColorSpaceFingerprint(std::vector<float> & fingerprintVals, 
-                               const ColorSpaceFingerprints & fingerprints, 
-                               const ConstConfigRcPtr & config, 
-                               const ConstColorSpaceRcPtr & cs)
+bool calcColorSpaceFingerprint(
+    std::vector<float> & fingerprintVals,
+    const ColorSpaceFingerprints & fingerprints,
+    const ConstConfigRcPtr & config,
+    const ConstColorSpaceRcPtr & cs)
 {
     bool skipColorSpace = false;
 
@@ -1206,10 +1232,10 @@ bool calcColorSpaceFingerprint(std::vector<float> & fingerprintVals,
     try
     {
         ConstProcessorRcPtr p = config->getProcessor(fromRef);
-        cpu = p->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
+        cpu                   = p->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
     }
-    catch (...) 
-    { 
+    catch (...)
+    {
         // If the transform doesn't validate (singular matrix, etc.), don't consider it.
         return true;
     }
@@ -1225,7 +1251,7 @@ bool calcColorSpaceFingerprint(std::vector<float> & fingerprintVals,
         fingerprintVals = fingerprints.sceneRefTestVals;
     }
     const size_t n = fingerprintVals.size();
-    PackedImageDesc desc( &fingerprintVals[0], (long) n / 4, 1, CHANNEL_ORDERING_RGBA );
+    PackedImageDesc desc(&fingerprintVals[0], (long)n / 4, 1, CHANNEL_ORDERING_RGBA);
 
     cpu->apply(desc);
 
@@ -1244,26 +1270,62 @@ void initializeTestVals(ColorSpaceFingerprints & fingerprints, const ConstConfig
     // TODO: Including negative values would exclude some matches that are probably
     // desirable, it's an open question how strict the matching should be.
 
-    std::vector<float> ACESvals = { 
-        0.408933127871f, 0.106169822808f, 0.027842572707f, 0.f, // lin_rec709 {0.9, 0.03, 0.01}
-        0.374615373650f, 0.739417755017f, 0.118862613721f, 0.f, // lin_rec709 {0.06, 0.9, 0.02}
-        0.171696591718f, 0.104272268468f, 0.786227391453f, 0.f, // lin_rec709 {0.01, 0.02, 0.9}
-        0.f            , 0.f            , 0.f            , 0.5f,
-        0.037018876439f, 0.030827687576f, 0.021641700645f, 0.f, // lin_rec709 {0.05, 0.03, 0.02}
-        1.f            , 1.f            , 1.f            , 1.f };
+    std::vector<float> ACESvals
+        = {0.408933127871f,
+           0.106169822808f,
+           0.027842572707f,
+           0.f, // lin_rec709 {0.9, 0.03, 0.01}
+           0.374615373650f,
+           0.739417755017f,
+           0.118862613721f,
+           0.f, // lin_rec709 {0.06, 0.9, 0.02}
+           0.171696591718f,
+           0.104272268468f,
+           0.786227391453f,
+           0.f, // lin_rec709 {0.01, 0.02, 0.9}
+           0.f,
+           0.f,
+           0.f,
+           0.5f,
+           0.037018876439f,
+           0.030827687576f,
+           0.021641700645f,
+           0.f, // lin_rec709 {0.05, 0.03, 0.02}
+           1.f,
+           1.f,
+           1.f,
+           1.f};
 
-    std::vector<float> XYZvals = { 
-        // Adjusted to keep it inside both Rec.601 and Rec.601 PAL.
-        0.383684057405f, 0.213552088801f, 0.030478901760f, 0.f, // lin_rec709 {0.9, 0.03, 0.01}
-        0.350178969169f, 0.657853997550f, 0.127445793983f, 0.f, // lin_rec709 {0.06, 0.9, 0.02}
-        0.173708304342f, 0.081402847459f, 0.858056140808f, 0.f, // lin_rec709 {0.01, 0.02, 0.9}
-        0.f            , 0.f            , 0.f            , 0.5f,
-        0.034956685913f, 0.033530856964f, 0.023553027375f, 0.f, // lin_rec709 {0.05, 0.03, 0.02}
-        0.950455927052f, 1.f            , 1.089057750760f, 1.f };
+    std::vector<float> XYZvals
+        = {// Adjusted to keep it inside both Rec.601 and Rec.601 PAL.
+           0.383684057405f,
+           0.213552088801f,
+           0.030478901760f,
+           0.f, // lin_rec709 {0.9, 0.03, 0.01}
+           0.350178969169f,
+           0.657853997550f,
+           0.127445793983f,
+           0.f, // lin_rec709 {0.06, 0.9, 0.02}
+           0.173708304342f,
+           0.081402847459f,
+           0.858056140808f,
+           0.f, // lin_rec709 {0.01, 0.02, 0.9}
+           0.f,
+           0.f,
+           0.f,
+           0.5f,
+           0.034956685913f,
+           0.033530856964f,
+           0.023553027375f,
+           0.f, // lin_rec709 {0.05, 0.03, 0.02}
+           0.950455927052f,
+           1.f,
+           1.089057750760f,
+           1.f};
 
     // Try to convert to the actual reference spaces of the config.
 
-    fingerprints.sceneRefTestVals = ACESvals;
+    fingerprints.sceneRefTestVals   = ACESvals;
     fingerprints.displayRefTestVals = XYZvals;
 
     ConstProcessorRcPtr p;
@@ -1281,31 +1343,34 @@ void initializeTestVals(ColorSpaceFingerprints & fingerprints, const ConstConfig
                 if (!cs)
                 {
                     // Otherwise, see if it's present using a different name.
-                    ConstConfigRcPtr builtinConfig = Config::CreateFromBuiltinConfig("ocio://cg-config-latest");
+                    ConstConfigRcPtr builtinConfig
+                        = Config::CreateFromBuiltinConfig("ocio://cg-config-latest");
                     // This throws if it cannot find the requested space.
-                    const char * cs_name = 
-                        Config::IdentifyBuiltinColorSpace(config, builtinConfig, "aces_interchange");
+                    const char * cs_name = Config::IdentifyBuiltinColorSpace(
+                        config,
+                        builtinConfig,
+                        "aces_interchange");
                     cs = config->getColorSpace(cs_name);
                 }
             }
         }
 
         ConstTransformRcPtr toRef = getTransformForDir(cs, COLORSPACE_DIR_TO_REFERENCE);
-        p = config->getProcessor(toRef);
+        p                         = config->getProcessor(toRef);
 
         const size_t n = ACESvals.size();
         std::vector<float> out(n, 0.f);
 
-        PackedImageDesc descSrc( &ACESvals[0], (long) n / 4, 1, CHANNEL_ORDERING_RGBA );
-        PackedImageDesc descDst( &out[0], (long) n / 4, 1, CHANNEL_ORDERING_RGBA );
+        PackedImageDesc descSrc(&ACESvals[0], (long)n / 4, 1, CHANNEL_ORDERING_RGBA);
+        PackedImageDesc descDst(&out[0], (long)n / 4, 1, CHANNEL_ORDERING_RGBA);
 
-        ConstCPUProcessorRcPtr cpu  = p->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
+        ConstCPUProcessorRcPtr cpu = p->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
         cpu->apply(descSrc, descDst);
 
         fingerprints.sceneRefTestVals = out;
     }
-    catch (...) 
-    { 
+    catch (...)
+    {
         fingerprints.sceneRefTestVals = ACESvals;
     }
 
@@ -1329,30 +1394,33 @@ void initializeTestVals(ColorSpaceFingerprints & fingerprints, const ConstConfig
                 if (!cs)
                 {
                     // Otherwise, see if it's present using a different name.
-                    ConstConfigRcPtr builtinConfig = Config::CreateFromBuiltinConfig("ocio://cg-config-latest");
-                    const char * cs_name = 
-                        Config::IdentifyBuiltinColorSpace(config, builtinConfig, "cie_xyz_d65_interchange");
+                    ConstConfigRcPtr builtinConfig
+                        = Config::CreateFromBuiltinConfig("ocio://cg-config-latest");
+                    const char * cs_name = Config::IdentifyBuiltinColorSpace(
+                        config,
+                        builtinConfig,
+                        "cie_xyz_d65_interchange");
                     cs = config->getColorSpace(cs_name);
                 }
             }
         }
 
         ConstTransformRcPtr toRef = getTransformForDir(cs, COLORSPACE_DIR_TO_REFERENCE);
-        p = config->getProcessor(toRef);
+        p                         = config->getProcessor(toRef);
 
         const size_t n = XYZvals.size();
         std::vector<float> out(n, 0.f);
 
-        PackedImageDesc descSrc( &XYZvals[0], (long) n / 4, 1, CHANNEL_ORDERING_RGBA );
-        PackedImageDesc descDst( &out[0], (long) n / 4, 1, CHANNEL_ORDERING_RGBA );
+        PackedImageDesc descSrc(&XYZvals[0], (long)n / 4, 1, CHANNEL_ORDERING_RGBA);
+        PackedImageDesc descDst(&out[0], (long)n / 4, 1, CHANNEL_ORDERING_RGBA);
 
-        ConstCPUProcessorRcPtr cpu  = p->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
+        ConstCPUProcessorRcPtr cpu = p->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
         cpu->apply(descSrc, descDst);
 
         fingerprints.displayRefTestVals = out;
     }
-    catch (...) 
-    { 
+    catch (...)
+    {
         fingerprints.displayRefTestVals = XYZvals;
     }
 }
@@ -1361,7 +1429,9 @@ void initializeTestVals(ColorSpaceFingerprints & fingerprints, const ConstConfig
 // to compare against color spaces in an input config for merging. Store the results in
 // the fingerprint struct.
 //
-void initializeColorSpaceFingerprints(ColorSpaceFingerprints & fingerprints, const ConstConfigRcPtr & config)
+void initializeColorSpaceFingerprints(
+    ColorSpaceFingerprints & fingerprints,
+    const ConstConfigRcPtr & config)
 {
     SuspendCacheGuard srcGuard(config);
 
@@ -1372,9 +1442,8 @@ void initializeColorSpaceFingerprints(ColorSpaceFingerprints & fingerprints, con
     fingerprints.vec.reserve(n);
     for (int i = 0; i < n; ++i)
     {
-        const char * name = config->getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL,
-                                                             COLORSPACE_ALL,
-                                                             i);
+        const char * name
+            = config->getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL, i);
         ConstColorSpaceRcPtr cs = config->getColorSpace(name);
         if (!cs || cs->isData())
         {
@@ -1390,7 +1459,7 @@ void initializeColorSpaceFingerprints(ColorSpaceFingerprints & fingerprints, con
         }
 
         ConstTransformRcPtr tFrom = cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
-        ConstTransformRcPtr tTo = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+        ConstTransformRcPtr tTo   = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
         if (tFrom && tTo)
         {
             // Don't bother with color spaces that have both directions defined,
@@ -1404,8 +1473,8 @@ void initializeColorSpaceFingerprints(ColorSpaceFingerprints & fingerprints, con
         {
             Fingerprint fprint;
             fprint.csName = cs->getName();
-            fprint.type = cs->getReferenceSpaceType();
-            fprint.vals = fp;
+            fprint.type   = cs->getReferenceSpaceType();
+            fprint.vals   = fp;
             fingerprints.vec.push_back(fprint);
         }
     }
@@ -1414,11 +1483,12 @@ void initializeColorSpaceFingerprints(ColorSpaceFingerprints & fingerprints, con
 // If the base config contains a color space equivalent to inputCS, return its name.
 // Return an empty string if no equivalent color space is found (within the tolerance).
 // The ref_space_type specifies the type of inputCS and determines which part of the
-// config is searched. 
+// config is searched.
 //
-const char * findEquivalentColorspace(const ColorSpaceFingerprints & fingerprints,
-                                      const ConstConfigRcPtr & inputConfig, 
-                                      const ConstColorSpaceRcPtr & inputCS)
+const char * findEquivalentColorspace(
+    const ColorSpaceFingerprints & fingerprints,
+    const ConstConfigRcPtr & inputConfig,
+    const ConstColorSpaceRcPtr & inputCS)
 {
     // The fingerprints must first be initialized from the base config.
     // NB: The inputConfig/inputCS must use the same reference space as the base config.
@@ -1433,7 +1503,8 @@ const char * findEquivalentColorspace(const ColorSpaceFingerprints & fingerprint
 
     // Calculate the fingerprint of inputCS from inputConfig.
     std::vector<float> inputVals;
-    const bool skipColorSpace = calcColorSpaceFingerprint(inputVals, fingerprints, inputConfig, inputCS);
+    const bool skipColorSpace
+        = calcColorSpaceFingerprint(inputVals, fingerprints, inputConfig, inputCS);
     if (skipColorSpace)
     {
         return "";
@@ -1477,6 +1548,6 @@ const char * findEquivalentColorspace(const ColorSpaceFingerprints & fingerprint
     return "";
 }
 
-}  // namespace ConfigUtils
+} // namespace ConfigUtils
 
-}  // namespace OCIO_NAMESPACE
+} // namespace OCIO_NAMESPACE

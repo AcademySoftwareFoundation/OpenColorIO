@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_GRADINGRGBCURVETRANSFORM_H
 #define INCLUDED_OCIO_GRADINGRGBCURVETRANSFORM_H
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/gradingrgbcurve/GradingRGBCurveOpData.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -17,10 +15,10 @@ class GradingRGBCurveTransformImpl : public GradingRGBCurveTransform
 {
 public:
     explicit GradingRGBCurveTransformImpl(GradingStyle style);
-    GradingRGBCurveTransformImpl() = delete;
-    GradingRGBCurveTransformImpl(const GradingRGBCurveTransformImpl &) = delete;
-    GradingRGBCurveTransformImpl& operator=(const GradingRGBCurveTransformImpl &) = delete;
-    ~GradingRGBCurveTransformImpl() override = default;
+    GradingRGBCurveTransformImpl()                                                 = delete;
+    GradingRGBCurveTransformImpl(const GradingRGBCurveTransformImpl &)             = delete;
+    GradingRGBCurveTransformImpl & operator=(const GradingRGBCurveTransformImpl &) = delete;
+    ~GradingRGBCurveTransformImpl() override                                       = default;
 
     TransformRcPtr createEditableCopy() const override;
 
@@ -62,4 +60,4 @@ private:
 };
 } // namespace OCIO_NAMESPACE
 
-#endif  // INCLUDED_OCIO_GRADINGRGBCURVETRANSFORM_H
+#endif // INCLUDED_OCIO_GRADINGRGBCURVETRANSFORM_H

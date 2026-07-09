@@ -5,15 +5,15 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "OpBuilders.h"
+#include "ParseUtils.h"
+#include "fileformats/FormatMetadata.h"
 #include "fileformats/cdl/CDLParser.h"
 #include "fileformats/cdl/CDLWriter.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "fileformats/xmlutils/XMLWriterUtils.h"
-#include "fileformats/FormatMetadata.h"
 #include "transforms/CDLTransform.h"
 #include "transforms/FileTransform.h"
-#include "OpBuilders.h"
-#include "ParseUtils.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -23,7 +23,7 @@ namespace
 class LocalCachedFile : public CachedFile
 {
 public:
-    LocalCachedFile () 
+    LocalCachedFile()
         : m_metadata()
     {
     }
@@ -53,34 +53,35 @@ typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
 class LocalFileFormat : public FileFormat
 {
 public:
-    LocalFileFormat() = default;
+    LocalFileFormat()  = default;
     ~LocalFileFormat() = default;
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-    CachedFileRcPtr read(std::istream & istream,
-                         const std::string & fileName,
-                         Interpolation interp) const override;
+    CachedFileRcPtr read(std::istream & istream, const std::string & fileName, Interpolation interp)
+        const override;
 
-    void write(const ConstConfigRcPtr & config,
-               const ConstContextRcPtr & context,
-               const GroupTransform & group,
-               const std::string & formatName,
-               std::ostream & ostream) const override;
+    void write(
+        const ConstConfigRcPtr & config,
+        const ConstContextRcPtr & context,
+        const GroupTransform & group,
+        const std::string & formatName,
+        std::ostream & ostream) const override;
 
-    void buildFileOps(OpRcPtrVec & ops,
-                      const Config & config,
-                      const ConstContextRcPtr & context,
-                      CachedFileRcPtr untypedCachedFile,
-                      const FileTransform & fileTransform,
-                      TransformDirection dir) const override;
+    void buildFileOps(
+        OpRcPtrVec & ops,
+        const Config & config,
+        const ConstContextRcPtr & context,
+        CachedFileRcPtr untypedCachedFile,
+        const FileTransform & fileTransform,
+        TransformDirection dir) const override;
 };
 
 void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 {
     FormatInfo info;
-    info.name = FILEFORMAT_COLOR_CORRECTION_COLLECTION;
-    info.extension = "ccc";
+    info.name         = FILEFORMAT_COLOR_CORRECTION_COLLECTION;
+    info.extension    = "ccc";
     info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_WRITE);
     formatInfoVec.push_back(info);
 }
@@ -88,27 +89,30 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 // Try and load the format
 // Raise an exception if it can't be loaded.
 
-CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
-                                      const std::string & fileName,
-                                      Interpolation /*interp*/) const
+CachedFileRcPtr LocalFileFormat::read(
+    std::istream & istream,
+    const std::string & fileName,
+    Interpolation /*interp*/) const
 {
     CDLParser parser(fileName);
     parser.parse(istream);
 
     LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
 
-    parser.getCDLTransforms(cachedFile->m_transformMap,
-                            cachedFile->m_transformVec,
-                            cachedFile->m_metadata);
+    parser.getCDLTransforms(
+        cachedFile->m_transformMap,
+        cachedFile->m_transformVec,
+        cachedFile->m_metadata);
 
     return cachedFile;
 }
 
-void LocalFileFormat::write(const ConstConfigRcPtr & /*config*/,
-                            const ConstContextRcPtr & /*context*/,
-                            const GroupTransform & group,
-                            const std::string & formatName,
-                            std::ostream & ostream) const
+void LocalFileFormat::write(
+    const ConstConfigRcPtr & /*config*/,
+    const ConstContextRcPtr & /*context*/,
+    const GroupTransform & group,
+    const std::string & formatName,
+    std::ostream & ostream) const
 {
     const auto numCDL = group.getNumTransforms();
     if (!numCDL)
@@ -155,12 +159,13 @@ void LocalFileFormat::write(const ConstConfigRcPtr & /*config*/,
     fmt.writeEndTag(CDL_TAG_COLOR_CORRECTION_COLLECTION);
 }
 
-void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
-                                   const Config & config,
-                                   const ConstContextRcPtr & context,
-                                   CachedFileRcPtr untypedCachedFile,
-                                   const FileTransform & fileTransform,
-                                   TransformDirection dir) const
+void LocalFileFormat::buildFileOps(
+    OpRcPtrVec & ops,
+    const Config & config,
+    const ConstContextRcPtr & context,
+    CachedFileRcPtr untypedCachedFile,
+    const FileTransform & fileTransform,
+    TransformDirection dir) const
 {
     LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
 
@@ -191,9 +196,9 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     // But either way, it's what we should throw below.
 
     std::string cccid = fileTransform.getCCCId();
-    cccid = context->resolveStringVar(cccid.c_str());
+    cccid             = context->resolveStringVar(cccid.c_str());
 
-    bool success=false;
+    bool success = false;
 
     const auto fileCDLStyle = fileTransform.getCDLStyle();
 
@@ -216,11 +221,11 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
     if (!success)
     {
         // Use 0 for empty string.
-        int cccindex=0;
+        int cccindex = 0;
         if (cccid.empty() || StringToInt(&cccindex, cccid.c_str(), true))
         {
-            int maxindex = ((int)cachedFile->m_transformVec.size())-1;
-            if (cccindex<0 || cccindex>maxindex)
+            int maxindex = ((int)cachedFile->m_transformVec.size()) - 1;
+            if (cccindex < 0 || cccindex > maxindex)
             {
                 std::ostringstream os;
                 os << "The specified cccindex " << cccindex;
@@ -250,7 +255,7 @@ void LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
         throw ExceptionMissingFile(os.str().c_str());
     }
 }
-}
+} // namespace
 
 FileFormat * CreateFileFormatCCC()
 {

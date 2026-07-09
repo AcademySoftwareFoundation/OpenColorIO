@@ -6,34 +6,35 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ops/fixedfunction/FixedFunctionOpData.h"
 #include "Platform.h"
+#include "ops/fixedfunction/FixedFunctionOpData.h"
 
 namespace OCIO_NAMESPACE
 {
 
 namespace
 {
-    void check_param_bounds(const std::string & name, double val, double low, double high)
+void check_param_bounds(const std::string & name, double val, double low, double high)
+{
+    if (val < low || val > high)
     {
-        if (val < low || val > high)
-        {
-            std::stringstream ss;
-            ss << "Parameter " << val << " (" << name << ") is outside valid range [" << low << "," << high << "]";
-            throw Exception(ss.str().c_str());
-        }
-    };
+        std::stringstream ss;
+        ss << "Parameter " << val << " (" << name << ") is outside valid range [" << low << ","
+           << high << "]";
+        throw Exception(ss.str().c_str());
+    }
+};
 
-    void check_param_no_frac(const std::string & name, double val)
+void check_param_no_frac(const std::string & name, double val)
+{
+    if (floor(val) != val)
     {
-        if (floor(val) != val)
-        {
-            std::stringstream ss;
-            ss << "Parameter " << val << " (" << name << ") cannot include any fractional component";
-            throw Exception(ss.str().c_str());
-        }
-    };
-}
+        std::stringstream ss;
+        ss << "Parameter " << val << " (" << name << ") cannot include any fractional component";
+        throw Exception(ss.str().c_str());
+    }
+};
+} // namespace
 
 namespace DefaultValues
 {
@@ -91,24 +92,24 @@ constexpr char HSY_VID_TO_RGB_STR[]                 = "HSY_VID_TO_RGB";
 // a more verbose human readable string
 const char * FixedFunctionOpData::ConvertStyleToString(Style style, bool detailed)
 {
-    switch(style)
+    switch (style)
     {
         case ACES_RED_MOD_03_FWD:
-            return detailed ? "ACES_RedMod03 (Forward)"    : ACES_RED_MOD_03_FWD_STR;
+            return detailed ? "ACES_RedMod03 (Forward)" : ACES_RED_MOD_03_FWD_STR;
         case ACES_RED_MOD_03_INV:
-            return detailed ? "ACES_RedMod03 (Inverse)"    : ACES_RED_MOD_03_REV_STR;
+            return detailed ? "ACES_RedMod03 (Inverse)" : ACES_RED_MOD_03_REV_STR;
         case ACES_RED_MOD_10_FWD:
-            return detailed ? "ACES_RedMod10 (Forward)"    : ACES_RED_MOD_10_FWD_STR;
+            return detailed ? "ACES_RedMod10 (Forward)" : ACES_RED_MOD_10_FWD_STR;
         case ACES_RED_MOD_10_INV:
-            return detailed ? "ACES_RedMod10 (Inverse)"    : ACES_RED_MOD_10_REV_STR;
+            return detailed ? "ACES_RedMod10 (Inverse)" : ACES_RED_MOD_10_REV_STR;
         case ACES_GLOW_03_FWD:
-            return detailed ? "ACES_Glow03 (Forward)"      : ACES_GLOW_03_FWD_STR;
+            return detailed ? "ACES_Glow03 (Forward)" : ACES_GLOW_03_FWD_STR;
         case ACES_GLOW_03_INV:
-            return detailed ? "ACES_Glow03 (Inverse)"      : ACES_GLOW_03_REV_STR;
+            return detailed ? "ACES_Glow03 (Inverse)" : ACES_GLOW_03_REV_STR;
         case ACES_GLOW_10_FWD:
-            return detailed ? "ACES_Glow10 (Forward)"      : ACES_GLOW_10_FWD_STR;
+            return detailed ? "ACES_Glow10 (Forward)" : ACES_GLOW_10_FWD_STR;
         case ACES_GLOW_10_INV:
-            return detailed ? "ACES_Glow10 (Inverse)"      : ACES_GLOW_10_REV_STR;
+            return detailed ? "ACES_Glow10 (Inverse)" : ACES_GLOW_10_REV_STR;
         case ACES_DARK_TO_DIM_10_FWD:
             return detailed ? "ACES_DarkToDim10 (Forward)" : ACES_DARK_TO_DIM_10_STR;
         case ACES_DARK_TO_DIM_10_INV:
@@ -126,9 +127,11 @@ const char * FixedFunctionOpData::ConvertStyleToString(Style style, bool detaile
         case ACES_JMh_TO_RGB_20:
             return ACES_JMh_TO_RGB_20_STR;
         case ACES_TONESCALE_COMPRESS_20_FWD:
-            return detailed ? "ACES_ToneScaleCompress20 (Forward)" : ACES_TONESCALE_COMPRESS_20_FWD_STR;
+            return detailed ? "ACES_ToneScaleCompress20 (Forward)"
+                            : ACES_TONESCALE_COMPRESS_20_FWD_STR;
         case ACES_TONESCALE_COMPRESS_20_INV:
-            return detailed ? "ACES_ToneScaleCompress20 (Inverse)" : ACES_TONESCALE_COMPRESS_20_INV_STR;
+            return detailed ? "ACES_ToneScaleCompress20 (Inverse)"
+                            : ACES_TONESCALE_COMPRESS_20_INV_STR;
         case ACES_GAMUT_COMPRESS_20_FWD:
             return detailed ? "ACES_GamutCompress20 (Forward)" : ACES_GAMUT_COMPRESS_20_FWD_STR;
         case ACES_GAMUT_COMPRESS_20_INV:
@@ -156,7 +159,7 @@ const char * FixedFunctionOpData::ConvertStyleToString(Style style, bool detaile
         case LIN_TO_PQ:
             return LIN_TO_PQ_STR;
         case PQ_TO_LIN:
-          return PQ_TO_LIN_STR;
+            return PQ_TO_LIN_STR;
         case LIN_TO_GAMMA_LOG:
             return LIN_TO_GAMMA_LOG_STR;
         case GAMMA_LOG_TO_LIN:
@@ -172,11 +175,11 @@ const char * FixedFunctionOpData::ConvertStyleToString(Style style, bool detaile
         case RGB_TO_HSY_VID:
             return RGB_TO_HSY_VID_STR;
         case HSY_LOG_TO_RGB:
-                return HSY_LOG_TO_RGB_STR;
+            return HSY_LOG_TO_RGB_STR;
         case HSY_LIN_TO_RGB:
-                return HSY_LIN_TO_RGB_STR;
+            return HSY_LIN_TO_RGB_STR;
         case HSY_VID_TO_RGB:
-                return HSY_VID_TO_RGB_STR;
+            return HSY_VID_TO_RGB_STR;
     }
 
     std::stringstream ss("Unknown FixedFunction style: ");
@@ -270,8 +273,9 @@ FixedFunctionOpData::Style FixedFunctionOpData::GetStyle(const char * name)
         {
             return ACES_GAMUT_COMPRESS_20_INV;
         }
-        else if (0 == Platform::Strcasecmp(name, SURROUND_STR) ||
-                 0 == Platform::Strcasecmp(name, REC_2100_SURROUND_FWD_STR))
+        else if (
+            0 == Platform::Strcasecmp(name, SURROUND_STR)
+            || 0 == Platform::Strcasecmp(name, REC_2100_SURROUND_FWD_STR))
         {
             return REC2100_SURROUND_FWD;
         }
@@ -368,8 +372,9 @@ FixedFunctionOpData::Style FixedFunctionOpData::GetStyle(const char * name)
 }
 
 // Combine the Transform style and direction into the internal OpData style.
-FixedFunctionOpData::Style FixedFunctionOpData::ConvertStyle(FixedFunctionStyle style,
-                                                             TransformDirection dir)
+FixedFunctionOpData::Style FixedFunctionOpData::ConvertStyle(
+    FixedFunctionStyle style,
+    TransformDirection dir)
 {
     const bool isForward = dir == TRANSFORM_DIR_FORWARD;
 
@@ -377,58 +382,58 @@ FixedFunctionOpData::Style FixedFunctionOpData::ConvertStyle(FixedFunctionStyle 
     {
         case FIXED_FUNCTION_ACES_RED_MOD_03:
         {
-            return isForward ? FixedFunctionOpData::ACES_RED_MOD_03_FWD :
-                               FixedFunctionOpData::ACES_RED_MOD_03_INV;
+            return isForward ? FixedFunctionOpData::ACES_RED_MOD_03_FWD
+                             : FixedFunctionOpData::ACES_RED_MOD_03_INV;
         }
         case FIXED_FUNCTION_ACES_RED_MOD_10:
         {
-            return isForward ? FixedFunctionOpData::ACES_RED_MOD_10_FWD :
-                               FixedFunctionOpData::ACES_RED_MOD_10_INV;
+            return isForward ? FixedFunctionOpData::ACES_RED_MOD_10_FWD
+                             : FixedFunctionOpData::ACES_RED_MOD_10_INV;
         }
         case FIXED_FUNCTION_ACES_GLOW_03:
         {
-            return isForward ? FixedFunctionOpData::ACES_GLOW_03_FWD :
-                               FixedFunctionOpData::ACES_GLOW_03_INV;
+            return isForward ? FixedFunctionOpData::ACES_GLOW_03_FWD
+                             : FixedFunctionOpData::ACES_GLOW_03_INV;
         }
         case FIXED_FUNCTION_ACES_GLOW_10:
         {
-            return isForward ? FixedFunctionOpData::ACES_GLOW_10_FWD :
-                               FixedFunctionOpData::ACES_GLOW_10_INV;
+            return isForward ? FixedFunctionOpData::ACES_GLOW_10_FWD
+                             : FixedFunctionOpData::ACES_GLOW_10_INV;
         }
         case FIXED_FUNCTION_ACES_DARK_TO_DIM_10:
         {
-            return isForward ? FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD :
-                               FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV;
+            return isForward ? FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD
+                             : FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV;
         }
         case FIXED_FUNCTION_ACES_GAMUT_COMP_13:
         {
-            return isForward ? FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD :
-                               FixedFunctionOpData::ACES_GAMUT_COMP_13_INV;
+            return isForward ? FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD
+                             : FixedFunctionOpData::ACES_GAMUT_COMP_13_INV;
         }
         case FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20:
         {
-            return isForward ? FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_FWD :
-                               FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_INV;
+            return isForward ? FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_FWD
+                             : FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_INV;
         }
         case FIXED_FUNCTION_ACES_RGB_TO_JMH_20:
         {
-            return isForward ? FixedFunctionOpData::ACES_RGB_TO_JMh_20 :
-                               FixedFunctionOpData::ACES_JMh_TO_RGB_20;
+            return isForward ? FixedFunctionOpData::ACES_RGB_TO_JMh_20
+                             : FixedFunctionOpData::ACES_JMh_TO_RGB_20;
         }
         case FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20:
         {
-            return isForward ? FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_FWD :
-                               FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_INV;
+            return isForward ? FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_FWD
+                             : FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_INV;
         }
         case FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20:
         {
-            return isForward ? FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_FWD :
-                               FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_INV;
+            return isForward ? FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_FWD
+                             : FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_INV;
         }
         case FIXED_FUNCTION_REC2100_SURROUND:
         {
-            return isForward ? FixedFunctionOpData::REC2100_SURROUND_FWD :
-                               FixedFunctionOpData::REC2100_SURROUND_INV;
+            return isForward ? FixedFunctionOpData::REC2100_SURROUND_FWD
+                             : FixedFunctionOpData::REC2100_SURROUND_INV;
         }
         case FIXED_FUNCTION_RGB_TO_HSV:
         {
@@ -436,18 +441,18 @@ FixedFunctionOpData::Style FixedFunctionOpData::ConvertStyle(FixedFunctionStyle 
         }
         case FIXED_FUNCTION_RGB_TO_HSY_LIN:
         {
-            return isForward ? FixedFunctionOpData::RGB_TO_HSY_LIN :
-                               FixedFunctionOpData::HSY_LIN_TO_RGB;
+            return isForward ? FixedFunctionOpData::RGB_TO_HSY_LIN
+                             : FixedFunctionOpData::HSY_LIN_TO_RGB;
         }
         case FIXED_FUNCTION_RGB_TO_HSY_LOG:
         {
-            return isForward ? FixedFunctionOpData::RGB_TO_HSY_LOG :
-                               FixedFunctionOpData::HSY_LOG_TO_RGB;
+            return isForward ? FixedFunctionOpData::RGB_TO_HSY_LOG
+                             : FixedFunctionOpData::HSY_LOG_TO_RGB;
         }
         case FIXED_FUNCTION_RGB_TO_HSY_VID:
         {
-            return isForward ? FixedFunctionOpData::RGB_TO_HSY_VID :
-                               FixedFunctionOpData::HSY_VID_TO_RGB;
+            return isForward ? FixedFunctionOpData::RGB_TO_HSY_VID
+                             : FixedFunctionOpData::HSY_VID_TO_RGB;
         }
         case FIXED_FUNCTION_XYZ_TO_xyY:
         {
@@ -464,24 +469,24 @@ FixedFunctionOpData::Style FixedFunctionOpData::ConvertStyle(FixedFunctionStyle 
         case FIXED_FUNCTION_ACES_GAMUTMAP_02:
         case FIXED_FUNCTION_ACES_GAMUTMAP_07:
         {
-            throw Exception("Unimplemented fixed function types: "
-                            "FIXED_FUNCTION_ACES_GAMUTMAP_02, "
-                            "FIXED_FUNCTION_ACES_GAMUTMAP_07.");
+            throw Exception(
+                "Unimplemented fixed function types: "
+                "FIXED_FUNCTION_ACES_GAMUTMAP_02, "
+                "FIXED_FUNCTION_ACES_GAMUTMAP_07.");
         }
-        case FIXED_FUNCTION_LIN_TO_PQ: 
+        case FIXED_FUNCTION_LIN_TO_PQ:
         {
-            return isForward ? FixedFunctionOpData::LIN_TO_PQ:
-                               FixedFunctionOpData::PQ_TO_LIN;
+            return isForward ? FixedFunctionOpData::LIN_TO_PQ : FixedFunctionOpData::PQ_TO_LIN;
         }
         case FIXED_FUNCTION_LIN_TO_GAMMA_LOG:
         {
-            return isForward ? FixedFunctionOpData::LIN_TO_GAMMA_LOG:
-                               FixedFunctionOpData::GAMMA_LOG_TO_LIN;
+            return isForward ? FixedFunctionOpData::LIN_TO_GAMMA_LOG
+                             : FixedFunctionOpData::GAMMA_LOG_TO_LIN;
         }
         case FIXED_FUNCTION_LIN_TO_DOUBLE_LOG:
         {
-            return isForward ? FixedFunctionOpData::LIN_TO_DOUBLE_LOG:
-                               FixedFunctionOpData::DOUBLE_LOG_TO_LIN;
+            return isForward ? FixedFunctionOpData::LIN_TO_DOUBLE_LOG
+                             : FixedFunctionOpData::DOUBLE_LOG_TO_LIN;
         }
     }
 
@@ -496,90 +501,89 @@ FixedFunctionStyle FixedFunctionOpData::ConvertStyle(FixedFunctionOpData::Style 
 {
     switch (style)
     {
-    case FixedFunctionOpData::ACES_RED_MOD_03_FWD:
-    case FixedFunctionOpData::ACES_RED_MOD_03_INV:
-        return FIXED_FUNCTION_ACES_RED_MOD_03;
+        case FixedFunctionOpData::ACES_RED_MOD_03_FWD:
+        case FixedFunctionOpData::ACES_RED_MOD_03_INV:
+            return FIXED_FUNCTION_ACES_RED_MOD_03;
 
-    case FixedFunctionOpData::ACES_RED_MOD_10_FWD:
-    case FixedFunctionOpData::ACES_RED_MOD_10_INV:
-        return FIXED_FUNCTION_ACES_RED_MOD_10;
+        case FixedFunctionOpData::ACES_RED_MOD_10_FWD:
+        case FixedFunctionOpData::ACES_RED_MOD_10_INV:
+            return FIXED_FUNCTION_ACES_RED_MOD_10;
 
-    case FixedFunctionOpData::ACES_GLOW_03_FWD:
-    case FixedFunctionOpData::ACES_GLOW_03_INV:
-        return FIXED_FUNCTION_ACES_GLOW_03;
+        case FixedFunctionOpData::ACES_GLOW_03_FWD:
+        case FixedFunctionOpData::ACES_GLOW_03_INV:
+            return FIXED_FUNCTION_ACES_GLOW_03;
 
-    case FixedFunctionOpData::ACES_GLOW_10_FWD:
-    case FixedFunctionOpData::ACES_GLOW_10_INV:
-        return FIXED_FUNCTION_ACES_GLOW_10;
+        case FixedFunctionOpData::ACES_GLOW_10_FWD:
+        case FixedFunctionOpData::ACES_GLOW_10_INV:
+            return FIXED_FUNCTION_ACES_GLOW_10;
 
-    case FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD:
-    case FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV:
-        return FIXED_FUNCTION_ACES_DARK_TO_DIM_10;
+        case FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD:
+        case FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV:
+            return FIXED_FUNCTION_ACES_DARK_TO_DIM_10;
 
-    case FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD:
-    case FixedFunctionOpData::ACES_GAMUT_COMP_13_INV:
-        return FIXED_FUNCTION_ACES_GAMUT_COMP_13;
+        case FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD:
+        case FixedFunctionOpData::ACES_GAMUT_COMP_13_INV:
+            return FIXED_FUNCTION_ACES_GAMUT_COMP_13;
 
-    case FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_FWD:
-    case FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_INV:
-        return FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20;
+        case FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_FWD:
+        case FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_INV:
+            return FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20;
 
-    case FixedFunctionOpData::ACES_RGB_TO_JMh_20:
-    case FixedFunctionOpData::ACES_JMh_TO_RGB_20:
-        return FIXED_FUNCTION_ACES_RGB_TO_JMH_20;
+        case FixedFunctionOpData::ACES_RGB_TO_JMh_20:
+        case FixedFunctionOpData::ACES_JMh_TO_RGB_20:
+            return FIXED_FUNCTION_ACES_RGB_TO_JMH_20;
 
-    case FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_FWD:
-    case FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_INV:
-        return FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20;
+        case FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_FWD:
+        case FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_INV:
+            return FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20;
 
-    case FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_FWD:
-    case FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_INV:
-        return FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20;
+        case FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_FWD:
+        case FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_INV:
+            return FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20;
 
-    case FixedFunctionOpData::REC2100_SURROUND_FWD:
-    case FixedFunctionOpData::REC2100_SURROUND_INV:
-        return FIXED_FUNCTION_REC2100_SURROUND;
+        case FixedFunctionOpData::REC2100_SURROUND_FWD:
+        case FixedFunctionOpData::REC2100_SURROUND_INV:
+            return FIXED_FUNCTION_REC2100_SURROUND;
 
-    case FixedFunctionOpData::RGB_TO_HSV:
-    case FixedFunctionOpData::HSV_TO_RGB:
-        return FIXED_FUNCTION_RGB_TO_HSV;
+        case FixedFunctionOpData::RGB_TO_HSV:
+        case FixedFunctionOpData::HSV_TO_RGB:
+            return FIXED_FUNCTION_RGB_TO_HSV;
 
-    case FixedFunctionOpData::XYZ_TO_xyY:
-    case FixedFunctionOpData::xyY_TO_XYZ:
-        return FIXED_FUNCTION_XYZ_TO_xyY;
+        case FixedFunctionOpData::XYZ_TO_xyY:
+        case FixedFunctionOpData::xyY_TO_XYZ:
+            return FIXED_FUNCTION_XYZ_TO_xyY;
 
-    case FixedFunctionOpData::XYZ_TO_uvY:
-    case FixedFunctionOpData::uvY_TO_XYZ:
-        return FIXED_FUNCTION_XYZ_TO_uvY;
+        case FixedFunctionOpData::XYZ_TO_uvY:
+        case FixedFunctionOpData::uvY_TO_XYZ:
+            return FIXED_FUNCTION_XYZ_TO_uvY;
 
-    case FixedFunctionOpData::XYZ_TO_LUV:
-    case FixedFunctionOpData::LUV_TO_XYZ:
-        return FIXED_FUNCTION_XYZ_TO_LUV;
+        case FixedFunctionOpData::XYZ_TO_LUV:
+        case FixedFunctionOpData::LUV_TO_XYZ:
+            return FIXED_FUNCTION_XYZ_TO_LUV;
 
-    case FixedFunctionOpData::LIN_TO_PQ:
-    case FixedFunctionOpData::PQ_TO_LIN:
-        return FIXED_FUNCTION_LIN_TO_PQ;
-    
-    case FixedFunctionOpData::LIN_TO_GAMMA_LOG:
-    case FixedFunctionOpData::GAMMA_LOG_TO_LIN:
-        return FIXED_FUNCTION_LIN_TO_GAMMA_LOG;
+        case FixedFunctionOpData::LIN_TO_PQ:
+        case FixedFunctionOpData::PQ_TO_LIN:
+            return FIXED_FUNCTION_LIN_TO_PQ;
 
-    case FixedFunctionOpData::LIN_TO_DOUBLE_LOG:
-    case FixedFunctionOpData::DOUBLE_LOG_TO_LIN:
-        return FIXED_FUNCTION_LIN_TO_DOUBLE_LOG;
-    
-    case FixedFunctionOpData::RGB_TO_HSY_LIN:
-    case FixedFunctionOpData::HSY_LIN_TO_RGB:
-        return FIXED_FUNCTION_RGB_TO_HSY_LIN;
+        case FixedFunctionOpData::LIN_TO_GAMMA_LOG:
+        case FixedFunctionOpData::GAMMA_LOG_TO_LIN:
+            return FIXED_FUNCTION_LIN_TO_GAMMA_LOG;
 
-    case FixedFunctionOpData::RGB_TO_HSY_LOG:
-    case FixedFunctionOpData::HSY_LOG_TO_RGB:
-        return FIXED_FUNCTION_RGB_TO_HSY_LOG;
+        case FixedFunctionOpData::LIN_TO_DOUBLE_LOG:
+        case FixedFunctionOpData::DOUBLE_LOG_TO_LIN:
+            return FIXED_FUNCTION_LIN_TO_DOUBLE_LOG;
 
-    case FixedFunctionOpData::RGB_TO_HSY_VID:
-    case FixedFunctionOpData::HSY_VID_TO_RGB:
-        return FIXED_FUNCTION_RGB_TO_HSY_VID;
+        case FixedFunctionOpData::RGB_TO_HSY_LIN:
+        case FixedFunctionOpData::HSY_LIN_TO_RGB:
+            return FIXED_FUNCTION_RGB_TO_HSY_LIN;
 
+        case FixedFunctionOpData::RGB_TO_HSY_LOG:
+        case FixedFunctionOpData::HSY_LOG_TO_RGB:
+            return FIXED_FUNCTION_RGB_TO_HSY_LOG;
+
+        case FixedFunctionOpData::RGB_TO_HSY_VID:
+        case FixedFunctionOpData::HSY_VID_TO_RGB:
+            return FIXED_FUNCTION_RGB_TO_HSY_VID;
     }
 
     std::stringstream ss("Unknown FixedFunction style: ");
@@ -589,16 +593,16 @@ FixedFunctionStyle FixedFunctionOpData::ConvertStyle(FixedFunctionOpData::Style 
 }
 
 FixedFunctionOpData::FixedFunctionOpData(Style style)
-    :   OpData()
-    ,   m_style(style)
+    : OpData()
+    , m_style(style)
 {
     validate();
 }
 
 FixedFunctionOpData::FixedFunctionOpData(Style style, const Params & params)
-    :   OpData()
-    ,   m_style(style)
-    ,   m_params(params)
+    : OpData()
+    , m_style(style)
+    , m_params(params)
 {
     validate();
 }
@@ -609,21 +613,20 @@ FixedFunctionOpData::~FixedFunctionOpData()
 
 FixedFunctionOpDataRcPtr FixedFunctionOpData::clone() const
 {
-    auto clone = std::make_shared<FixedFunctionOpData>(getStyle(), getParams());
+    auto clone                 = std::make_shared<FixedFunctionOpData>(getStyle(), getParams());
     clone->getFormatMetadata() = getFormatMetadata();
     return clone;
 }
 
 void FixedFunctionOpData::validate() const
 {
-    if (m_style==ACES_GAMUT_COMP_13_FWD || m_style == ACES_GAMUT_COMP_13_INV)
+    if (m_style == ACES_GAMUT_COMP_13_FWD || m_style == ACES_GAMUT_COMP_13_INV)
     {
         if (m_params.size() != 7)
         {
             std::stringstream ss;
-            ss  << "The style '" << ConvertStyleToString(m_style, true)
-                << "' must have seven parameters but "
-                << m_params.size() << " found.";
+            ss << "The style '" << ConvertStyleToString(m_style, true)
+               << "' must have seven parameters but " << m_params.size() << " found.";
             throw Exception(ss.str().c_str());
         }
 
@@ -635,32 +638,33 @@ void FixedFunctionOpData::validate() const
         const double thr_yellow  = m_params[5];
         const double power       = m_params[6];
 
-        // Clamped to the smallest increment above 1 in half float precision for numerical stability.
+        // Clamped to the smallest increment above 1 in half float precision for numerical
+        // stability.
         static constexpr double lim_low_bound = 1.001;
         static constexpr double lim_hi_bound  = 65504.0;
-        check_param_bounds("lim_cyan",    lim_cyan,    lim_low_bound, lim_hi_bound);
+        check_param_bounds("lim_cyan", lim_cyan, lim_low_bound, lim_hi_bound);
         check_param_bounds("lim_magenta", lim_magenta, lim_low_bound, lim_hi_bound);
-        check_param_bounds("lim_yellow",  lim_yellow,  lim_low_bound, lim_hi_bound);
+        check_param_bounds("lim_yellow", lim_yellow, lim_low_bound, lim_hi_bound);
 
         static constexpr double thr_low_bound = 0.0;
-        // Clamped to the smallest increment below 1 in half float precision for numerical stability.
-        static constexpr double thr_hi_bound  = 0.9995;
-        check_param_bounds("thr_cyan",    thr_cyan,    thr_low_bound, thr_hi_bound);
+        // Clamped to the smallest increment below 1 in half float precision for numerical
+        // stability.
+        static constexpr double thr_hi_bound = 0.9995;
+        check_param_bounds("thr_cyan", thr_cyan, thr_low_bound, thr_hi_bound);
         check_param_bounds("thr_magenta", thr_magenta, thr_low_bound, thr_hi_bound);
-        check_param_bounds("thr_yellow",  thr_yellow,  thr_low_bound, thr_hi_bound);
+        check_param_bounds("thr_yellow", thr_yellow, thr_low_bound, thr_hi_bound);
 
         static constexpr double pwr_low_bound = 1.0;
         static constexpr double pwr_hi_bound  = 65504.0;
-        check_param_bounds("power",       power,       pwr_low_bound, pwr_hi_bound);
+        check_param_bounds("power", power, pwr_low_bound, pwr_hi_bound);
     }
     else if (m_style == ACES_OUTPUT_TRANSFORM_20_FWD || m_style == ACES_OUTPUT_TRANSFORM_20_INV)
     {
         if (m_params.size() != 9)
         {
             std::stringstream ss;
-            ss  << "The style '" << ConvertStyleToString(m_style, true)
-                << "' must have 9 parameters but "
-                << m_params.size() << " found.";
+            ss << "The style '" << ConvertStyleToString(m_style, true)
+               << "' must have 9 parameters but " << m_params.size() << " found.";
             throw Exception(ss.str().c_str());
         }
 
@@ -673,9 +677,8 @@ void FixedFunctionOpData::validate() const
         if (m_params.size() != 8)
         {
             std::stringstream ss;
-            ss  << "The style '" << ConvertStyleToString(m_style, true)
-                << "' must have 8 parameters but "
-                << m_params.size() << " found.";
+            ss << "The style '" << ConvertStyleToString(m_style, true)
+               << "' must have 8 parameters but " << m_params.size() << " found.";
             throw Exception(ss.str().c_str());
         }
     }
@@ -684,9 +687,8 @@ void FixedFunctionOpData::validate() const
         if (m_params.size() != 1)
         {
             std::stringstream ss;
-            ss  << "The style '" << ConvertStyleToString(m_style, true)
-                << "' must have 1 parameters but "
-                << m_params.size() << " found.";
+            ss << "The style '" << ConvertStyleToString(m_style, true)
+               << "' must have 1 parameters but " << m_params.size() << " found.";
             throw Exception(ss.str().c_str());
         }
 
@@ -699,9 +701,8 @@ void FixedFunctionOpData::validate() const
         if (m_params.size() != 9)
         {
             std::stringstream ss;
-            ss  << "The style '" << ConvertStyleToString(m_style, true)
-                << "' must have 9 parameters but "
-                << m_params.size() << " found.";
+            ss << "The style '" << ConvertStyleToString(m_style, true)
+               << "' must have 9 parameters but " << m_params.size() << " found.";
             throw Exception(ss.str().c_str());
         }
 
@@ -709,18 +710,17 @@ void FixedFunctionOpData::validate() const
         check_param_bounds("peak_luminance", peak_luminance, 1, 10000);
         check_param_no_frac("peak_luminance", peak_luminance);
     }
-    else if (m_style==REC2100_SURROUND_FWD || m_style == REC2100_SURROUND_INV)
+    else if (m_style == REC2100_SURROUND_FWD || m_style == REC2100_SURROUND_INV)
     {
         if (m_params.size() != 1)
         {
             std::stringstream ss;
-            ss  << "The style '" << ConvertStyleToString(m_style, true)
-                << "' must have one parameter but "
-                << m_params.size() << " found.";
+            ss << "The style '" << ConvertStyleToString(m_style, true)
+               << "' must have one parameter but " << m_params.size() << " found.";
             throw Exception(ss.str().c_str());
         }
 
-        const double p = m_params[0];
+        const double p         = m_params[0];
         const double low_bound = 0.01;
         const double hi_bound  = 100.;
 
@@ -743,14 +743,13 @@ void FixedFunctionOpData::validate() const
         {
             std::stringstream ss;
             ss << "The style '" << ConvertStyleToString(m_style, true)
-                << "' must have 13 parameters but "
-                << m_params.size() << " found.";
+               << "' must have 13 parameters but " << m_params.size() << " found.";
             throw Exception(ss.str().c_str());
         }
 
-        double base              = m_params[0];
-        double break1            = m_params[1];
-        double break2            = m_params[2];
+        double base   = m_params[0];
+        double break1 = m_params[1];
+        double break2 = m_params[2];
         // TODO: Add additional checks on the remaining params.
         // double logSeg1_logSlope  = m_params[3];
         // double logSeg1_logOff    = m_params[4];
@@ -764,7 +763,7 @@ void FixedFunctionOpData::validate() const
         // double linSeg_off        = m_params[12];
 
         // Check log base.
-        if(base <= 0.0)
+        if (base <= 0.0)
         {
             std::stringstream ss;
             ss << "Log base " << base << " is not greater than zero.";
@@ -772,10 +771,11 @@ void FixedFunctionOpData::validate() const
         }
 
         // Check break point order.
-        if(break1 > break2)
+        if (break1 > break2)
         {
             std::stringstream ss;
-            ss << "First break point " << break1 << " is larger than the second break point " << break2 << ".";
+            ss << "First break point " << break1 << " is larger than the second break point "
+               << break2 << ".";
             throw Exception(ss.str().c_str());
         }
     }
@@ -785,18 +785,17 @@ void FixedFunctionOpData::validate() const
         {
             std::stringstream ss;
             ss << "The style '" << ConvertStyleToString(m_style, true)
-                << "' must have 10 parameters but "
-                << m_params.size() << " found.";
+               << "' must have 10 parameters but " << m_params.size() << " found.";
             throw Exception(ss.str().c_str());
         }
 
-        double mirrorPt          = m_params[0];
-        double breakPt           = m_params[1];
-        double gammaSeg_power    = m_params[2];
+        double mirrorPt       = m_params[0];
+        double breakPt        = m_params[1];
+        double gammaSeg_power = m_params[2];
         // TODO: Add additional checks on the remaining params.
         // double gammaSeg_slope    = m_params[3];
         // double gammaSeg_off      = m_params[4];
-        double logSeg_base       = m_params[5];
+        double logSeg_base = m_params[5];
         // double logSeg_logSlope   = m_params[6];
         // double logSeg_logOff     = m_params[7];
         // double logSeg_linSlope   = m_params[8];
@@ -814,7 +813,8 @@ void FixedFunctionOpData::validate() const
         if (mirrorPt >= breakPt)
         {
             std::stringstream ss;
-            ss << "Mirror point " << mirrorPt << " is not smaller than the break point " << breakPt << ".";
+            ss << "Mirror point " << mirrorPt << " is not smaller than the break point " << breakPt
+               << ".";
             throw Exception(ss.str().c_str());
         }
 
@@ -828,12 +828,11 @@ void FixedFunctionOpData::validate() const
     }
     else
     {
-        if (m_params.size()!=0)
+        if (m_params.size() != 0)
         {
             std::stringstream ss;
-            ss  << "The style '" << ConvertStyleToString(m_style, true)
-                << "' must have zero parameters but "
-                << m_params.size() << " found.";
+            ss << "The style '" << ConvertStyleToString(m_style, true)
+               << "' must have zero parameters but " << m_params.size() << " found.";
             throw Exception(ss.str().c_str());
         }
     }
@@ -857,7 +856,7 @@ void FixedFunctionOpData::invert() noexcept
 {
     // NB: The following assumes the op has already been validated.
 
-    switch(getStyle())
+    switch (getStyle())
     {
         case ACES_RED_MOD_03_FWD:
         {
@@ -1099,51 +1098,51 @@ TransformDirection FixedFunctionOpData::getDirection() const noexcept
 {
     switch (m_style)
     {
-    case FixedFunctionOpData::ACES_RED_MOD_03_FWD:
-    case FixedFunctionOpData::ACES_RED_MOD_10_FWD:
-    case FixedFunctionOpData::ACES_GLOW_03_FWD:
-    case FixedFunctionOpData::ACES_GLOW_10_FWD:
-    case FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD:
-    case FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD:
-    case FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_FWD:
-    case FixedFunctionOpData::ACES_RGB_TO_JMh_20:
-    case FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_FWD:
-    case FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_FWD:
-    case FixedFunctionOpData::REC2100_SURROUND_FWD:
-    case FixedFunctionOpData::RGB_TO_HSV:
-    case FixedFunctionOpData::RGB_TO_HSY_LOG:
-    case FixedFunctionOpData::RGB_TO_HSY_LIN:
-    case FixedFunctionOpData::RGB_TO_HSY_VID:
-    case FixedFunctionOpData::XYZ_TO_xyY:
-    case FixedFunctionOpData::XYZ_TO_uvY:
-    case FixedFunctionOpData::XYZ_TO_LUV:
-    case FixedFunctionOpData::LIN_TO_PQ:
-    case FixedFunctionOpData::LIN_TO_GAMMA_LOG:
-    case FixedFunctionOpData::LIN_TO_DOUBLE_LOG:
-        return TRANSFORM_DIR_FORWARD;
+        case FixedFunctionOpData::ACES_RED_MOD_03_FWD:
+        case FixedFunctionOpData::ACES_RED_MOD_10_FWD:
+        case FixedFunctionOpData::ACES_GLOW_03_FWD:
+        case FixedFunctionOpData::ACES_GLOW_10_FWD:
+        case FixedFunctionOpData::ACES_DARK_TO_DIM_10_FWD:
+        case FixedFunctionOpData::ACES_GAMUT_COMP_13_FWD:
+        case FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_FWD:
+        case FixedFunctionOpData::ACES_RGB_TO_JMh_20:
+        case FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_FWD:
+        case FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_FWD:
+        case FixedFunctionOpData::REC2100_SURROUND_FWD:
+        case FixedFunctionOpData::RGB_TO_HSV:
+        case FixedFunctionOpData::RGB_TO_HSY_LOG:
+        case FixedFunctionOpData::RGB_TO_HSY_LIN:
+        case FixedFunctionOpData::RGB_TO_HSY_VID:
+        case FixedFunctionOpData::XYZ_TO_xyY:
+        case FixedFunctionOpData::XYZ_TO_uvY:
+        case FixedFunctionOpData::XYZ_TO_LUV:
+        case FixedFunctionOpData::LIN_TO_PQ:
+        case FixedFunctionOpData::LIN_TO_GAMMA_LOG:
+        case FixedFunctionOpData::LIN_TO_DOUBLE_LOG:
+            return TRANSFORM_DIR_FORWARD;
 
-    case FixedFunctionOpData::ACES_RED_MOD_03_INV:
-    case FixedFunctionOpData::ACES_RED_MOD_10_INV:
-    case FixedFunctionOpData::ACES_GLOW_03_INV:
-    case FixedFunctionOpData::ACES_GLOW_10_INV:
-    case FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV:
-    case FixedFunctionOpData::ACES_GAMUT_COMP_13_INV:
-    case FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_INV:
-    case FixedFunctionOpData::ACES_JMh_TO_RGB_20:
-    case FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_INV:
-    case FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_INV:
-    case FixedFunctionOpData::REC2100_SURROUND_INV:
-    case FixedFunctionOpData::HSV_TO_RGB:
-    case FixedFunctionOpData::HSY_LOG_TO_RGB:
-    case FixedFunctionOpData::HSY_LIN_TO_RGB:
-    case FixedFunctionOpData::HSY_VID_TO_RGB:
-    case FixedFunctionOpData::xyY_TO_XYZ:
-    case FixedFunctionOpData::uvY_TO_XYZ:
-    case FixedFunctionOpData::LUV_TO_XYZ:
-    case FixedFunctionOpData::PQ_TO_LIN:
-    case FixedFunctionOpData::GAMMA_LOG_TO_LIN:
-    case FixedFunctionOpData::DOUBLE_LOG_TO_LIN:
-        return TRANSFORM_DIR_INVERSE;
+        case FixedFunctionOpData::ACES_RED_MOD_03_INV:
+        case FixedFunctionOpData::ACES_RED_MOD_10_INV:
+        case FixedFunctionOpData::ACES_GLOW_03_INV:
+        case FixedFunctionOpData::ACES_GLOW_10_INV:
+        case FixedFunctionOpData::ACES_DARK_TO_DIM_10_INV:
+        case FixedFunctionOpData::ACES_GAMUT_COMP_13_INV:
+        case FixedFunctionOpData::ACES_OUTPUT_TRANSFORM_20_INV:
+        case FixedFunctionOpData::ACES_JMh_TO_RGB_20:
+        case FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_INV:
+        case FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_INV:
+        case FixedFunctionOpData::REC2100_SURROUND_INV:
+        case FixedFunctionOpData::HSV_TO_RGB:
+        case FixedFunctionOpData::HSY_LOG_TO_RGB:
+        case FixedFunctionOpData::HSY_LIN_TO_RGB:
+        case FixedFunctionOpData::HSY_VID_TO_RGB:
+        case FixedFunctionOpData::xyY_TO_XYZ:
+        case FixedFunctionOpData::uvY_TO_XYZ:
+        case FixedFunctionOpData::LUV_TO_XYZ:
+        case FixedFunctionOpData::PQ_TO_LIN:
+        case FixedFunctionOpData::GAMMA_LOG_TO_LIN:
+        case FixedFunctionOpData::DOUBLE_LOG_TO_LIN:
+            return TRANSFORM_DIR_INVERSE;
     }
     return TRANSFORM_DIR_FORWARD;
 }
@@ -1158,9 +1157,10 @@ void FixedFunctionOpData::setDirection(TransformDirection dir) noexcept
 
 bool FixedFunctionOpData::equals(const OpData & other) const
 {
-    if (!OpData::equals(other)) return false;
+    if (!OpData::equals(other))
+        return false;
 
-    const FixedFunctionOpData* fop = static_cast<const FixedFunctionOpData*>(&other);
+    const FixedFunctionOpData * fop = static_cast<const FixedFunctionOpData *>(&other);
 
     return getStyle() == fop->getStyle() && getParams() == fop->getParams();
 }

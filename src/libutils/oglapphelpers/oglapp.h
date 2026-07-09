@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_OGLAPP_H
 #define INCLUDED_OCIO_OGLAPP_H
-
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -55,25 +53,25 @@ scrApp->readImage(imageBufferOut.data());
 class OglApp : public GraphicalApp
 {
 public:
-    OglApp() = delete;
-    OglApp(const OglApp&) = delete;
-    OglApp& operator=(const OglApp&) = delete;
+    OglApp()                           = delete;
+    OglApp(const OglApp &)             = delete;
+    OglApp & operator=(const OglApp &) = delete;
 
     // Initialize the app with given window name & client rect size.
     OglApp(int winWidth, int winHeight);
 
     virtual ~OglApp();
 
-    virtual void initImage(int imageWidth, int imageHeight,
-        Components comp, const float* imageBuffer) override;
+    virtual void
+    initImage(int imageWidth, int imageHeight, Components comp, const float * imageBuffer) override;
 
-    virtual void updateImage(const float* imageBuffer) override;
+    virtual void updateImage(const float * imageBuffer) override;
 
     // Create frame and rendering buffers. Needed if readImage will be used.
     void createBuffers() override;
 
     // Set the shader code.
-    virtual void setShader(GpuShaderDescRcPtr& shaderDesc) override;
+    virtual void setShader(GpuShaderDescRcPtr & shaderDesc) override;
 
     // Update the size of the buffer of the OpenGL viewport that will be used to process the image
     // (it does not modify the UI).  To be called at least one time. Use image size if we want to
@@ -87,14 +85,14 @@ public:
 
     // Read the image from the rendering buffer. It is not meant to be used by interactive
     // applications used to display the image.
-    virtual void readImage(float* imageBuffer) override;
+    virtual void readImage(float * imageBuffer) override;
 
     // Helper to print graphics info.
     void virtual printGraphicsInfo() const noexcept override;
 
     // Return a pointer of either ScreenOglApp or HeadlessOglApp depending on the
     // OCIO_HEADLESS_ENABLED preprocessor.
-    static GraphicalAppRcPtr CreateApp(const char* winTitle, int winWidth, int winHeight);
+    static GraphicalAppRcPtr CreateApp(const char * winTitle, int winWidth, int winHeight);
 
 protected:
     // Window or output image size (set using reshape).
@@ -102,34 +100,34 @@ protected:
     // when processed image is read from the viewport it matches the size of the original image.
     // When an interactive app is just displaying an image, this should equal the viewport size
     // and the image will be scaled to fit so there is no cropping.
-    int m_viewportWidth{ 0 };
-    int m_viewportHeight{ 0 };
+    int m_viewportWidth{0};
+    int m_viewportHeight{0};
 
     // Initialize the OpenGL engine, and set up GLEW if needed.
     void setupCommon();
-    
+
     void setImageDimensions(int imgWidth, int imgHeight, Components comp);
     Components getImageComponents() const { return m_components; }
-    
+
     OpenGLBuilderRcPtr m_oglBuilder;
-    
+
 private:
     // Keep track of the original image ratio.
-    float m_imageAspect{ 1.0f };
+    float m_imageAspect{1.0f};
 
     // Image information.
-    int m_imageWidth{ 0 };
-    int m_imageHeight{ 0 };
-    Components m_components{ COMPONENTS_RGBA };
+    int m_imageWidth{0};
+    int m_imageHeight{0};
+    Components m_components{COMPONENTS_RGBA};
 
     unsigned int m_imageTexID;
 };
 
-class ScreenOglApp: public OglApp
+class ScreenOglApp : public OglApp
 {
 public:
-    ScreenOglApp() = delete;
-    ScreenOglApp(const ScreenOglApp &) = delete;
+    ScreenOglApp()                                 = delete;
+    ScreenOglApp(const ScreenOglApp &)             = delete;
     ScreenOglApp & operator=(const ScreenOglApp &) = delete;
 
     ScreenOglApp(const char * winTitle, int winWidth, int winHeight);
@@ -141,14 +139,14 @@ public:
 
 private:
     // Window identifier returned by glutCreateWindow.
-    int m_mainWin{ 0 };
+    int m_mainWin{0};
 };
 
 #ifdef OCIO_HEADLESS_ENABLED
 
 #include <EGL/egl.h>
 
-class HeadlessOglApp: public OglApp
+class HeadlessOglApp : public OglApp
 {
 public:
     HeadlessOglApp() = delete;
@@ -165,8 +163,8 @@ protected:
     void printEGLInfo() const noexcept;
 
 private:
-    EGLint m_pixBufferWidth{ 0 };
-    EGLint m_pixBufferHeight{ 0 };
+    EGLint m_pixBufferWidth{0};
+    EGLint m_pixBufferHeight{0};
     std::vector<EGLint> m_pixBufferAttribs;
 
     EGLDisplay m_eglDisplay;
@@ -182,4 +180,3 @@ private:
 } // namespace OCIO_NAMESPACE
 
 #endif // INCLUDED_OCIO_OGLAPP_H
-

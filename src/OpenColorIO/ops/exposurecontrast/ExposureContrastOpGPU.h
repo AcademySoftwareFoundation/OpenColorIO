@@ -9,12 +9,12 @@
 #include "GpuShaderUtils.h"
 #include "ops/exposurecontrast/ExposureContrastOpData.h"
 
-
 namespace OCIO_NAMESPACE
 {
 
-void GetExposureContrastGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
-                                         ConstExposureContrastOpDataRcPtr & ec);
+void GetExposureContrastGPUShaderProgram(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    ConstExposureContrastOpDataRcPtr & ec);
 
 } // namespace OCIO_NAMESPACE
 

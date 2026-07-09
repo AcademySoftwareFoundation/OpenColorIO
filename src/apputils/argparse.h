@@ -29,10 +29,8 @@
   (This is the Modified BSD License)
 */
 
-
 /// \file
 /// \brief Simple parsing of program command-line arguments.
-
 
 #ifndef INCLUDED_OCIO_ARGPARSE_H
 #define INCLUDED_OCIO_ARGPARSE_H
@@ -40,17 +38,15 @@
 #include <string>
 #include <vector>
 
-#ifndef OPENCOLORIO_PRINTF_ARGS  /* See comments in strutil.h */
-#   ifndef __GNUC__
-#       define __attribute__(x)
-#   endif
-#   define OPENCOLORIO_PRINTF_ARGS(fmtarg_pos, vararg_pos) \
-        __attribute__ ((format (printf, fmtarg_pos, vararg_pos) ))
+#ifndef OPENCOLORIO_PRINTF_ARGS /* See comments in strutil.h */
+#ifndef __GNUC__
+#define __attribute__(x)
+#endif
+#define OPENCOLORIO_PRINTF_ARGS(fmtarg_pos, vararg_pos)                                            \
+    __attribute__((format(printf, fmtarg_pos, vararg_pos)))
 #endif
 
-class ArgOption;   // Forward declaration
-
-
+class ArgOption; // Forward declaration
 
 /////////////////////////////////////////////////////////////////////////////
 ///
@@ -69,7 +65,7 @@ class ArgOption;   // Forward declaration
 ///            filenames.push_back (argv[i]);
 ///        return 0;
 ///    }
-/// 
+///
 ///    ...
 ///
 ///    ArgParse ap;
@@ -103,7 +99,7 @@ class ArgOption;   // Forward declaration
 ///    - \%F - 64bit float (double)
 ///    - \%s - std::string
 ///    - \%L - std::vector<std::string>  (takes 1 arg, appends to list)
-///    - \%* - catch all non-options and pass individually as an (argc,argv) 
+///    - \%* - catch all non-options and pass individually as an (argc,argv)
 ///            sublist to a callback, each immediately after it's found
 ///
 /// There are several special format tokens:
@@ -119,14 +115,14 @@ class ArgOption;   // Forward declaration
 ///
 /////////////////////////////////////////////////////////////////////////////
 
-
-class ArgParse {
+class ArgParse
+{
 public:
-    ArgParse ();
-    ArgParse (const ArgParse & ) = delete;
-    ArgParse & operator= (const ArgParse & ) = delete;
-    ArgParse (int argc, const char **argv);
-    ~ArgParse ();
+    ArgParse();
+    ArgParse(const ArgParse &)             = delete;
+    ArgParse & operator=(const ArgParse &) = delete;
+    ArgParse(int argc, const char ** argv);
+    ~ArgParse();
 
     /// Declare the command line options.  After the introductory
     /// message, parameters are a set of format strings and variable
@@ -135,41 +131,41 @@ public:
     /// (eg. "-option %d %f %s").  The format string is followed by a
     /// list of pointers to the argument variables, just like scanf.  A
     /// NULL terminates the list.
-    int options (const char *intro, ...);
+    int options(const char * intro, ...);
 
     /// With the options already set up, parse the command line.
     /// Return 0 if ok, -1 if it's a malformed command line.
-    int parse (int argc, const char **argv);
+    int parse(int argc, const char ** argv);
 
     /// Return any error messages generated during the course of parse()
     /// (and clear any error flags).  If no error has occurred since the
     /// last time geterror() was called, it will return an empty string.
-    std::string geterror () const;
+    std::string geterror() const;
 
     /// Deprecated
     ///
-    std::string error_message () const { return geterror (); }
+    std::string error_message() const { return geterror(); }
 
     /// Print the usage message to stdout.  The usage message is
     /// generated and formatted automatically based on the command and
     /// description arguments passed to parse().
-    void usage () const;
+    void usage() const;
 
     /// Return the entire command-line as one string.
     ///
-    std::string command_line () const;
+    std::string command_line() const;
 
 private:
-    int m_argc;                           // a copy of the command line argc
-    const char **m_argv;                  // a copy of the command line argv
-    mutable std::string m_errmessage;     // error message
-    ArgOption *m_global;                  // option for extra cmd line arguments
+    int m_argc;                       // a copy of the command line argc
+    const char ** m_argv;             // a copy of the command line argv
+    mutable std::string m_errmessage; // error message
+    ArgOption * m_global;             // option for extra cmd line arguments
     std::string m_intro;
     std::vector<ArgOption *> m_option;
 
-    ArgOption *find_option(const char *name);
-    void error (const char *format, ...) OPENCOLORIO_PRINTF_ARGS(2,3);
-    int found (const char *option);      // number of times option was parsed
+    ArgOption * find_option(const char * name);
+    void error(const char * format, ...) OPENCOLORIO_PRINTF_ARGS(2, 3);
+    int found(const char * option); // number of times option was parsed
 };
 
 #endif // INCLUDED_OCIO_ARGPARSE_H

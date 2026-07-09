@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "BitDepthUtils.h"
@@ -17,7 +16,7 @@ namespace OCIO_NAMESPACE
 {
 double GetBitDepthMaxValue(BitDepth in)
 {
-    switch(in)
+    switch (in)
     {
         case BIT_DEPTH_UINT8:
             return (double)BitDepthInfo<BIT_DEPTH_UINT8>::maxValue;
@@ -48,13 +47,12 @@ double GetBitDepthMaxValue(BitDepth in)
 namespace
 {
 
-template<BitDepth A, BitDepth B>
-constexpr unsigned MiddleMaxValue()
+template <BitDepth A, BitDepth B> constexpr unsigned MiddleMaxValue()
 {
     return (BitDepthInfo<A>::maxValue + BitDepthInfo<B>::maxValue) / 2;
 }
 
-}
+} // namespace
 
 // For formats that do not explicitly identify the intended bit-depth scaling,
 // we must infer it based on the LUT values. However LUTs sometimes contain
@@ -86,10 +84,9 @@ BitDepth GetBitdepthFromMaxValue(unsigned maxValue)
     return BIT_DEPTH_UINT16;
 }
 
-
 bool IsFloatBitDepth(BitDepth in)
 {
-    switch(in)
+    switch (in)
     {
         case BIT_DEPTH_UINT8:
             return BitDepthInfo<BIT_DEPTH_UINT8>::isFloat;
@@ -117,10 +114,9 @@ bool IsFloatBitDepth(BitDepth in)
     }
 }
 
-
 unsigned GetChannelSizeInBytes(BitDepth in)
 {
-    switch(in)
+    switch (in)
     {
         case BIT_DEPTH_UINT8:
             return sizeof(BitDepthInfo<BIT_DEPTH_UINT8>::Type);
@@ -148,4 +144,3 @@ unsigned GetChannelSizeInBytes(BitDepth in)
 }
 
 } // namespace OCIO_NAMESPACE
-

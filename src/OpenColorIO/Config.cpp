@@ -1,27 +1,24 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
+#include <functional>
+#include <regex>
 #include <set>
 #include <sstream>
-#include <fstream>
 #include <utility>
 #include <vector>
-#include <regex>
-#include <functional>
-#include <filesystem>
 
 #include <pystring.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "builtinconfigs/BuiltinConfigRegistry.h"
 #include "ConfigUtils.h"
 #include "ContextVariableUtils.h"
 #include "Display.h"
-#include "fileformats/FileFormatICC.h"
 #include "FileRules.h"
 #include "HashUtils.h"
 #include "Logging.h"
@@ -37,10 +34,12 @@
 #include "Platform.h"
 #include "PrivateTypes.h"
 #include "Processor.h"
+#include "SystemMonitor.h"
+#include "ViewingRules.h"
+#include "builtinconfigs/BuiltinConfigRegistry.h"
+#include "fileformats/FileFormatICC.h"
 #include "transforms/FileTransform.h"
 #include "utils/StringUtils.h"
-#include "ViewingRules.h"
-#include "SystemMonitor.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -53,15 +52,15 @@ const char * OCIO_OPTIMIZATION_FLAGS_ENVVAR   = "OCIO_OPTIMIZATION_FLAGS";
 const char * OCIO_USER_CATEGORIES_ENVVAR      = "OCIO_USER_CATEGORIES";
 
 // Default filename (with extension) of a config and archived config.
-const char * OCIO_CONFIG_DEFAULT_NAME         = "config";
-const char * OCIO_CONFIG_DEFAULT_FILE_EXT     = ".ocio";
-const char * OCIO_CONFIG_ARCHIVE_FILE_EXT     = ".ocioz";
+const char * OCIO_CONFIG_DEFAULT_NAME     = "config";
+const char * OCIO_CONFIG_DEFAULT_FILE_EXT = ".ocio";
+const char * OCIO_CONFIG_ARCHIVE_FILE_EXT = ".ocioz";
 
 // A shared view using this for the color space name will use a display color space that
 // has the same name as the display the shared view is used by.
-const char * OCIO_VIEW_USE_DISPLAY_NAME       = "<USE_DISPLAY_NAME>";
+const char * OCIO_VIEW_USE_DISPLAY_NAME = "<USE_DISPLAY_NAME>";
 
-const char * OCIO_BUILTIN_URI_PREFIX          = "ocio://";
+const char * OCIO_BUILTIN_URI_PREFIX = "ocio://";
 
 namespace
 {
@@ -71,29 +70,27 @@ constexpr double DEFAULT_LUMA_COEFF_R = 0.2126;
 constexpr double DEFAULT_LUMA_COEFF_G = 0.7152;
 constexpr double DEFAULT_LUMA_COEFF_B = 0.0722;
 
+constexpr char INTERNAL_RAW_PROFILE[]
+    = "ocio_profile_version: 2\n"
+      "strictparsing: false\n"
+      "roles:\n"
+      "  default: raw\n"
+      "file_rules:\n"
+      "  - !<Rule> {name: Default, colorspace: default}\n"
+      "displays:\n"
+      "  sRGB:\n"
+      "  - !<View> {name: Raw, colorspace: raw}\n"
+      "colorspaces:\n"
+      "  - !<ColorSpace>\n"
+      "      name: raw\n"
+      "      family: raw\n"
+      "      equalitygroup:\n"
+      "      bitdepth: 32f\n"
+      "      isdata: true\n"
+      "      allocation: uniform\n"
+      "      description: 'A raw color space. Conversions to and from this space are no-ops.'\n";
 
-constexpr char INTERNAL_RAW_PROFILE[] =
-    "ocio_profile_version: 2\n"
-    "strictparsing: false\n"
-    "roles:\n"
-    "  default: raw\n"
-    "file_rules:\n"
-    "  - !<Rule> {name: Default, colorspace: default}\n"
-    "displays:\n"
-    "  sRGB:\n"
-    "  - !<View> {name: Raw, colorspace: raw}\n"
-    "colorspaces:\n"
-    "  - !<ColorSpace>\n"
-    "      name: raw\n"
-    "      family: raw\n"
-    "      equalitygroup:\n"
-    "      bitdepth: 32f\n"
-    "      isdata: true\n"
-    "      allocation: uniform\n"
-    "      description: 'A raw color space. Conversions to and from this space are no-ops.'\n";
-
-} // anon.
-
+} // namespace
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -111,13 +108,13 @@ namespace
 {
 ConstConfigRcPtr g_currentConfig;
 Mutex g_currentConfigLock;
-}
+} // namespace
 
 ConstConfigRcPtr GetCurrentConfig()
 {
     AutoMutex lock(g_currentConfigLock);
 
-    if(!g_currentConfig)
+    if (!g_currentConfig)
     {
         g_currentConfig = Config::CreateFromEnv();
     }
@@ -136,36 +133,37 @@ namespace
 {
 
 // Environment
-const char* LookupEnvironment(const StringMap & env, const std::string & name)
+const char * LookupEnvironment(const StringMap & env, const std::string & name)
 {
     StringMap::const_iterator iter = env.find(name);
-    if(iter == env.end()) return "";
+    if (iter == env.end())
+        return "";
     return iter->second.c_str();
 }
 
 // Roles
 // (lower case role name: colorspace name)
-const char* LookupRole(const StringMap & roles, const std::string & rolename)
+const char * LookupRole(const StringMap & roles, const std::string & rolename)
 {
     StringMap::const_iterator iter = roles.find(StringUtils::Lower(rolename));
-    if(iter == roles.end()) return "";
+    if (iter == roles.end())
+        return "";
     return iter->second.c_str();
 }
 
 void GetFileReferences(std::set<std::string> & files, const ConstTransformRcPtr & transform)
 {
-    if(!transform) return;
+    if (!transform)
+        return;
 
-    if(ConstGroupTransformRcPtr groupTransform = \
-        DynamicPtrCast<const GroupTransform>(transform))
+    if (ConstGroupTransformRcPtr groupTransform = DynamicPtrCast<const GroupTransform>(transform))
     {
-        for(int i=0; i<groupTransform->getNumTransforms(); ++i)
+        for (int i = 0; i < groupTransform->getNumTransforms(); ++i)
         {
             GetFileReferences(files, groupTransform->getTransform(i));
         }
     }
-    else if(ConstFileTransformRcPtr fileTransform = \
-        DynamicPtrCast<const FileTransform>(transform))
+    else if (ConstFileTransformRcPtr fileTransform = DynamicPtrCast<const FileTransform>(transform))
     {
         files.insert(fileTransform->getSrc());
     }
@@ -174,33 +172,35 @@ void GetFileReferences(std::set<std::string> & files, const ConstTransformRcPtr 
 // Return the list of all color spaces referenced by the transform (including all sub-transforms in
 // a group). All legal context variables are expanded, so if any are remaining, the caller may want
 // to throw.
-void GetColorSpaceReferences(std::set<std::string> & colorSpaceNames,
-                             const ConstTransformRcPtr & transform,
-                             const ConstContextRcPtr & context)
+void GetColorSpaceReferences(
+    std::set<std::string> & colorSpaceNames,
+    const ConstTransformRcPtr & transform,
+    const ConstContextRcPtr & context)
 {
-    if(!transform) return;
+    if (!transform)
+        return;
 
-    if(ConstGroupTransformRcPtr groupTransform = \
-        DynamicPtrCast<const GroupTransform>(transform))
+    if (ConstGroupTransformRcPtr groupTransform = DynamicPtrCast<const GroupTransform>(transform))
     {
-        for(int i=0; i<groupTransform->getNumTransforms(); ++i)
+        for (int i = 0; i < groupTransform->getNumTransforms(); ++i)
         {
             GetColorSpaceReferences(colorSpaceNames, groupTransform->getTransform(i), context);
         }
     }
-    else if(ConstColorSpaceTransformRcPtr colorSpaceTransform = \
-        DynamicPtrCast<const ColorSpaceTransform>(transform))
+    else if (
+        ConstColorSpaceTransformRcPtr colorSpaceTransform
+        = DynamicPtrCast<const ColorSpaceTransform>(transform))
     {
         colorSpaceNames.insert(context->resolveStringVar(colorSpaceTransform->getSrc()));
         colorSpaceNames.insert(context->resolveStringVar(colorSpaceTransform->getDst()));
     }
-    else if(ConstDisplayViewTransformRcPtr displayViewTransform = \
-        DynamicPtrCast<const DisplayViewTransform>(transform))
+    else if (
+        ConstDisplayViewTransformRcPtr displayViewTransform
+        = DynamicPtrCast<const DisplayViewTransform>(transform))
     {
         colorSpaceNames.insert(displayViewTransform->getSrc());
     }
-    else if(ConstLookTransformRcPtr lookTransform = \
-        DynamicPtrCast<const LookTransform>(transform))
+    else if (ConstLookTransformRcPtr lookTransform = DynamicPtrCast<const LookTransform>(transform))
     {
         colorSpaceNames.insert(lookTransform->getSrc());
         colorSpaceNames.insert(lookTransform->getDst());
@@ -244,12 +244,13 @@ std::ostringstream GetDisplayViewPrefixErrorMsg(const std::string & display, con
 }
 
 static constexpr unsigned FirstSupportedMajorVersion = 1;
-static constexpr unsigned LastSupportedMajorVersion = OCIO_VERSION_MAJOR;
+static constexpr unsigned LastSupportedMajorVersion  = OCIO_VERSION_MAJOR;
 
 // For each major version keep the most recent minor.
-static const unsigned int LastSupportedMinorVersion[] = {0, // Version 1
-                                                         5  // Version 2
-                                                         };
+static const unsigned int LastSupportedMinorVersion[] = {
+    0, // Version 1
+    5  // Version 2
+};
 
 } // namespace
 
@@ -269,7 +270,7 @@ public:
     ContextRcPtr m_context;
     std::string m_name;
     static constexpr char DefaultFamilySeparator = '/';
-    char m_familySeparator = DefaultFamilySeparator;
+    char m_familySeparator                       = DefaultFamilySeparator;
     std::string m_description;
 
     // The final list of inactive color spaces is built from several inputs.
@@ -279,8 +280,8 @@ public:
     //
     // Refer to Config::Impl::refreshActiveColorSpaces() to have the implementation details.
 
-    ColorSpaceSetRcPtr m_allColorSpaces; // All the color spaces (i.e. no filtering).
-    StringUtils::StringVec m_activeColorSpaceNames; // Active color space names.
+    ColorSpaceSetRcPtr m_allColorSpaces;              // All the color spaces (i.e. no filtering).
+    StringUtils::StringVec m_activeColorSpaceNames;   // Active color space names.
     StringUtils::StringVec m_inactiveColorSpaceNames; // inactive color space names.
 
     // Inactive color space or named transform filter from API request.
@@ -330,18 +331,18 @@ public:
     mutable std::string m_cacheidnocontext;
     FileRulesRcPtr m_fileRules;
 
-    mutable ProcessorCacheFlags m_cacheFlags { PROCESSOR_CACHE_DEFAULT };
+    mutable ProcessorCacheFlags m_cacheFlags{PROCESSOR_CACHE_DEFAULT};
     mutable ProcessorCache<std::size_t, ProcessorRcPtr> m_processorCache;
 
-    Impl() :
-        m_majorVersion(LastSupportedMajorVersion),
-        m_minorVersion(LastSupportedMinorVersion[LastSupportedMajorVersion - 1]),
-        m_context(Context::Create()),
-        m_allColorSpaces(ColorSpaceSet::Create()),
-        m_viewingRules(ViewingRules::Create()),
-        m_strictParsing(true),
-        m_validation(VALIDATION_UNKNOWN),
-        m_fileRules(FileRules::Create())
+    Impl()
+        : m_majorVersion(LastSupportedMajorVersion)
+        , m_minorVersion(LastSupportedMinorVersion[LastSupportedMajorVersion - 1])
+        , m_context(Context::Create())
+        , m_allColorSpaces(ColorSpaceSet::Create())
+        , m_viewingRules(ViewingRules::Create())
+        , m_strictParsing(true)
+        , m_validation(VALIDATION_UNKNOWN)
+        , m_fileRules(FileRules::Create())
     {
         std::string activeDisplays;
         Platform::Getenv(OCIO_ACTIVE_DISPLAYS_ENVVAR, activeDisplays);
@@ -367,31 +368,32 @@ public:
         Platform::Getenv(OCIO_INACTIVE_COLORSPACES_ENVVAR, m_inactiveColorSpaceNamesEnv);
         m_inactiveColorSpaceNamesEnv = StringUtils::Trim(m_inactiveColorSpaceNamesEnv);
 
-        m_processorCache.enable((m_cacheFlags & PROCESSOR_CACHE_ENABLED) == PROCESSOR_CACHE_ENABLED);
+        m_processorCache.enable(
+            (m_cacheFlags & PROCESSOR_CACHE_ENABLED) == PROCESSOR_CACHE_ENABLED);
 
         // This is used to allow the YAML writer to not save any virtual displays that were
         // instantiated.
         m_virtualDisplay.m_temporary = true;
     }
 
-    ~Impl() = default;
-    Impl(const Impl&) = delete;
+    ~Impl()            = default;
+    Impl(const Impl &) = delete;
 
-    Impl& operator= (const Impl & rhs)
+    Impl & operator=(const Impl & rhs)
     {
-        if(this!=&rhs)
+        if (this != &rhs)
         {
             m_majorVersion = rhs.m_majorVersion;
             m_minorVersion = rhs.m_minorVersion;
 
-            m_env = rhs.m_env;
-            m_context = rhs.m_context->createEditableCopy();
-            m_name = rhs.m_name;
+            m_env             = rhs.m_env;
+            m_context         = rhs.m_context->createEditableCopy();
+            m_name            = rhs.m_name;
             m_familySeparator = rhs.m_familySeparator;
-            m_description = rhs.m_description;
+            m_description     = rhs.m_description;
 
             // Deep copy the colorspaces.
-            m_allColorSpaces = rhs.m_allColorSpaces->createEditableCopy();
+            m_allColorSpaces              = rhs.m_allColorSpaces->createEditableCopy();
             m_activeColorSpaceNames       = rhs.m_activeColorSpaceNames;
             m_inactiveColorSpaceNames     = rhs.m_inactiveColorSpaceNames;
             m_inactiveColorSpaceNamesConf = rhs.m_inactiveColorSpaceNamesConf;
@@ -415,18 +417,18 @@ public:
             {
                 m_allNamedTransforms.push_back(nt->createEditableCopy());
             }
-            m_activeNamedTransformNames = rhs.m_activeNamedTransformNames;
+            m_activeNamedTransformNames   = rhs.m_activeNamedTransformNames;
             m_inactiveNamedTransformNames = rhs.m_inactiveNamedTransformNames;
 
-            m_displays = rhs.m_displays;
-            m_activeDisplays = rhs.m_activeDisplays;
-            m_activeViews = rhs.m_activeViews;
-            m_activeViewsEnvOverride = rhs.m_activeViewsEnvOverride;
+            m_displays                  = rhs.m_displays;
+            m_activeDisplays            = rhs.m_activeDisplays;
+            m_activeViews               = rhs.m_activeViews;
+            m_activeViewsEnvOverride    = rhs.m_activeViewsEnvOverride;
             m_activeDisplaysEnvOverride = rhs.m_activeDisplaysEnvOverride;
-            m_activeDisplaysStr = rhs.m_activeDisplaysStr;
-            m_displayCache = rhs.m_displayCache;
-            m_viewingRules = rhs.m_viewingRules->createEditableCopy();
-            m_sharedViews = rhs.m_sharedViews;
+            m_activeDisplaysStr         = rhs.m_activeDisplaysStr;
+            m_displayCache              = rhs.m_displayCache;
+            m_viewingRules              = rhs.m_viewingRules->createEditableCopy();
+            m_sharedViews               = rhs.m_sharedViews;
 
             m_virtualDisplay = rhs.m_virtualDisplay;
 
@@ -438,21 +440,22 @@ public:
                 m_viewTransforms.push_back(vt->createEditableCopy());
             }
             m_defaultViewTransform = rhs.m_defaultViewTransform;
-            m_defaultLumaCoefs = rhs.m_defaultLumaCoefs;
-            m_strictParsing = rhs.m_strictParsing;
+            m_defaultLumaCoefs     = rhs.m_defaultLumaCoefs;
+            m_strictParsing        = rhs.m_strictParsing;
 
-            m_validation = rhs.m_validation;
+            m_validation     = rhs.m_validation;
             m_validationtext = rhs.m_validationtext;
 
-            m_cacheids = rhs.m_cacheids;
+            m_cacheids         = rhs.m_cacheids;
             m_cacheidnocontext = rhs.m_cacheidnocontext;
 
             m_fileRules = rhs.m_fileRules->createEditableCopy();
-            
+
             m_cacheFlags = rhs.m_cacheFlags;
 
             m_processorCache.clear();
-            m_processorCache.enable((m_cacheFlags & PROCESSOR_CACHE_ENABLED) == PROCESSOR_CACHE_ENABLED);
+            m_processorCache.enable(
+                (m_cacheFlags & PROCESSOR_CACHE_ENABLED) == PROCESSOR_CACHE_ENABLED);
         }
         return *this;
     }
@@ -465,7 +468,7 @@ public:
         {
             // Check to see if the name is a role.
             const char * csname = LookupRole(m_roles, name);
-            cs = m_allColorSpaces->getColorSpace(csname);
+            cs                  = m_allColorSpaces->getColorSpace(csname);
         }
 
         return cs;
@@ -520,7 +523,7 @@ public:
 
     enum InactiveType
     {
-        INACTIVE_COLORSPACE =0,
+        INACTIVE_COLORSPACE = 0,
         INACTIVE_NAMEDTRANSFORM,
         INACTIVE_ALL
     };
@@ -590,11 +593,12 @@ public:
     static ConstConfigRcPtr Read(std::istream & istream, ConfigIOProxyRcPtr ciop);
 
     // Validate view object that can be a config defined shared view or a display-defined view.
-    void validateView(const std::string & display, const View & view, bool checkUseDisplayName) const
+    void validateView(const std::string & display, const View & view, bool checkUseDisplayName)
+        const
     {
         if (view.m_name.empty())
         {
-            std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
+            std::ostringstream os{GetDisplayViewPrefixErrorMsg(display, view)};
             m_validationtext = os.str();
             throw Exception(m_validationtext.c_str());
         }
@@ -604,7 +608,7 @@ public:
         // Validate color space name is not empty.
         if (view.m_colorspace.empty())
         {
-            std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
+            std::ostringstream os{GetDisplayViewPrefixErrorMsg(display, view)};
             os << "does not refer to a color space.";
             m_validationtext = os.str();
             throw Exception(m_validationtext.c_str());
@@ -615,7 +619,7 @@ public:
             // USE_DISPLAY_NAME can only be used by shared views.
             if (!sharedViewWithViewTransform && view.useDisplayNameForColorspace())
             {
-                std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
+                std::ostringstream os{GetDisplayViewPrefixErrorMsg(display, view)};
                 os << "can not use '" << OCIO_VIEW_USE_DISPLAY_NAME;
                 os << "' keyword for the color space name.";
                 m_validationtext = os.str();
@@ -624,11 +628,10 @@ public:
         }
 
         // If USE_DISPLAY_NAME is not present, a valid color space must be specified.
-        if (!view.useDisplayNameForColorspace() &&
-            !hasColorSpace(view.m_colorspace.c_str()) &&
-            !getNamedTransform(view.m_colorspace.c_str()))
+        if (!view.useDisplayNameForColorspace() && !hasColorSpace(view.m_colorspace.c_str())
+            && !getNamedTransform(view.m_colorspace.c_str()))
         {
-            std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
+            std::ostringstream os{GetDisplayViewPrefixErrorMsg(display, view)};
             os << "that refers to a color space or a named transform, '" << view.m_colorspace;
             os << "', which is not defined.";
             m_validationtext = os.str();
@@ -643,7 +646,7 @@ public:
             {
                 if (!getViewTransform(view.m_viewTransform.c_str()))
                 {
-                    std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
+                    std::ostringstream os{GetDisplayViewPrefixErrorMsg(display, view)};
                     os << "that refers to a view transform, '" << view.m_viewTransform << "', ";
                     os << "which is neither a view transform nor a named transform.";
                     m_validationtext = os.str();
@@ -658,7 +661,7 @@ public:
             auto cs = getColorSpace(displayCS);
             if (cs && cs->getReferenceSpaceType() != REFERENCE_SPACE_DISPLAY)
             {
-                std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
+                std::ostringstream os{GetDisplayViewPrefixErrorMsg(display, view)};
                 os << "refers to a color space, '" << std::string(displayCS) << "', ";
                 os << "that is not a display-referred color space.";
                 m_validationtext = os.str();
@@ -678,7 +681,7 @@ public:
 
                 if (!look.empty() && !getLook(look.c_str()))
                 {
-                    std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
+                    std::ostringstream os{GetDisplayViewPrefixErrorMsg(display, view)};
                     os << "refers to a look, '" << look << "', ";
                     os << "which is not defined.";
                     m_validationtext = os.str();
@@ -689,10 +692,10 @@ public:
 
         if (!view.m_rule.empty())
         {
-            size_t ruleIndex{ 0 };
+            size_t ruleIndex{0};
             if (!FindRule(m_viewingRules, view.m_rule, ruleIndex))
             {
-                std::ostringstream os{ GetDisplayViewPrefixErrorMsg(display, view) };
+                std::ostringstream os{GetDisplayViewPrefixErrorMsg(display, view)};
                 os << "refers to a viewing rule, '" << view.m_rule << "', ";
                 os << "which is not defined.";
                 m_validationtext = os.str();
@@ -702,10 +705,11 @@ public:
     }
 
     // Check a shared view used in a display. View itself has already been checked.
-    void validateSharedView(const std::string & display, 
-                            const ViewVec & viewsOfDisplay,
-                            const std::string & sharedView,
-                            bool checkUseDisplayName) const
+    void validateSharedView(
+        const std::string & display,
+        const ViewVec & viewsOfDisplay,
+        const std::string & sharedView,
+        bool checkUseDisplayName) const
     {
         // Is the name already used for a display-defined view?
         // This should never happen because this is checked when adding a view.
@@ -784,7 +788,8 @@ public:
 
     const View * getView(const char * display, const char * view) const
     {
-        if (!view || !*view) return nullptr;
+        if (!view || !*view)
+            return nullptr;
 
         bool searchShared = !display || !*display;
 
@@ -792,14 +797,15 @@ public:
         if (!searchShared)
         {
             iter = FindDisplay(m_displays, display);
-            if (iter == m_displays.end()) return nullptr;
+            if (iter == m_displays.end())
+                return nullptr;
 
             const StringUtils::StringVec & sharedViews = iter->second.m_sharedViews;
-            searchShared = StringUtils::Contain(sharedViews, view);
+            searchShared                               = StringUtils::Contain(sharedViews, view);
         }
 
         const ViewVec & views = searchShared ? m_sharedViews : iter->second.m_views;
-        const auto viewIt = FindView(views, view);
+        const auto viewIt     = FindView(views, view);
 
         if (viewIt != views.end())
         {
@@ -843,9 +849,10 @@ public:
     // Get all active views from a display with a rule that refers to color space or an encoding
     // referred by color space. Note that views that do not have viewing rules are all returned.
     // ViewNames, created from views, is returned as parameter.
-    StringUtils::StringVec getFilteredViews(StringUtils::StringVec & viewNames,
-                                            const ViewPtrVec & views,
-                                            const char * imageCSName) const
+    StringUtils::StringVec getFilteredViews(
+        StringUtils::StringVec & viewNames,
+        const ViewPtrVec & views,
+        const char * imageCSName) const
     {
         ConstColorSpaceRcPtr imageColorSpace = getColorSpace(imageCSName);
         if (!imageColorSpace)
@@ -855,18 +862,18 @@ public:
             throw Exception(os.str().c_str());
         }
 
-        const std::string viewEncoding{ imageColorSpace->getEncoding() };
+        const std::string viewEncoding{imageColorSpace->getEncoding()};
 
-        viewNames = GetViewNames(views);
+        viewNames                          = GetViewNames(views);
         StringUtils::StringVec activeViews = getActiveViews(viewNames);
 
-        const std::string imageColorSpaceName{ StringUtils::Lower(imageCSName) };
+        const std::string imageColorSpaceName{StringUtils::Lower(imageCSName)};
         StringUtils::StringVec filteredActiveViews;
         for (const auto & view : activeViews)
         {
-            const auto idx = FindInStringVecCaseIgnore(viewNames, view);
+            const auto idx        = FindInStringVecCaseIgnore(viewNames, view);
             const auto & ruleName = views[idx]->m_rule;
-            size_t ruleIdx{ 0 };
+            size_t ruleIdx{0};
             if (ruleName.empty())
             {
                 // Include all views that do not have a rule.
@@ -875,14 +882,14 @@ public:
             else if (FindRule(m_viewingRules, ruleName, ruleIdx))
             {
                 const size_t numcs = m_viewingRules->getNumColorSpaces(ruleIdx);
-                bool added = false;
+                bool added         = false;
                 for (size_t csIdx = 0; csIdx < numcs; ++csIdx)
                 {
                     // Rule can use role names.
                     const char * rolename = m_viewingRules->getColorSpace(ruleIdx, csIdx);
-                    const char * csname = LookupRole(m_roles, rolename);
+                    const char * csname   = LookupRole(m_roles, rolename);
 
-                    const std::string csName{ *csname ? csname : rolename  };
+                    const std::string csName{*csname ? csname : rolename};
                     if (StringUtils::Lower(csName) == imageColorSpaceName)
                     {
                         // Include a view if its rule contains the image's color space.
@@ -896,7 +903,7 @@ public:
                     const size_t numEnc = m_viewingRules->getNumEncodings(ruleIdx);
                     for (size_t encIdx = 0; encIdx < numEnc; ++encIdx)
                     {
-                        const std::string encName{ m_viewingRules->getEncoding(ruleIdx, encIdx) };
+                        const std::string encName{m_viewingRules->getEncoding(ruleIdx, encIdx)};
                         if (StringUtils::Lower(encName) == viewEncoding)
                         {
                             // Include a view if its rule contains the image's color space encoding.
@@ -914,44 +921,43 @@ public:
     {
         if (m_displayCache.empty())
         {
-            ComputeDisplays(m_displayCache,
-                            m_displays,
-                            m_activeDisplays,
-                            m_activeDisplaysEnvOverride);
+            ComputeDisplays(
+                m_displayCache,
+                m_displays,
+                m_activeDisplays,
+                m_activeDisplaysEnvOverride);
         }
-
     }
 
-    ProcessorCacheFlags getProcessorCacheFlags() const noexcept
-    {
-        return m_cacheFlags;
-    }
+    ProcessorCacheFlags getProcessorCacheFlags() const noexcept { return m_cacheFlags; }
 
     void setProcessorCacheFlags(ProcessorCacheFlags flags) const noexcept
     {
         m_cacheFlags = flags;
-        m_processorCache.enable((m_cacheFlags & PROCESSOR_CACHE_ENABLED) == PROCESSOR_CACHE_ENABLED);
+        m_processorCache.enable(
+            (m_cacheFlags & PROCESSOR_CACHE_ENABLED) == PROCESSOR_CACHE_ENABLED);
     }
 
     ConstProcessorRcPtr getProcessorWithoutCaching(
         const Config & config,
-        const ConstTransformRcPtr & transform, 
+        const ConstTransformRcPtr & transform,
         TransformDirection direction) const
     {
         if (!transform)
         {
             throw Exception("Config::GetProcessor failed. Transform is null.");
         }
-        
+
         ProcessorRcPtr processor = Processor::Create();
         processor->getImpl()->setProcessorCacheFlags(PROCESSOR_CACHE_OFF);
         processor->getImpl()->setTransform(config, m_context, transform, direction);
         return processor;
     }
- 
-    int instantiateDisplay(const std::string & monitorName,
-                           const std::string & monitorDescription,
-                           const std::string & ICCProfileFilepath)
+
+    int instantiateDisplay(
+        const std::string & monitorName,
+        const std::string & monitorDescription,
+        const std::string & ICCProfileFilepath)
     {
         if (ICCProfileFilepath.empty())
         {
@@ -968,11 +974,7 @@ public:
         {
             std::ostringstream oss;
             oss << "Cannot instantiate a virtual display because the list of active displays is "
-                << "defined by "
-                << OCIO_ACTIVE_DISPLAYS_ENVVAR
-                << " = "
-                << envContent
-                << ".";
+                << "defined by " << OCIO_ACTIVE_DISPLAYS_ENVVAR << " = " << envContent << ".";
             throw Exception(oss.str().c_str());
         }
 
@@ -990,8 +992,7 @@ public:
 
         // Check if the virtual display definition is present.
 
-        if (m_virtualDisplay.m_views.size() == 0
-            && m_virtualDisplay.m_sharedViews.size() == 0)
+        if (m_virtualDisplay.m_views.size() == 0 && m_virtualDisplay.m_sharedViews.size() == 0)
         {
             throw Exception("The virtual display information to instantiate a display is missing.");
         }
@@ -1035,10 +1036,10 @@ public:
             // Note that it adds it or updates the existing one.
             m_allColorSpaces->addColorSpace(cs);
         }
-        catch(const Exception & /* ex */)
+        catch (const Exception & /* ex */)
         {
             DisplayMap::iterator iter = FindDisplay(m_displays, colorSpaceName);
-            if (iter!=m_displays.end())
+            if (iter != m_displays.end())
             {
                 m_displays.erase(iter);
             }
@@ -1050,8 +1051,7 @@ public:
 
         // The display must be active.
 
-        if (!m_activeDisplays.empty()
-            && !m_activeDisplays[0].empty() 
+        if (!m_activeDisplays.empty() && !m_activeDisplays[0].empty()
             && !StringUtils::Contain(m_activeDisplays, colorSpaceName))
         {
             m_activeDisplays.push_back(colorSpaceName);
@@ -1082,10 +1082,7 @@ public:
 
         m_displayCache.clear();
 
-        ComputeDisplays(m_displayCache,
-                        m_displays,
-                        m_activeDisplays,
-                        m_activeDisplaysEnvOverride);
+        ComputeDisplays(m_displayCache, m_displays, m_activeDisplays, m_activeDisplaysEnvOverride);
 
         AutoMutex lock(m_cacheidMutex);
         resetCacheIDs();
@@ -1096,7 +1093,7 @@ public:
 
         for (size_t idx = 0; idx < m_displayCache.size(); ++idx)
         {
-            if (0==strcmp(m_displayCache[idx].c_str(), colorSpaceName.c_str()))
+            if (0 == strcmp(m_displayCache[idx].c_str(), colorSpaceName.c_str()))
             {
                 return static_cast<int>(idx);
             }
@@ -1107,11 +1104,8 @@ public:
     }
 };
 
-
-
 // Instantiate the cache with the right types.
 extern template class ProcessorCache<std::size_t, ProcessorRcPtr>;
-
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -1120,7 +1114,7 @@ ConfigRcPtr Config::Create()
     return ConfigRcPtr(new Config(), &deleter);
 }
 
-void Config::deleter(Config* c)
+void Config::deleter(Config * c)
 {
     delete c;
 }
@@ -1142,10 +1136,11 @@ ConstConfigRcPtr Config::CreateFromEnv()
     //   1) Path to a config file (e.g. /home/user/ocio/config.ocio)
     //   2) Path to an archived config file (e.g. /home/user/ocio/archived_config.ocioz)
     //   3) URI to a built-in config (e.g. ocio://cg-config-v0.1.0_aces-v1.3_ocio-v2.1.1)
-    if(!file.empty()) return CreateFromFile(file.c_str());
+    if (!file.empty())
+        return CreateFromFile(file.c_str());
 
-    static const char err[] =
-        "Color management disabled. (Specify the $OCIO environment variable to enable.)";
+    static const char err[]
+        = "Color management disabled. (Specify the $OCIO environment variable to enable.)";
 
     LogInfo(err);
 
@@ -1177,20 +1172,18 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
         throw ExceptionMissingFile(oss.str().c_str());
     }
 
-    std::ifstream ifstream = Platform::CreateInputFileStream(
-        filename, 
-        std::ios_base::in | std::ios_base::binary
-    );
+    std::ifstream ifstream
+        = Platform::CreateInputFileStream(filename, std::ios_base::in | std::ios_base::binary);
 
     if (ifstream.fail())
     {
         std::ostringstream os;
         os << "Error could not read '" << filename;
         os << "' OCIO profile.";
-        throw Exception (os.str().c_str());
+        throw Exception(os.str().c_str());
     }
 
-    char magicNumber[2] = { 0 };
+    char magicNumber[2] = {0};
     if (ifstream.read(magicNumber, 2))
     {
         // Check if it is an OCIOZ archive.
@@ -1208,7 +1201,7 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
             ciop->buildEntries();
             return CreateFromConfigIOProxy(ciop);
         }
-    } 
+    }
 
     // Not an OCIOZ archive. Continue as usual.
     ifstream.clear();
@@ -1234,16 +1227,16 @@ ConstConfigRcPtr Config::CreateFromConfigIOProxy(ConfigIOProxyRcPtr ciop)
     {
         std::ostringstream os;
         os << "Could not create config using ConfigIOProxy.";
-        throw Exception (os.str().c_str());
+        throw Exception(os.str().c_str());
     }
-    
+
     return config;
 }
 
 ConstConfigRcPtr Config::CreateFromBuiltinConfig(const char * configName)
 {
     std::string builtinConfigName = configName;
-    
+
     // Normalize the input to the URI format.
     if (!StringUtils::StartsWith(builtinConfigName, OCIO_BUILTIN_URI_PREFIX))
     {
@@ -1277,7 +1270,7 @@ ConstConfigRcPtr Config::CreateFromBuiltinConfig(const char * configName)
 ///////////////////////////////////////////////////////////////////////////
 
 Config::Config()
-: m_impl(new Config::Impl())
+    : m_impl(new Config::Impl())
 {
 }
 
@@ -1294,17 +1287,12 @@ unsigned Config::getMajorVersion() const
 
 void Config::setMajorVersion(unsigned int version)
 {
-    if (version <  FirstSupportedMajorVersion
-        || version >  LastSupportedMajorVersion)
+    if (version < FirstSupportedMajorVersion || version > LastSupportedMajorVersion)
     {
         std::ostringstream os;
-            os << "The version is " << version
-            << " where supported versions start at "
-            << FirstSupportedMajorVersion
-            << " and end at "
-            << LastSupportedMajorVersion
-            << ".";
-            throw Exception(os.str().c_str());
+        os << "The version is " << version << " where supported versions start at "
+           << FirstSupportedMajorVersion << " and end at " << LastSupportedMajorVersion << ".";
+        throw Exception(os.str().c_str());
     }
     m_impl->m_majorVersion = version;
     m_impl->m_minorVersion = LastSupportedMinorVersion[version - 1];
@@ -1324,10 +1312,8 @@ void Config::setMinorVersion(unsigned int version)
     if (version > maxMinor)
     {
         std::ostringstream os;
-        os << "The minor version " << version
-            << " is not supported for major version "
-            << m_impl->m_majorVersion
-            << ". Maximum minor version is " << maxMinor << ".";
+        os << "The minor version " << version << " is not supported for major version "
+           << m_impl->m_majorVersion << ". Maximum minor version is " << maxMinor << ".";
         throw Exception(os.str().c_str());
     }
     m_impl->m_minorVersion = version;
@@ -1362,19 +1348,20 @@ void Config::upgradeToLatestVersion() noexcept
 ConfigRcPtr Config::createEditableCopy() const
 {
     ConfigRcPtr config = Config::Create();
-    *config->m_impl = *m_impl;
+    *config->m_impl    = *m_impl;
     return config;
 }
 
 void Config::validate() const
 {
-    if(getImpl()->m_validation == Impl::VALIDATION_PASSED) return;
-    if(getImpl()->m_validation == Impl::VALIDATION_FAILED)
+    if (getImpl()->m_validation == Impl::VALIDATION_PASSED)
+        return;
+    if (getImpl()->m_validation == Impl::VALIDATION_FAILED)
     {
         throw Exception(getImpl()->m_validationtext.c_str());
     }
 
-    getImpl()->m_validation = Impl::VALIDATION_FAILED;
+    getImpl()->m_validation     = Impl::VALIDATION_FAILED;
     getImpl()->m_validationtext = "";
 
     ///// PREDEFINED CONTEXT VARIABLES
@@ -1394,20 +1381,18 @@ void Config::validate() const
                 // only legal case is ENV = $ENV. It means that there is no default value i.e. an
                 // system env. variable must exist.
 
-                const std::string ctxVariable1 = std::string("$")  + env.first;
+                const std::string ctxVariable1 = std::string("$") + env.first;
                 const std::string ctxVariable2 = std::string("${") + env.first + std::string("}");
-                const std::string ctxVariable3 = std::string("%")  + env.first + std::string("%");
+                const std::string ctxVariable3 = std::string("%") + env.first + std::string("%");
 
-                const bool isValid = (ctxVariable1 == ctxValue)
-                                        || (ctxVariable2 == ctxValue)
-                                        || (ctxVariable3 == ctxValue);
+                const bool isValid = (ctxVariable1 == ctxValue) || (ctxVariable2 == ctxValue)
+                                     || (ctxVariable3 == ctxValue);
 
                 if (!isValid)
                 {
                     std::ostringstream oss;
-                    oss << "Unresolved context variable in environment declaration '"
-                        << env.first << " = "
-                        << env.second << "'.";
+                    oss << "Unresolved context variable in environment declaration '" << env.first
+                        << " = " << env.second << "'.";
                     throw Exception(oss.str().c_str());
                 }
             }
@@ -1418,11 +1403,11 @@ void Config::validate() const
 
     StringSet existingColorSpaces;
 
-    bool hasDisplayReferredColorspace   = false;
-    bool hasSceneReferredColorspace     = false;
+    bool hasDisplayReferredColorspace = false;
+    bool hasSceneReferredColorspace   = false;
 
     // Confirm all ColorSpaces are valid.
-    for(int i=0; i<getImpl()->m_allColorSpaces->getNumColorSpaces(); ++i)
+    for (int i = 0; i < getImpl()->m_allColorSpaces->getNumColorSpaces(); ++i)
     {
         const auto cs = getImpl()->m_allColorSpaces->getColorSpaceByIndex(i);
         if (!cs)
@@ -1442,8 +1427,7 @@ void Config::validate() const
         {
             std::ostringstream oss;
             oss << "Config failed color space validation. "
-                << "A color space name '"
-                << name
+                << "A color space name '" << name
                 << "' cannot contain a context variable reserved token i.e. % or $.";
 
             getImpl()->m_validationtext = oss.str();
@@ -1462,10 +1446,10 @@ void Config::validate() const
         }
 
         // Make sure that all used interopIDs are available in this config.
-        const char* interop = cs->getInteropID();
-        if(interop && *interop)
+        const char * interop = cs->getInteropID();
+        if (interop && *interop)
         {
-            if(!getColorSpace(interop))
+            if (!getColorSpace(interop))
             {
                 std::ostringstream os;
                 os << "Config failed color space validation. ";
@@ -1495,22 +1479,23 @@ void Config::validate() const
 
     // Confirm all roles used by the config are valid and that essential roles are present.
     {
-        for(StringMap::const_iterator iter = getImpl()->m_roles.begin(),
-            end = getImpl()->m_roles.end(); iter!=end; ++iter)
+        for (StringMap::const_iterator iter = getImpl()->m_roles.begin(),
+                                       end  = getImpl()->m_roles.end();
+             iter != end;
+             ++iter)
         {
             // Retest in case version did change.
             if (getMajorVersion() >= 2 && ContainsContextVariableToken(iter->first))
             {
                 std::ostringstream oss;
                 oss << "Config failed role validation. "
-                    << "A role name '"
-                    << iter->first
+                    << "A role name '" << iter->first
                     << "' cannot contain a context variable reserved token i.e. % or $.";
                 getImpl()->m_validationtext = oss.str();
                 throw Exception(getImpl()->m_validationtext.c_str());
             }
 
-            if(!getImpl()->hasColorSpace(iter->second.c_str()))
+            if (!getImpl()->hasColorSpace(iter->second.c_str()))
             {
                 std::ostringstream os;
                 os << "Config failed role validation. ";
@@ -1524,27 +1509,26 @@ void Config::validate() const
             // AddColorSpace, addNamedTransform & setRole already check there is no name conflict.
         }
 
-
         // Check for interchange roles requirements - scene-referred and display-referred.
         unsigned int versionHex = (getMajorVersion() << 24) | (getMinorVersion() << 16);
-        if (versionHex >= 0x02020000u)  // v2.2 or higher
+        if (versionHex >= 0x02020000u) // v2.2 or higher
         {
-            bool hasRoleSceneLinear                 = false;
-            bool hasRoleCompositingLog              = false;
-            bool hasRoleColorTiming                 = false;
+            bool hasRoleSceneLinear    = false;
+            bool hasRoleCompositingLog = false;
+            bool hasRoleColorTiming    = false;
 
-            bool hasRoleAcesInterchange             = false;
-            bool acesInterHasSceneRefColorspace     = false;
-            bool hasRoleCieXyzD65Interchange        = false;
-            bool cieInterHasDisplayRefColorspace    = false;
+            bool hasRoleAcesInterchange          = false;
+            bool acesInterHasSceneRefColorspace  = false;
+            bool hasRoleCieXyzD65Interchange     = false;
+            bool cieInterHasDisplayRefColorspace = false;
 
-            for (auto const& role : getImpl()->m_roles)
+            for (auto const & role : getImpl()->m_roles)
             {
                 if (Platform::Strcasecmp(role.first.c_str(), ROLE_SCENE_LINEAR) == 0)
                 {
                     hasRoleSceneLinear = true;
                 }
-                else if (Platform::Strcasecmp(role.first.c_str(), ROLE_COMPOSITING_LOG ) == 0)
+                else if (Platform::Strcasecmp(role.first.c_str(), ROLE_COMPOSITING_LOG) == 0)
                 {
                     hasRoleCompositingLog = true;
                 }
@@ -1557,22 +1541,22 @@ void Config::validate() const
                     hasRoleAcesInterchange = true;
 
                     ConstColorSpaceRcPtr cs = getColorSpace(role.second.c_str());
-                    acesInterHasSceneRefColorspace = 
-                        cs->getReferenceSpaceType() == REFERENCE_SPACE_SCENE;
+                    acesInterHasSceneRefColorspace
+                        = cs->getReferenceSpaceType() == REFERENCE_SPACE_SCENE;
                 }
                 else if (Platform::Strcasecmp(role.first.c_str(), ROLE_INTERCHANGE_DISPLAY) == 0)
                 {
                     hasRoleCieXyzD65Interchange = true;
 
                     ConstColorSpaceRcPtr cs = getColorSpace(role.second.c_str());
-                    cieInterHasDisplayRefColorspace = 
-                        cs->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY;
+                    cieInterHasDisplayRefColorspace
+                        = cs->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY;
                 }
             }
 
-            // All LogError below are technically a validation failure, but only logging a message 
-            // rather than throwing (for now). This is to make it possible for upgradeToLatestVersion
-            // to always result in a config that does not fail validation.
+            // All LogError below are technically a validation failure, but only logging a message
+            // rather than throwing (for now). This is to make it possible for
+            // upgradeToLatestVersion to always result in a config that does not fail validation.
 
             if (!hasRoleSceneLinear)
             {
@@ -1602,8 +1586,7 @@ void Config::validate() const
                 os << " color spaces and the config version is 2.2 or higher.";
                 LogError(os.str());
             }
-            else if (hasRoleAcesInterchange && 
-                     !acesInterHasSceneRefColorspace)
+            else if (hasRoleAcesInterchange && !acesInterHasSceneRefColorspace)
             {
                 std::ostringstream os;
                 os << "The aces_interchange role must be a scene-referred color space.";
@@ -1617,8 +1600,7 @@ void Config::validate() const
                 os << " display-referred color spaces and the config version is 2.2 or higher.";
                 LogError(os.str());
             }
-            else if (hasRoleCieXyzD65Interchange && 
-                     !cieInterHasDisplayRefColorspace)
+            else if (hasRoleCieXyzD65Interchange && !cieInterHasDisplayRefColorspace)
             {
                 std::ostringstream os;
                 os << "The cie_xyz_d65_interchange role must be a display-referred color space.";
@@ -1648,20 +1630,21 @@ void Config::validate() const
 
     // Viewing rules.
 
-     try
-     {
-         auto colorSpaceAccessor = std::bind(&Config::getColorSpace, this, std::placeholders::_1);
-         getImpl()->m_viewingRules->getImpl()->validate(colorSpaceAccessor,
-                                                           getImpl()->m_allColorSpaces);
-     }
-     catch (const Exception & e)
-     {
-         std::ostringstream os;
-         os << "Config failed validation. Viewing rules failed validation with: ";
-         os << e.what();
-         getImpl()->m_validationtext = os.str();
-         throw Exception(getImpl()->m_validationtext.c_str());
-     }
+    try
+    {
+        auto colorSpaceAccessor = std::bind(&Config::getColorSpace, this, std::placeholders::_1);
+        getImpl()->m_viewingRules->getImpl()->validate(
+            colorSpaceAccessor,
+            getImpl()->m_allColorSpaces);
+    }
+    catch (const Exception & e)
+    {
+        std::ostringstream os;
+        os << "Config failed validation. Viewing rules failed validation with: ";
+        os << e.what();
+        getImpl()->m_validationtext = os.str();
+        throw Exception(getImpl()->m_validationtext.c_str());
+    }
 
     // Shared views.
     for (const auto & view : getImpl()->m_sharedViews)
@@ -1672,14 +1655,14 @@ void Config::validate() const
     int numdisplays = 0;
 
     // Confirm all Display transforms refer to colorspaces that exist.
-    for(DisplayMap::const_iterator iter = getImpl()->m_displays.begin();
-        iter != getImpl()->m_displays.end();
-        ++iter)
+    for (DisplayMap::const_iterator iter = getImpl()->m_displays.begin();
+         iter != getImpl()->m_displays.end();
+         ++iter)
     {
-        const std::string display = iter->first;
-        const ViewVec & views = iter->second.m_views;
+        const std::string display                  = iter->first;
+        const ViewVec & views                      = iter->second.m_views;
         const StringUtils::StringVec & sharedViews = iter->second.m_sharedViews;
-        if(views.empty() && sharedViews.empty())
+        if (views.empty() && sharedViews.empty())
         {
             std::ostringstream os;
             os << "Config failed display validation. ";
@@ -1697,7 +1680,7 @@ void Config::validate() const
         }
 
         // Confirm view references exist.
-        for(const auto & view : views)
+        for (const auto & view : views)
         {
             getImpl()->validateView(display, view, true);
         }
@@ -1713,7 +1696,6 @@ void Config::validate() const
         throw Exception(getImpl()->m_validationtext.c_str());
     }
 
-
     ///// VIRTUAL DISPLAY.
 
     if (getMajorVersion() >= 2)
@@ -1722,20 +1704,20 @@ void Config::validate() const
         for (const auto & sharedView : getImpl()->m_virtualDisplay.m_sharedViews)
         {
             // Bypass the <USE_DISPLAY_NAME> validation.
-            getImpl()->validateSharedView("virtual_display",
-                                          getImpl()->m_virtualDisplay.m_views,
-                                          sharedView,
-                                          false);
+            getImpl()->validateSharedView(
+                "virtual_display",
+                getImpl()->m_virtualDisplay.m_views,
+                sharedView,
+                false);
         }
 
         // Confirm view references exist.
-        for(const auto & view : getImpl()->m_virtualDisplay.m_views)
+        for (const auto & view : getImpl()->m_virtualDisplay.m_views)
         {
             // Bypass the <USE_DISPLAY_NAME> validation.
             getImpl()->validateView("virtual_display", view, false);
         }
     }
-
 
     ///// ACTIVE DISPLAYS & VIEWS
 
@@ -1747,12 +1729,10 @@ void Config::validate() const
         displays.push_back(iter->first);
     }
 
-
     if (!getImpl()->m_activeDisplaysEnvOverride.empty())
     {
-        const bool useAllDisplays
-            = getImpl()->m_activeDisplaysEnvOverride.size()==1
-                && getImpl()->m_activeDisplaysEnvOverride[0] == "";
+        const bool useAllDisplays = getImpl()->m_activeDisplaysEnvOverride.size() == 1
+                                    && getImpl()->m_activeDisplaysEnvOverride[0] == "";
 
         if (!useAllDisplays)
         {
@@ -1762,12 +1742,11 @@ void Config::validate() const
             {
                 std::ostringstream os;
                 os << "The content of the env. variable for the list of active displays ["
-                   << JoinStringEnvStyle(getImpl()->m_activeDisplaysEnvOverride)
-                   << "] is invalid.";
+                   << JoinStringEnvStyle(getImpl()->m_activeDisplaysEnvOverride) << "] is invalid.";
                 getImpl()->m_validationtext = os.str();
                 throw Exception(getImpl()->m_validationtext.c_str());
             }
-            if (orderedDisplays.size()!=getImpl()->m_activeDisplaysEnvOverride.size())
+            if (orderedDisplays.size() != getImpl()->m_activeDisplaysEnvOverride.size())
             {
                 std::ostringstream os;
                 os << "The content of the env. variable for the list of active displays ["
@@ -1780,8 +1759,8 @@ void Config::validate() const
     }
     else if (!getImpl()->m_activeDisplays.empty())
     {
-        const bool useAllDisplays = getImpl()->m_activeDisplays.size() == 1 &&
-                                    getImpl()->m_activeDisplays[0] == "";
+        const bool useAllDisplays
+            = getImpl()->m_activeDisplays.size() == 1 && getImpl()->m_activeDisplays[0] == "";
 
         if (!useAllDisplays)
         {
@@ -1796,7 +1775,7 @@ void Config::validate() const
                 getImpl()->m_validationtext = os.str();
                 throw Exception(getImpl()->m_validationtext.c_str());
             }
-            if (orderedDisplays.size()!=getImpl()->m_activeDisplays.size())
+            if (orderedDisplays.size() != getImpl()->m_activeDisplays.size())
             {
                 std::ostringstream os;
                 os << "The list of active displays ["
@@ -1810,9 +1789,7 @@ void Config::validate() const
 
     // TODO: Add validation for active views.
 
-
     ///// TRANSFORMS
-
 
     // Confirm for all transforms that reference internal color spaces,
     // the named color space exists and that all transforms are valid.
@@ -1841,8 +1818,8 @@ void Config::validate() const
                 {
                     std::ostringstream oss;
                     oss << "Config failed transform validation. "
-                        << "This config references a color space '"
-                        << name << "' using an unknown context variable.";
+                        << "This config references a color space '" << name
+                        << "' using an unknown context variable.";
 
                     getImpl()->m_validationtext = oss.str();
                     throw Exception(getImpl()->m_validationtext.c_str());
@@ -1866,7 +1843,7 @@ void Config::validate() const
                         throw Exception(getImpl()->m_validationtext.c_str());
                     }
                 }
-                else if(!getImpl()->hasColorSpace(csname))
+                else if (!getImpl()->hasColorSpace(csname))
                 {
                     // It's a role, but the color space it points to doesn't exist.
                     os << csname << "' (for role '" << name << "'), which is not defined.";
@@ -1880,7 +1857,7 @@ void Config::validate() const
     ///// LOOKS
 
     // For all looks, confirm the process space exists and the look is named.
-    for(unsigned int i=0; i<getImpl()->m_looksList.size(); ++i)
+    for (unsigned int i = 0; i < getImpl()->m_looksList.size(); ++i)
     {
         const char * lookName = getImpl()->m_looksList[i]->getName();
         if (!lookName || !*lookName)
@@ -1941,14 +1918,14 @@ void Config::validate() const
         if (!fromScene)
         {
             getImpl()->m_validationtext = "Config failed validation. If there are view_transforms, "
-                                      "at least one must use the scene reference space.";
+                                          "at least one must use the scene reference space.";
             throw Exception(getImpl()->m_validationtext.c_str());
         }
     }
     else if (hasDisplayReferredColorspace)
     {
         getImpl()->m_validationtext = "Config failed validation. If there are display-referred "
-                                  "color spaces, there must be view_transforms.";
+                                      "color spaces, there must be view_transforms.";
         throw Exception(getImpl()->m_validationtext.c_str());
     }
 
@@ -2006,7 +1983,8 @@ void Config::validate() const
                 const char * path = getImpl()->m_context->getSearchPath(idx);
                 if (!path || !*path)
                 {
-                    errMsg += " The search_path must not be an empty string if there are FileTransforms.";
+                    errMsg += " The search_path must not be an empty string if there are "
+                              "FileTransforms.";
                     continue;
                 }
 
@@ -2056,7 +2034,7 @@ void Config::validate() const
                 std::ostringstream oss;
                 oss << "Config failed validation expanding file transform paths. ";
                 oss << "The file transform source cannot be resolved: '";
-                
+
                 if (file != resolvedFile)
                 {
                     oss << file << "' vs. '" << resolvedFile << "'.";
@@ -2110,7 +2088,6 @@ void Config::validate() const
 
     getImpl()->checkVersionConsistency();
 
-
     // Everything is groovy.
     getImpl()->m_validation = Impl::VALIDATION_PASSED;
 }
@@ -2142,7 +2119,7 @@ char Config::GetDefaultFamilySeparator() noexcept
 void Config::setFamilySeparator(char separator)
 {
     const int val = (int)separator;
-    if (val!=0 && (val<32 || val>126))
+    if (val != 0 && (val < 32 || val > 126))
     {
         std::string err("Invalid family separator '");
         err += separator;
@@ -2190,7 +2167,8 @@ void Config::addEnvironmentVar(const char * name, const char * defaultValue)
     else
     {
         StringMap::const_iterator iter = getImpl()->m_env.find(std::string(name));
-        if(iter != getImpl()->m_env.end()) getImpl()->m_env.erase(iter);
+        if (iter != getImpl()->m_env.end())
+            getImpl()->m_env.erase(iter);
         getImpl()->m_context->setStringVar(name, nullptr);
     }
 
@@ -2205,15 +2183,18 @@ int Config::getNumEnvironmentVars() const
 
 const char * Config::getEnvironmentVarNameByIndex(int index) const
 {
-    if(index < 0 || index >= (int)getImpl()->m_env.size()) return "";
+    if (index < 0 || index >= (int)getImpl()->m_env.size())
+        return "";
     StringMap::const_iterator iter = getImpl()->m_env.begin();
-    for(int i = 0; i < index; ++i) ++iter;
+    for (int i = 0; i < index; ++i)
+        ++iter;
     return iter->first.c_str();
 }
 
 const char * Config::getEnvironmentVarDefault(const char * name) const
 {
-    if (!name || !*name) return "";
+    if (!name || !*name)
+        return "";
     return LookupEnvironment(getImpl()->m_env, name);
 }
 
@@ -2280,7 +2261,8 @@ void Config::clearSearchPaths()
 
 void Config::addSearchPath(const char * path)
 {
-    if (!path || !*path) return;
+    if (!path || !*path)
+        return;
     getImpl()->m_context->addSearchPath(path);
 
     AutoMutex lock(getImpl()->m_cacheidMutex);
@@ -2300,7 +2282,6 @@ void Config::setWorkingDir(const char * dirname)
     getImpl()->resetCacheIDs();
 }
 
-
 ///////////////////////////////////////////////////////////////////////////
 
 ColorSpaceSetRcPtr Config::getColorSpaces(const char * category) const
@@ -2309,11 +2290,11 @@ ColorSpaceSetRcPtr Config::getColorSpaces(const char * category) const
 
     // Loop on the list of active color spaces.
 
-    for(int idx=0; idx<getNumColorSpaces(); ++idx)
+    for (int idx = 0; idx < getNumColorSpaces(); ++idx)
     {
-        const char * csName = getColorSpaceNameByIndex(idx);
+        const char * csName     = getColorSpaceNameByIndex(idx);
         ConstColorSpaceRcPtr cs = getImpl()->m_allColorSpaces->getColorSpace(csName);
-        if(!category || !*category || cs->hasCategory(category))
+        if (!category || !*category || cs->hasCategory(category))
         {
             res->addColorSpace(cs);
         }
@@ -2328,81 +2309,84 @@ bool MatchReferenceType(SearchReferenceSpaceType st, ReferenceSpaceType t)
 {
     switch (st)
     {
-    case SEARCH_REFERENCE_SPACE_SCENE:
-        return t == REFERENCE_SPACE_SCENE;
-    case SEARCH_REFERENCE_SPACE_DISPLAY:
-        return t == REFERENCE_SPACE_DISPLAY;
-    case SEARCH_REFERENCE_SPACE_ALL:
-        return true;
+        case SEARCH_REFERENCE_SPACE_SCENE:
+            return t == REFERENCE_SPACE_SCENE;
+        case SEARCH_REFERENCE_SPACE_DISPLAY:
+            return t == REFERENCE_SPACE_DISPLAY;
+        case SEARCH_REFERENCE_SPACE_ALL:
+            return true;
     }
     return false;
 }
-}
+} // namespace
 
-int Config::getNumColorSpaces(SearchReferenceSpaceType searchReferenceType,
-                              ColorSpaceVisibility visibility) const
+int Config::getNumColorSpaces(
+    SearchReferenceSpaceType searchReferenceType,
+    ColorSpaceVisibility visibility) const
 {
     int res = 0;
     switch (visibility)
     {
-    case COLORSPACE_ALL:
-    {
-        const int nbCS = getImpl()->m_allColorSpaces->getNumColorSpaces();
-        if (searchReferenceType == SEARCH_REFERENCE_SPACE_ALL)
+        case COLORSPACE_ALL:
         {
-            return nbCS;
-        }
-        for (int i = 0; i < nbCS; ++i)
-        {
-            auto cs = getImpl()->m_allColorSpaces->getColorSpaceByIndex(i);
-            if (MatchReferenceType(searchReferenceType, cs->getReferenceSpaceType()))
+            const int nbCS = getImpl()->m_allColorSpaces->getNumColorSpaces();
+            if (searchReferenceType == SEARCH_REFERENCE_SPACE_ALL)
             {
-                ++res;
+                return nbCS;
             }
-        }
-        break;
-    }
-    case COLORSPACE_ACTIVE:
-    {
-        const size_t nbCS = getImpl()->m_activeColorSpaceNames.size();
-        if (searchReferenceType == SEARCH_REFERENCE_SPACE_ALL)
-        {
-            return (int)nbCS;
-        }
-        for (auto csname : getImpl()->m_activeColorSpaceNames)
-        {
-            auto cs = getColorSpace(csname.c_str());
-            if (MatchReferenceType(searchReferenceType, cs->getReferenceSpaceType()))
+            for (int i = 0; i < nbCS; ++i)
             {
-                ++res;
+                auto cs = getImpl()->m_allColorSpaces->getColorSpaceByIndex(i);
+                if (MatchReferenceType(searchReferenceType, cs->getReferenceSpaceType()))
+                {
+                    ++res;
+                }
             }
+            break;
         }
-        break;
-    }
-    case COLORSPACE_INACTIVE:
-    {
-        const auto ics = getImpl()->m_inactiveColorSpaceNames.size();
-        if (searchReferenceType == SEARCH_REFERENCE_SPACE_ALL)
+        case COLORSPACE_ACTIVE:
         {
-            return (int)ics;
-        }
-        for (auto csname : getImpl()->m_inactiveColorSpaceNames)
-        {
-            auto cs = getColorSpace(csname.c_str());
-            if (MatchReferenceType(searchReferenceType, cs->getReferenceSpaceType()))
+            const size_t nbCS = getImpl()->m_activeColorSpaceNames.size();
+            if (searchReferenceType == SEARCH_REFERENCE_SPACE_ALL)
             {
-                ++res;
+                return (int)nbCS;
             }
+            for (auto csname : getImpl()->m_activeColorSpaceNames)
+            {
+                auto cs = getColorSpace(csname.c_str());
+                if (MatchReferenceType(searchReferenceType, cs->getReferenceSpaceType()))
+                {
+                    ++res;
+                }
+            }
+            break;
         }
-        break;
-    }
+        case COLORSPACE_INACTIVE:
+        {
+            const auto ics = getImpl()->m_inactiveColorSpaceNames.size();
+            if (searchReferenceType == SEARCH_REFERENCE_SPACE_ALL)
+            {
+                return (int)ics;
+            }
+            for (auto csname : getImpl()->m_inactiveColorSpaceNames)
+            {
+                auto cs = getColorSpace(csname.c_str());
+                if (MatchReferenceType(searchReferenceType, cs->getReferenceSpaceType()))
+                {
+                    ++res;
+                }
+            }
+            break;
+        }
     }
 
     return res;
 }
 
-const char * Config::getColorSpaceNameByIndex(SearchReferenceSpaceType searchReferenceType,
-                                              ColorSpaceVisibility visibility, int index) const
+const char * Config::getColorSpaceNameByIndex(
+    SearchReferenceSpaceType searchReferenceType,
+    ColorSpaceVisibility visibility,
+    int index) const
 {
     if (index < 0)
     {
@@ -2412,92 +2396,92 @@ const char * Config::getColorSpaceNameByIndex(SearchReferenceSpaceType searchRef
     int current = 0;
     switch (visibility)
     {
-    case COLORSPACE_ALL:
-    {
-        if (searchReferenceType == SEARCH_REFERENCE_SPACE_ALL)
+        case COLORSPACE_ALL:
         {
-            if (index < getImpl()->m_allColorSpaces->getNumColorSpaces())
+            if (searchReferenceType == SEARCH_REFERENCE_SPACE_ALL)
             {
-                return getImpl()->m_allColorSpaces->getColorSpaceNameByIndex(index);
-            }
-            else
-            {
-                return "";
-            }
-        }
-        const int nbCS = getImpl()->m_allColorSpaces->getNumColorSpaces();
-        for (int i = 0; i < nbCS; ++i)
-        {
-            auto cs = getImpl()->m_allColorSpaces->getColorSpaceByIndex(i);
-            if (MatchReferenceType(searchReferenceType, cs->getReferenceSpaceType()))
-            {
-                if (current == index)
+                if (index < getImpl()->m_allColorSpaces->getNumColorSpaces())
                 {
-                    return cs->getName();
+                    return getImpl()->m_allColorSpaces->getColorSpaceNameByIndex(index);
                 }
-                ++current;
-            }
-        }
-        break;
-    }
-    case COLORSPACE_ACTIVE:
-    {
-        if (searchReferenceType == SEARCH_REFERENCE_SPACE_ALL)
-        {
-            if (index < (int)getImpl()->m_activeColorSpaceNames.size())
-            {
-                return getImpl()->m_activeColorSpaceNames[index].c_str();
-            }
-            else
-            {
-                return "";
-            }
-        }
-        const int nbCS = (int)getImpl()->m_activeColorSpaceNames.size();
-        for (int i = 0; i < nbCS; ++i)
-        {
-            auto csname = getImpl()->m_activeColorSpaceNames[i];
-            auto cs = getColorSpace(csname.c_str());
-            if (MatchReferenceType(searchReferenceType, cs->getReferenceSpaceType()))
-            {
-                if (current == index)
+                else
                 {
-                    return cs->getName();
+                    return "";
                 }
-                ++current;
             }
-        }
-        break;
-    }
-    case COLORSPACE_INACTIVE:
-    {
-        if (searchReferenceType == SEARCH_REFERENCE_SPACE_ALL)
-        {
-            if (index < (int)getImpl()->m_inactiveColorSpaceNames.size())
+            const int nbCS = getImpl()->m_allColorSpaces->getNumColorSpaces();
+            for (int i = 0; i < nbCS; ++i)
             {
-                return getImpl()->m_inactiveColorSpaceNames[index].c_str();
-            }
-            else
-            {
-                return "";
-            }
-        }
-        const int nbCS = (int)getImpl()->m_inactiveColorSpaceNames.size();
-        for (int i = 0; i < nbCS; ++i)
-        {
-            auto csname = getImpl()->m_inactiveColorSpaceNames[i];
-            auto cs = getColorSpace(csname.c_str());
-            if (MatchReferenceType(searchReferenceType, cs->getReferenceSpaceType()))
-            {
-                if (current == index)
+                auto cs = getImpl()->m_allColorSpaces->getColorSpaceByIndex(i);
+                if (MatchReferenceType(searchReferenceType, cs->getReferenceSpaceType()))
                 {
-                    return cs->getName();
+                    if (current == index)
+                    {
+                        return cs->getName();
+                    }
+                    ++current;
                 }
-                ++current;
             }
+            break;
         }
-        break;
-    }
+        case COLORSPACE_ACTIVE:
+        {
+            if (searchReferenceType == SEARCH_REFERENCE_SPACE_ALL)
+            {
+                if (index < (int)getImpl()->m_activeColorSpaceNames.size())
+                {
+                    return getImpl()->m_activeColorSpaceNames[index].c_str();
+                }
+                else
+                {
+                    return "";
+                }
+            }
+            const int nbCS = (int)getImpl()->m_activeColorSpaceNames.size();
+            for (int i = 0; i < nbCS; ++i)
+            {
+                auto csname = getImpl()->m_activeColorSpaceNames[i];
+                auto cs     = getColorSpace(csname.c_str());
+                if (MatchReferenceType(searchReferenceType, cs->getReferenceSpaceType()))
+                {
+                    if (current == index)
+                    {
+                        return cs->getName();
+                    }
+                    ++current;
+                }
+            }
+            break;
+        }
+        case COLORSPACE_INACTIVE:
+        {
+            if (searchReferenceType == SEARCH_REFERENCE_SPACE_ALL)
+            {
+                if (index < (int)getImpl()->m_inactiveColorSpaceNames.size())
+                {
+                    return getImpl()->m_inactiveColorSpaceNames[index].c_str();
+                }
+                else
+                {
+                    return "";
+                }
+            }
+            const int nbCS = (int)getImpl()->m_inactiveColorSpaceNames.size();
+            for (int i = 0; i < nbCS; ++i)
+            {
+                auto csname = getImpl()->m_inactiveColorSpaceNames[i];
+                auto cs     = getColorSpace(csname.c_str());
+                if (MatchReferenceType(searchReferenceType, cs->getReferenceSpaceType()))
+                {
+                    if (current == index)
+                    {
+                        return cs->getName();
+                    }
+                    ++current;
+                }
+            }
+            break;
+        }
     }
 
     return "";
@@ -2543,11 +2527,12 @@ int Config::getIndexForColorSpace(const char * name) const
     }
 
     // Check to see if the name is an active color space.
-    for (int idx = 0; idx < getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL,
-                                              COLORSPACE_ACTIVE); ++idx)
+    for (int idx = 0; idx < getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ACTIVE); ++idx)
     {
-        if (strcmp(getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ACTIVE, idx),
-                   cs->getName()) == 0)
+        if (strcmp(
+                getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ACTIVE, idx),
+                cs->getName())
+            == 0)
         {
             return idx;
         }
@@ -2596,7 +2581,8 @@ void Config::addColorSpace(const ConstColorSpaceRcPtr & original)
     if (hasRole(name.c_str()))
     {
         std::ostringstream os;
-        os << "Cannot add '" << name << "' color space, there is already a role with this "
+        os << "Cannot add '" << name
+           << "' color space, there is already a role with this "
               "name.";
         throw Exception(os.str().c_str());
     }
@@ -2604,8 +2590,10 @@ void Config::addColorSpace(const ConstColorSpaceRcPtr & original)
     if (nt)
     {
         std::ostringstream os;
-        os << "Cannot add '" << name << "' color space, there is already a named transform using "
-            "this name as a name or as an alias: '" << nt->getName() << "'.";
+        os << "Cannot add '" << name
+           << "' color space, there is already a named transform using "
+              "this name as a name or as an alias: '"
+           << nt->getName() << "'.";
         throw Exception(os.str().c_str());
     }
 
@@ -2636,14 +2624,15 @@ void Config::addColorSpace(const ConstColorSpaceRcPtr & original)
             std::ostringstream os;
             os << "Cannot add '" << name << "' color space, it has an alias '" << alias
                << "' and there is already a named transform using this name as a name or as "
-                  "an alias: '" << nt->getName() << "'.";
+                  "an alias: '"
+               << nt->getName() << "'.";
             throw Exception(os.str().c_str());
         }
         if (ContainsContextVariableToken(alias))
         {
             std::ostringstream os;
             os << "Cannot add '" << name << "' color space, it has an alias '" << alias
-                << "' that cannot contain a context variable reserved token i.e. % or $.";
+               << "' that cannot contain a context variable reserved token i.e. % or $.";
 
             throw Exception(os.str().c_str());
         }
@@ -2672,7 +2661,8 @@ bool Config::isColorSpaceUsed(const char * name) const noexcept
     // for example, in a display/view, look, or ColorSpaceTransform.  If the color space is
     // defined in the config, but not used elsewhere, this function returns false.
 
-    if (!name || !*name) return false;
+    if (!name || !*name)
+        return false;
 
     // Check for all color spaces, looks and view transforms.
 
@@ -2700,7 +2690,7 @@ bool Config::isColorSpaceUsed(const char * name) const noexcept
     for (int idx = 0; idx < numRoles; ++idx)
     {
         const char * roleName = getRoleName(idx);
-        const char * csName = LookupRole(getImpl()->m_roles, roleName);
+        const char * csName   = LookupRole(getImpl()->m_roles, roleName);
         if (0 == Platform::Strcasecmp(csName, name))
         {
             return true;
@@ -2726,7 +2716,7 @@ bool Config::isColorSpaceUsed(const char * name) const noexcept
         for (const auto & view : display.second.m_views)
         {
             const char * viewName = view.m_name.c_str();
-            const char * csName = getDisplayViewColorSpaceName(dispName, viewName);
+            const char * csName   = getDisplayViewColorSpaceName(dispName, viewName);
             if (0 == Platform::Strcasecmp(csName, name))
             {
                 return true;
@@ -2737,8 +2727,7 @@ bool Config::isColorSpaceUsed(const char * name) const noexcept
             auto viewIt = FindView(getImpl()->m_sharedViews, sharedView);
             if (viewIt != getImpl()->m_sharedViews.end())
             {
-                if (!((*viewIt).m_viewTransform.empty()) &&
-                    (*viewIt).useDisplayNameForColorspace())
+                if (!((*viewIt).m_viewTransform.empty()) && (*viewIt).useDisplayNameForColorspace())
                 {
                     if (0 == Platform::Strcasecmp(dispName, name))
                     {
@@ -2791,15 +2780,17 @@ void Config::clearColorSpaces()
 
 ///////////////////////////////////////////////////////////////////////////
 
-bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType referenceSpaceType) const
+bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType referenceSpaceType)
+    const
 {
     auto cs = getColorSpace(colorSpace);
 
     if (cs == nullptr)
     {
         std::ostringstream os;
-        os << "Could not test colorspace linearity. Colorspace " << colorSpace << " does not exist.";
-        throw Exception(os.str().c_str()); 
+        os << "Could not test colorspace linearity. Colorspace " << colorSpace
+           << " does not exist.";
+        throw Exception(os.str().c_str());
     }
 
     if (cs->isData())
@@ -2816,11 +2807,11 @@ bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType refe
     std::string encoding = cs->getEncoding();
     if (!encoding.empty())
     {
-        // Check the encoding value if it is set.        
-        if ((StringUtils::Compare(cs->getEncoding(), "scene-linear") && 
-            referenceSpaceType == REFERENCE_SPACE_SCENE) || 
-            (StringUtils::Compare(cs->getEncoding(), "display-linear") && 
-            referenceSpaceType == REFERENCE_SPACE_DISPLAY))
+        // Check the encoding value if it is set.
+        if ((StringUtils::Compare(cs->getEncoding(), "scene-linear")
+             && referenceSpaceType == REFERENCE_SPACE_SCENE)
+            || (StringUtils::Compare(cs->getEncoding(), "display-linear")
+                && referenceSpaceType == REFERENCE_SPACE_DISPLAY))
         {
             return true;
         }
@@ -2830,11 +2821,11 @@ bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType refe
         }
     }
 
-    // We want to assess linearity over at least a reasonable range of values, so use a very dark 
-    // value and a very bright value. Test neutral, red, green, and blue points to detect situations 
+    // We want to assess linearity over at least a reasonable range of values, so use a very dark
+    // value and a very bright value. Test neutral, red, green, and blue points to detect situations
     // where the neutral may be linear but there is non-linearity off the neutral axis.
-    auto evaluate = [](const Config & config, ConstTransformRcPtr &t) -> bool
-    {
+    auto evaluate = [](const Config & config, ConstTransformRcPtr & t) -> bool {
+        // clang-format off
         std::vector<float> img = 
         { 
             0.0625f, 0.0625f, 0.0625f, 4.f, 4.f, 4.f,
@@ -2842,14 +2833,14 @@ bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType refe
             0.f, 0.0625f, 0.f, 0.f, 4.f, 0.f,
             0.f, 0.f, 0.0625f, 0.f, 0.f, 4.f
         };
+        // clang-format on
         std::vector<float> dst(img.size(), 0.f);
 
         PackedImageDesc desc(&img[0], 8, 1, CHANNEL_ORDERING_RGB);
         PackedImageDesc descDst(&dst[0], 8, 1, CHANNEL_ORDERING_RGB);
 
-        auto procToReference = config.getImpl()->getProcessorWithoutCaching(
-            config, t, TRANSFORM_DIR_FORWARD
-        );
+        auto procToReference
+            = config.getImpl()->getProcessorWithoutCaching(config, t, TRANSFORM_DIR_FORWARD);
 
         // TODO: It could be useful to try and avoid evaluating points through ops that are
         // expensive but highly unlikely to be linear (with inverse Lut3D being the prime example).
@@ -2870,34 +2861,34 @@ bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType refe
         auto optCPUProc = procToReference->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
         optCPUProc->apply(desc, descDst);
 
-        float absError      = 1e-5f;
-        float multiplier    = 64.f;
-        bool ret            = true;
+        float absError   = 1e-5f;
+        float multiplier = 64.f;
+        bool ret         = true;
 
         // Test the first RGB pair.
-        ret &= EqualWithAbsError(dst[0]*multiplier, dst[3], absError);
-        ret &= EqualWithAbsError(dst[1]*multiplier, dst[4], absError);
-        ret &= EqualWithAbsError(dst[2]*multiplier, dst[5], absError);
+        ret &= EqualWithAbsError(dst[0] * multiplier, dst[3], absError);
+        ret &= EqualWithAbsError(dst[1] * multiplier, dst[4], absError);
+        ret &= EqualWithAbsError(dst[2] * multiplier, dst[5], absError);
 
         // Test the second RGB pair.
-        ret &= EqualWithAbsError(dst[6]*multiplier, dst[9], absError);
-        ret &= EqualWithAbsError(dst[7]*multiplier, dst[10], absError);
-        ret &= EqualWithAbsError(dst[8]*multiplier, dst[11], absError);
+        ret &= EqualWithAbsError(dst[6] * multiplier, dst[9], absError);
+        ret &= EqualWithAbsError(dst[7] * multiplier, dst[10], absError);
+        ret &= EqualWithAbsError(dst[8] * multiplier, dst[11], absError);
 
         // Test the third RGB pair.
-        ret &= EqualWithAbsError(dst[12]*multiplier, dst[15], absError);
-        ret &= EqualWithAbsError(dst[13]*multiplier, dst[16], absError);
-        ret &= EqualWithAbsError(dst[14]*multiplier, dst[17], absError);
+        ret &= EqualWithAbsError(dst[12] * multiplier, dst[15], absError);
+        ret &= EqualWithAbsError(dst[13] * multiplier, dst[16], absError);
+        ret &= EqualWithAbsError(dst[14] * multiplier, dst[17], absError);
 
         // Test the fourth RGB pair.
-        ret &= EqualWithAbsError(dst[18]*multiplier, dst[21], absError);
-        ret &= EqualWithAbsError(dst[19]*multiplier, dst[22], absError);
-        ret &= EqualWithAbsError(dst[20]*multiplier, dst[23], absError);
+        ret &= EqualWithAbsError(dst[18] * multiplier, dst[21], absError);
+        ret &= EqualWithAbsError(dst[19] * multiplier, dst[22], absError);
+        ret &= EqualWithAbsError(dst[20] * multiplier, dst[23], absError);
 
         return ret;
     };
-    
-    ConstTransformRcPtr transformToReference = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+
+    ConstTransformRcPtr transformToReference   = cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
     ConstTransformRcPtr transformFromReference = cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
     if ((transformToReference && transformFromReference) || transformToReference)
     {
@@ -2910,35 +2901,36 @@ bool Config::isColorSpaceLinear(const char * colorSpace, ReferenceSpaceType refe
         return evaluate(*this, transformFromReference);
     }
 
-    // Color space matches the desired reference space type, is not a data space, and has no 
+    // Color space matches the desired reference space type, is not a data space, and has no
     // transforms, so it is equivalent to the reference space and hence linear.
     return true;
 }
 
-void Config::IdentifyInterchangeSpace(const char ** srcInterchange,
-                                      const char ** builtinInterchange,
-                                      const ConstConfigRcPtr & srcConfig,
-                                      const char * srcColorSpaceName,
-                                      const ConstConfigRcPtr & builtinConfig,
-                                      const char * builtinColorSpaceName)
+void Config::IdentifyInterchangeSpace(
+    const char ** srcInterchange,
+    const char ** builtinInterchange,
+    const ConstConfigRcPtr & srcConfig,
+    const char * srcColorSpaceName,
+    const ConstConfigRcPtr & builtinConfig,
+    const char * builtinColorSpaceName)
 {
     // This will throw if it is unable to identify the interchange spaces.
-    ConfigUtils::IdentifyInterchangeSpace(srcInterchange, 
-                                          builtinInterchange, 
-                                          srcConfig, 
-                                          srcColorSpaceName, 
-                                          builtinConfig,
-                                          builtinColorSpaceName);
+    ConfigUtils::IdentifyInterchangeSpace(
+        srcInterchange,
+        builtinInterchange,
+        srcConfig,
+        srcColorSpaceName,
+        builtinConfig,
+        builtinColorSpaceName);
 }
 
-const char * Config::IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
-                                               const ConstConfigRcPtr & builtinConfig,
-                                               const char * builtinColorSpaceName)
+const char * Config::IdentifyBuiltinColorSpace(
+    const ConstConfigRcPtr & srcConfig,
+    const ConstConfigRcPtr & builtinConfig,
+    const char * builtinColorSpaceName)
 {
     // This will throw if it is unable to identify the interchange spaces.
-    return ConfigUtils::IdentifyBuiltinColorSpace(srcConfig,
-                                                  builtinConfig,
-                                                  builtinColorSpaceName);
+    return ConfigUtils::IdentifyBuiltinColorSpace(srcConfig, builtinConfig, builtinColorSpaceName);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -2948,16 +2940,16 @@ const char * Config::parseColorSpaceFromString(const char * str) const
     int rightMostColorSpaceIndex = ParseColorSpaceFromString(*this, str);
 
     // Index is using all color spaces.
-    if(rightMostColorSpaceIndex>=0)
+    if (rightMostColorSpaceIndex >= 0)
     {
         return getImpl()->m_allColorSpaces->getColorSpaceNameByIndex(rightMostColorSpaceIndex);
     }
 
-    if(!getImpl()->m_strictParsing)
+    if (!getImpl()->m_strictParsing)
     {
         // Is a default role defined?
-        const char* csname = LookupRole(getImpl()->m_roles, ROLE_DEFAULT);
-        if(csname && *csname)
+        const char * csname = LookupRole(getImpl()->m_roles, ROLE_DEFAULT);
+        if (csname && *csname)
         {
             const int csindex = getImpl()->getColorSpaceIndex(csname);
             if (-1 != csindex)
@@ -3000,15 +2992,17 @@ void Config::setRole(const char * role, const char * colorSpaceName)
             if (getColorSpace(role))
             {
                 std::ostringstream os;
-                os << "Cannot add '" << role << "' role, there is already a color space using this "
-                    "as a name or an alias.";
+                os << "Cannot add '" << role
+                   << "' role, there is already a color space using this "
+                      "as a name or an alias.";
                 throw Exception(os.str().c_str());
             }
             if (getNamedTransform(role))
             {
                 std::ostringstream os;
-                os << "Cannot add '" << role << "' role, there is already a named transform using "
-                    "this as a name or an alias.";
+                os << "Cannot add '" << role
+                   << "' role, there is already a named transform using "
+                      "this as a name or an alias.";
                 throw Exception(os.str().c_str());
             }
             if (getMajorVersion() >= 2 && ContainsContextVariableToken(role))
@@ -3018,7 +3012,6 @@ void Config::setRole(const char * role, const char * colorSpaceName)
                    << "' cannot contain a context variable reserved token i.e. % or $.";
                 throw Exception(os.str().c_str());
             }
-
         }
         getImpl()->m_roles[StringUtils::Lower(role)] = std::string(colorSpaceName);
     }
@@ -3026,7 +3019,7 @@ void Config::setRole(const char * role, const char * colorSpaceName)
     else
     {
         StringMap::iterator iter = getImpl()->m_roles.find(StringUtils::Lower(role));
-        if(iter != getImpl()->m_roles.end())
+        if (iter != getImpl()->m_roles.end())
         {
             getImpl()->m_roles.erase(iter);
         }
@@ -3043,16 +3036,19 @@ int Config::getNumRoles() const
 
 bool Config::hasRole(const char * role) const
 {
-    if (!role || !*role) return false;
-    const char* rname = LookupRole(getImpl()->m_roles, role);
-    return  rname && *rname;
+    if (!role || !*role)
+        return false;
+    const char * rname = LookupRole(getImpl()->m_roles, role);
+    return rname && *rname;
 }
 
 const char * Config::getRoleName(int index) const
 {
-    if(index < 0 || index >= (int)getImpl()->m_roles.size()) return "";
+    if (index < 0 || index >= (int)getImpl()->m_roles.size())
+        return "";
     StringMap::const_iterator iter = getImpl()->m_roles.begin();
-    for(int i = 0; i < index; ++i) ++iter;
+    for (int i = 0; i < index; ++i)
+        ++iter;
     return iter->first.c_str();
 }
 
@@ -3063,7 +3059,8 @@ const char * Config::getRoleColorSpace(int index) const
 
 const char * Config::getRoleColorSpace(const char * roleName) const noexcept
 {
-    if (!roleName || !roleName[0]) return "";
+    if (!roleName || !roleName[0])
+        return "";
     return LookupRole(getImpl()->m_roles, roleName);
 }
 
@@ -3071,35 +3068,33 @@ const char * Config::getRoleColorSpace(const char * roleName) const noexcept
 //
 // Named Transforms
 
-
 int Config::getNumNamedTransforms(NamedTransformVisibility visibility) const noexcept
 {
     int res = 0;
     switch (visibility)
     {
-    case NAMEDTRANSFORM_ALL:
-    {
-        res = (int)getImpl()->m_allNamedTransforms.size();
-        break;
-    }
-    case NAMEDTRANSFORM_ACTIVE:
-    {
-        res = (int)getImpl()->m_activeNamedTransformNames.size();
-        break;
-    }
-    case NAMEDTRANSFORM_INACTIVE:
-    {
-        res = (int)getImpl()->m_inactiveNamedTransformNames.size();
-        break;
-    }
+        case NAMEDTRANSFORM_ALL:
+        {
+            res = (int)getImpl()->m_allNamedTransforms.size();
+            break;
+        }
+        case NAMEDTRANSFORM_ACTIVE:
+        {
+            res = (int)getImpl()->m_activeNamedTransformNames.size();
+            break;
+        }
+        case NAMEDTRANSFORM_INACTIVE:
+        {
+            res = (int)getImpl()->m_inactiveNamedTransformNames.size();
+            break;
+        }
     }
 
     return res;
-
 }
 
-const char * Config::getNamedTransformNameByIndex(NamedTransformVisibility visibility,
-                                                  int index) const noexcept
+const char * Config::getNamedTransformNameByIndex(NamedTransformVisibility visibility, int index)
+    const noexcept
 {
     if (index < 0)
     {
@@ -3108,30 +3103,30 @@ const char * Config::getNamedTransformNameByIndex(NamedTransformVisibility visib
 
     switch (visibility)
     {
-    case NAMEDTRANSFORM_ALL:
-    {
-        if (index < (int)getImpl()->m_allNamedTransforms.size())
+        case NAMEDTRANSFORM_ALL:
         {
-            return getImpl()->m_allNamedTransforms[index]->getName();
+            if (index < (int)getImpl()->m_allNamedTransforms.size())
+            {
+                return getImpl()->m_allNamedTransforms[index]->getName();
+            }
+            return "";
         }
-        return "";
-    }
-    case NAMEDTRANSFORM_ACTIVE:
-    {
-        if (index < (int)getImpl()->m_activeNamedTransformNames.size())
+        case NAMEDTRANSFORM_ACTIVE:
         {
-            return getImpl()->m_activeNamedTransformNames[index].c_str();
+            if (index < (int)getImpl()->m_activeNamedTransformNames.size())
+            {
+                return getImpl()->m_activeNamedTransformNames[index].c_str();
+            }
+            return "";
         }
-        return "";
-    }
-    case NAMEDTRANSFORM_INACTIVE:
-    {
-        if (index < (int)getImpl()->m_inactiveNamedTransformNames.size())
+        case NAMEDTRANSFORM_INACTIVE:
         {
-            return getImpl()->m_inactiveNamedTransformNames[index].c_str();
+            if (index < (int)getImpl()->m_inactiveNamedTransformNames.size())
+            {
+                return getImpl()->m_inactiveNamedTransformNames[index].c_str();
+            }
+            return "";
         }
-        return "";
-    }
     }
 
     return "";
@@ -3173,7 +3168,6 @@ int Config::getIndexForNamedTransform(const char * name) const noexcept
 
     // Requests for an inactive named transform or an inactive color space will both fail.
     return -1;
-
 }
 
 void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
@@ -3187,8 +3181,7 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
     {
         throw Exception("Named transform must have a non-empty name.");
     }
-    if (!nt->getTransform(TRANSFORM_DIR_FORWARD) &&
-        !nt->getTransform(TRANSFORM_DIR_INVERSE))
+    if (!nt->getTransform(TRANSFORM_DIR_FORWARD) && !nt->getTransform(TRANSFORM_DIR_INVERSE))
     {
         throw Exception("Named transform must define at least one transform.");
     }
@@ -3196,7 +3189,8 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
     if (hasRole(name.c_str()))
     {
         std::ostringstream os;
-        os << "Cannot add '" << name << "' named transform, there is already a role with this "
+        os << "Cannot add '" << name
+           << "' named transform, there is already a role with this "
               "name.";
         throw Exception(os.str().c_str());
     }
@@ -3204,8 +3198,10 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
     if (cs)
     {
         std::ostringstream os;
-        os << "Cannot add '" << name << "' named transform, there is already a color space using "
-              "this name as a name or as an alias: '" << cs->getName() << "'.";
+        os << "Cannot add '" << name
+           << "' named transform, there is already a color space using "
+              "this name as a name or as an alias: '"
+           << cs->getName() << "'.";
         throw Exception(os.str().c_str());
     }
 
@@ -3221,10 +3217,10 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
     size_t existing = getImpl()->getNamedTransformIndex(name.c_str());
 
     size_t replaceIdx = (size_t)-1;
-    const auto numNT = getImpl()->m_allNamedTransforms.size();
+    const auto numNT  = getImpl()->m_allNamedTransforms.size();
     if (existing < numNT)
     {
-        const std::string existingName{ getImpl()->m_allNamedTransforms[existing]->getName() };
+        const std::string existingName{getImpl()->m_allNamedTransforms[existing]->getName()};
         if (!StringUtils::Compare(existingName, name))
         {
             std::ostringstream os;
@@ -3255,7 +3251,8 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
             std::ostringstream os;
             os << "Cannot add '" << name << "' named transform, it has an alias '" << alias
                << "' and there is already a color space using this name as a name or as "
-                  "an alias: '" << cs->getName() << "'.";
+                  "an alias: '"
+               << cs->getName() << "'.";
             throw Exception(os.str().c_str());
         }
         if (ContainsContextVariableToken(alias))
@@ -3272,7 +3269,7 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
         // Skip existing named transform that might be replaced.
         if (existing != replaceIdx && existing < numNT)
         {
-            const std::string existingName{ getImpl()->m_allNamedTransforms[existing]->getName() };
+            const std::string existingName{getImpl()->m_allNamedTransforms[existing]->getName()};
             std::ostringstream os;
             os << "Cannot add '" << name << "' named transform, it has '" << alias;
             os << "' alias and existing named transform, '";
@@ -3283,7 +3280,7 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
 
     if (replaceIdx < numNT)
     {
-        const std::string existingName{ getImpl()->m_allNamedTransforms[replaceIdx]->getName() };
+        const std::string existingName{getImpl()->m_allNamedTransforms[replaceIdx]->getName()};
         if (!StringUtils::Compare(existingName, name))
         {
             std::ostringstream os;
@@ -3291,14 +3288,14 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
             os << existingName << "' is using this name as an alias.";
             throw Exception(os.str().c_str());
         }
-        NamedTransformRcPtr copy = nt->createEditableCopy();
+        NamedTransformRcPtr copy                    = nt->createEditableCopy();
         ConstNamedTransformRcPtr namedTransformCopy = copy;
         // Safe to swap, copy is not used after.
         getImpl()->m_allNamedTransforms[replaceIdx].swap(namedTransformCopy);
     }
     else
     {
-        NamedTransformRcPtr copy = nt->createEditableCopy();
+        NamedTransformRcPtr copy                    = nt->createEditableCopy();
         ConstNamedTransformRcPtr namedTransformCopy = copy;
         getImpl()->m_allNamedTransforms.push_back(namedTransformCopy);
     }
@@ -3310,9 +3307,12 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
 void Config::removeNamedTransform(const char * name)
 {
     const std::string nameToSearch = StringUtils::Lower(name);
-    if (nameToSearch.empty()) return;
+    if (nameToSearch.empty())
+        return;
 
-    for (auto itr = getImpl()->m_allNamedTransforms.begin(); itr != getImpl()->m_allNamedTransforms.end(); ++itr)
+    for (auto itr = getImpl()->m_allNamedTransforms.begin();
+         itr != getImpl()->m_allNamedTransforms.end();
+         ++itr)
     {
         if (StringUtils::Lower((*itr)->getName()) == nameToSearch)
         {
@@ -3338,7 +3338,6 @@ void Config::clearNamedTransforms()
 //
 // Display/View Registration
 
-
 ConstViewingRulesRcPtr Config::getViewingRules() const noexcept
 {
     return getImpl()->m_viewingRules;
@@ -3354,12 +3353,14 @@ void Config::setViewingRules(ConstViewingRulesRcPtr viewingRules)
 
 bool Config::isViewShared(const char * dispName, const char * viewName) const
 {
-    if (!viewName || !*viewName) return false;
+    if (!viewName || !*viewName)
+        return false;
 
     for (int v = 0; v < getNumViews(VIEW_SHARED, dispName); v++)
     {
         const char * sharedViewName = getView(VIEW_SHARED, dispName, v);
-        if (sharedViewName && *sharedViewName && Platform::Strcasecmp(sharedViewName, viewName) == 0)
+        if (sharedViewName && *sharedViewName
+            && Platform::Strcasecmp(sharedViewName, viewName) == 0)
         {
             return true;
         }
@@ -3368,20 +3369,26 @@ bool Config::isViewShared(const char * dispName, const char * viewName) const
     return false;
 }
 
-void Config::addSharedView(const char * view, const char * viewTransform,
-                           const char * colorSpace, const char * looks,
-                           const char * rule, const char * description)
+void Config::addSharedView(
+    const char * view,
+    const char * viewTransform,
+    const char * colorSpace,
+    const char * looks,
+    const char * rule,
+    const char * description)
 {
     if (!view || !*view)
     {
-        throw Exception("Shared view could not be added to config, view name has to be a "
-                        "non-empty name.");
+        throw Exception(
+            "Shared view could not be added to config, view name has to be a "
+            "non-empty name.");
     }
 
     if (!colorSpace || !*colorSpace)
     {
-        throw Exception("Shared view could not be added to config, color space name has to be a "
-                        "non-empty name.");
+        throw Exception(
+            "Shared view could not be added to config, color space name has to be a "
+            "non-empty name.");
     }
 
     ViewVec & views = getImpl()->m_sharedViews;
@@ -3397,11 +3404,12 @@ void Config::removeSharedView(const char * view)
 {
     if (!view || !*view)
     {
-        throw Exception("Shared view could not be removed from config, view name has to be "
-                        "a non-empty name.");
+        throw Exception(
+            "Shared view could not be removed from config, view name has to be "
+            "a non-empty name.");
     }
     ViewVec & views = getImpl()->m_sharedViews;
-    auto viewIt = FindView(views, view);
+    auto viewIt     = FindView(views, view);
 
     if (viewIt != views.end())
     {
@@ -3415,8 +3423,8 @@ void Config::removeSharedView(const char * view)
     else
     {
         std::ostringstream os;
-        os << "Shared view could not be removed from config. A shared view named '"
-           << view << "' could not be found.";
+        os << "Shared view could not be removed from config. A shared view named '" << view
+           << "' could not be found.";
         throw Exception(os.str().c_str());
     }
 }
@@ -3450,7 +3458,7 @@ const char * Config::getDisplay(int index) const
 {
     getImpl()->updateDisplayCache();
 
-    if(index>=0 && index < static_cast<int>(getImpl()->m_displayCache.size()))
+    if (index >= 0 && index < static_cast<int>(getImpl()->m_displayCache.size()))
     {
         return getImpl()->m_displayCache[index].c_str();
     }
@@ -3470,29 +3478,33 @@ const char * Config::getDefaultView(const char * display, const char * colorspac
 
 int Config::getNumViews(const char * display) const
 {
-    if (!display || !*display) return 0;
+    if (!display || !*display)
+        return 0;
 
     DisplayMap::const_iterator iter = FindDisplay(getImpl()->m_displays, display);
-    if(iter == getImpl()->m_displays.end()) return 0;
+    if (iter == getImpl()->m_displays.end())
+        return 0;
 
     const ViewPtrVec views = getImpl()->getViews(iter->second);
 
-    const StringUtils::StringVec masterViews{ GetViewNames(views) };
+    const StringUtils::StringVec masterViews{GetViewNames(views)};
     StringUtils::StringVec activeViews = getImpl()->getActiveViews(masterViews);
     return static_cast<int>(activeViews.size());
 }
 
 const char * Config::getView(const char * display, int index) const
 {
-    if (!display || !*display) return "";
+    if (!display || !*display)
+        return "";
 
     // Include all displays, do not limit to active displays. Consider active views only.
     DisplayMap::const_iterator iter = FindDisplay(getImpl()->m_displays, display);
-    if(iter == getImpl()->m_displays.end()) return "";
+    if (iter == getImpl()->m_displays.end())
+        return "";
 
     const ViewPtrVec views = getImpl()->getViews(iter->second);
 
-    const StringUtils::StringVec masterViews{ GetViewNames(views) };
+    const StringUtils::StringVec masterViews{GetViewNames(views)};
     StringUtils::StringVec activeViews = getImpl()->getActiveViews(masterViews);
 
     if (index < 0 || static_cast<size_t>(index) >= activeViews.size())
@@ -3501,7 +3513,7 @@ const char * Config::getView(const char * display, int index) const
     }
     int idx = FindInStringVecCaseIgnore(masterViews, activeViews[index]);
 
-    if(idx >= 0 && static_cast<size_t>(idx) < views.size())
+    if (idx >= 0 && static_cast<size_t>(idx) < views.size())
     {
         return views[idx]->m_name.c_str();
     }
@@ -3511,34 +3523,36 @@ const char * Config::getView(const char * display, int index) const
 
 int Config::getNumViews(const char * display, const char * colorspace) const
 {
-    if (!display || !*display || !colorspace || !*colorspace) return 0;
+    if (!display || !*display || !colorspace || !*colorspace)
+        return 0;
 
     DisplayMap::const_iterator iter = FindDisplay(getImpl()->m_displays, display);
-    if (iter == getImpl()->m_displays.end()) return 0;
+    if (iter == getImpl()->m_displays.end())
+        return 0;
 
     const ViewPtrVec views = getImpl()->getViews(iter->second);
 
     StringUtils::StringVec viewNames;
-    const StringUtils::StringVec filteredViews{ getImpl()->getFilteredViews(viewNames,
-                                                                            views,
-                                                                            colorspace) };
+    const StringUtils::StringVec filteredViews{
+        getImpl()->getFilteredViews(viewNames, views, colorspace)};
 
     return static_cast<int>(filteredViews.size());
 }
 
 const char * Config::getView(const char * display, const char * colorspace, int index) const
 {
-    if (!display || !*display || !colorspace || !*colorspace) return "";
+    if (!display || !*display || !colorspace || !*colorspace)
+        return "";
 
     DisplayMap::const_iterator iter = FindDisplay(getImpl()->m_displays, display);
-    if (iter == getImpl()->m_displays.end()) return "";
+    if (iter == getImpl()->m_displays.end())
+        return "";
 
     const ViewPtrVec views = getImpl()->getViews(iter->second);
 
     StringUtils::StringVec viewNames;
-    const StringUtils::StringVec filteredViews{ getImpl()->getFilteredViews(viewNames,
-                                                                            views,
-                                                                            colorspace) };
+    const StringUtils::StringVec filteredViews{
+        getImpl()->getFilteredViews(viewNames, views, colorspace)};
     int idx = index;
 
     if (!filteredViews.empty())
@@ -3563,18 +3577,20 @@ const char * Config::getView(const char * display, const char * colorspace, int 
     return "";
 }
 
-
-bool Config::AreViewsEqual(const ConstConfigRcPtr & first,
-                           const ConstConfigRcPtr & second,
-                           const char * dispName,               // may be empty or nullptr for shared views
-                           const char * viewName)
+bool Config::AreViewsEqual(
+    const ConstConfigRcPtr & first,
+    const ConstConfigRcPtr & second,
+    const char * dispName, // may be empty or nullptr for shared views
+    const char * viewName)
 {
     // It's ok to call this even for displays/views that don't exist, it will simply return false.
 
-    // Note that this will return true even if the view is display-defined in one config and a reference
-    // to a shared view in the other config (both within the same display), as long as the contents match.
+    // Note that this will return true even if the view is display-defined in one config and a
+    // reference to a shared view in the other config (both within the same display), as long as the
+    // contents match.
 
-    // These calls return null if either the display or view doesn't exist (regardless if it's active).
+    // These calls return null if either the display or view doesn't exist (regardless if it's
+    // active).
     const char * cs1 = first->getDisplayViewColorSpaceName(dispName, viewName);
     const char * cs2 = second->getDisplayViewColorSpaceName(dispName, viewName);
 
@@ -3586,12 +3602,18 @@ bool Config::AreViewsEqual(const ConstConfigRcPtr & first,
         {
             // Note the remaining strings may be empty in a valid view.
             // Intentionally not checking the description since it is not a functional difference.
-            if ( (Platform::Strcasecmp(first->getDisplayViewLooks(dispName, viewName),
-                                       second->getDisplayViewLooks(dispName, viewName)) == 0) &&
-                 (Platform::Strcasecmp(first->getDisplayViewTransformName(dispName, viewName),
-                                       second->getDisplayViewTransformName(dispName, viewName)) == 0) &&
-                 (Platform::Strcasecmp(first->getDisplayViewRule(dispName, viewName),
-                                       second->getDisplayViewRule(dispName, viewName)) == 0) )
+            if ((Platform::Strcasecmp(
+                     first->getDisplayViewLooks(dispName, viewName),
+                     second->getDisplayViewLooks(dispName, viewName))
+                 == 0)
+                && (Platform::Strcasecmp(
+                        first->getDisplayViewTransformName(dispName, viewName),
+                        second->getDisplayViewTransformName(dispName, viewName))
+                    == 0)
+                && (Platform::Strcasecmp(
+                        first->getDisplayViewRule(dispName, viewName),
+                        second->getDisplayViewRule(dispName, viewName))
+                    == 0))
             {
                 return true;
             }
@@ -3604,7 +3626,8 @@ const char * Config::getDisplayViewTransformName(const char * display, const cha
 {
     const View * viewPtr = getImpl()->getView(display, view);
 
-    if (!viewPtr) return "";
+    if (!viewPtr)
+        return "";
     return viewPtr->m_viewTransform.c_str();
 }
 
@@ -3612,7 +3635,8 @@ const char * Config::getDisplayViewColorSpaceName(const char * display, const ch
 {
     const View * viewPtr = getImpl()->getView(display, view);
 
-    if (!viewPtr) return "";
+    if (!viewPtr)
+        return "";
     return viewPtr->m_colorspace.c_str();
 }
 
@@ -3620,7 +3644,8 @@ const char * Config::getDisplayViewLooks(const char * display, const char * view
 {
     const View * viewPtr = getImpl()->getView(display, view);
 
-    if (!viewPtr) return "";
+    if (!viewPtr)
+        return "";
     return viewPtr->m_looks.c_str();
 }
 
@@ -3631,7 +3656,8 @@ const char * Config::getDisplayViewRule(const char * display, const char * view)
     return viewPtr ? viewPtr->m_rule.c_str() : "";
 }
 
-const char * Config::getDisplayViewDescription(const char * display, const char * view) const noexcept
+const char * Config::getDisplayViewDescription(const char * display, const char * view)
+    const noexcept
 {
     const View * viewPtr = getImpl()->getView(display, view);
 
@@ -3657,28 +3683,30 @@ void Config::addDisplaySharedView(const char * display, const char * sharedView)
 {
     if (!display || !*display)
     {
-        throw Exception("Shared view could not be added to display: non-empty display name "
-                        "is needed.");
+        throw Exception(
+            "Shared view could not be added to display: non-empty display name "
+            "is needed.");
     }
     if (!sharedView || !*sharedView)
     {
-        throw Exception("Shared view could not be added to display: non-empty view name "
-                        "is needed.");
+        throw Exception(
+            "Shared view could not be added to display: non-empty view name "
+            "is needed.");
     }
 
-    bool invalidateCache = false;
+    bool invalidateCache      = false;
     DisplayMap::iterator iter = FindDisplay(getImpl()->m_displays, display);
     if (iter == getImpl()->m_displays.end())
     {
         const auto curSize = getImpl()->m_displays.size();
         getImpl()->m_displays.resize(curSize + 1);
         getImpl()->m_displays[curSize].first = display;
-        iter = std::prev(getImpl()->m_displays.end());
-        invalidateCache = true;
+        iter                                 = std::prev(getImpl()->m_displays.end());
+        invalidateCache                      = true;
     }
 
     const ViewVec & existingViews = iter->second.m_views;
-    auto viewIt = FindView(existingViews, sharedView);
+    auto viewIt                   = FindView(existingViews, sharedView);
     if (viewIt != existingViews.end())
     {
         std::ostringstream os;
@@ -3704,30 +3732,41 @@ void Config::addDisplaySharedView(const char * display, const char * sharedView)
     getImpl()->resetCacheIDs();
 }
 
-void Config::addDisplayView(const char * display, const char * view,
-                            const char * colorSpace, const char * looks)
+void Config::addDisplayView(
+    const char * display,
+    const char * view,
+    const char * colorSpace,
+    const char * looks)
 {
     addDisplayView(display, view, nullptr, colorSpace, looks, nullptr, nullptr);
 }
 
-void Config::addDisplayView(const char * display, const char * view, const char * viewTransform,
-                            const char * colorSpace, const char * looks,
-                            const char * rule, const char * description)
+void Config::addDisplayView(
+    const char * display,
+    const char * view,
+    const char * viewTransform,
+    const char * colorSpace,
+    const char * looks,
+    const char * rule,
+    const char * description)
 {
     if (!display || !*display)
     {
-        throw Exception("View could not be added to display in config: a non-empty display "
-                        "name is needed.");
+        throw Exception(
+            "View could not be added to display in config: a non-empty display "
+            "name is needed.");
     }
     if (!view || !*view)
     {
-        throw Exception("View could not be added to display in config: a non-empty view "
-                        "name is needed.");
+        throw Exception(
+            "View could not be added to display in config: a non-empty view "
+            "name is needed.");
     }
     if (!colorSpace || !*colorSpace)
     {
-        throw Exception("View could not be added to display in config: a non-empty color space "
-                        "name is needed.");
+        throw Exception(
+            "View could not be added to display in config: a non-empty color space "
+            "name is needed.");
     }
 
     DisplayMap::iterator iter = FindDisplay(getImpl()->m_displays, display);
@@ -3736,9 +3775,8 @@ void Config::addDisplayView(const char * display, const char * view, const char 
         const auto curSize = getImpl()->m_displays.size();
         getImpl()->m_displays.resize(curSize + 1);
         getImpl()->m_displays[curSize].first = display;
-        getImpl()->m_displays[curSize].second.m_views.push_back(View(view, viewTransform,
-                                                                     colorSpace, looks, rule,
-                                                                     description));
+        getImpl()->m_displays[curSize].second.m_views.push_back(
+            View(view, viewTransform, colorSpace, looks, rule, description));
         getImpl()->m_displayCache.clear();
     }
     else
@@ -3775,14 +3813,14 @@ void Config::removeDisplayView(const char * display, const char * view)
     // Check if the display exists.
 
     DisplayMap::iterator iter = FindDisplay(getImpl()->m_displays, display);
-    if (iter==getImpl()->m_displays.end())
+    if (iter == getImpl()->m_displays.end())
     {
         std::ostringstream os;
         os << "Could not find a display named '" << display << "' to be removed from config.";
         throw Exception(os.str().c_str());
     }
 
-    ViewVec & views = iter->second.m_views;
+    ViewVec & views                      = iter->second.m_views;
     StringUtils::StringVec & sharedViews = iter->second.m_sharedViews;
 
     const std::string viewNameRef(view);
@@ -3833,12 +3871,14 @@ bool Config::hasVirtualView(const char * viewName) const
 
 bool Config::isVirtualViewShared(const char * viewName) const
 {
-    if (!viewName || !*viewName) return false;
+    if (!viewName || !*viewName)
+        return false;
 
     for (int v = 0; v < getVirtualDisplayNumViews(VIEW_SHARED); v++)
     {
         const char * sharedViewName = getVirtualDisplayView(VIEW_SHARED, v);
-        if (sharedViewName && *sharedViewName && Platform::Strcasecmp(sharedViewName, viewName) == 0)
+        if (sharedViewName && *sharedViewName
+            && Platform::Strcasecmp(sharedViewName, viewName) == 0)
         {
             return true;
         }
@@ -3847,31 +3887,33 @@ bool Config::isVirtualViewShared(const char * viewName) const
     return false;
 }
 
-void Config::addVirtualDisplayView(const char * view,
-                                   const char * viewTransform,
-                                   const char * colorSpace,
-                                   const char * looks,
-                                   const char * rule,
-                                   const char * description)
+void Config::addVirtualDisplayView(
+    const char * view,
+    const char * viewTransform,
+    const char * colorSpace,
+    const char * looks,
+    const char * rule,
+    const char * description)
 {
     if (!view || !*view)
     {
-        throw Exception("View could not be added to virtual_display in config: a non-empty view "
-                        "name is needed.");
+        throw Exception(
+            "View could not be added to virtual_display in config: a non-empty view "
+            "name is needed.");
     }
 
     if (!colorSpace || !*colorSpace)
     {
-        throw Exception("View could not be added to virtual_display in config: a non-empty color "
-                        "space name is needed.");
+        throw Exception(
+            "View could not be added to virtual_display in config: a non-empty color "
+            "space name is needed.");
     }
 
     ViewVec::const_iterator iter = FindView(getImpl()->m_virtualDisplay.m_views, view);
     if (iter != getImpl()->m_virtualDisplay.m_views.end())
     {
         std::ostringstream oss;
-        oss << "View could not be added to virtual_display in config: View '"
-            << view
+        oss << "View could not be added to virtual_display in config: View '" << view
             << "' already exists.";
         throw Exception(oss.str().c_str());
     }
@@ -3887,8 +3929,9 @@ void Config::addVirtualDisplaySharedView(const char * sharedView)
 {
     if (!sharedView || !*sharedView)
     {
-        throw Exception("Shared view could not be added to virtual_display: "
-                        "non-empty view name is needed.");
+        throw Exception(
+            "Shared view could not be added to virtual_display: "
+            "non-empty view name is needed.");
     }
 
     StringUtils::StringVec & views = getImpl()->m_virtualDisplay.m_sharedViews;
@@ -3896,8 +3939,7 @@ void Config::addVirtualDisplaySharedView(const char * sharedView)
     {
         std::ostringstream oss;
         oss << "Shared view could not be added to virtual_display: "
-            << "There is already a shared view named '"
-            << sharedView << "'.";
+            << "There is already a shared view named '" << sharedView << "'.";
         throw Exception(oss.str().c_str());
     }
 
@@ -3909,7 +3951,7 @@ void Config::addVirtualDisplaySharedView(const char * sharedView)
 
 int Config::getVirtualDisplayNumViews(ViewType type) const noexcept
 {
-    switch(type)
+    switch (type)
     {
         case VIEW_DISPLAY_DEFINED:
             return static_cast<int>(getImpl()->m_virtualDisplay.m_views.size());
@@ -3922,7 +3964,7 @@ int Config::getVirtualDisplayNumViews(ViewType type) const noexcept
 
 const char * Config::getVirtualDisplayView(ViewType type, int index) const noexcept
 {
-    switch(type)
+    switch (type)
     {
         case VIEW_DISPLAY_DEFINED:
         {
@@ -3947,9 +3989,10 @@ const char * Config::getVirtualDisplayView(ViewType type, int index) const noexc
     return "";
 }
 
-bool Config::AreVirtualViewsEqual(const ConstConfigRcPtr & first,
-                                  const ConstConfigRcPtr & second,
-                                  const char * viewName)
+bool Config::AreVirtualViewsEqual(
+    const ConstConfigRcPtr & first,
+    const ConstConfigRcPtr & second,
+    const char * viewName)
 {
     const char * cs1 = first->getVirtualDisplayViewColorSpaceName(viewName);
     const char * cs2 = second->getVirtualDisplayViewColorSpaceName(viewName);
@@ -3961,12 +4004,18 @@ bool Config::AreVirtualViewsEqual(const ConstConfigRcPtr & first,
         {
             // Note the remaining strings may be empty in a valid view.
             // Intentionally not checking the description since it is not a functional difference.
-            if ( (Platform::Strcasecmp(first->getVirtualDisplayViewLooks(viewName),
-                                       second->getVirtualDisplayViewLooks(viewName)) == 0) &&
-                 (Platform::Strcasecmp(first->getVirtualDisplayViewTransformName(viewName),
-                                       second->getVirtualDisplayViewTransformName(viewName)) == 0) &&
-                 (Platform::Strcasecmp(first->getVirtualDisplayViewRule(viewName),
-                                       second->getVirtualDisplayViewRule(viewName)) == 0) )
+            if ((Platform::Strcasecmp(
+                     first->getVirtualDisplayViewLooks(viewName),
+                     second->getVirtualDisplayViewLooks(viewName))
+                 == 0)
+                && (Platform::Strcasecmp(
+                        first->getVirtualDisplayViewTransformName(viewName),
+                        second->getVirtualDisplayViewTransformName(viewName))
+                    == 0)
+                && (Platform::Strcasecmp(
+                        first->getVirtualDisplayViewRule(viewName),
+                        second->getVirtualDisplayViewRule(viewName))
+                    == 0))
             {
                 return true;
             }
@@ -3977,7 +4026,8 @@ bool Config::AreVirtualViewsEqual(const ConstConfigRcPtr & first,
 
 const char * Config::getVirtualDisplayViewTransformName(const char * view) const noexcept
 {
-    if (!view) return "";
+    if (!view)
+        return "";
 
     // Get the view transform name for the case where a virtual view is shared.
     if (isVirtualViewShared(view))
@@ -3996,7 +4046,8 @@ const char * Config::getVirtualDisplayViewTransformName(const char * view) const
 
 const char * Config::getVirtualDisplayViewColorSpaceName(const char * view) const noexcept
 {
-    if (!view) return "";
+    if (!view)
+        return "";
 
     // Get the colorspace name for the case where a virtual view is shared.
     if (isVirtualViewShared(view))
@@ -4015,7 +4066,8 @@ const char * Config::getVirtualDisplayViewColorSpaceName(const char * view) cons
 
 const char * Config::getVirtualDisplayViewLooks(const char * view) const noexcept
 {
-    if (!view) return "";
+    if (!view)
+        return "";
 
     // Get the view looks for the case where a virtual view is shared
     if (isVirtualViewShared(view))
@@ -4034,7 +4086,8 @@ const char * Config::getVirtualDisplayViewLooks(const char * view) const noexcep
 
 const char * Config::getVirtualDisplayViewRule(const char * view) const noexcept
 {
-    if (!view) return "";
+    if (!view)
+        return "";
 
     // Get the view rule for the case where a virtual view is shared
     if (isVirtualViewShared(view))
@@ -4053,7 +4106,8 @@ const char * Config::getVirtualDisplayViewRule(const char * view) const noexcept
 
 const char * Config::getVirtualDisplayViewDescription(const char * view) const noexcept
 {
-    if (!view) return "";
+    if (!view)
+        return "";
 
     // Get the view description for the case where a virtual view is shared
     if (isVirtualViewShared(view))
@@ -4072,19 +4126,18 @@ const char * Config::getVirtualDisplayViewDescription(const char * view) const n
 
 void Config::removeVirtualDisplayView(const char * view) noexcept
 {
-    if (!view) return;
+    if (!view)
+        return;
 
     ViewVec::const_iterator iter = FindView(getImpl()->m_virtualDisplay.m_views, view);
     if (iter != getImpl()->m_virtualDisplay.m_views.end())
     {
         ViewVec & views = getImpl()->m_virtualDisplay.m_views;
 
-        const auto it = std::find_if(views.begin(), views.end(), 
-                                     [view](const View & v) 
-                                     { 
-                                        return StringUtils::Compare(v.m_name.c_str(), view); 
-                                     });
-        if (it!=views.end())
+        const auto it = std::find_if(views.begin(), views.end(), [view](const View & v) {
+            return StringUtils::Compare(v.m_name.c_str(), view);
+        });
+        if (it != views.end())
         {
             views.erase(it);
 
@@ -4120,7 +4173,7 @@ int Config::instantiateDisplayFromMonitorName(const char * monitorName)
 
     const std::string ICCProfileFilepath
         = SystemMonitorsImpl::GetICCProfileFromMonitorName(monitorName);
-    
+
     const std::string monitorDescription
         = GetProfileDescriptionFromICCProfile(ICCProfileFilepath.c_str());
 
@@ -4134,8 +4187,7 @@ int Config::instantiateDisplayFromICCProfile(const char * ICCProfileFilepath)
         throw Exception("The ICC profile filepath cannot be null.");
     }
 
-    const std::string monitorDescription
-        = GetProfileDescriptionFromICCProfile(ICCProfileFilepath);
+    const std::string monitorDescription = GetProfileDescriptionFromICCProfile(ICCProfileFilepath);
 
     return getImpl()->instantiateDisplay("", monitorDescription, ICCProfileFilepath);
 }
@@ -4147,8 +4199,7 @@ void Config::setActiveDisplays(const char * displays)
 
     // SplitStringEnvStyle needs to always return a result, even if empty, for look parsing.
     // However, this does not count as an active display, so delete it.
-    if( getImpl()->m_activeDisplays.size() == 1 && 
-        getImpl()->m_activeDisplays[0].empty() )
+    if (getImpl()->m_activeDisplays.size() == 1 && getImpl()->m_activeDisplays[0].empty())
     {
         getImpl()->m_activeDisplays.clear();
     }
@@ -4167,15 +4218,17 @@ const char * Config::getActiveDisplays() const
 
 void Config::addActiveDisplay(const char * display)
 {
-    if( !display || !display[0] )
+    if (!display || !display[0])
     {
         throw Exception("Active display could not be added to config, display name was empty");
     }
-    
-    auto it = std::find(getImpl()->m_activeDisplays.begin(),
-                        getImpl()->m_activeDisplays.end(), display);
 
-    if( it != getImpl()->m_activeDisplays.end() )
+    auto it = std::find(
+        getImpl()->m_activeDisplays.begin(),
+        getImpl()->m_activeDisplays.end(),
+        display);
+
+    if (it != getImpl()->m_activeDisplays.end())
     {
         // Display is already present.
         return;
@@ -4190,23 +4243,25 @@ void Config::addActiveDisplay(const char * display)
 
 void Config::removeActiveDisplay(const char * display)
 {
-    if( !display || !display[0] )
+    if (!display || !display[0])
     {
         throw Exception("Active display could not be removed from config, display name was empty.");
     }
-        
-    auto it = std::find( getImpl()->m_activeDisplays.begin(),
-                         getImpl()->m_activeDisplays.end(), display );
 
-    if( it != getImpl()->m_activeDisplays.end() )
+    auto it = std::find(
+        getImpl()->m_activeDisplays.begin(),
+        getImpl()->m_activeDisplays.end(),
+        display);
+
+    if (it != getImpl()->m_activeDisplays.end())
     {
         getImpl()->m_activeDisplays.erase(it);
     }
     else
     {
         std::ostringstream os;
-        os << "Active display could not be removed from config, display '"
-           << display << "' was not found.";
+        os << "Active display could not be removed from config, display '" << display
+           << "' was not found.";
         throw Exception(os.str().c_str());
     }
 
@@ -4224,10 +4279,9 @@ void Config::clearActiveDisplays()
     getImpl()->resetCacheIDs();
 }
 
-const char * Config::getActiveDisplay( int index ) const
+const char * Config::getActiveDisplay(int index) const
 {
-    if( index<0 || 
-        index >= static_cast<int>(getImpl()->m_activeDisplays.size()))
+    if (index < 0 || index >= static_cast<int>(getImpl()->m_activeDisplays.size()))
     {
         return nullptr;
     }
@@ -4247,8 +4301,7 @@ void Config::setActiveViews(const char * views)
 
     // SplitStringEnvStyle needs to always return a result, even if empty, for look parsing.
     // However, this does not count as an active view, so delete it.
-    if( getImpl()->m_activeViews.size() == 1 && 
-        getImpl()->m_activeViews[0].empty() )
+    if (getImpl()->m_activeViews.size() == 1 && getImpl()->m_activeViews[0].empty())
     {
         getImpl()->m_activeViews.clear();
     }
@@ -4267,15 +4320,14 @@ const char * Config::getActiveViews() const
 
 void Config::addActiveView(const char * view)
 {
-    if( !view || !view[0] )
+    if (!view || !view[0])
     {
         throw Exception("Active view could not be added to config, view name was empty.");
     }
 
-    auto it = std::find(getImpl()->m_activeViews.begin(),
-                        getImpl()->m_activeViews.end(), view);
+    auto it = std::find(getImpl()->m_activeViews.begin(), getImpl()->m_activeViews.end(), view);
 
-    if( it != getImpl()->m_activeViews.end() )
+    if (it != getImpl()->m_activeViews.end())
     {
         // View is already present.
         return;
@@ -4290,24 +4342,22 @@ void Config::addActiveView(const char * view)
 
 void Config::removeActiveView(const char * view)
 {
-    if( !view || !view[0] )
+    if (!view || !view[0])
     {
         throw Exception("Active view could not be removed from config, view name was empty.");
     }
-        
-    auto it = std::find( getImpl()->m_activeViews.begin(),
-                         getImpl()->m_activeViews.end(), view );
 
-    if(it!=getImpl()->m_activeViews.end())
+    auto it = std::find(getImpl()->m_activeViews.begin(), getImpl()->m_activeViews.end(), view);
+
+    if (it != getImpl()->m_activeViews.end())
     {
-            getImpl()->m_activeViews.erase(it);
+        getImpl()->m_activeViews.erase(it);
     }
     else
     {
-            std::ostringstream os;
-            os << "Active view could not be removed from config, view '"
-               << view << "' was not found.";
-            throw Exception(os.str().c_str());
+        std::ostringstream os;
+        os << "Active view could not be removed from config, view '" << view << "' was not found.";
+        throw Exception(os.str().c_str());
     }
 
     getImpl()->m_displayCache.clear();
@@ -4324,10 +4374,9 @@ void Config::clearActiveViews()
     getImpl()->resetCacheIDs();
 }
 
-const char * Config::getActiveView( int index ) const
+const char * Config::getActiveView(int index) const
 {
-    if( index<0 || 
-        index >= static_cast<int>(getImpl()->m_activeViews.size()))
+    if (index < 0 || index >= static_cast<int>(getImpl()->m_activeViews.size()))
     {
         return nullptr;
     }
@@ -4364,12 +4413,12 @@ int Config::getDisplayAllByName(const char * name) const noexcept
 
     for (size_t idx = 0; idx < getImpl()->m_displays.size(); ++idx)
     {
-        if (0==strcmp(name, getImpl()->m_displays[idx].first.c_str()))
+        if (0 == strcmp(name, getImpl()->m_displays[idx].first.c_str()))
         {
             return static_cast<int>(idx);
         }
     }
-    
+
     return -1;
 }
 
@@ -4403,14 +4452,15 @@ int Config::getNumViews(ViewType type, const char * display) const
     }
 
     DisplayMap::const_iterator iter = FindDisplay(getImpl()->m_displays, display);
-    if (iter == getImpl()->m_displays.end()) return 0;
+    if (iter == getImpl()->m_displays.end())
+        return 0;
 
     switch (type)
     {
-    case VIEW_SHARED:
-        return static_cast<int>(iter->second.m_sharedViews.size());
-    case VIEW_DISPLAY_DEFINED:
-        return static_cast<int>(iter->second.m_views.size());
+        case VIEW_SHARED:
+            return static_cast<int>(iter->second.m_sharedViews.size());
+        case VIEW_DISPLAY_DEFINED:
+            return static_cast<int>(iter->second.m_views.size());
     }
 
     return 0;
@@ -4428,28 +4478,29 @@ const char * Config::getView(ViewType type, const char * display, int index) con
     }
 
     DisplayMap::const_iterator iter = FindDisplay(getImpl()->m_displays, display);
-    if(iter == getImpl()->m_displays.end()) return "";
+    if (iter == getImpl()->m_displays.end())
+        return "";
 
     switch (type)
     {
-    case VIEW_SHARED:
-    {
-        const StringUtils::StringVec & views = iter->second.m_sharedViews;
-        if (index >= 0 && index < static_cast<int>(views.size()))
+        case VIEW_SHARED:
         {
-            return views[index].c_str();
+            const StringUtils::StringVec & views = iter->second.m_sharedViews;
+            if (index >= 0 && index < static_cast<int>(views.size()))
+            {
+                return views[index].c_str();
+            }
+            break;
         }
-        break;
-    }
-    case VIEW_DISPLAY_DEFINED:
-    {
-        const ViewVec & views = iter->second.m_views;
-        if (index >= 0 && index < static_cast<int>(views.size()))
+        case VIEW_DISPLAY_DEFINED:
         {
-            return views[index].m_name.c_str();
+            const ViewVec & views = iter->second.m_views;
+            if (index >= 0 && index < static_cast<int>(views.size()))
+            {
+                return views[index].m_name.c_str();
+            }
+            break;
         }
-        break;
-    }
     }
 
     return "";
@@ -4463,7 +4514,7 @@ void Config::getDefaultLumaCoefs(double * c3) const
     {
         throw Exception("getDefaultLumaCoefs: c3 must not be null.");
     }
-    memcpy(c3, &getImpl()->m_defaultLumaCoefs[0], 3*sizeof(double));
+    memcpy(c3, &getImpl()->m_defaultLumaCoefs[0], 3 * sizeof(double));
 }
 
 void Config::setDefaultLumaCoefs(const double * c3)
@@ -4472,7 +4523,7 @@ void Config::setDefaultLumaCoefs(const double * c3)
     {
         throw Exception("setDefaultLumaCoefs: c3 must not be null.");
     }
-    memcpy(&getImpl()->m_defaultLumaCoefs[0], c3, 3*sizeof(double));
+    memcpy(&getImpl()->m_defaultLumaCoefs[0], c3, 3 * sizeof(double));
 
     AutoMutex lock(getImpl()->m_cacheidMutex);
     getImpl()->resetCacheIDs();
@@ -4492,7 +4543,7 @@ int Config::getNumLooks() const
 
 const char * Config::getLookNameByIndex(int index) const
 {
-    if(index<0 || index>=static_cast<int>(getImpl()->m_looksList.size()))
+    if (index < 0 || index >= static_cast<int>(getImpl()->m_looksList.size()))
     {
         return "";
     }
@@ -4503,15 +4554,15 @@ const char * Config::getLookNameByIndex(int index) const
 void Config::addLook(const ConstLookRcPtr & look)
 {
     const std::string name = look->getName();
-    if(name.empty())
+    if (name.empty())
         throw Exception("Cannot addLook with an empty name.");
 
     const std::string namelower = StringUtils::Lower(name);
 
     // If the look exists, replace it
-    for(unsigned int i=0; i<getImpl()->m_looksList.size(); ++i)
+    for (unsigned int i = 0; i < getImpl()->m_looksList.size(); ++i)
     {
-        if(StringUtils::Lower(getImpl()->m_looksList[i]->getName()) == namelower)
+        if (StringUtils::Lower(getImpl()->m_looksList[i]->getName()) == namelower)
         {
             getImpl()->m_looksList[i] = look->createEditableCopy();
 
@@ -4551,7 +4602,7 @@ ConstViewTransformRcPtr Config::getViewTransform(const char * name) const noexce
 
 const char * Config::getViewTransformNameByIndex(int index) const noexcept
 {
-    if (index<0 || index >= static_cast<int>(getImpl()->m_viewTransforms.size()))
+    if (index < 0 || index >= static_cast<int>(getImpl()->m_viewTransforms.size()))
     {
         return "";
     }
@@ -4607,8 +4658,8 @@ void Config::addViewTransform(const ConstViewTransformRcPtr & viewTransform)
         throw Exception("Cannot add view transform with an empty name.");
     }
 
-    if (!viewTransform->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE) &&
-        !viewTransform->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE))
+    if (!viewTransform->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE)
+        && !viewTransform->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE))
     {
         std::ostringstream os;
         os << "Cannot add view transform '" << name << "' with no transform.";
@@ -4624,7 +4675,7 @@ void Config::addViewTransform(const ConstViewTransformRcPtr & viewTransform)
     {
         if (StringUtils::Lower(vt->getName()) == namelower)
         {
-            vt = viewTransform->createEditableCopy();
+            vt    = viewTransform->createEditableCopy();
             addIt = false;
             break;
         }
@@ -4665,37 +4716,41 @@ void Config::setFileRules(ConstFileRulesRcPtr fileRules)
 
 const char * Config::getColorSpaceFromFilepath(const char * filePath) const
 {
-    return getImpl()->m_fileRules->getImpl()->getColorSpaceFromFilepath(*this,
-                                                                        filePath ? filePath : "");
+    return getImpl()->m_fileRules->getImpl()->getColorSpaceFromFilepath(
+        *this,
+        filePath ? filePath : "");
 }
 
 const char * Config::getColorSpaceFromFilepath(const char * filePath, size_t & ruleIndex) const
 {
-    return getImpl()->m_fileRules->getImpl()->getColorSpaceFromFilepath(*this,
-                                                                        filePath ? filePath : "",
-                                                                        ruleIndex);
+    return getImpl()->m_fileRules->getImpl()->getColorSpaceFromFilepath(
+        *this,
+        filePath ? filePath : "",
+        ruleIndex);
 }
 
 bool Config::filepathOnlyMatchesDefaultRule(const char * filePath) const
 {
-    return getImpl()->m_fileRules->getImpl()->filepathOnlyMatchesDefaultRule(*this,
-                                                                             filePath ? filePath : "");
+    return getImpl()->m_fileRules->getImpl()->filepathOnlyMatchesDefaultRule(
+        *this,
+        filePath ? filePath : "");
 }
-
 
 ///////////////////////////////////////////////////////////////////////////
 //  GetProcessor
 
-ConstProcessorRcPtr Config::getProcessor(const ConstColorSpaceRcPtr & src,
-                                         const ConstColorSpaceRcPtr & dst) const
+ConstProcessorRcPtr Config::getProcessor(
+    const ConstColorSpaceRcPtr & src,
+    const ConstColorSpaceRcPtr & dst) const
 {
     ConstContextRcPtr context = getCurrentContext();
     return getProcessor(context, src, dst);
 }
 
-ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
-                                         const ConstColorSpaceRcPtr & src,
-                                         const ConstColorSpaceRcPtr & dst) const
+ConstProcessorRcPtr Config::getProcessor(
+    const ConstContextRcPtr & context,
+    const ConstColorSpaceRcPtr & src,
+    const ConstColorSpaceRcPtr & dst) const
 {
     if (!src)
     {
@@ -4720,9 +4775,10 @@ ConstProcessorRcPtr Config::getProcessor(const char * srcName, const char * dstN
 }
 
 // Names can be color space name or role name
-ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
-                                         const char * srcName,
-                                         const char * dstName) const
+ConstProcessorRcPtr Config::getProcessor(
+    const ConstContextRcPtr & context,
+    const char * srcName,
+    const char * dstName) const
 {
     auto csTransform = ColorSpaceTransform::Create();
     csTransform->setSrc(srcName);
@@ -4730,21 +4786,22 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
     return getProcessor(context, csTransform, TRANSFORM_DIR_FORWARD);
 }
 
-
-ConstProcessorRcPtr Config::getProcessor(const char * srcColorSpaceName,
-                                         const char * display,
-                                         const char * view,
-                                         TransformDirection direction) const
+ConstProcessorRcPtr Config::getProcessor(
+    const char * srcColorSpaceName,
+    const char * display,
+    const char * view,
+    TransformDirection direction) const
 {
     ConstContextRcPtr context = getCurrentContext();
     return getProcessor(context, srcColorSpaceName, display, view, direction);
 }
 
-ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
-                                         const char * srcColorSpaceName,
-                                         const char * display,
-                                         const char * view,
-                                         TransformDirection direction) const
+ConstProcessorRcPtr Config::getProcessor(
+    const ConstContextRcPtr & context,
+    const char * srcColorSpaceName,
+    const char * display,
+    const char * view,
+    TransformDirection direction) const
 {
     auto dt = DisplayViewTransform::Create();
     dt->setSrc(srcColorSpaceName);
@@ -4754,16 +4811,18 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
     return getProcessor(context, dt, direction);
 }
 
-ConstProcessorRcPtr Config::getProcessor(const ConstNamedTransformRcPtr & namedTransform,
-                                         TransformDirection direction) const
+ConstProcessorRcPtr Config::getProcessor(
+    const ConstNamedTransformRcPtr & namedTransform,
+    TransformDirection direction) const
 {
     ConstContextRcPtr context = getCurrentContext();
     return getProcessor(context, namedTransform, direction);
 }
 
-ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
-                                         const ConstNamedTransformRcPtr & namedTransform,
-                                         TransformDirection direction) const
+ConstProcessorRcPtr Config::getProcessor(
+    const ConstContextRcPtr & context,
+    const ConstNamedTransformRcPtr & namedTransform,
+    TransformDirection direction) const
 {
     // This gets or calculates the named transform in the requested direction. The result
     // is always applied in the forward direction.
@@ -4771,16 +4830,18 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
     return getProcessor(context, transform, TRANSFORM_DIR_FORWARD);
 }
 
-ConstProcessorRcPtr Config::getProcessor(const char * namedTransformName,
-                                         TransformDirection direction) const
+ConstProcessorRcPtr Config::getProcessor(
+    const char * namedTransformName,
+    TransformDirection direction) const
 {
     ConstContextRcPtr context = getCurrentContext();
     return getProcessor(context, namedTransformName, direction);
 }
 
-ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
-                                         const char * namedTransformName,
-                                         TransformDirection direction) const
+ConstProcessorRcPtr Config::getProcessor(
+    const ConstContextRcPtr & context,
+    const char * namedTransformName,
+    TransformDirection direction) const
 {
     ConstNamedTransformRcPtr namedTransform = getNamedTransform(namedTransformName);
     return getProcessor(context, namedTransform, direction);
@@ -4791,16 +4852,18 @@ ConstProcessorRcPtr Config::getProcessor(const ConstTransformRcPtr & transform) 
     return getProcessor(transform, TRANSFORM_DIR_FORWARD);
 }
 
-ConstProcessorRcPtr Config::getProcessor(const ConstTransformRcPtr & transform,
-                                         TransformDirection direction) const
+ConstProcessorRcPtr Config::getProcessor(
+    const ConstTransformRcPtr & transform,
+    TransformDirection direction) const
 {
     ConstContextRcPtr context = getCurrentContext();
     return getProcessor(context, transform, direction);
 }
 
-ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
-                                         const ConstTransformRcPtr & transform,
-                                         TransformDirection direction) const
+ConstProcessorRcPtr Config::getProcessor(
+    const ConstContextRcPtr & context,
+    const ConstTransformRcPtr & transform,
+    TransformDirection direction) const
 {
     if (!context)
     {
@@ -4812,7 +4875,6 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
         throw Exception("Config::GetProcessor failed. Transform is null.");
     }
 
-
     // The goal of the usedContext is to only contain the context vars that are actually used for
     // this transform.  This allows the cache to be more efficient. However, there are still some
     // various TODOs since the usedContext will sometimes contain more vars than are needed.
@@ -4822,14 +4884,14 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
     usedContext->setWorkingDir(context->getWorkingDir());
     usedContext->setConfigIOProxy(context->getConfigIOProxy());
 
-    const bool needContextVariables = CollectContextVariables(*this, *context, transform, usedContext);
+    const bool needContextVariables
+        = CollectContextVariables(*this, *context, transform, usedContext);
 
     // Create helper method.
-    auto CreateProcessor = [](const Config & config, 
+    auto CreateProcessor = [](const Config & config,
                               const ConstContextRcPtr & context,
                               const ConstTransformRcPtr & transform,
-                              TransformDirection direction) -> ProcessorRcPtr
-    {
+                              TransformDirection direction) -> ProcessorRcPtr {
         ProcessorRcPtr processor = Processor::Create();
         processor->getImpl()->setProcessorCacheFlags(config.getImpl()->m_cacheFlags);
         processor->getImpl()->setTransform(config, context, transform, direction);
@@ -4844,8 +4906,7 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
         // Note that the key includes a string description of the transform which does not include
         // all the LUT entries (just the arguments of the FileTransforms for LUTs).
         std::ostringstream oss;
-        oss << (needContextVariables ? std::string(usedContext->getCacheID()) : "")
-            << *transform
+        oss << (needContextVariables ? std::string(usedContext->getCacheID()) : "") << *transform
             << direction;
 
         const std::size_t key = std::hash<std::string>{}(oss.str());
@@ -4896,21 +4957,28 @@ ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
     }
 }
 
-ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstConfigRcPtr & srcConfig,
-                                                    const char * srcName,
-                                                    const ConstConfigRcPtr & dstConfig,
-                                                    const char * dstName)
+ConstProcessorRcPtr Config::GetProcessorFromConfigs(
+    const ConstConfigRcPtr & srcConfig,
+    const char * srcName,
+    const ConstConfigRcPtr & dstConfig,
+    const char * dstName)
 {
-    return GetProcessorFromConfigs(srcConfig->getCurrentContext(), srcConfig, srcName,
-                                   dstConfig->getCurrentContext(), dstConfig, dstName);
+    return GetProcessorFromConfigs(
+        srcConfig->getCurrentContext(),
+        srcConfig,
+        srcName,
+        dstConfig->getCurrentContext(),
+        dstConfig,
+        dstName);
 }
 
-ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & srcContext,
-                                                    const ConstConfigRcPtr & srcConfig,
-                                                    const char * srcName,
-                                                    const ConstContextRcPtr & dstContext,
-                                                    const ConstConfigRcPtr & dstConfig,
-                                                    const char * dstName)
+ConstProcessorRcPtr Config::GetProcessorFromConfigs(
+    const ConstContextRcPtr & srcContext,
+    const ConstConfigRcPtr & srcConfig,
+    const char * srcName,
+    const ConstContextRcPtr & dstContext,
+    const ConstConfigRcPtr & dstConfig,
+    const char * dstName)
 {
     // Extract the appropriate interchange roles based on the reference space type of the
     // source and destination color spaces.  Note that no heuristics are attempted.  If these
@@ -4919,43 +4987,63 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
     const char * srcInterchangeName = nullptr;
     const char * dstInterchangeName = nullptr;
     ReferenceSpaceType interchangeType;
-    if( !ConfigUtils::GetInterchangeRolesForColorSpaceConversion(&srcInterchangeName, 
-                                                                 &dstInterchangeName, 
-                                                                 interchangeType,
-                                                                 srcConfig, srcName, 
-                                                                 dstConfig, dstName) )
+    if (!ConfigUtils::GetInterchangeRolesForColorSpaceConversion(
+            &srcInterchangeName,
+            &dstInterchangeName,
+            interchangeType,
+            srcConfig,
+            srcName,
+            dstConfig,
+            dstName))
     {
         const char * interchangeRoleName = (interchangeType == REFERENCE_SPACE_SCENE)
-                                           ? ROLE_INTERCHANGE_SCENE : ROLE_INTERCHANGE_DISPLAY;
+                                               ? ROLE_INTERCHANGE_SCENE
+                                               : ROLE_INTERCHANGE_DISPLAY;
         std::ostringstream os;
         os << "The required role '" << interchangeRoleName << "' is missing from the source and/or "
            << "destination config.";
         throw Exception(os.str().c_str());
     }
 
-    return GetProcessorFromConfigs(srcContext, srcConfig, srcName, srcInterchangeName,
-                                   dstContext, dstConfig, dstName, dstInterchangeName);
+    return GetProcessorFromConfigs(
+        srcContext,
+        srcConfig,
+        srcName,
+        srcInterchangeName,
+        dstContext,
+        dstConfig,
+        dstName,
+        dstInterchangeName);
 }
 
-ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstConfigRcPtr & srcConfig,
-                                                    const char * srcName,
-                                                    const char * srcInterchangeName,
-                                                    const ConstConfigRcPtr & dstConfig,
-                                                    const char * dstName,
-                                                    const char * dstInterchangeName)
+ConstProcessorRcPtr Config::GetProcessorFromConfigs(
+    const ConstConfigRcPtr & srcConfig,
+    const char * srcName,
+    const char * srcInterchangeName,
+    const ConstConfigRcPtr & dstConfig,
+    const char * dstName,
+    const char * dstInterchangeName)
 {
-    return GetProcessorFromConfigs(srcConfig->getCurrentContext(), srcConfig, srcName, srcInterchangeName,
-                                   dstConfig->getCurrentContext(), dstConfig, dstName, dstInterchangeName);
+    return GetProcessorFromConfigs(
+        srcConfig->getCurrentContext(),
+        srcConfig,
+        srcName,
+        srcInterchangeName,
+        dstConfig->getCurrentContext(),
+        dstConfig,
+        dstName,
+        dstInterchangeName);
 }
 
-ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & srcContext,
-                                                    const ConstConfigRcPtr & srcConfig,
-                                                    const char * srcName,
-                                                    const char * srcInterchangeName,
-                                                    const ConstContextRcPtr & dstContext,
-                                                    const ConstConfigRcPtr & dstConfig,
-                                                    const char * dstName,
-                                                    const char * dstInterchangeName)
+ConstProcessorRcPtr Config::GetProcessorFromConfigs(
+    const ConstContextRcPtr & srcContext,
+    const ConstConfigRcPtr & srcConfig,
+    const char * srcName,
+    const char * srcInterchangeName,
+    const ConstContextRcPtr & dstContext,
+    const ConstConfigRcPtr & dstConfig,
+    const char * dstName,
+    const char * dstInterchangeName)
 {
     ConstColorSpaceRcPtr srcColorSpace = srcConfig->getColorSpace(srcName);
     if (!srcColorSpace)
@@ -4992,14 +5080,16 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
     auto p1 = srcConfig->getProcessor(srcContext, srcColorSpace, srcExCs);
     if (!p1)
     {
-        throw Exception("Can't create the processor for the source config and "
+        throw Exception(
+            "Can't create the processor for the source config and "
             "the source color space.");
     }
 
     auto p2 = dstConfig->getProcessor(dstContext, dstExCs, dstColorSpace);
     if (!p2)
     {
-        throw Exception("Can't create the processor for the destination config "
+        throw Exception(
+            "Can't create the processor for the destination config "
             "and the destination color space.");
     }
 
@@ -5016,25 +5106,34 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
     return processor;
 }
 
-ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstConfigRcPtr & srcConfig,
-                                                    const char * srcName,
-                                                    const ConstConfigRcPtr & dstConfig,
-                                                    const char * dstDisplay,
-                                                    const char * dstView,
-                                                    TransformDirection direction)
+ConstProcessorRcPtr Config::GetProcessorFromConfigs(
+    const ConstConfigRcPtr & srcConfig,
+    const char * srcName,
+    const ConstConfigRcPtr & dstConfig,
+    const char * dstDisplay,
+    const char * dstView,
+    TransformDirection direction)
 {
-    return GetProcessorFromConfigs(srcConfig->getCurrentContext(), srcConfig, srcName,
-                                   dstConfig->getCurrentContext(), dstConfig, dstDisplay, dstView, direction);
+    return GetProcessorFromConfigs(
+        srcConfig->getCurrentContext(),
+        srcConfig,
+        srcName,
+        dstConfig->getCurrentContext(),
+        dstConfig,
+        dstDisplay,
+        dstView,
+        direction);
 }
 
-ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & srcContext,
-                                                    const ConstConfigRcPtr & srcConfig,
-                                                    const char * srcName,
-                                                    const ConstContextRcPtr & dstContext,
-                                                    const ConstConfigRcPtr & dstConfig,
-                                                    const char * dstDisplay,
-                                                    const char * dstView,
-                                                    TransformDirection direction)
+ConstProcessorRcPtr Config::GetProcessorFromConfigs(
+    const ConstContextRcPtr & srcContext,
+    const ConstConfigRcPtr & srcConfig,
+    const char * srcName,
+    const ConstContextRcPtr & dstContext,
+    const ConstConfigRcPtr & dstConfig,
+    const char * dstDisplay,
+    const char * dstView,
+    TransformDirection direction)
 {
     ConstColorSpaceRcPtr srcColorSpace = srcConfig->getColorSpace(srcName);
     if (!srcColorSpace)
@@ -5045,8 +5144,9 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
     }
 
     const bool sceneReferred = (srcColorSpace->getReferenceSpaceType() == REFERENCE_SPACE_SCENE);
-    const char* exchangeRoleName = sceneReferred ? ROLE_INTERCHANGE_SCENE : ROLE_INTERCHANGE_DISPLAY;
-    const char* srcExName = LookupRole(srcConfig->getImpl()->m_roles, exchangeRoleName);
+    const char * exchangeRoleName
+        = sceneReferred ? ROLE_INTERCHANGE_SCENE : ROLE_INTERCHANGE_DISPLAY;
+    const char * srcExName = LookupRole(srcConfig->getImpl()->m_roles, exchangeRoleName);
     if (!srcExName || !*srcExName)
     {
         std::ostringstream os;
@@ -5062,7 +5162,7 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
         throw Exception(os.str().c_str());
     }
 
-    const char* dstExName = LookupRole(dstConfig->getImpl()->m_roles, exchangeRoleName);
+    const char * dstExName = LookupRole(dstConfig->getImpl()->m_roles, exchangeRoleName);
     if (!dstExName || !*dstExName)
     {
         std::ostringstream os;
@@ -5078,33 +5178,53 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
         throw Exception(os.str().c_str());
     }
 
-    return GetProcessorFromConfigs(srcContext, srcConfig, srcName, srcExName,
-                                   dstContext, dstConfig, dstDisplay, dstView, dstExName, direction);
+    return GetProcessorFromConfigs(
+        srcContext,
+        srcConfig,
+        srcName,
+        srcExName,
+        dstContext,
+        dstConfig,
+        dstDisplay,
+        dstView,
+        dstExName,
+        direction);
 }
 
-ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstConfigRcPtr& srcConfig,
-                                                    const char * srcName,
-                                                    const char * srcInterchangeName,
-                                                    const ConstConfigRcPtr & dstConfig,
-                                                    const char * dstDisplay,
-                                                    const char * dstView,
-                                                    const char* dstInterchangeName,
-                                                    TransformDirection direction)
+ConstProcessorRcPtr Config::GetProcessorFromConfigs(
+    const ConstConfigRcPtr & srcConfig,
+    const char * srcName,
+    const char * srcInterchangeName,
+    const ConstConfigRcPtr & dstConfig,
+    const char * dstDisplay,
+    const char * dstView,
+    const char * dstInterchangeName,
+    TransformDirection direction)
 {
-    return GetProcessorFromConfigs(srcConfig->getCurrentContext(), srcConfig, srcName, srcInterchangeName,
-                                   dstConfig->getCurrentContext(), dstConfig, dstDisplay, dstView, dstInterchangeName, direction);
+    return GetProcessorFromConfigs(
+        srcConfig->getCurrentContext(),
+        srcConfig,
+        srcName,
+        srcInterchangeName,
+        dstConfig->getCurrentContext(),
+        dstConfig,
+        dstDisplay,
+        dstView,
+        dstInterchangeName,
+        direction);
 }
 
-ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & srcContext,
-                                                    const ConstConfigRcPtr & srcConfig,
-                                                    const char * srcName,
-                                                    const char * srcInterchangeName,
-                                                    const ConstContextRcPtr & dstContext,
-                                                    const ConstConfigRcPtr & dstConfig,
-                                                    const char * dstDisplay,
-                                                    const char * dstView,
-                                                    const char * dstInterchangeName,
-                                                    TransformDirection direction)
+ConstProcessorRcPtr Config::GetProcessorFromConfigs(
+    const ConstContextRcPtr & srcContext,
+    const ConstConfigRcPtr & srcConfig,
+    const char * srcName,
+    const char * srcInterchangeName,
+    const ConstContextRcPtr & dstContext,
+    const ConstConfigRcPtr & dstConfig,
+    const char * dstDisplay,
+    const char * dstView,
+    const char * dstInterchangeName,
+    TransformDirection direction)
 {
     ConstColorSpaceRcPtr srcColorSpace = srcConfig->getColorSpace(srcName);
     if (!srcColorSpace)
@@ -5129,23 +5249,27 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
     auto p1 = srcConfig->getProcessor(srcContext, srcColorSpace, srcExCs);
     if (!p1)
     {
-        throw Exception("Can't create the processor for the source config and "
+        throw Exception(
+            "Can't create the processor for the source config and "
             "the source color space.");
     }
 
-    const char* csName = dstConfig->getDisplayViewColorSpaceName(dstDisplay, dstView);
-    const char* displayColorSpaceName = View::UseDisplayName(csName) ? dstDisplay : csName;
+    const char * csName = dstConfig->getDisplayViewColorSpaceName(dstDisplay, dstView);
+    const char * displayColorSpaceName     = View::UseDisplayName(csName) ? dstDisplay : csName;
     ConstColorSpaceRcPtr displayColorSpace = dstConfig->getColorSpace(displayColorSpaceName);
     if (!displayColorSpace)
     {
-        throw Exception("Can't create the processor for the destination config: "
+        throw Exception(
+            "Can't create the processor for the destination config: "
             "display color space not found.");
     }
 
-    auto p2 = dstConfig->getProcessor(dstContext, dstInterchangeName, dstDisplay, dstView, direction);
+    auto p2
+        = dstConfig->getProcessor(dstContext, dstInterchangeName, dstDisplay, dstView, direction);
     if (!p2)
     {
-        throw Exception("Can't create the processor for the destination config "
+        throw Exception(
+            "Can't create the processor for the destination config "
             "and the destination display view transform.");
     }
 
@@ -5166,84 +5290,92 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
     return processor;
 }
 
-static ConstProcessorRcPtr GetProcessorToBuiltinCS(ConstConfigRcPtr srcConfig,
-                                                   const char * srcColorSpaceName, 
-                                                   const char * builtinColorSpaceName,
-                                                   TransformDirection direction)
+static ConstProcessorRcPtr GetProcessorToBuiltinCS(
+    ConstConfigRcPtr srcConfig,
+    const char * srcColorSpaceName,
+    const char * builtinColorSpaceName,
+    TransformDirection direction)
 {
-    // Use the Default config as the Built-in config to interpret the known color space name.        
+    // Use the Default config as the Built-in config to interpret the known color space name.
     ConstConfigRcPtr builtinConfig = Config::CreateFromFile("ocio://default");
 
     if (builtinConfig->getColorSpace(builtinColorSpaceName) == nullptr)
     {
         std::ostringstream os;
-        os  << "Built-in config does not contain the requested color space: " 
-            << builtinColorSpaceName << ".";
+        os << "Built-in config does not contain the requested color space: "
+           << builtinColorSpaceName << ".";
         throw Exception(os.str().c_str());
     }
 
-    const char * srcInterchange = nullptr;
+    const char * srcInterchange     = nullptr;
     const char * builtinInterchange = nullptr;
-    Config::IdentifyInterchangeSpace(&srcInterchange, 
-                                     &builtinInterchange,
-                                     srcConfig,
-                                     srcColorSpaceName, 
-                                     builtinConfig,
-                                     builtinColorSpaceName);
+    Config::IdentifyInterchangeSpace(
+        &srcInterchange,
+        &builtinInterchange,
+        srcConfig,
+        srcColorSpaceName,
+        builtinConfig,
+        builtinColorSpaceName);
 
     if (builtinInterchange && builtinInterchange[0])
     {
         ConstProcessorRcPtr proc;
         if (direction == TRANSFORM_DIR_FORWARD)
         {
-            proc = Config::GetProcessorFromConfigs(srcConfig,
-                                                   srcColorSpaceName,
-                                                   srcInterchange,
-                                                   builtinConfig,
-                                                   builtinColorSpaceName,
-                                                   builtinInterchange);
+            proc = Config::GetProcessorFromConfigs(
+                srcConfig,
+                srcColorSpaceName,
+                srcInterchange,
+                builtinConfig,
+                builtinColorSpaceName,
+                builtinInterchange);
         }
         else if (direction == TRANSFORM_DIR_INVERSE)
         {
-            proc = Config::GetProcessorFromConfigs(builtinConfig,
-                                                   builtinColorSpaceName,
-                                                   builtinInterchange,
-                                                   srcConfig,
-                                                   srcColorSpaceName,
-                                                   srcInterchange);
+            proc = Config::GetProcessorFromConfigs(
+                builtinConfig,
+                builtinColorSpaceName,
+                builtinInterchange,
+                srcConfig,
+                srcColorSpaceName,
+                srcInterchange);
         }
         return proc;
     }
 
     std::ostringstream os;
-    os  << "Heuristics were not able to find a known color space in the provided config.\n"
-        << "Please set the interchange roles in the config.";
+    os << "Heuristics were not able to find a known color space in the provided config.\n"
+       << "Please set the interchange roles in the config.";
     throw Exception(os.str().c_str());
 }
 
-ConstProcessorRcPtr Config::GetProcessorToBuiltinColorSpace(ConstConfigRcPtr srcConfig,
-                                                            const char * srcColorSpaceName, 
-                                                            const char * builtinColorSpaceName)
+ConstProcessorRcPtr Config::GetProcessorToBuiltinColorSpace(
+    ConstConfigRcPtr srcConfig,
+    const char * srcColorSpaceName,
+    const char * builtinColorSpaceName)
 {
-    return GetProcessorToBuiltinCS(srcConfig,
-                                   srcColorSpaceName, 
-                                   builtinColorSpaceName,
-                                   TRANSFORM_DIR_FORWARD);
+    return GetProcessorToBuiltinCS(
+        srcConfig,
+        srcColorSpaceName,
+        builtinColorSpaceName,
+        TRANSFORM_DIR_FORWARD);
 }
 
-ConstProcessorRcPtr Config::GetProcessorFromBuiltinColorSpace(const char * builtinColorSpaceName,
-                                                              ConstConfigRcPtr srcConfig,
-                                                              const char * srcColorSpaceName)
+ConstProcessorRcPtr Config::GetProcessorFromBuiltinColorSpace(
+    const char * builtinColorSpaceName,
+    ConstConfigRcPtr srcConfig,
+    const char * srcColorSpaceName)
 {
-    return GetProcessorToBuiltinCS(srcConfig,
-                                   srcColorSpaceName, 
-                                   builtinColorSpaceName,
-                                   TRANSFORM_DIR_INVERSE);
+    return GetProcessorToBuiltinCS(
+        srcConfig,
+        srcColorSpaceName,
+        builtinColorSpaceName,
+        TRANSFORM_DIR_INVERSE);
 }
 
 ///////////////////////////////////////////////////////////////////////////
 
-std::ostream& operator<< (std::ostream& os, const Config& config)
+std::ostream & operator<<(std::ostream & os, const Config & config)
 {
     config.serialize(os);
     return os;
@@ -5263,26 +5395,27 @@ const char * Config::getCacheID(const ConstContextRcPtr & context) const
 
     // A null context will use the empty cacheid
     std::string contextcacheid;
-    if(context) contextcacheid = context->getCacheID();
+    if (context)
+        contextcacheid = context->getCacheID();
 
     StringMap::const_iterator cacheiditer = getImpl()->m_cacheids.find(contextcacheid);
-    if(cacheiditer != getImpl()->m_cacheids.end())
+    if (cacheiditer != getImpl()->m_cacheids.end())
     {
         return cacheiditer->second.c_str();
     }
 
     // Include the hash of the yaml config serialization
-    if(getImpl()->m_cacheidnocontext.empty())
+    if (getImpl()->m_cacheidnocontext.empty())
     {
         std::ostringstream cacheid;
         serialize(cacheid);
-        const std::string fullstr = cacheid.str();
+        const std::string fullstr     = cacheid.str();
         getImpl()->m_cacheidnocontext = CacheIDHash(fullstr.c_str(), fullstr.size());
     }
 
     // Also include all file references, using the context (if specified)
     std::string fileReferencesFastHash;
-    if(context)
+    if (context)
     {
         std::ostringstream filehash;
 
@@ -5290,14 +5423,15 @@ const char * Config::getCacheID(const ConstContextRcPtr & context) const
         getImpl()->getAllInternalTransforms(allTransforms);
 
         std::set<std::string> files;
-        for(const auto & transform : allTransforms)
+        for (const auto & transform : allTransforms)
         {
             GetFileReferences(files, transform);
         }
 
-        for(const auto & iter : files)
+        for (const auto & iter : files)
         {
-            if(iter.empty()) continue;
+            if (iter.empty())
+                continue;
 
             filehash << iter << "=";
 
@@ -5306,7 +5440,7 @@ const char * Config::getCacheID(const ConstContextRcPtr & context) const
                 const std::string resolvedLocation = context->resolveFileLocation(iter.c_str());
                 filehash << GetFastFileHash(resolvedLocation, *context) << " ";
             }
-            catch(...)
+            catch (...)
             {
                 filehash << "? ";
                 continue;
@@ -5314,17 +5448,18 @@ const char * Config::getCacheID(const ConstContextRcPtr & context) const
         }
 
         const std::string fullstr = filehash.str();
-        fileReferencesFastHash = CacheIDHash(fullstr.c_str(), fullstr.size());
+        fileReferencesFastHash    = CacheIDHash(fullstr.c_str(), fullstr.size());
     }
 
-    getImpl()->m_cacheids[contextcacheid] = getImpl()->m_cacheidnocontext + ":" + fileReferencesFastHash;
+    getImpl()->m_cacheids[contextcacheid]
+        = getImpl()->m_cacheidnocontext + ":" + fileReferencesFastHash;
     return getImpl()->m_cacheids[contextcacheid].c_str();
 }
 
 ///////////////////////////////////////////////////////////////////////////
 //  Serialization
 
-void Config::serialize(std::ostream& os) const
+void Config::serialize(std::ostream & os) const
 {
     try
     {
@@ -5383,35 +5518,35 @@ StringUtils::StringVec Config::Impl::buildInactiveNamesList(InactiveType type) c
         v = StringUtils::Trim(v);
         switch (type)
         {
-        case INACTIVE_COLORSPACE:
-        {
-            const auto & cs = getColorSpace(v.c_str());
-            // Only add existing items.
-            if (cs)
+            case INACTIVE_COLORSPACE:
             {
-                // Use the canonical name (alias or role might have been used).
-                res.push_back(cs->getName());
+                const auto & cs = getColorSpace(v.c_str());
+                // Only add existing items.
+                if (cs)
+                {
+                    // Use the canonical name (alias or role might have been used).
+                    res.push_back(cs->getName());
+                }
+                break;
             }
-            break;
-        }
-        case INACTIVE_NAMEDTRANSFORM:
-        {
-            const auto & nt = getNamedTransform(v.c_str());
-            // Only add existing items.
-            if (nt)
+            case INACTIVE_NAMEDTRANSFORM:
             {
-                // Use the canonical name (alias might have been used).
-                res.push_back(nt->getName());
+                const auto & nt = getNamedTransform(v.c_str());
+                // Only add existing items.
+                if (nt)
+                {
+                    // Use the canonical name (alias might have been used).
+                    res.push_back(nt->getName());
+                }
+                break;
             }
-            break;
-        }
-        case INACTIVE_ALL:
-        {
-            // This is only used to verify that all items of the list do exists (only used by the
-            // validate() function.
-            res.push_back(v);
-            break;
-        }
+            case INACTIVE_ALL:
+            {
+                // This is only used to verify that all items of the list do exists (only used by
+                // the validate() function.
+                res.push_back(v);
+                break;
+            }
         }
     }
 
@@ -5434,7 +5569,7 @@ void Config::Impl::refreshActiveColorSpaces()
 
         for (const auto & csName : m_inactiveColorSpaceNames)
         {
-            if (csName==name)
+            if (csName == name)
             {
                 isActive = false;
                 break;
@@ -5475,8 +5610,8 @@ void Config::Impl::resetCacheIDs()
 {
     m_cacheids.clear();
     m_cacheidnocontext = "";
-    m_validation = VALIDATION_UNKNOWN;
-    m_validationtext = "";
+    m_validation       = VALIDATION_UNKNOWN;
+    m_validationtext   = "";
 
     // As any changes could impact the cache keys, it's better to always flush the cache
     // of processors to not keep in memory useless instances.
@@ -5605,16 +5740,19 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
             }
 
             if (m_majorVersion == 2 && m_minorVersion < 1
-                    && 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-LMT - ACES 1.3 Reference Gamut Compression"))
+                && 0
+                       == Platform::Strcasecmp(
+                           blt->getStyle(),
+                           "ACES-LMT - ACES 1.3 Reference Gamut Compression"))
             {
-                throw Exception("Only config version 2.1 (or higher) can have "
-                                "BuiltinTransform style 'ACES-LMT - ACES 1.3 Reference Gamut Compression'.");
+                throw Exception(
+                    "Only config version 2.1 (or higher) can have "
+                    "BuiltinTransform style 'ACES-LMT - ACES 1.3 Reference Gamut Compression'.");
             }
-            if (m_majorVersion == 2 && m_minorVersion < 2 
-                    && (   0 == Platform::Strcasecmp(blt->getStyle(), "ARRI_LOGC4_to_ACES2065-1")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - CANON_CLOG2_to_LINEAR")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - CANON_CLOG3_to_LINEAR") )
-                )
+            if (m_majorVersion == 2 && m_minorVersion < 2
+                && (0 == Platform::Strcasecmp(blt->getStyle(), "ARRI_LOGC4_to_ACES2065-1")
+                    || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - CANON_CLOG2_to_LINEAR")
+                    || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - CANON_CLOG3_to_LINEAR")))
             {
                 std::ostringstream os;
                 os << "Only config version 2.2 (or higher) can have BuiltinTransform style '"
@@ -5622,52 +5760,173 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
                 throw Exception(os.str().c_str());
             }
             if (m_majorVersion == 2 && m_minorVersion < 3
-                    && 0 == Platform::Strcasecmp(blt->getStyle(), "DISPLAY - CIE-XYZ-D65_to_DisplayP3"))
+                && 0 == Platform::Strcasecmp(blt->getStyle(), "DISPLAY - CIE-XYZ-D65_to_DisplayP3"))
             {
-                throw Exception("Only config version 2.3 (or higher) can have "
-                                "BuiltinTransform style 'DISPLAY - CIE-XYZ-D65_to_DisplayP3'.");
+                throw Exception(
+                    "Only config version 2.3 (or higher) can have "
+                    "BuiltinTransform style 'DISPLAY - CIE-XYZ-D65_to_DisplayP3'.");
             }
-            if (m_majorVersion == 2 && m_minorVersion < 4 
-                    && (   0 == Platform::Strcasecmp(blt->getStyle(), "APPLE_LOG_to_ACES2065-1")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - APPLE_LOG_to_LINEAR")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - HLG-OETF")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - HLG-OETF-INVERSE")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "DISPLAY - CIE-XYZ-D65_to_DCDM-D65")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "DISPLAY - CIE-XYZ-D65_to_ST2084-DCDM-D65")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-108nit-P3-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-300nit-P3-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-REC2020_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-REC2020_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-REC709-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-P3-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709-D60-in-REC2020-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D60-in-P3-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D60-in-XYZ-E_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-108nit-P3-D60-in-P3-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-300nit-P3-D60-in-XYZ-E_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D60-in-P3-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D60-in-P3-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D60-in-P3-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D60-in-P3-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D60-in-REC2020-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D60-in-REC2020-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D60-in-REC2020-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D60-in-REC2020-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-REC2020-D60-in-REC2020-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020-D60-in-REC2020-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-REC2020-D60-in-REC2020-D65_2.0")
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020-D60-in-REC2020-D65_2.0")
-                        // NB: This one was added in OCIO 2.4.1.
-                        || 0 == Platform::Strcasecmp(blt->getStyle(), "DISPLAY - CIE-XYZ-D65_to_DisplayP3-HDR") )
-                )
+            if (m_majorVersion == 2 && m_minorVersion < 4
+                && (0 == Platform::Strcasecmp(blt->getStyle(), "APPLE_LOG_to_ACES2065-1")
+                    || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - APPLE_LOG_to_LINEAR")
+                    || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - HLG-OETF")
+                    || 0 == Platform::Strcasecmp(blt->getStyle(), "CURVE - HLG-OETF-INVERSE")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "DISPLAY - CIE-XYZ-D65_to_DCDM-D65")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "DISPLAY - CIE-XYZ-D65_to_ST2084-DCDM-D65")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D65_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-108nit-P3-D65_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-300nit-P3-D65_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-P3-D65_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-P3-D65_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-P3-D65_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-P3-D65_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-500nit-REC2020_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-2000nit-REC2020_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - "
+                               "SDR-100nit-REC709-D60-in-REC709-D65_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - "
+                               "SDR-100nit-REC709-D60-in-P3-D65_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - "
+                               "SDR-100nit-REC709-D60-in-REC2020-D65_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - "
+                               "SDR-100nit-P3-D60-in-P3-D65_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - "
+                               "SDR-100nit-P3-D60-in-XYZ-E_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - "
+                               "HDR-108nit-P3-D60-in-P3-D65_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - "
+                               "HDR-300nit-P3-D60-in-XYZ-E_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - "
+                               "HDR-500nit-P3-D60-in-P3-D65_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - "
+                               "HDR-1000nit-P3-D60-in-P3-D65_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - "
+                               "HDR-2000nit-P3-D60-in-P3-D65_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - "
+                               "HDR-4000nit-P3-D60-in-P3-D65_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - "
+                               "HDR-500nit-P3-D60-in-REC2020-D65_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - "
+                               "HDR-1000nit-P3-D60-in-REC2020-D65_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - "
+                               "HDR-2000nit-P3-D60-in-REC2020-D65_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - "
+                               "HDR-4000nit-P3-D60-in-REC2020-D65_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - "
+                               "HDR-500nit-REC2020-D60-in-REC2020-D65_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - "
+                               "HDR-1000nit-REC2020-D60-in-REC2020-D65_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - "
+                               "HDR-2000nit-REC2020-D60-in-REC2020-D65_2.0")
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - "
+                               "HDR-4000nit-REC2020-D60-in-REC2020-D65_2.0")
+                    // NB: This one was added in OCIO 2.4.1.
+                    || 0
+                           == Platform::Strcasecmp(
+                               blt->getStyle(),
+                               "DISPLAY - CIE-XYZ-D65_to_DisplayP3-HDR")))
             {
                 std::ostringstream os;
                 os << "Only config version 2.4 (or higher) can have BuiltinTransform style '"
@@ -5679,8 +5938,9 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
         {
             if (m_majorVersion < 2 && cdl->getStyle() != CDL_TRANSFORM_DEFAULT)
             {
-                throw Exception("Only config version 2 (or higher) can have style for "
-                                "CDLTransform.");
+                throw Exception(
+                    "Only config version 2 (or higher) can have style for "
+                    "CDLTransform.");
             }
         }
         else if (DynamicPtrCast<const DisplayViewTransform>(transform))
@@ -5690,29 +5950,32 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
                 throw Exception("Only config version 2 (or higher) can have DisplayViewTransform.");
             }
         }
-        else if (ConstExponentTransformRcPtr ex =
-                 DynamicPtrCast<const ExponentTransform>(transform))
+        else if (
+            ConstExponentTransformRcPtr ex = DynamicPtrCast<const ExponentTransform>(transform))
         {
             if (m_majorVersion < 2 && ex->getNegativeStyle() != NEGATIVE_CLAMP)
             {
-                throw Exception("Config version 1 only supports ExponentTransform clamping "
-                                "negative values.");
+                throw Exception(
+                    "Config version 1 only supports ExponentTransform clamping "
+                    "negative values.");
             }
         }
         else if (DynamicPtrCast<const ExponentWithLinearTransform>(transform))
         {
             if (m_majorVersion < 2)
             {
-                throw Exception("Only config version 2 (or higher) can have "
-                                "ExponentWithLinearTransform.");
+                throw Exception(
+                    "Only config version 2 (or higher) can have "
+                    "ExponentWithLinearTransform.");
             }
         }
         else if (DynamicPtrCast<const ExposureContrastTransform>(transform))
         {
             if (m_majorVersion < 2)
             {
-                throw Exception("Only config version 2 (or higher) can have "
-                                "ExposureContrastTransform.");
+                throw Exception(
+                    "Only config version 2 (or higher) can have "
+                    "ExposureContrastTransform.");
             }
         }
         else if (ConstFileTransformRcPtr ft = DynamicPtrCast<const FileTransform>(transform))
@@ -5721,56 +5984,65 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
             {
                 if (ft->getInterpolation() == INTERP_CUBIC)
                 {
-                    throw Exception("Only config version 2 (or higher) can use 'cubic' "
-                                    "interpolation with FileTransform.");
+                    throw Exception(
+                        "Only config version 2 (or higher) can use 'cubic' "
+                        "interpolation with FileTransform.");
                 }
                 if (ft->getCDLStyle() != CDL_TRANSFORM_DEFAULT)
                 {
-                    throw Exception("Only config version 2 (or higher) can use CDL style' "
-                                    "for FileTransform.");
+                    throw Exception(
+                        "Only config version 2 (or higher) can use CDL style' "
+                        "for FileTransform.");
                 }
             }
         }
-        else if (ConstFixedFunctionTransformRcPtr ff = DynamicPtrCast<const FixedFunctionTransform>(transform))
+        else if (
+            ConstFixedFunctionTransformRcPtr ff
+            = DynamicPtrCast<const FixedFunctionTransform>(transform))
         {
             auto ffstyle = ff->getStyle();
             if (m_majorVersion < 2)
             {
-                throw Exception("Only config version 2 (or higher) can have "
-                                "FixedFunctionTransform.");
+                throw Exception(
+                    "Only config version 2 (or higher) can have "
+                    "FixedFunctionTransform.");
             }
 
-            if (m_majorVersion == 2 && m_minorVersion < 1 && ffstyle == FIXED_FUNCTION_ACES_GAMUT_COMP_13)
+            if (m_majorVersion == 2 && m_minorVersion < 1
+                && ffstyle == FIXED_FUNCTION_ACES_GAMUT_COMP_13)
             {
-                throw Exception("Only config version 2.1 (or higher) can have "
-                                "FixedFunctionTransform style 'ACES_GAMUT_COMP_13'.");
+                throw Exception(
+                    "Only config version 2.1 (or higher) can have "
+                    "FixedFunctionTransform style 'ACES_GAMUT_COMP_13'.");
             }
 
-            if (m_majorVersion == 2 && m_minorVersion < 4 )
+            if (m_majorVersion == 2 && m_minorVersion < 4)
             {
-                if( ffstyle == FIXED_FUNCTION_LIN_TO_PQ  || 
-                    ffstyle == FIXED_FUNCTION_LIN_TO_GAMMA_LOG || 
-                    ffstyle == FIXED_FUNCTION_LIN_TO_DOUBLE_LOG ||
-                    ffstyle == FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20 ||
-                    ffstyle == FIXED_FUNCTION_ACES_RGB_TO_JMH_20 ||
-                    ffstyle == FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20 ||
-                    ffstyle == FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20 )
+                if (ffstyle == FIXED_FUNCTION_LIN_TO_PQ
+                    || ffstyle == FIXED_FUNCTION_LIN_TO_GAMMA_LOG
+                    || ffstyle == FIXED_FUNCTION_LIN_TO_DOUBLE_LOG
+                    || ffstyle == FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20
+                    || ffstyle == FIXED_FUNCTION_ACES_RGB_TO_JMH_20
+                    || ffstyle == FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20
+                    || ffstyle == FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20)
                 {
                     std::ostringstream ss;
-                    ss << "Only config version 2.4 (or higher) can have FixedFunctionTransform style '" 
+                    ss << "Only config version 2.4 (or higher) can have FixedFunctionTransform "
+                          "style '"
                        << FixedFunctionStyleToString(ffstyle) << "'.";
                     throw Exception(ss.str().c_str());
                 }
             }
 
-            if (m_majorVersion == 2 && m_minorVersion < 5 )
+            if (m_majorVersion == 2 && m_minorVersion < 5)
             {
-                if( ffstyle == FIXED_FUNCTION_RGB_TO_HSY_LIN  || 
-                    ffstyle == FIXED_FUNCTION_RGB_TO_HSY_LOG ||
-                    ffstyle == FIXED_FUNCTION_RGB_TO_HSY_VID )
+                if (ffstyle == FIXED_FUNCTION_RGB_TO_HSY_LIN
+                    || ffstyle == FIXED_FUNCTION_RGB_TO_HSY_LOG
+                    || ffstyle == FIXED_FUNCTION_RGB_TO_HSY_VID)
                 {
                     std::ostringstream ss;
-                    ss << "Only config version 2.5 (or higher) can have FixedFunctionTransform style '" 
+                    ss << "Only config version 2.5 (or higher) can have FixedFunctionTransform "
+                          "style '"
                        << FixedFunctionStyleToString(ffstyle) << "'.";
                     throw Exception(ss.str().c_str());
                 }
@@ -5780,32 +6052,36 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
         {
             if (m_majorVersion < 2)
             {
-                throw Exception("Only config version 2 (or higher) can have "
-                                "GradingPrimaryTransform.");
+                throw Exception(
+                    "Only config version 2 (or higher) can have "
+                    "GradingPrimaryTransform.");
             }
         }
         else if (DynamicPtrCast<const GradingRGBCurveTransform>(transform))
         {
             if (m_majorVersion < 2)
             {
-                throw Exception("Only config version 2 (or higher) can have "
-                                "GradingRGBCurveTransform.");
+                throw Exception(
+                    "Only config version 2 (or higher) can have "
+                    "GradingRGBCurveTransform.");
             }
         }
         else if (DynamicPtrCast<const GradingHueCurveTransform>(transform))
         {
-            if (m_majorVersion == 2 && m_minorVersion < 5 )
+            if (m_majorVersion == 2 && m_minorVersion < 5)
             {
-                throw Exception("Only config version 2.5 (or higher) can have "
-                                "GradingHueCurveTransform.");
+                throw Exception(
+                    "Only config version 2.5 (or higher) can have "
+                    "GradingHueCurveTransform.");
             }
         }
         else if (DynamicPtrCast<const GradingToneTransform>(transform))
         {
             if (m_majorVersion < 2)
             {
-                throw Exception("Only config version 2 (or higher) can have "
-                                "GradingToneTransform.");
+                throw Exception(
+                    "Only config version 2 (or higher) can have "
+                    "GradingToneTransform.");
             }
         }
         else if (DynamicPtrCast<const LogAffineTransform>(transform))
@@ -5922,17 +6198,17 @@ void Config::Impl::checkVersionConsistency() const
         // Check for display color spaces.
 
         const auto & cs = m_allColorSpaces->getColorSpaceByIndex(i);
-        if (m_majorVersion < 2) 
+        if (m_majorVersion < 2)
         {
-            if (MatchReferenceType(SEARCH_REFERENCE_SPACE_DISPLAY, cs->getReferenceSpaceType())) 
+            if (MatchReferenceType(SEARCH_REFERENCE_SPACE_DISPLAY, cs->getReferenceSpaceType()))
             {
                 throw Exception("Only version 2 (or higher) can have DisplayColorSpaces.");
             }
-        } 
+        }
 
         // Check for new color space attributes.
 
-        if (m_majorVersion < 2) 
+        if (m_majorVersion < 2)
         {
             if (*cs->getInteropID())
             {
@@ -5943,9 +6219,9 @@ void Config::Impl::checkVersionConsistency() const
             }
         }
 
-        if (hexVersion < 0x02050000) 
+        if (hexVersion < 0x02050000)
         {
-            if (cs->getInterchangeAttributes().size()>0)
+            if (cs->getInterchangeAttributes().size() > 0)
             {
                 std::ostringstream os;
                 os << "Config failed validation. The color space '" << cs->getName() << "' ";
@@ -5964,11 +6240,11 @@ void Config::Impl::checkVersionConsistency() const
 
     // Check for new ViewTransform properties.
 
-    if (hexVersion < 0x02050000) 
+    if (hexVersion < 0x02050000)
     {
-        for (const auto& vt : m_viewTransforms)
+        for (const auto & vt : m_viewTransforms)
         {
-            if (vt->getInterchangeAttributes().size()>0)
+            if (vt->getInterchangeAttributes().size() > 0)
             {
                 std::ostringstream os;
                 os << "Config failed validation. The view transform '" << vt->getName() << "' ";
@@ -5980,11 +6256,11 @@ void Config::Impl::checkVersionConsistency() const
 
     // Check for new Look properties.
 
-    if (hexVersion < 0x02050000) 
+    if (hexVersion < 0x02050000)
     {
-        for (const auto& look : m_looksList)
+        for (const auto & look : m_looksList)
         {
-            if (look->getInterchangeAttributes().size()>0)
+            if (look->getInterchangeAttributes().size() > 0)
             {
                 std::ostringstream os;
                 os << "Config failed validation. The look '" << look->getName() << "' ";
@@ -6019,7 +6295,7 @@ bool Config::isArchivable() const
 {
     ConstContextRcPtr context = getCurrentContext();
 
-    // Current archive implementation needs a working directory to look for LUT files and 
+    // Current archive implementation needs a working directory to look for LUT files and
     // working directory must be an absolute path.
     const char * workingDirectory = getWorkingDir();
     if ((workingDirectory && !workingDirectory[0]) || !pystring::os::path::isabs(workingDirectory))
@@ -6028,19 +6304,17 @@ bool Config::isArchivable() const
     }
 
     // Utility lambda to check the following criteria.
-    auto validatePathForArchiving = [](const std::string & path) 
-    {
+    auto validatePathForArchiving = [](const std::string & path) {
         // Using the normalized path.
         const std::string normPath = pystring::os::path::normpath(path);
-        if (    
-                // 1) Path may not be absolute.
-                pystring::os::path::isabs(normPath)  || 
-                // 2) Path may not start with double dot ".." (going above working directory).
-                pystring::startswith(normPath, "..") ||
-                // 3) A context variable may not be located at the start of the path.
-                (ContainsContextVariables(path) && 
-                (StringUtils::Find(path, "$") == 0 || 
-                 StringUtils::Find(path, "%") == 0)))
+        if (
+            // 1) Path may not be absolute.
+            pystring::os::path::isabs(normPath) ||
+            // 2) Path may not start with double dot ".." (going above working directory).
+            pystring::startswith(normPath, "..") ||
+            // 3) A context variable may not be located at the start of the path.
+            (ContainsContextVariables(path)
+             && (StringUtils::Find(path, "$") == 0 || StringUtils::Find(path, "%") == 0)))
         {
             return false;
         }
@@ -6051,7 +6325,7 @@ bool Config::isArchivable() const
     ///////////////////////////////
     // Search path verification. //
     ///////////////////////////////
-    // Check that search paths are not absolute nor have context variables outside of config 
+    // Check that search paths are not absolute nor have context variables outside of config
     // working directory.
     int numSearchPaths = getNumSearchPaths();
     for (int i = 0; i < numSearchPaths; i++)
@@ -6071,12 +6345,12 @@ bool Config::isArchivable() const
     getImpl()->getAllInternalTransforms(allTransforms);
 
     std::set<std::string> files;
-    for(const auto & transform : allTransforms)
+    for (const auto & transform : allTransforms)
     {
         GetFileReferences(files, transform);
     }
 
-    // Check that FileTransform sources are not absolute nor have context variables outside of 
+    // Check that FileTransform sources are not absolute nor have context variables outside of
     // config working directory.
     for (const auto & path : files)
     {

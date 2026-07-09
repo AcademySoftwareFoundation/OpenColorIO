@@ -19,10 +19,7 @@ struct OCIOHIDDEN PyDynamicProperty
 
     virtual ~PyDynamicProperty() = default;
 
-    DynamicPropertyType getType() const
-    {
-        return m_prop->getType();
-    }
+    DynamicPropertyType getType() const { return m_prop->getType(); }
 
     double getDouble()
     {

@@ -10,8 +10,9 @@ namespace OCIO_NAMESPACE
 
 ExposureContrastTransformRcPtr ExposureContrastTransform::Create()
 {
-    return ExposureContrastTransformRcPtr(new ExposureContrastTransformImpl(),
-                                          &ExposureContrastTransformImpl::deleter);
+    return ExposureContrastTransformRcPtr(
+        new ExposureContrastTransformImpl(),
+        &ExposureContrastTransformImpl::deleter);
 }
 
 void ExposureContrastTransformImpl::deleter(ExposureContrastTransform * t)
@@ -22,7 +23,7 @@ void ExposureContrastTransformImpl::deleter(ExposureContrastTransform * t)
 TransformRcPtr ExposureContrastTransformImpl::createEditableCopy() const
 {
     TransformRcPtr transform = ExposureContrastTransform::Create();
-    dynamic_cast<ExposureContrastTransformImpl*>(transform.get())->data() = data();
+    dynamic_cast<ExposureContrastTransformImpl *>(transform.get())->data() = data();
     return transform;
 }
 
@@ -63,8 +64,9 @@ const FormatMetadata & ExposureContrastTransformImpl::getFormatMetadata() const 
 
 bool ExposureContrastTransformImpl::equals(const ExposureContrastTransform & other) const noexcept
 {
-    if (this == &other) return true;
-    return data() == dynamic_cast<const ExposureContrastTransformImpl*>(&other)->data();
+    if (this == &other)
+        return true;
+    return data() == dynamic_cast<const ExposureContrastTransformImpl *>(&other)->data();
 }
 
 ExposureContrastStyle ExposureContrastTransformImpl::getStyle() const
@@ -183,8 +185,7 @@ void ExposureContrastTransformImpl::setLogMidGray(double logMidGray)
     return data().setLogMidGray(logMidGray);
 }
 
-
-std::ostream& operator<< (std::ostream & os, const ExposureContrastTransform & t)
+std::ostream & operator<<(std::ostream & os, const ExposureContrastTransform & t)
 {
     os << "<ExposureContrast ";
     os << "direction=" << TransformDirectionToString(t.getDirection());
@@ -214,4 +215,3 @@ std::ostream& operator<< (std::ostream & os, const ExposureContrastTransform & t
 }
 
 } // namespace OCIO_NAMESPACE
-

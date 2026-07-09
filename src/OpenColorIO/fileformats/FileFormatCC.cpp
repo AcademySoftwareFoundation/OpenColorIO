@@ -3,13 +3,13 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "OpBuilders.h"
+#include "ParseUtils.h"
 #include "fileformats/cdl/CDLParser.h"
 #include "fileformats/cdl/CDLWriter.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "fileformats/xmlutils/XMLWriterUtils.h"
 #include "transforms/FileTransform.h"
-#include "OpBuilders.h"
-#include "ParseUtils.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -19,10 +19,7 @@ namespace
 class LocalCachedFile : public CachedFile
 {
 public:
-    LocalCachedFile ()
-    {
-        m_transform = CDLTransformImpl::Create();
-    };
+    LocalCachedFile() { m_transform = CDLTransformImpl::Create(); };
 
     ~LocalCachedFile() = default;
 
@@ -38,39 +35,38 @@ public:
 
 typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
 
-
-
 class LocalFileFormat : public FileFormat
 {
 public:
-    LocalFileFormat() = default;
+    LocalFileFormat()  = default;
     ~LocalFileFormat() = default;
 
     void getFormatInfo(FormatInfoVec & formatInfoVec) const override;
 
-    CachedFileRcPtr read(std::istream & istream,
-                         const std::string & fileName,
-                         Interpolation interp) const override;
+    CachedFileRcPtr read(std::istream & istream, const std::string & fileName, Interpolation interp)
+        const override;
 
-    void write(const ConstConfigRcPtr & config,
-               const ConstContextRcPtr & context,
-               const GroupTransform & group,
-               const std::string & formatName,
-               std::ostream & ostream) const override;
+    void write(
+        const ConstConfigRcPtr & config,
+        const ConstContextRcPtr & context,
+        const GroupTransform & group,
+        const std::string & formatName,
+        std::ostream & ostream) const override;
 
-    void buildFileOps(OpRcPtrVec & ops,
-                      const Config & config,
-                      const ConstContextRcPtr & context,
-                      CachedFileRcPtr untypedCachedFile,
-                      const FileTransform & fileTransform,
-                      TransformDirection dir) const override;
+    void buildFileOps(
+        OpRcPtrVec & ops,
+        const Config & config,
+        const ConstContextRcPtr & context,
+        CachedFileRcPtr untypedCachedFile,
+        const FileTransform & fileTransform,
+        TransformDirection dir) const override;
 };
 
 void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 {
     FormatInfo info;
-    info.name = FILEFORMAT_COLOR_CORRECTION;
-    info.extension = "cc";
+    info.name         = FILEFORMAT_COLOR_CORRECTION;
+    info.extension    = "cc";
     info.capabilities = FormatCapabilityFlags(FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_WRITE);
     formatInfoVec.push_back(info);
 }
@@ -78,19 +74,20 @@ void LocalFileFormat::getFormatInfo(FormatInfoVec & formatInfoVec) const
 // Try and load the format
 // Raise an exception if it can't be loaded.
 
-CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
-                                      const std::string & fileName,
-                                      Interpolation /*interp*/) const
+CachedFileRcPtr LocalFileFormat::read(
+    std::istream & istream,
+    const std::string & fileName,
+    Interpolation /*interp*/) const
 {
     LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
-    
+
     CDLParser parser(fileName);
     try
     {
         parser.parse(istream);
         parser.getCDLTransform(cachedFile->m_transform);
     }
-    catch(Exception & e)
+    catch (Exception & e)
     {
         std::ostringstream os;
         os << "Error parsing .cc file. ";
@@ -108,11 +105,12 @@ CachedFileRcPtr LocalFileFormat::read(std::istream & istream,
     return cachedFile;
 }
 
-void LocalFileFormat::write(const ConstConfigRcPtr & /*config*/,
-                            const ConstContextRcPtr & /*context*/,
-                            const GroupTransform & group,
-                            const std::string & /* formatName */,
-                            std::ostream & ostream) const
+void LocalFileFormat::write(
+    const ConstConfigRcPtr & /*config*/,
+    const ConstContextRcPtr & /*context*/,
+    const GroupTransform & group,
+    const std::string & /* formatName */,
+    std::ostream & ostream) const
 {
     if (group.getNumTransforms() != 1)
     {
@@ -128,13 +126,13 @@ void LocalFileFormat::write(const ConstConfigRcPtr & /*config*/,
     Write(fmt, cdl);
 }
 
-void
-LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
-                              const Config & config,
-                              const ConstContextRcPtr & /*context*/,
-                              CachedFileRcPtr untypedCachedFile,
-                              const FileTransform& fileTransform,
-                              TransformDirection dir) const
+void LocalFileFormat::buildFileOps(
+    OpRcPtrVec & ops,
+    const Config & config,
+    const ConstContextRcPtr & /*context*/,
+    CachedFileRcPtr untypedCachedFile,
+    const FileTransform & fileTransform,
+    TransformDirection dir) const
 {
     LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
 
@@ -148,7 +146,7 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 
     const auto newDir = CombineTransformDirections(dir, fileTransform.getDirection());
 
-    CDLTransformRcPtr cdl = cachedFile->m_transform;
+    CDLTransformRcPtr cdl   = cachedFile->m_transform;
     const auto fileCDLStyle = fileTransform.getCDLStyle();
     if (fileCDLStyle != CDL_TRANSFORM_DEFAULT)
     {
@@ -158,7 +156,7 @@ LocalFileFormat::buildFileOps(OpRcPtrVec & ops,
 
     BuildCDLOp(ops, config, *cdl, newDir);
 }
-}
+} // namespace
 
 FileFormat * CreateFileFormatCC()
 {

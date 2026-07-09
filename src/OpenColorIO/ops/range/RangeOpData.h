@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_RANGEOPDATA_H
 #define INCLUDED_OCIO_RANGEOPDATA_H
-
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
 #include "ops/matrix/MatrixOp.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -22,27 +19,27 @@ typedef OCIO_SHARED_PTR<const RangeOpData> ConstRangeOpDataRcPtr;
 class IndexMapping;
 
 // The class represents the Range op data.
-// 
+//
 // The Range is used to apply an affine transform (scale & offset),
 // clamp values to min/max bounds, or apply a simple bit-depth conversion.
-// 
+//
 // The spec is somewhat ambiguous about the details so we are required
 // to make some judgement calls.  The spec allows max/min elements to
 // be missing.  This means no clamping is requested.  In order to keep
 // the semantics reasonable, we further require that if minIn is set
 // then minOut must also be set (but setting minIn doesn't require maxIn).
-// 
+//
 // The min/max tags serve two purposes, they define the scale and offset
 // that will be applied to map in to out.  They also clamp values.
-// 
+//
 // If no min/max tags are present, the op does bit-depth conversion
 // without clamping.  If only min but not max is present then clamping
 // is only done at the low end (and vice versa).
-// 
+//
 // If only min or max is present, the spec doesn't give details so we
 // set the scale to whatever is necessary to do bit-depth conversion
 // and set the offset to map the in bound to the out bound.
-// 
+//
 class RangeOpData : public OpData
 {
 public:
@@ -50,17 +47,19 @@ public:
 
     RangeOpData(const RangeOpData &) = default;
 
-    RangeOpData(double minInValue,    // Lower bound of the domain
-                double maxInValue,    // Upper bound of the domain
-                double minOutValue,   // Lower bound of the range
-                double maxOutValue    // Upper bound of the range
-                );
+    RangeOpData(
+        double minInValue,  // Lower bound of the domain
+        double maxInValue,  // Upper bound of the domain
+        double minOutValue, // Lower bound of the range
+        double maxOutValue  // Upper bound of the range
+    );
 
-    RangeOpData(double minInValue,    // Lower bound of the domain
-                double maxInValue,    // Upper bound of the domain
-                double minOutValue,   // Lower bound of the range
-                double maxOutValue,   // Upper bound of the range
-                TransformDirection dir);
+    RangeOpData(
+        double minInValue,  // Lower bound of the domain
+        double maxInValue,  // Upper bound of the domain
+        double minOutValue, // Lower bound of the range
+        double maxOutValue, // Upper bound of the range
+        TransformDirection dir);
 
     // Constructor from a 2-entry index map from a Lut1D or Lut3D.
     // Note: Throws if the index map is not appropriate.
@@ -75,7 +74,7 @@ public:
     RangeOpDataRcPtr clone() const;
 
     //
-    // Note: The setters below do not call validate and are only for use 
+    // Note: The setters below do not call validate and are only for use
     //       by the file format parser.
     //
 
@@ -140,7 +139,7 @@ public:
     // Create a MatrixOp that is equivalent to the Range except does not clamp.
     MatrixOpDataRcPtr convertToMatrix() const;
 
-    bool equals(const OpData& other) const override;
+    bool equals(const OpData & other) const override;
 
     RangeOpDataRcPtr getAsForward() const;
 
@@ -164,17 +163,17 @@ private:
     static bool FloatsDiffer(double x1, double x2);
 
 private:
-    double m_minInValue;            // Minimum for the input value
-    double m_maxInValue;            // Maximum for the input value
-    double m_minOutValue;           // Minimum for the output value
-    double m_maxOutValue;           // Maximum for the output value
-    mutable double m_scale;         // Scaling calculated from the limits
-    mutable double m_offset;        // Offset calculated from the limits
+    double m_minInValue;     // Minimum for the input value
+    double m_maxInValue;     // Maximum for the input value
+    double m_minOutValue;    // Minimum for the output value
+    double m_maxOutValue;    // Maximum for the output value
+    mutable double m_scale;  // Scaling calculated from the limits
+    mutable double m_offset; // Offset calculated from the limits
 
     BitDepth m_fileInBitDepth  = BIT_DEPTH_UNKNOWN; // In bit-depth to be used for file I/O
     BitDepth m_fileOutBitDepth = BIT_DEPTH_UNKNOWN; // Out bit-depth to be used for file I/O
 
-    TransformDirection m_direction{ TRANSFORM_DIR_FORWARD };
+    TransformDirection m_direction{TRANSFORM_DIR_FORWARD};
 };
 
 bool operator==(const RangeOpData & lhs, const RangeOpData & rhs);

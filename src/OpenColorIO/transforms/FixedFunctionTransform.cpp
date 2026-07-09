@@ -13,13 +13,13 @@ namespace OCIO_NAMESPACE
 
 FixedFunctionTransformRcPtr FixedFunctionTransform::Create(FixedFunctionStyle style)
 {
-    return FixedFunctionTransformRcPtr(new FixedFunctionTransformImpl(style),
-                                       &FixedFunctionTransformImpl::deleter);
+    return FixedFunctionTransformRcPtr(
+        new FixedFunctionTransformImpl(style),
+        &FixedFunctionTransformImpl::deleter);
 }
 
-FixedFunctionTransformRcPtr FixedFunctionTransform::Create(FixedFunctionStyle style,
-                                                           const double * params,
-                                                           size_t num)
+FixedFunctionTransformRcPtr
+FixedFunctionTransform::Create(FixedFunctionStyle style, const double * params, size_t num)
 {
     if (!params && num > 0)
     {
@@ -31,8 +31,9 @@ FixedFunctionTransformRcPtr FixedFunctionTransform::Create(FixedFunctionStyle st
         std::copy(params, params + num, p.begin());
     }
 
-    return FixedFunctionTransformRcPtr(new FixedFunctionTransformImpl(style, p),
-                                       &FixedFunctionTransformImpl::deleter);
+    return FixedFunctionTransformRcPtr(
+        new FixedFunctionTransformImpl(style, p),
+        &FixedFunctionTransformImpl::deleter);
 }
 
 FixedFunctionTransformImpl::FixedFunctionTransformImpl(FixedFunctionStyle style)
@@ -40,8 +41,9 @@ FixedFunctionTransformImpl::FixedFunctionTransformImpl(FixedFunctionStyle style)
 {
 }
 
-FixedFunctionTransformImpl::FixedFunctionTransformImpl(FixedFunctionStyle style,
-                                                       const FixedFunctionOpData::Params & p)
+FixedFunctionTransformImpl::FixedFunctionTransformImpl(
+    FixedFunctionStyle style,
+    const FixedFunctionOpData::Params & p)
     : m_data(FixedFunctionOpData::ConvertStyle(style, TRANSFORM_DIR_FORWARD), p)
 {
 }
@@ -64,11 +66,11 @@ TransformRcPtr FixedFunctionTransformImpl::createEditableCopy() const
     {
         // A validation is done when creating the instance so the params are mandatory.
         const double * values = &params[0];
-        transform = FixedFunctionTransform::Create(getStyle(), values, params.size());
+        transform             = FixedFunctionTransform::Create(getStyle(), values, params.size());
     }
 
     // Also copy the Format Metadata if any.
-    dynamic_cast<FixedFunctionTransformImpl*>(transform.get())->data() = data();
+    dynamic_cast<FixedFunctionTransformImpl *>(transform.get())->data() = data();
     return transform;
 }
 
@@ -110,8 +112,9 @@ const FormatMetadata & FixedFunctionTransformImpl::getFormatMetadata() const noe
 
 bool FixedFunctionTransformImpl::equals(const FixedFunctionTransform & other) const noexcept
 {
-    if (this == &other) return true;
-    return data() == dynamic_cast<const FixedFunctionTransformImpl*>(&other)->data();
+    if (this == &other)
+        return true;
+    return data() == dynamic_cast<const FixedFunctionTransformImpl *>(&other)->data();
 }
 
 FixedFunctionStyle FixedFunctionTransformImpl::getStyle() const
@@ -150,14 +153,14 @@ void FixedFunctionTransformImpl::getParams(double * params) const
     std::copy(p.cbegin(), p.cend(), params);
 }
 
-std::ostream & operator<< (std::ostream & os, const FixedFunctionTransform & t)
+std::ostream & operator<<(std::ostream & os, const FixedFunctionTransform & t)
 {
     os << "<FixedFunction ";
     os << "direction=" << TransformDirectionToString(t.getDirection());
     os << ", style=" << FixedFunctionStyleToString(t.getStyle());
 
     const size_t numParams = t.getNumParams();
-    if(numParams>0)
+    if (numParams > 0)
     {
         FixedFunctionOpData::Params params(numParams, 0.);
         t.getParams(&params[0]);
@@ -165,7 +168,7 @@ std::ostream & operator<< (std::ostream & os, const FixedFunctionTransform & t)
         os << ", params=[" << params[0];
         for (size_t i = 1; i < numParams; ++i)
         {
-          os << ", " << params[i];
+            os << ", " << params[i];
         }
         os << "]";
     }
@@ -175,4 +178,3 @@ std::ostream & operator<< (std::ostream & os, const FixedFunctionTransform & t)
 }
 
 } // namespace OCIO_NAMESPACE
-

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_MATRIXTRANSFORM_H
 #define INCLUDED_OCIO_MATRIXTRANSFORM_H
 
@@ -9,17 +8,16 @@
 
 #include "ops/matrix/MatrixOpData.h"
 
-
 namespace OCIO_NAMESPACE
 {
 
 class MatrixTransformImpl : public MatrixTransform
 {
 public:
-    MatrixTransformImpl() = default;
-    MatrixTransformImpl(const MatrixTransformImpl &) = delete;
-    MatrixTransformImpl& operator=(const MatrixTransformImpl &) = delete;
-    ~MatrixTransformImpl() override = default;
+    MatrixTransformImpl()                                        = default;
+    MatrixTransformImpl(const MatrixTransformImpl &)             = delete;
+    MatrixTransformImpl & operator=(const MatrixTransformImpl &) = delete;
+    ~MatrixTransformImpl() override                              = default;
 
     TransformRcPtr createEditableCopy() const override;
 
@@ -53,7 +51,6 @@ private:
     MatrixOpData m_data;
 };
 
-
 } // namespace OCIO_NAMESPACE
 
-#endif  // INCLUDED_OCIO_MATRIXTRANSFORM_H
+#endif // INCLUDED_OCIO_MATRIXTRANSFORM_H

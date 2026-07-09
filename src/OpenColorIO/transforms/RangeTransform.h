@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_RANGETRANSFORM_H
 #define INCLUDED_OCIO_RANGETRANSFORM_H
 
@@ -9,17 +8,16 @@
 
 #include "ops/range/RangeOpData.h"
 
-
 namespace OCIO_NAMESPACE
 {
 
 class RangeTransformImpl : public RangeTransform
 {
 public:
-    RangeTransformImpl() = default;
-    RangeTransformImpl(const RangeTransformImpl &) = delete;
-    RangeTransformImpl& operator=(const RangeTransformImpl &) = delete;
-    ~RangeTransformImpl() override = default;
+    RangeTransformImpl()                                       = default;
+    RangeTransformImpl(const RangeTransformImpl &)             = delete;
+    RangeTransformImpl & operator=(const RangeTransformImpl &) = delete;
+    ~RangeTransformImpl() override                             = default;
 
     TransformRcPtr createEditableCopy() const override;
 
@@ -67,11 +65,10 @@ public:
     static void deleter(RangeTransform * t);
 
 private:
-    RangeStyle  m_style = RANGE_CLAMP;
+    RangeStyle m_style = RANGE_CLAMP;
     RangeOpData m_data;
 };
 
-
 } // namespace OCIO_NAMESPACE
 
-#endif  // INCLUDED_OCIO_RANGETRANSFORM_H
+#endif // INCLUDED_OCIO_RANGETRANSFORM_H

@@ -16,7 +16,6 @@
 #include <strings.h>
 #endif
 
-
 namespace OCIO_NAMESPACE
 {
 
@@ -62,7 +61,7 @@ bool Getenv(const char * name, std::string & value)
     std::string value_str;
 #endif
 
-    if(uint32_t size = GetEnvironmentVariable(name_str.c_str(), nullptr, 0))
+    if (uint32_t size = GetEnvironmentVariable(name_str.c_str(), nullptr, 0))
     {
         value_str.resize(size);
 
@@ -91,7 +90,7 @@ bool Getenv(const char * name, std::string & value)
     }
 #else
     const char * val = ::getenv(name);
-    value = (val && *val) ? val : "";
+    value            = (val && *val) ? val : "";
     return val; // Returns true if the env. variable exists but empty.
 #endif
 }
@@ -104,7 +103,7 @@ void Setenv(const char * name, const std::string & value)
     }
 
     // Note that the Windows _putenv_s() removes the env. variable if the value is empty. But
-    // the Linux ::setenv() sets the env. variable to empty if the value is empty i.e. it still 
+    // the Linux ::setenv() sets the env. variable to empty if the value is empty i.e. it still
     // exists. To avoid the ambiguity, use Unsetenv() when the env. variable removal if needed.
 
 #ifdef _WIN32
@@ -154,7 +153,7 @@ bool isEnvPresent(const char * name)
 
 int Strcasecmp(const char * str1, const char * str2)
 {
-    if (!str1 || !str2) 
+    if (!str1 || !str2)
     {
         throw Exception("String pointer for comparison must not be null.");
     }
@@ -168,7 +167,7 @@ int Strcasecmp(const char * str1, const char * str2)
 
 int Strncasecmp(const char * str1, const char * str2, size_t n)
 {
-    if (!str1 || !str2) 
+    if (!str1 || !str2)
     {
         throw Exception("String pointer for comparison must not be null.");
     }
@@ -185,8 +184,9 @@ void * AlignedMalloc(size_t size, size_t alignment)
 #ifdef _WIN32
     void * memBlock = _aligned_malloc(size, alignment);
 #else
-    void* memBlock = nullptr;
-    if (posix_memalign(&memBlock, alignment, size)) memBlock = nullptr;
+    void * memBlock = nullptr;
+    if (posix_memalign(&memBlock, alignment, size))
+        memBlock = nullptr;
 #endif
     if (!memBlock)
     {
@@ -195,7 +195,7 @@ void * AlignedMalloc(size_t size, size_t alignment)
     return memBlock;
 }
 
-void AlignedFree(void* memBlock)
+void AlignedFree(void * memBlock)
 {
 #ifdef _WIN32
     _aligned_free(memBlock);
@@ -217,7 +217,7 @@ int GenerateRandomNumber()
     return dist(engine);
 }
 
-}
+} // namespace
 
 std::string CreateTempFilename(const std::string & filenameExt)
 {
@@ -234,13 +234,13 @@ std::string CreateTempFilename(const std::string & filenameExt)
 #endif
 
     char tmpFilename[L_tmpnam_s];
-    if(tmpnam_s(tmpFilename))
+    if (tmpnam_s(tmpFilename))
     {
         throw Exception("Could not create a temporary file.");
     }
 
-    // Note that when a file name is pre-pended with a backslash and no path information, such as \fname21, this 
-    // indicates that the name is valid for the current working directory.
+    // Note that when a file name is pre-pended with a backslash and no path information, such as
+    // \fname21, this indicates that the name is valid for the current working directory.
     filename = tmpFilename[0] == '\\' ? tmpFilename + 1 : tmpFilename;
 
 #else
@@ -267,7 +267,10 @@ std::ifstream CreateInputFileStream(const char * filename, std::ios_base::openmo
 #endif
 }
 
-void OpenInputFileStream(std::ifstream & stream, const char * filename, std::ios_base::openmode mode)
+void OpenInputFileStream(
+    std::ifstream & stream,
+    const char * filename,
+    std::ios_base::openmode mode)
 {
 #if defined(_WIN32) && defined(UNICODE)
     stream.open(Utf8ToUtf16(filename).c_str(), mode);
@@ -291,7 +294,8 @@ const std::string filenameToUTF(const std::string & filename)
 
 std::wstring Utf8ToUtf16(const std::string & str)
 {
-    if (str.empty()) {
+    if (str.empty())
+    {
         return std::wstring();
     }
 
@@ -307,7 +311,8 @@ std::wstring Utf8ToUtf16(const std::string & str)
 
 std::string Utf16ToUtf8(const std::wstring & wstr)
 {
-    if (wstr.empty()) {
+    if (wstr.empty())
+    {
         return std::string();
     }
 
@@ -330,7 +335,7 @@ std::string Utf16ToUtf8(const std::wstring & wstr)
 // "The inode, and therefore st_ino, has no meaning in the FAT, HPFS, or NTFS file systems."
 
 // That's the default hash method implementation to compute a hash key based on a file content.
-std::string CreateFileContentHash(const std::string &filename)
+std::string CreateFileContentHash(const std::string & filename)
 {
 #if defined(_WIN32) && defined(UNICODE)
     struct _stat fileInfo;
@@ -356,7 +361,6 @@ std::string CreateFileContentHash(const std::string &filename)
     return "";
 }
 
-} // Platform
+} // namespace Platform
 
 } // namespace OCIO_NAMESPACE
-

@@ -13,9 +13,9 @@
 #include "MathUtils.h"
 #include "ops/lut1d/Lut1DOpData.h"
 #include "ops/lut3d/Lut3DOpData.h"
+#include "ops/range/RangeOp.h"
 #include "ops/range/RangeOpCPU.h"
 #include "ops/range/RangeOpGPU.h"
-#include "ops/range/RangeOp.h"
 #include "transforms/RangeTransform.h"
 
 namespace OCIO_NAMESPACE
@@ -56,12 +56,10 @@ public:
 protected:
     ConstRangeOpDataRcPtr rangeData() const { return DynamicPtrCast<const RangeOpData>(data()); }
     RangeOpDataRcPtr rangeData() { return DynamicPtrCast<RangeOpData>(data()); }
-
 };
 
-
 RangeOp::RangeOp(RangeOpDataRcPtr & range)
-    :   Op()
+    : Op()
 {
     range->validate();
     data() = range;
@@ -101,8 +99,8 @@ bool RangeOp::isInverse(ConstOpRcPtr & /* op */) const
 bool RangeOp::canCombineWith(ConstOpRcPtr & op2) const
 {
     auto opData2 = op2->data();
-    auto type2 = opData2->getType();
-    auto range1 = rangeData();
+    auto type2   = opData2->getType();
+    auto range1  = rangeData();
 
     // Need to validate prior to calling isIdentity to make sure scale and offset are updated.
     range1->validate();
@@ -149,13 +147,13 @@ bool RangeOp::canCombineWith(ConstOpRcPtr & op2) const
 
 void RangeOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
 {
-    if(!canCombineWith(secondOp))
+    if (!canCombineWith(secondOp))
     {
         throw Exception("RangeOp: canCombineWith must be checked before calling combineWith.");
     }
 
     auto opData = secondOp->data();
-    auto type = opData->getType();
+    auto type   = opData->getType();
     if (type == OpData::Lut1DType || type == OpData::Lut3DType)
     {
         // Avoid clone (we actually want to use the second op).
@@ -165,10 +163,10 @@ void RangeOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
     else
     {
         // Range + Range.
-        auto range1 = rangeData();
+        auto range1     = rangeData();
         auto typedRcPtr = DynamicPtrCast<const RangeOp>(secondOp);
-        auto range2 = typedRcPtr->rangeData();
-        auto resRange = range1->compose(range2);
+        auto range2     = typedRcPtr->rangeData();
+        auto resRange   = range1->compose(range2);
         CreateRangeOp(ops, resRange, TRANSFORM_DIR_FORWARD);
     }
 }
@@ -209,19 +207,17 @@ void RangeOp::extractGpuShaderInfo(GpuShaderCreatorRcPtr & shaderCreator) const
     GetRangeGPUShaderProgram(shaderCreator, data);
 }
 
-}  // Anon namespace
-
-
-
+} // namespace
 
 ///////////////////////////////////////////////////////////////////////////
 
-
-
-void CreateRangeOp(OpRcPtrVec & ops,
-                   double minInValue, double maxInValue,
-                   double minOutValue, double maxOutValue,
-                   TransformDirection direction)
+void CreateRangeOp(
+    OpRcPtrVec & ops,
+    double minInValue,
+    double maxInValue,
+    double minOutValue,
+    double maxOutValue,
+    TransformDirection direction)
 {
     auto data = std::make_shared<RangeOpData>(minInValue, maxInValue, minOutValue, maxOutValue);
 
@@ -233,7 +229,7 @@ void CreateRangeOp(OpRcPtrVec & ops, RangeOpDataRcPtr & rangeData, TransformDire
     auto range = rangeData;
     if (direction == TRANSFORM_DIR_INVERSE)
     {
-        range = rangeData->clone();
+        range       = rangeData->clone();
         auto newDir = CombineTransformDirections(range->getDirection(), direction);
         range->setDirection(newDir);
     }
@@ -251,7 +247,7 @@ void CreateRangeTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
         throw Exception("CreateRangeTransform: op has to be a RangeOp");
     }
     RangeTransformRcPtr rangeTransform = RangeTransform::Create();
-    RangeOpData & data = dynamic_cast<RangeTransformImpl*>(rangeTransform.get())->data();
+    RangeOpData & data = dynamic_cast<RangeTransformImpl *>(rangeTransform.get())->data();
 
     ConstRangeOpDataRcPtr rangeDataSrc = DynamicPtrCast<const RangeOpData>(op->data());
 
@@ -260,11 +256,9 @@ void CreateRangeTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
     group->appendTransform(rangeTransform);
 }
 
-void BuildRangeOp(OpRcPtrVec & ops,
-                  const RangeTransform & transform,
-                  TransformDirection dir)
+void BuildRangeOp(OpRcPtrVec & ops, const RangeTransform & transform, TransformDirection dir)
 {
-    const auto & data = dynamic_cast<const RangeTransformImpl*>(&transform)->data();
+    const auto & data = dynamic_cast<const RangeTransformImpl *>(&transform)->data();
 
     data.validate();
 

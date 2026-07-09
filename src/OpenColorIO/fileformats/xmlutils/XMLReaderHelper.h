@@ -4,17 +4,15 @@
 #ifndef INCLUDED_OCIO_FILEFORMATS_XMLUTILS_XMLREADERHELPER_H
 #define INCLUDED_OCIO_FILEFORMATS_XMLUTILS_XMLREADERHELPER_H
 
-
 #include <string.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "PrivateTypes.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "ops/cdl/CDLOpData.h"
-#include "PrivateTypes.h"
 #include "transforms/CDLTransform.h"
 #include "utils/StringUtils.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -22,9 +20,10 @@ namespace OCIO_NAMESPACE
 class XmlReaderElement
 {
 public:
-    XmlReaderElement(const std::string & name,
-                     unsigned int xmlLineNumber,
-                     const std::string & xmlFile);
+    XmlReaderElement(
+        const std::string & name,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile);
 
     virtual ~XmlReaderElement();
 
@@ -34,34 +33,24 @@ public:
     // End the parsing of the element.
     virtual void end() = 0;
 
-    const std::string & getName() const
-    {
-        return m_name;
-    }
+    const std::string & getName() const { return m_name; }
 
     virtual const std::string & getIdentifier() const = 0;
 
-    unsigned int getXmlLineNumber() const
-    {
-        return m_xmlLineNumber;
-    }
+    unsigned int getXmlLineNumber() const { return m_xmlLineNumber; }
 
     const std::string & getXmlFile() const;
 
     virtual const char * getTypeName() const = 0;
 
     // Set the element context.
-    void setContext(const std::string & name,
-                    unsigned int xmlLineNumber,
-                    const std::string & xmlFile);
+    void
+    setContext(const std::string & name, unsigned int xmlLineNumber, const std::string & xmlFile);
 
     // Is it a dummy element?
     // Only XmlReaderDummyElt will return true.
-    virtual bool isDummy() const
-    {
-        return false;
-    }
-    
+    virtual bool isDummy() const { return false; }
+
     // Is it a container which means if it can hold other elements.
     virtual bool isContainer() const = 0;
 
@@ -70,7 +59,7 @@ public:
     void logParameterWarning(const char * param) const;
 
 protected:
-    template<typename T>
+    template <typename T>
     void parseScalarAttribute(const char * name, const char * attrib, T & value)
     {
         const size_t len = strlen(attrib);
@@ -102,13 +91,13 @@ protected:
     }
 
 private:
-    std::string  m_name;
+    std::string m_name;
     unsigned int m_xmlLineNumber;
-    std::string  m_xmlFile;
+    std::string m_xmlFile;
 
 private:
-    XmlReaderElement() = delete;
-    XmlReaderElement(const XmlReaderElement &) = delete;
+    XmlReaderElement()                                     = delete;
+    XmlReaderElement(const XmlReaderElement &)             = delete;
     XmlReaderElement & operator=(const XmlReaderElement &) = delete;
 };
 
@@ -118,28 +107,23 @@ typedef OCIO_SHARED_PTR<XmlReaderElement> ElementRcPtr;
 class XmlReaderContainerElt : public XmlReaderElement
 {
 public:
-    XmlReaderContainerElt(const std::string & name,
-                          unsigned int xmlLineNumber,
-                          const std::string & xmlFile)
+    XmlReaderContainerElt(
+        const std::string & name,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile)
         : XmlReaderElement(name, xmlLineNumber, xmlFile)
     {
     }
 
-    virtual ~XmlReaderContainerElt()
-    {
-    }
+    virtual ~XmlReaderContainerElt() {}
 
     // Is it a container which means if it can hold other elements.
-    bool isContainer() const override
-    {
-        return true;
-    }
+    bool isContainer() const override { return true; }
 
-    virtual void appendMetadata(FormatMetadataImpl& metadata) = 0;
+    virtual void appendMetadata(FormatMetadataImpl & metadata) = 0;
 
 private:
     XmlReaderContainerElt() = delete;
-
 };
 
 typedef OCIO_SHARED_PTR<XmlReaderContainerElt> ContainerEltRcPtr;
@@ -148,42 +132,27 @@ typedef OCIO_SHARED_PTR<XmlReaderContainerElt> ContainerEltRcPtr;
 class XmlReaderPlainElt : public XmlReaderElement
 {
 public:
-    XmlReaderPlainElt(const std::string & name,
-                      ContainerEltRcPtr pParent,
-                      unsigned int xmlLineNumber,
-                      const std::string & xmlFile)
+    XmlReaderPlainElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile)
         : XmlReaderElement(name, xmlLineNumber, xmlFile)
         , m_parent(pParent)
     {
     }
 
-    ~XmlReaderPlainElt()
-    {
-    }
+    ~XmlReaderPlainElt() {}
 
-    virtual void setRawData(const char * str,
-                            size_t len,
-                            unsigned int xmlLine) = 0;
+    virtual void setRawData(const char * str, size_t len, unsigned int xmlLine) = 0;
 
-    bool isContainer() const override
-    {
-        return false;
-    }
+    bool isContainer() const override { return false; }
 
-    const ContainerEltRcPtr & getParent() const
-    {
-        return m_parent;
-    }
+    const ContainerEltRcPtr & getParent() const { return m_parent; }
 
-    const std::string & getIdentifier() const override
-    {
-        return getName();
-    }
+    const std::string & getIdentifier() const override { return getName(); }
 
-    const char * getTypeName() const override
-    {
-        return getName().c_str();
-    }
+    const char * getTypeName() const override { return getName().c_str(); }
 
 private:
     XmlReaderPlainElt() = delete;
@@ -202,65 +171,47 @@ class XmlReaderDummyElt : public XmlReaderPlainElt
     public:
         DummyParent() = delete;
         DummyParent(ElementRcPtr & pParent)
-            : XmlReaderContainerElt(pParent.get() ? pParent->getName() : "",
-                                    pParent.get() ? pParent->getXmlLineNumber() : 0,
-                                    pParent.get() ? pParent->getXmlFile() : "")
+            : XmlReaderContainerElt(
+                  pParent.get() ? pParent->getName() : "",
+                  pParent.get() ? pParent->getXmlLineNumber() : 0,
+                  pParent.get() ? pParent->getXmlFile() : "")
         {
         }
-        ~DummyParent()
-        {
-        }
+        ~DummyParent() {}
 
-        void appendMetadata(FormatMetadataImpl& /*metadata*/) override
-        {
-        }
+        void appendMetadata(FormatMetadataImpl & /*metadata*/) override {}
 
         const std::string & getIdentifier() const override;
 
-        void start(const char ** /* atts */) override
-        {
-        }
+        void start(const char ** /* atts */) override {}
 
-        void end() override
-        {
-        }
+        void end() override {}
 
-        const char * getTypeName() const override
-        {
-            return getIdentifier().c_str();
-        }
+        const char * getTypeName() const override { return getIdentifier().c_str(); }
     };
 
 public:
-    XmlReaderDummyElt(const std::string & name,
-                      ElementRcPtr pParent,
-                      unsigned int xmlLocation,
-                      const std::string & xmlFile,
-                      const char * msg);
+    XmlReaderDummyElt(
+        const std::string & name,
+        ElementRcPtr pParent,
+        unsigned int xmlLocation,
+        const std::string & xmlFile,
+        const char * msg);
 
-    virtual ~XmlReaderDummyElt()
-    {
-    }
+    virtual ~XmlReaderDummyElt() {}
 
     const std::string & getIdentifier() const override;
 
-    void start(const char ** /* atts */) override
-    {
-    }
+    void start(const char ** /* atts */) override {}
 
-    void end() override
-    {
-    }
+    void end() override {}
 
     void setRawData(const char * str, size_t len, unsigned int /* xmlLine */) override
     {
         m_rawData.push_back(std::string(str, len));
     }
 
-    bool isDummy() const  override
-    {
-        return true;
-    }
+    bool isDummy() const override { return true; }
 
 private:
     StringUtils::StringVec m_rawData;
@@ -273,18 +224,17 @@ class XmlReaderDescriptionElt : public XmlReaderPlainElt
 {
 public:
     XmlReaderDescriptionElt() = delete;
-    XmlReaderDescriptionElt(const std::string & name,
-                            ContainerEltRcPtr & pParent,
-                            unsigned int xmlLocation,
-                            const std::string & xmlFile)
+    XmlReaderDescriptionElt(
+        const std::string & name,
+        ContainerEltRcPtr & pParent,
+        unsigned int xmlLocation,
+        const std::string & xmlFile)
         : XmlReaderPlainElt(name, pParent, xmlLocation, xmlFile)
         , m_changed(false)
     {
     }
 
-    ~XmlReaderDescriptionElt()
-    {
-    }
+    ~XmlReaderDescriptionElt() {}
 
     void start(const char ** /* atts */) override
     {
@@ -305,44 +255,31 @@ public:
 private:
     std::string m_description;
     bool m_changed;
-
 };
 
 // Base class for nested elements.
 class XmlReaderComplexElt : public XmlReaderContainerElt
 {
 public:
-    XmlReaderComplexElt(const std::string & name,
-                        ContainerEltRcPtr pParent,
-                        unsigned int xmlLineNumber,
-                        const std::string & xmlFile)
+    XmlReaderComplexElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile)
         : XmlReaderContainerElt(name, xmlLineNumber, xmlFile)
         , m_parent(pParent)
     {
     }
 
-    ~XmlReaderComplexElt()
-    {
-    }
+    ~XmlReaderComplexElt() {}
 
-    const ContainerEltRcPtr & getParent() const
-    {
-        return m_parent;
-    }
+    const ContainerEltRcPtr & getParent() const { return m_parent; }
 
-    const std::string & getIdentifier() const override
-    {
-        return getName();
-    }
+    const std::string & getIdentifier() const override { return getName(); }
 
-    const char * getTypeName() const override
-    {
-        return getName().c_str();
-    }
+    const char * getTypeName() const override { return getName().c_str(); }
 
-    void appendMetadata(FormatMetadataImpl& /*metadata*/) override
-    {
-    }
+    void appendMetadata(FormatMetadataImpl & /*metadata*/) override {}
 
 private:
     XmlReaderComplexElt() = delete;
@@ -353,10 +290,11 @@ private:
 class XmlReaderSOPNodeBaseElt : public XmlReaderComplexElt
 {
 public:
-    XmlReaderSOPNodeBaseElt(const std::string & name,
-                            ContainerEltRcPtr pParent,
-                            unsigned int xmlLineNumber,
-                            const std::string & xmlFile)
+    XmlReaderSOPNodeBaseElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile)
         : XmlReaderComplexElt(name, pParent, xmlLineNumber, xmlFile)
         , m_isSlopeInit(false)
         , m_isOffsetInit(false)
@@ -393,7 +331,7 @@ public:
     void setIsOffsetInit(bool status) { m_isOffsetInit = status; }
     void setIsPowerInit(bool status) { m_isPowerInit = status; }
 
-    void appendMetadata(FormatMetadataImpl& metadata) override
+    void appendMetadata(FormatMetadataImpl & metadata) override
     {
         // Add description to parent and override name.
         metadata.setElementName(METADATA_SOP_DESCRIPTION);
@@ -412,10 +350,11 @@ private:
 class XmlReaderSOPValueElt : public XmlReaderPlainElt
 {
 public:
-    XmlReaderSOPValueElt(const std::string & name,
-                         ContainerEltRcPtr pParent,
-                         unsigned int xmlLineNumber,
-                         const std::string & xmlFile);
+    XmlReaderSOPValueElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile);
 
     ~XmlReaderSOPValueElt();
 
@@ -435,31 +374,27 @@ private:
 class XmlReaderSatNodeBaseElt : public XmlReaderComplexElt
 {
 public:
-    XmlReaderSatNodeBaseElt(const std::string & name,
-                            ContainerEltRcPtr pParent,
-                            unsigned int xmlLineNumber,
-                            const std::string & xmlFile)
+    XmlReaderSatNodeBaseElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile)
         : XmlReaderComplexElt(name, pParent, xmlLineNumber, xmlFile)
     {
     }
 
-    void start(const char ** /* atts */) override
-    {
-    }
+    void start(const char ** /* atts */) override {}
 
-    void end() override
-    {
-    }
+    void end() override {}
 
     virtual const CDLOpDataRcPtr & getCDL() const = 0;
 
-    void appendMetadata(FormatMetadataImpl& metadata) override
+    void appendMetadata(FormatMetadataImpl & metadata) override
     {
         // Add description to parent and override name.
         metadata.setElementName(METADATA_SAT_DESCRIPTION);
         getCDL()->getFormatMetadata().getChildrenElements().push_back(metadata);
     }
-
 
 private:
     XmlReaderSatNodeBaseElt() = delete;
@@ -469,10 +404,11 @@ private:
 class XmlReaderSaturationElt : public XmlReaderPlainElt
 {
 public:
-    XmlReaderSaturationElt(const std::string & name,
-                           ContainerEltRcPtr pParent,
-                           unsigned int xmlLineNumber,
-                           const std::string & xmlFile);
+    XmlReaderSaturationElt(
+        const std::string & name,
+        ContainerEltRcPtr pParent,
+        unsigned int xmlLineNumber,
+        const std::string & xmlFile);
 
     ~XmlReaderSaturationElt();
 
@@ -496,7 +432,7 @@ class XmlReaderElementStack
 public:
     XmlReaderElementStack();
 
-    XmlReaderElementStack(const XmlReaderElementStack &) = delete;
+    XmlReaderElementStack(const XmlReaderElementStack &)             = delete;
     XmlReaderElementStack & operator=(const XmlReaderElementStack &) = delete;
 
     virtual ~XmlReaderElementStack();

@@ -24,11 +24,12 @@ namespace OCIO_NAMESPACE
 
 namespace
 {
-void GetAbsoluteSearchPaths(StringUtils::StringVec & searchpaths,
-                            const StringUtils::StringVec & pathStrings,
-                            const std::string & configRootDir,
-                            const EnvMap & map,
-                            UsedEnvs & envs);
+void GetAbsoluteSearchPaths(
+    StringUtils::StringVec & searchpaths,
+    const StringUtils::StringVec & pathStrings,
+    const std::string & configRootDir,
+    const EnvMap & map,
+    UsedEnvs & envs);
 }
 
 class Context::Impl
@@ -54,20 +55,20 @@ public:
 
     ConfigIOProxyRcPtr m_configIOProxy;
 
-    Impl() = default;
+    Impl()  = default;
     ~Impl() = default;
 
-    Impl& operator= (const Impl & rhs)
+    Impl & operator=(const Impl & rhs)
     {
-        if(this!=&rhs)
+        if (this != &rhs)
         {
             AutoMutex lock1(m_resultsCacheMutex);
             AutoMutex lock2(rhs.m_resultsCacheMutex);
 
             m_searchPaths = rhs.m_searchPaths;
-            m_searchPath = rhs.m_searchPath;
-            m_workingDir = rhs.m_workingDir;
-            m_envMap = rhs.m_envMap;
+            m_searchPath  = rhs.m_searchPath;
+            m_workingDir  = rhs.m_workingDir;
+            m_envMap      = rhs.m_envMap;
 
             m_resultsStringCache   = rhs.m_resultsStringCache;
             m_resultsFilepathCache = rhs.m_resultsFilepathCache;
@@ -80,7 +81,8 @@ public:
     }
 
     // Resolve all context variables from an arbitrary string.
-    const char * resolveStringVar(const char * string, ContextRcPtr & usedContextVars) const noexcept
+    const char * resolveStringVar(const char * string, ContextRcPtr & usedContextVars)
+        const noexcept
     {
         if (!string || !*string)
         {
@@ -105,7 +107,7 @@ public:
         // Search some context variables to replace.
         UsedEnvs envs;
         const std::string resolvedString = ResolveContextVariables(string, m_envMap, envs);
-        m_resultsStringCache[string] = std::make_pair(resolvedString, envs);
+        m_resultsStringCache[string]     = std::make_pair(resolvedString, envs);
 
         if (usedContextVars)
         {
@@ -124,7 +126,7 @@ public:
     {
         m_resultsStringCache.clear();
         m_resultsFilepathCache.clear();
-        m_cacheID.clear();     
+        m_cacheID.clear();
     }
 };
 
@@ -135,7 +137,7 @@ ContextRcPtr Context::Create()
     return ContextRcPtr(new Context(), &deleter);
 }
 
-void Context::deleter(Context* c)
+void Context::deleter(Context * c)
 {
     delete c;
 }
@@ -143,7 +145,7 @@ void Context::deleter(Context* c)
 ///////////////////////////////////////////////////////////////////////////
 
 Context::Context()
-: m_impl(new Context::Impl)
+    : m_impl(new Context::Impl)
 {
 }
 
@@ -156,7 +158,7 @@ Context::~Context()
 ContextRcPtr Context::createEditableCopy() const
 {
     ContextRcPtr context = Context::Create();
-    *context->m_impl = *getImpl();
+    *context->m_impl     = *getImpl();
     return context;
 }
 
@@ -164,7 +166,7 @@ const char * Context::getCacheID() const
 {
     AutoMutex lock(getImpl()->m_resultsCacheMutex);
 
-    if(getImpl()->m_cacheID.empty())
+    if (getImpl()->m_cacheID.empty())
     {
         std::ostringstream cacheid;
         if (!getImpl()->m_searchPaths.empty())
@@ -179,13 +181,14 @@ const char * Context::getCacheID() const
         cacheid << "Environment Mode " << getImpl()->m_envmode << " ";
 
         for (EnvMap::const_iterator iter = getImpl()->m_envMap.begin(),
-                end = getImpl()->m_envMap.end();
-                iter != end; ++iter)
+                                    end  = getImpl()->m_envMap.end();
+             iter != end;
+             ++iter)
         {
             cacheid << iter->first << "=" << iter->second << " ";
         }
 
-        std::string fullstr = cacheid.str();
+        std::string fullstr  = cacheid.str();
         getImpl()->m_cacheID = CacheIDHash(fullstr.c_str(), fullstr.size());
     }
 
@@ -216,7 +219,8 @@ int Context::getNumSearchPaths() const
 
 const char * Context::getSearchPath(int index) const
 {
-    if (index < 0 || index >= (int)getImpl()->m_searchPaths.size()) return "";
+    if (index < 0 || index >= (int)getImpl()->m_searchPaths.size())
+        return "";
     return getImpl()->m_searchPaths[index].c_str();
 }
 
@@ -336,7 +340,7 @@ const char * Context::getStringVar(const char * name) const noexcept
     }
 
     EnvMap::const_iterator iter = getImpl()->m_envMap.find(name);
-    if(iter != getImpl()->m_envMap.end())
+    if (iter != getImpl()->m_envMap.end())
     {
         return iter->second.c_str();
     }
@@ -351,22 +355,24 @@ int Context::getNumStringVars() const
 
 const char * Context::getStringVarNameByIndex(int index) const
 {
-    if(index < 0 || index >= static_cast<int>(getImpl()->m_envMap.size()))
+    if (index < 0 || index >= static_cast<int>(getImpl()->m_envMap.size()))
         return "";
 
     EnvMap::const_iterator iter = getImpl()->m_envMap.begin();
-    for(int count = 0; count<index; ++count) ++iter;
+    for (int count = 0; count < index; ++count)
+        ++iter;
 
     return iter->first.c_str();
 }
 
 const char * Context::getStringVarByIndex(int index) const
 {
-    if(index < 0 || index >= static_cast<int>(getImpl()->m_envMap.size()))
+    if (index < 0 || index >= static_cast<int>(getImpl()->m_envMap.size()))
         return "";
 
     EnvMap::const_iterator iter = getImpl()->m_envMap.begin();
-    for(int count = 0; count<index; ++count) ++iter;
+    for (int count = 0; count < index; ++count)
+        ++iter;
 
     return iter->second.c_str();
 }
@@ -384,7 +390,7 @@ void Context::clearStringVars()
     getImpl()->m_envMap.clear();
 }
 
-const char * Context::resolveStringVar(const char * string) const  noexcept
+const char * Context::resolveStringVar(const char * string) const noexcept
 {
     AutoMutex lock(getImpl()->m_resultsCacheMutex);
 
@@ -393,7 +399,8 @@ const char * Context::resolveStringVar(const char * string) const  noexcept
     return getImpl()->resolveStringVar(string, usedContextVars);
 }
 
-const char * Context::resolveStringVar(const char * string, ContextRcPtr & usedContextVars) const noexcept
+const char * Context::resolveStringVar(const char * string, ContextRcPtr & usedContextVars)
+    const noexcept
 {
     AutoMutex lock(getImpl()->m_resultsCacheMutex);
 
@@ -408,10 +415,11 @@ const char * Context::resolveFileLocation(const char * filename) const
 }
 
 // TODO: Currently usedContextVars includes (for non-absolute filenames) all context vars used in
-// the search_path, regardless of whether they were needed to resolve the file location. So 
+// the search_path, regardless of whether they were needed to resolve the file location. So
 // usedContextVars may not be empty, even if no context vars are needed. Ideally, usedContextVars
 // would only contain the vars needed for the specific filename.
-const char * Context::resolveFileLocation(const char * filename, ContextRcPtr & usedContextVars) const
+const char * Context::resolveFileLocation(const char * filename, ContextRcPtr & usedContextVars)
+    const
 {
     AutoMutex lock(getImpl()->m_resultsCacheMutex);
 
@@ -438,17 +446,18 @@ const char * Context::resolveFileLocation(const char * filename, ContextRcPtr & 
         return iter->second.first.c_str();
     }
 
-    // If the file reference is absolute, check if the file exists (independent of the search paths).
-    if(pystring::os::path::isabs(resolvedFilename))
+    // If the file reference is absolute, check if the file exists (independent of the search
+    // paths).
+    if (pystring::os::path::isabs(resolvedFilename))
     {
-        if(FileExists(resolvedFilename, *this))
+        if (FileExists(resolvedFilename, *this))
         {
             // That's already an absolute path so no extra context variables are present.
             UsedEnvs envs;
 
             // Note that the filepath cache key is the 'resolvedFilename'.
 
-            getImpl()->m_resultsFilepathCache[resolvedFilename] 
+            getImpl()->m_resultsFilepathCache[resolvedFilename]
                 = std::make_pair(pystring::os::path::normpath(resolvedFilename), envs);
 
             return getImpl()->m_resultsFilepathCache[resolvedFilename].first.c_str();
@@ -460,12 +469,13 @@ const char * Context::resolveFileLocation(const char * filename, ContextRcPtr & 
         throw ExceptionMissingFile(errortext.str().c_str());
     }
 
-    // As that's a relative path search for the right root path using search path(s) or working path.
+    // As that's a relative path search for the right root path using search path(s) or working
+    // path.
 
     // The search_paths could contain some context variables.
     UsedEnvs envs;
 
-    // TODO: Used context variables from GetAbsoluteSearchPaths() are from all the search_paths 
+    // TODO: Used context variables from GetAbsoluteSearchPaths() are from all the search_paths
     // of the config i.e. it does not mean that all of them are used to resolve a FileTransform
     // for example.
 
@@ -473,11 +483,12 @@ const char * Context::resolveFileLocation(const char * filename, ContextRcPtr & 
     // Prep and resolve the search path vector
     // TODO: Cache this prepped vector?
     StringUtils::StringVec searchpaths;
-    GetAbsoluteSearchPaths(searchpaths,
-                           getImpl()->m_searchPaths,
-                           getImpl()->m_workingDir,
-                           getImpl()->m_envMap,
-                           envs);
+    GetAbsoluteSearchPaths(
+        searchpaths,
+        getImpl()->m_searchPaths,
+        getImpl()->m_workingDir,
+        getImpl()->m_envMap,
+        envs);
 
     // Loop over each path, and try to find the file
     std::ostringstream errortext;
@@ -488,7 +499,8 @@ const char * Context::resolveFileLocation(const char * filename, ContextRcPtr & 
     for (unsigned int i = 0; i < searchpaths.size(); ++i)
     {
         // Make an attempt to find the LUT in one of the search paths.
-        const std::string resolvedfullpath = pystring::os::path::join(searchpaths[i], resolvedFilename);
+        const std::string resolvedfullpath
+            = pystring::os::path::join(searchpaths[i], resolvedFilename);
         if (!ContainsContextVariables(resolvedfullpath) && FileExists(resolvedfullpath, *this))
         {
             // Collect all the used context variables.
@@ -507,7 +519,8 @@ const char * Context::resolveFileLocation(const char * filename, ContextRcPtr & 
             return getImpl()->m_resultsFilepathCache[resolvedFilename].first.c_str();
         }
 
-        if(i!=0) errortext << " : ";
+        if (i != 0)
+            errortext << " : ";
         errortext << "'" << resolvedfullpath << "'";
     }
     errortext << ".";
@@ -525,7 +538,7 @@ ConfigIOProxyRcPtr Context::getConfigIOProxy() const
     return getImpl()->m_configIOProxy;
 }
 
-std::ostream& operator<< (std::ostream& os, const Context& context)
+std::ostream & operator<<(std::ostream & os, const Context & context)
 {
     os << "<Context";
     os << " searchPath=[";
@@ -541,7 +554,7 @@ std::ostream& operator<< (std::ostream& os, const Context& context)
     os << "], workingDir=" << context.getWorkingDir();
     os << ", environmentMode=" << EnvironmentModeToString(context.getEnvironmentMode());
     os << ", environment=";
-    for(int i=0; i<context.getNumStringVars(); ++i)
+    for (int i = 0; i < context.getNumStringVars(); ++i)
     {
         const char * key = context.getStringVarNameByIndex(i);
         os << "\n    " << key << ": " << context.getStringVar(key);
@@ -552,13 +565,14 @@ std::ostream& operator<< (std::ostream& os, const Context& context)
 
 namespace
 {
-void GetAbsoluteSearchPaths(StringUtils::StringVec & searchpaths,
-                            const StringUtils::StringVec & pathStrings,
-                            const std::string & workingDir,
-                            const EnvMap & map,
-                            UsedEnvs & envs)
+void GetAbsoluteSearchPaths(
+    StringUtils::StringVec & searchpaths,
+    const StringUtils::StringVec & pathStrings,
+    const std::string & workingDir,
+    const EnvMap & map,
+    UsedEnvs & envs)
 {
-    if(pathStrings.empty())
+    if (pathStrings.empty())
     {
         searchpaths.push_back(workingDir);
         return;
@@ -582,6 +596,6 @@ void GetAbsoluteSearchPaths(StringUtils::StringVec & searchpaths,
         searchpaths.push_back(pystring::os::path::normpath(dirname));
     }
 }
-} // anon.
+} // namespace
 
 } // namespace OCIO_NAMESPACE

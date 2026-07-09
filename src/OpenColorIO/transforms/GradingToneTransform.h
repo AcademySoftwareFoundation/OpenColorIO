@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_GRADINGTONETRANSFORM_H
 #define INCLUDED_OCIO_GRADINGTONETRANSFORM_H
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ops/gradingtone/GradingToneOpData.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -17,10 +15,10 @@ class GradingToneTransformImpl : public GradingToneTransform
 {
 public:
     explicit GradingToneTransformImpl(GradingStyle style);
-    GradingToneTransformImpl() = delete;
-    GradingToneTransformImpl(const GradingToneTransformImpl &) = delete;
-    GradingToneTransformImpl& operator=(const GradingToneTransformImpl &) = delete;
-    ~GradingToneTransformImpl() override = default;
+    GradingToneTransformImpl()                                             = delete;
+    GradingToneTransformImpl(const GradingToneTransformImpl &)             = delete;
+    GradingToneTransformImpl & operator=(const GradingToneTransformImpl &) = delete;
+    ~GradingToneTransformImpl() override                                   = default;
 
     TransformRcPtr createEditableCopy() const override;
 
@@ -54,7 +52,6 @@ private:
     GradingToneOpData m_data;
 };
 
-
 } // namespace OCIO_NAMESPACE
 
-#endif  // INCLUDED_OCIO_GRADINGTONETRANSFORM_H
+#endif // INCLUDED_OCIO_GRADINGTONETRANSFORM_H

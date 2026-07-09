@@ -20,7 +20,7 @@ std::string AllocationData::getCacheID() const
     os.precision(FLOAT_DECIMALS);
     os << AllocationToString(allocation) << " ";
 
-    for(const auto & var : vars)
+    for (const auto & var : vars)
     {
         os << var << " ";
     }
@@ -28,28 +28,26 @@ std::string AllocationData::getCacheID() const
     return os.str();
 }
 
-std::ostream & operator<< (std::ostream & os, const AllocationData & allocation)
+std::ostream & operator<<(std::ostream & os, const AllocationData & allocation)
 {
     os << allocation.getCacheID();
     return os;
 }
 
-void CreateAllocationOps(OpRcPtrVec & ops,
-                         const AllocationData & data,
-                         TransformDirection dir)
+void CreateAllocationOps(OpRcPtrVec & ops, const AllocationData & data, TransformDirection dir)
 {
-    switch(data.allocation)
+    switch (data.allocation)
     {
         case ALLOCATION_UNIFORM:
         {
-            double oldmin[4] = { 0.0, 0.0, 0.0, 0.0 };
-            double oldmax[4] = { 1.0, 1.0, 1.0, 1.0 };
-            double newmin[4] = { 0.0, 0.0, 0.0, 0.0 };
-            double newmax[4] = { 1.0, 1.0, 1.0, 1.0 };
+            double oldmin[4] = {0.0, 0.0, 0.0, 0.0};
+            double oldmax[4] = {1.0, 1.0, 1.0, 1.0};
+            double newmin[4] = {0.0, 0.0, 0.0, 0.0};
+            double newmax[4] = {1.0, 1.0, 1.0, 1.0};
 
-            if(data.vars.size() >= 2)
+            if (data.vars.size() >= 2)
             {
-                for(int i=0; i<3; ++i)
+                for (int i = 0; i < 3; ++i)
                 {
                     oldmin[i] = data.vars[0];
                     oldmax[i] = data.vars[1];
@@ -62,14 +60,14 @@ void CreateAllocationOps(OpRcPtrVec & ops,
         }
         case ALLOCATION_LG2:
         {
-            double oldmin[4] = { -10.0, -10.0, -10.0, 0.0 };
-            double oldmax[4] = {   6.0,   6.0,   6.0, 1.0 };
-            double newmin[4] = {   0.0,   0.0,   0.0, 0.0 };
-            double newmax[4] = {   1.0,   1.0,   1.0, 1.0 };
+            double oldmin[4] = {-10.0, -10.0, -10.0, 0.0};
+            double oldmax[4] = {6.0, 6.0, 6.0, 1.0};
+            double newmin[4] = {0.0, 0.0, 0.0, 0.0};
+            double newmax[4] = {1.0, 1.0, 1.0, 1.0};
 
-            if(data.vars.size() >= 2)
+            if (data.vars.size() >= 2)
             {
-                for(int i=0; i<3; ++i)
+                for (int i = 0; i < 3; ++i)
                 {
                     oldmin[i] = data.vars[0];
                     oldmax[i] = data.vars[1];
@@ -79,15 +77,15 @@ void CreateAllocationOps(OpRcPtrVec & ops,
             // Log Settings.
             // output = logSlope * log( linSlope * input + linOffset, base ) + logOffset
 
-            double base = 2.0;
-            double logSlope[3]  = { 1.0, 1.0, 1.0 };
-            double linSlope[3]  = { 1.0, 1.0, 1.0 };
-            double linOffset[3] = { 0.0, 0.0, 0.0 };
-            double logOffset[3] = { 0.0, 0.0, 0.0 };
+            double base         = 2.0;
+            double logSlope[3]  = {1.0, 1.0, 1.0};
+            double linSlope[3]  = {1.0, 1.0, 1.0};
+            double linOffset[3] = {0.0, 0.0, 0.0};
+            double logOffset[3] = {0.0, 0.0, 0.0};
 
-            if(data.vars.size() >= 3)
+            if (data.vars.size() >= 3)
             {
-                for(int i=0; i<3; ++i)
+                for (int i = 0; i < 3; ++i)
                 {
                     linOffset[i] = data.vars[2];
                 }
@@ -108,7 +106,7 @@ void CreateAllocationOps(OpRcPtrVec & ops,
                     break;
                 }
             }
-            
+
             break;
         }
         case ALLOCATION_UNKNOWN:

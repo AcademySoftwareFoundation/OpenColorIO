@@ -3,10 +3,10 @@
 
 #include <sstream>
 
+#include "ParseUtils.h"
 #include "fileformats/cdl/CDLWriter.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "fileformats/xmlutils/XMLWriterUtils.h"
-#include "ParseUtils.h"
 #include "transforms/CDLTransform.h"
 #include "transforms/FileTransform.h"
 
@@ -21,12 +21,13 @@ void WriteStrings(XmlFormatter & fmt, const char * tag, const StringUtils::Strin
     }
 }
 
-void ExtractCDLMetadata(const FormatMetadata & metadata,
-                        StringUtils::StringVec & mainDesc,
-                        StringUtils::StringVec & inputDesc,
-                        StringUtils::StringVec & viewingDesc,
-                        StringUtils::StringVec & sopDesc,
-                        StringUtils::StringVec & satDesc)
+void ExtractCDLMetadata(
+    const FormatMetadata & metadata,
+    StringUtils::StringVec & mainDesc,
+    StringUtils::StringVec & inputDesc,
+    StringUtils::StringVec & viewingDesc,
+    StringUtils::StringVec & sopDesc,
+    StringUtils::StringVec & satDesc)
 {
     const int nbElt = metadata.getNumChildrenElements();
     for (int i = 0; i < nbElt; ++i)
@@ -91,7 +92,7 @@ void Write(XmlFormatter & fmt, const ConstCDLTransformRcPtr & cdl)
         {
             XmlScopeIndent scopeIndent(fmt);
             WriteStrings(fmt, TAG_DESCRIPTION, sopDesc);
-            double rgb[3]{ 0. };
+            double rgb[3]{0.};
             cdl->getSlope(rgb);
             fmt.writeContentTag(TAG_SLOPE, DoubleVecToString(rgb, 3));
             cdl->getOffset(rgb);

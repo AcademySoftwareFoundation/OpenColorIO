@@ -2,8 +2,8 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <algorithm>
-#include <cstring>
 #include <cmath>
+#include <cstring>
 #if OCIO_USE_SSE2 == 0
 #include <tuple>
 #endif
@@ -12,18 +12,18 @@
 
 #include "BitDepthUtils.h"
 #include "MathUtils.h"
-#include "ops/log/LogOpCPU.h"
-#include "ops/log/LogUtils.h"
-#include "ops/OpTools.h"
 #include "Platform.h"
 #include "SSE.h"
+#include "ops/OpTools.h"
+#include "ops/log/LogOpCPU.h"
+#include "ops/log/LogUtils.h"
 
 namespace OCIO_NAMESPACE
 {
 class LogOpCPU : public OpCPU
 {
 public:
-    LogOpCPU() = delete;
+    LogOpCPU()                 = delete;
     LogOpCPU(const LogOpCPU &) = delete;
 
     explicit LogOpCPU(ConstLogOpDataRcPtr & log);
@@ -218,8 +218,8 @@ public:
 };
 #endif
 
-static constexpr float LOG2_10 = ((float) 3.3219280948873623478703194294894);
-static constexpr float LOG10_2 = ((float) 0.3010299956639811952137388947245);
+static constexpr float LOG2_10 = ((float)3.3219280948873623478703194294894);
+static constexpr float LOG10_2 = ((float)0.3010299956639811952137388947245);
 
 ConstOpCPURcPtr GetLogRenderer(ConstLogOpDataRcPtr & log, bool fastExp)
 {
@@ -232,40 +232,44 @@ ConstOpCPURcPtr GetLogRenderer(ConstLogOpDataRcPtr & log, bool fastExp)
     {
         switch (dir)
         {
-        case TRANSFORM_DIR_FORWARD:
+            case TRANSFORM_DIR_FORWARD:
 #if OCIO_USE_SSE2
-            if (fastExp) return std::make_shared<LogRendererSSE>(log, 1.0f);
-            else
+                if (fastExp)
+                    return std::make_shared<LogRendererSSE>(log, 1.0f);
+                else
 #endif
-                return std::make_shared<LogRenderer>(log, 1.0f);
-            break;
-        case TRANSFORM_DIR_INVERSE:
+                    return std::make_shared<LogRenderer>(log, 1.0f);
+                break;
+            case TRANSFORM_DIR_INVERSE:
 #if OCIO_USE_SSE2
-            if (fastExp) return std::make_shared<AntiLogRendererSSE>(log, 1.0f);
-            else
+                if (fastExp)
+                    return std::make_shared<AntiLogRendererSSE>(log, 1.0f);
+                else
 #endif
-                return std::make_shared<AntiLogRenderer>(log, 1.0f);
-            break;
+                    return std::make_shared<AntiLogRenderer>(log, 1.0f);
+                break;
         }
     }
     else if (log->isLog10())
     {
         switch (dir)
         {
-        case TRANSFORM_DIR_FORWARD:
+            case TRANSFORM_DIR_FORWARD:
 #if OCIO_USE_SSE2
-            if (fastExp) return std::make_shared<LogRendererSSE>(log, LOG10_2);
-            else
+                if (fastExp)
+                    return std::make_shared<LogRendererSSE>(log, LOG10_2);
+                else
 #endif
-                return std::make_shared<LogRenderer>(log, LOG10_2);
-            break;
-        case TRANSFORM_DIR_INVERSE:
+                    return std::make_shared<LogRenderer>(log, LOG10_2);
+                break;
+            case TRANSFORM_DIR_INVERSE:
 #if OCIO_USE_SSE2
-            if (fastExp) return std::make_shared<AntiLogRendererSSE>(log, LOG2_10);
-            else
+                if (fastExp)
+                    return std::make_shared<AntiLogRendererSSE>(log, LOG2_10);
+                else
 #endif
-                return std::make_shared<AntiLogRenderer>(log, LOG2_10);
-            break;
+                    return std::make_shared<AntiLogRenderer>(log, LOG2_10);
+                break;
         }
     }
     else
@@ -274,40 +278,44 @@ ConstOpCPURcPtr GetLogRenderer(ConstLogOpDataRcPtr & log, bool fastExp)
         {
             switch (dir)
             {
-            case TRANSFORM_DIR_FORWARD:
+                case TRANSFORM_DIR_FORWARD:
 #if OCIO_USE_SSE2
-                if (fastExp) return std::make_shared<CameraLin2LogRendererSSE>(log);
-                else
+                    if (fastExp)
+                        return std::make_shared<CameraLin2LogRendererSSE>(log);
+                    else
 #endif
-                    return std::make_shared<CameraLin2LogRenderer>(log);
-                break;
-            case TRANSFORM_DIR_INVERSE:
+                        return std::make_shared<CameraLin2LogRenderer>(log);
+                    break;
+                case TRANSFORM_DIR_INVERSE:
 #if OCIO_USE_SSE2
-                if (fastExp) return std::make_shared<CameraLog2LinRendererSSE>(log);
-                else
+                    if (fastExp)
+                        return std::make_shared<CameraLog2LinRendererSSE>(log);
+                    else
 #endif
-                    return std::make_shared<CameraLog2LinRenderer>(log);
-                break;
+                        return std::make_shared<CameraLog2LinRenderer>(log);
+                    break;
             }
         }
         else
         {
             switch (dir)
             {
-            case TRANSFORM_DIR_FORWARD:
+                case TRANSFORM_DIR_FORWARD:
 #if OCIO_USE_SSE2
-                if (fastExp) return std::make_shared<Lin2LogRendererSSE>(log);
-                else
+                    if (fastExp)
+                        return std::make_shared<Lin2LogRendererSSE>(log);
+                    else
 #endif
-                    return std::make_shared<Lin2LogRenderer>(log);
-                break;
-            case TRANSFORM_DIR_INVERSE:
+                        return std::make_shared<Lin2LogRenderer>(log);
+                    break;
+                case TRANSFORM_DIR_INVERSE:
 #if OCIO_USE_SSE2
-                if (fastExp) return std::make_shared<Log2LinRendererSSE>(log);
-                else
+                    if (fastExp)
+                        return std::make_shared<Log2LinRendererSSE>(log);
+                    else
 #endif
-                    return std::make_shared<Log2LinRenderer>(log);
-                break;
+                        return std::make_shared<Log2LinRenderer>(log);
+                    break;
             }
         }
     }
@@ -323,7 +331,6 @@ void LogOpCPU::updateData(ConstLogOpDataRcPtr & /* log */)
 {
 }
 
-
 L2LBaseRenderer::L2LBaseRenderer(ConstLogOpDataRcPtr & log)
     : LogOpCPU(log)
 {
@@ -333,7 +340,7 @@ void L2LBaseRenderer::updateData(ConstLogOpDataRcPtr & log)
 {
     LogOpCPU::updateData(log);
 
-    m_base = (float)log->getBase();
+    m_base    = (float)log->getBase();
     m_paramsR = log->getRedParams();
     m_paramsG = log->getGreenParams();
     m_paramsB = log->getBlueParams();
@@ -393,9 +400,9 @@ void LogRenderer::apply(const void * inImg, void * outImg, long numPixels) const
     static constexpr float minValue = std::numeric_limits<float>::min();
 
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for (long idx = 0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         const float alphares = in[3];
 
@@ -408,7 +415,7 @@ void LogRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 
         out[3] = alphares;
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
@@ -426,14 +433,14 @@ void LogRendererSSE::apply(const void * inImg, void * outImg, long numPixels) co
     static constexpr float minValue = std::numeric_limits<float>::min();
 
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
     const __m128 mm_minValue = _mm_set1_ps(minValue);
     const __m128 mm_logScale = _mm_set1_ps(m_logScale);
 
     __m128 mm_pixel;
 
-    for (long idx = 0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         mm_pixel = _mm_set_ps(0.0f, in[2], in[1], in[0]);
         mm_pixel = _mm_max_ps(mm_pixel, mm_minValue);
@@ -445,7 +452,7 @@ void LogRendererSSE::apply(const void * inImg, void * outImg, long numPixels) co
         _mm_storeu_ps(out, mm_pixel);
         out[3] = alphares;
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
@@ -462,9 +469,9 @@ AntiLogRenderer::AntiLogRenderer(ConstLogOpDataRcPtr & log, float log2base)
 void AntiLogRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for (long idx = 0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         const float alphares = in[3];
 
@@ -476,7 +483,7 @@ void AntiLogRenderer::apply(const void * inImg, void * outImg, long numPixels) c
 
         out[3] = alphares;
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
@@ -498,13 +505,13 @@ void AntiLogRendererSSE::apply(const void * inImg, void * outImg, long numPixels
     //
 
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
     const __m128 mm_log2_base = _mm_set1_ps(m_log2_base);
 
     __m128 mm_pixel;
 
-    for (long idx = 0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         mm_pixel = _mm_set_ps(0.0f, in[2], in[1], in[0]);
         mm_pixel = sseExp2(_mm_mul_ps(mm_pixel, mm_log2_base));
@@ -514,7 +521,7 @@ void AntiLogRendererSSE::apply(const void * inImg, void * outImg, long numPixels
         _mm_storeu_ps(out, mm_pixel);
         out[3] = alphares;
 
-        in  += 4;
+        in += 4;
         out += 4;
     }
 }
@@ -531,27 +538,26 @@ void Log2LinRenderer::updateData(ConstLogOpDataRcPtr & log)
 {
     L2LBaseRenderer::updateData(log);
 
-    m_kinv[0] = log2f(m_base) / (float)m_paramsR[LOG_SIDE_SLOPE];
-    m_kinv[1] = log2f(m_base) / (float)m_paramsG[LOG_SIDE_SLOPE];
-    m_kinv[2] = log2f(m_base) / (float)m_paramsB[LOG_SIDE_SLOPE];
+    m_kinv[0]    = log2f(m_base) / (float)m_paramsR[LOG_SIDE_SLOPE];
+    m_kinv[1]    = log2f(m_base) / (float)m_paramsG[LOG_SIDE_SLOPE];
+    m_kinv[2]    = log2f(m_base) / (float)m_paramsB[LOG_SIDE_SLOPE];
     m_minuskb[0] = -(float)m_paramsR[LOG_SIDE_OFFSET];
     m_minuskb[1] = -(float)m_paramsG[LOG_SIDE_OFFSET];
     m_minuskb[2] = -(float)m_paramsB[LOG_SIDE_OFFSET];
-    m_minusb[0] = -(float)m_paramsR[LIN_SIDE_OFFSET];
-    m_minusb[1] = -(float)m_paramsG[LIN_SIDE_OFFSET];
-    m_minusb[2] = -(float)m_paramsB[LIN_SIDE_OFFSET];
-    m_minv[0] = 1.0f / (float)m_paramsR[LIN_SIDE_SLOPE];
-    m_minv[1] = 1.0f / (float)m_paramsG[LIN_SIDE_SLOPE];
-    m_minv[2] = 1.0f / (float)m_paramsB[LIN_SIDE_SLOPE];
+    m_minusb[0]  = -(float)m_paramsR[LIN_SIDE_OFFSET];
+    m_minusb[1]  = -(float)m_paramsG[LIN_SIDE_OFFSET];
+    m_minusb[2]  = -(float)m_paramsB[LIN_SIDE_OFFSET];
+    m_minv[0]    = 1.0f / (float)m_paramsR[LIN_SIDE_SLOPE];
+    m_minv[1]    = 1.0f / (float)m_paramsG[LIN_SIDE_SLOPE];
+    m_minv[2]    = 1.0f / (float)m_paramsB[LIN_SIDE_SLOPE];
 }
-
 
 void Log2LinRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for (long idx = 0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         const float alphares = in[3];
 
@@ -567,7 +573,7 @@ void Log2LinRenderer::apply(const void * inImg, void * outImg, long numPixels) c
         out[3] = alphares;
 
         out += 4;
-        in  += 4;
+        in += 4;
     }
 }
 
@@ -575,7 +581,6 @@ void Log2LinRenderer::apply(const void * inImg, void * outImg, long numPixels) c
 Log2LinRendererSSE::Log2LinRendererSSE(ConstLogOpDataRcPtr & log)
     : Log2LinRenderer(log)
 {
-
 }
 
 void Log2LinRendererSSE::apply(const void * inImg, void * outImg, long numPixels) const
@@ -591,12 +596,12 @@ void Log2LinRendererSSE::apply(const void * inImg, void * outImg, long numPixels
     //
 
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    const __m128 mm_kinv = _mm_set_ps(0.0f, m_kinv[2], m_kinv[1], m_kinv[0]);
+    const __m128 mm_kinv    = _mm_set_ps(0.0f, m_kinv[2], m_kinv[1], m_kinv[0]);
     const __m128 mm_minuskb = _mm_set_ps(0.0f, m_minuskb[2], m_minuskb[1], m_minuskb[0]);
-    const __m128 mm_minusb = _mm_set_ps(0.0f, m_minusb[2], m_minusb[1], m_minusb[0]);
-    const __m128 mm_minv = _mm_set_ps(0.0f, m_minv[2], m_minv[1], m_minv[0]);
+    const __m128 mm_minusb  = _mm_set_ps(0.0f, m_minusb[2], m_minusb[1], m_minusb[0]);
+    const __m128 mm_minv    = _mm_set_ps(0.0f, m_minv[2], m_minv[1], m_minv[0]);
 
     __m128 mm_pixel;
 
@@ -615,7 +620,7 @@ void Log2LinRendererSSE::apply(const void * inImg, void * outImg, long numPixels
         out[3] = alphares;
 
         out += 4;
-        in  += 4;
+        in += 4;
     }
 }
 #endif
@@ -631,18 +636,18 @@ void Lin2LogRenderer::updateData(ConstLogOpDataRcPtr & log)
 {
     L2LBaseRenderer::updateData(log);
 
-    m_m[0] = (float)m_paramsR[LIN_SIDE_SLOPE];
-    m_m[1] = (float)m_paramsG[LIN_SIDE_SLOPE];
-    m_m[2] = (float)m_paramsB[LIN_SIDE_SLOPE];
-    m_b[0] = (float)m_paramsR[LIN_SIDE_OFFSET];
-    m_b[1] = (float)m_paramsG[LIN_SIDE_OFFSET];
-    m_b[2] = (float)m_paramsB[LIN_SIDE_OFFSET];
+    m_m[0]    = (float)m_paramsR[LIN_SIDE_SLOPE];
+    m_m[1]    = (float)m_paramsG[LIN_SIDE_SLOPE];
+    m_m[2]    = (float)m_paramsB[LIN_SIDE_SLOPE];
+    m_b[0]    = (float)m_paramsR[LIN_SIDE_OFFSET];
+    m_b[1]    = (float)m_paramsG[LIN_SIDE_OFFSET];
+    m_b[2]    = (float)m_paramsB[LIN_SIDE_OFFSET];
     m_klog[0] = (float)(m_paramsR[LOG_SIDE_SLOPE] / log2(m_base));
     m_klog[1] = (float)(m_paramsG[LOG_SIDE_SLOPE] / log2(m_base));
     m_klog[2] = (float)(m_paramsB[LOG_SIDE_SLOPE] / log2(m_base));
-    m_kb[0] = (float)m_paramsR[LOG_SIDE_OFFSET];
-    m_kb[1] = (float)m_paramsG[LOG_SIDE_OFFSET];
-    m_kb[2] = (float)m_paramsB[LOG_SIDE_OFFSET];
+    m_kb[0]   = (float)m_paramsR[LOG_SIDE_OFFSET];
+    m_kb[1]   = (float)m_paramsG[LOG_SIDE_OFFSET];
+    m_kb[2]   = (float)m_paramsB[LOG_SIDE_OFFSET];
 }
 
 void Lin2LogRenderer::apply(const void * inImg, void * outImg, long numPixels) const
@@ -650,9 +655,9 @@ void Lin2LogRenderer::apply(const void * inImg, void * outImg, long numPixels) c
     static constexpr float minValue = std::numeric_limits<float>::min();
 
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for (long idx = 0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         const float alphares = in[3];
 
@@ -669,7 +674,7 @@ void Lin2LogRenderer::apply(const void * inImg, void * outImg, long numPixels) c
         out[3] = alphares;
 
         out += 4;
-        in  += 4;
+        in += 4;
     }
 }
 
@@ -688,18 +693,18 @@ void Lin2LogRendererSSE::apply(const void * inImg, void * outImg, long numPixels
     static constexpr float minValue = std::numeric_limits<float>::min();
 
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
     const __m128 mm_minValue = _mm_set1_ps(minValue);
 
-    const __m128 mm_m = _mm_set_ps(0.0f, m_m[2], m_m[1], m_m[0]);
-    const __m128 mm_b = _mm_set_ps(0.0f, m_b[2], m_b[1], m_b[0]);
+    const __m128 mm_m    = _mm_set_ps(0.0f, m_m[2], m_m[1], m_m[0]);
+    const __m128 mm_b    = _mm_set_ps(0.0f, m_b[2], m_b[1], m_b[0]);
     const __m128 mm_klog = _mm_set_ps(0.0f, m_klog[2], m_klog[1], m_klog[0]);
-    const __m128 mm_kb = _mm_set_ps(0.0f, m_kb[2], m_kb[1], m_kb[0]);
+    const __m128 mm_kb   = _mm_set_ps(0.0f, m_kb[2], m_kb[1], m_kb[0]);
 
     __m128 mm_pixel;
 
-    for (long idx = 0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         mm_pixel = _mm_set_ps(0.0f, in[2], in[1], in[0]);
         mm_pixel = _mm_mul_ps(mm_pixel, mm_m);
@@ -715,7 +720,7 @@ void Lin2LogRendererSSE::apply(const void * inImg, void * outImg, long numPixels
         out[3] = alphares;
 
         out += 4;
-        in  += 4;
+        in += 4;
     }
 }
 #endif
@@ -728,9 +733,9 @@ CameraL2LBaseRenderer::CameraL2LBaseRenderer(ConstLogOpDataRcPtr & log)
 void CameraL2LBaseRenderer::updateData(ConstLogOpDataRcPtr & log)
 {
     L2LBaseRenderer::updateData(log);
-    m_linearSlope[0] = LogUtil::GetLinearSlope(m_paramsR, m_base);
-    m_linearSlope[1] = LogUtil::GetLinearSlope(m_paramsG, m_base);
-    m_linearSlope[2] = LogUtil::GetLinearSlope(m_paramsB, m_base);
+    m_linearSlope[0]  = LogUtil::GetLinearSlope(m_paramsR, m_base);
+    m_linearSlope[1]  = LogUtil::GetLinearSlope(m_paramsG, m_base);
+    m_linearSlope[2]  = LogUtil::GetLinearSlope(m_paramsB, m_base);
     m_logSideBreak[0] = LogUtil::GetLogSideBreak(m_paramsR, m_base);
     m_logSideBreak[1] = LogUtil::GetLogSideBreak(m_paramsG, m_base);
     m_logSideBreak[2] = LogUtil::GetLogSideBreak(m_paramsB, m_base);
@@ -751,21 +756,21 @@ void CameraLog2LinRenderer::updateData(ConstLogOpDataRcPtr & log)
 {
     CameraL2LBaseRenderer::updateData(log);
 
-    m_kinv[0] = m_log2_base / (float)m_paramsR[LOG_SIDE_SLOPE];
-    m_kinv[1] = m_log2_base / (float)m_paramsG[LOG_SIDE_SLOPE];
-    m_kinv[2] = m_log2_base / (float)m_paramsB[LOG_SIDE_SLOPE];
-    m_minuskb[0] = -(float)m_paramsR[LOG_SIDE_OFFSET];
-    m_minuskb[1] = -(float)m_paramsG[LOG_SIDE_OFFSET];
-    m_minuskb[2] = -(float)m_paramsB[LOG_SIDE_OFFSET];
-    m_minusb[0] = -(float)m_paramsR[LIN_SIDE_OFFSET];
-    m_minusb[1] = -(float)m_paramsG[LIN_SIDE_OFFSET];
-    m_minusb[2] = -(float)m_paramsB[LIN_SIDE_OFFSET];
-    m_minv[0] = 1.0f / (float)m_paramsR[LIN_SIDE_SLOPE];
-    m_minv[1] = 1.0f / (float)m_paramsG[LIN_SIDE_SLOPE];
-    m_minv[2] = 1.0f / (float)m_paramsB[LIN_SIDE_SLOPE];
-    m_linsinv[0] = 1.0f / m_linearSlope[0];
-    m_linsinv[1] = 1.0f / m_linearSlope[1];
-    m_linsinv[2] = 1.0f / m_linearSlope[2];
+    m_kinv[0]      = m_log2_base / (float)m_paramsR[LOG_SIDE_SLOPE];
+    m_kinv[1]      = m_log2_base / (float)m_paramsG[LOG_SIDE_SLOPE];
+    m_kinv[2]      = m_log2_base / (float)m_paramsB[LOG_SIDE_SLOPE];
+    m_minuskb[0]   = -(float)m_paramsR[LOG_SIDE_OFFSET];
+    m_minuskb[1]   = -(float)m_paramsG[LOG_SIDE_OFFSET];
+    m_minuskb[2]   = -(float)m_paramsB[LOG_SIDE_OFFSET];
+    m_minusb[0]    = -(float)m_paramsR[LIN_SIDE_OFFSET];
+    m_minusb[1]    = -(float)m_paramsG[LIN_SIDE_OFFSET];
+    m_minusb[2]    = -(float)m_paramsB[LIN_SIDE_OFFSET];
+    m_minv[0]      = 1.0f / (float)m_paramsR[LIN_SIDE_SLOPE];
+    m_minv[1]      = 1.0f / (float)m_paramsG[LIN_SIDE_SLOPE];
+    m_minv[2]      = 1.0f / (float)m_paramsB[LIN_SIDE_SLOPE];
+    m_linsinv[0]   = 1.0f / m_linearSlope[0];
+    m_linsinv[1]   = 1.0f / m_linearSlope[1];
+    m_linsinv[2]   = 1.0f / m_linearSlope[2];
     m_minuslino[0] = -m_linearOffset[0];
     m_minuslino[1] = -m_linearOffset[1];
     m_minuslino[2] = -m_linearOffset[2];
@@ -774,7 +779,7 @@ void CameraLog2LinRenderer::updateData(ConstLogOpDataRcPtr & log)
 void CameraLog2LinRenderer::apply(const void * inImg, void * outImg, long numPixels) const
 {
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
     for (long idx = 0; idx < numPixels; ++idx)
     {
@@ -818,22 +823,23 @@ void CameraLog2LinRendererSSE::apply(const void * inImg, void * outImg, long num
     //
 
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    const __m128 mm_kinv = _mm_set_ps(0.0f, m_kinv[2], m_kinv[1], m_kinv[0]);
+    const __m128 mm_kinv    = _mm_set_ps(0.0f, m_kinv[2], m_kinv[1], m_kinv[0]);
     const __m128 mm_minuskb = _mm_set_ps(0.0f, m_minuskb[2], m_minuskb[1], m_minuskb[0]);
-    const __m128 mm_minusb = _mm_set_ps(0.0f, m_minusb[2], m_minusb[1], m_minusb[0]);
-    const __m128 mm_minv = _mm_set_ps(0.0f, m_minv[2], m_minv[1], m_minv[0]);
-    const __m128 breakPnt = _mm_set_ps(0.f, m_logSideBreak[2], m_logSideBreak[1], m_logSideBreak[0]);
+    const __m128 mm_minusb  = _mm_set_ps(0.0f, m_minusb[2], m_minusb[1], m_minusb[0]);
+    const __m128 mm_minv    = _mm_set_ps(0.0f, m_minv[2], m_minv[1], m_minv[0]);
+    const __m128 breakPnt
+        = _mm_set_ps(0.f, m_logSideBreak[2], m_logSideBreak[1], m_logSideBreak[0]);
     const __m128 mm_linoinv = _mm_set_ps(0.0f, m_minuslino[2], m_minuslino[1], m_minuslino[0]);
     const __m128 mm_linsinv = _mm_set_ps(0.0f, m_linsinv[2], m_linsinv[1], m_linsinv[0]);
 
     __m128 mm_pixel;
     __m128 mm_pixel_lin;
 
-    for (long idx = 0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
-        mm_pixel = _mm_set_ps(0.0f, in[2], in[1], in[0]);
+        mm_pixel    = _mm_set_ps(0.0f, in[2], in[1], in[0]);
         __m128 flag = _mm_cmpgt_ps(mm_pixel, breakPnt);
 
         mm_pixel_lin = _mm_add_ps(mm_pixel, mm_linoinv);
@@ -845,8 +851,7 @@ void CameraLog2LinRendererSSE::apply(const void * inImg, void * outImg, long num
         mm_pixel = _mm_add_ps(mm_pixel, mm_minusb);
         mm_pixel = _mm_mul_ps(mm_pixel, mm_minv);
 
-        mm_pixel = _mm_or_ps(_mm_and_ps(flag, mm_pixel),
-                             _mm_andnot_ps(flag, mm_pixel_lin));
+        mm_pixel = _mm_or_ps(_mm_and_ps(flag, mm_pixel), _mm_andnot_ps(flag, mm_pixel_lin));
 
         const float alphares = in[3];
 
@@ -869,18 +874,18 @@ void CameraLin2LogRenderer::updateData(ConstLogOpDataRcPtr & log)
 {
     CameraL2LBaseRenderer::updateData(log);
 
-    m_m[0] = (float)m_paramsR[LIN_SIDE_SLOPE];
-    m_m[1] = (float)m_paramsG[LIN_SIDE_SLOPE];
-    m_m[2] = (float)m_paramsB[LIN_SIDE_SLOPE];
-    m_b[0] = (float)m_paramsR[LIN_SIDE_OFFSET];
-    m_b[1] = (float)m_paramsG[LIN_SIDE_OFFSET];
-    m_b[2] = (float)m_paramsB[LIN_SIDE_OFFSET];
+    m_m[0]    = (float)m_paramsR[LIN_SIDE_SLOPE];
+    m_m[1]    = (float)m_paramsG[LIN_SIDE_SLOPE];
+    m_m[2]    = (float)m_paramsB[LIN_SIDE_SLOPE];
+    m_b[0]    = (float)m_paramsR[LIN_SIDE_OFFSET];
+    m_b[1]    = (float)m_paramsG[LIN_SIDE_OFFSET];
+    m_b[2]    = (float)m_paramsB[LIN_SIDE_OFFSET];
     m_klog[0] = (float)(m_paramsR[LOG_SIDE_SLOPE] / m_log2_base);
     m_klog[1] = (float)(m_paramsG[LOG_SIDE_SLOPE] / m_log2_base);
     m_klog[2] = (float)(m_paramsB[LOG_SIDE_SLOPE] / m_log2_base);
-    m_kb[0] = (float)m_paramsR[LOG_SIDE_OFFSET];
-    m_kb[1] = (float)m_paramsG[LOG_SIDE_OFFSET];
-    m_kb[2] = (float)m_paramsB[LOG_SIDE_OFFSET];
+    m_kb[0]   = (float)m_paramsR[LOG_SIDE_OFFSET];
+    m_kb[1]   = (float)m_paramsG[LOG_SIDE_OFFSET];
+    m_kb[2]   = (float)m_paramsB[LOG_SIDE_OFFSET];
     m_linb[0] = (float)m_paramsR[LIN_SIDE_BREAK];
     m_linb[1] = (float)m_paramsG[LIN_SIDE_BREAK];
     m_linb[2] = (float)m_paramsB[LIN_SIDE_BREAK];
@@ -891,9 +896,9 @@ void CameraLin2LogRenderer::apply(const void * inImg, void * outImg, long numPix
     static constexpr float minValue = std::numeric_limits<float>::min();
 
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
-    for (long idx = 0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
         const float alphares = in[3];
 
@@ -928,7 +933,7 @@ CameraLin2LogRendererSSE::CameraLin2LogRendererSSE(ConstLogOpDataRcPtr & log)
 void CameraLin2LogRendererSSE::apply(const void * inImg, void * outImg, long numPixels) const
 {
     // if in <= linBreak
-    //  out = linearSlope * in + linearOffset 
+    //  out = linearSlope * in + linearOffset
     // else
     //  out = ( logSlope * log( base, max( minValue, (in*linSlope + linOffset) ) ) + logOffset )
     //
@@ -937,24 +942,25 @@ void CameraLin2LogRendererSSE::apply(const void * inImg, void * outImg, long num
     static constexpr float minValue = std::numeric_limits<float>::min();
 
     const float * in = (const float *)inImg;
-    float * out = (float *)outImg;
+    float * out      = (float *)outImg;
 
     const __m128 mm_minValue = _mm_set1_ps(minValue);
 
-    const __m128 mm_m = _mm_set_ps(0.0f, m_m[2], m_m[1], m_m[0]);
-    const __m128 mm_b = _mm_set_ps(0.0f, m_b[2], m_b[1], m_b[0]);
+    const __m128 mm_m    = _mm_set_ps(0.0f, m_m[2], m_m[1], m_m[0]);
+    const __m128 mm_b    = _mm_set_ps(0.0f, m_b[2], m_b[1], m_b[0]);
     const __m128 mm_klog = _mm_set_ps(0.0f, m_klog[2], m_klog[1], m_klog[0]);
-    const __m128 mm_kb = _mm_set_ps(0.0f, m_kb[2], m_kb[1], m_kb[0]);
+    const __m128 mm_kb   = _mm_set_ps(0.0f, m_kb[2], m_kb[1], m_kb[0]);
     const __m128 mm_lins = _mm_set_ps(0.0f, m_linearSlope[2], m_linearSlope[1], m_linearSlope[0]);
-    const __m128 mm_lino = _mm_set_ps(0.0f, m_linearOffset[2], m_linearOffset[1], m_linearOffset[0]);
+    const __m128 mm_lino
+        = _mm_set_ps(0.0f, m_linearOffset[2], m_linearOffset[1], m_linearOffset[0]);
     const __m128 breakPnt = _mm_set_ps(0.f, m_linb[2], m_linb[1], m_linb[0]);
 
     __m128 mm_pixel;
     __m128 mm_pixel_lin;
 
-    for (long idx = 0; idx<numPixels; ++idx)
+    for (long idx = 0; idx < numPixels; ++idx)
     {
-        mm_pixel = _mm_set_ps(0.0f, in[2], in[1], in[0]);
+        mm_pixel    = _mm_set_ps(0.0f, in[2], in[1], in[0]);
         __m128 flag = _mm_cmpgt_ps(mm_pixel, breakPnt);
 
         mm_pixel_lin = _mm_mul_ps(mm_pixel, mm_lins);
@@ -967,8 +973,7 @@ void CameraLin2LogRendererSSE::apply(const void * inImg, void * outImg, long num
         mm_pixel = _mm_mul_ps(mm_pixel, mm_klog);
         mm_pixel = _mm_add_ps(mm_pixel, mm_kb);
 
-        mm_pixel = _mm_or_ps(_mm_and_ps(flag, mm_pixel),
-                             _mm_andnot_ps(flag, mm_pixel_lin));
+        mm_pixel = _mm_or_ps(_mm_and_ps(flag, mm_pixel), _mm_andnot_ps(flag, mm_pixel_lin));
 
         const float alphares = in[3];
 
@@ -982,4 +987,3 @@ void CameraLin2LogRendererSSE::apply(const void * inImg, void * outImg, long num
 #endif
 
 } // namespace OCIO_NAMESPACE
-

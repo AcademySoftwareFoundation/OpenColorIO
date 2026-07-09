@@ -6,11 +6,9 @@
 
 void OFX::Plugin::getPluginIDs(OFX::PluginFactoryArray & ids)
 {
-    static OCIOColorSpaceFactory ocioColorSpace(
-        "OpenColorIO.OCIOColorSpace", 1, 0);
+    static OCIOColorSpaceFactory ocioColorSpace("OpenColorIO.OCIOColorSpace", 1, 0);
     ids.push_back(&ocioColorSpace);
 
-    static OCIODisplayViewFactory ocioDisplayView(
-        "OpenColorIO.OCIODisplayView", 1, 0);
+    static OCIODisplayViewFactory ocioDisplayView("OpenColorIO.OCIODisplayView", 1, 0);
     ids.push_back(&ocioDisplayView);
 }

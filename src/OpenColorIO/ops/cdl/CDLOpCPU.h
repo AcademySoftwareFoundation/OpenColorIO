@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #ifndef INCLUDED_OCIO_CDLOP_CPU_H
 #define INCLUDED_OCIO_CDLOP_CPU_H
 
@@ -9,7 +8,6 @@
 
 #include "Op.h"
 #include "ops/cdl/CDLOpData.h"
-
 
 namespace OCIO_NAMESPACE
 {
@@ -49,11 +47,10 @@ private:
     float m_offset[4];
     float m_power[4];
     float m_saturation;
-    bool m_isReverse{ false };
-    bool m_isNoClamp{ false };
+    bool m_isReverse{false};
+    bool m_isNoClamp{false};
 };
 
 } // namespace OCIO_NAMESPACE
-
 
 #endif

@@ -11,30 +11,38 @@
 
 namespace OCIO_NAMESPACE
 {
-namespace {
+namespace
+{
 
-struct Lut3DContextAVX512 {
-    const float *lut;
+struct Lut3DContextAVX512
+{
+    const float * lut;
     __m512 lutmax;
     __m512 lutsize;
     __m512 lutsize2;
 };
 
-struct rgbavec_avx512 {
+struct rgbavec_avx512
+{
     __m512 r, g, b, a;
 };
 
-#define gather_rgb_avx512(src, idx)                            \
-    sample_r = _mm512_i32gather_ps(idx, (void * )(src+0), 4);  \
-    sample_g = _mm512_i32gather_ps(idx, (void * )(src+1), 4);  \
-    sample_b = _mm512_i32gather_ps(idx, (void * )(src+2), 4)
+#define gather_rgb_avx512(src, idx)                                                                \
+    sample_r = _mm512_i32gather_ps(idx, (void *)(src + 0), 4);                                     \
+    sample_g = _mm512_i32gather_ps(idx, (void *)(src + 1), 4);                                     \
+    sample_b = _mm512_i32gather_ps(idx, (void *)(src + 2), 4)
 
-static inline rgbavec_avx512 interp_tetrahedral_avx512(const Lut3DContextAVX512 &ctx, __m512& r, __m512& g, __m512& b, __m512& a)
+static inline rgbavec_avx512 interp_tetrahedral_avx512(
+    const Lut3DContextAVX512 & ctx,
+    __m512 & r,
+    __m512 & g,
+    __m512 & b,
+    __m512 & a)
 {
     __m512 x0, x1, x2;
     __m512 cxxxa;
     __m512 cxxxb;
-    __mmask16  mask;
+    __mmask16 mask;
     __m512 sample_r, sample_g, sample_b;
 
     rgbavec_avx512 result;
@@ -43,8 +51,8 @@ static inline rgbavec_avx512 interp_tetrahedral_avx512(const Lut3DContextAVX512 
     __m512 lutsize  = ctx.lutsize;
     __m512 lutsize2 = ctx.lutsize2;
 
-    __m512 one_f   = _mm512_set1_ps(1.0f);
-    __m512 four_f  = _mm512_set1_ps(4.0f);
+    __m512 one_f  = _mm512_set1_ps(1.0f);
+    __m512 four_f = _mm512_set1_ps(4.0f);
 
     __m512 prev_r = _mm512_floor_ps(r);
     __m512 prev_g = _mm512_floor_ps(g);
@@ -72,9 +80,9 @@ static inline rgbavec_avx512 interp_tetrahedral_avx512(const Lut3DContextAVX512 
     // This is the tetrahedral blend equation
     // red = (1-x0) * c000.r + (x0-x1) * cxxxa.r + (x1-x2) * cxxxb.r + x2 * c111.r;
     // The x values are the rgb delta values sorted, x0 >= x1 >= x2
-    // c### are samples from the lut, which are indices made with prev_(r,g,b) and next_(r,g,b) values
-    // 0 = use prev, 1 = use next
-    // c### = (prev_r or next_r) * (lutsize * lutsize) + (prev_g or next_g) * lutsize + (prev_b or next_b)
+    // c### are samples from the lut, which are indices made with prev_(r,g,b) and next_(r,g,b)
+    // values 0 = use prev, 1 = use next c### = (prev_r or next_r) * (lutsize * lutsize) + (prev_g
+    // or next_g) * lutsize + (prev_b or next_b)
 
     // cxxxa
     // always uses 1 next and 2 prev and next is largest delta
@@ -95,27 +103,27 @@ static inline rgbavec_avx512 interp_tetrahedral_avx512(const Lut3DContextAVX512 
     __mmask16 gt_b = _mm512_cmp_ps_mask(d_b, d_r, _CMP_GT_OQ); // b>r
 
     // r> !b>r && r>g
-    mask = _mm512_kandn(gt_b, gt_r);
+    mask  = _mm512_kandn(gt_b, gt_r);
     cxxxa = _mm512_mask_blend_ps(mask, prev_r, next_r);
 
     // r< !r>g && b>r
-    mask = _mm512_kandn(gt_r, gt_b);
+    mask  = _mm512_kandn(gt_r, gt_b);
     cxxxb = _mm512_mask_blend_ps(mask, next_r, prev_r);
 
     // g> !r>g && g>b
-    mask = _mm512_kandn(gt_r, gt_g);
+    mask  = _mm512_kandn(gt_r, gt_g);
     cxxxa = _mm512_add_ps(cxxxa, _mm512_mask_blend_ps(mask, prev_g, next_g));
 
     // g< !g>b && r>g
-    mask = _mm512_kandn(gt_g, gt_r);
+    mask  = _mm512_kandn(gt_g, gt_r);
     cxxxb = _mm512_add_ps(cxxxb, _mm512_mask_blend_ps(mask, next_g, prev_g));
 
     // b> !g>b && b>r
-    mask = _mm512_kandn(gt_g, gt_b);
+    mask  = _mm512_kandn(gt_g, gt_b);
     cxxxa = _mm512_add_ps(cxxxa, _mm512_mask_blend_ps(mask, prev_b, next_b));
 
     // b< !b>r && g>b
-    mask = _mm512_kandn(gt_b, gt_g);
+    mask  = _mm512_kandn(gt_b, gt_g);
     cxxxb = _mm512_add_ps(cxxxb, _mm512_mask_blend_ps(mask, next_b, prev_b));
 
     __m512 c000 = _mm512_add_ps(_mm512_add_ps(prev_r, prev_g), prev_b);
@@ -148,7 +156,7 @@ static inline rgbavec_avx512 interp_tetrahedral_avx512(const Lut3DContextAVX512 
     gather_rgb_avx512(ctx.lut, cxxxa_idx);
 
     // (x0-x1) * cxxxa
-    v = _mm512_sub_ps(x0, x1);
+    v        = _mm512_sub_ps(x0, x1);
     result.r = _mm512_fmadd_ps(v, sample_r, result.r);
     result.g = _mm512_fmadd_ps(v, sample_g, result.g);
     result.b = _mm512_fmadd_ps(v, sample_b, result.b);
@@ -156,7 +164,7 @@ static inline rgbavec_avx512 interp_tetrahedral_avx512(const Lut3DContextAVX512 
     gather_rgb_avx512(ctx.lut, cxxxb_idx);
 
     // (x1-x2) * cxxxb
-    v = _mm512_sub_ps(x1, x2);
+    v        = _mm512_sub_ps(x1, x2);
     result.r = _mm512_fmadd_ps(v, sample_r, result.r);
     result.g = _mm512_fmadd_ps(v, sample_g, result.g);
     result.b = _mm512_fmadd_ps(v, sample_b, result.b);
@@ -173,22 +181,27 @@ static inline rgbavec_avx512 interp_tetrahedral_avx512(const Lut3DContextAVX512 
     return result;
 }
 
-template<BitDepth inBD, BitDepth outBD>
-inline void applyTetrahedralAVX512Func(const float *lut3d, int dim, const void *inImg, void *outImg, int numPixels)
+template <BitDepth inBD, BitDepth outBD>
+inline void applyTetrahedralAVX512Func(
+    const float * lut3d,
+    int dim,
+    const void * inImg,
+    void * outImg,
+    int numPixels)
 {
     typedef typename BitDepthInfo<inBD>::Type InType;
     typedef typename BitDepthInfo<outBD>::Type OutType;
 
     const InType * src = (InType *)inImg;
-    OutType * dst = (OutType *)outImg;
-    __m512 r,g,b,a;
+    OutType * dst      = (OutType *)outImg;
+    __m512 r, g, b, a;
     rgbavec_avx512 c;
 
     Lut3DContextAVX512 ctx;
 
     float lutmax = (float)dim - 1;
-    __m512 scale   = _mm512_set1_ps(lutmax);
-    __m512 zero    = _mm512_setzero_ps();
+    __m512 scale = _mm512_set1_ps(lutmax);
+    __m512 zero  = _mm512_setzero_ps();
 
     ctx.lut      = lut3d;
     ctx.lutmax   = _mm512_set1_ps(lutmax);
@@ -196,9 +209,9 @@ inline void applyTetrahedralAVX512Func(const float *lut3d, int dim, const void *
     ctx.lutsize2 = _mm512_set1_ps((float)dim * dim * 4);
 
     int pixel_count = numPixels / 16 * 16;
-    int remainder = numPixels - pixel_count;
+    int remainder   = numPixels - pixel_count;
 
-    for (int i = 0; i < pixel_count; i += 16 )
+    for (int i = 0; i < pixel_count; i += 16)
     {
         AVX512RGBAPack<inBD>::Load(src, r, g, b, a);
 
@@ -223,7 +236,7 @@ inline void applyTetrahedralAVX512Func(const float *lut3d, int dim, const void *
         dst += 64;
     }
 
-     // handler leftovers pixels
+    // handler leftovers pixels
     if (remainder)
     {
         AVX512RGBAPack<inBD>::LoadMasked(src, r, g, b, a, remainder);
@@ -249,11 +262,21 @@ inline void applyTetrahedralAVX512Func(const float *lut3d, int dim, const void *
 
 } // anonymous namespace
 
-void applyTetrahedralAVX512(const float *lut3d, int dim, const float *src, float *dst, int total_pixel_count)
+void applyTetrahedralAVX512(
+    const float * lut3d,
+    int dim,
+    const float * src,
+    float * dst,
+    int total_pixel_count)
 {
-    applyTetrahedralAVX512Func<BIT_DEPTH_F32, BIT_DEPTH_F32>(lut3d, dim, src, dst, total_pixel_count);
+    applyTetrahedralAVX512Func<BIT_DEPTH_F32, BIT_DEPTH_F32>(
+        lut3d,
+        dim,
+        src,
+        dst,
+        total_pixel_count);
 }
 
-} // OCIO_NAMESPACE
+} // namespace OCIO_NAMESPACE
 
 #endif // OCIO_USE_AVX512

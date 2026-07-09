@@ -22,33 +22,27 @@ public:
     };
 
     // Shader code will be printed when generated.
-    void setShaderVerbose(bool print)
-    {
-        m_verboseShader = print;
-    }
+    void setShaderVerbose(bool print) { m_verboseShader = print; }
 
     bool isShaderVerbose() const { return m_verboseShader; }
 
     // When displaying the processed image in a window, enable Y-axis mirroring.
-    void setYMirror()
-    {
-        m_yMirror = true;
-    }
+    void setYMirror() { m_yMirror = true; }
 
     bool isYMirror() const { return m_yMirror; }
 
     // Initialize the image.
-    virtual void initImage(int imageWidth, int imageHeight,
-        Components comp, const float* imageBuffer) = 0;
+    virtual void
+    initImage(int imageWidth, int imageHeight, Components comp, const float * imageBuffer) = 0;
 
     // Update the image if it changes.
-    virtual void updateImage(const float* imageBuffer) = 0;
+    virtual void updateImage(const float * imageBuffer) = 0;
 
     // Create frame and rendering buffers. Needed if readImage will be used.
     virtual void createBuffers() = 0;
 
     // Set the shader code.
-    virtual void setShader(GpuShaderDescRcPtr& shaderDesc) = 0;
+    virtual void setShader(GpuShaderDescRcPtr & shaderDesc) = 0;
 
     // Update the size of the buffer of the viewport that will be used to process the image
     // (it does not modify the UI).  To be called at least one time. Use image size if we want to
@@ -62,7 +56,7 @@ public:
 
     // Read the image from the rendering buffer. It is not meant to be used by interactive
     // applications used to display the image.
-    virtual void readImage(float* imageBuffer) = 0;
+    virtual void readImage(float * imageBuffer) = 0;
 
     // Helper to print graphics info.
     virtual void printGraphicsInfo() const noexcept = 0;
@@ -72,10 +66,9 @@ public:
 
 private:
     // Will shader code be outputed when setShader is called.
-    bool m_verboseShader{ false };
+    bool m_verboseShader{false};
     // For interactive applications displaying the processed image.
-    bool m_yMirror{ false };
+    bool m_yMirror{false};
 };
 
 } // namespace OCIO_NAMESPACE
-

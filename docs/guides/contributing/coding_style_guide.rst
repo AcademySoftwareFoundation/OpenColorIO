@@ -18,6 +18,28 @@ There are two main rules when contributing to OpenColorIO:
    Use your head and ask for advice if your common sense seems to disagree with 
    the conventions.
 
+clang-format
+************
+
+OpenColorIO uses `clang-format 
+<https://clang.llvm.org/docs/ClangFormat.html>` to enforce its coding 
+conventions. You can obtain clang-format from various sources, including 
+packages managers and Python pip install. The command below shows how
+the CI workflow installs clang-format, the version is pinned to avoid
+breaking the build if a new version introduce behavioral changes. Please
+note CMake configure expects clang-format to be available on your path.
+
+  pip install clang-format==22.1.0
+
+When submitting a PR against 
+OpenColorIO repository, a check will make sure that clang-format has been run 
+locally before pushing the changes.
+
+Once clang-format is available on your system, from your build directory run 
+CMake configure step, then build the `clang-format` target::
+
+  cmake --build . --target clang-format
+
 File conventions
 ****************
 

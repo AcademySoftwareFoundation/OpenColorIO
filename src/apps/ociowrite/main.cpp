@@ -15,8 +15,7 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #include "apputils/argparse.h"
 
-
-int main(int argc, const char **argv)
+int main(int argc, const char ** argv)
 {
     bool verbose = false;
     std::string inputColorSpace, outputColorSpace, display, view;
@@ -32,10 +31,10 @@ int main(int argc, const char **argv)
     std::ostringstream formats;
     formats << "\n                            "
                "Formats to write to:\n                             ";
-    for (int i = 0; i<OCIO::GroupTransform::GetNumWriteFormats(); ++i)
+    for (int i = 0; i < OCIO::GroupTransform::GetNumWriteFormats(); ++i)
     {
         formats << OCIO::GroupTransform::GetFormatNameByIndex(i);
-        formats << " (." << OCIO::GroupTransform::GetFormatExtensionByIndex(i) 
+        formats << " (." << OCIO::GroupTransform::GetFormatExtensionByIndex(i)
                 << ")\n                             ";
     }
 
@@ -43,6 +42,7 @@ int main(int argc, const char **argv)
     pathDesc += formats.str();
 
     ArgParse ap;
+    // clang-format off
     ap.options("ociowrite -- write a color transformation to a file\n\n"
                "usage: ociowrite [options] --file outputfile\n\n",
                "--h",                       &help, 
@@ -62,6 +62,7 @@ int main(int argc, const char **argv)
                "--file %s",                 &filepath, 
                                             pathDesc.c_str(),
                NULL);
+    // clang-format on
 
     if (argc <= 1 || ap.parse(argc, argv) < 0)
     {
@@ -90,7 +91,7 @@ int main(int argc, const char **argv)
                 OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
                 std::cout << "OCIO search_path:    " << config->getSearchPath() << std::endl;
             }
-            catch(...)
+            catch (...)
             {
                 std::cerr << "Error loading the config file: '" << env << "'";
                 exit(1);
@@ -109,7 +110,7 @@ int main(int argc, const char **argv)
     const char * ext = strrchr(filepath.c_str(), '.');
     if (ext)
     {
-        std::string requestedExt(ext+1);
+        std::string requestedExt(ext + 1);
         std::transform(requestedExt.begin(), requestedExt.end(), requestedExt.begin(), ::tolower);
         for (int i = 0; i < OCIO::GroupTransform::GetNumWriteFormats(); ++i)
         {
@@ -148,16 +149,19 @@ int main(int argc, const char **argv)
         if (!inputColorSpace.empty() || (!display.empty() && !view.empty()))
         {
             const char * env = OCIO::GetEnvVariable("OCIO");
-            if(env && *env)
+            if (env && *env)
             {
                 if (verbose)
                 {
                     std::cout << std::endl;
-                    std::string inputStr = !inputColorSpace.empty() ?  inputColorSpace : "(" + display + ", " + view + ")";
-                    std::string outputStr = !outputColorSpace.empty() ?  outputColorSpace : "(" + display + ", " + view + ")";
-                    std::cout << "Processing from '" 
-                              << inputStr << "' to '"
-                              << outputStr << "'" << std::endl;
+                    std::string inputStr  = !inputColorSpace.empty()
+                                                ? inputColorSpace
+                                                : "(" + display + ", " + view + ")";
+                    std::string outputStr = !outputColorSpace.empty()
+                                                ? outputColorSpace
+                                                : "(" + display + ", " + view + ")";
+                    std::cout << "Processing from '" << inputStr << "' to '" << outputStr << "'"
+                              << std::endl;
                 }
             }
             else
@@ -167,7 +171,7 @@ int main(int argc, const char **argv)
                 exit(1);
             }
 
-            OCIO::ConstConfigRcPtr config  = OCIO::Config::CreateFromEnv();
+            OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromEnv();
 
             if (verbose)
             {
@@ -190,17 +194,18 @@ int main(int argc, const char **argv)
             useInvertview = !display.empty() && !view.empty() && !outputColorSpace.empty();
 
             // Errors validation
-            std::string msg; 
-            if (!((useColorspaces && !useDisplayview && !useInvertview) ||
-                    (useDisplayview && !useColorspaces && !useInvertview) ||
-                    (useInvertview && !useColorspaces && !useDisplayview)))
+            std::string msg;
+            if (!((useColorspaces && !useDisplayview && !useInvertview)
+                  || (useDisplayview && !useColorspaces && !useInvertview)
+                  || (useInvertview && !useColorspaces && !useDisplayview)))
             {
                 std::cerr << std::endl;
-                std::cerr << "Any combinations of --colorspaces, --view or --invertview is invalid." << std::endl;
+                std::cerr << "Any combinations of --colorspaces, --view or --invertview is invalid."
+                          << std::endl;
                 exit(1);
-            } 
+            }
 
-            // Processing colorspaces option         
+            // Processing colorspaces option
             if (useColorspaces)
             {
                 // colorspaces to colorspaces
@@ -208,7 +213,8 @@ int main(int argc, const char **argv)
                 // validate output arguments
                 if (!outputColorSpace.empty())
                 {
-                    processor = config->getProcessor(inputColorSpace.c_str(), outputColorSpace.c_str());
+                    processor
+                        = config->getProcessor(inputColorSpace.c_str(), outputColorSpace.c_str());
                 }
                 else
                 {
@@ -216,7 +222,7 @@ int main(int argc, const char **argv)
                     std::cerr << "Missing output color spaces for --colorspaces." << std::endl;
                     exit(1);
                 }
-            } 
+            }
             // Processing view option
             else if (useDisplayview)
             {
@@ -225,10 +231,11 @@ int main(int argc, const char **argv)
                 // validate output arguments
                 if (!display.empty() && !view.empty())
                 {
-                    processor = config->getProcessor(inputColorSpace.c_str(), 
-                                                     display.c_str(),
-                                                     view.c_str(),
-                                                     OCIO::TRANSFORM_DIR_FORWARD);
+                    processor = config->getProcessor(
+                        inputColorSpace.c_str(),
+                        display.c_str(),
+                        view.c_str(),
+                        OCIO::TRANSFORM_DIR_FORWARD);
                 }
                 else
                 {
@@ -245,10 +252,11 @@ int main(int argc, const char **argv)
                 // validate output arguments
                 if (!outputColorSpace.empty())
                 {
-                    processor = config->getProcessor(outputColorSpace.c_str(), 
-                                                     display.c_str(),
-                                                     view.c_str(),
-                                                     OCIO::TRANSFORM_DIR_INVERSE);
+                    processor = config->getProcessor(
+                        outputColorSpace.c_str(),
+                        display.c_str(),
+                        view.c_str(),
+                        OCIO::TRANSFORM_DIR_INVERSE);
                 }
                 else
                 {
@@ -275,16 +283,17 @@ int main(int argc, const char **argv)
         else
         {
             std::cerr << std::endl;
-            std::cerr << "Colorspaces or (display,view) pair must be specified as source." << std::endl;
+            std::cerr << "Colorspaces or (display,view) pair must be specified as source."
+                      << std::endl;
             exit(1);
         }
     }
-    catch(OCIO::Exception & exception)
+    catch (OCIO::Exception & exception)
     {
         std::cerr << "OCIO Error: " << exception.what() << std::endl;
         exit(1);
     }
-    catch(...)
+    catch (...)
     {
         std::cerr << "Unknown OCIO error encountered." << std::endl;
         exit(1);

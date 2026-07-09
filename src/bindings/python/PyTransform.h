@@ -11,7 +11,7 @@
 
 namespace OCIO_NAMESPACE
 {
-    
+
 // Subclasses
 void bindPyAllocationTransform(py::module & m);
 void bindPyBuiltinTransform(py::module & m);

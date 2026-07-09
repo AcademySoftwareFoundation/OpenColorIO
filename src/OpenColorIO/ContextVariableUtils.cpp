@@ -1,21 +1,18 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ContextVariableUtils.h"
-#include "utils/StringUtils.h"
 #include "Platform.h"
-
+#include "utils/StringUtils.h"
 
 #if defined(__APPLE__) && !defined(__IPHONE__)
 #include <crt_externs.h> // _NSGetEnviron()
 #elif !defined(_WIN32)
-#include<stdio.h>
+#include <stdio.h>
 extern char ** environ;
 #endif
-
 
 namespace
 {
@@ -39,20 +36,22 @@ inline char ** GetEnviron()
 }
 #endif
 
-} // anon.
+} // namespace
 
 namespace OCIO_NAMESPACE
 {
 
 bool ContainsContextVariableToken(const std::string & str)
 {
-    if (StringUtils::Find(str, "$") != std::string::npos) return true;
-    if (StringUtils::Find(str, "%") != std::string::npos) return true;
+    if (StringUtils::Find(str, "$") != std::string::npos)
+        return true;
+    if (StringUtils::Find(str, "%") != std::string::npos)
+        return true;
 
     return false;
 }
 
-// The method only searches for at least one context variable without checking its existence. 
+// The method only searches for at least one context variable without checking its existence.
 bool ContainsContextVariables(const std::string & str)
 {
     // As soon as there is the '$' reserved token, a context variable is present. It does not matter
@@ -69,7 +68,8 @@ bool ContainsContextVariables(const std::string & str)
     if (begin != std::string::npos)
     {
         const std::string::size_type end = StringUtils::ReverseFind(str, "%");
-        if (end != std::string::npos && begin != end) return true;
+        if (end != std::string::npos && begin != end)
+            return true;
     }
 
     return false;
@@ -80,7 +80,8 @@ void LoadEnvironment(EnvMap & map, bool update)
     // First, add or update the context variables with existing env. variables.
 
 #if defined(_WIN32) && defined(UNICODE)
-    if (GetEnviron() == NULL) {
+    if (GetEnviron() == NULL)
+    {
         // If the program starts with "main" instead of "wmain", then wenviron returns NULL until
         // the first call to either wgetenv or wputenv. Calling wgetenv, even with an empty
         // variable name, will populate wenviron correctly. We also use wgetenv_s (which requires
@@ -89,24 +90,25 @@ void LoadEnvironment(EnvMap & map, bool update)
         _wgetenv_s(&sz, NULL, 0, L"");
     }
 
-    for (wchar_t **env = GetEnviron(); *env != NULL; ++env)
+    for (wchar_t ** env = GetEnviron(); *env != NULL; ++env)
     {
         // Split environment up into std::map[name] = value.
 
-        const std::string env_str = Platform::Utf16ToUtf8((wchar_t*)*env);
+        const std::string env_str = Platform::Utf16ToUtf8((wchar_t *)*env);
 #else
-    for (char **env = GetEnviron(); *env != NULL; ++env)
+    for (char ** env = GetEnviron(); *env != NULL; ++env)
     {
         // Split environment up into std::map[name] = value.
 
-        const std::string env_str = (char*)*env;
+        const std::string env_str = (char *)*env;
 #endif
         const auto pos = env_str.find_first_of('=');
 
-        if (pos == std::string::npos) continue;
+        if (pos == std::string::npos)
+            continue;
 
         const std::string name  = env_str.substr(0, pos);
-        const std::string value = env_str.substr(pos+1);
+        const std::string value = env_str.substr(pos + 1);
 
         if (update)
         {
@@ -124,14 +126,15 @@ void LoadEnvironment(EnvMap & map, bool update)
     }
 }
 
-static std::string ResolveContextVariablesImpl(const std::string & str, const EnvMap & map,
-                                               UsedEnvs & used, int depth)
+static std::string
+ResolveContextVariablesImpl(const std::string & str, const EnvMap & map, UsedEnvs & used, int depth)
 {
     // Guard against infinite recursion at the string substitution level (e.g. $A expands
     // to $B which expands to $A). This is independent from the graph-level guards in
-    // CollectContextVariables() and Transform.cpp's BuildOps(), which protect against cycles 
+    // CollectContextVariables() and Transform.cpp's BuildOps(), which protect against cycles
     // in the color space / look / view transform reference graph.
-    if (depth > 32) return str;
+    if (depth > 32)
+        return str;
 
     // Early exit if no reserved tokens are found.
     if (!ContainsContextVariables(str))
@@ -139,7 +142,7 @@ static std::string ResolveContextVariablesImpl(const std::string & str, const En
         return str;
     }
 
-    std::string orig = str;
+    std::string orig   = str;
     std::string newstr = str;
 
     // This walks through the envmap in key order,
@@ -149,12 +152,12 @@ static std::string ResolveContextVariablesImpl(const std::string & str, const En
 
     for (const auto & entry : map)
     {
-        if (StringUtils::ReplaceInPlace(newstr, ("${"+ entry.first + "}"), entry.second))
+        if (StringUtils::ReplaceInPlace(newstr, ("${" + entry.first + "}"), entry.second))
         {
             used[entry.first] = entry.second;
         }
 
-        if (StringUtils::ReplaceInPlace(newstr, ("$" + entry.first),       entry.second))
+        if (StringUtils::ReplaceInPlace(newstr, ("$" + entry.first), entry.second))
         {
             used[entry.first] = entry.second;
         }
@@ -166,7 +169,7 @@ static std::string ResolveContextVariablesImpl(const std::string & str, const En
     }
 
     // recursively call till string doesn't expand anymore
-    if(newstr != orig)
+    if (newstr != orig)
     {
         return ResolveContextVariablesImpl(newstr, map, used, depth + 1);
     }
@@ -179,10 +182,11 @@ std::string ResolveContextVariables(const std::string & str, const EnvMap & map,
     return ResolveContextVariablesImpl(str, map, used, 0);
 }
 
-bool CollectContextVariables(const Config & config,
-                             const Context & context,
-                             ConstTransformRcPtr transform,
-                             ContextRcPtr & usedContextVars)
+bool CollectContextVariables(
+    const Config & config,
+    const Context & context,
+    ConstTransformRcPtr transform,
+    ContextRcPtr & usedContextVars)
 {
     // Guard against infinite recursion through cycles in the color space / look / view
     // transform reference graph (e.g. a ColorSpace whose from_reference is a
@@ -199,33 +203,42 @@ bool CollectContextVariables(const Config & config,
     struct DepthGuard
     {
         int & d;
-        DepthGuard(int & d_) : d(d_) { ++d; }
+        DepthGuard(int & d_)
+            : d(d_)
+        {
+            ++d;
+        }
         ~DepthGuard() { --d; }
     } guard(depth);
 
-    if(ConstColorSpaceTransformRcPtr tr = DynamicPtrCast<const ColorSpaceTransform>(transform))
+    if (ConstColorSpaceTransformRcPtr tr = DynamicPtrCast<const ColorSpaceTransform>(transform))
     {
-        if (CollectContextVariables(config, context, *tr, usedContextVars)) return true;
+        if (CollectContextVariables(config, context, *tr, usedContextVars))
+            return true;
     }
-    else if(ConstDisplayViewTransformRcPtr tr = DynamicPtrCast<const DisplayViewTransform>(transform))
+    else if (
+        ConstDisplayViewTransformRcPtr tr = DynamicPtrCast<const DisplayViewTransform>(transform))
     {
-        if (CollectContextVariables(config, context, *tr, usedContextVars)) return true;
+        if (CollectContextVariables(config, context, *tr, usedContextVars))
+            return true;
     }
-    else if(ConstFileTransformRcPtr tr = DynamicPtrCast<const FileTransform>(transform))
+    else if (ConstFileTransformRcPtr tr = DynamicPtrCast<const FileTransform>(transform))
     {
-        if (CollectContextVariables(config, context, *tr, usedContextVars)) return true;
+        if (CollectContextVariables(config, context, *tr, usedContextVars))
+            return true;
     }
-    else if(ConstGroupTransformRcPtr tr = DynamicPtrCast<const GroupTransform>(transform))
+    else if (ConstGroupTransformRcPtr tr = DynamicPtrCast<const GroupTransform>(transform))
     {
-        if (CollectContextVariables(config, context, *tr, usedContextVars)) return true;
+        if (CollectContextVariables(config, context, *tr, usedContextVars))
+            return true;
     }
-    else if(ConstLookTransformRcPtr tr = DynamicPtrCast<const LookTransform>(transform))
+    else if (ConstLookTransformRcPtr tr = DynamicPtrCast<const LookTransform>(transform))
     {
-        if (CollectContextVariables(config, context, *tr, usedContextVars)) return true;
+        if (CollectContextVariables(config, context, *tr, usedContextVars))
+            return true;
     }
 
     return false;
 }
 
 } // namespace OCIO_NAMESPACE
-
