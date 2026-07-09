@@ -1529,7 +1529,12 @@ bool AMFParser::Impl::processLookTransform(AMFTransform& look, int index, std::s
         cdl->setOffset(arr);
         extractThreeFloats(power, arr);
         cdl->setPower(arr);
-        cdl->setSat(std::stod(sat));
+        if (!sat.empty())
+        {
+            double satValue = 1.0;
+            std::istringstream(sat) >> satValue;
+            cdl->setSat(satValue);
+        }
 
         TransformRcPtr toTransform = NULL;
         TransformRcPtr fromTransform = NULL;
