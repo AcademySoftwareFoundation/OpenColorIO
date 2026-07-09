@@ -450,7 +450,9 @@ private:
     // place would fail config validation.
     void clearCopiedInteropIds();
 
-    void processOutputTransformId(const char* transformId, TransformDirection tDirection);
+    // Returns true if the transform ID resolved to a display color space and
+    // view transform in the reference config, false otherwise.
+    bool processOutputTransformId(const char* transformId, TransformDirection tDirection);
     void addInactiveCS(const char* csName);
     ConstViewTransformRcPtr searchViewTransforms(std::string acesId);
 
@@ -1050,7 +1052,8 @@ void AMFParser::Impl::processOutputTransform()
     {
         if (0 == Platform::Strcasecmp(elem.first.c_str(), AMF_TAG_TRANSFORMID))
         {
-            processOutputTransformId(elem.second.c_str(), TRANSFORM_DIR_FORWARD);
+            if (!processOutputTransformId(elem.second.c_str(), TRANSFORM_DIR_FORWARD))
+                throwMessage("Output transform not found: " + elem.second);
             return;
         }
         else if (0 == Platform::Strcasecmp(elem.first.c_str(), AMF_TAG_FILE))
@@ -1092,7 +1095,8 @@ void AMFParser::Impl::processOutputTransform()
             {
                 if (0 == Platform::Strcasecmp(it->first.c_str(), AMF_TAG_TRANSFORMID))
                 {
-                    processOutputTransformId(it->second.c_str(), TRANSFORM_DIR_FORWARD);
+                    if (!processOutputTransformId(it->second.c_str(), TRANSFORM_DIR_FORWARD))
+                        throwMessage("Output transform not found: " + it->second);
                 }
                 else if (0 == Platform::Strcasecmp(it->first.c_str(), AMF_TAG_FILE))
                 {
@@ -1374,7 +1378,7 @@ void AMFParser::Impl::initAMFConfig()
     m_amfConfig->addSearchPath(amfPath.c_str());
 }
 
-void AMFParser::Impl::processOutputTransformId(const char* transformId, TransformDirection tDirection)
+bool AMFParser::Impl::processOutputTransformId(const char* transformId, TransformDirection tDirection)
 {
     ConstColorSpaceRcPtr dcs = searchColorSpaces(transformId);
     ConstViewTransformRcPtr vt = searchViewTransforms(transformId);
@@ -1418,7 +1422,9 @@ void AMFParser::Impl::processOutputTransformId(const char* transformId, Transfor
             m_amfConfig->setActiveDisplays(dcs->getName());
             m_amfConfig->setActiveViews(vt->getName());
         }
+        return true;
     }
+    return false;
 }
 
 void AMFParser::Impl::addInactiveCS(const char* csName)
