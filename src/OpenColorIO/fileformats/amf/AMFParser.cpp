@@ -1589,6 +1589,8 @@ void AMFParser::Impl::loadCdlWsTransform(AMFTransform& amft, bool isTo, Transfor
                         if (0 == Platform::Strcasecmp(it->first.c_str(), AMF_TAG_TRANSFORMID))
                         {
                             ConstColorSpaceRcPtr cs = searchColorSpaces(it->second.c_str());
+                            if (cs == NULL)
+                                throwMessage("CDL working space transform ID not found: " + it->second);
                             m_amfConfig->addColorSpace(cs);
 
                             ColorSpaceTransformRcPtr cst = ColorSpaceTransform::Create();
