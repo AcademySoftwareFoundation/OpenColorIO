@@ -15,8 +15,3 @@ mastercopy
 .vscode/
 
 src/apps/ocioview/uv.lock
-
-# Large baked AMF look LUTs (multi-MB 3D LUTs from the AJA baseline). Kept on
-# disk for the local slogtopq* tests but not tracked; see PR discussion.
-tests/data/files/amf/slogtopq_1.clf
-tests/data/files/amf/slogtopq_wlook_1.clf

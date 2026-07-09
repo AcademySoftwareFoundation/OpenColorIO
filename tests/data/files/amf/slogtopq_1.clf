@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList compCLFversion="3" id="$slogtopq_1_lmt">
+    <Description>Small self-contained LMT fixture for the slogtopq AMF test: a gentle warm look (slight red lift, slight blue cut) applied in ACES2065-1.</Description>
+    <InputDescriptor>ACES2065-1</InputDescriptor>
+    <OutputDescriptor>ACES2065-1</OutputDescriptor>
+    <Matrix inBitDepth="32f" outBitDepth="32f">
+        <Array dim="3 3">
+1.05 0    0
+0    1    0
+0    0    0.95
+        </Array>
+    </Matrix>
+</ProcessList>
