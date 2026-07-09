@@ -226,7 +226,12 @@ endif()
 
 if(OCIO_BUILD_APPS)
 
-    if(OCIO_USE_OIIO_FOR_APPS AND OpenImageIO_FOUND AND TARGET OpenImageIO::OpenImageIO)
+    if(OCIO_USE_OIIO_FOR_APPS)
+        if(NOT (OpenImageIO_FOUND AND TARGET OpenImageIO::OpenImageIO))
+            message(FATAL_ERROR "OCIO_USE_OIIO_FOR_APPS is ON but OpenImageIO was not found. "
+                                 "Either install OpenImageIO or turn OCIO_USE_OIIO_FOR_APPS off "
+                                 "to build ociolutimage, ocioconvert and ociodisplay against OpenEXR instead.")
+        endif()
         if (USE_MSVC AND OCIO_IMAGE_BACKEND STREQUAL "OpenImageIO")
             # Temporary until fixed in OpenImageIO: Mute some warnings from OpenImageIO farmhash.h
             # C4267 (level 3)	    'var' : conversion from 'size_t' to 'type', possible loss of data
