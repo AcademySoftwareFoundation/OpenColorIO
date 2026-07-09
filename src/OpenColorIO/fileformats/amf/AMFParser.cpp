@@ -186,6 +186,103 @@ bool ElementMatchesTransformId(const ElementRcPtr & element,
 
 } // anonymous namespace
 
+AMFInfoRcPtr AMFInfo::Create()
+{
+    return AMFInfoRcPtr(new AMFInfo(), &deleter);
+}
+
+void AMFInfo::deleter(AMFInfo * c)
+{
+    delete c;
+}
+
+class AMFInfo::Impl
+{
+public:
+    std::string m_clipIdentifier;
+    std::string m_clipColorSpaceName;
+    std::string m_inputColorSpaceName;
+    int m_numLooksApplied = 0;
+    std::string m_displayName;
+    std::string m_viewName;
+
+    Impl() = default;
+    Impl(const Impl &) = delete;
+    Impl & operator=(const Impl &) = delete;
+    ~Impl() = default;
+};
+
+AMFInfo::AMFInfo()
+    : m_impl(new AMFInfo::Impl)
+{
+}
+
+AMFInfo::~AMFInfo()
+{
+    delete m_impl;
+    m_impl = nullptr;
+}
+
+const char * AMFInfo::getClipIdentifier() const
+{
+    return getImpl()->m_clipIdentifier.c_str();
+}
+
+void AMFInfo::setClipIdentifier(const char * value)
+{
+    getImpl()->m_clipIdentifier = value ? value : "";
+}
+
+const char * AMFInfo::getClipColorSpaceName() const
+{
+    return getImpl()->m_clipColorSpaceName.c_str();
+}
+
+void AMFInfo::setClipColorSpaceName(const char * value)
+{
+    getImpl()->m_clipColorSpaceName = value ? value : "";
+}
+
+const char * AMFInfo::getInputColorSpaceName() const
+{
+    return getImpl()->m_inputColorSpaceName.c_str();
+}
+
+void AMFInfo::setInputColorSpaceName(const char * value)
+{
+    getImpl()->m_inputColorSpaceName = value ? value : "";
+}
+
+int AMFInfo::getNumLooksApplied() const
+{
+    return getImpl()->m_numLooksApplied;
+}
+
+void AMFInfo::setNumLooksApplied(int value)
+{
+    getImpl()->m_numLooksApplied = value;
+}
+
+const char * AMFInfo::getDisplayName() const
+{
+    return getImpl()->m_displayName.c_str();
+}
+
+void AMFInfo::setDisplayName(const char * value)
+{
+    getImpl()->m_displayName = value ? value : "";
+}
+
+const char * AMFInfo::getViewName() const
+{
+    return getImpl()->m_viewName.c_str();
+}
+
+void AMFInfo::setViewName(const char * value)
+{
+    getImpl()->m_viewName = value ? value : "";
+}
+
 class AMFParser::Impl
 {
 private:
@@ -466,21 +563,21 @@ ConstConfigRcPtr AMFParser::Impl::parse(AMFInfoRcPtr amfInfoObject, const char* 
 
     handleWorkingLocation();
 
-    m_amfInfoObject->displayName = m_amfConfig->getDisplay(0);
-    m_amfInfoObject->viewName = m_amfConfig->getView(m_amfInfoObject->displayName, 0);
+    m_amfInfoObject->setDisplayName(m_amfConfig->getDisplay(0));
+    m_amfInfoObject->setViewName(m_amfConfig->getView(m_amfInfoObject->getDisplayName(), 0));
     determineClipColorSpace();
 
     std::regex nonAlnum("[^0-9a-zA-Z_]");
     std::string newName = std::regex_replace(m_clipName, nonAlnum, "");
     std::string roleName = "amf_clip_" + newName;
-    m_amfConfig->setRole(roleName.c_str(), m_amfInfoObject->clipColorSpaceName);
+    m_amfConfig->setRole(roleName.c_str(), m_amfInfoObject->getClipColorSpaceName());
 
     int numRoles = m_amfConfig->getNumRoles();
     for (int i = 0; i < numRoles; i++)
     {
         if (0 == Platform::Strcasecmp(m_amfConfig->getRoleName(i), roleName.c_str()))
         {
-            m_amfInfoObject->clipIdentifier = m_amfConfig->getRoleName(i);
+            m_amfInfoObject->setClipIdentifier(m_amfConfig->getRoleName(i));
             break;
         }
     }
@@ -813,7 +910,7 @@ void AMFParser::Impl::processInputTransform()
             if (cs != NULL)
             {
                 m_amfConfig->addColorSpace(cs);
-                m_amfInfoObject->inputColorSpaceName = m_amfConfig->getColorSpace(cs->getName())->getName();
+                m_amfInfoObject->setInputColorSpaceName(m_amfConfig->getColorSpace(cs->getName())->getName());
 
                 auto it = CAMERA_MAPPING.find(cs->getName());
                 if (it != CAMERA_MAPPING.end())
@@ -841,7 +938,7 @@ void AMFParser::Impl::processInputTransform()
             cs->setTransform(ft, COLORSPACE_DIR_TO_REFERENCE);
 
             m_amfConfig->addColorSpace(cs);
-            m_amfInfoObject->inputColorSpaceName = m_amfConfig->getColorSpace(cs->getName())->getName();
+            m_amfInfoObject->setInputColorSpaceName(m_amfConfig->getColorSpace(cs->getName())->getName());
         }
     }
 
@@ -906,7 +1003,7 @@ void AMFParser::Impl::processInputTransform()
                     m_amfConfig->setActiveDisplays(dispName.c_str());
                     m_amfConfig->setActiveViews(viewName.c_str());
                     m_amfConfig->addColorSpace(cs);
-                    m_amfInfoObject->inputColorSpaceName = m_amfConfig->getColorSpace(cs->getName())->getName();
+                    m_amfInfoObject->setInputColorSpaceName(m_amfConfig->getColorSpace(cs->getName())->getName());
                 }
             }
         }
@@ -920,7 +1017,7 @@ void AMFParser::Impl::processInputTransform()
         if (cs != NULL)
         {
             m_amfConfig->addColorSpace(cs);
-            m_amfInfoObject->inputColorSpaceName = m_amfConfig->getColorSpace(cs->getName())->getName();
+            m_amfInfoObject->setInputColorSpaceName(m_amfConfig->getColorSpace(cs->getName())->getName());
 
             auto it = CAMERA_MAPPING.find(cs->getName());
             if (it != CAMERA_MAPPING.end())
@@ -930,7 +1027,7 @@ void AMFParser::Impl::processInputTransform()
             }
         }
     }
-    else if ((NULL == m_amfInfoObject->inputColorSpaceName) || (0 == strlen(m_amfInfoObject->inputColorSpaceName)))
+    else if (0 == strlen(m_amfInfoObject->getInputColorSpaceName()))
     {
         throwMessage("Input transform not found.");
     }
@@ -1054,14 +1151,14 @@ void AMFParser::Impl::processOutputTransform()
 
 void AMFParser::Impl::processLookTransforms()
 {
-    m_amfInfoObject->numLooksApplied = 0;
+    m_amfInfoObject->setNumLooksApplied(0);
     auto index = 1;
     for (auto it = m_look.begin(); it != m_look.end(); it++)
     {
         if (processLookTransform(**it, index, (m_numLooksBeforeWorkingLocation < 0 ?
                                                 AMF_NO_WORKING_LOCATION :
                                                 (index <= m_numLooksBeforeWorkingLocation ? AMF_PRE_WORKING_LOCATION : AMF_POST_WORKING_LOCATION))))
-            m_amfInfoObject->numLooksApplied++;
+            m_amfInfoObject->setNumLooksApplied(m_amfInfoObject->getNumLooksApplied() + 1);
         index++;
     }
 
@@ -1167,14 +1264,6 @@ std::string AMFParser::Impl::refRoleColorSpace(const char* role, const char* fal
 
 void AMFParser::Impl::clearCopiedInteropIds()
 {
-    // AMFInfo string members point into color space name storage owned by the
-    // config. Capture the current names by value because replacing a color
-    // space below invalidates those pointers.
-    const std::string inputName =
-        m_amfInfoObject->inputColorSpaceName ? m_amfInfoObject->inputColorSpaceName : "";
-    const std::string clipName =
-        m_amfInfoObject->clipColorSpaceName ? m_amfInfoObject->clipColorSpaceName : "";
-
     std::vector<std::string> names;
     const int numColorSpaces =
         m_amfConfig->getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL);
@@ -1193,20 +1282,6 @@ void AMFParser::Impl::clearCopiedInteropIds()
             editable->setInteropID("");
             m_amfConfig->addColorSpace(editable);
         }
-    }
-
-    // Re-point AMFInfo at the (possibly replaced) color space name storage.
-    if (!inputName.empty())
-    {
-        ConstColorSpaceRcPtr cs = m_amfConfig->getColorSpace(inputName.c_str());
-        if (cs)
-            m_amfInfoObject->inputColorSpaceName = cs->getName();
-    }
-    if (!clipName.empty())
-    {
-        ConstColorSpaceRcPtr cs = m_amfConfig->getColorSpace(clipName.c_str());
-        if (cs)
-            m_amfInfoObject->clipColorSpaceName = cs->getName();
     }
 }
 
@@ -1334,7 +1409,7 @@ void AMFParser::Impl::processOutputTransformId(const char* transformId, Transfor
             cs->addCategory("file-io");
 
             m_amfConfig->addColorSpace(cs);
-            m_amfInfoObject->inputColorSpaceName = m_amfConfig->getColorSpace(cs->getName())->getName();
+            m_amfInfoObject->setInputColorSpaceName(m_amfConfig->getColorSpace(cs->getName())->getName());
         }
         else
         {
@@ -1732,15 +1807,15 @@ void AMFParser::Impl::determineClipColorSpace()
     bool mustApplyOutput = mustApply(m_output);
     if (!m_output.empty() && !mustApplyOutput)
     {
-        m_amfInfoObject->clipColorSpaceName = m_amfConfig->getDisplay(0);
+        m_amfInfoObject->setClipColorSpaceName(m_amfConfig->getDisplay(0));
         return;
     }
     else if (mustApplyInput)
     {
-        m_amfInfoObject->clipColorSpaceName = m_amfInfoObject->inputColorSpaceName;
+        m_amfInfoObject->setClipColorSpaceName(m_amfInfoObject->getInputColorSpaceName());
         return;
     }
-    m_amfInfoObject->clipColorSpaceName = ACES;
+    m_amfInfoObject->setClipColorSpaceName(ACES);
 }
 
 void AMFParser::Impl::handleWorkingLocation()
@@ -1758,18 +1833,18 @@ void AMFParser::Impl::handleWorkingLocation()
     bool workingForward = true;
     if (outputApplied)
         workingForward = false;
-    else if (m_amfInfoObject->numLooksApplied < m_numLooksBeforeWorkingLocation)
+    else if (m_amfInfoObject->getNumLooksApplied() < m_numLooksBeforeWorkingLocation)
         workingForward = true;
-    else if (m_amfInfoObject->numLooksApplied > m_numLooksBeforeWorkingLocation)
+    else if (m_amfInfoObject->getNumLooksApplied() > m_numLooksBeforeWorkingLocation)
         workingForward = false;
-    else if (m_amfInfoObject->numLooksApplied == m_numLooksBeforeWorkingLocation)
+    else if (m_amfInfoObject->getNumLooksApplied() == m_numLooksBeforeWorkingLocation)
         workingForward = true;
     if (workingForward)
     {
         if (mustApply(m_input))
         {
             ColorSpaceTransformRcPtr cst = ColorSpaceTransform::Create();
-            cst->setSrc(m_amfInfoObject->inputColorSpaceName);
+            cst->setSrc(m_amfInfoObject->getInputColorSpaceName());
             cst->setDst(ACES);
             cst->setDirection(TRANSFORM_DIR_FORWARD);
             cst->setDataBypass(true);

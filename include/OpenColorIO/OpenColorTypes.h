@@ -1023,15 +1023,7 @@ extern OCIOEXPORT const char * OCIO_CONFIG_ARCHIVE_FILE_EXT;
 // URI Prefix
 extern OCIOEXPORT const char * OCIO_BUILTIN_URI_PREFIX;
 
-struct AMFInfo
-{
-    const char* clipIdentifier;    // String appended to various pieces of the config to ensure the name is unique.
-    const char* clipColorSpaceName;    // Name of the color space for the media (clip) that the AMF describes.
-    const char* inputColorSpaceName;    // Name of the color space for the AMF Input Transform.
-    int numLooksApplied;    // Number of AMF Look Transforms that were applied to the clip.
-    const char* displayName;    // Name of the OCIO display corresponding to the AMF Output Transform.
-    const char* viewName;    // Name of the OCIO view corresponding to the AMF Output Transform.
-};
+class OCIOEXPORT AMFInfo;
 typedef OCIO_SHARED_PTR<const AMFInfo> ConstAMFInfoRcPtr;
 typedef OCIO_SHARED_PTR<AMFInfo> AMFInfoRcPtr;
 

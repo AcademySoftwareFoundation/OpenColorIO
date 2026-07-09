@@ -10,7 +10,7 @@ namespace OCIO_NAMESPACE
 {
     OCIO_ADD_TEST(AMFParser, CreateFromAMF_slogtopq)
     {
-        AMFInfoRcPtr amfInfoObject = std::make_shared<AMFInfo>();
+        AMFInfoRcPtr amfInfoObject = AMFInfo::Create();
         std::string amfFilePath(GetTestFilesDir() + "/amf/slogtopq.amf");
         ConstConfigRcPtr amfConfig = CreateFromAMF(amfInfoObject, amfFilePath.c_str());
 
@@ -65,7 +65,7 @@ namespace OCIO_NAMESPACE
 
     OCIO_ADD_TEST(AMFParser, CreateFromAMF_slogtopq_wlook)
     {
-        AMFInfoRcPtr amfInfoObject = std::make_shared<AMFInfo>();
+        AMFInfoRcPtr amfInfoObject = AMFInfo::Create();
         std::string amfFilePath(GetTestFilesDir() + "/amf/slogtopq_wlook.amf");
         ConstConfigRcPtr amfConfig = CreateFromAMF(amfInfoObject, amfFilePath.c_str());
 
@@ -123,7 +123,7 @@ namespace OCIO_NAMESPACE
         // An AMF that references ACES 2.0 (v2.0) transform IDs must auto-select
         // an ACES 2 reference config and resolve every transform through the
         // "amf_transform_ids" interchange attribute.
-        AMFInfoRcPtr amfInfoObject = std::make_shared<AMFInfo>();
+        AMFInfoRcPtr amfInfoObject = AMFInfo::Create();
         std::string amfFilePath(GetTestFilesDir() + "/amf/aces2_slog3_to_p3d65.amf");
         // Exercise the idiomatic Config::CreateFromAMF factory (Phase 4 API).
         ConstConfigRcPtr amfConfig = Config::CreateFromAMF(amfInfoObject, amfFilePath.c_str());
@@ -135,8 +135,7 @@ namespace OCIO_NAMESPACE
                           (amfConfig->getMajorVersion() == 2 && amfConfig->getMinorVersion() >= 5));
 
         // The input transform (S-Log3) must have resolved to a color space.
-        OCIO_REQUIRE_ASSERT(amfInfoObject->inputColorSpaceName != nullptr);
-        OCIO_CHECK_ASSERT(std::strlen(amfInfoObject->inputColorSpaceName) > 0);
+        OCIO_REQUIRE_ASSERT(std::strlen(amfInfoObject->getInputColorSpaceName()) > 0);
 
         // The output transform must have produced an active display and view.
         std::string activeDisplay = amfConfig->getActiveDisplays();
@@ -149,7 +148,7 @@ namespace OCIO_NAMESPACE
 
         // The resolved pipeline must be usable end to end.
         DisplayViewTransformRcPtr transform = DisplayViewTransform::Create();
-        transform->setSrc(amfInfoObject->inputColorSpaceName);
+        transform->setSrc(amfInfoObject->getInputColorSpaceName());
         transform->setDisplay(activeDisplay.c_str());
         transform->setView(activeView.c_str());
         transform->validate();
