@@ -386,11 +386,11 @@ public:
     Impl & operator=(const Impl &) = delete;
 
     explicit Impl()
-        : m_parser(XML_ParserCreate(NULL))
+        : m_parser(XML_ParserCreate(nullptr))
         , m_lineNumber(0)
-        , m_refConfig(NULL)
-        , m_amfConfig(NULL)
-        , m_amfInfoObject(NULL)
+        , m_refConfig(nullptr)
+        , m_amfConfig(nullptr)
+        , m_amfInfoObject(nullptr)
         , m_isInsideInputTransform(false)
         , m_isInsideOutputTransform(false)
         , m_isInsideLookTransform(false)
@@ -405,7 +405,7 @@ public:
         XML_ParserFree(m_parser);
     }
 
-    ConstConfigRcPtr parse(AMFInfoRcPtr amfInfoObject, const char* amfFilePath, const char* configFilePath = NULL);
+    ConstConfigRcPtr parse(AMFInfoRcPtr amfInfoObject, const char* amfFilePath, const char* configFilePath = nullptr);
 
 private:
     void reset();
@@ -435,7 +435,7 @@ private:
     void processLookTransforms();
     void processClipId();
 
-    void loadACESRefConfig(const char* configFilePath = NULL);
+    void loadACESRefConfig(const char* configFilePath = nullptr);
     void initAMFConfig();
 
     // Returns true if the parsed AMF references any ACES v2.0 transform IDs,
@@ -505,8 +505,8 @@ void AMFParser::Impl::reset()
     if (m_xmlStream.is_open())
         m_xmlStream.close();
     m_lineNumber = 0;
-    m_refConfig = m_amfConfig = NULL;
-    m_amfInfoObject = NULL;
+    m_refConfig = m_amfConfig = nullptr;
+    m_amfInfoObject = nullptr;
     m_clipId.reset();
     m_input.reset();
     m_output.reset();
@@ -909,7 +909,7 @@ void AMFParser::Impl::processInputTransform()
         if (0 == Platform::Strcasecmp(elem.first.c_str(), AMF_TAG_TRANSFORMID))
         {
             ConstColorSpaceRcPtr cs = searchColorSpaces(elem.second.c_str());
-            if (cs != NULL)
+            if (cs != nullptr)
             {
                 m_amfConfig->addColorSpace(cs);
                 m_amfInfoObject->setInputColorSpaceName(m_amfConfig->getColorSpace(cs->getName())->getName());
@@ -1017,7 +1017,7 @@ void AMFParser::Impl::processInputTransform()
         // No input transform: the clip is already in ACES2065-1. Fetch the ACES
         // color space directly by name (it cannot be found by amf_transform_ids).
         ConstColorSpaceRcPtr cs = m_refConfig->getColorSpace(ACES);
-        if (cs != NULL)
+        if (cs != nullptr)
         {
             m_amfConfig->addColorSpace(cs);
             m_amfInfoObject->setInputColorSpaceName(m_amfConfig->getColorSpace(cs->getName())->getName());
@@ -1041,7 +1041,7 @@ void AMFParser::Impl::processOutputTransform()
     //handle missing outputTransform
     if (m_output.empty())
     {
-        m_amfConfig->addDisplayView("None", "Raw", "Raw", NULL);
+        m_amfConfig->addDisplayView("None", "Raw", "Raw", nullptr);
         /* A config with a display color space must have a view transform.
         Either need to remove 'CIE-XYZ-D65' or add a view transform. */
         m_amfConfig->addViewTransform(m_refConfig->getViewTransform("Un-tone-mapped"));
@@ -1293,7 +1293,7 @@ void AMFParser::Impl::clearCopiedInteropIds()
 
 void AMFParser::Impl::loadACESRefConfig(const char* configFilePath)
 {
-    if (configFilePath != NULL)
+    if (configFilePath != nullptr)
     {
         m_refConfig = Config::CreateFromFile(configFilePath);
     }
@@ -1353,7 +1353,7 @@ void AMFParser::Impl::initAMFConfig()
     m_amfConfig->setRole("cie_xyz_d65_interchange", cieName.c_str());
     m_amfConfig->setRole("color_timing", colorTimingName.c_str());
     m_amfConfig->setRole("compositing_log", colorTimingName.c_str());
-    m_amfConfig->setRole("default", NULL);
+    m_amfConfig->setRole("default", nullptr);
 
     FileRulesRcPtr rules = FileRules::Create()->createEditableCopy();
     rules->setDefaultRuleColorSpace(ACES);
@@ -1443,7 +1443,7 @@ ConstViewTransformRcPtr AMFParser::Impl::searchViewTransforms(std::string acesId
         if (ElementMatchesTransformId(vt, acesId, m_useAmfIds))
             return vt;
     }
-    return NULL;
+    return nullptr;
 }
 
 bool AMFParser::Impl::processLookTransform(AMFTransform& look, int index, std::string workingLocation)
@@ -1473,7 +1473,7 @@ bool AMFParser::Impl::processLookTransform(AMFTransform& look, int index, std::s
         if (0 == Platform::Strcasecmp(it->first.c_str(), AMF_TAG_TRANSFORMID))
         {
             LookRcPtr lk = searchLookTransforms(it->second.c_str());
-            if (lk != NULL)
+            if (lk != nullptr)
             {
                 lk->setName(lookName.c_str());
                 m_amfConfig->addLook(lk);
@@ -1619,12 +1619,12 @@ bool AMFParser::Impl::processLookTransform(AMFTransform& look, int index, std::s
             cdl->setSat(satValue);
         }
 
-        TransformRcPtr toTransform = NULL;
-        TransformRcPtr fromTransform = NULL;
+        TransformRcPtr toTransform = nullptr;
+        TransformRcPtr fromTransform = nullptr;
         loadCdlWsTransform(look, true, toTransform);
         loadCdlWsTransform(look, false, fromTransform);
 
-        if (toTransform == NULL && fromTransform == NULL)
+        if (toTransform == nullptr && fromTransform == nullptr)
         {
             gt->appendTransform(cdl);
         }
@@ -1677,7 +1677,7 @@ void AMFParser::Impl::loadCdlWsTransform(AMFTransform& amft, bool isTo, Transfor
                         if (0 == Platform::Strcasecmp(it->first.c_str(), AMF_TAG_TRANSFORMID))
                         {
                             ConstColorSpaceRcPtr cs = searchColorSpaces(it->second.c_str());
-                            if (cs == NULL)
+                            if (cs == nullptr)
                                 throwMessage("CDL working space transform ID not found: " + it->second);
                             m_amfConfig->addColorSpace(cs);
 
@@ -1754,7 +1754,7 @@ LookRcPtr AMFParser::Impl::searchLookTransforms(std::string acesId)
         if (ElementMatchesTransformId(lk, acesId, m_useAmfIds))
             return lk->createEditableCopy();
     }
-    return NULL;
+    return nullptr;
 }
 
 ConstColorSpaceRcPtr AMFParser::Impl::searchColorSpaces(std::string acesId)
@@ -1766,7 +1766,7 @@ ConstColorSpaceRcPtr AMFParser::Impl::searchColorSpaces(std::string acesId)
         if (ElementMatchesTransformId(cs, acesId, m_useAmfIds))
             return cs;
     }
-    return NULL;
+    return nullptr;
 }
 
 void AMFParser::Impl::getFileDescription(AMFTransform& amft, std::string& desc)
@@ -1924,7 +1924,7 @@ void AMFParser::Impl::handleWorkingLocation()
     if (gt_unapplied->getNumTransforms() == 0)
     {
         MatrixTransformRcPtr mt = MatrixTransform::Create();
-        mt->Identity(NULL, NULL);
+        mt->Identity(nullptr, nullptr);
         gt_unapplied->appendTransform(mt);
     }
 
@@ -1948,22 +1948,22 @@ void AMFParser::Impl::throwMessage(const std::string& error) const
     throw Exception(os.str().c_str());
 }
 
-AMFParser::AMFParser() : m_impl(NULL)
+AMFParser::AMFParser() : m_impl(nullptr)
 {
 }
 
 AMFParser::~AMFParser()
 {
-    if (m_impl == NULL)
+    if (m_impl == nullptr)
         return;
 
     delete m_impl;
-    m_impl = NULL;
+    m_impl = nullptr;
 }
 
 ConstConfigRcPtr AMFParser::buildConfig(AMFInfoRcPtr amfInfoObject, const char* amfFilePath, const char* configFilePath)
 {
-    if (m_impl == NULL)
+    if (m_impl == nullptr)
         m_impl = new Impl();
     return m_impl->parse(amfInfoObject, amfFilePath, configFilePath);
 }

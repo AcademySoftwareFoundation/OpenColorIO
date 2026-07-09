@@ -15,11 +15,11 @@ public:
     AMFParser();
     ~AMFParser();
 
-    ConstConfigRcPtr buildConfig(AMFInfoRcPtr amfInfoObject, const char* amfFilePath, const char* configFilePath = NULL);
+    ConstConfigRcPtr buildConfig(AMFInfoRcPtr amfInfoObject, const char* amfFilePath, const char* configFilePath = nullptr);
 
 private:
     class Impl;
-    Impl* m_impl; 
+    Impl* m_impl;
 
     AMFParser(const AMFParser&) = delete;
     AMFParser& operator=(const AMFParser&) = delete;
