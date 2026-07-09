@@ -963,23 +963,24 @@ void AMFParser::Impl::processInputTransform()
                     odtFt->setDirection(TRANSFORM_DIR_INVERSE);
 
                     FileTransformRcPtr rrtFt = FileTransform::Create();
-                    for (auto itRrt = m_input.m_subElements.begin(); itRrt != m_input.m_subElements.end(); itRrt++)
+                    for (auto itRrt = m_input.m_subElements.begin(); itRrt != m_input.m_subElements.end(); ++itRrt)
                     {
                         if (0 == Platform::Strcasecmp(itRrt->first.c_str(), AMF_TAG_RRT))
                         {
-                            ++itRrt;
-                            while (itRrt != m_input.m_subElements.end() && Platform::Strcasecmp(itRrt->first.c_str(), AMF_TAG_RRT))
+                            for (++itRrt; itRrt != m_input.m_subElements.end() &&
+                                 0 != Platform::Strcasecmp(itRrt->first.c_str(), AMF_TAG_RRT); ++itRrt)
                             {
                                 if (0 == Platform::Strcasecmp(itRrt->first.c_str(), AMF_TAG_FILE))
                                 {
                                     checkLutPath(itRrt->second);
-                                    odtFt->setSrc(itRrt->second.c_str());
-                                    odtFt->setCCCId("");
-                                    odtFt->setInterpolation(INTERP_BEST);
-                                    odtFt->setDirection(TRANSFORM_DIR_INVERSE);
+                                    rrtFt->setSrc(itRrt->second.c_str());
+                                    rrtFt->setCCCId("");
+                                    rrtFt->setInterpolation(INTERP_BEST);
+                                    rrtFt->setDirection(TRANSFORM_DIR_INVERSE);
                                     break;
                                 }
                             }
+                            break;
                         }
                     }
 
@@ -994,7 +995,7 @@ void AMFParser::Impl::processInputTransform()
                     cs->addCategory("file-io");
 
                     GroupTransformRcPtr gt = GroupTransform::Create();
-                    if (rrtFt)
+                    if (rrtFt->getSrc() && *rrtFt->getSrc())
                         gt->appendTransform(rrtFt);
                     gt->appendTransform(odtFt);
                     cs->setTransform(gt, COLORSPACE_DIR_FROM_REFERENCE);
@@ -1103,23 +1104,24 @@ void AMFParser::Impl::processOutputTransform()
                     odtFt->setDirection(TRANSFORM_DIR_FORWARD);
 
                     FileTransformRcPtr rrtFt = FileTransform::Create();
-                    for (auto itRrt = m_output.m_subElements.begin(); itRrt != m_output.m_subElements.end(); itRrt++)
+                    for (auto itRrt = m_output.m_subElements.begin(); itRrt != m_output.m_subElements.end(); ++itRrt)
                     {
                         if (0 == Platform::Strcasecmp(itRrt->first.c_str(), AMF_TAG_RRT))
                         {
-                            ++itRrt;
-                            while (itRrt != m_output.m_subElements.end() && Platform::Strcasecmp(itRrt->first.c_str(), AMF_TAG_RRT))
+                            for (++itRrt; itRrt != m_output.m_subElements.end() &&
+                                 0 != Platform::Strcasecmp(itRrt->first.c_str(), AMF_TAG_RRT); ++itRrt)
                             {
                                 if (0 == Platform::Strcasecmp(itRrt->first.c_str(), AMF_TAG_FILE))
                                 {
                                     checkLutPath(itRrt->second);
-                                    odtFt->setSrc(itRrt->second.c_str());
-                                    odtFt->setCCCId("");
-                                    odtFt->setInterpolation(INTERP_BEST);
-                                    odtFt->setDirection(TRANSFORM_DIR_FORWARD);
+                                    rrtFt->setSrc(itRrt->second.c_str());
+                                    rrtFt->setCCCId("");
+                                    rrtFt->setInterpolation(INTERP_BEST);
+                                    rrtFt->setDirection(TRANSFORM_DIR_FORWARD);
                                     break;
                                 }
                             }
+                            break;
                         }
                     }
 
@@ -1134,7 +1136,7 @@ void AMFParser::Impl::processOutputTransform()
                     cs->addCategory("file-io");
 
                     GroupTransformRcPtr gt = GroupTransform::Create();
-                    if (rrtFt)
+                    if (rrtFt->getSrc() && *rrtFt->getSrc())
                         gt->appendTransform(rrtFt);
                     gt->appendTransform(odtFt);
                     cs->setTransform(gt, COLORSPACE_DIR_FROM_REFERENCE);
