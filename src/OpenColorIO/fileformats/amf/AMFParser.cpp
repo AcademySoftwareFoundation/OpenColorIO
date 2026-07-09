@@ -1708,6 +1708,8 @@ void AMFParser::Impl::extractThreeFloats(std::string str, double* arr)
 {
     std::istringstream iss(str);
     iss >> arr[0] >> arr[1] >> arr[2];
+    if (iss.fail())
+        throwMessage("CDL SOP node requires three numeric values but got: '" + str + "'");
 }
 
 bool AMFParser::Impl::mustApply(AMFTransform& amft)
