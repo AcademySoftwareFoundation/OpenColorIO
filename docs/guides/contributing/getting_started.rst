@@ -82,7 +82,7 @@ https://docs.docker.com/engine/docker-overview/
 In order to run the Docker environment you will have to build it from the Dockerfile
 provided in the repo directory::
 
-    OpenColorIO/shared/docker
+    OpenColorIO/share/docker
 
 Run this command in order to build the Docker image (aprox. 20min)::
 
