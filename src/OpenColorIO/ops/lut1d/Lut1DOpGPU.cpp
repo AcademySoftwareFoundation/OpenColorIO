@@ -48,6 +48,11 @@ void CreatePaddedLutChannels(unsigned long width,
             leftover -= step;
         }
 
+        // Skip the duplicate entry if the last value is the last pixel on a row
+        if ((currWidth + (height -1)) % width == 0) {
+            leftover -= 1;
+        }
+
         // If there are still texels to fill, add them to the texture data.
         if (leftover > 0)
         {
@@ -111,6 +116,11 @@ void CreatePaddedRedChannel(unsigned long width,
             leftover -= step;
         }
 
+        // Skip the duplicate entry if the last value is the last pixel on a row
+        if ((currWidth + (height -1)) % width == 0) {
+            leftover -= 1;
+        }
+
         // If there are still texels to fill, add them to the texture data.
         if (leftover > 0)
         {
@@ -154,10 +164,24 @@ void GetLut1DGPUShaderProgram(GpuShaderCreatorRcPtr & shaderCreator,
 
     const unsigned long length      = lutData->getArray().getLength();
     const unsigned long width       = std::min(length, defaultMaxWidth);
-    const unsigned long height      = (length / defaultMaxWidth) + 1;
+    const unsigned long heightWithDuplicates = length / (defaultMaxWidth -1) + 1;
+
+    // The height is calculated based on the amount of rows without duplicate data.
+    // ceil(length / defaultMaxWidth)
+    const unsigned long heightWithoutDuplicates = (std::max(2UL, length) - 1) / defaultMaxWidth + 1;
+
+    // The result of this determines how many duplicate values are really needed.
+    // When the amount of rows is one, the amount of duplicate entries will be zero.
+    // ceil(length / defaultMaxWidth) -1)
+    const unsigned long numDuplicateEntries = heightWithoutDuplicates - 1;
+
+    // Once we know the amount of duplicate entries, we can calculate if the last
+    // value ends on the same scanline, if that is the case we won't need an extra line.
+    // ((ceil(length / defaultMaxWidth) -1 + length) % defaultMaxWidth == 0)
+    const unsigned long height      = heightWithDuplicates - ((numDuplicateEntries + length) % defaultMaxWidth == 0);
     const unsigned long numChannels = lutData->getArray().getNumColorComponents();
 
-    // Note: The 1D LUT needs a GPU texture for the Look-up table implementation. 
+    // Note: The 1D LUT needs a GPU texture for the Look-up table implementation.
     // However, the texture type & content may vary based on the number of channels
     // i.e. when all channels are identical a F32 Red GPU texture is enough.
  
