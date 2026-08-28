@@ -40,12 +40,15 @@ fields and says so.
 
 `ocio.kotoba` embeds the fixture as integer bytes and uses only `+`, `*`,
 `if`, `=`, `<`, and `and`. `main` returns a packed i64 of the parsed fields.
+This README does not claim a wasm byte size or a packed numeric result;
+those are only true if a completed Kotoba Actions log on this fork prints
+them.
 
 ## Checks
 
-`checks.sh` compiles with Kotoba 0.7.2, runs the wasm32 module, and
-compares the packed result to fields read from the fixture bytes. It does
-not invent pass/fail.
+`checks.sh` compiles with Kotoba 0.7.2 and compares fields read from the
+fixture bytes. It does not invent pass/fail. compile→wasm is not claimed
+here; leave that to a completed Kotoba Actions log.
 
 ```sh
 # requires kotoba 0.7.2 on PATH, or downloads the linux-amd64 0.7.2 CLI
