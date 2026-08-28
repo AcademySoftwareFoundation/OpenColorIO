@@ -1,0 +1,195 @@
+; SPDX-License-Identifier: BSD-3-Clause
+;; Copyright Contributors to the OpenColorIO Project.
+;;
+;; Honest Kotoba v1: OCIO config header (profile version + colorspace name).
+;; wasm32, i64-v1, no FFI, no IEEE floats. Not a color transform pipeline.
+;; Fixture bytes match fixtures/tiny.ocio (version + colorspace name
+;; lines from Config.cpp INTERNAL_RAW_PROFILE; no transform pipeline).
+
+(ns ocio)
+
+(defn fixture-len []
+  71)
+
+(defn fixture-byte-0 [i]
+  (if (= i 0) 111
+      (if (= i 1) 99
+      (if (= i 2) 105
+      (if (= i 3) 111
+      (if (= i 4) 95
+      (if (= i 5) 112
+      (if (= i 6) 114
+      (if (= i 7) 111
+      0)))))))))
+(defn fixture-byte-8 [i]
+  (if (= i 8) 102
+      (if (= i 9) 105
+      (if (= i 10) 108
+      (if (= i 11) 101
+      (if (= i 12) 95
+      (if (= i 13) 118
+      (if (= i 14) 101
+      (if (= i 15) 114
+      0)))))))))
+(defn fixture-byte-16 [i]
+  (if (= i 16) 115
+      (if (= i 17) 105
+      (if (= i 18) 111
+      (if (= i 19) 110
+      (if (= i 20) 58
+      (if (= i 21) 32
+      (if (= i 22) 50
+      (if (= i 23) 10
+      0)))))))))
+(defn fixture-byte-24 [i]
+  (if (= i 24) 99
+      (if (= i 25) 111
+      (if (= i 26) 108
+      (if (= i 27) 111
+      (if (= i 28) 114
+      (if (= i 29) 115
+      (if (= i 30) 112
+      (if (= i 31) 97
+      0)))))))))
+(defn fixture-byte-32 [i]
+  (if (= i 32) 99
+      (if (= i 33) 101
+      (if (= i 34) 115
+      (if (= i 35) 58
+      (if (= i 36) 10
+      (if (= i 37) 32
+      (if (= i 38) 32
+      (if (= i 39) 45
+      0)))))))))
+(defn fixture-byte-40 [i]
+  (if (= i 40) 32
+      (if (= i 41) 33
+      (if (= i 42) 60
+      (if (= i 43) 67
+      (if (= i 44) 111
+      (if (= i 45) 108
+      (if (= i 46) 111
+      (if (= i 47) 114
+      0)))))))))
+(defn fixture-byte-48 [i]
+  (if (= i 48) 83
+      (if (= i 49) 112
+      (if (= i 50) 97
+      (if (= i 51) 99
+      (if (= i 52) 101
+      (if (= i 53) 62
+      (if (= i 54) 10
+      (if (= i 55) 32
+      0)))))))))
+(defn fixture-byte-56 [i]
+  (if (= i 56) 32
+      (if (= i 57) 32
+      (if (= i 58) 32
+      (if (= i 59) 32
+      (if (= i 60) 32
+      (if (= i 61) 110
+      (if (= i 62) 97
+      (if (= i 63) 109
+      0)))))))))
+(defn fixture-byte-64 [i]
+  (if (= i 64) 101
+      (if (= i 65) 58
+      (if (= i 66) 32
+      (if (= i 67) 114
+      (if (= i 68) 97
+      (if (= i 69) 119
+      (if (= i 70) 10
+      0))))))))
+
+(defn fixture-byte [i]
+  (if (< i 8)
+      (fixture-byte-0 i)
+      (if (< i 16)
+      (fixture-byte-8 i)
+      (if (< i 24)
+      (fixture-byte-16 i)
+      (if (< i 32)
+      (fixture-byte-24 i)
+      (if (< i 40)
+      (fixture-byte-32 i)
+      (if (< i 48)
+      (fixture-byte-40 i)
+      (if (< i 56)
+      (fixture-byte-48 i)
+      (if (< i 64)
+      (fixture-byte-56 i)
+      (if (< i 71)
+      (fixture-byte-64 i)
+      0))))))))))
+
+;; Identifying header key used by OCIOYaml.cpp load(Config): "ocio_profile_version"
+(defn header-key-ok []
+  (and (= (fixture-byte 0) 111)
+       (= (fixture-byte 1) 99)
+       (= (fixture-byte 2) 105)
+       (= (fixture-byte 3) 111)
+       (= (fixture-byte 4) 95)
+       (= (fixture-byte 5) 112)
+       (= (fixture-byte 6) 114)
+       (= (fixture-byte 7) 111)
+       (= (fixture-byte 8) 102)
+       (= (fixture-byte 9) 105)
+       (= (fixture-byte 10) 108)
+       (= (fixture-byte 11) 101)
+       (= (fixture-byte 12) 95)
+       (= (fixture-byte 13) 118)
+       (= (fixture-byte 14) 101)
+       (= (fixture-byte 15) 114)
+       (= (fixture-byte 16) 115)
+       (= (fixture-byte 17) 105)
+       (= (fixture-byte 18) 111)
+       (= (fixture-byte 19) 110)
+       (= (fixture-byte 20) 58)))
+
+;; ASCII '0'..'9' -> 0..9. Color matrices / LUT samples stay out (IEEE float).
+(defn ascii-digit [b]
+  (if (= b 48) 0
+    (if (= b 49) 1
+      (if (= b 50) 2
+        (if (= b 51) 3
+          (if (= b 52) 4
+            (if (= b 53) 5
+              (if (= b 54) 6
+                (if (= b 55) 7
+                  (if (= b 56) 8
+                    (if (= b 57) 9
+                      -1)))))))))))
+
+;; "ocio_profile_version: 2\n" — one token, so minor is 0 (OCIOYaml Split on '.')
+(defn profile-major []
+  (if (and (header-key-ok)
+           (= (fixture-byte 21) 32)
+           (= (fixture-byte 23) 10))
+    (ascii-digit (fixture-byte 22))
+    -1))
+
+(defn profile-minor []
+  (if (and (header-key-ok) (= (fixture-byte 23) 10))
+    0
+    -1))
+
+;; ColorSpace name "raw" at the fixture's name field (INTERNAL_RAW_PROFILE).
+(defn colorspace-raw-ok []
+  (and (= (fixture-byte 61) 110)
+       (= (fixture-byte 62) 97)
+       (= (fixture-byte 63) 109)
+       (= (fixture-byte 64) 101)
+       (= (fixture-byte 65) 58)
+       (= (fixture-byte 66) 32)
+       (= (fixture-byte 67) 114)
+       (= (fixture-byte 68) 97)
+       (= (fixture-byte 69) 119)))
+
+;; Packed i64: 1 + 10*major + 100*minor + 1000*name_ok
+(defn main []
+  (if (header-key-ok)
+    (+ 1
+       (* (profile-major) 10)
+       (* (profile-minor) 100)
+       (* (if (colorspace-raw-ok) 1 0) 1000))
+    0))

@@ -1,0 +1,3 @@
+*.wasm
+*.compile.json
+.kotoba-cli/

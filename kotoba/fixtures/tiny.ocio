@@ -1,0 +1,4 @@
+ocio_profile_version: 2
+colorspaces:
+  - !<ColorSpace>
+      name: raw
