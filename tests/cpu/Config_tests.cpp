@@ -6492,7 +6492,7 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
         std::string configStr;
         configStr += InactiveCSConfigStart;
         // Test a multi-line list.
-        configStr += "inactive_colorspaces: [cs1\t\n   \n,   \ncs2]\n";
+        configStr += "inactive_colorspaces: [cs1\t\n   \n  ,   \n  cs2]\n";
         configStr += InactiveCSConfigEnd;
 
         std::istringstream is;
