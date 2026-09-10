@@ -324,7 +324,17 @@ void BuildDisplayOps(OpRcPtrVec & ops,
     }
 
     const std::string display = displayViewTransform.getDisplay();
-    if (config.getNumViews(display.c_str()) == 0)
+
+    // Config authors may opt-in to using display color space names/aliases as aliases for
+    // display names. Resolve those to the actual display name.
+    std::string resolvedDisplay = display;
+    const char * canonicalDisplay = config.getCanonicalDisplayName(display.c_str());
+    if (canonicalDisplay && *canonicalDisplay)
+    {
+        resolvedDisplay = canonicalDisplay;
+    }
+
+    if (config.getNumViews(resolvedDisplay.c_str()) == 0)
     {
         std::ostringstream os;
         os << "DisplayViewTransform error.";
@@ -333,13 +343,23 @@ void BuildDisplayOps(OpRcPtrVec & ops,
     }
     const std::string view = displayViewTransform.getView();
 
+    // Config authors may opt-in to using view transform names/aliases as aliases for
+    // view names. Resolve those to the actual view name.
+    std::string resolvedView = view;
+    const char * canonicalView = config.getCanonicalViewName(resolvedDisplay.c_str(), view.c_str());
+    if (canonicalView && *canonicalView)
+    {
+        resolvedView = canonicalView;
+    }
+
     // Get the view transform if any: if it exists, it can be a view transform or a named transform.
-    const std::string viewTransformName = config.getDisplayViewTransformName(display.c_str(),
-                                                                             view.c_str());
+    const std::string viewTransformName = config.getDisplayViewTransformName(resolvedDisplay.c_str(),
+                                                                             resolvedView.c_str());
     ConstViewTransformRcPtr viewTransform;
     ConstNamedTransformRcPtr viewNamedTransform;
     if (!viewTransformName.empty())
     {
+        // If there is both a VT and NT with that name, the ViewTransform takes priority.
         viewTransform = config.getViewTransform(viewTransformName.c_str());
         if (!viewTransform)
         {
@@ -355,19 +375,18 @@ void BuildDisplayOps(OpRcPtrVec & ops,
         }
     }
 
-    // Get the color space associated to the (display, view) pair.
+    // Get the color space associated to the (display, view) pair.  This also takes care of the
+    // case of a shared view containing a view transform that sets the color space to
+    // <USE_DISPLAY_NAME>, by looking for a display color space with the same name as the display.
     // (Returns an empty string if the view does not exist.  This is trapped below.)
-    const char * csName = config.getDisplayViewColorSpaceName(display.c_str(), view.c_str());
-
-    // A shared view containing a view transform may set the color space to <USE_DISPLAY_NAME>,
-    // in which case we look for a display color space with the same name as the display.
-    const std::string displayColorSpaceName = View::UseDisplayName(csName) ? display : csName;
+    const std::string displayColorSpaceName
+        = config.getResolvedDisplayViewColorSpaceName(resolvedDisplay.c_str(),
+                                                      resolvedView.c_str());
 
     // At this point, displayColorSpaceName is typically one of the following strings:
     //   1. The "colorspace" attribute of the View, if there is no "view_transform".
-    //   2. The name of the View's display, if it's a shared_view and the "display_colorspace"
-    //      is "<USE_DISPLAY_NAME>".  It is expected this will also be the name of a display
-    //      color space in the config.
+    //   2. The display color space named after the View's display, if it's a shared_view and the
+    //      "display_colorspace" is "<USE_DISPLAY_NAME>".
     //   3. Else, the "display_colorspace" string if it's a View with a "view_transform".
     //
     //   (Though, in the implementation, both the "colorspace" and "display_colorspace" of 
@@ -427,7 +446,7 @@ void BuildDisplayOps(OpRcPtrVec & ops,
     LookParseResult looks;
     if (!displayViewTransform.getLooksBypass())
     {
-        looks.parse(config.getDisplayViewLooks(display.c_str(), view.c_str()));
+        looks.parse(config.getDisplayViewLooks(resolvedDisplay.c_str(), resolvedView.c_str()));
     }
 
     // Now that all the inputs are found and validated, the following code builds the list of ops
@@ -543,7 +562,26 @@ bool CollectContextVariables(const Config & config,
         foundContextVars = true;
     }
 
-    const char * csName = config.getDisplayViewColorSpaceName(tr.getDisplay(), tr.getView());
+    // Resolve the display and view the same way BuildDisplayOps does, so that a
+    // DisplayViewTransform using an old display or view name still finds the right color space,
+    // view transform, and looks.
+    std::string display{ tr.getDisplay() };
+    const char * canonicalDisplay = config.getCanonicalDisplayName(display.c_str());
+    if (canonicalDisplay && *canonicalDisplay)
+    {
+        display = canonicalDisplay;
+    }
+
+    std::string view{ tr.getView() };
+    const char * canonicalView = config.getCanonicalViewName(display.c_str(), view.c_str());
+    if (canonicalView && *canonicalView)
+    {
+        view = canonicalView;
+    }
+
+    // Note that this also handles a shared view whose display color space is <USE_DISPLAY_NAME>.
+    const char * csName = config.getResolvedDisplayViewColorSpaceName(display.c_str(),
+                                                                      view.c_str());
     if (csName && *csName)
     {
         src = config.getColorSpace(csName);
@@ -553,7 +591,7 @@ bool CollectContextVariables(const Config & config,
         }
     }
 
-    const char * vtName = config.getDisplayViewTransformName(tr.getDisplay(), tr.getView());
+    const char * vtName = config.getDisplayViewTransformName(display.c_str(), view.c_str());
     if (vtName && *vtName)
     {
         ConstViewTransformRcPtr vt = config.getViewTransform(vtName);
@@ -576,7 +614,7 @@ bool CollectContextVariables(const Config & config,
     // TODO: The LooksBypass must be a DynamicProperty to allow live on/off.
     if (!tr.getLooksBypass())
     {
-        const std::string looksStr = config.getDisplayViewLooks(tr.getDisplay(), tr.getView());
+        const std::string looksStr = config.getDisplayViewLooks(display.c_str(), view.c_str());
         LookParseResult looks;
         looks.parse(looksStr);
 

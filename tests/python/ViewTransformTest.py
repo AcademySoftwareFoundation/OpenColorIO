@@ -61,11 +61,13 @@ class ViewTransformTest(unittest.TestCase):
         vt.setTransform(mat, OCIO.VIEWTRANSFORM_DIR_TO_REFERENCE)
         vt.setTransform(direction=OCIO.VIEWTRANSFORM_DIR_FROM_REFERENCE, transform=mat)
         vt.addCategory('cat1')
+        vt.addAlias('alias1')
 
         other = copy.deepcopy(vt)
         self.assertFalse(other is vt)
 
         self.assertEqual(other.getName(), vt.getName())
+        self.assertEqual(list(other.getAliases()), list(vt.getAliases()))
         self.assertEqual(other.getFamily(), vt.getFamily())
         self.assertEqual(other.getDescription(), vt.getDescription())
         self.assertEqual(
@@ -84,6 +86,68 @@ class ViewTransformTest(unittest.TestCase):
 
         vt.setName('test name')
         self.assertEqual(vt.getName(), 'test name')
+
+    def test_aliases(self):
+        """
+        Test ViewTransform aliases.
+        """
+
+        vt = OCIO.ViewTransform()
+        self.assertEqual(vt.getName(), '')
+        aliases = vt.getAliases()
+        self.assertEqual(len(aliases), 0)
+
+        vt.addAlias('alias1')
+        aliases = vt.getAliases()
+        self.assertEqual(len(aliases), 1)
+        self.assertEqual(aliases[0], 'alias1')
+        self.assertTrue(vt.hasAlias('alias1'))
+        self.assertTrue(vt.hasAlias('aLiaS1'))
+        self.assertFalse(vt.hasAlias('alias2'))
+
+        vt.addAlias('alias2')
+        aliases = vt.getAliases()
+        self.assertEqual(len(aliases), 2)
+        self.assertEqual(aliases[0], 'alias1')
+        self.assertEqual(aliases[1], 'alias2')
+        self.assertTrue(vt.hasAlias('alias2'))
+
+        # Alias is already there, not added.
+
+        vt.addAlias('Alias2')
+        aliases = vt.getAliases()
+        self.assertEqual(len(aliases), 2)
+        self.assertEqual(aliases[0], 'alias1')
+        self.assertEqual(aliases[1], 'alias2')
+
+        # Name might remove an alias.
+
+        vt.setName('name')
+        aliases = vt.getAliases()
+        self.assertEqual(len(aliases), 2)
+
+        vt.setName('alias2')
+        aliases = vt.getAliases()
+        self.assertEqual(len(aliases), 1)
+        self.assertEqual(aliases[0], 'alias1')
+
+        vt.removeAlias('alias1')
+        aliases = vt.getAliases()
+        self.assertEqual(len(aliases), 0)
+
+        vt.addAlias('alias3')
+        vt.addAlias('alias4')
+        self.assertEqual(len(vt.getAliases()), 2)
+        vt.clearAliases()
+        self.assertEqual(len(vt.getAliases()), 0)
+
+        # Aliases may also be set via the constructor.
+
+        vt = OCIO.ViewTransform(name='vt_name', aliases=['a1', 'a2'])
+        aliases = vt.getAliases()
+        self.assertEqual(len(aliases), 2)
+        self.assertEqual(aliases[0], 'a1')
+        self.assertEqual(aliases[1], 'a2')
 
     def test_family(self):
         """
