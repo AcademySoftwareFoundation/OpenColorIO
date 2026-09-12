@@ -16,13 +16,12 @@ namespace OCIO_NAMESPACE
 namespace ConfigCompatibilityHelpers
 {
 
-bool AllDisplayColorSpacesHaveAttributes(const ConstConfigRcPtr & config)
+bool ActiveDisplayColorSpacesHaveAttributes(const ConstConfigRcPtr & config)
 {
-    const int numCS = config->getNumColorSpaces(SEARCH_REFERENCE_SPACE_DISPLAY, COLORSPACE_ALL);
+    const int numCS = config->getNumColorSpaces(SEARCH_REFERENCE_SPACE_DISPLAY, COLORSPACE_ACTIVE);
     if (numCS == 0)
     {
-        LogDebug("ConfigCompatibility: Config has no display-referred color spaces; "
-                 "CONFIG_HDR_DISPLAY_SUPPORT_26 requires at least one with an interop ID set.");
+        LogDebug("HDR Display Support (2.6): No active display-referred color spaces found.");
         return false;
     }
 
@@ -31,22 +30,20 @@ bool AllDisplayColorSpacesHaveAttributes(const ConstConfigRcPtr & config)
     for (int i = 0; i < numCS; ++i)
     {
         const char * csName = config->getColorSpaceNameByIndex(SEARCH_REFERENCE_SPACE_DISPLAY,
-                                                               COLORSPACE_ALL, i);
+                                                               COLORSPACE_ACTIVE, i);
         ConstColorSpaceRcPtr cs = config->getColorSpace(csName);
         if (!cs || cs->getReferenceSpaceType() != REFERENCE_SPACE_DISPLAY ||
             !cs->getInteropID() || !*cs->getInteropID())
         {
-            LogDebug(std::string("ConfigCompatibility: Display color space '") + csName +
-                     "' does not have an interop ID set; CONFIG_HDR_DISPLAY_SUPPORT_26 requires "
-                     "all display color spaces to have one.");
+            LogDebug(std::string("HDR Display Support (2.6): Active display color space '") + csName +
+                     "' has no interop ID.");
             allHaveInteropID = false;
         }
 
         if (!cs || !cs->getEncoding() || !*cs->getEncoding())
         {
-            LogDebug(std::string("ConfigCompatibility: Display color space '") + csName +
-                     "' does not have an encoding set; CONFIG_HDR_DISPLAY_SUPPORT_26 requires "
-                     "all display color spaces to have one.");
+            LogDebug(std::string("HDR Display Support (2.6): Active display color space '") + csName +
+                     "' has no encoding.");
             allHaveInteropID = false;
         }
     }
@@ -54,7 +51,34 @@ bool AllDisplayColorSpacesHaveAttributes(const ConstConfigRcPtr & config)
     return allHaveInteropID;
 }
 
-bool AllViewsHaveViewTransform(const ConstConfigRcPtr & config)
+bool ActiveDisplaysHaveColorSpace(const ConstConfigRcPtr & config)
+{
+    // Only check active displays.
+    const int numDisplays = config->getNumDisplays();
+    if (numDisplays == 0)
+    {
+        LogDebug("HDR Display Support (2.6): No active displays.");
+        return false;
+    }
+
+    bool allHaveColorSpace = true;
+
+    for (int d = 0; d < numDisplays; ++d)
+    {
+        const char * display = config->getDisplay(d);
+        ConstColorSpaceRcPtr cs = config->getColorSpace(display);
+        if (!cs)
+        {
+            LogDebug(std::string("HDR Display Support (2.6): Display '") + display +
+                     "' has no matching color space.");
+            allHaveColorSpace = false;
+        }
+    }
+
+    return allHaveColorSpace;
+}
+
+bool ActiveViewsHaveViewTransform(const ConstConfigRcPtr & config)
 {
     // Only check active displays.
     const int numDisplays = config->getNumDisplays();
@@ -88,25 +112,22 @@ bool AllViewsHaveViewTransform(const ConstConfigRcPtr & config)
                 continue;
             }
 
-            LogDebug(std::string("ConfigCompatibility: (display, view) pair ('") + display +
-                     "', '" + view + "') does not qualify; CONFIG_HDR_DISPLAY_SUPPORT_26 requires "
-                     "all active (display, view) pairs to reference a view transform unless their "
-                     "color space is a data color space.");
+            LogDebug(std::string("HDR Display Support (2.6): Active (display, view) pair ('") + display +
+                     "', '" + view + "') has no view transform and is not a data color space.");
             allHaveViewTransform = false;
         }
     }
 
     if (numViewsTotal == 0)
     {
-        LogDebug("ConfigCompatibility: Config has no (display, view) pairs; "
-                 "CONFIG_HDR_DISPLAY_SUPPORT_26 requires at least one.");
+        LogDebug("HDR Display Support (2.6): No active (display, view) pairs.");
         return false;
     }
 
     if (!hasViewTransform)
     {
-        LogDebug("ConfigCompatibility: No (display, view) pair references a view transform; "
-                 "CONFIG_HDR_DISPLAY_SUPPORT_26 requires at least one.");
+        LogDebug("HDR Display Support (2.6): No active (display, view) pair references a view "
+                 "transform.");
     }
 
     return allHaveViewTransform && hasViewTransform;
@@ -118,17 +139,21 @@ bool CheckHDRDisplaySupport26(const ConstConfigRcPtr & config)
 
     if (!config->hasRole(ROLE_INTERCHANGE_DISPLAY))
     {
-        LogDebug("ConfigCompatibility: Config is missing the ROLE_INTERCHANGE_DISPLAY role "
-                 "required for CONFIG_HDR_DISPLAY_SUPPORT_26.");
+        LogDebug("HDR Display Support (2.6): Missing the 'cie_xyz_d65_interchange' role.");
         compatible = false;
     }
 
-    if (!AllDisplayColorSpacesHaveAttributes(config))
+    if (!ActiveDisplayColorSpacesHaveAttributes(config))
     {
         compatible = false;
     }
 
-    if (!AllViewsHaveViewTransform(config))
+    if (!ActiveDisplaysHaveColorSpace(config))
+    {
+        compatible = false;
+    }
+
+    if (!ActiveViewsHaveViewTransform(config))
     {
         compatible = false;
     }
