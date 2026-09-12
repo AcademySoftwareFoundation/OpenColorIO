@@ -275,6 +275,19 @@ protected:
 
 extern OCIOEXPORT std::ostream & operator<<(std::ostream &, const ColorSpaceMenuHelper &);
 
+namespace ConfigCompatibilityHelpers
+{
+/**
+ * \brief Check the config for compatibility with a specific requirement.
+ *
+ * Returns false if the config is not compatible with the requirement identified by the given
+ * ConfigCompatibility value.
+ */
+extern OCIOEXPORT bool CheckCompatibility(const ConstConfigRcPtr & config,
+                                          ConfigCompatibility compatibility);
+
+} // namespace ConfigCompatibilityHelpers
+
 namespace ColorSpaceHelpers
 {
 /**

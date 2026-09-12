@@ -211,6 +211,7 @@ set(SOURCES
 set(TESTS
     apphelpers/CategoryHelpers_tests.cpp
     apphelpers/ColorSpaceHelpers_tests.cpp
+    apphelpers/ConfigCompatibility_tests.cpp
     apphelpers/DisplayViewHelpers_tests.cpp
     apphelpers/LegacyViewingPipeline_tests.cpp
     apphelpers/MergeConfigsHelpers_tests.cpp

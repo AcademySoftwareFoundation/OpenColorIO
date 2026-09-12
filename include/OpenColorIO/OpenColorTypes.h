@@ -742,6 +742,13 @@ enum ProcessorCacheFlags : unsigned int
     PROCESSOR_CACHE_DEFAULT = (PROCESSOR_CACHE_ENABLED | PROCESSOR_CACHE_SHARE_DYN_PROPERTIES)
 };
 
+//!cpp:type:: Enum identifying a specific compatibility requirement that a Config may be checked
+// against via :cpp:func:`ConfigCompatibilityHelpers::CheckCompatibility`.
+enum ConfigCompatibility
+{
+    CONFIG_HDR_DISPLAY_SUPPORT_26 = 0   // Config meets HDR display compatibility reqmts as of OCIO 2.6.
+};
+
 // Conversion
 
 extern OCIOEXPORT const char * BoolToString(bool val);

@@ -4,6 +4,7 @@
 set(SOURCES
     apphelpers/CategoryHelpers.cpp
     apphelpers/ColorSpaceHelpers.cpp
+    apphelpers/ConfigCompatibility.cpp
     apphelpers/DisplayViewHelpers.cpp
     apphelpers/LegacyViewingPipeline.cpp
     apphelpers/mergeconfigs/MergeConfigsHelpers.cpp
