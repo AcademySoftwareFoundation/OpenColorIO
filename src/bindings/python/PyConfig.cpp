@@ -363,6 +363,17 @@ void bindPyConfig(py::module & m)
                     "srcConfig"_a, "builtinConfig"_a, "builtinColorSpaceName"_a,
                     DOC(Config, IdentifyBuiltinColorSpace))
 
+        .def_static("LocateBuiltinColorSpace", [](const ConstConfigRcPtr & srcConfig,
+                                                  const char * srcColorSpaceName,
+                                                  const ConstConfigRcPtr & builtinConfig)
+            {
+                return Config::LocateBuiltinColorSpace(srcConfig,
+                                                       srcColorSpaceName,
+                                                       builtinConfig);
+            },
+                    "srcConfig"_a, "srcColorSpaceName"_a, "builtinConfig"_a,
+                    DOC(Config, LocateBuiltinColorSpace))
+
         .def_static("IdentifyInterchangeSpace", [](const ConstConfigRcPtr & srcConfig,
                                                    const char * srcColorSpaceName,
                                                    const ConstConfigRcPtr & builtinConfig,

@@ -763,17 +763,63 @@ display_colorspaces:
 
     // Validate that the fingerprints for the smallest likely gamuts are positive.
     std::vector<float> fingerprintVals;
-    OCIO_CHECK_ASSERT(!OCIO::ConfigUtils::calcColorSpaceFingerprint(fingerprintVals, fingerprints, inputConfig, 
-        inputConfig->getColorSpace("Rec.601 - Display")));
+    OCIO_CHECK_ASSERT(!OCIO::ConfigUtils::calcColorSpaceFingerprint(fingerprintVals, fingerprints.testVals,
+        inputConfig, inputConfig->getColorSpace("Rec.601 - Display")));
     for (size_t i = 0; i < fingerprintVals.size(); i++)
     {
         OCIO_CHECK_ASSERT(fingerprintVals[i] >= 0.);
     }
 
-    OCIO_CHECK_ASSERT(!OCIO::ConfigUtils::calcColorSpaceFingerprint(fingerprintVals, fingerprints, inputConfig, 
-        inputConfig->getColorSpace("Rec.601 (PAL) - Display")));
+    OCIO_CHECK_ASSERT(!OCIO::ConfigUtils::calcColorSpaceFingerprint(fingerprintVals, fingerprints.testVals,
+        inputConfig, inputConfig->getColorSpace("Rec.601 (PAL) - Display")));
     for (size_t i = 0; i < fingerprintVals.size(); i++)
     {
         OCIO_CHECK_ASSERT(fingerprintVals[i] >= 0.);
+    }
+
+    // Test the overload that uses the test values of the input config rather than those of
+    // the base config.  This is what Config::LocateBuiltinColorSpace uses, since it allows
+    // the color spaces of two configs to be compared without first adjusting the reference
+    // space of the input color space.
+
+    OCIO::ConfigUtils::TestVals inputTestVals;
+    OCIO::ConfigUtils::initializeTestVals(inputTestVals, inputConfig);
+
+    // The base config has both interchange roles.
+    OCIO_CHECK_ASSERT(fingerprints.testVals.sceneRefTestValsConverted);
+    OCIO_CHECK_ASSERT(fingerprints.testVals.displayRefTestValsConverted);
+
+    // The input config has neither interchange role, so the heuristics are used.  They are
+    // able to identify the scene-referred reference space ("ref_space"), but they do not
+    // support display-referred spaces.  (The display-referred test values happen to be
+    // correct anyway here, since the display reference space is CIE-XYZ-D65.)
+    OCIO_CHECK_ASSERT(inputTestVals.sceneRefTestValsConverted);
+    OCIO_CHECK_ASSERT(!inputTestVals.displayRefTestValsConverted);
+
+    // The reference space of the input config is also ACES2065-1, so the results are the
+    // same as the ones above.
+    {
+        OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("ACES cg");
+        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputTestVals,
+                                                                        inputConfig, cs);
+        OCIO_CHECK_EQUAL(name, std::string("ACEScg"));
+    }
+    {
+        OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("standard RGB");
+        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputTestVals,
+                                                                        inputConfig, cs);
+        OCIO_CHECK_EQUAL(name, std::string("sRGB - Texture"));
+    }
+    {
+        OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("very approx. standard RGB");
+        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputTestVals,
+                                                                        inputConfig, cs);
+        OCIO_CHECK_EQUAL(name, std::string(""));
+    }
+    {
+        OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("pq display");
+        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputTestVals,
+                                                                        inputConfig, cs);
+        OCIO_CHECK_EQUAL(name, std::string("Rec.2100-PQ - Display"));
     }
 }

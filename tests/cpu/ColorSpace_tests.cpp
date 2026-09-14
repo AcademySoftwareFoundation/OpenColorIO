@@ -1923,6 +1923,140 @@ colorspaces:
         const char * csname = OCIO::Config::IdentifyBuiltinColorSpace(editableCfg, builtinConfig, "ACEScg");
         OCIO_CHECK_EQUAL(std::string(csname), std::string("ACES cg"));
     }
+
+    //
+    // Test LocateBuiltinColorSpace.  (This is the inverse of IdentifyBuiltinColorSpace.)
+    //
+
+    // Set both interchange roles, so the heuristics are not needed yet.
+    editableCfg->setRole("aces_interchange", "ref_cs");
+    editableCfg->setRole("cie_xyz_d65_interchange", "CIE-XYZ-D65");
+    editableCfg->setInactiveColorSpaces("");
+
+    {
+        const char * csname = OCIO::Config::LocateBuiltinColorSpace(editableCfg, "ACES cg", builtinConfig);
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("ACEScg"));
+    }
+
+    {
+        const char * csname = OCIO::Config::LocateBuiltinColorSpace(editableCfg, "Texture -- sRGB", builtinConfig);
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("sRGB Encoded Rec.709 (sRGB)"));
+    }
+
+    {
+        const char * csname = OCIO::Config::LocateBuiltinColorSpace(editableCfg, "Linear ITU-R BT.709", builtinConfig);
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("Linear Rec.709 (sRGB)"));
+    }
+
+    {
+        const char * csname = OCIO::Config::LocateBuiltinColorSpace(editableCfg, "not sRGB", builtinConfig);
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("ACEScct"));
+    }
+
+    // Display-referred color spaces work if the display interchange role is present.
+    {
+        const char * csname = OCIO::Config::LocateBuiltinColorSpace(editableCfg, "sRGB - Display CS", builtinConfig);
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("sRGB - Display"));
+    }
+
+    // Roles may be used for the source color space name and inactive color spaces are found.
+    editableCfg->setInactiveColorSpaces("ref_cs");
+    {
+        // The scene_linear role is set to "ref_cs", which is the reference space.
+        const char * csname = OCIO::Config::LocateBuiltinColorSpace(editableCfg, "scene_linear", builtinConfig);
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("ACES2065-1"));
+    }
+    editableCfg->setInactiveColorSpaces("");
+
+    // A color space with no equivalent in the built-in config returns an empty string.
+    {
+        // This is only the sRGB gamma curve, with no primary conversion.
+        const char * csname = OCIO::Config::LocateBuiltinColorSpace(editableCfg, "sRGB - curve", builtinConfig);
+        OCIO_CHECK_EQUAL(std::string(csname), std::string(""));
+    }
+
+    // A data space returns an empty string rather than the data space of the built-in config.
+    {
+        const char * csname = OCIO::Config::LocateBuiltinColorSpace(editableCfg, "raw data", builtinConfig);
+        OCIO_CHECK_EQUAL(std::string(csname), std::string(""));
+    }
+
+    // Test that a missing or empty source color space name throws.
+    {
+        OCIO_CHECK_THROW_WHAT(
+            OCIO::Config::LocateBuiltinColorSpace(editableCfg, "Foo", builtinConfig),
+            OCIO::Exception,
+            "Source config does not contain the requested color space: Foo."
+        );
+
+        OCIO_CHECK_THROW_WHAT(
+            OCIO::Config::LocateBuiltinColorSpace(editableCfg, "", builtinConfig),
+            OCIO::Exception,
+            "Config::LocateBuiltinColorSpace: arguments must not be null."
+        );
+    }
+
+    // Test that the fingerprints are recalculated if the source config is modified.
+    // (Point the interchange role at the wrong color space and check that the previously
+    // cached test values are not reused.)
+    {
+        editableCfg->setRole("aces_interchange", "Texture -- sRGB");
+
+        const char * csname = OCIO::Config::LocateBuiltinColorSpace(editableCfg, "ACES cg", builtinConfig);
+        OCIO_CHECK_ASSERT(std::string(csname) != std::string("ACEScg"));
+
+        editableCfg->setRole("aces_interchange", "ref_cs");
+
+        csname = OCIO::Config::LocateBuiltinColorSpace(editableCfg, "ACES cg", builtinConfig);
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("ACEScg"));
+    }
+
+    // Test that the fingerprints are recalculated if the built-in config is modified.
+    {
+        OCIO::ConfigRcPtr editableBuiltin = builtinConfig->createEditableCopy();
+
+        const char * csname = OCIO::Config::LocateBuiltinColorSpace(editableCfg, "ACES cg", editableBuiltin);
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("ACEScg"));
+
+        // Rename the color space that was found above.  If the fingerprints were not
+        // recalculated, the stale name would no longer be found in the config and an empty
+        // string would be returned.
+        OCIO::ColorSpaceRcPtr renamedCS = editableBuiltin->getColorSpace("ACEScg")->createEditableCopy();
+        renamedCS->setName("ACES cg 2");
+        editableBuiltin->removeColorSpace("ACEScg");
+        editableBuiltin->addColorSpace(renamedCS);
+
+        csname = OCIO::Config::LocateBuiltinColorSpace(editableCfg, "ACES cg", editableBuiltin);
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("ACES cg 2"));
+    }
+
+    // Test that the heuristics are used if the interchange roles are not present.
+    editableCfg->setRole("aces_interchange", "");
+    editableCfg->setRole("cie_xyz_d65_interchange", "");
+    {
+        // The heuristics use the active color spaces to find the reference space.
+        const char * csname = OCIO::Config::LocateBuiltinColorSpace(editableCfg, "ACES cg", builtinConfig);
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("ACEScg"));
+    }
+
+    // Display-referred color spaces are not supported by the heuristics, but note that
+    // in this config the display-referred interchange space is found by its name.
+    {
+        const char * csname = OCIO::Config::LocateBuiltinColorSpace(editableCfg, "sRGB - Display CS", builtinConfig);
+        OCIO_CHECK_EQUAL(std::string(csname), std::string("sRGB - Display"));
+    }
+
+    // Make the color spaces that the heuristics are able to use inactive, so that an
+    // interchange space can no longer be identified in the source config.
+    editableCfg->setInactiveColorSpaces("ACES cg, Linear ITU-R BT.709, Texture -- sRGB, "
+                                        "OCIO v1 -- sRGB, ref_cs");
+    {
+        OCIO_CHECK_THROW_WHAT(
+            OCIO::Config::LocateBuiltinColorSpace(editableCfg, "ACES cg", builtinConfig),
+            OCIO::Exception,
+            "Heuristics were not able to find an interchange space in the source config"
+        );
+    }
 }
 
 OCIO_ADD_TEST(ConfigUtils, processor_to_known_colorspace_alt_config)

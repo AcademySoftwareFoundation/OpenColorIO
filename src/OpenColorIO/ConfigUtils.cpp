@@ -1192,9 +1192,9 @@ void initializeRefSpaceConverters(ConstTransformRcPtr & inputToBaseGtScene,
 // Send the test vals through the color space and store the result in fingerprintVals.
 // Returns true if the color space should not be considered.
 //
-bool calcColorSpaceFingerprint(std::vector<float> & fingerprintVals, 
-                               const ColorSpaceFingerprints & fingerprints, 
-                               const ConstConfigRcPtr & config, 
+bool calcColorSpaceFingerprint(std::vector<float> & fingerprintVals,
+                               const TestVals & testVals,
+                               const ConstConfigRcPtr & config,
                                const ConstColorSpaceRcPtr & cs)
 {
     bool skipColorSpace = false;
@@ -1218,11 +1218,11 @@ bool calcColorSpaceFingerprint(std::vector<float> & fingerprintVals,
 
     if (cs->getReferenceSpaceType() == REFERENCE_SPACE_DISPLAY)
     {
-        fingerprintVals = fingerprints.displayRefTestVals;
+        fingerprintVals = testVals.displayRefTestVals;
     }
     else
     {
-        fingerprintVals = fingerprints.sceneRefTestVals;
+        fingerprintVals = testVals.sceneRefTestVals;
     }
     const size_t n = fingerprintVals.size();
     PackedImageDesc desc( &fingerprintVals[0], (long) n / 4, 1, CHANNEL_ORDERING_RGBA );
@@ -1232,12 +1232,21 @@ bool calcColorSpaceFingerprint(std::vector<float> & fingerprintVals,
     return skipColorSpace;
 }
 
-// Define a set of test values to use for a config and store them in the fingerprints struct.
+// Define a set of test values to use for a config and store them in the testVals struct.
 // An attempt is made to convert them to the reference spaces of the config being used.
 // There are separate values for scene-referred and display-referred color spaces.
+// The sceneRefTestValsConverted and displayRefTestValsConverted flags are set to indicate
+// whether that conversion succeeded.
 //
-void initializeTestVals(ColorSpaceFingerprints & fingerprints, const ConstConfigRcPtr & config)
+void initializeTestVals(TestVals & testVals, const ConstConfigRcPtr & config)
 {
+    // The heuristics used below to identify an interchange space create a lot of Processors,
+    // so avoid polluting the Processor cache with transforms that won't be reused.
+    SuspendCacheGuard guard(config);
+
+    testVals.sceneRefTestValsConverted = false;
+    testVals.displayRefTestValsConverted = false;
+
     // Define a set of test values that are slightly inside the Rec.709 gamut
     // for the most common scene-referred and display-referred reference spaces.
 
@@ -1263,8 +1272,8 @@ void initializeTestVals(ColorSpaceFingerprints & fingerprints, const ConstConfig
 
     // Try to convert to the actual reference spaces of the config.
 
-    fingerprints.sceneRefTestVals = ACESvals;
-    fingerprints.displayRefTestVals = XYZvals;
+    testVals.sceneRefTestVals = ACESvals;
+    testVals.displayRefTestVals = XYZvals;
 
     ConstProcessorRcPtr p;
     try
@@ -1302,11 +1311,12 @@ void initializeTestVals(ColorSpaceFingerprints & fingerprints, const ConstConfig
         ConstCPUProcessorRcPtr cpu  = p->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
         cpu->apply(descSrc, descDst);
 
-        fingerprints.sceneRefTestVals = out;
+        testVals.sceneRefTestVals = out;
+        testVals.sceneRefTestValsConverted = true;
     }
-    catch (...) 
-    { 
-        fingerprints.sceneRefTestVals = ACESvals;
+    catch (...)
+    {
+        testVals.sceneRefTestVals = ACESvals;
     }
 
     const int m = config->getNumColorSpaces(SEARCH_REFERENCE_SPACE_DISPLAY, COLORSPACE_ALL);
@@ -1349,11 +1359,12 @@ void initializeTestVals(ColorSpaceFingerprints & fingerprints, const ConstConfig
         ConstCPUProcessorRcPtr cpu  = p->getOptimizedCPUProcessor(OPTIMIZATION_NONE);
         cpu->apply(descSrc, descDst);
 
-        fingerprints.displayRefTestVals = out;
+        testVals.displayRefTestVals = out;
+        testVals.displayRefTestValsConverted = true;
     }
-    catch (...) 
-    { 
-        fingerprints.displayRefTestVals = XYZvals;
+    catch (...)
+    {
+        testVals.displayRefTestVals = XYZvals;
     }
 }
 
@@ -1361,11 +1372,12 @@ void initializeTestVals(ColorSpaceFingerprints & fingerprints, const ConstConfig
 // to compare against color spaces in an input config for merging. Store the results in
 // the fingerprint struct.
 //
-void initializeColorSpaceFingerprints(ColorSpaceFingerprints & fingerprints, const ConstConfigRcPtr & config)
+// The test values in the fingerprints struct must have been initialized already, by
+// calling initializeTestVals.
+//
+void initializeFingerprintVec(ColorSpaceFingerprints & fingerprints, const ConstConfigRcPtr & config)
 {
     SuspendCacheGuard srcGuard(config);
-
-    initializeTestVals(fingerprints, config);
 
     const int n = config->getNumColorSpaces(SEARCH_REFERENCE_SPACE_ALL, COLORSPACE_ALL);
     fingerprints.vec.clear();
@@ -1399,7 +1411,7 @@ void initializeColorSpaceFingerprints(ColorSpaceFingerprints & fingerprints, con
         }
 
         std::vector<float> fp;
-        const bool skipColorSpace = calcColorSpaceFingerprint(fp, fingerprints, config, cs);
+        const bool skipColorSpace = calcColorSpaceFingerprint(fp, fingerprints.testVals, config, cs);
         if (!skipColorSpace)
         {
             Fingerprint fprint;
@@ -1411,10 +1423,15 @@ void initializeColorSpaceFingerprints(ColorSpaceFingerprints & fingerprints, con
     }
 }
 
+void initializeColorSpaceFingerprints(ColorSpaceFingerprints & fingerprints, const ConstConfigRcPtr & config)
+{
+    initializeTestVals(fingerprints.testVals, config);
+    initializeFingerprintVec(fingerprints, config);
+}
+
 // If the base config contains a color space equivalent to inputCS, return its name.
 // Return an empty string if no equivalent color space is found (within the tolerance).
-// The ref_space_type specifies the type of inputCS and determines which part of the
-// config is searched. 
+// This version assumes the reference space of both configs is the same.
 //
 const char * findEquivalentColorspace(const ColorSpaceFingerprints & fingerprints,
                                       const ConstConfigRcPtr & inputConfig, 
@@ -1424,7 +1441,19 @@ const char * findEquivalentColorspace(const ColorSpaceFingerprints & fingerprint
     // NB: The inputConfig/inputCS must use the same reference space as the base config.
     // In general, this means that updateReferenceColorspace must be called on inputCS
     // before calling this function.
+    return findEquivalentColorspace(fingerprints, fingerprints.testVals, inputConfig, inputCS);
+}
 
+// If the base config contains a color space equivalent to inputCS, return its name.
+// Return an empty string if no equivalent color space is found (within the tolerance).
+// This version assumes inputTestVals have been converted so that they are in the 
+// reference space of the inputConfig.
+//
+const char * findEquivalentColorspace(const ColorSpaceFingerprints & fingerprints,
+                                      const TestVals & inputTestVals,
+                                      const ConstConfigRcPtr & inputConfig,
+                                      const ConstColorSpaceRcPtr & inputCS)
+{
     // TODO: Should data spaces ever be replaced?
     if (inputCS->isData())
     {
@@ -1433,7 +1462,7 @@ const char * findEquivalentColorspace(const ColorSpaceFingerprints & fingerprint
 
     // Calculate the fingerprint of inputCS from inputConfig.
     std::vector<float> inputVals;
-    const bool skipColorSpace = calcColorSpaceFingerprint(inputVals, fingerprints, inputConfig, inputCS);
+    const bool skipColorSpace = calcColorSpaceFingerprint(inputVals, inputTestVals, inputConfig, inputCS);
     if (skipColorSpace)
     {
         return "";
@@ -1470,11 +1499,62 @@ const char * findEquivalentColorspace(const ColorSpaceFingerprints & fingerprint
         }
         if (matchFound)
         {
-            return fp.csName;
+            return fp.csName.c_str();
         }
     }
 
     return "";
+}
+
+// Try to find the name of a color space in the built-in config that is equivalent to
+// srcColorSpace.  See the declaration in ConfigUtils.h for details.
+//
+const char * LocateBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
+                                     const ConstColorSpaceRcPtr & srcColorSpace,
+                                     const ConstConfigRcPtr & builtinConfig,
+                                     const std::shared_ptr<const TestVals> & srcTestVals,
+                                     const std::shared_ptr<const ColorSpaceFingerprints> & fingerprints)
+{
+    const ReferenceSpaceType refSpaceType = srcColorSpace->getReferenceSpaceType();
+
+    auto testValsAreUsable = [refSpaceType](const TestVals & tv)
+    {
+        return refSpaceType == REFERENCE_SPACE_DISPLAY ? tv.displayRefTestValsConverted
+                                                       : tv.sceneRefTestValsConverted;
+    };
+
+    // The test values are the same colors as the ones used for the built-in config, but
+    // expressed in the reference space of the source config, which is what allows the
+    // fingerprints of the two configs to be compared without needing to adjust the
+    // reference space of the color space itself.
+    if (!testValsAreUsable(*srcTestVals))
+    {
+        std::ostringstream os;
+        os  << "Heuristics were not able to find an interchange space in the source config, "
+            << "so it is not possible to search for the color space: "
+            << srcColorSpace->getName() << ".";
+        throw Exception(os.str().c_str());
+    }
+
+    if (!testValsAreUsable(fingerprints->testVals))
+    {
+        throw Exception("Heuristics were not able to find an interchange space in the "
+                        "built-in config.");
+    }
+
+    const char * name = findEquivalentColorspace(*fingerprints,
+                                                  *srcTestVals,
+                                                  srcConfig,
+                                                  srcColorSpace);
+    if (!name || !*name)
+    {
+        return "";
+    }
+
+    // Return the name owned by the color space object rather than the one owned by the
+    // fingerprints, since the latter may be removed from the cache if the config is edited.
+    ConstColorSpaceRcPtr builtinColorSpace = builtinConfig->getColorSpace(name);
+    return builtinColorSpace ? builtinColorSpace->getName() : "";
 }
 
 }  // namespace ConfigUtils
