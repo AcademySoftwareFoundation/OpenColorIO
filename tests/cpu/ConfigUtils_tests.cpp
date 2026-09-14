@@ -823,3 +823,41 @@ display_colorspaces:
         OCIO_CHECK_EQUAL(name, std::string("Rec.2100-PQ - Display"));
     }
 }
+
+OCIO_ADD_TEST(ConfigUtils, sanitize_id_token)
+{
+    // Lower-case allowed characters pass through unchanged.
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken("abc.-_~/*#%^+()[]|09"),
+                     std::string("abc.-_~/*#%^+()[]|09"));
+
+    // Upper-case letters are lowered.
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken("ABCxyz"), std::string("abcxyz"));
+
+    // Explicit character mappings.
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken(" \t\n\r"), std::string("____"));
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken("{}<>"), std::string("()()"));
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken(","), std::string("."));
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken(";:"), std::string("||"));
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken("'\""), std::string("##"));
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken("\\"), std::string("/"));
+
+    // Any other disallowed ASCII character becomes '*'.
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken("a!b@c?"), std::string("a*b*c*"));
+
+    // A multi-byte UTF-8 codepoint becomes a single '^', regardless of how many bytes it takes
+    // to encode, so the result does not depend on the input's byte-level UTF-8 encoding.
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken("a\xC3\xA9z"),         // "a" + 'é' (2 bytes) + "z"
+                     std::string("a^z"));
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken("a\xE4\xB8\xADz"),     // "a" + '中' (3 bytes) + "z"
+                     std::string("a^z"));
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken("a\xF0\x9F\x98\x80z"), // "a" + emoji (4 bytes) + "z"
+                     std::string("a^z"));
+
+    // Malformed UTF-8 (a stray continuation/lead byte not followed by the expected continuation
+    // bytes) is still handled safely, one '^' per byte actually consumed.
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken("a\x80z"), std::string("a^z"));
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken("a\xC3z"), std::string("a^z"));
+
+    // Empty string.
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken(""), std::string(""));
+}

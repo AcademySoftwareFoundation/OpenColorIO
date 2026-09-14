@@ -836,6 +836,50 @@ public:
                                          const char * builtinColorSpaceName);
 
     /**
+     * \brief Find the color space in this config identified by a Color Interop ID, per the
+     *        ASWF Color Interop Forum ColorInteropID recommendation.
+     *
+     *        Only color space names and aliases are searched (not the interop_id attribute).
+     *        The following steps are tried in order, and the first match is returned:
+     *          1. idString itself is looked up directly.
+     *          2. If idString contains a ':', the leftmost namespace and one separator are
+     *             stripped (only one level, regardless of how many colons remain) and the
+     *             remainder is looked up.
+     *          3. If step 2 failed, and the string stripped in step 2 is of the form
+     *             "local:BASE" (exactly one colon), and the namespace removed in step 2 equals
+     *             the sanitized form of this config's own \ref Config::getName(), BASE is
+     *             looked up.
+     *
+     * \param idString A color interop ID.
+     *
+     * \return The matching color space, or null if not found (including for a null or empty
+     *         idString).
+     */
+    ConstColorSpaceRcPtr findColorSpaceForID(const char * idString) const;
+
+    /**
+     * \brief Generate an on-demand local Color Interop ID for a color space in this
+     *        config, per the ASWF Color Interop Forum ColorInteropID recommendation.
+     *
+     *        This should only be called if \ref ColorSpace::getInteropID returns nothing and
+     *        \ref Config::LocateBuiltinColorSpace was unable to find an equivalent to this
+     *        color space in a built-in config (which has interop IDs populated).
+     *
+     *        The result has the form "<CONFIG-NAME>:local:<BASE>", where CONFIG-NAME is
+     *        \ref Config::getName() and BASE is the color space's own canonical name (i.e. not
+     *        the alias or role that may have been used to look it up).  Both parts are
+     *        individually sanitized per the recommendation's Annex C sanitizeIDToken algorithm.
+     *
+     * \param srcColorSpaceName Name, role, or alias of an existing color space in this config.
+     *
+     * \return The generated ID.
+     *
+     * \throw Exception if \ref Config::getName() is empty, if srcColorSpaceName is null or
+     *        empty, or if srcColorSpaceName does not resolve to a color space in this config.
+     */
+    std::string generateLocalIDForColorSpace(const char * srcColorSpaceName) const;
+
+    /**
      * Methods related to Roles.
      *
      * A role allows a config author to indicate that a given color space should be used

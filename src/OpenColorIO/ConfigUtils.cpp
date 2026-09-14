@@ -1557,6 +1557,144 @@ const char * LocateBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
     return builtinColorSpace ? builtinColorSpace->getName() : "";
 }
 
+//////////////////////////////////////////////////////////////////////////////////////
+
+// Sanitize a single token for use in a Color Interop ID.  See the declaration in ConfigUtils.h
+// and Annex C of the ASWF Color Interop Forum ColorInteropID recommendation for details.  This
+// must match that algorithm exactly (including the specific character mappings below) since
+// searching for an ID requires sanitizing with the same algorithm used to generate it.
+//
+// NB: The reference algorithm operates on Unicode codepoints (a non-ASCII character always maps
+// to a single '^', regardless of how many bytes it takes to encode).  To match that exactly, and
+// so the sanitized result does not depend on the byte-level UTF-8 encoding of the input, this
+// decodes each multi-byte UTF-8 sequence and emits a single '^' for it, rather than one '^' per
+// byte.  A byte that looks like a UTF-8 lead byte but isn't followed by the expected continuation
+// bytes (i.e. malformed input) is still safely consumed one byte at a time, one '^' each.
+//
+std::string SanitizeIDToken(const std::string & token)
+{
+    static const std::string allowed{ "abcdefghijklmnopqrstuvwxyz0123456789.-_~/*#%^+()[]|" };
+
+    std::string result;
+    result.reserve(token.size());
+
+    const size_t n = token.size();
+    size_t i = 0;
+    while (i < n)
+    {
+        const unsigned char c = static_cast<unsigned char>(token[i]);
+
+        if (c > 127)
+        {
+            // Determine how many bytes the UTF-8 sequence starting here should occupy, then
+            // only consume as many of them as actually look like continuation bytes (0x80-0xBF).
+            size_t seqLen = 1;
+            if      ((c & 0xE0) == 0xC0) seqLen = 2;
+            else if ((c & 0xF0) == 0xE0) seqLen = 3;
+            else if ((c & 0xF8) == 0xF0) seqLen = 4;
+
+            size_t consumed = 1;
+            while (consumed < seqLen && i + consumed < n &&
+                  (static_cast<unsigned char>(token[i + consumed]) & 0xC0) == 0x80)
+            {
+                ++consumed;
+            }
+
+            result.push_back('^');
+            i += consumed;
+            continue;
+        }
+
+        char mapped = 0;
+        switch (c)
+        {
+        case ' ':  case '\t': case '\n': case '\r': mapped = '_'; break;
+        case '{':  case '<':                        mapped = '('; break;
+        case '}':  case '>':                        mapped = ')'; break;
+        case ',':                                   mapped = '.'; break;
+        case ';':  case ':':                        mapped = '|'; break;
+        case '\'': case '"':                        mapped = '#'; break;
+        case '\\':                                  mapped = '/'; break;
+        default: break;
+        }
+
+        if (mapped)
+        {
+            result.push_back(mapped);
+        }
+        else if (allowed.find(static_cast<char>(c)) != std::string::npos)
+        {
+            result.push_back(static_cast<char>(c));
+        }
+        else if (std::isupper(c))
+        {
+            result.push_back(static_cast<char>(std::tolower(c)));
+        }
+        else
+        {
+            result.push_back('*');
+        }
+
+        ++i;
+    }
+
+    return result;
+}
+
+ConstColorSpaceRcPtr FindColorSpaceForID(const Config & config, const char * idString)
+{
+    const std::string id{ idString ? idString : "" };
+    if (id.empty())
+    {
+        return ConstColorSpaceRcPtr();
+    }
+
+    // Step 1: the full ID string.
+    ConstColorSpaceRcPtr cs = config.getColorSpace(id.c_str());
+    if (cs)
+    {
+        return cs;
+    }
+
+    // Step 2: strip the leftmost namespace and one separator (only one level, regardless of
+    // how many colons remain in the result), and look up the remainder.
+    const size_t firstColon = id.find(':');
+    if (firstColon == std::string::npos)
+    {
+        return ConstColorSpaceRcPtr();
+    }
+
+    const std::string outerNamespace = id.substr(0, firstColon);
+    const std::string stripped = id.substr(firstColon + 1);
+
+    cs = config.getColorSpace(stripped.c_str());
+    if (cs)
+    {
+        return cs;
+    }
+
+    // Step 3: local mode.  The stripped remainder must be exactly "local:BASE" (i.e. exactly
+    // one colon left), and the namespace removed in step 2 must match this config's own
+    // (sanitized) name.
+    const size_t innerColon = stripped.find(':');
+    if (innerColon != std::string::npos &&
+        stripped.compare(0, innerColon, "local") == 0 &&
+        stripped.find(':', innerColon + 1) == std::string::npos)
+    {
+        const char * configName = config.getName();
+        if (SanitizeIDToken(configName ? configName : "") == outerNamespace)
+        {
+            cs = config.getColorSpace(stripped.substr(innerColon + 1).c_str());
+            if (cs)
+            {
+                return cs;
+            }
+        }
+    }
+
+    return ConstColorSpaceRcPtr();
+}
+
 }  // namespace ConfigUtils
 
 }  // namespace OCIO_NAMESPACE

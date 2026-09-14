@@ -140,6 +140,14 @@ const char * LocateBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
                                      const std::shared_ptr<const TestVals> & srcTestVals,
                                      const std::shared_ptr<const ColorSpaceFingerprints> & fingerprints);
 
+// Sanitize a single token (e.g. a config name or a color space base name) for use in a Color
+// Interop ID, per Annex C of the ASWF Color Interop Forum ColorInteropID recommendation.  Not
+// meant to be applied to an already-namespaced ID string as a whole.
+std::string SanitizeIDToken(const std::string & token);
+
+// Implements Config::findColorSpaceForID.  See that method's doc comment for the algorithm.
+ConstColorSpaceRcPtr FindColorSpaceForID(const Config & config, const char * idString);
+
 // Temporarily deactivate the Processor cache on a Config object.
 //
 class SuspendCacheGuard
