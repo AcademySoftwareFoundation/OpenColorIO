@@ -174,7 +174,7 @@ void addSupportedFiles(void * archiver, const char * path, const char * configWo
                 std::string root, ext;
                 pystring::os::path::splitext(root, ext, std::string(entry->d_name));
                 // Strip leading dot character in order to get the extension name only.
-                ext = pystring::lstrip(ext, ".");
+                ext = StringUtils::LeftTrim(ext, '.');
                 
                 // Check if the extension is supported. Using logic from LoadFileUncached().
                 FormatRegistry & formatRegistry = FormatRegistry::GetInstance();

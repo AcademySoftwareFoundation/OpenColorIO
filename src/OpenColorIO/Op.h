@@ -409,7 +409,7 @@ public:
 
 };
 
-std::string SerializeOpVec(const OpRcPtrVec & ops, int indent=0);
+std::string SerializeOpVec(const OpRcPtrVec & ops, size_t indent=0);
 
 void CreateOpVecFromOpData(OpRcPtrVec & ops,
                             const ConstOpDataRcPtr & opData,

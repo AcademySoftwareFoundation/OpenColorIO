@@ -54,6 +54,7 @@ target_include_directories(ofxplugin
         ${openfx_INCLUDE_DIR}
         ${PROJECT_SOURCE_DIR}/include/
         ${PROJECT_BINARY_DIR}/include/
+        ${PROJECT_SOURCE_DIR}/src/
 )
 
 target_link_libraries(ofxplugin

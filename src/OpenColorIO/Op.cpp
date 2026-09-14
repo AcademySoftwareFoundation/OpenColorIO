@@ -4,8 +4,6 @@
 #include <cstring>
 #include <sstream>
 
-#include <pystring.h>
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Logging.h"
@@ -23,6 +21,7 @@
 #include "ops/lut1d/Lut1DOp.h"
 #include "ops/lut3d/Lut3DOp.h"
 #include "ops/range/RangeOp.h"
+#include "utils/StringUtils.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -470,7 +469,7 @@ std::ostream& operator<< (std::ostream & os, const Op & op)
     return os;
 }
 
-std::string SerializeOpVec(const OpRcPtrVec & ops, int indent)
+std::string SerializeOpVec(const OpRcPtrVec & ops, size_t indent)
 {
     std::ostringstream oss;
 
@@ -478,7 +477,7 @@ std::string SerializeOpVec(const OpRcPtrVec & ops, int indent)
     {
         const OpRcPtr & op = ops[idx];
 
-        oss << pystring::mul(" ", indent);
+        oss << StringUtils::Repeat(" ", indent);
         oss << "Op " << idx << ": " << *op << " ";
         oss << op->getCacheID();
 
