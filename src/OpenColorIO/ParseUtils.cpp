@@ -771,12 +771,12 @@ StringUtils::StringVec SplitStringEnvStyle(const std::string & str)
                                             foundComma != std::string::npos ? ',' : ':' );
             if(nameEndPos > currentPos)
             {
-                outputvec.push_back(s.substr(currentPos, nameEndPos - currentPos));
+                outputvec.emplace_back(s.substr(currentPos, nameEndPos - currentPos));
                 currentPos = nameEndPos + 1;
             }
             else
             {
-                outputvec.push_back("");
+                outputvec.emplace_back("");
                 currentPos += 1;
             }
         }
@@ -784,7 +784,7 @@ StringUtils::StringVec SplitStringEnvStyle(const std::string & str)
     else
     {
         // If there is no comma or colon, consider the string as a single element.
-        outputvec.push_back(s);
+        outputvec.emplace_back(s);
     }
 
     for ( auto & val : outputvec )

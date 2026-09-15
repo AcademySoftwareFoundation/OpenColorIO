@@ -209,7 +209,7 @@ void CreateGradingToneOp(OpRcPtrVec & ops,
         tone = tone->inverse();
     }
 
-    ops.push_back(std::make_shared<GradingToneOp>(tone));
+    ops.emplace_back(std::make_shared<GradingToneOp>(tone));
 }
 
 ///////////////////////////////////////////////////////////////////////////

@@ -175,8 +175,7 @@ void Lut3DOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
     auto secondLut = typedRcPtr->lut3DData();
     auto thisLut = lut3DData();
     auto composed = Lut3DOpData::Compose(thisLut, secondLut);
-    auto composedOp = std::make_shared<Lut3DOp>(composed);
-    ops.push_back(composedOp);
+    ops.emplace_back(std::make_shared<Lut3DOp>(composed));
 }
 
 bool Lut3DOp::hasChannelCrosstalk() const
@@ -229,7 +228,7 @@ void CreateLut3DOp(OpRcPtrVec & ops, Lut3DOpDataRcPtr & lut, TransformDirection 
         lutData = lut->inverse();
     }
 
-    ops.push_back(std::make_shared<Lut3DOp>(lutData));
+    ops.emplace_back(std::make_shared<Lut3DOp>(lutData));
 }
 
 void CreateLut3DTransform(GroupTransformRcPtr & group, ConstOpRcPtr & op)
