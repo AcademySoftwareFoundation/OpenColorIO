@@ -5,6 +5,7 @@
 #define INCLUDED_OCIO_CONFIG_UTILS_H
 
 #include <memory>
+#include <string_view>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -143,7 +144,7 @@ const char * LocateBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
 // Sanitize a single token (e.g. a config name or a color space base name) for use in a Color
 // Interop ID, per Annex C of the ASWF Color Interop Forum ColorInteropID recommendation.  Not
 // meant to be applied to an already-namespaced ID string as a whole.
-std::string SanitizeIDToken(const std::string & token);
+std::string SanitizeIDToken(std::string_view token);
 
 // Implements Config::generateLocalIDForColorSpace.  See that method's doc comment for the
 // algorithm.

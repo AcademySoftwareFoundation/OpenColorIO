@@ -1572,7 +1572,7 @@ const char * LocateBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
 // byte.  A byte that looks like a UTF-8 lead byte but isn't followed by the expected continuation
 // bytes (i.e. malformed input) is still safely consumed one byte at a time, one '^' each.
 //
-std::string SanitizeIDToken(const std::string & token)
+std::string SanitizeIDToken(std::string_view token)
 {
     static const std::string allowed{ "abcdefghijklmnopqrstuvwxyz0123456789.-_~/*#%^+()[]|" };
 
@@ -1713,7 +1713,7 @@ ConstColorSpaceRcPtr FindColorSpaceForID(const Config & config,
         return ConstColorSpaceRcPtr();
     }
 
-    const std::string outerNamespace = id.substr(0, firstColon);
+    const std::string_view outerNamespace{ id.data(), firstColon };
     const std::string stripped = id.substr(firstColon + 1);
 
     // "local" is a reserved keyword that may only appear as the inner namespace of the mode 3
@@ -1743,7 +1743,8 @@ ConstColorSpaceRcPtr FindColorSpaceForID(const Config & config,
             // must sanitize the color space names and aliases in the config as well.
 
             // The base should already be sanitized, but enforce that it must be in order to match.
-            const std::string base = SanitizeIDToken(stripped.substr(innerColon + 1));
+            const std::string base = SanitizeIDToken(
+                std::string_view(stripped).substr(innerColon + 1));
 
             // This emulates getIndex in ColorSpaceSet.cpp, so it matches what getColorSpace does.
             // If two names sanitize to the same string, the first one in the config wins.
