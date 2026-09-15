@@ -141,7 +141,9 @@ int main(int argc, const char **argv)
         }
         else
         {
-            throw OCIO::Exception("Unsupported output bitdepth, must be uint8, uint16, half or float.");
+            std::cerr << "ERROR: Unsupported output bitdepth, must be uint8, uint16, half or float." << std::endl;
+            ap.usage();
+            exit(1);
         }
     }
 

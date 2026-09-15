@@ -55,3 +55,95 @@ OCIO_ADD_TEST(Lut3DRenderer, nan_tetra_test)
     Lut3DRendererNaNTest(OCIO::INTERP_TETRAHEDRAL);
 }
 
+#if OCIO_USE_AVX512 && defined(_WIN32)
+
+#include "ops/lut3d/Lut3DOpCPU_AVX512.h"
+#include <cstring>
+#include <windows.h>
+
+namespace
+{
+// Places a buffer so its last byte is immediately followed by a PAGE_NOACCESS page, so
+// any read or write past the requested size raises an access violation right away
+// instead of only sometimes, depending on heap layout.
+class GuardedBuffer
+{
+public:
+    explicit GuardedBuffer(size_t numFloats)
+    {
+        const size_t sizeBytes = numFloats * sizeof(float);
+        const size_t pageSize = 4096;
+        const size_t dataPages = (sizeBytes + pageSize - 1) / pageSize;
+
+        m_base = static_cast<uint8_t *>(VirtualAlloc(nullptr, (dataPages + 1) * pageSize,
+                                                       MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
+        OCIO_REQUIRE_ASSERT(m_base);
+
+        DWORD oldProtect = 0;
+        const BOOL ok = VirtualProtect(m_base + dataPages * pageSize, pageSize,
+                                        PAGE_NOACCESS, &oldProtect);
+        OCIO_REQUIRE_ASSERT(ok);
+
+        m_ptr = reinterpret_cast<float *>(m_base + dataPages * pageSize - sizeBytes);
+        memset(m_ptr, 0, sizeBytes);
+    }
+
+    ~GuardedBuffer()
+    {
+        VirtualFree(m_base, 0, MEM_RELEASE);
+    }
+
+    GuardedBuffer(const GuardedBuffer &) = delete;
+    GuardedBuffer & operator=(const GuardedBuffer &) = delete;
+
+    float * get() { return m_ptr; }
+
+private:
+    uint8_t * m_base = nullptr;
+    float * m_ptr = nullptr;
+};
+} // anonymous namespace
+
+// Diagnostic test for the "illegal instruction" crash seen in
+// OpOptimizers/invlut_pair_identities on the windows-2025-vs2026 CI runner (not
+// reproduced on other Windows configurations so far). Exercises the AVX512 tetrahedral
+// LUT3D interpolation directly, sweeping pixel counts across the 16-lane boundary (to
+// separate the masked "remainder" path from the main loop) and both a tiny grid (2,
+// matching tests/data/files/lut_inv_pairs.ctf) and a normal-sized one (32), with every
+// buffer (LUT, source, destination) placed against a guard page. Any out-of-bounds
+// access, regardless of mechanism, will raise a clean, immediate access violation
+// naming the exact (dim, numPixels) combination instead of an unexplained crash.
+OCIO_ADD_TEST(Lut3DRenderer, avx512_tetrahedral_bounds)
+{
+    if (!OCIO::CPUInfo::instance().hasAVX512()) throw SkipException();
+
+    for (int dim : { 2, 32 })
+    {
+        const int lutFloats = dim * dim * dim * 4;
+        GuardedBuffer lut(lutFloats);
+        float * lutPtr = lut.get();
+        for (int i = 0; i < lutFloats; ++i)
+        {
+            lutPtr[i] = static_cast<float>(i % 7) / 7.0f;
+        }
+
+        for (int numPixels = 1; numPixels <= 33; ++numPixels)
+        {
+            std::cerr << "avx512_tetrahedral_bounds: dim=" << dim
+                       << " numPixels=" << numPixels << std::endl;
+
+            GuardedBuffer src(numPixels * 4);
+            GuardedBuffer dst(numPixels * 4);
+            float * srcPtr = src.get();
+            for (int i = 0; i < numPixels * 4; ++i)
+            {
+                srcPtr[i] = static_cast<float>(i % 5) / 5.0f;
+            }
+
+            OCIO::applyTetrahedralAVX512(lut.get(), dim, src.get(), dst.get(), numPixels);
+        }
+    }
+}
+
+#endif // OCIO_USE_AVX512 && defined(_WIN32)
+

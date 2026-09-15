@@ -308,6 +308,7 @@ jobs:
         run: |
           vcpkg install zlib:x64-windows
           vcpkg install tiff:x64-windows
+          vcpkg install directx-headers:x64-windows
         shell: bash
       - name: Install fixed ext package versions
         # Minizip-ng depends on ZLIB. ZLIB must be installed first.

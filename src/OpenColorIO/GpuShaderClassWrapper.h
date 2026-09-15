@@ -120,6 +120,7 @@ private:
 
     static std::string getClassWrapperName(const std::string &resourcePrefix, const std::string &functionName);
     void extractFunctionParameters(const std::string& declaration);
+    std::string rewriteArrayDeclarations(const std::string& declarations) const;
     std::string generateClassWrapperHeader(GpuShaderText& st) const;
     std::string generateClassWrapperFooter(GpuShaderText& st, const std::string &ocioFunctionName) const;
 
