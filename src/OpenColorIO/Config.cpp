@@ -3044,7 +3044,7 @@ const char * Config::LocateBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
 {
     if (!srcConfig || !builtinConfig || !srcColorSpaceName || !*srcColorSpaceName)
     {
-        throw Exception("Config::LocateBuiltinColorSpace: arguments must not be null.");
+        throw Exception("LocateBuiltinColorSpace: arguments must not be null.");
     }
 
     // Note that this resolves roles and aliases and finds inactive color spaces.
@@ -3052,7 +3052,7 @@ const char * Config::LocateBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
     if (!srcColorSpace)
     {
         std::ostringstream os;
-        os  << "Source config does not contain the requested color space: "
+        os  << "LocateBuiltinColorSpace: Source config does not contain the requested color space: "
             << srcColorSpaceName << ".";
         throw Exception(os.str().c_str());
     }
@@ -3081,39 +3081,12 @@ const char * Config::LocateBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
 
 std::string Config::generateLocalIDForColorSpace(const char * srcColorSpaceName) const
 {
-    if (!srcColorSpaceName || !*srcColorSpaceName)
-    {
-        throw Exception("Config::generateLocalIDForColorSpace: srcColorSpaceName must not be "
-                        "null or empty.");
-    }
-
-    // Note that this resolves roles and aliases and finds inactive color spaces.
-    ConstColorSpaceRcPtr cs = getColorSpace(srcColorSpaceName);
-    if (!cs)
-    {
-        std::ostringstream os;
-        os  << "Config::generateLocalIDForColorSpace: This config does not contain the "
-            << "requested color space: " << srcColorSpaceName << ".";
-        throw Exception(os.str().c_str());
-    }
-
-    const char * configName = getName();
-    if (!configName || !*configName)
-    {
-        throw Exception("Config::generateLocalIDForColorSpace: Config::getName() must be "
-                        "non-empty.");
-    }
-
-    // Use the color space's own canonical name (rather than the possibly aliased/role-based
-    // srcColorSpaceName argument) so that the generated ID is stable and may be resolved back
-    // by Config::findColorSpaceForID.
-    return ConfigUtils::SanitizeIDToken(configName) + ":local:" +
-           ConfigUtils::SanitizeIDToken(cs->getName());
+    return ConfigUtils::GenerateLocalIDForColorSpace(*this, srcColorSpaceName);
 }
 
 ConstColorSpaceRcPtr Config::findColorSpaceForID(const char * idString) const
 {
-    return ConfigUtils::FindColorSpaceForID(*this, idString);
+    return ConfigUtils::FindColorSpaceForID(*this, getImpl()->m_allColorSpaces, idString);
 }
 
 ///////////////////////////////////////////////////////////////////////////

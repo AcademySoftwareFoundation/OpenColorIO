@@ -1149,5 +1149,5 @@ colorspaces:
           csname = OCIO.Config.LocateBuiltinColorSpace(editableCfg, "Foo", builtinConfig)
         self.assertEqual(
           str(cm.exception),
-          "Source config does not contain the requested color space: Foo."
+          "LocateBuiltinColorSpace: Source config does not contain the requested color space: Foo."
         )

@@ -145,8 +145,21 @@ const char * LocateBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
 // meant to be applied to an already-namespaced ID string as a whole.
 std::string SanitizeIDToken(const std::string & token);
 
+// Implements Config::generateLocalIDForColorSpace.  See that method's doc comment for the
+// algorithm.
+//
+// \throw Exception if srcColorSpaceName is null/empty, the config's name is empty or disallowed,
+//        or the config does not contain the requested color space.
+std::string GenerateLocalIDForColorSpace(const Config & config, const char * srcColorSpaceName);
+
 // Implements Config::findColorSpaceForID.  See that method's doc comment for the algorithm.
-ConstColorSpaceRcPtr FindColorSpaceForID(const Config & config, const char * idString);
+// The allColorSpaces argument must be the complete (unfiltered) set of color spaces of the
+// given config.  It is needed because the "local" mode fall-back must compare against the
+// sanitized form of the color space names and aliases, which requires iterating over the
+// color space objects themselves.
+ConstColorSpaceRcPtr FindColorSpaceForID(const Config & config,
+                                         const ConstColorSpaceSetRcPtr & allColorSpaces,
+                                         const char * idString);
 
 // Temporarily deactivate the Processor cache on a Config object.
 //

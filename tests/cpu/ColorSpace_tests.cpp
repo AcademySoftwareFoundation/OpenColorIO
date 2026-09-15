@@ -1992,7 +1992,7 @@ colorspaces:
         OCIO_CHECK_THROW_WHAT(
             OCIO::Config::LocateBuiltinColorSpace(editableCfg, "", builtinConfig),
             OCIO::Exception,
-            "Config::LocateBuiltinColorSpace: arguments must not be null."
+            "LocateBuiltinColorSpace: arguments must not be null."
         );
     }
 

@@ -7,6 +7,7 @@
 #include "MathUtils.h"
 #include "utils/StringUtils.h"
 #include "Logging.h"
+#include "builtinconfigs/BuiltinConfigRegistry.h"
 
 namespace OCIO_NAMESPACE
 {
@@ -1641,7 +1642,55 @@ std::string SanitizeIDToken(const std::string & token)
     return result;
 }
 
-ConstColorSpaceRcPtr FindColorSpaceForID(const Config & config, const char * idString)
+std::string GenerateLocalIDForColorSpace(const Config & config, const char * srcColorSpaceName)
+{
+    if (!srcColorSpaceName || !*srcColorSpaceName)
+    {
+        throw Exception("generateLocalIDForColorSpace: srcColorSpaceName must not be "
+                        "null or empty.");
+    }
+
+    const char * configName = config.getName();
+    if (!configName || !*configName)
+    {
+        throw Exception("May not generate a local interop ID if the config name is empty.");
+    }
+
+    const std::string sanitizedConfigName = SanitizeIDToken(configName);
+
+    // Disallow usage of config names for one of the OCIO configs for ACES that already
+    // contains interop IDs for all color spaces. Trying to avoid the situation where
+    // someone edits one of these configs but forgets to change the config name. This
+    // would result in a meaningless interop ID.
+    if (IsReservedConfigName(sanitizedConfigName))
+    {
+        std::ostringstream os;
+        os  << "May not generate a local interop ID if the name matches an ACES config "
+            << "that already has interop IDs: " << configName << ".";
+        throw Exception(os.str().c_str());
+    }
+
+    // Note that this resolves roles and aliases and finds inactive color spaces.
+    ConstColorSpaceRcPtr cs = config.getColorSpace(srcColorSpaceName);
+    if (!cs)
+    {
+        std::ostringstream os;
+        os  << "generateLocalIDForColorSpace: This config does not contain the "
+            << "requested color space: " << srcColorSpaceName << ".";
+        throw Exception(os.str().c_str());
+    }
+
+    // TODO: Should we prefer an alias of the color space which would not require sanitization?
+
+    // Use the color space's own canonical name (rather than the possibly aliased/role-based
+    // srcColorSpaceName argument) so that the generated ID is stable and may be resolved back
+    // by Config::findColorSpaceForID.
+    return sanitizedConfigName + ":local:" + SanitizeIDToken(cs->getName());
+}
+
+ConstColorSpaceRcPtr FindColorSpaceForID(const Config & config,
+                                         const ConstColorSpaceSetRcPtr & allColorSpaces,
+                                         const char * idString)
 {
     const std::string id{ idString ? idString : "" };
     if (id.empty())
@@ -1667,10 +1716,16 @@ ConstColorSpaceRcPtr FindColorSpaceForID(const Config & config, const char * idS
     const std::string outerNamespace = id.substr(0, firstColon);
     const std::string stripped = id.substr(firstColon + 1);
 
-    cs = config.getColorSpace(stripped.c_str());
-    if (cs)
+    // "local" is a reserved keyword that may only appear as the inner namespace of the mode 3
+    // form ("NAMESPACE:local:BASE"). It must not be treated as an ordinary outer namespace to
+    // strip off, so skip the plain lookup in that case.
+    if (outerNamespace != "local")
     {
-        return cs;
+        cs = config.getColorSpace(stripped.c_str());
+        if (cs)
+        {
+            return cs;
+        }
     }
 
     // Step 3: local mode.  The stripped remainder must be exactly "local:BASE" (i.e. exactly
@@ -1682,12 +1737,34 @@ ConstColorSpaceRcPtr FindColorSpaceForID(const Config & config, const char * idS
         stripped.find(':', innerColon + 1) == std::string::npos)
     {
         const char * configName = config.getName();
-        if (SanitizeIDToken(configName ? configName : "") == outerNamespace)
+        if (configName && *configName && SanitizeIDToken(configName) == outerNamespace)
         {
-            cs = config.getColorSpace(stripped.substr(innerColon + 1).c_str());
-            if (cs)
+            // Note that because the base name in the interop ID is sanitized, the comparison
+            // must sanitize the color space names and aliases in the config as well.
+
+            // The base should already be sanitized, but enforce that it must be in order to match.
+            const std::string base = SanitizeIDToken(stripped.substr(innerColon + 1));
+
+            // This emulates getIndex in ColorSpaceSet.cpp, so it matches what getColorSpace does.
+            // If two names sanitize to the same string, the first one in the config wins.
+            const int numColorSpaces = allColorSpaces->getNumColorSpaces();
+            for (int idx = 0; idx < numColorSpaces; ++idx)
             {
-                return cs;
+                ConstColorSpaceRcPtr candidate = allColorSpaces->getColorSpaceByIndex(idx);
+
+                if (SanitizeIDToken(candidate->getName()) == base)
+                {
+                    return candidate;
+                }
+
+                const size_t numAliases = candidate->getNumAliases();
+                for (size_t aidx = 0; aidx < numAliases; ++aidx)
+                {
+                    if (SanitizeIDToken(candidate->getAlias(aidx)) == base)
+                    {
+                        return candidate;
+                    }
+                }
             }
         }
     }

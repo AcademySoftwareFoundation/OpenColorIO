@@ -861,3 +861,188 @@ OCIO_ADD_TEST(ConfigUtils, sanitize_id_token)
     // Empty string.
     OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken(""), std::string(""));
 }
+
+OCIO_ADD_TEST(ConfigUtils, generate_local_id_for_color_space)
+{
+    auto cfg = OCIO::Config::Create();
+    cfg->setName("My Studio!");
+
+    auto cs = OCIO::ColorSpace::Create();
+    cs->setName("sRGB Encoded,Space");
+    cs->addAlias("myalias");
+    OCIO_CHECK_NO_THROW(cfg->addColorSpace(cs));
+
+    // Config name and color space name are each sanitized per Annex C: uppercase is lowered,
+    // spaces become '_', ',' becomes '.', and '!' (not allowed, no explicit mapping) becomes '*'.
+    std::string id;
+    OCIO_CHECK_NO_THROW(id = cfg->generateLocalIDForColorSpace("sRGB Encoded,Space"));
+    OCIO_CHECK_EQUAL(id, std::string("my_studio*:local:srgb_encoded.space"));
+
+    // An alias resolves to the same ID, since the canonical color space name is used, not the
+    // caller-supplied string.
+    OCIO_CHECK_NO_THROW(id = cfg->generateLocalIDForColorSpace("myalias"));
+    OCIO_CHECK_EQUAL(id, std::string("my_studio*:local:srgb_encoded.space"));
+
+    // A config with no name set cannot generate a local ID.
+    auto cfgNoName = OCIO::Config::Create();
+    OCIO_CHECK_NO_THROW(cfgNoName->addColorSpace(cs));
+    OCIO_CHECK_THROW_WHAT(cfgNoName->generateLocalIDForColorSpace("sRGB Encoded,Space"),
+                          OCIO::Exception, "May not generate a local interop ID if the config "
+                          "name is empty.");
+
+    // Null / empty color space name.
+    OCIO_CHECK_THROW_WHAT(cfg->generateLocalIDForColorSpace(nullptr), OCIO::Exception,
+                          "srcColorSpaceName must not be null or empty");
+    OCIO_CHECK_THROW_WHAT(cfg->generateLocalIDForColorSpace(""), OCIO::Exception,
+                          "srcColorSpaceName must not be null or empty");
+
+    // Color space that does not exist in the config.
+    OCIO_CHECK_THROW_WHAT(cfg->generateLocalIDForColorSpace("does_not_exist"), OCIO::Exception,
+                          "does not contain the requested color space");
+
+    // Renaming the config is reflected immediately.
+    cfg->setName("Other Studio");
+    OCIO_CHECK_NO_THROW(id = cfg->generateLocalIDForColorSpace("sRGB Encoded,Space"));
+    OCIO_CHECK_EQUAL(id, std::string("other_studio:local:srgb_encoded.space"));
+
+    // Disallow usage of config names for one of the OCIO configs for ACES that already
+    // contains interop IDs for all color spaces. Trying to avoid the situation where
+    // someone edits one of these configs but forgets to change the config name. This
+    // would result in a meaningless interop ID.
+
+    // A config named like one of the built-in configs at version 4.0.0 or higher already has
+    // interop IDs populated, so it may not be used as the namespace of a locally-generated one.
+    cfg->setName("cg-config-v4.0.0_aces-v2.0_ocio-v2.5");
+    OCIO_CHECK_THROW_WHAT(cfg->generateLocalIDForColorSpace("sRGB Encoded,Space"),
+                          OCIO::Exception, "May not generate a local interop ID if the name matches");
+
+    // Don't allow anything that would sanitize to one of the disallowed config names.
+    cfg->setName("CG-config-v4.0.0_aces-v2.0_ocio-v2.5");
+    OCIO_CHECK_THROW_WHAT(cfg->generateLocalIDForColorSpace("sRGB Encoded,Space"),
+                          OCIO::Exception, "May not generate a local interop ID if the name matches");
+
+    // Example of a potential future built-in config name.
+    cfg->setName("studio-config-v5.1.2_aces-v2.2_ocio-v2.7");
+    OCIO_CHECK_THROW_WHAT(cfg->generateLocalIDForColorSpace("sRGB Encoded,Space"),
+                          OCIO::Exception, "May not generate a local interop ID if the name matches");
+
+    // Similar, but with more digits in the ACES version.
+    cfg->setName("studio-config-v4.1.2_aces-v2.2.1_ocio-v2.7");
+    OCIO_CHECK_THROW_WHAT(cfg->generateLocalIDForColorSpace("sRGB Encoded,Space"),
+                          OCIO::Exception, "May not generate a local interop ID if the name matches");
+
+    // A built-in-looking config name with a major version below 4 does not have interop IDs, so
+    // it is still legal to use as a local ID namespace.
+    cfg->setName("studio-config-v3.0.0_aces-v2.0_ocio-v2.4");
+    OCIO_CHECK_NO_THROW(id = cfg->generateLocalIDForColorSpace("sRGB Encoded,Space"));
+    OCIO_CHECK_EQUAL(id, std::string("studio-config-v3.0.0_aces-v2.0_ocio-v2.4:local:"
+                                     "srgb_encoded.space"));
+
+    // A name that starts like a built-in config and has a version 4.0.0+, but continues with
+    // something other than the exact "_aces-<version>_ocio-<version>" suffix, is not actually
+    // one of the reserved built-in config names and so remains legal.
+    cfg->setName("cg-config-v4.0.0_aces-v2.0_ocio-v2.5_custom");
+    OCIO_CHECK_NO_THROW(id = cfg->generateLocalIDForColorSpace("sRGB Encoded,Space"));
+    OCIO_CHECK_EQUAL(id, std::string("cg-config-v4.0.0_aces-v2.0_ocio-v2.5_custom:local:srgb_encoded.space"));
+}
+
+OCIO_ADD_TEST(ConfigUtils, find_color_space_for_id)
+{
+    auto cfg = OCIO::Config::Create();
+    cfg->setName("MyStudio!");
+
+    auto acescg = OCIO::ColorSpace::Create();
+    acescg->setName("ACEScg");
+    acescg->addAlias("lin_ap1");
+    OCIO_CHECK_NO_THROW(cfg->addColorSpace(acescg));
+
+    auto srgb = OCIO::ColorSpace::Create();
+    srgb->setName("srgb");
+    OCIO_CHECK_NO_THROW(cfg->addColorSpace(srgb));
+
+    auto foo = OCIO::ColorSpace::Create();
+    foo->setName("foo");
+    OCIO_CHECK_NO_THROW(cfg->addColorSpace(foo));
+
+    auto fancy = OCIO::ColorSpace::Create();
+    fancy->setName("My Color Space!");
+    fancy->addAlias("Fancy Alias");
+    OCIO_CHECK_NO_THROW(cfg->addColorSpace(fancy));
+
+    // A different name that sanitizes to the same base as the color space above (both '!' and
+    // '?' sanitize to '*').  The color space added first wins.
+    auto fancyToo = OCIO::ColorSpace::Create();
+    fancyToo->setName("My Color Space?");
+    OCIO_CHECK_NO_THROW(cfg->addColorSpace(fancyToo));
+
+    OCIO::ConstColorSpaceRcPtr cs;
+
+    // Mode 1: exact name and exact alias.
+    OCIO_CHECK_ASSERT(cs = cfg->findColorSpaceForID("ACEScg"));
+    OCIO_CHECK_EQUAL(std::string(cs->getName()), "ACEScg");
+    OCIO_CHECK_ASSERT(cs = cfg->findColorSpaceForID("lin_ap1"));
+    OCIO_CHECK_EQUAL(std::string(cs->getName()), "ACEScg");
+
+    // Mode 2: one namespace, falls back to the base name.
+    OCIO_CHECK_ASSERT(cs = cfg->findColorSpaceForID("somestudio:acescg"));
+    OCIO_CHECK_EQUAL(std::string(cs->getName()), "ACEScg");
+
+    // Two-namespace ID whose one-level-stripped remainder is not itself a valid name/alias:
+    // no recursive stripping, so this must not match "ACEScg".
+    OCIO_CHECK_ASSERT(!cfg->findColorSpaceForID("outer:inner:acescg"));
+
+    // Mode 3 (local): outer namespace matches this config's sanitized name.
+    OCIO_CHECK_ASSERT(cs = cfg->findColorSpaceForID("mystudio*:local:acescg"));
+    OCIO_CHECK_EQUAL(std::string(cs->getName()), "ACEScg");
+
+    // Mode 3 negative: outer namespace does not match the config's name.
+    OCIO_CHECK_ASSERT(!cfg->findColorSpaceForID("othername:local:acescg"));
+    OCIO_CHECK_ASSERT(!cfg->findColorSpaceForID(":local:acescg"));
+    OCIO_CHECK_ASSERT(!cfg->findColorSpaceForID("::local:acescg"));
+
+    // Mode 3 with a color space whose name must be sanitized in order to match the ID base.
+    // (The first of the two color spaces that sanitize to this base is the one returned.)
+    OCIO_CHECK_ASSERT(cs = cfg->findColorSpaceForID("mystudio*:local:my_color_space*"));
+    OCIO_CHECK_EQUAL(std::string(cs->getName()), "My Color Space!");
+
+    // Aliases are searched as well, and are also compared in their sanitized form.
+    OCIO_CHECK_ASSERT(cs = cfg->findColorSpaceForID("mystudio*:local:fancy_alias"));
+    OCIO_CHECK_EQUAL(std::string(cs->getName()), "My Color Space!");
+
+    // The sanitized comparison is only used for the local mode fall-back, so the sanitized
+    // base does not match on its own or with a namespace that is not this config's name.
+    OCIO_CHECK_ASSERT(!cfg->findColorSpaceForID("my_color_space*"));
+    OCIO_CHECK_ASSERT(!cfg->findColorSpaceForID("othername:local:my_color_space*"));
+
+    // Empty inner namespace: "my-studio::srgb" strips to ":srgb", which must not match "srgb".
+    OCIO_CHECK_ASSERT(!cfg->findColorSpaceForID("my-studio::srgb"));
+
+    // Use of "local" as an ordinary namespace is not allowed, it may only be used as a keyword
+    // for the local (mode 3) form of an ID.
+    OCIO_CHECK_ASSERT(!cfg->findColorSpaceForID("local:foo"));
+
+    // Garbage input: extra colons, empty string, and null all resolve to "not found" without
+    // throwing.
+    OCIO_CHECK_ASSERT(!cfg->findColorSpaceForID("a:b:c:d"));
+    OCIO_CHECK_ASSERT(!cfg->findColorSpaceForID(""));
+    OCIO_CHECK_ASSERT(!cfg->findColorSpaceForID(nullptr));
+
+    // Round-trip: an ID generated by this config is resolved back to the same color space.
+    const std::string generated = cfg->generateLocalIDForColorSpace("ACEScg");
+    OCIO_CHECK_ASSERT(cs = cfg->findColorSpaceForID(generated.c_str()));
+    OCIO_CHECK_EQUAL(std::string(cs->getName()), "ACEScg");
+
+    // Round-trip for a color space whose name requires more than case sanitizing.
+    const std::string generatedFancy = cfg->generateLocalIDForColorSpace("My Color Space!");
+    OCIO_CHECK_EQUAL(generatedFancy, std::string("mystudio*:local:my_color_space*"));
+    OCIO_CHECK_ASSERT(cs = cfg->findColorSpaceForID(generatedFancy.c_str()));
+    OCIO_CHECK_EQUAL(std::string(cs->getName()), "My Color Space!");
+
+    // A config with no name never matches a local mode ID, not even one with an empty outer
+    // namespace (such an ID could not have been generated by an unnamed config).
+    auto cfgNoName = OCIO::Config::Create();
+    OCIO_CHECK_NO_THROW(cfgNoName->addColorSpace(foo));
+    OCIO_CHECK_ASSERT(cs = cfgNoName->findColorSpaceForID("foo"));
+    OCIO_CHECK_ASSERT(!cfgNoName->findColorSpaceForID(":local:foo"));
+    OCIO_CHECK_ASSERT(!cfgNoName->findColorSpaceForID("mystudio*:local:foo"));
+}
