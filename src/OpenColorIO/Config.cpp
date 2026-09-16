@@ -5688,7 +5688,7 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
                 throw Exception(os.str().c_str());
             }
             if (m_majorVersion == 2 && m_minorVersion < 6
-                    && 0 == Platform::Strcasecmp(blt->getStyle(), "ACES-LMT - ACES 2.0 DCC Look 1"))
+                    && 0 == Platform::Strcasecmp(blt->getStyle(), "APPLE_LOG-APPLEWG_to_ACES2065-1"))
             {
                 std::ostringstream os;
                 os << "Only config version 2.6 (or higher) can have BuiltinTransform style '"

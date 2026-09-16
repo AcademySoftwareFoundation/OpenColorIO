@@ -42,14 +42,9 @@ For Config Authors
 ++++++++++++++++++
 
 In config files with ``ocio_profile_version`` set to 2.6 or higher, config authors may take
-advantage of the following new BuiltinTransform style that provides a new look transform
-intended for use with the ACES 2.0 Output Transforms (SDR only) that provides a brighter,
-higher contrast look that is a more finished/graded look. The brightness is adjusted to be
-more appropriate for using ACES 2 Output Transforms outside of cinema or TV where the image
-has a brighter surround (such as on a web page or video game).
+advantage of the following new BuiltinTransform styles:
 
-* ``ACES-LMT - ACES 2.0 DCC Look 1``
-
+* ``APPLE_LOG-APPLEWG_to_ACES2065-1``
 
 Release Notes
 =============

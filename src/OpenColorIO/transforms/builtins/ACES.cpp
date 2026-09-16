@@ -9,7 +9,6 @@
 #include <Imath/half.h>
 
 #include "ops/fixedfunction/FixedFunctionOp.h"
-#include "ops/gradinghuecurve/GradingHueCurveOp.h"
 #include "ops/gradingrgbcurve/GradingRGBCurveOp.h"
 #include "ops/log/LogOp.h"
 #include "ops/matrix/MatrixOp.h"
@@ -794,102 +793,6 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
         registry.addBuiltin("ACES-LMT - ACES 1.3 Reference Gamut Compression",
                             "LMT (applied in ACES2065-1) to compress scene-referred values from common cameras into the AP1 gamut",
                             GAMUT_COMP_13_Functor);
-    }
-    {
-        auto ACES2_LMT_DCC_Functor = [](OpRcPtrVec & ops)
-        {
-            // Set up the GradingHueCurve.
-
-            auto gc = std::make_shared<GradingHueCurveOpData>(GRADING_VIDEO);
-            {
-                // TODO: These parameter values are not final.
-                auto ll = GradingBSplineCurve::Create({
-                             {0.f, 0.f},
-                    {0.030268261f, 0.033965353f},
-                    {0.063408233f, 0.071113035f},
-                     {0.11234653f, 0.13219112f},
-                     {0.15547293f, 0.19494583f},
-                       {0.252096f, 0.38115612f},
-                     {0.76718688f, 2.0309019f}
-                    }, LUM_LUM);
-                float slopes[] = { 1.136f, 1.107f, 1.1390001f, 1.355f, 1.5549999f, 2.3699999f, 5.f };
-                for (size_t i = 0; i < 7; ++i)
-                {
-                    ll->setSlope( i, slopes[i] );
-                }
-    
-                auto ls = GradingBSplineCurve::Create({
-                      {0.f, 1.f},
-                    {0.05f, 1.125f},
-                    {0.15f, 1.4f},
-                    {0.32f, 1.84f},
-                    {0.75f, 2.f},
-                      {1.f, 2.f}
-                    }, LUM_SAT);
-    
-                auto sl = GradingBSplineCurve::Create({
-                     {0.f,  1.f},
-                     {0.7f, 1.f},
-                     {1.f,  0.92f},
-                     {2.f,  0.75f},
-                     {2.2f, 0.75f}
-                    }, SAT_LUM);
-    
-                // Only lumSat, lumLum, and satLum are being customized above, so pull the
-                // remaining five curves from the style's defaults.
-                auto defaultCurves = GradingHueCurve::Create(GRADING_VIDEO);
-    
-                auto curves = GradingHueCurve::Create(
-                    defaultCurves->getCurve(HUE_HUE),
-                    defaultCurves->getCurve(HUE_SAT),
-                    defaultCurves->getCurve(HUE_LUM),
-                    ls,                                     // lumSat
-                    defaultCurves->getCurve(SAT_SAT),
-                    ll,                                     // lumLum
-                    sl,                                     // satLum
-                    defaultCurves->getCurve(HUE_FX));
-    
-                gc->setValue(curves);
-
-                // Use the supplied HMJ transform rather than the built-in HSY transform.
-                gc->setRGBToHSY(HSY_TRANSFORM_NONE);
-            }
-
-            // Create the built-in.
-
-            // TODO: The above parameters are based on the existing FF, will switch before merging.
-            //CreateFixedFunctionOp(ops, FixedFunctionOpData::ACES_RGB_TO_HMJ_20, {
-            CreateFixedFunctionOp(ops, FixedFunctionOpData::ACES_RGB_TO_JMh_20, {
-                // ACES2065-1
-                0.7347, 0.2653, 0.0000, 1.0000, 0.0001, -0.0770, 0.32168, 0.33767
-            });
-
-            // TODO: This is temporary, will remove before merging.
-            static constexpr double SWAP_CHANS[4 * 4]
-            {
-                0., 0., 0.0025, 0.,
-                0., 0.01, 0., 0.,
-                0.0025, 0., 0., 0.,
-                0., 0., 0., 1.
-            };
-            CreateMatrixOp(ops, &SWAP_CHANS[0], TRANSFORM_DIR_FORWARD);
-
-            CreateGradingHueCurveOp(ops, gc, TRANSFORM_DIR_FORWARD);
-
-            // TODO: This is temporary, will remove before merging.
-            CreateMatrixOp(ops, &SWAP_CHANS[0], TRANSFORM_DIR_INVERSE);
-
-            // TODO: The above parameters are based on the existing FF, will switch before merging.
-            //CreateFixedFunctionOp(ops, FixedFunctionOpData::ACES_HMJ_TO_RGB_20, {
-            CreateFixedFunctionOp(ops, FixedFunctionOpData::ACES_JMh_TO_RGB_20, {
-                // ACES2065-1
-                0.7347, 0.2653, 0.0000, 1.0000, 0.0001, -0.0770, 0.32168, 0.33767
-            });
-        };
-
-        registry.addBuiltin("ACES-LMT - ACES 2.0 DCC Look 1",
-                            "LMT (applied in ACES2065-1) to give a brighter, more contrasty look with ACES 2 Output Transforms",
-                            ACES2_LMT_DCC_Functor);
     }
 
     //

@@ -412,9 +412,6 @@ AllValues UnitTestValues
     { "ACES-LMT - ACES 1.3 Reference Gamut Compression",
         { 1.0e-6f,
         { 0.5f, 0.4f, -0.3f }, { 0.54812347889f, 0.42805567384f, -0.00588858686f } } },
-    { "ACES-LMT - ACES 2.0 DCC Look 1",
-        { 1.0e-6f,
-        { 0.5f, 0.4f, 0.3f }, { 0.875603199f, 0.673843086f, 0.47828418f } } },
 
     { "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-CINEMA_1.0",
         { 1.0e-6f,
@@ -793,7 +790,8 @@ void ValidateDisplayViewRoundTrip(const char * display_style, const char * view_
 
     // Built-in transform for the (optional) look.
     OCIO::BuiltinTransformRcPtr look_builtin = OCIO::BuiltinTransform::Create();
-    OCIO_CHECK_NO_THROW_FROM(look_builtin->setStyle("ACES-LMT - ACES 2.0 DCC Look 1"), lineNo);
+//     OCIO_CHECK_NO_THROW_FROM(look_builtin->setStyle("ACES-LMT - ACES 2.0 DCC Look 1"), lineNo);
+    OCIO_CHECK_NO_THROW_FROM(look_builtin->setStyle("ACES-LMT - BLUE_LIGHT_ARTIFACT_FIX"), lineNo);
     OCIO_CHECK_NO_THROW_FROM(look_builtin->validate(), lineNo);
     auto look_builtin_inv = look_builtin->createEditableCopy();
     look_builtin_inv->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
