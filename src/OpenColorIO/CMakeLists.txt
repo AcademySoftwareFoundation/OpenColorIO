@@ -216,6 +216,61 @@ else()
     set(includedir "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
 endif()
 
+# Adds a static dependency's info to OpenColorIO.pc: to OCIO_PC_REQUIRES_PRIVATE
+# if it has its own pkg-config file (built via OCIO_INSTALL_EXT_PACKAGES, only
+# resolvable from the build tree), or to OCIO_PC_LIBS_PRIVATE otherwise (e.g. a
+# system-provided copy, referenced directly since it may have no .pc file).
+macro(ocio_add_static_pc_dependency dep_target pc_name)
+    if(TARGET ${dep_target})
+        get_target_property(_ocio_dep_loc ${dep_target} IMPORTED_LOCATION)
+        if(NOT _ocio_dep_loc)
+            get_target_property(_ocio_dep_configs ${dep_target} IMPORTED_CONFIGURATIONS)
+            if(_ocio_dep_configs)
+                list(GET _ocio_dep_configs 0 _ocio_dep_config)
+                get_target_property(_ocio_dep_loc ${dep_target} IMPORTED_LOCATION_${_ocio_dep_config})
+            endif()
+        endif()
+        if(_ocio_dep_loc)
+            string(FIND "${_ocio_dep_loc}" "${_ocio_ext_dist_root}/" _ocio_dep_is_ext_dist)
+            if(_ocio_dep_is_ext_dist EQUAL 0)
+                string(APPEND OCIO_PC_REQUIRES_PRIVATE " ${pc_name}")
+            else()
+                get_filename_component(_ocio_dep_dir "${_ocio_dep_loc}" DIRECTORY)
+                get_filename_component(_ocio_dep_name "${_ocio_dep_loc}" NAME_WE)
+                string(REGEX REPLACE "^lib" "" _ocio_dep_name "${_ocio_dep_name}")
+                string(APPEND OCIO_PC_LIBS_PRIVATE " -L${_ocio_dep_dir} -l${_ocio_dep_name}")
+            endif()
+        endif()
+    endif()
+endmacro()
+
+set(OCIO_PC_REQUIRES_PRIVATE "")
+set(OCIO_PC_LIBS_PRIVATE "")
+if(NOT BUILD_SHARED_LIBS)
+    # A static libOpenColorIO doesn't embed its own dependencies, so pkg-config
+    # needs to know about them too (pystring has no upstream .pc file, so
+    # Buildpystring.cmake now generates one).
+    set(_ocio_ext_dist_root "${PROJECT_BINARY_DIR}/ext/dist")
+    ocio_add_static_pc_dependency(expat::expat expat)
+    ocio_add_static_pc_dependency(Imath::Imath Imath)
+    ocio_add_static_pc_dependency(pystring::pystring pystring)
+    ocio_add_static_pc_dependency(yaml-cpp::yaml-cpp yaml-cpp)
+    ocio_add_static_pc_dependency(MINIZIP::minizip-ng minizip-ng)
+    ocio_add_static_pc_dependency(ZLIB::ZLIB zlib)
+    if(APPLE)
+        # The frameworks OpenColorIO links privately for its SystemMonitor
+        # support (see the target_link_libraries(OpenColorIO ...) APPLE block
+        # below); a static consumer has to link them itself.
+        string(APPEND OCIO_PC_LIBS_PRIVATE
+            " -framework ColorSync"
+            " -framework CoreFoundation"
+            " -framework CoreGraphics"
+            " -framework IOKit")
+    endif()
+    string(STRIP "${OCIO_PC_REQUIRES_PRIVATE}" OCIO_PC_REQUIRES_PRIVATE)
+    string(STRIP "${OCIO_PC_LIBS_PRIVATE}" OCIO_PC_LIBS_PRIVATE)
+endif()
+
 configure_file(res/OpenColorIO.pc.in ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 
