@@ -288,7 +288,7 @@ void CreateIdentityMatrixOp(OpRcPtrVec & ops, TransformDirection direction)
     matrix[15] = 1.0;
     const double offset[4] = { 0.0, 0.0, 0.0, 0.0 };
 
-    ops.push_back(std::make_shared<MatrixOffsetOp>(matrix,
+    ops.emplace_back(std::make_shared<MatrixOffsetOp>(matrix,
                                                    offset,
                                                    direction));
 }
@@ -348,14 +348,14 @@ void CreateMatrixOp(OpRcPtrVec & ops, MatrixOpDataRcPtr & matrix, TransformDirec
         mat->setDirection(newDir);
     }
 
-    ops.push_back(std::make_shared<MatrixOffsetOp>(mat));
+    ops.emplace_back(std::make_shared<MatrixOffsetOp>(mat));
 }
 
 void CreateIdentityMatrixOp(OpRcPtrVec & ops)
 {
     MatrixOpDataRcPtr mat = MatrixOpData::CreateDiagonalMatrix(1.0);
 
-    ops.push_back(std::make_shared<MatrixOffsetOp>(mat));
+    ops.emplace_back(std::make_shared<MatrixOffsetOp>(mat));
 }
 
 ///////////////////////////////////////////////////////////////////////////

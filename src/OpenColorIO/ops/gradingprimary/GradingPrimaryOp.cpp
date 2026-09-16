@@ -215,7 +215,7 @@ void CreateGradingPrimaryOp(OpRcPtrVec & ops,
         prim = prim->inverse();
     }
 
-    ops.push_back(std::make_shared<GradingPrimaryOp>(prim));
+    ops.emplace_back(std::make_shared<GradingPrimaryOp>(prim));
 }
 
 ///////////////////////////////////////////////////////////////////////////

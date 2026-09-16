@@ -157,7 +157,7 @@ void CreateFixedFunctionOp(OpRcPtrVec & ops,
         func = func->inverse();
     }
 
-    ops.push_back(std::make_shared<FixedFunctionOp>(func));
+    ops.emplace_back(std::make_shared<FixedFunctionOp>(func));
 }
 
 ///////////////////////////////////////////////////////////////////////////

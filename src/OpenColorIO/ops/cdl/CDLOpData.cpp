@@ -361,8 +361,7 @@ void CDLOpData::getSimplerReplacement(OpDataVec & tmpops) const
         if (isClamping())
         {
             // Same in both directions.
-            auto range = std::make_shared<RangeOpData>(0., 1., 0., 1.);
-            tmpops.push_back(range);
+            tmpops.emplace_back(std::make_shared<RangeOpData>(0., 1., 0., 1.));
         }
 
         static constexpr double lumaCoef3[3]{ 0.2126, 0.7152, 0.0722 };
@@ -383,8 +382,7 @@ void CDLOpData::getSimplerReplacement(OpDataVec & tmpops) const
     // Clamping
     if (isClamping())
     {
-        auto range = std::make_shared<RangeOpData>(0., 1., 0., 1.);
-        tmpops.push_back(range);
+        tmpops.emplace_back( std::make_shared<RangeOpData>(0., 1., 0., 1.));
     }
 
     if (getDirection() == TRANSFORM_DIR_INVERSE)
