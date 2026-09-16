@@ -46,6 +46,65 @@ ColorSpaceMenuHelpers
       .. doxygentypedef:: ${OCIO_NAMESPACE}::ConstColorSpaceMenuHelperRcPtr
       .. doxygentypedef:: ${OCIO_NAMESPACE}::ColorSpaceMenuHelperRcPtr
 
+ConfigCompatibilityHelpers
+**************************
+
+.. tabs::
+
+   .. group-tab:: Python
+
+      .. autofunction:: PyOpenColorIO.ConfigCompatibilityHelpers.CheckCompatibility
+
+   .. group-tab:: C++
+
+      .. doxygennamespace:: ${OCIO_NAMESPACE}::ConfigCompatibilityHelpers
+         :members:
+         :undoc-members:
+
+ConfigMergingHelpers
+********************
+
+.. tabs::
+
+   .. group-tab:: Python
+
+      .. autofunction:: PyOpenColorIO.ConfigMergingHelpers.MergeConfigs
+      .. autofunction:: PyOpenColorIO.ConfigMergingHelpers.MergeColorSpace
+
+      .. autoclass:: PyOpenColorIO.ConfigMergingParameters
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+         :exclude-members: MergeStrategies
+
+      .. autoclass:: PyOpenColorIO.ConfigMergingParameters.MergeStrategies
+         :members:
+         :undoc-members:
+         :exclude-members: name
+
+      .. autoclass:: PyOpenColorIO.ConfigMerger
+         :members:
+         :undoc-members:
+         :special-members: __init__, __str__
+
+   .. group-tab:: C++
+
+      .. doxygenclass:: ${OCIO_NAMESPACE}::ConfigMergingParameters
+         :members:
+         :undoc-members:
+
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::operator<<(std::ostream&, const ConfigMergingParameters&)
+
+      .. doxygenclass:: ${OCIO_NAMESPACE}::ConfigMerger
+         :members:
+         :undoc-members:
+
+      .. doxygenfunction:: ${OCIO_NAMESPACE}::operator<<(std::ostream&, const ConfigMerger&)
+
+      .. doxygennamespace:: ${OCIO_NAMESPACE}::ConfigMergingHelpers
+         :members:
+         :undoc-members:
+
 DisplayViewHelpers
 ******************
 

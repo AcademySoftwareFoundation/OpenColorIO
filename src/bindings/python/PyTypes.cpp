@@ -859,6 +859,14 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, ProcessorCacheFlags, PROCESSOR_CACHE_DEFAULT))
         .export_values();
 
+    py::enum_<ConfigCompatibility>(
+        m, "ConfigCompatibility",
+        DOC(PyOpenColorIO, ConfigCompatibility))
+
+        .value("CONFIG_HDR_DISPLAY_SUPPORT_26", CONFIG_HDR_DISPLAY_SUPPORT_26,
+               DOC(PyOpenColorIO, ConfigCompatibility, CONFIG_HDR_DISPLAY_SUPPORT_26))
+        .export_values();
+
     // Conversion
     m.def("BoolToString", &BoolToString, "value"_a, 
           DOC(PyOpenColorIO, BoolToString));

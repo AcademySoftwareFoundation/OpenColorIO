@@ -53,6 +53,7 @@ endif()
 
 set(SOURCES
 	apphelpers/PyColorSpaceHelpers.cpp
+	apphelpers/PyConfigCompatibilityHelpers.cpp
 	apphelpers/PyDisplayViewHelpers.cpp
 	apphelpers/PyLegacyViewingPipeline.cpp
 	apphelpers/PyMergeConfigs.cpp
