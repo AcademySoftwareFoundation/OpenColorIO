@@ -13,5 +13,3 @@ mastercopy
 .idea/
 .venv/
 .vscode/
-
-src/apps/ocioview/uv.lock

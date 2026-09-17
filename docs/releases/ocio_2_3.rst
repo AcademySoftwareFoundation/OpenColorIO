@@ -24,6 +24,9 @@ the 2.3.0 release, ``ocioview`` is currently in an alpha release (please see the
 the apps/ocioview directory for details).  Documentation and tutorials will be forthcoming
 and we are looking for contributors to help with this and other tasks.
 
+Note: ``ocioview`` has moved to a
+`dedicated repository. <https://github.com/AcademySoftwareFoundation/ocioview>`_
+
 
 Built-in Configs
 ****************
