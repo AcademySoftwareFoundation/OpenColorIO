@@ -12,6 +12,18 @@ Users should exercise caution when working with untrusted data (config files,
 LUTs, etc.). OCIO takes every precaution to read only valid data, but it 
 would be naive to say our code is immune to every exploit.
 
+## Supported Versions
+
+This gives guidance about which branches are supported with patches to 
+security vulnerabilities.
+
+| Version / branch  | Supported |
+| ----------------- | --------- |
+| main              | :white_check_mark: :construction: All fixes immediately, but this branch is under active development with a frequently changing API and ABI. |
+| 2.5.x (RB-2.5)    | :white_check_mark: All security fixes that can be backported without breaking ABI compatibility. |
+| 2.4.x (RB-2.4)    | :warning: Critical security fixes only. |
+| <= 2.3.x          | :x: No longer receiving patches. |
+
 ## Reporting Vulnerabilities
 
 Quickly resolving security related issues is a priority. The best way to report a 
