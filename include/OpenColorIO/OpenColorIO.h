@@ -656,10 +656,9 @@ public:
     void removeColorSpace(const char * name);
 
     /**
-     * Return true if the color space is used by a transform, a role, or a look.
-     *
-     * \note
-     *    Name must be the canonical name.
+     * Return true if the color space is used by a transform, a role, a look, a (display, view)
+     * pair, or a file rule. The argument may be either an alias or the canonical name. While
+     * searching the config, aliases are always resolve to their canonical names for comparison.
      */
     bool isColorSpaceUsed(const char * name) const noexcept;
 
@@ -918,6 +917,8 @@ public:
     /**
      * Returns the colorspace attribute of the (display, view) pair.
      * (Note that this may be either a color space or a display color space.)
+     * See \ref Config::getResolvedDisplayViewColorSpaceName to first resolve
+     * any display or view aliases.
      */
     const char * getDisplayViewColorSpaceName(const char * display, const char * view) const;
     /// Returns the looks attribute of a (display, view) pair.
@@ -984,6 +985,85 @@ public:
     void removeDisplayView(const char * display, const char * view);
     /// Clear all the displays.
     void clearDisplays();
+
+    /**
+     * Methods related to display and view aliases.
+     *
+     */
+
+    /**
+     * \brief This property on the Config object allows config authors to use aliases for
+     * display or view names. This feature is off by default.
+     *
+     * Corresponds to the "use_display_view_aliases" config file attribute, which is only
+     * written to the file when true. Requires config version 2.6 or higher (validation
+     * will fail if this is enabled on an older config).
+     */
+    bool getUseDisplayViewAliases() const noexcept;
+    void setUseDisplayViewAliases(bool enabled) noexcept;
+
+    /**
+     * \brief Resolve display name aliases.
+     *
+     * If the argument does not match an existing display, a fallback checks if getColorSpace
+     * returns a display color space. If so, it checks to see if there is a display whose 
+     * name matches that color space name or one of its aliases.
+     *
+     * This fallback is only performed if \ref Config::getUseDisplayViewAliases is true.
+     *
+     * Returns "" if no display can be found, even with the fallback.
+     */
+    const char * getCanonicalDisplayName(const char * displayName) const;
+
+    /**
+     * \brief Resolve view name aliases.
+     *
+     * If the arguments do not directly match an existing (display, view) pair, a fallback
+     * checks if getViewTransform or getNamedTransform returns a result for viewName. If so,
+     * it checks if the display has a view whose view_transform matches the name or an alias
+     * of that transform.
+     *
+     * This fallback is only performed if \ref Config::getUseDisplayViewAliases is true.
+     *
+     * The displayName is first resolved via \ref Config::getCanonicalDisplayName.
+     *
+     * Returns "" if no display and view can be found, even with the fallback, or if the
+     * arguments are null or empty.
+     */
+    const char * getCanonicalViewName(const char * displayName, const char * viewName) const;
+
+    /**
+     * \brief Returns the name of the color space that a (display, view) pair uses.
+     * 
+     * This is similar to \ref Config::getDisplayViewColorSpaceName, but it first attempts
+     * to resolve displayName and viewName (which could be aliases) to their canonical names.
+     * And unlike that function, the displayName may not be empty. The alias resolution is
+     * gated by \ref Config::getUseDisplayViewAliases.
+     * 
+     * In addition, if the display_colorspace of a shared view is <USE_DISPLAY_NAME>, that
+     * is resolved to the name of the view's display.
+     *
+     * Note that, as with getDisplayViewColorSpaceName, the returned name may be that of a
+     * named transform rather than a color space (this is allowed for views that have no
+     * view_transform). 
+     *
+     * Returns either the canonical name of the view's color space or, if that does not
+     * find a result, the raw color space string (which would likely be used in an error
+     * message). If the (display, view) pair cannot even be resolved, it returns "".
+     */
+    const char * getResolvedDisplayViewColorSpaceName(const char * displayName,
+                                                      const char * viewName) const;
+
+    /**
+     * \brief Return the description of the display color space associated with displayName.
+     *
+     * If displayName matches the canonical name of a display color space, its description is
+     * returned. If \ref Config::getUseDisplayViewAliases is true, the search is broadened to
+     * include display color spaces that have displayName as an alias.
+     *
+     * Returns "" if no such display color space can be found.
+     */
+    const char * getDisplayDescription(const char * displayName) const;
 
     /**
      * Methods related to the Virtual Display.
@@ -2555,7 +2635,27 @@ public:
     ViewTransformRcPtr createEditableCopy() const;
 
     const char * getName() const noexcept;
+    /// \see ColorSpace::setName
     void setName(const char * name) noexcept;
+
+    /**
+     * \note
+     * ViewTransform aliases are available in config file versions 2.6 or higher. They
+     * are availaable regardless of how \ref Config::getUseDisplayViewAliases is set.
+     */
+
+    /// \see ColorSpace::getNumAliases
+    size_t getNumAliases() const noexcept;
+    /// \see ColorSpace::getAlias
+    const char * getAlias(size_t idx) const noexcept;
+    /// \see ColorSpace::hasAlias
+    bool hasAlias(const char * alias) const noexcept;
+    /// \see ColorSpace::addAlias
+    void addAlias(const char * alias) noexcept;
+    /// \see ColorSpace::removeAlias
+    void removeAlias(const char * alias) noexcept;
+    /// \see ColorSpace::clearAliases
+    void clearAliases() noexcept;
 
     /// \see ColorSpace::getFamily
     const char * getFamily() const noexcept;
@@ -2563,6 +2663,7 @@ public:
     void setFamily(const char * family);
 
     const char * getDescription() const noexcept;
+    /// \see ColorSpace::setDescription
     void setDescription(const char * description);
 
     /**

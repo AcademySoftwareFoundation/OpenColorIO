@@ -1491,3 +1491,376 @@ colorspaces:
     dt->setView("View18");
     OCIO_CHECK_ASSERT(!CollectContextVariables(*cfg, *cfg->getCurrentContext(), *dt, usedContextVars));
 }
+
+OCIO_ADD_TEST(DisplayViewTransform, use_display_name_alias)
+{
+    // Test that USE_DISPLAY_NAME will find a display color space where the display name
+    // is an alias.
+
+    constexpr const char * SIMPLE_CONFIG{ R"(
+ocio_profile_version: 2
+
+roles:
+  default: raw
+
+shared_views:
+  - !<View> {name: view1, view_transform: display_vt, display_colorspace: <USE_DISPLAY_NAME>}
+
+displays:
+  sRGB - Display:
+    - !<Views> [view1]
+  sRGB:
+    - !<Views> [view1]
+
+view_transforms:
+  - !<ViewTransform>
+    name: display_vt
+    to_scene_reference: !<MatrixTransform> {offset: [0.3, 0.1, 0.1, 0]}
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: sRGB - Display
+    aliases: [sRGB]
+    to_display_reference: !<MatrixTransform> {offset: [0.25, 0.15, 0.35, 0]}
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    isdata: true
+
+  - !<ColorSpace>
+    name: source
+    to_scene_reference: !<MatrixTransform> {offset: [0.11, 0.12, 0.13, 0]}
+)" };
+
+    std::istringstream is;
+    is.str(SIMPLE_CONFIG);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    const std::string display{ "sRGB - Display" };
+    const std::string aliasDisplay{ "sRGB" };
+    const std::string view{ "view1" };
+
+    auto dt = OCIO::DisplayViewTransform::Create();
+    dt->setSrc("source");
+    dt->setView(view.c_str());
+
+    // Build once with the display name matching the display color space name.
+    dt->setDisplay(display.c_str());
+    OCIO::OpRcPtrVec currentOps;
+    OCIO_CHECK_NO_THROW(OCIO::BuildDisplayOps(currentOps, *config, config->getCurrentContext(),
+                                              *dt, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(currentOps.validate());
+    OCIO_REQUIRE_EQUAL(currentOps.size(), 5); // (includes gpu allocation no-ops)
+
+    // Build again with the display name matching an alias. The result must be identical.
+    dt->setDisplay(aliasDisplay.c_str());
+    OCIO::OpRcPtrVec aliasedOps;
+    OCIO_CHECK_NO_THROW(OCIO::BuildDisplayOps(aliasedOps, *config, config->getCurrentContext(),
+                                              *dt, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(aliasedOps.validate());
+    OCIO_REQUIRE_EQUAL(aliasedOps.size(), currentOps.size());
+
+    for (size_t i = 0; i < aliasedOps.size(); ++i)
+    {
+        auto opA = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(aliasedOps[i]);
+        auto opB = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(currentOps[i]);
+        OCIO_CHECK_ASSERT(*opA->data() == *opB->data());
+    }
+}
+
+OCIO_ADD_TEST(DisplayViewTransform, display_alias_fallback)
+{
+    // Validate that BuildDisplayOps resolves a display using Config::getCanonicalDisplayName,
+    // so that renaming a display in a config (while keeping the old name as an alias on the
+    // associated display color space) doesn't break a DisplayViewTransform still using the old
+    // name.
+
+    constexpr char CONFIG[]{ R"(
+ocio_profile_version: 2.6
+
+# Opt-in to display aliasing.
+use_display_view_aliases: true
+
+roles:
+  default: raw
+  aces_interchange: raw
+  cie_xyz_d65_interchange: sRGB - Display
+  color_timing: raw
+  compositing_log: raw
+  scene_linear: raw
+
+shared_views:
+  - !<View> {name: view, view_transform: display_vt, display_colorspace: <USE_DISPLAY_NAME>}
+
+displays:
+  sRGB - Display:
+    - !<Views> [view]
+
+view_transforms:
+  - !<ViewTransform>
+    name: display_vt
+    to_scene_reference: !<MatrixTransform> {offset: [0.3, 0.1, 0.1, 0]}
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: sRGB - Display
+    aliases: [sRGB]
+    to_display_reference: !<MatrixTransform> {offset: [0.25, 0.15, 0.35, 0]}
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    isdata: true
+
+  - !<ColorSpace>
+    name: source
+    to_scene_reference: !<MatrixTransform> {offset: [0, 0.1, 0.2, 0]}
+)" };
+
+    std::istringstream is;
+    is.str(CONFIG);
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    const std::string display{ "sRGB - Display" };
+    const std::string oldDisplayName{ "sRGB" };
+    const std::string view{ "view" };
+
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalDisplayName(oldDisplayName.c_str())), display);
+
+    auto dt = OCIO::DisplayViewTransform::Create();
+    dt->setSrc("source");
+    dt->setView(view.c_str());
+
+    // Build once using the display's current name.
+    dt->setDisplay(display.c_str());
+    OCIO::OpRcPtrVec currentOps;
+    OCIO_CHECK_NO_THROW(OCIO::BuildDisplayOps(currentOps, *config, config->getCurrentContext(),
+                                              *dt, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(currentOps.validate());
+    OCIO_REQUIRE_EQUAL(currentOps.size(), 5); // (includes gpu allocation no-ops)
+
+    // Build again using only the display's old, alias-only name. The result must be identical.
+    dt->setDisplay(oldDisplayName.c_str());
+    OCIO::OpRcPtrVec aliasedOps;
+    OCIO_CHECK_NO_THROW(OCIO::BuildDisplayOps(aliasedOps, *config, config->getCurrentContext(),
+                                              *dt, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(aliasedOps.validate());
+    OCIO_REQUIRE_EQUAL(aliasedOps.size(), currentOps.size());
+
+    for (size_t i = 0; i < aliasedOps.size(); ++i)
+    {
+        auto opA = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(aliasedOps[i]);
+        auto opB = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(currentOps[i]);
+        OCIO_CHECK_ASSERT(*opA->data() == *opB->data());
+    }
+
+    // A display name that cannot be resolved at all -- not an existing display, and not a
+    // display color space name or alias either -- must still throw, referencing the name the
+    // caller actually provided.
+    dt->setDisplay("not a display");
+    OCIO::OpRcPtrVec badOps;
+    OCIO_CHECK_THROW_WHAT(OCIO::BuildDisplayOps(badOps, *config, config->getCurrentContext(),
+                                                *dt, OCIO::TRANSFORM_DIR_FORWARD),
+                          OCIO::Exception,
+                          "DisplayViewTransform error. Display 'not a display' not found.");
+}
+
+OCIO_ADD_TEST(DisplayViewTransform, view_alias_fallback)
+{
+    // Validate that BuildDisplayOps resolves a view using Config::getCanonicalViewName, so
+    // that renaming a view in a config (while keeping the old name as an alias) doesn't
+    // break a DisplayViewTransform still using the old name as its "view".
+
+    constexpr char CONFIG[]{ R"(
+ocio_profile_version: 2.6
+
+# Opt-in to view aliasing.
+use_display_view_aliases: true
+
+roles:
+  default: raw
+  aces_interchange: raw
+  cie_xyz_d65_interchange: sRGB - Display
+  color_timing: raw
+  compositing_log: raw
+  scene_linear: raw
+
+displays:
+  sRGB - Display:
+    - !<View> {name: view, view_transform: display_vt, display_colorspace: sRGB - Display, looks: look1}
+
+looks:
+  - !<Look>
+    name: look1
+    process_space: source
+    transform: !<CDLTransform> {slope: [1.1, 1.2, 1.3]}
+
+view_transforms:
+  - !<ViewTransform>
+    name: display_vt
+    aliases: [old_vt]
+    to_scene_reference: !<MatrixTransform> {offset: [0.3, 0.1, 0.1, 0]}
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: sRGB - Display
+    to_display_reference: !<MatrixTransform> {offset: [0.25, 0.15, 0.35, 0]}
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    isdata: true
+
+  - !<ColorSpace>
+    name: source
+    to_scene_reference: !<MatrixTransform> {offset: [0, 0.1, 0.2, 0]}
+)" };
+
+    std::istringstream is;
+    is.str(CONFIG);
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    const std::string display{ "sRGB - Display" };
+    const std::string view{ "view" };
+    const std::string oldViewTransformName{ "old_vt" };
+
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalViewName(display.c_str(),
+                                                              oldViewTransformName.c_str())),
+                      view);
+
+    auto dt = OCIO::DisplayViewTransform::Create();
+    dt->setSrc("source");
+    dt->setDisplay(display.c_str());
+
+    // Build once using the view's current name.
+    dt->setView(view.c_str());
+    OCIO::OpRcPtrVec currentOps;
+    OCIO_CHECK_NO_THROW(OCIO::BuildDisplayOps(currentOps, *config, config->getCurrentContext(),
+                                              *dt, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(currentOps.validate());
+    OCIO_REQUIRE_EQUAL(currentOps.size(), 7); // (includes gpu allocation no-ops)
+
+    // Build again using only the view transform's old, alias-only name as the "view". The result
+    // must be identical. Note that the view has a look, so this also verifies that the resolved
+    // view name is used to look up the view's looks, not just its color space and view transform.
+    dt->setView(oldViewTransformName.c_str());
+    OCIO::OpRcPtrVec aliasedOps;
+    OCIO_CHECK_NO_THROW(OCIO::BuildDisplayOps(aliasedOps, *config, config->getCurrentContext(),
+                                              *dt, OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_NO_THROW(aliasedOps.validate());
+    OCIO_REQUIRE_EQUAL(aliasedOps.size(), currentOps.size());
+
+    for (size_t i = 0; i < aliasedOps.size(); ++i)
+    {
+        auto opA = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(aliasedOps[i]);
+        auto opB = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Op>(currentOps[i]);
+        OCIO_CHECK_ASSERT(*opA->data() == *opB->data());
+    }
+
+    // A view name that cannot be resolved at all -- not an existing view, and not a view
+    // transform or named transform name or alias used by this display either -- must still
+    // throw, referencing the name the caller actually provided.
+    dt->setView("not a view");
+    OCIO::OpRcPtrVec badOps;
+    OCIO_CHECK_THROW_WHAT(OCIO::BuildDisplayOps(badOps, *config, config->getCurrentContext(),
+                                                *dt, OCIO::TRANSFORM_DIR_FORWARD),
+                          OCIO::Exception,
+                          "DisplayViewTransform error. The display 'sRGB - Display' does not "
+                          "have view 'not a view'.");
+}
+
+OCIO_ADD_TEST(DisplayViewTransform, context_variables_with_resolved_display_view)
+{
+    // Validate that CollectContextVariables resolves the (display, view) pair the same way
+    // BuildDisplayOps does, so that the context variables of the display color space are found
+    // even when the view uses <USE_DISPLAY_NAME> or when the display name is aliased.
+
+    constexpr const char * OCIO_CONFIG{ R"(
+ocio_profile_version: 2.6
+
+use_display_view_aliases: true
+
+environment: { FILE: cdl_test1.cc }
+
+roles:
+  default: raw
+  aces_interchange: raw
+  cie_xyz_d65_interchange: sRGB - Display
+  color_timing: raw
+  compositing_log: raw
+  scene_linear: source
+
+file_rules:
+  - !<Rule> {name: Default, colorspace: default}
+
+shared_views:
+  - !<View> {name: view, view_transform: display_vt, display_colorspace: <USE_DISPLAY_NAME>}
+
+displays:
+  sRGB - Display:
+    - !<Views> [view]
+    - !<View> {name: plain_view, colorspace: source}
+
+view_transforms:
+  - !<ViewTransform>
+    name: display_vt
+    to_scene_reference: !<MatrixTransform> {offset: [0.3, 0.1, 0.1, 0]}
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: sRGB - Display
+    aliases: [sRGB]
+    to_display_reference: !<FileTransform> {src: $FILE}
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    isdata: true
+
+  - !<ColorSpace>
+    name: source
+    allocation: uniform
+)" };
+
+    std::istringstream is;
+    is.str(OCIO_CONFIG);
+
+    OCIO::ConfigRcPtr cfg;
+    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    cfg->setSearchPath(OCIO::GetTestFilesDir().c_str());
+    OCIO_CHECK_NO_THROW(cfg->validate());
+
+    OCIO::ContextRcPtr usedContextVars = OCIO::Context::Create();
+
+    auto dt = OCIO::DisplayViewTransform::Create();
+    dt->setSrc("source");
+
+    // A view with no context variables anywhere: neither the source nor the color space it
+    // targets uses one. Returns false.
+    dt->setDisplay("sRGB - Display");
+    dt->setView("plain_view");
+    OCIO_CHECK_ASSERT(!CollectContextVariables(*cfg, *cfg->getCurrentContext(), *dt,
+                                               usedContextVars));
+
+    // The shared view's display color space is <USE_DISPLAY_NAME>, so finding the context
+    // variable requires resolving that to the display color space named after the display.
+    // The context variable is found: returns true.
+    dt->setView("view");
+    OCIO_CHECK_ASSERT(CollectContextVariables(*cfg, *cfg->getCurrentContext(), *dt,
+                                              usedContextVars));
+
+    // The display's old, alias-only name is resolved too, so the same context variable is found.
+    // The context variable is found: returns true.
+    dt->setDisplay("sRGB");
+    OCIO_CHECK_ASSERT(CollectContextVariables(*cfg, *cfg->getCurrentContext(), *dt,
+                                              usedContextVars));
+}

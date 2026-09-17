@@ -953,3 +953,135 @@ OCIO_ADD_TEST(LegacyViewingPipeline, processorWithNoOpLook)
     OCIO_REQUIRE_ASSERT(groupTransform);
     OCIO_CHECK_NO_THROW(groupTransform->validate());
 }
+
+OCIO_ADD_TEST(LegacyViewingPipeline, display_view_alias_fallback)
+{
+    // A LegacyViewingPipeline resolves the display and view of its DisplayViewTransform, so that
+    // names that are out of date still produce the same pipeline.
+    //
+    // Note that this is not simply duplicating what the DisplayViewTransform does for itself when
+    // it is appended to the group. It matters most for the looks: setDisplayViewTransform forces
+    // LooksBypass on the stored transform, so the view's looks are applied by the pipeline itself
+    // rather than by BuildDisplayOps. If the view name did not resolve here, the looks lookup
+    // would come back empty and the looks would be silently dropped.
+
+    constexpr char CONFIG[]{ R"(
+ocio_profile_version: 2.6
+
+use_display_view_aliases: true
+
+roles:
+  default: raw
+  aces_interchange: raw
+  cie_xyz_d65_interchange: sRGB - Display
+  color_timing: raw
+  compositing_log: raw
+  scene_linear: source
+
+displays:
+  sRGB - Display:
+    - !<View> {name: view, view_transform: display_vt, display_colorspace: sRGB - Display, looks: look1}
+
+looks:
+  - !<Look>
+    name: look1
+    process_space: source
+    transform: !<CDLTransform> {slope: [1.1, 1.2, 1.3]}
+
+view_transforms:
+  - !<ViewTransform>
+    name: display_vt
+    aliases: [old_vt]
+    to_scene_reference: !<MatrixTransform> {offset: [0.3, 0.1, 0.1, 0]}
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: sRGB - Display
+    aliases: [sRGB]
+    to_display_reference: !<MatrixTransform> {offset: [0.25, 0.15, 0.35, 0]}
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    isdata: true
+
+  - !<ColorSpace>
+    name: source
+    to_scene_reference: !<MatrixTransform> {offset: [0, 0.1, 0.2, 0]}
+)" };
+
+    std::istringstream is(CONFIG);
+
+    OCIO::ConstConfigRcPtr cfg;
+    OCIO_CHECK_NO_THROW(cfg = OCIO::Config::CreateFromStream(is));
+    OCIO_CHECK_NO_THROW(cfg->validate());
+
+    // Build the pipeline for a (display, view) pair and run one pixel through it. Comparing the
+    // resulting values catches a dropped look, which a structural check on the transform list
+    // could easily miss.
+    auto applyPipeline = [&cfg](const char * display, const char * view, bool bypassLooks,
+                                float * rgb)
+    {
+        OCIO::DisplayViewTransformRcPtr dt = OCIO::DisplayViewTransform::Create();
+        dt->setSrc("source");
+        dt->setDisplay(display);
+        dt->setView(view);
+        dt->setLooksBypass(bypassLooks);
+
+        OCIO::LegacyViewingPipelineRcPtr vp = OCIO::LegacyViewingPipeline::Create();
+        vp->setDisplayViewTransform(dt);
+
+        OCIO::ConstProcessorRcPtr proc = vp->getProcessor(cfg, cfg->getCurrentContext());
+        proc->getDefaultCPUProcessor()->applyRGB(rgb);
+    };
+
+    constexpr float srcPixel[3]{ 0.3f, 0.5f, 0.7f };
+    constexpr float tolerance = 1e-6f;
+
+    // The reference result, using the display's and the view's current names.
+    float ref[3]{ srcPixel[0], srcPixel[1], srcPixel[2] };
+    OCIO_CHECK_NO_THROW(applyPipeline("sRGB - Display", "view", false, ref));
+
+    // Confirm the look actually changes the result, so that the comparisons below can't pass
+    // merely because the look happens to be a no-op. Setting LooksBypass before handing the
+    // transform to the pipeline is what makes it skip the looks (see m_dtOriginalLooksBypass).
+    {
+        float noLook[3]{ srcPixel[0], srcPixel[1], srcPixel[2] };
+        OCIO_CHECK_NO_THROW(applyPipeline("sRGB - Display", "view", true, noLook));
+
+        OCIO_CHECK_ASSERT(std::abs(noLook[0] - ref[0]) > 1e-4f ||
+                          std::abs(noLook[1] - ref[1]) > 1e-4f ||
+                          std::abs(noLook[2] - ref[2]) > 1e-4f);
+    }
+
+    // The display's old, alias-only name must give the same result.
+    {
+        float aliasedDisplay[3]{ srcPixel[0], srcPixel[1], srcPixel[2] };
+        OCIO_CHECK_NO_THROW(applyPipeline("sRGB", "view", false, aliasedDisplay));
+
+        OCIO_CHECK_CLOSE(aliasedDisplay[0], ref[0], tolerance);
+        OCIO_CHECK_CLOSE(aliasedDisplay[1], ref[1], tolerance);
+        OCIO_CHECK_CLOSE(aliasedDisplay[2], ref[2], tolerance);
+    }
+
+    // So must the view transform's old, alias-only name used as the view. This is the case that
+    // would silently lose the look if the view were not resolved.
+    {
+        float aliasedView[3]{ srcPixel[0], srcPixel[1], srcPixel[2] };
+        OCIO_CHECK_NO_THROW(applyPipeline("sRGB - Display", "old_vt", false, aliasedView));
+
+        OCIO_CHECK_CLOSE(aliasedView[0], ref[0], tolerance);
+        OCIO_CHECK_CLOSE(aliasedView[1], ref[1], tolerance);
+        OCIO_CHECK_CLOSE(aliasedView[2], ref[2], tolerance);
+    }
+
+    // And both being out of date at once, since the view is resolved against the resolved display.
+    {
+        float bothAliased[3]{ srcPixel[0], srcPixel[1], srcPixel[2] };
+        OCIO_CHECK_NO_THROW(applyPipeline("sRGB", "old_vt", false, bothAliased));
+
+        OCIO_CHECK_CLOSE(bothAliased[0], ref[0], tolerance);
+        OCIO_CHECK_CLOSE(bothAliased[1], ref[1], tolerance);
+        OCIO_CHECK_CLOSE(bothAliased[2], ref[2], tolerance);
+    }
+}

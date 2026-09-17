@@ -346,6 +346,10 @@ void bindPyConfig(py::module & m)
              DOC(Config, isStrictParsingEnabled))
         .def("setStrictParsingEnabled", &Config::setStrictParsingEnabled, "enabled"_a,
              DOC(Config, setStrictParsingEnabled))
+        .def("getUseDisplayViewAliases", &Config::getUseDisplayViewAliases,
+             DOC(Config, getUseDisplayViewAliases))
+        .def("setUseDisplayViewAliases", &Config::setUseDisplayViewAliases, "enabled"_a,
+             DOC(Config, setUseDisplayViewAliases))
         .def("setInactiveColorSpaces", &Config::setInactiveColorSpaces, "inactiveColorSpaces"_a,
              DOC(Config, setInactiveColorSpaces))
         .def("getInactiveColorSpaces", &Config::getInactiveColorSpaces, 
@@ -432,6 +436,12 @@ void bindPyConfig(py::module & m)
             { 
                 return DisplayAllIterator(self); 
             })
+        .def("getCanonicalDisplayName", &Config::getCanonicalDisplayName, "display"_a,
+             DOC(Config, getCanonicalDisplayName))
+        .def("getDisplayDescription", &Config::getDisplayDescription, "display"_a,
+             DOC(Config, getDisplayDescription))
+        .def("getCanonicalViewName", &Config::getCanonicalViewName, "display"_a, "view"_a,
+             DOC(Config, getCanonicalViewName))
         .def("getDefaultView",
              (const char * (Config::*)(const char *) const)
              &Config::getDefaultView, "display"_a, 
@@ -463,6 +473,9 @@ void bindPyConfig(py::module & m)
         .def("getDisplayViewColorSpaceName", &Config::getDisplayViewColorSpaceName, 
              "display"_a, "view"_a, 
              DOC(Config, getDisplayViewColorSpaceName))
+        .def("getResolvedDisplayViewColorSpaceName", &Config::getResolvedDisplayViewColorSpaceName,
+             "display"_a, "view"_a,
+             DOC(Config, getResolvedDisplayViewColorSpaceName))
         .def("getDisplayViewLooks", &Config::getDisplayViewLooks, "display"_a, "view"_a, 
              DOC(Config, getDisplayViewLooks))
         .def("getDisplayViewRule", &Config::getDisplayViewRule, "display"_a, "view"_a, 

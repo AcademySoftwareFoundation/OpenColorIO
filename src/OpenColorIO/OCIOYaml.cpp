@@ -3822,6 +3822,15 @@ inline void load(const YAML::Node & node, ViewTransformRcPtr & vt)
             load(iter->second, stringval);
             vt->setName(stringval.c_str());
         }
+        else if (key == "aliases")
+        {
+            StringUtils::StringVec aliases;
+            load(iter->second, aliases);
+            for (const auto & alias : aliases)
+            {
+                vt->addAlias(alias.c_str());
+            }
+        }
         else if (key == "description")
         {
             std::string stringval;
@@ -3884,6 +3893,18 @@ inline void save(YAML::Emitter & out, ConstViewTransformRcPtr & vt, unsigned int
     out << YAML::BeginMap;
 
     out << YAML::Key << "name" << YAML::Value << vt->getName();
+    const size_t numAliases = vt->getNumAliases();
+    if (numAliases)
+    {
+        out << YAML::Key << "aliases";
+        StringUtils::StringVec aliases;
+        for (size_t aidx = 0; aidx < numAliases; ++aidx)
+        {
+            aliases.push_back(vt->getAlias(aidx));
+        }
+        out << YAML::Flow << YAML::Value << aliases;
+    }
+
     const char * family = vt->getFamily();
     if (family && *family)
     {
@@ -4754,6 +4775,11 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
                 }
             }
         }
+        else if (key == "use_display_view_aliases")
+        {
+            load(iter->second, boolval);
+            config->setUseDisplayViewAliases(boolval);
+        }
         else if(key == "active_displays")
         {
             StringUtils::StringVec display;
@@ -5272,6 +5298,12 @@ inline void save(YAML::Emitter & out, const Config & config)
 
     out << YAML::Newline;
     out << YAML::Newline;
+
+    if (config.getUseDisplayViewAliases())
+    {
+        out << YAML::Key << "use_display_view_aliases" << YAML::Value << true;
+    }
+
     out << YAML::Key << "active_displays";
     StringUtils::StringVec active_displays;
     int nDisplays = config.getNumActiveDisplays();

@@ -11,11 +11,13 @@ namespace
 
 enum ViewTransformIterator
 {
-    IT_VIEW_TRANSFORM_CATEGORY = 0
+    IT_VIEW_TRANSFORM_CATEGORY = 0,
+    IT_VIEW_TRANSFORM_ALIAS
 };
 
 using ViewTransformCategoryIterator = PyIterator<ViewTransformRcPtr, 
                                                  IT_VIEW_TRANSFORM_CATEGORY>;
+using ViewTransformAliasIterator = PyIterator<ViewTransformRcPtr, IT_VIEW_TRANSFORM_ALIAS>;
 
 std::vector<std::string> getCategoriesStdVec(const ViewTransformRcPtr & p) {
     std::vector<std::string> categories;
@@ -25,6 +27,17 @@ std::vector<std::string> getCategoriesStdVec(const ViewTransformRcPtr & p) {
         categories.push_back(p->getCategory(i));
     }
     return categories;
+}
+
+std::vector<std::string> getAliasesStdVec(const ViewTransformRcPtr & p)
+{
+    std::vector<std::string> aliases;
+    aliases.reserve(p->getNumAliases());
+    for (size_t i = 0; i < p->getNumAliases(); i++)
+    {
+        aliases.push_back(p->getAlias(i));
+    }
+    return aliases;
 }
 
 } // namespace
@@ -41,6 +54,10 @@ void bindPyViewTransform(py::module & m)
         py::class_<ViewTransformCategoryIterator>(
             clsViewTransform, "ViewTransformCategoryIterator");
 
+    auto clsViewTransformAliasIterator =
+        py::class_<ViewTransformAliasIterator>(
+            clsViewTransform, "ViewTransformAliasIterator");
+
     clsViewTransform
         .def(py::init([](ReferenceSpaceType referenceSpace) 
             { 
@@ -54,9 +71,19 @@ void bindPyViewTransform(py::module & m)
                          const std::string & description,
                          const TransformRcPtr & toReference,
                          const TransformRcPtr & fromReference,
-                         const std::vector<std::string> & categories) 
+                         const std::vector<std::string> & categories, 
+                         const std::vector<std::string> & aliases)
             {
                 ViewTransformRcPtr p = ViewTransform::Create(referenceSpace);
+                if (!aliases.empty())
+                {
+                    p->clearAliases();
+                    for (size_t i = 0; i < aliases.size(); i++)
+                    {
+                        p->addAlias(aliases[i].c_str());
+                    }
+                }
+                // Setting the name will remove alias named the same, so set name after.
                 if (!name.empty())          { p->setName(name.c_str()); }
                 if (!family.empty())        { p->setFamily(family.c_str()); }
                 if (!description.empty())   { p->setDescription(description.c_str()); }
@@ -85,6 +112,7 @@ void bindPyViewTransform(py::module & m)
              "toReference"_a = DEFAULT->getTransform(VIEWTRANSFORM_DIR_TO_REFERENCE),
              "fromReference"_a = DEFAULT->getTransform(VIEWTRANSFORM_DIR_FROM_REFERENCE),
              "categories"_a = getCategoriesStdVec(DEFAULT),
+             "aliases"_a = getAliasesStdVec(DEFAULT),
              DOC(ViewTransform, Create))
 
         .def("__deepcopy__", [](const ConstViewTransformRcPtr & self, py::dict)
@@ -97,6 +125,21 @@ void bindPyViewTransform(py::module & m)
              DOC(ViewTransform, getName))
         .def("setName", &ViewTransform::setName, "name"_a,
              DOC(ViewTransform, setName))
+
+        // Aliases.
+        .def("hasAlias", &ViewTransform::hasAlias, "alias"_a,
+             DOC(ViewTransform, hasAlias))
+        .def("addAlias", &ViewTransform::addAlias, "alias"_a.none(false),
+             DOC(ViewTransform, addAlias))
+        .def("removeAlias", &ViewTransform::removeAlias, "alias"_a.none(false),
+             DOC(ViewTransform, removeAlias))
+        .def("getAliases", [](ViewTransformRcPtr & self)
+            {
+                return ViewTransformAliasIterator(self);
+            })
+        .def("clearAliases", &ViewTransform::clearAliases,
+             DOC(ViewTransform, clearAliases))
+
         .def("getFamily", &ViewTransform::getFamily,
              DOC(ViewTransform, getFamily))
         .def("setFamily", &ViewTransform::setFamily, "family"_a,
@@ -150,6 +193,26 @@ void bindPyViewTransform(py::module & m)
             {
                 int i = it.nextIndex(it.m_obj->getNumCategories());
                 return it.m_obj->getCategory(i);
+            });
+
+    clsViewTransformAliasIterator
+        .def("__len__", [](ViewTransformAliasIterator & it)
+            {
+                return it.m_obj->getNumAliases();
+            })
+        .def("__getitem__", [](ViewTransformAliasIterator & it, int i)
+            {
+                it.checkIndex(i, (int)it.m_obj->getNumAliases());
+                return it.m_obj->getAlias(i);
+            })
+        .def("__iter__", [](ViewTransformAliasIterator & it) -> ViewTransformAliasIterator &
+            {
+                return it;
+            })
+        .def("__next__", [](ViewTransformAliasIterator & it)
+            {
+                int i = it.nextIndex((int)it.m_obj->getNumAliases());
+                return it.m_obj->getAlias(i);
             });
 }
 

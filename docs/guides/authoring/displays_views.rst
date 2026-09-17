@@ -132,6 +132,25 @@ A View Transform may use the following keys:
 
 .. TODO: Good spot for an example in a future revision.
 
+
+``use_display_view_aliases``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Optional.  Activates aliases for display and view names.
+
+By default, the arguments to DisplayViewTransform must be the exact strings found
+in the display / view section of the config. However, if ``ocio_profile_version`` 
+is 2.6 or higher, ``use_display_view_aliases`` may be set to true. This allows a
+display to be referred to by the name or aliases of its corresponding display
+ColorSpace and the view to be referred to by the name or aliases of its
+corresponding ViewTransform. This config-level attribute defaults to false and 
+must be omitted from the config file if its value is not "true".
+
+.. code-block:: yaml
+
+  use_display_view_aliases: true
+
+
 ``default_view_transform``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 

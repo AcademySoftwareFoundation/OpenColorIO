@@ -5,7 +5,9 @@
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "Platform.h"
 #include "TokensManager.h"
+#include "utils/StringUtils.h"
 
 namespace
 {
@@ -20,6 +22,7 @@ class ViewTransform::Impl
 {
 public:
     std::string m_name;
+    StringUtils::StringVec m_aliases;
     std::string m_family;
     std::string m_description;
     ReferenceSpaceType m_referenceSpaceType{ REFERENCE_SPACE_SCENE };
@@ -44,6 +47,7 @@ public:
         if (this != &rhs)
         {
             m_name        = rhs.m_name;
+            m_aliases     = rhs.m_aliases;
             m_family      = rhs.m_family;
             m_description = rhs.m_description;
 
@@ -100,6 +104,63 @@ const char * ViewTransform::getName() const noexcept
 void ViewTransform::setName(const char * name) noexcept
 {
     getImpl()->m_name = name ? name : "";
+    // Name can no longer be an alias.
+    StringUtils::Remove(getImpl()->m_aliases, getImpl()->m_name);
+}
+
+size_t ViewTransform::getNumAliases() const noexcept
+{
+    return getImpl()->m_aliases.size();
+}
+
+const char * ViewTransform::getAlias(size_t idx) const noexcept
+{
+    if (idx < getImpl()->m_aliases.size())
+    {
+        return getImpl()->m_aliases[idx].c_str();
+    }
+    return "";
+}
+
+bool ViewTransform::hasAlias(const char * alias) const noexcept
+{
+    if (!alias) return false;
+    for (size_t idx = 0; idx < getImpl()->m_aliases.size(); ++idx)
+    {
+        if (0 == Platform::Strcasecmp(getImpl()->m_aliases[idx].c_str(), alias))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void ViewTransform::addAlias(const char * alias) noexcept
+{
+    if (alias && *alias)
+    {
+        if (!StringUtils::Compare(alias, getImpl()->m_name))
+        {
+            if (!StringUtils::Contain(getImpl()->m_aliases, alias))
+            {
+                getImpl()->m_aliases.push_back(alias);
+            }
+        }
+    }
+}
+
+void ViewTransform::removeAlias(const char * name) noexcept
+{
+    if (name && *name)
+    {
+        const std::string alias{ name };
+        StringUtils::Remove(getImpl()->m_aliases, alias);
+    }
+}
+
+void ViewTransform::clearAliases() noexcept
+{
+    getImpl()->m_aliases.clear();
 }
 
 const char * ViewTransform::getFamily() const noexcept
@@ -267,6 +328,20 @@ std::ostream & operator<< (std::ostream & os, const ViewTransform & vt)
 {
     os << "<ViewTransform ";
     os << "name=" << vt.getName() << ", ";
+    const auto numAliases = vt.getNumAliases();
+    if (numAliases == 1)
+    {
+        os << "alias=" << vt.getAlias(0) << ", ";
+    }
+    else if (numAliases > 1)
+    {
+        os << "aliases=[" << vt.getAlias(0);
+        for (size_t aidx = 1; aidx < numAliases; ++aidx)
+        {
+            os << ", " << vt.getAlias(aidx);
+        }
+        os << "], ";
+    }
     os << "family=" << vt.getFamily() << ", ";
     os << "referenceSpaceType=" << ReferenceSpaceTypeToString(vt.getReferenceSpaceType());
     const std::string desc{ vt.getDescription() };

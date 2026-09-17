@@ -68,3 +68,74 @@ OCIO_ADD_TEST(ViewTransform, basic)
     OCIO_REQUIRE_ASSERT(vtd);
     OCIO_CHECK_EQUAL(OCIO::REFERENCE_SPACE_DISPLAY, vtd->getReferenceSpaceType());
 }
+
+OCIO_ADD_TEST(ViewTransform, aliases)
+{
+    OCIO::ViewTransformRcPtr vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_SCENE);
+    OCIO_REQUIRE_ASSERT(vt);
+    OCIO_CHECK_EQUAL(vt->getNumAliases(), 0);
+    constexpr char AliasA[]{ "aliasA" };
+    constexpr char AliasAAlt[]{ "aLiaSa" };
+    constexpr char AliasB[]{ "aliasB" };
+    vt->addAlias(AliasA);
+    OCIO_CHECK_EQUAL(vt->getNumAliases(), 1);
+    OCIO_CHECK_ASSERT(vt->hasAlias(AliasA));
+    OCIO_CHECK_ASSERT(vt->hasAlias(AliasAAlt));
+    OCIO_CHECK_ASSERT(!vt->hasAlias(AliasB));
+    vt->addAlias(AliasB);
+    OCIO_CHECK_EQUAL(vt->getNumAliases(), 2);
+    OCIO_CHECK_EQUAL(std::string(vt->getAlias(0)), AliasA);
+    OCIO_CHECK_EQUAL(std::string(vt->getAlias(1)), AliasB);
+    OCIO_CHECK_ASSERT(vt->hasAlias(AliasB));
+
+    // Alias with same name (different case) already exists, do nothing.
+
+    vt->addAlias(AliasAAlt);
+    OCIO_CHECK_EQUAL(vt->getNumAliases(), 2);
+    OCIO_CHECK_EQUAL(std::string(vt->getAlias(0)), AliasA);
+    OCIO_CHECK_EQUAL(std::string(vt->getAlias(1)), AliasB);
+
+    // Remove alias.
+
+    vt->removeAlias(AliasAAlt);
+    OCIO_CHECK_EQUAL(vt->getNumAliases(), 1);
+    OCIO_CHECK_EQUAL(std::string(vt->getAlias(0)), AliasB);
+    OCIO_CHECK_ASSERT(!vt->hasAlias(AliasA));
+    OCIO_CHECK_ASSERT(!vt->hasAlias(AliasAAlt));
+
+    // Add with new case.
+
+    vt->addAlias(AliasAAlt);
+    OCIO_CHECK_EQUAL(vt->getNumAliases(), 2);
+    OCIO_CHECK_EQUAL(std::string(vt->getAlias(0)), AliasB);
+    OCIO_CHECK_EQUAL(std::string(vt->getAlias(1)), AliasAAlt);
+    OCIO_CHECK_ASSERT(vt->hasAlias(AliasA));
+    OCIO_CHECK_ASSERT(vt->hasAlias(AliasAAlt));
+
+    // Setting the name of the view transform to one of its aliases removes the alias.
+
+    vt->setName(AliasA);
+    OCIO_CHECK_EQUAL(std::string(vt->getName()), AliasA);
+    OCIO_CHECK_EQUAL(vt->getNumAliases(), 1);
+    OCIO_CHECK_EQUAL(std::string(vt->getAlias(0)), AliasB);
+    OCIO_CHECK_ASSERT(!vt->hasAlias(AliasA));
+    OCIO_CHECK_ASSERT(!vt->hasAlias(AliasAAlt));
+
+    // Alias is not added if it is already the view transform name.
+
+    vt->addAlias(AliasAAlt);
+    OCIO_CHECK_EQUAL(std::string(vt->getName()), AliasA);
+    OCIO_CHECK_EQUAL(vt->getNumAliases(), 1);
+    OCIO_CHECK_EQUAL(std::string(vt->getAlias(0)), AliasB);
+    OCIO_CHECK_ASSERT(!vt->hasAlias(AliasAAlt));
+
+    // Remove all aliases.
+
+    vt->addAlias("other");
+    OCIO_CHECK_EQUAL(vt->getNumAliases(), 2);
+    OCIO_CHECK_ASSERT(vt->hasAlias("other"));
+    vt->clearAliases();
+    OCIO_CHECK_EQUAL(vt->getNumAliases(), 0);
+    OCIO_CHECK_ASSERT(!vt->hasAlias(AliasB));
+    OCIO_CHECK_ASSERT(!vt->hasAlias("other"));
+}
