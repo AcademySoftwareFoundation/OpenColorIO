@@ -515,3 +515,128 @@ colorspaces:
     OCIO_CHECK_EQUAL(std::string(configav->getView("sRGB", "c3", 0)), 
                      std::string(configav->getDefaultView("sRGB", "c3")));
 }
+
+OCIO_ADD_TEST(ViewingRules, viewing_rules_are_equal)
+{
+    // Two rules with the same colorspaces (added in a different order) and the same
+    // custom keys (added in a different order) are equal. The rule name is not compared.
+    OCIO::ViewingRulesRcPtr r1 = OCIO::ViewingRules::Create();
+    OCIO_CHECK_NO_THROW(r1->insertRule(0, "RuleA"));
+    OCIO_CHECK_NO_THROW(r1->addColorSpace(0, "cs0"));
+    OCIO_CHECK_NO_THROW(r1->addColorSpace(0, "cs1"));
+    OCIO_CHECK_NO_THROW(r1->setCustomKey(0, "key0", "value0"));
+    OCIO_CHECK_NO_THROW(r1->setCustomKey(0, "key1", "value1"));
+
+    OCIO::ViewingRulesRcPtr r2 = OCIO::ViewingRules::Create();
+    OCIO_CHECK_NO_THROW(r2->insertRule(0, "RuleB"));
+    OCIO_CHECK_NO_THROW(r2->addColorSpace(0, "cs1"));
+    OCIO_CHECK_NO_THROW(r2->addColorSpace(0, "cs0"));
+    OCIO_CHECK_NO_THROW(r2->setCustomKey(0, "key1", "value1"));
+    OCIO_CHECK_NO_THROW(r2->setCustomKey(0, "key0", "value0"));
+
+    OCIO_CHECK_ASSERT(OCIO::viewingRulesAreEqual(r1, 0, r2, 0));
+    OCIO_CHECK_ASSERT(OCIO::viewingRulesAreEqual(r2, 0, r1, 0));
+
+    // A different number of colorspaces makes the rules unequal.
+    OCIO::ViewingRulesRcPtr r3 = OCIO::ViewingRules::Create();
+    OCIO_CHECK_NO_THROW(r3->insertRule(0, "RuleC"));
+    OCIO_CHECK_NO_THROW(r3->addColorSpace(0, "cs0"));
+    OCIO_CHECK_ASSERT(!OCIO::viewingRulesAreEqual(r1, 0, r3, 0));
+
+    // The same number of colorspaces but different content makes the rules unequal.
+    OCIO::ViewingRulesRcPtr r4 = OCIO::ViewingRules::Create();
+    OCIO_CHECK_NO_THROW(r4->insertRule(0, "RuleD"));
+    OCIO_CHECK_NO_THROW(r4->addColorSpace(0, "cs0"));
+    OCIO_CHECK_NO_THROW(r4->addColorSpace(0, "cs2"));
+    OCIO_CHECK_ASSERT(!OCIO::viewingRulesAreEqual(r1, 0, r4, 0));
+
+    // Same colorspaces, but a differing custom key value makes the rules unequal.
+    OCIO::ViewingRulesRcPtr r5 = OCIO::ViewingRules::Create();
+    OCIO_CHECK_NO_THROW(r5->insertRule(0, "RuleE"));
+    OCIO_CHECK_NO_THROW(r5->addColorSpace(0, "cs0"));
+    OCIO_CHECK_NO_THROW(r5->addColorSpace(0, "cs1"));
+    OCIO_CHECK_NO_THROW(r5->setCustomKey(0, "key0", "value0"));
+    OCIO_CHECK_NO_THROW(r5->setCustomKey(0, "key1", "different"));
+    OCIO_CHECK_ASSERT(!OCIO::viewingRulesAreEqual(r1, 0, r5, 0));
+
+    // Same colorspaces and custom-key count, but a differing custom key name (rather than
+    // value) also makes the rules unequal.
+    OCIO::ViewingRulesRcPtr r5b = OCIO::ViewingRules::Create();
+    OCIO_CHECK_NO_THROW(r5b->insertRule(0, "RuleE2"));
+    OCIO_CHECK_NO_THROW(r5b->addColorSpace(0, "cs0"));
+    OCIO_CHECK_NO_THROW(r5b->addColorSpace(0, "cs1"));
+    OCIO_CHECK_NO_THROW(r5b->setCustomKey(0, "key0", "value0"));
+    OCIO_CHECK_NO_THROW(r5b->setCustomKey(0, "keyOther", "value1"));
+    OCIO_CHECK_ASSERT(!OCIO::viewingRulesAreEqual(r1, 0, r5b, 0));
+
+    // Rules built from encodings instead of colorspaces compare the same way.
+    OCIO::ViewingRulesRcPtr r6 = OCIO::ViewingRules::Create();
+    OCIO_CHECK_NO_THROW(r6->insertRule(0, "RuleF"));
+    OCIO_CHECK_NO_THROW(r6->addEncoding(0, "enc0"));
+    OCIO_CHECK_NO_THROW(r6->addEncoding(0, "enc1"));
+
+    OCIO::ViewingRulesRcPtr r7 = OCIO::ViewingRules::Create();
+    OCIO_CHECK_NO_THROW(r7->insertRule(0, "RuleG"));
+    OCIO_CHECK_NO_THROW(r7->addEncoding(0, "enc1"));
+    OCIO_CHECK_NO_THROW(r7->addEncoding(0, "enc0"));
+    OCIO_CHECK_ASSERT(OCIO::viewingRulesAreEqual(r6, 0, r7, 0));
+
+    OCIO::ViewingRulesRcPtr r8 = OCIO::ViewingRules::Create();
+    OCIO_CHECK_NO_THROW(r8->insertRule(0, "RuleH"));
+    OCIO_CHECK_NO_THROW(r8->addEncoding(0, "enc0"));
+    OCIO_CHECK_ASSERT(!OCIO::viewingRulesAreEqual(r6, 0, r8, 0));
+
+    // The same number of encodings but different content also makes the rules unequal.
+    OCIO::ViewingRulesRcPtr r9 = OCIO::ViewingRules::Create();
+    OCIO_CHECK_NO_THROW(r9->insertRule(0, "RuleI"));
+    OCIO_CHECK_NO_THROW(r9->addEncoding(0, "enc0"));
+    OCIO_CHECK_NO_THROW(r9->addEncoding(0, "enc2"));
+    OCIO_CHECK_ASSERT(!OCIO::viewingRulesAreEqual(r6, 0, r9, 0));
+
+    // Comparing different rule indices within multi-rule sets works as expected.
+    OCIO_CHECK_NO_THROW(r1->insertRule(1, "RuleA2"));
+    OCIO_CHECK_NO_THROW(r1->addColorSpace(1, "cs0"));
+    OCIO_CHECK_ASSERT(OCIO::viewingRulesAreEqual(r1, 1, r3, 0));
+    OCIO_CHECK_ASSERT(!OCIO::viewingRulesAreEqual(r1, 0, r1, 1));
+}
+
+OCIO_ADD_TEST(ViewingRules, copy_viewing_rule)
+{
+    // Copying a rule using colorspaces and custom keys reproduces it exactly (aside from
+    // the name, which is also copied) at the destination index.
+    OCIO::ViewingRulesRcPtr src = OCIO::ViewingRules::Create();
+    OCIO_CHECK_NO_THROW(src->insertRule(0, "SrcRule"));
+    OCIO_CHECK_NO_THROW(src->addColorSpace(0, "cs0"));
+    OCIO_CHECK_NO_THROW(src->addColorSpace(0, "cs1"));
+    OCIO_CHECK_NO_THROW(src->setCustomKey(0, "key0", "value0"));
+
+    OCIO::ViewingRulesRcPtr dst = OCIO::ViewingRules::Create();
+    OCIO_CHECK_NO_THROW(OCIO::copyViewingRule(src, 0, 0, dst));
+
+    OCIO_REQUIRE_EQUAL(dst->getNumEntries(), 1);
+    OCIO_CHECK_ASSERT(OCIO::viewingRulesAreEqual(src, 0, dst, 0));
+    std::string stringVal;
+    OCIO_CHECK_NO_THROW(stringVal = dst->getName(0));
+    OCIO_CHECK_EQUAL(stringVal, "SrcRule");
+
+    // Copying appends at the destination index without disturbing an existing rule there.
+    OCIO::ViewingRulesRcPtr srcEnc = OCIO::ViewingRules::Create();
+    OCIO_CHECK_NO_THROW(srcEnc->insertRule(0, "SrcEncRule"));
+    OCIO_CHECK_NO_THROW(srcEnc->addEncoding(0, "enc0"));
+    OCIO_CHECK_NO_THROW(OCIO::copyViewingRule(srcEnc, 0, dst->getNumEntries(), dst));
+
+    OCIO_REQUIRE_EQUAL(dst->getNumEntries(), 2);
+    OCIO_CHECK_ASSERT(OCIO::viewingRulesAreEqual(src, 0, dst, 0));
+    OCIO_CHECK_ASSERT(OCIO::viewingRulesAreEqual(srcEnc, 0, dst, 1));
+
+    // The copy is best-effort: a name collision means insertRule throws immediately (before
+    // any colorspace/encoding/custom-key is applied), so the exception is swallowed and the
+    // destination is left exactly as it was before the call.
+    OCIO::ViewingRulesRcPtr srcDup = OCIO::ViewingRules::Create();
+    OCIO_CHECK_NO_THROW(srcDup->insertRule(0, "SrcRule"));
+    OCIO_CHECK_NO_THROW(srcDup->addColorSpace(0, "cs2"));
+    OCIO_CHECK_NO_THROW(OCIO::copyViewingRule(srcDup, 0, dst->getNumEntries(), dst));
+    OCIO_REQUIRE_EQUAL(dst->getNumEntries(), 2);
+    OCIO_CHECK_ASSERT(OCIO::viewingRulesAreEqual(src, 0, dst, 0));
+    OCIO_CHECK_ASSERT(OCIO::viewingRulesAreEqual(srcEnc, 0, dst, 1));
+}

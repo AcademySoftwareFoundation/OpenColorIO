@@ -463,6 +463,118 @@ std::ostream & operator<< (std::ostream & os, const ViewingRules & vr)
     return os;
 }
 
+bool viewingRulesAreEqual(const ConstViewingRulesRcPtr & r1,
+                          size_t r1Idx,
+                          const ConstViewingRulesRcPtr & r2,
+                          size_t r2Idx)
+{
+    // NB: No need to compare the name of the rules, that should be done in the caller.
+
+    // Compare color space tokens, handling the case where they may be in a different order.
+
+    if (r1->getNumColorSpaces(r1Idx) != r2->getNumColorSpaces(r2Idx))
+    {
+        return false;
+    }
+
+    TokensManager r1ColorSpaces;
+    for (size_t m = 0; m < r1->getNumColorSpaces(r1Idx); m++)
+    {
+        r1ColorSpaces.addToken(r1->getColorSpace(r1Idx, m));
+    }
+
+    for (size_t m = 0; m < r2->getNumColorSpaces(r2Idx); m++)
+    {
+        if (!r1ColorSpaces.hasToken(r2->getColorSpace(r2Idx, m)))
+        {
+            return false;
+        }
+    }
+
+    // Compare encoding tokens, handling the case where they may be in a different order.
+
+    if (r1->getNumEncodings(r1Idx) != r2->getNumEncodings(r2Idx))
+    {
+        return false;
+    }
+
+    TokensManager r1Encodings;
+    for (size_t m = 0; m < r1->getNumEncodings(r1Idx); m++)
+    {
+        r1Encodings.addToken(r1->getEncoding(r1Idx, m));
+    }
+
+    for (size_t m = 0; m < r2->getNumEncodings(r2Idx); m++)
+    {
+        if(!r1Encodings.hasToken(r2->getEncoding(r2Idx, m)))
+        {
+            return false;
+        }
+    }
+
+    // Compare the custom keys, handling the case where they may be in a different order.
+
+    if (r1->getNumCustomKeys(r1Idx) != r2->getNumCustomKeys(r2Idx))
+    {
+        return false;
+    }
+
+    CustomKeysContainer r1CustomKeys;
+    for (size_t m = 0; m < r1->getNumCustomKeys(r1Idx); m++)
+    {
+        r1CustomKeys.set(r1->getCustomKeyName(r1Idx, m), r1->getCustomKeyValue(r1Idx, m));
+    }
+
+    for (size_t m = 0; m < r2->getNumCustomKeys(r2Idx); m++)
+    {
+        if (!r1CustomKeys.hasKey(r2->getCustomKeyName(r2Idx, m)))
+        {
+            return false;
+        }
+        else
+        {
+            if (Platform::Strcasecmp(r1CustomKeys.getValueForKey(r2->getCustomKeyName(r2Idx, m)),
+                                     r2->getCustomKeyValue(r2Idx, m)) != 0)
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+void copyViewingRule(const ConstViewingRulesRcPtr & src,
+                     size_t srcIdx,
+                     size_t dstIdx,
+                     ViewingRulesRcPtr & rules)
+{
+    try
+    {
+        rules->insertRule(dstIdx, src->getName(srcIdx));
+
+        for (int j = 0; j < static_cast<int>(src->getNumColorSpaces(srcIdx)); j++)
+        {
+            rules->addColorSpace(dstIdx, src->getColorSpace(srcIdx, j));
+        }
+
+        for (int k = 0; k < static_cast<int>(src->getNumEncodings(srcIdx)); k++)
+        {
+            rules->addEncoding(dstIdx, src->getEncoding(srcIdx, k));
+        }
+
+        for (int l = 0; l < static_cast<int>(src->getNumCustomKeys(srcIdx)); l++)
+        {
+            rules->setCustomKey(dstIdx, src->getCustomKeyName(srcIdx, l), src->getCustomKeyValue(srcIdx, l));
+        }
+    }
+    catch(...)
+    {
+        // Don't add it if any errors.
+        // Continue.
+    }
+}
+
 bool FindRule(ConstViewingRulesRcPtr vr, const std::string & name, size_t & ruleIndex)
 {
     const auto numrules = vr->getNumEntries();

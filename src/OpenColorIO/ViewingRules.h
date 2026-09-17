@@ -25,6 +25,25 @@ constexpr char CustomKey[]  { "custom" };
 
 bool FindRule(ConstViewingRulesRcPtr vr, const std::string & name, size_t & ruleIndex);
 
+// Compares the rule at r1Idx in r1 against the rule at r2Idx in r2: same colorspaces,
+// encodings, and custom keys (order-independent). Does not compare the rules' names,
+// callers that care about the name should compare it separately.
+bool viewingRulesAreEqual(const ConstViewingRulesRcPtr & r1,
+                          size_t r1Idx,
+                          const ConstViewingRulesRcPtr & r2,
+                          size_t r2Idx);
+
+// Copies the rule at srcIdx in src (name, colorspaces, encodings, and custom keys) into
+// rules at dstIdx. Best-effort: if the copy fails for any reason (e.g. rules already has
+// a rule named src's name), the exception is swallowed rather than propagated, and rules
+// is left as it was before the call. src must not alias rules: if they're the same object
+// and dstIdx < srcIdx, inserting shifts srcIdx before it's read, silently copying the
+// wrong (freshly-inserted, empty) rule instead of throwing.
+void copyViewingRule(const ConstViewingRulesRcPtr & src,
+                     size_t srcIdx,
+                     size_t dstIdx,
+                     ViewingRulesRcPtr & rules);
+
 class ViewingRule;
 using ViewingRuleRcPtr = OCIO_SHARED_PTR<ViewingRule>;
 
