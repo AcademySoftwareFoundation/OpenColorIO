@@ -3069,7 +3069,35 @@ const char * Config::LocateBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
     // Calculate (or reuse) the cached fingerprints of both configs.  This requires access to
     // the private Impl of Config, which is why it is done here rather than in ConfigUtils.
     auto srcTestVals = srcConfig->getImpl()->getColorSpaceTestVals(srcConfig);
+
+    const ReferenceSpaceType refSpaceType = srcColorSpace->getReferenceSpaceType();
+
+    auto testValsAreUsable = [refSpaceType](const ConfigUtils::TestVals & tv)
+    {
+        return refSpaceType == REFERENCE_SPACE_DISPLAY ? tv.displayRefTestValsConverted
+                                                       : tv.sceneRefTestValsConverted;
+    };
+
+    // The src test values are the same colors as the ones used for the built-in config,
+    // but expressed in the reference space of the source config, which is what allows the
+    // fingerprints of the two configs to be compared without needing to adjust the
+    // reference space of the src color space itself.
+    if (!testValsAreUsable(*srcTestVals))
+    {
+        std::ostringstream os;
+        os  << "Heuristics were not able to find an interchange space in the source config, "
+            << "so it is not possible to search for the color space: "
+            << srcColorSpace->getName() << ".";
+        throw Exception(os.str().c_str());
+    }
+
     auto builtinFingerprints = builtinConfig->getImpl()->getColorSpaceFingerprints(builtinConfig);
+
+    if (!testValsAreUsable(builtinFingerprints->testVals))
+    {
+        throw Exception("Heuristics were not able to find an interchange space in the "
+                        "built-in config.");
+    }
 
     // This will throw if it is unable to identify the interchange spaces.
     return ConfigUtils::LocateBuiltinColorSpace(srcConfig,

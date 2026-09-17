@@ -770,8 +770,8 @@ public:
      *        comparing the results, so the source config and the built-in config must each
      *        have an interchange role set or the heuristics must be able to identify a known
      *        color space in them (this is the same requirement as
-     *        \ref Config::IdentifyInterchangeSpace).  Note that the heuristics only look at
-     *        active color spaces and only support scene-referred color spaces, so if the
+     *        \ref Config::IdentifyInterchangeSpace).  Note that the heuristics look at active
+     *        and inactive color spaces but only support scene-referred color spaces, so if the
      *        requested color space is display-referred, the source config must have the
      *        cie_xyz_d65_interchange role set.
      *

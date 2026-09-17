@@ -1434,7 +1434,7 @@ void initializeColorSpaceFingerprints(ColorSpaceFingerprints & fingerprints, con
 // Return an empty string if no equivalent color space is found (within the tolerance).
 // This version assumes the reference space of both configs is the same.
 //
-const char * findEquivalentColorspace(const ColorSpaceFingerprints & fingerprints,
+const char * findEquivalentColorSpace(const ColorSpaceFingerprints & fingerprints,
                                       const ConstConfigRcPtr & inputConfig, 
                                       const ConstColorSpaceRcPtr & inputCS)
 {
@@ -1442,7 +1442,7 @@ const char * findEquivalentColorspace(const ColorSpaceFingerprints & fingerprint
     // NB: The inputConfig/inputCS must use the same reference space as the base config.
     // In general, this means that updateReferenceColorspace must be called on inputCS
     // before calling this function.
-    return findEquivalentColorspace(fingerprints, fingerprints.testVals, inputConfig, inputCS);
+    return findEquivalentColorSpace(fingerprints, fingerprints.testVals, inputConfig, inputCS);
 }
 
 // If the base config contains a color space equivalent to inputCS, return its name.
@@ -1450,7 +1450,7 @@ const char * findEquivalentColorspace(const ColorSpaceFingerprints & fingerprint
 // This version assumes inputTestVals have been converted so that they are in the 
 // reference space of the inputConfig.
 //
-const char * findEquivalentColorspace(const ColorSpaceFingerprints & fingerprints,
+const char * findEquivalentColorSpace(const ColorSpaceFingerprints & fingerprints,
                                       const TestVals & inputTestVals,
                                       const ConstConfigRcPtr & inputConfig,
                                       const ConstColorSpaceRcPtr & inputCS)
@@ -1495,7 +1495,7 @@ const char * findEquivalentColorspace(const ColorSpaceFingerprints & fingerprint
             if (!EqualWithAbsError(inputVals[i], fp.vals[i], absTolerance))
             {
                 matchFound = false;
-                continue;
+                break;
             }
         }
         if (matchFound)
@@ -1516,34 +1516,7 @@ const char * LocateBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
                                      const std::shared_ptr<const TestVals> & srcTestVals,
                                      const std::shared_ptr<const ColorSpaceFingerprints> & fingerprints)
 {
-    const ReferenceSpaceType refSpaceType = srcColorSpace->getReferenceSpaceType();
-
-    auto testValsAreUsable = [refSpaceType](const TestVals & tv)
-    {
-        return refSpaceType == REFERENCE_SPACE_DISPLAY ? tv.displayRefTestValsConverted
-                                                       : tv.sceneRefTestValsConverted;
-    };
-
-    // The test values are the same colors as the ones used for the built-in config, but
-    // expressed in the reference space of the source config, which is what allows the
-    // fingerprints of the two configs to be compared without needing to adjust the
-    // reference space of the color space itself.
-    if (!testValsAreUsable(*srcTestVals))
-    {
-        std::ostringstream os;
-        os  << "Heuristics were not able to find an interchange space in the source config, "
-            << "so it is not possible to search for the color space: "
-            << srcColorSpace->getName() << ".";
-        throw Exception(os.str().c_str());
-    }
-
-    if (!testValsAreUsable(fingerprints->testVals))
-    {
-        throw Exception("Heuristics were not able to find an interchange space in the "
-                        "built-in config.");
-    }
-
-    const char * name = findEquivalentColorspace(*fingerprints,
+    const char * name = findEquivalentColorSpace(*fingerprints,
                                                   *srcTestVals,
                                                   srcConfig,
                                                   srcColorSpace);
@@ -1680,12 +1653,28 @@ std::string GenerateLocalIDForColorSpace(const Config & config, const char * src
         throw Exception(os.str().c_str());
     }
 
-    // TODO: Should we prefer an alias of the color space which would not require sanitization?
-
     // Use the color space's own canonical name (rather than the possibly aliased/role-based
     // srcColorSpaceName argument) so that the generated ID is stable and may be resolved back
     // by Config::findColorSpaceForID.
-    return sanitizedConfigName + ":local:" + SanitizeIDToken(cs->getName());
+    std::string base = cs->getName();
+
+    // If the name would require sanitization, prefer the first alias (in order) that does not
+    // require any sanitization, so the ID stays as readable as possible.
+    if (SanitizeIDToken(base) != base)
+    {
+        const size_t numAliases = cs->getNumAliases();
+        for (size_t i = 0; i < numAliases; ++i)
+        {
+            const std::string alias = cs->getAlias(i);
+            if (SanitizeIDToken(alias) == alias)
+            {
+                base = alias;
+                break;
+            }
+        }
+    }
+
+    return sanitizedConfigName + ":local:" + SanitizeIDToken(base);
 }
 
 ConstColorSpaceRcPtr FindColorSpaceForID(const Config & config,
@@ -1737,7 +1726,8 @@ ConstColorSpaceRcPtr FindColorSpaceForID(const Config & config,
         stripped.find(':', innerColon + 1) == std::string::npos)
     {
         const char * configName = config.getName();
-        if (configName && *configName && SanitizeIDToken(configName) == outerNamespace)
+        if (configName && *configName
+            && SanitizeIDToken(configName) == SanitizeIDToken(outerNamespace))
         {
             // Note that because the base name in the interop ID is sanitized, the comparison
             // must sanitize the color space names and aliases in the config as well.

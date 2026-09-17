@@ -111,7 +111,7 @@ void initializeFingerprintVec(ColorSpaceFingerprints & fingerprints,
 void initializeColorSpaceFingerprints(ColorSpaceFingerprints & fingerprints,
                                       const ConstConfigRcPtr & config);
 
-const char * findEquivalentColorspace(const ColorSpaceFingerprints & fingerprints,
+const char * findEquivalentColorSpace(const ColorSpaceFingerprints & fingerprints,
                                       const ConstConfigRcPtr & inputConfig,
                                       const ConstColorSpaceRcPtr & inputCS);
 
@@ -119,13 +119,13 @@ const char * findEquivalentColorspace(const ColorSpaceFingerprints & fingerprint
 // inputTestVals (which must come from inputConfig) rather than those from fingerprints.
 // This allows searching for an equivalent color space without needing to first adjust the
 // reference space of inputCS to match the config the fingerprints were built from.
-const char * findEquivalentColorspace(const ColorSpaceFingerprints & fingerprints,
+const char * findEquivalentColorSpace(const ColorSpaceFingerprints & fingerprints,
                                       const TestVals & inputTestVals,
                                       const ConstConfigRcPtr & inputConfig,
                                       const ConstColorSpaceRcPtr & inputCS);
 
 // Try to find the name of a color space in the built-in config that is equivalent to
-// srcColorSpace.  Only active color spaces of the built-in config are searched.
+// srcColorSpace.  Both active and inactive color spaces of the built-in config are searched.
 //
 // srcConfig/srcColorSpace -- The color space to search for and the config that owns it.
 // builtinConfig -- The built-in config object to search.
