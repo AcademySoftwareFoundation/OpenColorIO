@@ -57,6 +57,13 @@ void bindPyGroupTransform(py::module & m)
              "direction"_a = DEFAULT->getDirection(),
              DOC(GroupTransform, Create))
 
+        .def_static("ParseFromBuffer", [](const std::string & buffer)
+            {
+                return GroupTransform::ParseFromBuffer(buffer.data(), buffer.size());
+            },
+             "buffer"_a.none(false),
+             DOC(GroupTransform, ParseFromBuffer))
+
         .def_static("GetWriteFormats", []()
             {
                 return WriteFormatIterator(nullptr);
