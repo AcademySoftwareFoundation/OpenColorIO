@@ -137,9 +137,12 @@ static const CTFVersion CTF_PROCESS_LIST_VERSION_2_4 = CTFVersion(2, 4);
 // Version 2.5 2025-08 adds the GradingHueCurve.
 static const CTFVersion CTF_PROCESS_LIST_VERSION_2_5 = CTFVersion(2, 5);
 
+// Version 2.6 2026-08 adds the FixedFunction FIXED_FUNCTION_ACES_RGB_TO_HMJ_20.
+static const CTFVersion CTF_PROCESS_LIST_VERSION_2_6 = CTFVersion(2, 6);
+
 // Add new version before this line
 // and do not forget to update the following line.
-static const CTFVersion CTF_PROCESS_LIST_VERSION = CTF_PROCESS_LIST_VERSION_2_5;
+static const CTFVersion CTF_PROCESS_LIST_VERSION = CTF_PROCESS_LIST_VERSION_2_6;
 
 
 // Version 1.0 initial Autodesk version for InfoElt.

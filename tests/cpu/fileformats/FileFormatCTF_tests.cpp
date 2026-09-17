@@ -4196,7 +4196,7 @@ void WriteGroupCLF(OCIO::ConstGroupTransformRcPtr group, std::ostringstream & ou
 void ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::Style style,
                                 const std::string & vers, int lineNo, std::string params="")
 {
-    // Validate the load & save for any FixedFunction style without parameters.
+    // Validate the load & save for any FixedFunction style.
 
     std::ostringstream ffStr;
     ffStr << "<FixedFunction inBitDepth=\"32f\" outBitDepth=\"32f\" style=\""
@@ -4314,6 +4314,10 @@ OCIO_ADD_TEST(FileFormatCTF, ff_load_save_ctf)
     ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::HSY_LIN_TO_RGB         , "2.5", __LINE__);
     ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::RGB_TO_HSY_VID         , "2.5", __LINE__);
     ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::HSY_VID_TO_RGB         , "2.5", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::ACES_RGB_TO_HMJ_20     , "2.6", __LINE__,
+        "0.7347 0.2653 0 1 0.0001 -0.077 0.32168 0.33767");
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::ACES_HMJ_TO_RGB_20     , "2.6", __LINE__,
+        "0.7347 0.2653 0 1 0.0001 -0.077 0.32168 0.33767");
 }
 
 OCIO_ADD_TEST(FileFormatCTF, load_ff_fail_version)
@@ -7120,6 +7124,55 @@ OCIO_ADD_TEST(CTFTransform, fixed_function_lin_to_doublelog_ctf)
         OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
         OCIO_CHECK_EQUAL(expected, outputTransform.str());
     }
+}
+
+OCIO_ADD_TEST(CTFTransform, fixed_function_aces_rgb_to_hmj_20_ctf)
+{
+    const double data[8] = { 0.7347, 0.2653, 0.0000, 1.0000, 0.0001, -0.0770, 0.32168, 0.33767 };
+    OCIO::FixedFunctionTransformRcPtr ff =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_RGB_TO_HMJ_20, &data[0], 8);
+
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+    group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDFF42");
+    group->appendTransform(ff);
+
+    std::ostringstream outputTransform;
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+    const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2.6" id="UIDFF42">
+    <FixedFunction inBitDepth="32f" outBitDepth="32f" style="RGB_TO_HMJ_20" params="0.7347 0.2653 0 1 0.0001 -0.077 0.32168 0.33767">
+    </FixedFunction>
+</ProcessList>
+)" };
+
+    OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
+    OCIO_CHECK_EQUAL(expected, outputTransform.str());
+}
+
+OCIO_ADD_TEST(CTFTransform, fixed_function_aces_hmj_to_rgb_20_ctf)
+{
+    const double data[8] = { 0.7347, 0.2653, 0.0000, 1.0000, 0.0001, -0.0770, 0.32168, 0.33767 };
+    OCIO::FixedFunctionTransformRcPtr ff =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_RGB_TO_HMJ_20, &data[0], 8);
+    ff->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+    group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDFF42");
+    group->appendTransform(ff);
+
+    std::ostringstream outputTransform;
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+    const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2.6" id="UIDFF42">
+    <FixedFunction inBitDepth="32f" outBitDepth="32f" style="HMJ_TO_RGB_20" params="0.7347 0.2653 0 1 0.0001 -0.077 0.32168 0.33767">
+    </FixedFunction>
+</ProcessList>
+)" };
+
+    OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
+    OCIO_CHECK_EQUAL(expected, outputTransform.str());
 }
 
 OCIO_ADD_TEST(CTFTransform, exposure_contrast_video_ctf)

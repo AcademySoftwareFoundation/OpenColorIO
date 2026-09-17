@@ -363,6 +363,7 @@ const char * FixedFunctionStyleToString(FixedFunctionStyle style)
         case FIXED_FUNCTION_ACES_GAMUT_COMP_13:         return "ACES_GamutComp13";
         case FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20:   return "ACES2_OutputTransform";
         case FIXED_FUNCTION_ACES_RGB_TO_JMH_20:         return "ACES2_RGB_TO_JMh";
+        case FIXED_FUNCTION_ACES_RGB_TO_HMJ_20:         return "ACES2_RGB_TO_HMJ";
         case FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20: return "ACES2_TonescaleCompress";
         case FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20:     return "ACES2_GamutCompress";
         case FIXED_FUNCTION_REC2100_SURROUND:           return "REC2100_Surround";
@@ -400,6 +401,7 @@ FixedFunctionStyle FixedFunctionStyleFromString(const char * style)
     else if(str == "aces_gamutcomp13")        return FIXED_FUNCTION_ACES_GAMUT_COMP_13;
     else if(str == "aces2_outputtransform")   return FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20;
     else if(str == "aces2_rgb_to_jmh")        return FIXED_FUNCTION_ACES_RGB_TO_JMH_20;
+    else if(str == "aces2_rgb_to_hmj")        return FIXED_FUNCTION_ACES_RGB_TO_HMJ_20;
     else if(str == "aces2_tonescalecompress") return FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20;
     else if(str == "aces2_gamutcompress")     return FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20;
     else if(str == "rec2100_surround")        return FIXED_FUNCTION_REC2100_SURROUND;
