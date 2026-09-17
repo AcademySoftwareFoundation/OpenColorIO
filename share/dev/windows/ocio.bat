@@ -145,6 +145,13 @@ rem Update build and install variables
 set BUILD_PATH=!BUILD_PATH!\!CMAKE_BUILD_TYPE!
 set INSTALL_PATH=!INSTALL_PATH!\!CMAKE_BUILD_TYPE!
 
+rem Create build and install directories if they don't already exist.
+rem Without --configure, cmake -B never runs, so these would otherwise
+rem never get created and the later cmake --build/--install/ctest steps
+rem would fail with "is not a directory".
+if NOT EXIST "!BUILD_PATH!" mkdir "!BUILD_PATH!"
+if NOT EXIST "!INSTALL_PATH!" mkdir "!INSTALL_PATH!"
+
 rem ****************************************************************************************************************
 rem Setting up the environment using MS Visual Studio batch script
 set VCVARS64_PATH="!MSVS_PATH!\VC\Auxiliary\Build\vcvars64.bat"
