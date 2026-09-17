@@ -804,7 +804,7 @@ colorspaces:
         cfg = OCIO.Config()
         cfg.setName('My Studio!')
 
-        cs = OCIO.ColorSpace(name='sRGB Encoded,Space', aliases=['myalias'])
+        cs = OCIO.ColorSpace(name='sRGB Encoded,Space', aliases=['My Alias'])
         cfg.addColorSpace(cs)
 
         # Config name and color space name are each sanitized per Annex C: uppercase is
@@ -812,8 +812,9 @@ colorspaces:
         self.assertEqual(cfg.generateLocalIDForColorSpace('sRGB Encoded,Space'),
                          'my_studio*:local:srgb_encoded.space')
 
-        # An alias resolves to the same ID, since the canonical color space name is used.
-        self.assertEqual(cfg.generateLocalIDForColorSpace('myalias'),
+        # An alias (that requires sanitization) resolves to the same ID, since the
+        # canonical color space name is used.
+        self.assertEqual(cfg.generateLocalIDForColorSpace('My Alias'),
                          'my_studio*:local:srgb_encoded.space')
 
         # A config with no name set cannot generate a local ID.
