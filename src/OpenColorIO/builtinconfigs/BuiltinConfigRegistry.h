@@ -5,11 +5,21 @@
 #ifndef INCLUDED_OCIO_BUILTIN_CONFIGS_REGISTRY_H
 #define INCLUDED_OCIO_BUILTIN_CONFIGS_REGISTRY_H
 
+#include <string>
 #include <vector>
 #include <OpenColorIO/OpenColorIO.h>
 
 namespace OCIO_NAMESPACE
 {
+
+// Returns true if sanitizedConfigName (the result of ConfigUtils::SanitizeIDToken on a config
+// name) is the name of one of the ASWF OCIO configs (e.g. "cg-config-v4.0.0_aces-v2.0_ocio-v2.5")
+// version 4.0.0 or higher, since those configs already have interop_id attributes populated
+// and so must not be used as the namespace of a locally-generated interop ID.  A name that
+// happens to start with "cg-config-"/"studio-config-" followed by a version but continues with
+// something other than the expected "_aces-<version>_ocio-<version>" suffix is not one of these
+// built-in configs and so is not reserved. See GenerateLocalIDForColorSpace.
+bool IsReservedConfigName(const std::string & sanitizedConfigName);
 
 class BuiltinConfigRegistryImpl : public BuiltinConfigRegistry
 {

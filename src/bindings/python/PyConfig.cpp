@@ -330,7 +330,11 @@ void bindPyConfig(py::module & m)
             })
         .def("getCanonicalName", &Config::getCanonicalName, "name"_a,
              DOC(Config, getCanonicalName))
-        .def("addColorSpace", &Config::addColorSpace, "colorSpace"_a, 
+        .def("generateLocalIDForColorSpace", &Config::generateLocalIDForColorSpace,
+             "srcColorSpaceName"_a, DOC(Config, generateLocalIDForColorSpace))
+        .def("findColorSpaceForID", &Config::findColorSpaceForID, "idString"_a,
+             DOC(Config, findColorSpaceForID))
+        .def("addColorSpace", &Config::addColorSpace, "colorSpace"_a,
              DOC(Config, addColorSpace))
         .def("removeColorSpace", &Config::removeColorSpace, "name"_a, 
              DOC(Config, removeColorSpace))
@@ -362,6 +366,17 @@ void bindPyConfig(py::module & m)
             },
                     "srcConfig"_a, "builtinConfig"_a, "builtinColorSpaceName"_a,
                     DOC(Config, IdentifyBuiltinColorSpace))
+
+        .def_static("LocateBuiltinColorSpace", [](const ConstConfigRcPtr & srcConfig,
+                                                  const char * srcColorSpaceName,
+                                                  const ConstConfigRcPtr & builtinConfig)
+            {
+                return Config::LocateBuiltinColorSpace(srcConfig,
+                                                       srcColorSpaceName,
+                                                       builtinConfig);
+            },
+                    "srcConfig"_a, "srcColorSpaceName"_a, "builtinConfig"_a,
+                    DOC(Config, LocateBuiltinColorSpace))
 
         .def_static("IdentifyInterchangeSpace", [](const ConstConfigRcPtr & srcConfig,
                                                    const char * srcColorSpaceName,

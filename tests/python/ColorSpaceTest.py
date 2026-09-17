@@ -1111,3 +1111,43 @@ colorspaces:
           str(cm.exception), 
           "Could not find destination color space ''."
         )
+
+
+        #
+        # Test LocateBuiltinColorSpace.  (This is the inverse of IdentifyBuiltinColorSpace.)
+        #
+
+        editableCfg.setRole("aces_interchange", "ref_cs")
+        editableCfg.setRole("cie_xyz_d65_interchange", "CIE-XYZ-D65")
+        editableCfg.setInactiveColorSpaces("")
+
+        csname = OCIO.Config.LocateBuiltinColorSpace(editableCfg, "ACES cg", builtinConfig)
+        self.assertEqual(csname, "ACEScg")
+
+        csname = OCIO.Config.LocateBuiltinColorSpace(editableCfg, "Texture -- sRGB", builtinConfig)
+        self.assertEqual(csname, "sRGB Encoded Rec.709 (sRGB)")
+
+        csname = OCIO.Config.LocateBuiltinColorSpace(editableCfg, "not sRGB", builtinConfig)
+        self.assertEqual(csname, "ACEScct")
+
+        # Display-referred color spaces work if the display interchange role is present.
+        csname = OCIO.Config.LocateBuiltinColorSpace(editableCfg, "sRGB - Display CS", builtinConfig)
+        self.assertEqual(csname, "sRGB - Display")
+
+        # Roles may be used for the source color space name and inactive color spaces
+        # are searched.  (The scene_linear role is set to the reference space.)
+        editableCfg.setInactiveColorSpaces("ref_cs")
+        csname = OCIO.Config.LocateBuiltinColorSpace(editableCfg, "scene_linear", builtinConfig)
+        self.assertEqual(csname, "ACES2065-1")
+
+        # A data space returns an empty string.
+        csname = OCIO.Config.LocateBuiltinColorSpace(editableCfg, "raw", builtinConfig)
+        self.assertEqual(csname, "")
+
+        # Check what happens if the source color space doesn't exist.
+        with self.assertRaises(OCIO.Exception) as cm:
+          csname = OCIO.Config.LocateBuiltinColorSpace(editableCfg, "Foo", builtinConfig)
+        self.assertEqual(
+          str(cm.exception),
+          "LocateBuiltinColorSpace: Source config does not contain the requested color space: Foo."
+        )

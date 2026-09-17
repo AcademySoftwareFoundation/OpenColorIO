@@ -60,6 +60,21 @@ const char * ResolveConfigPath(const char * originalPath) noexcept
     return originalPath;
 }
 
+bool IsReservedConfigName(const std::string & sanitizedConfigName)
+{
+    static const std::regex builtinConfigNamePattern(
+        R"(^(?:cg-config|studio-config)-v(\d+)\.\d+\.\d+_aces-v[\d.]+_ocio-v[\d.]+$)");
+
+    std::smatch match;
+    if (!std::regex_match(sanitizedConfigName, match, builtinConfigNamePattern))
+    {
+        return false;
+    }
+
+    const int majorVersion = std::stoi(match[1].str());
+    return majorVersion >= 4;
+}
+
 const BuiltinConfigRegistry & BuiltinConfigRegistry::Get() noexcept
 {
     // Meyer's Singleton pattern.

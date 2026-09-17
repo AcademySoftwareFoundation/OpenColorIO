@@ -333,6 +333,22 @@ public:
     mutable ProcessorCacheFlags m_cacheFlags { PROCESSOR_CACHE_DEFAULT };
     mutable ProcessorCache<std::size_t, ProcessorRcPtr> m_processorCache;
 
+    // Cache of the color space fingerprints used by LocateBuiltinColorSpace.  These are
+    // expensive to calculate (a Processor is built for each color space of the config), so
+    // they are calculated on first use and then kept until the config is modified.
+    //
+    // NB: These are held by pointer so that a caller which is using the results is not
+    // affected if the config is modified (resetCacheIDs below resets the ptr reference).  
+    // So an object a caller is still holding is unaffected until it is done with it.
+    //
+    // Two mutexes are used.  The first one protects the pointers and is only held for very
+    // short periods.  The second one serializes the calculation itself, which must not be
+    // done while holding the first one (see the comments in getColorSpaceFingerprints).
+    mutable Mutex m_fingerprintMutex;
+    mutable Mutex m_fingerprintCalcMutex;
+    mutable std::shared_ptr<const ConfigUtils::TestVals> m_csTestVals;
+    mutable std::shared_ptr<const ConfigUtils::ColorSpaceFingerprints> m_csFingerprints;
+
     Impl() :
         m_majorVersion(LastSupportedMajorVersion),
         m_minorVersion(LastSupportedMinorVersion[LastSupportedMajorVersion - 1]),
@@ -453,6 +469,10 @@ public:
 
             m_processorCache.clear();
             m_processorCache.enable((m_cacheFlags & PROCESSOR_CACHE_ENABLED) == PROCESSOR_CACHE_ENABLED);
+
+            // The fingerprints are not copied, they will be recalculated if needed.
+            m_csTestVals.reset();
+            m_csFingerprints.reset();
         }
         return *this;
     }
@@ -931,6 +951,83 @@ public:
     {
         m_cacheFlags = flags;
         m_processorCache.enable((m_cacheFlags & PROCESSOR_CACHE_ENABLED) == PROCESSOR_CACHE_ENABLED);
+    }
+
+    // Get the fingerprint test values for this config, calculating them if necessary.
+    // The config argument must be the Config object that owns this Impl.
+    //
+    std::shared_ptr<const ConfigUtils::TestVals> getColorSpaceTestVals(
+        const ConstConfigRcPtr & config) const
+    {
+        {
+            AutoMutex lock(m_fingerprintMutex);
+            if (m_csTestVals)
+            {
+                return m_csTestVals;
+            }
+        }
+
+        // The calculation is serialized with its own mutex rather than the one that
+        // protects the pointers.  That is because the calculation calls getProcessor, which
+        // takes m_cacheidMutex, whereas a config that is being modified takes m_cacheidMutex
+        // and then clears this cache.  Don't want the calculation to be holding the mutex
+        // that resetCacheIDs needs, in case threads take them in the opposite order.
+        AutoMutex calcLock(m_fingerprintCalcMutex);
+
+        {
+            // Another thread may have completed the calculation in the meantime.
+            AutoMutex lock(m_fingerprintMutex);
+            if (m_csTestVals)
+            {
+                return m_csTestVals;
+            }
+        }
+
+        auto testVals = std::make_shared<ConfigUtils::TestVals>();
+        ConfigUtils::initializeTestVals(*testVals, config);
+
+        AutoMutex lock(m_fingerprintMutex);
+        m_csTestVals = testVals;
+        return m_csTestVals;
+    }
+
+    // Get the complete set of color space fingerprints of this config, calculating them if
+    // necessary.  The config argument must be the Config object that owns this Impl.
+    //
+    std::shared_ptr<const ConfigUtils::ColorSpaceFingerprints> getColorSpaceFingerprints(
+        const ConstConfigRcPtr & config) const
+    {
+        {
+            AutoMutex lock(m_fingerprintMutex);
+            if (m_csFingerprints)
+            {
+                return m_csFingerprints;
+            }
+        }
+
+        // Get the test values used to calculate the fingerprints.  Note that this must be
+        // done before taking the calculation mutex below.
+        auto testVals = getColorSpaceTestVals(config);
+
+        // As above, the calculation must not be done while holding m_fingerprintMutex.
+        AutoMutex calcLock(m_fingerprintCalcMutex);
+
+        {
+            // Another thread may have completed the calculation in the meantime.
+            AutoMutex lock(m_fingerprintMutex);
+            if (m_csFingerprints)
+            {
+                return m_csFingerprints;
+            }
+        }
+
+        auto fingerprints = std::make_shared<ConfigUtils::ColorSpaceFingerprints>();
+        fingerprints->testVals = *testVals;
+        ConfigUtils::initializeFingerprintVec(*fingerprints, config);
+
+        AutoMutex lock(m_fingerprintMutex);
+        m_csFingerprints = fingerprints;
+        return m_csFingerprints;
     }
 
     ConstProcessorRcPtr getProcessorWithoutCaching(
@@ -2939,6 +3036,85 @@ const char * Config::IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfi
     return ConfigUtils::IdentifyBuiltinColorSpace(srcConfig,
                                                   builtinConfig,
                                                   builtinColorSpaceName);
+}
+
+const char * Config::LocateBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
+                                             const char * srcColorSpaceName,
+                                             const ConstConfigRcPtr & builtinConfig)
+{
+    if (!srcConfig || !builtinConfig || !srcColorSpaceName || !*srcColorSpaceName)
+    {
+        throw Exception("LocateBuiltinColorSpace: arguments must not be null.");
+    }
+
+    // Note that this resolves roles and aliases and finds inactive color spaces.
+    ConstColorSpaceRcPtr srcColorSpace = srcConfig->getColorSpace(srcColorSpaceName);
+    if (!srcColorSpace)
+    {
+        std::ostringstream os;
+        os  << "LocateBuiltinColorSpace: Source config does not contain the requested color space: "
+            << srcColorSpaceName << ".";
+        throw Exception(os.str().c_str());
+    }
+
+    if (srcColorSpace->isData())
+    {
+        // Data spaces have no colorimetry to compare, so return early rather than requiring
+        // an interchange space to be identified.  (Note that the built-in config data space
+        // is intentionally not returned, since a data space is not equivalent to any other
+        // color space.)
+        return "";
+    }
+
+    // Calculate (or reuse) the cached fingerprints of both configs.  This requires access to
+    // the private Impl of Config, which is why it is done here rather than in ConfigUtils.
+    auto srcTestVals = srcConfig->getImpl()->getColorSpaceTestVals(srcConfig);
+
+    const ReferenceSpaceType refSpaceType = srcColorSpace->getReferenceSpaceType();
+
+    auto testValsAreUsable = [refSpaceType](const ConfigUtils::TestVals & tv)
+    {
+        return refSpaceType == REFERENCE_SPACE_DISPLAY ? tv.displayRefTestValsConverted
+                                                       : tv.sceneRefTestValsConverted;
+    };
+
+    // The src test values are the same colors as the ones used for the built-in config,
+    // but expressed in the reference space of the source config, which is what allows the
+    // fingerprints of the two configs to be compared without needing to adjust the
+    // reference space of the src color space itself.
+    if (!testValsAreUsable(*srcTestVals))
+    {
+        std::ostringstream os;
+        os  << "Heuristics were not able to find an interchange space in the source config, "
+            << "so it is not possible to search for the color space: "
+            << srcColorSpace->getName() << ".";
+        throw Exception(os.str().c_str());
+    }
+
+    auto builtinFingerprints = builtinConfig->getImpl()->getColorSpaceFingerprints(builtinConfig);
+
+    if (!testValsAreUsable(builtinFingerprints->testVals))
+    {
+        throw Exception("Heuristics were not able to find an interchange space in the "
+                        "built-in config.");
+    }
+
+    // This will throw if it is unable to identify the interchange spaces.
+    return ConfigUtils::LocateBuiltinColorSpace(srcConfig,
+                                                srcColorSpace,
+                                                builtinConfig,
+                                                srcTestVals,
+                                                builtinFingerprints);
+}
+
+std::string Config::generateLocalIDForColorSpace(const char * srcColorSpaceName) const
+{
+    return ConfigUtils::GenerateLocalIDForColorSpace(*this, srcColorSpaceName);
+}
+
+ConstColorSpaceRcPtr Config::findColorSpaceForID(const char * idString) const
+{
+    return ConfigUtils::FindColorSpaceForID(*this, getImpl()->m_allColorSpaces, idString);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -5481,6 +5657,14 @@ void Config::Impl::resetCacheIDs()
     // As any changes could impact the cache keys, it's better to always flush the cache
     // of processors to not keep in memory useless instances.
     m_processorCache.clear();
+
+    // Any change could also affect the color space fingerprints (e.g. the transform of a
+    // color space or the interchange roles), so they must be recalculated on next use.
+    {
+        AutoMutex lock(m_fingerprintMutex);
+        m_csTestVals.reset();
+        m_csFingerprints.reset();
+    }
 }
 
 void Config::Impl::getAllInternalTransforms(ConstTransformVec & transformVec) const

@@ -753,6 +753,52 @@ public:
                                                   const char * builtinColorSpaceName);
 
     /**
+     * \brief Find the name of the color space in the given built-in config that is the same
+     *        as a color space in the source config.  This is the inverse of
+     *        \ref Config::IdentifyBuiltinColorSpace.  For example, if the source config
+     *        contains a color space named "cct_ap1", passing that name would return
+     *        "ACEScct" when using the default CG config.  Note that this method relies
+     *        on heuristics which may evolve over time and which may not work on all configs.
+     *
+     *        Both active and inactive color spaces are searched in the built-in config (note
+     *        that this differs from IdentifyBuiltinColorSpace, which only searches the active
+     *        color spaces of the source config).  Color spaces that are a data space, that
+     *        define both a to_reference and a from_reference transform, or that have the
+     *        "is-unique" category are not candidates for a match.
+     *
+     *        A color space is identified by sending a set of test colors through it and
+     *        comparing the results, so the source config and the built-in config must each
+     *        have an interchange role set or the heuristics must be able to identify a known
+     *        color space in them (this is the same requirement as
+     *        \ref Config::IdentifyInterchangeSpace).  Note that the heuristics look at active
+     *        and inactive color spaces but only support scene-referred color spaces, so if the
+     *        requested color space is display-referred, the source config must have the
+     *        cie_xyz_d65_interchange role set.
+     *
+     *        Note that the set of test results (the "fingerprints") for the built-in config
+     *        is expensive to calculate, since it requires building a Processor for each of
+     *        its color spaces.  It is calculated on the first call and then cached on the
+     *        config object until the config is modified.  For that reason, an application
+     *        that calls this method more than once should hold on to the built-in config
+     *        object rather than calling \ref Config::CreateFromBuiltinConfig each time
+     *        (that method returns a new Config object on each call).
+     *
+     * \param srcConfig The config containing the color space to search for.
+     * \param srcColorSpaceName Color space name in the source config.  Roles and aliases may
+     *                          be used, and inactive color spaces are available.
+     * \param builtinConfig The built-in config to search.  See \ref Config::CreateFromBuiltinConfig.
+     *                      (Any config may be used, if it has the interchange roles set.)
+     * \return Matching color space name from the built-in config.  Empty if not found (which
+     *         is also the case if the source color space is a data space).
+     *
+     * \throw Exception if the source color space does not exist or if an interchange space
+     *        cannot be found in either config.
+     */
+    static const char * LocateBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
+                                                const char * srcColorSpaceName,
+                                                const ConstConfigRcPtr & builtinConfig);
+
+    /**
      * \brief Identify the two names of a common color space that exists in both the 
      *        given config and the provided built-in config that may be used for converting
      *        color spaces between the two configs.  If both configs have the interchange
@@ -788,6 +834,53 @@ public:
                                          const char * srcColorSpaceName,
                                          const ConstConfigRcPtr & builtinConfig,
                                          const char * builtinColorSpaceName);
+
+    /**
+     * \brief Find the color space in this config identified by a Color Interop ID, per the
+     *        ASWF Color Interop Forum ColorInteropID recommendation.
+     *
+     *        Only color space names and aliases are searched (not the interop_id attribute).
+     *        The following steps are tried in order, and the first match is returned:
+     *          - idString itself is looked up directly.
+     *          - If idString contains a ':', the leftmost namespace and one separator are
+     *             stripped (only one level, regardless of how many colons remain) and the
+     *             remainder is looked up.
+     *          - If step 2 failed, and the string stripped in step 2 is of the form
+     *             "local:BASE" (exactly one colon), and the namespace removed in step 2 equals
+     *             the sanitized form of this config's own \ref Config::getName(), BASE is
+     *             looked up.  Since the BASE of such an ID was itself generated by sanitizing
+     *             a color space name (see \ref Config::generateLocalIDForColorSpace), this
+     *             step compares BASE against the sanitized form of the color space names and
+     *             aliases, rather than against the names as they appear in the config.
+     *
+     * \param idString A color interop ID.
+     *
+     * \return The matching color space, or null if not found (including for a null or empty
+     *         idString).
+     */
+    ConstColorSpaceRcPtr findColorSpaceForID(const char * idString) const;
+
+    /**
+     * \brief Generate an on-demand local Color Interop ID for a color space in this
+     *        config, per the ASWF Color Interop Forum ColorInteropID recommendation.
+     *
+     *        This should only be called if \ref ColorSpace::getInteropID returns nothing and
+     *        \ref Config::LocateBuiltinColorSpace was unable to find an equivalent to this
+     *        color space in a built-in config (which has interop IDs populated).
+     *
+     *        The result has the form "<CONFIG-NAME>:local:<BASE>", where CONFIG-NAME is
+     *        \ref Config::getName() and BASE is the color space's own canonical name (i.e. not
+     *        the alias or role that may have been used to look it up).  Both parts are
+     *        individually sanitized per the recommendation's Annex C sanitizeIDToken algorithm.
+     *
+     * \param srcColorSpaceName Name, role, or alias of an existing color space in this config.
+     *
+     * \return The generated ID.
+     *
+     * \throw Exception if \ref Config::getName() is empty or disallowed, if srcColorSpaceName is
+     *        null/empty, or if srcColorSpaceName does not resolve to a color space in this config.
+     */
+    std::string generateLocalIDForColorSpace(const char * srcColorSpaceName) const;
 
     /**
      * Methods related to Roles.

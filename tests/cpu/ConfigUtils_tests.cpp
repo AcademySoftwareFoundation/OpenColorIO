@@ -712,68 +712,401 @@ display_colorspaces:
 
     {
         OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("ref_space");
-        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
+        const char * name = OCIO::ConfigUtils::findEquivalentColorSpace(fingerprints, inputConfig, cs);
         OCIO_CHECK_EQUAL(name, std::string("ACES2065-1"));
     }
     {
         OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("standard RGB");
-        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
+        const char * name = OCIO::ConfigUtils::findEquivalentColorSpace(fingerprints, inputConfig, cs);
         OCIO_CHECK_EQUAL(name, std::string("sRGB - Texture"));
     }
     {
         OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("approx. standard RGB");
-        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
+        const char * name = OCIO::ConfigUtils::findEquivalentColorSpace(fingerprints, inputConfig, cs);
         OCIO_CHECK_EQUAL(name, std::string("sRGB - Texture"));
     }
     {
         OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("very approx. standard RGB");
-        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
+        const char * name = OCIO::ConfigUtils::findEquivalentColorSpace(fingerprints, inputConfig, cs);
         OCIO_CHECK_EQUAL(name, std::string(""));
     }
     {
         OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("ACES cct");
-        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
+        const char * name = OCIO::ConfigUtils::findEquivalentColorSpace(fingerprints, inputConfig, cs);
         OCIO_CHECK_EQUAL(name, std::string("ACEScct"));
     }
     {
         OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("requires ACES cct");
-        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
+        const char * name = OCIO::ConfigUtils::findEquivalentColorSpace(fingerprints, inputConfig, cs);
         OCIO_CHECK_EQUAL(name, std::string("ACEScct"));
     }
     {
         OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("ACES cg");
-        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
+        const char * name = OCIO::ConfigUtils::findEquivalentColorSpace(fingerprints, inputConfig, cs);
         OCIO_CHECK_EQUAL(name, std::string("ACEScg"));
     }
     {
         OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("ACES cg display");
-        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
+        const char * name = OCIO::ConfigUtils::findEquivalentColorSpace(fingerprints, inputConfig, cs);
         OCIO_CHECK_EQUAL(name, std::string(""));
     }
     {
         OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("pq display");
-        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
+        const char * name = OCIO::ConfigUtils::findEquivalentColorSpace(fingerprints, inputConfig, cs);
         OCIO_CHECK_EQUAL(name, std::string("Rec.2100-PQ - Display"));
     }
     {
         OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("pq display scene");
-        const char * name = OCIO::ConfigUtils::findEquivalentColorspace(fingerprints, inputConfig, cs);
+        const char * name = OCIO::ConfigUtils::findEquivalentColorSpace(fingerprints, inputConfig, cs);
         OCIO_CHECK_EQUAL(name, std::string(""));
     }
 
     // Validate that the fingerprints for the smallest likely gamuts are positive.
     std::vector<float> fingerprintVals;
-    OCIO_CHECK_ASSERT(!OCIO::ConfigUtils::calcColorSpaceFingerprint(fingerprintVals, fingerprints, inputConfig, 
-        inputConfig->getColorSpace("Rec.601 - Display")));
+    OCIO_CHECK_ASSERT(!OCIO::ConfigUtils::calcColorSpaceFingerprint(fingerprintVals, fingerprints.testVals,
+        inputConfig, inputConfig->getColorSpace("Rec.601 - Display")));
     for (size_t i = 0; i < fingerprintVals.size(); i++)
     {
         OCIO_CHECK_ASSERT(fingerprintVals[i] >= 0.);
     }
 
-    OCIO_CHECK_ASSERT(!OCIO::ConfigUtils::calcColorSpaceFingerprint(fingerprintVals, fingerprints, inputConfig, 
-        inputConfig->getColorSpace("Rec.601 (PAL) - Display")));
+    OCIO_CHECK_ASSERT(!OCIO::ConfigUtils::calcColorSpaceFingerprint(fingerprintVals, fingerprints.testVals,
+        inputConfig, inputConfig->getColorSpace("Rec.601 (PAL) - Display")));
     for (size_t i = 0; i < fingerprintVals.size(); i++)
     {
         OCIO_CHECK_ASSERT(fingerprintVals[i] >= 0.);
     }
+
+    // Test the overload that uses the test values of the input config rather than those of
+    // the base config.  This is what Config::LocateBuiltinColorSpace uses, since it allows
+    // the color spaces of two configs to be compared without first adjusting the reference
+    // space of the input color space.
+
+    OCIO::ConfigUtils::TestVals inputTestVals;
+    OCIO::ConfigUtils::initializeTestVals(inputTestVals, inputConfig);
+
+    // The base config has both interchange roles.
+    OCIO_CHECK_ASSERT(fingerprints.testVals.sceneRefTestValsConverted);
+    OCIO_CHECK_ASSERT(fingerprints.testVals.displayRefTestValsConverted);
+
+    // The input config has neither interchange role, so the heuristics are used.  They are
+    // able to identify the scene-referred reference space ("ref_space"), but they do not
+    // support display-referred spaces.  (The display-referred test values happen to be
+    // correct anyway here, since the display reference space is CIE-XYZ-D65.)
+    OCIO_CHECK_ASSERT(inputTestVals.sceneRefTestValsConverted);
+    OCIO_CHECK_ASSERT(!inputTestVals.displayRefTestValsConverted);
+
+    // The reference space of the input config is also ACES2065-1, so the results are the
+    // same as the ones above.
+    {
+        OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("ACES cg");
+        const char * name = OCIO::ConfigUtils::findEquivalentColorSpace(fingerprints, inputTestVals,
+                                                                        inputConfig, cs);
+        OCIO_CHECK_EQUAL(name, std::string("ACEScg"));
+    }
+    {
+        OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("standard RGB");
+        const char * name = OCIO::ConfigUtils::findEquivalentColorSpace(fingerprints, inputTestVals,
+                                                                        inputConfig, cs);
+        OCIO_CHECK_EQUAL(name, std::string("sRGB - Texture"));
+    }
+    {
+        OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("very approx. standard RGB");
+        const char * name = OCIO::ConfigUtils::findEquivalentColorSpace(fingerprints, inputTestVals,
+                                                                        inputConfig, cs);
+        OCIO_CHECK_EQUAL(name, std::string(""));
+    }
+    {
+        OCIO::ConstColorSpaceRcPtr cs = inputConfig->getColorSpace("pq display");
+        const char * name = OCIO::ConfigUtils::findEquivalentColorSpace(fingerprints, inputTestVals,
+                                                                        inputConfig, cs);
+        OCIO_CHECK_EQUAL(name, std::string("Rec.2100-PQ - Display"));
+    }
+}
+
+OCIO_ADD_TEST(ConfigUtils, sanitize_id_token)
+{
+    // Lower-case allowed characters pass through unchanged.
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken("abc.-_~/*#%^+()[]|09"),
+                     std::string("abc.-_~/*#%^+()[]|09"));
+
+    // Upper-case letters are lowered.
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken("ABCxyz"), std::string("abcxyz"));
+
+    // Explicit character mappings.
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken(" \t\n\r"), std::string("____"));
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken("{}<>"), std::string("()()"));
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken(","), std::string("."));
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken(";:"), std::string("||"));
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken("'\""), std::string("##"));
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken("\\"), std::string("/"));
+
+    // Any other disallowed ASCII character becomes '*'.
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken("a!b@c?"), std::string("a*b*c*"));
+
+    // A multi-byte UTF-8 codepoint becomes a single '^', regardless of how many bytes it takes
+    // to encode, so the result does not depend on the input's byte-level UTF-8 encoding.
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken("a\xC3\xA9z"),         // "a" + 'é' (2 bytes) + "z"
+                     std::string("a^z"));
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken("a\xE4\xB8\xADz"),     // "a" + '中' (3 bytes) + "z"
+                     std::string("a^z"));
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken("a\xF0\x9F\x98\x80z"), // "a" + emoji (4 bytes) + "z"
+                     std::string("a^z"));
+
+    // Malformed UTF-8 (a stray continuation/lead byte not followed by the expected continuation
+    // bytes) is still handled safely, one '^' per byte actually consumed.
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken("a\x80z"), std::string("a^z"));
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken("a\xC3z"), std::string("a^z"));
+
+    // Empty string.
+    OCIO_CHECK_EQUAL(OCIO::ConfigUtils::SanitizeIDToken(""), std::string(""));
+}
+
+OCIO_ADD_TEST(ConfigUtils, generate_local_id_for_color_space)
+{
+    auto cfg = OCIO::Config::Create();
+    cfg->setName("My Studio!");
+
+    auto cs = OCIO::ColorSpace::Create();
+    cs->setName("sRGB Encoded,Space");
+    // This alias also requires sanitization (space, uppercase), so it does not qualify to be
+    // preferred over the color space name; see the alias-preference test below for that case.
+    cs->addAlias("My Alias");
+    OCIO_CHECK_NO_THROW(cfg->addColorSpace(cs));
+
+    // Config name and color space name are each sanitized per Annex C: uppercase is lowered,
+    // spaces become '_', ',' becomes '.', and '!' (not allowed, no explicit mapping) becomes '*'.
+    std::string id;
+    OCIO_CHECK_NO_THROW(id = cfg->generateLocalIDForColorSpace("sRGB Encoded,Space"));
+    OCIO_CHECK_EQUAL(id, std::string("my_studio*:local:srgb_encoded.space"));
+
+    // An alias resolves to the same ID, since the canonical color space name is used, not the
+    // caller-supplied string.
+    OCIO_CHECK_NO_THROW(id = cfg->generateLocalIDForColorSpace("My Alias"));
+    OCIO_CHECK_EQUAL(id, std::string("my_studio*:local:srgb_encoded.space"));
+
+    // A config with no name set cannot generate a local ID.
+    auto cfgNoName = OCIO::Config::Create();
+    OCIO_CHECK_NO_THROW(cfgNoName->addColorSpace(cs));
+    OCIO_CHECK_THROW_WHAT(cfgNoName->generateLocalIDForColorSpace("sRGB Encoded,Space"),
+                          OCIO::Exception, "May not generate a local interop ID if the config "
+                          "name is empty.");
+
+    // Null / empty color space name.
+    OCIO_CHECK_THROW_WHAT(cfg->generateLocalIDForColorSpace(nullptr), OCIO::Exception,
+                          "srcColorSpaceName must not be null or empty");
+    OCIO_CHECK_THROW_WHAT(cfg->generateLocalIDForColorSpace(""), OCIO::Exception,
+                          "srcColorSpaceName must not be null or empty");
+
+    // Color space that does not exist in the config.
+    OCIO_CHECK_THROW_WHAT(cfg->generateLocalIDForColorSpace("does_not_exist"), OCIO::Exception,
+                          "does not contain the requested color space");
+
+    // Renaming the config is reflected immediately.
+    cfg->setName("Other Studio");
+    OCIO_CHECK_NO_THROW(id = cfg->generateLocalIDForColorSpace("sRGB Encoded,Space"));
+    OCIO_CHECK_EQUAL(id, std::string("other_studio:local:srgb_encoded.space"));
+
+    // Disallow usage of config names for one of the OCIO configs for ACES that already
+    // contains interop IDs for all color spaces. Trying to avoid the situation where
+    // someone edits one of these configs but forgets to change the config name. This
+    // would result in a meaningless interop ID.
+
+    // A config named like one of the built-in configs at version 4.0.0 or higher already has
+    // interop IDs populated, so it may not be used as the namespace of a locally-generated one.
+    cfg->setName("cg-config-v4.0.0_aces-v2.0_ocio-v2.5");
+    OCIO_CHECK_THROW_WHAT(cfg->generateLocalIDForColorSpace("sRGB Encoded,Space"),
+                          OCIO::Exception, "May not generate a local interop ID if the name matches");
+
+    // Don't allow anything that would sanitize to one of the disallowed config names.
+    cfg->setName("CG-config-v4.0.0_aces-v2.0_ocio-v2.5");
+    OCIO_CHECK_THROW_WHAT(cfg->generateLocalIDForColorSpace("sRGB Encoded,Space"),
+                          OCIO::Exception, "May not generate a local interop ID if the name matches");
+
+    // Example of a potential future built-in config name.
+    cfg->setName("studio-config-v5.1.2_aces-v2.2_ocio-v2.7");
+    OCIO_CHECK_THROW_WHAT(cfg->generateLocalIDForColorSpace("sRGB Encoded,Space"),
+                          OCIO::Exception, "May not generate a local interop ID if the name matches");
+
+    // Similar, but with more digits in the ACES version.
+    cfg->setName("studio-config-v4.1.2_aces-v2.2.1_ocio-v2.7");
+    OCIO_CHECK_THROW_WHAT(cfg->generateLocalIDForColorSpace("sRGB Encoded,Space"),
+                          OCIO::Exception, "May not generate a local interop ID if the name matches");
+
+    // A built-in-looking config name with a major version below 4 does not have interop IDs, so
+    // it is still legal to use as a local ID namespace.
+    cfg->setName("studio-config-v3.0.0_aces-v2.0_ocio-v2.4");
+    OCIO_CHECK_NO_THROW(id = cfg->generateLocalIDForColorSpace("sRGB Encoded,Space"));
+    OCIO_CHECK_EQUAL(id, std::string("studio-config-v3.0.0_aces-v2.0_ocio-v2.4:local:"
+                                     "srgb_encoded.space"));
+
+    // A name that starts like a built-in config and has a version 4.0.0+, but continues with
+    // something other than the exact "_aces-<version>_ocio-<version>" suffix, is not actually
+    // one of the reserved built-in config names and so remains legal.
+    cfg->setName("cg-config-v4.0.0_aces-v2.0_ocio-v2.5_custom");
+    OCIO_CHECK_NO_THROW(id = cfg->generateLocalIDForColorSpace("sRGB Encoded,Space"));
+    OCIO_CHECK_EQUAL(id, std::string("cg-config-v4.0.0_aces-v2.0_ocio-v2.5_custom:local:srgb_encoded.space"));
+}
+
+OCIO_ADD_TEST(ConfigUtils, generate_local_id_for_color_space_alias_preference)
+{
+    auto cfg = OCIO::Config::Create();
+    cfg->setName("studio");
+
+    std::string id;
+
+    // If the color space name already requires no sanitization, it is used as-is, even though
+    // an alias that also requires no sanitization is present.
+    {
+        auto cs = OCIO::ColorSpace::Create();
+        cs->setName("aces_cg");
+        cs->addAlias("some_other_name");
+        OCIO_CHECK_NO_THROW(cfg->addColorSpace(cs));
+
+        OCIO_CHECK_NO_THROW(id = cfg->generateLocalIDForColorSpace("aces_cg"));
+        OCIO_CHECK_EQUAL(id, std::string("studio:local:aces_cg"));
+    }
+
+    // If the name requires sanitization but an alias does not, the alias is preferred.
+    {
+        auto cs = OCIO::ColorSpace::Create();
+        cs->setName("ACES CG");
+        cs->addAlias("aces_cg_alias");
+        OCIO_CHECK_NO_THROW(cfg->addColorSpace(cs));
+
+        OCIO_CHECK_NO_THROW(id = cfg->generateLocalIDForColorSpace("ACES CG"));
+        OCIO_CHECK_EQUAL(id, std::string("studio:local:aces_cg_alias"));
+    }
+
+    // If several aliases would not require sanitization, the first one (in alias order) wins.
+    {
+        auto cs = OCIO::ColorSpace::Create();
+        cs->setName("Linear Rec709");
+        cs->addAlias("Needs Sanitizing");
+        cs->addAlias("first_clean_alias");
+        cs->addAlias("second_clean_alias");
+        OCIO_CHECK_NO_THROW(cfg->addColorSpace(cs));
+
+        OCIO_CHECK_NO_THROW(id = cfg->generateLocalIDForColorSpace("Linear Rec709"));
+        OCIO_CHECK_EQUAL(id, std::string("studio:local:first_clean_alias"));
+    }
+
+    // If the name and all aliases require sanitization, fall back to the sanitized name, as
+    // before this feature was added.
+    {
+        auto cs = OCIO::ColorSpace::Create();
+        cs->setName("Camera Log,Space");
+        cs->addAlias("Also Needs Sanitizing");
+        OCIO_CHECK_NO_THROW(cfg->addColorSpace(cs));
+
+        OCIO_CHECK_NO_THROW(id = cfg->generateLocalIDForColorSpace("Camera Log,Space"));
+        OCIO_CHECK_EQUAL(id, std::string("studio:local:camera_log.space"));
+    }
+}
+
+OCIO_ADD_TEST(ConfigUtils, find_color_space_for_id)
+{
+    auto cfg = OCIO::Config::Create();
+    cfg->setName("MyStudio!");
+
+    auto acescg = OCIO::ColorSpace::Create();
+    acescg->setName("ACEScg");
+    acescg->addAlias("lin_ap1");
+    OCIO_CHECK_NO_THROW(cfg->addColorSpace(acescg));
+
+    auto srgb = OCIO::ColorSpace::Create();
+    srgb->setName("srgb");
+    OCIO_CHECK_NO_THROW(cfg->addColorSpace(srgb));
+
+    auto foo = OCIO::ColorSpace::Create();
+    foo->setName("foo");
+    OCIO_CHECK_NO_THROW(cfg->addColorSpace(foo));
+
+    auto fancy = OCIO::ColorSpace::Create();
+    fancy->setName("My Color Space!");
+    fancy->addAlias("Fancy Alias");
+    OCIO_CHECK_NO_THROW(cfg->addColorSpace(fancy));
+
+    // A different name that sanitizes to the same base as the color space above (both '!' and
+    // '?' sanitize to '*').  The color space added first wins.
+    auto fancyToo = OCIO::ColorSpace::Create();
+    fancyToo->setName("My Color Space?");
+    OCIO_CHECK_NO_THROW(cfg->addColorSpace(fancyToo));
+
+    OCIO::ConstColorSpaceRcPtr cs;
+
+    // Mode 1: exact name and exact alias.
+    OCIO_CHECK_ASSERT(cs = cfg->findColorSpaceForID("ACEScg"));
+    OCIO_CHECK_EQUAL(std::string(cs->getName()), "ACEScg");
+    OCIO_CHECK_ASSERT(cs = cfg->findColorSpaceForID("lin_ap1"));
+    OCIO_CHECK_EQUAL(std::string(cs->getName()), "ACEScg");
+
+    // Mode 2: one namespace, falls back to the base name.
+    OCIO_CHECK_ASSERT(cs = cfg->findColorSpaceForID("somestudio:acescg"));
+    OCIO_CHECK_EQUAL(std::string(cs->getName()), "ACEScg");
+
+    // Two-namespace ID whose one-level-stripped remainder is not itself a valid name/alias:
+    // no recursive stripping, so this must not match "ACEScg".
+    OCIO_CHECK_ASSERT(!cfg->findColorSpaceForID("outer:inner:acescg"));
+
+    // Mode 3 (local): outer namespace matches this config's sanitized name.
+    OCIO_CHECK_ASSERT(cs = cfg->findColorSpaceForID("mystudio*:local:acescg"));
+    OCIO_CHECK_EQUAL(std::string(cs->getName()), "ACEScg");
+
+    // Mode 3 negative: outer namespace does not match the config's name.
+    OCIO_CHECK_ASSERT(!cfg->findColorSpaceForID("othername:local:acescg"));
+    OCIO_CHECK_ASSERT(!cfg->findColorSpaceForID(":local:acescg"));
+    OCIO_CHECK_ASSERT(!cfg->findColorSpaceForID("::local:acescg"));
+
+    // Mode 3 with a color space whose name must be sanitized in order to match the ID base.
+    // (The first of the two color spaces that sanitize to this base is the one returned.)
+    OCIO_CHECK_ASSERT(cs = cfg->findColorSpaceForID("mystudio*:local:my_color_space*"));
+    OCIO_CHECK_EQUAL(std::string(cs->getName()), "My Color Space!");
+
+    // Aliases are searched as well, and are also compared in their sanitized form.
+    OCIO_CHECK_ASSERT(cs = cfg->findColorSpaceForID("mystudio*:local:fancy_alias"));
+    OCIO_CHECK_EQUAL(std::string(cs->getName()), "My Color Space!");
+
+    // In this case, the outer namespace is illegal since it's not lower-case. 
+    // However, the base name would match regardless of case, so it's more predictable
+    // to allow this to match too.
+    OCIO_CHECK_ASSERT(cs = cfg->findColorSpaceForID("myStudio*:local:fancy_Alias"));
+    OCIO_CHECK_EQUAL(std::string(cs->getName()), "My Color Space!");
+
+    // The sanitized comparison is only used for the local mode fall-back, so the sanitized
+    // base does not match on its own or with a namespace that is not this config's name.
+    OCIO_CHECK_ASSERT(!cfg->findColorSpaceForID("my_color_space*"));
+    OCIO_CHECK_ASSERT(!cfg->findColorSpaceForID("othername:local:my_color_space*"));
+
+    // Empty inner namespace: "my-studio::srgb" strips to ":srgb", which must not match "srgb".
+    OCIO_CHECK_ASSERT(!cfg->findColorSpaceForID("my-studio::srgb"));
+
+    // Use of "local" as an ordinary namespace is not allowed, it may only be used as a keyword
+    // for the local (mode 3) form of an ID.
+    OCIO_CHECK_ASSERT(!cfg->findColorSpaceForID("local:foo"));
+
+    // Garbage input: extra colons, empty string, and null all resolve to "not found" without
+    // throwing.
+    OCIO_CHECK_ASSERT(!cfg->findColorSpaceForID("a:b:c:d"));
+    OCIO_CHECK_ASSERT(!cfg->findColorSpaceForID(""));
+    OCIO_CHECK_ASSERT(!cfg->findColorSpaceForID(nullptr));
+
+    // Round-trip: an ID generated by this config is resolved back to the same color space.
+    const std::string generated = cfg->generateLocalIDForColorSpace("ACEScg");
+    OCIO_CHECK_ASSERT(cs = cfg->findColorSpaceForID(generated.c_str()));
+    OCIO_CHECK_EQUAL(std::string(cs->getName()), "ACEScg");
+
+    // Round-trip for a color space whose name requires more than case sanitizing.
+    const std::string generatedFancy = cfg->generateLocalIDForColorSpace("My Color Space!");
+    OCIO_CHECK_EQUAL(generatedFancy, std::string("mystudio*:local:my_color_space*"));
+    OCIO_CHECK_ASSERT(cs = cfg->findColorSpaceForID(generatedFancy.c_str()));
+    OCIO_CHECK_EQUAL(std::string(cs->getName()), "My Color Space!");
+
+    // A config with no name never matches a local mode ID, not even one with an empty outer
+    // namespace (such an ID could not have been generated by an unnamed config).
+    auto cfgNoName = OCIO::Config::Create();
+    OCIO_CHECK_NO_THROW(cfgNoName->addColorSpace(foo));
+    OCIO_CHECK_ASSERT(cs = cfgNoName->findColorSpaceForID("foo"));
+    OCIO_CHECK_ASSERT(!cfgNoName->findColorSpaceForID(":local:foo"));
+    OCIO_CHECK_ASSERT(!cfgNoName->findColorSpaceForID("mystudio*:local:foo"));
 }
