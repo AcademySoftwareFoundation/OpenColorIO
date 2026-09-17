@@ -125,6 +125,19 @@ html_theme_options = {
   ]
 }
 
+def _fix_press_logo_url(app, pagename, templatename, context, doctree):
+    # Sphinx 7 resolves logo_url with pathto(); sphinx-press-theme 0.9.1 then
+    # calls pathto(logo_url) again, which breaks the image on nested pages
+    # (alt text "logo"). Reset to a root-static path so Press's pathto is correct.
+    logo_url = context.get("logo_url")
+    if not logo_url or logo_url.startswith(("http://", "https://", "data:")):
+        return
+    name = logo_url.replace("\\", "/").rsplit("/", 1)[-1]
+    context["logo_url"] = "_static/" + name
+
+def setup(app):
+    app.connect("html-page-context", _fix_press_logo_url, priority=1000)
+
 # -- Options for LaTeX output -------------------------------------------------
 
 latex_documents = [(
