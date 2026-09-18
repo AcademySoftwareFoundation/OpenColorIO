@@ -3538,19 +3538,30 @@ OCIO_ADD_TEST(Config, view)
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_1")), "View_1");
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_1"), 2);
+        OCIO_REQUIRE_EQUAL(config->getNumViewsAll("sRGB_1"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 0)), "View_1");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 1)), "View_2");
-        // Invalid index.
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_1", 0)), "View_1");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_1", 1)), "View_2");
+        // Invalid indexes.
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 42)), "");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_1", -1)), "");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_1", 42)), "");
 
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_2")), "View_2");
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_2"), 2);
+        OCIO_REQUIRE_EQUAL(config->getNumViewsAll("sRGB_2"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 0)), "View_2");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 1)), "View_3");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_2", 0)), "View_2");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_2", 1)), "View_3");
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_3")), "View_3");
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_3"), 2);
+        OCIO_REQUIRE_EQUAL(config->getNumViewsAll("sRGB_3"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 0)), "View_3");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 1)), "View_1");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_3", 0)), "View_3");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_3", 1)), "View_1");
 
         std::stringstream ss;
         ss << *config.get();
@@ -3571,14 +3582,23 @@ OCIO_ADD_TEST(Config, view)
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_1")), "View_1");
         // The active views list is ignored, for a display, if it would remove all views.
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_1"), 2);
+        OCIO_REQUIRE_EQUAL(config->getNumViewsAll("sRGB_1"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 0)), "View_1");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 1)), "View_2");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_1", 0)), "View_1");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_1", 1)), "View_2");
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_2")), "View_3");
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_2"), 1);
+        OCIO_REQUIRE_EQUAL(config->getNumViewsAll("sRGB_2"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 0)), "View_3");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_2", 0)), "View_2");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_2", 1)), "View_3");
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_3")), "View_3");
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_3"), 1);
+        OCIO_REQUIRE_EQUAL(config->getNumViewsAll("sRGB_3"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 0)), "View_3");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_3", 0)), "View_3");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_3", 1)), "View_1");
 
         OCIO_REQUIRE_EQUAL(config->getNumViews(OCIO::VIEW_DISPLAY_DEFINED, "sRGB_1"), 2);
         OCIO_REQUIRE_EQUAL(config->getNumViews(OCIO::VIEW_DISPLAY_DEFINED, "sRGB_2"), 2);
@@ -3603,16 +3623,26 @@ OCIO_ADD_TEST(Config, view)
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_1")), "View_2");
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_1"), 2);
+        OCIO_REQUIRE_EQUAL(config->getNumViewsAll("sRGB_1"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 0)), "View_2");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 1)), "View_1");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_1", 0)), "View_1");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_1", 1)), "View_2");
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_2")), "View_3");
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_2"), 2);
+        OCIO_REQUIRE_EQUAL(config->getNumViewsAll("sRGB_2"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 0)), "View_3");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 1)), "View_2");
+        // Ignore view ordering from active views list.
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_2", 0)), "View_2");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_2", 1)), "View_3");
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_3")), "View_3");
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_3"), 2);
+        OCIO_REQUIRE_EQUAL(config->getNumViewsAll("sRGB_3"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 0)), "View_3");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 1)), "View_1");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_3", 0)), "View_3");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_3", 1)), "View_1");
     }
 
     {
@@ -3630,14 +3660,23 @@ OCIO_ADD_TEST(Config, view)
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_1")), "View_2");
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_1"), 1);
+        OCIO_REQUIRE_EQUAL(config->getNumViewsAll("sRGB_1"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 0)), "View_2");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_1", 0)), "View_1");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_1", 1)), "View_2");
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_2")), "View_3");
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_2"), 2);
+        OCIO_REQUIRE_EQUAL(config->getNumViewsAll("sRGB_2"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 0)), "View_3");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 1)), "View_2");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_2", 0)), "View_2");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_2", 1)), "View_3");
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_3")), "View_3");
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_3"), 1);
+        OCIO_REQUIRE_EQUAL(config->getNumViewsAll("sRGB_3"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 0)), "View_3");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_3", 0)), "View_3");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_3", 1)), "View_1");
     }
 
     {
@@ -3656,16 +3695,25 @@ OCIO_ADD_TEST(Config, view)
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_1")), "View_1");
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_1"), 2);
+        OCIO_REQUIRE_EQUAL(config->getNumViewsAll("sRGB_1"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 0)), "View_1");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 1)), "View_2");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_1", 0)), "View_1");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_1", 1)), "View_2");
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_2")), "View_2");
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_2"), 2);
+        OCIO_REQUIRE_EQUAL(config->getNumViewsAll("sRGB_2"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 0)), "View_2");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 1)), "View_3");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_2", 0)), "View_2");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_2", 1)), "View_3");
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_3")), "View_3");
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_3"), 2);
+        OCIO_REQUIRE_EQUAL(config->getNumViewsAll("sRGB_3"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 0)), "View_3");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 1)), "View_1");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_3", 0)), "View_3");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_3", 1)), "View_1");
     }
 
     {
@@ -3684,16 +3732,25 @@ OCIO_ADD_TEST(Config, view)
         OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_1")), "View_1");
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_1"), 2);
+        OCIO_REQUIRE_EQUAL(config->getNumViewsAll("sRGB_1"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 0)), "View_1");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 1)), "View_2");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_1", 0)), "View_1");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_1", 1)), "View_2");
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_2")), "View_2");
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_2"), 2);
+        OCIO_REQUIRE_EQUAL(config->getNumViewsAll("sRGB_2"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 0)), "View_2");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 1)), "View_3");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_2", 0)), "View_2");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_2", 1)), "View_3");
         OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_3")), "View_3");
         OCIO_REQUIRE_EQUAL(config->getNumViews("sRGB_3"), 2);
+        OCIO_REQUIRE_EQUAL(config->getNumViewsAll("sRGB_3"), 2);
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 0)), "View_3");
         OCIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 1)), "View_1");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_3", 0)), "View_3");
+        OCIO_CHECK_EQUAL(std::string(config->getViewAll("sRGB_3", 1)), "View_1");
     }
 }
 
