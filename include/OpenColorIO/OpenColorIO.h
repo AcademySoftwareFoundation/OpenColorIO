@@ -887,6 +887,14 @@ public:
     const char * getView(const char * display, int index) const;
 
     /**
+     * Return the number of views, ignoring the active_views list, attached to the
+     * display including the number of shared views if any. Return 0 if display
+     * does not exist.
+     */
+    int getNumViewsAll(const char * display) const;
+    const char * getViewAll(const char * display, int index) const;
+
+    /**
      * If the config has ViewingRules, get the number of active Views for this
      * colorspace. (If there are no rules, it returns all of them.)
      */

@@ -3509,6 +3509,35 @@ const char * Config::getView(const char * display, int index) const
     return "";
 }
 
+int Config::getNumViewsAll(const char * display) const
+{
+    if (!display || !*display) return 0;
+
+    DisplayMap::const_iterator iter = FindDisplay(getImpl()->m_displays, display);
+    if(iter == getImpl()->m_displays.end()) return 0;
+
+    const ViewPtrVec views = getImpl()->getViews(iter->second);
+
+    return static_cast<int>(views.size());
+}
+
+const char * Config::getViewAll(const char * display, int index) const
+{
+    if (!display || !*display || index < 0) return "";
+
+    DisplayMap::const_iterator iter = FindDisplay(getImpl()->m_displays, display);
+    if(iter == getImpl()->m_displays.end()) return "";
+
+    const ViewPtrVec views = getImpl()->getViews(iter->second);
+
+    if(static_cast<size_t>(index) < views.size())
+    {
+        return views[index]->m_name.c_str();
+    }
+
+    return "";
+}
+
 int Config::getNumViews(const char * display, const char * colorspace) const
 {
     if (!display || !*display || !colorspace || !*colorspace) return 0;
