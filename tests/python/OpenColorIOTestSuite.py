@@ -57,6 +57,7 @@ import CDLTransformTest
 import ColorSpaceHelpersTest
 import ColorSpaceTest
 import ColorSpaceTransformTest
+import ConfigCompatibilityHelpersTest
 import ConfigTest
 import ConstantsTest
 import ContextTest
@@ -108,6 +109,7 @@ def get_test_modules():
         ("ColorSpaceHelpersTest", ColorSpaceHelpersTest),
         ("ColorSpaceTest", ColorSpaceTest),
         ("ColorSpaceTransformTest", ColorSpaceTransformTest),
+        ("ConfigCompatibilityHelpersTest", ConfigCompatibilityHelpersTest),
         ("ConfigTest", ConfigTest),
         ("ConstantsTest", ConstantsTest),
         ("ContextTest", ContextTest),

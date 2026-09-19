@@ -25,7 +25,7 @@ const char * DESC_STRING = "\n\n"
 "All display/view pairs, color spaces, and named transforms are checked,\n"
 "regardless of whether they are active or inactive.\n\n"
 "Ociocheck can also be used to clean up formatting on an existing profile\n"
-"that has been manually edited, using the '-o' option.\n";
+"that has been manually edited, using the '--oconfig' option.\n";
 
 
 // Returns true if the interopID is valid.
@@ -107,6 +107,7 @@ bool isValidInteropID(const std::string& id)
 int main(int argc, const char **argv)
 {
     bool help = false;
+    bool verbose = false;
     int errorcount = 0;
     int warningcount = 0;
     std::string inputconfig;
@@ -118,6 +119,8 @@ int main(int argc, const char **argv)
                "--help", &help, "Print help message",
                "--iconfig %s", &inputconfig, "Input .ocio configuration file (default: $OCIO)",
                "--oconfig %s", &outputconfig, "Output .ocio file",
+               "-i %s", &inputconfig, "Same as --iconfig",
+               "-v", &verbose, "Print detailed reasons for failed compatibility checks",
                NULL);
 
     if (ap.parse(argc, argv) < 0)
@@ -655,6 +658,18 @@ int main(int argc, const char **argv)
             errorcount += 1;
             std::cout << exception.what() << std::endl;
             std::cout << "Validation: failed" << std::endl;
+        }
+
+        std::cout << std::endl;
+        std::cout << "** Compatibility **" << std::endl;
+
+        LogGuard compatLogGuard;
+        const bool hdrDisplaySupport26 = OCIO::ConfigCompatibilityHelpers::CheckCompatibility(
+            config, OCIO::CONFIG_HDR_DISPLAY_SUPPORT_26);
+        std::cout << "HDR Display Support (2.6): " << (hdrDisplaySupport26 ? "yes" : "no") << std::endl;
+        if (verbose && !compatLogGuard.empty())
+        {
+            std::cout << compatLogGuard.output();
         }
 
         std::cout << std::endl;
