@@ -1024,6 +1024,10 @@ extern OCIOEXPORT const char * OCIO_CONFIG_ARCHIVE_FILE_EXT;
 // URI Prefix
 extern OCIOEXPORT const char * OCIO_BUILTIN_URI_PREFIX;
 
+class OCIOEXPORT AMFInfo;
+typedef OCIO_SHARED_PTR<const AMFInfo> ConstAMFInfoRcPtr;
+typedef OCIO_SHARED_PTR<AMFInfo> AMFInfoRcPtr;
+
 } // namespace OCIO_NAMESPACE
 
 #endif

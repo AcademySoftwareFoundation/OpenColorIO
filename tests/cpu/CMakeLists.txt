@@ -252,6 +252,7 @@ set(TESTS
     fileformats/FileFormatVF_tests.cpp
     fileformats/FormatMetadata_tests.cpp
     fileformats/xmlutils/XMLReaderUtils_tests.cpp
+    fileformats/amf/AMFParser_tests.cpp
     FileRules_tests.cpp
     GpuShader_tests.cpp
     GpuShaderUtils_tests.cpp

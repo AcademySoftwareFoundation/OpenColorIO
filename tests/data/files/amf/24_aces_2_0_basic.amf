@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<aces:acesMetadataFile xmlns:aces="urn:ampas:aces:amf:v2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cdl="urn:ASC:CDL:v1.01" version="2.0">
+    <aces:amfInfo>
+        <aces:description>ACES 2.0 Basic Pipeline</aces:description>
+        <aces:author>
+            <aces:name>Recipe System</aces:name>
+            <aces:emailAddress>recipes@example.com</aces:emailAddress>
+        </aces:author>
+        <aces:dateTime>
+            <aces:creationDateTime>2026-03-26T19:19:49Z</aces:creationDateTime>
+            <aces:modificationDateTime>2026-03-26T19:19:49Z</aces:modificationDateTime>
+        </aces:dateTime>
+        <aces:uuid>urn:uuid:0de2f05c-92e5-4896-8946-fe96bf0d73a4</aces:uuid>
+    </aces:amfInfo>
+    <aces:pipeline>
+        <aces:pipelineInfo>
+            <aces:description>ACES 2.0 camera to display pipeline</aces:description>
+            <aces:dateTime>
+                <aces:creationDateTime>2026-03-26T19:19:49Z</aces:creationDateTime>
+                <aces:modificationDateTime>2026-03-26T19:19:49Z</aces:modificationDateTime>
+            </aces:dateTime>
+            <aces:uuid>urn:uuid:8f28d91b-a638-42b8-9622-1940d51eba09</aces:uuid>
+            <aces:systemVersion>
+                <aces:majorVersion>2</aces:majorVersion>
+                <aces:minorVersion>0</aces:minorVersion>
+                <aces:patchVersion>0</aces:patchVersion>
+            </aces:systemVersion>
+        </aces:pipelineInfo>
+        <aces:inputTransform applied="false">
+            <aces:description>ARRI Alexa LF LogC4 EI800 to ACES2065-1</aces:description>
+            <aces:transformId>urn:ampas:aces:transformId:v2.0:CSC.Arri.LogC4_to_ACES.a2.v1</aces:transformId>
+        </aces:inputTransform>
+        <aces:outputTransform applied="false">
+            <aces:description>ACES2065-1 to Rec.709 100 nits</aces:description>
+            <aces:transformId>urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D65_100nit_in_Rec709-D65_BT1886.a2.v1</aces:transformId>
+        </aces:outputTransform>
+    </aces:pipeline>
+</aces:acesMetadataFile>

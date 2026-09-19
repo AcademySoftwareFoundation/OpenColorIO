@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<aces:acesMetadataFile xmlns:aces="urn:ampas:aces:amf:v2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cdl="urn:ASC:CDL:v1.01" version="2.0">
+    <aces:amfInfo>
+        <aces:description>Applied/Non-Applied Transform Sequence</aces:description>
+        <aces:author>
+            <aces:name>Colorist</aces:name>
+            <aces:emailAddress>colorist@studio.com</aces:emailAddress>
+        </aces:author>
+        <aces:dateTime>
+            <aces:creationDateTime>2026-03-26T19:19:49Z</aces:creationDateTime>
+            <aces:modificationDateTime>2026-03-26T19:19:49Z</aces:modificationDateTime>
+        </aces:dateTime>
+        <aces:uuid>urn:uuid:f5410f44-8836-4062-a480-a3c2c88626b1</aces:uuid>
+    </aces:amfInfo>
+    <aces:pipeline>
+        <aces:pipelineInfo>
+            <aces:description>Active Looks with Archived Alternatives</aces:description>
+            <aces:dateTime>
+                <aces:creationDateTime>2026-03-26T19:19:49Z</aces:creationDateTime>
+                <aces:modificationDateTime>2026-03-26T19:19:49Z</aces:modificationDateTime>
+            </aces:dateTime>
+            <aces:uuid>urn:uuid:46ea8947-ac25-4297-8134-4e208ed94eb1</aces:uuid>
+            <aces:systemVersion>
+                <aces:majorVersion>2</aces:majorVersion>
+                <aces:minorVersion>0</aces:minorVersion>
+                <aces:patchVersion>0</aces:patchVersion>
+            </aces:systemVersion>
+        </aces:pipelineInfo>
+        <aces:inputTransform applied="true">
+            <aces:description>Sony Venice 2 to ACES</aces:description>
+            <aces:transformId>urn:ampas:aces:transformId:v2.0:CSC.Sony.Venice_SLog3_SGamut3_to_ACES.a2.v1</aces:transformId>
+        </aces:inputTransform>
+        <aces:lookTransform applied="true">
+            <aces:description>Hero Grade - APPLIED</aces:description>
+            <aces:cdlWorkingSpace>
+                <aces:toCdlWorkingSpace>
+                    <aces:transformId>urn:ampas:aces:transformId:v2.0:CSC.Academy.ACES_to_ACEScct.a2.v1</aces:transformId>
+                </aces:toCdlWorkingSpace>
+                <aces:fromCdlWorkingSpace>
+                    <aces:transformId>urn:ampas:aces:transformId:v2.0:CSC.Academy.ACEScct_to_ACES.a2.v1</aces:transformId>
+                </aces:fromCdlWorkingSpace>
+            </aces:cdlWorkingSpace>
+            <cdl:ASC_SOP>
+                <cdl:Slope>1.15 1.0 0.9</cdl:Slope>
+                <cdl:Offset>0.0 0.0 0.0</cdl:Offset>
+                <cdl:Power>1.0 1.0 1.0</cdl:Power>
+            </cdl:ASC_SOP>
+            <cdl:ASC_SAT>
+                <cdl:Saturation>1.1</cdl:Saturation>
+            </cdl:ASC_SAT>
+        </aces:lookTransform>
+        <aces:lookTransform applied="true">
+            <aces:description>Secondary Correction - APPLIED</aces:description>
+            <aces:cdlWorkingSpace>
+                <aces:toCdlWorkingSpace>
+                    <aces:transformId>urn:ampas:aces:transformId:v2.0:CSC.Academy.ACES_to_ACEScct.a2.v1</aces:transformId>
+                </aces:toCdlWorkingSpace>
+                <aces:fromCdlWorkingSpace>
+                    <aces:transformId>urn:ampas:aces:transformId:v2.0:CSC.Academy.ACEScct_to_ACES.a2.v1</aces:transformId>
+                </aces:fromCdlWorkingSpace>
+            </aces:cdlWorkingSpace>
+            <cdl:ASC_SOP>
+                <cdl:Slope>1.05 1.05 1.0</cdl:Slope>
+                <cdl:Offset>0.01 0.0 0.0</cdl:Offset>
+                <cdl:Power>1.0 1.0 1.0</cdl:Power>
+            </cdl:ASC_SOP>
+            <cdl:ASC_SAT>
+                <cdl:Saturation>1.05</cdl:Saturation>
+            </cdl:ASC_SAT>
+        </aces:lookTransform>
+        <aces:lookTransform applied="false">
+            <aces:description>Alternative Look - Cool Tones (ARCHIVED)</aces:description>
+            <aces:cdlWorkingSpace>
+                <aces:toCdlWorkingSpace>
+                    <aces:transformId>urn:ampas:aces:transformId:v2.0:CSC.Academy.ACES_to_ACEScct.a2.v1</aces:transformId>
+                </aces:toCdlWorkingSpace>
+                <aces:fromCdlWorkingSpace>
+                    <aces:transformId>urn:ampas:aces:transformId:v2.0:CSC.Academy.ACEScct_to_ACES.a2.v1</aces:transformId>
+                </aces:fromCdlWorkingSpace>
+            </aces:cdlWorkingSpace>
+            <cdl:ASC_SOP>
+                <cdl:Slope>0.95 1.0 1.1</cdl:Slope>
+                <cdl:Offset>0.0 0.0 0.0</cdl:Offset>
+                <cdl:Power>1.0 1.0 1.0</cdl:Power>
+            </cdl:ASC_SOP>
+            <cdl:ASC_SAT>
+                <cdl:Saturation>1.0</cdl:Saturation>
+            </cdl:ASC_SAT>
+        </aces:lookTransform>
+        <aces:lookTransform applied="false">
+            <aces:description>Experimental High Contrast Look (ARCHIVED)</aces:description>
+            <aces:cdlWorkingSpace>
+                <aces:toCdlWorkingSpace>
+                    <aces:transformId>urn:ampas:aces:transformId:v2.0:CSC.Academy.ACES_to_ACEScct.a2.v1</aces:transformId>
+                </aces:toCdlWorkingSpace>
+                <aces:fromCdlWorkingSpace>
+                    <aces:transformId>urn:ampas:aces:transformId:v2.0:CSC.Academy.ACEScct_to_ACES.a2.v1</aces:transformId>
+                </aces:fromCdlWorkingSpace>
+            </aces:cdlWorkingSpace>
+            <cdl:ASC_SOP>
+                <cdl:Slope>1.3 1.1 0.8</cdl:Slope>
+                <cdl:Offset>0.0 0.0 0.0</cdl:Offset>
+                <cdl:Power>1.0 1.0 1.0</cdl:Power>
+            </cdl:ASC_SOP>
+            <cdl:ASC_SAT>
+                <cdl:Saturation>1.2</cdl:Saturation>
+            </cdl:ASC_SAT>
+        </aces:lookTransform>
+        <aces:outputTransform applied="true">
+            <aces:description>ACES to Rec.709</aces:description>
+            <aces:transformId>urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D65_100nit_in_Rec709-D65_BT1886.a2.v1</aces:transformId>
+        </aces:outputTransform>
+    </aces:pipeline>
+</aces:acesMetadataFile>

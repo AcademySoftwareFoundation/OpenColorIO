@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<aces:acesMetadataFile xmlns:aces="urn:ampas:aces:amf:v2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cdl="urn:ASC:CDL:v1.01" version="2.0">
+    <aces:amfInfo>
+        <aces:description>ACES 2.0 with Creative LMT</aces:description>
+        <aces:author>
+            <aces:name>Recipe System</aces:name>
+            <aces:emailAddress>recipes@example.com</aces:emailAddress>
+        </aces:author>
+        <aces:dateTime>
+            <aces:creationDateTime>2026-03-26T19:19:49Z</aces:creationDateTime>
+            <aces:modificationDateTime>2026-03-26T19:19:49Z</aces:modificationDateTime>
+        </aces:dateTime>
+        <aces:uuid>urn:uuid:933b3498-e5e6-4742-8318-f974eb6aabee</aces:uuid>
+    </aces:amfInfo>
+    <aces:pipeline>
+        <aces:pipelineInfo>
+            <aces:description>ACES 2.0 with creative grade</aces:description>
+            <aces:dateTime>
+                <aces:creationDateTime>2026-03-26T19:19:49Z</aces:creationDateTime>
+                <aces:modificationDateTime>2026-03-26T19:19:49Z</aces:modificationDateTime>
+            </aces:dateTime>
+            <aces:uuid>urn:uuid:93472135-2726-424c-af6f-ccb387a1c8b1</aces:uuid>
+            <aces:systemVersion>
+                <aces:majorVersion>2</aces:majorVersion>
+                <aces:minorVersion>0</aces:minorVersion>
+                <aces:patchVersion>0</aces:patchVersion>
+            </aces:systemVersion>
+        </aces:pipelineInfo>
+        <aces:inputTransform applied="false">
+            <aces:description>Sony Venice 2 S-Log3 to ACES2065-1</aces:description>
+            <aces:transformId>urn:ampas:aces:transformId:v2.0:CSC.Sony.Venice_SLog3_SGamut3_to_ACES.a2.v1</aces:transformId>
+        </aces:inputTransform>
+        <aces:lookTransform applied="false">
+            <aces:description>Creative grade in ACEScct</aces:description>
+            <aces:cdlWorkingSpace>
+                <aces:toCdlWorkingSpace>
+                    <aces:description>ACES2065-1 to ACEScct</aces:description>
+                    <aces:transformId>urn:ampas:aces:transformId:v2.0:CSC.Academy.ACES_to_ACEScct.a2.v1</aces:transformId>
+                </aces:toCdlWorkingSpace>
+                <aces:fromCdlWorkingSpace>
+                    <aces:description>ACEScct to ACES2065-1</aces:description>
+                    <aces:transformId>urn:ampas:aces:transformId:v2.0:CSC.Academy.ACEScct_to_ACES.a2.v1</aces:transformId>
+                </aces:fromCdlWorkingSpace>
+            </aces:cdlWorkingSpace>
+            <cdl:ASC_SOP>
+                <cdl:Slope>1.1 1.0 0.95</cdl:Slope>
+                <cdl:Offset>0.0 -0.01 0.0</cdl:Offset>
+                <cdl:Power>1.0 1.0 1.05</cdl:Power>
+            </cdl:ASC_SOP>
+            <cdl:ASC_SAT>
+                <cdl:Saturation>1.1</cdl:Saturation>
+            </cdl:ASC_SAT>
+        </aces:lookTransform>
+        <aces:outputTransform applied="false">
+            <aces:description>ACES2065-1 to P3-D65 ST2084 HDR</aces:description>
+            <aces:transformId>urn:ampas:aces:transformId:v2.0:Output.Academy.P3-D65_108nit_in_P3-D65_ST2084.a2.v1</aces:transformId>
+        </aces:outputTransform>
+    </aces:pipeline>
+</aces:acesMetadataFile>

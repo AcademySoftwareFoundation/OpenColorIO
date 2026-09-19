@@ -49,6 +49,7 @@ else:
 import PyOpenColorIO as OCIO
 
 import AllocationTransformTest
+import AMFTest
 import BakerTest
 import BuiltinConfigRegistryTest
 import BuiltinTransformRegistryTest
@@ -100,6 +101,7 @@ import ViewTransformTest
 def get_test_modules():
     return [
         ("AllocationTransformTest", AllocationTransformTest),
+        ("AMFTest", AMFTest),
         ("BakerTest", BakerTest),
         ("BuiltinConfigRegistryTest", BuiltinConfigRegistryTest),
         ("BuiltinTransformRegistryTest", BuiltinTransformRegistryTest),

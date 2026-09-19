@@ -360,7 +360,30 @@ public:
      * \return The Config object.
      */
     static ConstConfigRcPtr CreateFromConfigIOProxy(ConfigIOProxyRcPtr ciop);
-    
+
+    /**
+     * \brief Create a config that implements the color pipeline of an ACES
+     * Metadata File (AMF).
+     *
+     * The returned config expresses the AMF's input, look and output transforms
+     * as OCIO color spaces, looks, displays and views, so that the AMF pipeline
+     * can be applied through the normal OCIO processing paths. Details about how
+     * the AMF pipeline maps onto the config are reported through \p amfInfoObject.
+     *
+     * When \p configFilePath is null a builtin reference config is selected
+     * automatically based on the ACES version of the transforms the AMF
+     * references (ACES 1.x or ACES 2). Supply a config path to override this.
+     *
+     * \param[out] amfInfoObject Struct describing how the AMF pipeline maps onto the config.
+     * \param amfFilePath Full path to the AMF file.
+     * \param configFilePath Optional reference config path (null to auto-select a builtin).
+     * \throw Exception If there is a problem interpreting the AMF file.
+     * \return The Config object implementing the AMF processing pipeline.
+     */
+    static ConstConfigRcPtr CreateFromAMF(AMFInfoRcPtr amfInfoObject,
+                                          const char * amfFilePath,
+                                          const char * configFilePath = nullptr);
+
     /**
      * \brief Create a configuration using an OCIO built-in config.
      * 
@@ -4136,6 +4159,72 @@ public:
      */
     virtual std::string getFastLutFileHash(const char * filepath) const = 0;
 };
+
+/**
+ * \brief Describes how the pipeline of an ACES Metadata File (AMF) maps onto the
+ * OCIO config produced by \ref Config::CreateFromAMF.
+ *
+ * The string accessors own their storage, so an AMFInfo remains valid
+ * independently of the lifetime of the config it was produced alongside.
+ */
+class OCIOEXPORT AMFInfo
+{
+public:
+    static AMFInfoRcPtr Create();
+
+    /// Identifier appended to config items derived from this AMF to keep names unique.
+    const char * getClipIdentifier() const;
+    void setClipIdentifier(const char * value);
+
+    /// Name of the color space for the media (clip) that the AMF describes.
+    const char * getClipColorSpaceName() const;
+    void setClipColorSpaceName(const char * value);
+
+    /// Name of the color space for the AMF Input Transform.
+    const char * getInputColorSpaceName() const;
+    void setInputColorSpaceName(const char * value);
+
+    /// Number of AMF Look Transforms that were applied to the clip.
+    int getNumLooksApplied() const;
+    void setNumLooksApplied(int value);
+
+    /// Name of the OCIO display corresponding to the AMF Output Transform.
+    const char * getDisplayName() const;
+    void setDisplayName(const char * value);
+
+    /// Name of the OCIO view corresponding to the AMF Output Transform.
+    const char * getViewName() const;
+    void setViewName(const char * value);
+
+    AMFInfo(const AMFInfo &) = delete;
+    AMFInfo & operator=(const AMFInfo &) = delete;
+    /// Do not use (needed only for pybind11).
+    ~AMFInfo();
+
+private:
+    AMFInfo();
+
+    static void deleter(AMFInfo * c);
+
+    class Impl;
+    Impl * m_impl;
+    Impl * getImpl() { return m_impl; }
+    const Impl * getImpl() const { return m_impl; }
+};
+
+/**
+ * \brief Convert an ACES Metadata File into an OCIO config.
+ *     The config object may then be used to convert between any parts of the AMF pipeline.
+ *     The function returns various other pieces of information that allow the caller to understand
+ *     the details of the pipeline described by the AMF file and how that relates to the config.
+ *
+ * \param[out] amfInfoObject Object containing various details about the AMF pipeline.
+ * \param amfFilePath containing full path along with AMF file name.
+ * \return The OCIO config implementing the AMF processing pipeline.
+ *
+ * \throw Exception if there is a problem interpreting the AMF file.
+ */
+extern OCIOEXPORT ConstConfigRcPtr CreateFromAMF(AMFInfoRcPtr amfInfoObject, const char* amfFilePath, const char* configFilePath = nullptr);
 
 } // namespace OCIO_NAMESPACE
 

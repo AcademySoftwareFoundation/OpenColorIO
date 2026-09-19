@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<aces:acesMetadataFile xmlns:aces="urn:ampas:aces:amf:v2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cdl="urn:ASC:CDL:v1.01" version="2.0">
+    <aces:amfInfo>
+        <aces:description>LUT-Based Look Transform</aces:description>
+        <aces:author>
+            <aces:name>DIT</aces:name>
+            <aces:emailAddress>dit@on-set.com</aces:emailAddress>
+        </aces:author>
+        <aces:dateTime>
+            <aces:creationDateTime>2026-03-26T19:19:49Z</aces:creationDateTime>
+            <aces:modificationDateTime>2026-03-26T19:19:49Z</aces:modificationDateTime>
+        </aces:dateTime>
+        <aces:uuid>urn:uuid:192fe4cc-41ae-4369-aa67-1b742723e3d1</aces:uuid>
+    </aces:amfInfo>
+    <aces:pipeline>
+        <aces:pipelineInfo>
+            <aces:description>External LUT File Reference</aces:description>
+            <aces:dateTime>
+                <aces:creationDateTime>2026-03-26T19:19:49Z</aces:creationDateTime>
+                <aces:modificationDateTime>2026-03-26T19:19:49Z</aces:modificationDateTime>
+            </aces:dateTime>
+            <aces:uuid>urn:uuid:0d87aadb-da88-443b-a7c7-1a4aa3c10110</aces:uuid>
+            <aces:systemVersion>
+                <aces:majorVersion>2</aces:majorVersion>
+                <aces:minorVersion>0</aces:minorVersion>
+                <aces:patchVersion>0</aces:patchVersion>
+            </aces:systemVersion>
+        </aces:pipelineInfo>
+        <aces:inputTransform applied="false">
+            <aces:description>Panasonic V-Log to ACES</aces:description>
+            <aces:transformId>urn:ampas:aces:transformId:v2.0:CSC.Panasonic.VLog_VGamut_to_ACES.a2.v1</aces:transformId>
+        </aces:inputTransform>
+        <aces:lookTransform applied="false">
+            <aces:description>Creative LUT - Film Emulation</aces:description>
+            <aces:hash algorithm="http://www.w3.org/2001/04/xmldsig-more#md5">4GYskVNKvJ8K1ltFxVqpgw==</aces:hash>
+            <aces:file>MasterLookBright_O-Rec709.clf</aces:file>
+        </aces:lookTransform>
+        <aces:outputTransform applied="false">
+            <aces:description>ACES to Rec.709</aces:description>
+            <aces:transformId>urn:ampas:aces:transformId:v2.0:Output.Academy.Rec709-D65_100nit_in_Rec709-D65_BT1886.a2.v1</aces:transformId>
+        </aces:outputTransform>
+    </aces:pipeline>
+</aces:acesMetadataFile>
