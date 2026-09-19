@@ -149,6 +149,18 @@ OCIO_ADD_TEST(ConfigCompatibility, hdr_display_support_26)
     OCIO_CHECK_ASSERT(OCIO::ConfigCompatibilityHelpers::CheckCompatibility(
         config, OCIO::CONFIG_HDR_DISPLAY_SUPPORT_26));
 
+    // Add a view that uses a named transform as its view_transform, the config is still compatible.
+
+    auto nt = OCIO::NamedTransform::Create();
+    nt->setTransform(OCIO::MatrixTransform::Create(), OCIO::TRANSFORM_DIR_FORWARD);
+    nt->setName("namedtransform");
+    OCIO_CHECK_NO_THROW(config->addDisplayView("display2", "nt view", "namedtransform",
+                                               "display_cs", "", "", ""));
+
+    OCIO_CHECK_ASSERT(OCIO::ConfigCompatibilityHelpers::ActiveViewsHaveViewTransform(config));
+    OCIO_CHECK_ASSERT(OCIO::ConfigCompatibilityHelpers::CheckCompatibility(
+        config, OCIO::CONFIG_HDR_DISPLAY_SUPPORT_26));
+
     // Add a view that does not qualify (no view transform, non-data color space) to the
     // active display. Since it is active, the check fails. Deactivating it via setActiveViews
     // makes the config compatible again, showing that an inactive view does not need to pass
