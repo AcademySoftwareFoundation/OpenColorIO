@@ -231,17 +231,22 @@ void AddCurveEvalMethodTextToShaderProgram(GpuShaderCreatorRcPtr & shaderCreator
     }
 
     st.newLine() << "";
-    if (shaderCreator->getLanguage() == LANGUAGE_OSL_1 || shaderCreator->getLanguage() == GPU_LANGUAGE_MSL_2_0)
+    const bool inverse = gcData->getDirection() == TRANSFORM_DIR_INVERSE;
+    const bool noInQualifier = shaderCreator->getLanguage() == LANGUAGE_OSL_1 ||
+                               shaderCreator->getLanguage() == GPU_LANGUAGE_MSL_2_0;
+    const std::string in = noInQualifier ? "" : "in ";
+    // The inverse eval omits identity_x (returns the input when there is no curve), matching the CPU evalCurveRev signature.
+    if (inverse)
     {
-        st.newLine() << st.floatKeyword() << " " << props.m_eval << "(int curveIdx, float x, float identity_x)";
+        st.newLine() << st.floatKeyword() << " " << props.m_eval << "(" << in << "int curveIdx, " << in << "float x)";
     }
     else
     {
-        st.newLine() << st.floatKeyword() << " " << props.m_eval << "(in int curveIdx, in float x, in float identity_x)";
+        st.newLine() << st.floatKeyword() << " " << props.m_eval << "(" << in << "int curveIdx, " << in << "float x, " << in << "float identity_x)";
     }
     st.newLine() << "{";
     st.indent();
-    if (gcData->getDirection() == TRANSFORM_DIR_INVERSE)
+    if (inverse)
     {
         GradingBSplineCurveImpl::AddShaderEvalRev(st, props.m_knotsOffsets, props.m_coefsOffsets,
                                                   props.m_knots, props.m_coefs);
@@ -331,13 +336,13 @@ void AddGCInverseShader(GpuShaderCreatorRcPtr & shaderCreator,
 
     const std::string pix(shaderCreator->getPixelName());
 
-    // Call the curve evaluation method for each curve.
-    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(3, " << pix << ".rgb.r, " << pix << ".rgb.r);"; // MASTER
-    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(3, " << pix << ".rgb.g, " << pix << ".rgb.g);"; // MASTER
-    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(3, " << pix << ".rgb.b, " << pix << ".rgb.b);"; // MASTER
-    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(0, " << pix << ".rgb.r, " << pix << ".rgb.r);"; // RED
-    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(1, " << pix << ".rgb.g, " << pix << ".rgb.g);"; // GREEN
-    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(2, " << pix << ".rgb.b, " << pix << ".rgb.b);"; // BLUE
+    // Call the curve evaluation method for each curve (inverse eval takes no identity_x).
+    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(3, " << pix << ".rgb.r);"; // MASTER
+    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(3, " << pix << ".rgb.g);"; // MASTER
+    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(3, " << pix << ".rgb.b);"; // MASTER
+    st.newLine() << pix << ".rgb.r = " << props.m_eval << "(0, " << pix << ".rgb.r);"; // RED
+    st.newLine() << pix << ".rgb.g = " << props.m_eval << "(1, " << pix << ".rgb.g);"; // GREEN
+    st.newLine() << pix << ".rgb.b = " << props.m_eval << "(2, " << pix << ".rgb.b);"; // BLUE
 
     if (doLinToLog)
     {

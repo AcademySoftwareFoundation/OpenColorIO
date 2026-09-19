@@ -404,6 +404,17 @@ std::string GpuShaderText::intKeyword() const
     return "int";
 }
 
+std::string GpuShaderText::intCast(const std::string & expr) const
+{
+    // HLSL/DXC flags the functional cast int(x) under -Wfloat-conversion; a C-style cast suppresses it (GLSL forbids C-style casts).
+    if (m_lang == GPU_LANGUAGE_HLSL_SM_5_0)
+    {
+        return "(int)(" + expr + ")";
+    }
+
+    return intKeyword() + "(" + expr + ")";
+}
+
 std::string GpuShaderText::intKeywordConst() const
 {
     std::string str;

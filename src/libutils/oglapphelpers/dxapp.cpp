@@ -568,10 +568,17 @@ void DxApp::setShader(GpuShaderDescRcPtr& shaderDesc)
     sourceBuffer.Size     = sourceBlob->GetBufferSize();
     sourceBuffer.Encoding = DXC_CP_UTF8;
 
-    // Compile pixel shader (ps_6_0).
-    LPCWSTR psArgs[] = { L"-T", L"ps_6_0", L"-E", L"PSMain" };
+    // Compile pixel shader (ps_6_0). Opt-in: surface useful DXC warnings on the generated HLSL when verbose.
+    std::vector<LPCWSTR> psArgs = { L"-T", L"ps_6_0", L"-E", L"PSMain" };
+    if (isShaderVerbose())
+    {
+        psArgs.push_back(L"-Wall");
+        psArgs.push_back(L"-Wextra");
+        psArgs.push_back(L"-Wconversion");
+    }
     ComPtr<IDxcResult> psResult;
-    ThrowIfFailed(m_dxcCompiler->Compile(&sourceBuffer, psArgs, _countof(psArgs),
+    ThrowIfFailed(m_dxcCompiler->Compile(&sourceBuffer, psArgs.data(),
+                                        static_cast<UINT32>(psArgs.size()),
                                         nullptr, IID_PPV_ARGS(&psResult)));
     HRESULT psHr;
     psResult->GetStatus(&psHr);
@@ -585,6 +592,17 @@ void DxApp::setShader(GpuShaderDescRcPtr& shaderDesc)
             oss << ":\n" << errors->GetStringPointer();
         std::cerr << oss.str() << std::endl;
         throw Exception(oss.str().c_str());
+    }
+    // Opt-in: surface DXC warnings (carried on the ERRORS output even on success) when verbose.
+    if (isShaderVerbose())
+    {
+        ComPtr<IDxcBlobUtf8> psWarnings;
+        psResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&psWarnings), nullptr);
+        if (psWarnings && psWarnings->GetStringLength())
+        {
+            std::cerr << "[DXC-WARN] pixel shader '" << shaderDesc->getFunctionName()
+                      << "':\n" << psWarnings->GetStringPointer() << std::endl;
+        }
     }
     ComPtr<IDxcBlob> pixelShaderBlob;
     ThrowIfFailed(psResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&pixelShaderBlob), nullptr));
