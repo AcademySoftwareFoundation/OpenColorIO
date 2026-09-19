@@ -591,6 +591,9 @@ AllValues UnitTestValues
     { "APPLE_LOG_to_ACES2065-1",
         { 1.0e-6f,
         { 0.5f, 0.4f, 0.3f }, { 0.153334766f,    0.083515430f,     0.032948254f } } },
+    { "APPLE_LOG-APPLEWG_to_ACES2065-1",
+        { 1.0e-6f,
+        { 0.5f, 0.4f, 0.3f }, { 0.160302015f,    0.091223177f,     0.026405713f } } },
     { "CURVE - APPLE_LOG_to_LINEAR",
         { 1.0e-6f,
         { 0.5f, 0.4f, 0.3f }, { 0.198913991f,    0.083076466024f,  0.0315782763f } } },
@@ -770,7 +773,7 @@ namespace
 {
 
 void ValidateDisplayViewRoundTrip(const char * display_style, const char * view_style,
-                                  float scale, float errorThreshold, 
+                                  float scale, float errorThreshold, bool applyLMT,
                                   std::vector<int> difficultItems, float difficultThreshold,
                                   int lineNo)
 {
@@ -788,11 +791,24 @@ void ValidateDisplayViewRoundTrip(const char * display_style, const char * view_
     auto view_builtin_inv = view_builtin->createEditableCopy();
     view_builtin_inv->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
+    // Built-in transform for the (optional) look.
+    OCIO::BuiltinTransformRcPtr look_builtin = OCIO::BuiltinTransform::Create();
+//     OCIO_CHECK_NO_THROW_FROM(look_builtin->setStyle("ACES-LMT - ACES 2.0 DCC Look 1"), lineNo);
+    OCIO_CHECK_NO_THROW_FROM(look_builtin->setStyle("ACES-LMT - BLUE_LIGHT_ARTIFACT_FIX"), lineNo);
+    OCIO_CHECK_NO_THROW_FROM(look_builtin->validate(), lineNo);
+    auto look_builtin_inv = look_builtin->createEditableCopy();
+    look_builtin_inv->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
     // Assemble inverse and forward transform into a group transform that goes from
     // display code values to ACES and back to code values.
     OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
     group->appendTransform(display_builtin_inv);
     group->appendTransform(view_builtin_inv);
+    if (applyLMT)
+    {
+        group->appendTransform(look_builtin_inv);
+        group->appendTransform(look_builtin);
+    }
     group->appendTransform(view_builtin);
     group->appendTransform(display_builtin);
 
@@ -875,6 +891,7 @@ OCIO_ADD_TEST(Builtins, aces2_displayview_roundtrip)
                                  "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709_2.0",
                                  1.0f,          // scale factor
                                  0.004f,        // tolerance
+                                 false,         // apply LMT
                                  {}, 0.f,
                                  __LINE__);
 
@@ -882,6 +899,7 @@ OCIO_ADD_TEST(Builtins, aces2_displayview_roundtrip)
                                  "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D65_2.0",
                                  1.0f,          // scale factor
                                  0.001f,        // tolerance
+                                 false,         // apply LMT
                                  {}, 0.f,
                                  __LINE__);
 
@@ -890,6 +908,7 @@ OCIO_ADD_TEST(Builtins, aces2_displayview_roundtrip)
                                  // Need to lower the max value from 1000 to 990 nits.
                                  0.7507f,       // scale factor = 990 nits
                                  0.005f,        // main tolerance
+                                 false,         // apply LMT
                                  {168, 196, 364, 392, 1344},    // difficult values
                                  0.03f,         // tolerance for difficult values
                                  __LINE__);
@@ -899,6 +918,7 @@ OCIO_ADD_TEST(Builtins, aces2_displayview_roundtrip)
                                  // Need to lower the max value from 4000 to 3860 nits.
                                  0.8987f,       // scale factor = 3860 nits
                                  0.007f,        // main tolerance
+                                 false,         // apply LMT
                                  {168, 196, 392, 396, 588, 592, 952, 1148, 1196, 1200, 1260, 1288},
                                  0.2f,         // tolerance for difficult values
                                  __LINE__);
@@ -908,13 +928,35 @@ OCIO_ADD_TEST(Builtins, aces2_displayview_roundtrip)
     //                              "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-1000nit-REC2020_2.0",
     //                              0.7507f,       // scale factor = 990 nits
     //                              5e-3f,         // tolerance
+    //                              false,         // apply LMT
     //                              __LINE__);
     // 
     // ValidateDisplayViewRoundTrip("DISPLAY - CIE-XYZ-D65_to_REC.2100-PQ",
     //                              "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - HDR-4000nit-REC2020_2.0",
     //                              0.8987f,       // scale factor = 3860 nits
     //                              5e-3f,         // tolerance
+    //                              false,         // apply LMT
     //                              __LINE__);
+
+    // Test the SDR transforms with an LMT in place.
+
+    ValidateDisplayViewRoundTrip("DISPLAY - CIE-XYZ-D65_to_REC.1886-REC.709",
+                                 "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-REC709_2.0",
+                                 1.0f,          // scale factor
+                                 0.004f,        // tolerance
+                                 true,          // apply LMT
+                                 {192,          // {1, 1, 0} leaves 0.0053 in blue
+                                 1344},         // {0, 1, 1} leaves 0.0044 in red
+                                 0.006f,        // tolerance for difficult values
+                                 __LINE__);
+
+    ValidateDisplayViewRoundTrip("DISPLAY - CIE-XYZ-D65_to_DisplayP3",
+                                 "ACES-OUTPUT - ACES2065-1_to_CIE-XYZ-D65 - SDR-100nit-P3-D65_2.0",
+                                 1.0f,          // scale factor
+                                 0.001f,        // tolerance
+                                 true,          // apply LMT
+                                 {}, 0.f,
+                                 __LINE__);
 }
 
 OCIO_ADD_TEST(Builtins, aces2_Aab_to_RGB_nan)

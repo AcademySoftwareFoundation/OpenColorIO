@@ -372,4 +372,16 @@ OCIO_ADD_TEST(FixedFunctionOpData, is_inverse)
         OCIO::FixedFunctionOpData::ACES_GAMUT_COMP_13_INV, p7);
     OCIO_CHECK_ASSERT(!f_gm_inv->isInverse(f_gm));
     OCIO_CHECK_ASSERT(!f_gm->isInverse(f_gm_inv));
+
+    OCIO::FixedFunctionOpData::Params p8 =
+        { 0.7347, 0.2653, 0.0000, 1.0000, 0.0001, -0.0770, 0.32168, 0.33767 };
+    auto f_hmj = std::make_shared<const OCIO::FixedFunctionOpData>(
+        OCIO::FixedFunctionOpData::ACES_RGB_TO_HMJ_20, p8);
+    auto f_hmj_inv = std::make_shared<const OCIO::FixedFunctionOpData>(
+        OCIO::FixedFunctionOpData::ACES_HMJ_TO_RGB_20, p8);
+    OCIO_CHECK_ASSERT(f_hmj->isInverse(f_hmj_inv));
+    OCIO_CHECK_ASSERT(f_hmj_inv->isInverse(f_hmj));
+    OCIO_CHECK_ASSERT(!f_hmj->isInverse(f_hmj));
+    OCIO_CHECK_ASSERT(!f_hmj_inv->isInverse(f_hmj_inv));
+    OCIO_CHECK_ASSERT(!f_hmj->isInverse(f_gm));
 }

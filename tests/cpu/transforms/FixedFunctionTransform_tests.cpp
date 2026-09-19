@@ -78,6 +78,25 @@ OCIO_ADD_TEST(FixedFunctionTransform, basic)
         OCIO::Exception, "Unimplemented fixed function types: "
                          "FIXED_FUNCTION_ACES_GAMUTMAP_02, "
                          "FIXED_FUNCTION_ACES_GAMUTMAP_07.");
+
+    OCIO_CHECK_NO_THROW(func->setParams(&values_7[0], 7));
+    OCIO_CHECK_NO_THROW(func->setStyle(OCIO::FIXED_FUNCTION_ACES_RGB_TO_HMJ_20));
+    OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FIXED_FUNCTION_ACES_RGB_TO_HMJ_20);
+    OCIO_CHECK_NO_THROW(func->setDirection(OCIO::TRANSFORM_DIR_INVERSE));
+    OCIO_CHECK_EQUAL(func->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO_CHECK_THROW_WHAT(func->validate(), OCIO::Exception,
+                          "The style 'HMJ_TO_RGB_20' must have "
+                          "8 parameters but 7 found.");
+
+    OCIO::FixedFunctionOpData::Params values_8 =
+        { 0.7347, 0.2653, 0.0000, 1.0000, 0.0001, -0.0770, 0.32168, 0.33767 };
+    OCIO_CHECK_NO_THROW(func->setParams(&values_8[0], 8));
+    OCIO_CHECK_EQUAL(func->getNumParams(), 8);
+    OCIO_CHECK_NO_THROW(func->validate());
+
+    OCIO_CHECK_NO_THROW(func->setDirection(OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_CHECK_EQUAL(func->getStyle(), OCIO::FIXED_FUNCTION_ACES_RGB_TO_HMJ_20);
+    OCIO_CHECK_NO_THROW(func->validate());
 }
 
 OCIO_ADD_TEST(FixedFunctionTransform, createEditableCopy)

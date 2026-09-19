@@ -58,6 +58,8 @@ public:
         ACES_OUTPUT_TRANSFORM_20_INV,   // ACES2 Output transform (inverse)
         ACES_RGB_TO_JMh_20,             // ACES2 RGB to JMh
         ACES_JMh_TO_RGB_20,             // ACES2 JMh to RGB
+        ACES_RGB_TO_HMJ_20,             // ACES2 RGB to HMJ (h/360, M/200, J/100)
+        ACES_HMJ_TO_RGB_20,             // ACES2 HMJ to RGB
         ACES_TONESCALE_COMPRESS_20_FWD, // ACES2 Tonescale and chroma compression
         ACES_TONESCALE_COMPRESS_20_INV, // ACES2 Tonescale and chroma compression (inv)
         ACES_GAMUT_COMPRESS_20_FWD,     // ACES2 Gamut compression

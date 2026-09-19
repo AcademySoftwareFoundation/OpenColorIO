@@ -33,6 +33,10 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
         if(directx-headers_VERSION)
             set(DirectX-Headers_VERSION ${directx-headers_VERSION})
         endif()
+        if(TARGET Microsoft::DirectX-Headers AND NOT DirectX-Headers_INCLUDE_DIR)
+            get_target_property(DirectX-Headers_INCLUDE_DIR
+                Microsoft::DirectX-Headers INTERFACE_INCLUDE_DIRECTORIES)
+        endif()
     else()
         # Fall back to locating the public header directly (e.g. when the
         # headers were installed without the CMake config, or are provided

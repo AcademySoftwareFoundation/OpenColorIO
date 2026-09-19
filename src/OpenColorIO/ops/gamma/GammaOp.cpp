@@ -141,7 +141,7 @@ void CreateGammaOp(OpRcPtrVec & ops,
         gamma = gamma->inverse();
     }
 
-    ops.push_back(std::make_shared<GammaOp>(gamma));
+    ops.emplace_back(std::make_shared<GammaOp>(gamma));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////

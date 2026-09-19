@@ -11,6 +11,7 @@
 #include <vector>
 #include <regex>
 #include <functional>
+#include <filesystem>
 
 #include <pystring.h>
 
@@ -247,7 +248,7 @@ static constexpr unsigned LastSupportedMajorVersion = OCIO_VERSION_MAJOR;
 
 // For each major version keep the most recent minor.
 static const unsigned int LastSupportedMinorVersion[] = {0, // Version 1
-                                                         5  // Version 2
+                                                         6  // Version 2
                                                          };
 
 } // namespace
@@ -1153,9 +1154,10 @@ ConstConfigRcPtr Config::CreateFromEnv()
 
 ConstConfigRcPtr Config::CreateFromFile(const char * filename)
 {
+    // Specifically check if a config filepath is provided.
     if (!filename || !*filename)
     {
-        throw ExceptionMissingFile ("The config filepath is missing.");
+        throw Exception("The config filepath is missing.");
     }
 
     // Check for URI Pattern: ocio://<config name>
@@ -1165,6 +1167,14 @@ ConstConfigRcPtr Config::CreateFromFile(const char * filename)
     if (std::regex_search(uri, match, uriPattern))
     {
         return CreateFromBuiltinConfig(uri.c_str());
+    }
+
+    // Specifically check if the provided non-builtin config filepath exists.
+    if (!std::filesystem::exists(filename))
+    {
+        std::ostringstream oss;
+        oss << "'" << filename << "' file does not exist.";
+        throw ExceptionMissingFile(oss.str().c_str());
     }
 
     std::ifstream ifstream = Platform::CreateInputFileStream(
@@ -5664,6 +5674,27 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
                    << blt->getStyle() << "'.";
                 throw Exception(os.str().c_str());
             }
+            if (m_majorVersion == 2 && m_minorVersion < 5
+                    && (   0 == Platform::Strcasecmp(blt->getStyle(), "DISPLAY - CIE-XYZ-D65_to_REC.1886-REC.709 - MIRROR NEGS")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "DISPLAY - CIE-XYZ-D65_to_REC.1886-REC.2020 - MIRROR NEGS")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "DISPLAY - CIE-XYZ-D65_to_G2.2-REC.709 - MIRROR NEGS")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "DISPLAY - CIE-XYZ-D65_to_sRGB - MIRROR NEGS")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "DISPLAY - CIE-XYZ-D65_to_G2.6-P3-D65 - MIRROR NEGS") )
+                )
+            {
+                std::ostringstream os;
+                os << "Only config version 2.5 (or higher) can have BuiltinTransform style '"
+                   << blt->getStyle() << "'.";
+                throw Exception(os.str().c_str());
+            }
+            if (m_majorVersion == 2 && m_minorVersion < 6
+                    && 0 == Platform::Strcasecmp(blt->getStyle(), "APPLE_LOG-APPLEWG_to_ACES2065-1"))
+            {
+                std::ostringstream os;
+                os << "Only config version 2.6 (or higher) can have BuiltinTransform style '"
+                   << blt->getStyle() << "'.";
+                throw Exception(os.str().c_str());
+            }
         }
         else if (ConstCDLTransformRcPtr cdl = DynamicPtrCast<const CDLTransform>(transform))
         {
@@ -5760,7 +5791,18 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
                     ffstyle == FIXED_FUNCTION_RGB_TO_HSY_VID )
                 {
                     std::ostringstream ss;
-                    ss << "Only config version 2.5 (or higher) can have FixedFunctionTransform style '" 
+                    ss << "Only config version 2.5 (or higher) can have FixedFunctionTransform style '"
+                       << FixedFunctionStyleToString(ffstyle) << "'.";
+                    throw Exception(ss.str().c_str());
+                }
+            }
+
+            if (m_majorVersion == 2 && m_minorVersion < 6 )
+            {
+                if( ffstyle == FIXED_FUNCTION_ACES_RGB_TO_HMJ_20 )
+                {
+                    std::ostringstream ss;
+                    ss << "Only config version 2.6 (or higher) can have FixedFunctionTransform style '"
                        << FixedFunctionStyleToString(ffstyle) << "'.";
                     throw Exception(ss.str().c_str());
                 }

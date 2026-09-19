@@ -788,6 +788,39 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, aces_rgb_to_jmh_20)
                        funcData2,
                        1e-4f,
                        __LINE__);
+
+    // FIXED_FUNCTION_ACES_RGB_TO_HMJ_20 repacks the same JMh values as [ h/360, M/200, J/100 ].
+    float expected_hmj_32f[num_samples*4];
+    for (unsigned idx = 0; idx < num_samples; ++idx)
+    {
+        const float J = expected_32f[idx*4 + 0];
+        const float M = expected_32f[idx*4 + 1];
+        const float h = expected_32f[idx*4 + 2];
+        expected_hmj_32f[idx*4 + 0] = h / 360.0f;
+        expected_hmj_32f[idx*4 + 1] = M / 200.0f;
+        expected_hmj_32f[idx*4 + 2] = J / 100.0f;
+        expected_hmj_32f[idx*4 + 3] = expected_32f[idx*4 + 3];
+    }
+
+    memcpy(&input2_32f[0], &input_32f[0], sizeof(float)*num_samples * 4);
+
+    OCIO::ConstFixedFunctionOpDataRcPtr funcData3
+        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::ACES_RGB_TO_HMJ_20,
+                                                      params);
+
+    ApplyFixedFunction(&input2_32f[0], &expected_hmj_32f[0], num_samples,
+                       funcData3,
+                       1e-5f,
+                       __LINE__);
+
+    OCIO::ConstFixedFunctionOpDataRcPtr funcData4
+        = std::make_shared<OCIO::FixedFunctionOpData>(OCIO::FixedFunctionOpData::ACES_HMJ_TO_RGB_20,
+                                                      params);
+
+    ApplyFixedFunction(&input2_32f[0], &input_32f[0], num_samples,
+                       funcData4,
+                       1e-4f,
+                       __LINE__);
 }
 
 OCIO_ADD_TEST(FixedFunctionOpCPU, aces_tonescale_compress_20)

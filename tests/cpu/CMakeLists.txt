@@ -130,6 +130,11 @@ function(add_ocio_test NAME SOURCES TESTS PRIVATE_INCLUDES)
 
         if(OCIO_USE_AVX512)
             add_ocio_test_variant(${TEST_NAME}_avx512 ${TEST_BINARY} --avx512)
+            # Runs in its own process, independent of the full suite above, so it still
+            # executes (and reports its own result) even if some other AVX512 test crashes
+            # the ${TEST_NAME}_avx512 process before reaching it.
+            add_ocio_test_variant(${TEST_NAME}_avx512_diag ${TEST_BINARY} --avx512
+                                   --run_only "Lut3DRenderer/avx512_tetrahedral_bounds")
         endif()
     else()
         add_ocio_test_variant(${TEST_NAME} ${TEST_BINARY})
