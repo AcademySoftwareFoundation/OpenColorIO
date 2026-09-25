@@ -1215,48 +1215,20 @@ ocioOCIOMain(
   , bool ocio_grading_rgbcurve_localBypass
 )
 {
-  for(int i = 0; i < ocio_grading_rgbcurve_knotsOffsets_count; ++i)
-  {
-    this->ocio_grading_rgbcurve_knotsOffsets[i] = ocio_grading_rgbcurve_knotsOffsets[i];
-  }
-  for(int i = ocio_grading_rgbcurve_knotsOffsets_count; i < 8; ++i)
-  {
-    this->ocio_grading_rgbcurve_knotsOffsets[i] = 0;
-  }
-  for(int i = 0; i < ocio_grading_rgbcurve_knots_count; ++i)
-  {
-    this->ocio_grading_rgbcurve_knots[i] = ocio_grading_rgbcurve_knots[i];
-  }
-  for(int i = ocio_grading_rgbcurve_knots_count; i < 120; ++i)
-  {
-    this->ocio_grading_rgbcurve_knots[i] = 0;
-  }
-  for(int i = 0; i < ocio_grading_rgbcurve_coefsOffsets_count; ++i)
-  {
-    this->ocio_grading_rgbcurve_coefsOffsets[i] = ocio_grading_rgbcurve_coefsOffsets[i];
-  }
-  for(int i = ocio_grading_rgbcurve_coefsOffsets_count; i < 8; ++i)
-  {
-    this->ocio_grading_rgbcurve_coefsOffsets[i] = 0;
-  }
-  for(int i = 0; i < ocio_grading_rgbcurve_coefs_count; ++i)
-  {
-    this->ocio_grading_rgbcurve_coefs[i] = ocio_grading_rgbcurve_coefs[i];
-  }
-  for(int i = ocio_grading_rgbcurve_coefs_count; i < 360; ++i)
-  {
-    this->ocio_grading_rgbcurve_coefs[i] = 0;
-  }
+  this->ocio_grading_rgbcurve_knotsOffsets = ocio_grading_rgbcurve_knotsOffsets;
+  this->ocio_grading_rgbcurve_knots = ocio_grading_rgbcurve_knots;
+  this->ocio_grading_rgbcurve_coefsOffsets = ocio_grading_rgbcurve_coefsOffsets;
+  this->ocio_grading_rgbcurve_coefs = ocio_grading_rgbcurve_coefs;
   this->ocio_grading_rgbcurve_localBypass = ocio_grading_rgbcurve_localBypass;
 }
 
 
 // Declaration of all variables
 
-int ocio_grading_rgbcurve_knotsOffsets[8];
-float ocio_grading_rgbcurve_knots[120];
-int ocio_grading_rgbcurve_coefsOffsets[8];
-float ocio_grading_rgbcurve_coefs[360];
+constant int* ocio_grading_rgbcurve_knotsOffsets;
+constant float* ocio_grading_rgbcurve_knots;
+constant int* ocio_grading_rgbcurve_coefsOffsets;
+constant float* ocio_grading_rgbcurve_coefs;
 bool ocio_grading_rgbcurve_localBypass;
 
 
@@ -1361,7 +1333,7 @@ float4 OCIOMain(
   ).OCIOMain(inPixel);
 }
 )" };
-    
+
     OCIO_CHECK_EQUAL(expected, text);
 }
 

@@ -1491,6 +1491,32 @@ void Add_JMh_to_RGB_Shader(
     _Add_JMh_to_RGB_Shader(shaderCreator, ss, p);
 }
 
+void Add_RGB_to_HMJ_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & ss,
+    const FixedFunctionOpData::Params & params)
+{
+    const std::string pxl(shaderCreator->getPixelName());
+
+    // Compute JMh (in pxl.rgb) and then repack it as HMJ, scaled for a [0,1]-ish range.
+    Add_RGB_to_JMh_Shader(shaderCreator, ss, params);
+
+    ss.newLine() << pxl << ".rgb = " << ss.float3Const(pxl + ".b / 360.0", pxl + ".g / 200.0", pxl + ".r / 100.0") << ";";
+}
+
+void Add_HMJ_to_RGB_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & ss,
+    const FixedFunctionOpData::Params & params)
+{
+    const std::string pxl(shaderCreator->getPixelName());
+
+    // Unpack HMJ back into JMh (in pxl.rgb) and reuse the existing JMh to RGB conversion.
+    ss.newLine() << pxl << ".rgb = " << ss.float3Const(pxl + ".b * 100.0", pxl + ".g * 200.0", pxl + ".r * 360.0") << ";";
+
+    Add_JMh_to_RGB_Shader(shaderCreator, ss, params);
+}
+
 void Add_Tonescale_Compress_Fwd_Shader(
     GpuShaderCreatorRcPtr & shaderCreator,
     GpuShaderText & ss,
@@ -2347,6 +2373,16 @@ void GetFixedFunctionGPUProcessingText(GpuShaderCreatorRcPtr & shaderCreator,
         case FixedFunctionOpData::ACES_JMh_TO_RGB_20:
         {
             Add_JMh_to_RGB_Shader(shaderCreator, ss, func->getParams());
+            break;
+        }
+        case FixedFunctionOpData::ACES_RGB_TO_HMJ_20:
+        {
+            Add_RGB_to_HMJ_Shader(shaderCreator, ss, func->getParams());
+            break;
+        }
+        case FixedFunctionOpData::ACES_HMJ_TO_RGB_20:
+        {
+            Add_HMJ_to_RGB_Shader(shaderCreator, ss, func->getParams());
             break;
         }
         case FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_FWD:

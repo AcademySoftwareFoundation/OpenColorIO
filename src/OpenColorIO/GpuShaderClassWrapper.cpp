@@ -181,36 +181,10 @@ std::string MetalShaderClassWrapper::generateClassWrapperHeader(GpuShaderText& k
     kw.indent();
     for(const auto& param : m_functionParameters)
     {
-        size_t openAngledBracketPos = param.m_name.find('[');
-        if(!param.m_isArray)
-        {
-            kw.newLine()    << "this->" << param.m_name  << " = " << param.m_name  << ";";
-        }
-        else
-        {
-            size_t closeAngledBracketPos = param.m_name.find(']');
-            std::string variableName = param.m_name.substr(0, openAngledBracketPos);
-            
-            kw.newLine()    << "for(int i = 0; i < "
-                            << GetArrayLengthVariableName(variableName)
-                            << "; ++i)";
-            kw.newLine()    << "{";
-            kw.indent();
-            kw.newLine()    << "this->" << variableName << "[i] = " << variableName << "[i];";
-            kw.dedent();
-            kw.newLine()    << "}";
-            
-            kw.newLine()    << "for(int i = "
-                            << GetArrayLengthVariableName(variableName)
-                            << "; i < "
-                            << param.m_name.substr(openAngledBracketPos+1, closeAngledBracketPos-openAngledBracketPos-1)
-                            << "; ++i)";
-            kw.newLine()    << "{";
-            kw.indent();
-            kw.newLine()    << "this->" << variableName << "[i] = 0;";
-            kw.dedent();
-            kw.newLine()    << "}";
-        }
+        // Array members are pointers into constant memory (see rewriteArrayDeclarations) so they
+        // are bound rather than copied, using the parameter name without its array size.
+        std::string variableName = param.m_name.substr(0, param.m_name.find('['));
+        kw.newLine() << "this->" << variableName << " = " << variableName << ";";
     }
     kw.dedent();
     kw.newLine() <<"}";
@@ -378,6 +352,38 @@ void MetalShaderClassWrapper::prepareClassWrapper(const std::string& resourcePre
     extractFunctionParameters(originalHeader);
 }
 
+std::string MetalShaderClassWrapper::rewriteArrayDeclarations(const std::string& declarations) const
+{
+    // The uniform declarations are shared with the other GPU languages so arrays arrive here as
+    // fixed-size members i.e. 'float name[120];'. Owning them would make the constructor copy the
+    // whole array out of constant memory into per-thread memory. The struct is constructed inside
+    // the generated OCIOMain(), which takes and returns a single pixel, so that copy is paid once
+    // per invocation: once per pixel for a fragment shader or a one-thread-per-pixel kernel. Hold
+    // a pointer to the constant memory instead; every read site is unchanged as the indexing
+    // syntax is the same.
+    //
+    // Note that nothing zero-fills the members between the array length and the declared capacity
+    // any more. An op declaring an array uniform must therefore keep its reads below the length it
+    // reports, as only that many elements are uploaded: a read beyond it now runs past the
+    // uploaded data instead of returning zero.
+    std::string rewritten = declarations;
+    for(const auto& param : m_functionParameters)
+    {
+        if(!param.m_isArray)
+            continue;
+
+        const std::string declaration = param.m_type + " " + param.m_name + ";";
+        const size_t pos = rewritten.find(declaration);
+        if(pos != std::string::npos)
+        {
+            rewritten.replace(pos, declaration.size(),
+                              "constant " + param.m_type + "* "
+                                  + param.m_name.substr(0, param.m_name.find('[')) + ";");
+        }
+    }
+    return rewritten;
+}
+
 std::string MetalShaderClassWrapper::getClassWrapperHeader(const std::string& originalHeader)
 {
     GpuShaderText st(GPU_LANGUAGE_MSL_2_0);
@@ -388,7 +394,7 @@ std::string MetalShaderClassWrapper::getClassWrapperHeader(const std::string& or
     std::string classWrapHeader = "\n// Declaration of class wrapper\n\n";
     classWrapHeader += st.string();
     
-    return classWrapHeader + originalHeader;
+    return classWrapHeader + rewriteArrayDeclarations(originalHeader);
 }
 
 std::string MetalShaderClassWrapper::getClassWrapperFooter(const std::string& originalFooter)

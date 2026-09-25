@@ -103,7 +103,7 @@ bool DefinesGpuAllocation(const OpRcPtr & op)
 
 void CreateGpuAllocationNoOp(OpRcPtrVec & ops, const AllocationData & allocationData)
 {
-    ops.push_back( std::make_shared<AllocationNoOp>(allocationData) );
+    ops.emplace_back( std::make_shared<AllocationNoOp>(allocationData) );
 }
 
 
@@ -233,7 +233,7 @@ void PartitionGPUOps(OpRcPtrVec & gpuPreOps,
     {
         for(unsigned int i=0; i<ops.size(); ++i)
         {
-            gpuPreOps.push_back( ops[i]->clone() );
+            gpuPreOps.emplace_back( ops[i]->clone() );
         }
     }
     // Analytical -> 3D LUT -> analytical
@@ -242,7 +242,7 @@ void PartitionGPUOps(OpRcPtrVec & gpuPreOps,
         // Handle analytical shader block before start index.
         for(int i=0; i<gpuLut3DOpStartIndex; ++i)
         {
-            gpuPreOps.push_back( ops[i]->clone() );
+            gpuPreOps.emplace_back( ops[i]->clone() );
         }
 
         // Get the GPU Allocation at the cross-over point
@@ -275,13 +275,13 @@ void PartitionGPUOps(OpRcPtrVec & gpuPreOps,
         // Handle cpu lattice processing
         for(int i=gpuLut3DOpStartIndex; i<=gpuLut3DOpEndIndex; ++i)
         {
-            gpuLatticeOps.push_back( ops[i]->clone() );
+            gpuLatticeOps.emplace_back( ops[i]->clone() );
         }
 
         // And then handle the gpu post processing
         for(int i=gpuLut3DOpEndIndex+1; i<(int)ops.size(); ++i)
         {
-            gpuPostOps.push_back( ops[i]->clone() );
+            gpuPostOps.emplace_back( ops[i]->clone() );
         }
     }
 }
@@ -365,7 +365,7 @@ std::string FileNoOp::getCacheID() const
 void CreateFileNoOp(OpRcPtrVec & ops,
                     const std::string & fileReference)
 {
-    ops.push_back( std::make_shared<FileNoOp>(fileReference) );
+    ops.emplace_back( std::make_shared<FileNoOp>(fileReference) );
 }
 
 
@@ -449,7 +449,7 @@ std::string LookNoOp::getCacheID() const
 void CreateLookNoOp(OpRcPtrVec & ops,
                     const std::string & look)
 {
-    ops.push_back( std::make_shared<LookNoOp>(look) );
+    ops.emplace_back( std::make_shared<LookNoOp>(look) );
 }
 
 } // namespace OCIO_NAMESPACE

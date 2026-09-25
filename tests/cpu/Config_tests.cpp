@@ -5360,6 +5360,50 @@ R"([OpenColorIO Warning]: FixedFunction style is experimental and may be removed
         const std::string strEnd =
             "    from_scene_reference: !<GroupTransform>\n"
             "      children:\n"
+            "        - !<FixedFunctionTransform> {style: ACES2_RGB_TO_HMJ, params: [0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329]}\n"
+            "        - !<FixedFunctionTransform> {style: ACES2_RGB_TO_HMJ, params: [0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329], direction: inverse}\n";
+
+        {
+            const std::string str = PROFILE_START_V<2, 5>() + strEnd;
+
+            std::istringstream is;
+            is.str(str);
+
+            OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is), OCIO::Exception,
+                "Only config version 2.6 (or higher) can have FixedFunctionTransform style 'ACES2_RGB_TO_HMJ'.");
+        }
+
+        {
+            const std::string str = PROFILE_START_V<2, 6>() + strEnd;
+
+            std::istringstream is;
+            is.str(str);
+
+            OCIO_CHECK_NO_THROW(OCIO::Config::CreateFromStream(is));
+        }
+
+        {
+            const std::string str2End =
+                "    from_scene_reference: !<GroupTransform>\n"
+                "      children:\n"
+                "        - !<FixedFunctionTransform> {style: ACES2_RGB_TO_HMJ, params: [0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329, 0.], direction: inverse}\n";
+
+            const std::string str = PROFILE_START_V<2, 6>() + str2End;
+
+            std::istringstream is;
+            is.str(str);
+
+            OCIO::ConstConfigRcPtr config;
+            OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+            OCIO_CHECK_THROW_WHAT(config->validate(), OCIO::Exception,
+                "The style 'HMJ_TO_RGB_20' must have 8 parameters but 9 found.");
+        }
+    }
+
+    {
+        const std::string strEnd =
+            "    from_scene_reference: !<GroupTransform>\n"
+            "      children:\n"
             "        - !<FixedFunctionTransform> {style: ACES2_OutputTransform, params: [100, 0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329]}\n"
             "        - !<FixedFunctionTransform> {style: ACES2_OutputTransform, params: [100, 0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.329], direction: inverse}\n";
 
