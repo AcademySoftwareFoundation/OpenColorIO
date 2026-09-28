@@ -84,45 +84,62 @@ jobs:
             manylinux: manylinux_2_28
             python: cp310-manylinux_x86_64
             arch: x86_64
+            numpy: numpy
           - build: CPython 3.11 64 bits manylinux_2_28
             manylinux: manylinux_2_28
             python: cp311-manylinux_x86_64
             arch: x86_64
+            numpy: numpy
           - build: CPython 3.12 64 bits manylinux_2_28
             manylinux: manylinux_2_28
             python: cp312-manylinux_x86_64
             arch: x86_64
+            numpy: numpy
           - build: CPython 3.13 64 bits manylinux_2_28
             manylinux: manylinux_2_28
             python: cp313-manylinux_x86_64
             arch: x86_64
+            numpy: numpy
           - build: CPython 3.14 64 bits manylinux_2_28
             manylinux: manylinux_2_28
             python: cp314-manylinux_x86_64
             arch: x86_64
+            numpy: numpy
           # -------------------------------------------------------------------
           # CPython 64 bits manylinux2014
           # -------------------------------------------------------------------
+          # NumPy dropped manylinux2014 wheels as of 2.3.0 (and manylinux2014's
+          # toolchain is too old to build newer NumPy from source), so the test
+          # environment here must be pinned to the last version that still
+          # published manylinux2014 wheels. No NumPy release supports both
+          # manylinux2014 and cp314, so that combination skips NumPy entirely;
+          # the Python test suite tolerates its absence and skips only the
+          # NumPy-dependent cases.
           - build: CPython 3.10 64 bits manylinux2014
             manylinux: manylinux2014
             python: cp310-manylinux_x86_64
             arch: x86_64
+            numpy: "numpy<2.3"
           - build: CPython 3.11 64 bits manylinux2014
             manylinux: manylinux2014
             python: cp311-manylinux_x86_64
             arch: x86_64
+            numpy: "numpy<2.3"
           - build: CPython 3.12 64 bits manylinux2014
             manylinux: manylinux2014
             python: cp312-manylinux_x86_64
             arch: x86_64
+            numpy: "numpy<2.3"
           - build: CPython 3.13 64 bits manylinux2014
             manylinux: manylinux2014
             python: cp313-manylinux_x86_64
             arch: x86_64
+            numpy: "numpy<2.3"
           - build: CPython 3.14 64 bits manylinux2014
             manylinux: manylinux2014
             python: cp314-manylinux_x86_64
             arch: x86_64
+            numpy: ""
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -139,6 +156,7 @@ jobs:
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux }}
           CIBW_BEFORE_BUILD: "pip install sphinx-press-theme"
+          CIBW_TEST_REQUIRES: ${{ matrix.numpy }}
 
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
@@ -162,26 +180,33 @@ jobs:
           # -------------------------------------------------------------------
           # CPython ARM 64 bits manylinux2014
           # -------------------------------------------------------------------
+          # See the x86_64 manylinux2014 rows above for why the NumPy test
+          # dependency is pinned (and dropped for cp314) here.
           - build: CPython 3.10 ARM 64 bits manylinux2014
             manylinux: manylinux2014
             python: cp310-manylinux_aarch64
             arch: aarch64
+            numpy: "numpy<2.3"
           - build: CPython 3.11 ARM 64 bits manylinux2014
             manylinux: manylinux2014
             python: cp311-manylinux_aarch64
             arch: aarch64
+            numpy: "numpy<2.3"
           - build: CPython 3.12 ARM 64 bits manylinux2014
             manylinux: manylinux2014
             python: cp312-manylinux_aarch64
             arch: aarch64
+            numpy: "numpy<2.3"
           - build: CPython 3.13 ARM 64 bits manylinux2014
             manylinux: manylinux2014
             python: cp313-manylinux_aarch64
             arch: aarch64
+            numpy: "numpy<2.3"
           - build: CPython 3.14 ARM 64 bits manylinux2014
             manylinux: manylinux2014
             python: cp314-manylinux_aarch64
             arch: aarch64
+            numpy: ""
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -198,6 +223,7 @@ jobs:
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.manylinux }}
           CIBW_BEFORE_BUILD: "pip install sphinx-press-theme"
+          CIBW_TEST_REQUIRES: ${{ matrix.numpy }}
 
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
