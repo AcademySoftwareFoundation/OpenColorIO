@@ -14,19 +14,21 @@ namespace OCIO_NAMESPACE
 namespace ConfigCompatibilityHelpers
 {
 
-// Returns true if the config has at least one active display color space and all of them have
-// an interop ID and an encoding set.
-bool ActiveDisplayColorSpacesHaveAttributes(const ConstConfigRcPtr & config);
+// Returns true if the config has at least one display color space (active or inactive) and all
+// of them have an interop ID and an encoding set.
+bool DisplayColorSpacesHaveAttributes(const ConstConfigRcPtr & config);
 
 // Returns true if the config has at least one active display and each active display has a
-// color space matching its name.
+// display-referred color space matching its name.
 bool ActiveDisplaysHaveColorSpace(const ConstConfigRcPtr & config);
 
 // Returns true if the config has at least one active (display, view) pair using a view transform,
 // and all views reference a non-empty view transform, except that a view with no view transform is
-// allowed if the color space it refers to has isData set to true.
+// allowed if the color space it refers to has isData set to true or if it refers to a named
+// transform.
 bool ActiveViewsHaveViewTransform(const ConstConfigRcPtr & config);
 
+// Check HDR display compatibility requirements, as of OCIO 2.6.
 bool CheckHDRDisplaySupport26(const ConstConfigRcPtr & config);
 
 } // namespace ConfigCompatibilityHelpers

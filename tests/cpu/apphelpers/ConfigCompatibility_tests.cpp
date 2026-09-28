@@ -34,7 +34,7 @@ OCIO_ADD_TEST(ConfigCompatibility, hdr_display_support_26)
     OCIO_CHECK_NO_THROW(config->setRole(OCIO::ROLE_INTERCHANGE_DISPLAY,
                                         "CIE XYZ-D65"));
 
-    OCIO_CHECK_ASSERT(!OCIO::ConfigCompatibilityHelpers::ActiveDisplayColorSpacesHaveAttributes(config));
+    OCIO_CHECK_ASSERT(!OCIO::ConfigCompatibilityHelpers::DisplayColorSpacesHaveAttributes(config));
     OCIO_CHECK_ASSERT(!OCIO::ConfigCompatibilityHelpers::CheckCompatibility(
         config, OCIO::CONFIG_HDR_DISPLAY_SUPPORT_26));
 
@@ -43,7 +43,7 @@ OCIO_ADD_TEST(ConfigCompatibility, hdr_display_support_26)
     interchange->setInteropID("ocio:lin_ciexyzd65_display");
     OCIO_CHECK_NO_THROW(config->addColorSpace(interchange));
 
-    OCIO_CHECK_ASSERT(!OCIO::ConfigCompatibilityHelpers::ActiveDisplayColorSpacesHaveAttributes(config));
+    OCIO_CHECK_ASSERT(!OCIO::ConfigCompatibilityHelpers::DisplayColorSpacesHaveAttributes(config));
     OCIO_CHECK_ASSERT(!OCIO::ConfigCompatibilityHelpers::CheckCompatibility(
         config, OCIO::CONFIG_HDR_DISPLAY_SUPPORT_26));
 
@@ -53,7 +53,7 @@ OCIO_ADD_TEST(ConfigCompatibility, hdr_display_support_26)
     interchange->setEncoding("display-linear");
     OCIO_CHECK_NO_THROW(config->addColorSpace(interchange));
 
-    OCIO_CHECK_ASSERT(OCIO::ConfigCompatibilityHelpers::ActiveDisplayColorSpacesHaveAttributes(config));
+    OCIO_CHECK_ASSERT(OCIO::ConfigCompatibilityHelpers::DisplayColorSpacesHaveAttributes(config));
     OCIO_CHECK_ASSERT(!OCIO::ConfigCompatibilityHelpers::CheckCompatibility(
         config, OCIO::CONFIG_HDR_DISPLAY_SUPPORT_26));
 
@@ -63,15 +63,25 @@ OCIO_ADD_TEST(ConfigCompatibility, hdr_display_support_26)
     auto dcs = CreateDisplayColorSpace("display_cs");
     OCIO_CHECK_NO_THROW(config->addColorSpace(dcs));
 
-    OCIO_CHECK_ASSERT(!OCIO::ConfigCompatibilityHelpers::ActiveDisplayColorSpacesHaveAttributes(config));
+    OCIO_CHECK_ASSERT(!OCIO::ConfigCompatibilityHelpers::DisplayColorSpacesHaveAttributes(config));
     OCIO_CHECK_ASSERT(!OCIO::ConfigCompatibilityHelpers::CheckCompatibility(
         config, OCIO::CONFIG_HDR_DISPLAY_SUPPORT_26));
 
-    // It does not have the interop ID and encoding, but making it inactive allows it to pass.
+    // Making it inactive does not help, since inactive display color spaces are also checked.
 
     OCIO_CHECK_NO_THROW(config->setInactiveColorSpaces("display_cs"));
 
-    OCIO_CHECK_ASSERT(OCIO::ConfigCompatibilityHelpers::ActiveDisplayColorSpacesHaveAttributes(config));
+    OCIO_CHECK_ASSERT(!OCIO::ConfigCompatibilityHelpers::DisplayColorSpacesHaveAttributes(config));
+    OCIO_CHECK_ASSERT(!OCIO::ConfigCompatibilityHelpers::CheckCompatibility(
+        config, OCIO::CONFIG_HDR_DISPLAY_SUPPORT_26));
+
+    // Giving it an interop ID and encoding allows it to pass.
+
+    dcs->setInteropID("foo:display_cs");
+    dcs->setEncoding("sdr-video");
+    OCIO_CHECK_NO_THROW(config->addColorSpace(dcs));
+
+    OCIO_CHECK_ASSERT(OCIO::ConfigCompatibilityHelpers::DisplayColorSpacesHaveAttributes(config));
     OCIO_CHECK_ASSERT(!OCIO::ConfigCompatibilityHelpers::CheckCompatibility(
         config, OCIO::CONFIG_HDR_DISPLAY_SUPPORT_26));
 
@@ -118,16 +128,27 @@ OCIO_ADD_TEST(ConfigCompatibility, hdr_display_support_26)
     OCIO_CHECK_ASSERT(!OCIO::ConfigCompatibilityHelpers::CheckCompatibility(
         config, OCIO::CONFIG_HDR_DISPLAY_SUPPORT_26));
 
-    // Add a color space matching the display's name (with an interop ID and encoding, since
-    // it is active and so must also satisfy ActiveDisplayColorSpacesHaveAttributes). The config
-    // is now compatible.
+    // Add a scene-referred color space matching the display's name. It must be display-referred,
+    // so the check still fails.
+
+    auto sceneDisplayCS = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
+    sceneDisplayCS->setName("display");
+    OCIO_CHECK_NO_THROW(config->addColorSpace(sceneDisplayCS));
+
+    OCIO_CHECK_ASSERT(!OCIO::ConfigCompatibilityHelpers::ActiveDisplaysHaveColorSpace(config));
+    OCIO_CHECK_ASSERT(!OCIO::ConfigCompatibilityHelpers::CheckCompatibility(
+        config, OCIO::CONFIG_HDR_DISPLAY_SUPPORT_26));
+
+    // Replace it with a display-referred color space matching the display's name (with an
+    // interop ID and encoding, since all display color spaces must also satisfy
+    // DisplayColorSpacesHaveAttributes). The config is now compatible.
 
     auto displayCS = CreateDisplayColorSpace("display");
     displayCS->setInteropID("foo:pq_rec6000_display");
     displayCS->setEncoding("hdr-video");
     OCIO_CHECK_NO_THROW(config->addColorSpace(displayCS));
 
-    OCIO_CHECK_ASSERT(OCIO::ConfigCompatibilityHelpers::ActiveDisplayColorSpacesHaveAttributes(config));
+    OCIO_CHECK_ASSERT(OCIO::ConfigCompatibilityHelpers::DisplayColorSpacesHaveAttributes(config));
     OCIO_CHECK_ASSERT(OCIO::ConfigCompatibilityHelpers::ActiveDisplaysHaveColorSpace(config));
     OCIO_CHECK_ASSERT(OCIO::ConfigCompatibilityHelpers::CheckCompatibility(
         config, OCIO::CONFIG_HDR_DISPLAY_SUPPORT_26));
@@ -154,8 +175,19 @@ OCIO_ADD_TEST(ConfigCompatibility, hdr_display_support_26)
     auto nt = OCIO::NamedTransform::Create();
     nt->setTransform(OCIO::MatrixTransform::Create(), OCIO::TRANSFORM_DIR_FORWARD);
     nt->setName("namedtransform");
-    OCIO_CHECK_NO_THROW(config->addDisplayView("display2", "nt view", "namedtransform",
+    OCIO_CHECK_NO_THROW(config->addNamedTransform(nt));
+    OCIO_CHECK_NO_THROW(config->addDisplayView("display", "nt view", "namedtransform",
                                                "display_cs", "", "", ""));
+
+    OCIO_CHECK_ASSERT(OCIO::ConfigCompatibilityHelpers::ActiveViewsHaveViewTransform(config));
+    OCIO_CHECK_ASSERT(OCIO::ConfigCompatibilityHelpers::CheckCompatibility(
+        config, OCIO::CONFIG_HDR_DISPLAY_SUPPORT_26));
+
+    // Add a view with no view transform whose color space name refers to a named transform. It
+    // is exempt from the view transform requirement, so the config is still compatible. It is
+    // added to the active display since display2 is inactive.
+
+    OCIO_CHECK_NO_THROW(config->addDisplayView("display", "nt_cs_view", "namedtransform", ""));
 
     OCIO_CHECK_ASSERT(OCIO::ConfigCompatibilityHelpers::ActiveViewsHaveViewTransform(config));
     OCIO_CHECK_ASSERT(OCIO::ConfigCompatibilityHelpers::CheckCompatibility(

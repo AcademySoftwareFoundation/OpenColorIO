@@ -666,7 +666,7 @@ int main(int argc, const char **argv)
         LogGuard compatLogGuard;
         const bool hdrDisplaySupport26 = OCIO::ConfigCompatibilityHelpers::CheckCompatibility(
             config, OCIO::CONFIG_HDR_DISPLAY_SUPPORT_26);
-        std::cout << "HDR Display Support (2.6): " << (hdrDisplaySupport26 ? "yes" : "no") << std::endl;
+        std::cout << "HDR Display Support (OCIO 2.6): " << (hdrDisplaySupport26 ? "yes" : "no") << std::endl;
         if (verbose && !compatLogGuard.empty())
         {
             std::cout << compatLogGuard.output();
