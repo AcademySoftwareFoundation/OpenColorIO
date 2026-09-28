@@ -346,10 +346,10 @@ void bindPyConfig(py::module & m)
              DOC(Config, isStrictParsingEnabled))
         .def("setStrictParsingEnabled", &Config::setStrictParsingEnabled, "enabled"_a,
              DOC(Config, setStrictParsingEnabled))
-        .def("getUseDisplayViewAliases", &Config::getUseDisplayViewAliases,
-             DOC(Config, getUseDisplayViewAliases))
-        .def("setUseDisplayViewAliases", &Config::setUseDisplayViewAliases, "enabled"_a,
-             DOC(Config, setUseDisplayViewAliases))
+        .def("getUseDisplayAliases", &Config::getUseDisplayAliases,
+             DOC(Config, getUseDisplayAliases))
+        .def("setUseDisplayAliases", &Config::setUseDisplayAliases, "enabled"_a,
+             DOC(Config, setUseDisplayAliases))
         .def("setInactiveColorSpaces", &Config::setInactiveColorSpaces, "inactiveColorSpaces"_a,
              DOC(Config, setInactiveColorSpaces))
         .def("getInactiveColorSpaces", &Config::getInactiveColorSpaces, 
@@ -412,11 +412,13 @@ void bindPyConfig(py::module & m)
                                const char *,
                                const char *,
                                const char *,
+                               const char *,
                                const char *)) &Config::addSharedView,
-             "view"_a, "viewTransformName"_a, "colorSpaceName"_a, 
+             "view"_a, "viewTransformName"_a, "colorSpaceName"_a,
              "looks"_a = "",
-             "ruleName"_a = "", 
-             "description"_a = "", 
+             "ruleName"_a = "",
+             "description"_a = "",
+             "aliases"_a = "",
              DOC(Config, addSharedView))
         .def("removeSharedView", &Config::removeSharedView, "view"_a, 
              DOC(Config, removeSharedView))
@@ -476,6 +478,11 @@ void bindPyConfig(py::module & m)
         .def("getResolvedDisplayViewColorSpaceName", &Config::getResolvedDisplayViewColorSpaceName,
              "display"_a, "view"_a,
              DOC(Config, getResolvedDisplayViewColorSpaceName))
+        .def("getDisplayViewAliases", &Config::getDisplayViewAliases, "display"_a, "view"_a,
+             DOC(Config, getDisplayViewAliases))
+        .def("hasDisplayViewAlias", &Config::hasDisplayViewAlias,
+             "display"_a, "view"_a, "alias"_a,
+             DOC(Config, hasDisplayViewAlias))
         .def("getDisplayViewLooks", &Config::getDisplayViewLooks, "display"_a, "view"_a, 
              DOC(Config, getDisplayViewLooks))
         .def("getDisplayViewRule", &Config::getDisplayViewRule, "display"_a, "view"_a, 
@@ -492,18 +499,20 @@ void bindPyConfig(py::module & m)
              "display"_a, "view"_a, "colorSpaceName"_a, 
              "looks"_a = "", 
              DOC(Config, addDisplayView))
-        .def("addDisplayView", 
-             (void (Config::*)(const char *, 
-                               const char *, 
-                               const char *, 
-                               const char *, 
+        .def("addDisplayView",
+             (void (Config::*)(const char *,
                                const char *,
                                const char *,
-                               const char *)) &Config::addDisplayView, 
-             "display"_a, "view"_a, "viewTransform"_a, "displayColorSpaceName"_a, 
+                               const char *,
+                               const char *,
+                               const char *,
+                               const char *,
+                               const char *)) &Config::addDisplayView,
+             "display"_a, "view"_a, "viewTransform"_a, "displayColorSpaceName"_a,
              "looks"_a = "",
-             "ruleName"_a = "", 
-             "description"_a = "", 
+             "ruleName"_a = "",
+             "description"_a = "",
+             "aliases"_a = "",
              DOC(Config, addDisplayView))
         .def("isViewShared", &Config::isViewShared, "display"_a, "view"_a,
              DOC(Config, isViewShared))

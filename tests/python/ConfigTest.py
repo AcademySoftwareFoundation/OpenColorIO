@@ -798,20 +798,22 @@ colorspaces:
         self.assertEqual(cfg.getCanonicalName('Alias1'), 'nt1')
         self.assertEqual(cfg.getCanonicalName('Test1'), 'nt1')
 
-    def test_use_display_view_aliases(self):
-        # Test the getUseDisplayViewAliases/setUseDisplayViewAliases methods, and that they gate
-        # the getCanonicalDisplayName/getCanonicalViewName fallbacks.
+    def test_use_display_aliases(self):
+        # Test the getUseDisplayAliases/setUseDisplayAliases methods, and that they gate
+        # the getCanonicalDisplayName fallback, but not view alias resolution, which is
+        # always active since a view's aliases are an explicit attribute of the view.
 
         cfg = OCIO.Config()
-        self.assertFalse(cfg.getUseDisplayViewAliases())
+        self.assertFalse(cfg.getUseDisplayAliases())
 
-        cfg.setUseDisplayViewAliases(True)
-        self.assertTrue(cfg.getUseDisplayViewAliases())
-        cfg.setUseDisplayViewAliases(False)
-        self.assertFalse(cfg.getUseDisplayViewAliases())
+        cfg.setUseDisplayAliases(True)
+        self.assertTrue(cfg.getUseDisplayAliases())
+        cfg.setUseDisplayAliases(False)
+        self.assertFalse(cfg.getUseDisplayAliases())
 
-        # Build a config where a display and a view transform have both been renamed, keeping
-        # their old names alive as aliases.
+        # Build a config where a display has been renamed, keeping its old name available as
+        # an alias, and a view that has been renamed, keeping its old name available as one
+        # of the view's aliases.
         cfg.setVersion(2, 6)
 
         dcs = OCIO.ColorSpace(
@@ -821,31 +823,78 @@ colorspaces:
         dcs.setTransform(OCIO.MatrixTransform(), OCIO.COLORSPACE_DIR_FROM_REFERENCE)
         cfg.addColorSpace(dcs)
 
-        vt = OCIO.ViewTransform(
-            referenceSpace=OCIO.REFERENCE_SPACE_SCENE,
-            name='vt_new',
-            aliases=['vt_old'])
-        vt.setTransform(OCIO.MatrixTransform(), OCIO.VIEWTRANSFORM_DIR_FROM_REFERENCE)
-        cfg.addViewTransform(vt)
+        cfg.addDisplayView('sRGB - Display', 'view', viewTransform='',
+                           displayColorSpaceName='sRGB - Display', looks='', ruleName='',
+                           description='', aliases='view_old')
 
-        cfg.addDisplayView('sRGB - Display', 'view', viewTransform='vt_new',
-                           displayColorSpaceName='sRGB - Display')
-
-        # The fallback is disabled by default: only exact matches resolve.
+        # The display alias fallback is disabled by default: only an exact match resolves.
         self.assertEqual(cfg.getCanonicalDisplayName('sRGB - Display'), 'sRGB - Display')
         self.assertEqual(cfg.getCanonicalDisplayName('sRGB'), '')
-        self.assertEqual(cfg.getCanonicalViewName('sRGB - Display', 'view'), 'view')
-        self.assertEqual(cfg.getCanonicalViewName('sRGB - Display', 'vt_old'), '')
 
-        # Once enabled, both the display and view transform aliases resolve.
-        cfg.setUseDisplayViewAliases(True)
+        # But view alias resolution is always active, regardless of getUseDisplayAliases.
+        self.assertEqual(cfg.getCanonicalViewName('sRGB - Display', 'view'), 'view')
+        self.assertEqual(cfg.getCanonicalViewName('sRGB - Display', 'view_old'), 'view')
+
+        # Once enabled, the display alias resolves too.
+        cfg.setUseDisplayAliases(True)
         self.assertEqual(cfg.getCanonicalDisplayName('sRGB'), 'sRGB - Display')
-        self.assertEqual(cfg.getCanonicalViewName('sRGB - Display', 'vt_old'), 'view')
+        self.assertEqual(cfg.getCanonicalViewName('sRGB - Display', 'view_old'), 'view')
+
+    def test_display_view_aliases(self):
+        # Test Config.getDisplayViewAliases and Config.hasDisplayViewAlias, for both a
+        # display-defined view and a shared view.
+
+        cfg = OCIO.Config()
+        cfg.setVersion(2, 6)
+        cfg.addColorSpace(OCIO.ColorSpace(name='raw'))
+
+        cfg.addDisplayView('display1', 'view1', viewTransform='',
+                           displayColorSpaceName='raw', looks='', ruleName='',
+                           description='', aliases='alias1, alias2')
+
+        self.assertEqual(cfg.getDisplayViewAliases('display1', 'view1'), 'alias1, alias2')
+        self.assertTrue(cfg.hasDisplayViewAlias('display1', 'view1', 'alias1'))
+        self.assertTrue(cfg.hasDisplayViewAlias('display1', 'view1', 'ALIAS2'))
+        self.assertFalse(cfg.hasDisplayViewAlias('display1', 'view1', 'alias3'))
+
+        # A view with no aliases.
+        cfg.addDisplayView('display1', 'view2', 'raw')
+        self.assertEqual(cfg.getDisplayViewAliases('display1', 'view2'), '')
+        self.assertFalse(cfg.hasDisplayViewAlias('display1', 'view2', 'alias1'))
+
+        # A shared view, looked up the same way as Config.hasView (an empty display finds it
+        # among the config's shared views).
+        cfg.addSharedView('shared1', '', 'raw', aliases='shared_alias')
+        cfg.addDisplaySharedView('display1', 'shared1')
+
+        self.assertEqual(cfg.getDisplayViewAliases('', 'shared1'), 'shared_alias')
+        self.assertTrue(cfg.hasDisplayViewAlias('', 'shared1', 'shared_alias'))
+        self.assertFalse(cfg.hasDisplayViewAlias('display1', 'shared1', 'unknown'))
+
+        # Unknown display, view, or display/view combination.
+        self.assertEqual(cfg.getDisplayViewAliases('display1', 'not_a_view'), '')
+        self.assertFalse(cfg.hasDisplayViewAlias('display1', 'not_a_view', 'alias1'))
+        self.assertFalse(cfg.hasDisplayViewAlias('not_a_display', 'view1', 'alias1'))
+
+        # An alias may itself contain a comma, as long as it is surrounded by quotes, so
+        # that the comma isn't mistaken for the separator between aliases.
+        cfg.addDisplayView('display1', 'view3', viewTransform='',
+                           displayColorSpaceName='raw', looks='', ruleName='',
+                           description='', aliases='"alias,with,comma", alias4')
+
+        self.assertTrue(cfg.hasDisplayViewAlias('display1', 'view3', 'alias,with,comma'))
+        self.assertTrue(cfg.hasDisplayViewAlias('display1', 'view3', 'alias4'))
+        self.assertFalse(cfg.hasDisplayViewAlias('display1', 'view3', 'alias'))
+
+        # The comma-containing alias is quoted again on the way out, so that the result can be
+        # split back apart the same way.
+        self.assertEqual(
+            cfg.getDisplayViewAliases('display1', 'view3'), '"alias,with,comma", alias4')
 
     def test_display_description(self):
         # Test that getDisplayDescription borrows the description of the display's associated
         # display color space: an exact name match always works, but matching only via one of
-        # the color space's aliases requires getUseDisplayViewAliases.
+        # the color space's aliases requires getUseDisplayAliases.
 
         cfg = OCIO.Config()
         cfg.setVersion(2, 6)
@@ -858,11 +907,11 @@ colorspaces:
         dcs.setTransform(OCIO.MatrixTransform(), OCIO.COLORSPACE_DIR_FROM_REFERENCE)
         cfg.addColorSpace(dcs)
 
-        self.assertFalse(cfg.getUseDisplayViewAliases())
+        self.assertFalse(cfg.getUseDisplayAliases())
         self.assertEqual(cfg.getDisplayDescription('sRGB - Display'), 'The sRGB display.')
         self.assertEqual(cfg.getDisplayDescription('sRGB'), '')
 
-        cfg.setUseDisplayViewAliases(True)
+        cfg.setUseDisplayAliases(True)
         self.assertEqual(cfg.getDisplayDescription('sRGB'), 'The sRGB display.')
 
         self.assertEqual(cfg.getDisplayDescription('does not exist'), '')
@@ -883,37 +932,34 @@ colorspaces:
         dcs.setTransform(OCIO.MatrixTransform(), OCIO.COLORSPACE_DIR_FROM_REFERENCE)
         cfg.addColorSpace(dcs)
 
-        vt = OCIO.ViewTransform(
-            referenceSpace=OCIO.REFERENCE_SPACE_SCENE,
-            name='vt_new',
-            aliases=['vt_old'])
-        vt.setTransform(OCIO.MatrixTransform(), OCIO.VIEWTRANSFORM_DIR_FROM_REFERENCE)
-        cfg.addViewTransform(vt)
-
         cfg.addDisplayView('sRGB - Display', 'view1', 'raw')
-        cfg.addDisplayView('sRGB - Display', 'view2', viewTransform='vt_old',
-                           displayColorSpaceName='<USE_DISPLAY_NAME>')
+        cfg.addDisplayView('sRGB - Display', 'view2', viewTransform='',
+                           displayColorSpaceName='<USE_DISPLAY_NAME>', looks='', ruleName='',
+                           description='', aliases='view2_old')
 
         # A plain view behaves like getDisplayViewColorSpaceName.
         self.assertEqual(
             cfg.getResolvedDisplayViewColorSpaceName('sRGB - Display', 'view1'), 'raw')
 
         # <USE_DISPLAY_NAME> resolves to the display's own color space, without needing the
-        # display/view alias fallback to be enabled.
-        self.assertFalse(cfg.getUseDisplayViewAliases())
+        # display alias fallback to be enabled.
+        self.assertFalse(cfg.getUseDisplayAliases())
         self.assertEqual(
             cfg.getDisplayViewColorSpaceName('sRGB - Display', 'view2'), '<USE_DISPLAY_NAME>')
         self.assertEqual(
             cfg.getResolvedDisplayViewColorSpaceName('sRGB - Display', 'view2'), 'sRGB - Display')
 
-        # Resolving an out-of-date display or view name is opt-in.
+        # Resolving a view by one of its own aliases is always active, unlike resolving an
+        # out-of-date display name, which requires getUseDisplayAliases.
         self.assertEqual(cfg.getResolvedDisplayViewColorSpaceName('sRGB', 'view1'), '')
-        self.assertEqual(cfg.getResolvedDisplayViewColorSpaceName('sRGB - Display', 'vt_new'), '')
+        self.assertEqual(
+            cfg.getResolvedDisplayViewColorSpaceName('sRGB - Display', 'view2_old'),
+            'sRGB - Display')
 
-        cfg.setUseDisplayViewAliases(True)
+        cfg.setUseDisplayAliases(True)
         self.assertEqual(cfg.getResolvedDisplayViewColorSpaceName('sRGB', 'view1'), 'raw')
         self.assertEqual(
-            cfg.getResolvedDisplayViewColorSpaceName('sRGB', 'vt_new'), 'sRGB - Display')
+            cfg.getResolvedDisplayViewColorSpaceName('sRGB', 'view2_old'), 'sRGB - Display')
 
         # Nonexistent display or view.
         self.assertEqual(

@@ -89,6 +89,11 @@ The keys allowed with a View are:
   and the '-' character to apply in reverse. See :ref:`config-looks`
 * ``rule``: The viewing rule to be used with this View. See :ref:`config-viewing-rules`
 * ``description``: A description string for this View.
+* ``aliases``: Alternative names that can be used to refer to this View. Unlike display
+  aliases, resolving a view by one of its aliases is always active (it does not depend
+  on ``use_display_aliases``). An alias must not collide with the name or an alias of
+  another view used by the same display (whether display-defined or a referenced
+  shared view). Requires ``ocio_profile_version`` 2.6 or higher.
 
 Note that a View may use either the colorspace key or it may use both
 the view_transform and dispay_colorspace keys.  No other combinations
@@ -133,22 +138,24 @@ A View Transform may use the following keys:
 .. TODO: Good spot for an example in a future revision.
 
 
-``use_display_view_aliases``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``use_display_aliases``
+^^^^^^^^^^^^^^^^^^^^^^^
 
-Optional.  Activates aliases for display and view names.
+Optional.  Activates aliases for display names.
 
-By default, the arguments to DisplayViewTransform must be the exact strings found
-in the display / view section of the config. However, if ``ocio_profile_version`` 
-is 2.6 or higher, ``use_display_view_aliases`` may be set to true. This allows a
-display to be referred to by the name or aliases of its corresponding display
-ColorSpace and the view to be referred to by the name or aliases of its
-corresponding ViewTransform. This config-level attribute defaults to false and 
-must be omitted from the config file if its value is not "true".
+By default, the arguments to DisplayViewTransform must be the exact display name found
+in the display section of the config. However, if ``ocio_profile_version`` is 2.6 or
+higher, ``use_display_aliases`` may be set to true. This allows a display to be
+referred to by the name or aliases of its corresponding display ColorSpace. This
+config-level attribute defaults to false and must be omitted from the config file if
+its value is not "true".
+
+Note that this does not affect resolving a view by one of its ``aliases`` (see the View
+keys above), which is always active regardless of this setting.
 
 .. code-block:: yaml
 
-  use_display_view_aliases: true
+  use_display_aliases: true
 
 
 ``default_view_transform``

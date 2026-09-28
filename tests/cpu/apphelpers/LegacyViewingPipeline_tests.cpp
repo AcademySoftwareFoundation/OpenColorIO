@@ -968,7 +968,7 @@ OCIO_ADD_TEST(LegacyViewingPipeline, display_view_alias_fallback)
     constexpr char CONFIG[]{ R"(
 ocio_profile_version: 2.6
 
-use_display_view_aliases: true
+use_display_aliases: true
 
 roles:
   default: raw
@@ -980,7 +980,8 @@ roles:
 
 displays:
   sRGB - Display:
-    - !<View> {name: view, view_transform: display_vt, display_colorspace: sRGB - Display, looks: look1}
+    - !<View> {name: view, view_transform: display_vt, display_colorspace: sRGB - Display,
+               looks: look1, aliases: [old_view]}
 
 looks:
   - !<Look>
@@ -991,7 +992,6 @@ looks:
 view_transforms:
   - !<ViewTransform>
     name: display_vt
-    aliases: [old_vt]
     to_scene_reference: !<MatrixTransform> {offset: [0.3, 0.1, 0.1, 0]}
 
 display_colorspaces:
@@ -1064,11 +1064,11 @@ colorspaces:
         OCIO_CHECK_CLOSE(aliasedDisplay[2], ref[2], tolerance);
     }
 
-    // So must the view transform's old, alias-only name used as the view. This is the case that
-    // would silently lose the look if the view were not resolved.
+    // So must the view's old, alias-only name used as the view. This is the case that would
+    // silently lose the look if the view were not resolved.
     {
         float aliasedView[3]{ srcPixel[0], srcPixel[1], srcPixel[2] };
-        OCIO_CHECK_NO_THROW(applyPipeline("sRGB - Display", "old_vt", false, aliasedView));
+        OCIO_CHECK_NO_THROW(applyPipeline("sRGB - Display", "old_view", false, aliasedView));
 
         OCIO_CHECK_CLOSE(aliasedView[0], ref[0], tolerance);
         OCIO_CHECK_CLOSE(aliasedView[1], ref[1], tolerance);
@@ -1078,7 +1078,7 @@ colorspaces:
     // And both being out of date at once, since the view is resolved against the resolved display.
     {
         float bothAliased[3]{ srcPixel[0], srcPixel[1], srcPixel[2] };
-        OCIO_CHECK_NO_THROW(applyPipeline("sRGB", "old_vt", false, bothAliased));
+        OCIO_CHECK_NO_THROW(applyPipeline("sRGB", "old_view", false, bothAliased));
 
         OCIO_CHECK_CLOSE(bothAliased[0], ref[0], tolerance);
         OCIO_CHECK_CLOSE(bothAliased[1], ref[1], tolerance);

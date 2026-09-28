@@ -1495,7 +1495,9 @@ colorspaces:
 OCIO_ADD_TEST(DisplayViewTransform, use_display_name_alias)
 {
     // Test that USE_DISPLAY_NAME will find a display color space where the display name
-    // is an alias.
+    // is an alias. Note that this has nothing to do with whether use_display_aliases
+    // is set. It is simply a consequence of the fact that USE_DISPLAY_NAME is resolved
+    // via a call to config->getColorSpace(displayName), which handles aliases.
 
     constexpr const char * SIMPLE_CONFIG{ R"(
 ocio_profile_version: 2
@@ -1509,6 +1511,8 @@ shared_views:
 displays:
   sRGB - Display:
     - !<Views> [view1]
+  # Note that the "sRGB" display needs to be present. This test relies on color space aliases
+  # rather than display aliases.
   sRGB:
     - !<Views> [view1]
 
@@ -1582,7 +1586,7 @@ OCIO_ADD_TEST(DisplayViewTransform, display_alias_fallback)
 ocio_profile_version: 2.6
 
 # Opt-in to display aliasing.
-use_display_view_aliases: true
+use_display_aliases: true
 
 roles:
   default: raw
@@ -1674,14 +1678,11 @@ colorspaces:
 OCIO_ADD_TEST(DisplayViewTransform, view_alias_fallback)
 {
     // Validate that BuildDisplayOps resolves a view using Config::getCanonicalViewName, so
-    // that renaming a view in a config (while keeping the old name as an alias) doesn't
-    // break a DisplayViewTransform still using the old name as its "view".
+    // that renaming a view in a config (while keeping the old name as one of the view's
+    // aliases) doesn't break a DisplayViewTransform still using the old name as its "view".
 
     constexpr char CONFIG[]{ R"(
 ocio_profile_version: 2.6
-
-# Opt-in to view aliasing.
-use_display_view_aliases: true
 
 roles:
   default: raw
@@ -1693,7 +1694,8 @@ roles:
 
 displays:
   sRGB - Display:
-    - !<View> {name: view, view_transform: display_vt, display_colorspace: sRGB - Display, looks: look1}
+    - !<View> {name: view, view_transform: display_vt, display_colorspace: sRGB - Display,
+               looks: look1, aliases: [old_view]}
 
 looks:
   - !<Look>
@@ -1704,7 +1706,6 @@ looks:
 view_transforms:
   - !<ViewTransform>
     name: display_vt
-    aliases: [old_vt]
     to_scene_reference: !<MatrixTransform> {offset: [0.3, 0.1, 0.1, 0]}
 
 display_colorspaces:
@@ -1731,10 +1732,10 @@ colorspaces:
 
     const std::string display{ "sRGB - Display" };
     const std::string view{ "view" };
-    const std::string oldViewTransformName{ "old_vt" };
+    const std::string oldViewName{ "old_view" };
 
     OCIO_CHECK_EQUAL(std::string(config->getCanonicalViewName(display.c_str(),
-                                                              oldViewTransformName.c_str())),
+                                                              oldViewName.c_str())),
                       view);
 
     auto dt = OCIO::DisplayViewTransform::Create();
@@ -1749,10 +1750,10 @@ colorspaces:
     OCIO_CHECK_NO_THROW(currentOps.validate());
     OCIO_REQUIRE_EQUAL(currentOps.size(), 7); // (includes gpu allocation no-ops)
 
-    // Build again using only the view transform's old, alias-only name as the "view". The result
-    // must be identical. Note that the view has a look, so this also verifies that the resolved
-    // view name is used to look up the view's looks, not just its color space and view transform.
-    dt->setView(oldViewTransformName.c_str());
+    // Build again using only the view's old, alias-only name as the "view". The result must be
+    // identical. Note that the view has a look, so this also verifies that the resolved view
+    // name is used to look up the view's looks, not just its color space and view transform.
+    dt->setView(oldViewName.c_str());
     OCIO::OpRcPtrVec aliasedOps;
     OCIO_CHECK_NO_THROW(OCIO::BuildDisplayOps(aliasedOps, *config, config->getCurrentContext(),
                                               *dt, OCIO::TRANSFORM_DIR_FORWARD));
@@ -1766,9 +1767,9 @@ colorspaces:
         OCIO_CHECK_ASSERT(*opA->data() == *opB->data());
     }
 
-    // A view name that cannot be resolved at all -- not an existing view, and not a view
-    // transform or named transform name or alias used by this display either -- must still
-    // throw, referencing the name the caller actually provided.
+    // A view name that cannot be resolved at all -- not an existing view, and not an alias of
+    // a view used by this display either -- must still throw, referencing the name the caller
+    // actually provided.
     dt->setView("not a view");
     OCIO::OpRcPtrVec badOps;
     OCIO_CHECK_THROW_WHAT(OCIO::BuildDisplayOps(badOps, *config, config->getCurrentContext(),
@@ -1787,7 +1788,7 @@ OCIO_ADD_TEST(DisplayViewTransform, context_variables_with_resolved_display_view
     constexpr const char * OCIO_CONFIG{ R"(
 ocio_profile_version: 2.6
 
-use_display_view_aliases: true
+use_display_aliases: true
 
 environment: { FILE: cdl_test1.cc }
 
@@ -1850,6 +1851,7 @@ colorspaces:
     dt->setView("plain_view");
     OCIO_CHECK_ASSERT(!CollectContextVariables(*cfg, *cfg->getCurrentContext(), *dt,
                                                usedContextVars));
+    OCIO_CHECK_EQUAL(0, usedContextVars->getNumStringVars());
 
     // The shared view's display color space is <USE_DISPLAY_NAME>, so finding the context
     // variable requires resolving that to the display color space named after the display.
@@ -1857,10 +1859,14 @@ colorspaces:
     dt->setView("view");
     OCIO_CHECK_ASSERT(CollectContextVariables(*cfg, *cfg->getCurrentContext(), *dt,
                                               usedContextVars));
+    OCIO_CHECK_EQUAL(1, usedContextVars->getNumStringVars());
+    OCIO_CHECK_EQUAL(std::string("FILE"), usedContextVars->getStringVarNameByIndex(0));
 
     // The display's old, alias-only name is resolved too, so the same context variable is found.
     // The context variable is found: returns true.
     dt->setDisplay("sRGB");
     OCIO_CHECK_ASSERT(CollectContextVariables(*cfg, *cfg->getCurrentContext(), *dt,
                                               usedContextVars));
+    OCIO_CHECK_EQUAL(1, usedContextVars->getNumStringVars());
+    OCIO_CHECK_EQUAL(std::string("FILE"), usedContextVars->getStringVarNameByIndex(0));
 }

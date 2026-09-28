@@ -343,8 +343,8 @@ void BuildDisplayOps(OpRcPtrVec & ops,
     }
     const std::string view = displayViewTransform.getView();
 
-    // Config authors may opt-in to using view transform names/aliases as aliases for
-    // view names. Resolve those to the actual view name.
+    // A view may have its own aliases. Resolving a view by one of its aliases is always
+    // active. Resolve those to the actual view name.
     std::string resolvedView = view;
     const char * canonicalView = config.getCanonicalViewName(resolvedDisplay.c_str(), view.c_str());
     if (canonicalView && *canonicalView)

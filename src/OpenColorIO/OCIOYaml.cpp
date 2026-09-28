@@ -453,6 +453,10 @@ inline void load(const YAML::Node& node, View& v)
         {
             load(iter->second, v.m_description);
         }
+        else if (key == "aliases")
+        {
+            load(iter->second, v.m_aliases);
+        }
         else
         {
             LogUnknownKeyWarning(node, iter->first);
@@ -499,6 +503,10 @@ inline void save(YAML::Emitter& out, const View & view)
     if (!view.m_rule.empty())
     {
         out << YAML::Key << "rule" << YAML::Value << view.m_rule;
+    }
+    if (!view.m_aliases.empty())
+    {
+        out << YAML::Key << "aliases" << YAML::Value << view.m_aliases;
     }
     saveDescription(out, view.m_description.c_str());
     out << YAML::EndMap;
@@ -3822,15 +3830,6 @@ inline void load(const YAML::Node & node, ViewTransformRcPtr & vt)
             load(iter->second, stringval);
             vt->setName(stringval.c_str());
         }
-        else if (key == "aliases")
-        {
-            StringUtils::StringVec aliases;
-            load(iter->second, aliases);
-            for (const auto & alias : aliases)
-            {
-                vt->addAlias(alias.c_str());
-            }
-        }
         else if (key == "description")
         {
             std::string stringval;
@@ -3893,18 +3892,6 @@ inline void save(YAML::Emitter & out, ConstViewTransformRcPtr & vt, unsigned int
     out << YAML::BeginMap;
 
     out << YAML::Key << "name" << YAML::Value << vt->getName();
-    const size_t numAliases = vt->getNumAliases();
-    if (numAliases)
-    {
-        out << YAML::Key << "aliases";
-        StringUtils::StringVec aliases;
-        for (size_t aidx = 0; aidx < numAliases; ++aidx)
-        {
-            aliases.push_back(vt->getAlias(aidx));
-        }
-        out << YAML::Flow << YAML::Value << aliases;
-    }
-
     const char * family = vt->getFamily();
     if (family && *family)
     {
@@ -4688,10 +4675,11 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
 
                 View view;
                 load(val, view);
+                const std::string aliases = JoinStringEnvStyle(view.m_aliases);
                 config->addSharedView(view.m_name.c_str(),
                                       view.m_viewTransform.c_str(), view.m_colorspace.c_str(),
                                       view.m_looks.c_str(), view.m_rule.c_str(),
-                                      view.m_description.c_str());
+                                      view.m_description.c_str(), aliases.c_str());
             }
         }
         else if (key == "displays")
@@ -4718,10 +4706,11 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
                     {
                         View view;
                         load(node, view);
+                        const std::string aliases = JoinStringEnvStyle(view.m_aliases);
                         config->addDisplayView(display.c_str(), view.m_name.c_str(),
                                                view.m_viewTransform.c_str(), view.m_colorspace.c_str(),
                                                view.m_looks.c_str(), view.m_rule.c_str(),
-                                               view.m_description.c_str());
+                                               view.m_description.c_str(), aliases.c_str());
                     }
                     else if (node.Tag() == "Views")
                     {
@@ -4775,10 +4764,10 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
                 }
             }
         }
-        else if (key == "use_display_view_aliases")
+        else if (key == "use_display_aliases")
         {
             load(iter->second, boolval);
-            config->setUseDisplayViewAliases(boolval);
+            config->setUseDisplayAliases(boolval);
         }
         else if(key == "active_displays")
         {
@@ -5056,6 +5045,21 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
     }
 }
 
+// Config only exposes a view's aliases as a single comma-delimited string (see
+// Config::getDisplayViewAliases), so split it back into a vector for the View struct used
+// below to build up what gets passed to save(YAML::Emitter&, const View&).
+StringUtils::StringVec GetViewAliasVec(const Config & config, const char * display,
+                                       const char * name)
+{
+    StringUtils::StringVec aliases = SplitStringEnvStyle(config.getDisplayViewAliases(display,
+                                                                                      name));
+    if (aliases.size() == 1 && aliases[0].empty())
+    {
+        aliases.clear();
+    }
+    return aliases;
+}
+
 inline void save(YAML::Emitter & out, const Config & config)
 {
     std::stringstream ss;
@@ -5210,7 +5214,8 @@ inline void save(YAML::Emitter & out, const Config & config)
                               config.getDisplayViewColorSpaceName(nullptr, name),
                               config.getDisplayViewLooks(nullptr, name),
                               config.getDisplayViewRule(nullptr, name),
-                              config.getDisplayViewDescription(nullptr, name) };
+                              config.getDisplayViewDescription(nullptr, name),
+                              GetViewAliasVec(config, nullptr, name) };
             save(out, dview);
         }
         out << YAML::EndSeq;
@@ -5239,7 +5244,8 @@ inline void save(YAML::Emitter & out, const Config & config)
                                   config.getDisplayViewColorSpaceName(display, name),
                                   config.getDisplayViewLooks(display, name),
                                   config.getDisplayViewRule(display, name),
-                                  config.getDisplayViewDescription(display, name) };
+                                  config.getDisplayViewDescription(display, name),
+                                  GetViewAliasVec(config, display, name) };
                 save(out, dview);
             }
 
@@ -5299,9 +5305,9 @@ inline void save(YAML::Emitter & out, const Config & config)
     out << YAML::Newline;
     out << YAML::Newline;
 
-    if (config.getUseDisplayViewAliases())
+    if (config.getUseDisplayAliases())
     {
-        out << YAML::Key << "use_display_view_aliases" << YAML::Value << true;
+        out << YAML::Key << "use_display_aliases" << YAML::Value << true;
     }
 
     out << YAML::Key << "active_displays";
