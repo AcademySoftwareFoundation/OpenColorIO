@@ -35,20 +35,28 @@ if(NOT ZLIB_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGE
     set(_EXT_DIST_ROOT "${PROJECT_BINARY_DIR}/ext/dist")
     set(_EXT_BUILD_ROOT "${PROJECT_BINARY_DIR}/ext/build")
 
-    if(WIN32)
-        set(_ZLIB_LIB_NAME "zlib")
-        set(_ZLIB_STATIC_LIB_NAME "zlibstatic")
-    else()
-        set(_ZLIB_LIB_NAME "z")
-        set(_ZLIB_STATIC_LIB_NAME "z")
-    endif()
-
     # Set find_package standard args
     set(ZLIB_FOUND TRUE)
     if(OCIO_ZLIB_RECOMMENDED_VERSION)
         set(ZLIB_VERSION ${OCIO_ZLIB_RECOMMENDED_VERSION})
     else()
         set(ZLIB_VERSION ${ZLIB_FIND_VERSION})
+    endif()
+
+    if(WIN32)
+        # zlib 1.3.2 rewrote its CMakeLists.txt and renamed the Windows shared and
+        # static library outputs from "zlib"/"zlibstatic" to "z"/"zs".
+        # Keep the old names for versions prior to that so older pins still work.
+        if(ZLIB_VERSION VERSION_LESS "1.3.2")
+            set(_ZLIB_LIB_NAME "zlib")
+            set(_ZLIB_STATIC_LIB_NAME "zlibstatic")
+        else()
+            set(_ZLIB_LIB_NAME "z")
+            set(_ZLIB_STATIC_LIB_NAME "zs")
+        endif()
+    else()
+        set(_ZLIB_LIB_NAME "z")
+        set(_ZLIB_STATIC_LIB_NAME "z")
     endif()
 
     set(ZLIB_INCLUDE_DIRS "${_EXT_DIST_ROOT}/${CMAKE_INSTALL_INCLUDEDIR}")
@@ -82,6 +90,11 @@ if(NOT ZLIB_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGE
             -DCMAKE_INSTALL_MESSAGE=${CMAKE_INSTALL_MESSAGE}
             -DCMAKE_INSTALL_PREFIX=${_EXT_DIST_ROOT}
             -DCMAKE_OBJECT_PATH_MAX=${CMAKE_OBJECT_PATH_MAX}
+            # ZLIB versions <=1.3.1 always install to ${CMAKE_INSTALL_PREFIX}/lib and ignore
+            # CMAKE_INSTALL_LIBDIR. Starting with 1.3.2, ZLIB uses GNUInstallDirs, which without
+            # this pre-seeded value would default to a platform-specific dir (e.g. lib64),
+            # breaking the hardcoded "${_ZLIB_INSTALL_LIBDIR}" path used below.
+            -DCMAKE_INSTALL_LIBDIR=${_ZLIB_INSTALL_LIBDIR}
         )
 
         if(CMAKE_TOOLCHAIN_FILE)
@@ -131,10 +144,24 @@ if(NOT ZLIB_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PACKAGE
 
     ExternalProject_Add_Step(
         ZLIB_install zlib_remove_dll
-        COMMENT "Remove zlib.lib and zlib.dll, leaves only zlibstatic.lib"
+        COMMENT "Remove ${_ZLIB_LIB_NAME}.lib and ${_ZLIB_LIB_NAME}.dll, leaves only ${_ZLIB_STATIC_LIB_NAME}.lib"
         DEPENDEES install
-        COMMAND ${CMAKE_COMMAND} -E remove -f ${_EXT_DIST_ROOT}/${_ZLIB_INSTALL_LIBDIR}/zlib.lib ${_EXT_DIST_ROOT}/bin/zlib.dll
+        COMMAND ${CMAKE_COMMAND} -E remove -f ${_EXT_DIST_ROOT}/${_ZLIB_INSTALL_LIBDIR}/${_ZLIB_LIB_NAME}.lib ${_EXT_DIST_ROOT}/bin/${_ZLIB_LIB_NAME}.dll
     )
+
+    if(WIN32 AND NOT _ZLIB_STATIC_LIB_NAME STREQUAL "zlibstatic")
+        # CMake's own FindZLIB.cmake (used by downstream consumers of OpenColorIOConfig.cmake)
+        # only ever looks for the static library under the name "zlibstatic", so alias the
+        # renamed 1.3.2+ output ("zs") to that name too.
+        ExternalProject_Add_Step(
+            ZLIB_install zlib_alias_static_lib
+            COMMENT "Alias ${_ZLIB_STATIC_LIB_NAME}.lib as zlibstatic.lib for downstream find_package(ZLIB)"
+            DEPENDEES zlib_remove_dll
+            COMMAND ${CMAKE_COMMAND} -E copy
+                ${_EXT_DIST_ROOT}/${_ZLIB_INSTALL_LIBDIR}/${_ZLIB_STATIC_LIB_NAME}${_ZLIB_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}
+                ${_EXT_DIST_ROOT}/${_ZLIB_INSTALL_LIBDIR}/zlibstatic${_ZLIB_LIB_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}
+        )
+    endif()
 
     add_dependencies(ZLIB::ZLIB ZLIB_install)
     

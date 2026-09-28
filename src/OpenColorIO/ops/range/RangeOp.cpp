@@ -238,7 +238,7 @@ void CreateRangeOp(OpRcPtrVec & ops, RangeOpDataRcPtr & rangeData, TransformDire
         range->setDirection(newDir);
     }
 
-    ops.push_back(std::make_shared<RangeOp>(range));
+    ops.emplace_back(std::make_shared<RangeOp>(range));
 }
 
 ///////////////////////////////////////////////////////////////////////////

@@ -9,7 +9,18 @@
 
 #elif _WIN32
 
+// GLEW undefines APIENTRY/CALLBACK/WINGDIAPI at the end of glew.h unless windows.h
+// already defined them, which glu.h needs for its declarations. NOMINMAX avoids
+// windows.h's min/max macros clashing with std::numeric_limits<>::min/max().
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
 #include <GL/glew.h>
+#include <GL/glu.h>
 
 #else
 

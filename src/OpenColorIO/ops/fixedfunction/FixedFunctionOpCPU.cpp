@@ -169,6 +169,23 @@ protected:
     ACES2::JMhParams m_p;
 };
 
+class Renderer_ACES_RGB_TO_HMJ_20 : public OpCPU
+{
+public:
+    Renderer_ACES_RGB_TO_HMJ_20() = delete;
+    explicit Renderer_ACES_RGB_TO_HMJ_20(ConstFixedFunctionOpDataRcPtr & data);
+
+    void apply(const void * inImg, void * outImg, long numPixels) const override;
+
+private:
+    void fwd(const void * inImg, void * outImg, long numPixels) const;
+    void inv(const void * inImg, void * outImg, long numPixels) const;
+
+protected:
+    bool m_fwd;
+    ACES2::JMhParams m_p;
+};
+
 class Renderer_ACES_TONESCALE_COMPRESS_20 : public OpCPU
 {
 public:
@@ -1229,6 +1246,83 @@ void Renderer_ACES_RGB_TO_JMh_20::inv(const void * inImg, void * outImg, long nu
     {
         const float normalised_hue = ACES2::from_degrees(in[2]);
         const ACES2::f3 RGB = ACES2::JMh_to_RGB({in[0], in[1], normalised_hue}, m_p);
+
+        out[0] = RGB[0];
+        out[1] = RGB[1];
+        out[2] = RGB[2];
+        out[3] = in[3];
+
+        in  += 4;
+        out += 4;
+    }
+}
+
+Renderer_ACES_RGB_TO_HMJ_20::Renderer_ACES_RGB_TO_HMJ_20(ConstFixedFunctionOpDataRcPtr & data)
+    :   OpCPU()
+{
+    m_fwd = FixedFunctionOpData::ACES_RGB_TO_HMJ_20 == data->getStyle();
+
+    const float red_x   = (float) data->getParams()[0];
+    const float red_y   = (float) data->getParams()[1];
+    const float green_x = (float) data->getParams()[2];
+    const float green_y = (float) data->getParams()[3];
+    const float blue_x  = (float) data->getParams()[4];
+    const float blue_y  = (float) data->getParams()[5];
+    const float white_x = (float) data->getParams()[6];
+    const float white_y = (float) data->getParams()[7];
+
+    const Primaries primaries = {
+        {red_x  , red_y  },
+        {green_x, green_y},
+        {blue_x , blue_y },
+        {white_x, white_y}
+    };
+
+    m_p = ACES2::init_JMhParams(primaries);
+}
+
+void Renderer_ACES_RGB_TO_HMJ_20::apply(const void * inImg, void * outImg, long numPixels) const
+{
+    if (m_fwd)
+    {
+        fwd(inImg, outImg, numPixels);
+    }
+    else
+    {
+        inv(inImg, outImg, numPixels);
+    }
+}
+
+void Renderer_ACES_RGB_TO_HMJ_20::fwd(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for(long idx=0; idx<numPixels; ++idx)
+    {
+        const ACES2::f3 JMh = ACES2::RGB_to_JMh({in[0], in[1], in[2]}, m_p);
+
+        out[0] = ACES2::to_degrees(JMh[2]) / 360.0f;
+        out[1] = JMh[1] / 200.0f;
+        out[2] = JMh[0] / 100.0f;
+        out[3] = in[3];
+
+        in  += 4;
+        out += 4;
+    }
+}
+
+void Renderer_ACES_RGB_TO_HMJ_20::inv(const void * inImg, void * outImg, long numPixels) const
+{
+    const float * in = (const float *)inImg;
+    float * out = (float *)outImg;
+
+    for(long idx=0; idx<numPixels; ++idx)
+    {
+        const float normalised_hue = ACES2::from_degrees(in[0] * 360.0f);
+        const float M              = in[1] * 200.0f;
+        const float J              = in[2] * 100.0f;
+        const ACES2::f3 RGB = ACES2::JMh_to_RGB({J, M, normalised_hue}, m_p);
 
         out[0] = RGB[0];
         out[1] = RGB[1];
@@ -2495,6 +2589,13 @@ ConstOpCPURcPtr GetFixedFunctionCPURenderer(ConstFixedFunctionOpDataRcPtr & func
         {
             // Sharing same renderer (param will be inverted to handle direction).
             return std::make_shared<Renderer_ACES_RGB_TO_JMh_20>(func);
+        }
+
+        case FixedFunctionOpData::ACES_RGB_TO_HMJ_20:
+        case FixedFunctionOpData::ACES_HMJ_TO_RGB_20:
+        {
+            // Sharing same renderer (param will be inverted to handle direction).
+            return std::make_shared<Renderer_ACES_RGB_TO_HMJ_20>(func);
         }
 
         case FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_FWD:

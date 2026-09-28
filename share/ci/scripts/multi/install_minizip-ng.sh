@@ -38,6 +38,7 @@ cmake -DCMAKE_BUILD_TYPE=Release \
       -DMZ_LZMA=OFF \
       -DMZ_LIBCOMP=OFF \
       -DMZ_ZSTD=OFF \
+      -DMZ_PPMD=OFF \
       -DMZ_PKCRYPT=OFF \
       -DMZ_WZAES=OFF \
       -DMZ_SIGNING=OFF \

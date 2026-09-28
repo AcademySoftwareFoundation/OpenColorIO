@@ -130,13 +130,13 @@ void CreateLogOp(OpRcPtrVec & ops,
 {
     auto opData = std::make_shared<LogOpData>(base, logSlope, logOffset,
                                               linSlope, linOffset, direction);
-    ops.push_back(std::make_shared<LogOp>(opData));
+    ops.emplace_back(std::make_shared<LogOp>(opData));
 }
 
 void CreateLogOp(OpRcPtrVec & ops, double base, TransformDirection direction)
 {
     auto opData = std::make_shared<LogOpData>(base, direction);
-    ops.push_back(std::make_shared<LogOp>(opData));
+    ops.emplace_back(std::make_shared<LogOp>(opData));
 }
 
 void CreateLogOp(OpRcPtrVec & ops,
@@ -149,7 +149,7 @@ void CreateLogOp(OpRcPtrVec & ops,
         log = log->inverse();
     }
 
-    ops.push_back(std::make_shared<LogOp>(log));
+    ops.emplace_back(std::make_shared<LogOp>(log));
 }
 
 

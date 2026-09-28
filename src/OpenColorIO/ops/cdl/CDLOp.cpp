@@ -177,7 +177,7 @@ void CreateCDLOp(OpRcPtrVec & ops,
         cdl = cdl->inverse();
     }
 
-    ops.push_back(std::make_shared<CDLOp>(cdl));
+    ops.emplace_back(std::make_shared<CDLOp>(cdl));
 }
 
 ///////////////////////////////////////////////////////////////////////////

@@ -311,9 +311,12 @@ OCIO_ADD_TEST(OpOptimizers, combine_ops)
         OCIO_CHECK_EQUAL(ops.size(), 3);
         OCIO::CombineOps(ops, AllBut(OCIO::OPTIMIZATION_COMP_MATRIX));
         OCIO_CHECK_EQUAL(ops.size(), 3);
-        OCIO::CombineOps(ops, OCIO::OPTIMIZATION_ALL);
+        auto count = OCIO::CombineOps(ops, OCIO::OPTIMIZATION_ALL);
         // CombineOps removes at most one pair on each call, repeat to combine all pairs.
-        OCIO::CombineOps(ops, OCIO::OPTIMIZATION_ALL);
+        OCIO_CHECK_EQUAL(count, 1);
+        OCIO_CHECK_EQUAL(ops.size(), 2);
+        count = OCIO::CombineOps(ops, OCIO::OPTIMIZATION_ALL);
+        OCIO_CHECK_EQUAL(count, 1);
         OCIO_CHECK_EQUAL(ops.size(), 1);
     }
 
@@ -325,7 +328,9 @@ OCIO_ADD_TEST(OpOptimizers, combine_ops)
         OCIO_CHECK_EQUAL(ops.size(), 2);
         OCIO::CombineOps(ops, AllBut(OCIO::OPTIMIZATION_COMP_MATRIX));
         OCIO_CHECK_EQUAL(ops.size(), 2);
-        OCIO::CombineOps(ops, OCIO::OPTIMIZATION_ALL);
+        auto count = OCIO::CombineOps(ops, OCIO::OPTIMIZATION_ALL);
+        // Note: the number of optimisations is 1 even though they both get removed
+        OCIO_CHECK_EQUAL(count, 1);
         OCIO_CHECK_EQUAL(ops.size(), 0);
     }
 
@@ -355,8 +360,11 @@ OCIO_ADD_TEST(OpOptimizers, combine_ops)
         OCIO_CHECK_EQUAL(ops.size(), 5);
         OCIO::CombineOps(ops, OCIO::OPTIMIZATION_ALL);
         // CombineOps removes at most one pair on each call, repeat to combine all pairs.
+        OCIO_CHECK_EQUAL(ops.size(), 4);
         OCIO::CombineOps(ops, OCIO::OPTIMIZATION_ALL);
+        OCIO_CHECK_EQUAL(ops.size(), 3);
         OCIO::CombineOps(ops, OCIO::OPTIMIZATION_ALL);
+        OCIO_CHECK_EQUAL(ops.size(), 2);
         OCIO::CombineOps(ops, OCIO::OPTIMIZATION_ALL);
         OCIO_CHECK_EQUAL(ops.size(), 1);
     }
@@ -374,6 +382,7 @@ OCIO_ADD_TEST(OpOptimizers, combine_ops)
         OCIO_CHECK_EQUAL(ops.size(), 4);
         OCIO::CombineOps(ops, OCIO::OPTIMIZATION_ALL);
         // CombineOps removes at most one pair on each call, repeat to combine all pairs.
+        OCIO_CHECK_EQUAL(ops.size(), 2);
         OCIO::CombineOps(ops, OCIO::OPTIMIZATION_ALL);
         OCIO_CHECK_EQUAL(ops.size(), 0);
     }
@@ -1332,6 +1341,41 @@ OCIO_ADD_TEST(OpOptimizers, dynamic_ops)
 
         // It does not get optimized with default flags (OPTIMIZATION_NO_DYNAMIC_PROPERTIES off).
         OCIO_CHECK_NO_THROW(ops.finalize());
+        OCIO_CHECK_EQUAL(OCIO::RemoveDynamicProperties(ops, OCIO::OPTIMIZATION_DEFAULT), 0);
+        OCIO_REQUIRE_EQUAL(ops.size(), 3);
+
+        OCIO_CHECK_ASSERT(ops[1]->isDynamic());
+
+        OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
+        OCIO_CHECK_EQUAL(ops[1]->getInfo(), "<ExposureContrastOp>");
+        OCIO_CHECK_EQUAL(ops[2]->getInfo(), "<MatrixOffsetOp>");
+
+        // It does get optimized if flag is set.
+        OCIO_CHECK_ASSERT(HasFlag(OCIO::OPTIMIZATION_ALL,  OCIO::OPTIMIZATION_NO_DYNAMIC_PROPERTIES));
+        OCIO_CHECK_NO_THROW(ops.finalize());
+        OCIO_CHECK_EQUAL(OCIO::RemoveDynamicProperties(ops, OCIO::OPTIMIZATION_ALL), 1);
+        OCIO_REQUIRE_EQUAL(ops.size(), 3);
+
+        OCIO_CHECK_ASSERT(!ops[1]->isDynamic());
+    }
+
+    {
+        OCIO::OpRcPtrVec ops;
+        OCIO_CHECK_NO_THROW(OCIO::CreateMatrixOp(ops, matrix, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_NO_THROW(OCIO::CreateExposureContrastOp(ops, exposureDyn,
+                                                           OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_CHECK_NO_THROW(OCIO::CreateMatrixOp(ops, matrix, OCIO::TRANSFORM_DIR_FORWARD));
+        OCIO_REQUIRE_EQUAL(ops.size(), 3);
+        OCIO_CHECK_ASSERT(!ops[0]->isIdentity());
+
+        // Exposure contrast is dynamic.
+        OCIO_CHECK_ASSERT(ops[1]->isDynamic());
+        OCIO_CHECK_ASSERT(!ops[1]->isIdentity());
+
+        OCIO_CHECK_ASSERT(!ops[2]->isIdentity());
+
+        // It does not get optimized with default flags (OPTIMIZATION_NO_DYNAMIC_PROPERTIES off).
+        OCIO_CHECK_NO_THROW(ops.finalize());
         OCIO_CHECK_NO_THROW(ops.optimize(OCIO::OPTIMIZATION_DEFAULT));
         OCIO_REQUIRE_EQUAL(ops.size(), 3);
         OCIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
@@ -1554,7 +1598,7 @@ OCIO_ADD_TEST(OpOptimizers, opt_prefix_test1)
     // First one is the file no op.
     OCIO_CHECK_EQUAL(ops.size(), 12);
 
-    OCIO_CHECK_NO_THROW(OCIO::RemoveNoOpTypes(ops));
+    OCIO_CHECK_NO_THROW(OCIO::RemoveNoOpTypes(ops, OCIO::OPTIMIZATION_ALL));
 
     OCIO_CHECK_EQUAL(ops.size(), 11);
 

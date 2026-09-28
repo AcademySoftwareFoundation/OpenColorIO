@@ -312,7 +312,7 @@ void CreateExponentOp(OpRcPtrVec & ops,
     {
     case TRANSFORM_DIR_FORWARD:
     {
-        ops.push_back(std::make_shared<ExponentOp>(expData));
+        ops.emplace_back(std::make_shared<ExponentOp>(expData));
         break;
     }
     case TRANSFORM_DIR_INVERSE:
@@ -330,7 +330,7 @@ void CreateExponentOp(OpRcPtrVec & ops,
             }
         }
         ExponentOpDataRcPtr expInv = std::make_shared<ExponentOpData>(values);
-        ops.push_back(std::make_shared<ExponentOp>(expInv));
+        ops.emplace_back(std::make_shared<ExponentOp>(expInv));
         break;
     }
     }

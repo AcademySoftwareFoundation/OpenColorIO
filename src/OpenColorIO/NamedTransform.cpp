@@ -86,7 +86,7 @@ void NamedTransformImpl::addAlias(const char * alias) noexcept
         {
             if (!StringUtils::Contain(m_aliases, alias))
             {
-                m_aliases.push_back(alias);
+                m_aliases.emplace_back(alias);
             }
         }
     }
@@ -279,7 +279,7 @@ std::ostream & operator<< (std::ostream & os, const NamedTransform & t)
         StringUtils::StringVec categories;
         for (int i = 0; i < t.getNumCategories(); ++i)
         {
-            categories.push_back(t.getCategory(i));
+            categories.emplace_back(t.getCategory(i));
         }
         os << ", categories=[" << StringUtils::Join(categories, ',') << "]";
     }

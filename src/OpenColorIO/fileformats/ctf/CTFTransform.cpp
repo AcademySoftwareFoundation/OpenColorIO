@@ -312,6 +312,11 @@ CTFVersion GetOpMinimumVersion(const ConstOpDataRcPtr & op)
         {
             minVersion = CTF_PROCESS_LIST_VERSION_2_5;
         }
+        else if (  ff->getStyle() == FixedFunctionOpData::ACES_RGB_TO_HMJ_20
+                || ff->getStyle() == FixedFunctionOpData::ACES_HMJ_TO_RGB_20 )
+        {
+            minVersion = CTF_PROCESS_LIST_VERSION_2_6;
+        }
         break;
     }
     case OpData::GradingPrimaryType:
