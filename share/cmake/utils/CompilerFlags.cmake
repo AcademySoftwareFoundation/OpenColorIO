@@ -55,6 +55,10 @@ endif()
 
 if(USE_MSVC)
 
+    # Keep mutex initialization compatible with older MSVC runtimes in host applications.
+    # See https://github.com/AcademySoftwareFoundation/OpenImageIO/issues/4641
+    add_compile_definitions(_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR)
+
     set(PLATFORM_COMPILE_OPTIONS "${PLATFORM_COMPILE_OPTIONS};/DUSE_MSVC")
 
     # /we4062 Enables warning in switch when an enumeration value is not explicitly handled.

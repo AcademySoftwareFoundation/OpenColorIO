@@ -78,6 +78,7 @@ if(NOT minizip-ng_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_P
             -DMZ_LZMA=OFF
             -DMZ_LIBCOMP=OFF
             -DMZ_ZSTD=OFF
+            -DMZ_PPMD=OFF
             -DMZ_PKCRYPT=OFF
             -DMZ_WZAES=OFF
             -DMZ_SIGNING=OFF

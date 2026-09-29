@@ -56,14 +56,14 @@ message(STATUS "Checking for mandatory dependencies...")
 # https://github.com/libexpat/libexpat
 ocio_handle_dependency(  expat REQUIRED ALLOW_INSTALL
                          MIN_VERSION 2.6.0
-                         RECOMMENDED_VERSION 2.7.2
-                         RECOMMENDED_VERSION_REASON "CVE fixes and Latest version tested with OCIO")
+                         RECOMMENDED_VERSION 2.8.4
+                         RECOMMENDED_VERSION_REASON "CVE fixes and latest version tested with OCIO")
 
 # yaml-cpp
 # https://github.com/jbeder/yaml-cpp
 ocio_handle_dependency(  yaml-cpp REQUIRED ALLOW_INSTALL
                          MIN_VERSION 0.8.0
-                         RECOMMENDED_VERSION 0.8.0
+                         RECOMMENDED_VERSION 0.9.0
                          RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
 
 # pystring
@@ -77,7 +77,7 @@ ocio_handle_dependency(  pystring REQUIRED ALLOW_INSTALL
 # https://github.com/AcademySoftwareFoundation/Imath
 ocio_handle_dependency(  Imath REQUIRED ALLOW_INSTALL
                          MIN_VERSION 3.1.1
-                         RECOMMENDED_VERSION 3.2.1
+                         RECOMMENDED_VERSION 3.2.3
                          RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
 
 ###############################################################################
@@ -102,8 +102,8 @@ ocio_handle_dependency(  Imath REQUIRED ALLOW_INSTALL
 # See https://github.com/madler/zlib/releases/tag/v1.2.13
 ocio_handle_dependency(  ZLIB REQUIRED ALLOW_INSTALL
                          MIN_VERSION 1.2.13         # CVE fixes
-                         RECOMMENDED_VERSION 1.3.1
-                         RECOMMENDED_VERSION_REASON "Latest version tested with OCIO"
+                         RECOMMENDED_VERSION 1.3.2
+                         RECOMMENDED_VERSION_REASON "CVE fixes and latest version tested with OCIO"
                          VERSION_VARS ZLIB_VERSION_STRING ZLIB_VERSION )
 
 ###############################################################################
@@ -111,8 +111,8 @@ ocio_handle_dependency(  ZLIB REQUIRED ALLOW_INSTALL
 # minizip-ng
 # https://github.com/zlib-ng/minizip-ng
 ocio_handle_dependency(  minizip-ng REQUIRED ALLOW_INSTALL
-                         MIN_VERSION 4.0.0
-                         RECOMMENDED_VERSION 4.0.10
+                         MIN_VERSION 4.0.5
+                         RECOMMENDED_VERSION 4.2.2
                          RECOMMENDED_VERSION_REASON "Latest version tested with OCIO")
 
 ###############################################################################
