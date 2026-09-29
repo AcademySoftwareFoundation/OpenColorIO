@@ -205,24 +205,37 @@ ConstProcessorRcPtr LegacyViewingPipelineImpl::getProcessor(const ConstConfigRcP
         throw Exception(os.str().c_str());
     }
 
-    const std::string display = m_displayViewTransform->getDisplay();
-    const std::string view = m_displayViewTransform->getView();
-
-    const std::string viewTransformName = config->getDisplayViewTransformName(display.c_str(),
-                                                                              view.c_str());
-    ConstViewTransformRcPtr viewTransform;
-    if (!viewTransformName.empty())
+    // Resolve the display and view the same way BuildDisplayOps does, so that a display or view
+    // name that is aliased still finds the right color space and looks.
+    //
+    // Note this is not merely duplicating what the DisplayViewTransform appended below will do
+    // for itself. The looks lookup further down uses Config::getDisplayViewLooks, which reports
+    // what the config contains and so needs an up-to-date view name, and the color space found
+    // here decides whether color space conversions are skipped at all. The looks matter most:
+    // setDisplayViewTransform forces LooksBypass on the stored transform, so the looks are
+    // applied by this function or not at all.
+    std::string display = m_displayViewTransform->getDisplay();
+    const char * canonicalDisplay = config->getCanonicalDisplayName(display.c_str());
+    if (canonicalDisplay && *canonicalDisplay)
     {
-        viewTransform = config->getViewTransform(viewTransformName.c_str());
+        display = canonicalDisplay;
     }
 
-    // NB: If the viewTransform is present, then displayColorSpace is a true display color space
-    // rather than a traditional color space.
-    const std::string name{ config->getDisplayViewColorSpaceName(display.c_str(), view.c_str()) };
-    // A shared view containing a view transform may set the color space to USE_DISPLAY_NAME,
-    // in which case we look for a display color space with the same name as the display.
-    const bool nameFromDisplay = (0 == strcmp(name.c_str(), OCIO_VIEW_USE_DISPLAY_NAME));
-    const std::string displayColorSpaceName{ nameFromDisplay ? display : name };
+    // Ensure the view name is resolved (needed for getDisplayViewLooks below). The
+    // DisplayViewTransform will do the same name resolution, so need to stay in sync.
+    std::string view = m_displayViewTransform->getView();
+    const char * canonicalView = config->getCanonicalViewName(display.c_str(), view.c_str());
+    if (canonicalView && *canonicalView)
+    {
+        view = canonicalView;
+    }
+
+    // NB: If the view has a view transform, then displayColorSpace is a true display color space
+    // rather than a traditional color space.  Note that this also handles a shared view that
+    // sets its display color space to USE_DISPLAY_NAME, by looking for a display color space
+    // with the same name as the display.
+    const std::string displayColorSpaceName{
+        config->getResolvedDisplayViewColorSpaceName(display.c_str(), view.c_str()) };
     ConstColorSpaceRcPtr displayColorSpace = config->getColorSpace(displayColorSpaceName.c_str());
     // If this is not a color space it can be a named transform. Error handling (missing color
     // space or named transform) is handled by display view transform.

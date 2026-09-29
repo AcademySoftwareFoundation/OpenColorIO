@@ -39,6 +39,7 @@ enum ConfigIterator
     IT_DISPLAY_ALL,
     IT_DISPLAY_VIEW_TYPE,
     IT_VIRTUAL_DISPLAY_VIEW,
+    IT_DISPLAY_VIEW_ALIAS,
 };
 
 using EnvironmentVarNameIterator       = PyIterator<ConfigRcPtr, IT_ENVIRONMENT_VAR_NAME>;
@@ -65,6 +66,8 @@ using ViewForColorSpaceIterator        = PyIterator<ConfigRcPtr, IT_DISPLAY_VIEW
                                                     std::string, std::string>;
 using ViewForViewTypeIterator          = PyIterator<ConfigRcPtr, IT_DISPLAY_VIEW_TYPE, 
                                                     ViewType, std::string>;
+using DisplayViewAliasIterator         = PyIterator<ConfigRcPtr, IT_DISPLAY_VIEW_ALIAS,
+                                                    std::string, std::string>;
 using ActiveDisplaysListIterator       = PyIterator<ConfigRcPtr, IT_ACTIVE_DISPLAYS_LIST>;
 using ActiveViewsListIterator          = PyIterator<ConfigRcPtr, IT_ACTIVE_VIEWS_LIST>;
 using LookNameIterator                 = PyIterator<ConfigRcPtr, IT_LOOK_NAME>;
@@ -146,7 +149,11 @@ void bindPyConfig(py::module & m)
         py::class_<ViewForViewTypeIterator>(
             clsConfig, "ViewForViewTypeIterator");
 
-    auto clsActiveDisplaysListIterator = 
+    auto clsDisplayViewAliasIterator =
+        py::class_<DisplayViewAliasIterator>(
+            clsConfig, "DisplayViewAliasIterator");
+
+    auto clsActiveDisplaysListIterator =
         py::class_<ActiveDisplaysListIterator>(
             clsConfig, "ActiveDisplaysListIterator");
 
@@ -346,6 +353,10 @@ void bindPyConfig(py::module & m)
              DOC(Config, isStrictParsingEnabled))
         .def("setStrictParsingEnabled", &Config::setStrictParsingEnabled, "enabled"_a,
              DOC(Config, setStrictParsingEnabled))
+        .def("getUseDisplayAliases", &Config::getUseDisplayAliases,
+             DOC(Config, getUseDisplayAliases))
+        .def("setUseDisplayAliases", &Config::setUseDisplayAliases, "enabled"_a,
+             DOC(Config, setUseDisplayAliases))
         .def("setInactiveColorSpaces", &Config::setInactiveColorSpaces, "inactiveColorSpaces"_a,
              DOC(Config, setInactiveColorSpaces))
         .def("getInactiveColorSpaces", &Config::getInactiveColorSpaces, 
@@ -408,11 +419,13 @@ void bindPyConfig(py::module & m)
                                const char *,
                                const char *,
                                const char *,
-                               const char *)) &Config::addSharedView,
-             "view"_a, "viewTransformName"_a, "colorSpaceName"_a, 
+                               const char *,
+                               const std::vector<std::string> &)) &Config::addSharedView,
+             "view"_a, "viewTransformName"_a, "colorSpaceName"_a,
              "looks"_a = "",
-             "ruleName"_a = "", 
-             "description"_a = "", 
+             "ruleName"_a = "",
+             "description"_a = "",
+             "aliases"_a = std::vector<std::string>(),
              DOC(Config, addSharedView))
         .def("removeSharedView", &Config::removeSharedView, "view"_a, 
              DOC(Config, removeSharedView))
@@ -432,6 +445,12 @@ void bindPyConfig(py::module & m)
             { 
                 return DisplayAllIterator(self); 
             })
+        .def("getCanonicalDisplayName", &Config::getCanonicalDisplayName, "display"_a,
+             DOC(Config, getCanonicalDisplayName))
+        .def("getDisplayDescription", &Config::getDisplayDescription, "display"_a,
+             DOC(Config, getDisplayDescription))
+        .def("getCanonicalViewName", &Config::getCanonicalViewName, "display"_a, "view"_a,
+             DOC(Config, getCanonicalViewName))
         .def("getDefaultView",
              (const char * (Config::*)(const char *) const)
              &Config::getDefaultView, "display"_a, 
@@ -463,6 +482,18 @@ void bindPyConfig(py::module & m)
         .def("getDisplayViewColorSpaceName", &Config::getDisplayViewColorSpaceName, 
              "display"_a, "view"_a, 
              DOC(Config, getDisplayViewColorSpaceName))
+        .def("getResolvedDisplayViewColorSpaceName", &Config::getResolvedDisplayViewColorSpaceName,
+             "display"_a, "view"_a,
+             DOC(Config, getResolvedDisplayViewColorSpaceName))
+        .def("getDisplayViewAliases", [](ConfigRcPtr & self,
+                                         const std::string & display, const std::string & view)
+            {
+                return DisplayViewAliasIterator(self, display, view);
+            },
+            "display"_a, "view"_a)
+        .def("hasDisplayViewAlias", &Config::hasDisplayViewAlias,
+             "display"_a, "view"_a, "alias"_a,
+             DOC(Config, hasDisplayViewAlias))
         .def("getDisplayViewLooks", &Config::getDisplayViewLooks, "display"_a, "view"_a, 
              DOC(Config, getDisplayViewLooks))
         .def("getDisplayViewRule", &Config::getDisplayViewRule, "display"_a, "view"_a, 
@@ -479,18 +510,20 @@ void bindPyConfig(py::module & m)
              "display"_a, "view"_a, "colorSpaceName"_a, 
              "looks"_a = "", 
              DOC(Config, addDisplayView))
-        .def("addDisplayView", 
-             (void (Config::*)(const char *, 
-                               const char *, 
-                               const char *, 
-                               const char *, 
+        .def("addDisplayView",
+             (void (Config::*)(const char *,
                                const char *,
                                const char *,
-                               const char *)) &Config::addDisplayView, 
-             "display"_a, "view"_a, "viewTransform"_a, "displayColorSpaceName"_a, 
+                               const char *,
+                               const char *,
+                               const char *,
+                               const char *,
+                               const std::vector<std::string> &)) &Config::addDisplayView,
+             "display"_a, "view"_a, "viewTransform"_a, "displayColorSpaceName"_a,
              "looks"_a = "",
-             "ruleName"_a = "", 
-             "description"_a = "", 
+             "ruleName"_a = "",
+             "description"_a = "",
+             "aliases"_a = std::vector<std::string>(),
              DOC(Config, addDisplayView))
         .def("isViewShared", &Config::isViewShared, "display"_a, "view"_a,
              DOC(Config, isViewShared))
@@ -1292,6 +1325,29 @@ void bindPyConfig(py::module & m)
                                                            std::get<1>(it.m_args).c_str()));
                 return it.m_obj->getView(std::get<0>(it.m_args),
                                          std::get<1>(it.m_args).c_str(), i);
+            });
+
+    clsDisplayViewAliasIterator
+        .def("__len__", [](DisplayViewAliasIterator & it)
+                        { return it.m_obj->getNumDisplayViewAliases(std::get<0>(it.m_args).c_str(),
+                                                                    std::get<1>(it.m_args).c_str()); })
+        .def("__getitem__", [](DisplayViewAliasIterator & it, int i)
+            {
+                it.checkIndex(i, it.m_obj->getNumDisplayViewAliases(std::get<0>(it.m_args).c_str(),
+                                                                    std::get<1>(it.m_args).c_str()));
+                return it.m_obj->getDisplayViewAlias(std::get<0>(it.m_args).c_str(),
+                                                     std::get<1>(it.m_args).c_str(), i);
+            })
+        .def("__iter__", [](DisplayViewAliasIterator & it) -> DisplayViewAliasIterator &
+            {
+                return it;
+            })
+        .def("__next__", [](DisplayViewAliasIterator & it)
+            {
+                int i = it.nextIndex(it.m_obj->getNumDisplayViewAliases(std::get<0>(it.m_args).c_str(),
+                                                                        std::get<1>(it.m_args).c_str()));
+                return it.m_obj->getDisplayViewAlias(std::get<0>(it.m_args).c_str(),
+                                                     std::get<1>(it.m_args).c_str(), i);
             });
 
     clsActiveDisplaysListIterator

@@ -6622,7 +6622,9 @@ OCIO_ADD_TEST(Config, inactive_color_space_read_write)
 OCIO_ADD_TEST(Config, get_processor_from_two_configs)
 {
     constexpr const char * SIMPLE_CONFIG1{ R"(
-ocio_profile_version: 2
+ocio_profile_version: 2.6
+
+use_display_aliases: true
 
 environment:
   {}
@@ -6631,17 +6633,27 @@ roles:
   default: raw1
   aces_interchange: aces1
   cie_xyz_d65_interchange: display1
+  color_timing: raw1
+  compositing_log: raw1
+  scene_linear: aces1
 
 displays:
   displayname:
     - !<View> {name: view1, colorspace: displaytest1}
-    - !<View> {name: view2, view_transform: vt1, display_colorspace: display2}
+    - !<View> {name: view2, view_transform: vt1, display_colorspace: displayname,
+               aliases: [oldview2]}
     - !<View> {name: view3, colorspace: data_space}
+    - !<View> {name: view4, view_transform: vt2, display_colorspace: <USE_DISPLAY_NAME>,
+               aliases: [oldview4]}
 
 view_transforms:
   - !<ViewTransform>
     name: vt1
     from_scene_reference: !<RangeTransform> {min_in_value: 0., min_out_value: 0.}
+
+  - !<ViewTransform>
+    name: vt2
+    from_scene_reference: !<MatrixTransform> {offset: [0.02, 0.03, 0.04, 0]}
 
 colorspaces:
   - !<ColorSpace>
@@ -6677,6 +6689,12 @@ display_colorspaces:
     name: display2
     allocation: uniform
     from_display_reference: !<FixedFunctionTransform> {style: ACES_RedMod03}
+
+  - !<ColorSpace>
+    name: displayname
+    aliases: [olddisplayname]
+    allocation: uniform
+    from_display_reference: !<ExposureContrastTransform> {style: linear, exposure: 1.5}
 
 )" };
 
@@ -6876,10 +6894,61 @@ display_colorspaces:
     r3 = OCIO_DYNAMIC_POINTER_CAST<OCIO::RangeTransform>(t3);
     OCIO_CHECK_ASSERT(r3);
     t4 = group->getTransform(4);
-    auto ff4 = OCIO_DYNAMIC_POINTER_CAST<OCIO::FixedFunctionTransform>(t4);
-    OCIO_CHECK_ASSERT(ff4);
+    auto l4 = OCIO_DYNAMIC_POINTER_CAST<OCIO::ExposureContrastTransform>(t4);
+    OCIO_CHECK_ASSERT(l4);
+
+    // Test that aliases for display and view names work.
+
+    // Basic test using aliased display and view names.
+    OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessorFromConfigs(
+        config2, "test2", "aces2", config1, "olddisplayname", "oldview2", "aces1",
+        OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_ASSERT(p);
+    group = p->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 5);
+
+    // Test that the fallback works with just the single config getProcessor too. The result
+    // goes through "displayname" itself (a ECTransform), confirming the resolved view actually
+    // belongs with the resolved display.
+    OCIO_CHECK_NO_THROW(p = config1->getProcessor("aces1", "olddisplayname", "oldview2",
+        OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_ASSERT(p);
+    group = p->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 3);
+    t0 = group->getTransform(0);
+    OCIO_CHECK_ASSERT(OCIO_DYNAMIC_POINTER_CAST<OCIO::ExponentTransform>(t0));
+    t1 = group->getTransform(1);
+    OCIO_CHECK_ASSERT(OCIO_DYNAMIC_POINTER_CAST<OCIO::RangeTransform>(t1));
+    t2 = group->getTransform(2);
+    OCIO_CHECK_ASSERT(OCIO_DYNAMIC_POINTER_CAST<OCIO::ExposureContrastTransform>(t2));
+
+    // Verify that <USE_DISPLAY_NAME> substitution happens.
+    OCIO_CHECK_NO_THROW(p = config1->getProcessor("aces1", "displayname", "oldview4",
+        OCIO::TRANSFORM_DIR_FORWARD));
+    OCIO_REQUIRE_ASSERT(p);
+    group = p->createGroupTransform();
+    OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 3);
+    t0 = group->getTransform(0);
+    OCIO_CHECK_ASSERT(OCIO_DYNAMIC_POINTER_CAST<OCIO::ExponentTransform>(t0));
+    t1 = group->getTransform(1);
+    OCIO_CHECK_ASSERT(OCIO_DYNAMIC_POINTER_CAST<OCIO::MatrixTransform>(t1));
+    t2 = group->getTransform(2);
+    OCIO_CHECK_ASSERT(OCIO_DYNAMIC_POINTER_CAST<OCIO::ExposureContrastTransform>(t2));
+
+    // Turn off display aliasing and ensure the result now throws. (View alias resolution is
+    // always active, but the display fails to resolve.)
+    {
+        OCIO::ConfigRcPtr config1NoFallback = config1->createEditableCopy();
+        config1NoFallback->setUseDisplayAliases(false);
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::GetProcessorFromConfigs(
+            config2, "test2", "aces2", config1NoFallback, "olddisplayname", "oldview2", "aces1",
+            OCIO::TRANSFORM_DIR_FORWARD),
+            OCIO::Exception,
+            "DisplayViewTransform error. Display 'olddisplayname' not found.");
+    }
 
     // If one of the spaces is a data space, the whole result must be a no-op.
+
     OCIO_CHECK_NO_THROW(p = OCIO::Config::GetProcessorFromConfigs(
         config2, "test2", config1, "displayname", "view3", OCIO::TRANSFORM_DIR_FORWARD));
     OCIO_REQUIRE_ASSERT(p);
@@ -7343,6 +7412,710 @@ colorspaces:
                           OCIO::Exception, "a non-empty color space name is needed");
 }
 
+namespace
+{
+// Checks that a (display, view) pair's aliases, as returned by Config::getDisplayViewAlias
+// match the expected value, preserving order.
+void CheckDisplayViewAliases(const OCIO::ConstConfigRcPtr & config, const char * display,
+                             const char * view, const StringUtils::StringVec & expected,
+                             int line)
+{
+    OCIO_REQUIRE_EQUAL_FROM(config->getNumDisplayViewAliases(display, view),
+                           (int)expected.size(), line);
+    for (size_t i = 0; i < expected.size(); i++)
+    {
+        OCIO_CHECK_EQUAL_FROM(std::string(config->getDisplayViewAlias(display, view, (int)i)),
+                             expected[i], line);
+    }
+}
+} // namespace
+
+OCIO_ADD_TEST(Config, view_aliases)
+{
+    // Views (display-defined or shared) may have their own aliases, set directly via
+    // Config::addDisplayView/addSharedView, and queried via Config::getDisplayViewAlias and
+    // Config::hasDisplayViewAlias. This test covers that machinery: setting aliases, querying
+    // them, keeping them unambiguous, requiring config version 2.6, and surviving a YAML
+    // serialize/reload round-trip. See the aliased_view_name test below for how aliases are
+    // resolved by Config::getCanonicalViewName.
+
+    constexpr const char * SIMPLE_CONFIG{ R"(
+ocio_profile_version: 2.6
+
+roles:
+  default: ref1
+  aces_interchange: ref1
+  color_timing: ref1
+  compositing_log: ref1
+  scene_linear: ref1
+
+shared_views:
+  - !<View> {name: sview, colorspace: ref1, aliases: [sv_alias]}
+
+displays:
+  display1:
+    - !<View> {name: view1, colorspace: ref1, aliases: [v1_alias2, v1_alias]}
+    - !<View> {name: view2, colorspace: cs1}
+    - !<Views> [sview]
+  display2:
+    - !<View> {name: view3, colorspace: ref1, aliases: [v1_alias]}
+    - !<Views> [sview]
+
+colorspaces:
+  - !<ColorSpace>
+    name: ref1
+
+  - !<ColorSpace>
+    name: cs1
+)" };
+
+    std::istringstream is;
+    is.str(SIMPLE_CONFIG);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+
+    // Test getNumDisplayViewAliases/getDisplayViewAlias return the aliases in view order.
+    CheckDisplayViewAliases(config, "display1", "view1", { "v1_alias2", "v1_alias" }, __LINE__);
+    // A view with no aliases, an unknown view, or an unknown display all return none.
+    CheckDisplayViewAliases(config, "display1", "view2", {}, __LINE__);
+    CheckDisplayViewAliases(config, "display1", "not_a_view", {}, __LINE__);
+    CheckDisplayViewAliases(config, "not_a_display", "view1", {}, __LINE__);
+
+    // A null/empty display means look up the view among the config's shared views, following
+    // the same convention as some of the other getters.
+    CheckDisplayViewAliases(config, nullptr, "sview", { "sv_alias" }, __LINE__);
+    CheckDisplayViewAliases(config, "", "sview", { "sv_alias" }, __LINE__);
+
+    // Test hasDisplayViewAlias convenience method.
+    OCIO_CHECK_ASSERT(config->hasDisplayViewAlias("display1", "view1", "v1_alias"));
+    OCIO_CHECK_ASSERT(!config->hasDisplayViewAlias("display1", "view1", "not_an_alias"));
+    OCIO_CHECK_ASSERT(config->hasDisplayViewAlias(nullptr, "sview", "sv_alias"));
+
+    // Aliases only need to be unique among the views used by a single display, so the same
+    // alias string ("v1_alias") can be reused by an unrelated view in a different display.
+    OCIO_CHECK_ASSERT(config->hasDisplayViewAlias("display2", "view3", "v1_alias"));
+
+    // Aliases containing a comma must be quoted in the Yaml, e.g., similar to how the
+    // active_views list works.
+    {
+        OCIO::ConfigRcPtr edit = config->createEditableCopy();
+        OCIO_CHECK_NO_THROW(edit->addDisplayView("display1", "view4", nullptr, "ref1", "", "", "",
+                                                 { "a,b", "plain" }));
+        CheckDisplayViewAliases(edit, "display1", "view4", { "a,b", "plain" }, __LINE__);
+        OCIO_CHECK_ASSERT(edit->hasDisplayViewAlias("display1", "view4", "a,b"));
+        OCIO_CHECK_ASSERT(edit->hasDisplayViewAlias("display1", "view4", "plain"));
+
+        // The comma-containing alias survives a YAML serialize / reload round-trip, quoted as
+        // needed by the YAML emitter so that it stays a single flow-sequence entry rather than
+        // being split into two.
+        std::ostringstream os;
+        edit->serialize(os);
+
+        std::istringstream reloadStream;
+        reloadStream.str(os.str());
+        OCIO::ConstConfigRcPtr reloaded;
+        OCIO_CHECK_NO_THROW(reloaded = OCIO::Config::CreateFromStream(reloadStream));
+        OCIO_CHECK_NO_THROW(reloaded->validate());
+
+        CheckDisplayViewAliases(reloaded, "display1", "view4", { "a,b", "plain" }, __LINE__);
+        OCIO_CHECK_ASSERT(reloaded->hasDisplayViewAlias("display1", "view4", "a,b"));
+        OCIO_CHECK_ASSERT(reloaded->hasDisplayViewAlias("display1", "view4", "plain"));
+
+        // The other, comma-free aliases also survive the round-trip.
+        CheckDisplayViewAliases(reloaded, "display1", "view1", { "v1_alias2", "v1_alias" },
+                                __LINE__);
+        CheckDisplayViewAliases(reloaded, nullptr, "sview", { "sv_alias" }, __LINE__);
+    }
+
+    // A view's alias must not collide with the name or alias of another view used by the same
+    // display, whether display-defined or a referenced shared view. This is checked as soon as
+    // the collision would occur.
+    {
+        OCIO::ConfigRcPtr edit = config->createEditableCopy();
+
+        // Collides with view1's alias in display1.
+        OCIO_CHECK_THROW_WHAT(
+            edit->addDisplayView("display1", "view4", nullptr, "ref1", "", "", "", { "v1_alias" }),
+            OCIO::Exception, "already used as the name or alias");
+
+        // Collides with the "sview" shared view's alias, which display1 references.
+        OCIO_CHECK_THROW_WHAT(
+            edit->addDisplayView("display1", "view4", nullptr, "ref1", "", "", "", { "sv_alias" }),
+            OCIO::Exception, "already used as the name or alias");
+
+        // No collision in display2, since display2 does not use view1 or its aliases.
+        OCIO_CHECK_NO_THROW(
+            edit->addDisplayView("display2", "view4", nullptr, "ref1", "", "", "", { "v1_alias2" }));
+
+        // A shared view's alias must not collide with another shared view's name or alias,
+        // regardless of which displays reference either of them (this keeps shared views
+        // unambiguous when looked up directly, e.g. via a null display argument).
+        OCIO_CHECK_THROW_WHAT(edit->addSharedView("sview2", nullptr, "ref1", "", "", "",
+                                                  { "sv_alias" }),
+                              OCIO::Exception, "already used as the name or alias");
+
+        // Linking an existing shared view to a display is also checked against that display's
+        // own views.
+        OCIO_CHECK_NO_THROW(edit->addDisplayView("display3", "view5", "ref1", ""));
+        OCIO_CHECK_NO_THROW(
+            edit->addDisplayView("display3", "view5", nullptr, "ref1", "", "", "", { "sv_alias" }));
+        OCIO_CHECK_THROW_WHAT(edit->addDisplaySharedView("display3", "sview"), OCIO::Exception,
+                              "already used as the name or alias");
+    }
+
+    // Defensive backstop: addSharedView can replace an already-linked shared view's aliases,
+    // and that call has no way to know which displays currently reference it, so this
+    // particular collision is only caught later, when the config is validated.
+    {
+        OCIO::ConfigRcPtr edit = config->createEditableCopy();
+        OCIO_CHECK_NO_THROW(edit->addDisplayView("display3", "view5", "ref1", ""));
+        OCIO_CHECK_NO_THROW(edit->addDisplaySharedView("display3", "sview"));
+
+        // No collision yet: "view5" has no alias, and "sview"'s alias is "sv_alias".
+        OCIO_CHECK_NO_THROW(edit->validate());
+
+        // Redefine "sview" so its alias now collides with "view5" in display3. addSharedView
+        // does not throw, since it only checks against sibling shared views.
+        OCIO_CHECK_NO_THROW(edit->addSharedView("sview", nullptr, "ref1", "", "", "", { "view5" }));
+        OCIO_CHECK_THROW_WHAT(edit->validate(), OCIO::Exception, "collides with the name or "
+                              "alias");
+    }
+
+    // View aliases require ocio_profile_version 2.6 or higher.
+    {
+        constexpr const char * OLD_CONFIG{ R"(
+ocio_profile_version: 2.5
+
+roles:
+  default: ref1
+  aces_interchange: ref1
+  color_timing: ref1
+  compositing_log: ref1
+  scene_linear: ref1
+
+colorspaces:
+  - !<ColorSpace>
+    name: ref1
+
+displays:
+  disp:
+    - !<View> {name: view1, colorspace: ref1}
+)" };
+        std::istringstream isOld;
+        isOld.str(OLD_CONFIG);
+        OCIO::ConfigRcPtr oldConfig;
+        OCIO_CHECK_NO_THROW(
+            oldConfig = OCIO::Config::CreateFromStream(isOld)->createEditableCopy());
+        OCIO_CHECK_NO_THROW(
+            oldConfig->addDisplayView("disp", "view1", nullptr, "ref1", "", "", "", { "alias1" }));
+        OCIO_CHECK_THROW_WHAT(oldConfig->validate(), OCIO::Exception, "less than 2.6");
+    }
+
+    // Test aliases in virtual displays.
+    {
+        OCIO::ConfigRcPtr edit = config->createEditableCopy();
+
+        // A virtual display may reference a shared view that has aliases ("sview" has the
+        // alias "sv_alias").
+        OCIO_CHECK_NO_THROW(edit->addVirtualDisplaySharedView("sview"));
+        OCIO_REQUIRE_EQUAL(edit->getVirtualDisplayNumViews(OCIO::VIEW_SHARED), 1);
+        OCIO_CHECK_EQUAL(std::string(edit->getVirtualDisplayView(OCIO::VIEW_SHARED, 0)), "sview");
+        OCIO_CHECK_ASSERT(edit->hasDisplayViewAlias(nullptr, "sview", "sv_alias"));
+        OCIO_CHECK_NO_THROW(edit->validate());
+
+        // The virtual display's reference to a shared view with an alias survives a
+        // serialize/reload round-trip without throwing.
+        std::ostringstream osRoundTrip;
+        edit->serialize(osRoundTrip);
+        std::istringstream roundTripStream;
+        roundTripStream.str(osRoundTrip.str());
+        OCIO_CHECK_NO_THROW(OCIO::Config::CreateFromStream(roundTripStream));
+
+        // But aliases on display-defined views on a virtual display are not supported.
+        // Validate that a hand-edited config file will throw if it tries to use them.
+
+        // Config::addVirtualDisplayView has no aliases argument, so an alias is injected into
+        // the serialized YAML to exercise the parser's check.
+        OCIO_CHECK_NO_THROW(edit->addVirtualDisplayView("vview", nullptr, "ref1", "", "", ""));
+
+        std::ostringstream os;
+        edit->serialize(os);
+        const std::string configStr = StringUtils::Replace(
+            os.str(), "name: vview, colorspace: ref1}",
+            "name: vview, colorspace: ref1, aliases: [vv_alias]}");
+
+        std::istringstream reloadStream;
+        reloadStream.str(configStr);
+        OCIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(reloadStream), OCIO::Exception,
+                              "Aliases are not supported for virtual display views.");
+    }
+}
+
+OCIO_ADD_TEST(Config, aliased_view_name)
+{
+    // Test that Config::getCanonicalViewName resolves a view by one of its aliases. Unlike
+    // display name aliasing (see the aliased_display_name test below), this resolution is
+    // always active, i.e. it does not depend on Config::getUseDisplayAliases. See the
+    // view_aliases test above for the machinery of setting and querying view aliases.
+
+    constexpr const char * SIMPLE_CONFIG{ R"(
+ocio_profile_version: 2.6
+
+roles:
+  default: ref1
+  aces_interchange: ref1
+  color_timing: ref1
+  compositing_log: ref1
+  scene_linear: ref1
+
+shared_views:
+  - !<View> {name: sview, colorspace: ref1, aliases: [sv_alias]}
+
+displays:
+  display1:
+    - !<View> {name: view1, colorspace: ref1, aliases: [v1_alias, v1_alias2]}
+    - !<View> {name: view2, colorspace: cs1}
+    - !<Views> [sview]
+  display2:
+    - !<View> {name: view3, colorspace: ref1, aliases: [v1_alias]}
+    - !<Views> [sview]
+  act_display:
+    - !<View> {name: act_view, colorspace: cs1}
+
+# The view aliasing works even if the display and/or view are inactive.
+active_displays: [act_display]
+active_views: [act_view]
+
+colorspaces:
+  - !<ColorSpace>
+    name: ref1
+
+  - !<ColorSpace>
+    name: cs1
+)" };
+
+    std::istringstream is;
+    is.str(SIMPLE_CONFIG);
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+
+    // Alias resolution is always active, regardless of getUseDisplayAliases (which only
+    // gates display name aliasing).
+    OCIO_CHECK_ASSERT(!config->getUseDisplayAliases());
+
+    // Resolve a display-defined view by one of its aliases.
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalViewName("display1", "v1_alias")), "view1");
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalViewName("display1", "v1_alias2")), "view1");
+
+    // Resolve a shared view by its alias, through either display that references it.
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalViewName("display1", "sv_alias")), "sview");
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalViewName("display2", "sv_alias")), "sview");
+
+    // Aliases only need to be unique among the views used by a single display, so the same
+    // alias string ("v1_alias") can be reused by an unrelated view in a different display.
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalViewName("display2", "v1_alias")), "view3");
+
+    // An exact view name always takes priority and needs no alias resolution.
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalViewName("display1", "view2")), "view2");
+
+    // No match at all: unknown alias, unknown display, or empty/null arguments.
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalViewName("display1", "not_a_view")), "");
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalViewName("not_a_display", "v1_alias")), "");
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalViewName("display1", "")), "");
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalViewName("display1", nullptr)), "");
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalViewName("", "view1")), "");
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalViewName(nullptr, "view1")), "");
+
+    // A comma-containing alias also resolves.
+    {
+        OCIO::ConfigRcPtr edit = config->createEditableCopy();
+        OCIO_CHECK_NO_THROW(edit->addDisplayView("display1", "view4", nullptr, "ref1", "", "", "",
+                                                 { "a,b", "plain" }));
+        OCIO_CHECK_EQUAL(std::string(edit->getCanonicalViewName("display1", "a,b")), "view4");
+    }
+
+    // Unlike getCanonicalViewName, the other Config methods that take a view name are not meant
+    // to resolve it against a view alias. These functions are meant to tell exactly what the
+    // Config object contains, which would become less clear if they resolved aliases.
+    OCIO_CHECK_ASSERT(config->hasView("display1", "view1"));
+    OCIO_CHECK_ASSERT(!config->hasView("display1", "v1_alias"));
+
+    OCIO_CHECK_EQUAL(std::string(config->getDisplayViewTransformName("display1", "v1_alias")), "");
+    OCIO_CHECK_EQUAL(std::string(config->getDisplayViewColorSpaceName("display1", "v1_alias")), "");
+    OCIO_CHECK_EQUAL(std::string(config->getDisplayViewLooks("display1", "v1_alias")), "");
+    OCIO_CHECK_EQUAL(std::string(config->getDisplayViewRule("display1", "v1_alias")), "");
+    OCIO_CHECK_EQUAL(std::string(config->getDisplayViewDescription("display1", "v1_alias")), "");
+
+    OCIO::ConfigRcPtr configEdit = config->createEditableCopy();
+    OCIO_CHECK_THROW_WHAT(configEdit->removeDisplayView("display1", "v1_alias"), OCIO::Exception,
+                          "Could not find a view named 'v1_alias");
+
+    // Aliases may not be used in the active_views list.
+    {
+        OCIO::ConfigRcPtr edit = config->createEditableCopy();
+        OCIO_REQUIRE_EQUAL(edit->getNumViews("display1"), 3);
+        OCIO_CHECK_NO_THROW(edit->setActiveViews("v1_alias"));
+        // Has no effect.
+        OCIO_REQUIRE_EQUAL(edit->getNumViews("display1"), 3);
+        OCIO_CHECK_EQUAL(std::string(edit->getView("display1", 0)), "view1");
+        OCIO_CHECK_EQUAL(std::string(edit->getView("display1", 1)), "view2");
+        OCIO_CHECK_EQUAL(std::string(edit->getView("display1", 2)), "sview");
+        // Note: Config validation currently does not validate active_views,
+        // so that is not something that could be tested here.
+    }
+}
+
+OCIO_ADD_TEST(Config, aliased_display_name)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setVersion(2, 6);
+
+    auto raw = OCIO::ColorSpace::Create();
+    raw->setName("raw");
+    config->addColorSpace(raw);
+
+    // The display color space associated with the "sRGB - Display" display keeps the display's
+    // old name, "sRGB", as an alias.
+    auto dcs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_DISPLAY);
+    dcs->setName("sRGB - Display");
+    dcs->addAlias("sRGB");
+    config->addColorSpace(dcs);
+
+    OCIO_CHECK_NO_THROW(config->addDisplayView("sRGB - Display", "view1", "raw", ""));
+
+    // Exact, case-insensitive match.
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalDisplayName("sRGB - Display")),
+                     "sRGB - Display");
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalDisplayName("srgb - display")),
+                     "sRGB - Display");
+
+    // Display aliasing is opt-in and disabled by default.
+    OCIO_CHECK_ASSERT(!config->getUseDisplayAliases());
+    config->setUseDisplayAliases(true);
+
+    // Resolving via the display color space's alias also requires that the display actually use
+    // that color space in one of its views. So far "sRGB - Display" only has view1, whose color
+    // space is "raw", so there is no connection to the display color space and the match fails.
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalDisplayName("sRGB")), "");
+
+    // Add a view that uses the display color space itself, satisfying that requirement.
+    OCIO_CHECK_NO_THROW(config->addDisplayView("sRGB - Display", "view2", "sRGB - Display", ""));
+    // Now the alias works.
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalDisplayName("sRGB")), "sRGB - Display");
+
+    // Remove that view, the alias no longer works.
+    OCIO_CHECK_NO_THROW(config->removeDisplayView("sRGB - Display", "view2"));
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalDisplayName("sRGB")), "");
+
+    // Now test that a shared view that uses <USE_DISPLAY_NAME> is sufficient to establish
+    // a connection between the display and a display color space.
+    auto vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_SCENE);
+    vt->setName("vt1");
+    OCIO_CHECK_NO_THROW(vt->setTransform(OCIO::MatrixTransform::Create(),
+                                         OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
+    OCIO_CHECK_NO_THROW(config->addViewTransform(vt));
+    OCIO_CHECK_NO_THROW(config->addSharedView("sview", "vt1", "<USE_DISPLAY_NAME>", "", "", ""));
+    OCIO_CHECK_NO_THROW(config->addDisplaySharedView("sRGB - Display", "sview"));
+    // The alias works again.
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalDisplayName("sRGB")), "sRGB - Display");
+
+    // If there is a display named "sRGB" added, make sure it returns that one.
+    OCIO_CHECK_NO_THROW(config->addDisplayView("sRGB", "view1", "raw", ""));
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalDisplayName("sRGB")), "sRGB");
+    OCIO_CHECK_NO_THROW(config->removeDisplayView("sRGB", "view1"));
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalDisplayName("sRGB")), "sRGB - Display");
+
+    // If the display color space's own name doesn't match any display, its aliases are tried
+    // too. Here the name of "other_dcs" matches no display, but one of its aliases does.
+    OCIO_CHECK_NO_THROW(config->addDisplayView("AliasedDisplay", "view1", "raw", ""));
+    auto otherDcs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_DISPLAY);
+    otherDcs->setName("other_dcs");
+    otherDcs->addAlias("AliasedDisplay");
+    otherDcs->addAlias("other_alias");
+    otherDcs->addAlias("another_alias");
+    OCIO_CHECK_NO_THROW(config->addColorSpace(otherDcs));
+
+    // As above, the name match alone isn't enough: "AliasedDisplay" only has view1, whose
+    // colorspace is "raw", so it isn't yet found to be using "other_dcs".
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalDisplayName("other_dcs")), "");
+
+    // Add a view that uses the display color space, satisfying that requirement. Note that
+    // the display_colorspace may resolve via an alias of the display color space.
+    OCIO_CHECK_NO_THROW(config->addDisplayView("AliasedDisplay", "view2", "other_alias", ""));
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalDisplayName("other_dcs")), "AliasedDisplay");
+
+    // Any alias of other_dcs will find the AliasedDisplay.
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalDisplayName("another_alias")), "AliasedDisplay");
+
+    // Don't resolve against role names.
+    OCIO_CHECK_NO_THROW(config->setRole("display_role", "sRGB - Display"));
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalDisplayName("display_role")), "");
+    config->setRole("display_role", nullptr);
+
+    // The fallback is opt-in.
+    config->setUseDisplayAliases(false);
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalDisplayName("sRGB")), "");
+    config->setUseDisplayAliases(true);
+
+    // The alias resolution still works even if the display being found is not part of the
+    // active_displays list.
+    OCIO_CHECK_NO_THROW(config->setActiveDisplays("not_a_real_display"));
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalDisplayName("sRGB")), "sRGB - Display");
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalDisplayName("other_dcs")), "AliasedDisplay");
+    config->clearActiveDisplays();
+
+    // It also still works even if the display color space is in the inactive_colorspaces list.
+    OCIO_CHECK_NO_THROW(config->setInactiveColorSpaces("sRGB - Display, other_dcs"));
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalDisplayName("sRGB")), "sRGB - Display");
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalDisplayName("other_dcs")), "AliasedDisplay");
+    config->setInactiveColorSpaces("");
+
+    // No match at all, and null/empty input.
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalDisplayName("does not exist")), "");
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalDisplayName("")), "");
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalDisplayName(nullptr)), "");
+
+    // Unlike getCanonicalDisplayName, the other Config methods that take a display name are not
+    // meant to resolve it via the display color space alias fallback. These functions are meant
+    // to tell exactly what the Config object contains, which would become less clear if they
+    // resolved aliases.
+    OCIO_CHECK_EQUAL(config->getNumViews("sRGB"), 0);
+    OCIO_CHECK_ASSERT(!config->hasView("sRGB", "view1"));
+    OCIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB")), "");
+    OCIO_CHECK_EQUAL(std::string(config->getView("sRGB", 0)), "");
+    OCIO_CHECK_EQUAL(std::string(config->getDisplayViewColorSpaceName("sRGB", "view1")), "");
+    OCIO_CHECK_EQUAL(std::string(config->getDisplayViewTransformName("sRGB", "view1")), "");
+
+    OCIO_CHECK_THROW_WHAT(config->removeDisplayView("sRGB", "view1"), OCIO::Exception,
+                          "Could not find a display named 'sRGB'");
+
+    // Replace the display color space with a scene-referred one of the same name, keeping the
+    // same "sRGB" alias. Since it is no longer display-referred, "sRGB" must no longer resolve
+    // to the display, even though the color space's canonical name still matches it exactly.
+    auto scs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
+    scs->setName("sRGB - Display");
+    scs->addAlias("sRGB");
+    config->addColorSpace(scs);
+
+    OCIO_CHECK_EQUAL(std::string(config->getCanonicalDisplayName("sRGB")), "");
+}
+
+OCIO_ADD_TEST(Config, active_display_alias)
+{
+    // Aliases may not be used in the active_displays list.
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(
+        config = OCIO::Config::CreateFromBuiltinConfig("cg-config-v4.0.0_aces-v2.0_ocio-v2.5")
+    );
+    OCIO_REQUIRE_ASSERT(config);
+
+    OCIO::ConfigRcPtr edit = config->createEditableCopy();
+    edit->setVersion(2, 6);
+    edit->setUseDisplayAliases(true);
+
+    // "srgb_rec709_display" is an alias of the "sRGB - Display" display color space, and
+    // resolves to the "sRGB - Display" display.
+    OCIO_CHECK_EQUAL(std::string(edit->getCanonicalDisplayName("srgb_rec709_display")),
+                     "sRGB - Display");
+
+    OCIO_REQUIRE_EQUAL(edit->getNumDisplays(), 8);
+    OCIO_CHECK_NO_THROW(edit->setActiveDisplays("srgb_rec709_display"));
+    // It has no effect, there are still eight displays.
+    OCIO_REQUIRE_EQUAL(edit->getNumDisplays(), 8);
+    OCIO_CHECK_THROW_WHAT(edit->validate(), OCIO::Exception,
+                          "The list of active displays [srgb_rec709_display] from the config "
+                          "file is invalid.");
+}
+
+OCIO_ADD_TEST(Config, display_description)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setVersion(2, 6);
+
+    auto raw = OCIO::ColorSpace::Create();
+    raw->setName("raw");
+    config->addColorSpace(raw);
+
+    auto dcs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_DISPLAY);
+    dcs->setName("sRGB - Display");
+    dcs->addAlias("sRGB");
+    dcs->setDescription("The sRGB display.");
+    config->addColorSpace(dcs);
+
+    OCIO_CHECK_NO_THROW(config->addDisplayView("sRGB - Display", "view1", "raw", ""));
+
+    // The name match alone isn't enough: the display must also actually use that color space
+    // in one of its views. So far "sRGB - Display" only has view1, whose color space is "raw",
+    // so there is no connection to the display color space and the match fails, even though it
+    // is an exact name match.
+    OCIO_CHECK_ASSERT(!config->getUseDisplayAliases());
+    OCIO_CHECK_EQUAL(std::string(config->getDisplayDescription("sRGB - Display")), "");
+
+    // Add a view that uses the display color space itself, satisfying that requirement.
+    OCIO_CHECK_NO_THROW(config->addDisplayView("sRGB - Display", "view2", "sRGB - Display", ""));
+
+    // Exact match works even though the fallback is disabled by default.
+    OCIO_CHECK_EQUAL(std::string(config->getDisplayDescription("sRGB - Display")),
+                     "The sRGB display.");
+
+    // Matching via the color space's alias requires the switch.
+    OCIO_CHECK_EQUAL(std::string(config->getDisplayDescription("sRGB")), "");
+    config->setUseDisplayAliases(true);
+    OCIO_CHECK_EQUAL(std::string(config->getDisplayDescription("sRGB")), "The sRGB display.");
+
+    // A color space that isn't display-referred doesn't count, even with a matching name and
+    // even though it is actually used by a display's view (so this fails specifically because
+    // it isn't display-referred, not merely because it goes unused).
+    auto scs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_SCENE);
+    scs->setName("scene_cs");
+    scs->setDescription("A scene color space.");
+    config->addColorSpace(scs);
+    OCIO_CHECK_NO_THROW(config->addDisplayView("scene_cs", "view1", "scene_cs", ""));
+    OCIO_CHECK_EQUAL(std::string(config->getDisplayDescription("scene_cs")), "");
+
+    // No color space at all, and null/empty input.
+    OCIO_CHECK_EQUAL(std::string(config->getDisplayDescription("does not exist")), "");
+    OCIO_CHECK_EQUAL(std::string(config->getDisplayDescription("")), "");
+    OCIO_CHECK_EQUAL(std::string(config->getDisplayDescription(nullptr)), "");
+}
+
+OCIO_ADD_TEST(Config, resolved_display_view_color_space_name)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setVersion(2, 6);
+
+    auto raw = OCIO::ColorSpace::Create();
+    raw->setName("raw");
+    config->addColorSpace(raw);
+
+    // The display color space associated with the "sRGB - Display" display keeps the display's
+    // old name, "sRGB", as an alias.
+    auto dcs = OCIO::ColorSpace::Create(OCIO::REFERENCE_SPACE_DISPLAY);
+    dcs->setName("sRGB - Display");
+    dcs->addAlias("sRGB");
+    config->addColorSpace(dcs);
+
+    auto vt = OCIO::ViewTransform::Create(OCIO::REFERENCE_SPACE_SCENE);
+    vt->setName("vt_new");
+    OCIO_CHECK_NO_THROW(vt->setTransform(OCIO::MatrixTransform::Create(),
+                                         OCIO::VIEWTRANSFORM_DIR_FROM_REFERENCE));
+    OCIO_CHECK_NO_THROW(config->addViewTransform(vt));
+
+    // A plain view, with just a color space.
+    OCIO_CHECK_NO_THROW(config->addDisplayView("sRGB - Display", "view1", "raw", ""));
+
+    // A view with a view transform, whose display color space is <USE_DISPLAY_NAME>. It has its
+    // own alias, "view2_old", so getCanonicalViewName can find it from that old name.
+    OCIO_CHECK_NO_THROW(config->addDisplayView("sRGB - Display", "view2", "vt_new",
+                                               "<USE_DISPLAY_NAME>", "", "", "", { "view2_old" }));
+
+    // The plain case behaves like getDisplayViewColorSpaceName.
+    OCIO_CHECK_EQUAL(std::string(config->getResolvedDisplayViewColorSpaceName("sRGB - Display",
+                                                                              "view1")), "raw");
+
+    // <USE_DISPLAY_NAME> is resolved to the display's own display color space, rather than being
+    // returned as the placeholder string. This does not require getUseDisplayAliases.
+    OCIO_CHECK_ASSERT(!config->getUseDisplayAliases());
+    OCIO_CHECK_EQUAL(std::string(config->getDisplayViewColorSpaceName("sRGB - Display", "view2")),
+                     "<USE_DISPLAY_NAME>");
+    OCIO_CHECK_EQUAL(std::string(config->getResolvedDisplayViewColorSpaceName("sRGB - Display",
+                                                                              "view2")),
+                     "sRGB - Display");
+
+    // Resolving a view by one of its own aliases is always active, unlike resolving the display
+    // name, which is opt-in (see getCanonicalDisplayName/getCanonicalViewName).
+    OCIO_CHECK_EQUAL(std::string(config->getResolvedDisplayViewColorSpaceName("sRGB - Display",
+                                                                              "view2_old")),
+                     "sRGB - Display");
+
+    // Resolving the display is opt-in.
+    OCIO_CHECK_EQUAL(std::string(config->getResolvedDisplayViewColorSpaceName("sRGB", "view1")),
+                     "");
+
+    config->setUseDisplayAliases(true);
+
+    // The display is resolved from the old name kept as an alias on its display color space.
+    OCIO_CHECK_EQUAL(std::string(config->getResolvedDisplayViewColorSpaceName("sRGB", "view1")),
+                     "raw");
+
+    // The view is still resolved from its own alias, and the display may be out of date at
+    // the same time.
+    OCIO_CHECK_EQUAL(std::string(config->getResolvedDisplayViewColorSpaceName("sRGB - Display",
+                                                                              "view2_old")),
+                     "sRGB - Display");
+    OCIO_CHECK_EQUAL(std::string(config->getResolvedDisplayViewColorSpaceName("sRGB",
+                                                                              "view2_old")),
+                     "sRGB - Display");
+
+    // A view whose colorspace attribute is an alias of a color space returns the canonical name
+    // of that color space.
+    auto aliased = OCIO::ColorSpace::Create();
+    aliased->setName("cs_new");
+    aliased->addAlias("cs_old");
+    config->addColorSpace(aliased);
+    OCIO_CHECK_NO_THROW(config->addDisplayView("sRGB - Display", "view3", "cs_old", ""));
+    OCIO_CHECK_EQUAL(std::string(config->getDisplayViewColorSpaceName("sRGB - Display", "view3")),
+                     "cs_old");
+    OCIO_CHECK_EQUAL(std::string(config->getResolvedDisplayViewColorSpaceName("sRGB - Display",
+                                                                              "view3")), "cs_new");
+
+    // Likewise for a role.
+    OCIO_CHECK_NO_THROW(config->setRole("cs_role", "cs_new"));
+    OCIO_CHECK_NO_THROW(config->addDisplayView("sRGB - Display", "view4", "cs_role", ""));
+    OCIO_CHECK_EQUAL(std::string(config->getResolvedDisplayViewColorSpaceName("sRGB - Display",
+                                                                              "view4")), "cs_new");
+
+    // A view with no view transform may use a named transform in place of a color space, and
+    // named transforms have aliases too.
+    auto nt = OCIO::NamedTransform::Create();
+    nt->setName("nt_new");
+    nt->addAlias("nt_old");
+    nt->setTransform(OCIO::MatrixTransform::Create(), OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_CHECK_NO_THROW(config->addNamedTransform(nt));
+    OCIO_CHECK_NO_THROW(config->addDisplayView("sRGB - Display", "view5", "nt_old", ""));
+    OCIO_CHECK_EQUAL(std::string(config->getResolvedDisplayViewColorSpaceName("sRGB - Display",
+                                                                              "view5")), "nt_new");
+
+    // A shared view attached to the display is found too, and its <USE_DISPLAY_NAME> resolves to
+    // the display's own color space.
+    OCIO_CHECK_NO_THROW(config->addSharedView("shared1", "vt_new", "<USE_DISPLAY_NAME>",
+                                              "", "", ""));
+    OCIO_CHECK_NO_THROW(config->addDisplaySharedView("sRGB - Display", "shared1"));
+    OCIO_CHECK_EQUAL(std::string(config->getResolvedDisplayViewColorSpaceName("sRGB - Display",
+                                                                              "shared1")),
+                     "sRGB - Display");
+    OCIO_CHECK_EQUAL(std::string(config->getResolvedDisplayViewColorSpaceName("sRGB", "shared1")),
+                     "sRGB - Display");
+
+    // If the color space named after the display doesn't exist, the display name is returned
+    // as-is, so that callers can report which color space they were unable to find.
+    OCIO_CHECK_NO_THROW(config->addDisplayView("no_cs_display", "view1", "vt_new",
+                                               "<USE_DISPLAY_NAME>", "", "", ""));
+    OCIO_CHECK_EQUAL(std::string(config->getResolvedDisplayViewColorSpaceName("no_cs_display",
+                                                                              "view1")),
+                     "no_cs_display");
+
+    // Nonexistent display or view, and null/empty input.
+    OCIO_CHECK_EQUAL(std::string(config->getResolvedDisplayViewColorSpaceName("sRGB - Display",
+                                                                              "not a view")), "");
+    OCIO_CHECK_EQUAL(std::string(config->getResolvedDisplayViewColorSpaceName("not a display",
+                                                                              "view1")), "");
+    OCIO_CHECK_EQUAL(std::string(config->getResolvedDisplayViewColorSpaceName("sRGB - Display",
+                                                                              "")), "");
+    OCIO_CHECK_EQUAL(std::string(config->getResolvedDisplayViewColorSpaceName("sRGB - Display",
+                                                                              nullptr)), "");
+
+    // Unlike getDisplayViewColorSpaceName, an empty display does not mean "look at the
+    // config-level shared views", since a shared view's color space is only meaningful in the
+    // context of a display.
+    OCIO_CHECK_EQUAL(std::string(config->getDisplayViewColorSpaceName("", "shared1")),
+                     "<USE_DISPLAY_NAME>");
+    OCIO_CHECK_EQUAL(std::string(config->getResolvedDisplayViewColorSpaceName("", "shared1")), "");
+    OCIO_CHECK_EQUAL(std::string(config->getResolvedDisplayViewColorSpaceName(nullptr,
+                                                                              "shared1")), "");
+}
+
 OCIO_ADD_TEST(Config, not_case_sensitive)
 {
     // Validate that the color spaces and roles are case insensitive.
@@ -7782,6 +8555,137 @@ OCIO_ADD_TEST(Config, is_colorspace_used)
     OCIO_CHECK_ASSERT(!config->isColorSpaceUsed(nullptr));
     OCIO_CHECK_ASSERT(!config->isColorSpaceUsed(""));
     OCIO_CHECK_ASSERT(!config->isColorSpaceUsed("cs65")); // Unknown color spaces are not used.
+}
+
+OCIO_ADD_TEST(Config, is_colorspace_used_aliases)
+{
+    // Config::isColorSpaceUsed must resolve both the name it is given and each of the names it finds
+    // in the config down to a canonical name before comparing them, since either side may be an
+    // alias or a role rather than the color space's name.
+
+    constexpr char CONFIG[]{ R"(
+ocio_profile_version: 2.6
+
+roles:
+  aces_interchange: raw
+  cie_xyz_d65_interchange: cie_xyz_d65
+  color_timing: raw
+  compositing_log: raw
+  default: default_old
+  scene_linear: raw
+  some_role: role_old
+
+file_rules:
+  - !<Rule> {name: rule1, colorspace: fr_old, pattern: "*", extension: "*"}
+  - !<Rule> {name: Default, colorspace: default}
+
+shared_views:
+  - !<View> {name: shared1, view_transform: vt1, display_colorspace: <USE_DISPLAY_NAME>}
+
+displays:
+  disp1:
+    - !<View> {name: view1, colorspace: view_old}
+  AliasedDisplay:
+    - !<Views> [shared1]
+
+view_transforms:
+  - !<ViewTransform>
+    name: vt1
+    from_scene_reference: !<MatrixTransform> {offset: [0.1, 0.1, 0.1, 0]}
+
+display_colorspaces:
+  - !<ColorSpace>
+    name: other_dcs
+    aliases: [AliasedDisplay]
+    to_display_reference: !<MatrixTransform> {offset: [0.25, 0.15, 0.35, 0]}
+
+  - !<ColorSpace>
+    name: cie_xyz_d65
+
+colorspaces:
+  - !<ColorSpace>
+    name: raw
+    isdata: true
+
+  - !<ColorSpace>
+    name: default_new
+    aliases: [default_old]
+
+  - !<ColorSpace>
+    name: view_new
+    aliases: [view_old]
+
+  - !<ColorSpace>
+    name: role_new
+    aliases: [role_old]
+
+  - !<ColorSpace>
+    name: fr_new
+    aliases: [fr_old]
+
+  - !<ColorSpace>
+    name: unused_new
+    aliases: [unused_old]
+)" };
+
+    std::istringstream iss;
+    iss.str(CONFIG);
+
+    OCIO::ConstConfigRcPtr config;
+    OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(iss));
+    OCIO_CHECK_NO_THROW(config->validate());
+
+    // The display-defined view "view1" refers to "view_new" by its alias. Nothing else in the
+    // config mentions this color space, so the view is the only thing that can make it used.
+    OCIO_CHECK_ASSERT(config->isColorSpaceUsed("view_new"));
+    OCIO_CHECK_ASSERT(config->isColorSpaceUsed("view_old"));
+
+    OCIO_CHECK_ASSERT(config->isColorSpaceUsed("other_dcs"));
+    OCIO_CHECK_ASSERT(config->isColorSpaceUsed("AliasedDisplay"));
+
+    OCIO_CHECK_ASSERT(config->isColorSpaceUsed("role_new"));
+    OCIO_CHECK_ASSERT(config->isColorSpaceUsed("role_old"));
+    OCIO_CHECK_ASSERT(config->isColorSpaceUsed("some_role"));
+
+    OCIO_CHECK_ASSERT(config->isColorSpaceUsed("fr_new"));
+    OCIO_CHECK_ASSERT(config->isColorSpaceUsed("fr_old"));
+
+    // The Default rule's color space is written as the "default" role, which in turn refers to
+    // "default_new" by its alias, so resolving the rule takes two steps.
+    //
+    // Note that this path is not independently observable: the roles are checked separately, and
+    // any color space reachable through the Default rule's role is necessarily reachable through
+    // the role itself. It is the "rule1" case above that exercises the file rule comparison on
+    // its own.
+    OCIO_CHECK_ASSERT(config->isColorSpaceUsed("default_new"));
+    OCIO_CHECK_ASSERT(config->isColorSpaceUsed("default_old"));
+
+    // A color space that really isn't used anywhere is still reported as unused, whether it is
+    // named by its canonical name or by an alias.
+    OCIO_CHECK_ASSERT(!config->isColorSpaceUsed("unused_new"));
+    OCIO_CHECK_ASSERT(!config->isColorSpaceUsed("unused_old"));
+
+    // None of the above depends on Config::getUseDisplayAliases, which was off.
+    // Turning it on must not change any result.
+    OCIO::ConfigRcPtr editableConfig = config->createEditableCopy();
+    OCIO_CHECK_ASSERT(!editableConfig->getUseDisplayAliases());
+    OCIO_CHECK_NO_THROW(editableConfig->setUseDisplayAliases(true));
+    OCIO_CHECK_NO_THROW(editableConfig->validate());
+
+    OCIO_CHECK_ASSERT(editableConfig->isColorSpaceUsed("view_new"));
+    OCIO_CHECK_ASSERT(editableConfig->isColorSpaceUsed("view_old"));
+    OCIO_CHECK_ASSERT(editableConfig->isColorSpaceUsed("role_new"));
+    OCIO_CHECK_ASSERT(editableConfig->isColorSpaceUsed("role_old"));
+    OCIO_CHECK_ASSERT(editableConfig->isColorSpaceUsed("some_role"));
+    OCIO_CHECK_ASSERT(editableConfig->isColorSpaceUsed("fr_new"));
+    OCIO_CHECK_ASSERT(editableConfig->isColorSpaceUsed("fr_old"));
+    OCIO_CHECK_ASSERT(editableConfig->isColorSpaceUsed("default_new"));
+    OCIO_CHECK_ASSERT(editableConfig->isColorSpaceUsed("default_old"));
+    OCIO_CHECK_ASSERT(editableConfig->isColorSpaceUsed("other_dcs"));
+    OCIO_CHECK_ASSERT(editableConfig->isColorSpaceUsed("AliasedDisplay"));
+
+    OCIO_CHECK_ASSERT(!editableConfig->isColorSpaceUsed("unused_new"));
+    OCIO_CHECK_ASSERT(!editableConfig->isColorSpaceUsed("unused_old"));
 }
 
 OCIO_ADD_TEST(Config, transform_versions)
