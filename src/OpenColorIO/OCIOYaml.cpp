@@ -455,6 +455,9 @@ inline void load(const YAML::Node& node, View& v)
         }
         else if (key == "aliases")
         {
+            // This uses load(const YAML::Node & node, StringUtils::StringVec & x), so the
+            // Yaml parser handles unquoting view names with embedded quotes, symmetric with
+            // the save function below, rather than using SplitStringEnvStyle.
             load(iter->second, v.m_aliases);
         }
         else
@@ -506,6 +509,8 @@ inline void save(YAML::Emitter& out, const View & view)
     }
     if (!view.m_aliases.empty())
     {
+        // The Yaml parser automatically quotes view name aliases that contain commas, so
+        // they are not confused with separators. No need to use JoinStringEnvStyle here.
         out << YAML::Key << "aliases" << YAML::Value << view.m_aliases;
     }
     saveDescription(out, view.m_description.c_str());
@@ -4675,11 +4680,10 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
 
                 View view;
                 load(val, view);
-                const std::string aliases = JoinStringEnvStyle(view.m_aliases);
                 config->addSharedView(view.m_name.c_str(),
                                       view.m_viewTransform.c_str(), view.m_colorspace.c_str(),
                                       view.m_looks.c_str(), view.m_rule.c_str(),
-                                      view.m_description.c_str(), aliases.c_str());
+                                      view.m_description.c_str(), view.m_aliases);
             }
         }
         else if (key == "displays")
@@ -4706,11 +4710,10 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
                     {
                         View view;
                         load(node, view);
-                        const std::string aliases = JoinStringEnvStyle(view.m_aliases);
                         config->addDisplayView(display.c_str(), view.m_name.c_str(),
                                                view.m_viewTransform.c_str(), view.m_colorspace.c_str(),
                                                view.m_looks.c_str(), view.m_rule.c_str(),
-                                               view.m_description.c_str(), aliases.c_str());
+                                               view.m_description.c_str(), view.m_aliases);
                     }
                     else if (node.Tag() == "Views")
                     {
@@ -4739,6 +4742,11 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
                 {
                     View view;
                     load(val, view);
+                    if (!view.m_aliases.empty())
+                    {
+                        throwValueError(node.Tag(), iter->first,
+                                         "Aliases are not supported for virtual display views.");
+                    }
                     config->addVirtualDisplayView(view.m_name.c_str(),
                                                   view.m_viewTransform.c_str(),
                                                   view.m_colorspace.c_str(),
@@ -5045,17 +5053,17 @@ inline void load(const YAML::Node& node, ConfigRcPtr & config, const char* filen
     }
 }
 
-// Config only exposes a view's aliases as a single comma-delimited string (see
-// Config::getDisplayViewAliases), so split it back into a vector for the View struct used
-// below to build up what gets passed to save(YAML::Emitter&, const View&).
+// Build the vector for the View struct used below to build up what gets passed to
+// save(YAML::Emitter&, const View&).
 StringUtils::StringVec GetViewAliasVec(const Config & config, const char * display,
                                        const char * name)
 {
-    StringUtils::StringVec aliases = SplitStringEnvStyle(config.getDisplayViewAliases(display,
-                                                                                      name));
-    if (aliases.size() == 1 && aliases[0].empty())
+    StringUtils::StringVec aliases;
+    const int numAliases = config.getNumDisplayViewAliases(display, name);
+    aliases.reserve(numAliases);
+    for (int i = 0; i < numAliases; i++)
     {
-        aliases.clear();
+        aliases.push_back(config.getDisplayViewAlias(display, name, i));
     }
     return aliases;
 }

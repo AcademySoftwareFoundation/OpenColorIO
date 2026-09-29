@@ -658,7 +658,7 @@ public:
     /**
      * Return true if the color space is used by a transform, a role, a look, a (display, view)
      * pair, or a file rule. The argument may be either an alias or the canonical name. While
-     * searching the config, aliases are always resolve to their canonical names for comparison.
+     * searching the config, aliases are always resolved to their canonical names for comparison.
      */
     bool isColorSpaceUsed(const char * name) const noexcept;
 
@@ -863,8 +863,7 @@ public:
                        const char * colorSpaceName, const char * looks,
                        const char * ruleName, const char * description);
     /**
-     * \brief As above, but also sets the view's aliases (see \ref Config::getDisplayViewAliases
-     * for the format).
+     * \brief As above, but also sets the view's aliases.
      *
      * Will throw if view or colorSpaceName are null or empty, or if an alias collides with the
      * name or an alias of another shared view.
@@ -872,7 +871,8 @@ public:
     void addSharedView(const char * view, const char * viewTransformName,
                        const char * colorSpaceName, const char * looks,
                        const char * ruleName, const char * description,
-                       const char * aliases);
+                       const std::vector<std::string> & aliases);
+
     /// Remove a shared view.  Will throw if the view does not exist.
     void removeSharedView(const char * view);
 
@@ -940,14 +940,19 @@ public:
     const char * getDisplayViewDescription(const char * display, const char * view) const noexcept;
 
     /**
-     * \brief Get the aliases of a (display, view) pair, as a comma-delimited string (as it
-     * would appear in a config file). If display is null or empty, config shared views are used.
-     *
-     * If an alias itself contains a comma, it is enclosed in quotes, similar to active_views.
-     *
-     * Returns "" if the (display, view) pair does not exist or has no aliases.
+     * \brief Get the number of aliases of a (display, view) pair. If display is null or
+     * empty, config shared views are used.
      */
-    std::string getDisplayViewAliases(const char * display, const char * view) const;
+    int getNumDisplayViewAliases(const char * display, const char * view) const noexcept;
+
+    /**
+     * \brief Get an alias of a (display, view) pair, by index. If display is null or empty,
+     * config shared views are used.
+     *
+     * Returns "" if the (display, view) pair does not exist or index is out of range.
+     */
+    const char * getDisplayViewAlias(const char * display, const char * view,
+                                     int index) const noexcept;
 
     /**
      * \brief Convenience method to check whether a (display, view) pair has a specific alias.
@@ -991,8 +996,7 @@ public:
                         const char * ruleName, const char * description);
 
     /**
-     * \brief As above, but also sets the view's aliases (see \ref Config::getDisplayViewAliases
-     * for the format).
+     * \brief As above, but also sets the view's aliases.
      *
      * Will throw if:
      * * Display, view or colorSpace are null or empty.
@@ -1002,7 +1006,8 @@ public:
      */
     void addDisplayView(const char * display, const char * view, const char * viewTransformName,
                         const char * colorSpaceName, const char * looks,
-                        const char * ruleName, const char * description, const char * aliases);
+                        const char * ruleName, const char * description,
+                        const std::vector<std::string> & aliases);
 
     /**
      * \brief Add a (reference to a) shared view to a display.
@@ -1234,6 +1239,9 @@ public:
      * the config file as well as any modifications made by the client app. These functions
      * only get and set what is in the config object and do not take into account the override
      * and thus may not represent the actual user experience.
+     *
+     * Display aliases may not be used in the active list, use \ref Config::getCanonicalDisplayName
+     * to convert any aliases to their canonical name.
      */
     /// Set all active displays at once as a comma or colon delimited string. This replaces any
     /// previous contents of the list.
@@ -1272,6 +1280,9 @@ public:
      * the config file as well as any modifications made by the client app. These functions
      * only get and set what is in the config object and do not take into account the override
      * and thus may not represent the actual user experience.
+     *
+     * View aliases may not be used in the active list, use \ref Config::getCanonicalViewName
+     * to convert any aliases to their canonical name.
      */
     /// Set all active views at once as a comma or colon delimited string. This replaces any
     /// previous contents of the list.

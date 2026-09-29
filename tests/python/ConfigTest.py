@@ -825,7 +825,7 @@ colorspaces:
 
         cfg.addDisplayView('sRGB - Display', 'view', viewTransform='',
                            displayColorSpaceName='sRGB - Display', looks='', ruleName='',
-                           description='', aliases='view_old')
+                           description='', aliases=['view_old'])
 
         # The display alias fallback is disabled by default: only an exact match resolves.
         self.assertEqual(cfg.getCanonicalDisplayName('sRGB - Display'), 'sRGB - Display')
@@ -850,54 +850,58 @@ colorspaces:
 
         cfg.addDisplayView('display1', 'view1', viewTransform='',
                            displayColorSpaceName='raw', looks='', ruleName='',
-                           description='', aliases='alias1, alias2')
+                           description='', aliases=['alias1', 'alias2'])
 
-        self.assertEqual(cfg.getDisplayViewAliases('display1', 'view1'), 'alias1, alias2')
+        self.assertEqual(list(cfg.getDisplayViewAliases('display1', 'view1')),
+                         ['alias1', 'alias2'])
         self.assertTrue(cfg.hasDisplayViewAlias('display1', 'view1', 'alias1'))
         self.assertTrue(cfg.hasDisplayViewAlias('display1', 'view1', 'ALIAS2'))
         self.assertFalse(cfg.hasDisplayViewAlias('display1', 'view1', 'alias3'))
 
         # A view with no aliases.
         cfg.addDisplayView('display1', 'view2', 'raw')
-        self.assertEqual(cfg.getDisplayViewAliases('display1', 'view2'), '')
+        self.assertEqual(list(cfg.getDisplayViewAliases('display1', 'view2')), [])
         self.assertFalse(cfg.hasDisplayViewAlias('display1', 'view2', 'alias1'))
 
         # A shared view, looked up the same way as Config.hasView (an empty display finds it
         # among the config's shared views).
-        cfg.addSharedView('shared1', '', 'raw', aliases='shared_alias')
+        cfg.addSharedView('shared1', '', 'raw', aliases=['shared_alias'])
         cfg.addDisplaySharedView('display1', 'shared1')
 
-        self.assertEqual(cfg.getDisplayViewAliases('', 'shared1'), 'shared_alias')
+        self.assertEqual(list(cfg.getDisplayViewAliases('', 'shared1')), ['shared_alias'])
         self.assertTrue(cfg.hasDisplayViewAlias('', 'shared1', 'shared_alias'))
         self.assertFalse(cfg.hasDisplayViewAlias('display1', 'shared1', 'unknown'))
 
         # Unknown display, view, or display/view combination.
-        self.assertEqual(cfg.getDisplayViewAliases('display1', 'not_a_view'), '')
+        self.assertEqual(list(cfg.getDisplayViewAliases('display1', 'not_a_view')), [])
         self.assertFalse(cfg.hasDisplayViewAlias('display1', 'not_a_view', 'alias1'))
         self.assertFalse(cfg.hasDisplayViewAlias('not_a_display', 'view1', 'alias1'))
 
-        # An alias may itself contain a comma, as long as it is surrounded by quotes, so
-        # that the comma isn't mistaken for the separator between aliases.
+        # An alias may itself contain a comma; since aliases are set as a real list, no
+        # quoting is needed (unlike the comma-delimited Config.setActiveViews string).
         cfg.addDisplayView('display1', 'view3', viewTransform='',
                            displayColorSpaceName='raw', looks='', ruleName='',
-                           description='', aliases='"alias,with,comma", alias4')
+                           description='', aliases=['alias,with,comma', 'alias4'])
 
         self.assertTrue(cfg.hasDisplayViewAlias('display1', 'view3', 'alias,with,comma'))
         self.assertTrue(cfg.hasDisplayViewAlias('display1', 'view3', 'alias4'))
         self.assertFalse(cfg.hasDisplayViewAlias('display1', 'view3', 'alias'))
 
-        # The comma-containing alias is quoted again on the way out, so that the result can be
-        # split back apart the same way.
-        self.assertEqual(
-            cfg.getDisplayViewAliases('display1', 'view3'), '"alias,with,comma", alias4')
+        self.assertEqual(list(cfg.getDisplayViewAliases('display1', 'view3')),
+                         ['alias,with,comma', 'alias4'])
 
     def test_display_description(self):
         # Test that getDisplayDescription borrows the description of the display's associated
         # display color space: an exact name match always works, but matching only via one of
-        # the color space's aliases requires getUseDisplayAliases.
+        # the color space's aliases requires getUseDisplayAliases. Either way, the display must
+        # actually use that color space in one of its views, or the match fails (a display
+        # color space that merely happens to share a name with an unrelated display doesn't
+        # match).
 
         cfg = OCIO.Config()
         cfg.setVersion(2, 6)
+
+        cfg.addColorSpace(OCIO.ColorSpace(name='raw'))
 
         dcs = OCIO.ColorSpace(
             referenceSpace=OCIO.REFERENCE_SPACE_DISPLAY,
@@ -907,7 +911,16 @@ colorspaces:
         dcs.setTransform(OCIO.MatrixTransform(), OCIO.COLORSPACE_DIR_FROM_REFERENCE)
         cfg.addColorSpace(dcs)
 
+        cfg.addDisplayView('sRGB - Display', 'view1', 'raw')
+
+        # The name match alone isn't enough: so far "sRGB - Display" only has view1, whose
+        # color space is "raw", so the match fails even though it is an exact name match.
         self.assertFalse(cfg.getUseDisplayAliases())
+        self.assertEqual(cfg.getDisplayDescription('sRGB - Display'), '')
+
+        # Add a view that uses the display color space itself, satisfying that requirement.
+        cfg.addDisplayView('sRGB - Display', 'view2', 'sRGB - Display', '')
+
         self.assertEqual(cfg.getDisplayDescription('sRGB - Display'), 'The sRGB display.')
         self.assertEqual(cfg.getDisplayDescription('sRGB'), '')
 
@@ -935,7 +948,7 @@ colorspaces:
         cfg.addDisplayView('sRGB - Display', 'view1', 'raw')
         cfg.addDisplayView('sRGB - Display', 'view2', viewTransform='',
                            displayColorSpaceName='<USE_DISPLAY_NAME>', looks='', ruleName='',
-                           description='', aliases='view2_old')
+                           description='', aliases=['view2_old'])
 
         # A plain view behaves like getDisplayViewColorSpaceName.
         self.assertEqual(
