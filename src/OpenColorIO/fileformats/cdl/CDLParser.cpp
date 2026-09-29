@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <exception>
 #include <sstream>
 
 #include "expat.h"
@@ -157,6 +158,10 @@ private:
     std::string m_fileName;
     bool m_isCC;
     bool m_isCCC;
+
+    // Exception thrown from within an expat callback, deferred until control
+    // returns to parse() so it is not thrown across expat's own C call stack.
+    std::exception_ptr m_pendingException;
 };
 
 CDLParser::Impl::Impl(const std::string & fileName)
@@ -242,10 +247,23 @@ void CDLParser::Impl::parse(const std::string & buffer, bool lastLine)
 {
     const int done = lastLine?1:0;
 
-    if (XML_STATUS_ERROR == XML_Parse(m_parser,
-                                      buffer.c_str(),
-                                      (int)buffer.size(),
-                                      done))
+    const XML_Status status = XML_Parse(m_parser,
+                                        buffer.c_str(),
+                                        (int)buffer.size(),
+                                        done);
+
+    // A handler may have thrown a C++ exception. Rethrowing it here, rather
+    // than letting it escape the expat callback directly, keeps expat's own
+    // bookkeeping (see XML_ParserFree's isCalledFromInsideHandler guard)
+    // consistent; otherwise XML_ParserFree silently leaks the parser.
+    if (m_pendingException)
+    {
+        std::exception_ptr pendingException = m_pendingException;
+        m_pendingException = nullptr;
+        std::rethrow_exception(pendingException);
+    }
+
+    if (XML_STATUS_ERROR == status)
     {
         XML_Error eXpatErrorCode = XML_GetErrorCode(m_parser);
         if (eXpatErrorCode == XML_ERROR_TAG_MISMATCH)
@@ -425,17 +443,32 @@ void CDLParser::Impl::StartElementHandlerCDL(void *userData,
                                              const XML_Char **atts)
 {
     CDLParser::Impl* pImpl = (CDLParser::Impl*)userData;
-    if (IsValidStartElement(pImpl, name))
+    try
     {
-        if (HandleColorDecisionListStartElement(pImpl, name) ||
-            HandleColorDecisionStartElement(pImpl, name) ||
-            HandleColorCorrectionCDLStartElement(pImpl, name) ||
-            HandleSOPNodeStartElement(pImpl, name) ||
-            HandleSatNodeStartElement(pImpl, name) ||
-            HandleTerminalStartElement(pImpl, name) ||
-            HandleUnknownStartElement(pImpl, name))
+        if (IsValidStartElement(pImpl, name))
         {
-            pImpl->m_elms.back()->start(atts);
+            if (HandleColorDecisionListStartElement(pImpl, name) ||
+                HandleColorDecisionStartElement(pImpl, name) ||
+                HandleColorCorrectionCDLStartElement(pImpl, name) ||
+                HandleSOPNodeStartElement(pImpl, name) ||
+                HandleSatNodeStartElement(pImpl, name) ||
+                HandleTerminalStartElement(pImpl, name) ||
+                HandleUnknownStartElement(pImpl, name))
+            {
+                pImpl->m_elms.back()->start(atts);
+            }
+        }
+    }
+    catch (...)
+    {
+        // Keep the first exception: for a self-closing element, expat may
+        // still invoke the matching EndElementHandler before it honors
+        // XML_StopParser, and that call can itself throw; don't let that
+        // spurious, secondary exception overwrite the original one.
+        if (pImpl && !pImpl->m_pendingException)
+        {
+            pImpl->m_pendingException = std::current_exception();
+            XML_StopParser(pImpl->m_parser, XML_FALSE);
         }
     }
 }
@@ -445,16 +478,31 @@ void CDLParser::Impl::StartElementHandlerCCC(void *userData,
                                              const XML_Char **atts)
 {
     CDLParser::Impl* pImpl = (CDLParser::Impl*)userData;
-    if (IsValidStartElement(pImpl, name))
+    try
     {
-        if (HandleColorCorrectionCollectionStartElement(pImpl, name) ||
-            HandleColorCorrectionCCCStartElement(pImpl, name) ||
-            HandleSOPNodeStartElement(pImpl, name) ||
-            HandleSatNodeStartElement(pImpl, name) ||
-            HandleTerminalStartElement(pImpl, name) ||
-            HandleUnknownStartElement(pImpl, name))
+        if (IsValidStartElement(pImpl, name))
         {
-            pImpl->m_elms.back()->start(atts);
+            if (HandleColorCorrectionCollectionStartElement(pImpl, name) ||
+                HandleColorCorrectionCCCStartElement(pImpl, name) ||
+                HandleSOPNodeStartElement(pImpl, name) ||
+                HandleSatNodeStartElement(pImpl, name) ||
+                HandleTerminalStartElement(pImpl, name) ||
+                HandleUnknownStartElement(pImpl, name))
+            {
+                pImpl->m_elms.back()->start(atts);
+            }
+        }
+    }
+    catch (...)
+    {
+        // Keep the first exception: for a self-closing element, expat may
+        // still invoke the matching EndElementHandler before it honors
+        // XML_StopParser, and that call can itself throw; don't let that
+        // spurious, secondary exception overwrite the original one.
+        if (pImpl && !pImpl->m_pendingException)
+        {
+            pImpl->m_pendingException = std::current_exception();
+            XML_StopParser(pImpl->m_parser, XML_FALSE);
         }
     }
 }
@@ -464,15 +512,30 @@ void CDLParser::Impl::StartElementHandlerCC(void *userData,
                                             const XML_Char **atts)
 {
     CDLParser::Impl* pImpl = (CDLParser::Impl*)userData;
-    if (IsValidStartElement(pImpl, name))
+    try
     {
-        if (HandleColorCorrectionCCStartElement(pImpl, name) ||
-            HandleSOPNodeStartElement(pImpl, name) ||
-            HandleSatNodeStartElement(pImpl, name) ||
-            HandleTerminalStartElement(pImpl, name) ||
-            HandleUnknownStartElement(pImpl, name))
+        if (IsValidStartElement(pImpl, name))
         {
-            pImpl->m_elms.back()->start(atts);
+            if (HandleColorCorrectionCCStartElement(pImpl, name) ||
+                HandleSOPNodeStartElement(pImpl, name) ||
+                HandleSatNodeStartElement(pImpl, name) ||
+                HandleTerminalStartElement(pImpl, name) ||
+                HandleUnknownStartElement(pImpl, name))
+            {
+                pImpl->m_elms.back()->start(atts);
+            }
+        }
+    }
+    catch (...)
+    {
+        // Keep the first exception: for a self-closing element, expat may
+        // still invoke the matching EndElementHandler before it honors
+        // XML_StopParser, and that call can itself throw; don't let that
+        // spurious, secondary exception overwrite the original one.
+        if (pImpl && !pImpl->m_pendingException)
+        {
+            pImpl->m_pendingException = std::current_exception();
+            XML_StopParser(pImpl->m_parser, XML_FALSE);
         }
     }
 }
@@ -817,65 +880,80 @@ bool CDLParser::Impl::HandleUnknownStartElement(CDLParser::Impl* pImpl,
 void CDLParser::Impl::EndElementHandler(void *userData, const XML_Char *name)
 {
     CDLParser::Impl* pImpl = (CDLParser::Impl*)userData;
-    if (!pImpl)
+    try
     {
-        throw Exception("Internal CDL parsing error.");
-    }
+        if (!pImpl)
+        {
+            throw Exception("Internal CDL parsing error.");
+        }
 
-    if (!name || !*name)
-    {
-        pImpl->throwMessage("Internal parsing error");
-    }
+        if (!name || !*name)
+        {
+            pImpl->throwMessage("Internal parsing error");
+        }
 
-    // Is the expected element present?
-    ElementRcPtr pElt = pImpl->getBackElement();
-    if (!pElt)
-    {
-        pImpl->throwMessage("Missing element");
-    }
+        // Is the expected element present?
+        ElementRcPtr pElt = pImpl->getBackElement();
+        if (!pElt)
+        {
+            pImpl->throwMessage("Missing element");
+        }
 
-    // Is it the expected element?
-    if (pElt->getName() != name)
-    {
-        std::ostringstream os;
-        os << "Unexpected element (";
-        os << name << "). ";
-        os << "Expecting (";
-        os << pElt->getName() << "). ";
-
-        pImpl->throwMessage(os.str());
-    }
-
-    pImpl->m_elms.pop_back();
-
-    if (!pElt->isContainer() && !pElt->isDummy())
-    {
-        // Is it a plain element?
-        auto pPlainElt = std::dynamic_pointer_cast<XmlReaderPlainElt>(pElt);
-        if (!pPlainElt)
+        // Is it the expected element?
+        if (pElt->getName() != name)
         {
             std::ostringstream os;
-            os << "Unexpected attribute (";
-            os << name << ")";
+            os << "Unexpected element (";
+            os << name << "). ";
+            os << "Expecting (";
+            os << pElt->getName() << "). ";
 
             pImpl->throwMessage(os.str());
         }
 
-        ElementRcPtr pParent = pImpl->getBackElement();
+        pImpl->m_elms.pop_back();
 
-        // Is it at the right location in the stack?
-        if ((!pParent || !pParent->isContainer() ||
-             pParent != pPlainElt->getParent()))
+        if (!pElt->isContainer() && !pElt->isDummy())
         {
-            std::ostringstream os;
-            os << "Parsing error (";
-            os << name << ")";
+            // Is it a plain element?
+            auto pPlainElt = std::dynamic_pointer_cast<XmlReaderPlainElt>(pElt);
+            if (!pPlainElt)
+            {
+                std::ostringstream os;
+                os << "Unexpected attribute (";
+                os << name << ")";
 
-            pImpl->throwMessage(os.str());
+                pImpl->throwMessage(os.str());
+            }
+
+            ElementRcPtr pParent = pImpl->getBackElement();
+
+            // Is it at the right location in the stack?
+            if ((!pParent || !pParent->isContainer() ||
+                 pParent != pPlainElt->getParent()))
+            {
+                std::ostringstream os;
+                os << "Parsing error (";
+                os << name << ")";
+
+                pImpl->throwMessage(os.str());
+            }
+        }
+
+        pElt->end();
+    }
+    catch (...)
+    {
+        // Keep the first exception: for a self-closing element, expat may
+        // still invoke the matching EndElementHandler before it honors
+        // XML_StopParser, and that call can itself throw; don't let that
+        // spurious, secondary exception overwrite the original one.
+        if (pImpl && !pImpl->m_pendingException)
+        {
+            pImpl->m_pendingException = std::current_exception();
+            XML_StopParser(pImpl->m_parser, XML_FALSE);
         }
     }
-
-    pElt->end();
 }
 
 void CDLParser::Impl::CharacterDataHandler(void *userData,
@@ -883,61 +961,52 @@ void CDLParser::Impl::CharacterDataHandler(void *userData,
                                            int len)
 {
     CDLParser::Impl* pImpl = (CDLParser::Impl*)userData;
-    if (!pImpl)
+    try
     {
-        throw Exception("Internal CDL parsing error.");
-    }
-
-    if (len == 0) return;
-    if (len<0 || !s || !*s)
-    {
-        pImpl->throwMessage("Empty attribute data");
-    }
-    // Parsing a single new line. This is valid.
-    if (len == 1 && s[0] == '\n') return;
-
-    if (pImpl->m_elms.empty())
-    {
-        pImpl->throwMessage("Unexpected character data before root element");
-    }
-
-    ElementRcPtr pElt = pImpl->m_elms.back();
-    if (!pElt)
-    {
-        std::ostringstream os;
-        os << "Missing eng tag (";
-        os << std::string(s, len) << ")";
-
-        pImpl->throwMessage(os.str());
-    }
-
-    auto pDescElt = std::dynamic_pointer_cast<XmlReaderDescriptionElt>(pElt);
-    if (pDescElt)
-    {
-        // For description we keep the all the text.
-        pDescElt->setRawData(s, len, pImpl->getXmlLocation());
-    }
-    else
-    {
-        // Ignore white-spaces.
-        size_t start = 0;
-        size_t end = len;
-        FindSubString(s, len, start, end);
-
-        if (end>0)
+        if (!pImpl)
         {
-            if (pElt->isContainer())
-            {
-                std::ostringstream os;
-                os << "Illegal attribute (";
-                os << std::string(s, len) << ")";
+            throw Exception("Internal CDL parsing error.");
+        }
 
-                pImpl->throwMessage(os.str());
-            }
-            else
+        if (len == 0) return;
+        if (len<0 || !s || !*s)
+        {
+            pImpl->throwMessage("Empty attribute data");
+        }
+        // Parsing a single new line. This is valid.
+        if (len == 1 && s[0] == '\n') return;
+
+        if (pImpl->m_elms.empty())
+        {
+            pImpl->throwMessage("Unexpected character data before root element");
+        }
+
+        ElementRcPtr pElt = pImpl->m_elms.back();
+        if (!pElt)
+        {
+            std::ostringstream os;
+            os << "Missing eng tag (";
+            os << std::string(s, len) << ")";
+
+            pImpl->throwMessage(os.str());
+        }
+
+        auto pDescElt = std::dynamic_pointer_cast<XmlReaderDescriptionElt>(pElt);
+        if (pDescElt)
+        {
+            // For description we keep the all the text.
+            pDescElt->setRawData(s, len, pImpl->getXmlLocation());
+        }
+        else
+        {
+            // Ignore white-spaces.
+            size_t start = 0;
+            size_t end = len;
+            FindSubString(s, len, start, end);
+
+            if (end>0)
             {
-                auto pPlainElt = std::dynamic_pointer_cast<XmlReaderPlainElt>(pElt);
-                if (!pPlainElt)
+                if (pElt->isContainer())
                 {
                     std::ostringstream os;
                     os << "Illegal attribute (";
@@ -945,10 +1014,34 @@ void CDLParser::Impl::CharacterDataHandler(void *userData,
 
                     pImpl->throwMessage(os.str());
                 }
-                pPlainElt->setRawData(s + start,
-                                      end - start,
-                                      pImpl->getXmlLocation());
+                else
+                {
+                    auto pPlainElt = std::dynamic_pointer_cast<XmlReaderPlainElt>(pElt);
+                    if (!pPlainElt)
+                    {
+                        std::ostringstream os;
+                        os << "Illegal attribute (";
+                        os << std::string(s, len) << ")";
+
+                        pImpl->throwMessage(os.str());
+                    }
+                    pPlainElt->setRawData(s + start,
+                                          end - start,
+                                          pImpl->getXmlLocation());
+                }
             }
+        }
+    }
+    catch (...)
+    {
+        // Keep the first exception: for a self-closing element, expat may
+        // still invoke the matching EndElementHandler before it honors
+        // XML_StopParser, and that call can itself throw; don't let that
+        // spurious, secondary exception overwrite the original one.
+        if (pImpl && !pImpl->m_pendingException)
+        {
+            pImpl->m_pendingException = std::current_exception();
+            XML_StopParser(pImpl->m_parser, XML_FALSE);
         }
     }
 }
