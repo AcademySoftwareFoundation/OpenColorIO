@@ -20,9 +20,12 @@ cd yaml-cpp
 if [ "$YAMLCPP_VERSION" == "latest" ]; then
     LATEST_TAG=$(git describe --abbrev=0 --tags)
     git checkout tags/${LATEST_TAG} -b ${LATEST_TAG}
-else
-    # From 0.8.0, tags are now simply the version number.
+elif [ "$YAMLCPP_VERSION" == "0.8.0" ]; then
+    # 0.8.0 briefly used the bare version number as its tag; all other
+    # releases (including 0.9.0+) use the "yaml-cpp-" prefix.
     git checkout tags/${YAMLCPP_VERSION} -b ${YAMLCPP_VERSION}
+else
+    git checkout tags/yaml-cpp-${YAMLCPP_VERSION} -b ${YAMLCPP_VERSION}
 fi
 
 mkdir build

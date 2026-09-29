@@ -313,7 +313,7 @@ jobs:
                 -Dpystring_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -Dyaml-cpp_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -Dyaml-cpp_STATIC_LIBRARY=ON \
-                -Dyaml-cpp_VERSION=0.8.0 \
+                -Dyaml-cpp_VERSION=0.9.0 \
                 -DZLIB_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -DZLIB_STATIC_LIBRARY=ON \
                 -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist \
@@ -440,7 +440,7 @@ jobs:
                 -Dpystring_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -Dyaml-cpp_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -Dyaml-cpp_STATIC_LIBRARY=ON \
-                -Dyaml-cpp_VERSION=0.8.0 \
+                -Dyaml-cpp_VERSION=0.9.0 \
                 -DZLIB_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -DZLIB_STATIC_LIBRARY=ON \
                 -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist \
@@ -579,7 +579,7 @@ jobs:
                 -Dpystring_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -Dyaml-cpp_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -Dyaml-cpp_STATIC_LIBRARY=ON \
-                -Dyaml-cpp_VERSION=0.8.0 \
+                -Dyaml-cpp_VERSION=0.9.0 \
                 -DZLIB_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -DZLIB_STATIC_LIBRARY=ON \
                 -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist \
@@ -733,7 +733,7 @@ jobs:
                 -Dpystring_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -Dyaml-cpp_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -Dyaml-cpp_STATIC_LIBRARY=ON \
-                -Dyaml-cpp_VERSION=0.8.0 \
+                -Dyaml-cpp_VERSION=0.9.0 \
                 -DZLIB_ROOT=${{ env.ocio_build_path }}/ext/dist \
                 -DZLIB_STATIC_LIBRARY=ON \
                 -Dminizip-ng_ROOT=${{ env.ocio_build_path }}/ext/dist \
