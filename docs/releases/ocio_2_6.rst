@@ -25,18 +25,18 @@ in the OCIO 2.6.1 release, after ACES 2.1 is officially released.
 
 In addition, these configs include the following updates:
 
-* "Apple Log 2" and "Linear Apple Wide Gamut" color spaces.
+* Adds "Apple Log 2" and "Linear Apple Wide Gamut" color spaces.
 
 * The "P3-D65 - Display" display and display color space are renamed "Gamma 2.6 P3-D65 - Display".
   Backwards compatibility is provided by the new display aliasing feature in OCIO 2.6, but may
   require updates on the part of application developers in some situations.
 
-* The new interop ID `g24_rec709_scene` is added, the previous `ocio:g24_rec709_scene` is kept 
-  as an alias.
+* The new interop ID ``g24_rec709_scene`` is added, though the previous ID ``ocio:g24_rec709_scene``
+  is preserved as an alias.
 
-* The family attribute of Sony Venice color spaces is now "Input/Sony/Legacy" following the
-  guidance from Sony that the Venice color spaces are no longer recommended. These may be
-  made inactive or be removed in future versions of the configs.
+* The family attribute of Sony Venice color spaces is now "Input/Sony/Legacy" to lower their
+  placement in hierarchical menus, following the guidance from Sony that the Venice color spaces are
+  no longer recommended. These may be made inactive or be removed in future versions of the configs.
 
 For Users
 +++++++++
