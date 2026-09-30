@@ -90,6 +90,33 @@ available for config authors to set.) This enables applications to provide tool-
 similar help text for both displays and views.
 
 
+Color Interop ID Support
+************************
+
+For Developers
+++++++++++++++
+
+New functions have been added to assist developers in implementing support for the ASWF
+Color Interop Forum's `Color Interop ID. <https://github.com/AcademySoftwareFoundation/ColorInterop/blob/main/Recommendations/03_ColorInteropID/ColorInteropID.md>`_
+These allow applications to either find a color space for an ID or, conversely, find an ID
+for a color space (even if its ``interop_id`` is missing).
+
+* The function ``Config::findColorSpaceForID`` searches a config for the color space that
+  should be used for a given interop ID. This implements the fallback rules defined in the
+  ASWF CIF Recommendation.
+
+* The function ``Config::LocateBuiltinColorSpace`` searches for a color space in a built-in
+  config that is equivalent to a source color space. Since all color spaces in the recent
+  built-in configs have interop IDs populated, it allows you to determine the interop ID
+  for most color spaces, even if the interop ID is not populated in your source config.
+  This function leverages the color space "finger-printing" technique developed for the
+  config merging feature in OCIO 2.5.
+
+* The function ``Config::generateLocalIDForColorSpace`` allows applications to generate
+  an interop ID, even if the config does not contain one for that color space and one 
+  cannot be found using LocateBuiltinColorSpace.
+
+
 New Fixed Function Transforms
 *****************************
 

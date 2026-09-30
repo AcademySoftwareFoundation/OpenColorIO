@@ -2248,7 +2248,7 @@ bool ColorspacesMerger::handleAvoidDuplicatesOption(ConfigUtils::ColorSpaceFinge
     // (e.g., consider the CIE-XYZ-D65 space, which is typically inactive). However, 
     // when the inactive list is regenerated to avoid listing removed color spaces,
     // some color spaces that were inactive may become active.
-    const char * duplicateInBase = ConfigUtils::findEquivalentColorspace(
+    const char * duplicateInBase = ConfigUtils::findEquivalentColorSpace(
         fingerprints,
         inputConfig, inputCS
     );
