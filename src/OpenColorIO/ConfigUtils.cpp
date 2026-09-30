@@ -1617,6 +1617,10 @@ std::string SanitizeIDToken(std::string_view token)
 
 std::string GenerateLocalIDForColorSpace(const Config & config, const char * srcColorSpaceName)
 {
+    // Note: this intentionally ignores any interop ID already on the color space, in case
+    // it is necessary to calculate what the local ID would be, independent of that.
+    // Applications are expected to have already called getInteropID on the color space.
+
     if (!srcColorSpaceName || !*srcColorSpaceName)
     {
         throw Exception("generateLocalIDForColorSpace: srcColorSpaceName must not be "
@@ -1658,8 +1662,8 @@ std::string GenerateLocalIDForColorSpace(const Config & config, const char * src
     // by Config::findColorSpaceForID.
     std::string base = cs->getName();
 
-    // If the name would require sanitization, prefer the first alias (in order) that does not
-    // require any sanitization, so the ID stays as readable as possible.
+    // But if the name would require sanitization, prefer the first alias (in order) that does
+    // not require any sanitization, so the ID stays as readable as possible.
     if (SanitizeIDToken(base) != base)
     {
         const size_t numAliases = cs->getNumAliases();

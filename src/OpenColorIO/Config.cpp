@@ -3099,7 +3099,7 @@ const char * Config::LocateBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
                         "built-in config.");
     }
 
-    // This will throw if it is unable to identify the interchange spaces.
+    // Returns null if no match is found.
     return ConfigUtils::LocateBuiltinColorSpace(srcConfig,
                                                 srcColorSpace,
                                                 builtinConfig,

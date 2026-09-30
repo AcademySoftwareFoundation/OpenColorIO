@@ -872,6 +872,9 @@ OCIO_ADD_TEST(ConfigUtils, generate_local_id_for_color_space)
     // This alias also requires sanitization (space, uppercase), so it does not qualify to be
     // preferred over the color space name; see the alias-preference test below for that case.
     cs->addAlias("My Alias");
+    // The color space already has an interop ID, but generateLocalIDForColorSpace must ignore it
+    // and always generate a local ID.
+    cs->setInteropID("lin_rec709_scene");
     OCIO_CHECK_NO_THROW(cfg->addColorSpace(cs));
 
     // Config name and color space name are each sanitized per Annex C: uppercase is lowered,
@@ -879,6 +882,10 @@ OCIO_ADD_TEST(ConfigUtils, generate_local_id_for_color_space)
     std::string id;
     OCIO_CHECK_NO_THROW(id = cfg->generateLocalIDForColorSpace("sRGB Encoded,Space"));
     OCIO_CHECK_EQUAL(id, std::string("my_studio*:local:srgb_encoded.space"));
+    OCIO_CHECK_ASSERT(id.find("populated") == std::string::npos);
+    // The color space's own interop ID is left untouched.
+    OCIO_CHECK_EQUAL(std::string(cfg->getColorSpace("sRGB Encoded,Space")->getInteropID()),
+                     std::string("lin_rec709_scene"));
 
     // An alias resolves to the same ID, since the canonical color space name is used, not the
     // caller-supplied string.
@@ -1044,6 +1051,14 @@ OCIO_ADD_TEST(ConfigUtils, find_color_space_for_id)
     // Mode 2: one namespace, falls back to the base name.
     OCIO_CHECK_ASSERT(cs = cfg->findColorSpaceForID("somestudio:acescg"));
     OCIO_CHECK_EQUAL(std::string(cs->getName()), "ACEScg");
+
+    // But if the namespaced name is there, it takes precedence.
+    auto nsname = OCIO::ColorSpace::Create();
+    nsname->setName("Namespaced name");
+    nsname->addAlias("somestudio:acescg");
+    OCIO_CHECK_NO_THROW(cfg->addColorSpace(nsname));
+    OCIO_CHECK_ASSERT(cs = cfg->findColorSpaceForID("somestudio:acescg"));
+    OCIO_CHECK_EQUAL(std::string(cs->getName()), "Namespaced name");
 
     // Two-namespace ID whose one-level-stripped remainder is not itself a valid name/alias:
     // no recursive stripping, so this must not match "ACEScg".
