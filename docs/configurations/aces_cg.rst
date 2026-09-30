@@ -17,7 +17,9 @@ color spaces and a wider set of displays and view should look at the :ref:`aces_
 Please note that some of the color spaces (e.g. for texturing) are not officially part of the 
 ACES specifications but are included because they are widely used in VFX, animation, and games.
 
-The most recent version of the CG config is based on ACES 2.0.
+The most recent version of the CG config is based on ACES 2.1.
+
+Please note that the AMF transform IDs in these configs are preliminary and subject to change.
 
 The latest version of this config may be downloaded from the Releases page of its GitHub
 `repo. <https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES/releases>`_
@@ -26,6 +28,8 @@ The CG Config leverages the high quality ACES implementation built into OCIO its
 and so requires no external LUT files.  In fact, even the config file is built into OCIO
 and users may access it from any application that uses OCIO 2.2 or higher by using one of the
 following strings in place of the config path:
+
+``ocio://cg-config-v5.0.0_aces-v2.1_ocio-v2.6``   (for OCIO 2.6 or higher)
 
 ``ocio://cg-config-v4.0.0_aces-v2.0_ocio-v2.5``   (for OCIO 2.5 or higher)
 

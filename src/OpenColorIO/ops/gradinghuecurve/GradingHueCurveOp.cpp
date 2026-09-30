@@ -211,7 +211,7 @@ void CreateGradingHueCurveOp(OpRcPtrVec & ops,
         curve = curve->inverse();
     }
 
-    ops.push_back(std::make_shared<GradingHueCurveOp>(curve));
+    ops.emplace_back(std::make_shared<GradingHueCurveOp>(curve));
 }
 
 ///////////////////////////////////////////////////////////////////////////

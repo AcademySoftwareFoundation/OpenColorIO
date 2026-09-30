@@ -1608,6 +1608,89 @@ OCIO_ADD_TEST(FileFormatCTF, smpte_all_metadata)
     }
 }
 
+OCIO_ADD_TEST(FileFormatCTF, smpte_broadcast_profile_noclamp_range)
+{
+    // Tests of the low-level GetEquivalentNoClampRange are in CTFTransform_tests.cpp.
+
+    // The file starts and ends with a Range using the noClamp style, which OCIO reads in
+    // as an equivalent Matrix (a Range always clamps in OCIO, see
+    // RangeOpData::convertToMatrix). When writing CLF, a Matrix at the start or end of the
+    // op list that is equivalent to this specific noClamp Range must be written back out
+    // as that Range rather than as a Matrix.
+    const std::string ctfFile("clf/smpte_only/broadcast_profile_lut33.clf");
+
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    OCIO_CHECK_NO_THROW(cachedFile = LoadCLFFile(ctfFile));
+    OCIO_REQUIRE_ASSERT((bool)cachedFile);
+
+    // On read, the noClamp Range ops are converted to Matrix ops.
+    const OCIO::ConstOpDataVec & opList = cachedFile->m_transform->getOpDataVec();
+    OCIO_REQUIRE_EQUAL(opList.size(), 3);
+    OCIO_CHECK_EQUAL(opList[0]->getType(), OCIO::OpData::MatrixType);
+    OCIO_CHECK_EQUAL(opList[1]->getType(), OCIO::OpData::Lut3DType);
+    OCIO_CHECK_EQUAL(opList[2]->getType(), OCIO::OpData::MatrixType);
+
+    auto mat0 = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(opList[0]);
+    auto mat2 = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(opList[2]);
+    OCIO_REQUIRE_ASSERT(mat0);
+    OCIO_REQUIRE_ASSERT(mat2);
+
+    // Write the file back out as CLF.
+
+    OCIO::ConstProcessorRcPtr processor;
+    OCIO_CHECK_NO_THROW(processor = OCIO::GetFileTransformProcessor(ctfFile));
+    OCIO_REQUIRE_ASSERT(processor);
+
+    std::ostringstream oss;
+    const auto group = processor->createGroupTransform();
+    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateRaw();
+    OCIO_CHECK_NO_THROW(group->write(config, "Academy/ASC Common LUT Format", oss));
+    const std::string clfString = oss.str();
+
+    // Count how many times sub appears in str.
+    auto countOccurrences = [](const std::string & str, const std::string & sub) -> size_t
+    {
+        size_t count = 0;
+        size_t pos = 0;
+        while ((pos = str.find(sub, pos)) != std::string::npos)
+        {
+            ++count;
+            pos += sub.length();
+        }
+        return count;
+    };
+
+    // The Matrix ops at the start and end must have been written as noClamp Range ops
+    // rather than as Matrix ops. The LUT3D in between is untouched.
+    OCIO_CHECK_EQUAL(countOccurrences(clfString, "<Matrix"), 0);
+    OCIO_CHECK_EQUAL(countOccurrences(clfString, "<Range"), 2);
+    OCIO_CHECK_EQUAL(countOccurrences(clfString, "style=\"noClamp\""), 2);
+    OCIO_CHECK_EQUAL(countOccurrences(clfString, "<LUT3D"), 1);
+
+    // Reading the written file back should reproduce the original Matrix ops (within
+    // floating-point precision), confirming the round trip is lossless.
+    OCIO::LocalCachedFileRcPtr cachedFile2;
+    OCIO_CHECK_NO_THROW(cachedFile2 = ParseString(clfString));
+    OCIO_REQUIRE_ASSERT((bool)cachedFile2);
+
+    const OCIO::ConstOpDataVec & opList2 = cachedFile2->m_transform->getOpDataVec();
+    OCIO_REQUIRE_EQUAL(opList2.size(), 3);
+    OCIO_CHECK_EQUAL(opList2[0]->getType(), OCIO::OpData::MatrixType);
+    OCIO_CHECK_EQUAL(opList2[1]->getType(), OCIO::OpData::Lut3DType);
+    OCIO_CHECK_EQUAL(opList2[2]->getType(), OCIO::OpData::MatrixType);
+
+    auto mat0b = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(opList2[0]);
+    auto mat2b = OCIO::DynamicPtrCast<const OCIO::MatrixOpData>(opList2[2]);
+    OCIO_REQUIRE_ASSERT(mat0b);
+    OCIO_REQUIRE_ASSERT(mat2b);
+
+    constexpr double error = 1e-9;
+    OCIO_CHECK_CLOSE(mat0b->getArrayValue(0), mat0->getArrayValue(0), error);
+    OCIO_CHECK_CLOSE(mat0b->getOffsetValue(0), mat0->getOffsetValue(0), error);
+    OCIO_CHECK_CLOSE(mat2b->getArrayValue(0), mat2->getArrayValue(0), error);
+    OCIO_CHECK_CLOSE(mat2b->getOffsetValue(0), mat2->getOffsetValue(0), error);
+}
+
 OCIO_ADD_TEST(FileFormatCTF, smpte_namespaces)
 {
     const std::string ctfFile("clf/smpte_only/namespaces.clf");
@@ -4196,7 +4279,7 @@ void WriteGroupCLF(OCIO::ConstGroupTransformRcPtr group, std::ostringstream & ou
 void ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::Style style,
                                 const std::string & vers, int lineNo, std::string params="")
 {
-    // Validate the load & save for any FixedFunction style without parameters.
+    // Validate the load & save for any FixedFunction style.
 
     std::ostringstream ffStr;
     ffStr << "<FixedFunction inBitDepth=\"32f\" outBitDepth=\"32f\" style=\""
@@ -4314,6 +4397,10 @@ OCIO_ADD_TEST(FileFormatCTF, ff_load_save_ctf)
     ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::HSY_LIN_TO_RGB         , "2.5", __LINE__);
     ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::RGB_TO_HSY_VID         , "2.5", __LINE__);
     ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::HSY_VID_TO_RGB         , "2.5", __LINE__);
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::ACES_RGB_TO_HMJ_20     , "2.6", __LINE__,
+        "0.7347 0.2653 0 1 0.0001 -0.077 0.32168 0.33767");
+    ValidateFixedFunctionStyle(OCIO::FixedFunctionOpData::ACES_HMJ_TO_RGB_20     , "2.6", __LINE__,
+        "0.7347 0.2653 0 1 0.0001 -0.077 0.32168 0.33767");
 }
 
 OCIO_ADD_TEST(FileFormatCTF, load_ff_fail_version)
@@ -7120,6 +7207,55 @@ OCIO_ADD_TEST(CTFTransform, fixed_function_lin_to_doublelog_ctf)
         OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
         OCIO_CHECK_EQUAL(expected, outputTransform.str());
     }
+}
+
+OCIO_ADD_TEST(CTFTransform, fixed_function_aces_rgb_to_hmj_20_ctf)
+{
+    const double data[8] = { 0.7347, 0.2653, 0.0000, 1.0000, 0.0001, -0.0770, 0.32168, 0.33767 };
+    OCIO::FixedFunctionTransformRcPtr ff =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_RGB_TO_HMJ_20, &data[0], 8);
+
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+    group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDFF42");
+    group->appendTransform(ff);
+
+    std::ostringstream outputTransform;
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+    const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2.6" id="UIDFF42">
+    <FixedFunction inBitDepth="32f" outBitDepth="32f" style="RGB_TO_HMJ_20" params="0.7347 0.2653 0 1 0.0001 -0.077 0.32168 0.33767">
+    </FixedFunction>
+</ProcessList>
+)" };
+
+    OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
+    OCIO_CHECK_EQUAL(expected, outputTransform.str());
+}
+
+OCIO_ADD_TEST(CTFTransform, fixed_function_aces_hmj_to_rgb_20_ctf)
+{
+    const double data[8] = { 0.7347, 0.2653, 0.0000, 1.0000, 0.0001, -0.0770, 0.32168, 0.33767 };
+    OCIO::FixedFunctionTransformRcPtr ff =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_RGB_TO_HMJ_20, &data[0], 8);
+    ff->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO::GroupTransformRcPtr group = OCIO::GroupTransform::Create();
+    group->getFormatMetadata().addAttribute(OCIO::METADATA_ID, "UIDFF42");
+    group->appendTransform(ff);
+
+    std::ostringstream outputTransform;
+    OCIO_CHECK_NO_THROW(WriteGroupCTF(group, outputTransform));
+
+    const std::string expected{ R"(<?xml version="1.0" encoding="UTF-8"?>
+<ProcessList version="2.6" id="UIDFF42">
+    <FixedFunction inBitDepth="32f" outBitDepth="32f" style="HMJ_TO_RGB_20" params="0.7347 0.2653 0 1 0.0001 -0.077 0.32168 0.33767">
+    </FixedFunction>
+</ProcessList>
+)" };
+
+    OCIO_CHECK_EQUAL(expected.size(), outputTransform.str().size());
+    OCIO_CHECK_EQUAL(expected, outputTransform.str());
 }
 
 OCIO_ADD_TEST(CTFTransform, exposure_contrast_video_ctf)

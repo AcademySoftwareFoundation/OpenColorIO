@@ -24,6 +24,17 @@
 namespace OCIO_NAMESPACE
 {
 
+// Apple Wide Gamut primaries from the Apple Log 2 white paper.
+namespace APPLE_WIDE_GAMUT
+{
+static const Chromaticities red_xy(0.725,   0.301);
+static const Chromaticities grn_xy(0.221,   0.814);
+static const Chromaticities blu_xy(0.068,  -0.076);
+static const Chromaticities wht_xy(0.3127,  0.3290);
+
+const Primaries primaries(red_xy, grn_xy, blu_xy, wht_xy);
+}
+
 namespace APPLE_LOG
 {
 
@@ -108,6 +119,22 @@ void RegisterAll(BuiltinTransformRegistryImpl & registry) noexcept
         registry.addBuiltin("APPLE_LOG_to_ACES2065-1",
                             "Convert Apple Log to ACES2065-1",
                             APPLE_LOG_to_ACES2065_1_Functor);
+    }
+    {
+        // Apple Log 2 uses the same transfer function as Apple Log, but with the wider
+        // Apple Wide Gamut primaries rather than Rec.2020.
+        auto APPLE_LOG_APPLEWG_to_ACES2065_1_Functor = [](OpRcPtrVec & ops)
+        {
+            APPLE_LOG::GenerateAppleLogToLinearOps(ops);
+
+            MatrixOpData::MatrixArrayPtr matrix
+            = build_conversion_matrix(APPLE_WIDE_GAMUT::primaries, ACES_AP0::primaries, ADAPTATION_BRADFORD);
+            CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
+        };
+
+        registry.addBuiltin("APPLE_LOG-APPLEWG_to_ACES2065-1",
+                            "Convert Apple Log 2 Apple Wide Gamut to ACES2065-1",
+                            APPLE_LOG_APPLEWG_to_ACES2065_1_Functor);
     }
     {
         auto APPLE_LOG_to_Linear_Functor = [](OpRcPtrVec & ops)

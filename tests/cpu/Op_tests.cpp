@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
+#include <cstring>
 
 #include "Op.cpp"
 
@@ -10,7 +11,9 @@
 
 namespace OCIO = OCIO_NAMESPACE;
 
-
+namespace
+{
+    
 void Apply(const OCIO::OpRcPtrVec & ops, float * source, long numPixels)
 {
     for(const auto & op : ops)
@@ -268,7 +271,7 @@ OCIO_ADD_TEST(Op, non_dynamic_ops)
     OCIO_CHECK_ASSERT(!ops[0]->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_CONTRAST));
     OCIO_CHECK_ASSERT(!ops[0]->hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA));
 
-    OCIO_CHECK_THROW_WHAT(ops[0]->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA),
+    OCIO_CHECK_THROW_WHAT([[maybe_unused]] auto unused = ops[0]->getDynamicProperty(OCIO::DYNAMIC_PROPERTY_GAMMA),
                           OCIO::Exception, "does not implement dynamic property");
 }
 
@@ -432,7 +435,7 @@ OCIO_ADD_TEST(OpRcPtrVec, dynamic_property)
     OCIO::CreateExposureContrastOp(ops, ec, OCIO::TRANSFORM_DIR_FORWARD);
 
     OCIO_CHECK_ASSERT(!ops.hasDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE));
-    OCIO_CHECK_THROW_WHAT(ops.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE),
+    OCIO_CHECK_THROW_WHAT([[maybe_unused]] auto unused = ops.getDynamicProperty(OCIO::DYNAMIC_PROPERTY_EXPOSURE),
                           OCIO::Exception,
                           "Cannot find dynamic property.");
 
@@ -514,4 +517,28 @@ OCIO_ADD_TEST(OpRcPtrVec, serialize)
 
     // Serialize not optimized OpVec i.e. contains some NoOps.
     OCIO_CHECK_NO_THROW(OCIO::SerializeOpVec(ops));
+}
+
+OCIO_ADD_TEST(OpRcPtrVec, move_semantics)
+{
+    OCIO::OpRcPtrVec ops;
+    auto mat = OCIO::MatrixOpData::CreateDiagonalMatrix(1.1);
+    mat->setID("First");
+    OCIO::CreateMatrixOp(ops, mat, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO_REQUIRE_EQUAL(ops.size(), 1);
+
+    // Test move constructor
+    OCIO::OpRcPtrVec ops2(std::move(ops));
+    OCIO_REQUIRE_EQUAL(ops.size(), 0);
+    OCIO_REQUIRE_EQUAL(ops2.size(), 1);
+    OCIO_CHECK_EQUAL(ops2[0]->getInfo(), "<MatrixOffsetOp>");
+
+    // Test move assignment
+    OCIO::OpRcPtrVec ops3;
+    ops3 = std::move(ops2);
+    OCIO_REQUIRE_EQUAL(ops2.size(), 0);
+    OCIO_REQUIRE_EQUAL(ops3.size(), 1);
+    OCIO_CHECK_EQUAL(ops3[0]->getInfo(), "<MatrixOffsetOp>");
+}
+
 }

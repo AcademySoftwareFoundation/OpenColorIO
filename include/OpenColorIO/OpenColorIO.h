@@ -219,8 +219,8 @@ extern OCIOEXPORT void SetCurrentConfig(const ConstConfigRcPtr & config);
  * "ocio://studio-config-latest" will point to newer versions of those configs. Therefore, it is 
  * recommended that application developers not save those strings and instead save the string that 
  * refers to the current version of that config. That way, it's guaranteed that there will be no 
- * change of behavior in the future. For example, as of OCIO 2.5, "ocio://default" should be saved
- * as "ocio://cg-config-v4.0.0_aces-v2.0_ocio-v2.5".
+ * change of behavior in the future. For example, as of OCIO 2.6, "ocio://default" should be saved
+ * as "ocio://cg-config-v5.0.0_aces-v2.1_ocio-v2.6".
  * 
  * Note that there is no validation done on the path. That is left to the application since 
  * typically the application will load the config before attempting to save its path
@@ -379,13 +379,15 @@ public:
      * "studio-config-v2.1.0_aces-v1.3_ocio-v2.3"
      * "studio-config-v2.2.0_aces-v1.3_ocio-v2.4"
      * "studio-config-v4.0.0_aces-v2.0_ocio-v2.5"
-     * 
+     * "studio-config-v5.0.0_aces-v2.1_ocio-v2.6"
+     *
      * ACES CG config, basic color spaces for computer graphics apps:
      * "cg-config-v1.0.0_aces-v1.3_ocio-v2.1"
      * "cg-config-v2.1.0_aces-v1.3_ocio-v2.3"
      * "cg-config-v2.2.0_aces-v1.3_ocio-v2.4"
      * "cg-config-v4.0.0_aces-v2.0_ocio-v2.5"
-     * 
+     * "cg-config-v5.0.0_aces-v2.1_ocio-v2.6"
+     *
      * More information is available at: 
      * %https://github.com/AcademySoftwareFoundation/OpenColorIO-Config-ACES
      * 
@@ -656,10 +658,9 @@ public:
     void removeColorSpace(const char * name);
 
     /**
-     * Return true if the color space is used by a transform, a role, or a look.
-     *
-     * \note
-     *    Name must be the canonical name.
+     * Return true if the color space is used by a transform, a role, a look, a (display, view)
+     * pair, or a file rule. The argument may be either an alias or the canonical name. While
+     * searching the config, aliases are always resolved to their canonical names for comparison.
      */
     bool isColorSpaceUsed(const char * name) const noexcept;
 
@@ -753,6 +754,43 @@ public:
                                                   const char * builtinColorSpaceName);
 
     /**
+     * \brief Find the name of the color space in the given built-in config that is equivalent to
+     *        the color space in the source config.  This is useful as a way of finding a color
+     *        interop ID for a color space that doesn't have one, since the recent built-in
+     *        configs have the ID populated for all color spaces.  Note that this method relies
+     *        on heuristics which may evolve over time and which may not work on all configs.
+     *        
+     *        Both active and inactive color spaces are searched in the built-in config (note
+     *        that this differs from IdentifyBuiltinColorSpace, which only searches the active
+     *        color spaces of the source config).
+     *
+     *        A built-in color space is evaluated by processing test colors and comparing to
+     *        the source color space.  The interchange roles are used to make this comparison
+     *        independent of the reference spaces in the configs. If the source config does not
+     *        have the interchange roles, heuristics will be used but these may be less accurate
+     *        or may not identify the reference space, particularly for display-referred spaces.
+     *        
+     *        Note that the set of test results (the "fingerprints") for the built-in config
+     *        are expensive to calculate, since it requires building a Processor for each of
+     *        its color spaces.  They are calculated on the first call and then cached on the
+     *        builtinConfig until the config is modified.  For that reason, an application
+     *        that calls this method more than once should hold on to the built-in config
+     *        object rather than calling \ref Config::CreateFromBuiltinConfig each time.
+     *
+     * \param srcConfig The config containing the color space to locate an equivalent for.
+     * \param srcColorSpaceName Color space name in the source config.  Roles and aliases may
+     *                          be used, and inactive color spaces are allowed.
+     * \param builtinConfig The built-in config to search.  See \ref Config::CreateFromBuiltinConfig.
+     * \return Matching color space name from the built-in config.  Empty if not found.
+     *
+     * \throw Exception if the source color space does not exist or if an interchange space
+     *        cannot be found in srcConfig.
+     */
+    static const char * LocateBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
+                                                const char * srcColorSpaceName,
+                                                const ConstConfigRcPtr & builtinConfig);
+
+    /**
      * \brief Identify the two names of a common color space that exists in both the 
      *        given config and the provided built-in config that may be used for converting
      *        color spaces between the two configs.  If both configs have the interchange
@@ -788,6 +826,58 @@ public:
                                          const char * srcColorSpaceName,
                                          const ConstConfigRcPtr & builtinConfig,
                                          const char * builtinColorSpaceName);
+
+    /**
+     * \brief Find the color space in this config identified by a Color Interop ID, per the
+     *        ASWF Color Interop Forum ColorInteropID recommendation.
+     *
+     *        Only color space names and aliases are searched (not the interop_id attribute).
+     *        The following steps are tried in order, and the first match is returned:
+     *          - idString itself is looked up directly.
+     *          - If idString contains a ':', the leftmost namespace and one separator are
+     *             stripped (only one level, regardless of how many colons remain) and the
+     *             remainder is looked up.
+     *          - If step 2 failed, and the stripped remainder string from step 2 is of the form
+     *             "local:BASE" (exactly one colon), and the namespace removed in step 2 equals
+     *             the sanitized form of this config's own \ref Config::getName(), BASE is
+     *             looked up.  Since the BASE of such an ID was itself generated by sanitizing
+     *             a color space name (see \ref Config::generateLocalIDForColorSpace), this
+     *             step compares BASE against the sanitized form of the color space names and
+     *             aliases, rather than against the names as they appear in the config.
+     *
+     * \param idString A color interop ID.
+     *
+     * \return The matching color space, or null if not found (including for a null or empty
+     *         idString).
+     */
+    ConstColorSpaceRcPtr findColorSpaceForID(const char * idString) const;
+
+    /**
+     * \brief Generate an on-demand local Color Interop ID for a color space in this config,
+     *        per the ASWF Color Interop Forum ColorInteropID recommendation.
+     *
+     *        The result has the form "<CONFIG-NAME>:local:<BASE>", where CONFIG-NAME is from
+     *        \ref Config::getName() and then sanitized per the recommendation's Annex C
+     *        sanitizeIDToken algorithm.  The canonical name and the aliases of the color space
+     *        are then checked to see if any are left unmodified by sanitization.  If so, the
+     *        first one found is used for BASE.  Otherwise, the sanitized canonical color space
+     *        name is used for BASE.
+     *        
+     *        This should only be called if \ref ColorSpace::getInteropID returns nothing and
+     *        \ref Config::LocateBuiltinColorSpace was unable to find an equivalent to this
+     *        color space in a built-in config (which has interop IDs populated).  In fact,
+     *        this method ignores an interop ID in the color space, if present, to allow
+     *        calculating the local ID, if necessary.
+     *
+     * \param srcColorSpaceName Name, role, or alias of an existing color space in this config.
+     *
+     * \return The generated ID.
+     *
+     * \throw Exception if srcColorSpaceName does not resolve to a color space in this config, or
+     *        if \ref Config::getName() is empty or matches one of the built-in config names that
+     *        is already populated with interop IDs.
+     */
+    std::string generateLocalIDForColorSpace(const char * srcColorSpaceName) const;
 
     /**
      * Methods related to Roles.
@@ -863,6 +953,17 @@ public:
     void addSharedView(const char * view, const char * viewTransformName,
                        const char * colorSpaceName, const char * looks,
                        const char * ruleName, const char * description);
+    /**
+     * \brief As above, but also sets the view's aliases.
+     *
+     * Will throw if view or colorSpaceName are null or empty, or if an alias collides with the
+     * name or an alias of another shared view.
+     */
+    void addSharedView(const char * view, const char * viewTransformName,
+                       const char * colorSpaceName, const char * looks,
+                       const char * ruleName, const char * description,
+                       const std::vector<std::string> & aliases);
+
     /// Remove a shared view.  Will throw if the view does not exist.
     void removeSharedView(const char * view);
 
@@ -918,6 +1019,8 @@ public:
     /**
      * Returns the colorspace attribute of the (display, view) pair.
      * (Note that this may be either a color space or a display color space.)
+     * See \ref Config::getResolvedDisplayViewColorSpaceName to first resolve
+     * any display or view aliases.
      */
     const char * getDisplayViewColorSpaceName(const char * display, const char * view) const;
     /// Returns the looks attribute of a (display, view) pair.
@@ -926,6 +1029,28 @@ public:
     const char * getDisplayViewRule(const char * display, const char * view) const noexcept;
     /// Returns the description attribute of a (display, view) pair.
     const char * getDisplayViewDescription(const char * display, const char * view) const noexcept;
+
+    /**
+     * \brief Get the number of aliases of a (display, view) pair. If display is null or
+     * empty, config shared views are used.
+     */
+    int getNumDisplayViewAliases(const char * display, const char * view) const noexcept;
+
+    /**
+     * \brief Get an alias of a (display, view) pair, by index. If display is null or empty,
+     * config shared views are used.
+     *
+     * Returns "" if the (display, view) pair does not exist or index is out of range.
+     */
+    const char * getDisplayViewAlias(const char * display, const char * view,
+                                     int index) const noexcept;
+
+    /**
+     * \brief Convenience method to check whether a (display, view) pair has a specific alias.
+     * If display is null or empty, config shared views are used.
+     */
+    bool hasDisplayViewAlias(const char * display, const char * view,
+                             const char * alias) const noexcept;
 
     /**
      * \brief Determine if a display and view exist.
@@ -962,6 +1087,20 @@ public:
                         const char * ruleName, const char * description);
 
     /**
+     * \brief As above, but also sets the view's aliases.
+     *
+     * Will throw if:
+     * * Display, view or colorSpace are null or empty.
+     * * Display already has a shared view with the same name.
+     * * An alias collides with the name or an alias of another view in this display, whether
+     *   display-defined or a shared view referenced by this display.
+     */
+    void addDisplayView(const char * display, const char * view, const char * viewTransformName,
+                        const char * colorSpaceName, const char * looks,
+                        const char * ruleName, const char * description,
+                        const std::vector<std::string> & aliases);
+
+    /**
      * \brief Add a (reference to a) shared view to a display.
      * 
      * The shared view must be part of the config. See \ref Config::addSharedView
@@ -984,6 +1123,83 @@ public:
     void removeDisplayView(const char * display, const char * view);
     /// Clear all the displays.
     void clearDisplays();
+
+    /**
+     * Methods that involve resolving display and view aliases.
+     *
+     */
+
+    /**
+     * \brief This property on the Config object allows config authors to use aliases for
+     * display names. This feature is off by default.
+     *
+     * Corresponds to the "use_display_aliases" config file attribute, which is only
+     * written to the file when true. Requires config version 2.6 or higher (validation
+     * will fail if this is enabled on an older config).
+     */
+    bool getUseDisplayAliases() const noexcept;
+    void setUseDisplayAliases(bool enabled) noexcept;
+
+    /**
+     * \brief Resolve display name aliases.
+     *
+     * If the argument does not match an existing display, a fallback checks if getColorSpace
+     * returns a display color space. If so, it checks to see if there is a display whose
+     * name matches that color space name or one of its aliases.
+     *
+     * This fallback is only performed if \ref Config::getUseDisplayAliases is true.
+     *
+     * Returns "" if no display can be found, even with the fallback.
+     */
+    const char * getCanonicalDisplayName(const char * displayName) const;
+
+    /**
+     * \brief Resolve view name aliases.
+     *
+     * If the arguments do not directly match an existing (display, view) pair, this looks for
+     * a view used by the display (whether display-defined or a referenced shared view, active
+     * or inactive) that has viewName as one of its aliases (see \ref Config::addDisplayView
+     * and \ref Config::addSharedView).
+     *
+     * The displayName is first resolved via \ref Config::getCanonicalDisplayName.
+     *
+     * Returns "" if no display and view can be found, even with the fallback, or if the
+     * arguments are null or empty.
+     */
+    const char * getCanonicalViewName(const char * displayName, const char * viewName) const;
+
+    /**
+     * \brief Returns the name of the color space that a (display, view) pair uses.
+     *
+     * This is similar to \ref Config::getDisplayViewColorSpaceName, but it first attempts
+     * to resolve displayName and viewName (which could be aliases) to their canonical names,
+     * via \ref Config::getCanonicalDisplayName and \ref Config::getCanonicalViewName. And
+     * unlike that function, the displayName may not be empty.
+     *
+     * In addition, if the display_colorspace of a shared view is <USE_DISPLAY_NAME>, that
+     * is resolved to the name of the view's display.
+     *
+     * Note that, as with getDisplayViewColorSpaceName, the returned name may be that of a
+     * named transform rather than a color space (this is allowed for views that have no
+     * view_transform).
+     *
+     * Returns either the canonical name of the view's color space or, if that does not
+     * find a result, the raw color space string (which would likely be used in an error
+     * message). If the (display, view) pair cannot even be resolved, it returns "".
+     */
+    const char * getResolvedDisplayViewColorSpaceName(const char * displayName,
+                                                      const char * viewName) const;
+
+    /**
+     * \brief Return the description of the display color space associated with displayName.
+     *
+     * If displayName matches the canonical name of a display color space, its description is
+     * returned. If \ref Config::getUseDisplayAliases is true, the search is broadened to
+     * include display color spaces that have displayName as an alias.
+     *
+     * Returns "" if no such display color space can be found.
+     */
+    const char * getDisplayDescription(const char * displayName) const;
 
     /**
      * Methods related to the Virtual Display.
@@ -1114,6 +1330,9 @@ public:
      * the config file as well as any modifications made by the client app. These functions
      * only get and set what is in the config object and do not take into account the override
      * and thus may not represent the actual user experience.
+     *
+     * Display aliases may not be used in the active list, use \ref Config::getCanonicalDisplayName
+     * to convert any aliases to their canonical name.
      */
     /// Set all active displays at once as a comma or colon delimited string. This replaces any
     /// previous contents of the list.
@@ -1152,6 +1371,9 @@ public:
      * the config file as well as any modifications made by the client app. These functions
      * only get and set what is in the config object and do not take into account the override
      * and thus may not represent the actual user experience.
+     *
+     * View aliases may not be used in the active list, use \ref Config::getCanonicalViewName
+     * to convert any aliases to their canonical name.
      */
     /// Set all active views at once as a comma or colon delimited string. This replaces any
     /// previous contents of the list.
@@ -2555,6 +2777,7 @@ public:
     ViewTransformRcPtr createEditableCopy() const;
 
     const char * getName() const noexcept;
+    /// \see ColorSpace::setName
     void setName(const char * name) noexcept;
 
     /// \see ColorSpace::getFamily
@@ -2563,6 +2786,7 @@ public:
     void setFamily(const char * family);
 
     const char * getDescription() const noexcept;
+    /// \see ColorSpace::setDescription
     void setDescription(const char * description);
 
     /**

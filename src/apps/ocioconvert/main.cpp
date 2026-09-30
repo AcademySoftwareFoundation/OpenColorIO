@@ -141,7 +141,9 @@ int main(int argc, const char **argv)
         }
         else
         {
-            throw OCIO::Exception("Unsupported output bitdepth, must be uint8, uint16, half or float.");
+            std::cerr << "ERROR: Unsupported output bitdepth, must be uint8, uint16, half or float." << std::endl;
+            ap.usage();
+            exit(1);
         }
     }
 
@@ -652,7 +654,10 @@ int main(int argc, const char **argv)
     {
         if (useDisplayView)
         {
-            outputcolorspace = config->getDisplayViewColorSpaceName(display, view);
+            // Note that this resolves the (display, view) pair the same way the processor above
+            // did, and yields the name of an actual color space even for a shared view that uses
+            // <USE_DISPLAY_NAME>.
+            outputcolorspace = config->getResolvedDisplayViewColorSpaceName(display, view);
         }
 
         if (outputcolorspace)

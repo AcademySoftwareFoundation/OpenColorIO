@@ -181,6 +181,18 @@ CPUInfo::CPUInfo()
     {
       cpuid(0x80000002 + index, (int *)(name + 16*index));
     }
+
+    // AMD erratum #1485 (Zen4, e.g. EPYC 8004/9004 and Ryzen 7000 series): when SMT is
+    // enabled and STIBP is not, affected CPUs can corrupt their own instruction stream
+    // during speculative execution, raising a spurious illegal-instruction fault on
+    // otherwise-correct code. There is no cheap, portable, unprivileged way to check the
+    // actual STIBP enablement state from here, and the documented Zen4 model numbers are
+    // scattered/non-contiguous, so this only blocks the exact SKU seen to hit this in
+    // practice rather than guessing at a broader family/model range.
+    if (!strncmp(vendor, "AuthenticAMD", 12) && strstr(name, "EPYC 9V45"))
+    {
+        flags &= ~X86_CPU_FLAG_AVX512;
+    }
 }
 
 #elif defined(__aarch64__) || defined(_M_ARM64) // ARM 64-bit processor (multiple platforms)

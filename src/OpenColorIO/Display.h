@@ -28,6 +28,7 @@ struct View
     std::string m_looks;         // Might be empty.
     std::string m_rule;          // Might be empty.
     std::string m_description;   // Might be empty.
+    StringUtils::StringVec m_aliases; // Might be empty.
 
     View() = default;
 
@@ -36,13 +37,15 @@ struct View
          const char * colorspace,
          const char * looks,
          const char * rule,
-         const char * description)
+         const char * description,
+         const StringUtils::StringVec & aliases = StringUtils::StringVec())
         : m_name(name ? name : "")
         , m_viewTransform(viewTransform ? viewTransform : "")
         , m_colorspace(colorspace ? colorspace : "")
         , m_looks(looks ? looks : "")
         , m_rule(rule ? rule : "")
         , m_description(description ? description : "")
+        , m_aliases(aliases)
     { }
 
     // Make sure that csname is not null.
@@ -54,6 +57,31 @@ struct View
     {
         return UseDisplayName(m_colorspace.c_str());
     }
+
+    bool hasAlias(const char * alias) const
+    {
+        if (!alias || !*alias) return false;
+        return StringUtils::Contain(m_aliases, alias);
+    }
+
+    // Returns the string (name or alias) of 'this' that collides with the name or an alias of
+    // 'other', or an empty string if the two views' identities do not overlap. Comparisons are
+    // case-insensitive. Used to keep view names/aliases unambiguous within whatever scope two
+    // views can both be resolved in (e.g. the same display, or the config's shared views).
+    std::string FindNamingCollision(const View & other) const
+    {
+        if (StringUtils::Compare(m_name, other.m_name)) return m_name;
+        for (const auto & alias : m_aliases)
+        {
+            if (StringUtils::Compare(alias, other.m_name)) return alias;
+        }
+        if (other.hasAlias(m_name.c_str())) return m_name;
+        for (const auto & alias : m_aliases)
+        {
+            if (other.hasAlias(alias.c_str())) return alias;
+        }
+        return std::string();
+    }
 };
 
 typedef std::vector<View> ViewVec;
@@ -63,7 +91,8 @@ ViewVec::iterator FindView(ViewVec & vec, const std::string & name);
 
 void AddView(ViewVec & views, const char * name, const char * viewTransform,
              const char * displayColorSpace, const char * looks,
-             const char * rule, const char * description);
+             const char * rule, const char * description,
+             const StringUtils::StringVec & aliases = StringUtils::StringVec());
 
 // Display can be part of the list of displays (DisplayMap) of a config.
 struct Display

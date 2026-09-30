@@ -156,7 +156,7 @@ ViewingRules::Impl & ViewingRules::Impl::operator=(const ViewingRules::Impl & rh
 
         for (const auto & rule : rhs.m_rules)
         {
-            m_rules.push_back(rule->clone());
+            m_rules.emplace_back(rule->clone());
         }
     }
 
@@ -387,15 +387,14 @@ void ViewingRules::insertRule(size_t ruleIndex, const char * name)
 
     m_impl->validateNewRule(ruleName.c_str());
 
-    auto newRule = std::make_shared<ViewingRule>(ruleName.c_str());
     if (ruleIndex == getNumEntries())
     {
-        m_impl->m_rules.push_back(newRule);
+        m_impl->m_rules.emplace_back(std::make_shared<ViewingRule>(ruleName.c_str()));
     }
     else
     {
         m_impl->validatePosition(ruleIndex);
-        m_impl->m_rules.insert(m_impl->m_rules.begin() + ruleIndex, newRule);
+        m_impl->m_rules.insert(m_impl->m_rules.begin() + ruleIndex, std::make_shared<ViewingRule>(ruleName.c_str()));
     }
 }
 

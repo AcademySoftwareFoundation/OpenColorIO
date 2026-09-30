@@ -180,13 +180,13 @@ void CreateExposureContrastOp(OpRcPtrVec & ops,
     {
     case TRANSFORM_DIR_FORWARD:
     {
-        ops.push_back(std::make_shared<ExposureContrastOp>(data));
+        ops.emplace_back(std::make_shared<ExposureContrastOp>(data));
         break;
     }
     case TRANSFORM_DIR_INVERSE:
     {
         ExposureContrastOpDataRcPtr dataInv = data->inverse();
-        ops.push_back(std::make_shared<ExposureContrastOp>(dataInv));
+        ops.emplace_back(std::make_shared<ExposureContrastOp>(dataInv));
         break;
     }
     }

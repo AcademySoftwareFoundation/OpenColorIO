@@ -215,7 +215,7 @@ void CreateGradingRGBCurveOp(OpRcPtrVec & ops,
         curve = curve->inverse();
     }
 
-    ops.push_back(std::make_shared<GradingRGBCurveOp>(curve));
+    ops.emplace_back(std::make_shared<GradingRGBCurveOp>(curve));
 }
 
 ///////////////////////////////////////////////////////////////////////////

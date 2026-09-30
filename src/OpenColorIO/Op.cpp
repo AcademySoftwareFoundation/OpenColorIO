@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 // Copyright Contributors to the OpenColorIO Project.
 
-#include <cstring>
+#include <memory>
+#include <string>
+#include <ostream>
 #include <sstream>
-
-#include <pystring.h>
+#include <utility>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -26,39 +27,9 @@
 
 namespace OCIO_NAMESPACE
 {
-bool OpCPU::isDynamic() const
-{
-    return false;
-}
-
-bool OpCPU::hasDynamicProperty(DynamicPropertyType /* type */) const
-{
-    return false;
-}
-
 DynamicPropertyRcPtr OpCPU::getDynamicProperty(DynamicPropertyType /* type */) const
 {
     throw Exception("Op does not implement dynamic property.");
-}
-
-OpData::OpData()
-    :   m_metadata()
-{ }
-
-OpData::OpData(const OpData & rhs)
-    : m_metadata()
-{
-    *this = rhs;
-}
-
-OpData & OpData::operator=(const OpData & rhs)
-{
-    if (this != &rhs)
-    {
-        m_metadata = rhs.m_metadata;
-    }
-
-    return *this;
 }
 
 OpDataRcPtr OpData::getIdentityReplacement() const
@@ -68,39 +39,6 @@ OpDataRcPtr OpData::getIdentityReplacement() const
 
 void OpData::getSimplerReplacement(OpDataVec & /* ops */) const
 {
-}
-
-bool OpData::equals(const OpData & other) const
-{
-    if (this == &other) return true;
-
-    // Ignore metadata.
-    return getType() == other.getType();
-}
-
-const std::string & OpData::getID() const
-{
-    return m_metadata.getAttributeValueString(METADATA_ID);
-}
-
-void OpData::setID(const std::string & id)
-{
-    return m_metadata.setID(id.c_str());
-}
-
-const std::string & OpData::getName() const
-{
-    return m_metadata.getAttributeValueString(METADATA_NAME);
-}
-
-void OpData::setName(const std::string & name)
-{
-    return m_metadata.setName(name.c_str());
-}
-
-bool operator==(const OpData & lhs, const OpData & rhs)
-{
-    return lhs.equals(rhs);
 }
 
 const char * GetTypeName(OpData::Type type)
@@ -179,6 +117,8 @@ OpRcPtr Op::getIdentityReplacement() const
 {
     auto opData = m_data->getIdentityReplacement();
     OpRcPtrVec ops;
+    ops.reserve(1);
+
     if (opData->getType() == OpData::MatrixType)
     {
         // No-op that will be optimized.
@@ -198,118 +138,32 @@ OpRcPtr Op::getIdentityReplacement() const
             << std::string(GetTypeName(opData->getType())) << ".";
         throw Exception(oss.str().c_str());
     }
-    return ops[0];
+    return std::move(ops[0]);
 }
 
 void Op::getSimplerReplacement(OpRcPtrVec & ops) const
 {
     OpDataVec opDataVec;
     m_data->getSimplerReplacement(opDataVec);
+    ops.reserve(ops.size() + opDataVec.size());
     for (const auto & opData : opDataVec)
     {
         CreateOpVecFromOpData(ops, opData, TRANSFORM_DIR_FORWARD);
     }
 }
 
-OpRcPtrVec::OpRcPtrVec()
-    : m_metadata()
-{
-}
-
-OpRcPtrVec::OpRcPtrVec(const OpRcPtrVec & v)
-    : OpRcPtrVec()
-{
-    *this = v; 
-}
-
-OpRcPtrVec & OpRcPtrVec::operator=(const OpRcPtrVec & v)
-{
-    if(this!=&v)
-    {
-        m_ops = v.m_ops;
-        m_metadata = v.m_metadata;
-    }
-
-    return *this;
-}
-
 OpRcPtrVec & OpRcPtrVec::operator+=(const OpRcPtrVec & v)
 {
+    // reserve enough space so we can call insert without invalidating the iterators.
+    m_ops.reserve(m_ops.size() + v.m_ops.size());
+    m_ops.insert(end(), v.begin(), v.end());
+
     if (this != &v)
     {
-        m_ops.insert(end(), v.begin(), v.end());
         m_metadata.combine(v.m_metadata);
-        return *this;
-    }
-    else
-    {
-        OpRcPtrVec other = v;
-        return operator+=(other);
-    }
-}
-
-OpRcPtrVec::iterator OpRcPtrVec::erase(OpRcPtrVec::const_iterator position) 
-{ 
-    return m_ops.erase(position); 
-}
-
-OpRcPtrVec::iterator OpRcPtrVec::erase(OpRcPtrVec::const_iterator first, 
-                                        OpRcPtrVec::const_iterator last)
-{ 
-    return m_ops.erase(first, last); 
-}
-
-void OpRcPtrVec::insert(OpRcPtrVec::const_iterator position, 
-                        OpRcPtrVec::const_iterator first, 
-                        OpRcPtrVec::const_iterator last)
-{
-    m_ops.insert(position, first, last);
-}
-
-void OpRcPtrVec::push_back(const OpRcPtrVec::value_type & val) 
-{
-    m_ops.push_back(val);
-}
-
-OpRcPtrVec::const_reference OpRcPtrVec::back() const
-{
-    return m_ops.back();
-}
-
-OpRcPtrVec::const_reference OpRcPtrVec::front() const
-{
-    return m_ops.front();
-}
-
-bool OpRcPtrVec::isNoOp() const noexcept
-{
-    for (const auto & op : m_ops)
-    {
-        if(!op->isNoOp()) return false;
     }
 
-    return true;
-}
-
-bool OpRcPtrVec::hasChannelCrosstalk() const noexcept
-{
-    return m_ops.end() != std::find_if(m_ops.begin(),
-                                       m_ops.end(),
-                                       [](const OpRcPtr & op) { return op->hasChannelCrosstalk(); } );
-}
-
-bool OpRcPtrVec::isDynamic() const noexcept
-{
-    return m_ops.end() != std::find_if(m_ops.begin(),
-                                       m_ops.end(),
-                                       [](const OpRcPtr & op) { return op->isDynamic(); } );
-}
-
-bool OpRcPtrVec::hasDynamicProperty(DynamicPropertyType type) const noexcept
-{
-    return m_ops.end() != std::find_if(m_ops.begin(),
-                                       m_ops.end(),
-                                       [type](const OpRcPtr & op) { return op->hasDynamicProperty(type); } );
+    return *this;   
 }
 
 DynamicPropertyRcPtr OpRcPtrVec::getDynamicProperty(DynamicPropertyType type) const
@@ -328,10 +182,11 @@ DynamicPropertyRcPtr OpRcPtrVec::getDynamicProperty(DynamicPropertyType type) co
 OpRcPtrVec OpRcPtrVec::clone() const 
 {
     OpRcPtrVec cloned;
+    cloned.reserve(m_ops.size());
 
     for (const auto & op : m_ops)
     {
-        cloned.push_back(op->clone());
+        cloned.emplace_back(op->clone());
     }
 
     return cloned;
@@ -340,9 +195,10 @@ OpRcPtrVec OpRcPtrVec::clone() const
 OpRcPtrVec OpRcPtrVec::invert() const
 {
     OpRcPtrVec inverted;
+    inverted.reserve(m_ops.size());
 
-    OpRcPtrVec::const_reverse_iterator iter = m_ops.rbegin();
-    OpRcPtrVec::const_reverse_iterator end  = m_ops.rend();
+    auto iter = m_ops.rbegin();
+    auto end  = m_ops.rend();
     for (; iter!=end; ++iter)
     {
         ConstOpRcPtr op = *iter;
@@ -361,18 +217,10 @@ OpRcPtrVec OpRcPtrVec::invert() const
     return inverted;
 }
 
-void OpRcPtrVec::validate() const
-{
-    for (auto & op : m_ops)
-    {
-        op->validate();
-    }
-}
-
 namespace
 {
 template<typename T>
-void ValidateDynamicProperty(OpRcPtr op, std::shared_ptr<T> & prop, DynamicPropertyType type)
+void ValidateDynamicProperty(const OpRcPtr& op, std::shared_ptr<T> & prop, DynamicPropertyType type)
 {
     if (op->hasDynamicProperty(type))
     {
@@ -432,7 +280,7 @@ void OpRcPtrVec::validateDynamicProperties()
     DynamicPropertyGradingHueCurveImplRcPtr dpGradingHueCurve;
     DynamicPropertyGradingToneImplRcPtr dpGradingTone;
 
-    for (auto op : m_ops)
+    for (const auto& op : m_ops)
     {
         // Each property can only be there once.
         ValidateDynamicProperty(op, dpExposure, DYNAMIC_PROPERTY_EXPOSURE);
@@ -473,16 +321,14 @@ std::ostream& operator<< (std::ostream & os, const Op & op)
 std::string SerializeOpVec(const OpRcPtrVec & ops, int indent)
 {
     std::ostringstream oss;
+    const std::string indentStr(indent, ' ');
 
-    for (OpRcPtrVec::size_type idx = 0, size = ops.size(); idx < size; ++idx)
+    OpRcPtrVec::size_type idx = 0;
+    for (const auto & op : ops)
     {
-        const OpRcPtr & op = ops[idx];
-
-        oss << pystring::mul(" ", indent);
-        oss << "Op " << idx << ": " << *op << " ";
-        oss << op->getCacheID();
-
-        oss << "\n";
+        oss << indentStr << "Op " << idx << ": " << *op << " "
+            << op->getCacheID() << "\n";
+        ++idx;
     }
 
     return oss.str();

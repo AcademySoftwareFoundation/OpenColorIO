@@ -615,6 +615,8 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_ACES_OUTPUT_TRANSFORM_20))
         .value("FIXED_FUNCTION_ACES_RGB_TO_JMH_20", FIXED_FUNCTION_ACES_RGB_TO_JMH_20,
                DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_ACES_RGB_TO_JMH_20))
+        .value("FIXED_FUNCTION_ACES_RGB_TO_HMJ_20", FIXED_FUNCTION_ACES_RGB_TO_HMJ_20,
+               DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_ACES_RGB_TO_HMJ_20))
         .value("FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20", FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20,
                DOC(PyOpenColorIO, FixedFunctionStyle, FIXED_FUNCTION_ACES_TONESCALE_COMPRESS_20))
         .value("FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20", FIXED_FUNCTION_ACES_GAMUT_COMPRESS_20,
@@ -857,6 +859,14 @@ void bindPyTypes(py::module & m)
                DOC(PyOpenColorIO, ProcessorCacheFlags, PROCESSOR_CACHE_SHARE_DYN_PROPERTIES))
         .value("PROCESSOR_CACHE_DEFAULT", PROCESSOR_CACHE_DEFAULT, 
                DOC(PyOpenColorIO, ProcessorCacheFlags, PROCESSOR_CACHE_DEFAULT))
+        .export_values();
+
+    py::enum_<ConfigCompatibility>(
+        m, "ConfigCompatibility",
+        DOC(PyOpenColorIO, ConfigCompatibility))
+
+        .value("CONFIG_HDR_DISPLAY_SUPPORT_26", CONFIG_HDR_DISPLAY_SUPPORT_26,
+               DOC(PyOpenColorIO, ConfigCompatibility, CONFIG_HDR_DISPLAY_SUPPORT_26))
         .export_values();
 
     // Conversion

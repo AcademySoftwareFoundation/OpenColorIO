@@ -248,7 +248,7 @@ static constexpr unsigned LastSupportedMajorVersion = OCIO_VERSION_MAJOR;
 
 // For each major version keep the most recent minor.
 static const unsigned int LastSupportedMinorVersion[] = {0, // Version 1
-                                                         5  // Version 2
+                                                         6  // Version 2
                                                          };
 
 } // namespace
@@ -321,6 +321,7 @@ public:
     // Misc
     std::vector<double> m_defaultLumaCoefs;
     bool m_strictParsing;
+    bool m_useDisplayAliases{ false };
 
     mutable Validation m_validation;
     mutable std::string m_validationtext;
@@ -332,6 +333,22 @@ public:
 
     mutable ProcessorCacheFlags m_cacheFlags { PROCESSOR_CACHE_DEFAULT };
     mutable ProcessorCache<std::size_t, ProcessorRcPtr> m_processorCache;
+
+    // Cache of the color space fingerprints used by LocateBuiltinColorSpace.  These are
+    // expensive to calculate (a Processor is built for each color space of the config), so
+    // they are calculated on first use and then kept until the config is modified.
+    //
+    // NB: These are held by pointer so that a caller which is using the results is not
+    // affected if the config is modified (resetCacheIDs below resets the ptr reference).  
+    // So an object a caller is still holding is unaffected until it is done with it.
+    //
+    // Two mutexes are used.  The first one protects the pointers and is only held for very
+    // short periods.  The second one serializes the calculation itself, which must not be
+    // done while holding the first one (see the comments in getColorSpaceFingerprints).
+    mutable Mutex m_fingerprintMutex;
+    mutable Mutex m_fingerprintCalcMutex;
+    mutable std::shared_ptr<const ConfigUtils::TestVals> m_csTestVals;
+    mutable std::shared_ptr<const ConfigUtils::ColorSpaceFingerprints> m_csFingerprints;
 
     Impl() :
         m_majorVersion(LastSupportedMajorVersion),
@@ -440,6 +457,7 @@ public:
             m_defaultViewTransform = rhs.m_defaultViewTransform;
             m_defaultLumaCoefs = rhs.m_defaultLumaCoefs;
             m_strictParsing = rhs.m_strictParsing;
+            m_useDisplayAliases = rhs.m_useDisplayAliases;
 
             m_validation = rhs.m_validation;
             m_validationtext = rhs.m_validationtext;
@@ -453,6 +471,10 @@ public:
 
             m_processorCache.clear();
             m_processorCache.enable((m_cacheFlags & PROCESSOR_CACHE_ENABLED) == PROCESSOR_CACHE_ENABLED);
+
+            // The fingerprints are not copied, they will be recalculated if needed.
+            m_csTestVals.reset();
+            m_csFingerprints.reset();
         }
         return *this;
     }
@@ -733,7 +755,32 @@ public:
             m_validationtext = os.str();
             throw Exception(m_validationtext.c_str());
         }
-        else if (checkUseDisplayName)
+        else
+        {
+            // Does the shared view's name or an alias collide with the name or an alias of a
+            // display-defined view in this display? This is normally already prevented by
+            // addDisplayView and addDisplaySharedView at the point a view is added to (or
+            // linked to) the display. However, addSharedView may replace an already-linked
+            // shared view's aliases afterwards, and that call does not check if any other 
+            // displays currently reference it, so this check acts as the defensive backstop
+            // for that case.
+            for (const auto & view : viewsOfDisplay)
+            {
+                const std::string collision = sharedViewIt->FindNamingCollision(view);
+                if (!collision.empty())
+                {
+                    std::ostringstream os;
+                    os << "Config failed view validation. The display '" << display << "' ";
+                    os << "contains a shared view '" << sharedViewIt->m_name << "' whose name ";
+                    os << "or alias '" << collision << "' collides with the name or alias of ";
+                    os << "the view '" << view.m_name << "' in this display.";
+                    m_validationtext = os.str();
+                    throw Exception(m_validationtext.c_str());
+                }
+            }
+        }
+
+        if (checkUseDisplayName)
         {
             const auto view = *sharedViewIt;
             if (!view.m_viewTransform.empty() && view.useDisplayNameForColorspace())
@@ -931,6 +978,83 @@ public:
     {
         m_cacheFlags = flags;
         m_processorCache.enable((m_cacheFlags & PROCESSOR_CACHE_ENABLED) == PROCESSOR_CACHE_ENABLED);
+    }
+
+    // Get the fingerprint test values for this config, calculating them if necessary.
+    // The config argument must be the Config object that owns this Impl.
+    //
+    std::shared_ptr<const ConfigUtils::TestVals> getColorSpaceTestVals(
+        const ConstConfigRcPtr & config) const
+    {
+        {
+            AutoMutex lock(m_fingerprintMutex);
+            if (m_csTestVals)
+            {
+                return m_csTestVals;
+            }
+        }
+
+        // The calculation is serialized with its own mutex rather than the one that
+        // protects the pointers.  That is because the calculation calls getProcessor, which
+        // takes m_cacheidMutex, whereas a config that is being modified takes m_cacheidMutex
+        // and then clears this cache.  Don't want the calculation to be holding the mutex
+        // that resetCacheIDs needs, in case threads take them in the opposite order.
+        AutoMutex calcLock(m_fingerprintCalcMutex);
+
+        {
+            // Another thread may have completed the calculation in the meantime.
+            AutoMutex lock(m_fingerprintMutex);
+            if (m_csTestVals)
+            {
+                return m_csTestVals;
+            }
+        }
+
+        auto testVals = std::make_shared<ConfigUtils::TestVals>();
+        ConfigUtils::initializeTestVals(*testVals, config);
+
+        AutoMutex lock(m_fingerprintMutex);
+        m_csTestVals = testVals;
+        return m_csTestVals;
+    }
+
+    // Get the complete set of color space fingerprints of this config, calculating them if
+    // necessary.  The config argument must be the Config object that owns this Impl.
+    //
+    std::shared_ptr<const ConfigUtils::ColorSpaceFingerprints> getColorSpaceFingerprints(
+        const ConstConfigRcPtr & config) const
+    {
+        {
+            AutoMutex lock(m_fingerprintMutex);
+            if (m_csFingerprints)
+            {
+                return m_csFingerprints;
+            }
+        }
+
+        // Get the test values used to calculate the fingerprints.  Note that this must be
+        // done before taking the calculation mutex below.
+        auto testVals = getColorSpaceTestVals(config);
+
+        // As above, the calculation must not be done while holding m_fingerprintMutex.
+        AutoMutex calcLock(m_fingerprintCalcMutex);
+
+        {
+            // Another thread may have completed the calculation in the meantime.
+            AutoMutex lock(m_fingerprintMutex);
+            if (m_csFingerprints)
+            {
+                return m_csFingerprints;
+            }
+        }
+
+        auto fingerprints = std::make_shared<ConfigUtils::ColorSpaceFingerprints>();
+        fingerprints->testVals = *testVals;
+        ConfigUtils::initializeFingerprintVec(*fingerprints, config);
+
+        AutoMutex lock(m_fingerprintMutex);
+        m_csFingerprints = fingerprints;
+        return m_csFingerprints;
     }
 
     ConstProcessorRcPtr getProcessorWithoutCaching(
@@ -2674,6 +2798,21 @@ bool Config::isColorSpaceUsed(const char * name) const noexcept
 
     if (!name || !*name) return false;
 
+    // Resolve any aliases, so both source and target are comparing the canonical names.
+    auto resolveName = [this](const char * csName) -> std::string
+    {
+        const char * canonicalName = getCanonicalName(csName);
+        return (canonicalName && *canonicalName) ? std::string(canonicalName)
+                                                 : std::string(csName ? csName : "");
+    };
+
+    const std::string searchName = resolveName(name);
+
+    auto isMatch = [&resolveName, &searchName](const char * csName)
+    {
+        return csName && *csName && StringUtils::Compare(resolveName(csName), searchName);
+    };
+
     // Check for all color spaces, looks and view transforms.
 
     ConstTransformVec allTransforms;
@@ -2688,7 +2827,7 @@ bool Config::isColorSpaceUsed(const char * name) const noexcept
 
     for (const auto & csName : colorSpaceNames)
     {
-        if (0 == Platform::Strcasecmp(name, csName.c_str()))
+        if (isMatch(csName.c_str()))
         {
             return true;
         }
@@ -2701,7 +2840,7 @@ bool Config::isColorSpaceUsed(const char * name) const noexcept
     {
         const char * roleName = getRoleName(idx);
         const char * csName = LookupRole(getImpl()->m_roles, roleName);
-        if (0 == Platform::Strcasecmp(csName, name))
+        if (isMatch(csName))
         {
             return true;
         }
@@ -2712,7 +2851,7 @@ bool Config::isColorSpaceUsed(const char * name) const noexcept
     for (const auto & view : getImpl()->m_sharedViews)
     {
         const char * csName = view.m_colorspace.c_str();
-        if (0 == Platform::Strcasecmp(csName, name))
+        if (isMatch(csName))
         {
             return true;
         }
@@ -2727,7 +2866,7 @@ bool Config::isColorSpaceUsed(const char * name) const noexcept
         {
             const char * viewName = view.m_name.c_str();
             const char * csName = getDisplayViewColorSpaceName(dispName, viewName);
-            if (0 == Platform::Strcasecmp(csName, name))
+            if (isMatch(csName))
             {
                 return true;
             }
@@ -2740,7 +2879,8 @@ bool Config::isColorSpaceUsed(const char * name) const noexcept
                 if (!((*viewIt).m_viewTransform.empty()) &&
                     (*viewIt).useDisplayNameForColorspace())
                 {
-                    if (0 == Platform::Strcasecmp(dispName, name))
+                    // The view uses the display color space named after the display.
+                    if (isMatch(dispName))
                     {
                         return true;
                     }
@@ -2757,7 +2897,7 @@ bool Config::isColorSpaceUsed(const char * name) const noexcept
         const char * lookName = getLookNameByIndex(idx);
 
         ConstLookRcPtr l = getLook(lookName);
-        if (0 == Platform::Strcasecmp(l->getProcessSpace(), name))
+        if (isMatch(l->getProcessSpace()))
         {
             return true;
         }
@@ -2771,7 +2911,7 @@ bool Config::isColorSpaceUsed(const char * name) const noexcept
     for (size_t idx = 0; idx < numRules; ++idx)
     {
         const char * csName = rules->getColorSpace(idx);
-        if (0 == Platform::Strcasecmp(csName, name))
+        if (isMatch(csName))
         {
             return true;
         }
@@ -2939,6 +3079,85 @@ const char * Config::IdentifyBuiltinColorSpace(const ConstConfigRcPtr & srcConfi
     return ConfigUtils::IdentifyBuiltinColorSpace(srcConfig,
                                                   builtinConfig,
                                                   builtinColorSpaceName);
+}
+
+const char * Config::LocateBuiltinColorSpace(const ConstConfigRcPtr & srcConfig,
+                                             const char * srcColorSpaceName,
+                                             const ConstConfigRcPtr & builtinConfig)
+{
+    if (!srcConfig || !builtinConfig || !srcColorSpaceName || !*srcColorSpaceName)
+    {
+        throw Exception("LocateBuiltinColorSpace: arguments must not be null.");
+    }
+
+    // Note that this resolves roles and aliases and finds inactive color spaces.
+    ConstColorSpaceRcPtr srcColorSpace = srcConfig->getColorSpace(srcColorSpaceName);
+    if (!srcColorSpace)
+    {
+        std::ostringstream os;
+        os  << "LocateBuiltinColorSpace: Source config does not contain the requested color space: "
+            << srcColorSpaceName << ".";
+        throw Exception(os.str().c_str());
+    }
+
+    if (srcColorSpace->isData())
+    {
+        // Data spaces have no colorimetry to compare, so return early rather than requiring
+        // an interchange space to be identified.  Built-in configs always have a "raw" data
+        // color space, so just use that rather than searching for one.
+        ConstColorSpaceRcPtr rawColorSpace = builtinConfig->getColorSpace("raw");
+        return rawColorSpace ? rawColorSpace->getName() : "";
+    }
+
+    // Calculate (or reuse) the cached fingerprints of both configs.  This requires access to
+    // the private Impl of Config, which is why it is done here rather than in ConfigUtils.
+    auto srcTestVals = srcConfig->getImpl()->getColorSpaceTestVals(srcConfig);
+
+    const ReferenceSpaceType refSpaceType = srcColorSpace->getReferenceSpaceType();
+
+    auto testValsAreUsable = [refSpaceType](const ConfigUtils::TestVals & tv)
+    {
+        return refSpaceType == REFERENCE_SPACE_DISPLAY ? tv.displayRefTestValsConverted
+                                                       : tv.sceneRefTestValsConverted;
+    };
+
+    // The src test values are the same colors as the ones used for the built-in config,
+    // but expressed in the reference space of the source config, which is what allows the
+    // fingerprints of the two configs to be compared without needing to adjust the
+    // reference space of the src color space itself.
+    if (!testValsAreUsable(*srcTestVals))
+    {
+        std::ostringstream os;
+        os  << "Heuristics were not able to find an interchange space in the source config, "
+            << "so it is not possible to search for the color space: "
+            << srcColorSpace->getName() << ".";
+        throw Exception(os.str().c_str());
+    }
+
+    auto builtinFingerprints = builtinConfig->getImpl()->getColorSpaceFingerprints(builtinConfig);
+
+    if (!testValsAreUsable(builtinFingerprints->testVals))
+    {
+        throw Exception("Heuristics were not able to find an interchange space in the "
+                        "built-in config.");
+    }
+
+    // Returns null if no match is found.
+    return ConfigUtils::LocateBuiltinColorSpace(srcConfig,
+                                                srcColorSpace,
+                                                builtinConfig,
+                                                srcTestVals,
+                                                builtinFingerprints);
+}
+
+std::string Config::generateLocalIDForColorSpace(const char * srcColorSpaceName) const
+{
+    return ConfigUtils::GenerateLocalIDForColorSpace(*this, srcColorSpaceName);
+}
+
+ConstColorSpaceRcPtr Config::findColorSpaceForID(const char * idString) const
+{
+    return ConfigUtils::FindColorSpaceForID(*this, getImpl()->m_allColorSpaces, idString);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -3372,6 +3591,14 @@ void Config::addSharedView(const char * view, const char * viewTransform,
                            const char * colorSpace, const char * looks,
                            const char * rule, const char * description)
 {
+    addSharedView(view, viewTransform, colorSpace, looks, rule, description, {});
+}
+
+void Config::addSharedView(const char * view, const char * viewTransform,
+                           const char * colorSpace, const char * looks,
+                           const char * rule, const char * description,
+                           const std::vector<std::string> & aliases)
+{
     if (!view || !*view)
     {
         throw Exception("Shared view could not be added to config, view name has to be a "
@@ -3385,7 +3612,35 @@ void Config::addSharedView(const char * view, const char * viewTransform,
     }
 
     ViewVec & views = getImpl()->m_sharedViews;
-    AddView(views, view, viewTransform, colorSpace, looks, rule, description);
+
+    const View candidate(view, viewTransform, colorSpace, looks, rule, description, aliases);
+
+    // Keep shared views unambiguous among themselves (independent of which displays end up
+    // referencing them), by checking the candidate's name/aliases against every sibling shared
+    // view (other than the one being replaced, if this call is updating an existing one).
+    //
+    // Note: this does not check the candidate against the views of displays that may already
+    // reference an existing shared view of this name. That case (redefining an already-linked
+    // shared view's aliases so that they collide with that display's own views) is instead
+    // caught defensively by validateSharedView.
+    for (const auto & existing : views)
+    {
+        if (StringUtils::Compare(existing.m_name, view))
+        {
+            continue;
+        }
+        const std::string collision = candidate.FindNamingCollision(existing);
+        if (!collision.empty())
+        {
+            std::ostringstream os;
+            os << "Shared view '" << view << "' could not be added to config: '" << collision;
+            os << "' is already used as the name or alias of the shared view '";
+            os << existing.m_name << "'.";
+            throw Exception(os.str().c_str());
+        }
+    }
+
+    AddView(views, view, viewTransform, colorSpace, looks, rule, description, aliases);
 
     getImpl()->m_displayCache.clear();
 
@@ -3608,6 +3863,8 @@ const char * Config::getDisplayViewTransformName(const char * display, const cha
     return viewPtr->m_viewTransform.c_str();
 }
 
+// NB: See getResolvedDisplayViewColorSpaceName for a version of this that resolves display aliases.
+
 const char * Config::getDisplayViewColorSpaceName(const char * display, const char * view) const
 {
     const View * viewPtr = getImpl()->getView(display, view);
@@ -3636,6 +3893,30 @@ const char * Config::getDisplayViewDescription(const char * display, const char 
     const View * viewPtr = getImpl()->getView(display, view);
 
     return viewPtr ? viewPtr->m_description.c_str() : "";
+}
+
+int Config::getNumDisplayViewAliases(const char * display, const char * view) const noexcept
+{
+    const View * viewPtr = getImpl()->getView(display, view);
+    return viewPtr ? static_cast<int>(viewPtr->m_aliases.size()) : 0;
+}
+
+const char * Config::getDisplayViewAlias(const char * display, const char * view,
+                                         int index) const noexcept
+{
+    const View * viewPtr = getImpl()->getView(display, view);
+    if (!viewPtr || index < 0 || static_cast<size_t>(index) >= viewPtr->m_aliases.size())
+    {
+        return "";
+    }
+    return viewPtr->m_aliases[index].c_str();
+}
+
+bool Config::hasDisplayViewAlias(const char * display, const char * view,
+                                 const char * alias) const noexcept
+{
+    const View * viewPtr = getImpl()->getView(display, view);
+    return viewPtr && viewPtr->hasAlias(alias);
 }
 
 bool Config::hasView(const char * dispName, const char * viewName) const
@@ -3687,6 +3968,27 @@ void Config::addDisplaySharedView(const char * display, const char * sharedView)
         throw Exception(os.str().c_str());
     }
 
+    // If the shared view is already defined, make sure its aliases don't collide with this
+    // display's own views either (a plain name collision is already excluded above, since
+    // shared view names and display-defined view names share one namespace per display).
+    const auto sharedViewIt = FindView(getImpl()->m_sharedViews, sharedView);
+    if (sharedViewIt != getImpl()->m_sharedViews.end())
+    {
+        for (const auto & existing : existingViews)
+        {
+            const std::string collision = sharedViewIt->FindNamingCollision(existing);
+            if (!collision.empty())
+            {
+                std::ostringstream os;
+                os << "Shared view '" << sharedView << "' could not be added to display '";
+                os << display << "': '" << collision;
+                os << "' is already used as the name or alias of the view '";
+                os << existing.m_name << "' in this display.";
+                throw Exception(os.str().c_str());
+            }
+        }
+    }
+
     StringUtils::StringVec & views = iter->second.m_sharedViews;
     if (StringUtils::Contain(views, sharedView))
     {
@@ -3707,12 +4009,20 @@ void Config::addDisplaySharedView(const char * display, const char * sharedView)
 void Config::addDisplayView(const char * display, const char * view,
                             const char * colorSpace, const char * looks)
 {
-    addDisplayView(display, view, nullptr, colorSpace, looks, nullptr, nullptr);
+    addDisplayView(display, view, nullptr, colorSpace, looks, nullptr, nullptr, {});
 }
 
 void Config::addDisplayView(const char * display, const char * view, const char * viewTransform,
                             const char * colorSpace, const char * looks,
                             const char * rule, const char * description)
+{
+    addDisplayView(display, view, viewTransform, colorSpace, looks, rule, description, {});
+}
+
+void Config::addDisplayView(const char * display, const char * view, const char * viewTransform,
+                            const char * colorSpace, const char * looks,
+                            const char * rule, const char * description,
+                            const std::vector<std::string> & aliases)
 {
     if (!display || !*display)
     {
@@ -3738,7 +4048,7 @@ void Config::addDisplayView(const char * display, const char * view, const char 
         getImpl()->m_displays[curSize].first = display;
         getImpl()->m_displays[curSize].second.m_views.push_back(View(view, viewTransform,
                                                                      colorSpace, looks, rule,
-                                                                     description));
+                                                                     description, aliases));
         getImpl()->m_displayCache.clear();
     }
     else
@@ -3751,8 +4061,48 @@ void Config::addDisplayView(const char * display, const char * view, const char 
             throw Exception(os.str().c_str());
         }
 
+        const View candidate(view, viewTransform, colorSpace, looks, rule, description, aliases);
+
+        // Check the candidate's name/aliases against sibling views in this display (other than
+        // the one being replaced, if this call is updating an existing view by that name).
+        for (const auto & existing : iter->second.m_views)
+        {
+            if (StringUtils::Compare(existing.m_name, view))
+            {
+                continue;
+            }
+            const std::string collision = candidate.FindNamingCollision(existing);
+            if (!collision.empty())
+            {
+                std::ostringstream os;
+                os << "View '" << view << "' could not be added to display '" << display;
+                os << "': '" << collision << "' is already used as the name or alias of the ";
+                os << "view '" << existing.m_name << "' in this display.";
+                throw Exception(os.str().c_str());
+            }
+        }
+
+        // Check the candidate's name/aliases against the shared views this display references.
+        for (const auto & sharedViewName : iter->second.m_sharedViews)
+        {
+            const auto sharedViewIt = FindView(getImpl()->m_sharedViews, sharedViewName);
+            if (sharedViewIt == getImpl()->m_sharedViews.end())
+            {
+                continue;
+            }
+            const std::string collision = candidate.FindNamingCollision(*sharedViewIt);
+            if (!collision.empty())
+            {
+                std::ostringstream os;
+                os << "View '" << view << "' could not be added to display '" << display;
+                os << "': '" << collision << "' is already used as the name or alias of the ";
+                os << "shared view '" << sharedViewIt->m_name << "' referenced by this display.";
+                throw Exception(os.str().c_str());
+            }
+        }
+
         ViewVec & views = iter->second.m_views;
-        AddView(views, view, viewTransform, colorSpace, looks, rule, description);
+        AddView(views, view, viewTransform, colorSpace, looks, rule, description, aliases);
     }
 
     AutoMutex lock(getImpl()->m_cacheidMutex);
@@ -3822,6 +4172,258 @@ void Config::clearDisplays()
     AutoMutex lock(getImpl()->m_cacheidMutex);
     getImpl()->resetCacheIDs();
 }
+
+///////////////////////////////////////////////////////////////////////////
+//  Unlike the above functions, these are set up to work with display
+//  and view aliases.
+
+bool Config::getUseDisplayAliases() const noexcept
+{
+    return getImpl()->m_useDisplayAliases;
+}
+
+void Config::setUseDisplayAliases(bool enabled) noexcept
+{
+    getImpl()->m_useDisplayAliases = enabled;
+
+    AutoMutex lock(getImpl()->m_cacheidMutex);
+    getImpl()->resetCacheIDs();
+}
+
+namespace
+{
+
+// A display might have a display color space with a matching name purely by coincidence.
+// This checks whether one of the display's views (display-defined or shared, active or
+// inactive) actually resolves, directly or via <USE_DISPLAY_NAME>, to the given color space.
+bool DisplayUsesColorSpace(const Config & config, const ViewPtrVec & views,
+                           const ConstColorSpaceRcPtr & cs)
+{
+    for (const auto * view : views)
+    {
+        // Only requiring one (rather than all) the display's views to match since sometimes a
+        // display will have utility views such as "Raw" that don't rely on a display color space.
+
+        if (view->useDisplayNameForColorspace())
+        {
+            // The display_colorspace is <USE_DISPLAY_NAME>.
+            return true;
+        }
+        ConstColorSpaceRcPtr viewCs = config.getColorSpace(view->m_colorspace.c_str());
+        if (viewCs && StringUtils::Compare(viewCs->getName(), cs->getName()))
+        {
+            // The canonical name of the view's display_colorspace (or colorspace)
+            // equals that of cs.
+            return true;
+        }
+    }
+    return false;
+}
+
+} // namespace
+
+const char * Config::getCanonicalDisplayName(const char * displayName) const
+{
+    if (!displayName || !*displayName)
+    {
+        return "";
+    }
+
+    // This is the normal case, there is a display called displayName.
+    DisplayMap::const_iterator iter = FindDisplay(getImpl()->m_displays, displayName);
+    if (iter != getImpl()->m_displays.end())
+    {
+        return iter->first.c_str();
+    }
+
+    // Use of the fallback requires a config-level opt-in, which is false by default.
+    if (!getImpl()->m_useDisplayAliases)
+    {
+        return "";
+    }
+
+    // Normally, getColorSpace searches roles, but that is not the intended use-case and
+    // could be confusing, so don't resolve against them.
+    if (hasRole(displayName))
+    {
+        return "";
+    }
+
+    // Look for a display color space that has displayName as its name or an alias.
+    ConstColorSpaceRcPtr cs = getColorSpace(displayName);
+
+    // Only consider display-referred color spaces.
+    if (!cs || cs->getReferenceSpaceType() == REFERENCE_SPACE_SCENE)
+    {
+        return "";
+    }
+
+    // A candidate display found by name match alone isn't enough: it must also actually use
+    // this color space, i.e. have a view whose display_colorspace is <USE_DISPLAY_NAME> or
+    // that resolves (by name or alias) to this same color space. Otherwise, a display that
+    // merely happens to share a name with an unrelated color space would incorrectly match.
+    auto usesColorSpace = [this, &cs](DisplayMap::const_iterator candidateIter) -> bool
+    {
+        // Consider both display-defined views and shared views used by this display, and both
+        // active and inactive views.
+        return DisplayUsesColorSpace(*this, getImpl()->getViews(candidateIter->second), cs);
+    };
+
+    iter = FindDisplay(getImpl()->m_displays, cs->getName());
+    if (iter != getImpl()->m_displays.end() && usesColorSpace(iter))
+    {
+        // A display exists with the name of the color space. In this case, displayName
+        // was an alias of the color space.
+        return iter->first.c_str();
+    }
+
+    const size_t numAliases = cs->getNumAliases();
+    for (size_t i = 0; i < numAliases; ++i)
+    {
+        iter = FindDisplay(getImpl()->m_displays, cs->getAlias(i));
+        if (iter != getImpl()->m_displays.end() && usesColorSpace(iter))
+        {
+            // A display exists with the name of an alias of the color space. In this case,
+            // displayName was either the color space name or one of the other aliases.
+            //
+            // The reason to allow this match is because <USE_DISPLAY_NAME> resolves via
+            // getColorSpace(displanName), which works via color space aliases, independent
+            // of display aliases. Therefore, configs may already contain display color
+            // spaces that are set up to only match the display name via their aliases.
+            // In addition, this allows for renaming a display but keeping the display
+            // color space name unchanged, if that were desired for some reason.
+            //
+            // See the aliased_display_name test in Config_tests.cpp.
+            return iter->first.c_str();
+        }
+    }
+
+    return "";
+}
+
+const char * Config::getResolvedDisplayViewColorSpaceName(const char * display,
+                                                          const char * view) const
+{
+    if (!display || !*display || !view || !*view)
+    {
+        return "";
+    }
+
+    const char * resolvedDisplay = getCanonicalDisplayName(display);
+    if (!resolvedDisplay || !*resolvedDisplay)
+    {
+        return "";
+    }
+
+    const char * resolvedView = getCanonicalViewName(resolvedDisplay, view);
+    if (!resolvedView || !*resolvedView)
+    {
+        return "";
+    }
+
+    const View * viewPtr = getImpl()->getView(resolvedDisplay, resolvedView);
+    if (!viewPtr) return "";
+
+    // A shared view that has a view transform may set its display_colorspace to
+    // <USE_DISPLAY_NAME>, meaning that the display color space named after the display is used.
+    const char * csName = viewPtr->useDisplayNameForColorspace() ? resolvedDisplay
+                                                                 : viewPtr->m_colorspace.c_str();
+
+    // Return the canonical name, since csName may be a role or an alias. (Note that the view's
+    // colorspace attribute is allowed to name a named transform rather than a color space, if
+    // the view has no view_transform, and getCanonicalName handles both.) If it doesn't name
+    // anything at all, return it as-is so callers can report what they were unable to find.
+    const char * canonicalName = getCanonicalName(csName);
+    return (canonicalName && *canonicalName) ? canonicalName : csName;
+}
+
+const char * Config::getDisplayDescription(const char * display) const
+{
+    if (!display || !*display)
+    {
+        return "";
+    }
+
+    // Getting a description requires that the display name matches the name or alias of
+    // a display color space in the config.
+    ConstColorSpaceRcPtr cs = getColorSpace(display);
+
+    // Only support display color spaces.
+    if (!cs || cs->getReferenceSpaceType() != REFERENCE_SPACE_DISPLAY)
+    {
+        return "";
+    }
+
+    // If the color space was found via its aliases, exit now if display alias support is off.
+    if (!StringUtils::Compare(cs->getName(), display) && !getImpl()->m_useDisplayAliases)
+    {
+        return "";
+    }
+
+    // Check that there is an actual display with this name.
+    const char * canonicalDisplay = getCanonicalDisplayName(cs->getName());
+    if (!canonicalDisplay || !*canonicalDisplay)
+    {
+        return "";
+    }
+
+    // Confirm that the display has a view that references this display color space.
+    // This rules out matches that coincidentally share the same name but are unrelated.
+    DisplayMap::const_iterator iter = FindDisplay(getImpl()->m_displays, canonicalDisplay);
+    if (iter == getImpl()->m_displays.end() ||
+        !DisplayUsesColorSpace(*this, getImpl()->getViews(iter->second), cs))
+    {
+        return "";
+    }
+
+    return cs->getDescription();
+}
+
+const char * Config::getCanonicalViewName(const char * displayName, const char * viewName) const
+{
+    if (!displayName || !*displayName || !viewName || !*viewName)
+    {
+        return "";
+    }
+
+    // Resolve the displayName first, since it may itself be an alias. (That fallback is gated
+    // by m_useDisplayAliases; view alias resolution below is not, since view aliases are
+    // an explicit attribute of the view rather than a heuristic fallback.)
+    const char * resolvedDisplay = displayName;
+    const char * canonicalDisplay = getCanonicalDisplayName(displayName);
+    if (canonicalDisplay && *canonicalDisplay)
+    {
+        resolvedDisplay = canonicalDisplay;
+    }
+
+    // This is the normal case, the display has a view named viewName.
+    if (getImpl()->getView(resolvedDisplay, viewName))
+    {
+        return viewName;
+    }
+
+    // Otherwise, look for a view used by this display (whether display-defined or a
+    // referenced shared view, active or inactive) that has viewName as an alias.
+    DisplayMap::const_iterator iter = FindDisplay(getImpl()->m_displays, resolvedDisplay);
+    if (iter == getImpl()->m_displays.end())
+    {
+        // The requested display does not exist.
+        return "";
+    }
+
+    const ViewPtrVec views = getImpl()->getViews(iter->second);
+    for (const auto * candidate : views)
+    {
+        if (candidate->hasAlias(viewName))
+        {
+            return candidate->m_name.c_str();
+        }
+    }
+
+    return "";
+}
+
+///////////////////////////////////////////////////////////////////////////
 
 bool Config::hasVirtualView(const char * viewName) const
 {
@@ -4140,6 +4742,8 @@ int Config::instantiateDisplayFromICCProfile(const char * ICCProfileFilepath)
     return getImpl()->instantiateDisplay("", monitorDescription, ICCProfileFilepath);
 }
 
+///////////////////////////////////////////////////////////////////////////
+
 void Config::setActiveDisplays(const char * displays)
 {
     getImpl()->m_activeDisplays.clear();
@@ -4339,6 +4943,8 @@ int Config::getNumActiveViews() const
 {
     return static_cast<int>(getImpl()->m_activeViews.size());
 }
+
+///////////////////////////////////////////////////////////////////////////
 
 int Config::getNumDisplaysAll() const noexcept
 {
@@ -5133,20 +5739,35 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
             "the source color space.");
     }
 
-    const char* csName = dstConfig->getDisplayViewColorSpaceName(dstDisplay, dstView);
-    const char* displayColorSpaceName = View::UseDisplayName(csName) ? dstDisplay : csName;
-    ConstColorSpaceRcPtr displayColorSpace = dstConfig->getColorSpace(displayColorSpaceName);
-    if (!displayColorSpace)
-    {
-        throw Exception("Can't create the processor for the destination config: "
-            "display color space not found.");
-    }
-
+    // This creates a DisplayViewTransform and uses the standard BuildDisplayOps to build it,
+    // handle aliases, and do any necessary error handling.
     auto p2 = dstConfig->getProcessor(dstContext, dstInterchangeName, dstDisplay, dstView, direction);
     if (!p2)
     {
         throw Exception("Can't create the processor for the destination config "
             "and the destination display view transform.");
+    }
+
+    // Although we now have a valid processor, we still need to get the view's color space
+    // to check if it's actually a data space. This resolution process handles aliases and
+    // the <USE_DISPLAY_NAME> case.
+    bool viewIsData = false;
+    const char * csName = dstConfig->getResolvedDisplayViewColorSpaceName(dstDisplay, dstView);
+    ConstColorSpaceRcPtr viewColorSpace = dstConfig->getColorSpace(csName);
+    if (!viewColorSpace)
+    {
+        // A view's color space could be a Named Transform. In this case, viewIsData
+        // should remain false.
+        ConstNamedTransformRcPtr nt = dstConfig->getNamedTransform(csName);
+        if (!nt)
+        {
+            // Given that the getProcessor call succeeded above, this should never happen.
+            throw Exception("Can't create the processor for the destination config.");
+        }
+    }
+    else
+    {
+        viewIsData = viewColorSpace->isData();
     }
 
     ProcessorRcPtr processor = Processor::Create();
@@ -5155,7 +5776,7 @@ ConstProcessorRcPtr Config::GetProcessorFromConfigs(const ConstContextRcPtr & sr
     // If either of the color spaces are data spaces, its corresponding processor
     // will be empty, but need to make sure the entire result is also empty to
     // better match the semantics of how data spaces are handled.
-    if (!srcColorSpace->isData() && !displayColorSpace->isData())
+    if (!srcColorSpace->isData() && !viewIsData)
     {
         if (direction == TRANSFORM_DIR_INVERSE)
         {
@@ -5481,6 +6102,14 @@ void Config::Impl::resetCacheIDs()
     // As any changes could impact the cache keys, it's better to always flush the cache
     // of processors to not keep in memory useless instances.
     m_processorCache.clear();
+
+    // Any change could also affect the color space fingerprints (e.g. the transform of a
+    // color space or the interchange roles), so they must be recalculated on next use.
+    {
+        AutoMutex lock(m_fingerprintMutex);
+        m_csTestVals.reset();
+        m_csFingerprints.reset();
+    }
 }
 
 void Config::Impl::getAllInternalTransforms(ConstTransformVec & transformVec) const
@@ -5674,6 +6303,27 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
                    << blt->getStyle() << "'.";
                 throw Exception(os.str().c_str());
             }
+            if (m_majorVersion == 2 && m_minorVersion < 5
+                    && (   0 == Platform::Strcasecmp(blt->getStyle(), "DISPLAY - CIE-XYZ-D65_to_REC.1886-REC.709 - MIRROR NEGS")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "DISPLAY - CIE-XYZ-D65_to_REC.1886-REC.2020 - MIRROR NEGS")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "DISPLAY - CIE-XYZ-D65_to_G2.2-REC.709 - MIRROR NEGS")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "DISPLAY - CIE-XYZ-D65_to_sRGB - MIRROR NEGS")
+                        || 0 == Platform::Strcasecmp(blt->getStyle(), "DISPLAY - CIE-XYZ-D65_to_G2.6-P3-D65 - MIRROR NEGS") )
+                )
+            {
+                std::ostringstream os;
+                os << "Only config version 2.5 (or higher) can have BuiltinTransform style '"
+                   << blt->getStyle() << "'.";
+                throw Exception(os.str().c_str());
+            }
+            if (m_majorVersion == 2 && m_minorVersion < 6
+                    && 0 == Platform::Strcasecmp(blt->getStyle(), "APPLE_LOG-APPLEWG_to_ACES2065-1"))
+            {
+                std::ostringstream os;
+                os << "Only config version 2.6 (or higher) can have BuiltinTransform style '"
+                   << blt->getStyle() << "'.";
+                throw Exception(os.str().c_str());
+            }
         }
         else if (ConstCDLTransformRcPtr cdl = DynamicPtrCast<const CDLTransform>(transform))
         {
@@ -5770,7 +6420,18 @@ void Config::Impl::checkVersionConsistency(ConstTransformRcPtr & transform) cons
                     ffstyle == FIXED_FUNCTION_RGB_TO_HSY_VID )
                 {
                     std::ostringstream ss;
-                    ss << "Only config version 2.5 (or higher) can have FixedFunctionTransform style '" 
+                    ss << "Only config version 2.5 (or higher) can have FixedFunctionTransform style '"
+                       << FixedFunctionStyleToString(ffstyle) << "'.";
+                    throw Exception(ss.str().c_str());
+                }
+            }
+
+            if (m_majorVersion == 2 && m_minorVersion < 6 )
+            {
+                if( ffstyle == FIXED_FUNCTION_ACES_RGB_TO_HMJ_20 )
+                {
+                    std::ostringstream ss;
+                    ss << "Only config version 2.6 (or higher) can have FixedFunctionTransform style '"
                        << FixedFunctionStyleToString(ffstyle) << "'.";
                     throw Exception(ss.str().c_str());
                 }
@@ -5973,6 +6634,51 @@ void Config::Impl::checkVersionConsistency() const
                 std::ostringstream os;
                 os << "Config failed validation. The view transform '" << vt->getName() << "' ";
                 os << "has non-empty interchange attributes and config version is less than 2.5.";
+                throw Exception(os.str().c_str());
+            }
+        }
+    }
+
+    // Check for use_display_aliases.
+
+    if (hexVersion < 0x02060000 && m_useDisplayAliases)
+    {
+        throw Exception("Config failed validation: use_display_aliases is true and config "
+                        "version is less than 2.6.");
+    }
+
+    // Check for view aliases.
+
+    if (hexVersion < 0x02060000)
+    {
+        auto checkViewAliases = [](const ViewVec & views) -> const View *
+        {
+            for (const auto & view : views)
+            {
+                if (!view.m_aliases.empty())
+                {
+                    return &view;
+                }
+            }
+            return nullptr;
+        };
+
+        if (const View * view = checkViewAliases(m_sharedViews))
+        {
+            std::ostringstream os;
+            os << "Config failed validation. The shared view '" << view->m_name << "' ";
+            os << "has aliases and config version is less than 2.6.";
+            throw Exception(os.str().c_str());
+        }
+        // Note: the virtual display's views are not checked here, since there is currently no
+        // way to set aliases on them (addVirtualDisplayView has no aliases argument).
+        for (const auto & display : m_displays)
+        {
+            if (const View * view = checkViewAliases(display.second.m_views))
+            {
+                std::ostringstream os;
+                os << "Config failed validation. The view '" << view->m_name << "' in display '";
+                os << display.first << "' has aliases and config version is less than 2.6.";
                 throw Exception(os.str().c_str());
             }
         }

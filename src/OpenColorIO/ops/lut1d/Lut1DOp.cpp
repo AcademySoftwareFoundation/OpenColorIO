@@ -123,8 +123,7 @@ void Lut1DOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
     const auto compFlag = Lut1DOpData::COMPOSE_RESAMPLE_BIG;
     auto thisLut = lut1DData();
     Lut1DOpDataRcPtr result =  Lut1DOpData::Compose(thisLut, secondLut, compFlag);
-    auto composedOp = std::make_shared<Lut1DOp>(result);
-    ops.push_back(composedOp);
+    ops.emplace_back(std::make_shared<Lut1DOp>(result));
 }
 
 bool Lut1DOp::hasChannelCrosstalk() const
@@ -188,7 +187,7 @@ void CreateLut1DOp(OpRcPtrVec & ops,
         lutData = lut->inverse();
     }
 
-    ops.push_back(std::make_shared<Lut1DOp>(lutData));
+    ops.emplace_back(std::make_shared<Lut1DOp>(lutData));
 }
 
 void GenerateIdentityLut1D(float* img, int numElements, int numChannels)

@@ -40,7 +40,7 @@ void Add_hue_weight_shader(GpuShaderCreatorRcPtr & shaderCreator, GpuShaderText 
     //  << "    hue = mix( hue, hue - 6.28318530717959, step( 3.14159265358979, hue));\n"
 
     ss.newLine() << ss.floatDecl("knot_coord") << " = clamp(2. + hue * float(" << inv_width << "), 0., 4.);";
-    ss.newLine() << "int j = int(min(knot_coord, 3.));";
+    ss.newLine() << "int j = " << ss.intCast("min(knot_coord, 3.)") << ";";
     ss.newLine() << ss.floatDecl("t") << " = knot_coord - float(j);";
     ss.newLine() << ss.float4Decl("monomials") << " = " << ss.float4Const("t*t*t", "t*t", "t", "1.") << ";";
     ss.newLine() << ss.float4Decl("m0") << " = " << ss.float4Const(0.25,  0.00,  0.00,  0.00) << ";";
@@ -867,14 +867,14 @@ std::string _Add_Cusp_table(
     ss.newLine() << "{";
     ss.indent();
 
-    ss.newLine() << ss.intDecl("i") << " = " << ss.intKeyword() << "(h) + " << g.gamut_cusp_table.base_index << ";";
+    ss.newLine() << ss.intDecl("i") << " = " << ss.intCast("h") << " + " << g.gamut_cusp_table.base_index << ";";
 
-    ss.newLine() << ss.intDecl("i_lo") << " = " << ss.intKeyword() << "(max("
-                 << ss.floatKeyword() << "(" << g.gamut_cusp_table.lower_wrap_index << "), "
-                 << ss.floatKeyword() << "(i + " << g.hue_linearity_search_range[0] << ")));";
-    ss.newLine() << ss.intDecl("i_hi") << " = " << ss.intKeyword() << "(min("
-                 << ss.floatKeyword() << "(" << g.gamut_cusp_table.upper_wrap_index << "), "
-                 << ss.floatKeyword() << "(i + " << g.hue_linearity_search_range[1] << ")));";
+    ss.newLine() << ss.intDecl("i_lo") << " = " << ss.intCast(
+                        "max(" + ss.floatKeyword() + "(" + std::to_string(g.gamut_cusp_table.lower_wrap_index) + "), "
+                        + ss.floatKeyword() + "(i + " + std::to_string(g.hue_linearity_search_range[0]) + "))") << ";";
+    ss.newLine() << ss.intDecl("i_hi") << " = " << ss.intCast(
+                        "min(" + ss.floatKeyword() + "(" + std::to_string(g.gamut_cusp_table.upper_wrap_index) + "), "
+                        + ss.floatKeyword() + "(i + " + std::to_string(g.hue_linearity_search_range[1]) + "))") << ";";
 
     ss.newLine() << "while (i_lo + 1 < i_hi)";
     ss.newLine() << "{";
@@ -1491,6 +1491,32 @@ void Add_JMh_to_RGB_Shader(
     _Add_JMh_to_RGB_Shader(shaderCreator, ss, p);
 }
 
+void Add_RGB_to_HMJ_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & ss,
+    const FixedFunctionOpData::Params & params)
+{
+    const std::string pxl(shaderCreator->getPixelName());
+
+    // Compute JMh (in pxl.rgb) and then repack it as HMJ, scaled for a [0,1]-ish range.
+    Add_RGB_to_JMh_Shader(shaderCreator, ss, params);
+
+    ss.newLine() << pxl << ".rgb = " << ss.float3Const(pxl + ".b / 360.0", pxl + ".g / 200.0", pxl + ".r / 100.0") << ";";
+}
+
+void Add_HMJ_to_RGB_Shader(
+    GpuShaderCreatorRcPtr & shaderCreator,
+    GpuShaderText & ss,
+    const FixedFunctionOpData::Params & params)
+{
+    const std::string pxl(shaderCreator->getPixelName());
+
+    // Unpack HMJ back into JMh (in pxl.rgb) and reuse the existing JMh to RGB conversion.
+    ss.newLine() << pxl << ".rgb = " << ss.float3Const(pxl + ".b * 100.0", pxl + ".g * 200.0", pxl + ".r * 360.0") << ";";
+
+    Add_JMh_to_RGB_Shader(shaderCreator, ss, params);
+}
+
 void Add_Tonescale_Compress_Fwd_Shader(
     GpuShaderCreatorRcPtr & shaderCreator,
     GpuShaderText & ss,
@@ -1583,8 +1609,7 @@ void Add_Gamut_Compress_Fwd_Shader(
     const std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, s.reach_m_table);
 
     _Add_WrapHueChannel_Shader(shaderCreator, ss);
-    _Add_SinCos_Shader(shaderCreator, ss);
-
+    // No _Add_SinCos_Shader: gamut-compress stays in JMh space, so cos_hr/sin_hr would be unused.
     ss.newLine() << ss.floatDecl("reachMaxM") << " = " << reachName << "_sample(" << pxl << ".b);";
 
     _Add_Gamut_Compress_Fwd_Shader(shaderCreator, ss, resourceIndex, s, g);
@@ -1626,8 +1651,7 @@ void Add_Gamut_Compress_Inv_Shader(
     const std::string reachName = _Add_Reach_table(shaderCreator, resourceIndex, s.reach_m_table);
 
     _Add_WrapHueChannel_Shader(shaderCreator, ss);
-    _Add_SinCos_Shader(shaderCreator, ss);
-
+    // No _Add_SinCos_Shader: gamut-compress stays in JMh space, so cos_hr/sin_hr would be unused.
     ss.newLine() << ss.floatDecl("reachMaxM") << " = " << reachName << "_sample(" << pxl << ".b);";
 
     _Add_Gamut_Compress_Inv_Shader(shaderCreator, ss, resourceIndex, s, g);
@@ -2347,6 +2371,16 @@ void GetFixedFunctionGPUProcessingText(GpuShaderCreatorRcPtr & shaderCreator,
         case FixedFunctionOpData::ACES_JMh_TO_RGB_20:
         {
             Add_JMh_to_RGB_Shader(shaderCreator, ss, func->getParams());
+            break;
+        }
+        case FixedFunctionOpData::ACES_RGB_TO_HMJ_20:
+        {
+            Add_RGB_to_HMJ_Shader(shaderCreator, ss, func->getParams());
+            break;
+        }
+        case FixedFunctionOpData::ACES_HMJ_TO_RGB_20:
+        {
+            Add_HMJ_to_RGB_Shader(shaderCreator, ss, func->getParams());
             break;
         }
         case FixedFunctionOpData::ACES_TONESCALE_COMPRESS_20_FWD:

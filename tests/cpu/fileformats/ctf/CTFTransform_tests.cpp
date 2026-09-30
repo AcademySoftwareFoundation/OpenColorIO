@@ -292,3 +292,139 @@ OCIO_ADD_TEST(CTFReaderTransform, accessors)
         OCIO_CHECK_EQUAL_STR(meta.getChildElement(6).getAttributeValue("language"), "tr");
     }
 }
+
+OCIO_ADD_TEST(CTFTransform, get_equivalent_noclamp_range)
+{
+    // Integration test is in FileFormatCTF_tests.cpp smpte_broadcast_profile_noclamp_range.
+
+    // GetEquivalentNoClampRange only recognizes a forward, diagonal Matrix whose scale and
+    // offset (applied uniformly to R, G, and B) exactly match (within tolerance) the fixed
+    // input-side or output-side Range used by the SMPTE CLF Broadcast Profile (see
+    // tests/data/files/clf/smpte_only/broadcast_profile_lut33.clf). Anything else must
+    // return null so the Matrix is written as-is.
+
+    auto createDiagMatrix = [](double scale, double offset,
+                               OCIO::TransformDirection dir = OCIO::TRANSFORM_DIR_FORWARD)
+    {
+        auto mat = std::make_shared<OCIO::MatrixOpData>();
+        mat->setArrayValue(0, scale);
+        mat->setArrayValue(5, scale);
+        mat->setArrayValue(10, scale);
+        mat->setOffsetValue(0, offset);
+        mat->setOffsetValue(1, offset);
+        mat->setOffsetValue(2, offset);
+        mat->setDirection(dir);
+        return mat;
+    };
+
+    // Matches the "input" Range (minInValue=0, maxInValue=1) but not the "output" one.
+    {
+        auto mat = createDiagMatrix(OCIO::NOCLAMP_INPUT_RANGE_SCALE,
+                                    OCIO::NOCLAMP_INPUT_RANGE_OFFSET);
+
+        OCIO::RangeOpDataRcPtr range;
+        OCIO_CHECK_NO_THROW(range = OCIO::GetEquivalentNoClampRange(mat, true));
+        OCIO_REQUIRE_ASSERT(range);
+        OCIO_CHECK_EQUAL(range->getMinInValue(), 0.);
+        OCIO_CHECK_EQUAL(range->getMaxInValue(), 1.);
+        OCIO_CHECK_CLOSE(range->getMinOutValue(), OCIO::NOCLAMP_RANGE_MIN_OUT_VALUE, 1e-12);
+        OCIO_CHECK_CLOSE(range->getMaxOutValue(), OCIO::NOCLAMP_RANGE_MAX_OUT_VALUE, 1e-12);
+
+        OCIO_CHECK_ASSERT(!OCIO::GetEquivalentNoClampRange(mat, false));
+    }
+
+    // Matches the "output" Range (minOutValue=0, maxOutValue=1) but not the "input" one.
+    {
+        auto mat = createDiagMatrix(OCIO::NOCLAMP_OUTPUT_RANGE_SCALE,
+                                    OCIO::NOCLAMP_OUTPUT_RANGE_OFFSET);
+
+        OCIO::RangeOpDataRcPtr range;
+        OCIO_CHECK_NO_THROW(range = OCIO::GetEquivalentNoClampRange(mat, false));
+        OCIO_REQUIRE_ASSERT(range);
+        OCIO_CHECK_CLOSE(range->getMinInValue(), OCIO::NOCLAMP_RANGE_MIN_OUT_VALUE, 1e-12);
+        OCIO_CHECK_CLOSE(range->getMaxInValue(), OCIO::NOCLAMP_RANGE_MAX_OUT_VALUE, 1e-12);
+        OCIO_CHECK_EQUAL(range->getMinOutValue(), 0.);
+        OCIO_CHECK_EQUAL(range->getMaxOutValue(), 1.);
+
+        OCIO_CHECK_ASSERT(!OCIO::GetEquivalentNoClampRange(mat, true));
+    }
+
+    // Scale/offset within tolerance of the target still match.
+    {
+        auto mat = createDiagMatrix(OCIO::NOCLAMP_INPUT_RANGE_SCALE  + 1e-7,
+                                    OCIO::NOCLAMP_INPUT_RANGE_OFFSET - 1e-7);
+        OCIO_CHECK_ASSERT(OCIO::GetEquivalentNoClampRange(mat, true));
+    }
+
+    // Scale/offset outside tolerance of the target do not match.
+    {
+        auto mat = createDiagMatrix(OCIO::NOCLAMP_INPUT_RANGE_SCALE + 1e-3,
+                                    OCIO::NOCLAMP_INPUT_RANGE_OFFSET);
+        OCIO_CHECK_ASSERT(!OCIO::GetEquivalentNoClampRange(mat, true));
+    }
+
+    // An unrelated diagonal matrix (identity) never matches.
+    {
+        auto mat = std::make_shared<OCIO::MatrixOpData>();
+        OCIO_CHECK_ASSERT(!OCIO::GetEquivalentNoClampRange(mat, true));
+        OCIO_CHECK_ASSERT(!OCIO::GetEquivalentNoClampRange(mat, false));
+    }
+
+    // An inverse-direction Matrix never matches, even with the right scale/offset.
+    {
+        auto mat = createDiagMatrix(OCIO::NOCLAMP_INPUT_RANGE_SCALE,
+                                    OCIO::NOCLAMP_INPUT_RANGE_OFFSET,
+                                    OCIO::TRANSFORM_DIR_INVERSE);
+        OCIO_CHECK_ASSERT(!OCIO::GetEquivalentNoClampRange(mat, true));
+    }
+
+    // A non-diagonal matrix never matches, even with the right values on the diagonal.
+    {
+        auto mat = createDiagMatrix(OCIO::NOCLAMP_INPUT_RANGE_SCALE,
+                                    OCIO::NOCLAMP_INPUT_RANGE_OFFSET);
+        mat->setArrayValue(1, 0.01);
+        OCIO_CHECK_ASSERT(!OCIO::GetEquivalentNoClampRange(mat, true));
+    }
+
+    // Non-uniform scale across R, G, and B never matches.
+    {
+        auto mat = createDiagMatrix(OCIO::NOCLAMP_INPUT_RANGE_SCALE,
+                                    OCIO::NOCLAMP_INPUT_RANGE_OFFSET);
+        mat->setArrayValue(5, OCIO::NOCLAMP_INPUT_RANGE_SCALE + 0.01);
+        OCIO_CHECK_ASSERT(!OCIO::GetEquivalentNoClampRange(mat, true));
+    }
+
+    // Non-uniform offset across R, G, and B never matches.
+    {
+        auto mat = createDiagMatrix(OCIO::NOCLAMP_INPUT_RANGE_SCALE,
+                                    OCIO::NOCLAMP_INPUT_RANGE_OFFSET);
+        mat->setOffsetValue(1, OCIO::NOCLAMP_INPUT_RANGE_OFFSET + 0.01);
+        OCIO_CHECK_ASSERT(!OCIO::GetEquivalentNoClampRange(mat, true));
+    }
+
+    // A Matrix with an alpha component never matches, even with matching R/G/B scale/offset.
+    {
+        auto mat = createDiagMatrix(OCIO::NOCLAMP_INPUT_RANGE_SCALE,
+                                    OCIO::NOCLAMP_INPUT_RANGE_OFFSET);
+        mat->setOffsetValue(3, 0.1);
+        OCIO_CHECK_ASSERT(!OCIO::GetEquivalentNoClampRange(mat, true));
+    }
+
+    // FormatMetadata and file bit-depths are carried over onto the returned Range.
+    {
+        auto mat = createDiagMatrix(OCIO::NOCLAMP_INPUT_RANGE_SCALE,
+                                    OCIO::NOCLAMP_INPUT_RANGE_OFFSET);
+        mat->getFormatMetadata().addChildElement(OCIO::METADATA_DESCRIPTION, "My Description");
+        mat->setFileInputBitDepth(OCIO::BIT_DEPTH_UINT10);
+        mat->setFileOutputBitDepth(OCIO::BIT_DEPTH_UINT12);
+
+        OCIO::RangeOpDataRcPtr range;
+        OCIO_CHECK_NO_THROW(range = OCIO::GetEquivalentNoClampRange(mat, true));
+        OCIO_REQUIRE_ASSERT(range);
+        OCIO_CHECK_EQUAL(range->getFileInputBitDepth(), OCIO::BIT_DEPTH_UINT10);
+        OCIO_CHECK_EQUAL(range->getFileOutputBitDepth(), OCIO::BIT_DEPTH_UINT12);
+        OCIO_REQUIRE_EQUAL(range->getFormatMetadata().getNumChildrenElements(), 1);
+        OCIO_CHECK_EQUAL_STR(range->getFormatMetadata().getChildElement(0).getElementValue(),
+                             "My Description");
+    }
+}
