@@ -148,6 +148,13 @@ if(NOT OCIO_INSTALL_EXT_PACKAGES STREQUAL ALL)
                 lib64 lib 
         )
 
+        if (minizip-ng_LIBRARY)
+            cmake_path(GET minizip-ng_LIBRARY STEM _lib_stem)
+            if (_lib_stem STREQUAL "libminizip")
+                set(minizip_LIBRARY ${minizip-ng_LIBRARY})
+            endif()
+        endif()
+
         # Get version from header or pkg-config
         if(minizip-ng_INCLUDE_DIR)
             list(GET minizip-ng_INCLUDE_DIR 0 _minizip-ng_INCLUDE_DIR)
