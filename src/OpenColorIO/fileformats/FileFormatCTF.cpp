@@ -2,6 +2,7 @@
 // Copyright Contributors to the OpenColorIO Project.
 
 #include <cstdio>
+#include <exception>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -256,9 +257,22 @@ public:
     {
         const int done = lastLine?1:0;
 
-        if (XML_STATUS_ERROR == XML_Parse(m_parser,
-                                          buffer.c_str(),
-                                          (int)buffer.size(), done))
+        const XML_Status status = XML_Parse(m_parser,
+                                            buffer.c_str(),
+                                            (int)buffer.size(), done);
+
+        // A handler may have thrown a C++ exception. Rethrowing it here,
+        // rather than letting it escape the expat callback directly, keeps
+        // expat's own bookkeeping (see XML_ParserFree's isCalledFromInsideHandler
+        // guard) consistent; otherwise XML_ParserFree silently leaks the parser.
+        if (m_pendingException)
+        {
+            std::exception_ptr pendingException = m_pendingException;
+            m_pendingException = nullptr;
+            std::rethrow_exception(pendingException);
+        }
+
+        if (XML_STATUS_ERROR == status)
         {
             XML_Error eXpatErrorCode = XML_GetErrorCode(m_parser);
             if (eXpatErrorCode == XML_ERROR_TAG_MISMATCH)
@@ -436,9 +450,37 @@ private:
     }
 
     // Start the parsing of one element.
+    // Trampoline registered with expat. Catching exceptions here (rather than
+    // letting them escape into expat's C call stack) keeps expat's internal
+    // handler-depth bookkeeping consistent; see XML_ParserFree's
+    // isCalledFromInsideHandler guard, which otherwise leaks the parser.
     static void StartElementHandler(void * userData,
                                     const XML_Char * name_full,
                                     const XML_Char ** atts)
+    {
+        XMLParserHelper * pImpl = (XMLParserHelper*)userData;
+        try
+        {
+            StartElementHandlerImpl(userData, name_full, atts);
+        }
+        catch (...)
+        {
+            // Keep the first exception: for a self-closing element, expat may
+            // still invoke the matching EndElementHandler before it honors
+            // XML_StopParser, and that call can itself throw (since the
+            // element was never pushed onto m_elms); don't let that spurious,
+            // secondary exception overwrite the original one.
+            if (pImpl && !pImpl->m_pendingException)
+            {
+                pImpl->m_pendingException = std::current_exception();
+                XML_StopParser(pImpl->m_parser, XML_FALSE);
+            }
+        }
+    }
+
+    static void StartElementHandlerImpl(void * userData,
+                                        const XML_Char * name_full,
+                                        const XML_Char ** atts)
     {
         static const std::vector<const char *> rangeSubElements = {
             TAG_MIN_IN_VALUE,
@@ -1032,6 +1074,29 @@ private:
                                   const XML_Char * name_full)
     {
         XMLParserHelper * pImpl = (XMLParserHelper*)userData;
+        try
+        {
+            EndElementHandlerImpl(userData, name_full);
+        }
+        catch (...)
+        {
+            // Keep the first exception: for a self-closing element, expat may
+            // still invoke the matching EndElementHandler before it honors
+            // XML_StopParser, and that call can itself throw (since the
+            // element was never pushed onto m_elms); don't let that spurious,
+            // secondary exception overwrite the original one.
+            if (pImpl && !pImpl->m_pendingException)
+            {
+                pImpl->m_pendingException = std::current_exception();
+                XML_StopParser(pImpl->m_parser, XML_FALSE);
+            }
+        }
+    }
+
+    static void EndElementHandlerImpl(void * userData,
+                                      const XML_Char * name_full)
+    {
+        XMLParserHelper * pImpl = (XMLParserHelper*)userData;
         if (!pImpl || !name_full || !*name_full)
         {
             throw Exception("CTF/CLF internal parsing error.");
@@ -1110,8 +1175,32 @@ private:
 
     // Handle of strings within an element.
     static void CharacterDataHandler(void * userData,
-                                     const XML_Char * s, 
+                                     const XML_Char * s,
                                      int len)
+    {
+        XMLParserHelper * pImpl = (XMLParserHelper*)userData;
+        try
+        {
+            CharacterDataHandlerImpl(userData, s, len);
+        }
+        catch (...)
+        {
+            // Keep the first exception: for a self-closing element, expat may
+            // still invoke the matching EndElementHandler before it honors
+            // XML_StopParser, and that call can itself throw (since the
+            // element was never pushed onto m_elms); don't let that spurious,
+            // secondary exception overwrite the original one.
+            if (pImpl && !pImpl->m_pendingException)
+            {
+                pImpl->m_pendingException = std::current_exception();
+                XML_StopParser(pImpl->m_parser, XML_FALSE);
+            }
+        }
+    }
+
+    static void CharacterDataHandlerImpl(void * userData,
+                                         const XML_Char * s,
+                                         int len)
     {
         XMLParserHelper * pImpl = (XMLParserHelper*)userData;
         if (!pImpl)
@@ -1226,6 +1315,10 @@ private:
     XmlReaderElementStack m_elms; // Parsing stack
     CTFReaderTransformPtr m_transform;
     int m_keepNamespaces = 0; // if >0, name spaces will be preserved
+
+    // Exception thrown from within an expat callback, deferred until control
+    // returns to Parse() so it is not thrown across expat's own C call stack.
+    std::exception_ptr m_pendingException;
 
 };
 

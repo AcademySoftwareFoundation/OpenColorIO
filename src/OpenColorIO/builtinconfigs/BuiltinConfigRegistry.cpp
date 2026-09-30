@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <algorithm>
+#include <charconv>
 #include <sstream>
 #include <regex>
 
@@ -20,9 +21,9 @@ static constexpr char OUT_OF_RANGE_EXCEPTION_TEXT[] = "Config index is out of ra
 
 // These are used for ResolveConfigPath function and we need to return a variable that still exists
 // once the function finishes since we are returning a const char *.
-static constexpr char DEFAULT_BUILTIN_CONFIG_URI[] = "ocio://cg-config-v4.0.0_aces-v2.0_ocio-v2.5";
-static constexpr char LATEST_CG_BUILTIN_CONFIG_URI[] = "ocio://cg-config-v4.0.0_aces-v2.0_ocio-v2.5";
-static constexpr char LATEST_STUDIO_BUILTIN_CONFIG_URI[] = "ocio://studio-config-v4.0.0_aces-v2.0_ocio-v2.5";
+static constexpr char DEFAULT_BUILTIN_CONFIG_URI[] = "ocio://cg-config-v5.0.0_aces-v2.1_ocio-v2.6";
+static constexpr char LATEST_CG_BUILTIN_CONFIG_URI[] = "ocio://cg-config-v5.0.0_aces-v2.1_ocio-v2.6";
+static constexpr char LATEST_STUDIO_BUILTIN_CONFIG_URI[] = "ocio://studio-config-v5.0.0_aces-v2.1_ocio-v2.6";
 
 static constexpr char BUILTIN_DEFAULT_NAME[] = "default";
 static constexpr char BUILTIN_LATEST_CG_NAME[] = "cg-config-latest";
@@ -58,6 +59,28 @@ const char * ResolveConfigPath(const char * originalPath) noexcept
 
     // Return originalPath if no special path was used.
     return originalPath;
+}
+
+bool IsReservedConfigName(const std::string & sanitizedConfigName)
+{
+    static const std::regex builtinConfigNamePattern(
+        R"(^(?:cg-config|studio-config)-v(\d+)\.\d+\.\d+_aces-v[\d.]+_ocio-v[\d.]+$)");
+
+    std::smatch match;
+    if (!std::regex_match(sanitizedConfigName, match, builtinConfigNamePattern))
+    {
+        return false;
+    }
+
+    const std::string majorVersionStr = match[1].str();
+    int majorVersion = 0;
+    const auto result = std::from_chars(
+        majorVersionStr.data(), majorVersionStr.data() + majorVersionStr.size(), majorVersion);
+    if (result.ec != std::errc())
+    {
+        return false;
+    }
+    return majorVersion >= 4;
 }
 
 const BuiltinConfigRegistry & BuiltinConfigRegistry::Get() noexcept

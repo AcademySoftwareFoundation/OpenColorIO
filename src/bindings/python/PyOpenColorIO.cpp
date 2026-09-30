@@ -97,6 +97,7 @@ PYBIND11_MODULE(PyOpenColorIO, m)
 
     // OpenColorIOAppHelpers
     bindPyColorSpaceMenuHelpers(m);
+    bindPyConfigCompatibilityHelpers(m);
     bindPyConfigMergingHelpers(m);
     bindPyDisplayViewHelpers(m);
     bindPyLegacyViewingPipeline(m);

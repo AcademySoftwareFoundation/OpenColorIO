@@ -113,8 +113,13 @@ if(NOT yaml-cpp_FOUND AND OCIO_INSTALL_EXT_PACKAGES AND NOT OCIO_INSTALL_EXT_PAC
                 -DANDROID_STL=${ANDROID_STL})
         endif()
 
-        # in v0.8.0 yaml switched from "yaml-cpp-vA.B.C" to "vA.B.C" format for tags.
-        set(yaml-cpp_GIT_TAG "${yaml-cpp_VERSION}")
+        # v0.8.0 briefly switched tags to the bare "A.B.C" format, but v0.9.0 reverted
+        # to the "yaml-cpp-A.B.C" format used by all other releases.
+        if(yaml-cpp_VERSION VERSION_EQUAL "0.8.0")
+            set(yaml-cpp_GIT_TAG "${yaml-cpp_VERSION}")
+        else()
+            set(yaml-cpp_GIT_TAG "yaml-cpp-${yaml-cpp_VERSION}")
+        endif()
 
         # Hack to let imported target be built from ExternalProject_Add
         file(MAKE_DIRECTORY ${yaml-cpp_INCLUDE_DIR})
