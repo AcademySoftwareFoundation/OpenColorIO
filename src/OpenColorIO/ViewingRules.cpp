@@ -19,13 +19,11 @@ namespace
 {
 bool IsEncodingUsed(const ColorSpaceSetRcPtr & colorspaces, const char * encName)
 {
-    const std::string teststr = StringUtils::Lower(encName);
     const int numCS = colorspaces->getNumColorSpaces();
     for (int cs = 0; cs < numCS; ++cs)
     {
         auto colorspace = colorspaces->getColorSpaceByIndex(cs);
-        const std::string csis{ colorspace->getEncoding() };
-        if (StringUtils::Lower(csis) == teststr)
+        if (StringUtils::Compare(colorspace->getEncoding(), encName))
         {
             return true;
         }

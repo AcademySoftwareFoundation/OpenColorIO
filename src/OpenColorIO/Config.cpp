@@ -520,17 +520,16 @@ public:
     {
         if (name && *name)
         {
-            const std::string str = StringUtils::Lower(name);
             for (size_t idx = 0; idx < m_allNamedTransforms.size(); ++idx)
             {
-                if (StringUtils::Lower(m_allNamedTransforms[idx]->getName()) == str)
+                if (StringUtils::Compare(m_allNamedTransforms[idx]->getName(), name))
                 {
                     return idx;
                 }
                 const auto numAliases = m_allNamedTransforms[idx]->getNumAliases();
                 for (size_t alias = 0; alias < numAliases; ++alias)
                 {
-                    if (StringUtils::Lower(m_allNamedTransforms[idx]->getAlias(alias)) == str)
+                    if (StringUtils::Compare(m_allNamedTransforms[idx]->getAlias(alias), name))
                     {
                         return idx;
                     }
@@ -551,11 +550,14 @@ public:
 
     ConstViewTransformRcPtr getViewTransform(const char * name) const noexcept
     {
-        const std::string namelower = StringUtils::Lower(name);
+        if (!name)
+        {
+            return ConstViewTransformRcPtr();
+        }
 
         for (const auto & vt : m_viewTransforms)
         {
-            if (StringUtils::Lower(vt->getName()) == namelower)
+            if (StringUtils::Compare(vt->getName(), name))
             {
                 return vt;
             }
@@ -566,11 +568,14 @@ public:
 
     ConstLookRcPtr getLook(const char * name) const
     {
-        const std::string namelower = StringUtils::Lower(name);
+        if (!name)
+        {
+            return ConstLookRcPtr();
+        }
 
         for (const auto & look : m_looksList)
         {
-            if (StringUtils::Lower(look->getName()) == namelower)
+            if (StringUtils::Compare(look->getName(), name))
             {
                 return look;
             }
@@ -907,7 +912,6 @@ public:
         viewNames = GetViewNames(views);
         StringUtils::StringVec activeViews = getActiveViews(viewNames);
 
-        const std::string imageColorSpaceName{ StringUtils::Lower(imageCSName) };
         StringUtils::StringVec filteredActiveViews;
         for (const auto & view : activeViews)
         {
@@ -929,8 +933,8 @@ public:
                     const char * rolename = m_viewingRules->getColorSpace(ruleIdx, csIdx);
                     const char * csname = LookupRole(m_roles, rolename);
 
-                    const std::string csName{ *csname ? csname : rolename  };
-                    if (StringUtils::Lower(csName) == imageColorSpaceName)
+                    const char * csName = *csname ? csname : rolename;
+                    if (StringUtils::Compare(csName, imageCSName))
                     {
                         // Include a view if its rule contains the image's color space.
                         filteredActiveViews.push_back(view);
@@ -3528,12 +3532,11 @@ void Config::addNamedTransform(const ConstNamedTransformRcPtr & nt)
 
 void Config::removeNamedTransform(const char * name)
 {
-    const std::string nameToSearch = StringUtils::Lower(name);
-    if (nameToSearch.empty()) return;
+    if (!name || !*name) return;
 
     for (auto itr = getImpl()->m_allNamedTransforms.begin(); itr != getImpl()->m_allNamedTransforms.end(); ++itr)
     {
-        if (StringUtils::Lower((*itr)->getName()) == nameToSearch)
+        if (StringUtils::Compare((*itr)->getName(), name))
         {
             getImpl()->m_allNamedTransforms.erase(itr);
             return;
@@ -5112,12 +5115,10 @@ void Config::addLook(const ConstLookRcPtr & look)
     if(name.empty())
         throw Exception("Cannot addLook with an empty name.");
 
-    const std::string namelower = StringUtils::Lower(name);
-
     // If the look exists, replace it
     for(unsigned int i=0; i<getImpl()->m_looksList.size(); ++i)
     {
-        if(StringUtils::Lower(getImpl()->m_looksList[i]->getName()) == namelower)
+        if(StringUtils::Compare(getImpl()->m_looksList[i]->getName(), name))
         {
             getImpl()->m_looksList[i] = look->createEditableCopy();
 
@@ -5221,14 +5222,12 @@ void Config::addViewTransform(const ConstViewTransformRcPtr & viewTransform)
         throw Exception(os.str().c_str());
     }
 
-    const std::string namelower = StringUtils::Lower(name);
-
     bool addIt = true;
 
     // If the view transform exists, replace it.
     for (auto && vt : getImpl()->m_viewTransforms)
     {
-        if (StringUtils::Lower(vt->getName()) == namelower)
+        if (StringUtils::Compare(vt->getName(), name))
         {
             vt = viewTransform->createEditableCopy();
             addIt = false;

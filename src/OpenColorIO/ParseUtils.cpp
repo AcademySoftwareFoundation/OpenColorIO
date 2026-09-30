@@ -880,10 +880,9 @@ StringUtils::StringVec IntersectStringVecsCaseIgnore(const StringUtils::StringVe
 
 int FindInStringVecCaseIgnore(const StringUtils::StringVec & vec, const std::string & str)
 {
-    const std::string teststr = StringUtils::Lower(str);
     for(unsigned int i=0; i<vec.size(); ++i)
     {
-        if(StringUtils::Lower(vec[i]) == teststr) return static_cast<int>(i);
+        if(StringUtils::Compare(vec[i], str)) return static_cast<int>(i);
     }
 
     return -1;
