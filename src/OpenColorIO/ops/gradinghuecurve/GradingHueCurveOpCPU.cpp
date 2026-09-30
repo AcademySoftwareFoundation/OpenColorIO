@@ -66,7 +66,7 @@ public:
 
 protected:
     DynamicPropertyGradingHueCurveImplRcPtr m_ghuecurve;
-    bool m_isLinear = false;
+    bool m_isLog = false;
 
     ConstOpCPURcPtr m_rgbToHsyOp;
     ConstOpCPURcPtr m_hsyToRgbOp;
@@ -93,11 +93,11 @@ GradingHueCurveOpCPU::GradingHueCurveOpCPU(ConstGradingHueCurveOpDataRcPtr & gcD
     case GRADING_LIN:
         fwdStyle = FixedFunctionOpData::RGB_TO_HSY_LIN;
         invStyle = FixedFunctionOpData::HSY_LIN_TO_RGB;
-        m_isLinear = true;
         break;
     case GRADING_LOG:
         fwdStyle = FixedFunctionOpData::RGB_TO_HSY_LOG;
         invStyle = FixedFunctionOpData::HSY_LOG_TO_RGB;
+        m_isLog = true;
         break;
     case GRADING_VIDEO:
         fwdStyle = FixedFunctionOpData::RGB_TO_HSY_VID;
@@ -263,8 +263,8 @@ void GradingHueCurveFwdOpCPU::apply(const void * inImg, void * outImg, long numP
         hueLumGain = 1.f - (1.f - hueLumGain) * std::min(out[1], 1.f);
 
         // Apply lum gain.
-        out[2] = m_isLinear ? out[2] * hueLumGain * satLumGain :
-                              out[2] + (hueLumGain + satLumGain - 2.f) * 0.1f;
+        out[2] = m_isLog ?  out[2] + (hueLumGain + satLumGain - 2.f) * 0.1f :
+                            out[2] * hueLumGain * satLumGain;
 
         // HUE-FX
         out[0] = out[0] - std::floor(out[0]);   // wrap to [0,1)
@@ -331,8 +331,8 @@ void GradingHueCurveRevOpCPU::apply(const void * inImg, void * outImg, long numP
 
         // Invert the lum gain.
         const float lum_gain = hue_lum_gain * sat_lum_gain;
-        out[2] = m_isLinear ? out[2] / std::max(0.01f, lum_gain) :
-                              out[2] - (hue_lum_gain + sat_lum_gain - 2.f) * 0.1f;
+        out[2] = m_isLog ? out[2] - (hue_lum_gain + sat_lum_gain - 2.f) * 0.1f :
+                           out[2] / std::max(0.01f, lum_gain);
 
         m_applyLinLog(out);
 

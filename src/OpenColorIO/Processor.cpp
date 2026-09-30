@@ -93,7 +93,7 @@ const char * ProcessorMetadata::getLook(int index) const
 
 void ProcessorMetadata::addLook(const char * look)
 {
-    getImpl()->looks.push_back(look);
+    getImpl()->looks.emplace_back(look);
 }
 
 //////////////////////////////////////////////////////////////////////////

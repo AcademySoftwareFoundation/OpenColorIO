@@ -777,6 +777,93 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_nan_bug)
     test.setErrorThreshold(0.01f);
 }
 
+namespace
+{
+// Shared test data for the FIXED_FUNCTION_ACES_RGB_TO_JMH_20 / FIXED_FUNCTION_ACES_RGB_TO_HMJ_20
+// GPU tests below (ACEScg primaries and secondaries scaled by 4, some OCIO test values, and
+// ColorChecker24 SMPTE 2065-1 2021 values).
+const std::vector<float> g_aces2_rgb_values =
+{
+    2.781808965f, 0.179178253f, -0.022103530f, 1.0f,
+    3.344523751f, 3.617862727f, -0.006002689f, 1.0f,
+    0.562714786f, 3.438684474f, 0.016100841f, 1.0f,
+    1.218191035f, 3.820821747f, 4.022103530f, 1.0f,
+    0.655476249f, 0.382137273f, 4.006002689f, 1.0f,
+    3.437285214f, 0.561315526f, 3.983899159f, 1.0f,
+    0.110000000f, 0.020000000f, 0.040000000f, 0.5f,
+    0.710000000f, 0.510000000f, 0.810000000f, 1.0f,
+    0.430000000f, 0.820000000f, 0.710000000f, 0.0f,
+    0.118770000f, 0.087090000f, 0.058950000f, 1.0f,
+    0.400020000f, 0.319160000f, 0.237360000f, 1.0f,
+    0.184760000f, 0.203980000f, 0.313110000f, 1.0f,
+    0.109010000f, 0.135110000f, 0.064930000f, 1.0f,
+    0.266840000f, 0.246040000f, 0.409320000f, 1.0f,
+    0.322830000f, 0.462080000f, 0.406060000f, 1.0f,
+    0.386050000f, 0.227430000f, 0.057770000f, 1.0f,
+    0.138220000f, 0.130370000f, 0.337030000f, 1.0f,
+    0.302020000f, 0.137520000f, 0.127580000f, 1.0f,
+    0.093100000f, 0.063470000f, 0.135250000f, 1.0f,
+    0.348760000f, 0.436540000f, 0.106130000f, 1.0f,
+    0.486550000f, 0.366850000f, 0.080610000f, 1.0f,
+    0.087320000f, 0.074430000f, 0.272740000f, 1.0f,
+    0.153660000f, 0.256920000f, 0.090710000f, 1.0f,
+    0.217420000f, 0.070700000f, 0.051300000f, 1.0f,
+    0.589190000f, 0.539430000f, 0.091570000f, 1.0f,
+    0.309040000f, 0.148180000f, 0.274260000f, 1.0f,
+    0.149010000f, 0.233780000f, 0.359390000f, 1.0f,
+};
+
+// The JMh values corresponding to g_aces2_rgb_values above, run through RGB_TO_JMH_20.
+const std::vector<float> g_aces2_jmh_values =
+{
+    107.480636597f, 206.827301025f, 25.025110245f, 1.0f,
+    173.194076538f, 133.330886841f, 106.183448792f, 1.0f,
+    139.210220337f, 191.922363281f, 147.056488037f, 1.0f,
+    157.905166626f, 111.975311279f, 192.204727173f, 1.0f,
+    79.229278564f, 100.424659729f, 268.442108154f, 1.0f,
+    132.888137817f, 173.358779907f, 341.715240479f, 1.0f,
+    26.112514496f, 42.523605347f, 4.173158169f, 0.5f,
+    79.190460205f, 25.002300262f, 332.159759521f, 1.0f,
+    81.912559509f, 39.754810333f, 182.925750732f, 0.0f,
+    33.924663544f, 12.254567146f, 38.146659851f, 1.0f,
+    61.332393646f, 15.169423103f, 39.841842651f, 1.0f,
+    47.191543579f, 11.839941978f, 249.107116699f, 1.0f,
+    37.328300476f, 13.224150658f, 128.878036499f, 1.0f,
+    53.465549469f, 13.121579170f, 285.658966064f, 1.0f,
+    65.414512634f, 19.172147751f, 179.324264526f, 1.0f,
+    55.711513519f, 37.182041168f, 50.924011230f, 1.0f,
+    40.020961761f, 20.762512207f, 271.008331299f, 1.0f,
+    47.704769135f, 35.791145325f, 13.975610733f, 1.0f,
+    30.385913849f, 14.544739723f, 317.544281006f, 1.0f,
+    64.222846985f, 33.487697601f, 119.145133972f, 1.0f,
+    65.570358276f, 35.864013672f, 70.842193604f, 1.0f,
+    31.800464630f, 23.920211792f, 273.228973389f, 1.0f,
+    47.950405121f, 28.027387619f, 144.154159546f, 1.0f,
+    38.440967560f, 42.604164124f, 17.892261505f, 1.0f,
+    75.117736816f, 40.952045441f, 90.752044678f, 1.0f,
+    49.311210632f, 33.812240601f, 348.832092285f, 1.0f,
+    47.441757202f, 22.915655136f, 218.454376221f, 1.0f,
+};
+
+// Reorders/scales a JMh values vector into the HMJ layout used by FIXED_FUNCTION_ACES_RGB_TO_HMJ_20:
+// [ h/360, M/200, J/100 ].
+std::vector<float> JMhToHMJ(const std::vector<float> & jmh)
+{
+    std::vector<float> hmj(jmh.size());
+    for (size_t idx = 0; idx < jmh.size(); idx += 4)
+    {
+        const float J = jmh[idx + 0];
+        const float M = jmh[idx + 1];
+        const float h = jmh[idx + 2];
+        hmj[idx + 0] = h / 360.0f;
+        hmj[idx + 1] = M / 200.0f;
+        hmj[idx + 2] = J / 100.0f;
+        hmj[idx + 3] = jmh[idx + 3];
+    }
+    return hmj;
+}
+} // anon.
+
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_rgb_to_jmh_fwd)
 {
     // ACES AP0
@@ -788,41 +875,10 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_rgb_to_jmh_fwd)
     test.setProcessor(func);
 
     OCIOGPUTest::CustomValues values;
-    values.m_inputValues =
-    {
-        // ACEScg primaries and secondaries scaled by 4
-        2.781808965f, 0.179178253f, -0.022103530f, 1.0f,
-        3.344523751f, 3.617862727f, -0.006002689f, 1.0f,
-        0.562714786f, 3.438684474f, 0.016100841f, 1.0f,
-        1.218191035f, 3.820821747f, 4.022103530f, 1.0f,
-        0.655476249f, 0.382137273f, 4.006002689f, 1.0f,
-        3.437285214f, 0.561315526f, 3.983899159f, 1.0f,
-        // OCIO test values
-        0.110000000f, 0.020000000f, 0.040000000f, 0.5f,
-        0.710000000f, 0.510000000f, 0.810000000f, 1.0f,
-        0.430000000f, 0.820000000f, 0.710000000f, 0.0f,
-        // ColorChecker24 (SMPTE 2065-1 2021)
-        0.118770000f, 0.087090000f, 0.058950000f, 1.0f,
-        0.400020000f, 0.319160000f, 0.237360000f, 1.0f,
-        0.184760000f, 0.203980000f, 0.313110000f, 1.0f,
-        0.109010000f, 0.135110000f, 0.064930000f, 1.0f,
-        0.266840000f, 0.246040000f, 0.409320000f, 1.0f,
-        0.322830000f, 0.462080000f, 0.406060000f, 1.0f,
-        0.386050000f, 0.227430000f, 0.057770000f, 1.0f,
-        0.138220000f, 0.130370000f, 0.337030000f, 1.0f,
-        0.302020000f, 0.137520000f, 0.127580000f, 1.0f,
-        0.093100000f, 0.063470000f, 0.135250000f, 1.0f,
-        0.348760000f, 0.436540000f, 0.106130000f, 1.0f,
-        0.486550000f, 0.366850000f, 0.080610000f, 1.0f,
-        0.087320000f, 0.074430000f, 0.272740000f, 1.0f,
-        0.153660000f, 0.256920000f, 0.090710000f, 1.0f,
-        0.217420000f, 0.070700000f, 0.051300000f, 1.0f,
-        0.589190000f, 0.539430000f, 0.091570000f, 1.0f,
-        0.309040000f, 0.148180000f, 0.274260000f, 1.0f,
-        0.149010000f, 0.233780000f, 0.359390000f, 1.0f,
-    };
+    values.m_inputValues = g_aces2_rgb_values;
     test.setCustomValues(values);
 
+    // Large because JMh is scaled in the hundreds.
     test.setErrorThreshold(2e-4f);
 }
 
@@ -837,42 +893,49 @@ OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_rgb_to_jmh_inv)
     test.setProcessor(func);
 
     OCIOGPUTest::CustomValues values;
-    values.m_inputValues =
-    {
-        // ACEScg primaries and secondaries scaled by 4
-        107.480636597f, 206.827301025f, 25.025110245f, 1.0f,
-        173.194076538f, 133.330886841f, 106.183448792f, 1.0f,
-        139.210220337f, 191.922363281f, 147.056488037f, 1.0f,
-        157.905166626f, 111.975311279f, 192.204727173f, 1.0f,
-        79.229278564f, 100.424659729f, 268.442108154f, 1.0f,
-        132.888137817f, 173.358779907f, 341.715240479f, 1.0f,
-        // OCIO test values
-        26.112514496f, 42.523605347f, 4.173158169f, 0.5f,
-        79.190460205f, 25.002300262f, 332.159759521f, 1.0f,
-        81.912559509f, 39.754810333f, 182.925750732f, 0.0f,
-        // ColorChecker24 (SMPTE 2065-1 2021)
-        33.924663544f, 12.254567146f, 38.146659851f, 1.0f,
-        61.332393646f, 15.169423103f, 39.841842651f, 1.0f,
-        47.191543579f, 11.839941978f, 249.107116699f, 1.0f,
-        37.328300476f, 13.224150658f, 128.878036499f, 1.0f,
-        53.465549469f, 13.121579170f, 285.658966064f, 1.0f,
-        65.414512634f, 19.172147751f, 179.324264526f, 1.0f,
-        55.711513519f, 37.182041168f, 50.924011230f, 1.0f,
-        40.020961761f, 20.762512207f, 271.008331299f, 1.0f,
-        47.704769135f, 35.791145325f, 13.975610733f, 1.0f,
-        30.385913849f, 14.544739723f, 317.544281006f, 1.0f,
-        64.222846985f, 33.487697601f, 119.145133972f, 1.0f,
-        65.570358276f, 35.864013672f, 70.842193604f, 1.0f,
-        31.800464630f, 23.920211792f, 273.228973389f, 1.0f,
-        47.950405121f, 28.027387619f, 144.154159546f, 1.0f,
-        38.440967560f, 42.604164124f, 17.892261505f, 1.0f,
-        75.117736816f, 40.952045441f, 90.752044678f, 1.0f,
-        49.311210632f, 33.812240601f, 348.832092285f, 1.0f,
-        47.441757202f, 22.915655136f, 218.454376221f, 1.0f,
-    };
+    values.m_inputValues = g_aces2_jmh_values;
     test.setCustomValues(values);
 
-    test.setErrorThreshold(1e-4f);
+    test.setErrorThreshold(2e-5f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_rgb_to_hmj_fwd)
+{
+    // Same RGB values as style_aces2_rgb_to_jmh_fwd above -- FIXED_FUNCTION_ACES_RGB_TO_HMJ_20
+    // computes the same JMh internally, just repacked as [ h/360, M/200, J/100 ].
+
+    // ACES AP0
+    const double data[8] = { 0.7347, 0.2653, 0.0000, 1.0000, 0.0001, -0.0770, 0.32168, 0.33767 };
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_RGB_TO_HMJ_20, &data[0], 8);
+    func->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+    test.setProcessor(func);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues = g_aces2_rgb_values;
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_rgb_to_hmj_inv)
+{
+    // Same JMh values as style_aces2_rgb_to_jmh_inv above, reordered/scaled into HMJ.
+
+    // ACES AP0
+    const double data[8] = { 0.7347, 0.2653, 0.0000, 1.0000, 0.0001, -0.0770, 0.32168, 0.33767 };
+    OCIO::FixedFunctionTransformRcPtr func =
+        OCIO::FixedFunctionTransform::Create(OCIO::FIXED_FUNCTION_ACES_RGB_TO_HMJ_20, &data[0], 8);
+    func->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    test.setProcessor(func);
+
+    OCIOGPUTest::CustomValues values;
+    values.m_inputValues = JMhToHMJ(g_aces2_jmh_values);
+    test.setCustomValues(values);
+
+    test.setErrorThreshold(2e-5f);
 }
 
 OCIO_ADD_GPU_TEST(FixedFunction, style_aces2_tonescale_compress_fwd)

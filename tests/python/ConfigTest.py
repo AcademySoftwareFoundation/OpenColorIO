@@ -903,6 +903,188 @@ colorspaces:
         self.assertIsNone(cfgNoName.findColorSpaceForID(':local:foo'))
         self.assertIsNone(cfgNoName.findColorSpaceForID('mystudio*:local:foo'))
 
+    def test_use_display_aliases(self):
+        # Test the getUseDisplayAliases/setUseDisplayAliases methods, and that they gate
+        # the getCanonicalDisplayName fallback, but not view alias resolution, which is
+        # always active since a view's aliases are an explicit attribute of the view.
+
+        cfg = OCIO.Config()
+        self.assertFalse(cfg.getUseDisplayAliases())
+
+        cfg.setUseDisplayAliases(True)
+        self.assertTrue(cfg.getUseDisplayAliases())
+        cfg.setUseDisplayAliases(False)
+        self.assertFalse(cfg.getUseDisplayAliases())
+
+        # Build a config where a display has been renamed, keeping its old name available as
+        # an alias, and a view that has been renamed, keeping its old name available as one
+        # of the view's aliases.
+        cfg.setVersion(2, 6)
+
+        dcs = OCIO.ColorSpace(
+            referenceSpace=OCIO.REFERENCE_SPACE_DISPLAY,
+            name='sRGB - Display',
+            aliases=['sRGB'])
+        dcs.setTransform(OCIO.MatrixTransform(), OCIO.COLORSPACE_DIR_FROM_REFERENCE)
+        cfg.addColorSpace(dcs)
+
+        cfg.addDisplayView('sRGB - Display', 'view', viewTransform='',
+                           displayColorSpaceName='sRGB - Display', looks='', ruleName='',
+                           description='', aliases=['view_old'])
+
+        # The display alias fallback is disabled by default: only an exact match resolves.
+        self.assertEqual(cfg.getCanonicalDisplayName('sRGB - Display'), 'sRGB - Display')
+        self.assertEqual(cfg.getCanonicalDisplayName('sRGB'), '')
+
+        # But view alias resolution is always active, regardless of getUseDisplayAliases.
+        self.assertEqual(cfg.getCanonicalViewName('sRGB - Display', 'view'), 'view')
+        self.assertEqual(cfg.getCanonicalViewName('sRGB - Display', 'view_old'), 'view')
+
+        # Once enabled, the display alias resolves too.
+        cfg.setUseDisplayAliases(True)
+        self.assertEqual(cfg.getCanonicalDisplayName('sRGB'), 'sRGB - Display')
+        self.assertEqual(cfg.getCanonicalViewName('sRGB - Display', 'view_old'), 'view')
+
+    def test_display_view_aliases(self):
+        # Test Config.getDisplayViewAliases and Config.hasDisplayViewAlias, for both a
+        # display-defined view and a shared view.
+
+        cfg = OCIO.Config()
+        cfg.setVersion(2, 6)
+        cfg.addColorSpace(OCIO.ColorSpace(name='raw'))
+
+        cfg.addDisplayView('display1', 'view1', viewTransform='',
+                           displayColorSpaceName='raw', looks='', ruleName='',
+                           description='', aliases=['alias1', 'alias2'])
+
+        self.assertEqual(list(cfg.getDisplayViewAliases('display1', 'view1')),
+                         ['alias1', 'alias2'])
+        self.assertTrue(cfg.hasDisplayViewAlias('display1', 'view1', 'alias1'))
+        self.assertTrue(cfg.hasDisplayViewAlias('display1', 'view1', 'ALIAS2'))
+        self.assertFalse(cfg.hasDisplayViewAlias('display1', 'view1', 'alias3'))
+
+        # A view with no aliases.
+        cfg.addDisplayView('display1', 'view2', 'raw')
+        self.assertEqual(list(cfg.getDisplayViewAliases('display1', 'view2')), [])
+        self.assertFalse(cfg.hasDisplayViewAlias('display1', 'view2', 'alias1'))
+
+        # A shared view, looked up the same way as Config.hasView (an empty display finds it
+        # among the config's shared views).
+        cfg.addSharedView('shared1', '', 'raw', aliases=['shared_alias'])
+        cfg.addDisplaySharedView('display1', 'shared1')
+
+        self.assertEqual(list(cfg.getDisplayViewAliases('', 'shared1')), ['shared_alias'])
+        self.assertTrue(cfg.hasDisplayViewAlias('', 'shared1', 'shared_alias'))
+        self.assertFalse(cfg.hasDisplayViewAlias('display1', 'shared1', 'unknown'))
+
+        # Unknown display, view, or display/view combination.
+        self.assertEqual(list(cfg.getDisplayViewAliases('display1', 'not_a_view')), [])
+        self.assertFalse(cfg.hasDisplayViewAlias('display1', 'not_a_view', 'alias1'))
+        self.assertFalse(cfg.hasDisplayViewAlias('not_a_display', 'view1', 'alias1'))
+
+        # An alias may itself contain a comma; since aliases are set as a real list, no
+        # quoting is needed (unlike the comma-delimited Config.setActiveViews string).
+        cfg.addDisplayView('display1', 'view3', viewTransform='',
+                           displayColorSpaceName='raw', looks='', ruleName='',
+                           description='', aliases=['alias,with,comma', 'alias4'])
+
+        self.assertTrue(cfg.hasDisplayViewAlias('display1', 'view3', 'alias,with,comma'))
+        self.assertTrue(cfg.hasDisplayViewAlias('display1', 'view3', 'alias4'))
+        self.assertFalse(cfg.hasDisplayViewAlias('display1', 'view3', 'alias'))
+
+        self.assertEqual(list(cfg.getDisplayViewAliases('display1', 'view3')),
+                         ['alias,with,comma', 'alias4'])
+
+    def test_display_description(self):
+        # Test that getDisplayDescription borrows the description of the display's associated
+        # display color space: an exact name match always works, but matching only via one of
+        # the color space's aliases requires getUseDisplayAliases. Either way, the display must
+        # actually use that color space in one of its views, or the match fails (a display
+        # color space that merely happens to share a name with an unrelated display doesn't
+        # match).
+
+        cfg = OCIO.Config()
+        cfg.setVersion(2, 6)
+
+        cfg.addColorSpace(OCIO.ColorSpace(name='raw'))
+
+        dcs = OCIO.ColorSpace(
+            referenceSpace=OCIO.REFERENCE_SPACE_DISPLAY,
+            name='sRGB - Display',
+            aliases=['sRGB'],
+            description='The sRGB display.')
+        dcs.setTransform(OCIO.MatrixTransform(), OCIO.COLORSPACE_DIR_FROM_REFERENCE)
+        cfg.addColorSpace(dcs)
+
+        cfg.addDisplayView('sRGB - Display', 'view1', 'raw')
+
+        # The name match alone isn't enough: so far "sRGB - Display" only has view1, whose
+        # color space is "raw", so the match fails even though it is an exact name match.
+        self.assertFalse(cfg.getUseDisplayAliases())
+        self.assertEqual(cfg.getDisplayDescription('sRGB - Display'), '')
+
+        # Add a view that uses the display color space itself, satisfying that requirement.
+        cfg.addDisplayView('sRGB - Display', 'view2', 'sRGB - Display', '')
+
+        self.assertEqual(cfg.getDisplayDescription('sRGB - Display'), 'The sRGB display.')
+        self.assertEqual(cfg.getDisplayDescription('sRGB'), '')
+
+        cfg.setUseDisplayAliases(True)
+        self.assertEqual(cfg.getDisplayDescription('sRGB'), 'The sRGB display.')
+
+        self.assertEqual(cfg.getDisplayDescription('does not exist'), '')
+
+    def test_resolved_display_view_color_space_name(self):
+        # Test that getResolvedDisplayViewColorSpaceName returns the color space actually used by
+        # a (display, view) pair, rather than the colorspace attribute as written in the config.
+
+        cfg = OCIO.Config()
+        cfg.setVersion(2, 6)
+
+        cfg.addColorSpace(OCIO.ColorSpace(name='raw'))
+
+        dcs = OCIO.ColorSpace(
+            referenceSpace=OCIO.REFERENCE_SPACE_DISPLAY,
+            name='sRGB - Display',
+            aliases=['sRGB'])
+        dcs.setTransform(OCIO.MatrixTransform(), OCIO.COLORSPACE_DIR_FROM_REFERENCE)
+        cfg.addColorSpace(dcs)
+
+        cfg.addDisplayView('sRGB - Display', 'view1', 'raw')
+        cfg.addDisplayView('sRGB - Display', 'view2', viewTransform='',
+                           displayColorSpaceName='<USE_DISPLAY_NAME>', looks='', ruleName='',
+                           description='', aliases=['view2_old'])
+
+        # A plain view behaves like getDisplayViewColorSpaceName.
+        self.assertEqual(
+            cfg.getResolvedDisplayViewColorSpaceName('sRGB - Display', 'view1'), 'raw')
+
+        # <USE_DISPLAY_NAME> resolves to the display's own color space, without needing the
+        # display alias fallback to be enabled.
+        self.assertFalse(cfg.getUseDisplayAliases())
+        self.assertEqual(
+            cfg.getDisplayViewColorSpaceName('sRGB - Display', 'view2'), '<USE_DISPLAY_NAME>')
+        self.assertEqual(
+            cfg.getResolvedDisplayViewColorSpaceName('sRGB - Display', 'view2'), 'sRGB - Display')
+
+        # Resolving a view by one of its own aliases is always active, unlike resolving an
+        # out-of-date display name, which requires getUseDisplayAliases.
+        self.assertEqual(cfg.getResolvedDisplayViewColorSpaceName('sRGB', 'view1'), '')
+        self.assertEqual(
+            cfg.getResolvedDisplayViewColorSpaceName('sRGB - Display', 'view2_old'),
+            'sRGB - Display')
+
+        cfg.setUseDisplayAliases(True)
+        self.assertEqual(cfg.getResolvedDisplayViewColorSpaceName('sRGB', 'view1'), 'raw')
+        self.assertEqual(
+            cfg.getResolvedDisplayViewColorSpaceName('sRGB', 'view2_old'), 'sRGB - Display')
+
+        # Nonexistent display or view.
+        self.assertEqual(
+            cfg.getResolvedDisplayViewColorSpaceName('sRGB - Display', 'not a view'), '')
+        self.assertEqual(cfg.getResolvedDisplayViewColorSpaceName('not a display', 'view1'), '')
+        self.assertEqual(cfg.getResolvedDisplayViewColorSpaceName('', 'view1'), '')
+
     def test_virtual_display(self):
         # Test platform agnostic virtual display interface.
 
