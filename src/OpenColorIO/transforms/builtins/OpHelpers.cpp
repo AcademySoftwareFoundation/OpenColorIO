@@ -66,9 +66,10 @@ void CreateLut(OpRcPtrVec & ops,
 
     for (unsigned long idx = 0; idx < lutDimension; ++idx)
     {
-        values[idx * 3 + 0] = lutValueGenerator(double(idx) / (lutDimension - 1.));
-        values[idx * 3 + 1] = lutValueGenerator(double(idx) / (lutDimension - 1.));
-        values[idx * 3 + 2] = lutValueGenerator(double(idx) / (lutDimension - 1.));
+        const float value = lutValueGenerator(double(idx) / (lutDimension - 1.));
+        values[idx * 3 + 0] = value;
+        values[idx * 3 + 1] = value;
+        values[idx * 3 + 2] = value;
     }
 
     CreateLut1DOp(ops, lut, TRANSFORM_DIR_FORWARD);
@@ -132,9 +133,10 @@ void CreateHalfLut(OpRcPtrVec & ops, std::function<float(double)> lutValueGenera
             value = halfValue.isNegative() ? -HALF_MAX : HALF_MAX;
         }
 
-        values[idx * 3 + 0] = lutValueGenerator(value);
-        values[idx * 3 + 1] = lutValueGenerator(value);
-        values[idx * 3 + 2] = lutValueGenerator(value);
+        const float outValue = lutValueGenerator(value);
+        values[idx * 3 + 0] = outValue;
+        values[idx * 3 + 1] = outValue;
+        values[idx * 3 + 2] = outValue;
     }
 
     CreateLut1DOp(ops, lut, TRANSFORM_DIR_FORWARD);
