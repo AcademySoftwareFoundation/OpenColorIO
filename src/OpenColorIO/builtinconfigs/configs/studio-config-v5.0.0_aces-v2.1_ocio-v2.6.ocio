@@ -80,7 +80,7 @@ virtual_display:
   - !<View> {name: Raw, colorspace: Raw}
   - !<Views> [ACES 2.0 - SDR 100 nits (Rec.709), ACES 2.0 - SDR 100 nits (P3 D65), Un-tone-mapped, Video (colorimetric)]
 
-use_display_view_aliases: true
+use_display_aliases: true
 active_displays: [sRGB - Display, Display P3 - Display, Display P3 HDR - Display, Gamma 2.2 Rec.709 - Display, Gamma 2.6 P3-D65 - Display, Rec.1886 Rec.709 - Display, Rec.2100-HLG - Display, Rec.2100-PQ - Display, ST2084-P3-D65 - Display]
 active_views: [ACES 2.0 - HDR 1000 nits (P3 D65), ACES 2.0 - HDR 1000 nits (Rec.2020), ACES 2.0 - HDR 2000 nits (P3 D65), ACES 2.0 - HDR 2000 nits (Rec.2020), ACES 2.0 - HDR 4000 nits (P3 D65), ACES 2.0 - HDR 4000 nits (Rec.2020), ACES 2.0 - HDR 500 nits (P3 D65), ACES 2.0 - HDR 500 nits (Rec.2020), ACES 2.0 - HDR 108 nits (P3 D65), ACES 2.0 - SDR 100 nits (P3 D65), ACES 2.0 - SDR 100 nits (Rec.709), Un-tone-mapped, Video (colorimetric), Raw]
 inactive_colorspaces: [CIE XYZ-D65 - Display-referred, CIE XYZ-D65 - Scene-referred]

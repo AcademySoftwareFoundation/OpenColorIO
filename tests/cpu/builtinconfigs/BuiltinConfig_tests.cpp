@@ -577,6 +577,22 @@ OCIO_ADD_TEST(BuiltinConfigs, create_builtin_config)
         int nbOfColorspacesForStudioConfig1 = 57;
         testFromBuiltinConfig(studioConfigName, nbOfColorspacesForStudioConfig1, "", __LINE__);
         testFromEnvAndFromFile(uriPrefix + studioConfigName, nbOfColorspacesForStudioConfig1, studioConfigName, __LINE__);
+
+        // Additionally test that the new display aliasing is working.
+
+        OCIO::ConstConfigRcPtr config;
+        OCIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromBuiltinConfig(cgConfigName.c_str()));
+        OCIO_REQUIRE_ASSERT(config);
+        OCIO_CHECK_ASSERT(config->getUseDisplayAliases());
+
+        auto dt = OCIO::DisplayViewTransform::Create();
+        dt->setSrc("ACES2065-1");
+        dt->setView("Un-tone-mapped");
+        // Use the display name from the previous configs.
+        dt->setDisplay("P3-D65 - Display");
+        OCIO::ConstProcessorRcPtr proc;
+        // This would throw if the display were not found.
+        OCIO_CHECK_NO_THROW(proc = config->getProcessor(dt));
     }
 
     {

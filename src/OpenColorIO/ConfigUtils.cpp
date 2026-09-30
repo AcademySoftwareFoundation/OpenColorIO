@@ -904,9 +904,7 @@ ConstTransformRcPtr getRefSpaceConverter(const ConstConfigRcPtr & srcConfig,
                                          const ConstConfigRcPtr & dstConfig, 
                                          ReferenceSpaceType refSpaceType)
 {
-//     ConstConfigRcPtr builtinConfig = Config::CreateFromBuiltinConfig("ocio://cg-config-latest");
-//  FIXME: Temporarily use an earlier built-in config until the display/view aliases PR is merged.
-    ConstConfigRcPtr builtinConfig = Config::CreateFromBuiltinConfig("cg-config-v4.0.0_aces-v2.0_ocio-v2.5");
+    ConstConfigRcPtr builtinConfig = Config::CreateFromBuiltinConfig("ocio://cg-config-latest");
 
     auto getColorspaceOfRefType = [](const ConstConfigRcPtr & config, 
                                      ReferenceSpaceType refType) -> const char *
@@ -1293,8 +1291,7 @@ void initializeTestVals(TestVals & testVals, const ConstConfigRcPtr & config)
                 if (!cs)
                 {
                     // Otherwise, see if it's present using a different name.
-//                     ConstConfigRcPtr builtinConfig = Config::CreateFromBuiltinConfig("ocio://cg-config-latest");
-                    ConstConfigRcPtr builtinConfig = Config::CreateFromBuiltinConfig("cg-config-v4.0.0_aces-v2.0_ocio-v2.5");
+                    ConstConfigRcPtr builtinConfig = Config::CreateFromBuiltinConfig("ocio://cg-config-latest");
                     // This throws if it cannot find the requested space.
                     const char * cs_name = 
                         Config::IdentifyBuiltinColorSpace(config, builtinConfig, "aces_interchange");
@@ -1343,8 +1340,7 @@ void initializeTestVals(TestVals & testVals, const ConstConfigRcPtr & config)
                 if (!cs)
                 {
                     // Otherwise, see if it's present using a different name.
-//                     ConstConfigRcPtr builtinConfig = Config::CreateFromBuiltinConfig("ocio://cg-config-latest");
-                    ConstConfigRcPtr builtinConfig = Config::CreateFromBuiltinConfig("cg-config-v4.0.0_aces-v2.0_ocio-v2.5");
+                    ConstConfigRcPtr builtinConfig = Config::CreateFromBuiltinConfig("ocio://cg-config-latest");
                     const char * cs_name = 
                         Config::IdentifyBuiltinColorSpace(config, builtinConfig, "cie_xyz_d65_interchange");
                     cs = config->getColorSpace(cs_name);
