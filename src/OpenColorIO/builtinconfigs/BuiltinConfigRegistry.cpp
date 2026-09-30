@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <algorithm>
+#include <charconv>
 #include <sstream>
 #include <regex>
 
@@ -58,6 +59,28 @@ const char * ResolveConfigPath(const char * originalPath) noexcept
 
     // Return originalPath if no special path was used.
     return originalPath;
+}
+
+bool IsReservedConfigName(const std::string & sanitizedConfigName)
+{
+    static const std::regex builtinConfigNamePattern(
+        R"(^(?:cg-config|studio-config)-v(\d+)\.\d+\.\d+_aces-v[\d.]+_ocio-v[\d.]+$)");
+
+    std::smatch match;
+    if (!std::regex_match(sanitizedConfigName, match, builtinConfigNamePattern))
+    {
+        return false;
+    }
+
+    const std::string majorVersionStr = match[1].str();
+    int majorVersion = 0;
+    const auto result = std::from_chars(
+        majorVersionStr.data(), majorVersionStr.data() + majorVersionStr.size(), majorVersion);
+    if (result.ec != std::errc())
+    {
+        return false;
+    }
+    return majorVersion >= 4;
 }
 
 const BuiltinConfigRegistry & BuiltinConfigRegistry::Get() noexcept

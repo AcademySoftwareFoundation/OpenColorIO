@@ -50,7 +50,8 @@ ViewVec::iterator FindView(ViewVec & vec, const std::string & name)
 
 void AddView(ViewVec & views, const char * name, const char * viewTransform,
              const char * displayColorSpace, const char * looks,
-             const char * rule, const char * description)
+             const char * rule, const char * description,
+             const StringUtils::StringVec & aliases)
 {
     if (displayColorSpace && 0 == Platform::Strcasecmp(displayColorSpace, OCIO_VIEW_USE_DISPLAY_NAME))
     {
@@ -59,7 +60,8 @@ void AddView(ViewVec & views, const char * name, const char * viewTransform,
     auto view = FindView(views, name);
     if (view == views.end())
     {
-        views.push_back(View(name, viewTransform, displayColorSpace, looks, rule, description));
+        views.push_back(View(name, viewTransform, displayColorSpace, looks, rule, description,
+                             aliases));
     }
     else
     {
@@ -68,6 +70,7 @@ void AddView(ViewVec & views, const char * name, const char * viewTransform,
         (*view).m_looks         = looks             ? looks             : "";
         (*view).m_rule          = rule              ? rule              : "";
         (*view).m_description   = description       ? description       : "";
+        (*view).m_aliases       = aliases;
     }
 }
 

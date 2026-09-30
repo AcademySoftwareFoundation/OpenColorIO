@@ -482,3 +482,19 @@ ProcessorCacheFlags
    .. group-tab:: C++
 
       .. doxygenenum:: ${OCIO_NAMESPACE}::ProcessorCacheFlags
+
+ConfigCompatibility
+********************
+
+.. tabs::
+
+   .. group-tab:: Python
+
+      .. autoclass:: PyOpenColorIO.ConfigCompatibility
+         :members:
+         :undoc-members:
+         :exclude-members: name
+
+   .. group-tab:: C++
+
+      .. doxygenenum:: ${OCIO_NAMESPACE}::ConfigCompatibility

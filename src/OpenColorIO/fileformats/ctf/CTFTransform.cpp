@@ -5,6 +5,7 @@
 #include <regex>
 
 #include "BitDepthUtils.h"
+#include "MathUtils.h"
 #include "fileformats/ctf/CTFReaderUtils.h"
 #include "fileformats/ctf/CTFTransform.h"
 #include "fileformats/xmlutils/XMLReaderUtils.h"
@@ -2528,22 +2529,27 @@ public:
     RangeWriter(const RangeWriter&) = delete;
     RangeWriter& operator=(const RangeWriter&) = delete;
     RangeWriter(XmlFormatter & formatter,
-                ConstRangeOpDataRcPtr range);
+                ConstRangeOpDataRcPtr range,
+                bool noClamp = false);
     virtual ~RangeWriter();
 
 protected:
     ConstOpDataRcPtr getOp() const override;
     const char * getTagName() const override;
+    void getAttributes(XmlFormatter::Attributes & attributes) const override;
     void writeContent() const override;
 
 private:
     ConstRangeOpDataRcPtr m_range;
+    bool m_noClamp;
 };
 
 RangeWriter::RangeWriter(XmlFormatter & formatter,
-                         ConstRangeOpDataRcPtr range)
+                         ConstRangeOpDataRcPtr range,
+                         bool noClamp)
     : OpWriter(formatter)
     , m_range(range)
+    , m_noClamp(noClamp)
 {
 }
 
@@ -2559,6 +2565,15 @@ ConstOpDataRcPtr RangeWriter::getOp() const
 const char * RangeWriter::getTagName() const
 {
     return TAG_RANGE;
+}
+
+void RangeWriter::getAttributes(XmlFormatter::Attributes & attributes) const
+{
+    OpWriter::getAttributes(attributes);
+    if (m_noClamp)
+    {
+        attributes.push_back(XmlFormatter::Attribute(ATTR_STYLE, "noClamp"));
+    }
 }
 
 void WriteTag(XmlFormatter & fmt, const char * tag, double value)
@@ -2827,6 +2842,80 @@ BitDepth GetInputFileBD(ConstOpDataRcPtr op)
     return BIT_DEPTH_F32;
 }
 
+// A Range with the noClamp style is read in as an equivalent Matrix since a RangeOpData
+// always clamps (see RangeOpData::convertToMatrix).  The SMPTE standard ST2136-10, the
+// CLF Broadcast Profile, relies on writing that exact noClamp Range back out rather
+// than a Matrix.  Since a Matrix's scale & offset alone can't tell us what minIn/maxIn/
+// minOut/maxOut bounds the original Range used, we only recognize this one specific,
+// fixed transform (and its exact inverse) rather than attempting a general reconstruction.
+
+// Set minOutValue/maxOutValue used by the SMPTE CLF Broadcast Profile signal-range brackets.
+// See an example in tests/data/files/clf/smpte_only/broadcast_profile_lut33.clf.
+// This is a 10-bit full-to-narrow range conversion on input and narrow-to-full on output.
+constexpr double NOCLAMP_RANGE_MIN_OUT_VALUE =  64./1023.;  // 0.06256109481915934
+constexpr double NOCLAMP_RANGE_MAX_OUT_VALUE = 940./1023.;  // 0.91886608015640270
+
+// Equivalent uniform scale/offset (out = in * scale + offset) for the "input" Range
+// (minInValue=0, maxInValue=1, minOutValue/maxOutValue as above) and for the "output"
+// Range, which is its exact algebraic inverse (minInValue/maxInValue as above,
+// minOutValue=0, maxOutValue=1).
+constexpr double NOCLAMP_INPUT_RANGE_SCALE  = NOCLAMP_RANGE_MAX_OUT_VALUE - NOCLAMP_RANGE_MIN_OUT_VALUE;
+constexpr double NOCLAMP_INPUT_RANGE_OFFSET = NOCLAMP_RANGE_MIN_OUT_VALUE;
+constexpr double NOCLAMP_OUTPUT_RANGE_SCALE  = 1.0 / NOCLAMP_INPUT_RANGE_SCALE;
+constexpr double NOCLAMP_OUTPUT_RANGE_OFFSET = -NOCLAMP_RANGE_MIN_OUT_VALUE * NOCLAMP_OUTPUT_RANGE_SCALE;
+
+constexpr double NOCLAMP_RANGE_TOLERANCE = 1e-6;
+
+// Returns the equivalent noClamp Range for matSrc if, and only if, it is a forward,
+// diagonal matrix applying the same scale & offset to R, G, and B as the fixed Range used
+// by the SMPTE CLF Broadcast Profile (isInputRange selects which one of the pair, the
+// input-side or the output-side, to compare against). Returns null otherwise, leaving
+// the Matrix to be written as-is.
+RangeOpDataRcPtr GetEquivalentNoClampRange(ConstMatrixOpDataRcPtr matSrc, bool isInputRange)
+{
+    if (matSrc->getDirection() != TRANSFORM_DIR_FORWARD ||
+        matSrc->hasAlpha() ||
+        !matSrc->isDiagonal())
+    {
+        return RangeOpDataRcPtr();
+    }
+
+    // Matrix must scale R, G, and B by the same amount.
+    const double scale = matSrc->getArrayValue(0);
+    if (!EqualWithAbsError(scale, matSrc->getArrayValue(5), NOCLAMP_RANGE_TOLERANCE) ||
+        !EqualWithAbsError(scale, matSrc->getArrayValue(10), NOCLAMP_RANGE_TOLERANCE))
+    {
+        return RangeOpDataRcPtr();
+    }
+
+    // Matrix must offset R, G, and B by the same amount.
+    const double offset = matSrc->getOffsetValue(0);
+    if (!EqualWithAbsError(offset, matSrc->getOffsetValue(1), NOCLAMP_RANGE_TOLERANCE) ||
+        !EqualWithAbsError(offset, matSrc->getOffsetValue(2), NOCLAMP_RANGE_TOLERANCE))
+    {
+        return RangeOpDataRcPtr();
+    }
+
+    const double targetScale  = isInputRange ? NOCLAMP_INPUT_RANGE_SCALE  : NOCLAMP_OUTPUT_RANGE_SCALE;
+    const double targetOffset = isInputRange ? NOCLAMP_INPUT_RANGE_OFFSET : NOCLAMP_OUTPUT_RANGE_OFFSET;
+
+    if (!EqualWithAbsError(scale, targetScale, NOCLAMP_RANGE_TOLERANCE) ||
+        !EqualWithAbsError(offset, targetOffset, NOCLAMP_RANGE_TOLERANCE))
+    {
+        return RangeOpDataRcPtr();
+    }
+
+    RangeOpDataRcPtr range = isInputRange
+        ? std::make_shared<RangeOpData>(0., 1., NOCLAMP_RANGE_MIN_OUT_VALUE, NOCLAMP_RANGE_MAX_OUT_VALUE)
+        : std::make_shared<RangeOpData>(NOCLAMP_RANGE_MIN_OUT_VALUE, NOCLAMP_RANGE_MAX_OUT_VALUE, 0., 1.);
+
+    range->getFormatMetadata() = matSrc->getFormatMetadata();
+    range->setFileInputBitDepth(matSrc->getFileInputBitDepth());
+    range->setFileOutputBitDepth(matSrc->getFileOutputBitDepth());
+
+    return range;
+}
+
 }
 
 void TransformWriter::writeOps(const CTFVersion & version) const
@@ -3077,6 +3166,27 @@ void TransformWriter::writeOps(const CTFVersion & version) const
                     if (matSrc->hasAlpha())
                     {
                         ThrowWriteOp("Matrix with alpha component");
+                    }
+
+                    // SMPTE CLF Broadcast Profile requires writing a noClamp Range at the
+                    // start or end of a CLF when it is equivalent to a specific full/narrow
+                    // scale and offset value. Only op[0] and the last op qualify.
+                    if (i == 0 || i == numOps - 1)
+                    {
+                        const bool isInputRange = i == 0;
+                        RangeOpDataRcPtr range = GetEquivalentNoClampRange(matSrc, isInputRange);
+                        if (range)
+                        {
+                            outBD = GetValidatedFileBitDepth(range->getFileOutputBitDepth(),
+                                                              OpData::RangeType);
+
+                            RangeWriter opWriter(m_formatter, range, /*noClamp=*/ true);
+                            opWriter.setInputBitdepth(inBD);
+                            opWriter.setOutputBitdepth(outBD);
+
+                            opWriter.write();
+                            break;
+                        }
                     }
                 }
 
