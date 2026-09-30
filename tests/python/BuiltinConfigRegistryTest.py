@@ -104,12 +104,12 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
         # Config specific tests
 
         # Test number of configs.
-        self.assertEqual(len(self.REGISTRY), 8)
+        self.assertEqual(len(self.REGISTRY), 10)
 
         # Test for the default built-in config.
         self.assertEqual(
             OCIO.ResolveConfigPath('ocio://default'),
-            "ocio://cg-config-v4.0.0_aces-v2.0_ocio-v2.5"
+            "ocio://cg-config-v5.0.0_aces-v2.1_ocio-v2.6"
         )
 
         # Test the CG configs.
@@ -157,6 +157,18 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
         self.assertEqual(values[cfgidx][1], 
             ("Academy Color Encoding System - CG Config [COLORSPACES v4.0.0] [ACES v2.0] "
             "[OCIO v2.5]"))
+        # isRecommended
+        self.assertEqual(values[cfgidx][2], False)
+		# isDefault
+        self.assertEqual(values[cfgidx][3], False)
+
+        cfgidx += 1
+        # Name
+        self.assertEqual(values[cfgidx][0], "cg-config-v5.0.0_aces-v2.1_ocio-v2.6")
+        # UI name
+        self.assertEqual(values[cfgidx][1],
+            ("Academy Color Encoding System - CG Config [COLORSPACES v5.0.0] [ACES v2.1] "
+            "[OCIO v2.6]"))
         # isRecommended
         self.assertEqual(values[cfgidx][2], True)
 		# isDefault
@@ -208,6 +220,18 @@ class BuiltinConfigRegistryTest(unittest.TestCase):
         self.assertEqual(values[cfgidx][1], 
             ("Academy Color Encoding System - Studio Config [COLORSPACES v4.0.0] [ACES v2.0] "
             "[OCIO v2.5]"))
+        # isRecommended
+        self.assertEqual(values[cfgidx][2], False)
+        # isDefault
+        self.assertEqual(values[cfgidx][3], False)
+
+        cfgidx += 1
+        # Name
+        self.assertEqual(values[cfgidx][0], "studio-config-v5.0.0_aces-v2.1_ocio-v2.6")
+        # UI name
+        self.assertEqual(values[cfgidx][1],
+            ("Academy Color Encoding System - Studio Config [COLORSPACES v5.0.0] [ACES v2.1] "
+            "[OCIO v2.6]"))
         # isRecommended
         self.assertEqual(values[cfgidx][2], True)
         # isDefault
