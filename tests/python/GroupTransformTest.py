@@ -1,9 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+import os
 import unittest
 
 import PyOpenColorIO as OCIO
+from UnitTestUtils import TEST_DATAFILES_DIR
 from TransformsBaseTest import TransformsBaseTest
 
 
@@ -130,6 +132,28 @@ class GroupTransformTest(unittest.TestCase, TransformsBaseTest):
         for invalid in (None, 1):
             with self.assertRaises(TypeError):
                 group_tr = OCIO.FixedFunctionTransform(invalid)
+
+    def test_parse_from_buffer(self):
+        """
+        Test the ParseFromBuffer() static method.
+        """
+
+        test_file = os.path.join(TEST_DATAFILES_DIR, 'lut1d_1.spi1d')
+        with open(test_file, 'rb') as f:
+            content = f.read()
+
+        group_tr = OCIO.GroupTransform.ParseFromBuffer(content)
+        self.assertEqual(len(group_tr), 1)
+        self.assertIsInstance(group_tr[0], OCIO.Lut1DTransform)
+
+        # An empty buffer raises.
+        with self.assertRaises(OCIO.Exception):
+            OCIO.GroupTransform.ParseFromBuffer(b'')
+
+        # Contents that no LUT file reader can parse raises.
+        with self.assertRaises(OCIO.Exception):
+            OCIO.GroupTransform.ParseFromBuffer(
+                b'This is not the content of any supported LUT format.')
 
     def test_write_clf(self):
         """

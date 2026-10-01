@@ -1532,6 +1532,35 @@ class OCIOEXPORT GroupTransform : public Transform
 public:
     static GroupTransformRcPtr Create();
 
+    /**
+     * \brief Parse the contents of a LUT file contained in a memory buffer and return the
+     * transforms it contains as a GroupTransform.
+     *
+     * This allows any of the LUT file formats supported by FileTransform to be parsed from
+     * memory rather than from a file on disk.  The buffer contents is tried against each of
+     * the LUT file readers until one of them is able to parse it (the same fallback behavior
+     * that FileTransform uses for files with an unrecognized extension).  The available
+     * readers may be listed using FileTransform::GetNumFormats and
+     * FileTransform::GetFormatNameByIndex.
+     *
+     * The buffer contents are copied internally, so the buffer only needs to remain valid
+     * for the duration of the call.
+     *
+     * The parsed contents are stored in the global (process-wide) file cache, keyed on a hash
+     * of the buffer contents, so parsing a buffer with identical contents again is a cache
+     * hit.  As with LUT files loaded from disk, the cache may be flushed using
+     * \ref ClearAllCaches.
+     *
+     * \param buffer Pointer to the in-memory contents of the LUT file.
+     * \param bufferSize Size of the buffer, in bytes.
+     *
+     * \return The GroupTransform containing the parsed transforms.
+     *
+     * \throw Exception if the buffer is null or empty, or if none of the LUT file readers
+     * are able to parse the buffer contents.
+     */
+    static GroupTransformRcPtr ParseFromBuffer(const char * buffer, size_t bufferSize);
+
     virtual const FormatMetadata & getFormatMetadata() const noexcept = 0;
     virtual FormatMetadata & getFormatMetadata() noexcept = 0;
 

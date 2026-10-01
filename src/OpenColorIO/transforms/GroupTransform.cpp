@@ -7,6 +7,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ContextVariableUtils.h"
+#include "HashUtils.h"
 #include "OpBuilders.h"
 #include "transforms/FileTransform.h"
 #include "transforms/GroupTransform.h"
@@ -14,9 +15,87 @@
 
 namespace OCIO_NAMESPACE
 {
+
+namespace
+{
+// ConfigIOProxy implementation that provides the contents of a single in-memory LUT file
+// buffer, regardless of the file path being requested.
+class BufferConfigIOProxy : public ConfigIOProxy
+{
+public:
+    BufferConfigIOProxy(const char * buffer, size_t bufferSize, const std::string & hash)
+        : m_buffer(reinterpret_cast<const uint8_t *>(buffer),
+                   reinterpret_cast<const uint8_t *>(buffer) + bufferSize)
+        , m_hash(hash)
+    {
+    }
+
+    std::vector<uint8_t> getLutData(const char * /* filepath */) const override
+    {
+        return m_buffer;
+    }
+
+    std::string getConfigData() const override
+    {
+        // Unused, the config itself is not provided through the proxy.
+        return "";
+    }
+
+    std::string getFastLutFileHash(const char * /* filepath */) const override
+    {
+        return m_hash;
+    }
+
+private:
+    std::vector<uint8_t> m_buffer;
+    std::string m_hash;
+};
+} // anonymous namespace
+
 GroupTransformRcPtr GroupTransform::Create()
 {
     return GroupTransformRcPtr(new GroupTransformImpl(), &GroupTransformImpl::Deleter);
+}
+
+GroupTransformRcPtr GroupTransform::ParseFromBuffer(const char * buffer, size_t bufferSize)
+{
+    if (!buffer || bufferSize == 0)
+    {
+        throw Exception("GroupTransform::ParseFromBuffer: buffer is null or empty.");
+    }
+
+    // Hash the buffer contents. The hash is used both to form the synthetic file name given
+    // to the FileTransform and as the fast LUT file hash returned by the ConfigIOProxy, so
+    // that the global file caches (which are keyed on these strings) never confuse the
+    // contents of two different buffers.
+    const std::string contentHash = CacheIDHash(buffer, bufferSize);
+
+    ConfigIOProxyRcPtr ciop = std::make_shared<BufferConfigIOProxy>(buffer,
+                                                                    bufferSize,
+                                                                    contentHash);
+
+    ConfigRcPtr config = Config::CreateRaw()->createEditableCopy();
+    config->setConfigIOProxy(ciop);
+
+    // Prefix the hash to form a synthetic file name so that the global file cache entries
+    // created here can never collide with those of a real file whose resolved path happens
+    // to match the bare hash string.
+    const std::string syntheticFileName = "ParseFromBuffer:" + contentHash;
+
+    FileTransformRcPtr fileTransform = FileTransform::Create();
+    fileTransform->setSrc(syntheticFileName.c_str());
+
+    try
+    {
+        ConstProcessorRcPtr processor = config->getProcessor(fileTransform);
+        return processor->createGroupTransform();
+    }
+    catch (Exception & e)
+    {
+        std::ostringstream os;
+        os << "GroupTransform::ParseFromBuffer: Error parsing LUT from buffer: " << e.what();
+        throw Exception(os.str().c_str());
+    }
 }
 
 void GroupTransformImpl::Deleter(GroupTransform * t)

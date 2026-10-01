@@ -114,3 +114,95 @@ OCIO_ADD_TEST(GroupTransform, write_with_noops)
         OCIO_CHECK_NO_THROW(group->write(config, OCIO::FILEFORMAT_CLF, oss));
     }
 }
+
+namespace
+{
+std::string ReadTestFile(const std::string & fileName)
+{
+    const std::string filePath(OCIO::GetTestFilesDir() + "/" + fileName);
+
+    std::ifstream fstream;
+    OCIO::Platform::OpenInputFileStream(fstream,
+                                        filePath.c_str(),
+                                        std::ios_base::in | std::ios_base::binary);
+    if (fstream.fail())
+    {
+        std::ostringstream os;
+        os << "Error opening test file: " << filePath;
+        throw OCIO::Exception(os.str().c_str());
+    }
+
+    std::stringstream buffer;
+    buffer << fstream.rdbuf();
+    return buffer.str();
+}
+}
+
+OCIO_ADD_TEST(GroupTransform, parse_from_buffer)
+{
+    // Parse a SPI1D LUT from a memory buffer.
+    {
+        const std::string content = ReadTestFile("lut1d_1.spi1d");
+
+        OCIO::GroupTransformRcPtr group;
+        OCIO_CHECK_NO_THROW(group = OCIO::GroupTransform::ParseFromBuffer(content.c_str(),
+                                                                          content.size()));
+        OCIO_REQUIRE_ASSERT(group);
+        OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+
+        auto lut = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Lut1DTransform>(group->getTransform(0));
+        OCIO_REQUIRE_ASSERT(lut);
+        OCIO_CHECK_EQUAL(lut->getLength(), 512U);
+
+        float r = 0.f, g = 0.f, b = 0.f;
+        lut->getValue(1, r, g, b);
+        OCIO_CHECK_CLOSE(r, 0.00195695f, 1e-8f);
+        OCIO_CHECK_CLOSE(g, 0.00195695f, 1e-8f);
+        OCIO_CHECK_CLOSE(b, 0.00195695f, 1e-8f);
+
+        // Parsing the same buffer again works and gives the same result.
+        OCIO::GroupTransformRcPtr group2;
+        OCIO_CHECK_NO_THROW(group2 = OCIO::GroupTransform::ParseFromBuffer(content.c_str(),
+                                                                           content.size()));
+        OCIO_REQUIRE_ASSERT(group2);
+        OCIO_REQUIRE_EQUAL(group2->getNumTransforms(), 1);
+    }
+
+    // Parse a CLF LUT from a memory buffer. This also validates that a different buffer
+    // parsed within the same process is not confused with the previous one by the global
+    // file caches.
+    {
+        const std::string content = ReadTestFile("clf/lut1d_example.clf");
+
+        OCIO::GroupTransformRcPtr group;
+        OCIO_CHECK_NO_THROW(group = OCIO::GroupTransform::ParseFromBuffer(content.c_str(),
+                                                                          content.size()));
+        OCIO_REQUIRE_ASSERT(group);
+        OCIO_REQUIRE_EQUAL(group->getNumTransforms(), 1);
+
+        auto lut = OCIO_DYNAMIC_POINTER_CAST<const OCIO::Lut1DTransform>(group->getTransform(0));
+        OCIO_REQUIRE_ASSERT(lut);
+        OCIO_CHECK_EQUAL(lut->getLength(), 65U);
+    }
+
+    // Null or empty buffer must throw.
+    {
+        OCIO_CHECK_THROW_WHAT(OCIO::GroupTransform::ParseFromBuffer(nullptr, 0),
+                              OCIO::Exception,
+                              "buffer is null or empty");
+
+        const std::string content = ReadTestFile("lut1d_1.spi1d");
+        OCIO_CHECK_THROW_WHAT(OCIO::GroupTransform::ParseFromBuffer(content.c_str(), 0),
+                              OCIO::Exception,
+                              "buffer is null or empty");
+    }
+
+    // Malformed buffer contents must throw rather than crash or silently succeed.
+    {
+        const std::string content = "This is not the content of any supported LUT format.";
+        OCIO_CHECK_THROW_WHAT(OCIO::GroupTransform::ParseFromBuffer(content.c_str(),
+                                                                    content.size()),
+                              OCIO::Exception,
+                              "Error parsing LUT from buffer");
+    }
+}
