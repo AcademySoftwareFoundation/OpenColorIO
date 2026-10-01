@@ -9,17 +9,99 @@ OCIO 2.6 Release
 Timeline
 ********
 
-OpenColorIO 2.6 was delivered in September 2026 and is in the VFX Reference Platform for
-calendar year 2027.
+OpenColorIO 2.6.0 was delivered in September 2026 and is in the VFX Reference Platform for
+calendar year 2027. A 2.6.1 release is planned for around the end of 2026 or early 2027.
+
 
 New Feature Guide
 =================
+
+SMPTE Common LUT Format (CLF) Support
+*************************************
+
+OCIO will now read and write CLF files conforming to the new SMPTE ST 2136-1 standard. The SMPTE 
+standard makes it suitable for use in long-term archiving and interchange. CLF is a floating-point 
+capable format that is more powerful than most vendor-specific LUT formats.
+
+The SMPTE version is very similar to version 3 of the Academy/ASC CLF specification. The main changes
+are a slightly different header and stricter requirements about ordering. Thus, it is possible
+to write files that should be compatible with both the SMPTE standard and the Academy/ASC 
+specification. Files written by OCIO therefore write both header attributes: ``compCLFversion="3"`` 
+and ``xmlns="http://www.smpte-ra.org/ns/2136-1/2024"``. You may continue to use the existing
+"Academy/ASC Common LUT Format" format string to choose CLF when writing ``GroupTransforms``,
+they will now be compatible with the SMPTE standard as well.
+
+
+HDR Display Compatible Configs
+******************************
+
+For Config Authors
+++++++++++++++++++
+
+The OCIO project held many meetings this year focusing on the impact of the changing color
+management situation in the three main operating systems, largely related to the needs of HDR
+displays. Going forward, applications will no longer be able to bypass OS color management.
+They may need to do additional processing after a user's ``DisplayViewTransform`` in order to 
+provide a properly tagged buffer to the OS, where additional color processing will happen
+before being sent to the display.
+
+As a first step, OCIO 2.6 introduces a concept of "HDR Display Compatible" configs, which may
+be checked via the ``ociocheck`` tool and a new API function. The goal is to standardize what
+is expected of config authors in order to enable applications to successfully interact with
+the recent OS color management requirements. Currently, each application that supports HDR
+displays has their own specific config requirements, so hopefully having a standard here will
+simplify the task of developing a config that will provide HDR support across multiple
+applications. The required config features are:
+
+* Set the display-referred interchange role: ``cie_xyz_d65_interchange``.
+
+* Displays must have a corresponding display color space.
+
+* Set the ``interop_id`` and ``encoding`` attributes on all display color spaces.
+
+* All active views must use a ``view_transform``. (An exception is allowed for "utility views"
+  where the ``colorspace`` has ``isdata: true`` or is a NamedTransform.)
+
+For Developers
+++++++++++++++
+
+Applications may check if a config meets the requirements by calling the new function 
+``ConfigCompatibilityHelpers::CheckCompatibility`` with the enum ``CONFIG_HDR_DISPLAY_SUPPORT_26``.
+
+
+Color Interop ID Support
+************************
+
+For Developers
+++++++++++++++
+
+New functions have been added to assist developers in implementing support for the ASWF
+Color Interop Forum's `Color Interop ID. <https://github.com/AcademySoftwareFoundation/ColorInterop/blob/main/Recommendations/03_ColorInteropID/ColorInteropID.md>`_
+These allow applications to either find a color space for an ID or, conversely, find an ID
+for a color space (even if its ``interop_id`` is missing).
+
+* The function ``Config::findColorSpaceForID`` searches a config for the color space that
+  should be used for a given interop ID. This implements the fallback rules defined in the
+  ASWF Color Interop Forum Recommendation.
+
+* The function ``Config::LocateBuiltinColorSpace`` searches for a color space in a built-in
+  config that is equivalent to a source color space. Since all color spaces in the recent
+  built-in configs have interop IDs populated, it allows you to determine the interop ID
+  for most color spaces, even if the interop ID is not populated in your source config.
+  This function leverages the color space "finger-printing" technique developed for the
+  config merging feature in OCIO 2.5.
+
+* The function ``Config::generateLocalIDForColorSpace`` allows applications to generate
+  a config-specific "local" interop ID, even if the config does not contain one for that
+  color space and one cannot be found using LocateBuiltinColorSpace.
+
 
 Built-in ACES 2.1 Configs
 *************************
 
 Built-in ACES 2.1 versions of the Studio and CG config are now provided. Please note that
-the Output Transforms were not changed in the 2.1 release, only the AMF transform IDs.
+the Output Transforms are not changed in this ACES release. The planned changes are improvements
+to the AMF transform IDs and associated tooling, plus the addition of some Input Transforms.
 The AMF transform IDs in the OCIO 2.6.0 built-in configs are preliminary and will change
 in the OCIO 2.6.1 release, after ACES 2.1 is officially released.
 
@@ -36,7 +118,8 @@ In addition, these configs include the following updates:
 
 * The family attribute of Sony Venice color spaces is now "Input/Sony/Legacy" to lower their
   placement in hierarchical menus, following the guidance from Sony that the Venice color spaces are
-  no longer recommended. These may be made inactive or be removed in future versions of the configs.
+  no longer recommended. These color spaces may be made inactive or be removed in future versions of 
+  the configs.
 
 For Users
 +++++++++
@@ -45,19 +128,19 @@ The following URI strings may be provided anywhere you would normally provide a 
 to a config (e.g. as the OCIO environment variable):
 
 To use the updated :ref:`aces_cg`, use this string for the config path:
-    ocio://cg-config-v5.0.0_aces-v2.1_ocio-v2.6
+    ``ocio://cg-config-v5.0.0_aces-v2.1_ocio-v2.6``
 
 To use the updated :ref:`aces_studio`, use this string for the config path:
-    ocio://studio-config-v5.0.0_aces-v2.1_ocio-v2.6
+    ``ocio://studio-config-v5.0.0_aces-v2.1_ocio-v2.6``
 
 This string will give you the current default config, which is the latest ACES 2.1 CG Config:
-    ocio://default
+    ``ocio://default``
 
 This string now points to this latest ACES 2.1 CG config:
-    ocio://cg-config-latest
+    ``ocio://cg-config-latest``
 
 This string now points to this latest ACES 2.1 Studio config:
-    ocio://studio-config-latest
+    ``ocio://studio-config-latest``
 
 
 Display and View Aliases
@@ -75,17 +158,17 @@ Display aliasing is opt-in and the config author must set the new config-level a
 ``use_display_aliases: true``. With that enabled, the name or aliases of the display color
 space for the display will be considered synonyms for that display. 
 
-View aliasing is allowed via a new ``aliases`` attribute on a view or shared view. These are
-always active, independent of whether ``use_display_aliases`` is enabled. Similar to other
+View aliasing is allowed via a new ``aliases`` attribute on a view or shared view. (These are
+always active, independent of whether ``use_display_aliases`` is enabled.) Similar to other
 Yaml lists, these are separated by a comma. Names that contain an embedded comma are 
 enclosed in quotes to prevent it from being used as a separator.
 
 Please note that the ``active_displays`` and ``active_views`` lists must use the canonical names
 rather than aliases. Similarly, view aliases in a shared view may not be used when referring to
-the shared view in a display's views. 
+the shared view in a display's ``Views`` attribute. 
 
-For virtual displays, aliases may be used with shared views but are 
-not suppored for display-defined virtual views.
+For virtual displays, aliases may be used with shared views but are not supported for 
+display-defined virtual views.
 
 As an example, in the following config file excerpt, "srgb_rec709_display" could be used as
 a display alias and "aces2_sdr_view" could be used as a view alias when creating a
@@ -121,6 +204,13 @@ any changes.
 The new functions ``Config::getCanonicalDisplayName`` and ``Config::getCanonicalViewName`` may
 be used to convert aliases back to the primary name used in the config.
 
+New versions of ``Config::addDisplayView`` and ``Config::addSharedView`` may be used to add
+aliases to views. And new ``Config`` methods ``getNumDisplayViewAliases``, ``getDisplayViewAlias``,
+and ``hasDisplayViewAlias`` may be used to get or check aliases on views.
+
+The new functions ``Config::getUseDisplayAliases`` and ``Config::setUseDisplayAliases`` may
+be used to get or set the new flag to opt into display aliasing.
+
 
 Display Descriptions
 ********************
@@ -135,41 +225,14 @@ available for config authors to set.) This enables applications to provide tool-
 similar help text for both displays and views.
 
 
-Color Interop ID Support
-************************
-
-For Developers
-++++++++++++++
-
-New functions have been added to assist developers in implementing support for the ASWF
-Color Interop Forum's `Color Interop ID. <https://github.com/AcademySoftwareFoundation/ColorInterop/blob/main/Recommendations/03_ColorInteropID/ColorInteropID.md>`_
-These allow applications to either find a color space for an ID or, conversely, find an ID
-for a color space (even if its ``interop_id`` is missing).
-
-* The function ``Config::findColorSpaceForID`` searches a config for the color space that
-  should be used for a given interop ID. This implements the fallback rules defined in the
-  ASWF CIF Recommendation.
-
-* The function ``Config::LocateBuiltinColorSpace`` searches for a color space in a built-in
-  config that is equivalent to a source color space. Since all color spaces in the recent
-  built-in configs have interop IDs populated, it allows you to determine the interop ID
-  for most color spaces, even if the interop ID is not populated in your source config.
-  This function leverages the color space "finger-printing" technique developed for the
-  config merging feature in OCIO 2.5.
-
-* The function ``Config::generateLocalIDForColorSpace`` allows applications to generate
-  an interop ID, even if the config does not contain one for that color space and one 
-  cannot be found using LocateBuiltinColorSpace.
-
-
 New Fixed Function Transforms
 *****************************
 
 For Config Authors
 ++++++++++++++++++
 
-The following new styles are available for use with FixedFunctionTransforms in config
-files with ``ocio_profile_version`` set to 2.6 or higher. They implement a conversion from
+The following new style is available for use with FixedFunctionTransforms in config
+files with ``ocio_profile_version`` set to 2.6 or higher. It implements a conversion from
 a linear RGB space with customizable primaries to the JMh (lightness, colorfulness, hue)
 color appearance space used in the ACES 2.0 Output Transforms. The ordering is hue,
 colorfulness, lightness, rather than JMh since that is the order already established by
@@ -189,9 +252,42 @@ For Config Authors
 ++++++++++++++++++
 
 In config files with ``ocio_profile_version`` set to 2.6 or higher, config authors may take
-advantage of the following new BuiltinTransform styles:
+advantage of the following new BuiltinTransform style:
 
 * ``APPLE_LOG-APPLEWG_to_ACES2065-1``
+
+
+HLSL and Vulkan GPU Test Harness
+********************************
+
+For Developers
+++++++++++++++
+
+OCIO's GPU unit tests may now be run in HLSL (on Windows) and Vulkan (all platforms).
+Please note that OCIO's GPU CI test only checks GLSL, so it's important for developers
+working on GPU-related features to run the new tests locally, if possible.
+
+
+Dependency Updates
+******************
+
+For Developers
+++++++++++++++
+
+Many projects have been hit with a lot of security related fixes this year, so we've
+updated the recommended versions of our key dependencies to be their current release.
+As a reminder, our "recommended" version is the one that OCIO will download and build
+itself, when ``OCIO_INSTALL_EXT_PACKAGES`` is set to ``MISSING`` or ``ALL``. 
+
+We only updated one minimum supported version which is that the minimum ``minizip-ng``
+version has been raised from 4.0.0 to 4.0.5.
+
+
+OCIO Support in FFmpeg
+**********************
+
+This is not technically part of the OCIO 2.6 release, but we want to thank Sam Richards for
+adding support for OCIO to FFmpeg 8.1. It is a very welcome addition!
 
 
 Release Notes

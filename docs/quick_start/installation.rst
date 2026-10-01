@@ -128,7 +128,7 @@ Required components:
 - \*yaml-cpp >= 0.8.0 (YAML parser for Configs)
 - \*Imath >= 3.1.1 (for half domain LUTs)
 - \*pystring >= 1.1.3
-- \*minizip-ng >= 4.0.0 (for config archiving)
+- \*minizip-ng >= 4.0.5 (for config archiving)
 - \*ZLIB >= 1.2.13 (for config archiving)
 
 Optional OCIO functionality also depends on:
