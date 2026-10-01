@@ -33,3 +33,21 @@ install(TARGETS ${PROJECT_NAME}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/pystring
 )
+
+# pystring has no pkg-config file upstream, unlike its OCIO_INSTALL_EXT_PACKAGES
+# siblings (expat, yaml-cpp, Imath, minizip-ng, zlib); write a minimal one so
+# OpenColorIO.pc's Requires.private can reference it like the others.
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/pystring.pc"
+"prefix=${CMAKE_INSTALL_PREFIX}
+exec_prefix=\${prefix}
+libdir=\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}
+includedir=\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}/pystring
+
+Name: pystring
+Description: A C++ port of some of Python's string functions
+Version: ${PYSTRING_PC_VERSION}
+Libs: -L\${libdir} -lpystring
+Cflags: -I\${includedir}
+")
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/pystring.pc"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
