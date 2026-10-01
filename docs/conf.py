@@ -118,6 +118,7 @@ expandvars_define = {
 html_theme = "press"
 html_logo = "_static/ocio_b.svg"
 html_static_path = ["_static"]
+templates_path = ["_templates"]
 
 html_theme_options = {
   "external_links": [
