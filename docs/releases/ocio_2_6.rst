@@ -27,7 +27,9 @@ The SMPTE version is very similar to version 3 of the Academy/ASC CLF specificat
 are a slightly different header and stricter requirements about ordering. Thus, it is possible
 to write files that should be compatible with both the SMPTE standard and the Academy/ASC 
 specification. Files written by OCIO therefore write both header attributes: ``compCLFversion="3"`` 
-and ``xmlns="http://www.smpte-ra.org/ns/2136-1/2024"``. 
+and ``xmlns="http://www.smpte-ra.org/ns/2136-1/2024"``. You may continue to use the existing
+"Academy/ASC Common LUT Format" format string to choose CLF when writing ``GroupTransforms``,
+they will now be compatible with the SMPTE standard as well.
 
 
 HDR Display Compatible Configs
@@ -43,8 +45,8 @@ They may need to do additional processing after a user's ``DisplayViewTransform`
 provide a properly tagged buffer to the OS, where additional color processing will happen
 before being sent to the display.
 
-As a first step, OCIO 2.6 introduces the notion of an "HDR Compatible Config", which may be
-checked via the ``ociocheck`` tool and a new API function. The goal is to standardize what
+As a first step, OCIO 2.6 introduces a concept of "HDR Display Compatible" configs, which may
+be checked via the ``ociocheck`` tool and a new API function. The goal is to standardize what
 is expected of config authors in order to enable applications to successfully interact with
 the recent OS color management requirements. Currently, each application that supports HDR
 displays has their own specific config requirements, so hopefully having a standard here will
@@ -59,6 +61,39 @@ applications. The required config features are:
 
 * All active views must use a ``view_transform``. (An exception is allowed for "utility views"
   where the ``colorspace`` has ``isdata: true`` or is a NamedTransform.)
+
+For Developers
+++++++++++++++
+
+Applications may check if a config meets the requirements by calling the new function 
+``ConfigCompatibilityHelpers::CheckCompatibility`` with the enum ``CONFIG_HDR_DISPLAY_SUPPORT_26``.
+
+
+Color Interop ID Support
+************************
+
+For Developers
+++++++++++++++
+
+New functions have been added to assist developers in implementing support for the ASWF
+Color Interop Forum's `Color Interop ID. <https://github.com/AcademySoftwareFoundation/ColorInterop/blob/main/Recommendations/03_ColorInteropID/ColorInteropID.md>`_
+These allow applications to either find a color space for an ID or, conversely, find an ID
+for a color space (even if its ``interop_id`` is missing).
+
+* The function ``Config::findColorSpaceForID`` searches a config for the color space that
+  should be used for a given interop ID. This implements the fallback rules defined in the
+  ASWF Color Interop Forum Recommendation.
+
+* The function ``Config::LocateBuiltinColorSpace`` searches for a color space in a built-in
+  config that is equivalent to a source color space. Since all color spaces in the recent
+  built-in configs have interop IDs populated, it allows you to determine the interop ID
+  for most color spaces, even if the interop ID is not populated in your source config.
+  This function leverages the color space "finger-printing" technique developed for the
+  config merging feature in OCIO 2.5.
+
+* The function ``Config::generateLocalIDForColorSpace`` allows applications to generate
+  a config-specific "local" interop ID, even if the config does not contain one for that
+  color space and one cannot be found using LocateBuiltinColorSpace.
 
 
 Built-in ACES 2.1 Configs
@@ -132,7 +167,7 @@ Please note that the ``active_displays`` and ``active_views`` lists must use the
 rather than aliases. Similarly, view aliases in a shared view may not be used when referring to
 the shared view in a display's ``Views`` attribute. 
 
-For virtual displays, aliases may be used with shared views but are not suppored for 
+For virtual displays, aliases may be used with shared views but are not supported for 
 display-defined virtual views.
 
 As an example, in the following config file excerpt, "srgb_rec709_display" could be used as
@@ -169,6 +204,13 @@ any changes.
 The new functions ``Config::getCanonicalDisplayName`` and ``Config::getCanonicalViewName`` may
 be used to convert aliases back to the primary name used in the config.
 
+New versions of ``Config::addDisplayView`` and ``Config::addSharedView`` may be used to add
+aliases to views. And new ``Config`` methods ``getNumDisplayViewAliases``, ``getDisplayViewAlias``,
+and ``hasDisplayViewAlias`` may be used to get or check aliases on views.
+
+The new functions ``Config::getUseDisplayAliases`` and ``Config::setUseDisplayAliases`` may
+be used to get or set the new flag to opt into display aliasing.
+
 
 Display Descriptions
 ********************
@@ -181,33 +223,6 @@ description for a display. This is sourced from the description attribute of the
 color space that implements the display. (Views already have a description attribute
 available for config authors to set.) This enables applications to provide tool-tips or
 similar help text for both displays and views.
-
-
-Color Interop ID Support
-************************
-
-For Developers
-++++++++++++++
-
-New functions have been added to assist developers in implementing support for the ASWF
-Color Interop Forum's `Color Interop ID. <https://github.com/AcademySoftwareFoundation/ColorInterop/blob/main/Recommendations/03_ColorInteropID/ColorInteropID.md>`_
-These allow applications to either find a color space for an ID or, conversely, find an ID
-for a color space (even if its ``interop_id`` is missing).
-
-* The function ``Config::findColorSpaceForID`` searches a config for the color space that
-  should be used for a given interop ID. This implements the fallback rules defined in the
-  ASWF Color Interop Forum Recommendation.
-
-* The function ``Config::LocateBuiltinColorSpace`` searches for a color space in a built-in
-  config that is equivalent to a source color space. Since all color spaces in the recent
-  built-in configs have interop IDs populated, it allows you to determine the interop ID
-  for most color spaces, even if the interop ID is not populated in your source config.
-  This function leverages the color space "finger-printing" technique developed for the
-  config merging feature in OCIO 2.5.
-
-* The function ``Config::generateLocalIDForColorSpace`` allows applications to generate
-  a config-specific "local" interop ID, even if the config does not contain one for that
-  color space and one cannot be found using LocateBuiltinColorSpace.
 
 
 New Fixed Function Transforms
