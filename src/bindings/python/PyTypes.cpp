@@ -34,6 +34,11 @@ void bindPyTypes(py::module & m)
         m, "Config",
         DOC(Config));
 
+    py::class_<AMFInfo, AMFInfoRcPtr /* holder */>(
+        m, "AMFInfo",
+        "Describes how the pipeline of an ACES Metadata File (AMF) maps onto the "
+        "OCIO config produced by Config.CreateFromAMF.");
+
     py::class_<Context, ContextRcPtr /* holder */>(
         m, "Context", 
         DOC(Context));

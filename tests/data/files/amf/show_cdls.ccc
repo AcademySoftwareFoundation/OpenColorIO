@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ColorCorrectionCollection xmlns="urn:ASC:CDL:v1.01">
+	<ColorCorrection id="A001_C005_0923SG">
+		<SOPNode>
+			<Description>Scene 5 Grade</Description>
+			<Slope>1.0240 0.9855 0.8645</Slope>
+			<Offset>-0.0468 -0.0365 0.0040</Offset>
+			<Power>0.8631 0.8763 0.9053</Power>
+		</SOPNode>
+		<SATNode>
+			<Saturation>1.1000</Saturation>
+		</SATNode>
+	</ColorCorrection>
+	<ColorCorrection id="A001_C010_1215RT">
+		<SOPNode>
+			<Description>Scene 10 Grade</Description>
+			<Slope>0.9500 1.0200 1.0100</Slope>
+			<Offset>0.0100 -0.0200 0.0050</Offset>
+			<Power>1.0000 0.9800 0.9900</Power>
+		</SOPNode>
+		<SATNode>
+			<Saturation>1.0500</Saturation>
+		</SATNode>
+	</ColorCorrection>
+	<ColorCorrection id="A002_C020_0845BW">
+		<SOPNode>
+			<Description>Scene 20 Grade</Description>
+			<Slope>1.1000 0.9800 1.0500</Slope>
+			<Offset>-0.0100 0.0150 -0.0050</Offset>
+			<Power>0.9500 1.0200 1.0100</Power>
+		</SOPNode>
+		<SATNode>
+			<Saturation>0.9500</Saturation>
+		</SATNode>
+	</ColorCorrection>
+</ColorCorrectionCollection>
+

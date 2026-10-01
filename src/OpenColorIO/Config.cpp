@@ -21,6 +21,7 @@
 #include "ConfigUtils.h"
 #include "ContextVariableUtils.h"
 #include "Display.h"
+#include "fileformats/amf/AMFParser.h"
 #include "fileformats/FileFormatICC.h"
 #include "FileRules.h"
 #include "HashUtils.h"
@@ -1396,6 +1397,14 @@ ConstConfigRcPtr Config::CreateFromBuiltinConfig(const char * configName)
     builtinConfig = Config::CreateFromStream(iss);
 
     return builtinConfig;
+}
+
+ConstConfigRcPtr Config::CreateFromAMF(AMFInfoRcPtr amfInfoObject,
+                                       const char * amfFilePath,
+                                       const char * configFilePath)
+{
+    AMFParser parser;
+    return parser.buildConfig(amfInfoObject, amfFilePath, configFilePath);
 }
 
 ///////////////////////////////////////////////////////////////////////////

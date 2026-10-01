@@ -60,6 +60,7 @@ set(SOURCES
     fileformats/xmlutils/XMLReaderHelper.cpp
     fileformats/xmlutils/XMLReaderUtils.cpp
     fileformats/xmlutils/XMLWriterUtils.cpp
+    fileformats/amf/AMFParser.cpp
     FileRules.cpp
     GPUProcessor.cpp
     GpuShader.cpp
