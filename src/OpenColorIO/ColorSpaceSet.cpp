@@ -91,7 +91,7 @@ public:
         // Search for name and aliases.
         if (csName && *csName)
         {
-            const std::string str = StringUtils::Lower(csName);
+            const std::string_view str(csName);
             for (size_t idx = 0; idx < m_colorSpaces.size(); ++idx)
             {
                 if (StringUtils::Compare(m_colorSpaces[idx]->getName(), str))
@@ -181,12 +181,10 @@ public:
     void remove(const char * csName)
     {
         if (!csName || !*csName) return;
-        const std::string name = StringUtils::Lower(csName);
-        if (name.empty()) return;
 
         for (auto itr = m_colorSpaces.begin(); itr != m_colorSpaces.end(); ++itr)
         {
-            if (StringUtils::Lower((*itr)->getName())==name)
+            if (StringUtils::Compare((*itr)->getName(), csName))
             {
                 m_colorSpaces.erase(itr);
                 return;

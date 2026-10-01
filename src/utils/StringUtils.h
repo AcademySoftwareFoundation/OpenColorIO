@@ -9,6 +9,7 @@
 #include <iterator>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 
@@ -82,9 +83,22 @@ inline std::string Upper(const char * str)
 }
 
 // Case insensitive comparison of strings.
-inline bool Compare(const std::string & left, const std::string & right)
+inline bool Compare(std::string_view left, std::string_view right)
 {
-    return Lower(left) == Lower(right);
+    if (left.size() != right.size())
+    {
+        return false;
+    }
+
+    // Manual comparison by character to avoid std::string allocation overhead.
+    for (size_t i = 0; i < left.size(); ++i)
+    {
+        if (Lower((unsigned char)left[i]) != Lower((unsigned char)right[i]))
+        {
+            return false;
+        }
+    }
+    return true;
 }
 
 // Return true if the string ends with the suffix.

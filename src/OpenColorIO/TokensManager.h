@@ -31,11 +31,12 @@ public:
         if (!token || !*token) return m_tokens.end();
 
         // NB: Categories are not case-sensitive and whitespace is stripped.
-        const std::string ref(StringUtils::Trim(StringUtils::Lower(token)));
+        // Stored tokens are already trimmed by addToken().
+        const std::string ref(StringUtils::Trim(token));
 
         for (auto itr = m_tokens.begin(); itr != m_tokens.end(); ++itr)
         {
-            if (StringUtils::Trim(StringUtils::Lower(*itr)) == ref)
+            if (StringUtils::Compare(*itr, ref))
             {
                 return itr;
             }
@@ -60,21 +61,11 @@ public:
 
     void removeToken(const char * token) noexcept
     {
-        if (!token || !*token) return;
-
-        // NB: Categories are not case-sensitive and whitespace is stripped.
-        const std::string ref(StringUtils::Trim(StringUtils::Lower(token)));
-
-        for (auto itr = m_tokens.begin(); itr != m_tokens.end(); ++itr)
+        const auto itr = findToken(token);
+        if (itr != m_tokens.end())
         {
-            if (StringUtils::Trim(StringUtils::Lower(*itr)) == ref)
-            {
-                m_tokens.erase(itr);
-                return;
-            }
+            m_tokens.erase(itr);
         }
-
-        return;
     }
 
     int getNumTokens() const noexcept
