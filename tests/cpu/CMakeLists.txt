@@ -63,7 +63,7 @@ function(add_ocio_test NAME SOURCES TESTS PRIVATE_INCLUDES)
         target_link_libraries(${TEST_BINARY} PRIVATE sse2neon)
     endif()
 
-    if(APPLE)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
         # Frameworks needed to access the ICC monitor profile.
         target_link_libraries(${TEST_BINARY}
             PRIVATE
@@ -72,7 +72,7 @@ function(add_ocio_test NAME SOURCES TESTS PRIVATE_INCLUDES)
                 "-framework CoreGraphics"
                 "-framework IOKit"
         )
-    endif(APPLE)
+    endif()
 
     if(PRIVATE_INCLUDES)
         target_include_directories(${TEST_BINARY}

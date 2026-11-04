@@ -6,6 +6,10 @@
 #include <string>
 #include <string.h>
 
+#if defined(__APPLE__)
+#include <TargetConditionals.h>
+#endif
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Logging.h"
@@ -26,7 +30,7 @@ void SystemMonitorsImpl::getAllMonitors()
 
 } // namespace OCIO_NAMESPACE
 
-#elif __APPLE__
+#elif defined(__APPLE__) && TARGET_OS_OSX
 
 #include "SystemMonitor_macos.cpp"
 

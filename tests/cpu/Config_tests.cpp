@@ -4,6 +4,10 @@
 
 #include <sys/stat.h>
 
+#if defined(__APPLE__)
+#include <TargetConditionals.h>
+#endif
+
 #include <pystring.h>
 
 #include "Config.cpp"
@@ -9845,7 +9849,8 @@ colorspaces:
         = std::string(OCIO::GetTestFilesDir()) + "/icc-test-1.icc";
 
 
-#if !defined(OCIO_HEADLESS_ENABLED) && ( defined(__APPLE__) || defined(_WIN32) )
+#if !defined(OCIO_HEADLESS_ENABLED) && \
+    ( defined(_WIN32) || ( defined(__APPLE__) && TARGET_OS_OSX ) )
 
     OCIO_CHECK_ASSERT(OCIO::SystemMonitors::Get()->isSupported());
 
@@ -10070,7 +10075,8 @@ colorspaces:
     // Only the 'view' view is active.
     OCIO_CHECK_EQUAL(1, config->getNumViews("sRGB"));
 
-#if !defined(OCIO_HEADLESS_ENABLED) && ( defined(__APPLE__) || defined(_WIN32) )
+#if !defined(OCIO_HEADLESS_ENABLED) && \
+    ( defined(_WIN32) || ( defined(__APPLE__) && TARGET_OS_OSX ) )
 
     OCIO_CHECK_ASSERT(OCIO::SystemMonitors::Get()->isSupported());
 
