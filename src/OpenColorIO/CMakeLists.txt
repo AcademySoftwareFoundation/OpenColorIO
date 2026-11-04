@@ -336,7 +336,7 @@ if(OCIO_USE_SIMD AND OCIO_USE_SSE2NEON AND COMPILER_SUPPORTS_SSE_WITH_SSE2NEON)
     target_link_libraries(OpenColorIO PRIVATE $<BUILD_INTERFACE:sse2neon>)
 endif()
 
-if(APPLE)
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     target_link_libraries(OpenColorIO
         PRIVATE
             "-framework ColorSync"
