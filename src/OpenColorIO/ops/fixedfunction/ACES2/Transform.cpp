@@ -993,7 +993,9 @@ float find_gamut_boundary_intersection(const f2 &JM_cusp, float J_max, float gam
     // The upper hull is flipped and thus 'zeroed' at J_max
     // Also note we negate the slope
     const float f_J_intersect_cusp   = J_max - J_intersect_cusp;
-    const float f_J_intersect_source = J_max - J_intersect_source;
+    // J_intersect_source can land a float step above J_max when J is at the limit:
+    // clamp so that powf never gets a negative base.
+    const float f_J_intersect_source = std::max(0.f, J_max - J_intersect_source);
     const float f_JM_cusp_J          = J_max - JM_cusp[0];
     const float M_boundary_upper =
       estimate_line_and_boundary_intersection_M(f_J_intersect_source, -slope, gamma_top_inv, f_JM_cusp_J, JM_cusp[1], f_J_intersect_cusp);

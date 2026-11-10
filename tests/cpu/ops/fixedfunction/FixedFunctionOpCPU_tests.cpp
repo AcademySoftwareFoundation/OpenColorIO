@@ -1453,3 +1453,53 @@ OCIO_ADD_TEST(FixedFunctionOpCPU, LIN_TO_DOUBLE_LOG)
         ApplyFixedFunction(img.data(), linearFrame.data(), NumPixels, dataFInv, 1e-6f, __LINE__, false);
     }
 }
+
+
+OCIO_ADD_TEST(FixedFunctionOpCPU, aces_gamut_comp_20_limit_J)
+{
+    // At J = limit_J_max the J intersection may land a float step above the limit and the
+    // upper hull term used to be NaN. These hues gave NaN without the fix, both with and
+    // without fused multiply-add.
+    OCIO::FixedFunctionOpData::Params params = {
+        // Peak luminance
+        100.f,
+        // Rec709 gamut
+        0.64, 0.33, 0.3, 0.6, 0.15, 0.06, 0.3127, 0.3290
+    };
+
+    const float hues[] = { 4.f, 46.f, 70.f, 101.f, 160.f, 210.f, 266.f, 325.f };
+    std::vector<float> input_32f;
+    for (float h : hues)
+    {
+        input_32f.insert(input_32f.end(), { 100.0f, 10.0f, h, 1.0f });
+    }
+    const unsigned num_samples = static_cast<unsigned>(input_32f.size() / 4);
+
+    for (auto style : { OCIO::FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_FWD,
+                        OCIO::FixedFunctionOpData::ACES_GAMUT_COMPRESS_20_INV })
+    {
+        OCIO::ConstFixedFunctionOpDataRcPtr funcData
+            = std::make_shared<OCIO::FixedFunctionOpData>(style, params);
+
+        OCIO::ConstOpCPURcPtr op;
+        OCIO_CHECK_NO_THROW(op = OCIO::GetFixedFunctionCPURenderer(funcData, false));
+
+        std::vector<float> output_32f(input_32f);
+        OCIO_CHECK_NO_THROW(op->apply(output_32f.data(), output_32f.data(), num_samples));
+
+        // At the limit the colourfulness is mapped to 0, as for J above the limit.
+        unsigned num_failed = 0;
+        for (unsigned i = 0; i < num_samples; ++i)
+        {
+            const float J = output_32f[i * 4 + 0];
+            const float M = output_32f[i * 4 + 1];
+            if (!std::isfinite(J) || !std::isfinite(M) || std::abs(J - 100.0f) > 1e-5f || std::abs(M) > 1e-5f)
+            {
+                ++num_failed;
+            }
+        }
+        OCIO_CHECK_ASSERT_MESSAGE(num_failed == 0,
+                                  std::to_string(num_failed) + " of " + std::to_string(num_samples)
+                                  + " samples at J = limit_J_max are not (J, 0, h)");
+    }
+}

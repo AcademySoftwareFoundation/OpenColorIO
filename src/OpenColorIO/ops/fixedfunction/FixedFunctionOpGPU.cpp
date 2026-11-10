@@ -1048,7 +1048,7 @@ std::string _Add_Find_Gamut_Boundary_Intersection_func(
     ss.indent();
 
     ss.newLine() << ss.floatDecl("M_boundary_lower") << " = J_intersect_cusp * pow(J_intersect_source / J_intersect_cusp, gamma_bottom_inv) / (JM_cusp.r / JM_cusp.g - slope);";
-    ss.newLine() << ss.floatDecl("M_boundary_upper") << " = JM_cusp.g * (" << s.limit_J_max << " - J_intersect_cusp) * pow((" << s.limit_J_max << " - J_intersect_source) / (" << s.limit_J_max << " - J_intersect_cusp), gamma_top_inv) / (slope * JM_cusp.g + " << s.limit_J_max << " - JM_cusp.r);";
+    ss.newLine() << ss.floatDecl("M_boundary_upper") << " = JM_cusp.g * (" << s.limit_J_max << " - J_intersect_cusp) * pow(max(0.0, " << s.limit_J_max << " - J_intersect_source) / (" << s.limit_J_max << " - J_intersect_cusp), gamma_top_inv) / (slope * JM_cusp.g + " << s.limit_J_max << " - JM_cusp.r);";
 
     ss.newLine() << ss.floatDecl("smin") << " = 0.0;";
     ss.newLine() << "{";
