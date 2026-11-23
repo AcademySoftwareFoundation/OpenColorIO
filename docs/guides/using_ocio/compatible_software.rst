@@ -135,6 +135,18 @@ Website : `<https://www.aja.com/products/og-colorbox>`__
 Supported Version : >= 3.0
 
 
+Coreplay
+********
+
+Coreplay is a free, open-source player for movies and image sequences, made for film and VFX. Image sequences go through OpenColorIO on the GPU: the input colour space is read from the file or chosen by the user, with every display and view of the active config (the built-in studio config, or $OCIO). Camera log to Rec.709 / Rec.2020 presets and LUTs are applied with OCIO on movies too.
+
+Website: `<https://imcore.ai/coreplay.html>`__
+
+Documentation:
+
+- `Coreplay on GitHub <https://github.com/imCore-ai/coreplay>`__
+
+
 CryEngine (CryTek)
 *******************
 
